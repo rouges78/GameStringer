@@ -1,0 +1,34 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Build artifacts
+/.next/
+/out/
+
+# Local environment files
+.env*.local
+
+# Log files
+yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Prisma
+/prisma/dev.db
+/prisma/dev.db-journal
+
+# IDE configuration
+.vscode/
+
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
