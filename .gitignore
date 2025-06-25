@@ -8,6 +8,7 @@
 /out/
 
 # Local environment files
+.env
 .env*.local
 
 # Log files
@@ -18,8 +19,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Prisma
-/prisma/dev.db
-/prisma/dev.db-journal
+**/dev.db
+**/dev.db-journal
 
 # IDE configuration
 .vscode/
