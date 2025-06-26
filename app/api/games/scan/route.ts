@@ -6,11 +6,11 @@ import { prisma } from '@/lib/prisma';
 import SteamGridDB from 'steamgriddb';
 const steamGridDbClient = new SteamGridDB(process.env.STEAMGRIDDB_API_KEY || '');
 
-// Funzione per analizzare il file libraryfolders.vdf di Steam
+// Funzione per analizzare il file libraryfolders.vdf di Steam e restituire i percorsi radice delle librerie
 async function getSteamLibraryFolders(): Promise<string[]> {
     const steamPath = 'C:/Program Files (x86)/Steam';
     const libraryFoldersVdf = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
-    const libraryFolders: string[] = [path.join(steamPath, 'steamapps', 'common')];
+    const libraryPaths: string[] = [steamPath]; // La libreria di default
 
     try {
         const data = await fs.readFile(libraryFoldersVdf, 'utf-8');
@@ -18,14 +18,15 @@ async function getSteamLibraryFolders(): Promise<string[]> {
         lines.forEach(line => {
             const match = line.match(/"path"\s+"(.+?)"/);
             if (match && match[1]) {
-                libraryFolders.push(path.join(match[1].replace(/\\/g, '/'), 'steamapps', 'common'));
+                // Aggiunge il percorso radice della libreria, normalizzando i backslash
+                libraryPaths.push(match[1].replace(/\\\\/g, '/'));
             }
         });
     } catch (error) {
         console.warn(`Impossibile leggere il file libraryfolders.vdf:`, error);
     }
 
-    return libraryFolders;
+    return Array.from(new Set(libraryPaths)); // Rimuove eventuali duplicati e converte in array
 }
 
 // Funzione per trovare l'eseguibile più grande in una cartella
@@ -62,64 +63,80 @@ function normalizeGameName(name: string): string {
         .toLowerCase();
 }
 
-async function scanDirectoryForGames(dir: string, platform: 'Steam' | 'GOG' | 'Epic Games'): Promise<GameScanResult[]> {
+// Nuova funzione specifica per la scansione dei giochi Steam tramite i file manifest
+async function scanSteamGames(libraryPath: string): Promise<GameScanResult[]> {
+    const steamAppsPath = path.join(libraryPath, 'steamapps');
+    const commonPath = path.join(steamAppsPath, 'common');
     const games: GameScanResult[] = [];
+
     try {
-        const entries = await fs.readdir(dir, { withFileTypes: true });
-        for (const entry of entries) {
-            if (entry.isDirectory()) {
-                const gamePath = path.join(dir, entry.name);
-                const executable = await findLargestExe(gamePath);
+        const files = await fs.readdir(steamAppsPath);
+        const manifestFiles = files.filter(f => f.startsWith('appmanifest_') && f.endsWith('.acf'));
 
-                if (executable) {
-                    let imageUrl: string | undefined = undefined;
+        for (const manifestFile of manifestFiles) {
+            const filePath = path.join(steamAppsPath, manifestFile);
+            try {
+                const content = await fs.readFile(filePath, 'utf-8');
+                
+                const appIdMatch = content.match(/"appid"\s+"(\d+)"/);
+                const nameMatch = content.match(/"name"\s+"(.+?)"/);
+                const installDirMatch = content.match(/"installdir"\s+"(.+?)"/);
+
+                if (appIdMatch && nameMatch && installDirMatch) {
+                    const steamAppId = parseInt(appIdMatch[1], 10);
+                    const title = nameMatch[1];
+                    const installDir = installDirMatch[1];
+                    const gamePath = path.join(commonPath, installDir);
+
+                    // Verifica se la cartella del gioco esiste effettivamente
                     try {
-                        const normalizedName = normalizeGameName(entry.name);
-                        console.log(`[SteamGridDB] Searching for game: "${entry.name}" (normalized to: "${normalizedName}")`);
-                        const searchResults = await steamGridDbClient.searchGame(normalizedName);
-                        
-                        // Log avanzato per il debug delle copertine
-                        if (searchResults.length === 0) {
-                            console.warn(`[SteamGridDB] Nessun risultato per "${normalizedName}".`);
-                        } else {
-                            // Loggo i primi 3 risultati per vedere cosa trova l'API
-                            console.log(`[SteamGridDB] Trovati ${searchResults.length} risultati per "${normalizedName}". Primi 3:`, JSON.stringify(searchResults.slice(0, 3), null, 2));
-                        }
+                        await fs.access(gamePath);
+                    } catch {
+                        console.warn(`Cartella di installazione non trovata per ${title} (${gamePath}), gioco saltato.`);
+                        continue; // Salta questo gioco se la cartella non esiste
+                    }
 
-                        if (searchResults.length > 0) {
-                            const gameId = searchResults[0].id;
-                            console.log(`[SteamGridDB] Found game ID ${gameId} for "${entry.name}". Fetching grids...`);
-                            const grids = await steamGridDbClient.getGrids({ type: 'game', id: gameId, styles: ['alternate'], dimensions: ['460x215', '920x430'] });
-                            
-                            if (grids.length > 0) {
-                                imageUrl = grids[0].url;
-                                console.log(`[SteamGridDB] Found image URL for "${entry.name}": ${imageUrl}`);
-                            } else {
-                                console.warn(`[SteamGridDB] No grids found for game ID ${gameId} ("${entry.name}").`);
-                            }
+                    const executable = await findLargestExe(gamePath);
+                    let imageUrl: string | undefined = undefined;
+
+                    try {
+                        const grids = await steamGridDbClient.getGrids({ type: 'steam' as any, id: steamAppId, styles: ['alternate'], dimensions: ['460x215', '920x430'] });
+                        if (grids.length > 0) {
+                            imageUrl = grids[0].url;
                         } else {
-                            console.warn(`[SteamGridDB] No search results found for "${entry.name}".`);
+                             console.warn(`[SteamGridDB] Nessuna copertina trovata per Steam AppID ${steamAppId} ("${title}").`);
                         }
-                    } catch (error) {
-                        console.error(`[SteamGridDB] Error fetching cover for ${entry.name}:`, error);
+                    } catch (error: any) {
+                        // Gestione intelligente degli errori di SteamGridDB
+                        // Gli errori 404 sono comuni per demo o titoli minori e non devono causare un crash.
+                        // Vengono gestiti come un avviso, mentre altri errori vengono loggati come criticità.
+                        if (error.isAxiosError && error.response?.status === 404) {
+                            console.warn(`[SteamGridDB] Copertina non trovata (404) per ${title} (AppID: ${steamAppId}).`);
+                        } else {
+                            console.error(`[SteamGridDB] Errore imprevisto per ${title}:`, error.message);
+                        }
                     }
 
                     games.push({
-                        id: `${platform}-${entry.name}`,
-                        title: entry.name,
-                        platform: platform,
+                        id: `Steam-${steamAppId}`,
+                        steamAppId: steamAppId,
+                        title: title,
+                        platform: 'Steam',
                         installPath: gamePath,
-                        executablePath: executable.path,
+                        executablePath: executable ? executable.path : undefined,
                         imageUrl: imageUrl,
                         isInstalled: true,
-                        createdAt: new Date().toISOString(), // <-- FIX: Converto la data in stringa ISO
+                        createdAt: new Date().toISOString(),
                     });
                 }
+            } catch (error) {
+                console.warn(`Impossibile leggere o analizzare il file manifest ${manifestFile}:`, error);
             }
         }
     } catch (error) {
-        console.error(`Errore durante la scansione della directory ${dir}:`, error);
+        console.error(`Errore durante la scansione della directory Steam ${steamAppsPath}:`, error);
     }
+    
     return games;
 }
 
@@ -128,20 +145,18 @@ export async function POST() {
         console.log('Avvio scansione giochi...');
 
         const steamLibraryFolders = await getSteamLibraryFolders();
-        const gogPath = 'C:/Program Files (x86)/GOG Galaxy/Games';
-        const epicGamesPath = 'C:/Program Files/Epic Games';
 
+        // Scansiona solo Steam per ora, come da focus attuale
         const allScanPromises = [
-            ...steamLibraryFolders.map(folder => scanDirectoryForGames(folder, 'Steam')),
-            scanDirectoryForGames(gogPath, 'GOG'),
-            scanDirectoryForGames(epicGamesPath, 'Epic Games'),
+            ...steamLibraryFolders.map(folder => scanSteamGames(folder)),
         ];
 
         const allGamesArrays = await Promise.all(allScanPromises);
         const allGames = allGamesArrays.flat();
 
-        console.log(`Trovati ${allGames.length} giochi. Salvataggio nel database...`);
+        console.log(`Trovati ${allGames.length} giochi installati. Salvataggio nel database...`);
 
+        // Aggiorna o crea i giochi nel database
         for (const game of allGames) {
             await prisma.game.upsert({
                 where: { installPath: game.installPath },
@@ -149,6 +164,7 @@ export async function POST() {
                     isInstalled: true,
                     executablePath: game.executablePath,
                     imageUrl: game.imageUrl,
+                    steamAppId: game.steamAppId,
                 },
                 create: {
                     title: game.title,
@@ -157,13 +173,28 @@ export async function POST() {
                     executablePath: game.executablePath,
                     imageUrl: game.imageUrl,
                     isInstalled: true,
+                    steamAppId: game.steamAppId,
                 },
             });
         }
+        
+        // Imposta 'isInstalled' a false per i giochi che non sono più stati trovati
+        const installedPaths = allGames.map(g => g.installPath);
+        await prisma.game.updateMany({
+            where: {
+                platform: 'Steam', // Aggiorna solo lo stato dei giochi Steam
+                installPath: {
+                    notIn: installedPaths,
+                },
+            },
+            data: {
+                isInstalled: false,
+            },
+        });
 
         console.log('Scansione e salvataggio completati.');
 
-        return NextResponse.json({ newGames: allGames, gamesFound: allGames.length });
+        return NextResponse.json({ message: `Scansione completata. Trovati ${allGames.length} giochi installati.`, gamesFound: allGames.length });
 
     } catch (error) {
         console.error("Errore durante la scansione dei giochi:", error);

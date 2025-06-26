@@ -75,11 +75,22 @@ L'app è progettata per essere user-friendly e accessibile sia a utenti esperti 
 - Crittografia dei backup sensibili
 - Pulizia automatica dei backup obsoleti
 
+### ✨ **Funzionalità Implementate**
+
+#### **Libreria Giochi Avanzata (`/games`)**
+- **Visualizzazione Unificata**: Mostra tutti i giochi da diverse piattaforme (Steam, locali) in un'unica interfaccia.
+- **Copertine Intelligenti**: Sistema di fallback automatico (Steam → SteamGridDB → placeholder) per garantire che ogni gioco abbia sempre un'immagine di copertina, eliminando errori 404.
+- **Dati Arricchiti**: Recupero di informazioni dettagliate da Steam, inclusi generi, categorie e supporto VR.
+- **Filtri Potenti**: Filtra la libreria per stato di installazione (installati/non installati) e supporto VR.
+- **Ordinamento Flessibile**: Ordina i giochi per nome, data di aggiunta o tempo di gioco.
+- **Badge Informativi**: Etichette visive immediate per identificare giochi installati e compatibili con VR.
+
 ### 🏪 **Integrazione Store**
-- Sincronizzazione automatica con Steam, Epic Games, GOG
-- Importazione metadati dei giochi
-- Aggiornamento automatico della libreria
-- Supporto per launcher personalizzati
+- **Sincronizzazione con Steam**: Connessione sicura via NextAuth per recuperare la lista completa dei giochi posseduti e il tempo di gioco.
+- **Scansione Locale**: Identificazione dei giochi Steam installati localmente.
+- **Importazione Metadati Estesi**: Arricchimento dei dati con generi, categorie e supporto VR tramite le API di Steam.
+- **Aggiornamento Automatico**: La libreria si aggiorna per riflettere lo stato attuale.
+- **(In Sviluppo)**: Supporto per Epic Games, GOG e launcher personalizzati.
 
 ## 🛠 Tecnologie Utilizzate
 
@@ -388,6 +399,31 @@ interface ScanResponse {
 ### Creazione Patch
 ![Patch Creation](screenshots/patches.png)
 *Interfaccia per creare e gestire patch di traduzione*
+
+## 📔 Diario di Sviluppo
+
+### **26 Giugno 2025: Sessione di Debug Critica e Svolta**
+
+Questa giornata è stata dedicata alla risoluzione di una serie di problemi bloccanti che impedivano l'avvio e il corretto funzionamento dell'applicazione in ambiente di sviluppo.
+
+1.  **Problema Iniziale: `ChunkLoadError` e Crash del Server**
+    *   **Sintomo**: L'applicazione non si avviava, restituendo errori `ChunkLoadError` nel browser e crashando il server di sviluppo Next.js.
+    *   **Analisi**: L'errore indicava una corruzione nella cache di build (`.next`) o nelle dipendenze (`node_modules`).
+    *   **Soluzione**: È stata eseguita una pulizia completa del progetto, rimuovendo le cartelle `.next`, `node_modules` e il file `yarn.lock`, seguita da una reinstallazione pulita con `yarn install`.
+
+2.  **Secondo Problema: Errore `prisma generate`**
+    *   **Sintomo**: Durante `yarn install`, il processo si interrompeva con un errore `EPERM: operation not permitted` durante la fase `prisma generate`.
+    *   **Analisi**: L'errore `EPERM` su Windows è quasi sempre legato a permessi insufficienti. Il terminale non aveva i privilegi per scrivere/rinominare file nella cartella `node_modules`.
+    *   **Soluzione**: Dopo aver corretto una piccola omissione nello schema (`schema.prisma`), il problema è stato risolto definitivamente eseguendo il terminale **come Amministratore**.
+
+3.  **Problema Finale e Svolta: Errore `401 Unauthorized` sui Giochi Condivisi**
+    *   **Sintomo**: Una volta avviata l'app, la lista dei giochi non includeva quelli della Libreria Familiare di Steam. L'utente ha notato che il numero di giochi "cambiava continuamente".
+    *   **Analisi**: L'analisi dei log del server ha rivelato il problema esatto. La chiamata all'API della Libreria Familiare falliva con un errore `401 Unauthorized`. Questo significa che il cookie di autenticazione (`steamLoginSecure`) fornito nel file `.env.local` era scaduto, non valido o errato. Il sistema, in modo robusto, procedeva mostrando solo i giochi di proprietà, causando la discrepanza notata dall'utente.
+    *   **Soluzione Identificata (Prossimo Passo)**: È necessario ottenere un cookie `steamLoginSecure` aggiornato dal browser (dopo aver effettuato il login su `store.steampowered.com`) e sostituirlo nel file `.env.local`.
+
+**Stato Attuale:** L'applicazione è stabile, robusta e si avvia correttamente. Il problema del recupero dei giochi condivisi è stato identificato con certezza e la soluzione è a portata di mano.
+
+**Azione Richiesta all'Utente:** Aggiornare il cookie `steamLoginSecure` come da istruzioni per sbloccare la funzionalità completa.
 
 ## 🤝 Contribuire
 

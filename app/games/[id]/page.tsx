@@ -34,14 +34,45 @@ export default function GameDetailPage() {
   
   const [game, setGame] = useState<any>(null);
   const [translations, setTranslations] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
 
   useEffect(() => {
-    const foundGame = mockGames.find(g => g.id === gameId);
-    if (foundGame) {
-      setGame(foundGame);
-      setTranslations(mockTranslations.filter(t => t.gameId === gameId));
+    if (gameId) {
+      const fetchGameData = async () => {
+        setIsLoading(true);
+        try {
+          const response = await fetch(`/api/steam/games/${gameId}`);
+          if (response.ok) {
+            const data = await response.json();
+            // Simula dati che non sono ancora nell'API
+            data.engine = 'Source 2';
+            data.lastScanned = new Date().toISOString();
+            data.detectedFiles = [];
+            data.installPath = `C:\Program Files (x86)\Steam\steamapps\common\${data.name.replace(/ /g, '')}`;
+            data.isInstalled = true; // Assumiamo sia installato per ora
+            data.platform = 'Steam';
+            data.storeId = data.appid;
+            data.title = data.name;
+            data.description = data.short_description?.replace(/<[^>]*>?/gm, '') || 'Nessuna descrizione.';
+            data.coverUrl = `https://steamcdn-a.akamaihd.net/steam/apps/${data.appid}/library_600x900.jpg`;
+
+            setGame(data);
+            // TODO: Caricare le traduzioni reali
+            setTranslations(mockTranslations.filter(t => t.gameId === gameId));
+          } else {
+            setGame(null);
+          }
+        } catch (error) {
+          console.error('Failed to fetch game data:', error);
+          setGame(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchGameData();
     }
   }, [gameId]);
 
@@ -77,6 +108,17 @@ export default function GameDetailPage() {
       default: return 'bg-gray-500/10 text-gray-500';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Caricamento dati del gioco...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!game) {
     return (

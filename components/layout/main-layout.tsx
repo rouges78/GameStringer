@@ -57,15 +57,14 @@ export function MainLayout({ children }: MainLayoutProps) {
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="flex items-center justify-between h-16 px-6 border-b">
-            <div className="flex items-center space-x-2">
-              <Image src="/logo.png" alt="GameStringer Logo" width={40} height={40} />
-              <span className="text-xl font-bold">GameStringer</span>
+          <div className="relative flex items-center justify-center h-52 px-4 border-b">
+            <div className="flex items-center">
+              <Image src="/logo.png" alt="GameStringer Logo" width={768} height={192} className="w-auto h-48" priority />
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
+              className="absolute top-1/2 right-4 -translate-y-1/2 lg:hidden"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="h-5 w-5" />

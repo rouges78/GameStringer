@@ -98,11 +98,10 @@ export const authOptions: NextAuthOptions = {
       // 1. Handle initial sign-in
       if (user) {
         token.id = user.id; // Persist the user ID from the provider
-
-        // Handle custom providers (like Steam Credentials)
-        const u = user as any;
-        if (u.steam) {
-          token.steam = u.steam;
+        // Check if this is a steam login and persist steam-specific data
+        // The user object is the one returned from the authorize callback
+        if ((user as any).steam) {
+          token.steam = (user as any).steam;
         }
       }
 

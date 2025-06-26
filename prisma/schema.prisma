@@ -4,6 +4,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -13,14 +14,19 @@ datasource db {
 
 // Modello per i giochi scansionati
 model Game {
-  id          String   @id @default(cuid())
-  title       String
-  platform    String
-  installPath String   @unique // Il percorso di installazione è un identificatore univoco
-  executablePath String? // Percorso dell'eseguibile principale
-  icon        String?  // Icona in formato Base64
-  imageUrl    String?  // URL della copertina ottenuta da SteamGridDB
-  isInstalled Boolean  @default(true)
+  id             String    @id @default(cuid())
+  title          String
+  platform       String
+  installPath    String? // Non più univoco, può essere nullo
+  executablePath String?
+  icon           String?
+  imageUrl       String?
+  isInstalled    Boolean   @default(false)
+  steamAppId     Int?      @unique
+  isVr           Boolean   @default(false)
+  engine         String?
+  lastPlayed     DateTime?
+  isShared       Boolean   @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

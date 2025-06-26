@@ -1,4 +1,5 @@
 export interface GameScanResult {
+  steamAppId?: number; // Aggiunto per i giochi Steam
   id: string;
   title: string;
   platform: string;
@@ -46,4 +47,27 @@ export interface RealTimeTranslationState {
   translationsApplied: number;
   memoryPatchCount: number;
   injectionStatus: 'idle' | 'hooking' | 'active' | 'error';
+}
+
+export interface SteamGame {
+  appid: number;
+  name: string;
+  playtime_forever: number;
+  img_icon_url: string;
+  img_logo_url: string;
+  last_played: number;
+  is_installed: boolean;
+  is_shared: boolean;
+  playtime_windows_forever?: number;
+  playtime_mac_forever?: number;
+  playtime_linux_forever?: number;
+  genres?: { id: string; description: string }[];
+  tags?: string[];
+  is_free?: boolean;
+  short_description?: string;
+  header_image?: string;
+  library_capsule?: string;
+  categories?: { id: number; description: string }[];
+  isVr: boolean;
+  engine?: string;
 }
