@@ -174,7 +174,11 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
             await sleep(Math.pow(2, attempts) * 1000);
         }
     }
-    const ownedGames = ownedGamesResponseData.response?.games || [];
+    if (!ownedGamesResponseData || !ownedGamesResponseData.response) {
+        console.error('[API/STEAM/GAMES] CRITICAL: Could not fetch owned games from Steam after multiple retries. Aborting.');
+        throw new Error('Failed to fetch owned games from Steam API.');
+    }
+    const ownedGames = ownedGamesResponseData.response.games || [];
     console.log(`[API/STEAM/GAMES] Found ${ownedGames.length} owned games.`);
     console.timeEnd('[PERF] GetOwnedGames');
 
@@ -243,76 +247,64 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
     }
     console.timeEnd('[PERF] GetSharedLibraryApps');
 
-    // 3. Enrich games with details (robust batching with single-file fallback)
+    // 3. Enrich games with details using the more reliable steamapi.xpaw.me
     console.time('[PERF] Enrichment');
-    console.log(`[API/STEAM/GAMES] Total unique games to process: ${allGames.length}. Starting enrichment...`);
-    
-    const enrichedDetailsMap = new Map<number, any>();
-    const batchSize = 50;
-    const batchDelay = 2000; // 2 seconds between batches
+    console.log(`[API/STEAM/GAMES] Total unique games to process: ${allGames.length}. Starting enrichment via steamapi.xpaw.me...`);
 
-    for (let i = 0; i < allGames.length; i += batchSize) {
-        const batch = allGames.slice(i, i + batchSize);
-        const appids = batch.map(g => g.appid).join(',');
-        const detailsUrl = `https://store.steampowered.com/api/appdetails?appids=${appids}&cc=us&l=en`;
-        
-        console.log(`[API/STEAM/GAMES] Enriching batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(allGames.length / batchSize)}...`);
-        
+    const enrichedDetailsMap = new Map<number, any>();
+    const enrichmentDelay = 100; // 100ms delay between requests to be safe and avoid rate limits
+
+    for (const game of allGames) {
         try {
+            const detailsUrl = `https://steamapi.xpaw.me/api.php?action=appdetails&appid=${game.appid}`;
             const detailsResponse = await fetch(detailsUrl);
-            if (!detailsResponse.ok) throw new Error(`Batch fetch failed with status ${detailsResponse.status}`);
+
+            if (!detailsResponse.ok) {
+                console.warn(`[API/STEAM/GAMES] xpaw.me API failed for AppID ${game.appid} with status ${detailsResponse.status}. Skipping.`);
+                continue; // Go to the next game
+            }
 
             const detailsData = await detailsResponse.json();
-            let allSuccess = true;
-            for (const appid in detailsData) {
-                if (!detailsData[appid].success) {
-                    allSuccess = false;
-                    break;
-                }
+            
+            // The xpaw API doesn't have a 'success' flag. We assume success if we get a valid JSON object.
+            // We also check for a 'name' property as a sanity check.
+            if (detailsData && detailsData.name) {
+                enrichedDetailsMap.set(game.appid, detailsData);
+            } else {
+                 console.warn(`[API/STEAM/GAMES] xpaw.me API returned invalid or empty data for AppID ${game.appid}. Skipping.`);
             }
 
-            if (allSuccess) {
-                for (const appid in detailsData) {
-                    enrichedDetailsMap.set(Number(appid), detailsData[appid].data);
-                }
-            } else {
-                throw new Error('At least one AppID in batch failed, falling back to single requests.');
-            }
+            await sleep(enrichmentDelay); // Be nice to the API
 
         } catch (error: any) {
-            console.warn(`[API/STEAM/GAMES] Batch enrichment failed: ${error.message}. Falling back to single requests for this batch.`);
-            for (const game of batch) {
-                try {
-                    await sleep(200); // Small delay between single requests
-                    const singleUrl = `https://store.steampowered.com/api/appdetails?appids=${game.appid}&cc=us&l=en`;
-                    const singleResponse = await fetch(singleUrl);
-                    if (singleResponse.ok) {
-                        const singleData = await singleResponse.json();
-                        if (singleData[String(game.appid)]?.success) {
-                            enrichedDetailsMap.set(game.appid, singleData[String(game.appid)].data);
-                        }
-                    }
-                } catch (singleError: any) {
-                    console.error(`[API/STEAM/GAMES] Failed to fetch single AppID ${game.appid}: ${singleError.message}`);
-                }
-            }
-        }
-
-        if (i + batchSize < allGames.length) {
-            console.log(`[API/STEAM/GAMES] Batch processed. Waiting for ${batchDelay / 1000}s...`);
-            await sleep(batchDelay);
+            console.error(`[API/STEAM/GAMES] CRITICAL: Failed to fetch or parse from xpaw.me for AppID ${game.appid}: ${error.message}`);
         }
     }
     console.timeEnd('[PERF] Enrichment');
 
     // 4. Map, detect VR/engine, filter, and sort
     console.time('[PERF] Final Mapping and Sorting');
-    const enrichedGames = allGames.map((game): SteamGame | null => {
+    const enrichedGames = allGames.map((game): SteamGame => {
         const details = enrichedDetailsMap.get(game.appid);
+
+        // If enrichment fails, create a fallback object with basic info
         if (!details) {
-            return null; // Skip if enrichment failed
+            console.warn(`[API/STEAM/GAMES] Enrichment failed for AppID ${game.appid}. Using fallback data.`);
+            return {
+                appid: game.appid,
+                name: game.name, // Use the name from the initial fetch
+                playtime_forever: game.playtime_forever || 0,
+                img_icon_url: game.img_icon_url || '',
+                img_logo_url: game.img_logo_url || '',
+                isVr: false, // Cannot determine
+                engine: 'Unknown', // Cannot determine
+                last_played: (game as any).rtime_last_played || 0,
+                is_installed: false, // Placeholder
+                is_shared: !initialOwnedAppIds.has(game.appid),
+            };
         }
 
+        // --- Enrichment succeeded, use full details ---
         const categories = details.categories || [];
         const isVr = categories.some((cat: { id: number }) => cat.id === 28 || cat.id === 38);
 
@@ -344,7 +336,7 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
             is_installed: false, // Placeholder
             is_shared: !initialOwnedAppIds.has(game.appid),
         };
-    }).filter((game): game is SteamGame => game !== null && !!game.name && game.name.trim() !== '');
+    }).filter((game): game is SteamGame => !!game.name && game.name.trim() !== '');
     
     const finalGames = enrichedGames.sort((a, b) => a.name.localeCompare(b.name));
 
