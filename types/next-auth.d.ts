@@ -23,6 +23,8 @@ declare module 'next-auth' {
     user: {
       /** I dati del profilo Steam dell'utente. */
       steam?: SteamProfile;
+      /** Elenco dei provider di account collegati. */
+      connectedProviders?: string[];
     } & DefaultSession['user'];
   }
 }

@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,10 +23,12 @@ import {
   Download,
   RefreshCw,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  User
 } from 'lucide-react';
 
 export default function SettingsPage() {
+  const { data: session } = useSession();
   const [settings, setSettings] = useState({
     // AI Settings
     aiProvider: 'gpt-4o-mini',
@@ -65,6 +68,14 @@ export default function SettingsPage() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+
+  const handleItchIOConnect = () => {
+    const clientId = process.env.NEXT_PUBLIC_ITCHIO_CLIENT_ID;
+    const redirectUri = `${window.location.origin}/api/auth/callback/itchio`;
+    const scope = 'profile:me';
+    const authUrl = `https://itch.io/user/oauth?client_id=${clientId}&scope=${scope}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    window.location.href = authUrl;
+  };
 
   const saveSettings = async () => {
     setIsSaving(true);
@@ -153,12 +164,13 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="ai" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="ai">AI & Traduzione</TabsTrigger>
           <TabsTrigger value="system">Sistema</TabsTrigger>
           <TabsTrigger value="directories">Directory</TabsTrigger>
           <TabsTrigger value="advanced">Avanzate</TabsTrigger>
           <TabsTrigger value="notifications">Notifiche</TabsTrigger>
+          <TabsTrigger value="accounts">Account</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ai" className="space-y-4">
@@ -557,6 +569,40 @@ export default function SettingsPage() {
                   <AlertTriangle className="h-4 w-4 mr-2 text-yellow-500" />
                   Test Errore
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="accounts" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <User className="h-5 w-5" />
+                <span>Account Collegati</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                {
+                  ['steam', 'epic', 'itchio'].map(provider => {
+                    const isConnected = session?.user?.connectedProviders?.includes(provider);
+                    return (
+                      <div key={provider} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          {/* Qui potresti aggiungere le icone dei provider */}
+                          <span className="font-medium capitalize">{provider}</span>
+                        </div>
+                        {isConnected ? (
+                          <Badge variant="success"><CheckCircle className="h-4 w-4 mr-1" />Connesso</Badge>
+                        ) : provider === 'itchio' ? (
+                          <Button onClick={handleItchIOConnect}>Connetti</Button>
+                        ) : (
+                          <Badge variant="outline">Non Connesso</Badge>
+                        )}
+                      </div>
+                    )
+                  })
+                }
               </div>
             </CardContent>
           </Card>

@@ -1,5 +1,5 @@
 {
-  "timestamp": 1750955811938,
+  "timestamp": 1750966299441,
   "games": [
     {
       "appid": 1880837,
@@ -106,7 +106,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -190,7 +190,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1734867510,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -262,7 +262,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1735335033,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -310,7 +310,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -490,7 +490,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1747502461,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -538,7 +538,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -694,7 +694,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1748281597,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -922,7 +922,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1736443999,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -958,7 +958,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1740506276,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1078,7 +1078,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1740412443,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1126,7 +1126,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": true
     },
     {
@@ -1174,7 +1174,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1738349238,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1294,7 +1294,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1366,7 +1366,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1438,7 +1438,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1750528523,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1486,7 +1486,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1737268814,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1606,7 +1606,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": true
     },
     {
@@ -1642,7 +1642,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1739605535,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1714,7 +1714,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1726,7 +1726,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1709317838,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -1930,7 +1930,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1718385035,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2026,7 +2026,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1749989993,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2218,7 +2218,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1742241726,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2266,7 +2266,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1735062061,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2662,7 +2662,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1730486158,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2686,7 +2686,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1729441242,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2734,7 +2734,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1745858374,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2770,7 +2770,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1749989989,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2794,7 +2794,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2830,7 +2830,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1739706149,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2878,7 +2878,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2890,7 +2890,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1747674513,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -2950,7 +2950,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1616091026,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3166,7 +3166,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1735236385,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3202,7 +3202,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1746206923,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3298,7 +3298,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1691076748,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3454,7 +3454,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1730657729,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3610,7 +3610,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1736063591,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3622,7 +3622,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3826,7 +3826,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1750179429,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3922,7 +3922,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3934,7 +3934,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1740313719,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -4090,7 +4090,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1737398570,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -4330,7 +4330,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1749392055,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -4378,7 +4378,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 0,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -4534,7 +4534,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1744993294,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -4546,7 +4546,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1739967744,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -4714,7 +4714,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1749239328,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {

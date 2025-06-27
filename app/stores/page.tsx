@@ -37,16 +37,10 @@ export default function StoresPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {stores.map((store) => {
-          const isConnectable = ['steam', 'epic'].includes(store.id);
+          const isConnectable = ['steam'].includes(store.id);
           const isConnected =
-            (store.id === 'steam' && !!session?.user?.steam) ||
-            (store.id === 'epic' && !!session?.user?.epic);
-
-          const handleConnect = () => {
-            if (store.id === 'epic') {
-              signIn('epic', { callbackUrl: '/stores' });
-            }
-          };
+            (store.id === 'steam' && session?.user?.connectedProviders?.includes('steam-credentials')) ||
+            (store.id !== 'steam' && session?.user?.connectedProviders?.includes(store.id));
 
           const handleDisconnect = () => {
             // This is a simplified disconnect. A real implementation might need
@@ -102,26 +96,19 @@ export default function StoresPage() {
                     {isLoading ? 'Caricamento...' : 'Disconnetti'}
                   </Button>
                 ) : isConnectable ? (
-                  store.id === 'steam' ? (
-                    <Button asChild className="w-full mt-4">
-                      <Link href={`https://steamcommunity.com/openid/login?${new URLSearchParams({
-                        "openid.ns": "http://specs.openid.net/auth/2.0",
-                        "openid.mode": "checkid_setup",
-                        "openid.return_to": `${typeof window !== 'undefined' ? window.location.origin : ''}/api/auth/callback/steam`,
-                        "openid.realm": `${typeof window !== 'undefined' ? window.location.origin : ''}`,
-                        "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
-                        "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
-                      })}`}>
-                        <LinkIcon className="mr-2 h-4 w-4" />
-                        Collega Account
-                      </Link>
-                    </Button>
-                  ) : ( // This is for Epic Games
-                    <Button className="w-full mt-4" onClick={handleConnect} disabled={isLoading}>
+                  <Button asChild className="w-full mt-4">
+                    <Link href={`https://steamcommunity.com/openid/login?${new URLSearchParams({
+                      "openid.ns": "http://specs.openid.net/auth/2.0",
+                      "openid.mode": "checkid_setup",
+                      "openid.return_to": `${typeof window !== 'undefined' ? window.location.origin : ''}/api/auth/callback/steam`,
+                      "openid.realm": `${typeof window !== 'undefined' ? window.location.origin : ''}`,
+                      "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
+                      "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
+                    })}`}>
                       <LinkIcon className="mr-2 h-4 w-4" />
-                      {isLoading ? 'Caricamento...' : 'Collega Account'}
-                    </Button>
-                  )
+                      Collega Account
+                    </Link>
+                  </Button>
                 ) : (
                   <Button className="w-full mt-4" disabled={true}>
                     <LinkIcon className="mr-2 h-4 w-4" />

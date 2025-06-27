@@ -23,6 +23,7 @@
 - [Contribuire](#-contribuire)
 - [Licenza](#-licenza)
 - [Crediti](#-crediti)
+- [Stato di Avanzamento](#-stato-di-avanzamento)
 
 ## 🎯 Descrizione del Progetto
 
@@ -86,11 +87,12 @@ L'app è progettata per essere user-friendly e accessibile sia a utenti esperti 
 - **Badge Informativi**: Etichette visive immediate per identificare giochi installati e compatibili con VR.
 
 ### 🏪 **Integrazione Store**
-- **Sincronizzazione con Steam**: Connessione sicura via NextAuth per recuperare la lista completa dei giochi posseduti e il tempo di gioco.
-- **Scansione Locale**: Identificazione dei giochi Steam installati localmente.
-- **Importazione Metadati Estesi**: Arricchimento dei dati con generi, categorie e supporto VR tramite le API di Steam.
-- **Aggiornamento Automatico**: La libreria si aggiorna per riflettere lo stato attuale.
-- **(In Sviluppo)**: Supporto per Epic Games, GOG e launcher personalizzati.
+- **Sincronizzazione con Steam**: Connessione sicura via NextAuth e OpenID per recuperare la lista completa dei giochi posseduti, il tempo di gioco e lo stato di installazione.
+- **Logica di Arricchimento Robusta**: Utilizzo di API alternative (steamapi.xpaw.me) e una logica di fallback per garantire che i dati dei giochi vengano sempre visualizzati, anche in caso di instabilità delle API di Steam.
+- **Rilevamento Giochi Installati**: Scansione del registro di Windows e dei file di configurazione di Steam (`.acf`) per un rilevamento preciso dei giochi installati, superando i limiti delle API pubbliche.
+- **Correzione Cache**: Implementata la possibilità di forzare l'aggiornamento della cache per visualizzare immediatamente le modifiche.
+- **(Sospeso)**: L'integrazione con **itch.io** è stata temporaneamente sospesa a causa di incompatibilità e restrizioni non documentate della loro API OAuth che impediscono un'autenticazione server-side affidabile.
+- **(In Sviluppo)**: Supporto per Epic Games, GOG e altri launcher.
 
 ## 🛠 Tecnologie Utilizzate
 
@@ -395,6 +397,21 @@ interface ScanResponse {
 ### Modalità Tempo Reale
 ![Real-time Mode](screenshots/realtime.png)
 *Overlay non invasivo per traduzioni durante il gameplay*
+
+## 📈 Stato di Avanzamento
+
+### **Fase 1: Integrazione Steam (Completata)**
+- **[✅] Connessione e Autenticazione**: Implementato con successo il login tramite Steam (OpenID) e NextAuth, con salvataggio sicuro delle credenziali nel database.
+- **[✅] Importazione Libreria Giochi**: Sviluppata una logica di importazione robusta che recupera tutti i giochi posseduti dall'utente. Risolti bug critici che impedivano l'importazione di alcuni titoli (es. Dead Space) a causa di API instabili, implementando una logica di arricchimento con fallback.
+- **[✅] Rilevamento Giochi Installati**: Creata una soluzione ibrida che combina la lettura del registro di Windows e il parsing dei file di configurazione di Steam (`.acf`) per determinare con precisione quali giochi sono installati, superando i limiti delle API ufficiali.
+- **[✅] UI e UX**: La libreria giochi ora mostra correttamente lo stato "Installato" e tutti i dati vengono sincronizzati tra backend e frontend, risolvendo problemi di cache.
+
+### **Fase 2: Integrazione Itch.io (Sospesa)**
+- **[⚠️] Problema Bloccante**: Dopo un'analisi approfondita e numerosi tentativi, si è concluso che l'API OAuth di itch.io non è compatibile con un flusso di autenticazione server-side standard (richiesto da NextAuth). Le richieste vengono bloccate o ricevono risposte inattese, rendendo impossibile completare l'integrazione in modo affidabile. L'integrazione è stata sospesa in attesa di chiarimenti o aggiornamenti da parte di itch.io.
+
+### **Prossimi Passi**
+- **Integrazione GOG**: Inizio dell'analisi e sviluppo per l'integrazione con GOG.
+- **Integrazione Epic Games Store**: A seguire, si procederà con l'integrazione di Epic Games.
 
 ### Creazione Patch
 ![Patch Creation](screenshots/patches.png)

@@ -120,7 +120,7 @@ export default function GamesPage() {
           imageUrl: `https://cdn.akamai.steamstatic.com/steam/apps/${steamGame.appid}/header.jpg`,
           fallbackImageUrl: localGame?.imageUrl || null,
           platform: 'Steam',
-          isInstalled: !!localGame,
+          isInstalled: steamGame.is_installed, // Usa il valore corretto dall'API
           playtime: steamGame.playtime_forever,
           isVrSupported,
         };

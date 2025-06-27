@@ -1,10 +1,13 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import { NextRequest, NextResponse } from 'next/server';
-
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
 
     // Provider #2: A credentials provider to handle the final login step.
@@ -20,52 +23,143 @@ export const authOptions: NextAuthOptions = {
           console.error("[AUTH] Missing steamid");
           return null;
         }
-
         const steamId = credentials.steamid;
 
+        // Trova l'utente tramite l'account collegato
+        const account = await prisma.account.findUnique({
+          where: {
+            provider_providerAccountId: {
+              provider: 'steam-credentials',
+              providerAccountId: steamId,
+            },
+          },
+        });
+
+        if (account) {
+          // Account trovato, restituisci l'utente associato
+          const user = await prisma.user.findUnique({ where: { id: account.userId } });
+          return user;
+        }
+
+        // Primo login: crea un nuovo utente e un nuovo account
+        const user = await prisma.user.create({
+          data: {
+            name: `user_${steamId}`, // Nome utente provvisorio
+          },
+        });
+
+        await prisma.account.create({
+          data: {
+            userId: user.id,
+            type: 'credentials',
+            provider: 'steam-credentials',
+            providerAccountId: steamId,
+          },
+        });
+
+        return user;
+      },
+    }),
+
+    // Provider #3: itch.io Credentials for manual flow
+    CredentialsProvider({
+      id: 'itchio-credentials',
+      name: 'itch.io Credentials',
+      credentials: {
+        accessToken: { label: "Access Token", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.accessToken) {
+          console.error("[AUTH] Missing itch.io access token");
+          return null;
+        }
+
         try {
-          const apiKey = process.env.STEAM_API_KEY;
-          if (!apiKey) {
-            console.error("[AUTH] Missing STEAM_API_KEY");
+          // Use the token to get user info from itch.io API (server-side)
+          const profileRes = await fetch('https://itch.io/api/1/me', {
+            headers: {
+              Authorization: `Bearer ${credentials.accessToken}`,
+              'Accept': 'application/json',
+              'User-Agent': 'GameStringer/1.0',
+            },
+          });
+
+          if (!profileRes.ok) {
+            console.error('[AUTH] Failed to fetch user from itch.io:', await profileRes.text());
             return null;
           }
 
-          const response = await fetch(
-            `https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=${apiKey}&steamids=${steamId}`
-          );
+          const profile = await profileRes.json();
+          const itchUser = profile.user;
 
-          if (!response.ok) {
-            console.error(`[AUTH] Steam API fetch failed with status: ${response.status}`);
+          if (!itchUser) {
+            console.error('[AUTH] Invalid user data from itch.io');
             return null;
           }
 
-          const data = await response.json();
+          const providerAccountId = itchUser.id.toString();
 
-          if (data.response.players && data.response.players.length > 0) {
-            const player = data.response.players[0];
-            // Return the user object if found
-            return {
-              id: player.steamid,
-              steam: {
-                steamid: player.steamid,
-                personaname: player.personaname,
-                avatar: player.avatarfull,
-                id: 'steam' // Identificatore del provider
-              }
-            };
-          } else {
-            // If no player is found, return null
-            console.error("[AUTH] Steam user not found for SteamID:", steamId);
-            return null;
+          const account = await prisma.account.findUnique({
+            where: {
+              provider_providerAccountId: {
+                provider: 'itchio',
+                providerAccountId: providerAccountId,
+              },
+            },
+          });
+
+          if (account) {
+            const user = await prisma.user.findUnique({ where: { id: account.userId } });
+            return user;
           }
+
+          const user = await prisma.user.create({
+            data: {
+              name: itchUser.username,
+              image: itchUser.cover_url,
+            },
+          });
+
+          await prisma.account.create({
+            data: {
+              userId: user.id,
+              type: 'oauth',
+              provider: 'itchio',
+              providerAccountId: providerAccountId,
+            },
+          });
+
+          return user;
+
         } catch (error) {
-          console.error("[AUTH] Error in Steam credentials provider:", error);
+          console.error("[AUTH] Error during itch.io authorization:", error);
           return null;
         }
       },
     }),
 
-    // Provider #3: Epic Games Custom OAuth
+    // Provider: itch.io Custom OAuth (now disabled, kept for reference)
+
+    {
+      id: "itchio",
+      name: "itch.io",
+      type: "oauth",
+      clientId: process.env.ITCHIO_CLIENT_ID!,
+      clientSecret: process.env.ITCHIO_CLIENT_SECRET!,
+      authorization: "https://itch.io/user/oauth?scope=profile:me",
+      token: "https://itch.io/api/1/oauth/token",
+      userinfo: "https://itch.io/api/1/me",
+      profile(profile) {
+        return {
+          id: profile.user.id.toString(),
+          name: profile.user.username,
+          image: profile.user.cover_url,
+          email: null, // itch.io API doesn't provide email
+        };
+      },
+    },
+
+    // Provider #4: Epic Games Custom OAuth
     {
       id: "epic",
       name: "Epic Games",
@@ -90,14 +184,18 @@ export const authOptions: NextAuthOptions = {
     },
   ],
   secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   callbacks: {
     async jwt({ token, user, account, profile }) {
       // This callback is called whenever a JWT is created or updated.
       // `user`, `account`, `profile` are only passed on initial sign-in.
 
-      // 1. Handle initial sign-in
+      // Se l'adapter Prisma è attivo, l'ID utente sarà già nel token dal database.
+      // Questa callback serve a persistere l'ID utente nel token JWT.
       if (user) {
-        token.id = user.id; // Persist the user ID from the provider
+        token.id = user.id;
         // Check if this is a steam login and persist steam-specific data
         // The user object is the one returned from the authorize callback
         if ((user as any).steam) {
@@ -118,19 +216,19 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      // This callback is called whenever a session is checked.
-      // We pass the custom data from the token to the session object.
-
-      if (token.id) {
+      if (session.user && token.id) {
+        // Aggiungi l'ID utente alla sessione
         session.user.id = token.id as string;
-      }
-      if (token.steam) {
-        session.user.steam = token.steam;
-      }
-      if (token.epic) {
-        session.user.epic = token.epic;
-      }
 
+        // Carica i provider connessi dal database
+        const userAccounts = await prisma.account.findMany({
+          where: { userId: token.id as string },
+          select: { provider: true },
+        });
+        
+        // Aggiungi l'elenco dei provider alla sessione
+        session.user.connectedProviders = userAccounts.map((acc: { provider: string }) => acc.provider);
+      }
       return session;
     },
   },

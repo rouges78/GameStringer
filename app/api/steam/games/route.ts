@@ -5,6 +5,7 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { SteamGame } from '@/lib/types';
 import { prisma } from '@/lib/prisma';
+import { getInstalledSteamAppIds } from '@/app/utils/steam-local-files';
 
 // --- Caching Configuration ---
 const CACHE_DIR = path.resolve(process.cwd(), '.cache');
@@ -186,6 +187,9 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
     const allAppIds = new Set(allGames.map(g => g.appid));
     const initialOwnedAppIds = new Set(allAppIds);
 
+    // Get locally installed games
+    const installedAppIds = await getInstalledSteamAppIds();
+
     // 2. Get shared games using the new Family Sharing API
     console.time('[PERF] GetSharedLibraryApps');
     let sharedGamesFound = 0;
@@ -299,14 +303,14 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
                 isVr: false, // Cannot determine
                 engine: 'Unknown', // Cannot determine
                 last_played: (game as any).rtime_last_played || 0,
-                is_installed: false, // Placeholder
+                is_installed: installedAppIds.has(game.appid),
                 is_shared: !initialOwnedAppIds.has(game.appid),
             };
         }
 
         // --- Enrichment succeeded, use full details ---
         const categories = details.categories || [];
-        const isVr = categories.some((cat: { id: number }) => cat.id === 28 || cat.id === 38);
+        const isVr = details.steam_deck_compatibility?.category === 'verified' || categories.some((cat: { id: number }) => cat.id === 28 || cat.id === 38);
 
         let engine = 'Unknown';
         const textCorpus = [
@@ -333,12 +337,17 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
             isVr: isVr,
             engine: engine,
             last_played: (game as any).rtime_last_played || 0,
-            is_installed: false, // Placeholder
+            is_installed: installedAppIds.has(game.appid),
             is_shared: !initialOwnedAppIds.has(game.appid),
         };
     }).filter((game): game is SteamGame => !!game.name && game.name.trim() !== '');
     
-    const finalGames = enrichedGames.sort((a, b) => a.name.localeCompare(b.name));
+    // Aggiungo una rimappatura esplicita per garantire che 'is_installed' sia corretto.
+    // Questo risolve il bug per cui il valore non veniva riflesso correttamente.
+    const finalGames = enrichedGames.map(g => ({
+        ...g,
+        is_installed: installedAppIds.has(g.appid)
+    })).sort((a, b) => a.name.localeCompare(b.name));
 
     const skippedCount = allGames.length - finalGames.length;
     if (skippedCount > 0) {
@@ -355,7 +364,7 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
 export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   const apiKey = process.env.STEAM_API_KEY;
-  const steamId = session?.user?.steam?.steamid;
+  const steamId = session?.user?.id;
 
   if (!steamId || !apiKey) {
     console.error('[API/STEAM/GAMES] Authentication error: Missing Steam ID or API Key.');
