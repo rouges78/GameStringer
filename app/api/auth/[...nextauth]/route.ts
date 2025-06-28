@@ -1,240 +1,285 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, User } from "next-auth";
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+
+import { Prisma, PrismaClient, User as PrismaUser } from "@prisma/client";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 const prisma = new PrismaClient();
 
+/**
+ * Handles linking a provider account to an existing user or creating a new user.
+ * This centralized function prevents duplicate users and correctly manages multi-provider authentication.
+ *
+ * @param provider - The name of the authentication provider (e.g., 'steam-credentials').
+ * @param providerAccountId - The unique ID for the user on the provider's platform.
+ * @param userId - The optional ID of the currently logged-in user (for linking).
+ * @param accountData - Additional data for the account record (e.g., access_token).
+ * @param userCreateData - Data for creating a new user if one doesn't exist.
+ * @returns The user object (either found, linked, or newly created).
+ */
+async function linkOrCreateUser(
+  provider: string,
+  providerAccountId: string,
+  userId: string | undefined,
+  accountData: Omit<Prisma.AccountUncheckedCreateInput, 'userId' | 'type' | 'provider' | 'providerAccountId'>,
+  userCreateData: { name?: string | null, image?: string | null }
+): Promise<User> {
+  // 1. Check if this provider account is already linked to ANY user.
+  // This handles the case where a user is logging back in.
+  const existingAccount = await prisma.account.findUnique({
+    where: {
+      provider_providerAccountId: { provider, providerAccountId },
+    },
+    include: { user: true },
+  });
+
+  if (existingAccount) {
+    console.log(`[AUTH] Found existing account for provider ${provider}. Returning user ${existingAccount.user.id}`);
+    const { user } = existingAccount;
+    return { id: user.id, name: user.name, email: user.email, image: user.image };
+  }
+
+  // 2. Account does not exist. Determine the target user for linking.
+  let targetUser: PrismaUser;
+
+  if (userId) {
+    // Case A: User is already logged in (userId is provided). Link this new account to them.
+    console.log(`[AUTH] Linking new ${provider} account to existing user ${userId}`);
+    const userToLink = await prisma.user.findUnique({ where: { id: userId } });
+    if (!userToLink) throw new Error(`User with ID ${userId} not found for linking.`);
+    targetUser = userToLink;
+  } else {
+    // Case B: New sign-in. Create a new user for this provider account.
+    const syntheticEmail = `${providerAccountId}@${provider}.local`;
+    console.log(`[AUTH] New sign-in with ${provider}. Using synthetic email: ${syntheticEmail}`);
+    
+    // We use upsert to safely find an existing user with that synthetic email or create a new one.
+    targetUser = await prisma.user.upsert({
+        where: { email: syntheticEmail },
+        update: {}, // Nothing to update if found
+        create: {
+            email: syntheticEmail,
+            name: userCreateData.name ?? `user_${providerAccountId}`,
+            image: userCreateData.image,
+        }
+    });
+    console.log(`[AUTH] Upserted user ${targetUser.id} for new ${provider} account.`);
+  }
+  
+  // 3. Create the new account link in the database.
+  await prisma.account.create({
+    data: {
+      userId: targetUser.id,
+      type: 'credentials',
+      provider,
+      providerAccountId,
+      ...accountData,
+    },
+  });
+  console.log(`[AUTH] Successfully created account link for provider ${provider} and user ${targetUser.id}`);
+
+  // 4. Return a standard NextAuth User object.
+  return {
+    id: targetUser.id,
+    name: targetUser.name,
+    email: targetUser.email,
+    image: targetUser.image,
+  };
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-
-    // Provider #2: A credentials provider to handle the final login step.
-    // We will call this ourselves after manually verifying the OpenID response.
+    // Provider #1: Steam Credentials (manual flow)
     CredentialsProvider({
       id: 'steam-credentials',
       name: 'Steam Credentials',
       credentials: {
         steamid: { label: "Steam ID", type: "text" },
+        userId: { label: "User ID", type: "text" }, // For linking
       },
       async authorize(credentials) {
-        if (!credentials?.steamid) {
-          console.error("[AUTH] Missing steamid");
-          return null;
-        }
-        const steamId = credentials.steamid;
-
-        // Trova l'utente tramite l'account collegato
-        const account = await prisma.account.findUnique({
-          where: {
-            provider_providerAccountId: {
-              provider: 'steam-credentials',
-              providerAccountId: steamId,
-            },
-          },
-        });
-
-        if (account) {
-          // Account trovato, restituisci l'utente associato
-          const user = await prisma.user.findUnique({ where: { id: account.userId } });
-          return user;
-        }
-
-        // Primo login: crea un nuovo utente e un nuovo account
-        const user = await prisma.user.create({
-          data: {
-            name: `user_${steamId}`, // Nome utente provvisorio
-          },
-        });
-
-        await prisma.account.create({
-          data: {
-            userId: user.id,
-            type: 'credentials',
-            provider: 'steam-credentials',
-            providerAccountId: steamId,
-          },
-        });
-
-        return user;
+        if (!credentials?.steamid) return null;
+        
+        return await linkOrCreateUser(
+            'steam-credentials',
+            credentials.steamid,
+            credentials.userId,
+            {}, // No extra account data for steam
+            { name: `user_${credentials.steamid}` }
+        );
       },
     }),
 
-    // Provider #3: itch.io Credentials for manual flow
+    // Provider #2: itch.io Credentials (manual flow)
     CredentialsProvider({
       id: 'itchio-credentials',
-      name: 'itch.io Credentials',
+      name: 'Itch.io Credentials',
       credentials: {
-        accessToken: { label: "Access Token", type: "text" },
+        accessToken: { label: 'Access Token', type: 'text' },
+        userId: { label: "User ID", type: "text" }, // For linking
       },
       async authorize(credentials) {
         if (!credentials?.accessToken) {
-          console.error("[AUTH] Missing itch.io access token");
-          return null;
+          throw new Error('No access token provided');
         }
 
-        try {
-          // Use the token to get user info from itch.io API (server-side)
-          const profileRes = await fetch('https://itch.io/api/1/me', {
-            headers: {
-              Authorization: `Bearer ${credentials.accessToken}`,
-              'Accept': 'application/json',
-              'User-Agent': 'GameStringer/1.0',
-            },
-          });
+        // 1. Fetch user profile from Itch.io
+        const apiUrl = `https://itch.io/api/1/${credentials.accessToken}/me`;
+        const profileRes = await fetch(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${credentials.accessToken}`,
+            'Accept': 'application/json',
+            'User-Agent': 'GameStringerApp/1.0',
+          },
+        });
 
-          if (!profileRes.ok) {
-            console.error('[AUTH] Failed to fetch user from itch.io:', await profileRes.text());
-            return null;
-          }
-
-          const profile = await profileRes.json();
-          const itchUser = profile.user;
-
-          if (!itchUser) {
-            console.error('[AUTH] Invalid user data from itch.io');
-            return null;
-          }
-
-          const providerAccountId = itchUser.id.toString();
-
-          const account = await prisma.account.findUnique({
-            where: {
-              provider_providerAccountId: {
-                provider: 'itchio',
-                providerAccountId: providerAccountId,
-              },
-            },
-          });
-
-          if (account) {
-            const user = await prisma.user.findUnique({ where: { id: account.userId } });
-            return user;
-          }
-
-          const user = await prisma.user.create({
-            data: {
-              name: itchUser.username,
-              image: itchUser.cover_url,
-            },
-          });
-
-          await prisma.account.create({
-            data: {
-              userId: user.id,
-              type: 'oauth',
-              provider: 'itchio',
-              providerAccountId: providerAccountId,
-            },
-          });
-
-          return user;
-
-        } catch (error) {
-          console.error("[AUTH] Error during itch.io authorization:", error);
-          return null;
+        if (!profileRes.ok) {
+          throw new Error(`Failed to fetch Itch.io profile: ${profileRes.statusText}`);
         }
+
+        const profileData = await profileRes.json();
+        const itchUser = profileData.user;
+        if (!itchUser || !itchUser.id) {
+          throw new Error('Invalid Itch.io profile data');
+        }
+        const providerAccountId = itchUser.id.toString();
+
+        // 2. Link or create user
+        return await linkOrCreateUser(
+            'itchio-credentials',
+            providerAccountId,
+            credentials.userId,
+            { access_token: credentials.accessToken },
+            { name: itchUser.username, image: itchUser.cover_url }
+        );
       },
     }),
 
-    // Provider: itch.io Custom OAuth (now disabled, kept for reference)
+    CredentialsProvider({
+      id: 'ubisoft-credentials',
+      name: 'Ubisoft Connect',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials, req) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email e password sono obbligatori.');
+        }
+
+        const { email, password } = credentials;
+        const { UbiServicesApi } = await import('ubisoft-demux');
+        const ubiServices = new UbiServicesApi();
+
+        try {
+          const { ticket } = await ubiServices.login(email, password);
+          if (!ticket) {
+            throw new Error('Credenziali Ubisoft non valide o 2FA attivo.');
+          }
+
+          const profileResponse = await fetch('https://public-ubiservices.ubi.com/v3/profiles/me', {
+            headers: {
+              'Authorization': `Ubi_v1 t=${ticket}`,
+              'Ubi-AppId': '39baebad-39e5-4552-8c25-2c9b9190622a',
+            }
+          });
+
+          if (!profileResponse.ok) {
+            throw new Error('Impossibile recuperare il profilo Ubisoft dopo il login.');
+          }
+
+          const profile = await profileResponse.json();
+          if (!profile.userId) {
+            throw new Error('ID utente non trovato nella risposta del profilo Ubisoft.');
+          }
+
+          const userIdToLink = req.body?.userId || undefined;
+
+          const user = await linkOrCreateUser(
+            'ubisoft-credentials',
+            profile.userId,
+            userIdToLink,
+            {},
+            {
+              name: profile.nameOnPlatform,
+              image: profile.avatarUrl146 || profile.avatarUrl256 || null,
+            }
+          );
+          return user;
+
+        } catch (error: any) {
+          console.error("[UBISOFT_AUTH_ERROR]", error.message);
+          throw new Error(error.message || "Errore durante l'autenticazione con Ubisoft.");
+        }
+      }
+    }),
 
     {
-      id: "itchio",
-      name: "itch.io",
-      type: "oauth",
-      clientId: process.env.ITCHIO_CLIENT_ID!,
-      clientSecret: process.env.ITCHIO_CLIENT_SECRET!,
-      authorization: "https://itch.io/user/oauth?scope=profile:me",
-      token: "https://itch.io/api/1/oauth/token",
-      userinfo: "https://itch.io/api/1/me",
-      profile(profile) {
-        return {
-          id: profile.user.id.toString(),
-          name: profile.user.username,
-          image: profile.user.cover_url,
-          email: null, // itch.io API doesn't provide email
-        };
-      },
-    },
-
-    // Provider #4: Epic Games Custom OAuth
-    {
-      id: "epic",
-      name: "Epic Games",
-      type: "oauth",
-      clientId: process.env.EPIC_CLIENT_ID!,
-      clientSecret: process.env.EPIC_CLIENT_SECRET!,
-      authorization: {
-        url: "https://www.epicgames.com/id/authorize",
-        params: { scope: "basic_profile" },
-      },
-      token: "https://api.epicgames.dev/epic/oauth/v2/token",
-      userinfo: "https://api.epicgames.dev/epic/oauth/v2/tokenInfo", // This is for introspection, but profile callback is better
-      profile(profile) {
-        return {
-          id: profile.account_id,
-          name: profile.display_name, // This might come from a different endpoint or JWT decode
-          // Epic doesn't provide email or image in this flow by default
-          email: null,
-          image: null,
-        };
-      },
-    },
+            id: "epicgames",
+            name: "Epic Games",
+            type: "oauth",
+            clientId: process.env.EPIC_CLIENT_ID,
+            clientSecret: process.env.EPIC_CLIENT_SECRET,
+            authorization: {
+                url: "https://www.epicgames.com/id/authorize",
+                params: { scope: "basic_profile" },
+            },
+            token: "https://api.epicgames.dev/epic/oauth/v1/token",
+            userinfo: "https://api.epicgames.dev/epic/oauth/v1/userInfo",
+            profile(profile) {
+                console.log("[AUTH - Epic Profile]", profile);
+                return {
+                    id: profile.sub, 
+                    name: profile.display_name || profile.preferred_username,
+                    email: `${profile.sub}@epicgames.local`,
+                    image: null,
+                };
+            },
+        },
+        // Other providers (like Epic Games, etc.) can be added here
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user }) {
       // This callback is called whenever a JWT is created or updated.
-      // `user`, `account`, `profile` are only passed on initial sign-in.
-
-      // Se l'adapter Prisma è attivo, l'ID utente sarà già nel token dal database.
-      // Questa callback serve a persistere l'ID utente nel token JWT.
+      // `user` is only passed on initial sign-in.
       if (user) {
         token.id = user.id;
-        // Check if this is a steam login and persist steam-specific data
-        // The user object is the one returned from the authorize callback
-        if ((user as any).steam) {
-          token.steam = (user as any).steam;
+      }
+
+      // On any subsequent request, reload accounts from DB to ensure the session is fresh.
+      if (token.id) {
+        const userWithAccounts = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          include: { accounts: true }, // Fetch the full account objects
+        });
+        if (userWithAccounts) {
+          token.accounts = userWithAccounts.accounts;
+          // For legacy support or simple checks, keep the provider list
+          token.connectedProviders = userWithAccounts.accounts.map(a => a.provider);
         }
       }
-
-      // 2. Handle OAuth providers (like Epic Games)
-      if (account?.provider === 'epic' && user) {
-         token.epic = {
-          id: user.id,       // Epic account ID from profile mapping
-          name: user.name,   // Epic display name from profile mapping
-          provider: 'epic'
-        };
-      }
-
       return token;
     },
-
     async session({ session, token }) {
-      if (session.user && token.id) {
-        // Aggiungi l'ID utente alla sessione
+      // This callback is called whenever a session is checked.
+      // We forward the custom properties from the token to the session.
+      if (session.user) {
         session.user.id = token.id as string;
-
-        // Carica i provider connessi dal database
-        const userAccounts = await prisma.account.findMany({
-          where: { userId: token.id as string },
-          select: { provider: true },
-        });
-        
-        // Aggiungi l'elenco dei provider alla sessione
-        session.user.connectedProviders = userAccounts.map((acc: { provider: string }) => acc.provider);
+        session.user.accounts = token.accounts;
+        session.user.connectedProviders = token.connectedProviders;
       }
       return session;
     },
   },
   pages: {
-    signIn: '/stores', // Redirect to stores page on error
-  }
+    signIn: '/stores', // Redirect to stores page on auth errors
+  },
 };
 
 // The main handler that wraps NextAuth.js

@@ -4,7 +4,7 @@ export async function GET() {
   const clientId = process.env.ITCHIO_CLIENT_ID;
   // The callback URL must be registered in the itch.io app settings
   const redirectUri = `${process.env.NEXTAUTH_URL}/auth/itchio/callback`; 
-  const scope = 'profile:me';
+  const scope = 'profile:me profile:email';
 
   const params = new URLSearchParams({
     client_id: clientId!,

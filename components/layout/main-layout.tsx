@@ -28,6 +28,7 @@ const navigationItems = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Giochi', href: '/games', icon: Gamepad2 },
   { name: 'Traduttore', href: '/translator', icon: Languages },
+  { name: 'Libreria', href: '/library', icon: Gamepad2 }, // Usiamo un'icona adatta
   { name: 'Tempo Reale', href: '/realtime', icon: Zap },
   { name: 'Editor', href: '/editor', icon: FileText },
   { name: 'Patch', href: '/patches', icon: Archive },
@@ -97,7 +98,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="p-4 border-t">
             <div className="text-sm text-muted-foreground">
               <p>Versione 3.2.1</p>
-              <p>© 2024 GameStringer</p>
+              <p> 2024 GameStringer</p>
             </div>
           </div>
         </aside>

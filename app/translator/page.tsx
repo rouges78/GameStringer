@@ -1,489 +1,358 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Play, 
-  Pause, 
-  Square, 
-  Languages, 
-  FileText, 
-  Save,
-  RotateCcw,
-  Settings,
-  Lightbulb,
-  CheckCircle,
-  AlertCircle,
-  RefreshCw
-} from 'lucide-react';
-import { motion } from 'framer-motion';
-import { mockGames, mockTranslations } from '@/lib/mock-data';
+import { Loader2, AlertTriangle, Gamepad2, FolderSearch, FileText, ArrowLeft, Languages, Wand2 } from 'lucide-react';
 
-interface TranslationJob {
-  id: string;
-  filePath: string;
-  originalText: string;
-  translatedText: string;
-  status: 'pending' | 'translating' | 'completed' | 'error';
-  confidence: number;
-  suggestions: string[];
-}
+// Tipi di dati
+interface Game { id: string; name: string; imageUrl: string; provider: string; }
+interface FileHandle { name: string; handle: any; size: number; }
 
-export default function TranslatorPage() {
-  const [selectedGame, setSelectedGame] = useState<any>(null);
-  const [selectedFile, setSelectedFile] = useState<string>('');
-  const [targetLanguage, setTargetLanguage] = useState('it');
+const TranslatorPage = () => {
+  // Stati per la libreria giochi
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  // Stati per la selezione del gioco e dei file
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [isFindingPath, setIsFindingPath] = useState(false);
+  const [foundPath, setFoundPath] = useState<string | null>(null);
+  const [isReadingFiles, setIsReadingFiles] = useState(false);
+  const [gameFiles, setGameFiles] = useState<FileHandle[]>([]);
+
+  // Stati per il traduttore
+  const [selectedFile, setSelectedFile] = useState<FileHandle | null>(null);
+  const [isReadingFile, setIsReadingFile] = useState(false);
+  const [provider, setProvider] = useState<'openai' | 'deepl' | 'google'>('openai');
+  const [apiKey, setApiKey] = useState('');
+  const [originalContent, setOriginalContent] = useState('');
+  const [translatedContent, setTranslatedContent] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
-  const [translationJobs, setTranslationJobs] = useState<TranslationJob[]>([]);
-  const [progress, setProgress] = useState(0);
-  const [currentJob, setCurrentJob] = useState<TranslationJob | null>(null);
+  const [translatorError, setTranslatorError] = useState<string | null>(null);
 
-  const [games] = useState(mockGames.filter(g => g.isInstalled && g.detectedFiles.length > 0));
-
-  const languages = [
-    { code: 'it', name: 'Italiano' },
-    { code: 'es', name: 'Spagnolo' },
-    { code: 'fr', name: 'Francese' },
-    { code: 'de', name: 'Tedesco' },
-    { code: 'pt', name: 'Portoghese' },
-    { code: 'ru', name: 'Russo' },
-    { code: 'ja', name: 'Giapponese' },
-    { code: 'ko', name: 'Coreano' },
-    { code: 'zh', name: 'Cinese' },
-  ];
-
-  // Mock text samples for different games
-  const getTextSamples = (gameId: string) => {
-    const samples: Record<string, string[]> = {
-      '1': [ // Cyberpunk 2077
-        "Welcome to Night City, the most dangerous place on Earth.",
-        "Your reputation in Night City will determine your story.",
-        "Customize your character's appearance, cyberware, and playstyle.",
-        "The future is now, but at what cost?",
-        "Every choice matters in this city of dreams and nightmares."
-      ],
-      '3': [ // Mass Effect
-        "Commander, we need to stop the Reapers before they destroy all organic life.",
-        "The fate of the galaxy rests in your hands.",
-        "Your decisions will shape the destiny of entire civilizations.",
-        "Unity is our strength against the coming darkness.",
-        "Hope is what makes us human, even in the darkest times."
-      ],
-      '4': [ // Horizon Zero Dawn
-        "In this post-apocalyptic world, machines rule the earth.",
-        "Aloy must uncover the truth about her past to save her world.",
-        "Hunt mechanical beasts in a lush, post-apocalyptic world.",
-        "Technology and nature have become one in unexpected ways.",
-        "The old world's sins have created new dangers."
-      ]
-    };
-    return samples[gameId] || ["Sample text for translation testing."];
-  };
-
-  const startTranslation = async () => {
-    if (!selectedGame || !selectedFile) return;
-
-    setIsTranslating(true);
-    setProgress(0);
-
-    const textSamples = getTextSamples(selectedGame.id);
-    const jobs: TranslationJob[] = textSamples.map((text, index) => ({
-      id: `job_${index}`,
-      filePath: selectedFile,
-      originalText: text,
-      translatedText: '',
-      status: 'pending',
-      confidence: 0,
-      suggestions: []
-    }));
-
-    setTranslationJobs(jobs);
-
-    // Simulate translation process
-    for (let i = 0; i < jobs.length; i++) {
-      const job = jobs[i];
-      setCurrentJob(job);
-      
-      // Update job status to translating
-      setTranslationJobs(prev => prev.map(j => 
-        j.id === job.id ? { ...j, status: 'translating' } : j
-      ));
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Mock translation result
-      const translatedText = await mockTranslateText(job.originalText, targetLanguage);
-      const confidence = 0.85 + Math.random() * 0.15;
-      const suggestions = await mockGenerateSuggestions(job.originalText, targetLanguage);
-
-      // Update job with results
-      setTranslationJobs(prev => prev.map(j => 
-        j.id === job.id ? { 
-          ...j, 
-          status: 'completed',
-          translatedText,
-          confidence,
-          suggestions
-        } : j
-      ));
-
-      setProgress(((i + 1) / jobs.length) * 100);
-    }
-
-    setIsTranslating(false);
-    setCurrentJob(null);
-  };
-
-  const mockTranslateText = async (text: string, targetLang: string): Promise<string> => {
-    // Mock translations for different languages
-    const translations: Record<string, Record<string, string>> = {
-      'it': {
-        "Welcome to Night City, the most dangerous place on Earth.": "Benvenuto a Night City, il posto più pericoloso della Terra.",
-        "Commander, we need to stop the Reapers before they destroy all organic life.": "Comandante, dobbiamo fermare i Razziatori prima che distruggano ogni forma di vita organica.",
-        "In this post-apocalyptic world, machines rule the earth.": "In questo mondo post-apocalittico, le macchine dominano la Terra.",
-        "Your reputation in Night City will determine your story.": "La tua reputazione a Night City determinerà la tua storia.",
-        "The fate of the galaxy rests in your hands.": "Il destino della galassia è nelle tue mani."
-      },
-      'es': {
-        "Welcome to Night City, the most dangerous place on Earth.": "Bienvenido a Night City, el lugar más peligroso de la Tierra.",
-        "Commander, we need to stop the Reapers before they destroy all organic life.": "Comandante, debemos detener a los Segadores antes de que destruyan toda vida orgánica.",
-        "In this post-apocalyptic world, machines rule the earth.": "En este mundo post-apocalíptico, las máquinas dominan la Tierra."
+  // Caricamento iniziale dei giochi
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        const response = await fetch('/api/library/games');
+        if (!response.ok) {
+          throw new Error('Errore nel caricamento della libreria dei giochi.');
+        }
+        const data = await response.json();
+        console.log('Dati ricevuti da /api/library/games:', JSON.stringify(data, null, 2));
+        setGames(data);
+      } catch (err) {
+        setApiError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setLoading(false);
       }
     };
+    fetchGames();
+  }, []);
 
-    return translations[targetLang]?.[text] || `[${targetLang.toUpperCase()}] ${text}`;
+  // Gestione selezione gioco e ricerca percorso
+  const handleGameSelect = async (game: Game) => {
+    setSelectedGame(game);
+    setIsFindingPath(true);
+    setFoundPath(null);
+    setGameFiles([]);
+    try {
+      const response = await fetch(`/api/library/game-path?provider=${game.provider}&gameId=${game.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFoundPath(data.path);
+        console.log(`Percorso per ${game.name}: ${data.path}`);
+      } else {
+        console.warn(`Nessun percorso di installazione automatico trovato per ${game.name}`);
+      }
+    } catch (error) {
+      console.error('Errore durante la ricerca del percorso del gioco:', error);
+    } finally {
+      setIsFindingPath(false);
+    }
   };
 
-  const mockGenerateSuggestions = async (text: string, targetLang: string): Promise<string[]> => {
-    const baseSuggestions = await mockTranslateText(text, targetLang);
-    return [
-      baseSuggestions,
-      baseSuggestions.replace(/\b\w+\b/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()),
-      baseSuggestions.replace(/\./g, '...')
-    ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 3);
+  // Selezione manuale cartella
+  const handleFolderSelect = async () => {
+    if (!selectedGame) return;
+    setIsReadingFiles(true);
+    setGameFiles([]);
+    try {
+      // @ts-ignore
+      const dirHandle = await window.showDirectoryPicker();
+      const files: FileHandle[] = [];
+      for await (const entry of dirHandle.values()) {
+        if (entry.kind === 'file' && (entry.name.endsWith('.txt') || entry.name.endsWith('.json') || entry.name.endsWith('.xml'))) {
+          const file = await entry.getFile();
+          files.push({ name: entry.name, handle: entry, size: file.size });
+        }
+      }
+      setGameFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (err) {
+      console.error('Errore durante la selezione della cartella:', err);
+    } finally {
+      setIsReadingFiles(false);
+    }
   };
 
-  const stopTranslation = () => {
-    setIsTranslating(false);
-    setCurrentJob(null);
+  // Selezione e lettura file
+  const handleFileSelect = async (file: FileHandle) => {
+    setSelectedFile(file);
+    setIsReadingFile(true);
+    setOriginalContent('');
+    setTranslatedContent('');
+    setTranslatorError(null);
+    try {
+      // @ts-ignore
+      const fileHandle = await file.handle.getFile();
+      const content = await fileHandle.text();
+      setOriginalContent(content);
+    } catch (err) {
+      setTranslatorError('Impossibile leggere il file.');
+      console.error('Errore lettura file:', err);
+    } finally {
+      setIsReadingFile(false);
+    }
   };
 
-  const resetTranslation = () => {
-    setTranslationJobs([]);
-    setProgress(0);
-    setCurrentJob(null);
+  // Funzioni di navigazione UI
+  const handleBackToLibrary = () => {
+    setSelectedGame(null);
+    setGameFiles([]);
+    setFoundPath(null);
   };
 
-  const saveTranslations = async () => {
-    // Mock save operation
-    console.log('Saving translations...', translationJobs);
+  const handleBackToFileSelection = () => {
+    setSelectedFile(null);
+    setOriginalContent('');
+    setTranslatedContent('');
+    setTranslatorError(null);
+  };
+  
+  // Calcolo costo stimato
+  const getEstimatedCost = () => {
+    const chars = originalContent.length;
+    if (chars === 0) return '0.0000';
+    switch (provider) {
+      case 'openai': return ((chars / 4) / 1000 * 0.50).toFixed(4); // Stima basata su gpt-4o
+      case 'deepl': return (chars / 1000000 * 25).toFixed(4);
+      case 'google': return (chars / 1000000 * 20).toFixed(4);
+      default: return '0.0000';
+    }
   };
 
-  return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Traduttore AI</h1>
-          <p className="text-muted-foreground">Sistema di traduzione automatica con supporto AI</p>
+  // Avvio traduzione
+  const handleStartTranslation = async () => {
+    if (!apiKey || !originalContent) {
+      setTranslatorError('La chiave API e il contenuto del file sono necessari.');
+      return;
+    }
+    setIsTranslating(true);
+    setTranslatorError(null);
+    setTranslatedContent('');
+    try {
+      const response = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: originalContent, 
+          provider,
+          apiKey,
+          targetLang: 'it' 
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Errore sconosciuto dal server');
+      }
+      setTranslatedContent(data.translatedText);
+    } catch (err) {
+      setTranslatorError(err instanceof Error ? err.message : 'Si è verificato un errore');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // --- VISTE --- 
+
+  // --- VISTA 1: LIBRERIA GIOCHI ---
+  const GameLibraryView = () => (
+    <>
+      <h2 className="text-2xl font-bold tracking-tight flex items-center">
+        <Gamepad2 className="mr-2 h-6 w-6"/>
+        Libreria Giochi
+      </h2>
+      <p className="text-muted-foreground">Seleziona un gioco per iniziare.</p>
+      
+      {isFindingPath && (
+        <div className="flex justify-center items-center py-10">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Ricerca del percorso del gioco in corso...</span>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={resetTranslation} disabled={isTranslating}>
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
-          </Button>
-          {translationJobs.length > 0 && (
-            <Button onClick={saveTranslations} disabled={isTranslating}>
-              <Save className="h-4 w-4 mr-2" />
-              Salva
-            </Button>
-          )}
-        </div>
+      )}
+      <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mt-6 ${isFindingPath ? 'opacity-50 pointer-events-none' : ''}`}>
+        {games.map((game) => (
+          <Card 
+            key={game.id} 
+            className="hover:shadow-lg transition-shadow duration-200 cursor-pointer flex items-center justify-center text-center p-2 min-h-[100px]"
+            onClick={() => handleGameSelect(game)}
+          >
+            <CardContent className="p-2">
+                 <p className="font-semibold text-sm" title={game.name}>{game.name}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+    </>
+  );
 
-      {/* Configuration */}
+  // --- VISTA 2: SELEZIONE CARTELLA E FILE LIST ---
+  const FileSelectionView = () => (
+    <>
+      <Button variant="ghost" onClick={handleBackToLibrary} className="mb-4">
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Torna alla libreria
+      </Button>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Settings className="h-5 w-5" />
-            <span>Configurazione Traduzione</span>
+          <CardTitle className="flex items-center">
+            <Gamepad2 className="mr-2 h-6 w-6"/>
+            {selectedGame?.name}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Gioco</label>
-              <Select value={selectedGame?.id || ''} onValueChange={(gameId) => {
-                const game = games.find(g => g.id === gameId);
-                setSelectedGame(game);
-                setSelectedFile('');
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona gioco..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {games.map(game => (
-                    <SelectItem key={game.id} value={game.id}>
-                      {game.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">Seleziona la cartella di installazione del gioco per trovare i file di testo (.txt, .json, .xml).</p>
+          {foundPath && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm font-semibold text-green-800">Percorso di installazione trovato automaticamente:</p>
+              <p className="text-xs text-green-700 font-mono break-all">{foundPath}</p>
+              <p className="text-xs text-muted-foreground mt-1">Puoi comunque selezionare una cartella diversa se necessario.</p>
             </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">File</label>
-              <Select value={selectedFile} onValueChange={setSelectedFile} disabled={!selectedGame}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona file..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {selectedGame?.detectedFiles.map((file: string) => (
-                    <SelectItem key={file} value={file}>
-                      {file}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          )}
+          <Button onClick={handleFolderSelect} className="w-full" disabled={isReadingFiles}>
+            <FolderSearch className="mr-2 h-4 w-4" />
+            {isReadingFiles ? 'Analisi cartella...' : 'Seleziona manualmente la cartella del gioco'}
+          </Button>
+
+          {isReadingFiles && (
+            <div className="flex justify-center items-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin" />
             </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">Lingua di Destinazione</label>
-              <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map(lang => (
-                    <SelectItem key={lang.code} value={lang.code}>
-                      {lang.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="flex items-center space-x-4">
-              <Button 
-                onClick={startTranslation} 
-                disabled={!selectedGame || !selectedFile || isTranslating}
-                className="min-w-[120px]"
-              >
-                {isTranslating ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Traduzione...
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 mr-2" />
-                    Avvia
-                  </>
-                )}
-              </Button>
-              
-              {isTranslating && (
-                <Button variant="outline" onClick={stopTranslation}>
-                  <Square className="h-4 w-4 mr-2" />
-                  Ferma
-                </Button>
-              )}
-            </div>
-            
-            {progress > 0 && (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-muted-foreground">
-                  Progresso: {Math.round(progress)}%
-                </span>
-                <Progress value={progress} className="w-32" />
+          )}
+
+          {gameFiles.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-semibold text-lg mb-2">File di testo trovati</h3>
+              <div className="border rounded-md max-h-60 overflow-y-auto">
+                {gameFiles.map((file) => (
+                  <div 
+                    key={file.name} 
+                    onClick={() => handleFileSelect(file)}
+                    className="p-3 flex justify-between items-center cursor-pointer hover:bg-muted border-b last:border-b-0"
+                  >
+                    <div className="flex items-center">
+                      <FileText className="h-4 w-4 mr-3 text-muted-foreground"/>
+                      <span className="font-medium">{file.name}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{Math.round(file.size / 1024)} KB</span>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </>
+  );
+
+  // --- VISTA 3: TRADUTTORE ---
+  const TranslatorView = () => (
+    <>
+      <Button variant="ghost" onClick={handleBackToFileSelection} className="mb-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Torna alla selezione file
+      </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="mr-2 h-5 w-5"/>
+            Traduzione di: {selectedFile?.name}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isReadingFile ? (
+              <div className="flex justify-center items-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
+          ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <label className="text-sm font-medium">Testo Originale</label>
+                      <Textarea value={originalContent} readOnly className="h-80 resize-none bg-muted/50" />
+                  </div>
+                  <div className="relative space-y-2">
+                      <label className="text-sm font-medium">Traduzione</label>
+                      <Textarea value={translatedContent} readOnly={isTranslating} placeholder={isTranslating ? '' : 'La traduzione apparirà qui...'} className="h-80 resize-none" />
+                      {isTranslating && <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-md"><Loader2 className="h-6 w-6 animate-spin" /></div>}
+                  </div>
+              </div>
+          )}
+          <div className="mt-6 p-4 border rounded-lg bg-slate-50">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Servizio AI</label>
+                    <Select value={provider} onValueChange={(value: 'openai' | 'deepl' | 'google') => setProvider(value)}>
+                        <SelectTrigger><SelectValue placeholder="Seleziona un provider" /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="openai">OpenAI (gpt-4o)</SelectItem>
+                            <SelectItem value="deepl">DeepL</SelectItem>
+                            <SelectItem value="google">Google Translate</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-1.5">
+                    <label className="text-sm font-medium">API Key</label>
+                    <Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="La tua chiave API" />
+                </div>
+                <div className="text-sm text-muted-foreground self-center pt-5">
+                    Costo Stimato: <strong>${getEstimatedCost()}</strong>
+                </div>
+            </div>
+            {translatorError && <p className="text-sm text-red-500 mt-2">{translatorError}</p>}
+            <Button onClick={handleStartTranslation} disabled={isTranslating || !apiKey || isReadingFile || !originalContent} className="mt-4 w-full">
+                {isTranslating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Traduzione in corso...</> : <><Wand2 className="mr-2 h-4 w-4" /> Avvia Traduzione AI</>}
+            </Button>
           </div>
         </CardContent>
       </Card>
-
-      {/* Current Translation */}
-      {currentJob && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                <span>Traduzione in Corso</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">Testo Originale (EN)</label>
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm">{currentJob.originalText}</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                    Traduzione ({targetLanguage.toUpperCase()})
-                  </label>
-                  <div className="p-3 bg-primary/5 rounded-lg min-h-[60px] flex items-center">
-                    <div className="flex items-center space-x-2">
-                      <RefreshCw className="h-4 w-4 animate-spin text-primary" />
-                      <span className="text-sm text-muted-foreground">Generazione traduzione...</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Translation Results */}
-      {translationJobs.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Languages className="h-5 w-5" />
-                <span>Risultati Traduzione</span>
-                <Badge variant="secondary">{translationJobs.length} elementi</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {translationJobs.map((job, index) => (
-                <motion.div
-                  key={job.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="border rounded-lg p-4 space-y-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">{job.filePath}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      {job.status === 'completed' && (
-                        <>
-                          <Badge variant="default">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Completato
-                          </Badge>
-                          <Badge variant="secondary">
-                            {Math.round(job.confidence * 100)}% confidenza
-                          </Badge>
-                        </>
-                      )}
-                      {job.status === 'translating' && (
-                        <Badge variant="outline">
-                          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                          Traduzione...
-                        </Badge>
-                      )}
-                      {job.status === 'pending' && (
-                        <Badge variant="secondary">In attesa</Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                        Originale (EN)
-                      </label>
-                      <Textarea
-                        value={job.originalText}
-                        readOnly
-                        className="text-sm min-h-[80px] bg-muted/30"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                        Traduzione ({targetLanguage.toUpperCase()})
-                      </label>
-                      <Textarea
-                        value={job.translatedText}
-                        onChange={(e) => {
-                          setTranslationJobs(prev => prev.map(j => 
-                            j.id === job.id ? { ...j, translatedText: e.target.value } : j
-                          ));
-                        }}
-                        className="text-sm min-h-[80px]"
-                        placeholder={job.status === 'pending' ? 'In attesa di traduzione...' : 'Traduzione generata'}
-                      />
-                    </div>
-                  </div>
-                  
-                  {job.suggestions.length > 0 && (
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-2 block flex items-center">
-                        <Lightbulb className="h-3 w-3 mr-1" />
-                        Suggerimenti AI
-                      </label>
-                      <div className="space-y-2">
-                        {job.suggestions.map((suggestion, idx) => (
-                          <div 
-                            key={idx}
-                            className="p-2 bg-muted/30 rounded text-sm cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => {
-                              setTranslationJobs(prev => prev.map(j => 
-                                j.id === job.id ? { ...j, translatedText: suggestion } : j
-                              ));
-                            }}
-                          >
-                            {suggestion}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Empty State */}
-      {translationJobs.length === 0 && !isTranslating && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Languages className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Pronto per Tradurre</h3>
-            <p className="text-muted-foreground mb-6">
-              Seleziona un gioco e un file per iniziare la traduzione automatica con AI.
-            </p>
-            <div className="flex justify-center">
-              <Button 
-                onClick={startTranslation} 
-                disabled={!selectedGame || !selectedFile}
-                size="lg"
-              >
-                <Play className="h-5 w-5 mr-2" />
-                Avvia Prima Traduzione
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    </>
   );
+
+  // --- LOGICA DI RENDER PRINCIPALE ---
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin text-primary"/></div>
+  }
+
+  if (apiError) {
+    return <div className="p-6 text-center text-red-500"><AlertTriangle className="mx-auto h-10 w-10 mb-3"/> <p className="text-lg">{apiError}</p></div>
+  }
+
+  return (
+    <div className="p-6">
+        <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight flex items-center">
+                <Languages className="mr-3 h-8 w-8"/>
+                GameStringer AI Translator
+            </h1>
+            <p className="text-muted-foreground">Traduci i testi dei tuoi giochi preferiti con l'aiuto dell'IA.</p>
+        </div>
+
+        {selectedFile ? <TranslatorView /> : selectedGame ? <FileSelectionView /> : <GameLibraryView />}
+    </div>
+  )
 }
+
+export default TranslatorPage;

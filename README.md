@@ -94,6 +94,11 @@ L'app è progettata per essere user-friendly e accessibile sia a utenti esperti 
 - **(Sospeso)**: L'integrazione con **itch.io** è stata temporaneamente sospesa a causa di incompatibilità e restrizioni non documentate della loro API OAuth che impediscono un'autenticazione server-side affidabile.
 - **(In Sviluppo)**: Supporto per Epic Games, GOG e altri launcher.
 
+#### **Traduttore AI (`/translator`)**
+- **Interfaccia Semplificata**: La UI è stata ridisegnata per essere più pulita e veloce, mostrando una lista di giochi testuale senza locandine, per eliminare tempi di caricamento e problemi con API esterne.
+- **Flusso di Lavoro Completo**: Supporta l'intero processo: selezione del gioco, ricerca del percorso di installazione (automatica o manuale), scansione dei file di testo (.json, .xml, .txt), e interfaccia di traduzione multi-provider (OpenAI, DeepL, Google Translate).
+- **Calcolo Costi in Tempo Reale**: Fornisce una stima dei costi di traduzione prima di avviare il processo.
+
 ## 🛠 Tecnologie Utilizzate
 
 ### **Frontend**

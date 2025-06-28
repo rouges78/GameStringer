@@ -360,14 +360,44 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
     return finalGames;
 }
 
-
 export async function GET(req: Request) {
+  console.log('\n[API/STEAM/GAMES] Inizio richiesta GET...');
   const session = await getServerSession(authOptions);
   const apiKey = process.env.STEAM_API_KEY;
-  const steamId = session?.user?.id;
 
+  // 1. Log della sessione
+  console.log('[API/STEAM/GAMES] Sessione ricevuta:', JSON.stringify(session, null, 2));
+
+  if (!session || !session.user?.id) {
+    console.error('[API/STEAM/GAMES] ERRORE: Sessione o ID utente non trovati.');
+    return NextResponse.json({ error: 'Utente non autenticato.' }, { status: 401 });
+  }
+
+  const userId = session.user.id;
+  console.log(`[API/STEAM/GAMES] ID utente dalla sessione: ${userId}`);
+
+  // 2. Recupero e log dell'account Steam
+  console.log(`[API/STEAM/GAMES] Cerco account Steam per l'utente ${userId}...`);
+  const steamAccount = await prisma.account.findFirst({
+    where: {
+      userId: userId,
+      provider: 'steam-credentials',
+    },
+  });
+
+  console.log('[API/STEAM/GAMES] Account Steam trovato:', JSON.stringify(steamAccount, null, 2));
+
+  if (!steamAccount || !steamAccount.providerAccountId) {
+    console.error('[API/STEAM/GAMES] ERRORE: Account Steam non trovato nel DB o providerAccountId mancante.');
+    return NextResponse.json({ error: 'Account Steam non collegato o SteamID non trovato nel database.' }, { status: 400 });
+  }
+
+  const steamId = steamAccount.providerAccountId;
+  console.log(`[API/STEAM/GAMES] SteamID recuperato: ${steamId}`);
+
+  // 3. Verifica finale
   if (!steamId || !apiKey) {
-    console.error('[API/STEAM/GAMES] Authentication error: Missing Steam ID or API Key.');
+    console.error('[API/STEAM/GAMES] ERRORE: Autenticazione fallita - SteamID o API Key mancanti.');
     return NextResponse.json(
       { error: 'Not authenticated or server is missing API key.' },
       { status: 401 }
