@@ -27,8 +27,7 @@ interface MainLayoutProps {
 const navigationItems = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Giochi', href: '/games', icon: Gamepad2 },
-  { name: 'Traduttore', href: '/translator', icon: Languages },
-  { name: 'Libreria', href: '/library', icon: Gamepad2 }, // Usiamo un'icona adatta
+  { name: 'Traduttore AI', href: '/translator', icon: Languages },
   { name: 'Tempo Reale', href: '/realtime', icon: Zap },
   { name: 'Editor', href: '/editor', icon: FileText },
   { name: 'Patch', href: '/patches', icon: Archive },

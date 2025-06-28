@@ -8988,6 +8988,11 @@ vaul@0.9.9:
   dependencies:
     "@radix-ui/react-dialog" "^1.1.1"
 
+vdf-parser@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/vdf-parser/-/vdf-parser-1.2.1.tgz#735ccdf51d08d583672e32748bafb414833b60bd"
+  integrity sha512-g5c73LP8NSebruEiVjOpV6KlN6xgVXBXc5UbexHWzjkatLJR++gUBhg76YqfJ9j4ZLfZ+Hv00592uiDywR+dWg==
+
 vdf@^0.0.2:
   version "0.0.2"
   resolved "https://registry.npmjs.org/vdf/-/vdf-0.0.2.tgz"

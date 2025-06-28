@@ -1,5 +1,5 @@
 {
-  "timestamp": 1751046901141,
+  "timestamp": 1751148337252,
   "games": [
     {
       "appid": 1880837,
@@ -12,6 +12,18 @@
       "last_played": 0,
       "is_installed": false,
       "is_shared": true
+    },
+    {
+      "appid": 1895890,
+      "name": "9 Childs Street",
+      "playtime_forever": 0,
+      "img_icon_url": "0692f6b00f48741351081c314b339037327ad87f",
+      "img_logo_url": "",
+      "isVr": false,
+      "engine": "Unknown",
+      "last_played": 0,
+      "is_installed": true,
+      "is_shared": false
     },
     {
       "appid": 1383690,
@@ -910,7 +922,7 @@
       "isVr": false,
       "engine": "Unknown",
       "last_played": 1737917992,
-      "is_installed": false,
+      "is_installed": true,
       "is_shared": false
     },
     {
@@ -3170,6 +3182,18 @@
       "is_shared": false
     },
     {
+      "appid": 1608230,
+      "name": "Planet of Lana",
+      "playtime_forever": 0,
+      "img_icon_url": "bdd2e1185b697ebe383d5f09754d3ca7fb484971",
+      "img_logo_url": "",
+      "isVr": false,
+      "engine": "Unknown",
+      "last_played": 0,
+      "is_installed": false,
+      "is_shared": false
+    },
+    {
       "appid": 218510,
       "name": "Planets Under Attack",
       "playtime_forever": 0,
@@ -3600,6 +3624,18 @@
       "last_played": 0,
       "is_installed": false,
       "is_shared": true
+    },
+    {
+      "appid": 1707990,
+      "name": "Skydance's BEHEMOTH",
+      "playtime_forever": 0,
+      "img_icon_url": "3f1c507f4d3652d0fee52612f631a09210a3915c",
+      "img_logo_url": "",
+      "isVr": false,
+      "engine": "Unknown",
+      "last_played": 0,
+      "is_installed": false,
+      "is_shared": false
     },
     {
       "appid": 646570,

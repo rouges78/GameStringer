@@ -385,6 +385,22 @@ interface ScanResponse {
 }
 ```
 
+## Stato di Avanzamento
+
+### Stato Attuale (29 Giugno 2025)
+
+Lo sviluppo è attualmente concentrato sul modulo **Traduttore AI**.
+
+-   **✅ Completato**:
+    -   Refactoring dell'interfaccia utente per un flusso a passi (Selezione Gioco → Selezione Cartella → Traduzione).
+    -   Sostituzione della griglia giochi con un combobox ricercabile.
+    -   Implementazione della logica API per recuperare la lista completa dei giochi dell'utente da Steam.
+
+-   **🔴 Blocker Critico**:
+    -   L'applicazione è attualmente bloccata da un errore `TypeError: Steam is not a constructor` che si verifica nell'endpoint API `/api/library/games`. Questo errore impedisce di filtrare e mostrare solo i giochi installati, rendendo il Traduttore AI inutilizzabile.
+    -   **Causa**: Conflitto di interoperabilità tra la libreria `steam-locate` (CommonJS) e l'ambiente server di Next.js (ES Modules).
+    -   **Prossimi Passi**: La risoluzione di questo blocker è la priorità assoluta. L'attività corrente è una ricerca approfondita per trovare il pattern di importazione corretto e stabile per questo tipo di dipendenza.
+
 ## 📸 Screenshots
 
 ### Dashboard Principale
