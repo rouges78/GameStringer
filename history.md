@@ -1,5 +1,19 @@
 # Cronologia del Progetto GameStringer
 
+### 🌙 Notte del 30 Giugno 2025: Sessione Intensiva di Debug e Stabilizzazione
+
+Una sessione notturna dedicata a risolvere una serie di bug critici che impedivano il corretto funzionamento del flusso di traduzione.
+
+- **FIX Correzione Caricamento Lista Giochi**: Risolto il bug principale che causava la mancata visualizzazione della lista giochi nella pagina del Traduttore AI. Il problema era un disallineamento tra i nomi delle proprietà (`appId` vs `id`) tra backend e frontend. Ora i dati vengono correttamente mappati e la lista appare come previsto.
+
+- **FIX Configurazione Immagini Next.js**: Risolto un errore di runtime che impediva il caricamento delle copertine dei giochi da Steam. È stato configurato il file `next.config.js` per autorizzare il dominio `steamcdn-a.akamaihd.net`, permettendo a `next/image` di funzionare correttamente.
+
+- **FIX Stabilità Selettore Giochi**: Risolti due problemi nel componente `Combobox`:
+  1.  **Errore 500**: Aggiunto un filtro per scartare opzioni con ID non validi, prevenendo chiamate API errate che causavano un crash del backend.
+  2.  **Warning React**: Aggiunta una `key` univoca agli elementi della lista per eliminare i warning di React e migliorare le performance di rendering.
+
+- **Miglioramento Robustezza Codice**: Corretti errori di sintassi minori (es. attributi duplicati in JSX) e migliorata la logica di gestione dei dati per rendere l'applicazione più stabile e resiliente.
+
 ## 29 Giugno 2025
 
 - **Miglioramento Ricerca Giochi**: Implementata una nuova logica di ordinamento nella libreria che dà priorità ai giochi il cui titolo inizia con il termine di ricerca. Questo migliora notevolmente l'esperienza utente durante la ricerca.

@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'steamcdn-a.akamaihd.net',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   webpack: (config, { isServer }) => {
     // Risolve l'errore 'Module not found: Can't resolve 'winreg''
     // Marcando 'winreg' come modulo esterno, diciamo a Webpack di non provare a includerlo nel bundle.

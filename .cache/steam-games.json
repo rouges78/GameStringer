@@ -1,5 +1,5 @@
 {
-  "timestamp": 1751208291795,
+  "timestamp": 1751236073968,
   "games": [
     {
       "appid": 1880837,
@@ -1994,6 +1994,18 @@
       "is_shared": false
     },
     {
+      "appid": 341940,
+      "name": "Hatred",
+      "playtime_forever": 0,
+      "img_icon_url": "091055fcdf2d144959f83cacd2b526b8068e2c95",
+      "img_logo_url": "",
+      "isVr": false,
+      "engine": "Unknown",
+      "last_played": 0,
+      "is_installed": true,
+      "is_shared": false
+    },
+    {
       "appid": 3103480,
       "name": "Heart-Lung Machine",
       "playtime_forever": 0,
@@ -2795,6 +2807,18 @@
       "engine": "Unknown",
       "last_played": 0,
       "is_installed": false,
+      "is_shared": false
+    },
+    {
+      "appid": 361300,
+      "name": "Mother Russia Bleeds",
+      "playtime_forever": 0,
+      "img_icon_url": "0ca01b6857e876a1900daa958ffbe72701c2ed54",
+      "img_logo_url": "",
+      "isVr": false,
+      "engine": "Unknown",
+      "last_played": 0,
+      "is_installed": true,
       "is_shared": false
     },
     {

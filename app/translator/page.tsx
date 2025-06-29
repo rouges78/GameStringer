@@ -21,8 +21,12 @@ import { LanguageFlags } from '@/components/ui/language-flags';
 interface Game {
   id: string;
   name: string;
-  provider: string;
+  provider: string; // Manteniamo provider se serve altrove
+  engine?: string;
+  supportedLanguages?: string;
+  coverUrl?: string;
 }
+
 
 interface FileHandle {
   name: string;
@@ -76,10 +80,19 @@ const TranslatorPage = () => {
         if (!response.ok) {
           throw new Error('Errore nel caricamento della libreria dei giochi.');
         }
-        const data = await response.json() as { games: Game[] };
-        if (Array.isArray(data.games)) {
+        const backendGames = await response.json();
+        if (Array.isArray(backendGames)) {
+            const games: Game[] = backendGames.map((g: any) => ({
+                id: g.appId, // Traduzione da appId a id
+                name: g.name,
+                provider: 'steam', // Aggiunto provider di default
+                engine: g.engine,
+                supportedLanguages: g.supportedLanguages,
+                coverUrl: g.coverUrl,
+            }));
+
             // Filtra i duplicati basati sul nome del gioco, poi ordina
-            const uniqueGamesMap = new Map(data.games.map((game) => [game.name, game]));
+            const uniqueGamesMap = new Map(games.map((game) => [game.name, game]));
             const uniqueGames = Array.from(uniqueGamesMap.values());
             setGames(uniqueGames.sort((a, b) => a.name.localeCompare(b.name)));
         } else {
@@ -346,7 +359,19 @@ const TranslatorPage = () => {
     }
   };
 
-  const gameOptions: ComboboxOption[] = games.map(g => ({ value: g.id, label: g.name }));
+  const gameOptions: ComboboxOption[] = games.map(g => ({
+    value: g.id,
+    label: (
+      <div className="flex items-center justify-between w-full">
+        <span>{g.name}</span>
+        <div className="flex items-center gap-2 text-xs text-gray-400">
+          {g.engine && <span>⚙️ {g.engine}</span>}
+          {g.supportedLanguages && <LanguageFlags supportedLanguages={g.supportedLanguages.split(',')} />}
+        </div>
+      </div>
+    ),
+    searchValue: g.name,
+  }));
 
   // --- VISTE ---
 
@@ -368,7 +393,7 @@ const TranslatorPage = () => {
                 placeholder="Cerca un gioco..."
                 emptyPlaceholder="Nessun gioco trovato."
               />
-              {supportedLanguages && <LanguageFlags supportedLanguages={supportedLanguages} />}
+              {supportedLanguages && supportedLanguages.length > 0 && <LanguageFlags supportedLanguages={supportedLanguages.split(',')} />}
             </div>
       </CardContent>
     </Card>

@@ -42,6 +42,9 @@ export async function GET(req: NextRequest) {
     try {
         switch (provider) {
             case 'steam':
+                if (!gameId) {
+                    return NextResponse.json({ error: '`gameId` è richiesto per i giochi Steam' }, { status: 400 });
+                }
                 gamePath = await findSteamGamePath(gameId);
                 break;
             case 'epic':

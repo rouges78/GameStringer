@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
-export interface ComboboxOption {
+export type ComboboxOption = {
   value: string;
-  label: string;
-}
+  label: React.ReactNode;
+  searchValue?: string;
+};
 
 interface ComboboxProps {
   options: ComboboxOption[];
@@ -56,16 +57,18 @@ export function Combobox({
           <CommandList>
             <CommandEmpty>{emptyPlaceholder}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {options.filter(option => option.value).map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} // Filtra sulla label, non sul value
-                  onSelect={(currentLabel) => {
-                    const selectedOption = options.find(opt => opt.label === currentLabel);
+                  value={option.searchValue ?? (typeof option.label === 'string' ? option.label : option.value)}
+                  onSelect={(currentValue) => {
+                    const selectedOption = options.find(opt => (opt.searchValue ?? (typeof opt.label === 'string' ? opt.label : opt.value)) === currentValue);
                     if (selectedOption) {
                       onChange(selectedOption.value === value ? "" : selectedOption.value);
+                    } else {
+                      onChange("");
                     }
-                    setOpen(false);
+                    setOpen(false)
                   }}
                 >
                   <Check

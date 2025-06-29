@@ -70,6 +70,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
           Installato
         </Badge>
       )}
+
       <div className="p-4 bg-card min-h-[52px]">
         {isLoading && (
           <div className="h-5 w-full bg-muted animate-pulse rounded-md"></div>
@@ -94,7 +95,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             {details.game_engine && (
               <div className="flex items-center gap-1">
-                <Cog className="h-3 w-3" />
+                <span role="img" aria-label="Engine">⚙️</span>
                 <span>{details.game_engine}</span>
               </div>
             )}

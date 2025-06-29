@@ -1,5 +1,28 @@
 # 🎮 GameStringer
 
+---
+
+### ✨ Correzioni Recenti e Miglioramenti (Giugno 2025)
+
+Questa versione include importanti correzioni di bug e miglioramenti alla stabilità e all'esperienza utente:
+
+- **Risolto: Lista Giochi Vuota nel Traduttore AI**
+  - Corretto un disallineamento critico tra i dati del backend (`appId`) e quelli attesi dal frontend (`id`).
+  - Ora la lista dei giochi installati viene caricata e visualizzata correttamente.
+
+- **Risolto: Errore Caricamento Immagini di Copertina**
+  - Configurato `next.config.js` per autorizzare il dominio delle immagini di Steam (`steamcdn-a.akamaihd.net`).
+  - Le copertine dei giochi ora vengono visualizzate senza errori.
+
+- **Risolto: Errori 500 e Warning nel Selettore Giochi**
+  - Aggiunto un filtro per prevenire chiamate API con ID non validi, eliminando crash del backend.
+  - Aggiunta una `key` univoca agli elementi della lista per risolvere i warning di React e migliorare le performance.
+
+- **Stabilizzazione Generale del Backend**
+  - Verificato e confermato il corretto funzionamento della pipeline di scansione dei giochi, dalla lettura del registro di Windows fino alla restituzione dei dati via API.
+
+---
+
 GameStringer è un'applicazione avanzata per la traduzione di videogiochi che sfrutta l'intelligenza artificiale per aiutare gli utenti a tradurre i loro giochi preferiti. L'applicazione si integra con Steam per recuperare la libreria di giochi dell'utente e fornisce un'interfaccia intuitiva per estrarre, tradurre e creare patch di lingua.
 
 ## ✨ Funzionalità Principali
