@@ -31,7 +31,7 @@ const TranslatorPage = () => {
 
   // --- STATI DI FLUSSO ---
   const [currentStep, setCurrentStep] = useState<'select-game' | 'confirm-path' | 'select-file' | 'translate'>('select-game');
-  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   
   // Stati per la ricerca del percorso
   const [isFindingPath, setIsFindingPath] = useState(false);
@@ -63,7 +63,9 @@ const TranslatorPage = () => {
         }
         const data = await response.json();
         if (Array.isArray(data.games)) {
-            setGames(data.games.sort((a: Game, b: Game) => a.name.localeCompare(b.name)));
+            // Filtra i duplicati basati sul nome del gioco, poi ordina
+            const uniqueGames = Array.from(new Map(data.games.map((game: Game) => [game.name, game])).values());
+            setGames(uniqueGames.sort((a: Game, b: Game) => a.name.localeCompare(b.name)));
         } else {
             throw new Error("Formato dati della libreria non valido.");
         }
@@ -81,14 +83,15 @@ const TranslatorPage = () => {
   // Gestione selezione gioco e ricerca automatica percorso
   const handleGameSelect = async (gameId: string) => {
     if (!gameId) {
-      setSelectedGameId(null);
+      setSelectedGame(null);
       setCurrentStep('select-game');
       return;
     }
 
-    setSelectedGameId(gameId);
     const game = games.find(g => g.id === gameId);
     if (!game) return;
+    
+    setSelectedGame(game);
 
     setIsFindingPath(true);
     setFoundPath(null);
@@ -221,7 +224,7 @@ const TranslatorPage = () => {
         setCurrentStep('confirm-path');
         break;
       case 'confirm-path':
-        setSelectedGameId(null);
+        setSelectedGame(null);
         setFoundPath(null);
         setCurrentStep('select-game');
         break;
@@ -244,17 +247,16 @@ const TranslatorPage = () => {
       <CardContent>
         <Combobox
           options={gameOptions}
-          value={selectedGameId}
+          value={selectedGame?.id || ''}
           onChange={handleGameSelect}
           placeholder="Cerca un gioco..."
-          emptyMessage="Nessun gioco trovato."
+          emptyPlaceholder="Nessun gioco trovato."
         />
       </CardContent>
     </Card>
   );
 
   const ConfirmPathView = () => {
-    const game = games.find(g => g.id === selectedGameId);
     return (
       <>
         <Button variant="ghost" onClick={handleBack} className="mb-4">
@@ -265,7 +267,7 @@ const TranslatorPage = () => {
           <CardHeader>
             <CardTitle className="flex items-center">
               <FolderSearch className="mr-2 h-6 w-6"/>
-              Passo 2: Conferma Percorso per "{game?.name}"
+              Passo 2: Conferma Percorso per "{selectedGame?.name}"
             </CardTitle>
             <CardDescription>Verifica il percorso di installazione o selezionalo manualmente.</CardDescription>
           </CardHeader>

@@ -1,84 +1,125 @@
 import fs from 'fs/promises';
 import path from 'path';
-// Usiamo la sintassi require per la massima compatibilità con moduli CJS come questo.
-const steamLocate = require('steam-locate'); 
-import { parse } from 'vdf-parser';
+import * as vdf from 'vdf-parser';
 
-// Definiamo un tipo per la risposta della libreria, basandoci sul suo uso effettivo.
+// Il modulo 'steam-locate' verrà importato dinamicamente all'interno delle funzioni per evitare crash all'avvio.
+
+/**
+ * Definiamo un tipo per la risposta della libreria, basandoci sul suo uso effettivo.
+ * NOTA: Questo tipo è un'ipotesi. Verrà confermato dopo aver ispezionato l'output.
+ */
 interface SteamGame {
-    appid: string;
-    path: string;
-    // Aggiungere altre proprietà se necessario
+    appId: number;
+    name: string;
+    path: string; // Questa è la proprietà che ci serve per trovare il gioco
 }
 
-interface AcfFile {
-  AppState?: { installdir?: string };
+// Cache unificata per i dati delle app di Steam per evitare chiamate I/O ridondanti
+const steamAppsCache = {
+    timestamp: 0,
+    data: [] as any[], // Salveremo qui l'array completo dei giochi
+    TTL: 5 * 60 * 1000, // 5 minuti
+};
+
+/**
+ * Funzione interna per ottenere e cachare l'elenco delle app Steam installate.
+ * Questa è la fonte di dati unica per tutte le altre funzioni.
+ * @returns Una Promise che si risolve in un array di app Steam.
+ */
+async function getCachedSteamApps(): Promise<any[]> {
+    const now = Date.now();
+    if (now - steamAppsCache.timestamp < steamAppsCache.TTL && steamAppsCache.data.length > 0) {
+        console.log(`[CACHE] Restituzione di ${steamAppsCache.data.length} app Steam dalla cache.`);
+        return steamAppsCache.data;
+    }
+
+    try {
+        console.log('[steam-locate] Chiamata a getInstalledSteamApps...');
+        const steamLocate = require('steam-locate');
+        const installedApps: any[] = await steamLocate.getInstalledSteamApps();
+        console.log(`[steam-locate] Trovate ${installedApps.length} app installate.`);
+
+        // Aggiorna la cache
+        steamAppsCache.data = installedApps;
+        steamAppsCache.timestamp = now;
+
+        return installedApps;
+    } catch (error) {
+        console.error('[steam-locate] Errore critico durante la chiamata a getInstalledSteamApps:', error);
+        return []; // Restituisce array vuoto in caso di errore per non bloccare
+    }
+}
+
+// Definiamo un tipo per i giochi installati che restituiamo all'API
+interface InstalledGame {
+  id: string;
+  name: string;
+  provider: 'steam';
 }
 
 /**
- * Trova tutte le cartelle della libreria di Steam.
- * Questa implementazione si basa su un esempio funzionante e gestisce le eccentricità del pacchetto.
+ * Ottiene un elenco di tutti i giochi Steam installati localmente.
+ * @returns Una Promise che si risolve in un array di oggetti InstalledGame.
  */
-export async function getSteamLibraryFolders(): Promise<string[]> {
-    try {
-        // La funzione `getInstalledGames` è un metodo dell'oggetto importato.
-                const games: SteamGame[] = await steamLocate.getInstalledSteamApps();
-        
-        if (!Array.isArray(games) || games.length === 0) {
-            console.warn('Nessun gioco Steam installato trovato o formato dati non corretto.');
-            return [];
-        }
+export async function getInstalledSteamGames(): Promise<InstalledGame[]> {
+    const installedApps = await getCachedSteamApps();
 
-        const libraryPaths = new Set<string>();
-
-        for (const game of games) {
-            if (game && game.path) {
-                const libraryPath = path.dirname(path.dirname(path.dirname(game.path)));
-                libraryPaths.add(libraryPath);
-            }
-        }
-        
-        const uniquePaths = Array.from(libraryPaths);
-        console.log('Cartelle della libreria di Steam trovate:', uniquePaths);
-        return uniquePaths;
-
-    } catch (error) {
-        console.error('Errore durante il recupero delle cartelle della libreria di Steam:', error);
+    if (!installedApps || installedApps.length === 0) {
         return [];
+    }
+
+    // Filtra gli elementi che non hanno un appid o un nome, che causerebbero errori nel frontend
+    const validApps = installedApps.filter(app => app.appid && app.name);
+
+    const games = validApps.map(app => ({
+        id: String(app.appid),
+        name: app.name,
+        provider: 'steam' as const,
+    }));
+
+    return games;
+}
+
+/**
+ * Trova il percorso di installazione di un gioco Steam specifico dato il suo appid.
+ * @param appid L'AppID del gioco da cercare.
+ * @param libraryFolders (Opzionale) Un array di cartelle di libreria pre-calcolate per ottimizzazione.
+ * @returns Una Promise che si risolve in una stringa con il percorso del gioco o null se non trovato.
+ */
+export async function findSteamGamePath(appid: string): Promise<string | null> {
+    const games = await getCachedSteamApps();
+    const game = games.find(app => String(app.appid) === appid);
+
+    if (game && game.path) {
+        console.log(`[steam-utils] Percorso trovato per appid '${appid}' (dalla cache): ${game.path}`);
+        return game.path;
+    } else {
+        console.log(`[steam-utils] Nessun percorso locale trovato per appid ${appid} nella cache.`);
+        return null;
     }
 }
 
 /**
- * Trova il percorso di installazione di un gioco Steam specifico dato il suo AppID.
+ * Analizza i file .acf per estrarre l'ID, il nome e la lingua di un gioco.
+ * @param acfPath Il percorso completo del file .acf del gioco.
+ * @returns Un oggetto con i dati del gioco o null in caso di errore.
  */
-export async function findSteamGamePath(gameId: string): Promise<string | null> {
+export async function parseAcfFile(acfPath: string): Promise<{ appId: string; name: string; language: string; } | null> {
     try {
-        const libraryFolders = await getSteamLibraryFolders();
-        if (libraryFolders.length === 0) {
-            console.warn('Nessuna cartella della libreria di Steam trovata.');
-            return null;
-        }
+        const content = await fs.readFile(acfPath, 'utf-8');
+        const data = vdf.parse(content);
 
-        for (const folder of libraryFolders) {
-            const acfPath = path.join(folder, 'steamapps', `appmanifest_${gameId}.acf`);
-            try {
-                await fs.access(acfPath);
-                const acfContent = await fs.readFile(acfPath, 'utf-8');
-                const acfData = parse(acfContent) as AcfFile;
-                if (acfData.AppState?.installdir) {
-                    const gamePath = path.join(folder, 'steamapps', 'common', acfData.AppState.installdir);
-                    await fs.access(gamePath);
-                    return gamePath;
-                }
-            } catch (error) {
-                continue;
-            }
+        const appState = data.AppState;
+        if (appState) {
+            return {
+                appId: appState.appid,
+                name: appState.name,
+                language: appState.UserConfig?.language || 'n/d'
+            };
         }
-
-        console.warn(`Percorso di gioco non trovato per l'AppID: ${gameId}`);
         return null;
     } catch (error) {
-        console.error(`Errore nella ricerca del percorso per l'AppID ${gameId}:`, error);
+        console.error(`Errore durante la lettura o il parsing del file ACF '${acfPath}':`, error);
         return null;
     }
 }
