@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import { getInstalledSteamGames } from '@/lib/steam-utils';
+import { getAllInstalledSteamGames } from '@/lib/steam-utils';
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
     // La logica precedente con l'API key di Steam è stata rimossa per usare solo il rilevamento locale.
     console.log('[API Route] Tentativo di ottenere i giochi installati localmente...');
-    const installedGames = await getInstalledSteamGames();
+    const installedGames = await getAllInstalledSteamGames();
     
     // Ordiniamo i giochi alfabeticamente per nome, come richiesto dal frontend
     installedGames.sort((a, b) => a.name.localeCompare(b.name));
