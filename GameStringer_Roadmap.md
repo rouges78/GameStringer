@@ -1,4 +1,45 @@
 # GameStringer - Roadmap Commerciale Completa
+
+## ✅ Fase 1: Core Funzionale e Integrazione Steam (Completato)
+
+- **[Completato]** Sviluppo del sistema di autenticazione con Steam.
+- **[Completato]** Integrazione con l'API di Steam per il recupero della libreria giochi.
+- **[Completato]** Creazione dell'interfaccia utente per la visualizzazione della libreria.
+- **[Completato]** Implementazione della funzione di estrazione delle stringhe di testo dai file di gioco.
+- **[Completato]** Integrazione con un provider di traduzione AI (es. OpenAI).
+- **[Completato]** Funzionalità di base per la creazione di patch di traduzione.
+- **[Completato]** Gestione robusta degli errori di rate limiting di Steam (status 429) con retry automatico.
+- **[Completato]** Parsing robusto delle lingue supportate dai giochi, con pulizia di tag HTML e caratteri spuri.
+- **[Completato]** Visualizzazione delle lingue ufficiali tramite icone a bandiera nella libreria.
+- **[Completato]** Supporto per l'analisi e la traduzione di file `.ini`.
+- **[Completato]** Supporto per l'analisi e la traduzione di file `.csv` multilingua con selettore di lingua nella UI.
+- **[Completato]** Gestione dei casi limite per giochi senza file di testo traducibili.
+- **[Completato]** Miglioramento della ricerca nella libreria con priorità ai titoli che iniziano con il termine cercato.
+
+## 🚧 Fase 2: Debug Critico e Miglioramento UX (In Corso)
+
+- **Obiettivo Principale**: Ripristinare e stabilizzare il flusso completo del Traduttore AI.
+- **Task Critico**: Analizzare e risolvere il problema del rilevamento automatico del percorso di installazione del gioco. Questo è attualmente il blocco principale.
+- **Task Frontend**: Aggiornare la pagina del traduttore per recuperare la configurazione AI (provider, API key) e includerla correttamente nelle richieste all'API di traduzione.
+- **Task UX**: Visualizzare il nome dell'engine di gioco accanto alle bandierine delle lingue nella libreria.
+
+## 🚀 Fase 3: Funzionalità Avanzate e Qualità della Vita
+
+- **Traduzione di Immagini (OCR)**: Implementare una funzione per estrarre il testo dalle immagini presenti nei giochi (es. menu, texture) e tradurlo.
+- **Supporto per Altre Piattaforme**: Integrare il supporto per altri store come GOG, Epic Games Store, etc.
+- **Gestione Patch Avanzata**: Sistema per gestire versioni multiple delle patch, condividerle con la community e applicarle in modo non distruttivo.
+- **Modalità Offline**: Consentire l'uso dell'applicazione anche senza una connessione internet attiva (con funzionalità limitate).
+- **Database Comunitario**: Creare un database dove gli utenti possano condividere e votare le traduzioni per i giochi.
+
+## 💰 Fase 4: Monetizzazione e Sostenibilità
+
+- **Versione Premium**: Offrire una versione a pagamento con funzionalità avanzate (es. traduzioni illimitate, supporto prioritario, traduzione audio).
+- **Integrazione con Patreon**: Permettere agli utenti di supportare lo sviluppo tramite donazioni.
+- **Marketplace di Traduzioni**: Creare un marketplace dove i traduttori possono vendere le loro patch di alta qualità.
+
+## 🔊 Fase 5: Espansione a Lungo Termine (Futuro)
+
+- **Traduzione Audio**: Esplorare la possibilità di integrare servizi di speech-to-text e text-to-speech per tradurre l'audio dei dialoghi nei giochi, come richiesto dall'utente.
 ## Il "Google Translate dei Videogiochi"
 
 ---

@@ -1,5 +1,27 @@
 # Cronologia del Progetto GameStringer
 
+## 29 Giugno 2025
+
+- **Miglioramento Ricerca Giochi**: Implementata una nuova logica di ordinamento nella libreria che dà priorità ai giochi il cui titolo inizia con il termine di ricerca. Questo migliora notevolmente l'esperienza utente durante la ricerca.
+- **Aggiornamento Documentazione**: Revisionati e aggiornati i file `README.md`, `GameStringer_Roadmap.md` e `history.md` per riflettere lo stato attuale del progetto e le ultime funzionalità implementate.
+
+## 28 Giugno 2025
+
+- **Supporto File Avanzato**: Aggiunto il supporto per l'analisi e la traduzione di file di configurazione `.ini` e file di dati `.csv` multilingua.
+- **UI per File Complessi**: Sviluppata un'interfaccia utente che permette la selezione della lingua per i file `.csv` che contengono più lingue.
+- **Gestione Casi Limite**: Implementata una UX per gestire i giochi che non possiedono file di testo traducibili, mostrando all'utente un feedback chiaro.
+- **Visualizzazione Lingue**: Aggiunte le icone a bandiera per mostrare le lingue supportate da ciascun gioco direttamente nella libreria.
+
+## 27 Giugno 2025
+
+- **Fix Critici al Backend**: Risolti numerosi bug critici nel backend che causavano crash (errore 500) e impedivano il corretto caricamento della libreria giochi e dei dettagli dei singoli giochi. Il sistema ora è più stabile e robusto.
+- **Stabilizzazione Frontend**: Corretti bug nella visualizzazione delle bandiere delle lingue e nella gestione dei dati dei giochi.
+
+## 25 Giugno 2025
+
+- **Integrazione Iniziale Steam**: Prima versione funzionante dell'integrazione con Steam per recuperare la lista dei giochi installati.
+- **Creazione Flusso Traduttore AI**: Sviluppo delle API di base e dell'interfaccia per il traduttore AI.
+
 Questo file tiene traccia di tutte le attività completate, delle decisioni prese e dei traguardi raggiunti, in ordine cronologico.
 
 ---

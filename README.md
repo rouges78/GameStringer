@@ -1,5 +1,20 @@
 # 🎮 GameStringer
 
+GameStringer è un'applicazione avanzata per la traduzione di videogiochi che sfrutta l'intelligenza artificiale per aiutare gli utenti a tradurre i loro giochi preferiti. L'applicazione si integra con Steam per recuperare la libreria di giochi dell'utente e fornisce un'interfaccia intuitiva per estrarre, tradurre e creare patch di lingua.
+
+## ✨ Funzionalità Principali
+
+- **Integrazione con Steam**: Sincronizza la tua libreria di Steam per un accesso facile e veloce ai tuoi giochi.
+- **Traduzione AI**: Utilizza potenti API di traduzione AI (OpenAI, Abacus.AI) per traduzioni rapide e accurate.
+- **Estrazione di Stringhe**: Analizza automaticamente i file di gioco per estrarre il testo da tradurre.
+- **Supporto File Avanzato**: Gestisce una varietà di formati, inclusi file di testo semplici, file `.ini` strutturati e file `.csv` multilingua complessi.
+- **Selezione Lingua per File Multilingua**: Per i giochi con file che contengono più lingue (es. *Decarnation*), l'interfaccia permette di selezionare la lingua specifica da visualizzare e tradurre.
+- **Gestione Casi Limite**: Fornisce un'esperienza utente chiara anche per i giochi che non contengono file di testo traducibili (es. solo eseguibili), mostrando messaggi informativi e opzioni appropriate.
+- **Creazione di Patch**: Genera file di patch che possono essere facilmente applicati al gioco per visualizzare le traduzioni.
+- **Ricerca Intuitiva**: La ricerca nella libreria dà priorità ai giochi il cui titolo inizia con il testo cercato, rendendo più facile trovare ciò che cerchi.
+- **Visualizzazione Lingue Supportate**: Mostra le lingue ufficialmente supportate da un gioco direttamente nella libreria tramite icone a bandiera, per una rapida consultazione.
+- **Interfaccia Moderna**: Un'interfaccia utente pulita e reattiva costruita con Next.js e shadcn/ui.
+
 **Un'applicazione completa per la traduzione automatica di videogiochi ispirata alle tecnologie RAI-PAL VR**
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
