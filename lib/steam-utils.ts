@@ -91,7 +91,13 @@ export async function findSteamGamePath(appid: string): Promise<string | null> {
             return null;
         }
 
-        const game = steamApps.find(app => String(app.appId) === appid);
+        // Normalizziamo il confronto per evitare problemi di case-sensitivity
+        // e logghiamo i tipi per un debug più facile.
+        const game = steamApps.find(app => {
+            const cachedAppId = app.appId || app.appid; // Prova entrambi i possibili case
+            // console.log(`[DEBUG] Confronto: cache ID (${cachedAppId}, type: ${typeof cachedAppId}) vs. richiesto ID (${appid}, type: ${typeof appid})`);
+            return String(cachedAppId).toLowerCase() === String(appid).toLowerCase();
+        });
 
         if (game && game.installDir) {
             console.log(`[findSteamGamePath] Percorso trovato per appid '${appid}': ${game.installDir}`);
