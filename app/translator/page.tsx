@@ -62,7 +62,7 @@ const TranslatorPage = () => {
           throw new Error('Errore nel caricamento della libreria dei giochi.');
         }
         const data = await response.json();
-        if (data.games) {
+        if (Array.isArray(data.games)) {
             setGames(data.games.sort((a: Game, b: Game) => a.name.localeCompare(b.name)));
         } else {
             throw new Error("Formato dati della libreria non valido.");
