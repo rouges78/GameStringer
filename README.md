@@ -99,6 +99,11 @@ L'app è progettata per essere user-friendly e accessibile sia a utenti esperti 
 - **Flusso di Lavoro Completo**: Supporta l'intero processo: selezione del gioco, ricerca del percorso di installazione (automatica o manuale), scansione dei file di testo (.json, .xml, .txt), e interfaccia di traduzione multi-provider (OpenAI, DeepL, Google Translate).
 - **Calcolo Costi in Tempo Reale**: Fornisce una stima dei costi di traduzione prima di avviare il processo.
 
+## 🚀 Idee per il Futuro
+
+-   **Integrazione con Database di Giochi (via APIWeaver)**: Utilizzare il server MCP [APIWeaver](https://github.com/GongRzhe/APIWeaver) per integrare dinamicamente API come IGDB. Questo ci permetterebbe di arricchire automaticamente i dati dei giochi con copertine, descrizioni, generi e screenshot, migliorando notevolmente l'interfaccia utente.
+-   **Espansione dei Provider di Traduzione (via Any Chat Completions)**: Sfruttare il server MCP [Any Chat Completions](https://github.com/pyroprompts/any-chat-completions-mcp) per aggiungere facilmente il supporto a nuovi servizi di traduzione AI (es. Perplexity, Groq), offrendo agli utenti maggiore flessibilità e scelta.
+
 ## 🛠 Tecnologie Utilizzate
 
 ### **Frontend**
