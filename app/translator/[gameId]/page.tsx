@@ -21,10 +21,18 @@ interface TranslationResult {
   suggestions: string[];
 }
 
+interface AiConfig {
+  provider: string;
+  apiKey: string;
+}
+
 export default function TranslatorPage({ params }: { params: { gameId: string } }) {
   const [game, setGame] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [aiConfig, setAiConfig] = useState<AiConfig | null>(null);
+  const [aiConfigError, setAiConfigError] = useState<string | null>(null);
 
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractedStrings, setExtractedStrings] = useState<ExtractedString[]>([]);
@@ -37,21 +45,32 @@ export default function TranslatorPage({ params }: { params: { gameId: string } 
   const [editedTranslation, setEditedTranslation] = useState<string>('');
 
   useEffect(() => {
-    const fetchGame = async () => {
+    const fetchGameAndConfig = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/games/${params.gameId}`);
-        if (response.status === 404) notFound();
-        if (!response.ok) throw new Error('Errore nel caricamento dei dati del gioco.');
-        const data = await response.json();
-        setGame(data);
+        // Carica la configurazione AI
+        const configResponse = await fetch('/api/ai/config');
+        if (!configResponse.ok) {
+          const errorData = await configResponse.json();
+          throw new Error(errorData.error || 'Errore nel caricamento della configurazione AI.');
+        }
+        const config = await configResponse.json();
+        setAiConfig(config);
+
+        // Carica i dati del gioco
+        const gameResponse = await fetch(`/api/games/${params.gameId}`);
+        if (gameResponse.status === 404) notFound();
+        if (!gameResponse.ok) throw new Error('Errore nel caricamento dei dati del gioco.');
+        const gameData = await gameResponse.json();
+        setGame(gameData);
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Errore sconosciuto.');
       } finally {
         setIsLoading(false);
       }
     };
-    if (params.gameId) fetchGame();
+    if (params.gameId) fetchGameAndConfig();
   }, [params.gameId]);
 
   const handleSelectString = (index: number) => {
@@ -82,7 +101,10 @@ export default function TranslatorPage({ params }: { params: { gameId: string } 
   };
 
   const handleTranslate = async () => {
-    if (selectedStringIndex === null) return;
+    if (selectedStringIndex === null || !aiConfig) {
+        if (!aiConfig) setTranslationError('La configurazione AI non è disponibile. Impossibile tradurre.');
+        return;
+    }
     setIsTranslating(true);
     setTranslationError(null);
     setTranslationResult(null);
@@ -91,7 +113,12 @@ export default function TranslatorPage({ params }: { params: { gameId: string } 
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: extractedStrings[selectedStringIndex].string, targetLanguage: 'it' }),
+        body: JSON.stringify({
+          text: extractedStrings[selectedStringIndex].string,
+          targetLanguage: 'it',
+          provider: aiConfig.provider,
+          apiKey: aiConfig.apiKey,
+        }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -129,6 +156,8 @@ export default function TranslatorPage({ params }: { params: { gameId: string } 
         </div>
       </div>
 
+      {aiConfigError && <div className="text-destructive text-sm p-3 mb-4 bg-destructive/10 rounded-md flex items-center"><AlertTriangle className="h-4 w-4 mr-2"/>{aiConfigError}</div>}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card/50 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -151,7 +180,7 @@ export default function TranslatorPage({ params }: { params: { gameId: string } 
         <Card className="bg-card/50 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center"><Languages className="mr-2 h-5 w-5" /> Testo Tradotto</CardTitle>
-            <Button size="sm" onClick={handleTranslate} disabled={selectedStringIndex === null || isTranslating}>{isTranslating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Traduco...</> : <><Wand2 className="mr-2 h-4 w-4" />Traduci con AI</>}</Button>
+            <Button size="sm" onClick={handleTranslate} disabled={selectedStringIndex === null || isTranslating || !aiConfig}>{isTranslating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Traduco...</> : <><Wand2 className="mr-2 h-4 w-4" />Traduci con AI</>}</Button>
           </CardHeader>
           <CardContent>
             {translationError && <div className="text-destructive text-sm p-3 mb-4 bg-destructive/10 rounded-md flex items-center"><AlertTriangle className="h-4 w-4 mr-2"/>{translationError}</div>}

@@ -318,7 +318,7 @@ async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSe
             (details.short_description || ''),
             (details.detailed_description || ''),
             (details.about_the_game || ''),
-            ...categories.map((c: { description: string }) => c.description)
+            ...categories.filter((c: any) => c && c.description).map((c: { description: string }) => c.description)
         ].join(' ').toLowerCase();
 
         if (textCorpus.includes('unreal')) engine = 'Unreal Engine';

@@ -29,6 +29,7 @@ import {
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import GameImage from '@/components/game-image';
+import GameCard from '@/components/game-card';
 import type { SteamGame } from '@/lib/types';
 
 // Definizione del tipo per i giochi locali da Prisma
@@ -151,14 +152,28 @@ export default function GamesPage() {
   }, [status]);
 
   const filteredAndSortedGames = useMemo(() => {
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
+
     return games
       .filter(game => {
-        const searchMatch = game.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const searchMatch = game.title.toLowerCase().includes(lowercasedSearchTerm);
         const installMatch = installationFilter === 'all' || (installationFilter === 'installed' ? game.isInstalled : !game.isInstalled);
         const vrMatch = !showVrOnly || game.isVrSupported;
         return searchMatch && installMatch && vrMatch;
       })
       .sort((a, b) => {
+        // Logica di priorità per la ricerca
+        if (lowercasedSearchTerm) {
+          const aTitle = a.title.toLowerCase();
+          const bTitle = b.title.toLowerCase();
+          const aStartsWith = aTitle.startsWith(lowercasedSearchTerm);
+          const bStartsWith = bTitle.startsWith(lowercasedSearchTerm);
+
+          if (aStartsWith && !bStartsWith) return -1;
+          if (!aStartsWith && bStartsWith) return 1;
+        }
+
+        // Logica di ordinamento standard
         switch (sortOrder) {
           case 'title-desc':
             return b.title.localeCompare(a.title);
@@ -278,29 +293,8 @@ export default function GamesPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          {filteredAndSortedGames.map(game => (
-            <motion.div key={game.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-              <Card className="group overflow-hidden rounded-lg border-2 border-transparent hover:border-primary/50 transition-all duration-300 bg-card/50 backdrop-blur-sm h-full flex flex-col">
-                <Link href={`/games/${game.id}`} className="block flex-grow flex flex-col">
-                  <div className="relative w-full aspect-[16/9] bg-muted overflow-hidden rounded-t-lg">
-                    <GameImage
-                      src={game.imageUrl}
-                      fallbackSrc={game.fallbackImageUrl}
-                      alt={`Copertina di ${game.title}`}
-                    />
-                  </div>
-                  <CardContent className="p-3 flex-grow flex flex-col justify-between">
-                    <div>
-                      <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{game.title}</h3>
-                      <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                        {game.isInstalled && <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-300 border-green-500/30">Installato</Badge>}
-                        {game.isVrSupported && <Badge variant="outline" className="text-xs border-cyan-500/50 text-cyan-300">VR</Badge>}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Link>
-              </Card>
-            </motion.div>
+          {filteredAndSortedGames.map((game, index) => (
+            <GameCard key={game.id} game={game} index={index} />
           ))}
         </motion.div>
       ) : (

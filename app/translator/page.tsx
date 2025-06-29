@@ -5,9 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, AlertTriangle, Gamepad2, FolderSearch, FileText, ArrowLeft, Languages, Wand2, CheckCircle } from 'lucide-react';
 import { Combobox, ComboboxOption } from '@/components/ui/combobox';
+import { LanguageFlags } from '@/components/ui/language-flags';
 
 // --- Tipi di Dati ---
 interface Game {
@@ -18,7 +26,8 @@ interface Game {
 
 interface FileHandle {
   name: string;
-  handle: any;
+  handle?: any; // Opzionale per la selezione manuale
+  path?: string;  // Opzionale per la scansione automatica
   size: number;
 }
 
@@ -50,6 +59,12 @@ const TranslatorPage = () => {
   const [translatedContent, setTranslatedContent] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [translatorError, setTranslatorError] = useState<string | null>(null);
+  const [isMultiLangFile, setIsMultiLangFile] = useState(false);
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+  const [selectedSourceLanguage, setSelectedSourceLanguage] = useState('');
+  const [parsedStrings, setParsedStrings] = useState<{ [key: string]: { [lang: string]: string } } | null>(null);
+  const [isIniFile, setIsIniFile] = useState(false);
+  const [supportedLanguages, setSupportedLanguages] = useState<string | null>(null);
 
   // --- EFFETTI ---
 
@@ -61,11 +76,12 @@ const TranslatorPage = () => {
         if (!response.ok) {
           throw new Error('Errore nel caricamento della libreria dei giochi.');
         }
-        const data = await response.json();
+        const data = await response.json() as { games: Game[] };
         if (Array.isArray(data.games)) {
             // Filtra i duplicati basati sul nome del gioco, poi ordina
-            const uniqueGames = Array.from(new Map(data.games.map((game: Game) => [game.name, game])).values());
-            setGames(uniqueGames.sort((a: Game, b: Game) => a.name.localeCompare(b.name)));
+            const uniqueGamesMap = new Map(data.games.map((game) => [game.name, game]));
+            const uniqueGames = Array.from(uniqueGamesMap.values());
+            setGames(uniqueGames.sort((a, b) => a.name.localeCompare(b.name)));
         } else {
             throw new Error("Formato dati della libreria non valido.");
         }
@@ -82,35 +98,33 @@ const TranslatorPage = () => {
 
   // Gestione selezione gioco e ricerca automatica percorso
   const handleGameSelect = async (gameId: string) => {
-    if (!gameId) {
-      setSelectedGame(null);
-      setCurrentStep('select-game');
-      return;
-    }
+    setSupportedLanguages(null); // Reset
 
     const game = games.find(g => g.id === gameId);
-    if (!game) return;
-    
-    setSelectedGame(game);
+    setSelectedGame(game || null);
 
-    setIsFindingPath(true);
-    setFoundPath(null);
-    setGameFiles([]);
-    setCurrentStep('confirm-path'); // Vai al passo successivo
-
-    try {
-      const response = await fetch(`/api/library/game-path?provider=${game.provider}&gameId=${game.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFoundPath(data.path);
-      } else {
-        console.warn(`Nessun percorso di installazione automatico trovato per ${game.name}`);
+    if (game) {
+      setCurrentStep('confirm-path');
+      // Recupera le lingue supportate in background
+      try {
+        const response = await fetch(`/api/steam/game-details/${game.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSupportedLanguages(data.supported_languages);
+        }
+      } catch (error) {
+        console.error('Errore nel recuperare i dettagli del gioco:', error);
       }
-    } catch (error) {
-      console.error('Errore durante la ricerca del percorso del gioco:', error);
-    } finally {
-      setIsFindingPath(false);
+    } else {
+      setCurrentStep('select-game');
     }
+
+    // Reset stati successivi
+    setGameFiles([]);
+    setSelectedFile(null);
+    setOriginalContent('');
+    setTranslatedContent('');
+    setTranslatorError(null);
   };
 
   // Legge i file dalla cartella
@@ -148,11 +162,33 @@ const TranslatorPage = () => {
   
   // Conferma percorso e lettura file
   const handleConfirmPath = async () => {
-    // A causa delle restrizioni di sicurezza del browser (File System Access API),
-    // non è possibile accedere programmaticamente a un percorso locale.
-    // Guidiamo quindi l'utente a selezionare manualmente la cartella,
-    // usando il percorso trovato come riferimento.
-    await handleManualFolderSelect();
+    if (!foundPath) return;
+
+    setIsReadingFiles(true);
+    setGameFiles([]);
+    setTranslatorError(null); // Pulisce errori precedenti
+    try {
+        const response = await fetch('/api/library/scan-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ directoryPath: foundPath }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Errore durante la scansione dei file.');
+        }
+
+        const files: FileHandle[] = await response.json();
+        setGameFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
+        setCurrentStep('select-file');
+    } catch (err: any) {
+        setApiError(err.message); // Mostra l'errore all'utente
+        console.error('Errore durante la scansione dei file:', err);
+        // Rimane al passo corrente per mostrare l'errore
+    } finally {
+        setIsReadingFiles(false);
+    }
   };
 
   // Selezione e lettura file
@@ -162,19 +198,93 @@ const TranslatorPage = () => {
     setOriginalContent('');
     setTranslatedContent('');
     setTranslatorError(null);
+    setIsMultiLangFile(false);
+    setAvailableLanguages([]);
+    setSelectedSourceLanguage('');
+    setParsedStrings(null);
+    setIsIniFile(false);
     setCurrentStep('translate');
 
     try {
-      // @ts-ignore
-      const fileHandle = await file.handle.getFile();
-      const content = await fileHandle.text();
-      setOriginalContent(content);
-    } catch (err) {
-      setTranslatorError('Impossibile leggere il file.');
+        let content = '';
+        if (file.path) {
+            const response = await fetch('/api/library/read-file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filePath: file.path }),
+            });
+            if (!response.ok) throw new Error((await response.json()).error || 'Errore lettura file.');
+            content = (await response.json()).content;
+        } else if (file.handle) {
+            // @ts-ignore
+            const fileHandle = await file.handle.getFile();
+            content = await fileHandle.text();
+        } else {
+            throw new Error('Informazioni sul file non valide.');
+        }
+
+        // Chiama il parser per vedere se è un file multilingua
+        const parseResponse = await fetch('/api/parser/multilang-csv', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content }),
+        });
+
+        if (parseResponse.ok) {
+            const data = await parseResponse.json();
+            if (data.languages && data.languages.length > 0) {
+                setIsMultiLangFile(true);
+                setAvailableLanguages(data.languages);
+                setParsedStrings(data.strings);
+                // Imposta una lingua di default
+                const defaultLang = data.languages.includes('English') ? 'English' : data.languages[0];
+                handleSourceLanguageChange(defaultLang, data.strings);
+            } else {
+                setOriginalContent(content);
+            }
+        } else {
+             // Se non è un CSV multilingua, controlla se è un file INI
+            if (file.name.toLowerCase().endsWith('.ini')) {
+                const iniParseResponse = await fetch('/api/parser/ini', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content }),
+                });
+
+                if (iniParseResponse.ok) {
+                    const data = await iniParseResponse.json();
+                    if (data.strings) {
+                        setIsIniFile(true);
+                        const formattedContent = Object.entries(data.strings)
+                            .map(([key, value]) => `${key}: ${value}`)
+                            .join('\n');
+                        setOriginalContent(formattedContent);
+                    } else {
+                        setOriginalContent(content); // Fallback
+                    }
+                } else {
+                    setOriginalContent(content); // Fallback
+                }
+            } else {
+                 setOriginalContent(content); // Fallback finale per file di testo semplici
+            }
+        }
+    } catch (err: any) {
+      setTranslatorError(err.message || 'Impossibile leggere il file.');
       console.error('Errore lettura file:', err);
     } finally {
       setIsReadingFile(false);
     }
+  };
+
+  const handleSourceLanguageChange = (lang: string, strings: any) => {
+    if (!strings) return;
+    setSelectedSourceLanguage(lang);
+    const content = Object.entries(strings)
+        .map(([key, translations]) => `${key}: ${ (translations as any)[lang] || ''}`)
+        .join('\n');
+    setOriginalContent(content);
+    setTranslatedContent(''); // Pulisce la traduzione precedente
   };
 
   // Avvio traduzione
@@ -217,6 +327,11 @@ const TranslatorPage = () => {
         setOriginalContent('');
         setTranslatedContent('');
         setTranslatorError(null);
+        setIsMultiLangFile(false);
+        setAvailableLanguages([]);
+        setSelectedSourceLanguage('');
+        setParsedStrings(null);
+        setIsIniFile(false);
         setCurrentStep(gameFiles.length > 0 ? 'select-file' : 'confirm-path');
         break;
       case 'select-file':
@@ -245,13 +360,16 @@ const TranslatorPage = () => {
         <CardDescription>Scegli il titolo di cui vuoi tradurre i file di testo.</CardDescription>
       </CardHeader>
       <CardContent>
-        <Combobox
-          options={gameOptions}
-          value={selectedGame?.id || ''}
-          onChange={handleGameSelect}
-          placeholder="Cerca un gioco..."
-          emptyPlaceholder="Nessun gioco trovato."
-        />
+        <div className="flex items-center gap-4">
+              <Combobox
+                options={gameOptions}
+                value={selectedGame?.id || ''}
+                onChange={handleGameSelect}
+                placeholder="Cerca un gioco..."
+                emptyPlaceholder="Nessun gioco trovato."
+              />
+              {supportedLanguages && <LanguageFlags supportedLanguages={supportedLanguages} />}
+            </div>
       </CardContent>
     </Card>
   );
@@ -286,9 +404,9 @@ const TranslatorPage = () => {
                         <p className="text-sm text-green-700 font-mono break-all">{foundPath}</p>
                     </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 text-center">Usa questo percorso come riferimento per selezionare la cartella.</p>
-                <Button onClick={handleConfirmPath} className="w-full mt-4">
-                  Conferma e apri selettore cartella
+                <p className="text-xs text-muted-foreground mt-2 text-center">Clicca per avviare la ricerca dei file di testo in questa cartella.</p>
+                <Button onClick={handleConfirmPath} className="w-full mt-4" disabled={isReadingFiles}>
+                  {isReadingFiles ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Ricerca in corso...</> : 'Conferma e cerca i file'}
                 </Button>
               </div>
             ) : (
@@ -384,16 +502,47 @@ const TranslatorPage = () => {
             {isReadingFile ? (
                 <div className="flex justify-center items-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">Testo Originale</label>
-                        <Textarea value={originalContent} readOnly className="h-80 resize-none bg-muted/50" />
-                    </div>
-                    <div className="relative space-y-2">
-                        <label className="text-sm font-medium">Traduzione</label>
-                        <Textarea value={translatedContent} readOnly={isTranslating} placeholder={isTranslating ? '' : 'La traduzione apparirà qui...'} className="h-80 resize-none" />
-                        {isTranslating && <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-md"><Loader2 className="h-6 w-6 animate-spin" /></div>}
-                    </div>
+                <div className="grid md:grid-cols-2 gap-6 h-full">
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="original-text">Testo Originale</Label>
+                  {isMultiLangFile && availableLanguages.length > 0 && (
+                    <Select value={selectedSourceLanguage} onValueChange={(lang) => handleSourceLanguageChange(lang, parsedStrings)}>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Seleziona Lingua" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableLanguages.map(lang => (
+                          <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <Textarea
+                  id="original-text"
+                  value={originalContent}
+                  readOnly
+                  className="h-full min-h-[400px] bg-background/50 font-mono text-sm"
+                  placeholder="Il contenuto del file apparirà qui."
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="translated-text">Traduzione</Label>
+                <Textarea
+                  id="translated-text"
+                  value={translatedContent}
+                  readOnly
+                  className="h-full min-h-[400px] bg-background/50 font-mono text-sm"
+                  placeholder="La traduzione apparirà qui."
+                />
+              </div>
+            </div>
+            )}
+            {translatorError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
+                    <AlertTriangle className="h-5 w-5 text-red-600 mr-3"/>
+                    <p className="text-sm text-red-800">{translatorError}</p>
                 </div>
             )}
             <div className="mt-6 p-4 border rounded-lg bg-slate-50">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSteamLibraryFolders, findSteamGamePath } from '@/lib/steam-utils';
+import { findSteamGamePath } from '@/lib/steam-utils';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -42,8 +42,7 @@ export async function GET(req: NextRequest) {
     try {
         switch (provider) {
             case 'steam':
-                const libraryFolders = await getSteamLibraryFolders();
-                gamePath = await findSteamGamePath(gameId, libraryFolders);
+                gamePath = await findSteamGamePath(gameId);
                 break;
             case 'epic':
                 if (!appName) {

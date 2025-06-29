@@ -15,7 +15,14 @@ export async function GET(request: Request, { params }: { params: { id: string }
   try {
     // Leggi la cache dei giochi
     const cachedData = await fs.readFile(cacheFilePath, 'utf-8');
-    const games: SteamGame[] = JSON.parse(cachedData);
+    const cacheObject = JSON.parse(cachedData);
+
+    // Controlla che la cache abbia la struttura corretta
+    if (!cacheObject || !Array.isArray(cacheObject.games)) {
+        throw new Error('Formato della cache non valido.');
+    }
+
+    const games: SteamGame[] = cacheObject.games;
 
     // Trova il gioco specifico
     const game = games.find(g => g.appid.toString() === gameId);
