@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  webpack: (config, { isServer }) => {
+    // Risolve l'errore 'Module not found: Can't resolve 'winreg''
+    // Marcando 'winreg' come modulo esterno, diciamo a Webpack di non provare a includerlo nel bundle.
+    // Questo è necessario per i pacchetti nativi di Node.js che non sono destinati al browser.
+    if (isServer) {
+      config.externals.push('winreg');
+    }
+
+    return config;
+  },
   images: {
     remotePatterns: [
       {
