@@ -1,125 +1,135 @@
 import fs from 'fs/promises';
 import path from 'path';
 import * as vdf from 'vdf-parser';
+import WinReg from 'winreg';
 
-// Cache unificata per i dati delle app di Steam per evitare chiamate I/O ridondanti
-const steamAppsCache = {
-    timestamp: 0,
-    data: [] as any[], // Salveremo qui l'array completo dei giochi
-    TTL: 5 * 60 * 1000, // 5 minuti
-};
+// --- Strategia di Ricerca Potenziata (Ispirata a RAI PAL) ---
 
 /**
- * Funzione helper per importare dinamicamente 'steam-locate' in modo sicuro.
+ * Cerca il percorso di installazione di Steam dal registro di Windows.
+ * @returns {Promise<string | null>} Il percorso della cartella di installazione di Steam o null.
  */
-async function getSteamLocateModule() {
+async function getSteamInstallPathFromRegistry(): Promise<string | null> {
   try {
-    // Importiamo l'intero modulo per accedere a tutti i suoi export
-    const steamLocateModule = await import('steam-locate');
-    return steamLocateModule;
+    const regKey = new WinReg({
+      hive: WinReg.HKLM,
+      key: '\\SOFTWARE\\WOW6432Node\\Valve\\Steam'
+    });
+    const installPathItem = await new Promise((resolve, reject) => {
+      regKey.get('InstallPath', (err, item) => {
+        if (err) return reject(err);
+        resolve(item);
+      });
+    });
+    // @ts-ignore
+    return installPathItem?.value || null;
   } catch (error) {
-    console.error("[steam-utils] Errore critico: impossibile caricare il modulo 'steam-locate'.", error);
-    throw new Error("Modulo 'steam-locate' non trovato o corrotto.");
+    console.warn('[Registry] Impossibile trovare la chiave di registro di Steam:', error);
+    return null;
   }
 }
 
 /**
- * Funzione interna per ottenere e cachare l'elenco delle app Steam installate.
+ * Legge il file libraryfolders.vdf per ottenere tutte le cartelle della libreria di Steam.
+ * @param {string} steamPath - Il percorso di installazione di Steam.
+ * @returns {Promise<string[]>} Una lista di percorsi assoluti delle librerie Steam.
  */
-async function getCachedSteamApps(): Promise<any[]> {
-    const now = Date.now();
-    if (now - steamAppsCache.timestamp < steamAppsCache.TTL && steamAppsCache.data.length > 0) {
-        console.log(`[CACHE] Restituzione di ${steamAppsCache.data.length} app Steam dalla cache.`);
-        return steamAppsCache.data;
-    }
+async function getSteamLibraryFolders(steamPath: string): Promise<string[]> {
+  const libraryFoldersVdfPath = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
+  const libraryPaths: string[] = [path.join(steamPath)]; // La cartella principale è sempre una libreria
 
-    try {
-        console.log('[steam-locate] Chiamata a getInstalledSteamApps...');
-        const steamLocate = await getSteamLocateModule();
-        // Chiamiamo 'getInstalledSteamApps' come funzione esportata dal modulo
-        const installedApps: any[] = await steamLocate.getInstalledSteamApps();
-        console.log(`[steam-locate] Trovate ${installedApps.length} app installate.`);
+  try {
+    const content = await fs.readFile(libraryFoldersVdfPath, 'utf-8');
+    const data = vdf.parse(content);
 
-        steamAppsCache.data = installedApps || []; // Assicura che sia sempre un array
-        steamAppsCache.timestamp = now;
+    Object.values(data.libraryfolders || data.LibraryFolders).forEach((lib: any) => {
+      if (typeof lib === 'object' && lib.path) {
+        libraryPaths.push(lib.path);
+      } else if (typeof lib === 'string') {
+        // Per formati più vecchi
+        libraryPaths.push(lib);
+      }
+    });
 
-        return steamAppsCache.data;
-    } catch (error) {
-        console.error('[steam-locate] Errore durante la chiamata a getInstalledSteamApps:', error);
-        steamAppsCache.data = []; // Svuota la cache in caso di errore
-        steamAppsCache.timestamp = now; // Aggiorna il timestamp per evitare tentativi falliti a raffica
-        return [];
-    }
-}
-
-// Definiamo un tipo per i giochi installati che restituiamo all'API
-interface InstalledGame {
-  id: string;
-  name: string;
-  provider: 'steam';
+    console.log(`[VDF] Trovate ${libraryPaths.length} librerie Steam:`, libraryPaths);
+    return [...new Set(libraryPaths)]; // Rimuovi duplicati
+  } catch (error) {
+    console.warn(`[VDF] Impossibile leggere o parsare libraryfolders.vdf. Uso solo la libreria principale. Errore:`, error);
+    return libraryPaths;
+  }
 }
 
 /**
- * Ottiene un elenco di tutti i giochi Steam installati localmente.
+ * Scansiona una cartella di libreria per trovare il percorso di un gioco tramite il suo file manifest .acf.
+ * @param {string} libraryPath - Il percorso della libreria da scansionare.
+ * @param {string} appid - L'ID dell'app da trovare.
+ * @returns {Promise<string | null>} Il percorso di installazione del gioco o null.
  */
-export async function getInstalledSteamGames(): Promise<InstalledGame[]> {
-    const installedApps = await getCachedSteamApps();
+async function findGamePathInLibrary(libraryPath: string, appid: string): Promise<string | null> {
+  const steamappsPath = path.join(libraryPath, 'steamapps');
+  const manifestPath = path.join(steamappsPath, `appmanifest_${appid}.acf`);
 
-    if (!installedApps || installedApps.length === 0) {
-        return [];
+  try {
+    await fs.access(manifestPath);
+    const content = await fs.readFile(manifestPath, 'utf-8');
+    const data = vdf.parse(content);
+    const installDirName = data?.AppState?.installdir;
+
+    if (installDirName) {
+      const gamePath = path.join(steamappsPath, 'common', installDirName);
+      await fs.access(gamePath); // Verifica che la cartella esista
+      console.log(`[ACF] Trovato percorso per appid ${appid} in ${libraryPath}: ${gamePath}`);
+      return gamePath;
     }
-
-    const validApps = installedApps.filter(app => app && app.appId && app.name);
-
-    return validApps.map(app => ({
-        id: String(app.appId),
-        name: app.name,
-        provider: 'steam' as const,
-    }));
+    return null;
+  } catch (error) {
+    // Se il file non esiste (ENOENT) o altri errori, semplicemente non è qui.
+    return null;
+  }
 }
 
 /**
- * Trova il percorso di installazione di un gioco Steam specifico dato il suo appid.
+ * Trova il percorso di installazione di un gioco Steam specifico dato il suo appid, usando una strategia a cascata.
  */
 export async function findSteamGamePath(appid: string): Promise<string | null> {
-    console.log(`[findSteamGamePath] Inizio ricerca per appid: '${appid}'`);
-    try {
-        const steamApps = await getCachedSteamApps();
-        
-        if (!steamApps || steamApps.length === 0) {
-            console.warn('[findSteamGamePath] La lista di app da steam-locate è vuota. Impossibile procedere.');
-            return null;
-        }
+  console.log(`[Ricerca Potenziata] Inizio ricerca per appid: '${appid}'`);
 
-        // Normalizziamo il confronto per evitare problemi di case-sensitivity
-        // e logghiamo i tipi per un debug più facile.
-        const game = steamApps.find(app => {
-            const cachedAppId = app.appId || app.appid; // Prova entrambi i possibili case
-            // console.log(`[DEBUG] Confronto: cache ID (${cachedAppId}, type: ${typeof cachedAppId}) vs. richiesto ID (${appid}, type: ${typeof appid})`);
-            return String(cachedAppId).toLowerCase() === String(appid).toLowerCase();
-        });
-
-        if (game && game.installDir) {
-            console.log(`[findSteamGamePath] Percorso trovato per appid '${appid}': ${game.installDir}`);
-            // Aggiungiamo una verifica di esistenza del percorso
-            try {
-                await fs.access(game.installDir);
-                return game.installDir;
-            } catch (e) {
-                console.error(`[findSteamGamePath] Errore: la directory '${game.installDir}' per il gioco '${game.name}' non è accessibile o non esiste.`);
-                return null;
-            }
-        } else {
-            const availableAppIds = steamApps.map(app => app.appId).join(', ');
-            console.warn(`[findSteamGamePath] Gioco con appid '${appid}' non trovato nella cache.`);
-            console.log(`[findSteamGamePath] AppID disponibili nella cache: [${availableAppIds}]`);
-            return null;
-        }
-    } catch (error) {
-        console.error('[findSteamGamePath] Errore imprevisto durante la ricerca del percorso:', error);
-        return null;
+  // Strategia 1: Prova con 'steam-locate' (veloce e basato su cache)
+  try {
+    const steamLocateModule = await import('steam-locate');
+    const gamePath = await steamLocateModule.getAppPathById(Number(appid));
+    if (gamePath) {
+        await fs.access(gamePath);
+        console.log(`[Strategia 1 - steam-locate] Successo! Percorso trovato: ${gamePath}`);
+        return gamePath;
     }
+  } catch (error) {
+      console.warn('[Strategia 1 - steam-locate] Fallita o non ha trovato il gioco:', error);
+  }
+
+  console.log('[Ricerca Potenziata] Strategia 1 fallita. Avvio Strategia 2: Scansione manuale librerie.');
+
+  // Strategia 2: Scansione manuale tramite registro e file VDF
+  const steamPath = await getSteamInstallPathFromRegistry();
+  if (!steamPath) {
+    console.error('[Strategia 2] Fallimento critico: impossibile trovare la cartella di Steam nel registro.');
+    return null;
+  }
+
+  const libraryFolders = await getSteamLibraryFolders(steamPath);
+  for (const library of libraryFolders) {
+    const gamePath = await findGamePathInLibrary(library, appid);
+    if (gamePath) {
+      console.log(`[Strategia 2 - Scansione ACF] Successo! Percorso trovato: ${gamePath}`);
+      return gamePath;
+    }
+  }
+
+  console.error(`[Ricerca Potenziata] Tutte le strategie sono fallite. Impossibile trovare il percorso per l'appid ${appid}.`);
+  return null;
 }
+
+
 
 /**
  * Analizza i file .acf per estrarre l'ID, il nome e la lingua di un gioco.
