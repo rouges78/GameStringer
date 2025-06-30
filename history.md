@@ -1,5 +1,29 @@
 # Cronologia del Progetto GameStringer
 
+### 🚀 1 Luglio 2025: Migrazione a Tauri v2 e Integrazione Desktop
+
+**Sessione notturna dedicata all'aggiornamento dell'infrastruttura desktop e alla risoluzione di problemi di compatibilità.**
+
+- **COMPLETATO Aggiornamento a Tauri v2**: Migrazione completa da Tauri v1.5 a v2.0 con successo:
+  - Aggiornate tutte le dipendenze Rust (`tauri = "2.0"`, `tauri-build = "2.0"`)
+  - Convertita la configurazione `tauri.conf.json` al nuovo formato v2
+  - Risolti problemi di compatibilità tra CLI e backend
+  - Build system ottimizzato per migliori performance
+
+- **COMPLETATO Sviluppo Injekt-Translator**: Implementazione del modulo base per traduzione in tempo reale:
+  - Creata struttura Rust per intercettazione processi Windows
+  - Implementati comandi Tauri per comunicazione frontend-backend
+  - Sviluppata UI React per gestione processi e traduzioni
+  - Integrazione con API di traduzione AI
+
+- **COMPLETATO Miglioramenti UI/UX**:
+  - Dashboard resa completamente interattiva con dati reali
+  - Menu laterale riorganizzato ("Libreria", "Injekt-Translator", "Stores")
+  - Editor di traduzione integrato direttamente nella pagina dettaglio gioco
+  - Configurazione API AI accessibile dall'interfaccia
+
+- **IN CORSO Debug Integrazione Desktop**: Risoluzione problemi di avvio applicazione Tauri v2
+
 ### 🌙 Notte del 30 Giugno 2025: Sessione Intensiva di Debug e Stabilizzazione
 
 Una sessione notturna dedicata a risolvere una serie di bug critici che impedivano il corretto funzionamento del flusso di traduzione.

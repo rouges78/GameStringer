@@ -271,7 +271,12 @@ export const authOptions: NextAuthOptions = {
       // We forward the custom properties from the token to the session.
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.accounts = token.accounts;
+        // Find the steam account and explicitly add the steamId to the session user object
+        const steamAccount = token.accounts?.find(acc => acc.provider === 'steam-credentials');
+        if (steamAccount) {
+          session.user.steamId = steamAccount.providerAccountId;
+        }
+        session.user.accounts = token.accounts; // Keep the full list for other purposes
         session.user.connectedProviders = token.connectedProviders;
       }
       return session;

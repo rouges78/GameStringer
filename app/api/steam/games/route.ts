@@ -6,428 +6,456 @@ import { promises as fs } from 'fs';
 import { SteamGame } from '@/lib/types';
 import { prisma } from '@/lib/prisma';
 import { getInstalledSteamAppIds } from '@/app/utils/steam-local-files';
+import { HowLongToBeatService, HowLongToBeatEntry } from 'howlongtobeat';
 
 // --- Caching Configuration ---
 const CACHE_DIR = path.resolve(process.cwd(), '.cache');
 const CACHE_FILE_PATH = path.join(CACHE_DIR, 'steam-games.json');
-const CACHE_TTL_HOURS = 24; // Time-to-live for the cache in hours
+const CACHE_TTL_HOURS = 24;
 
-// Funzione per attendere un certo tempo (per il rate limiting)
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+// Helper to add timeout to a promise
+function promiseWithTimeout<T>(promise: Promise<T>, ms: number, timeoutMessage: string): Promise<T> {
+  const timeout = new Promise<T>((_, reject) => {
+    const id = setTimeout(() => {
+      clearTimeout(id);
+      reject(new Error(timeoutMessage));
+    }, ms);
+  });
+  return Promise.race([promise, timeout]);
+}
 
-// Funzione per leggere la cache
-async function readCache() {
+// Read from cache
+async function readCache(req: Request) {
+  const { searchParams } = new URL(req.url);
+  if (searchParams.get('force') === 'true') {
+    console.log('[API/STEAM] Cache bypassed by query param.');
+    return null;
+  }
   try {
     await fs.mkdir(CACHE_DIR, { recursive: true });
-    const fileContent = await fs.readFile(CACHE_FILE_PATH, 'utf-8');
-    const cacheData = JSON.parse(fileContent);
-    
-    const cacheAgeHours = (Date.now() - cacheData.timestamp) / (1000 * 60 * 60);
+    const stats = await fs.stat(CACHE_FILE_PATH);
+    const cacheAgeHours = (Date.now() - stats.mtime.getTime()) / (1000 * 60 * 60);
     if (cacheAgeHours < CACHE_TTL_HOURS) {
-      console.log('[API/STEAM/GAMES] Serving from fresh cache.');
-      return cacheData.games;
+      console.log('[API/STEAM] Serving from fresh cache.');
+      const fileContent = await fs.readFile(CACHE_FILE_PATH, 'utf-8');
+      return JSON.parse(fileContent).games;
     }
-    console.log('[API/STEAM/GAMES] Cache is stale.');
+    console.log('[API/STEAM] Cache is stale.');
     return null;
   } catch (error) {
-    console.log('[API/STEAM/GAMES] Cache not found or invalid. Fetching from source.');
+    console.log('[API/STEAM] Cache not found or invalid.');
     return null;
   }
 }
 
-// Funzione per scrivere nella cache
-async function writeCache(games: any[]) {
+// Write to cache
+async function writeCache(games: SteamGame[]) {
   try {
-    const cacheData = {
-      timestamp: Date.now(),
-      games: games,
-    };
-    await fs.writeFile(CACHE_FILE_PATH, JSON.stringify(cacheData, null, 2));
-    console.log('[API/STEAM/GAMES] Cache updated successfully.');
+    await fs.writeFile(CACHE_FILE_PATH, JSON.stringify({ timestamp: Date.now(), games }, null, 2));
+    console.log('[API/STEAM] Cache updated successfully.');
   } catch (error) {
-    console.error('[API/STEAM/GAMES] Failed to write cache:', error);
+    console.error('[API/STEAM] Failed to write cache:', error);
   }
 }
 
-// Funzione per parsare i giochi condivisi dal file XML (versione robusta e compatibile)
-async function parseSharedGamesXml(): Promise<{ appid: number; name: string; owner_steamid?: string }[]> {
+// Parse shared games from local XML
+async function parseSharedGamesXml(): Promise<{ appid: number; name: string }[]> {
   try {
     const xmlPath = path.join(process.cwd(), 'data', 'steam_shared_games.xml');
-    console.log(`[API/STEAM/GAMES] Attempting to read XML from: ${xmlPath}`);
     const xmlContent = await fs.readFile(xmlPath, 'utf-8');
-    console.log(`[API/STEAM/GAMES] Successfully read XML file, length: ${xmlContent.length} characters.`);
-
-    // Regex compatibile che usa [\s\S] al posto della flag 's' (dotAll)
     const gameRegex = /<game>[\s\S]*?<appID>(\d+)<\/appID>[\s\S]*?<name><!\[CDATA\[([\s\S]*?)\]\]><\/name>[\s\S]*?<\/game>/g;
-    
-    // Loop 'while' compatibile al posto di 'matchAll'
-    const matches = [];
-    let match;
-    while ((match = gameRegex.exec(xmlContent)) !== null) {
-        matches.push(match);
-    }
-
-    console.log(`[API/STEAM/GAMES] Found ${matches.length} game blocks in XML.`);
-
-    if (matches.length === 0) {
-      console.warn('[API/STEAM/GAMES] No valid <game> blocks found in XML. Check file content and format.');
-      return [];
-    }
-
-    const sharedGames = matches.map(match => {
-      const appid = parseInt(match[1], 10);
-      const name = match[2];
-      return { appid, name, owner_steamid: '76561198135965127' }; // Owner ID hardcoded
-    }).filter(game => game.appid > 0);
-
-    console.log(`[API/STEAM/GAMES] Parsed ${sharedGames.length} shared games from XML file.`);
-    return sharedGames;
-
+    const matches = [...xmlContent.matchAll(gameRegex)];
+    return matches.map(match => ({ appid: parseInt(match[1], 10), name: match[2] }));
   } catch (error: any) {
-    if (error.code === 'ENOENT') {
-        console.warn('[API/STEAM/GAMES] steam_shared_games.xml not found in data directory. Skipping XML parse.');
-    } else {
-        console.error('[API/STEAM/GAMES] CRITICAL: Failed to read or parse shared games XML:', error.message);
-    }
+    if (error.code !== 'ENOENT') console.error('[API/STEAM] Failed to parse shared games XML:', error);
     return [];
   }
 }
 
-// Definisce un tipo di base per i giochi restituiti dalle API iniziali di Steam
-interface SteamApiGame {
-    appid: number;
-    name: string;
-    [key: string]: any; // Accetta altri campi non definiti
-}
-
+// Save games to the database
 async function saveGamesToDb(games: SteamGame[]) {
-    if (games.length === 0) {
-        console.log('[API/STEAM/GAMES] No games to save.');
-        return;
-    }
+  if (games.length === 0) return;
 
-    try {
-        console.log('[API/STEAM/GAMES] Clearing existing games...');
-        await prisma.game.deleteMany({});
-    } catch (error) {
-        console.error('[API/STEAM/GAMES] Error clearing games from DB:', error);
-    }
+  const upsertPromises = games.map(game => {
+    // Mappatura esplicita per corrispondere a schema.prisma
+    const gameDataForDb = {
+      title: game.name,
+      platform: 'Steam',
+      imageUrl: `https://steamcdn-a.akamaihd.net/steam/apps/${game.appid}/header.jpg`,
+      isInstalled: game.is_installed || false,
+      isVr: game.isVr || false,
+      engine: game.engine || 'Unknown',
+      lastPlayed: game.last_played ? new Date(game.last_played * 1000) : null,
+      isShared: game.is_shared || false,
+      // 'installPath' non viene aggiornato qui per non sovrascrivere i dati locali
+    };
 
-    const gamesToSave = games.map(game => ({
-        steamAppId: game.appid, // Corretto: nome 'steamAppId' e tipo numerico
-        title: game.name,
-        platform: 'Steam',
-        installPath: '',
-        isVr: game.isVr,
-        engine: game.engine,
-        lastPlayed: game.last_played ? new Date(game.last_played * 1000) : null,
-        isInstalled: game.is_installed,
-        isShared: game.is_shared,
-    }));
-
-    try {
-        console.log(`[API/STEAM/GAMES] Saving ${games.length} games to database...`);
-        await prisma.game.createMany({
-            data: gamesToSave,
-        });
-        console.log(`[API/STEAM/GAMES] Successfully saved ${games.length} games.`);
-    } catch (error) {
-        console.error('[API/STEAM/GAMES] Error saving games to DB:', error);
-        if (process.env.NODE_ENV === 'development') {
-            console.error('[API/STEAM/GAMES] Data that caused the error:', JSON.stringify(gamesToSave, null, 2));
-        }
-    }
-}
-
-async function fetchGamesFromSteam(apiKey: string, steamId: string, steamLoginSecureCookie: string | undefined): Promise<SteamGame[]> {
-    console.time('[PERF] fetchGamesFromSteam total');
-
-    // 1. Get owned games with retry logic
-    console.time('[PERF] GetOwnedGames');
-    console.log('[API/STEAM/GAMES] Fetching owned games...');
-    const ownedGamesUrl = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${steamId}&format=json&include_appinfo=true&include_played_free_games=true`;
-    
-    let ownedGamesResponseData: any;
-    let attempts = 0;
-    const maxAttempts = 5;
-    while (attempts < maxAttempts) {
-        try {
-            const ownedGamesResponse = await fetch(ownedGamesUrl);
-            if (ownedGamesResponse.status === 429) {
-                const delay = Math.pow(2, attempts) * 1000;
-                console.warn(`[API/STEAM/GAMES] Rate limited on GetOwnedGames. Retrying in ${delay / 1000}s...`);
-                await sleep(delay);
-                attempts++;
-                continue;
-            }
-            if (!ownedGamesResponse.ok) {
-                throw new Error(`Steam API (GetOwnedGames) failed with status: ${ownedGamesResponse.status}`);
-            }
-            ownedGamesResponseData = await ownedGamesResponse.json();
-            break; // Success
-        } catch (error: any) {
-            console.error(`[API/STEAM/GAMES] Attempt ${attempts + 1} to fetch owned games failed: ${error.message}`);
-            if (attempts >= maxAttempts - 1) {
-                console.error('[API/STEAM/GAMES] Final attempt to fetch owned games failed.');
-                throw error;
-            }
-            attempts++;
-            await sleep(Math.pow(2, attempts) * 1000);
-        }
-    }
-    if (!ownedGamesResponseData || !ownedGamesResponseData.response) {
-        console.error('[API/STEAM/GAMES] CRITICAL: Could not fetch owned games from Steam after multiple retries. Aborting.');
-        throw new Error('Failed to fetch owned games from Steam API.');
-    }
-    const ownedGames = ownedGamesResponseData.response.games || [];
-    console.log(`[API/STEAM/GAMES] Found ${ownedGames.length} owned games.`);
-    console.timeEnd('[PERF] GetOwnedGames');
-
-    const allGames: SteamApiGame[] = [...ownedGames];
-    const allAppIds = new Set(allGames.map(g => g.appid));
-    const initialOwnedAppIds = new Set(allAppIds);
-
-    // Get locally installed games
-    const installedAppIds = await getInstalledSteamAppIds();
-
-    // 2. Get shared games using the new Family Sharing API
-    console.time('[PERF] GetSharedLibraryApps');
-    let sharedGamesFound = 0;
-
-    // Prima prova a leggere dal file XML locale
-    const xmlSharedGames = await parseSharedGamesXml();
-    if (xmlSharedGames.length > 0) {
-        console.log('[API/STEAM/GAMES] Using shared games from XML file...');
-        for (const sharedGame of xmlSharedGames) {
-            if (!allAppIds.has(sharedGame.appid)) {
-                allGames.push(sharedGame);
-                allAppIds.add(sharedGame.appid);
-                sharedGamesFound++;
-            }
-        }
-        console.log(`[API/STEAM/GAMES] Added ${sharedGamesFound} unique shared games from XML file.`);
-    } else if (steamLoginSecureCookie) {
-        // Fallback alla Family API se il file XML non è disponibile o è vuoto
-        console.log('[API/STEAM/GAMES] XML file not available or empty, trying Family API as fallback...');
-        try {
-            const cookie = steamLoginSecureCookie;
-            
-            const familyGroupUrl = `https://api.steampowered.com/IFamilyGroupsService/GetFamilyGroupForUser/v1/?steamid=${steamId}`;
-            const familyGroupResponse = await fetch(familyGroupUrl, { headers: { 'Cookie': cookie } });
-            
-            if (!familyGroupResponse.ok) {
-                throw new Error(`Failed to fetch family group: ${familyGroupResponse.statusText} (${familyGroupResponse.status})`);
-            }
-            const familyGroupData = await familyGroupResponse.json();
-            const familyGroupId = familyGroupData.response?.family_groupid;
-
-            if (!familyGroupId) {
-                console.warn('[API/STEAM/GAMES] Could not retrieve Family Group ID via API. User may not be in a family, or the cookie is invalid/expired.');
-            } else {
-                console.log(`[API/STEAM/GAMES] Found Family Group ID via API: ${familyGroupId}`);
-                const sharedAppsUrl = `https://api.steampowered.com/IFamilyGroupsService/GetSharedLibraryApps/v1/?family_groupid=${familyGroupId}&include_own=false`;
-                const sharedAppsResponse = await fetch(sharedAppsUrl, { headers: { 'Cookie': cookie } });
-
-                if (!sharedAppsResponse.ok) {
-                    throw new Error(`Failed to fetch shared library apps: ${sharedAppsResponse.statusText} (${sharedAppsResponse.status})`);
-                }
-                const sharedAppsData = await sharedAppsResponse.json();
-                const sharedApps = sharedAppsData.response?.apps || [];
-                
-                for (const app of sharedApps) {
-                    if (app.appid && !allAppIds.has(app.appid)) {
-                        allGames.push({ appid: app.appid, name: app.name || 'Unknown Shared Game', owner_steamid: app.owner_steamid });
-                        allAppIds.add(app.appid);
-                        sharedGamesFound++;
-                    }
-                }
-                console.log(`[API/STEAM/GAMES] Found and added ${sharedGamesFound} unique shared games from Family API.`);
-            }
-        } catch (e: any) {
-            console.error('[API/STEAM/GAMES] CRITICAL: Fallback to Family API also failed.', e.message);
-        }
-    } else {
-        console.warn('[API/STEAM/GAMES] No XML file and no STEAM_LOGIN_SECURE_COOKIE set. Skipping shared games fetch.');
-    }
-    console.timeEnd('[PERF] GetSharedLibraryApps');
-
-    // 3. Enrich games with details using the more reliable steamapi.xpaw.me
-    console.time('[PERF] Enrichment');
-    console.log(`[API/STEAM/GAMES] Total unique games to process: ${allGames.length}. Starting enrichment via steamapi.xpaw.me...`);
-
-    const enrichedDetailsMap = new Map<number, any>();
-    const enrichmentDelay = 100; // 100ms delay between requests to be safe and avoid rate limits
-
-    for (const game of allGames) {
-        try {
-            const detailsUrl = `https://steamapi.xpaw.me/api.php?action=appdetails&appid=${game.appid}`;
-            const detailsResponse = await fetch(detailsUrl);
-
-            if (!detailsResponse.ok) {
-                console.warn(`[API/STEAM/GAMES] xpaw.me API failed for AppID ${game.appid} with status ${detailsResponse.status}. Skipping.`);
-                continue; // Go to the next game
-            }
-
-            const detailsData = await detailsResponse.json();
-            
-            // The xpaw API doesn't have a 'success' flag. We assume success if we get a valid JSON object.
-            // We also check for a 'name' property as a sanity check.
-            if (detailsData && detailsData.name) {
-                enrichedDetailsMap.set(game.appid, detailsData);
-            } else {
-                 console.warn(`[API/STEAM/GAMES] xpaw.me API returned invalid or empty data for AppID ${game.appid}. Skipping.`);
-            }
-
-            await sleep(enrichmentDelay); // Be nice to the API
-
-        } catch (error: any) {
-            console.error(`[API/STEAM/GAMES] CRITICAL: Failed to fetch or parse from xpaw.me for AppID ${game.appid}: ${error.message}`);
-        }
-    }
-    console.timeEnd('[PERF] Enrichment');
-
-    // 4. Map, detect VR/engine, filter, and sort
-    console.time('[PERF] Final Mapping and Sorting');
-    const enrichedGames = allGames.map((game): SteamGame => {
-        const details = enrichedDetailsMap.get(game.appid);
-
-        // If enrichment fails, create a fallback object with basic info
-        if (!details) {
-            console.warn(`[API/STEAM/GAMES] Enrichment failed for AppID ${game.appid}. Using fallback data.`);
-            return {
-                appid: game.appid,
-                name: game.name, // Use the name from the initial fetch
-                playtime_forever: game.playtime_forever || 0,
-                img_icon_url: game.img_icon_url || '',
-                img_logo_url: game.img_logo_url || '',
-                isVr: false, // Cannot determine
-                engine: 'Unknown', // Cannot determine
-                last_played: (game as any).rtime_last_played || 0,
-                is_installed: installedAppIds.has(game.appid),
-                is_shared: !initialOwnedAppIds.has(game.appid),
-            };
-        }
-
-        // --- Enrichment succeeded, use full details ---
-        const categories = details.categories || [];
-        const isVr = details.steam_deck_compatibility?.category === 'verified' || categories.some((cat: { id: number }) => cat.id === 28 || cat.id === 38);
-
-        let engine = 'Unknown';
-        const textCorpus = [
-            (details.name || ''),
-            (details.short_description || ''),
-            (details.detailed_description || ''),
-            (details.about_the_game || ''),
-            ...categories.filter((c: any) => c && c.description).map((c: { description: string }) => c.description)
-        ].join(' ').toLowerCase();
-
-        if (textCorpus.includes('unreal')) engine = 'Unreal Engine';
-        else if (textCorpus.includes('unity')) engine = 'Unity';
-        else if (textCorpus.includes('source 2')) engine = 'Source 2';
-        else if (textCorpus.includes('source')) engine = 'Source Engine';
-        else if (textCorpus.includes('id tech')) engine = 'id Tech';
-        else if (textCorpus.includes('cryengine')) engine = 'CryEngine';
-
-        return {
-            appid: game.appid,
-            name: details.name || game.name,
-            playtime_forever: game.playtime_forever || 0,
-            img_icon_url: game.img_icon_url || '',
-            img_logo_url: game.img_logo_url || '',
-            isVr: isVr,
-            engine: engine,
-            last_played: (game as any).rtime_last_played || 0,
-            is_installed: installedAppIds.has(game.appid),
-            is_shared: !initialOwnedAppIds.has(game.appid),
-        };
-    }).filter((game): game is SteamGame => !!game.name && game.name.trim() !== '');
-    
-    // Aggiungo una rimappatura esplicita per garantire che 'is_installed' sia corretto.
-    // Questo risolve il bug per cui il valore non veniva riflesso correttamente.
-    const finalGames = enrichedGames.map(g => ({
-        ...g,
-        is_installed: installedAppIds.has(g.appid)
-    })).sort((a, b) => a.name.localeCompare(b.name));
-
-    const skippedCount = allGames.length - finalGames.length;
-    if (skippedCount > 0) {
-        console.warn(`[API/STEAM/GAMES] Skipped ${skippedCount} games that could not be enriched or had no name.`);
-    }
-    console.timeEnd('[PERF] Final Mapping and Sorting');
-
-    console.log(`\n[API/STEAM/GAMES] Enrichment process completed. Returning ${finalGames.length} games.`);
-    console.timeEnd('[PERF] fetchGamesFromSteam total');
-    return finalGames;
-}
-
-export async function GET(req: Request) {
-  console.log('\n[API/STEAM/GAMES] Inizio richiesta GET...');
-  const session = await getServerSession(authOptions);
-  const apiKey = process.env.STEAM_API_KEY;
-
-  // 1. Log della sessione
-  console.log('[API/STEAM/GAMES] Sessione ricevuta:', JSON.stringify(session, null, 2));
-
-  if (!session || !session.user?.id) {
-    console.error('[API/STEAM/GAMES] ERRORE: Sessione o ID utente non trovati.');
-    return NextResponse.json({ error: 'Utente non autenticato.' }, { status: 401 });
-  }
-
-  const userId = session.user.id;
-  console.log(`[API/STEAM/GAMES] ID utente dalla sessione: ${userId}`);
-
-  // 2. Recupero e log dell'account Steam
-  console.log(`[API/STEAM/GAMES] Cerco account Steam per l'utente ${userId}...`);
-  const steamAccount = await prisma.account.findFirst({
-    where: {
-      userId: userId,
-      provider: 'steam-credentials',
-    },
+    return prisma.game.upsert({
+      where: { steamAppId: game.appid },
+      update: gameDataForDb,
+      create: {
+        steamAppId: game.appid,
+        ...gameDataForDb,
+        installPath: null, // Imposta a null alla creazione
+      },
+    });
   });
 
-  console.log('[API/STEAM/GAMES] Account Steam trovato:', JSON.stringify(steamAccount, null, 2));
-
-  if (!steamAccount || !steamAccount.providerAccountId) {
-    console.error('[API/STEAM/GAMES] ERRORE: Account Steam non trovato nel DB o providerAccountId mancante.');
-    return NextResponse.json({ error: 'Account Steam non collegato o SteamID non trovato nel database.' }, { status: 400 });
+  try {
+    await Promise.allSettled(upsertPromises);
+    console.log(`[API/STEAM] Database update process completed for ${games.length} games.`);
+  } catch (error) {
+    // Poiché usiamo allSettled, gli errori individuali sono già gestiti.
+    // Logghiamo un errore generico se il processo stesso fallisce.
+    console.error('[API/STEAM] Critical error during bulk DB update:', error);
   }
+}
 
-  const steamId = steamAccount.providerAccountId;
-  console.log(`[API/STEAM/GAMES] SteamID recuperato: ${steamId}`);
+// Helper to normalize game names for HLTB search
+function normalizeGameNameForHltb(name: string): string {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    // Remove legal symbols
+    .replace(/®|™|©/g, '')
+    // Remove edition suffixes in various forms
+    .replace(/:\s(deluxe|definitive|special|gold|game of the year|goty|redux|remastered|hd|enhanced|vr) edition/g, '')
+    .replace(/\s(deluxe|definitive|special|gold|game of the year|goty|redux|remastered|hd|enhanced|vr) edition/g, '')
+    // Remove content descriptions in brackets or parentheses
+    .replace(/\[.*?\]/g, '')
+    .replace(/\(.*?\)/g, '')
+    // Remove standalone "demo"
+    .replace(/\bdemo\b/g, '')
+    // Remove content after a colon or hyphen, often indicating subtitles or DLC
+    .replace(/[:–-].*$/, '')
+    // Remove non-alphanumeric characters except spaces
+    .replace(/[^\w\s]/gi, '')
+    .trim();
+}
 
-  // 3. Verifica finale
-  if (!steamId || !apiKey) {
-    console.error('[API/STEAM/GAMES] ERRORE: Autenticazione fallita - SteamID o API Key mancanti.');
-    return NextResponse.json(
-      { error: 'Not authenticated or server is missing API key.' },
-      { status: 401 }
-    );
-  }
+// Main function to fetch and process all games
+async function fetchAndProcessGames(apiKey: string, steamId: string): Promise<SteamGame[]> {
+  console.time('[PERF] fetchAndProcessGames');
 
-  const { searchParams } = new URL(req.url);
-  const forceRefresh = searchParams.get('force') === 'true';
+  // 1. Fetch owned games
+  const ownedGamesUrl = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${steamId}&format=json&include_appinfo=true&include_played_free_games=true`;
+  const ownedGamesResponse = await fetch(ownedGamesUrl);
+  if (!ownedGamesResponse.ok) throw new Error(`Steam API (GetOwnedGames) failed: ${ownedGamesResponse.status}`);
+  const ownedGamesData = await ownedGamesResponse.json();
+  const allGames: any[] = ownedGamesData.response?.games || [];
+  
+  const allAppIds = new Set(allGames.map(g => g.appid));
+  const initialOwnedAppIds = new Set(allAppIds);
 
-  if (!forceRefresh) {
-    const cachedGames = await readCache();
-    if (cachedGames) {
-      return NextResponse.json(cachedGames);
+  // 2. Add shared games from XML
+  const sharedGames = await parseSharedGamesXml();
+  for (const sharedGame of sharedGames) {
+    if (!allAppIds.has(sharedGame.appid)) {
+      allGames.push(sharedGame);
+      allAppIds.add(sharedGame.appid);
     }
   }
+  console.log(`[API/STEAM] Total unique games to process: ${allGames.length}`);
+
+  // 3. Get installed games
+  const installedAppIds = await getInstalledSteamAppIds();
+
+  // 4. Enrich games in parallel
+  console.time('[PERF] Enrichment');
+  const hltbService = new HowLongToBeatService();
+
+  const enrichmentPromises = allGames.map(async (game): Promise<SteamGame> => {
+    const enrichedGame: SteamGame = {
+      appid: game.appid,
+      name: game.name,
+      playtime_forever: game.playtime_forever || 0,
+      img_icon_url: game.img_icon_url || '',
+      img_logo_url: game.img_logo_url || '',
+      last_played: game.rtime_last_played || 0,
+      is_installed: installedAppIds.has(game.appid),
+      is_shared: !initialOwnedAppIds.has(game.appid),
+      isVr: false,
+      engine: 'Unknown',
+    };
+
+    let details: any = null;
+    try {
+      const detailsResponse = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.appid}&l=it`);
+      if (detailsResponse.ok) {
+        const responseData = await detailsResponse.json();
+        if (responseData[game.appid] && responseData[game.appid].success) {
+          details = responseData[game.appid].data;
+          if (details.name) enrichedGame.name = details.name;
+        }
+      }
+    } catch (e) { /* Ignore details fetch error, proceed with basic info */ }
+
+    // HLTB Enrichment
+    try {
+      const normalizedName = normalizeGameNameForHltb(enrichedGame.name);
+      const searchPromise = hltbService.search(normalizedName);
+      const result = await promiseWithTimeout(searchPromise, 15000, `Timeout HLTB for ${enrichedGame.name}`);
+      if (result && result.length > 0) {
+        enrichedGame.howLongToBeat = {
+          main: result[0].gameplayMain,
+          mainExtra: result[0].gameplayMainExtra,
+          completionist: result[0].gameplayCompletionist,
+        };
+      }
+    } catch (e: any) {
+      // Only log if it's not a 404, which is common and noisy
+      if (!e.message?.includes('404')) {
+          const normalizedName = normalizeGameNameForHltb(enrichedGame.name);
+          console.warn(`[HLTB] Failed for \"${enrichedGame.name}\" (normalized: \"${normalizedName}\"): ${e.message}`);
+      }
+    }
+
+    // Details-based Enrichment (VR, Engine, and more)
+    if (details) {
+      // VR Detection (more reliable)
+      const vrCategoryIds = [31, 32]; // 31: VR Support, 32: VR Only
+      const hasVRCategory = details.categories?.some((cat: any) => 
+        cat.description.toLowerCase().includes('vr') ||
+        cat.id === 31 || // VR Support
+        cat.id === 401 // SteamVR Collectibles
+      ) || false;
+      
+      const hasVRInTitle = enrichedGame.name.toLowerCase().includes(' vr') ||
+                          enrichedGame.name.toLowerCase().includes('vr ') ||
+                          enrichedGame.name.toLowerCase().endsWith('vr');
+      
+      enrichedGame.isVr = hasVRCategory || hasVRInTitle;
+
+      // Engine Detection (advanced pattern matching)
+      const dev = (details.developers?.[0] || '').toLowerCase();
+      const publisher = (details.publishers?.[0] || '').toLowerCase();
+      const about = (details.about_the_game || '').toLowerCase();
+      const description = (details.short_description || '').toLowerCase();
+      const title = enrichedGame.name.toLowerCase();
+      
+      // Combina tutti i testi per una ricerca più completa
+      const searchText = `${dev} ${publisher} ${about} ${description} ${title}`;
+      
+      // Pattern matching avanzato per i motori
+      if (searchText.includes('unreal engine 5') || searchText.includes('ue5')) {
+        enrichedGame.engine = 'Unreal Engine 5';
+      } else if (searchText.includes('unreal engine 4') || searchText.includes('ue4')) {
+        enrichedGame.engine = 'Unreal Engine 4';
+      } else if (searchText.includes('unreal engine') || searchText.includes('unreal') || dev.includes('epic games')) {
+        enrichedGame.engine = 'Unreal Engine';
+      } else if (searchText.includes('unity 3d') || searchText.includes('unity engine') || searchText.includes('made with unity')) {
+        enrichedGame.engine = 'Unity';
+      } else if (searchText.includes('godot')) {
+        enrichedGame.engine = 'Godot';
+      } else if (searchText.includes('cryengine') || dev.includes('crytek')) {
+        enrichedGame.engine = 'CryEngine';
+      } else if (searchText.includes('source 2')) {
+        enrichedGame.engine = 'Source 2';
+      } else if (searchText.includes('source engine') || (dev.includes('valve') && !searchText.includes('source 2'))) {
+        enrichedGame.engine = 'Source';
+      } else if (searchText.includes('id tech 7')) {
+        enrichedGame.engine = 'id Tech 7';
+      } else if (searchText.includes('id tech') || dev.includes('id software')) {
+        enrichedGame.engine = 'id Tech';
+      } else if (searchText.includes('frostbite')) {
+        enrichedGame.engine = 'Frostbite';
+      } else if (searchText.includes('rpg maker mz')) {
+        enrichedGame.engine = 'RPG Maker MZ';
+      } else if (searchText.includes('rpg maker mv')) {
+        enrichedGame.engine = 'RPG Maker MV';
+      } else if (searchText.includes('rpg maker')) {
+        enrichedGame.engine = 'RPG Maker';
+      } else if (searchText.includes('gamemaker') || searchText.includes('game maker')) {
+        enrichedGame.engine = 'GameMaker';
+      } else if (searchText.includes('construct 3')) {
+        enrichedGame.engine = 'Construct 3';
+      } else if (searchText.includes('construct 2')) {
+        enrichedGame.engine = 'Construct 2';
+      } else if (searchText.includes('renpy') || searchText.includes("ren'py")) {
+        enrichedGame.engine = "Ren'Py";
+      } else if (searchText.includes('xna')) {
+        enrichedGame.engine = 'XNA/FNA';
+      } else if (searchText.includes('monogame')) {
+        enrichedGame.engine = 'MonoGame';
+      } else if (searchText.includes('love2d') || searchText.includes('löve')) {
+        enrichedGame.engine = 'LÖVE2D';
+      } else if (searchText.includes('pico-8') || searchText.includes('pico8')) {
+        enrichedGame.engine = 'PICO-8';
+      } else if (searchText.includes('clickteam fusion')) {
+        enrichedGame.engine = 'Clickteam Fusion';
+      } else if (searchText.includes('adventure game studio') || searchText.includes('ags')) {
+        enrichedGame.engine = 'AGS';
+      } else if (searchText.includes('twine')) {
+        enrichedGame.engine = 'Twine';
+      } else if (searchText.includes('bitsy')) {
+        enrichedGame.engine = 'Bitsy';
+      } else if (searchText.includes('defold')) {
+        enrichedGame.engine = 'Defold';
+      } else if (searchText.includes('cocos2d') || searchText.includes('cocos creator')) {
+        enrichedGame.engine = 'Cocos2d';
+      } else if (searchText.includes('phaser')) {
+        enrichedGame.engine = 'Phaser';
+      } else if (searchText.includes('heaps')) {
+        enrichedGame.engine = 'Heaps';
+      } else if (searchText.includes('bevy')) {
+        enrichedGame.engine = 'Bevy';
+      } else if (searchText.includes('amethyst')) {
+        enrichedGame.engine = 'Amethyst';
+      } else if (searchText.includes('raylib')) {
+        enrichedGame.engine = 'raylib';
+      } else if (searchText.includes('pygame')) {
+        enrichedGame.engine = 'Pygame';
+      } else if (searchText.includes('libgdx')) {
+        enrichedGame.engine = 'libGDX';
+      } else if (searchText.includes('lwjgl')) {
+        enrichedGame.engine = 'LWJGL';
+      } else if (searchText.includes('openfl')) {
+        enrichedGame.engine = 'OpenFL';
+      } else if (searchText.includes('haxeflixel')) {
+        enrichedGame.engine = 'HaxeFlixel';
+      } else if (searchText.includes('stencyl')) {
+        enrichedGame.engine = 'Stencyl';
+      } else if (searchText.includes('buildbox')) {
+        enrichedGame.engine = 'Buildbox';
+      } else if (searchText.includes('gdevelop')) {
+        enrichedGame.engine = 'GDevelop';
+      } else if (searchText.includes('solar2d') || searchText.includes('corona sdk')) {
+        enrichedGame.engine = 'Solar2D';
+      } else if (searchText.includes('amazon lumberyard') || searchText.includes('lumberyard')) {
+        enrichedGame.engine = 'Amazon Lumberyard';
+      } else if (searchText.includes('o3de') || searchText.includes('open 3d engine')) {
+        enrichedGame.engine = 'O3DE';
+      } else if (dev.includes('bethesda') || searchText.includes('creation engine')) {
+        enrichedGame.engine = 'Creation Engine';
+      } else if (dev.includes('cd projekt') || searchText.includes('redengine')) {
+        enrichedGame.engine = 'REDengine';
+      } else if (dev.includes('rockstar') || searchText.includes('rage engine')) {
+        enrichedGame.engine = 'RAGE';
+      } else if (dev.includes('ubisoft') && (searchText.includes('anvil') || searchText.includes('assassin'))) {
+        enrichedGame.engine = 'Anvil';
+      } else if (dev.includes('ubisoft') && searchText.includes('snowdrop')) {
+        enrichedGame.engine = 'Snowdrop';
+      } else if (dev.includes('capcom') && searchText.includes('re engine')) {
+        enrichedGame.engine = 'RE Engine';
+      } else if (dev.includes('fromsoftware') || dev.includes('from software')) {
+        enrichedGame.engine = 'FromSoftware Engine';
+      } else if (searchText.includes('decima')) {
+        enrichedGame.engine = 'Decima';
+      } else if (searchText.includes('fox engine')) {
+        enrichedGame.engine = 'Fox Engine';
+      } else if (searchText.includes('luminous engine')) {
+        enrichedGame.engine = 'Luminous Engine';
+      } else if (searchText.includes('dunia')) {
+        enrichedGame.engine = 'Dunia Engine';
+      } else if (searchText.includes('clausewitz')) {
+        enrichedGame.engine = 'Clausewitz';
+      } else if (searchText.includes('irrlicht')) {
+        enrichedGame.engine = 'Irrlicht';
+      } else if (searchText.includes('ogre') || searchText.includes('ogre3d')) {
+        enrichedGame.engine = 'OGRE';
+      } else if (searchText.includes('torque')) {
+        enrichedGame.engine = 'Torque';
+      } else if (searchText.includes('leadwerks')) {
+        enrichedGame.engine = 'Leadwerks';
+      } else if (searchText.includes('armory3d') || searchText.includes('armory')) {
+        enrichedGame.engine = 'Armory3D';
+      } else if (searchText.includes('stride') || searchText.includes('xenko')) {
+        enrichedGame.engine = 'Stride';
+      } else if (searchText.includes('flax')) {
+        enrichedGame.engine = 'Flax Engine';
+      } else if (searchText.includes('wicked engine')) {
+        enrichedGame.engine = 'Wicked Engine';
+      } else if (searchText.includes('neoaxis')) {
+        enrichedGame.engine = 'NeoAxis';
+      }
+
+      // Aggiungi altre informazioni dall'API Steam
+      if (details.genres) {
+        enrichedGame.genres = details.genres;
+      }
+      if (details.categories) {
+        enrichedGame.categories = details.categories;
+      }
+      if (details.short_description) {
+        enrichedGame.short_description = details.short_description;
+      }
+      if (details.is_free !== undefined) {
+        enrichedGame.is_free = details.is_free;
+      }
+      if (details.header_image) {
+        enrichedGame.header_image = details.header_image;
+      }
+      if (details.capsule_image) {
+        enrichedGame.library_capsule = details.capsule_image;
+      }
+      // Aggiungi developer, publisher, release_date, supported_languages
+      if (details.developers) {
+        enrichedGame.developers = details.developers;
+      }
+      if (details.publishers) {
+        enrichedGame.publishers = details.publishers;
+      }
+      if (details.release_date) {
+        enrichedGame.release_date = details.release_date;
+      }
+      if (details.supported_languages) {
+        enrichedGame.supported_languages = details.supported_languages;
+      }
+      if (details.pc_requirements) {
+        enrichedGame.pc_requirements = details.pc_requirements;
+      }
+      enrichedGame.dlc = details.dlc || [];
+
+    } else {
+      // Fallback for VR if details fetch fails - controlla solo il titolo
+      const hasVRInTitle = enrichedGame.name.toLowerCase().includes(' vr') ||
+                          enrichedGame.name.toLowerCase().includes('vr ') ||
+                          enrichedGame.name.toLowerCase().endsWith('vr');
+      enrichedGame.isVr = hasVRInTitle;
+    }
+    
+    return enrichedGame;
+  });
+
+  const settledGames = await Promise.allSettled(enrichmentPromises);
+  const successfulGames = settledGames
+    .filter(r => r.status === 'fulfilled')
+    .map(r => (r as PromiseFulfilledResult<SteamGame>).value);
   
-  if (forceRefresh) {
-    console.log('[API/STEAM/GAMES] Force refresh requested. Bypassing and rebuilding cache...');
-  }
+  console.timeEnd('[PERF] Enrichment');
+  console.timeEnd('[PERF] fetchAndProcessGames');
+  return successfulGames;
+}
 
+// --- API Endpoint ---
+export async function GET(req: Request) {
   try {
-    console.log('[API/STEAM/GAMES] Cache empty, stale, or bypassed. Fetching from Steam API...');
-    const steamLoginSecureCookie = process.env.STEAM_LOGIN_SECURE_COOKIE;
-    const games = await fetchGamesFromSteam(apiKey, steamId, steamLoginSecureCookie);
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.steamId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    await saveGamesToDb(games);
-    await writeCache(games);
+    const apiKey = process.env.STEAM_API_KEY;
+    if (!apiKey) return NextResponse.json({ error: 'Server configuration missing' }, { status: 500 });
+
+    const cachedGames = await readCache(req);
+    if (cachedGames) return NextResponse.json(cachedGames);
+
+    console.log('[API/STEAM] No fresh cache. Starting full fetch process...');
+    const games = await fetchAndProcessGames(apiKey, session.user.steamId);
+
+    games.sort((a, b) => {
+      if (a.is_installed !== b.is_installed) return a.is_installed ? -1 : 1;
+      if (a.last_played !== b.last_played) return (b.last_played || 0) - (a.last_played || 0);
+      return a.name.localeCompare(b.name);
+    });
+
+    // Non-blocking cache and DB updates
+    writeCache(games);
+    saveGamesToDb(games);
+
     return NextResponse.json(games);
+
   } catch (error: any) {
-    console.error('[API/STEAM/GAMES] An error occurred while fetching from Steam:', error);
-    return NextResponse.json({ error: error.message || 'An unknown error occurred' }, { status: 500 });
+    console.error('[API/STEAM] Critical error in GET handler:', error);
+    return NextResponse.json({ error: 'Failed to fetch Steam games', details: error.message }, { status: 500 });
   }
 }

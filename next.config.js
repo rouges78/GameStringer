@@ -8,6 +8,36 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.akamai.steamstatic.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'shared.akamai.steamstatic.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.steamgriddb.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn2.steamgriddb.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.steampowered.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
   webpack: (config, { isServer }) => {
@@ -19,26 +49,6 @@ const nextConfig = {
     }
 
     return config;
-  },
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'cdn.akamai.steamstatic.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.steamgriddb.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn2.steamgriddb.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'media.steampowered.com',
-      },
-    ],
   },
 };
 

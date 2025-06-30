@@ -1,0 +1,62 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/v1/tooling/cli/schema.json",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devPath": "http://localhost:3000",
+    "distDir": "../out",
+    "withGlobalTauri": false
+  },
+  "package": {
+    "productName": "GameStringer",
+    "version": "3.2.1"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "process": {
+        "all": true
+      },
+      "window": {
+        "all": true
+      },
+      "fs": {
+        "all": true
+      },
+      "path": {
+        "all": true
+      },
+      "os": {
+        "all": true
+      }
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.gamestringer.app",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ]
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "resizable": true,
+        "title": "GameStringer",
+        "width": 1200,
+        "height": 800
+      }
+    ]
+  }
+}

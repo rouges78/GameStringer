@@ -30,34 +30,37 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import GameImage from '@/components/game-image';
 import GameCard from '@/components/game-card';
-import type { SteamGame } from '@/lib/types';
-
-// Definizione del tipo per i giochi locali da Prisma
-// Definizione manuale del tipo per i giochi locali per evitare problemi di generazione
-interface LocalGame {
-  id: string;
-  title: string;
-  platform: string;
-  installPath: string;
-  executablePath: string | null;
-  icon: string | null;
-  imageUrl: string | null;
-  isInstalled: boolean;
-  steamAppId: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import HowLongToBeatDisplay from '../components/HowLongToBeatDisplay';
+import type { SteamGame, LocalGame, HowLongToBeatData } from '@/lib/types';
 
 // Tipo unificato per la visualizzazione nell'interfaccia
 interface DisplayGame {
-  id: string; // Usiamo appid di steam come id univoco
+  id: string; // Usiamo appid di steam o id del gioco locale
   title: string;
   imageUrl: string;
   fallbackImageUrl: string | null;
-  platform: string;
+  platform: 'Steam' | 'Local';
   isInstalled: boolean;
   playtime: number;
-  isVrSupported: boolean;
+  lastPlayed: number;
+  isVrSupported?: boolean;
+  engine?: string;
+  howLongToBeat?: HowLongToBeatData;
+  genres?: { id: string; description: string }[];
+  categories?: { id: number; description: string }[];
+  shortDescription?: string;
+  isFree?: boolean;
+  developers?: string[];
+  publishers?: string[];
+  releaseDate?: {
+    coming_soon: boolean;
+    date: string;
+  };
+  supportedLanguages?: string;
+  pcRequirements?: {
+    minimum?: string;
+    recommended?: string;
+  };
 }
 
 const StatCard = ({ title, value, icon: Icon, color }: { title: string, value: string | number, icon: React.ElementType, color: string }) => (
@@ -105,25 +108,45 @@ export default function GamesPage() {
       const steamGames: SteamGame[] = await steamResponse.json();
       const localGames: LocalGame[] = localResponse.ok ? await localResponse.json() : [];
 
+      // --- DEBUGGING: Log the first game object to check for enriched data ---
+      if (steamGames && steamGames.length > 0) {
+        console.log('--- DEBUG: First game data received from API ---');
+        console.log(JSON.stringify(steamGames[0], null, 2));
+        console.log('-------------------------------------------------');
+      }
+      // --- END DEBUGGING ---
+
       const localGameMap = new Map(
         localGames
           .filter(g => g.steamAppId !== null)
           .map(g => [g.steamAppId!, g])
       );
 
+      // Definiamo un tipo per i giochi che verranno visualizzati, combinando le fonti
       const displayGames: DisplayGame[] = steamGames.map(steamGame => {
         const localGame = localGameMap.get(steamGame.appid);
-        const isVrSupported = steamGame.isVr;
-
+        
         return {
           id: steamGame.appid.toString(),
           title: steamGame.name,
-          imageUrl: `https://cdn.akamai.steamstatic.com/steam/apps/${steamGame.appid}/header.jpg`,
+          imageUrl: steamGame.header_image || `https://cdn.akamai.steamstatic.com/steam/apps/${steamGame.appid}/header.jpg`,
           fallbackImageUrl: localGame?.imageUrl || null,
           platform: 'Steam',
-          isInstalled: steamGame.is_installed, // Usa il valore corretto dall'API
+          isInstalled: steamGame.is_installed,
           playtime: steamGame.playtime_forever,
-          isVrSupported,
+          lastPlayed: steamGame.last_played,
+          isVrSupported: steamGame.isVr,
+          engine: steamGame.engine,
+          howLongToBeat: steamGame.howLongToBeat,
+          genres: steamGame.genres,
+          categories: steamGame.categories,
+          shortDescription: steamGame.short_description,
+          isFree: steamGame.is_free,
+          developers: steamGame.developers,
+          publishers: steamGame.publishers,
+          releaseDate: steamGame.release_date,
+          supportedLanguages: steamGame.supported_languages,
+          pcRequirements: steamGame.pc_requirements,
         };
       });
 

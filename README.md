@@ -2,9 +2,22 @@
 
 ---
 
+### ✨ Correzioni Recenti e Miglioramenti (Luglio 2025)
+
+#### 🚀 Aggiornamento a Tauri v2
+- **Migrazione Completata**: Il progetto è stato aggiornato con successo da Tauri v1.5 a Tauri v2.0
+- **Configurazione Modernizzata**: Nuovo formato di configurazione `tauri.conf.json` compatibile con v2
+- **Dipendenze Aggiornate**: Tutte le dipendenze Rust e npm sono state allineate a Tauri v2
+- **Build System Ottimizzato**: Processo di compilazione più veloce e affidabile
+
 ### ✨ Correzioni Recenti e Miglioramenti (Giugno 2025)
 
 Questa versione include importanti correzioni di bug e miglioramenti alla stabilità e all'esperienza utente:
+
+- **Risolto: Problemi di Arricchimento Dati Steam (VR, Motore, HLTB)**
+  - **Diagnosi:** Identificato che un'API esterna (`xpaw.me`) non era più affidabile, causando il fallimento silenzioso del recupero dei dati.
+  - **Soluzione:** Sostituita l'API esterna con l'endpoint ufficiale di Steam (`appdetails`) per garantire un recupero dati stabile e accurato.
+  - **Debug:** Risolto un problema di cache del server di sviluppo Next.js che impediva l'applicazione delle correzioni, forzando una pulizia completa della cache (`.next`).
 
 - **Risolto: Lista Giochi Vuota nel Traduttore AI**
   - Corretto un disallineamento critico tra i dati del backend (`appId`) e quelli attesi dal frontend (`id`).
@@ -43,6 +56,8 @@ GameStringer è un'applicazione avanzata per la traduzione di videogiochi che sf
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Next.js](https://img.shields.io/badge/Next.js-14.2.28-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.2.2-blue)
+![Tauri](https://img.shields.io/badge/Tauri-2.0-blue)
+![Rust](https://img.shields.io/badge/Rust-1.70+-orange)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
 ![Prisma](https://img.shields.io/badge/Prisma-6.7.0-2D3748)
 

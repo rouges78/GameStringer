@@ -12,6 +12,8 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
+      /** The user's Steam ID, if connected. */
+      steamId?: string;
       /** Elenco completo degli account collegati all'utente. */
       accounts?: Account[];
       /** Elenco semplice dei nomi dei provider collegati. */

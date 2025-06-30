@@ -16,14 +16,26 @@
 - **[Completato]** Gestione dei casi limite per giochi senza file di testo traducibili.
 - **[Completato]** Miglioramento della ricerca nella libreria con priorità ai titoli che iniziano con il termine cercato.
 
-## 🚧 Fase 2: Debug Critico e Miglioramento UX (In Corso)
+## ✅ Fase 2: Stabilizzazione Arricchimento Dati e UX (Completato)
 
-- **Obiettivo Principale**: Ripristinare e stabilizzare il flusso completo del Traduttore AI.
-- **Task Critico**: Analizzare e risolvere il problema del rilevamento automatico del percorso di installazione del gioco. Questo è attualmente il blocco principale.
-- **Task Frontend**: Aggiornare la pagina del traduttore per recuperare la configurazione AI (provider, API key) e includerla correttamente nelle richieste all'API di traduzione.
-- **Task UX**: Visualizzare il nome dell'engine di gioco accanto alle bandierine delle lingue nella libreria.
+- **[Completato]** Debug e risoluzione dei problemi di arricchimento dati (VR, Motore, HLTB) tramite passaggio all'API ufficiale di Steam.
+- **[Completato]** Risoluzione dei problemi di cache del server di sviluppo che impedivano l'applicazione delle patch.
+- **[Completato]** Implementazione della visualizzazione delle lingue supportate tramite bandierine nella libreria.
+- **[Completato]** Miglioramento UI con badge colorati per motori di gioco e indicatori VR.
+- **[Completato]** Integrazione editor di traduzione reale con configurazione API AI.
+- **[Completato]** Gestione DLC nella pagina dettaglio gioco.
+- **[Completato]** Dashboard interattiva con dati reali.
+- **[Completato]** Aggiornamento a Tauri v2 per migliore performance desktop.
 
-## 🚀 Fase 3: Funzionalità Avanzate e Qualità della Vita
+## 🚧 Fase 3: Injekt-Translator e Traduzione in Tempo Reale (In Sviluppo)
+
+- **[In Corso]** Sviluppo del modulo Injekt-Translator per traduzione in tempo reale durante il gameplay.
+- **[In Corso]** Implementazione di hook per intercettare testi nei giochi Windows.
+- **[Pianificato]** Sistema di iniezione DLL per giochi DirectX/OpenGL.
+- **[Pianificato]** Cache intelligente delle traduzioni per ridurre latenza.
+- **[Pianificato]** Supporto per overlay di traduzione non invasivo.
+
+## 🚀 Fase 4: Funzionalità Avanzate e Qualità della Vita
 
 - **Traduzione di Immagini (OCR)**: Implementare una funzione per estrarre il testo dalle immagini presenti nei giochi (es. menu, texture) e tradurlo.
 - **Supporto per Altre Piattaforme**: Integrare il supporto per altri store come GOG, Epic Games Store, etc.

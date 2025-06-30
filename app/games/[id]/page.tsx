@@ -27,6 +27,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { mockGames, mockTranslations } from '@/lib/mock-data';
+import InlineTranslator from '@/components/inline-translator';
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -37,6 +38,8 @@ export default function GameDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
+  const [dlcGames, setDlcGames] = useState<any[]>([]);
+  const [showTranslation, setShowTranslation] = useState(false);
 
   useEffect(() => {
     if (gameId) {
@@ -47,31 +50,48 @@ export default function GameDetailPage() {
           if (response.ok) {
             const data = await response.json();
             // Simula dati che non sono ancora nell'API
-            data.engine = 'Source 2';
+            // Mantieni i dati esistenti dall'API e aggiungi campi simulati
             data.lastScanned = new Date().toISOString();
             data.detectedFiles = [];
-            data.installPath = `C:\Program Files (x86)\Steam\steamapps\common\${data.name.replace(/ /g, '')}`;
-            data.isInstalled = true; // Assumiamo sia installato per ora
+            data.installPath = data.is_installed ? `C:\Program Files (x86)\Steam\steamapps\common\${data.name.replace(/ /g, '')}` : null;
             data.platform = 'Steam';
             data.storeId = data.appid;
             data.title = data.name;
             data.description = data.short_description?.replace(/<[^>]*>?/gm, '') || 'Nessuna descrizione.';
-            data.coverUrl = `https://steamcdn-a.akamaihd.net/steam/apps/${data.appid}/library_600x900.jpg`;
+            data.coverUrl = data.header_image || `https://steamcdn-a.akamaihd.net/steam/apps/${data.appid}/library_600x900.jpg`;
 
             setGame(data);
             // TODO: Caricare le traduzioni reali
             setTranslations(mockTranslations.filter(t => t.gameId === gameId));
+            
+            // Carica i DLC se presenti
+            if (data.dlc && data.dlc.length > 0) {
+              const dlcPromises = data.dlc.map(async (dlcId: number) => {
+                try {
+                  const dlcResponse = await fetch(`https://store.steampowered.com/api/appdetails?appids=${dlcId}&l=it`);
+                  const dlcData = await dlcResponse.json();
+                  if (dlcData[dlcId]?.success) {
+                    return dlcData[dlcId].data;
+                  }
+                } catch (e) {
+                  console.error(`Errore caricamento DLC ${dlcId}:`, e);
+                }
+                return null;
+              });
+              
+              const dlcResults = await Promise.all(dlcPromises);
+              setDlcGames(dlcResults.filter((dlc: any) => dlc !== null));
+            }
           } else {
-            setGame(null);
+            console.error('Errore nel caricamento del gioco');
           }
         } catch (error) {
-          console.error('Failed to fetch game data:', error);
-          setGame(null);
+          console.error('Errore:', error);
         } finally {
           setIsLoading(false);
         }
       };
-
+      
       fetchGameData();
     }
   }, [gameId]);
@@ -158,16 +178,17 @@ export default function GameDetailPage() {
       </motion.div>
 
       {/* Game Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cover and Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Cover and Actions - più piccola */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
+          className="lg:col-span-1"
         >
           <Card>
-            <CardContent className="p-6">
-              <div className="relative aspect-[3/4] bg-muted rounded-lg overflow-hidden mb-4">
+            <CardContent className="p-4">
+              <div className="relative aspect-[3/4] bg-muted rounded-lg overflow-hidden mb-4 max-w-[200px] mx-auto">
                 <Image
                   src={game.coverUrl}
                   alt={game.title}
@@ -181,19 +202,26 @@ export default function GameDetailPage() {
                   <Badge className={getPlatformColor(game.platform)}>
                     {game.platform}
                   </Badge>
-                  <Badge variant={game.isInstalled ? "default" : "secondary"}>
-                    {game.isInstalled ? 'Installato' : 'Non Installato'}
+                  <Badge variant={game.is_installed ? "default" : "secondary"}>
+                    {game.is_installed ? 'Installato' : 'Non Installato'}
                   </Badge>
+                  {game.is_free && (
+                    <Badge variant="outline" className="bg-purple-500/10 text-purple-500">
+                      Free to Play
+                    </Badge>
+                  )}
                 </div>
                 
-                {game.isInstalled && (
+                {game.is_installed && (
                   <div className="space-y-2">
-                    <Link href={`/translator?gameId=${game.id}`} className="block">
-                      <Button className="w-full">
-                        <Languages className="h-4 w-4 mr-2" />
-                        Avvia Traduzione
-                      </Button>
-                    </Link>
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => setShowTranslation(true)}
+                    >
+                      <Languages className="h-4 w-4 mr-2" />
+                      Avvia Traduzione
+                    </Button>
                     <Link href={`/realtime?gameId=${game.id}`} className="block">
                       <Button variant="outline" className="w-full">
                         <Zap className="h-4 w-4 mr-2" />
@@ -207,7 +235,7 @@ export default function GameDetailPage() {
                   </div>
                 )}
                 
-                {!game.isInstalled && (
+                {!game.is_installed && (
                   <Button variant="outline" className="w-full" disabled>
                     <Download className="h-4 w-4 mr-2" />
                     Gioco Non Installato
@@ -218,13 +246,25 @@ export default function GameDetailPage() {
           </Card>
         </motion.div>
 
-        {/* Game Info */}
+        {/* Game Details */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2"
+          className="lg:col-span-3 space-y-6"
         >
+          {/* Descrizione del gioco */}
+          {game.short_description && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Descrizione</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-relaxed">{game.short_description}</p>
+              </CardContent>
+            </Card>
+          )}
+          
           <Card>
             <CardHeader>
               <CardTitle>Informazioni Gioco</CardTitle>
@@ -240,6 +280,26 @@ export default function GameDetailPage() {
                     </div>
                   </div>
                   
+                  {game.developers && game.developers.length > 0 && (
+                    <div className="flex items-center space-x-3">
+                      <Monitor className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Sviluppatore</p>
+                        <p className="text-sm text-muted-foreground">{game.developers.join(', ')}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {game.publishers && game.publishers.length > 0 && (
+                    <div className="flex items-center space-x-3">
+                      <Archive className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Publisher</p>
+                        <p className="text-sm text-muted-foreground">{game.publishers.join(', ')}</p>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex items-center space-x-3">
                     <Monitor className="h-5 w-5 text-muted-foreground" />
                     <div>
@@ -248,15 +308,17 @@ export default function GameDetailPage() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Ultima Scansione</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(game.lastScanned).toLocaleString('it-IT')}
-                      </p>
+                  {game.release_date && (
+                    <div className="flex items-center space-x-3">
+                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Data di Rilascio</p>
+                        <p className="text-sm text-muted-foreground">
+                          {game.release_date.coming_soon ? 'Prossimamente' : game.release_date.date}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 
                 <div className="space-y-4">
@@ -268,12 +330,22 @@ export default function GameDetailPage() {
                     </div>
                   </div>
                   
-                  {game.isInstalled && (
+                  {game.is_installed && game.installPath && (
                     <div className="flex items-center space-x-3">
                       <Folder className="h-5 w-5 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">Directory</p>
                         <p className="text-xs text-muted-foreground truncate">{game.installPath}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {game.supported_languages && (
+                    <div className="flex items-center space-x-3">
+                      <Languages className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm font-medium">Lingue Supportate</p>
+                        <p className="text-xs text-muted-foreground">{game.supported_languages.replace(/<[^>]*>?/gm, '').substring(0, 50)}...</p>
                       </div>
                     </div>
                   )}
@@ -299,8 +371,97 @@ export default function GameDetailPage() {
                   <Progress value={scanProgress} className="h-2" />
                 </div>
               )}
+              
+              {/* Categorie */}
+              {game.categories && game.categories.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-sm font-semibold mb-3">Categorie</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {game.categories.map((category: any) => (
+                      <Badge key={category.id} variant="outline">
+                        {category.description}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Generi */}
+              {game.genres && game.genres.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-semibold mb-3">Generi</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {game.genres.map((genre: any) => (
+                      <Badge key={genre.id} variant="secondary">
+                        {genre.description}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
+          
+          {/* Requisiti di Sistema */}
+          {game.pc_requirements && (game.pc_requirements.minimum || game.pc_requirements.recommended) && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Requisiti di Sistema</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {game.pc_requirements.minimum && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Minimi</h4>
+                      <div className="text-sm text-muted-foreground prose prose-sm max-w-none" 
+                           dangerouslySetInnerHTML={{ __html: game.pc_requirements.minimum }} />
+                    </div>
+                  )}
+                  {game.pc_requirements.recommended && (
+                    <div>
+                      <h4 className="font-semibold mb-2">Consigliati</h4>
+                      <div className="text-sm text-muted-foreground prose prose-sm max-w-none" 
+                           dangerouslySetInnerHTML={{ __html: game.pc_requirements.recommended }} />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
+          {/* DLC */}
+          {dlcGames.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Contenuti Aggiuntivi (DLC)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3">
+                  {dlcGames.map((dlc) => (
+                    <div key={dlc.steam_appid} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                      {dlc.header_image && (
+                        <img 
+                          src={dlc.header_image} 
+                          alt={dlc.name}
+                          className="w-20 h-10 object-cover rounded"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{dlc.name}</h4>
+                        {dlc.is_free ? (
+                          <span className="text-xs text-green-600">Gratuito</span>
+                        ) : dlc.price_overview ? (
+                          <span className="text-xs text-muted-foreground">
+                            {dlc.price_overview.final_formatted}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </motion.div>
       </div>
 
@@ -462,6 +623,16 @@ export default function GameDetailPage() {
           </TabsContent>
         </Tabs>
       </motion.div>
+      
+      {/* Inline Translator Modal */}
+      {showTranslation && game && (
+        <InlineTranslator
+          gameId={game.appid.toString()}
+          gameName={game.name}
+          gamePath={game.installPath}
+          onClose={() => setShowTranslation(false)}
+        />
+      )}
     </div>
   );
 }

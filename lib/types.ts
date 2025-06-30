@@ -49,6 +49,27 @@ export interface RealTimeTranslationState {
   injectionStatus: 'idle' | 'hooking' | 'active' | 'error';
 }
 
+export interface HowLongToBeatData {
+  main: number;
+  mainExtra: number;
+  completionist: number;
+}
+
+// Definizione del tipo per i giochi locali da Prisma
+// Questo viene definito manualmente per evitare problemi di generazione o dipendenze dirette
+export interface LocalGame {
+  id: string;
+  steamAppId?: number | null; // Collegamento opzionale a Steam
+  title: string;
+  platform: string;
+  installPath: string;
+  executablePath?: string | null;
+  imageUrl?: string | null;
+  isInstalled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface SteamGame {
   appid: number;
   name: string;
@@ -68,6 +89,19 @@ export interface SteamGame {
   header_image?: string;
   library_capsule?: string;
   categories?: { id: number; description: string }[];
-  isVr: boolean;
+  isVr?: boolean;
   engine?: string;
+  howLongToBeat?: HowLongToBeatData;
+  developers?: string[];
+  publishers?: string[];
+  release_date?: {
+    coming_soon: boolean;
+    date: string;
+  };
+  supported_languages?: string;
+  pc_requirements?: {
+    minimum?: string;
+    recommended?: string;
+  };
+  dlc?: number[]; // Array di appid dei DLC
 }

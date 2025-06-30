@@ -1,0 +1,23 @@
+[package]
+name = "gamestringer"
+version = "3.2.1"
+description = "GameStringer - AI Game Translation System"
+authors = ["GameStringer Team"]
+license = ""
+repository = ""
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = [] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "handleapi", "memoryapi", "tlhelp32", "psapi"] }
+windows = { version = "0.51", features = ["Win32_Foundation", "Win32_System_Diagnostics_Debug", "Win32_System_Memory", "Win32_System_Threading", "Win32_UI_WindowsAndMessaging"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

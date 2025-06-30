@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Zap, 
   Play, 
@@ -19,133 +21,104 @@ import {
   AlertTriangle,
   CheckCircle,
   RefreshCw,
-  Eye
+  Eye,
+  Search,
+  Download,
+  Upload,
+  Trash2,
+  Languages,
+  Key
 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { mockGames } from '@/lib/mock-data';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useInjektTranslator, ProcessInfo, InjectionConfig } from '@/lib/injekt-translator';
 
-interface InjectionStatus {
-  isActive: boolean;
-  gameProcess: string;
-  translationsApplied: number;
-  memoryPatches: number;
-  hookPoints: number;
-  status: 'idle' | 'injecting' | 'hooked' | 'active' | 'error';
-}
-
-interface MemoryPatch {
-  id: string;
-  address: string;
-  originalText: string;
-  translatedText: string;
-  status: 'pending' | 'applied' | 'failed';
-  timestamp: Date;
-}
-
-export default function RealtimePage() {
-  const [selectedGame, setSelectedGame] = useState<any>(null);
-  const [injectionStatus, setInjectionStatus] = useState<InjectionStatus>({
-    isActive: false,
-    gameProcess: '',
-    translationsApplied: 0,
-    memoryPatches: 0,
-    hookPoints: 0,
-    status: 'idle'
-  });
+export default function InjektTranslatorPage() {
+  const { stats, translations, findProcesses, startInjection, stopInjection, clearCache, exportCache, importCache } = useInjektTranslator();
   
-  const [memoryPatches, setMemoryPatches] = useState<MemoryPatch[]>([]);
-  const [isMonitoring, setIsMonitoring] = useState(false);
-  const [cpuUsage, setCpuUsage] = useState(0);
-  const [memoryUsage, setMemoryUsage] = useState(0);
+  const [availableProcesses, setAvailableProcesses] = useState<ProcessInfo[]>([]);
+  const [selectedProcess, setSelectedProcess] = useState<string>('');
+  const [targetLanguage, setTargetLanguage] = useState<string>('it');
+  const [provider, setProvider] = useState<'openai' | 'deepl' | 'google'>('openai');
+  const [apiKey, setApiKey] = useState<string>('');
+  const [hookMode, setHookMode] = useState<'aggressive' | 'safe' | 'minimal'>('safe');
+  const [isScanning, setIsScanning] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [showConfig, setShowConfig] = useState(false);
 
-  const [games] = useState(mockGames.filter(g => g.isInstalled));
-
-  // Simulate real-time monitoring
-  useEffect(() => {
-    if (isMonitoring) {
-      const interval = setInterval(() => {
-        setCpuUsage(Math.random() * 30 + 10);
-        setMemoryUsage(Math.random() * 40 + 20);
-        
-        // Simulate new translations being applied
-        if (injectionStatus.isActive && Math.random() > 0.7) {
-          setInjectionStatus(prev => ({
-            ...prev,
-            translationsApplied: prev.translationsApplied + 1
-          }));
-          
-          // Add new memory patch
-          const newPatch: MemoryPatch = {
-            id: `patch_${Date.now()}`,
-            address: `0x${Math.random().toString(16).substr(2, 8).toUpperCase()}`,
-            originalText: "Sample text found in memory",
-            translatedText: "Testo di esempio trovato in memoria",
-            status: 'applied',
-            timestamp: new Date()
-          };
-          
-          setMemoryPatches(prev => [newPatch, ...prev.slice(0, 9)]);
-        }
-      }, 2000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [isMonitoring, injectionStatus.isActive]);
-
-  const startInjection = async () => {
-    if (!selectedGame) return;
-    
-    setInjectionStatus(prev => ({ ...prev, status: 'injecting', gameProcess: selectedGame.executablePath }));
-    
-    // Simulate injection process
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setInjectionStatus(prev => ({ ...prev, status: 'hooked', hookPoints: 5 }));
-    
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setInjectionStatus(prev => ({ 
-      ...prev, 
-      status: 'active', 
-      isActive: true,
-      memoryPatches: 0,
-      translationsApplied: 0
-    }));
-    
-    setIsMonitoring(true);
-  };
-
-  const stopInjection = () => {
-    setInjectionStatus({
-      isActive: false,
-      gameProcess: '',
-      translationsApplied: 0,
-      memoryPatches: 0,
-      hookPoints: 0,
-      status: 'idle'
-    });
-    setIsMonitoring(false);
-    setMemoryPatches([]);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'idle': return 'bg-gray-500/10 text-gray-500';
-      case 'injecting': return 'bg-yellow-500/10 text-yellow-500';
-      case 'hooked': return 'bg-blue-500/10 text-blue-500';
-      case 'active': return 'bg-green-500/10 text-green-500';
-      case 'error': return 'bg-red-500/10 text-red-500';
-      default: return 'bg-gray-500/10 text-gray-500';
+  // Scan for game processes
+  const scanForProcesses = async () => {
+    setIsScanning(true);
+    setError('');
+    try {
+      const processes = await findProcesses();
+      setAvailableProcesses(processes);
+      if (processes.length === 0) {
+        setError('Nessun gioco in esecuzione trovato. Avvia un gioco e riprova.');
+      }
+    } catch (err) {
+      setError('Errore durante la scansione dei processi');
+    } finally {
+      setIsScanning(false);
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'idle': return 'Inattivo';
-      case 'injecting': return 'Injection in corso...';
-      case 'hooked': return 'Hook applicati';
-      case 'active': return 'Attivo';
-      case 'error': return 'Errore';
-      default: return 'Sconosciuto';
+  // Start injection
+  const handleStartInjection = async () => {
+    if (!selectedProcess || !apiKey) {
+      setError('Seleziona un processo e inserisci la chiave API');
+      return;
     }
+
+    const config: InjectionConfig = {
+      targetProcess: selectedProcess,
+      targetLanguage,
+      provider,
+      apiKey,
+      hookMode,
+      cacheEnabled: true
+    };
+
+    const success = await startInjection(config);
+    if (!success) {
+      setError('Errore durante l\'injection. Verifica che il gioco sia in esecuzione.');
+    }
+  };
+
+  // Export cache to file
+  const handleExportCache = () => {
+    const cache = exportCache();
+    const blob = new Blob([JSON.stringify(cache, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `injekt-cache-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+  };
+
+  // Import cache from file
+  const handleImportCache = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        importCache(data);
+        setError('');
+      } catch (err) {
+        setError('Errore durante l\'importazione della cache');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500';
+  };
+
+  const getStatusText = (isActive: boolean) => {
+    return isActive ? 'Attivo' : 'Inattivo';
   };
 
   return (
@@ -153,114 +126,216 @@ export default function RealtimePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Modalità Tempo Reale</h1>
-          <p className="text-muted-foreground">Sistema di traduzione live con memory injection simulato</p>
+          <h1 className="text-3xl font-bold">Injekt-Translator</h1>
+          <p className="text-muted-foreground">Sistema di traduzione in tempo reale con memory injection</p>
         </div>
         
         <div className="flex items-center space-x-2">
-          <Badge className={getStatusColor(injectionStatus.status)}>
+          <Badge className={getStatusColor(stats.isActive)}>
             <Activity className="h-3 w-3 mr-1" />
-            {getStatusText(injectionStatus.status)}
+            {getStatusText(stats.isActive)}
           </Badge>
         </div>
       </div>
 
       {/* Warning */}
-      <Card className="border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-900/20">
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
-            <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">Modalità Sperimentale</h3>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                Questa funzionalità è in fase di prototipo e simula le tecnologie RAI-PAL per l'injection in memoria. 
-                Assicurati di aver fatto un backup prima di procedere.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Alert className="border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-900/20">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Funzionalità Sperimentale:</strong> L'Injekt-Translator utilizza tecniche avanzate di memory injection. 
+          Usa questa funzione solo con giochi di cui possiedi una copia legale.
+        </AlertDescription>
+      </Alert>
 
-      {/* Game Selection & Control */}
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Process Selection */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Settings className="h-5 w-5" />
-            <span>Configurazione Injection</span>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Monitor className="h-5 w-5" />
+              <span>Selezione Processo</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={scanForProcesses}
+              disabled={isScanning || stats.isActive}
+            >
+              {isScanning ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Scansione...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4 mr-2" />
+                  Cerca Giochi
+                </>
+              )}
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Gioco Target</label>
-              <Select 
-                value={selectedGame?.id || ''} 
-                onValueChange={(gameId) => {
-                  const game = games.find(g => g.id === gameId);
-                  setSelectedGame(game);
-                }}
-                disabled={injectionStatus.isActive}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona gioco installato..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {games.map(game => (
-                    <SelectItem key={game.id} value={game.id}>
-                      {game.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium mb-2 block">Processo Target</label>
-              <div className="flex items-center space-x-2">
-                <div className="flex-1 p-2 bg-muted/50 rounded text-sm">
-                  {selectedGame?.executablePath || 'Nessun processo selezionato'}
-                </div>
-                <Button variant="outline" size="icon" disabled>
-                  <Monitor className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+          <div>
+            <Label>Processo Gioco</Label>
+            <Select 
+              value={selectedProcess} 
+              onValueChange={setSelectedProcess}
+              disabled={stats.isActive}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona un processo di gioco..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableProcesses.map(process => (
+                  <SelectItem key={process.pid} value={process.name}>
+                    {process.windowTitle || process.name} (PID: {process.pid})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          
-          <div className="flex items-center justify-between pt-4 border-t">
-            <div className="flex items-center space-x-4">
-              {!injectionStatus.isActive ? (
-                <Button 
-                  onClick={startInjection} 
-                  disabled={!selectedGame}
-                  className="min-w-[120px]"
-                >
-                  <Play className="h-4 w-4 mr-2" />
-                  Avvia Injection
-                </Button>
-              ) : (
-                <Button 
-                  onClick={stopInjection} 
-                  variant="destructive"
-                  className="min-w-[120px]"
-                >
-                  <Square className="h-4 w-4 mr-2" />
-                  Ferma Injection
-                </Button>
-              )}
-            </div>
-            
-            {injectionStatus.gameProcess && (
-              <div className="text-sm text-muted-foreground">
-                Processo: {injectionStatus.gameProcess.split('\\').pop()}
-              </div>
+
+          {/* Configuration Toggle */}
+          <div className="pt-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowConfig(!showConfig)}
+              className="w-full justify-between"
+            >
+              <span className="flex items-center">
+                <Settings className="h-4 w-4 mr-2" />
+                Configurazione Avanzata
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${showConfig ? 'rotate-180' : ''}`} />
+            </Button>
+          </div>
+
+          {/* Advanced Configuration */}
+          <AnimatePresence>
+            {showConfig && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="space-y-4 overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                  <div>
+                    <Label>Lingua di Destinazione</Label>
+                    <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="it">🇮🇹 Italiano</SelectItem>
+                        <SelectItem value="es">🇪🇸 Spagnolo</SelectItem>
+                        <SelectItem value="fr">🇫🇷 Francese</SelectItem>
+                        <SelectItem value="de">🇩🇪 Tedesco</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Provider AI</Label>
+                    <Select value={provider} onValueChange={(v: any) => setProvider(v)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="openai">OpenAI GPT-4</SelectItem>
+                        <SelectItem value="deepl">DeepL</SelectItem>
+                        <SelectItem value="google">Google Translate</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>API Key</Label>
+                    <Input 
+                      type="password" 
+                      placeholder="Inserisci la tua API key..."
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Modalità Hook</Label>
+                    <Select value={hookMode} onValueChange={(v: any) => setHookMode(v)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="minimal">Minimale (Solo UI)</SelectItem>
+                        <SelectItem value="safe">Sicura (Consigliata)</SelectItem>
+                        <SelectItem value="aggressive">Aggressiva (Tutti i testi)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </motion.div>
             )}
+          </AnimatePresence>
+
+          {/* Control Buttons */}
+          <div className="flex items-center justify-between pt-4 border-t">
+            {!stats.isActive ? (
+              <Button 
+                onClick={handleStartInjection} 
+                disabled={!selectedProcess || !apiKey}
+                className="min-w-[140px]"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Avvia Injection
+              </Button>
+            ) : (
+              <Button 
+                onClick={stopInjection} 
+                variant="destructive"
+                className="min-w-[140px]"
+              >
+                <Square className="h-4 w-4 mr-2" />
+                Ferma Injection
+              </Button>
+            )}
+
+            <div className="flex items-center space-x-2">
+              <Button variant="outline" size="icon" onClick={clearCache} title="Pulisci Cache">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" onClick={handleExportCache} title="Esporta Cache">
+                <Download className="h-4 w-4" />
+              </Button>
+              <label>
+                <Button variant="outline" size="icon" asChild title="Importa Cache">
+                  <span>
+                    <Upload className="h-4 w-4" />
+                  </span>
+                </Button>
+                <input 
+                  type="file" 
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleImportCache}
+                />
+              </label>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Status Overview */}
-      {injectionStatus.status !== 'idle' && (
+      {/* Statistics */}
+      {stats.isActive && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -270,10 +345,22 @@ export default function RealtimePage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Hook Points</p>
-                  <div className="text-2xl font-bold">{injectionStatus.hookPoints}</div>
+                  <p className="text-sm font-medium text-muted-foreground">Processo</p>
+                  <p className="text-lg font-semibold truncate">{stats.currentProcess?.name || 'N/A'}</p>
                 </div>
-                <Zap className="h-8 w-8 text-blue-500" />
+                <Monitor className="h-8 w-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Hook Attivi</p>
+                  <div className="text-2xl font-bold">{stats.activeHooks}</div>
+                </div>
+                <Zap className="h-8 w-8 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
@@ -283,9 +370,9 @@ export default function RealtimePage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Traduzioni</p>
-                  <div className="text-2xl font-bold">{injectionStatus.translationsApplied}</div>
+                  <div className="text-2xl font-bold">{stats.translationsApplied}</div>
                 </div>
-                <FileText className="h-8 w-8 text-green-500" />
+                <Languages className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
@@ -294,61 +381,10 @@ export default function RealtimePage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">CPU Usage</p>
-                  <div className="text-2xl font-bold">{cpuUsage.toFixed(1)}%</div>
+                  <p className="text-sm font-medium text-muted-foreground">Cache</p>
+                  <div className="text-2xl font-bold">{stats.cachedTranslations}</div>
                 </div>
-                <Cpu className="h-8 w-8 text-orange-500" />
-              </div>
-              <Progress value={cpuUsage} className="mt-2 h-1" />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Memory</p>
-                  <div className="text-2xl font-bold">{memoryUsage.toFixed(1)}%</div>
-                </div>
-                <Activity className="h-8 w-8 text-purple-500" />
-              </div>
-              <Progress value={memoryUsage} className="mt-2 h-1" />
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Injection Process Simulation */}
-      {injectionStatus.status === 'injecting' && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                <span>Injection in Corso</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Attaching al processo...</span>
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Scanning memoria per stringhe...</span>
-                  <RefreshCw className="h-4 w-4 animate-spin text-primary" />
-                </div>
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="text-sm">Applicando hook API...</span>
-                  <div className="w-4 h-4" />
-                </div>
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <span className="text-sm">Inizializzando traduttore live...</span>
-                  <div className="w-4 h-4" />
-                </div>
+                <FileText className="h-8 w-8 text-purple-500" />
               </div>
             </CardContent>
           </Card>
@@ -356,133 +392,71 @@ export default function RealtimePage() {
       )}
 
       {/* Live Translation Feed */}
-      {injectionStatus.isActive && (
+      {stats.isActive && translations.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Activity className="h-5 w-5" />
-                <span>Feed Traduzioni Live</span>
-                <Badge variant="secondary">{memoryPatches.length} patch attive</Badge>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Activity className="h-5 w-5" />
+                  <span>Feed Traduzioni Live</span>
+                </div>
+                <Badge variant="secondary">{translations.length} traduzioni recenti</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {memoryPatches.length > 0 ? (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {memoryPatches.map((patch, index) => (
-                    <motion.div
-                      key={patch.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="p-3 border rounded-lg space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <code className="text-xs bg-muted px-2 py-1 rounded">{patch.address}</code>
-                          <Badge variant={patch.status === 'applied' ? 'default' : 'secondary'}>
-                            {patch.status}
-                          </Badge>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {patch.timestamp.toLocaleTimeString('it-IT')}
-                        </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <p className="text-muted-foreground mb-1">Originale:</p>
-                          <p className="bg-muted/50 p-2 rounded">{patch.originalText}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground mb-1">Tradotto:</p>
-                          <p className="bg-primary/5 p-2 rounded">{patch.translatedText}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">
-                    In attesa di rilevamento testi nel gioco...
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Monitor className="h-5 w-5" />
-                <span>Monitor Sistema</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>CPU Usage</span>
-                  <span>{cpuUsage.toFixed(1)}%</span>
-                </div>
-                <Progress value={cpuUsage} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Memory Usage</span>
-                  <span>{memoryUsage.toFixed(1)}%</span>
-                </div>
-                <Progress value={memoryUsage} className="h-2" />
-              </div>
-              
-              <div className="space-y-3 pt-4 border-t">
-                <div className="flex justify-between text-sm">
-                  <span>Hook Status</span>
-                  <Badge variant="default">Attivo</Badge>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>API Intercepted</span>
-                  <span>DrawText, TextOut, ExtTextOut</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Translation Engine</span>
-                  <Badge variant="secondary">AI Real-time</Badge>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>Response Time</span>
-                  <span>~120ms</span>
-                </div>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {translations.map((translation, index) => (
+                  <motion.div
+                    key={`${translation.address}-${index}`}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="p-3 border rounded-lg space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <code className="text-xs bg-muted px-2 py-1 rounded">{translation.address}</code>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(translation.timestamp).toLocaleTimeString('it-IT')}
+                      </span>
+                    </div>
+                    
+                    <div className="text-sm">
+                      <p className="text-primary">{translation.text}</p>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </motion.div>
       )}
 
-      {/* Idle State */}
-      {injectionStatus.status === 'idle' && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Zap className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Modalità Tempo Reale Inattiva</h3>
-            <p className="text-muted-foreground mb-6">
-              Seleziona un gioco installato e avvia l'injection per tradurre in tempo reale.
-            </p>
-            <Button 
-              onClick={startInjection} 
-              disabled={!selectedGame}
-              size="lg"
-            >
-              <Play className="h-5 w-5 mr-2" />
-              Avvia Traduzione Live
-            </Button>
+      {/* Instructions when inactive */}
+      {!stats.isActive && (
+        <Card className="border-dashed">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <Zap className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Come Funziona l'Injekt-Translator</h3>
+              <div className="text-sm text-muted-foreground space-y-2 max-w-2xl mx-auto">
+                <p>1. <strong>Avvia il gioco</strong> che vuoi tradurre</p>
+                <p>2. <strong>Cerca i processi</strong> cliccando su "Cerca Giochi"</p>
+                <p>3. <strong>Seleziona il processo</strong> del gioco dalla lista</p>
+                <p>4. <strong>Configura le opzioni</strong> di traduzione (lingua, API, modalità)</p>
+                <p>5. <strong>Avvia l'injection</strong> per iniziare la traduzione in tempo reale</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
     </div>
   );
 }
+
+// Missing import
+import { ChevronDown } from 'lucide-react';

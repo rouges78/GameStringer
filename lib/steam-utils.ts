@@ -1,4 +1,6 @@
 import 'server-only';
+// Preferiamo usare steam-locate per individuare i giochi installati
+import { getInstalledSteamAppsSync } from 'steam-locate';
 import fs from 'fs/promises';
 import path from 'path';
 import * as vdf from 'vdf-parser';
@@ -91,6 +93,22 @@ async function getSteamLibraryFolders(steamPath: string): Promise<string[]> {
  * @returns {Promise<InstalledGame[]>} La lista dei giochi installati.
  */
 export async function getInstalledGames(): Promise<InstalledGame[]> {
+  // 1. Tentativo rapido con steam-locate (sincrono, quindi poco overhead)
+  try {
+    const apps = getInstalledSteamAppsSync();
+    if (apps && apps.length > 0) {
+      console.log(`[getInstalledGames] Recuperati ${apps.length} giochi tramite steam-locate.`);
+      return apps.map(app => ({
+        appId: app.appId,
+        name: app.name ?? `App ${app.appId}`,
+        installDir: app.installDir ?? '',
+      }));
+    } else {
+      console.warn('[getInstalledGames] steam-locate non ha restituito giochi, procedo con fallback legacy.');
+    }
+  } catch (locErr) {
+    console.warn('[getInstalledGames] steam-locate non disponibile o ha fallito, procedo con fallback legacy.', locErr);
+  }
   console.log('[getInstalledGames] Inizio scansione giochi installati...');
   const steamPath = await getSteamInstallPathFromRegistry();
 
