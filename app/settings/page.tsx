@@ -1,15 +1,20 @@
 
 'use client';
 
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from '@/components/ui/use-toast';
 import { 
   Settings as SettingsIcon, 
   Save, 
@@ -24,35 +29,185 @@ import {
   RefreshCw,
   AlertTriangle,
   CheckCircle,
-  User
+  User,
+  Key,
+  Globe,
+  Zap,
+  Database,
+  Gamepad2,
+  Brain,
+  FolderOpen,
+  Trash2,
+  Plus,
+  Monitor,
+  Palette,
+  Volume2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
+interface Settings {
+  apiKeys: {
+    openai: string;
+    anthropic: string;
+    google: string;
+    deepl: string;
+    azure: string;
+  };
+  translation: {
+    provider: string;
+    model: string;
+    defaultSourceLang: string;
+    defaultTargetLang: string;
+    temperature: number;
+    maxTokens: number;
+    contextWindow: number;
+    preserveFormatting: boolean;
+    glossaryEnabled: boolean;
+    cacheTranslations: boolean;
+    batchSize: number;
+  };
+  injekt: {
+    enabled: boolean;
+    autoStart: boolean;
+    hotkeyToggle: string;
+    hotkeyPause: string;
+    overlayOpacity: number;
+    overlayPosition: string;
+    fontSize: number;
+    updateInterval: number;
+    processWhitelist: string[];
+    processBlacklist: string[];
+    experimentalFeatures: boolean;
+  };
+  steam: {
+    autoDetectPath: boolean;
+    customSteamPath: string;
+    scanOnStartup: boolean;
+    includeNonSteamGames: boolean;
+    downloadMetadata: boolean;
+    cacheImages: boolean;
+    updateInterval: number;
+  };
+  system: {
+    language: string;
+    theme: string;
+    autoBackup: boolean;
+    backupInterval: number;
+    backupLocation: string;
+    maxBackups: number;
+    autoUpdate: boolean;
+    betaChannel: boolean;
+    hardwareAcceleration: boolean;
+    logLevel: string;
+    telemetry: boolean;
+  };
+  performance: {
+    maxCpuUsage: number;
+    maxMemoryUsage: number;
+    gpuAcceleration: boolean;
+    multiThreading: boolean;
+    cacheSize: number;
+    clearCacheOnExit: boolean;
+  };
+  directories: string[];
+  backupDirectory: string;
+  patchDirectory: string;
+  excludePatterns: string[];
+  maxConcurrentTranslations: number;
+  apiTimeout: number;
+  retryAttempts: number;
+  notifyTranslationComplete: boolean;
+  notifyPatchReady: boolean;
+  notifyErrors: boolean;
+  notifyUpdates: boolean;
+}
+
 export default function SettingsPage() {
-  const { data: session } = useSession();
-  const [settings, setSettings] = useState({
-    // AI Settings
-    aiProvider: 'gpt-4o-mini',
-    defaultTargetLanguage: 'it',
-    confidenceThreshold: 0.8,
-    batchSize: 100,
-    temperature: 0.3,
-    systemPrompt: 'You are a professional video game translator. Maintain context, tone, and gaming terminology.',
+  const [settings, setSettings] = useState<Settings>({
+    // API Keys
+    apiKeys: {
+      openai: '',
+      anthropic: '',
+      google: '',
+      deepl: '',
+      azure: ''
+    },
+    
+    // AI Translation Settings
+    translation: {
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      defaultSourceLang: 'auto',
+      defaultTargetLang: 'it',
+      temperature: 0.3,
+      maxTokens: 2000,
+      contextWindow: 5,
+      preserveFormatting: true,
+      glossaryEnabled: true,
+      cacheTranslations: true,
+      batchSize: 50
+    },
+    
+    // Injekt-Translator Settings
+    injekt: {
+      enabled: true,
+      autoStart: false,
+      hotkeyToggle: 'Ctrl+Shift+T',
+      hotkeyPause: 'Ctrl+Shift+P',
+      overlayOpacity: 0.9,
+      overlayPosition: 'bottom',
+      fontSize: 14,
+      updateInterval: 100,
+      processWhitelist: [],
+      processBlacklist: ['chrome.exe', 'firefox.exe'],
+      experimentalFeatures: false
+    },
+    
+    // Steam Integration
+    steam: {
+      autoDetectPath: true,
+      customSteamPath: '',
+      scanOnStartup: true,
+      includeNonSteamGames: false,
+      downloadMetadata: true,
+      cacheImages: true,
+      updateInterval: 24
+    },
     
     // System Settings
-    autoBackup: true,
-    backupInterval: 24,
-    maxFileSize: 10485760, // 10MB
-    autoUpdate: true,
-    realTimeMode: false,
+    system: {
+      language: 'it',
+      theme: 'dark',
+      autoBackup: true,
+      backupInterval: 24,
+      backupLocation: 'C:\\GameStringer\\Backups',
+      maxBackups: 10,
+      autoUpdate: true,
+      betaChannel: false,
+      hardwareAcceleration: true,
+      logLevel: 'info',
+      telemetry: false
+    },
+    
+    // Performance
+    performance: {
+      maxCpuUsage: 80,
+      maxMemoryUsage: 2048,
+      gpuAcceleration: true,
+      multiThreading: true,
+      cacheSize: 500,
+      clearCacheOnExit: false
+    },
     
     // Directories
-    scanDirectories: [
+    directories: [
       'C:\\Program Files (x86)\\Steam\\steamapps',
       'C:\\Program Files\\Epic Games',
       'C:\\Program Files (x86)\\GOG Galaxy\\Games'
     ],
-    backupDirectory: 'C:\\GameTranslator\\Backups',
-    patchDirectory: 'C:\\GameTranslator\\Patches',
+    backupDirectory: 'C:\\GameStringer\\Backups',
+    patchDirectory: 'C:\\GameStringer\\Patches',
     
     // Advanced
     excludePatterns: ['*.log', '*.tmp', '*.cache'],
@@ -68,51 +223,87 @@ export default function SettingsPage() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [showApiKeys, setShowApiKeys] = useState<{ [key: string]: boolean }>({});
 
-  const handleItchIOConnect = () => {
-    const clientId = process.env.NEXT_PUBLIC_ITCHIO_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/api/auth/callback/itchio`;
-    const scope = 'profile:me';
-    const authUrl = `https://itch.io/user/oauth?client_id=${clientId}&scope=${scope}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}`;
-    window.location.href = authUrl;
-  };
+  // Carica impostazioni salvate
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('gameStringerSettings');
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        setSettings(prev => ({ ...prev, ...parsed }));
+      } catch (error) {
+        console.error('Errore nel caricamento delle impostazioni:', error);
+      }
+    }
+  }, []);
 
   const saveSettings = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSaving(false);
+    try {
+      // Salva le impostazioni nel localStorage
+      localStorage.setItem('gameStringerSettings', JSON.stringify(settings));
+      
+      // Simula salvataggio su server
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Impostazioni salvate",
+        description: "Le tue preferenze sono state salvate con successo.",
+      });
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante il salvataggio.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const resetSettings = () => {
-    // Reset to defaults
-    setSettings({
-      ...settings,
-      aiProvider: 'gpt-4o-mini',
-      defaultTargetLanguage: 'it',
-      confidenceThreshold: 0.8,
-      temperature: 0.3
+    if (confirm('Sei sicuro di voler ripristinare le impostazioni predefinite?')) {
+      localStorage.removeItem('gameStringerSettings');
+      window.location.reload();
+    }
+  };
+
+  const updateSetting = (category: keyof Settings | 'root', key: string, value: any) => {
+    setSettings(prev => {
+      if (category === 'root') {
+        return { ...prev, [key]: value };
+      }
+      
+      const categoryData = prev[category];
+      if (typeof categoryData === 'object' && !Array.isArray(categoryData)) {
+        return {
+          ...prev,
+          [category]: {
+            ...categoryData,
+            [key]: value
+          }
+        };
+      }
+      
+      return prev;
     });
   };
 
-  const updateSetting = (key: string, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
-  };
-
-  const addScanDirectory = () => {
+  const addDirectory = () => {
     const newDir = prompt('Inserisci il percorso della directory:');
     if (newDir) {
       setSettings(prev => ({
         ...prev,
-        scanDirectories: [...prev.scanDirectories, newDir]
+        directories: [...prev.directories, newDir]
       }));
     }
   };
 
-  const removeScanDirectory = (index: number) => {
+  const removeDirectory = (index: number) => {
     setSettings(prev => ({
       ...prev,
-      scanDirectories: prev.scanDirectories.filter((_, i) => i !== index)
+      directories: prev.directories.filter((_, i) => i !== index)
     }));
   };
 
@@ -174,10 +365,56 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="ai" className="space-y-4">
+          {/* API Keys Card */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Languages className="h-5 w-5" />
+                <Key className="h-5 w-5" />
+                <span>API Keys</span>
+              </CardTitle>
+              <CardDescription>
+                Configura le chiavi API per i vari servizi di traduzione AI
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                {Object.entries(settings.apiKeys).map(([provider, key]) => (
+                  <div key={provider}>
+                    <label className="text-sm font-medium mb-2 block capitalize">
+                      {provider} API Key
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type={showApiKeys[provider] ? "text" : "password"}
+                        value={key}
+                        onChange={(e) => updateSetting('apiKeys', provider, e.target.value)}
+                        placeholder={`Inserisci la chiave API ${provider}`}
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowApiKeys(prev => ({ ...prev, [provider]: !prev[provider] }))}
+                      >
+                        {showApiKeys[provider] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Le chiavi API sono salvate localmente. Assicurati di non condividere questi dati.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+
+          {/* AI Configuration Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Brain className="h-5 w-5" />
                 <span>Configurazione AI</span>
               </CardTitle>
             </CardHeader>
@@ -185,21 +422,23 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Provider AI</label>
-                  <Select value={settings.aiProvider} onValueChange={(value) => updateSetting('aiProvider', value)}>
+                  <Select value={settings.translation.provider} onValueChange={(value) => updateSetting('translation', 'provider', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gpt-4o-mini">GPT-4o Mini</SelectItem>
-                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                      <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
+                      <SelectItem value="openai">OpenAI</SelectItem>
+                      <SelectItem value="anthropic">Anthropic Claude</SelectItem>
+                      <SelectItem value="google">Google Gemini</SelectItem>
+                      <SelectItem value="deepl">DeepL</SelectItem>
+                      <SelectItem value="azure">Azure OpenAI</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
                   <label className="text-sm font-medium mb-2 block">Lingua Default</label>
-                  <Select value={settings.defaultTargetLanguage} onValueChange={(value) => updateSetting('defaultTargetLanguage', value)}>
+                  <Select value={settings.translation.defaultTargetLang} onValueChange={(value) => updateSetting('translation', 'defaultTargetLang', value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -221,30 +460,30 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
-                    Soglia Confidenza ({Math.round(settings.confidenceThreshold * 100)}%)
+                    Temperature ({settings.translation.temperature})
                   </label>
                   <input
                     type="range"
-                    min="0.5"
-                    max="1"
-                    step="0.05"
-                    value={settings.confidenceThreshold}
-                    onChange={(e) => updateSetting('confidenceThreshold', parseFloat(e.target.value))}
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={settings.translation.temperature}
+                    onChange={(e) => updateSetting('translation', 'temperature', parseFloat(e.target.value))}
                     className="w-full"
                   />
                 </div>
                 
                 <div>
                   <label className="text-sm font-medium mb-2 block">
-                    Temperature ({settings.temperature})
+                    Max Tokens ({settings.translation.maxTokens})
                   </label>
                   <input
                     type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={settings.temperature}
-                    onChange={(e) => updateSetting('temperature', parseFloat(e.target.value))}
+                    min="100"
+                    max="4000"
+                    step="100"
+                    value={settings.translation.maxTokens}
+                    onChange={(e) => updateSetting('translation', 'maxTokens', parseInt(e.target.value))}
                     className="w-full"
                   />
                 </div>
@@ -253,8 +492,8 @@ export default function SettingsPage() {
                   <label className="text-sm font-medium mb-2 block">Batch Size</label>
                   <Input
                     type="number"
-                    value={settings.batchSize}
-                    onChange={(e) => updateSetting('batchSize', parseInt(e.target.value))}
+                    value={settings.translation.batchSize}
+                    onChange={(e) => updateSetting('translation', 'batchSize', parseInt(e.target.value))}
                     min="1"
                     max="500"
                   />
@@ -264,8 +503,8 @@ export default function SettingsPage() {
               <div>
                 <label className="text-sm font-medium mb-2 block">System Prompt</label>
                 <Textarea
-                  value={settings.systemPrompt}
-                  onChange={(e) => updateSetting('systemPrompt', e.target.value)}
+                  defaultValue="You are a professional video game translator. Maintain context, tone, and gaming terminology."
+                  onChange={(e) => updateSetting('translation', 'systemPrompt', e.target.value)}
                   className="min-h-[100px]"
                   placeholder="Prompt di sistema per l'AI..."
                 />
@@ -290,8 +529,8 @@ export default function SettingsPage() {
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      checked={settings.autoBackup}
-                      onChange={(e) => updateSetting('autoBackup', e.target.checked)}
+                      checked={settings.system.autoBackup}
+                      onChange={(e) => updateSetting('system', 'autoBackup', e.target.checked)}
                       className="rounded"
                     />
                     <span className="text-sm">Backup automatico</span>
@@ -301,8 +540,8 @@ export default function SettingsPage() {
                     <label className="text-sm font-medium mb-2 block">Intervallo Backup (ore)</label>
                     <Input
                       type="number"
-                      value={settings.backupInterval}
-                      onChange={(e) => updateSetting('backupInterval', parseInt(e.target.value))}
+                      value={settings.system.backupInterval}
+                      onChange={(e) => updateSetting('system', 'backupInterval', parseInt(e.target.value))}
                       min="1"
                       max="168"
                     />
@@ -315,8 +554,8 @@ export default function SettingsPage() {
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      checked={settings.autoUpdate}
-                      onChange={(e) => updateSetting('autoUpdate', e.target.checked)}
+                      checked={settings.system.autoUpdate}
+                      onChange={(e) => updateSetting('system', 'autoUpdate', e.target.checked)}
                       className="rounded"
                     />
                     <span className="text-sm">Aggiornamenti automatici</span>
@@ -325,26 +564,26 @@ export default function SettingsPage() {
                   <label className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      checked={settings.realTimeMode}
-                      onChange={(e) => updateSetting('realTimeMode', e.target.checked)}
+                      checked={settings.injekt.enabled}
+                      onChange={(e) => updateSetting('injekt', 'enabled', e.target.checked)}
                       className="rounded"
                     />
-                    <span className="text-sm">Modalità tempo reale (sperimentale)</span>
+                    <span className="text-sm">Abilita Injekt-Translator</span>
                   </label>
                 </div>
               </div>
               
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Dimensione Massima File ({(settings.maxFileSize / 1024 / 1024).toFixed(1)} MB)
+                  Cache Size ({settings.performance.cacheSize} MB)
                 </label>
                 <input
                   type="range"
-                  min="1048576"
-                  max="104857600"
-                  step="1048576"
-                  value={settings.maxFileSize}
-                  onChange={(e) => updateSetting('maxFileSize', parseInt(e.target.value))}
+                  min="100"
+                  max="2000"
+                  step="100"
+                  value={settings.performance.cacheSize}
+                  onChange={(e) => updateSetting('performance', 'cacheSize', parseInt(e.target.value))}
                   className="w-full"
                 />
               </div>
@@ -362,21 +601,21 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                {settings.scanDirectories.map((dir, index) => (
+                {settings.directories.map((dir: string, index: number) => (
                   <div key={index} className="flex items-center justify-between p-2 border rounded">
                     <span className="text-sm font-mono">{dir}</span>
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => removeScanDirectory(index)}
+                      onClick={() => removeDirectory(index)}
                     >
                       Rimuovi
                     </Button>
                   </div>
                 ))}
               </div>
-              <Button onClick={addScanDirectory} variant="outline">
-                <Folder className="h-4 w-4 mr-2" />
+              <Button onClick={addDirectory} variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
                 Aggiungi Directory
               </Button>
             </CardContent>
@@ -394,7 +633,7 @@ export default function SettingsPage() {
                 <label className="text-sm font-medium mb-2 block">Directory Backup</label>
                 <Input
                   value={settings.backupDirectory}
-                  onChange={(e) => updateSetting('backupDirectory', e.target.value)}
+                  onChange={(e) => updateSetting('root', 'backupDirectory', e.target.value)}
                 />
               </div>
               
@@ -402,7 +641,7 @@ export default function SettingsPage() {
                 <label className="text-sm font-medium mb-2 block">Directory Patch</label>
                 <Input
                   value={settings.patchDirectory}
-                  onChange={(e) => updateSetting('patchDirectory', e.target.value)}
+                  onChange={(e) => updateSetting('root', 'patchDirectory', e.target.value)}
                 />
               </div>
             </CardContent>
@@ -424,7 +663,7 @@ export default function SettingsPage() {
                   <Input
                     type="number"
                     value={settings.maxConcurrentTranslations}
-                    onChange={(e) => updateSetting('maxConcurrentTranslations', parseInt(e.target.value))}
+                    onChange={(e) => updateSetting('root', 'maxConcurrentTranslations', parseInt(e.target.value))}
                     min="1"
                     max="20"
                   />
@@ -435,7 +674,7 @@ export default function SettingsPage() {
                   <Input
                     type="number"
                     value={settings.apiTimeout}
-                    onChange={(e) => updateSetting('apiTimeout', parseInt(e.target.value))}
+                    onChange={(e) => updateSetting('root', 'apiTimeout', parseInt(e.target.value))}
                     min="5000"
                     max="120000"
                     step="5000"
@@ -447,7 +686,7 @@ export default function SettingsPage() {
                   <Input
                     type="number"
                     value={settings.retryAttempts}
-                    onChange={(e) => updateSetting('retryAttempts', parseInt(e.target.value))}
+                    onChange={(e) => updateSetting('root', 'retryAttempts', parseInt(e.target.value))}
                     min="1"
                     max="10"
                   />
@@ -508,7 +747,7 @@ export default function SettingsPage() {
                   <input
                     type="checkbox"
                     checked={settings.notifyTranslationComplete}
-                    onChange={(e) => updateSetting('notifyTranslationComplete', e.target.checked)}
+                    onChange={(e) => updateSetting('root', 'notifyTranslationComplete', e.target.checked)}
                     className="rounded"
                   />
                 </label>
@@ -521,7 +760,7 @@ export default function SettingsPage() {
                   <input
                     type="checkbox"
                     checked={settings.notifyPatchReady}
-                    onChange={(e) => updateSetting('notifyPatchReady', e.target.checked)}
+                    onChange={(e) => updateSetting('root', 'notifyPatchReady', e.target.checked)}
                     className="rounded"
                   />
                 </label>
@@ -534,7 +773,7 @@ export default function SettingsPage() {
                   <input
                     type="checkbox"
                     checked={settings.notifyErrors}
-                    onChange={(e) => updateSetting('notifyErrors', e.target.checked)}
+                    onChange={(e) => updateSetting('root', 'notifyErrors', e.target.checked)}
                     className="rounded"
                   />
                 </label>
@@ -547,7 +786,7 @@ export default function SettingsPage() {
                   <input
                     type="checkbox"
                     checked={settings.notifyUpdates}
-                    onChange={(e) => updateSetting('notifyUpdates', e.target.checked)}
+                    onChange={(e) => updateSetting('root', 'notifyUpdates', e.target.checked)}
                     className="rounded"
                   />
                 </label>
@@ -585,17 +824,15 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 {
                   ['steam', 'epic', 'itchio'].map(provider => {
-                    const isConnected = session?.user?.connectedProviders?.includes(provider);
+                    const isConnected = false; // Per ora non gestiamo sessioni
                     return (
                       <div key={provider} className="flex items-center justify-between p-3 border rounded-lg">
                         <div className="flex items-center space-x-3">
-                          {/* Qui potresti aggiungere le icone dei provider */}
+                          <Gamepad2 className="h-5 w-5" />
                           <span className="font-medium capitalize">{provider}</span>
                         </div>
                         {isConnected ? (
-                          <Badge variant="success"><CheckCircle className="h-4 w-4 mr-1" />Connesso</Badge>
-                        ) : provider === 'itchio' ? (
-                          <Button onClick={handleItchIOConnect}>Connetti</Button>
+                          <Badge variant="default"><CheckCircle className="h-4 w-4 mr-1" />Connesso</Badge>
                         ) : (
                           <Badge variant="outline">Non Connesso</Badge>
                         )}

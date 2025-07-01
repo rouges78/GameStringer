@@ -351,11 +351,11 @@ export function useInjektTranslator() {
   return {
     stats,
     translations,
-    findProcesses: () => injektTranslator.findGameProcesses(),
+    findProcesses: () => injektTranslator.findProcesses(),
     startInjection: (config: InjectionConfig) => injektTranslator.startInjection(config),
     stopInjection: () => injektTranslator.stopInjection(),
     clearCache: () => injektTranslator.clearCache(),
     exportCache: () => injektTranslator.exportCache(),
-    importCache: (data: TranslationCache[]) => injektTranslator.importCache(data)
+    importCache: (data: Record<string, string>) => injektTranslator.importCache(data)
   };
 }

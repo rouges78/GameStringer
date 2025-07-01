@@ -7,6 +7,10 @@ license = ""
 repository = ""
 edition = "2021"
 
+[[bin]]
+name = "gamestringer"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
 
