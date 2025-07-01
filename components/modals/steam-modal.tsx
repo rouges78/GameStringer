@@ -1,0 +1,126 @@
+'use client';
+
+import { useState } from 'react';
+import { X, Loader2, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+interface SteamModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (steamId: string) => Promise<void>;
+  isLoading?: boolean;
+}
+
+export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalProps) {
+  const [steamId, setSteamId] = useState('');
+  const [error, setError] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    // Validate Steam ID format (17 digits)
+    if (!/^\d{17}$/.test(steamId)) {
+      setError('Il SteamID deve essere un numero di 17 cifre');
+      return;
+    }
+
+    try {
+      await onSubmit(steamId);
+      setSteamId('');
+      onClose();
+    } catch (err) {
+      setError('Errore durante la connessione con Steam');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-background border rounded-lg shadow-xl w-full max-w-md p-6 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+          disabled={isLoading}
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <h2 className="text-2xl font-bold mb-2">Collega Account Steam</h2>
+        <p className="text-muted-foreground mb-6">
+          Inserisci il tuo SteamID64 per collegare il tuo account Steam e accedere alla tua libreria di giochi.
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="steamid">SteamID64</Label>
+            <Input
+              id="steamid"
+              type="text"
+              placeholder="76561198000000000"
+              value={steamId}
+              onChange={(e) => setSteamId(e.target.value)}
+              disabled={isLoading}
+              className="font-mono"
+            />
+            <p className="text-xs text-muted-foreground">
+              Il tuo SteamID64 è un numero univoco di 17 cifre che identifica il tuo account Steam.
+            </p>
+          </div>
+
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
+
+          <div className="bg-muted/50 rounded-md p-4 space-y-2">
+            <p className="text-sm font-medium">Come trovare il tuo SteamID64:</p>
+            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+              <li>Apri Steam e vai al tuo profilo</li>
+              <li>Copia l'URL del tuo profilo</li>
+              <li>Visita uno di questi siti per convertirlo:</li>
+            </ol>
+            <div className="flex gap-2 mt-2">
+              <a
+                href="https://steamid.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline text-sm flex items-center gap-1"
+              >
+                SteamID.io <ExternalLink className="h-3 w-3" />
+              </a>
+              <span className="text-muted-foreground">•</span>
+              <a
+                href="https://steamidfinder.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline text-sm flex items-center gap-1"
+              >
+                SteamID Finder <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+            >
+              Annulla
+            </Button>
+            <Button type="submit" disabled={isLoading || !steamId}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Collega Steam
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

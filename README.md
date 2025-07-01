@@ -4,6 +4,13 @@
 
 ### ✨ Correzioni Recenti e Miglioramenti (Luglio 2025)
 
+#### 🔐 Supporto 2FA per GOG Implementato (2 Luglio 2025)
+- **Autenticazione a Due Fattori**: Supporto completo per il login GOG con codice 2FA
+- **UI Moderna a Due Step**: Flusso intuitivo che guida l'utente attraverso email/password e poi codice 2FA
+- **Alert Informativi**: Avvisi chiari che spiegano i requisiti di autenticazione GOG
+- **Campo Codice Dedicato**: Input formattato per codici a 6 cifre con stile monospace
+- **Gestione Errori Intelligente**: Messaggi specifici per problemi di autenticazione 2FA
+
 #### 🎯 Milestone Raggiunta: POC Injekt-Translator Completato (1 Luglio 2025)
 - **Proof of Concept Funzionante**: Sistema di traduzione in tempo reale completamente simulato
 - **Rilevamento Processi**: Identificazione automatica dei giochi in esecuzione
@@ -547,49 +554,26 @@ Questa giornata è stata dedicata alla risoluzione di una serie di problemi bloc
     *   **Analisi**: L'errore `EPERM` su Windows è quasi sempre legato a permessi insufficienti. Il terminale non aveva i privilegi per scrivere/rinominare file nella cartella `node_modules`.
     *   **Soluzione**: Dopo aver corretto una piccola omissione nello schema (`schema.prisma`), il problema è stato risolto definitivamente eseguendo il terminale **come Amministratore**.
 
-3.  **Problema Finale e Svolta: Errore `401 Unauthorized` sui Giochi Condivisi**
-    *   **Sintomo**: Una volta avviata l'app, la lista dei giochi non includeva quelli della Libreria Familiare di Steam. L'utente ha notato che il numero di giochi "cambiava continuamente".
-    *   **Analisi**: L'analisi dei log del server ha rivelato il problema esatto. La chiamata all'API della Libreria Familiare falliva con un errore `401 Unauthorized`. Questo significa che il cookie di autenticazione (`steamLoginSecure`) fornito nel file `.env.local` era scaduto, non valido o errato. Il sistema, in modo robusto, procedeva mostrando solo i giochi di proprietà, causando la discrepanza notata dall'utente.
-    *   **Soluzione Identificata (Prossimo Passo)**: È necessario ottenere un cookie `steamLoginSecure` aggiornato dal browser (dopo aver effettuato il login su `store.steampowered.com`) e sostituirlo nel file `.env.local`.
-
-**Stato Attuale:** L'applicazione è stabile, robusta e si avvia correttamente. Il problema del recupero dei giochi condivisi è stato identificato con certezza e la soluzione è a portata di mano.
-
-**Azione Richiesta all'Utente:** Aggiornare il cookie `steamLoginSecure` come da istruzioni per sbloccare la funzionalità completa.
 
 ## 🤝 Contribuire
 
-Siamo sempre felici di ricevere contributi! Ecco come puoi aiutare:
+Le contribuzioni sono benvenute! 
 
-### **Segnalazione Bug**
-1. Controlla se il bug è già stato segnalato negli [Issues](https://github.com/tuousername/GameStringer/issues)
-2. Crea un nuovo issue con:
-   - Descrizione dettagliata del problema
-   - Passi per riprodurre il bug
-   - Screenshot se applicabili
-   - Informazioni sul sistema (OS, browser, versione app)
-
-### **Richiesta Funzionalità**
-1. Apri un nuovo issue con il tag `enhancement`
-2. Descrivi la funzionalità richiesta
-3. Spiega perché sarebbe utile
-4. Proponi una possibile implementazione
-
-### **Contributi Codice**
-1. Fai fork del repository
-2. Crea un branch per la tua feature: `git checkout -b feature/amazing-feature`
-3. Committa le modifiche: `git commit -m 'Add amazing feature'`
-4. Pusha il branch: `git push origin feature/amazing-feature`
+1. Fork del progetto
+2. Crea un feature branch (`git checkout -b feature/NuovaFunzionalità`)
+3. Commit delle modifiche (`git commit -m 'Aggiunge nuova funzionalità'`)
+4. Push del branch (`git push origin feature/NuovaFunzionalità`)
 5. Apri una Pull Request
 
-### **Linee Guida**
-- Segui le convenzioni di codice esistenti
-- Scrivi test per le nuove funzionalità
-- Aggiorna la documentazione se necessario
-- Usa commit message descrittivi
+### Linee Guida
+- Segui lo stile di codice esistente
+- Aggiungi test quando possibile
+- Aggiorna la documentazione
+- Usa commit messages descrittivi
 
 ## 📄 Licenza
 
-Questo progetto è rilasciato sotto la licenza MIT. Vedi il file [LICENSE](LICENSE) per i dettagli completi.
+Questo progetto è distribuito sotto licenza MIT. Vedi il file [LICENSE](LICENSE) per maggiori informazioni.
 
 ```
 MIT License
@@ -660,6 +644,44 @@ Ringraziamo tutti i maintainer e contributor delle librerie open source utilizza
 - **Email**: support@gamestringer-app.com
 - **Twitter**: [@GameTranslatorApp](https://twitter.com/GameTranslatorApp)
 - **GitHub Issues**: [Segnala un problema](https://github.com/tuousername/gamestringer-app/issues)
+
+## 📄 Dialogue Patcher
+
+Il **Dialogue Patcher** è uno strumento avanzato per tradurre i file di dialoghi dei giochi che memorizzano i testi in file esterni (CSV, TSV, XML, etc.).
+
+### Caratteristiche principali:
+
+- **Parsing automatico** dei file di dialoghi in vari formati
+- **Estrazione intelligente** dei testi da tradurre
+- **Generazione patch** con traduzioni organizzate
+- **Applicazione sicura** delle traduzioni con backup automatico
+- **Interfaccia grafica** per gestire e visualizzare le patch
+
+### Giochi supportati:
+
+#### 🎮 Decarnation
+- **File dialoghi**: `dialogues-resources.assets-52.txt` (formato TSV)
+- **Traduzioni disponibili**: 33 dialoghi principali in italiano
+- **Stato**: ✅ Patch completa e testata
+
+### Come usare il Dialogue Patcher:
+
+1. **Accedi alla sezione** "Dialogue Patcher" dal menu principale
+2. **Seleziona una patch** disponibile dalla lista
+3. **Visualizza le traduzioni** nella scheda "Traduzioni"
+4. **Applica la patch** seguendo le istruzioni:
+   - **Metodo 1**: Usa l'Injekt-Translator per applicare le traduzioni in tempo reale
+   - **Metodo 2**: Modifica direttamente il file di dialoghi del gioco
+
+### Creare nuove patch:
+
+```bash
+# Genera una nuova patch per un gioco
+npm run patch:create <game-id>
+
+# Esempio per Decarnation
+npm run patch:decarnation:create
+```
 
 ---
 

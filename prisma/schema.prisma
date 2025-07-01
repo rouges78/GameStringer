@@ -30,6 +30,8 @@ model Game {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  translations Translation[]
 
   @@map("games")
 }
@@ -75,6 +77,7 @@ model User {
   sessions      Session[]
 
   @@map("users")
+  preferences   UserPreference[]
 }
 
 model VerificationToken {
@@ -84,4 +87,55 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model UserPreference {
+  id     String @id @default(cuid())
+  userId String
+  key    String
+  value  String
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, key])
+  @@map("user_preferences")
+}
+
+// Modello per le traduzioni
+model Translation {
+  id              String   @id @default(cuid())
+  gameId          String
+  filePath        String
+  originalText    String
+  translatedText  String   @default("")
+  targetLanguage  String
+  sourceLanguage  String   @default("en")
+  status          String   @default("pending") // pending, completed, reviewed, edited
+  confidence      Float    @default(0)
+  isManualEdit    Boolean  @default(false)
+  context         String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  game            Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  suggestions     AISuggestion[]
+  
+  @@index([gameId])
+  @@map("translations")
+}
+
+// Modello per i suggerimenti AI
+model AISuggestion {
+  id             String      @id @default(cuid())
+  translationId  String
+  suggestion     String
+  confidence     Float       @default(0)
+  provider       String      @default("openai") // openai, deepl, google, etc.
+  
+  createdAt      DateTime    @default(now())
+  
+  translation    Translation @relation(fields: [translationId], references: [id], onDelete: Cascade)
+  
+  @@map("ai_suggestions")
 }

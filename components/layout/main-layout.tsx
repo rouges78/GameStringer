@@ -27,8 +27,9 @@ interface MainLayoutProps {
 const navigationItems = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Libreria', href: '/games', icon: Gamepad2 },
-  { name: 'Injekt-Translator', href: '/realtime', icon: Zap },
+  { name: 'Injekt-Translator', href: '/injekt-translator', icon: Zap },
   { name: 'Editor', href: '/editor', icon: FileText },
+  { name: 'Dialogue Patcher', href: '/dialogue-patcher', icon: Languages },
   { name: 'Patch', href: '/patches', icon: Archive },
   { name: 'Stores', href: '/stores', icon: Store },
   { name: 'Impostazioni', href: '/settings', icon: Settings },

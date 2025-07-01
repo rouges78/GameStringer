@@ -162,7 +162,8 @@ export const authOptions: NextAuthOptions = {
       name: 'Ubisoft Connect',
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        userId: { label: "User ID", type: "text" }, // For linking
       },
       async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
@@ -195,13 +196,11 @@ export const authOptions: NextAuthOptions = {
             throw new Error('ID utente non trovato nella risposta del profilo Ubisoft.');
           }
 
-          const userIdToLink = req.body?.userId || undefined;
-
           const user = await linkOrCreateUser(
             'ubisoft-credentials',
             profile.userId,
-            userIdToLink,
-            {},
+            credentials.userId,
+            { access_token: ticket },
             {
               name: profile.nameOnPlatform,
               image: profile.avatarUrl146 || profile.avatarUrl256 || null,
@@ -216,6 +215,93 @@ export const authOptions: NextAuthOptions = {
       }
     }),
 
+    // Provider #4: GOG Credentials
+    CredentialsProvider({
+      id: 'gog-credentials',
+      name: 'GOG',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        userId: { label: "User ID", type: "text" }, // For linking
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email e password sono obbligatori.');
+        }
+
+        // GOG doesn't have a public API for authentication
+        // We'll store credentials for future use but can't verify them now
+        // In a real implementation, you'd need to use GOG Galaxy SDK or web scraping
+        
+        // For now, we'll create a synthetic user ID based on email
+        const syntheticId = Buffer.from(credentials.email).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
+        
+        return await linkOrCreateUser(
+          'gog-credentials',
+          syntheticId,
+          credentials.userId,
+          {}, // No extra account data needed
+          { name: credentials.email.split('@')[0] }
+        );
+      },
+    }),
+
+    // Provider #5: Origin/EA App Credentials
+    CredentialsProvider({
+      id: 'origin-credentials',
+      name: 'EA App / Origin',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        userId: { label: "User ID", type: "text" }, // For linking
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email e password sono obbligatori.');
+        }
+
+        // EA doesn't provide a public API for authentication
+        // Similar to GOG, we'll create a synthetic ID
+        const syntheticId = Buffer.from(credentials.email).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
+        
+        return await linkOrCreateUser(
+          'origin-credentials',
+          syntheticId,
+          credentials.userId,
+          {}, // No extra account data needed
+          { name: credentials.email.split('@')[0] }
+        );
+      },
+    }),
+
+    // Provider #6: Battle.net Credentials
+    CredentialsProvider({
+      id: 'battlenet-credentials',
+      name: 'Battle.net',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        userId: { label: "User ID", type: "text" }, // For linking
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email e password sono obbligatori.');
+        }
+
+        // Battle.net has OAuth but requires app approval
+        // For now, we'll use a synthetic ID approach
+        const syntheticId = Buffer.from(credentials.email).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
+        
+        return await linkOrCreateUser(
+          'battlenet-credentials',
+          syntheticId,
+          credentials.userId,
+          {}, // No extra account data needed
+          { name: credentials.email.split('@')[0] }
+        );
+      },
+    }),
+
     {
             id: "epicgames",
             name: "Epic Games",
@@ -224,21 +310,29 @@ export const authOptions: NextAuthOptions = {
             clientSecret: process.env.EPIC_CLIENT_SECRET,
             authorization: {
                 url: "https://www.epicgames.com/id/authorize",
-                params: { scope: "basic_profile" },
+                params: {
+                  scope: "basic_profile",
+                  response_type: "code"
+                },
             },
-            token: "https://api.epicgames.dev/epic/oauth/v1/token",
+            token: {
+              url: "https://api.epicgames.dev/epic/oauth/v1/token",
+              params: {
+                grant_type: "authorization_code"
+              }
+            },
             userinfo: "https://api.epicgames.dev/epic/oauth/v1/userInfo",
             profile(profile) {
                 console.log("[AUTH - Epic Profile]", profile);
                 return {
-                    id: profile.sub, 
-                    name: profile.display_name || profile.preferred_username,
-                    email: `${profile.sub}@epicgames.local`,
+                    id: profile.sub || profile.account_id,
+                    name: profile.displayName || profile.display_name || profile.preferred_username,
+                    email: profile.email || `${profile.sub || profile.account_id}@epicgames.local`,
                     image: null,
                 };
             },
+            checks: ["state"],
         },
-        // Other providers (like Epic Games, etc.) can be added here
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {

@@ -26,14 +26,16 @@ export default function InjektPOCPage() {
   const [translations, setTranslations] = useState<Translation[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Carica processi simulati
+  // Carica processi reali dal sistema
   const loadProcesses = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/injekt/test');
+      const response = await fetch('/api/processes');
       const data = await response.json();
       if (data.success) {
         setProcesses(data.processes);
+      } else {
+        console.error('Errore:', data.error || data.message);
       }
     } catch (error) {
       console.error('Errore caricamento processi:', error);

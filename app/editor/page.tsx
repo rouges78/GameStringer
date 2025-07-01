@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,12 +19,32 @@ import {
   AlertCircle,
   Lightbulb,
   Copy,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Download,
+  Upload,
+  Loader2,
+  Trash2,
+  BarChart3
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { mockGames, mockTranslations } from '@/lib/mock-data';
+import { useToast } from '@/components/ui/use-toast';
+import { TranslationImportDialog } from '@/components/translation-import-dialog';
+import Link from 'next/link';
 
-interface TranslationEntry {
+interface Game {
+  id: string;
+  title: string;
+  platform: string;
+}
+
+interface AISuggestion {
+  id: string;
+  suggestion: string;
+  confidence: number;
+  provider: string;
+}
+
+interface Translation {
   id: string;
   gameId: string;
   filePath: string;
@@ -36,122 +55,128 @@ interface TranslationEntry {
   status: 'pending' | 'completed' | 'reviewed' | 'edited';
   confidence: number;
   isManualEdit: boolean;
-  aiSuggestions: string[];
   context?: string;
-  lastModified: Date;
+  updatedAt: string;
+  game: Game;
+  suggestions: AISuggestion[];
 }
 
 export default function EditorPage() {
-  const [translations, setTranslations] = useState<TranslationEntry[]>([]);
-  const [selectedTranslation, setSelectedTranslation] = useState<TranslationEntry | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [translations, setTranslations] = useState<Translation[]>([]);
+  const [selectedTranslation, setSelectedTranslation] = useState<Translation | null>(null);
+  const [games, setGames] = useState<Game[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterGame, setFilterGame] = useState<string>('all');
-  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const { toast } = useToast();
 
-  const [games] = useState(mockGames);
-
-  // Initialize with mock data
+  // Carica i giochi disponibili
   useEffect(() => {
-    const mockEntries: TranslationEntry[] = [
-      {
-        id: '1',
-        gameId: '1',
-        filePath: 'localization/text_en.csv',
-        originalText: 'Welcome to Night City, the most dangerous place on Earth.',
-        translatedText: 'Benvenuto a Night City, il posto più pericoloso della Terra.',
-        targetLanguage: 'it',
-        sourceLanguage: 'en',
-        status: 'completed',
-        confidence: 0.95,
-        isManualEdit: false,
-        aiSuggestions: [
-          'Benvenuti a Night City, il luogo più pericoloso del mondo.',
-          'Benvenuto a Night City, la località più pericolosa sulla Terra.'
-        ],
-        context: 'Game intro message',
-        lastModified: new Date()
-      },
-      {
-        id: '2',
-        gameId: '1',
-        filePath: 'dialog/conversations.json',
-        originalText: 'Your reputation in Night City will determine your story.',
-        translatedText: 'La tua reputazione a Night City determinerà la tua storia.',
-        targetLanguage: 'it',
-        sourceLanguage: 'en',
-        status: 'reviewed',
-        confidence: 0.92,
-        isManualEdit: true,
-        aiSuggestions: [
-          'La reputazione che avrai a Night City plasmerà la tua storia.',
-          'La tua fama a Night City influenzerà il tuo destino.'
-        ],
-        context: 'Character progression dialog',
-        lastModified: new Date(Date.now() - 3600000)
-      },
-      {
-        id: '3',
-        gameId: '3',
-        filePath: 'BioGame/CookedPC/Localization/INT/GlobalTlk.pcc',
-        originalText: 'Commander, we need to stop the Reapers before they destroy all organic life.',
-        translatedText: 'Comandante, dobbiamo fermare i Razziatori prima che distruggano ogni forma di vita organica.',
-        targetLanguage: 'it',
-        sourceLanguage: 'en',
-        status: 'reviewed',
-        confidence: 0.88,
-        isManualEdit: true,
-        aiSuggestions: [
-          'Comandante, bisogna fermare i Mietitori prima che annientino tutta la vita organica.',
-          'Comandante, è necessario fermare i Razziatori prima che sterminino ogni vita organica.'
-        ],
-        context: 'Main story dialog',
-        lastModified: new Date(Date.now() - 7200000)
-      },
-      {
-        id: '4',
-        gameId: '4',
-        filePath: 'Localized/Text/en/strings.json',
-        originalText: 'Hunt mechanical beasts in a lush, post-apocalyptic world.',
-        translatedText: '',
-        targetLanguage: 'it',
-        sourceLanguage: 'en',
-        status: 'pending',
-        confidence: 0,
-        isManualEdit: false,
-        aiSuggestions: [],
-        context: 'Game description',
-        lastModified: new Date(Date.now() - 14400000)
-      }
-    ];
-    
-    setTranslations(mockEntries);
-    setSelectedTranslation(mockEntries[0]);
+    fetchGames();
   }, []);
 
-  const filteredTranslations = translations.filter(t => {
-    const matchesSearch = t.originalText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         t.translatedText.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || t.status === filterStatus;
-    const matchesGame = filterGame === 'all' || t.gameId === filterGame;
-    return matchesSearch && matchesStatus && matchesGame;
-  });
+  // Carica le traduzioni
+  useEffect(() => {
+    fetchTranslations();
+  }, [filterGame, filterStatus, searchTerm]);
 
-  const updateTranslation = (updates: Partial<TranslationEntry>) => {
+  const fetchGames = async () => {
+    try {
+      const response = await fetch('/api/games');
+      if (response.ok) {
+        const data = await response.json();
+        setGames(data.map((g: any) => ({
+          id: g.id,
+          title: g.title,
+          platform: 'Unknown'
+        })));
+      }
+    } catch (error) {
+      console.error('Errore nel caricamento dei giochi:', error);
+    }
+  };
+
+  const fetchTranslations = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterGame !== 'all') params.append('gameId', filterGame);
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+      if (searchTerm) params.append('search', searchTerm);
+
+      const response = await fetch(`/api/translations?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTranslations(data);
+        
+        // Se c'è una traduzione selezionata, aggiornala con i nuovi dati
+        if (selectedTranslation) {
+          const updated = data.find((t: Translation) => t.id === selectedTranslation.id);
+          if (updated) {
+            setSelectedTranslation(updated);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Errore nel caricamento delle traduzioni:', error);
+      toast({
+        title: 'Errore',
+        description: 'Impossibile caricare le traduzioni',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateTranslation = async (updates: Partial<Translation>) => {
     if (!selectedTranslation) return;
     
-    const updatedTranslation = {
-      ...selectedTranslation,
-      ...updates,
-      lastModified: new Date(),
-      isManualEdit: true,
-      status: 'edited' as const
-    };
-    
-    setSelectedTranslation(updatedTranslation);
-    setTranslations(prev => prev.map(t => 
-      t.id === updatedTranslation.id ? updatedTranslation : t
-    ));
+    setIsSaving(true);
+    setHasUnsavedChanges(false);
+    try {
+      const response = await fetch('/api/translations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedTranslation.id,
+          ...updates,
+          isManualEdit: true
+        })
+      });
+
+      if (response.ok) {
+        const updatedTranslation = await response.json();
+        setSelectedTranslation(updatedTranslation);
+        
+        // Aggiorna anche la lista
+        setTranslations(prev => prev.map(t => 
+          t.id === updatedTranslation.id ? updatedTranslation : t
+        ));
+        
+        toast({
+          title: 'Salvato',
+          description: 'Traduzione aggiornata con successo'
+        });
+      } else {
+        throw new Error('Errore nel salvataggio');
+      }
+    } catch (error) {
+      console.error('Errore nell\'aggiornamento della traduzione:', error);
+      toast({
+        title: 'Errore',
+        description: 'Impossibile salvare la traduzione',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const generateSuggestions = async () => {
@@ -159,21 +184,160 @@ export default function EditorPage() {
     
     setIsGeneratingSuggestions(true);
     
-    // Simulate AI API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const newSuggestions = [
-      "Caccia bestie meccaniche in un mondo post-apocalittico rigoglioso.",
-      "Dai la caccia a creature meccaniche in un lussureggiante mondo post-apocalittico.",
-      "Insegui bestie robotiche in un florido ambiente post-apocalittico."
-    ];
-    
-    updateTranslation({ aiSuggestions: newSuggestions });
-    setIsGeneratingSuggestions(false);
+    try {
+      const response = await fetch('/api/translations/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          translationId: selectedTranslation.id,
+          originalText: selectedTranslation.originalText,
+          targetLanguage: selectedTranslation.targetLanguage
+        })
+      });
+
+      if (response.ok) {
+        const suggestions = await response.json();
+        
+        // Aggiorna la traduzione selezionata con i nuovi suggerimenti
+        const updatedTranslation = {
+          ...selectedTranslation,
+          suggestions
+        };
+        
+        setSelectedTranslation(updatedTranslation);
+        setTranslations(prev => prev.map(t => 
+          t.id === selectedTranslation.id ? updatedTranslation : t
+        ));
+        
+        toast({
+          title: 'Suggerimenti generati',
+          description: `${suggestions.length} suggerimenti AI generati`
+        });
+      }
+    } catch (error) {
+      console.error('Errore nella generazione dei suggerimenti:', error);
+      toast({
+        title: 'Errore',
+        description: 'Impossibile generare suggerimenti',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsGeneratingSuggestions(false);
+    }
   };
 
   const applySuggestion = (suggestion: string) => {
     updateTranslation({ translatedText: suggestion });
+  };
+
+  // Salvataggio automatico con debounce
+  const handleTranslationChange = useCallback((newText: string) => {
+    if (!selectedTranslation) return;
+    
+    // Aggiorna lo stato locale immediatamente
+    setSelectedTranslation({
+      ...selectedTranslation,
+      translatedText: newText
+    });
+    
+    setHasUnsavedChanges(true);
+    
+    // Cancella il timeout precedente se esiste
+    if (saveTimeoutId) {
+      clearTimeout(saveTimeoutId);
+    }
+    
+    // Imposta un nuovo timeout per il salvataggio automatico dopo 2 secondi
+    const newTimeoutId = setTimeout(() => {
+      updateTranslation({ translatedText: newText });
+    }, 2000);
+    
+    setSaveTimeoutId(newTimeoutId);
+  }, [selectedTranslation, saveTimeoutId]);
+
+  // Salvataggio manuale immediato
+  const handleManualSave = () => {
+    if (!selectedTranslation || !hasUnsavedChanges) return;
+    
+    // Cancella il timeout del salvataggio automatico
+    if (saveTimeoutId) {
+      clearTimeout(saveTimeoutId);
+      setSaveTimeoutId(null);
+    }
+    
+    updateTranslation({ translatedText: selectedTranslation.translatedText });
+  };
+
+  const deleteTranslation = async (id: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questa traduzione?')) return;
+    
+    try {
+      const response = await fetch(`/api/translations?id=${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setTranslations(prev => prev.filter(t => t.id !== id));
+        if (selectedTranslation?.id === id) {
+          setSelectedTranslation(null);
+        }
+        
+        toast({
+          title: 'Eliminata',
+          description: 'Traduzione eliminata con successo'
+        });
+      }
+    } catch (error) {
+      console.error('Errore nell\'eliminazione della traduzione:', error);
+      toast({
+        title: 'Errore',
+        description: 'Impossibile eliminare la traduzione',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const exportTranslations = async (format: 'json' | 'csv' | 'po') => {
+    if (!filterGame || filterGame === 'all') {
+      toast({
+        title: 'Seleziona un gioco',
+        description: 'Devi selezionare un gioco specifico per esportare le traduzioni',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams();
+      params.append('gameId', filterGame);
+      params.append('format', format);
+      if (filterStatus !== 'all') params.append('status', filterStatus);
+
+      const response = await fetch(`/api/translations/export?${params}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `translations.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        toast({
+          title: 'Esportazione completata',
+          description: `Traduzioni esportate in formato ${format.toUpperCase()}`
+        });
+      }
+    } catch (error) {
+      console.error('Errore nell\'esportazione:', error);
+      toast({
+        title: 'Errore',
+        description: 'Impossibile esportare le traduzioni',
+        variant: 'destructive'
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -186,8 +350,14 @@ export default function EditorPage() {
     }
   };
 
-  const getGameTitle = (gameId: string) => {
-    return games.find(g => g.id === gameId)?.title || 'Unknown Game';
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-3 w-3" />;
+      case 'reviewed': return <CheckCircle className="h-3 w-3" />;
+      case 'edited': return <Edit3 className="h-3 w-3" />;
+      case 'pending': return <AlertCircle className="h-3 w-3" />;
+      default: return null;
+    }
   };
 
   return (
@@ -196,17 +366,43 @@ export default function EditorPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Editor Traduzioni</h1>
-          <p className="text-muted-foreground">Workspace collaborativo stile DeepL per revisione traduzioni</p>
+          <p className="text-muted-foreground">Workspace collaborativo per revisione traduzioni</p>
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={() => setSelectedTranslation(null)}>
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
+          <Link href="/editor/dashboard">
+            <Button variant="outline">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Dashboard
+            </Button>
+          </Link>
+          <Button variant="outline" onClick={() => setShowImportDialog(true)}>
+            <Upload className="h-4 w-4 mr-2" />
+            Importa
           </Button>
-          <Button disabled={!selectedTranslation}>
-            <Save className="h-4 w-4 mr-2" />
-            Salva Modifiche
+          
+          <Select onValueChange={(format) => exportTranslations(format as any)}>
+            <SelectTrigger className="w-32">
+              <Download className="h-4 w-4 mr-2" />
+              <span>Esporta</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="json">JSON</SelectItem>
+              <SelectItem value="csv">CSV</SelectItem>
+              <SelectItem value="po">PO (gettext)</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button 
+            disabled={!selectedTranslation || isSaving}
+            onClick={() => selectedTranslation && updateTranslation({})}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            Salva
           </Button>
         </div>
       </div>
@@ -218,7 +414,7 @@ export default function EditorPage() {
             <CardTitle className="flex items-center space-x-2">
               <FileText className="h-5 w-5" />
               <span>Traduzioni</span>
-              <Badge variant="secondary">{filteredTranslations.length}</Badge>
+              <Badge variant="secondary">{translations.length}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -265,51 +461,78 @@ export default function EditorPage() {
             </div>
 
             {/* Translation List */}
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {filteredTranslations.map((translation, index) => (
-                <motion.div
-                  key={translation.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                    selectedTranslation?.id === translation.id 
-                      ? 'border-primary bg-primary/5' 
-                      : 'hover:bg-muted/50'
-                  }`}
-                  onClick={() => setSelectedTranslation(translation)}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getStatusColor(translation.status)} variant="secondary">
-                        {translation.status}
-                      </Badge>
-                      {translation.confidence > 0 && (
-                        <span className="text-xs text-muted-foreground">
-                          {Math.round(translation.confidence * 100)}%
-                        </span>
-                      )}
+            <div className="space-y-2 max-h-[600px] overflow-y-auto">
+              {isLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : translations.length === 0 ? (
+                <div className="text-center p-8 text-muted-foreground">
+                  <Languages className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>Nessuna traduzione trovata</p>
+                </div>
+              ) : (
+                translations.map((translation, index) => (
+                  <motion.div
+                    key={translation.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`p-3 border rounded-lg cursor-pointer transition-colors group ${
+                      selectedTranslation?.id === translation.id 
+                        ? 'border-primary bg-primary/5' 
+                        : 'hover:bg-muted/50'
+                    }`}
+                    onClick={() => setSelectedTranslation(translation)}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Badge className={getStatusColor(translation.status)} variant="secondary">
+                          <span className="flex items-center space-x-1">
+                            {getStatusIcon(translation.status)}
+                            <span>{translation.status}</span>
+                          </span>
+                        </Badge>
+                        {translation.confidence > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            {Math.round(translation.confidence * 100)}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {translation.isManualEdit && (
+                          <Edit3 className="h-3 w-3 text-purple-500" />
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteTranslation(translation.id);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                    {translation.isManualEdit && (
-                      <Edit3 className="h-3 w-3 text-purple-500" />
-                    )}
-                  </div>
-                  
-                  <p className="text-sm font-medium mb-1 line-clamp-2">
-                    {translation.originalText}
-                  </p>
-                  
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {getGameTitle(translation.gameId)} • {translation.filePath.split('/').pop()}
-                  </p>
-                  
-                  {translation.translatedText && (
-                    <p className="text-xs text-primary line-clamp-2">
-                      {translation.translatedText}
+                    
+                    <p className="text-sm font-medium mb-1 line-clamp-2">
+                      {translation.originalText}
                     </p>
-                  )}
-                </motion.div>
-              ))}
+                    
+                    <p className="text-xs text-muted-foreground mb-2">
+                      {translation.game.title} • {translation.filePath.split('/').pop()}
+                    </p>
+                    
+                    {translation.translatedText && (
+                      <p className="text-xs text-primary line-clamp-2">
+                        {translation.translatedText}
+                      </p>
+                    )}
+                  </motion.div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -328,7 +551,7 @@ export default function EditorPage() {
                         <span>Editor Traduzione</span>
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {getGameTitle(selectedTranslation.gameId)} • {selectedTranslation.filePath}
+                        {selectedTranslation.game.title} • {selectedTranslation.filePath}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -351,7 +574,17 @@ export default function EditorPage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-medium">Testo Originale ({selectedTranslation.sourceLanguage.toUpperCase()})</label>
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedTranslation.originalText);
+                            toast({
+                              title: 'Copiato',
+                              description: 'Testo originale copiato negli appunti'
+                            });
+                          }}
+                        >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
@@ -385,7 +618,7 @@ export default function EditorPage() {
                             disabled={isGeneratingSuggestions}
                           >
                             {isGeneratingSuggestions ? (
-                              <ArrowLeftRight className="h-4 w-4 animate-pulse" />
+                              <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
                               <Lightbulb className="h-4 w-4" />
                             )}
@@ -394,17 +627,43 @@ export default function EditorPage() {
                       </div>
                       <Textarea
                         value={selectedTranslation.translatedText}
-                        onChange={(e) => updateTranslation({ translatedText: e.target.value })}
+                        onChange={(e) => handleTranslationChange(e.target.value)}
                         className="min-h-[120px] text-sm"
                         placeholder="Inserisci o modifica la traduzione..."
                       />
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          {selectedTranslation.isManualEdit ? 'Modificato manualmente' : 'Traduzione AI'}
-                        </span>
-                        <span>
-                          Ultimo aggiornamento: {selectedTranslation.lastModified.toLocaleString('it-IT')}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                          <span>
+                            {selectedTranslation.isManualEdit ? 'Modificato manualmente' : 'Traduzione AI'}
+                          </span>
+                          {hasUnsavedChanges && (
+                            <Badge variant="outline" className="text-xs">
+                              Modifiche non salvate
+                            </Badge>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={handleManualSave}
+                          disabled={!hasUnsavedChanges || isSaving}
+                          className="h-8"
+                        >
+                          {isSaving ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Salvataggio...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              Salva
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-2">
+                        Ultimo aggiornamento: {new Date(selectedTranslation.updatedAt).toLocaleString('it-IT')}
+                        {hasUnsavedChanges && ' • Salvataggio automatico in 2 secondi'}
                       </div>
                     </div>
                   </div>
@@ -412,7 +671,7 @@ export default function EditorPage() {
               </Card>
 
               {/* AI Suggestions */}
-              {selectedTranslation.aiSuggestions.length > 0 && (
+              {selectedTranslation.suggestions.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -422,23 +681,33 @@ export default function EditorPage() {
                       <CardTitle className="flex items-center space-x-2">
                         <Lightbulb className="h-5 w-5" />
                         <span>Suggerimenti AI</span>
-                        <Badge variant="secondary">{selectedTranslation.aiSuggestions.length}</Badge>
+                        <Badge variant="secondary">{selectedTranslation.suggestions.length}</Badge>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {selectedTranslation.aiSuggestions.map((suggestion, index) => (
+                      {selectedTranslation.suggestions.map((suggestion, index) => (
                         <motion.div
-                          key={index}
+                          key={suggestion.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.1 }}
                           className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                         >
-                          <p className="text-sm flex-1">{suggestion}</p>
+                          <div className="flex-1">
+                            <p className="text-sm">{suggestion.suggestion}</p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                {Math.round(suggestion.confidence * 100)}%
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {suggestion.provider}
+                              </span>
+                            </div>
+                          </div>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            onClick={() => applySuggestion(suggestion)}
+                            onClick={() => applySuggestion(suggestion.suggestion)}
                           >
                             Applica
                           </Button>
@@ -447,7 +716,7 @@ export default function EditorPage() {
                       
                       {isGeneratingSuggestions && (
                         <div className="flex items-center justify-center p-6">
-                          <ArrowLeftRight className="h-6 w-6 animate-pulse text-primary mr-2" />
+                          <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
                           <span className="text-sm text-muted-foreground">Generando nuovi suggerimenti...</span>
                         </div>
                       )}
@@ -466,8 +735,8 @@ export default function EditorPage() {
                   Scegli una traduzione dalla lista per iniziare a modificarla nell'editor.
                 </p>
                 <Button 
-                  onClick={() => setSelectedTranslation(filteredTranslations[0])}
-                  disabled={filteredTranslations.length === 0}
+                  onClick={() => setSelectedTranslation(translations[0])}
+                  disabled={translations.length === 0}
                 >
                   <Edit3 className="h-4 w-4 mr-2" />
                   Modifica Prima Traduzione
@@ -477,6 +746,14 @@ export default function EditorPage() {
           )}
         </div>
       </div>
+      
+      {/* Import Dialog */}
+      <TranslationImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        games={games}
+        onImportComplete={fetchTranslations}
+      />
     </div>
   );
 }

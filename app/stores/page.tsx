@@ -9,12 +9,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, Plug, Unplug, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2, Clock, Trophy, Gamepad2, BarChart3 } from 'lucide-react';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image, { StaticImageData } from 'next/image';
 import { useSession, signIn } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
+import { SteamFamilySharing } from '@/components/steam-family-sharing';
+import { ItchioModal } from '@/components/modals/itchio-modal';
+import { GenericCredentialsModal } from '@/components/modals/generic-credentials-modal';
+import { SteamModal } from '@/components/modals/steam-modal';
 
 // Define a type for the store object for better type safety
 type Store = {
@@ -28,15 +32,43 @@ type Store = {
 const stores: Store[] = [
   { id: 'steam', name: 'Steam', logoUrl: '/logos/steam.png', description: 'Collega il tuo account Steam per importare i tuoi giochi.' },
   { id: 'epic', name: 'Epic Games', logoUrl: '/logos/epic-games.png', description: 'Collega il tuo account Epic Games per importare i tuoi giochi.' },
-    { id: 'ubisoft', name: 'Ubisoft Connect', logoUrl: '/logos/ubisoft-connect.png', description: 'Collega il tuo account Ubisoft Connect per importare i tuoi giochi.' },
+  { id: 'ubisoft', name: 'Ubisoft Connect', logoUrl: '/logos/ubisoft-connect.png', description: 'Collega il tuo account Ubisoft Connect per importare i tuoi giochi.' },
   { id: 'itchio', name: 'itch.io', logoUrl: '/logos/itch-io.png', description: 'Collega il tuo account itch.io per importare i tuoi giochi.' },
-  { id: 'gog', name: 'GOG', logoUrl: '/logos/gog.png', description: 'La connessione con GOG non è ancora supportata.' },
-  { id: 'ea', name: 'EA App', logoUrl: '/logos/ea-app.png', description: 'La connessione con EA App non è ancora supportata.' },
-  { id: 'battlenet', name: 'Battle.net', logoUrl: '/logos/battlenet.png', description: 'La connessione con Battle.net non è ancora supportata.' },
+  { id: 'gog', name: 'GOG', logoUrl: '/logos/gog.png', description: 'Collega il tuo account GOG per importare i tuoi giochi.' },
+  { id: 'origin', name: 'EA App / Origin', logoUrl: '/logos/ea-app.png', description: 'Collega il tuo account EA per importare i tuoi giochi.' },
+  { id: 'battlenet', name: 'Battle.net', logoUrl: '/logos/battlenet.png', description: 'Collega il tuo account Battle.net per importare i tuoi giochi.' },
   { id: 'rockstar', name: 'Rockstar', logoUrl: '/logos/rockstar.png', description: 'La connessione con Rockstar non è ancora supportata.' },
 ];
 
-const connectableProviders = ['steam', 'epic', 'ubisoft', 'itchio'];
+const utilityServices: Store[] = [
+  {
+    id: 'howlongtobeat',
+    name: 'HowLongToBeat',
+    icon: <Clock className="h-12 w-12 text-blue-500" />,
+    description: 'Ottieni informazioni sui tempi di completamento dei tuoi giochi.'
+  },
+  {
+    id: 'steamgriddb',
+    name: 'SteamGridDB',
+    icon: <Gamepad2 className="h-12 w-12 text-purple-500" />,
+    description: 'Scarica artwork e copertine personalizzate per i tuoi giochi.'
+  },
+  {
+    id: 'achievements',
+    name: 'Achievement Tracker',
+    icon: <Trophy className="h-12 w-12 text-yellow-500" />,
+    description: 'Traccia i tuoi achievement e trofei su tutte le piattaforme.'
+  },
+  {
+    id: 'playtime',
+    name: 'Playtime Stats',
+    icon: <BarChart3 className="h-12 w-12 text-green-500" />,
+    description: 'Analizza le tue statistiche di gioco aggregate.'
+  },
+];
+
+const connectableProviders = ['steam', 'epic', 'ubisoft', 'itchio', 'gog', 'origin', 'battlenet'];
+const connectableUtilities = ['howlongtobeat', 'steamgriddb'];
 
 export default function StoresPage() {
   const { data: session, status, update } = useSession();
@@ -44,29 +76,47 @@ export default function StoresPage() {
 
   // State for UI elements and forms
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
-  const [vdfFile, setVdfFile] = React.useState<File | null>(null);
-  const [sharedAccounts, setSharedAccounts] = React.useState<string[]>([]);
-  const [isParsing, setIsParsing] = React.useState(false);
-  const [parseError, setParseError] = React.useState<string | null>(null);
   
   const [steamId, setSteamId] = useState('');
   const [fixMessage, setFixMessage] = useState('');
 
   // State for Steam ID modal
   const [isSteamModalOpen, setIsSteamModalOpen] = useState(false);
-  const [steamIdInput, setSteamIdInput] = useState('');
 
   const [ubisoftCredentials, setUbisoftCredentials] = useState({ email: '', password: '' });
   const [isUbisoftModalOpen, setIsUbisoftModalOpen] = useState(false);
+
+  // State for itch.io modal
+  const [isItchioModalOpen, setIsItchioModalOpen] = useState(false);
+
+  // Generic credentials state for new providers
+  const [genericCredentials, setGenericCredentials] = useState({ email: '', password: '' });
+  const [genericModalProvider, setGenericModalProvider] = useState<string | null>(null);
+  
+  // Test connection state
+  const [testingProvider, setTestingProvider] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<{ [key: string]: any }>({});
+  
+  // Utility services state
+  const [utilityPreferences, setUtilityPreferences] = useState<{ [key: string]: any }>({});
 
   const providerMap: { [key: string]: string } = {
     steam: 'steam-credentials',
     itchio: 'itchio-credentials',
     epic: 'epicgames',
     ubisoft: 'ubisoft-credentials',
+    gog: 'gog-credentials',
+    origin: 'origin-credentials',
+    battlenet: 'battlenet-credentials',
   };
 
   const isConnected = (providerId: string): boolean => {
+    // Check for utility services
+    if (['howlongtobeat', 'steamgriddb', 'achievements', 'playtime'].includes(providerId)) {
+      return utilityPreferences[providerId]?.enabled || false;
+    }
+    
+    // Check for store providers
     if (!session?.user?.accounts) return false;
     const backendProviderId = providerMap[providerId] || providerId;
     return session.user.accounts.some(acc => acc.provider === backendProviderId);
@@ -100,44 +150,132 @@ export default function StoresPage() {
     setLoadingProvider(null);
   };
 
+  // Load utility preferences on mount
+  useEffect(() => {
+    const loadUtilityPreferences = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        const response = await fetch('/api/utilities/preferences');
+        if (response.ok) {
+          const prefs = await response.json();
+          setUtilityPreferences(prefs);
+        }
+      } catch (error) {
+        console.error('Error loading utility preferences:', error);
+      }
+    };
+    
+    loadUtilityPreferences();
+  }, [session]);
+
+  const handleConnectUtility = async (utilityId: string) => {
+    setLoadingProvider(utilityId);
+    
+    try {
+      if (utilityId === 'howlongtobeat') {
+        // HowLongToBeat doesn't require authentication, just enable it
+        const response = await fetch('/api/utilities/preferences', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ service: utilityId, enabled: true }),
+        });
+        
+        if (response.ok) {
+          toast.success('HowLongToBeat attivato! Le informazioni sui tempi di gioco verranno mostrate automaticamente.');
+          setUtilityPreferences(prev => ({ ...prev, [utilityId]: { enabled: true } }));
+        } else {
+          throw new Error('Failed to save preference');
+        }
+      } else if (utilityId === 'steamgriddb') {
+        const apiKey = prompt('Inserisci la tua API key di SteamGridDB (ottienila da https://www.steamgriddb.com/profile/preferences/api):');
+        if (apiKey) {
+          const response = await fetch('/api/utilities/preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ service: utilityId, enabled: true, apiKey }),
+          });
+          
+          if (response.ok) {
+            toast.success('SteamGridDB collegato con successo!');
+            setUtilityPreferences(prev => ({ ...prev, [utilityId]: { enabled: true, apiKey } }));
+          } else {
+            throw new Error('Failed to save API key');
+          }
+        }
+      }
+    } catch (error) {
+      toast.error(`Errore durante l'attivazione di ${utilityId}`);
+    }
+    
+    setLoadingProvider(null);
+  };
+
+  const handleDisconnectUtility = async (utilityId: string) => {
+    setLoadingProvider(utilityId);
+    
+    try {
+      const response = await fetch(`/api/utilities/preferences?service=${utilityId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        toast.success(`${utilityId} disattivato con successo.`);
+        setUtilityPreferences(prev => {
+          const newPrefs = { ...prev };
+          delete newPrefs[utilityId];
+          return newPrefs;
+        });
+      } else {
+        throw new Error('Failed to delete preference');
+      }
+    } catch (error) {
+      toast.error(`Errore durante la disattivazione di ${utilityId}`);
+    }
+    
+    setLoadingProvider(null);
+  };
+
   const handleConnect = async (providerId: string) => {
     setLoadingProvider(providerId);
     const userId = session?.user?.id;
 
+    // Handle OAuth providers
+    if (providerId === 'epic') {
+      try {
+        await signIn('epicgames', { callbackUrl: '/stores' });
+      } catch (error) {
+        console.error('Epic Games auth error:', error);
+        toast.error('Errore durante la connessione con Epic Games. Verifica le credenziali OAuth.');
+        setLoadingProvider(null);
+      }
+      return;
+    }
+
+    // Handle credential-based providers with modals
     if (providerId === 'ubisoft') {
       setIsUbisoftModalOpen(true);
-      setLoadingProvider(null); // Stop loading, modal will handle its own loading state
+      setLoadingProvider(null);
       return;
     }
 
-    if (providerId === 'epic') {
-      await signIn('epicgames', { callbackUrl: '/stores' });
-      // setLoadingProvider(null) will be called on page reload
-      return;
-    }
-
-    // For credential-based providers
-    let signInResult;
     if (providerId === 'steam') {
       setIsSteamModalOpen(true);
-      setLoadingProvider(null); // Modal will handle its own loading
+      setLoadingProvider(null);
       return;
-    } else if (providerId === 'itchio') {
-      const accessToken = prompt('Per favore, inserisci la tua chiave API di Itch.io:');
-      if (accessToken) {
-        signInResult = await signIn('itchio-credentials', {
-          accessToken: accessToken,
-          userId: userId,
-          redirect: false,
-        });
-      }
     }
 
-    if (signInResult?.error) {
-      toast.error(signInResult.error);
-    } else if (signInResult?.ok) {
-      toast.success(`Account ${providerId} collegato con successo!`);
-      await update();
+    if (['gog', 'origin', 'battlenet'].includes(providerId)) {
+      setGenericModalProvider(providerId);
+      setLoadingProvider(null);
+      return;
+    }
+
+    // Handle itch.io with dedicated modal
+    if (providerId === 'itchio') {
+      setIsItchioModalOpen(true);
+      setLoadingProvider(null);
+      return;
     }
     
     setLoadingProvider(null);
@@ -162,100 +300,188 @@ export default function StoresPage() {
     setLoadingProvider(null);
   };
 
-  const handleUbisoftLogin = async () => {
-    if (!ubisoftCredentials.email || !ubisoftCredentials.password) {
+  const handleUbisoftLogin = async (email: string, password: string, twoFactorCode?: string) => {
+    if (!email || !password) {
       toast.error('Per favore, inserisci sia email che password.');
       return;
     }
     setLoadingProvider('ubisoft');
-    const result = await signIn('ubisoft-credentials', {
-      redirect: false,
-      email: ubisoftCredentials.email,
-      password: ubisoftCredentials.password,
-      userId: session?.user.id,
-    });
+    try {
+      const result = await signIn('ubisoft-credentials', {
+        redirect: false,
+        email,
+        password,
+        twoFactorCode,
+        userId: session?.user.id,
+      });
 
-    if (result?.error) {
-      toast.error(result.error || 'Errore durante la connessione con Ubisoft.');
-    } else {
-      toast.success('Account Ubisoft collegato con successo!');
-      setIsUbisoftModalOpen(false);
-      setUbisoftCredentials({ email: '', password: '' });
-      await update();
+      if (result?.error) {
+        toast.error(result.error || 'Errore durante la connessione con Ubisoft.');
+      } else {
+        toast.success('Account Ubisoft collegato con successo!');
+        setIsUbisoftModalOpen(false);
+        setUbisoftCredentials({ email: '', password: '' });
+        await update();
+      }
+    } catch (error) {
+      console.error('Ubisoft auth error:', error);
+      toast.error('Errore durante la connessione con Ubisoft. Verifica le credenziali.');
     }
     setLoadingProvider(null);
   };
 
-  const handleSteamLogin = async () => {
-    if (!/^\d{17}$/.test(steamIdInput)) {
-      toast.error('Formato SteamID non valido. Deve essere un numero di 17 cifre.');
+  const handleGenericLogin = async (email: string, password: string, twoFactorCode?: string) => {
+    if (!email || !password) {
+      toast.error('Per favore, inserisci sia email che password.');
       return;
     }
+    if (!genericModalProvider) return;
+
+    setLoadingProvider(genericModalProvider);
+    try {
+      const backendProviderId = providerMap[genericModalProvider] || `${genericModalProvider}-credentials`;
+      const result = await signIn(backendProviderId, {
+        redirect: false,
+        email,
+        password,
+        twoFactorCode,
+        userId: session?.user.id,
+      });
+
+      if (result?.error) {
+        // Se GOG richiede 2FA, l'errore dovrebbe indicarlo
+        if (genericModalProvider === 'gog' && result.error.includes('2FA')) {
+          toast.error('Per favore inserisci il codice 2FA');
+          // La modale gestirà la richiesta del codice 2FA
+        } else {
+          toast.error(result.error || `Errore durante la connessione con ${genericModalProvider}.`);
+        }
+      } else {
+        toast.success(`Account ${genericModalProvider} collegato con successo!`);
+        setGenericModalProvider(null);
+        setGenericCredentials({ email: '', password: '' });
+        await update();
+      }
+    } catch (error) {
+      console.error(`${genericModalProvider} auth error:`, error);
+      toast.error(`Errore durante la connessione con ${genericModalProvider}.`);
+    }
+    setLoadingProvider(null);
+  };
+
+  const handleSteamLogin = async (steamId: string) => {
     setLoadingProvider('steam');
     const result = await signIn('steam-credentials', {
       redirect: false,
-      steamid: steamIdInput,
+      steamid: steamId,
       userId: session?.user.id,
     });
 
     if (result?.error) {
       toast.error(result.error || 'Errore durante la connessione con Steam.');
+      throw new Error(result.error);
     } else {
       toast.success('Account Steam collegato con successo!');
       setIsSteamModalOpen(false);
-      setSteamIdInput('');
       await update();
     }
     setLoadingProvider(null);
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setVdfFile(event.target.files[0]);
-      setParseError(null);
-    }
-  };
-
-  const handleParseVdf = async () => {
-    if (!vdfFile) {
-      setParseError('Per favore, seleziona un file prima di procedere.');
-      return;
-    }
-
-    setIsParsing(true);
-    setParseError(null);
-    setSharedAccounts([]);
-
+  const handleItchioLogin = async (apiKey: string) => {
+    setLoadingProvider('itchio');
     try {
-      const fileContent = await vdfFile.text();
-      const response = await fetch('/api/steam/shared-config', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-        body: fileContent,
+      const result = await signIn('itchio-credentials', {
+        accessToken: apiKey,
+        userId: session?.user?.id,
+        redirect: false,
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Si è verificato un errore sconosciuto.');
+      
+      if (result?.error) {
+        throw new Error(result.error);
+      } else if (result?.ok) {
+        toast.success('Account itch.io collegato con successo!');
+        await update();
       }
-
-      setSharedAccounts(result.sharedAccounts || []);
-      if (result.sharedAccounts.length === 0) {
-        setParseError('Nessun account condiviso trovato nel file.');
-      }
-
-    } catch (error: any) {
-      setParseError(error.message);
+    } catch (error) {
+      toast.error('Errore durante la connessione con itch.io');
+      throw error;
     } finally {
-      setIsParsing(false);
+      setLoadingProvider(null);
     }
   };
 
   const steamAccount = session?.user?.accounts?.find(acc => acc.provider === 'steam-credentials');
   const isSteamIdInvalid = steamAccount ? !/^\d{17}$/.test(steamAccount.providerAccountId) : false;
+
+  const testConnectionUtility = async (utilityId: string) => {
+    setTestingProvider(utilityId);
+    
+    try {
+      if (utilityId === 'howlongtobeat') {
+        // Test HowLongToBeat API
+        const response = await fetch('/api/utilities/howlongtobeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ search: 'The Witcher 3' }),
+        });
+        
+        if (response.ok) {
+          setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
+          toast.success('HowLongToBeat funziona correttamente!');
+        } else {
+          throw new Error('API test failed');
+        }
+      } else if (utilityId === 'steamgriddb') {
+        // Test SteamGridDB API
+        const apiKey = utilityPreferences[utilityId]?.apiKey;
+        if (!apiKey) {
+          throw new Error('API key mancante');
+        }
+        
+        const response = await fetch('/api/utilities/steamgriddb?search=The Witcher 3', {
+          headers: { 'X-API-Key': apiKey },
+        });
+        
+        if (response.ok) {
+          setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
+          toast.success('SteamGridDB funziona correttamente!');
+        } else {
+          throw new Error('API test failed');
+        }
+      }
+    } catch (error) {
+      setTestResults(prev => ({ ...prev, [utilityId]: { error: error instanceof Error ? error.message : 'Test fallito' } }));
+      toast.error(`Problema con ${utilityId}: ${error instanceof Error ? error.message : 'Test fallito'}`);
+    }
+    
+    setTestingProvider(null);
+  };
+
+  const testConnection = async (providerId: string) => {
+    setTestingProvider(providerId);
+    try {
+      const backendProviderId = getBackendProviderId(providerId);
+      const response = await fetch('/api/stores/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: backendProviderId }),
+      });
+      
+      const result = await response.json();
+      setTestResults(prev => ({ ...prev, [providerId]: result }));
+      
+      if (result.connected) {
+        toast.success(`Connessione ${providerId} verificata!`);
+      } else {
+        toast.error(`Problema con ${providerId}: ${result.error || 'Connessione non riuscita'}`);
+      }
+    } catch (error) {
+      toast.error(`Errore nel test di ${providerId}`);
+      setTestResults(prev => ({ ...prev, [providerId]: { error: 'Test fallito' } }));
+    }
+    setTestingProvider(null);
+  };
 
   return (
     <div className="p-6">
@@ -327,15 +553,45 @@ export default function StoresPage() {
                 </CardDescription>
                 <div className="mt-4 flex flex-col space-y-2">
                   {connected ? (
-                    <Button
-                      className="w-full"
-                      variant="destructive"
-                      disabled={isLoading || currentLoading}
-                      onClick={() => handleDisconnect(store.id)}
-                    >
-                      {currentLoading ? <Loader2 className="animate-spin mr-2" /> : <Unplug className="mr-2 h-4 w-4" />}
-                      Disconnetti
-                    </Button>
+                    <>
+                      <div className="flex gap-2">
+                        <Button
+                          className="flex-1"
+                          variant="destructive"
+                          disabled={isLoading || currentLoading}
+                          onClick={() => handleDisconnect(store.id)}
+                        >
+                          {currentLoading ? <Loader2 className="animate-spin mr-2" /> : <Unplug className="mr-2 h-4 w-4" />}
+                          Disconnetti
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          disabled={testingProvider === store.id}
+                          onClick={() => testConnection(store.id)}
+                          title="Test connessione"
+                        >
+                          {testingProvider === store.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : testResults[store.id]?.connected ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : testResults[store.id]?.error ? (
+                            <AlertCircle className="h-4 w-4 text-red-500" />
+                          ) : (
+                            <AlertCircle className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {testResults[store.id] && (
+                        <div className="text-xs text-muted-foreground">
+                          {testResults[store.id].connected ? (
+                            <span className="text-green-600">✓ Connessione verificata</span>
+                          ) : (
+                            <span className="text-red-600">✗ {testResults[store.id].error}</span>
+                          )}
+                        </div>
+                      )}
+                    </>
                   ) : isConnectable ? (
                     <Button
                       className="w-full"
@@ -358,114 +614,150 @@ export default function StoresPage() {
         })}
       </div>
 
-      {isUbisoftModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Collega Ubisoft Connect</h3>
-            <div className="space-y-4">
-              <input
-                type="email"
-                placeholder="Email"
-                value={ubisoftCredentials.email}
-                onChange={(e) => setUbisoftCredentials({ ...ubisoftCredentials, email: e.target.value })}
-                className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={ubisoftCredentials.password}
-                onChange={(e) => setUbisoftCredentials({ ...ubisoftCredentials, password: e.target.value })}
-                className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-            </div>
-            <div className="mt-6 flex justify-end space-x-4">
-              <button
-                onClick={() => setIsUbisoftModalOpen(false)}
-                className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-500 transition-colors"
-                disabled={loadingProvider === 'ubisoft'}
-              >
-                Annulla
-              </button>
-              <button
-                onClick={handleUbisoftLogin}
-                className="px-4 py-2 rounded bg-purple-600 hover:bg-purple-500 transition-colors flex items-center"
-                disabled={loadingProvider === 'ubisoft'}
-              >
-                {loadingProvider === 'ubisoft' ? <Loader2 className="animate-spin mr-2" /> : null}
-                Collega
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Ubisoft modal removed - now using GenericCredentialsModal */}
 
       <div className="mt-12">
         <h2 className="text-2xl font-bold tracking-tight mb-4">Steam Family Sharing</h2>
-        <Card>
-          <CardHeader>
-            <CardTitle>Analizza la tua configurazione di condivisione</CardTitle>
-            <CardDescription>
-              Carica il tuo file <code>sharedconfig.vdf</code> per vedere con chi stai condividendo la tua libreria di giochi Steam.
-              Puoi trovarlo nella cartella <code>config</code> della tua installazione di Steam (es. <code>C:\Program Files (x86)\Steam\config</code>).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4">
-              <input type="file" accept=".vdf" onChange={handleFileChange} className="text-sm" />
-              <Button onClick={handleParseVdf} disabled={isParsing || !vdfFile}>
-                {isParsing ? <><Loader2 className="animate-spin mr-2" /> Analisi in corso...</> : 'Analizza File'}
-              </Button>
-              {parseError && <p className="text-red-500 text-sm">{parseError}</p>}
-              {sharedAccounts.length > 0 && (
-                <div>
-                  <h3 className="font-semibold">Account autorizzati:</h3>
-                  <ul className="list-disc pl-5 mt-2">
-                    {sharedAccounts.map(id => <li key={id}><code>{id}</code></li>)}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <SteamFamilySharing />
       </div>
 
-      {isSteamModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card p-6 rounded-lg shadow-xl w-full max-w-md border">
-            <h3 className="text-lg font-semibold mb-4">Collega Account Steam</h3>
-            <p className="text-sm text-muted-foreground mb-4">Inserisci il tuo SteamID64 (un numero di 17 cifre) per collegare il tuo account.</p>
-            <div className="grid w-full max-w-sm items-center gap-1.5">
-              <label htmlFor="steamid">SteamID64</label>
-              <Input
-                id="steamid"
-                value={steamIdInput}
-                onChange={(e) => setSteamIdInput(e.target.value)}
-                placeholder="Inserisci il tuo SteamID64 di 17 cifre"
-              />
-              <div className="text-xs text-muted-foreground pt-1">
-                <a href="https://steamid.io/" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
-                  Non conosci il tuo SteamID? Trovalo qui.
-                </a>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsSteamModalOpen(false)}
-                disabled={loadingProvider === 'steam'}
-              >
-                Annulla
-              </Button>
-              <Button
-                onClick={handleSteamLogin}
-                disabled={loadingProvider === 'steam'}
-              >
-                {loadingProvider === 'steam' ? <Loader2 className="animate-spin mr-2" /> : null}
-                Collega
-              </Button>
-            </div>
-          </div>
+      {/* Steam modal removed - now using a dedicated Steam modal component */}
+
+      {/* Generic modal removed - now using GenericCredentialsModal */}
+
+      {/* Utility Services Section */}
+      <div className="mt-12">
+        <h2 className="text-2xl font-bold tracking-tight mb-4">Servizi Utility</h2>
+        <p className="text-muted-foreground mb-6">
+          Collega servizi aggiuntivi per arricchire la tua esperienza di gioco con informazioni e funzionalità extra.
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {utilityServices.map((service) => {
+            const connected = isConnected(service.id);
+            const isConnectable = connectableUtilities.includes(service.id);
+            const currentLoading = loadingProvider === service.id;
+
+            return (
+              <Card key={service.id}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="flex items-center gap-4">
+                    <div className="relative h-12 w-12 flex items-center justify-center">
+                      {service.icon}
+                    </div>
+                  </div>
+                  {connected ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <XCircle className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <CardTitle className="text-lg font-bold mb-2">{service.name}</CardTitle>
+                  <CardDescription className="mb-4">
+                    {service.description}
+                  </CardDescription>
+                  <div className="mt-4 flex flex-col space-y-2">
+                    {connected ? (
+                      <>
+                        <div className="flex gap-2">
+                          <Button
+                            className="flex-1"
+                            variant="destructive"
+                            disabled={isLoading || currentLoading}
+                            onClick={() => handleDisconnectUtility(service.id)}
+                          >
+                            {currentLoading ? <Loader2 className="animate-spin mr-2" /> : <Unplug className="mr-2 h-4 w-4" />}
+                            Disattiva
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            disabled={testingProvider === service.id}
+                            onClick={() => testConnectionUtility(service.id)}
+                            title="Test servizio"
+                          >
+                            {testingProvider === service.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : testResults[service.id]?.connected ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            ) : testResults[service.id]?.error ? (
+                              <AlertCircle className="h-4 w-4 text-red-500" />
+                            ) : (
+                              <AlertCircle className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        {testResults[service.id] && (
+                          <div className="text-xs text-muted-foreground">
+                            {testResults[service.id].connected ? (
+                              <span className="text-green-600">✓ Servizio attivo</span>
+                            ) : (
+                              <span className="text-red-600">✗ {testResults[service.id].error}</span>
+                            )}
+                          </div>
+                        )}
+                      </>
+                    ) : isConnectable ? (
+                      <Button
+                        className="w-full"
+                        disabled={isLoading || currentLoading}
+                        onClick={() => handleConnectUtility(service.id)}
+                      >
+                        {currentLoading ? <Loader2 className="animate-spin mr-2" /> : <Plug className="mr-2 h-4 w-4" />}
+                        Attiva Servizio
+                      </Button>
+                    ) : (
+                      <Button className="w-full" disabled={true}>
+                        <Plug className="mr-2 h-4 w-4" />
+                        Prossimamente
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
+      </div>
+
+      {/* Modern Modals */}
+      <SteamModal
+        isOpen={isSteamModalOpen}
+        onClose={() => setIsSteamModalOpen(false)}
+        onSubmit={handleSteamLogin}
+        isLoading={loadingProvider === 'steam'}
+      />
+
+      <ItchioModal
+        isOpen={isItchioModalOpen}
+        onClose={() => setIsItchioModalOpen(false)}
+        onSubmit={handleItchioLogin}
+        isLoading={loadingProvider === 'itchio'}
+      />
+
+      <GenericCredentialsModal
+        isOpen={isUbisoftModalOpen}
+        onClose={() => {
+          setIsUbisoftModalOpen(false);
+          setUbisoftCredentials({ email: '', password: '' });
+        }}
+        onSubmit={handleUbisoftLogin}
+        provider="ubisoft"
+        isLoading={loadingProvider === 'ubisoft'}
+      />
+
+      {genericModalProvider && genericModalProvider !== 'itchio' && (
+        <GenericCredentialsModal
+          isOpen={true}
+          onClose={() => {
+            setGenericModalProvider(null);
+            setGenericCredentials({ email: '', password: '' });
+          }}
+          onSubmit={handleGenericLogin}
+          provider={genericModalProvider}
+          isLoading={loadingProvider === genericModalProvider}
+        />
       )}
 
     </div>

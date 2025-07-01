@@ -1,0 +1,13 @@
+{
+  "gameId": "decarnation",
+  "gameName": "Decarnation",
+  "sourceFile": "dialogues-resources.assets-52.txt",
+  "targetLanguage": "it",
+  "entries": [],
+  "metadata": {
+    "createdAt": "2025-07-01T20:37:03.592Z",
+    "updatedAt": "2025-07-01T20:37:03.592Z",
+    "version": "1.0.0",
+    "author": "GameStringer"
+  }
+}

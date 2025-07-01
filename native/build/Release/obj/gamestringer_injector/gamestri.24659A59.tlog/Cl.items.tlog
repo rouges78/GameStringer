@@ -1,0 +1,4 @@
+C:\dev\GameStringer\native\src\injector.cc;C:\dev\GameStringer\native\build\Release\obj\gamestringer_injector\src\injector.obj
+C:\dev\GameStringer\native\src\process_utils.cc;C:\dev\GameStringer\native\build\Release\obj\gamestringer_injector\src\process_utils.obj
+C:\dev\GameStringer\native\src\memory_utils.cc;C:\dev\GameStringer\native\build\Release\obj\gamestringer_injector\src\memory_utils.obj
+C:\Users\rouges\AppData\Roaming\npm\node_modules\npm\node_modules\node-gyp\src\win_delay_load_hook.cc;C:\dev\GameStringer\native\build\Release\obj\gamestringer_injector\win_delay_load_hook.obj
