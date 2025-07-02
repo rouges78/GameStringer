@@ -24,6 +24,7 @@
     "@tauri-apps/cli": "^2.6.2",
     "@types/cheerio": "^1.0.0",
     "@types/ini": "^4.1.1",
+    "@types/long": "^5.0.0",
     "@types/node": "20.6.2",
     "@types/papaparse": "^5.3.16",
     "@types/react": "18.2.22",

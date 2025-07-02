@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
       });
 
       const result: Record<string, any> = {};
-      preferences.forEach(pref => {
+      preferences.forEach((pref: any) => {
         const service = pref.key.replace('utility_', '');
         result[service] = JSON.parse(pref.value);
       });
