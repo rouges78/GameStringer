@@ -343,6 +343,8 @@ class GameTranslationProfileManager {
       // Aggiorna metadata
       this.updateProfile(id, {
         metadata: {
+          createdAt: new Date(),
+          updatedAt: new Date(),
           description: `Profilo unito da ${profiles.map(p => p.gameName).join(', ')}`,
           tags: Array.from(allTags)
         }

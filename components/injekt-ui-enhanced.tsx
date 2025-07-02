@@ -521,7 +521,7 @@ export function InjektUIEnhanced() {
                   Esporta Profilo
                 </Button>
                 <Label htmlFor="import-profile" className="cursor-pointer">
-                  <Button as="span" variant="outline">
+                  <Button variant="outline">
                     <Upload className="mr-2 h-4 w-4" />
                     Importa Profilo
                   </Button>

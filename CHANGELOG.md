@@ -5,7 +5,14 @@ Tutte le modifiche importanti a questo progetto saranno documentate in questo fi
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-07-01
+## [Unreleased] - 2025-07-02
+
+### 🔧 Risolto
+- **Errore TypeScript 'long'** - Risolto conflitto di definizioni di tipo
+  - Rimosso `@types/long` ridondante che causava conflitto con `@xtuc/long`
+  - `@xtuc/long` (dipendenza di webpack) fornisce già le definizioni necessarie
+  - TypeScript compilation ora pulita senza errori
+  - Documentazione aggiornata in TROUBLESHOOTING.md
 
 ### 🎯 Milestone Raggiunta
 - **POC Injekt-Translator Completato** - Il primo proof of concept del sistema di traduzione in tempo reale è stato completato con successo

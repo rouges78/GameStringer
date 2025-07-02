@@ -46,7 +46,33 @@ const mappedGames = games.map(game => ({
 }));
 ```
 
-### 3. Errori Prisma EPERM su Windows
+### 3. Errore TypeScript "Cannot find type definition file for 'long'"
+
+#### Sintomi
+- Errore TypeScript: "Cannot find type definition file for 'long'"
+- `npx tsc --noEmit` fallisce con errore di definizione tipi
+- Errore persiste nonostante @types/long sia installato
+
+#### Causa
+Conflitto tra due definizioni di tipo per 'long':
+- `@xtuc/long` (dipendenza indiretta di webpack/webassembly) fornisce già le definizioni
+- `@types/long` crea un conflitto duplicato
+
+#### Soluzione
+```bash
+# Rimuovi @types/long che è ridondante
+npm uninstall @types/long
+
+# Verifica che l'errore sia risolto
+npx tsc --noEmit
+```
+
+#### Note Tecniche
+- `@xtuc/long` è una dipendenza indiretta di `@webassemblyjs`
+- Fornisce definizioni complete per il tipo Long
+- Non è necessario `@types/long` aggiuntivo
+
+### 4. Errori Prisma EPERM su Windows
 
 #### Sintomi
 ```

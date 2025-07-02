@@ -4,6 +4,13 @@
 
 ### ✨ Correzioni Recenti e Miglioramenti (Luglio 2025)
 
+#### 🔧 Errore TypeScript 'long' Risolto (2 Luglio 2025)
+- **Conflitto Definizioni Tipo**: Risolto conflitto tra `@types/long` e `@xtuc/long`
+- **Dipendenza Ridondante**: Rimosso `@types/long` che causava errore di compilazione
+- **Webpack Compatibility**: `@xtuc/long` (dipendenza di webpack) fornisce già tutte le definizioni necessarie
+- **Build Pulita**: TypeScript compilation ora funziona senza errori
+- **Documentazione Aggiornata**: Aggiunta sezione in TROUBLESHOOTING.md per riferimento futuro
+
 #### 🔐 Supporto 2FA per GOG Implementato (2 Luglio 2025)
 - **Autenticazione a Due Fattori**: Supporto completo per il login GOG con codice 2FA
 - **UI Moderna a Due Step**: Flusso intuitivo che guida l'utente attraverso email/password e poi codice 2FA
