@@ -5,7 +5,40 @@ Tutte le modifiche importanti a questo progetto saranno documentate in questo fi
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-07-02
+## [Unreleased] - 2025-07-03
+
+### 🔄 Migrazione API Routes → Comandi Tauri
+- **Primo Comando Migrato** - `auto_detect_steam_config` convertito da Next.js API route a comando Rust Tauri
+  - Backend Rust implementato con lettura registro Windows (winreg) e parsing VDF (steamy-vdf)
+  - Frontend React aggiornato per usare `invoke` Tauri invece di `fetch`
+  - Architettura modulare stabilita (src-tauri/src/models/, src-tauri/src/commands/)
+  - Dipendenze aggiunte: winreg 0.52.0, steamy-vdf 0.2.0, @tauri-apps/api
+
+### 🛠️ Risolto
+- **Errori Compilazione Rust** - Risolti problemi di import e sintassi
+  - Aggiunto `use winreg::HKEY;` per accesso registro Windows
+  - Corretto ciclo iterazione VDF: `users.iter()` invece di `users`
+  - Ripristinato `build.rs` standard con `tauri_build::build()`
+- **Problemi Next.js/React** - Riparate dipendenze corrotte
+  - Reinstallato Next.js CLI e React per risolvere errori di moduli mancanti
+  - Installato `caniuse-lite` per compatibilità browser
+  - Pulite cache npm e Cargo multiple volte
+- **Configurazione Tauri** - Corrette impostazioni app
+  - Configurate icone in `tauri.conf.json` con file esistenti
+  - Impostazioni finestra ottimizzate (center, visible, decorations)
+  - Script di build standardizzato
+
+### ⚠️ Problemi Noti
+- **Applicazione Non Appare** - Compilazione riuscita ma finestra non visibile
+  - Possibile problema ambiente, antivirus, permessi, compatibilità
+  - Raccomandato: investigare ambiente, testare su altro sistema
+
+### 🎯 Architettura Pronta
+- Base solida per migrazione completa di tutte le API Routes Steam
+- Struttura modulare Rust pronta per espansione
+- Frontend React preparato per comunicazione Tauri
+
+## [3.2.1] - 2025-07-02
 
 ### 🔧 Risolto
 - **Errore TypeScript 'long'** - Risolto conflitto di definizioni di tipo

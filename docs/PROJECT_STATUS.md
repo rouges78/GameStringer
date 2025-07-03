@@ -1,6 +1,25 @@
 # Stato del Progetto GameStringer
 
-## 🚀 Ultimo Aggiornamento: 2 Luglio 2025
+## 🚀 Ultimo Aggiornamento: 3 Luglio 2025
+
+### 🔄 **NOVITÀ: Migrazione API Routes → Comandi Tauri**
+
+#### Stato Migrazione
+- ✅ **Primo Comando Completato**: `auto_detect_steam_config` migrato con successo
+- ✅ **Architettura Rust**: Struttura modulare implementata (models, commands)
+- ✅ **Frontend Aggiornato**: React preparato per comunicazione Tauri
+- ❌ **Problema Runtime**: Applicazione si compila ma non appare (ambiente/sistema)
+
+#### Dettagli Tecnici
+- **Backend**: Rust con winreg (registro Windows) e steamy-vdf (parsing VDF)
+- **Frontend**: React con @tauri-apps/api per `invoke` comandi
+- **Dipendenze**: winreg 0.52.0, steamy-vdf 0.2.0, @tauri-apps/api
+- **Configurazione**: tauri.conf.json, build.rs, Cargo.toml ottimizzati
+
+#### Prossimi Passi
+1. Risolvere problema visualizzazione applicazione
+2. Migrare API Routes rimanenti (`/games`, `/game-details`, ecc.)
+3. Test end-to-end dell'integrazione completa
 
 ### ✅ Funzionalità Completate
 

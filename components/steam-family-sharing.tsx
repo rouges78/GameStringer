@@ -1,6 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
+
+// Definizione del tipo restituito dal comando Rust
+interface SteamConfig {
+  steam_path: string | null;
+  logged_in_users: string[];
+}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,36 +50,36 @@ export function SteamFamilySharing() {
     setIsDetecting(true);
     setError(null);
     setDetectionProgress(0);
-    
+
     try {
       // Simulate progress
       const progressInterval = setInterval(() => {
-        setDetectionProgress(prev => Math.min(prev + 10, 90));
+        setDetectionProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await fetch('/api/steam/auto-detect-config', {
-        method: 'POST',
-      });
-      
+      // Chiamata al comando Tauri
+      const result = await invoke<SteamConfig>('auto_detect_steam_config');
+
       clearInterval(progressInterval);
       setDetectionProgress(100);
-      
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Rilevamento automatico fallito');
-      }
-      
-      if (result.sharedAccounts && result.sharedAccounts.length > 0) {
-        setSharedAccounts(result.sharedAccounts);
-        toast.success(`Trovati ${result.sharedAccounts.length} account condivisi!`);
+
+      if (result.logged_in_users && result.logged_in_users.length > 0) {
+        const accounts = result.logged_in_users.map((steamId: string) => ({ steamId }));
+        setSharedAccounts(accounts);
+        toast.success(`Trovati ${accounts.length} account pronti per la condivisione!`);
+        if (result.steam_path) {
+          toast.info(`Rilevata installazione di Steam in: ${result.steam_path}`);
+        }
       } else {
-        setError('Nessun account condiviso trovato. Assicurati che la condivisione familiare sia attiva.');
+        setError("Nessun utente Steam trovato. Assicurati di aver effettuato l'accesso a Steam.");
+        toast.warning('Nessun utente Steam trovato.');
       }
-      
-    } catch (error: any) {
-      setError(error.message);
-      toast.error('Rilevamento automatico non riuscito');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
+      toast.error('Rilevamento automatico non riuscito', {
+        description: errorMessage,
+      });
     } finally {
       setIsDetecting(false);
       setDetectionProgress(0);

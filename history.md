@@ -1,5 +1,27 @@
 # Cronologia del Progetto GameStringer
 
+### 🔄 3 Luglio 2025: Migrazione API Routes → Comandi Tauri (Rust)
+
+**Sessione intensiva dedicata alla migrazione delle Next.js API Routes in comandi Rust-based Tauri per creare un'applicazione desktop standalone.**
+
+- **COMPLETATO Migrazione Primo Comando**: Implementazione riuscita di `auto_detect_steam_config`:
+  - Backend Rust con lettura registro Windows (winreg) e parsing file VDF (steamy-vdf)
+  - Frontend React aggiornato per usare `invoke` Tauri invece di `fetch`
+  - Architettura modulare stabilita (models, commands) per future migrazioni
+  - Dipendenze risolte: winreg 0.52.0, steamy-vdf 0.2.0, @tauri-apps/api
+
+- **RISOLTI Problemi Tecnici Critici**:
+  - Errori compilazione Rust (HKEY import, iterazione VDF, build script)
+  - Problemi Next.js (CLI mancante, React corrotto, caniuse-lite)
+  - Configurazione Tauri (icone, finestre, script di build standard)
+  - Cache corrotte (Cargo, npm, node_modules pulite multiple volte)
+
+- **PROBLEMA PERSISTENTE**: Applicazione si compila senza errori ma non appare visivamente
+  - Causa sconosciuta: possibile problema ambiente, antivirus, permessi, compatibilità
+  - Raccomandato: investigare ambiente, testare su altro sistema, continuare migrazione API
+
+- **ARCHITETTURA PRONTA**: Base solida per migrazione completa di tutte le API Routes Steam
+
 ### 🚀 1 Luglio 2025: Migrazione a Tauri v2 e Integrazione Desktop
 
 **Sessione notturna dedicata all'aggiornamento dell'infrastruttura desktop e alla risoluzione di problemi di compatibilità.**

@@ -27,6 +27,31 @@
 - **[Completato]** Dashboard interattiva con dati reali.
 - **[Completato]** Aggiornamento a Tauri v2 per migliore performance desktop.
 
+## 🔄 Fase 2.5: Migrazione API Routes → Comandi Tauri (In Corso)
+
+### Obiettivo: Trasformare l'app in Desktop Standalone
+- **[Completato]** Primo comando migrato: `auto_detect_steam_config`
+  - Backend Rust con lettura registro Windows e parsing VDF
+  - Frontend React aggiornato per comunicazione Tauri
+  - Architettura modulare stabilita (models, commands)
+- **[Completato]** Risoluzione problemi tecnici critici
+  - Errori compilazione Rust (HKEY, iterazione VDF, build script)
+  - Problemi Next.js/React (CLI, dipendenze corrotte, caniuse-lite)
+  - Configurazione Tauri (icone, finestre, script di build)
+- **[In Corso]** Risoluzione problema runtime/visualizzazione
+- **[Pianificato]** Migrazione API Routes rimanenti
+  - `/api/steam/games` - Recupero libreria completa Steam
+  - `/api/steam/game-details` - Dettagli singolo gioco
+  - `/api/steam/fix-steam-id` - Correzione ID Steam
+  - Integrazione HLTB (HowLongToBeat)
+  - Sistema di caching Rust
+
+### Benefici Attesi
+- App desktop standalone senza dipendenze server Node.js
+- Performance migliorate con backend Rust nativo
+- Distribuzione semplificata (singolo eseguibile)
+- Accesso diretto a API Windows per funzionalità avanzate
+
 ## 🚧 Fase 3: Injekt-Translator e Traduzione in Tempo Reale (In Sviluppo)
 
 - **[In Corso]** Sviluppo del modulo Injekt-Translator per traduzione in tempo reale durante il gameplay.

@@ -1,0 +1,262 @@
+/* Reset e Stili Globali */
+:root {
+    --primary-color: #0D0D0D; /* Nero quasi assoluto */
+    --secondary-color: #1A1A1A; /* Grigio molto scuro */
+    --accent-color: #00A3FF; /* Blu elettrico */
+    --text-color: #E0E0E0; /* Grigio chiaro per testo */
+    --text-muted: #888888; /* Grigio per testo secondario */
+    --card-bg: #252525; /* Sfondo per le card */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h1, h2, .logo {
+    font-family: 'Teko', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Header e Navigazione */
+header {
+    background-color: var(--secondary-color);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100px; /* Altezza fissa per la barra di navigazione */
+}
+
+.logo img {
+    height: 80px; /* Altezza fissa per il logo */
+    width: auto;
+}
+
+.logo {
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+}
+
+.nav-links li {
+    margin-left: 2rem;
+}
+
+.nav-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+    color: var(--accent-color);
+}
+
+/* Main Content - Sezioni */
+main {
+    padding-top: 100px; /* Altezza header */
+}
+
+section {
+    padding: 4rem 0;
+}
+
+.section-title {
+    font-size: 3rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--accent-color);
+}
+
+/* Hero Section */
+#hero {
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9)), url('https://source.unsplash.com/random/1600x900/?gaming,technology') no-repeat center center/cover;
+    text-align: center;
+    padding: 6rem 0;
+}
+
+#hero h1 {
+    font-size: 6rem;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+#hero h2 {
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+#hero p {
+    font-size: 1.2rem;
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+}
+
+.cta-button {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 1rem 2rem;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.cta-button:hover {
+    background-color: #007acc;
+}
+
+/* Features Section */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature-card {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #444;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 163, 255, 0.2);
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+    font-family: 'Teko', sans-serif;
+    font-size: 2rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+/* Vision Section */
+#vision {
+    background-color: var(--secondary-color);
+}
+
+.vision-text {
+    font-size: 1.2rem;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Tech Stack Section */
+.tech-stack {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.tech-item {
+    background-color: var(--card-bg);
+    padding: 0.8rem 1.5rem;
+    border-radius: 20px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: 1px solid var(--accent-color);
+}
+
+#tech p {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Contact Section */
+#contact {
+    background-color: var(--secondary-color);
+}
+
+#contact p {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 2rem auto;
+}
+
+#contact-form {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#contact-form input, #contact-form textarea {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--card-bg);
+    border: 1px solid #444;
+    border-radius: 5px;
+    color: var(--text-color);
+    font-size: 1rem;
+}
+
+#contact-form input:focus, #contact-form textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+/* Footer */
+footer {
+    background-color: #0D0D0D;
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 1px solid #333;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none; /* Semplificazione per il tutorial, si potrebbe implementare un menu hamburger */
+    }
+
+    #hero h1 { font-size: 4rem; }
+    #hero h2 { font-size: 1.8rem; }
+    .section-title { font-size: 2.5rem; }
+}
