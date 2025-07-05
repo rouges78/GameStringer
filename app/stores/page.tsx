@@ -374,7 +374,7 @@ export default function StoresPage() {
     const result = await signIn('steam-credentials', {
       redirect: false,
       steamid: steamId,
-      userId: session?.user.id,
+      userId: session?.user?.id || steamId, // Fallback a steamId se session è null
     });
 
     if (result?.error) {

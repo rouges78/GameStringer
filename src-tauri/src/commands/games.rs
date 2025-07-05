@@ -7,12 +7,65 @@ use tokio::fs;
 pub async fn get_games() -> Result<Vec<GameInfo>, String> {
     log::info!("🎮 Recupero lista giochi dal database...");
     
-    // TODO: Implementare connessione database SQLite
-    // Per ora restituiamo una lista vuota come placeholder
-    let games = Vec::new();
+    // Leggi i giochi dal file steam_owned_games.json come fallback
+    // In futuro sarà sostituito con connessione diretta al database Prisma
+    let steam_games_path = r"C:\dev\GameStringer\steam_owned_games.json";
     
-    log::info!("✅ Trovati {} giochi nel database", games.len());
-    Ok(games)
+    match tokio::fs::read_to_string(steam_games_path).await {
+        Ok(data) => {
+            match serde_json::from_str::<Vec<serde_json::Value>>(&data) {
+                Ok(steam_games) => {
+                    let mut games = Vec::new();
+                    
+                    for game in steam_games {
+                        if let (Some(appid), Some(name)) = (
+                            game["appid"].as_u64(),
+                            game["name"].as_str()
+                        ) {
+                            let game_info = GameInfo {
+                                id: format!("steam_{}", appid),
+                                title: name.to_string(),
+                                platform: "Steam".to_string(),
+                                install_path: None,
+                                executable_path: None,
+                                icon: game["img_icon_url"].as_str().map(|icon| {
+                                    format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", appid, icon)
+                                }),
+                                image_url: game["img_icon_url"].as_str().map(|icon| {
+                                    format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", appid, icon)
+                                }),
+                                is_installed: false, // Sarà aggiornato dalla scansione
+                                steam_app_id: Some(appid as u32),
+                                is_vr: false,
+                                engine: None,
+                                last_played: game["rtime_last_played"].as_u64()
+                                    .and_then(|timestamp| {
+                                        if timestamp > 0 {
+                                            Some(timestamp)
+                                        } else {
+                                            None
+                                        }
+                                    }),
+                                is_shared: false,
+                            };
+                            games.push(game_info);
+                        }
+                    }
+                    
+                    log::info!("✅ Trovati {} giochi Steam nel database", games.len());
+                    Ok(games)
+                }
+                Err(e) => {
+                    log::error!("❌ Errore parsing JSON giochi Steam: {}", e);
+                    Err(format!("Errore parsing giochi Steam: {}", e))
+                }
+            }
+        }
+        Err(e) => {
+            log::error!("❌ Errore lettura file giochi Steam: {}", e);
+            Err(format!("Errore lettura giochi Steam: {}", e))
+        }
+    }
 }
 
 #[tauri::command]

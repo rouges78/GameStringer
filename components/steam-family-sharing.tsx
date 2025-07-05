@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 
 // Definizione del tipo restituito dal comando Rust
 interface SteamConfig {

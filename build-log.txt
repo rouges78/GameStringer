@@ -1,0 +1,20 @@
+
+> build
+> next build
+
+   Ôû▓ Next.js 15.3.4
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./components/steam-family-sharing.tsx
+Module not found: Can't resolve '@tauri-apps/api/tauri'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./app/stores/page.tsx
+
+
+> Build failed because of webpack errors

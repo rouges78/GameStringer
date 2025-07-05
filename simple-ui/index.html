@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameStringer - Desktop App</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Tauri API will be injected by Tauri runtime -->
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">🎮 GameStringer</h1>
+                <div class="header-actions">
+                    <button id="refresh-btn" class="btn btn-primary">🔄 Aggiorna</button>
+                    <button id="settings-btn" class="btn btn-secondary">⚙️ Impostazioni</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <button class="nav-item active" data-page="dashboard">📊 Dashboard</button>
+            <button class="nav-item" data-page="library">📚 Libreria</button>
+            <button class="nav-item" data-page="translator">🔤 Traduttore</button>
+            <button class="nav-item" data-page="patches">🔨 Patch</button>
+            <button class="nav-item" data-page="test">🧪 Test Comandi</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page active">
+                <h2>📊 Dashboard</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>🎮 Giochi Steam</h3>
+                        <div class="stat-value" id="steam-games-count">-</div>
+                        <div class="stat-label">Nella tua libreria</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>🔤 Traduzioni</h3>
+                        <div class="stat-value" id="translations-count">-</div>
+                        <div class="stat-label">Patch create</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>💾 Cache</h3>
+                        <div class="stat-value" id="cache-size">-</div>
+                        <div class="stat-label">Dati memorizzati</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>⚡ Stato</h3>
+                        <div class="stat-value" id="app-status">✅</div>
+                        <div class="stat-label">Sistema operativo</div>
+                    </div>
+                </div>
+                
+                <div class="recent-activity">
+                    <h3>📈 Attività Recente</h3>
+                    <div id="activity-list" class="activity-list">
+                        <div class="activity-item">
+                            <span class="activity-icon">🎮</span>
+                            <span class="activity-text">Libreria Steam caricata</span>
+                            <span class="activity-time">Ora</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Library Page -->
+            <div id="library" class="page">
+                <h2>📚 Libreria Giochi</h2>
+                <div class="library-controls">
+                    <input type="text" id="search-input" placeholder="🔍 Cerca giochi..." class="search-input">
+                    <button id="load-steam-btn" class="btn btn-primary">🎮 Carica Steam</button>
+                    <button id="scan-local-btn" class="btn btn-secondary">📁 Scansiona Locali</button>
+                </div>
+                
+                <div class="loading" id="library-loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Caricamento libreria...</p>
+                </div>
+                
+                <div id="games-grid" class="games-grid">
+                    <!-- I giochi verranno caricati dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Translator Page -->
+            <div id="translator" class="page">
+                <h2>🔤 Traduttore AI</h2>
+                <div class="translator-container">
+                    <div class="translator-input">
+                        <label for="source-text">Testo da tradurre:</label>
+                        <textarea id="source-text" placeholder="Inserisci il testo da tradurre..."></textarea>
+                        
+                        <div class="translator-controls">
+                            <select id="target-language">
+                                <option value="it">🇮🇹 Italiano</option>
+                                <option value="en">🇺🇸 Inglese</option>
+                                <option value="es">🇪🇸 Spagnolo</option>
+                                <option value="fr">🇫🇷 Francese</option>
+                                <option value="de">🇩🇪 Tedesco</option>
+                            </select>
+                            
+                            <select id="ai-provider">
+                                <option value="openai">OpenAI</option>
+                                <option value="google">Google Translate</option>
+                                <option value="deepl">DeepL</option>
+                            </select>
+                            
+                            <button id="translate-btn" class="btn btn-primary">🔤 Traduci</button>
+                        </div>
+                    </div>
+                    
+                    <div class="translator-output">
+                        <label>Traduzione:</label>
+                        <div id="translated-text" class="translated-result">
+                            La traduzione apparirà qui...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Patches Page -->
+            <div id="patches" class="page">
+                <h2>🔨 Gestione Patch</h2>
+                <div class="patches-controls">
+                    <button id="create-patch-btn" class="btn btn-primary">➕ Nuova Patch</button>
+                    <button id="import-patch-btn" class="btn btn-secondary">📥 Importa</button>
+                    <button id="export-patches-btn" class="btn btn-secondary">📤 Esporta</button>
+                </div>
+                
+                <div id="patches-list" class="patches-list">
+                    <!-- Le patch verranno caricate dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Test Commands Page -->
+            <div id="test" class="page">
+                <h2>🧪 Test Comandi Tauri</h2>
+                <div class="test-sections">
+                    <div class="test-section">
+                        <h3>🎮 Steam Commands</h3>
+                        <div class="test-buttons">
+                            <button class="test-btn" data-command="auto_detect_steam_config">Auto Detect Config</button>
+                            <button class="test-btn" data-command="get_steam_games" data-args='{"api_key":"test","user_id":"test","force_refresh":false}'>Get Steam Games</button>
+                            <button class="test-btn" data-command="get_game_details" data-args='{"app_id":"730"}'>Get Game Details</button>
+                        </div>
+                    </div>
+                    
+                    <div class="test-section">
+                        <h3>📚 Library Commands</h3>
+                        <div class="test-buttons">
+                            <button class="test-btn" data-command="get_library_games">Get Library Games</button>
+                            <button class="test-btn" data-command="get_game_path" data-args='{"game_id":"test"}'>Get Game Path</button>
+                        </div>
+                    </div>
+                    
+                    <div class="test-section">
+                        <h3>🔧 Utilities Commands</h3>
+                        <div class="test-buttons">
+                            <button class="test-btn" data-command="get_preferences">Get Preferences</button>
+                            <button class="test-btn" data-command="get_cache_stats">Get Cache Stats</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="test-results">
+                    <h3>📋 Risultati Test</h3>
+                    <div id="test-output" class="test-output">
+                        I risultati dei test appariranno qui...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

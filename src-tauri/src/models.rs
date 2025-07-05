@@ -91,3 +91,32 @@ pub struct GameDetails {
     pub name: String,
     pub supported_languages: String,
 }
+
+// Struct for game info (used by games API)
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GameInfo {
+    pub id: String,
+    pub title: String,
+    pub platform: String,
+    pub install_path: Option<String>,
+    pub executable_path: Option<String>,
+    pub icon: Option<String>,
+    pub image_url: Option<String>,
+    pub is_installed: bool,
+    pub steam_app_id: Option<u32>,
+    pub is_vr: bool,
+    pub engine: Option<String>,
+    pub last_played: Option<u64>,
+    pub is_shared: bool,
+}
+
+// Struct for game scan results
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GameScanResult {
+    pub title: String,
+    pub path: String,
+    pub executable_path: Option<String>,
+    pub app_id: Option<String>,
+    pub source: String, // "Steam", "Epic", "GOG", etc.
+    pub is_installed: bool,
+}

@@ -18,6 +18,7 @@ import {
 import Link from 'next/link';
 import { ScanButton } from '@/components/scan-button';
 import { motion } from 'framer-motion';
+import { invoke } from '@tauri-apps/api/core';
 
 // Componenti UI riutilizzabili
 const StatCard = ({ icon: Icon, title, value, change, progress, color }: any) => (
@@ -73,9 +74,8 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Recupera giochi installati da Steam
-      const gamesResponse = await fetch('/api/steam/games');
-      const games = await gamesResponse.json();
+      // Recupera giochi installati da Steam usando comando Tauri aggiornato
+      const games = await invoke('get_games') as any[];
       
       // Recupera statistiche traduzioni salvate
       const savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');

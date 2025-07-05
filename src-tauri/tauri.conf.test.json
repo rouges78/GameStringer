@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "identifier": "com.gamestringer.app",
   "build": {
-    "beforeDevCommand": "",
+    "beforeDevCommand": null,
     "beforeBuildCommand": "",
-    "devUrl": "http://localhost:3000"
+    "devUrl": null,
+    "frontendDist": "../simple-ui"
   },
   "app": {
     "windows": [
       {
-        "title": "GameStringer",
+        "title": "GameStringer - Test Comandi Tauri",
         "width": 1200,
         "height": 800,
         "resizable": true,
@@ -24,7 +25,9 @@
     ],
     "security": {
       "csp": null
-    }
+    },
+    "withGlobalTauri": false,
+    "macOSPrivateApi": false
   },
   "bundle": {
     "active": true,
@@ -32,7 +35,9 @@
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
-      "icons/128x128@2x.png"
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
     ]
   }
 }

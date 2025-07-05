@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
+  // output: 'export', // Commentato per permettere API dinamiche next-auth
   images: {
     unoptimized: true,
     remotePatterns: [

@@ -1,435 +1,189 @@
-import NextAuth, { NextAuthOptions, User } from "next-auth";
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-
-import { Prisma, PrismaClient, User as PrismaUser } from "@prisma/client";
-import CredentialsProvider from "next-auth/providers/credentials";
-
-const prisma = new PrismaClient();
-
-/**
- * Handles linking a provider account to an existing user or creating a new user.
- * This centralized function prevents duplicate users and correctly manages multi-provider authentication.
- *
- * @param provider - The name of the authentication provider (e.g., 'steam-credentials').
- * @param providerAccountId - The unique ID for the user on the provider's platform.
- * @param userId - The optional ID of the currently logged-in user (for linking).
- * @param accountData - Additional data for the account record (e.g., access_token).
- * @param userCreateData - Data for creating a new user if one doesn't exist.
- * @returns The user object (either found, linked, or newly created).
- */
-async function linkOrCreateUser(
-  provider: string,
-  providerAccountId: string,
-  userId: string | undefined,
-  accountData: Omit<Prisma.AccountUncheckedCreateInput, 'userId' | 'type' | 'provider' | 'providerAccountId'>,
-  userCreateData: { name?: string | null, image?: string | null }
-): Promise<User> {
-  // 1. Check if this provider account is already linked to ANY user.
-  // This handles the case where a user is logging back in.
-  const existingAccount = await prisma.account.findUnique({
-    where: {
-      provider_providerAccountId: { provider, providerAccountId },
-    },
-    include: { user: true },
-  });
-
-  if (existingAccount) {
-    console.log(`[AUTH] Found existing account for provider ${provider}. Returning user ${existingAccount.user.id}`);
-    const { user } = existingAccount;
-    return { id: user.id, name: user.name, email: user.email, image: user.image };
-  }
-
-  // 2. Account does not exist. Determine the target user for linking.
-  let targetUser: PrismaUser;
-
-  if (userId) {
-    // Case A: User is already logged in (userId is provided). Link this new account to them.
-    console.log(`[AUTH] Linking new ${provider} account to existing user ${userId}`);
-    const userToLink = await prisma.user.findUnique({ where: { id: userId } });
-    if (!userToLink) throw new Error(`User with ID ${userId} not found for linking.`);
-    targetUser = userToLink;
-  } else {
-    // Case B: New sign-in. Create a new user for this provider account.
-    const syntheticEmail = `${providerAccountId}@${provider}.local`;
-    console.log(`[AUTH] New sign-in with ${provider}. Using synthetic email: ${syntheticEmail}`);
-    
-    // We use upsert to safely find an existing user with that synthetic email or create a new one.
-    targetUser = await prisma.user.upsert({
-        where: { email: syntheticEmail },
-        update: {}, // Nothing to update if found
-        create: {
-            email: syntheticEmail,
-            name: userCreateData.name ?? `user_${providerAccountId}`,
-            image: userCreateData.image,
-        }
-    });
-    console.log(`[AUTH] Upserted user ${targetUser.id} for new ${provider} account.`);
-  }
-  
-  // 3. Create the new account link in the database.
-  await prisma.account.create({
-    data: {
-      userId: targetUser.id,
-      type: 'credentials',
-      provider,
-      providerAccountId,
-      ...accountData,
-    },
-  });
-  console.log(`[AUTH] Successfully created account link for provider ${provider} and user ${targetUser.id}`);
-
-  // 4. Return a standard NextAuth User object.
-  return {
-    id: targetUser.id,
-    name: targetUser.name,
-    email: targetUser.email,
-    image: targetUser.image,
-  };
-}
+import NextAuth from 'next-auth';
+import { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
-    // Provider #1: Steam Credentials (manual flow)
     CredentialsProvider({
       id: 'steam-credentials',
-      name: 'Steam Credentials',
+      name: 'Steam',
       credentials: {
-        steamid: { label: "Steam ID", type: "text" },
-        userId: { label: "User ID", type: "text" }, // For linking
+        steamid: { label: 'Steam ID', type: 'text' },
+        userId: { label: 'User ID', type: 'text' }
       },
       async authorize(credentials) {
-        if (!credentials?.steamid) return null;
-        
-        return await linkOrCreateUser(
-            'steam-credentials',
-            credentials.steamid,
-            credentials.userId,
-            {}, // No extra account data for steam
-            { name: `user_${credentials.steamid}` }
-        );
+        if (!credentials?.steamid) {
+          throw new Error('Steam ID richiesto');
+        }
+
+        // Validate Steam ID format (17 digits)
+        if (!/^\d{17}$/.test(credentials.steamid)) {
+          throw new Error('Steam ID non valido - deve essere un numero di 17 cifre');
+        }
+
+        try {
+          // Here you would typically validate the Steam ID with Steam API
+          // For now, we'll accept any valid format Steam ID
+          return {
+            id: credentials.userId || credentials.steamid,
+            name: `Steam User ${credentials.steamid}`,
+            email: `${credentials.steamid}@steam.local`
+          };
+        } catch (error) {
+          console.error('Steam auth error:', error);
+          throw new Error('Errore durante la verifica Steam ID');
+        }
+      }
+    }),
+    
+    CredentialsProvider({
+      id: 'epic-credentials',
+      name: 'Epic Games',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+        userId: { label: 'User ID', type: 'text' }
       },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email e password richiesti');
+        }
+
+        // Here you would validate Epic Games credentials
+        return {
+          id: credentials.userId || credentials.email,
+          name: `Epic User ${credentials.email}`,
+          email: credentials.email,
+          accounts: [{
+            provider: 'epic-credentials',
+            providerAccountId: credentials.email,
+            type: 'credentials'
+          }]
+        };
+      }
     }),
 
-    // Provider #2: itch.io Credentials (manual flow)
     CredentialsProvider({
-      id: 'itchio-credentials',
-      name: 'Itch.io Credentials',
+      id: 'gog-credentials',
+      name: 'GOG',
       credentials: {
-        accessToken: { label: 'Access Token', type: 'text' },
-        userId: { label: "User ID", type: "text" }, // For linking
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+        userId: { label: 'User ID', type: 'text' }
       },
       async authorize(credentials) {
-        if (!credentials?.accessToken) {
-          throw new Error('No access token provided');
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Email e password richiesti');
         }
 
-        // 1. Fetch user profile from Itch.io
-        const apiUrl = `https://itch.io/api/1/${credentials.accessToken}/me`;
-        const profileRes = await fetch(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${credentials.accessToken}`,
-            'Accept': 'application/json',
-            'User-Agent': 'GameStringerApp/1.0',
-          },
-        });
-
-        if (!profileRes.ok) {
-          throw new Error(`Failed to fetch Itch.io profile: ${profileRes.statusText}`);
-        }
-
-        const profileData = await profileRes.json();
-        const itchUser = profileData.user;
-        if (!itchUser || !itchUser.id) {
-          throw new Error('Invalid Itch.io profile data');
-        }
-        const providerAccountId = itchUser.id.toString();
-
-        // 2. Link or create user
-        return await linkOrCreateUser(
-            'itchio-credentials',
-            providerAccountId,
-            credentials.userId,
-            { access_token: credentials.accessToken },
-            { name: itchUser.username, image: itchUser.cover_url }
-        );
-      },
+        return {
+          id: credentials.userId || credentials.email,
+          name: `GOG User ${credentials.email}`,
+          email: credentials.email,
+          accounts: [{
+            provider: 'gog-credentials',
+            providerAccountId: credentials.email,
+            type: 'credentials'
+          }]
+        };
+      }
     }),
 
     CredentialsProvider({
       id: 'ubisoft-credentials',
       name: 'Ubisoft Connect',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        userId: { label: "User ID", type: "text" }, // For linking
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+        twoFactorCode: { label: '2FA Code', type: 'text' },
+        userId: { label: 'User ID', type: 'text' }
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email e password sono obbligatori.');
+          throw new Error('Email e password richiesti');
         }
 
-        const { email, password } = credentials;
-        const { UbiServicesApi } = await import('ubisoft-demux');
-        const ubiServices = new UbiServicesApi();
-
-        try {
-          const { ticket } = await ubiServices.login(email, password);
-          if (!ticket) {
-            throw new Error('Credenziali Ubisoft non valide o 2FA attivo.');
-          }
-
-          const profileResponse = await fetch('https://public-ubiservices.ubi.com/v3/profiles/me', {
-            headers: {
-              'Authorization': `Ubi_v1 t=${ticket}`,
-              'Ubi-AppId': '39baebad-39e5-4552-8c25-2c9b9190622a',
-            }
-          });
-
-          if (!profileResponse.ok) {
-            throw new Error('Impossibile recuperare il profilo Ubisoft dopo il login.');
-          }
-
-          const profile = await profileResponse.json();
-          if (!profile.userId) {
-            throw new Error('ID utente non trovato nella risposta del profilo Ubisoft.');
-          }
-
-          const user = await linkOrCreateUser(
-            'ubisoft-credentials',
-            profile.userId,
-            credentials.userId,
-            { access_token: ticket },
-            {
-              name: profile.nameOnPlatform,
-              image: profile.avatarUrl146 || profile.avatarUrl256 || null,
-            }
-          );
-          return user;
-
-        } catch (error: any) {
-          console.error("[UBISOFT_AUTH_ERROR]", error.message);
-          throw new Error(error.message || "Errore durante l'autenticazione con Ubisoft.");
-        }
+        return {
+          id: credentials.userId || credentials.email,
+          name: `Ubisoft User ${credentials.email}`,
+          email: credentials.email,
+          accounts: [{
+            provider: 'ubisoft-credentials',
+            providerAccountId: credentials.email,
+            type: 'credentials'
+          }]
+        };
       }
     }),
 
-    // Provider #4: GOG Credentials
     CredentialsProvider({
-      id: 'gog-credentials',
-      name: 'GOG',
+      id: 'itchio-credentials',
+      name: 'itch.io',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        userId: { label: "User ID", type: "text" }, // For linking
+        accessToken: { label: 'API Key', type: 'text' },
+        userId: { label: 'User ID', type: 'text' }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email e password sono obbligatori.');
+        if (!credentials?.accessToken) {
+          throw new Error('API Key richiesta');
         }
 
-        // GOG doesn't have a public API for authentication
-        // We'll store credentials for future use but can't verify them now
-        // In a real implementation, you'd need to use GOG Galaxy SDK or web scraping
-        
-        // For now, we'll create a synthetic user ID based on email
-        const syntheticId = Buffer.from(credentials.email).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
-        
-        return await linkOrCreateUser(
-          'gog-credentials',
-          syntheticId,
-          credentials.userId,
-          {}, // No extra account data needed
-          { name: credentials.email.split('@')[0] }
-        );
-      },
-    }),
-
-    // Provider #5: Origin/EA App Credentials
-    CredentialsProvider({
-      id: 'origin-credentials',
-      name: 'EA App / Origin',
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        userId: { label: "User ID", type: "text" }, // For linking
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email e password sono obbligatori.');
-        }
-
-        // EA doesn't provide a public API for authentication
-        // Similar to GOG, we'll create a synthetic ID
-        const syntheticId = Buffer.from(credentials.email).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
-        
-        return await linkOrCreateUser(
-          'origin-credentials',
-          syntheticId,
-          credentials.userId,
-          {}, // No extra account data needed
-          { name: credentials.email.split('@')[0] }
-        );
-      },
-    }),
-
-    // Provider #6: Battle.net Credentials
-    CredentialsProvider({
-      id: 'battlenet-credentials',
-      name: 'Battle.net',
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        userId: { label: "User ID", type: "text" }, // For linking
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Email e password sono obbligatori.');
-        }
-
-        // Battle.net has OAuth but requires app approval
-        // For now, we'll use a synthetic ID approach
-        const syntheticId = Buffer.from(credentials.email).toString('base64').replace(/[^a-zA-Z0-9]/g, '');
-        
-        return await linkOrCreateUser(
-          'battlenet-credentials',
-          syntheticId,
-          credentials.userId,
-          {}, // No extra account data needed
-          { name: credentials.email.split('@')[0] }
-        );
-      },
-    }),
-
-    {
-            id: "epicgames",
-            name: "Epic Games",
-            type: "oauth",
-            clientId: process.env.EPIC_CLIENT_ID,
-            clientSecret: process.env.EPIC_CLIENT_SECRET,
-            authorization: {
-                url: "https://www.epicgames.com/id/authorize",
-                params: {
-                  scope: "basic_profile",
-                  response_type: "code"
-                },
-            },
-            token: {
-              url: "https://api.epicgames.dev/epic/oauth/v1/token",
-              params: {
-                grant_type: "authorization_code"
-              }
-            },
-            userinfo: "https://api.epicgames.dev/epic/oauth/v1/userInfo",
-            profile(profile) {
-                console.log("[AUTH - Epic Profile]", profile);
-                return {
-                    id: profile.sub || profile.account_id,
-                    name: profile.displayName || profile.display_name || profile.preferred_username,
-                    email: profile.email || `${profile.sub || profile.account_id}@epicgames.local`,
-                    image: null,
-                };
-            },
-            checks: ["state"],
-        },
+        return {
+          id: credentials.userId || credentials.accessToken,
+          name: 'itch.io User',
+          email: `${credentials.accessToken}@itchio.local`,
+          accounts: [{
+            provider: 'itchio-credentials',
+            providerAccountId: credentials.accessToken,
+            type: 'credentials'
+          }]
+        };
+      }
+    })
   ],
-  secret: process.env.NEXTAUTH_SECRET,
-  session: {
-    strategy: "jwt",
-  },
+  
   callbacks: {
-    async jwt({ token, user }) {
-      // This callback is called whenever a JWT is created or updated.
-      // `user` is only passed on initial sign-in.
-      if (user) {
-        token.id = user.id;
-      }
-
-      // On any subsequent request, reload accounts from DB to ensure the session is fresh.
-      if (token.id) {
-        const userWithAccounts = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          include: { accounts: true }, // Fetch the full account objects
-        });
-        if (userWithAccounts) {
-          token.accounts = userWithAccounts.accounts;
-          // For legacy support or simple checks, keep the provider list
-          token.connectedProviders = userWithAccounts.accounts.map(a => a.provider);
-        }
+    async jwt({ token, user, account }) {
+      if (account && user) {
+        token.accounts = user.accounts || [];
       }
       return token;
     },
+    
     async session({ session, token }) {
-      // This callback is called whenever a session is checked.
-      // We forward the custom properties from the token to the session.
-      if (session.user) {
-        session.user.id = token.id as string;
-        // Find the steam account and explicitly add the steamId to the session user object
-        const steamAccount = token.accounts?.find(acc => acc.provider === 'steam-credentials');
-        if (steamAccount) {
-          session.user.steamId = steamAccount.providerAccountId;
-        }
-        session.user.accounts = token.accounts; // Keep the full list for other purposes
-        session.user.connectedProviders = token.connectedProviders;
+      if (token.accounts) {
+        session.user.accounts = token.accounts;
       }
       return session;
-    },
+    }
   },
+  
   pages: {
-    signIn: '/stores', // Redirect to stores page on auth errors
+    signIn: '/stores',
+    error: '/stores'
   },
-};
-
-// The main handler that wraps NextAuth.js
-async function handler(req: NextRequest, context: { params: { nextauth: string[] } }) {
-  // Check if this is the callback from Steam
-  if (context.params.nextauth?.includes("callback") && context.params.nextauth?.includes("steam")) {
-    try {
-      const requestUrl = new URL(req.url);
-      const params = requestUrl.searchParams;
-
-      // 1. Manually verify the OpenID response from Steam
-      const verificationParams = new URLSearchParams(params.toString());
-      verificationParams.set('openid.mode', 'check_authentication');
-
-      const verificationRes = await fetch("https://steamcommunity.com/openid/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: verificationParams.toString(),
-        cache: 'no-store'
-      });
-
-      const verificationText = await verificationRes.text();
-
-      if (!verificationText.includes("is_valid:true")) {
-        console.error("Steam OpenID verification failed.");
-        const errorUrl = new URL('/stores?error=SteamAuthFailed', requestUrl.origin);
-        return NextResponse.redirect(errorUrl);
-      }
-
-      // 2. Extract SteamID from the claimed_id
-      const claimedId = params.get('openid.claimed_id');
-      const steamIdMatch = claimedId?.match(/^https?:\/\/steamcommunity\.com\/openid\/id\/([0-9]{17,25})/);
-      const steamid = steamIdMatch?.[1];
-
-      if (steamid) {
-        // 3. Redirect to a client-side page that will trigger the credentials sign-in.
-        const redirectUrl = new URL(`/auth/steam/verify`, requestUrl.origin);
-        redirectUrl.searchParams.set('steamId', steamid);
-        return NextResponse.redirect(redirectUrl);
-      } else {
-        throw new Error("Could not parse SteamID from claimed_id.");
-      }
-    } catch (error) {
-      console.error("Error during Steam callback verification:", error);
-      const errorUrl = new URL('/stores?error=SteamAuthFailed', new URL(req.url).origin);
-      return NextResponse.redirect(errorUrl);
+  
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 giorni
+  },
+  
+  debug: process.env.NODE_ENV === 'development',
+  
+  // Assicuriamoci che le risposte siano sempre JSON validi
+  events: {
+    async session(message) {
+      console.log('[NextAuth] Session event:', message);
+    },
+    async signIn(message) {
+      console.log('[NextAuth] SignIn event:', message);
+    },
+    async signOut(message) {
+      console.log('[NextAuth] SignOut event:', message);
     }
   }
+};
 
-  // For all other requests, pass them to the default NextAuth handler
-  return NextAuth(authOptions)(req, context);
-}
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

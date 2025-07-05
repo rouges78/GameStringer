@@ -7,6 +7,10 @@
 /.next/
 /out/
 
+# Tauri build artifacts
+/src-tauri/target/
+/src-tauri/Cargo.lock
+
 # Local environment files
 .env
 .env*.local

@@ -15,6 +15,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { invoke } from '@tauri-apps/api/core';
 import { 
   Search, 
   RefreshCw, 
@@ -95,18 +96,70 @@ export default function GamesPage() {
     }
     setError(null);
     try {
-      // Carica in parallelo i giochi da Steam e quelli locali
-      const [steamResponse, localResponse] = await Promise.all([
-        fetch(`/api/steam/games${forceRefresh ? '?force=true' : ''}`),
-        fetch('/api/games')
-      ]);
-
-      if (!steamResponse.ok) {
-        throw new Error(`Errore API Steam: ${await steamResponse.text()}`);
+      console.log('[FRONTEND DEBUG] Session status:', status);
+      console.log('[FRONTEND DEBUG] Session data:', session);
+      
+      // Recupera credenziali Steam dalla sessione next-auth
+      let steamId = 'demo_id';
+      let apiKey = 'demo_key';
+      
+      if (session?.user) {
+        // Se l'utente è autenticato, prova a estrarre il SteamID
+        const userEmail = session.user.email;
+        console.log('[FRONTEND DEBUG] Email utente dalla sessione:', userEmail);
+        
+        if (userEmail && userEmail.includes('@steam.local')) {
+          // Estrai SteamID dall'email (formato: steamid@steam.local)
+          steamId = userEmail.replace('@steam.local', '');
+          console.log('[FRONTEND DEBUG] ✅ SteamID estratto dalla sessione:', steamId);
+        } else {
+          console.log('[FRONTEND DEBUG] ❌ Email non contiene @steam.local, uso demo_id');
+        }
+        
+        // Usa API key dal localStorage come fallback
+        apiKey = localStorage.getItem('steamApiKey') || 'demo_key';
+        console.log('[FRONTEND DEBUG] API Key usata:', apiKey);
+      } else {
+        console.log('[FRONTEND DEBUG] ❌ Nessuna sessione attiva, uso credenziali demo');
       }
+      
+      // TEST: Verifica comunicazione Tauri
+      console.log('[FRONTEND DEBUG] 🧪 Test comunicazione Tauri...');
+      try {
+        const testResult = await invoke('test_steam_connection');
+        console.log('[FRONTEND DEBUG] ✅ Test Tauri riuscito:', testResult);
+      } catch (error) {
+        console.log('[FRONTEND DEBUG] ❌ Test Tauri fallito:', error);
+        setError('Errore di comunicazione con il backend Tauri');
+        setLoading(false);
+        return;
+      }
+      
+      // Carica in parallelo i giochi da Steam (via Tauri) e quelli locali
+      console.log('[FRONTEND DEBUG] 🚀 Chiamata Tauri get_steam_games con:', { apiKey, steamId, forceRefresh });
+      console.log('[FRONTEND DEBUG] 🚀 Chiamata Tauri get_library_games...');
+      
+      // Timeout per evitare blocchi indefiniti
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout: Chiamate Tauri troppo lente')), 10000)
+      );
+      
+      const [steamGames, localData] = await Promise.race([
+        Promise.all([
+          invoke('get_steam_games', {
+            apiKey,
+            steamId,
+            forceRefresh
+          }) as Promise<SteamGame[]>,
+          invoke('get_library_games') as Promise<{ games: LocalGame[] }>
+        ]),
+        timeoutPromise
+      ]) as [SteamGame[], { games: LocalGame[] }];
+      
+      console.log('[FRONTEND DEBUG] ✅ Risposta get_steam_games:', steamGames?.length || 0, 'giochi');
+      console.log('[FRONTEND DEBUG] ✅ Risposta get_library_games:', localData?.games?.length || 0, 'giochi');
 
-      const steamGames: SteamGame[] = await steamResponse.json();
-      const localGames: LocalGame[] = localResponse.ok ? await localResponse.json() : [];
+      const localGames: LocalGame[] = localData.games || [];
 
       // --- DEBUGGING: Log the first game object to check for enriched data ---
       if (steamGames && steamGames.length > 0) {
@@ -228,10 +281,10 @@ export default function GamesPage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center p-8 bg-card/50 backdrop-blur-sm rounded-lg border">
-          <h2 className="text-2xl font-bold">Accesso Richiesto</h2>
-          <p className="mt-2 text-muted-foreground">Per favore, accedi con il tuo account Steam per continuare.</p>
-          <Button onClick={() => window.location.href = '/api/auth/signin/steam'} className="mt-6">
-            Accedi con Steam
+          <h2 className="text-2xl font-bold">Connessione Store Richiesta</h2>
+          <p className="mt-2 text-muted-foreground">Per favore, collega i tuoi store per visualizzare la libreria giochi.</p>
+          <Button onClick={() => window.location.href = '/stores'} className="mt-6">
+            Collega Store
           </Button>
         </div>
       </div>
@@ -241,14 +294,35 @@ export default function GamesPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-center p-6 bg-destructive/10 border border-destructive/50 rounded-lg">
-          <ServerCrash className="mx-auto h-12 w-12 text-destructive" />
-          <h2 className="mt-4 text-xl font-semibold text-destructive">Oops! Qualcosa è andato storto.</h2>
-          <p className="mt-2 text-destructive/80">{error}</p>
-          <Button onClick={() => loadGames()} className="mt-6" disabled={status !== 'authenticated'}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Riprova
-          </Button>
+        <div className="text-center p-8 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/20 rounded-2xl backdrop-blur-xl">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-6">
+            <ServerCrash className="h-8 w-8 text-blue-400" />
+          </div>
+          <h2 className="text-2xl font-semibold text-white mb-3">🎮 Nessun Gioco Trovato</h2>
+          <p className="text-white/70 mb-2 leading-relaxed">Per iniziare a vedere i tuoi giochi, collega prima uno store:</p>
+          <p className="text-blue-400 font-medium mb-6">Steam • Epic Games • GOG • Ubisoft • itch.io</p>
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}
+          <div className="flex gap-3 justify-center">
+            <Button 
+              onClick={() => window.location.href = '/stores'} 
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-xl transition-all duration-200"
+            >
+              ✨ Collega Store
+            </Button>
+            <Button 
+              onClick={() => loadGames()} 
+              variant="outline" 
+              className="border-white/20 text-white hover:bg-white/10 px-6 py-3 rounded-xl" 
+              disabled={status !== 'authenticated'}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Riprova
+            </Button>
+          </div>
         </div>
       </div>
     );
