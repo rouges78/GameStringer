@@ -1,79 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
-    
-    if (!session) {
-      return NextResponse.json({ error: 'Non autenticato' }, { status: 401 });
-    }
-
     const { provider } = await request.json();
     
-    if (!provider) {
-      return NextResponse.json({ error: 'Provider richiesto' }, { status: 400 });
-    }
-
-    // Simulate connection test based on provider
-    let testResult: { connected: boolean; error?: string; message?: string; gamesFound?: number } = { connected: false, error: 'Provider non supportato' };
-    
+    // Simulazione test connessione per diversi provider
     switch (provider) {
       case 'steam-credentials':
-        // Test Steam connection
-        testResult = { 
-          connected: true, 
-          message: 'Connessione Steam verificata',
-          gamesFound: 401 
-        };
-        break;
+        // Test connessione Steam
+        return NextResponse.json({
+          connected: true,
+          message: 'Steam connesso correttamente',
+          provider: 'steam'
+        });
         
       case 'epic-credentials':
-        testResult = { 
-          connected: true, 
-          message: 'Connessione Epic Games verificata',
-          gamesFound: 0 
-        };
-        break;
-        
-      case 'gog-credentials':
-        testResult = { 
-          connected: true, 
-          message: 'Connessione GOG verificata',
-          gamesFound: 0 
-        };
-        break;
+        // Test connessione Epic Games
+        return NextResponse.json({
+          connected: true,
+          message: 'Epic Games connesso correttamente',
+          provider: 'epic'
+        });
         
       case 'ubisoft-credentials':
-        testResult = { 
-          connected: true, 
-          message: 'Connessione Ubisoft Connect verificata',
-          gamesFound: 0 
-        };
-        break;
+        // Test connessione Ubisoft
+        return NextResponse.json({
+          connected: true,
+          message: 'Ubisoft Connect connesso correttamente',
+          provider: 'ubisoft'
+        });
+        
+      case 'gog-credentials':
+        // Test connessione GOG
+        return NextResponse.json({
+          connected: true,
+          message: 'GOG connesso correttamente',
+          provider: 'gog'
+        });
+        
+      case 'origin-credentials':
+        // Test connessione EA Origin
+        return NextResponse.json({
+          connected: true,
+          message: 'EA App/Origin connesso correttamente',
+          provider: 'origin'
+        });
+        
+      case 'battlenet-credentials':
+        // Test connessione Battle.net
+        return NextResponse.json({
+          connected: true,
+          message: 'Battle.net connesso correttamente',
+          provider: 'battlenet'
+        });
         
       case 'itchio-credentials':
-        testResult = { 
-          connected: true, 
-          message: 'Connessione itch.io verificata',
-          gamesFound: 0 
-        };
-        break;
+        // Test connessione itch.io
+        return NextResponse.json({
+          connected: true,
+          message: 'itch.io connesso correttamente',
+          provider: 'itchio'
+        });
         
       default:
-        testResult = { 
-          connected: false, 
-          error: `Provider ${provider} non ancora implementato` 
-        };
+        return NextResponse.json({
+          connected: false,
+          error: `Provider ${provider} non supportato`,
+          provider
+        });
     }
-    
-    return NextResponse.json(testResult);
-    
   } catch (error) {
-    console.error('Test connection error:', error);
-    return NextResponse.json(
-      { connected: false, error: 'Errore durante il test di connessione' }, 
-      { status: 500 }
-    );
+    console.error('Errore test connessione:', error);
+    return NextResponse.json({
+      connected: false,
+      error: 'Errore interno del server'
+    }, { status: 500 });
   }
 }

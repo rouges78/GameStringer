@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: 'export', // Commentato per permettere API dinamiche next-auth
+  // output: 'export', // Disabilitato - incompatibile con App Router e Tauri
   images: {
     unoptimized: true,
     remotePatterns: [

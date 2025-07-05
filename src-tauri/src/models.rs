@@ -102,6 +102,7 @@ pub struct GameInfo {
     pub executable_path: Option<String>,
     pub icon: Option<String>,
     pub image_url: Option<String>,
+    pub header_image: Option<String>,  // URL dell'immagine di copertina
     pub is_installed: bool,
     pub steam_app_id: Option<u32>,
     pub is_vr: bool,

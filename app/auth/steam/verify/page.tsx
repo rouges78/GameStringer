@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn } from '@/lib/auth';
 
 export default function SteamVerifyPage() {
   const searchParams = useSearchParams();

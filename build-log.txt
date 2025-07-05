@@ -6,15 +6,20 @@
    - Environments: .env.local, .env
 
    Creating an optimized production build ...
+ Ô£ô Compiled successfully in 5.0s
+   Linting and checking validity of types ...
 Failed to compile.
 
-./components/steam-family-sharing.tsx
-Module not found: Can't resolve '@tauri-apps/api/tauri'
+.next/types/app/api/auth/[...nextauth]/route.ts:12:13
+Type error: Type 'OmitWithTag<typeof import("C:/dev/GameStringer/app/api/auth/[...nextauth]/route"), "config" | "GET" | "POST" | "PUT" | "DELETE" | "generateStaticParams" | "revalidate" | "dynamic" | "dynamicParams" | ... 6 more ... | "PATCH", "">' does not satisfy the constraint '{ [x: string]: never; }'.
+  Property 'authOptions' is incompatible with index signature.
+    Type 'AuthOptions' is not assignable to type 'never'.
 
-https://nextjs.org/docs/messages/module-not-found
-
-Import trace for requested module:
-./app/stores/page.tsx
-
-
-> Build failed because of webpack errors
+  10 |
+  11 | // Check that the entry is a valid entry
+> 12 | checkFields<Diff<{
+     |             ^
+  13 |   GET?: Function
+  14 |   HEAD?: Function
+  15 |   OPTIONS?: Function
+Next.js build worker exited with code: 1 and signal: null

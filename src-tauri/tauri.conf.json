@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "identifier": "com.gamestringer.app",
   "build": {
-    "beforeDevCommand": "",
-    "beforeBuildCommand": "",
-    "devUrl": "http://localhost:3000"
+    "beforeDevCommand": "npm run next-dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://127.0.0.1:3002",
+    "frontendDist": "../.next"
   },
   "app": {
     "windows": [
@@ -24,7 +25,8 @@
     ],
     "security": {
       "csp": null
-    }
+    },
+    "withGlobalTauri": true
   },
   "bundle": {
     "active": true,
@@ -34,5 +36,6 @@
       "icons/128x128.png",
       "icons/128x128@2x.png"
     ]
-  }
+  },
+  "plugins": {}
 }

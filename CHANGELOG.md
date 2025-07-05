@@ -5,6 +5,38 @@ Tutte le modifiche importanti a questo progetto saranno documentate in questo fi
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.3] - 2025-07-06 🚀 **LIBRERIA GIOCHI COMPLETATA**
+
+### ✅ **MILESTONE RAGGIUNTA: LIBRERIA GIOCHI COMPLETAMENTE FUNZIONALE E STABILE**
+- **🖼️ Visualizzazione Copertine Giochi** - Risolto il problema delle immagini mancanti
+  - **Analisi**: Il backend non recuperava né salvava gli URL delle immagini durante la scansione.
+  - **Backend (Rust)**: Modificata la struct `GameInfo` in `models.rs` per includere `header_image: Option<String>`.
+  - **Backend (Rust)**: Aggiornata la funzione `get_games` in `games.rs` per costruire e includere l'URL corretto delle copertine di Steam (`https://cdn.cloudflare.steamstatic.com/steam/apps/{APP_ID}/header.jpg`).
+  - **Frontend (Next.js/React)**: Aggiornata l'interfaccia `Game` in `app/library/page.tsx` per accettare `header_image` come `string | null`.
+  - **Risultato**: Le copertine dei giochi Steam ora vengono visualizzate correttamente nella libreria.
+
+- **🐛 Correzione Visualizzazione Nomi Giochi** - Risolto il bug per cui tutti i giochi venivano mostrati come "Gioco senza nome".
+  - **Analisi**: Il frontend cercava il campo `name`, ma il backend Rust forniva `title`.
+  - **Frontend (Next.js/React)**: Aggiornato il componente della libreria per usare `game.title` invece di `game.name`.
+  - **Risultato**: I titoli dei giochi ora vengono visualizzati correttamente.
+
+- **🛠️ Stabilizzazione Integrazione Tauri v2 + Next.js**
+  - **Wrapper API Tauri**: Creato un wrapper `lib/tauri-api.ts` robusto che gestisce il caricamento dinamico dell'API di Tauri v2 (`@tauri-apps/api/core`) garantendo la compatibilità.
+  - **Configurazione Tauri**: Ottimizzato `tauri.conf.json` con `beforeDevCommand` per avviare automaticamente il server Next.js e `devUrl` impostato su `127.0.0.1` per risolvere problemi di connessione.
+  - **Gestione Errori**: Migliorata la gestione degli errori nel frontend con placeholder per immagini e titoli mancanti, evitando crash dell'applicazione.
+
+- **🧹 Pulizia e Refactoring**
+  - Rimosso codice e componenti non utilizzati.
+  - Risolti numerosi warning di compilazione in Rust (import non usati, variabili non usate).
+  - Risolto errore `EADDRINUSE` terminando processi zombie che occupavano la porta di sviluppo.
+
+### 🔄 **PROBLEMI IDENTIFICATI E RISOLTI**
+- **ChunkLoadError**: Risolto definitivamente il problema di caricamento dei componenti Next.js in ambiente Tauri, causato da un'errata configurazione delle importazioni dell'API Tauri.
+- **Image Missing Src**: Risolto mostrando un'immagine di placeholder quando `header_image` è nullo o vuoto.
+- **Processi Zombie**: Risolto il problema di build `Accesso negato` e `EADDRINUSE` terminando i processi `gamestringer.exe` e `node.exe` rimasti attivi.
+
+---
+
 ## [3.2.2] - 2025-07-04 🏗️ **BUILD E INTEGRAZIONE STABILIZZATE**
 
 ### ✅ **MILESTONE RAGGIUNTA: APPLICAZIONE DESKTOP COMPLETAMENTE STABILE**

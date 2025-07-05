@@ -1,66 +1,69 @@
 'use client';
 
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
+import { invoke, isTauri } from '@/lib/tauri-api';
 
+// Definiamo l'interfaccia basata sulla struttura dati di Rust
 interface Game {
   id: string;
-  name: string;
-  imageUrl: string;
+  title: string;
   provider: string;
+  header_image: string | null;  // Può essere null se non disponibile
 }
 
 export default function LibraryPage() {
-  const { data: session, status } = useSession();
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      const fetchGames = async () => {
-        try {
-          setIsLoading(true);
-          const response = await fetch('/api/library/games');
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Impossibile caricare i giochi.');
-          }
-          const data = await response.json();
-          setGames(data.games || []);
-        } catch (err: any) {
-          setError(err.message);
-        } finally {
-          setIsLoading(false);
+    const fetchGames = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Aspetta che l'ambiente Tauri sia pronto
+        if (!isTauri()) {
+          // Riprova dopo un breve ritardo se Tauri non è ancora disponibile
+          setTimeout(fetchGames, 100);
+          return;
         }
-      };
-
-      fetchGames();
-    }
-
-    if (status === 'unauthenticated') {
+        
+        const result = await invoke<Game[]>('get_games');
+        console.log(`✅ Trovati ${result.length} giochi nel database`);
+        // Log dettagliato del primo gioco per vedere la struttura
+        if (result.length > 0) {
+          console.log('🎮 Esempio di struttura gioco:', result[0]);
+          console.log('🎮 Primi 5 giochi:', result.slice(0, 5));
+          // Verifica header_image
+          const giochiConImmagini = result.filter(g => g.header_image && g.header_image !== '');
+          console.log(`🖼️ Giochi con immagini: ${giochiConImmagini.length} su ${result.length}`);
+          if (giochiConImmagini.length > 0) {
+            console.log('🖼️ Esempio di URL immagine:', giochiConImmagini[0].header_image);
+          }
+        }
+        setGames(result);
+      } catch (err: any) {
+        console.error('Errore durante il recupero dei giochi dal backend:', err);
+        setError(err.toString());
+      } finally {
         setIsLoading(false);
-    }
+      }
+    };
 
-  }, [status]);
+    fetchGames();
+  }, []);
 
   const renderContent = () => {
-    if (isLoading || status === 'loading') {
+    if (isLoading) {
       return (
         <div className="flex justify-center items-center py-10">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      );
-    }
-
-    if (status === 'unauthenticated') {
-      return (
-        <p className="text-muted-foreground mt-4">
-          Devi essere autenticato per vedere la tua libreria. Vai alla pagina degli store per collegare i tuoi account.
-        </p>
       );
     }
 
@@ -75,9 +78,14 @@ export default function LibraryPage() {
 
     if (games.length === 0) {
       return (
-        <p className="text-muted-foreground mt-4">
-          Nessun gioco trovato. Assicurati di aver collegato i tuoi account nella pagina degli store.
-        </p>
+        <div className="text-center py-10">
+          <p className="text-muted-foreground mb-4">
+            Nessun gioco trovato nella tua libreria.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Vai alla pagina <strong>Stores</strong> per collegare i tuoi account Steam, Epic Games, e altri store.
+          </p>
+        </div>
       );
     }
 
@@ -86,11 +94,30 @@ export default function LibraryPage() {
         {games.map((game) => (
           <Card key={game.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
             <CardContent className="p-0">
-              <div className="relative aspect-square w-full">
-                <Image src={game.imageUrl} alt={game.name} layout="fill" objectFit="cover" />
+              <div className="relative aspect-square w-full bg-gray-200 dark:bg-gray-700">
+                {game.header_image ? (
+                  <Image 
+                    src={game.header_image} 
+                    alt={game.title} 
+                    fill
+                    className="object-cover"
+                    onError={(e) => {
+                      // Nascondi l'immagine se c'è un errore di caricamento
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <span className="text-4xl text-gray-400">
+                      {game.title ? game.title.charAt(0).toUpperCase() : '?'}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="p-3">
-                <p className="font-semibold text-sm truncate" title={game.name}>{game.name}</p>
+                <p className="font-semibold text-sm truncate" title={game.title || 'Gioco senza nome'}>
+                  {game.title || 'Gioco senza nome'}
+                </p>
               </div>
             </CardContent>
           </Card>

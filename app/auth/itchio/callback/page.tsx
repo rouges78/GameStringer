@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 
 export default function ItchioCallbackPage() {

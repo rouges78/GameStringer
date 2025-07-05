@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "node scripts/dev-server.js",
     "dev:auto": "node scripts/dev-server.js",
-    "next-dev": "next dev",
+    "next-dev": "next dev -p 3002",
     "dev:simple": "next dev",
     "build": "next build",
     "build:native": "node-gyp rebuild --directory=native",
@@ -17,7 +17,8 @@
     "tauri:build": "tauri build",
     "patch:decarnation:create": "tsx scripts/create-decarnation-patch.ts",
     "patch:decarnation:apply": "tsx scripts/apply-decarnation-patch.ts",
-    "patch:decarnation": "npm run patch:decarnation:create && npm run patch:decarnation:apply"
+    "patch:decarnation": "npm run patch:decarnation:create && npm run patch:decarnation:apply",
+    "dev:sync": "npx start-server-and-test next-dev http://127.0.0.1:3002 tauri:dev"
   },
   "devDependencies": {
     "@next/swc-wasm-nodejs": "13.5.1",
@@ -119,7 +120,6 @@
     "lucide-react": "0.446.0",
     "mapbox-gl": "1.13.3",
     "next": "^15.3.4",
-    "next-auth": "^4.24.11",
     "next-themes": "0.3.0",
     "openai": "^5.8.2",
     "papaparse": "^5.5.3",

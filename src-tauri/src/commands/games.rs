@@ -34,6 +34,8 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                                 image_url: game["img_icon_url"].as_str().map(|icon| {
                                     format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", appid, icon)
                                 }),
+                                // Aggiungi header_image con l'URL corretto di Steam
+                                header_image: Some(format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg", appid)),
                                 is_installed: false, // Sarà aggiornato dalla scansione
                                 steam_app_id: Some(appid as u32),
                                 is_vr: false,

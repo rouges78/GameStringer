@@ -172,7 +172,6 @@ pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: O
     println!("[RUST] Returning {} games", all_games.len());
     Ok(all_games)
 }
-}
 
 async fn parse_shared_games_xml() -> Vec<SteamGame> {
     // Simplified implementation - in real version would parse sharedconfig.vdf
