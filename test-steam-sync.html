@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Sincronizzazione Steam - GameStringer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+        .test-section {
+            background-color: #2a2a2a;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #3a3a3a;
+        }
+        .success { color: #4ade80; }
+        .error { color: #ef4444; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        button:disabled {
+            background-color: #6b7280;
+            cursor: not-allowed;
+        }
+        .game-card {
+            background-color: #1a1a1a;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #3a3a3a;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background-color: #1a1a1a;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+        #log {
+            background-color: #000;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Test Sincronizzazione Steam - GameStringer</h1>
+    
+    <div class="test-section">
+        <h2>Controlli Test</h2>
+        <button onclick="testConnection()">1. Test Connessione Steam</button>
+        <button onclick="loadCredentials()">2. Carica Credenziali</button>
+        <button onclick="autoConnect()">3. Auto-Connetti Steam</button>
+        <button onclick="getSteamGames()">4. Recupera Giochi Steam</button>
+        <button onclick="getFullLibrary()">5. Recupera Libreria Completa</button>
+        <button onclick="runFullTest()" style="background-color: #10b981;">▶️ Esegui Test Completo</button>
+        <button onclick="clearLog()" style="background-color: #6b7280;">🗑️ Pulisci Log</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Statistiche</h2>
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalGames">0</div>
+                <div>Giochi Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="steamGames">0</div>
+                <div>Giochi Steam</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="installedGames">0</div>
+                <div>Giochi Installati</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="vrGames">0</div>
+                <div>Giochi VR</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Log Test</h2>
+        <div id="log"></div>
+    </div>
+
+    <div class="test-section" id="gamesSection" style="display: none;">
+        <h2>Esempi Giochi Trovati</h2>
+        <div id="gamesList"></div>
+    </div>
+
+    <script>
+        const log = (message, type = 'info') => {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colorClass = type === 'error' ? 'error' : 
+                              type === 'success' ? 'success' : 
+                              type === 'warning' ? 'warning' : 'info';
+            logDiv.innerHTML += `<span class="${colorClass}">[${timestamp}] ${message}</span>\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+
+        const clearLog = () => {
+            document.getElementById('log').innerHTML = '';
+            log('Log pulito', 'info');
+        };
+
+        const updateStats = (games) => {
+            const stats = {
+                total: games.length,
+                steam: games.filter(g => g.store === 'Steam').length,
+                installed: games.filter(g => g.is_installed).length,
+                vr: games.filter(g => g.is_vr).length
+            };
+            
+            document.getElementById('totalGames').textContent = stats.total;
+            document.getElementById('steamGames').textContent = stats.steam;
+            document.getElementById('installedGames').textContent = stats.installed;
+            document.getElementById('vrGames').textContent = stats.vr;
+        };
+
+        const showGames = (games) => {
+            const gamesSection = document.getElementById('gamesSection');
+            const gamesList = document.getElementById('gamesList');
+            
+            if (games.length > 0) {
+                gamesSection.style.display = 'block';
+                gamesList.innerHTML = '';
+                
+                // Mostra primi 10 giochi
+                games.slice(0, 10).forEach(game => {
+                    const gameCard = document.createElement('div');
+                    gameCard.className = 'game-card';
+                    gameCard.innerHTML = `
+                        <strong>${game.title || game.name || 'Senza nome'}</strong> 
+                        <span class="info">(${game.store || 'Unknown'})</span><br>
+                        ID: ${game.steam_app_id || game.id || 'N/A'} | 
+                        Engine: ${game.engine || 'Non rilevato'} | 
+                        Installato: ${game.is_installed ? '✅' : '❌'} | 
+                        VR: ${game.is_vr ? '🥽' : '❌'}
+                    `;
+                    gamesList.appendChild(gameCard);
+                });
+                
+                if (games.length > 10) {
+                    gamesList.innerHTML += `<p class="info">...e altri ${games.length - 10} giochi</p>`;
+                }
+            }
+        };
+
+        async function testConnection() {
+            try {
+                log('Testing connessione Steam...', 'info');
+                const result = await window.__TAURI__.invoke('test_steam_connection');
+                log(`Connessione Steam: ${JSON.stringify(result)}`, 'success');
+                return result;
+            } catch (error) {
+                log(`Errore connessione: ${error}`, 'error');
+                return null;
+            }
+        }
+
+        async function loadCredentials() {
+            try {
+                log('Caricamento credenziali Steam...', 'info');
+                const creds = await window.__TAURI__.invoke('load_steam_credentials');
+                log(`Credenziali caricate: ${creds ? 'Sì' : 'No'}`, creds ? 'success' : 'warning');
+                return creds;
+            } catch (error) {
+                log(`Errore caricamento credenziali: ${error}`, 'error');
+                return null;
+            }
+        }
+
+        async function autoConnect() {
+            try {
+                log('Auto-connessione Steam...', 'info');
+                const result = await window.__TAURI__.invoke('auto_connect_steam');
+                log(`Auto-connessione: ${JSON.stringify(result)}`, 'success');
+                return result;
+            } catch (error) {
+                log(`Errore auto-connessione: ${error}`, 'error');
+                return null;
+            }
+        }
+
+        async function getSteamGames() {
+            try {
+                log('Recupero giochi Steam...', 'info');
+                const games = await window.__TAURI__.invoke('get_steam_games');
+                log(`Trovati ${games.length} giochi Steam!`, 'success');
+                
+                if (games.length > 0) {
+                    // Mostra statistiche dettagliate
+                    const installed = games.filter(g => g.is_installed).length;
+                    const owned = games.length - installed;
+                    log(`  - ${installed} installati`, 'info');
+                    log(`  - ${owned} posseduti (non installati)`, 'info');
+                    
+                    // Conta engines
+                    const engines = {};
+                    games.forEach(g => {
+                        const engine = g.engine || 'Unknown';
+                        engines[engine] = (engines[engine] || 0) + 1;
+                    });
+                    
+                    log('Engines rilevati:', 'info');
+                    Object.entries(engines)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .forEach(([engine, count]) => {
+                            log(`  - ${engine}: ${count} giochi`, 'info');
+                        });
+                }
+                
+                updateStats(games);
+                showGames(games);
+                return games;
+            } catch (error) {
+                log(`Errore recupero giochi: ${error}`, 'error');
+                return [];
+            }
+        }
+
+        async function getFullLibrary() {
+            try {
+                log('Recupero libreria completa...', 'info');
+                const library = await window.__TAURI__.invoke('get_library_games');
+                log(`Libreria totale: ${library.length} giochi`, 'success');
+                
+                // Conta per store
+                const stores = {};
+                library.forEach(game => {
+                    const store = game.store || 'Unknown';
+                    stores[store] = (stores[store] || 0) + 1;
+                });
+                
+                log('Giochi per store:', 'info');
+                Object.entries(stores).forEach(([store, count]) => {
+                    log(`  - ${store}: ${count} giochi`, 'info');
+                });
+                
+                updateStats(library);
+                showGames(library);
+                return library;
+            } catch (error) {
+                log(`Errore recupero libreria: ${error}`, 'error');
+                return [];
+            }
+        }
+
+        async function runFullTest() {
+            log('=== INIZIO TEST COMPLETO SINCRONIZZAZIONE ===', 'success');
+            
+            // Disabilita tutti i pulsanti durante il test
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            try {
+                // 1. Test connessione
+                await testConnection();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // 2. Carica credenziali
+                await loadCredentials();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // 3. Auto-connetti
+                await autoConnect();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // 4. Recupera giochi Steam
+                const steamGames = await getSteamGames();
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // 5. Recupera libreria completa
+                const fullLibrary = await getFullLibrary();
+                
+                log('=== TEST COMPLETATO CON SUCCESSO ===', 'success');
+                
+                // Verifica risultati attesi
+                if (steamGames.length >= 1300) {
+                    log(`✅ OTTIMO! Trovati ${steamGames.length} giochi Steam (attesi ~1345)`, 'success');
+                } else if (steamGames.length > 100) {
+                    log(`⚠️ Trovati ${steamGames.length} giochi Steam (meno del previsto)`, 'warning');
+                } else {
+                    log(`❌ Solo ${steamGames.length} giochi Steam trovati (problema possibile)`, 'error');
+                }
+                
+            } catch (error) {
+                log(`Errore durante il test completo: ${error}`, 'error');
+            } finally {
+                // Riabilita i pulsanti
+                buttons.forEach(btn => btn.disabled = false);
+            }
+        }
+
+        // Verifica se Tauri è disponibile
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.__TAURI__) {
+                log('✅ Tauri API disponibile - Pronto per il test!', 'success');
+                log('Clicca "Esegui Test Completo" per iniziare', 'info');
+            } else {
+                log('❌ Tauri API non disponibile! Assicurati di aprire questa pagina nell\'app Tauri.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

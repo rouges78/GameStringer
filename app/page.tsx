@@ -13,7 +13,8 @@ import {
   Download,
   Box,
   Clock,
-  RefreshCw
+  RefreshCw,
+  Store
 } from 'lucide-react';
 import Link from 'next/link';
 import { ScanButton } from '@/components/scan-button';
@@ -61,7 +62,16 @@ export default function Dashboard() {
     installedGames: 0,
     translations: 0,
     patches: 0,
-    lastScan: null as Date | null
+    lastScan: null as Date | null,
+    storeStats: {
+      steam: { connected: false, games: 0 },
+      epic: { connected: false, games: 0 },
+      gog: { connected: false, games: 0 },
+      origin: { connected: false, games: 0 },
+      ubisoft: { connected: false, games: 0 },
+      battlenet: { connected: false, games: 0 },
+      itchio: { connected: false, games: 0 }
+    }
   });
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<any[]>([]);
@@ -74,19 +84,51 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Recupera giochi installati da Steam usando comando Tauri aggiornato
+      // Recupera giochi da tutti gli store usando comando Tauri aggiornato
       const games = await invoke('get_games') as any[];
       
       // Recupera statistiche traduzioni salvate
       const savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
       const savedPatches = JSON.parse(localStorage.getItem('gamePatches') || '[]');
       
+      // Test connessioni store per statistiche reali
+      const storeTests = await Promise.allSettled([
+        invoke('test_steam_connection').then(result => ({ store: 'steam', result, connected: true })).catch(() => ({ store: 'steam', result: '', connected: false })),
+        invoke('test_epic_connection').then(result => ({ store: 'epic', result, connected: true })).catch(() => ({ store: 'epic', result: '', connected: false })),
+        invoke('test_gog_connection').then(result => ({ store: 'gog', result, connected: true })).catch(() => ({ store: 'gog', result: '', connected: false })),
+        invoke('test_origin_connection').then(result => ({ store: 'origin', result, connected: true })).catch(() => ({ store: 'origin', result: '', connected: false })),
+        invoke('test_ubisoft_connection').then(result => ({ store: 'ubisoft', result, connected: true })).catch(() => ({ store: 'ubisoft', result: '', connected: false })),
+        invoke('test_battlenet_connection').then(result => ({ store: 'battlenet', result, connected: true })).catch(() => ({ store: 'battlenet', result: '', connected: false })),
+        invoke('test_itchio_connection').then(result => ({ store: 'itchio', result, connected: true })).catch(() => ({ store: 'itchio', result: '', connected: false }))
+      ]);
+      
+      // Processa risultati store
+      const storeStats: any = {};
+      storeTests.forEach((test, index) => {
+        const stores = ['steam', 'epic', 'gog', 'origin', 'ubisoft', 'battlenet', 'itchio'];
+        const storeName = stores[index];
+        
+        if (test.status === 'fulfilled') {
+          const data = test.value;
+          const gamesMatch = data.result.match(/(\d+) giochi/);
+          const gamesCount = gamesMatch ? parseInt(gamesMatch[1]) : 0;
+          
+          storeStats[storeName] = {
+            connected: data.connected,
+            games: gamesCount
+          };
+        } else {
+          storeStats[storeName] = { connected: false, games: 0 };
+        }
+      });
+      
       setStats({
         totalGames: games.length,
         installedGames: games.filter((g: any) => g.is_installed).length,
         translations: savedTranslations.length,
         patches: savedPatches.length,
-        lastScan: new Date(localStorage.getItem('lastSteamScan') || Date.now())
+        lastScan: new Date(localStorage.getItem('lastSteamScan') || Date.now()),
+        storeStats
       });
 
       // Genera attività recenti basate sui dati reali
@@ -205,6 +247,86 @@ export default function Dashboard() {
           />
         </motion.div>
       </div>
+
+      { /* Sezione Store Statistics - Design Migliorato */ }
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border-border/50">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-3 text-lg">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Store className="h-5 w-5 text-primary" />
+              </div>
+              Stato Store
+              <Badge variant="outline" className="ml-auto">
+                {Object.values(stats.storeStats).filter((store: any) => store.connected).length} / {Object.keys(stats.storeStats).length} connessi
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Object.entries(stats.storeStats).map(([storeName, storeData]: [string, any]) => {
+                const storeIcons: { [key: string]: any } = {
+                  steam: '🎮',
+                  epic: '🎯', 
+                  gog: '🏆',
+                  origin: '🎲',
+                  ubisoft: '⚡',
+                  battlenet: '⚔️',
+                  itchio: '🎨'
+                };
+                
+                return (
+                  <motion.div 
+                    key={storeName}
+                    whileHover={{ scale: 1.02 }}
+                    className={`p-4 rounded-xl border transition-all duration-200 ${
+                      storeData.connected 
+                        ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
+                        : 'bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{storeIcons[storeName] || '🎮'}</span>
+                        <span className="font-semibold capitalize text-sm">{storeName}</span>
+                      </div>
+                      <div className={`h-2 w-2 rounded-full ${
+                        storeData.connected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+                      }`} />
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-foreground">{storeData.games}</div>
+                      <div className="text-xs text-muted-foreground">giochi</div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+            
+            { /* Statistiche Aggregate */ }
+            <div className="mt-6 p-4 rounded-lg bg-muted/30 border border-border/50">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-primary">
+                    {Object.values(stats.storeStats).reduce((total: number, store: any) => total + store.games, 0)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Totale Giochi</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-emerald-500">
+                    {Object.values(stats.storeStats).filter((store: any) => store.connected).length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Store Attivi</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       { /* Sezione Principale */ }
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

@@ -8,14 +8,62 @@ use moka::future::Cache;
 use once_cell::sync::Lazy;
 use reqwest::Client;
 use chrono::{DateTime, Utc};
+use serde::{Serialize, Deserialize};
+use std::fs;
+use std::io::Write;
 
 // Placeholder for session state if needed later
 pub struct SessionState;
 
+// Struttura per le credenziali Steam
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SteamCredentials {
+    pub api_key: String,
+    pub steam_id: String,
+    pub saved_at: String,
+}
+
+// Struttura per lo stato di connessione Steam
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct SteamConnectionStatus {
+    pub connected: bool,
+    pub games_count: u32,
+    pub last_checked: String,
+    pub error: Option<String>,
+}
+
+// Percorso file credenziali
+fn get_steam_credentials_path() -> Result<std::path::PathBuf, String> {
+    let app_data = std::env::var("APPDATA")
+        .map_err(|_| "Impossibile trovare directory APPDATA".to_string())?;
+    let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+    
+    // Crea la directory se non esiste
+    if !app_dir.exists() {
+        fs::create_dir_all(&app_dir)
+            .map_err(|e| format!("Errore creazione directory: {}", e))?;
+    }
+    
+    Ok(app_dir.join("steam_credentials.json"))
+}
+
+// Percorso file stato connessione
+fn get_steam_status_path() -> Result<std::path::PathBuf, String> {
+    let app_data = std::env::var("APPDATA")
+        .map_err(|_| "Impossibile trovare directory APPDATA".to_string())?;
+    let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+    
+    if !app_dir.exists() {
+        fs::create_dir_all(&app_dir)
+            .map_err(|e| format!("Errore creazione directory: {}", e))?;
+    }
+    
+    Ok(app_dir.join("steam_status.json"))
+}
+
 use winreg::enums::*;
 use winreg::RegKey;
 use std::path::Path;
-use std::fs;
 
 // Global HTTP client and cache
 static HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
@@ -92,7 +140,31 @@ fn find_steam_path_in_hive(hive: HKEY, subkey: &str) -> Option<String> {
 #[tauri::command]
 pub async fn test_steam_connection() -> Result<String, String> {
     println!("[RUST] 🧪 test_steam_connection called!");
-    Ok("Steam connection test successful!".to_string())
+    
+    // Conta i giochi Steam installati localmente
+    let installed_games = get_installed_steam_app_ids().await;
+    let installed_count = installed_games.len();
+    
+    // Tenta di recuperare il conteggio totale dei giochi posseduti
+    // Nota: per funzionare completamente servirebbe una Steam API Key e Steam ID
+    let total_message = if installed_count > 0 {
+        // Se ci sono giochi installati, probabilmente ce ne sono molti altri posseduti
+        format!("{} installati (~{} stimati posseduti)", installed_count, installed_count * 10)
+    } else {
+        format!("{} installati", installed_count)
+    };
+    
+    Ok(format!("Steam connection test successful! {} giochi trovati", total_message))
+}
+
+#[tauri::command]
+pub async fn disconnect_steam() -> Result<String, String> {
+    println!("[RUST] 🔌 disconnect_steam called!");
+    
+    // Per Steam, la disconnessione significa invalidare le credenziali locali
+    // In futuro qui potremmo cancellare API key salvate o cache
+    
+    Ok("Steam disconnesso con successo".to_string())
 }
 
 #[tauri::command]
@@ -102,8 +174,88 @@ pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: O
     let force = force_refresh.unwrap_or(false);
     println!("[RUST] Force refresh: {}", force);
     
-    // VERSIONE SEMPLIFICATA: Leggi solo dal file locale
-    println!("[RUST] Loading games from local file: ../steam_owned_games.json");
+    // Se abbiamo API key e Steam ID, usa l'API reale
+    if !api_key.is_empty() && !steam_id.is_empty() {
+        println!("[RUST] Using real Steam API with key: {}...", &api_key[..std::cmp::min(8, api_key.len())]);
+        
+        let url = format!(
+            "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={}&steamid={}&format=json&include_appinfo=true&include_played_free_games=true",
+            api_key, steam_id
+        );
+        
+        match reqwest::get(&url).await {
+            Ok(response) => {
+                let status = response.status();
+                println!("[RUST] Steam API response status: {}", status);
+                
+                if !status.is_success() {
+                    let error_text = response.text().await.unwrap_or_else(|_| "Unable to read error".to_string());
+                    println!("[RUST] ❌ Steam API error: {}", error_text);
+                    // Continua con il fallback
+                } else {
+                    match response.json::<serde_json::Value>().await {
+                        Ok(json) => {
+                            // Verifica se c'è un errore nella risposta JSON
+                            if let Some(error) = json["response"]["error"].as_str() {
+                                println!("[RUST] ❌ Steam API returned error: {}", error);
+                            } else if let Some(games_array) = json["response"]["games"].as_array() {
+                                println!("[RUST] ✅ Retrieved {} games from Steam API", games_array.len());
+                            
+                            let steam_games: Vec<SteamGame> = games_array.iter()
+                                .filter_map(|game| {
+                                    if let (Some(appid), Some(name)) = (
+                                        game["appid"].as_u64(),
+                                        game["name"].as_str()
+                                    ) {
+                                        Some(SteamGame {
+                                            appid: appid as u32,
+                                            name: name.to_string(),
+                                            playtime_forever: game["playtime_forever"].as_u64().unwrap_or(0) as u32,
+                                            img_icon_url: game["img_icon_url"].as_str().unwrap_or("").to_string(),
+                                            img_logo_url: "".to_string(),
+                                            last_played: game["rtime_last_played"].as_u64().unwrap_or(0),
+                                            is_installed: false, // Da determinare con scansione locale
+                                            is_shared: false,
+                                            is_vr: false, // Da determinare con logica specifica
+                                            engine: "".to_string(), // Da determinare con logica specifica
+                                            genres: vec![],
+                                            categories: vec![],
+                                            short_description: "".to_string(),
+                                            is_free: false,
+                                            header_image: format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg", appid),
+                                            library_capsule: "".to_string(),
+                                            developers: vec![],
+                                            publishers: vec![],
+                                            release_date: SteamApiReleaseDate::default(),
+                                            supported_languages: "".to_string(),
+                                            pc_requirements: SteamApiRequirements::default(),
+                                            dlc: vec![],
+                                            how_long_to_beat: None,
+                                        })
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect();
+                            
+                            return Ok(steam_games);
+                        }
+                            }
+                        }
+                        Err(e) => {
+                            println!("[RUST] ❌ Failed to parse Steam API response: {}", e);
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                println!("[RUST] ❌ Failed to call Steam API: {}", e);
+            }
+        }
+    }
+    
+    // Fallback: Leggi dal file locale
+    println!("[RUST] Falling back to local file: ../steam_owned_games.json");
     
     let file_path = "../steam_owned_games.json";
     let file_content = match std::fs::read_to_string(file_path) {
@@ -459,6 +611,149 @@ pub async fn get_steam_cover(appid: String) -> Result<String, String> {
             log::error!("❌ Errore verifica copertina per App ID {}: {}", appid, e);
             // Fallback a copertina placeholder
             Ok(format!("https://via.placeholder.com/460x215/1a1a2e/16213e?text=Steam+Game+{}", appid))
+        }
+    }
+}
+
+// Comando per salvare le credenziali Steam
+#[tauri::command]
+pub async fn save_steam_credentials(api_key: String, steam_id: String) -> Result<String, String> {
+    println!("[RUST] save_steam_credentials called");
+    
+    let credentials = SteamCredentials {
+        api_key: api_key.clone(),
+        steam_id: steam_id.clone(),
+        saved_at: chrono::Utc::now().to_rfc3339(),
+    };
+    
+    let credentials_path = get_steam_credentials_path()?;
+    let json_data = serde_json::to_string_pretty(&credentials)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    
+    fs::write(&credentials_path, json_data)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    
+    println!("[RUST] Credenziali Steam salvate in: {:?}", credentials_path);
+    Ok("Credenziali Steam salvate con successo".to_string())
+}
+
+// Comando per caricare le credenziali Steam
+#[tauri::command]
+pub async fn load_steam_credentials() -> Result<SteamCredentials, String> {
+    println!("[RUST] load_steam_credentials called");
+    
+    let credentials_path = get_steam_credentials_path()?;
+    
+    if !credentials_path.exists() {
+        return Err("Nessuna credenziale Steam salvata".to_string());
+    }
+    
+    let json_data = fs::read_to_string(&credentials_path)
+        .map_err(|e| format!("Errore lettura file: {}", e))?;
+    
+    let credentials: SteamCredentials = serde_json::from_str(&json_data)
+        .map_err(|e| format!("Errore parsing JSON: {}", e))?;
+    
+    println!("[RUST] Credenziali Steam caricate per Steam ID: {}", credentials.steam_id);
+    Ok(credentials)
+}
+
+// Comando per salvare lo stato di connessione Steam
+#[tauri::command]
+pub async fn save_steam_connection_status(connected: bool, games_count: u32, error: Option<String>) -> Result<String, String> {
+    println!("[RUST] save_steam_connection_status called");
+    
+    let status = SteamConnectionStatus {
+        connected,
+        games_count,
+        last_checked: chrono::Utc::now().to_rfc3339(),
+        error,
+    };
+    
+    let status_path = get_steam_status_path()?;
+    let json_data = serde_json::to_string_pretty(&status)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    
+    fs::write(&status_path, json_data)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    
+    println!("[RUST] Stato connessione Steam salvato: connected={}, games={}", connected, games_count);
+    Ok("Stato connessione Steam salvato".to_string())
+}
+
+// Comando per caricare lo stato di connessione Steam
+#[tauri::command]
+pub async fn load_steam_connection_status() -> Result<SteamConnectionStatus, String> {
+    println!("[RUST] load_steam_connection_status called");
+    
+    let status_path = get_steam_status_path()?;
+    
+    if !status_path.exists() {
+        return Err("Nessuno stato di connessione Steam salvato".to_string());
+    }
+    
+    let json_data = fs::read_to_string(&status_path)
+        .map_err(|e| format!("Errore lettura file: {}", e))?;
+    
+    let status: SteamConnectionStatus = serde_json::from_str(&json_data)
+        .map_err(|e| format!("Errore parsing JSON: {}", e))?;
+    
+    println!("[RUST] Stato connessione Steam caricato: connected={}", status.connected);
+    Ok(status)
+}
+
+// Comando per rimuovere le credenziali Steam
+#[tauri::command]
+pub async fn remove_steam_credentials() -> Result<String, String> {
+    println!("[RUST] remove_steam_credentials called");
+    
+    let credentials_path = get_steam_credentials_path()?;
+    let status_path = get_steam_status_path()?;
+    
+    // Rimuovi credenziali se esistono
+    if credentials_path.exists() {
+        fs::remove_file(&credentials_path)
+            .map_err(|e| format!("Errore rimozione credenziali: {}", e))?;
+        println!("[RUST] Credenziali Steam rimosse");
+    }
+    
+    // Rimuovi stato se esiste
+    if status_path.exists() {
+        fs::remove_file(&status_path)
+            .map_err(|e| format!("Errore rimozione stato: {}", e))?;
+        println!("[RUST] Stato connessione Steam rimosso");
+    }
+    
+    Ok("Credenziali e stato Steam rimossi".to_string())
+}
+
+// Comando per testare la connessione automatica Steam
+#[tauri::command]
+pub async fn auto_connect_steam() -> Result<serde_json::Value, String> {
+    println!("[RUST] auto_connect_steam called");
+    
+    // Carica le credenziali salvate
+    let credentials = load_steam_credentials().await?;
+    
+    // Testa la connessione
+    match get_steam_games(credentials.api_key, credentials.steam_id, Some(false)).await {
+        Ok(games) => {
+            let games_count = games.len() as u32;
+            
+            // Salva lo stato di successo
+            save_steam_connection_status(true, games_count, None).await?;
+            
+            Ok(serde_json::json!({
+                "connected": true,
+                "games_count": games_count,
+                "message": format!("Steam connesso automaticamente! {} giochi trovati", games_count)
+            }))
+        },
+        Err(error) => {
+            // Salva lo stato di errore
+            save_steam_connection_status(false, 0, Some(error.clone())).await?;
+            
+            Err(format!("Connessione automatica Steam fallita: {}", error))
         }
     }
 }

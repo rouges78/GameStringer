@@ -1106,6 +1106,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tokio",
+ "urlencoding",
  "winapi",
  "windows 0.51.1",
  "winreg 0.52.0",

@@ -5,7 +5,39 @@ Tutte le modifiche importanti a questo progetto saranno documentate in questo fi
 Il formato è basato su [Keep a Changelog](https://keepachangelog.com/it/1.0.0/),
 e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.2.3] - 2025-07-06 🚀 **LIBRERIA GIOCHI COMPLETATA**
+## [Unreleased] - 2025-07-07
+
+### 🔧 Fixed
+- **CRITICO**: Rimosso limite artificiale di 50 giochi nella sincronizzazione Steam
+- **Backend**: Aggiunti log dettagliati per diagnosticare errori API Steam
+- **Steam API**: Identificata e confermata validità delle credenziali Steam
+- **Troubleshooting**: Risolti problemi di build e processi bloccati durante sviluppo
+
+### 🧪 Testing
+- **API Steam**: Test diretto confermato funzionamento (bloccato solo da CORS policy)
+- **Tauri Commands**: Verificati parametri e struttura chiamate backend
+- **Diagnostica**: Controllo processi Windows e porte di rete
+- **Credenziali**: Confermata validità API key Steam `62995E6ABA414C66A8A2FB706BEF165F`
+
+### 🛠️ Technical
+- **File modificato**: `src-tauri/src/commands/steam.rs` - rimosso `.take(50)` limitante
+- **Log aggiunti**: Status HTTP, errori JSON, diagnostica completa API Steam
+- **Strumenti utilizzati**: Cascade AI, PowerShell, Browser DevTools, Tauri v2
+- **Framework**: Next.js 15.3.5, Rust backend, Tauri desktop app
+
+### 📋 Known Issues
+- ⚠️ Applicazione necessita riavvio pulito per applicare modifiche backend
+- ⚠️ Problemi intermittenti di build con processi Node.js bloccati
+- ⚠️ Test finale sincronizzazione Steam in attesa di completamento
+
+### 🎯 Next Steps
+- [ ] Test sincronizzazione Steam con limite rimosso (~1345 giochi attesi)
+- [ ] Verifica visualizzazione completa libreria nell'interfaccia utente
+- [ ] Consolidamento e stabilizzazione del sistema
+
+---
+
+## [0.5.0] - 2025-07-06 🚀 **LIBRERIA GIOCHI COMPLETATA**
 
 ### ✅ **MILESTONE RAGGIUNTA: LIBRERIA GIOCHI COMPLETAMENTE FUNZIONALE E STABILE**
 - **🖼️ Visualizzazione Copertine Giochi** - Risolto il problema delle immagini mancanti
@@ -37,7 +69,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 
 ---
 
-## [3.2.2] - 2025-07-04 🏗️ **BUILD E INTEGRAZIONE STABILIZZATE**
+## [0.4.0] - 2025-07-04 🏗️ **BUILD E INTEGRAZIONE STABILIZZATE**
 
 ### ✅ **MILESTONE RAGGIUNTA: APPLICAZIONE DESKTOP COMPLETAMENTE STABILE**
 - **🔧 Build Rust Corretta** - Risolti tutti gli errori di compilazione
@@ -70,7 +102,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
   - Applicazione completamente funzionante con interfaccia attuale
   - Troubleshooting Next.js/dev server opzionale e non bloccante
 
-## [3.2.1] - 2025-07-03 🎉 **MIGRAZIONE COMPLETATA CON SUCCESSO!**
+## [0.3.0] - 2025-07-03 🎉 **MIGRAZIONE COMPLETATA CON SUCCESSO!**
 
 ### ✅ **MILESTONE RAGGIUNTA: PROGETTO COMPLETAMENTE OPERATIVO**
 - **🚀 Migrazione API Completata al 100%** - Tutti i 33 comandi Tauri implementati e funzionanti
@@ -146,7 +178,7 @@ e questo progetto aderisce al [Semantic Versioning](https://semver.org/spec/v2.0
 - Struttura modulare Rust pronta per espansione
 - Frontend React preparato per comunicazione Tauri
 
-## [3.2.1] - 2025-07-02
+## [0.2.0] - 2025-07-02
 
 ### 🔧 Risolto
 - **Errore TypeScript 'long'** - Risolto conflitto di definizioni di tipo

@@ -1,59 +1,51 @@
-// Wrapper per l'API Tauri v2
-// In Tauri v2, l'API viene esposta diversamente
+// Wrapper per l'API Tauri v2, reso più robusto per l'uso in ambienti ibridi (browser/Tauri)
 
-let tauriInvoke: any = null;
-let initPromise: Promise<any> | null = null;
+// Controlla una sola volta se l'app è in esecuzione all'interno di Tauri.
+const IS_TAURI = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
 
-// Funzione per inizializzare l'API Tauri v2
-const initTauri = async () => {
-  if (tauriInvoke) return tauriInvoke;
-  
-  if (initPromise) return initPromise;
-  
-  initPromise = (async () => {
-    try {
-      // In Tauri v2, l'invoke è in @tauri-apps/api/core
-      const tauriModule = await import('@tauri-apps/api/core');
-      tauriInvoke = tauriModule.invoke;
-      console.log('Tauri v2 API caricata con successo');
-      return tauriInvoke;
-    } catch (error) {
-      console.error('Errore caricamento Tauri API:', error);
-      
-      // Fallback: prova con window.__TAURI_INTERNALS__
-      if (typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__) {
-        console.log('Usando fallback __TAURI_INTERNALS__');
-        tauriInvoke = (window as any).__TAURI_INTERNALS__.invoke;
-        return tauriInvoke;
-      }
-      
-      throw new Error('Tauri API non disponibile');
-    }
-  })();
-  
-  return initPromise;
-};
+let tauriInvoke: ((cmd: string, args?: any) => Promise<any>) | null = null;
 
-// Funzione per invocare comandi Tauri
+/**
+ * Invoca un comando del backend Rust in modo sicuro.
+ * Se l'app non è in esecuzione in un ambiente Tauri, lancia un errore controllato
+ * invece di causare un crash.
+ * @param cmd Il comando da invocare.
+ * @param args Gli argomenti per il comando.
+ * @returns Una Promise che si risolve con il risultato del comando.
+ */
 export const invoke = async <T = any>(cmd: string, args?: any): Promise<T> => {
+  if (!IS_TAURI) {
+    const errorMsg = `Comando Tauri '${cmd}' bloccato: l'app non è in esecuzione in ambiente Tauri.`;
+    console.warn(errorMsg, args);
+    throw new Error(errorMsg);
+  }
+
+  // Inizializzazione lazy dell'API di Tauri per evitare import non necessari.
+  if (!tauriInvoke) {
+    try {
+      const { invoke: coreInvoke } = await import('@tauri-apps/api/core');
+      tauriInvoke = coreInvoke;
+    } catch (e) {
+      console.error("Impossibile caricare il modulo @tauri-apps/api/core:", e);
+      throw new Error("Impossibile caricare il modulo API di Tauri.");
+    }
+  }
+
   try {
-    const invokeFunc = await initTauri();
     console.log(`Invocando comando Tauri: ${cmd}`, args);
-    const result = await invokeFunc(cmd, args);
+    const result = await tauriInvoke(cmd, args);
     console.log(`Risultato comando ${cmd}:`, result);
-    return result;
+    return result as T;
   } catch (error) {
-    console.error('Errore invocazione Tauri:', error);
-    throw error;
+    console.error(`Errore durante l'invocazione del comando Tauri '${cmd}':`, error);
+    throw error; // Rilancia l'errore originale per essere gestito dal chiamante.
   }
 };
 
-// Funzione per verificare se siamo in ambiente Tauri
+/**
+ * Verifica se l'applicazione è in esecuzione all'interno di un ambiente Tauri.
+ * @returns `true` se in ambiente Tauri, altrimenti `false`.
+ */
 export const isTauri = (): boolean => {
-  try {
-    return typeof window !== 'undefined' && 
-           ((window as any).__TAURI_INTERNALS__ !== undefined);
-  } catch {
-    return false;
-  }
+  return IS_TAURI;
 };

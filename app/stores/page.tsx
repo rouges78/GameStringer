@@ -531,9 +531,17 @@ export default function StoresPage() {
       )}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Connessioni Store</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-4">
           Collega i tuoi account per sincronizzare la tua libreria di giochi e accedere a funzionalità avanzate.
         </p>
+        <div className="flex justify-center">
+          <Button asChild variant="outline" className="mb-4">
+            <a href="/store-manager">
+              <CheckCircle className="h-4 w-4 mr-2" />
+              🔧 Gestione Store Interattiva
+            </a>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">

@@ -109,6 +109,7 @@ pub struct GameInfo {
     pub engine: Option<String>,
     pub last_played: Option<u64>,
     pub is_shared: bool,
+    pub supported_languages: Option<Vec<String>>, // Lingue supportate dal gioco
 }
 
 // Struct for game scan results

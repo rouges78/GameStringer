@@ -32,7 +32,7 @@ const navigationItems = [
   { name: 'Editor', href: '/editor', icon: FileText },
   { name: 'Dialogue Patcher', href: '/dialogue-patcher', icon: Languages },
   { name: 'Patch', href: '/patches', icon: Archive },
-  { name: 'Stores', href: '/stores', icon: Store },
+  { name: 'Stores Manager', href: '/store-manager', icon: Store },
   { name: 'Impostazioni', href: '/settings', icon: Settings },
 ];
 

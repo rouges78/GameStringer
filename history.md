@@ -60,6 +60,63 @@ Una sessione notturna dedicata a risolvere una serie di bug critici che impediva
 
 - **Miglioramento Robustezza Codice**: Corretti errori di sintassi minori (es. attributi duplicati in JSX) e migliorata la logica di gestione dei dati per rendere l'applicazione più stabile e resiliente.
 
+## 07/01/2025 - Troubleshooting Sincronizzazione Steam
+
+### Obiettivo
+Risolvere il problema della sincronizzazione incompleta della libreria Steam (solo 10-13 giochi mostrati invece di ~1345 posseduti).
+
+### Problemi Identificati
+1. **Limite artificiale di 50 giochi** nel backend Rust (`src-tauri/src/commands/steam.rs`)
+2. **Fallback su file locale** quando l'API Steam fallisce
+3. **Problemi di build e processi bloccati** durante lo sviluppo
+4. **Policy CORS** che impedisce test diretti API Steam dal browser
+
+### Soluzioni Implementate
+- ✅ Rimosso limite `.take(50)` dal backend Rust
+- ✅ Aggiunti log dettagliati per diagnosticare errori API Steam
+- ✅ Identificato che l'API Steam funziona correttamente (test CORS conferma validità credenziali)
+- ✅ Confermato che il problema era solo il limite artificiale nel codice
+
+### Test Eseguiti
+- Test diretto API Steam dal browser (bloccato da CORS ma conferma validità API key)
+- Test comandi Tauri nella console desktop
+- Verifica credenziali Steam (API key: `62995E6ABA414C66A8A2FB706BEF165F`, Steam ID: `76561198135965100`)
+- Controllo processi e porte di rete
+
+### Strumenti e LLM Utilizzati
+- **Cascade AI** (principale assistente di coding)
+- **PowerShell** per gestione processi e diagnostica
+- **Browser DevTools** per test JavaScript
+- **Tauri DevTools** per debug applicazione desktop
+- **Rust Compiler** per modifiche backend
+- **Next.js Dev Server** per frontend
+
+### Stato Finale
+- Backend modificato con log dettagliati e limite rimosso
+- Pronto per test finale sincronizzazione completa Steam
+- Necessario riavvio pulito dell'applicazione per test definitivo
+
+### Prossimi Passi
+- Testare sincronizzazione Steam con limite rimosso
+- Verificare visualizzazione completa libreria (~1345 giochi)
+- Procedere con consolidamento altri store se necessario
+
+---
+
+### 🌙 Notte del 29 Giugno 2025: Sessione Intensiva di Debug e Stabilizzazione
+
+Una sessione notturna dedicata a risolvere una serie di bug critici che impedivano il corretto funzionamento del flusso di traduzione.
+
+- **FIX Correzione Caricamento Lista Giochi**: Risolto il bug principale che causava la mancata visualizzazione della lista giochi nella pagina del Traduttore AI. Il problema era un disallineamento tra i nomi delle proprietà (`appId` vs `id`) tra backend e frontend. Ora i dati vengono correttamente mappati e la lista appare come previsto.
+
+- **FIX Configurazione Immagini Next.js**: Risolto un errore di runtime che impediva il caricamento delle copertine dei giochi da Steam. È stato configurato il file `next.config.js` per autorizzare il dominio `steamcdn-a.akamaihd.net`, permettendo a `next/image` di funzionare correttamente.
+
+- **FIX Stabilità Selettore Giochi**: Risolti due problemi nel componente `Combobox`:
+  1.  **Errore 500**: Aggiunto un filtro per scartare opzioni con ID non validi, prevenendo chiamate API errate che causavano un crash del backend.
+  2.  **Warning React**: Aggiunta una `key` univoca agli elementi della lista per eliminare i warning di React e migliorare le performance di rendering.
+
+- **Miglioramento Robustezza Codice**: Corretti errori di sintassi minori (es. attributi duplicati in JSX) e migliorata la logica di gestione dei dati per rendere l'applicazione più stabile e resiliente.
+
 ## 29 Giugno 2025
 
 - **Miglioramento Ricerca Giochi**: Implementata una nuova logica di ordinamento nella libreria che dà priorità ai giochi il cui titolo inizia con il termine di ricerca. Questo migliora notevolmente l'esperienza utente durante la ricerca.

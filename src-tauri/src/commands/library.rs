@@ -1,7 +1,9 @@
 use tauri::command;
 use serde::{Serialize, Deserialize};
+use crate::models::*;
 use std::path::Path;
 use std::fs;
+use tokio::fs as async_fs;
 use winreg::enums::*;
 use winreg::RegKey;
 
@@ -32,9 +34,29 @@ pub async fn get_library_games() -> Result<Vec<InstalledGame>, String> {
         games.extend(epic_games);
     }
     
-    // 3. Scan GOG games
-    if let Ok(gog_games) = get_gog_installed_games().await {
+    // 3. Scan GOG Games
+    if let Ok(gog_games) = crate::commands::gog::get_gog_installed_games().await {
         games.extend(gog_games);
+    }
+    
+    // 4. Scan Origin/EA App Games
+    if let Ok(origin_games) = crate::commands::origin::get_origin_installed_games().await {
+        games.extend(origin_games);
+    }
+    
+    // 5. Scan Ubisoft Connect Games
+    if let Ok(ubisoft_games) = crate::commands::ubisoft::get_ubisoft_installed_games().await {
+        games.extend(ubisoft_games);
+    }
+    
+    // 6. Scan Battle.net Games
+    if let Ok(battlenet_games) = crate::commands::battlenet::get_battlenet_installed_games().await {
+        games.extend(battlenet_games);
+    }
+    
+    // 7. Scan itch.io Games
+    if let Ok(itchio_games) = crate::commands::itchio::get_itchio_installed_games().await {
+        games.extend(itchio_games);
     }
     
     // Sort alphabetically
@@ -122,7 +144,7 @@ async fn parse_acf_file(file_path: &Path) -> Result<InstalledGame, String> {
     })
 }
 
-async fn get_epic_installed_games() -> Result<Vec<InstalledGame>, String> {
+pub async fn get_epic_installed_games() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
     // Epic Games stores manifests in ProgramData

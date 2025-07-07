@@ -1,4 +1,10 @@
 pub mod steam;
+pub mod epic;
+pub mod gog;
+pub mod origin;
+pub mod ubisoft;
+pub mod battlenet;
+pub mod itchio;
 pub mod library;
 pub mod games;
 pub mod utilities;
