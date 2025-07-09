@@ -4961,5 +4961,18 @@
             5
         ],
         "playtime_disconnected": 0
+    },
+    {
+        "appid": 2681110,
+        "name": "RoboCop: Rogue City",
+        "playtime_forever": 0,
+        "img_icon_url": "b8c4c7a1a8f5c9c5c4c3e3b6b9b8a7a6",
+        "playtime_windows_forever": 0,
+        "playtime_mac_forever": 0,
+        "playtime_linux_forever": 0,
+        "playtime_deck_forever": 0,
+        "rtime_last_played": 0,
+        "content_descriptorids": [],
+        "playtime_disconnected": 0
     }
 ]

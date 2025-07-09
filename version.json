@@ -1,0 +1,51 @@
+{
+  "version": "3.2.2",
+  "major": 3,
+  "minor": 2,
+  "patch": 2,
+  "buildNumber": 10,
+  "buildDate": "2025-07-08T22:20:03.288Z",
+  "gitHash": "218f2be0",
+  "branch": "main",
+  "changelog": {
+    "3.2.1": {
+      "date": "2025-01-07",
+      "type": "patch",
+      "changes": [
+        "Sistema versioning automatico implementato",
+        "System Status spostato nella sidebar",
+        "Dashboard layout migliorato",
+        "Quick Actions compattate"
+      ]
+    },
+    "3.2.0": {
+      "date": "2025-01-06",
+      "type": "minor",
+      "changes": [
+        "Pagina impostazioni completamente ridisegnata",
+        "Debug tools integrati nelle impostazioni",
+        "Sidebar collassabile con animazioni",
+        "Steam API debugging migliorato"
+      ]
+    },
+    "3.1.0": {
+      "date": "2025-01-05",
+      "type": "minor",
+      "changes": [
+        "Force refresh implementato per Steam games",
+        "Sistema manual game addition",
+        "Badge system per VR games",
+        "Dashboard design futuristico"
+      ]
+    },
+    "3.2.2": {
+      "date": "2025-07-07",
+      "type": "patch",
+      "changes": [
+        "Implementato sistema versioning automatico completo",
+        "Integrazione UI dinamica",
+        "Git hooks configurati"
+      ]
+    }
+  }
+}

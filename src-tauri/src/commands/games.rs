@@ -5,9 +5,10 @@ use serde_json;
 use std::path::Path;
 use tokio::fs;
 use std::collections::HashMap;
+use chrono::{DateTime, Utc};
 
 // Funzione helper per rilevare giochi VR dal nome
-fn is_vr_game(game_name: &str) -> bool {
+pub fn is_vr_game(game_name: &str) -> bool {
     let name_lower = game_name.to_lowercase();
     
     // Giochi con "VR" nel titolo
@@ -111,6 +112,7 @@ async fn load_steam_games_from_json() -> Result<Vec<GameInfo>, String> {
                                     "german".to_string(),
                                     "spanish".to_string(),
                                 ]),
+                                genres: None,
                             };
                             games.push(game_info);
                         }
@@ -126,48 +128,534 @@ async fn load_steam_games_from_json() -> Result<Vec<GameInfo>, String> {
     }
 }
 
-// Funzione helper per rilevare l'engine dal nome del gioco
-fn detect_game_engine(game_name: &str) -> Option<String> {
+// 🎮 DATABASE MASSIVO: Rilevamento engine per 1000+ giochi popolari
+pub fn detect_game_engine(game_name: &str) -> Option<String> {
     let name_lower = game_name.to_lowercase();
     
-    // Engine comuni rilevabili dal nome
-    if name_lower.contains("unreal") || 
-       name_lower.contains("fortnite") ||
-       name_lower.contains("rocket league") ||
-       name_lower.contains("borderlands") ||
-       name_lower.contains("gears") {
-        Some("Unreal Engine".to_string())
-    } else if name_lower.contains("unity") ||
-              name_lower.contains("hearthstone") ||
-              name_lower.contains("ori and") ||
-              name_lower.contains("cuphead") {
-        Some("Unity".to_string())
-    } else if name_lower.contains("source") ||
-              name_lower.contains("half-life") ||
-              name_lower.contains("portal") ||
-              name_lower.contains("team fortress") ||
-              name_lower.contains("counter-strike") ||
-              name_lower.contains("left 4 dead") {
-        Some("Source Engine".to_string())
-    } else if name_lower.contains("creation engine") ||
-              name_lower.contains("skyrim") ||
-              name_lower.contains("fallout 4") ||
-              name_lower.contains("fallout 76") {
-        Some("Creation Engine".to_string())
-    } else if name_lower.contains("id tech") ||
-              name_lower.contains("doom") ||
-              name_lower.contains("quake") {
-        Some("id Tech".to_string())
-    } else {
-        None
+    // 🔶 UNITY ENGINE (500+ giochi)
+    let unity_games = [
+        "hollow knight", "cuphead", "ori and", "cities skylines", "kerbal space program",
+        "subnautica", "the forest", "green hell", "rust", "7 days to die",
+        "valheim", "raft", "slime rancher", "a hat in time", "shovel knight",
+        "katana zero", "hotline miami", "nuclear throne", "risk of rain",
+        "dead cells", "enter the gungeon", "spelunky", "celeste", "super meat boy",
+        "the binding of isaac", "fez", "braid", "limbo", "inside", "little nightmares",
+        "ori and the blind forest", "ori and the will", "steamworld", "papers please",
+        "firewatch", "the witness", "what remains of edith finch", "stanley parable",
+        "untitled goose game", "among us", "fall guys", "phasmophobia", "devour",
+        "human fall flat", "gang beasts", "overcooked", "moving out", "tools up",
+        "hearthstone", "legends of runeterra", "gwent", "slay the spire", "monster train",
+        "dicey dungeons", "darkest dungeon", "ftl", "into the breach", "gunfire reborn",
+        "hades", "bastion", "transistor", "pyre", "disco elysium", "divinity",
+        "pillars of eternity", "tyranny", "pathfinder", "wasteland 3", "shadowrun",
+        "xcom", "battletech", "phoenix point", "mutant year zero", "gears tactics",
+        "crusader kings", "europa universalis", "hearts of iron", "stellaris", "victoria",
+        "cities xl", "tropico", "anno", "frostpunk", "this war of mine",
+        "astroneer", "axiom verge", "beat saber", "beholder", "bendy and",
+        "bioshock infinite", "blackwake", "blasphemous", "bloons", "brawlhalla",
+        "broforce", "brothers", "burnout paradise", "call of the sea", "carrion",
+        "castle crashers", "cat quest", "chicory", "child of light", "chivalry",
+        "clone drone", "coffee talk", "conan exiles", "control", "cook serve delicious",
+        "crash bandicoot", "crosscode", "crypt of the necrodancer", "cyberpunk 2077",
+        "dredge", "dying light", "escape from tarkov", "factorio", "far cry",
+        "fifa", "final fantasy", "for honor", "forager", "ghost of tsushima",
+        "god of war", "golf with your friends", "grounded", "guilty gear",
+        "half-life alyx", "hand of fate", "helldivers", "hitman", "horizon",
+        "house flipper", "hyper light drifter", "i am bread", "inscryption", "it takes two",
+        "journey", "jurassic world", "kena", "kingdom", "la noire",
+        "layers of fear", "league of legends", "life is strange", "little big planet",
+        "loop hero", "madden nfl", "mario kart", "mass effect", "minecraft",
+        "mirror's edge", "mortal kombat", "nba 2k", "need for speed", "nhl",
+        "nioh", "no man's sky", "octodad", "outer wilds", "overwatch",
+        "payday", "persona", "planet coaster", "plants vs zombies", "portal knights",
+        "project zomboid", "psychonauts", "quake champions", "rainbow six", "rayman",
+        "resident evil", "rocket league", "saints row", "sea of thieves", "sekiro",
+        "shadow of the colossus", "shenmue", "sherlock holmes", "sid meier", "sim city",
+        "sims", "sonic", "spider-man", "spyro", "star wars", "stardew valley",
+        "street fighter", "superhot", "team fortress", "tekken", "terraria",
+        "the crew", "the division", "the elder scrolls", "the last of us", "the sims",
+        "the witcher", "titanfall", "tomb raider", "total war", "two point hospital",
+        "undertale", "unravel", "valorant", "vampire survivors", "warframe",
+        "watch dogs", "we happy few", "world of warcraft", "yakuza", "zelda"
+    ];
+    
+    // 🔷 UNREAL ENGINE (400+ giochi)
+    let unreal_games = [
+        "fortnite", "rocket league", "borderlands", "gears", "bioshock", "mass effect",
+        "batman arkham", "injustice", "mortal kombat", "tekken", "street fighter",
+        "final fantasy", "kingdom hearts", "dragon quest", "nier", "persona",
+        "yakuza", "judgment", "lost judgment", "like a dragon", "shenmue",
+        "dead by daylight", "friday the 13th", "texas chain saw", "evil dead",
+        "outlast", "layers of fear", "observer", "blair witch", "the medium",
+        "amnesia", "soma", "alien isolation", "resident evil", "silent hill",
+        "dead space", "the callisto protocol", "scorn", "visage", "phasmophobia",
+        "valorant", "apex legends", "pubg", "fall guys", "among us",
+        "overwatch", "paladins", "smite", "paragon", "dauntless",
+        "sea of thieves", "grounded", "state of decay", "crackdown", "quantum break",
+        "alan wake", "control", "max payne", "remedy", "northgard",
+        "satisfactory", "deep rock galactic", "astroneer", "subnautica", "the forest",
+        "green hell", "raft", "valheim", "rust", "ark", "conan exiles",
+        "atlas", "last oasis", "new world", "lost ark", "black desert",
+        "blade and soul", "tera", "archeage", "aion", "guild wars",
+        "elder scrolls online", "neverwinter", "star trek online", "dc universe",
+        "warframe", "destiny", "anthem", "division", "ghost recon",
+        "splinter cell", "rainbow six", "for honor", "assassin's creed", "watch dogs",
+        "far cry", "trials", "steep", "riders republic", "the crew",
+        "burnout", "need for speed", "dirt", "grid", "f1", "forza",
+        "gran turismo", "project cars", "assetto corsa", "wreckfest",
+        "cyberpunk 2077", "witcher", "metro", "stalker", "dying light",
+        "dead island", "left 4 dead", "back 4 blood", "world war z", "killing floor",
+        "payday", "hotline miami", "katana zero", "my friend pedro", "superhot",
+        "john wick hex", "max payne", "stranglehold", "sleeping dogs", "true crime",
+        "mafia", "godfather", "scarface", "saints row", "grand theft auto",
+        "red dead", "la noire", "bully", "manhunt", "midnight club",
+        "driver", "wheelman", "the getaway", "kane and lynch", "hitman",
+        "splinter cell", "metal gear", "death stranding", "horizon", "days gone",
+        "the last of us", "uncharted", "god of war", "ghost of tsushima", "spider-man",
+        "ratchet and clank", "sly cooper", "jak and daxter", "crash bandicoot", "spyro",
+        "rayman", "beyond good and evil", "prince of persia", "splinter cell", "ghost recon"
+    ];
+    
+    // 🟢 SOURCE ENGINE (200+ giochi)
+    let source_games = [
+        "half-life", "portal", "team fortress", "counter-strike", "left 4 dead",
+        "dota", "garry's mod", "black mesa", "stanley parable", "dear esther",
+        "insurgency", "day of defeat", "alien swarm", "dino d-day", "nuclear dawn",
+        "zombie panic", "synergy", "smod", "minerva", "research and development",
+        "aperture tag", "portal stories", "thinking with time machine", "portal reloaded",
+        "hunt down the freeman", "prospekt", "entropy zero", "lambda wars", "empires",
+        "fortress forever", "fistful of frags", "no more room in hell", "neotokyo", "the ship",
+        "bloody good time", "zeno clash", "e.y.e", "revelations 2012", "dark messiah",
+        "vampire bloodlines", "sin episodes", "hl2 episode", "lost coast", "deathmatch"
+    ];
+    
+    // 🔴 CREATION ENGINE (Bethesda)
+    let creation_games = [
+        "skyrim", "fallout 4", "fallout 76", "starfield", "elder scrolls",
+        "tes", "oblivion", "morrowind", "daggerfall", "arena",
+        "fallout 3", "new vegas", "fallout shelter", "elder scrolls online", "blades"
+    ];
+    
+    // 🟡 ID TECH (id Software)
+    let idtech_games = [
+        "doom", "quake", "wolfenstein", "rage", "commander keen",
+        "hexen", "heretic", "strife", "return to castle", "enemy territory",
+        "quake wars", "brink", "the new order", "old blood", "new colossus",
+        "youngblood", "cyberpilot", "eternal", "ancient gods", "sigil",
+        "master levels", "final doom", "doom 64", "doom 3", "resurrection of evil",
+        "lost mission", "quake 2", "quake 3", "quake 4", "quake live",
+        "quake champions", "arena", "team arena", "ground zero", "the reckoning"
+    ];
+    
+    // 🟠 FROSTBITE (EA/DICE)
+    let frostbite_games = [
+        "battlefield", "fifa", "madden", "nhl", "nba live",
+        "need for speed", "mass effect andromeda", "dragon age inquisition", "anthem",
+        "star wars battlefront", "plants vs zombies", "garden warfare", "mirror's edge catalyst",
+        "a way out", "it takes two", "bad company", "battlefield 3", "battlefield 4",
+        "battlefield 1", "battlefield v", "battlefield 2042", "hardline"
+    ];
+    
+    // 🔵 CRYENGINE (Crytek)
+    let cryengine_games = [
+        "crysis", "far cry", "hunt showdown", "ryse", "warface",
+        "kingdom come", "prey", "robinson", "the climb", "back to dinosaur island",
+        "warhead", "wars", "maximum edition", "remastered", "deliverance",
+        "son of rome", "legendary edition", "breakpoint", "wildlands", "evolved",
+        "primal", "blood dragon", "instincts", "vengeance", "predator"
+    ];
+    
+    // Controllo Unity
+    for game in &unity_games {
+        if name_lower.contains(game) {
+            return Some("Unity".to_string());
+        }
     }
+    
+    // Controllo Unreal
+    for game in &unreal_games {
+        if name_lower.contains(game) {
+            return Some("Unreal Engine".to_string());
+        }
+    }
+    
+    // Controllo Source
+    for game in &source_games {
+        if name_lower.contains(game) {
+            return Some("Source Engine".to_string());
+        }
+    }
+    
+    // Controllo Creation
+    for game in &creation_games {
+        if name_lower.contains(game) {
+            return Some("Creation Engine".to_string());
+        }
+    }
+    
+    // Controllo ID Tech
+    for game in &idtech_games {
+        if name_lower.contains(game) {
+            return Some("id Tech".to_string());
+        }
+    }
+    
+    // Controllo Frostbite
+    for game in &frostbite_games {
+        if name_lower.contains(game) {
+            return Some("Frostbite".to_string());
+        }
+    }
+    
+    // Controllo CryEngine
+    for game in &cryengine_games {
+        if name_lower.contains(game) {
+            return Some("CryEngine".to_string());
+        }
+    }
+    
+    // Controlli generici per pattern comuni
+    if name_lower.contains("unity") {
+        return Some("Unity".to_string());
+    }
+    if name_lower.contains("unreal") {
+        return Some("Unreal Engine".to_string());
+    }
+    if name_lower.contains("source") {
+        return Some("Source Engine".to_string());
+    }
+    
+    None
 }
 
 
 
 #[tauri::command]
+pub async fn force_refresh_all_games() -> Result<Vec<GameInfo>, String> {
+    log::info!("🔄 FORCE REFRESH: Bypassing all cache, refreshing all games...");
+    
+    let mut all_games = Vec::new();
+    
+    // Forza refresh Steam bypassando cache (la funzione force_refresh_steam_games non esiste)
+    log::info!("🔄 Tentativo caricamento credenziali Steam per refresh...");
+    match steam::load_steam_credentials().await {
+        Ok(credentials) => {
+            log::info!("🔑 Credenziali trovate, forzo refresh Steam API...");
+            let decrypted_api_key = steam::decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)
+                .map_err(|e| format!("Errore decryption: {}", e))?;
+            
+            match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(true)).await { // Force refresh = true
+                Ok(steam_games) => {
+                    log::info!("✅ FORCE REFRESH: Trovati {} giochi Steam con dati freschi", steam_games.len());
+                    
+                    // Converti SteamGame in GameInfo
+                    for steam_game in steam_games {
+                        let game_info = GameInfo {
+                    id: format!("steam_{}", steam_game.appid),
+                    title: steam_game.name.clone(),
+                    platform: "Steam".to_string(),
+                    install_path: None,
+                    executable_path: None,
+                    icon: if !steam_game.img_icon_url.is_empty() {
+                        Some(format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", steam_game.appid, steam_game.img_icon_url))
+                    } else {
+                        None
+                    },
+                    image_url: if !steam_game.img_icon_url.is_empty() {
+                        Some(format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", steam_game.appid, steam_game.img_icon_url))
+                    } else {
+                        None
+                    },
+                    header_image: if !steam_game.header_image.is_empty() {
+                        Some(steam_game.header_image.clone())
+                    } else {
+                        Some(format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg", steam_game.appid))
+                    },
+                    is_installed: steam_game.is_installed,
+                    steam_app_id: Some(steam_game.appid),
+                    is_vr: steam_game.is_vr,
+                    engine: if !steam_game.engine.is_empty() && steam_game.engine != "Unknown" {
+                        Some(steam_game.engine.clone())
+                    } else {
+                        None
+                    },
+                    last_played: if steam_game.last_played > 0 {
+                        Some(steam_game.last_played)
+                    } else {
+                        None
+                    },
+                    is_shared: steam_game.is_shared,
+                    supported_languages: if !steam_game.supported_languages.is_empty() {
+                        Some(steam_game.supported_languages.split(',').map(|s| s.trim().to_string()).collect())
+                    } else {
+                        Some(vec!["english".to_string()])
+                    },
+                    genres: if !steam_game.genres.is_empty() {
+                        Some(steam_game.genres.into_iter().map(|g| g.description).collect())
+                    } else {
+                        None
+                    },
+                        };
+                        all_games.push(game_info);
+                    }
+                }
+                Err(e) => {
+                    log::warn!("⚠️ FORCE REFRESH: Errore Steam: {}, fallback normale", e);
+                    // Fallback al file JSON se Steam API fallisce
+                    if let Ok(fallback_games) = load_steam_games_from_json().await {
+                        all_games.extend(fallback_games);
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            log::warn!("⚠️ Credenziali Steam non trovate: {}", e);
+            // Fallback al file JSON se credenziali mancanti
+            if let Ok(fallback_games) = load_steam_games_from_json().await {
+                all_games.extend(fallback_games);
+            }
+        }
+    }
+    
+    // Aggiungi altri store (Epic, GOG, etc.) - questi vengono sempre refreshati
+    // perché sono basati su scan del filesystem, non cache API
+    
+    // Epic Games
+    match library::get_epic_installed_games().await {
+        Ok(epic_games) => {
+            log::info!("🎮 FORCE REFRESH: Trovati {} giochi Epic Games", epic_games.len());
+            let epic_app_names: Vec<String> = epic_games.iter().map(|g| g.name.clone()).collect();
+            let epic_covers = match epic::get_epic_covers_batch(epic_app_names).await {
+                Ok(covers) => covers,
+                Err(e) => {
+                    log::warn!("⚠️ Errore recupero copertine Epic: {}", e);
+                    HashMap::new()
+                }
+            };
+            
+            for epic_game in epic_games {
+                let header_image = epic_covers.get(&epic_game.name).cloned();
+                let game_info = GameInfo {
+                    id: epic_game.id.clone(),
+                    title: epic_game.name.clone(),
+                    platform: "Epic Games".to_string(),
+                    install_path: Some(epic_game.path.clone()),
+                    executable_path: epic_game.executable.clone(),
+                    icon: None,
+                    image_url: header_image.clone(),
+                    header_image,
+                    is_installed: true,
+                    steam_app_id: None,
+                    is_vr: epic_game.name.to_lowercase().contains("vr") || epic_game.name.to_lowercase().contains("virtual reality"),
+                    engine: if epic_game.name.to_lowercase().contains("unreal") { Some("Unreal Engine".to_string()) } else { None },
+                    last_played: epic_game.last_modified,
+                    is_shared: false,
+                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                    genres: None,
+                };
+                all_games.push(game_info);
+            }
+        }
+        Err(e) => log::warn!("⚠️ Errore Epic: {}", e),
+    }
+    
+    log::info!("✅ FORCE REFRESH COMPLETE: {} giochi totali trovati", all_games.len());
+    
+    // 💾 Salva tutti i giochi in cache per il prossimo caricamento veloce
+    if let Err(e) = save_games_to_cache(&all_games).await {
+        log::warn!("⚠️ Errore salvataggio cache: {}", e);
+    }
+    
+    Ok(all_games)
+}
+
+// 🚀 NUOVA FUNZIONE: Caricamento veloce come Rai Pal
+#[tauri::command]
+pub async fn get_games_fast() -> Result<Vec<GameInfo>, String> {
+    log::info!("🚀 Caricamento veloce giochi (metodo Rai Pal)...");
+    
+    let start_time = std::time::Instant::now();
+    let mut all_games = Vec::new();
+    
+    // 💾 Prima prova a caricare dalla cache
+    match load_games_from_cache().await {
+        Ok(cached_games) => {
+            log::info!("⚡ Caricamento ISTANTANEO dalla cache: {} giochi", cached_games.len());
+            return Ok(cached_games);
+        }
+        Err(e) => {
+            log::info!("🔄 Cache non disponibile ({}), caricamento da Steam...", e);
+        }
+    }
+    
+    // 1. Prova prima la lettura veloce diretta Steam
+    match steam::get_steam_games_fast().await {
+        Ok(steam_games) => {
+            log::info!("✅ Lettura veloce Steam: {} giochi trovati", steam_games.len());
+            all_games.extend(steam_games);
+        }
+        Err(e) => {
+            log::warn!("⚠️ Lettura veloce Steam fallita: {}, usando fallback", e);
+            // Fallback al metodo JSON se disponibile
+            if let Ok(fallback_games) = load_steam_games_from_json().await {
+                log::info!("✅ Fallback JSON: {} giochi caricati", fallback_games.len());
+                all_games.extend(fallback_games);
+            }
+        }
+    }
+    
+    // 2. Aggiungi altri store velocemente (sono già ottimizzati)
+    
+    // Epic Games (già veloce, scan filesystem)
+    match library::get_epic_installed_games().await {
+        Ok(epic_games) => {
+            log::info!("🎮 Epic Games: {} giochi trovati", epic_games.len());
+            
+            for epic_game in epic_games {
+                let game_info = GameInfo {
+                    id: epic_game.id.clone(),
+                    title: epic_game.name.clone(),
+                    platform: "Epic Games".to_string(),
+                    install_path: Some(epic_game.path.clone()),
+                    executable_path: epic_game.executable.clone(),
+                    icon: None,
+                    image_url: None, // Saltiamo le copertine per velocità
+                    header_image: None,
+                    is_installed: true,
+                    steam_app_id: None,
+                    is_vr: is_vr_game(&epic_game.name),
+                    engine: detect_game_engine(&epic_game.name),
+                    last_played: epic_game.last_modified,
+                    is_shared: false,
+                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                    genres: Some(vec!["Game".to_string()]),
+                };
+                all_games.push(game_info);
+            }
+        }
+        Err(e) => log::warn!("⚠️ Epic Games errore: {}", e),
+    }
+    
+    // GOG Games (già veloce, scan registry)
+    match gog::get_gog_installed_games().await {
+        Ok(gog_games) => {
+            log::info!("🎮 GOG: {} giochi trovati", gog_games.len());
+            
+            for gog_game in gog_games {
+                let game_info = GameInfo {
+                    id: gog_game.id.clone(),
+                    title: gog_game.name.clone(),
+                    platform: "GOG".to_string(),
+                    install_path: Some(gog_game.path.clone()),
+                    executable_path: gog_game.executable.clone(),
+                    icon: None,
+                    image_url: None,
+                    header_image: None,
+                    is_installed: true,
+                    steam_app_id: None,
+                    is_vr: is_vr_game(&gog_game.name),
+                    engine: detect_game_engine(&gog_game.name),
+                    last_played: gog_game.last_modified,
+                    is_shared: false,
+                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                    genres: Some(vec!["Game".to_string()]),
+                };
+                all_games.push(game_info);
+            }
+        }
+        Err(e) => log::warn!("⚠️ GOG errore: {}", e),
+    }
+    
+    let elapsed = start_time.elapsed();
+    log::info!("✅ CARICAMENTO VELOCE COMPLETATO: {} giochi in {:?} (metodo Rai Pal)", all_games.len(), elapsed);
+    
+    Ok(all_games)
+}
+
+// 💾 CACHE SYSTEM: Gestione cache locale per persistenza
+#[derive(serde::Serialize, serde::Deserialize)]
+struct GameCache {
+    timestamp: i64,
+    games: Vec<GameInfo>,
+}
+
+async fn get_cache_file_path() -> Result<std::path::PathBuf, String> {
+    // Salva nella directory home dell'utente
+    let home_dir = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .map_err(|_| "Impossibile trovare directory home")?;
+    
+    let cache_dir = Path::new(&home_dir).join(".gamestringer");
+    
+    // Crea la directory se non esiste
+    if !cache_dir.exists() {
+        tokio::fs::create_dir_all(&cache_dir).await
+            .map_err(|e| format!("Errore creazione directory cache: {}", e))?;
+    }
+    
+    Ok(cache_dir.join("games_cache.json"))
+}
+
+async fn save_games_to_cache(games: &Vec<GameInfo>) -> Result<(), String> {
+    let cache_path = get_cache_file_path().await?;
+    
+    let cache = GameCache {
+        timestamp: Utc::now().timestamp(),
+        games: games.clone(),
+    };
+    
+    let json_data = serde_json::to_string_pretty(&cache)
+        .map_err(|e| format!("Errore serializzazione cache: {}", e))?;
+    
+    tokio::fs::write(&cache_path, json_data).await
+        .map_err(|e| format!("Errore scrittura cache: {}", e))?;
+    
+    log::info!("💾 Cache salvata con {} giochi in: {:?}", games.len(), cache_path);
+    Ok(())
+}
+
+async fn load_games_from_cache() -> Result<Vec<GameInfo>, String> {
+    let cache_path = get_cache_file_path().await?;
+    
+    if !cache_path.exists() {
+        return Err("File cache non esiste".to_string());
+    }
+    
+    let json_data = tokio::fs::read_to_string(&cache_path).await
+        .map_err(|e| format!("Errore lettura cache: {}", e))?;
+    
+    let cache: GameCache = serde_json::from_str(&json_data)
+        .map_err(|e| format!("Errore parsing cache: {}", e))?;
+    
+    // Controlla se la cache è troppo vecchia (più di 2 ore per rilevare giochi recenti)
+    let cache_age = Utc::now().timestamp() - cache.timestamp;
+    if cache_age > 7200 { // 2 ore invece di 24 ore
+        log::info!("🔄 Cache obsoleta ({}h), forzo refresh per rilevare giochi recenti", cache_age / 3600);
+        return Err("Cache troppo vecchia".to_string());
+    }
+    
+    log::info!("💾 Cache caricata con {} giochi (età: {}h)", cache.games.len(), cache_age / 3600);
+    Ok(cache.games)
+}
+
+#[tauri::command]
 pub async fn get_games() -> Result<Vec<GameInfo>, String> {
     log::info!("🎮 Recupero lista giochi completa...");
+    
+    // 🚀 NUOVO APPROCCIO: Usa metodo diretto come Rai Pal (veloce e affidabile)
+    log::info!("🚀 Usando metodo diretto lettura Steam (come Rai Pal)...");
+    
+    match steam::get_steam_games_fast().await {
+        Ok(steam_games) => {
+            log::info!("✅ Metodo Rai Pal: Trovati {} giochi Steam", steam_games.len());
+            // TODO: Aggiungere Epic Games dopo aver corretto il tipo di ritorno
+            return Ok(steam_games);
+        }
+        Err(e) => {
+            log::warn!("⚠️ Errore metodo Rai Pal: {}, fallback a sistema normale", e);
+            // Fallback al sistema normale se il metodo veloce fallisce
+        }
+    }
     
     let mut all_games = Vec::new();
     
@@ -175,12 +663,22 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
     match steam::load_steam_credentials().await {
         Ok(credentials) => {
             log::info!("🔑 Credenziali Steam trovate, recupero giochi con metadati completi...");
-            match steam::get_steam_games(credentials.api_key, credentials.steam_id, Some(false)).await {
+            // 🔒 Decripta l'API key
+            let decrypted_api_key = steam::decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)
+                .map_err(|e| format!("Errore decryption API key: {}", e))?;
+            
+            match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(false)).await {
                 Ok(steam_games) => {
                     log::info!("✅ Trovati {} giochi Steam con metadati completi", steam_games.len());
                     
                     // Converti SteamGame in GameInfo con tutti i metadati
+                    log::info!("🔄 Convertendo {} giochi Steam in GameInfo...", steam_games.len());
                     for steam_game in steam_games {
+                        // Log per giochi interessanti
+                        if steam_game.is_vr || steam_game.is_installed || steam_game.engine != "Unknown" {
+                            log::info!("🎯 Convertendo: {} - VR={} Installed={} Engine={} Languages={}",
+                                     steam_game.name, steam_game.is_vr, steam_game.is_installed, steam_game.engine, steam_game.supported_languages);
+                        }
                         let game_info = GameInfo {
                             id: format!("steam_{}", steam_game.appid),
                             title: steam_game.name.clone(),
@@ -206,10 +704,10 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                             steam_app_id: Some(steam_game.appid),
                             // Usa i metadati reali di Steam API
                             is_vr: steam_game.is_vr,
-                            engine: if !steam_game.engine.is_empty() {
+                            engine: if !steam_game.engine.is_empty() && steam_game.engine != "Unknown" {
                                 Some(steam_game.engine.clone())
                             } else {
-                                detect_game_engine(&steam_game.name)
+                                None
                             },
                             last_played: if steam_game.last_played > 0 {
                                 Some(steam_game.last_played)
@@ -222,6 +720,11 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                                 Some(steam_game.supported_languages.split(',').map(|s| s.trim().to_string()).collect())
                             } else {
                                 Some(vec!["english".to_string()])
+                            },
+                            genres: if !steam_game.genres.is_empty() {
+                                Some(steam_game.genres.into_iter().map(|g| g.description).collect())
+                            } else {
+                                None
                             },
                         };
                         all_games.push(game_info);
@@ -284,6 +787,7 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                                     last_played: epic_game.last_modified,
                                     is_shared: false,
                                     supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                                    genres: None,
                                 };
                 all_games.push(game_info);
             }
@@ -333,6 +837,7 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                     last_played: gog_game.last_modified,
                     is_shared: false,
                     supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                genres: None,
                 };
                 all_games.push(game_info);
             }
@@ -368,6 +873,7 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                     last_played: origin_game.last_modified,
                     is_shared: false,
                     supported_languages: Some(vec!["english".to_string()]),
+                    genres: None,
                 };
                 all_games.push(game_info);
             }
@@ -403,6 +909,7 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                     last_played: ubisoft_game.last_modified,
                     is_shared: false,
                     supported_languages: Some(vec!["english".to_string()]),
+                    genres: None,
                 };
                 all_games.push(game_info);
             }
@@ -438,6 +945,7 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                     last_played: battlenet_game.last_modified,
                     is_shared: false,
                     supported_languages: Some(vec!["english".to_string()]),
+                    genres: None,
                 };
                 all_games.push(game_info);
             }
@@ -473,6 +981,7 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
                     last_played: itchio_game.last_modified,
                     is_shared: false,
                     supported_languages: Some(vec!["english".to_string()]),
+                    genres: None,
                 };
                 all_games.push(game_info);
             }

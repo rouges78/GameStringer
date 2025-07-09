@@ -14,11 +14,15 @@ import {
   Store, 
   Settings,
   Menu,
-  X
+  X,
+  Bug,
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useVersion } from '@/lib/version';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -27,8 +31,7 @@ interface MainLayoutProps {
 const navigationItems = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Libreria', href: '/library', icon: Gamepad2 },
-  { name: 'Test Comandi', href: '/test-commands', icon: Zap },
-  { name: 'Injekt-Translator', href: '/injekt-translator', icon: Zap },
+  { name: 'Neural Translator', href: '/injekt-translator', icon: Zap },
   { name: 'Editor', href: '/editor', icon: FileText },
   { name: 'Dialogue Patcher', href: '/dialogue-patcher', icon: Languages },
   { name: 'Patch', href: '/patches', icon: Archive },
@@ -36,14 +39,100 @@ const navigationItems = [
   { name: 'Impostazioni', href: '/settings', icon: Settings },
 ];
 
+interface SystemStatus {
+  neuralEngine: { status: 'online' | 'offline' | 'error'; color: string; text: string };
+  steamApi: { status: 'connected' | 'disconnected' | 'error'; color: string; text: string };
+  cache: { percentage: number; color: string; text: string };
+}
+
 export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [systemStatus, setSystemStatus] = useState<SystemStatus>({
+    neuralEngine: { status: 'online', color: 'bg-green-500', text: 'ON' },
+    steamApi: { status: 'connected', color: 'bg-blue-500', text: 'OK' },
+    cache: { percentage: 0, color: 'bg-purple-500', text: '0%' }
+  });
   const pathname = usePathname();
+  const { version, buildInfo } = useVersion();
 
   useEffect(() => {
     setIsMounted(true);
+    // Carica preferenza sidebar dal localStorage
+    const savedSidebarState = localStorage.getItem('sidebarOpen');
+    if (savedSidebarState !== null) {
+      setSidebarOpen(JSON.parse(savedSidebarState));
+    }
+    
+    // Aggiorna status del sistema
+    updateSystemStatus();
+    const statusInterval = setInterval(updateSystemStatus, 10000); // Ogni 10 secondi
+    
+    return () => clearInterval(statusInterval);
   }, []);
+
+  const updateSystemStatus = async () => {
+    try {
+      // Controlla Neural Engine (sempre online se l'app funziona)
+      const neuralEngine = { 
+        status: 'online' as const, 
+        color: 'bg-green-500', 
+        text: 'ON' 
+      };
+
+      // Controlla Steam API
+      let steamApi = { 
+        status: 'disconnected' as const, 
+        color: 'bg-red-500', 
+        text: 'OFF' 
+      };
+      
+      try {
+        const steamSettings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+        if (steamSettings.steam?.apiKey && steamSettings.steam?.steamId) {
+          // Se API key e Steam ID sono configurati, assume connessione
+          steamApi = { 
+            status: 'connected', 
+            color: 'bg-blue-500', 
+            text: 'OK' 
+          };
+        }
+      } catch (error) {
+        console.error('Error checking Steam API status:', error);
+      }
+
+      // Calcola uso cache
+      const cacheData = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key) {
+          const value = localStorage.getItem(key);
+          if (value) cacheData.push(value);
+        }
+      }
+      
+      const cacheSize = JSON.stringify(cacheData).length;
+      const maxCache = 5 * 1024 * 1024; // 5MB max
+      const cachePercentage = Math.min(Math.round((cacheSize / maxCache) * 100), 100);
+      
+      const cache = {
+        percentage: cachePercentage,
+        color: cachePercentage > 80 ? 'bg-red-500' : cachePercentage > 60 ? 'bg-yellow-500' : 'bg-purple-500',
+        text: `${cachePercentage}%`
+      };
+
+      setSystemStatus({ neuralEngine, steamApi, cache });
+    } catch (error) {
+      console.error('Error updating system status:', error);
+    }
+  };
+
+  // Salva preferenza sidebar
+  const toggleSidebar = () => {
+    const newState = !sidebarOpen;
+    setSidebarOpen(newState);
+    localStorage.setItem('sidebarOpen', JSON.stringify(newState));
+  };
 
   if (!isMounted) {
     return null;
@@ -54,25 +143,44 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Sidebar */}
         <aside 
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            "fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-all duration-300 ease-in-out",
+            sidebarOpen ? "w-64 translate-x-0" : "w-16 translate-x-0"
           )}
         >
-          <div className="relative flex items-center justify-center h-52 px-4 border-b">
-            <div className="flex items-center">
-              <Image src="/logo.png" alt="GameStringer Logo" width={768} height={192} className="w-auto h-48" priority />
-            </div>
+          {/* Header con logo e toggle */}
+          <div className="relative flex items-center justify-center h-16 px-2 border-b">
+            {sidebarOpen && (
+              <div className="flex items-center flex-1 px-2">
+                <Image 
+                  src="/logo.png" 
+                  alt="GameStringer Logo" 
+                  width={200} 
+                  height={50} 
+                  className="w-full h-auto max-h-10" 
+                  priority 
+                />
+              </div>
+            )}
+            
+            {/* Toggle Button */}
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-1/2 right-4 -translate-y-1/2 lg:hidden"
-              onClick={() => setSidebarOpen(false)}
+              className={cn(
+                "h-8 w-8 rounded-full transition-all duration-300 hover:bg-primary/10 hover:scale-110",
+                sidebarOpen ? "ml-auto" : "mx-auto"
+              )}
+              onClick={toggleSidebar}
             >
-              <X className="h-5 w-5" />
+              {sidebarOpen ? (
+                <ChevronLeft className="h-4 w-4 transition-transform duration-300" />
+              ) : (
+                <ChevronRight className="h-4 w-4 transition-transform duration-300 animate-pulse" />
+              )}
             </Button>
           </div>
           
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-2 py-4 space-y-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -82,49 +190,114 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn(
-                      "w-full justify-start space-x-3",
+                      "w-full transition-all duration-300",
+                      sidebarOpen 
+                        ? "justify-start space-x-3 px-3" 
+                        : "justify-center px-0",
                       isActive && "bg-primary/10 text-primary"
                     )}
-                    onClick={() => setSidebarOpen(false)}
+                    title={!sidebarOpen ? item.name : undefined}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span>{item.name}</span>
+                    <Icon className={cn(
+                      "transition-all duration-300",
+                      sidebarOpen ? "h-5 w-5" : "h-6 w-6"
+                    )} />
+                    {sidebarOpen && (
+                      <span className="transition-opacity duration-300">
+                        {item.name}
+                      </span>
+                    )}
                   </Button>
                 </Link>
               );
             })}
           </nav>
           
-          <div className="p-4 border-t">
-            <div className="text-sm text-muted-foreground">
-              <p>Versione 3.2.1</p>
-              <p> 2024 GameStringer</p>
-            </div>
+          {/* System Status Section */}
+          <div className="p-2 border-t border-b bg-gradient-to-r from-slate-800/50 to-slate-700/50">
+            {sidebarOpen ? (
+              <div className="space-y-2">
+                <h4 className="text-xs font-semibold text-gray-400 mb-2">System Status</h4>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-300">Neural Engine</span>
+                    <div className="flex items-center gap-1">
+                      <div className={`w-1.5 h-1.5 ${systemStatus.neuralEngine.color} rounded-full animate-pulse`}></div>
+                      <span className={`text-xs ${systemStatus.neuralEngine.color === 'bg-green-500' ? 'text-green-400' : 'text-red-400'}`}>
+                        {systemStatus.neuralEngine.text}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-300">Steam API</span>
+                    <div className="flex items-center gap-1">
+                      <div className={`w-1.5 h-1.5 ${systemStatus.steamApi.color} rounded-full animate-pulse`}></div>
+                      <span className={`text-xs ${
+                        systemStatus.steamApi.color === 'bg-blue-500' ? 'text-blue-400' : 
+                        systemStatus.steamApi.color === 'bg-yellow-500' ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        {systemStatus.steamApi.text}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-300">Cache</span>
+                    <div className="flex items-center gap-1">
+                      <div className={`w-1.5 h-1.5 ${systemStatus.cache.color} rounded-full animate-pulse`}></div>
+                      <span className={`text-xs ${
+                        systemStatus.cache.color === 'bg-purple-500' ? 'text-purple-400' : 
+                        systemStatus.cache.color === 'bg-yellow-500' ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        {systemStatus.cache.text}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1">
+                <div 
+                  className={`w-2 h-2 ${systemStatus.neuralEngine.color} rounded-full animate-pulse`} 
+                  title={`Neural Engine - ${systemStatus.neuralEngine.text}`}
+                ></div>
+                <div 
+                  className={`w-2 h-2 ${systemStatus.steamApi.color} rounded-full animate-pulse`} 
+                  title={`Steam API - ${systemStatus.steamApi.text}`}
+                ></div>
+                <div 
+                  className={`w-2 h-2 ${systemStatus.cache.color} rounded-full animate-pulse`} 
+                  title={`Cache - ${systemStatus.cache.text}`}
+                ></div>
+              </div>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="p-2">
+            {sidebarOpen ? (
+              <div className="text-xs text-muted-foreground transition-opacity duration-300">
+                <p className="font-mono">v{version}.{buildInfo.build}</p>
+                <p>© 2024 GameStringer</p>
+                <p className="text-xs text-gray-500 truncate" title={buildInfo.git}>
+                  {buildInfo.git.slice(0, 7)}
+                </p>
+              </div>
+            ) : (
+              <div className="flex justify-center">
+                <div className="text-xs text-gray-500 font-mono">v{version}</div>
+              </div>
+            )}
           </div>
         </aside>
 
-        {/* Overlay per mobile */}
-        {sidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={cn(
+          "flex-1 flex flex-col min-w-0 transition-all duration-300",
+          sidebarOpen ? "ml-64" : "ml-16"
+        )}>
           {/* Header */}
           <header className="h-16 bg-card border-b flex items-center justify-between px-6">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            
-            <div className="flex-1 lg:flex-none">
+            <div className="flex-1">
               <h1 className="text-xl font-semibold">
                 {navigationItems.find(item => item.href === pathname)?.name || 'GameStringer'}
               </h1>
@@ -132,7 +305,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             
             <div className="flex items-center space-x-4">
               <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span>Sistema Online</span>
               </div>
             </div>

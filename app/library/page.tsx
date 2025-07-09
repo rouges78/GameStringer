@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { invoke } from '@/lib/tauri-api';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { LanguageFlags } from '@/components/ui/language-flags';
+import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
 
 // Definiamo l'interfaccia per un singolo gioco, assicurandoci che corrisponda al backend
 interface Game {
@@ -17,7 +19,115 @@ interface Game {
   is_vr?: boolean; // Se il gioco supporta VR
   engine?: string | null; // Engine utilizzato dal gioco
   is_installed?: boolean; // Se il gioco è installato localmente
+  genres?: string[]; // Generi del gioco
 }
+
+// Funzione per normalizzare i nomi delle lingue
+const normalizeLanguage = (language: string): string => {
+  const languageMap: { [key: string]: string } = {
+    // Inglese
+    'english': 'English',
+    'English': 'English',
+    'en': 'English',
+    'EN': 'English',
+    
+    // Italiano
+    'italian': 'Italian',
+    'Italian': 'Italian',
+    'italiano': 'Italian',
+    'Italiano': 'Italian',
+    'it': 'Italian',
+    'IT': 'Italian',
+    
+    // Francese
+    'french': 'French',
+    'French': 'French',
+    'français': 'French',
+    'Français': 'French',
+    'fr': 'French',
+    'FR': 'French',
+    
+    // Tedesco
+    'german': 'German',
+    'German': 'German',
+    'deutsch': 'German',
+    'Deutsch': 'German',
+    'de': 'German',
+    'DE': 'German',
+    
+    // Spagnolo
+    'spanish': 'Spanish',
+    'Spanish': 'Spanish',
+    'español': 'Spanish',
+    'Español': 'Spanish',
+    'es': 'Spanish',
+    'ES': 'Spanish',
+    
+    // Giapponese
+    'japanese': 'Japanese',
+    'Japanese': 'Japanese',
+    '日本語': 'Japanese',
+    'ja': 'Japanese',
+    'JA': 'Japanese',
+    
+    // Russo
+    'russian': 'Russian',
+    'Russian': 'Russian',
+    'русский': 'Russian',
+    'Русский': 'Russian',
+    'ru': 'Russian',
+    'RU': 'Russian',
+    
+    // Portoghese
+    'portuguese': 'Portuguese',
+    'Portuguese': 'Portuguese',
+    'português': 'Portuguese',
+    'Português': 'Portuguese',
+    'pt': 'Portuguese',
+    'PT': 'Portuguese',
+    
+    // Cinese
+    'chinese': 'Chinese',
+    'Chinese': 'Chinese',
+    'simplified chinese': 'Chinese',
+    'traditional chinese': 'Chinese',
+    '中文': 'Chinese',
+    'zh': 'Chinese',
+    'ZH': 'Chinese',
+    
+    // Coreano
+    'korean': 'Korean',
+    'Korean': 'Korean',
+    '한국어': 'Korean',
+    'ko': 'Korean',
+    'KO': 'Korean',
+    
+    // Polacco
+    'polish': 'Polish',
+    'Polish': 'Polish',
+    'polski': 'Polish',
+    'Polski': 'Polish',
+    'pl': 'Polish',
+    'PL': 'Polish',
+    
+    // Olandese
+    'dutch': 'Dutch',
+    'Dutch': 'Dutch',
+    'nederlands': 'Dutch',
+    'Nederlands': 'Dutch',
+    'nl': 'Dutch',
+    'NL': 'Dutch',
+    
+    // Arabo
+    'arabic': 'Arabic',
+    'Arabic': 'Arabic',
+    'العربية': 'Arabic',
+    'ar': 'Arabic',
+    'AR': 'Arabic',
+  };
+  
+  return languageMap[language] || language;
+};
 
 export default function LibraryPage() {
   const [games, setGames] = useState<Game[]>([]);
@@ -27,22 +137,64 @@ export default function LibraryPage() {
   const [selectedPlatform, setSelectedPlatform] = useState('All');
   const [showVROnly, setShowVROnly] = useState(false);
   const [showInstalledOnly, setShowInstalledOnly] = useState(false);
+  const [selectedEngine, setSelectedEngine] = useState('All');
+  const [selectedGenre, setSelectedGenre] = useState('All');
+  const [selectedLanguage, setSelectedLanguage] = useState('All');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     const fetchGames = async () => {
       try {
-        const result = await invoke('get_games');
-        console.log(' Giochi caricati:', result);
-        console.log(' Debug primi 3 giochi:', (result as Game[]).slice(0, 3));
-        console.log(' Giochi con VR:', (result as Game[]).filter(g => g.is_vr));
-        console.log(' Giochi con engine:', (result as Game[]).filter(g => g.engine));
-        console.log(' Giochi installati:', (result as Game[]).filter(g => g.is_installed));
-        console.log(' Totale giochi per piattaforma:', (result as Game[]).reduce((acc, g) => { acc[g.platform] = (acc[g.platform] || 0) + 1; return acc; }, {} as Record<string, number>));
+        // 🚀 Prova prima con la nuova funzione veloce
+        console.log('🚀 Tentativo caricamento veloce (metodo Rai Pal)...');
+        const result = await invoke('get_games_fast');
+        console.log('✅ Giochi caricati velocemente da Tauri:', result);
+        console.log('📊 Debug primi 3 giochi:', (result as Game[]).slice(0, 3));
+        console.log('🥽 Giochi con VR:', (result as Game[]).filter(g => g.is_vr));
+        console.log('🎯 Giochi con engine:', (result as Game[]).filter(g => g.engine));
+        console.log('💾 Giochi installati:', (result as Game[]).filter(g => g.is_installed));
+        console.log('📋 Totale giochi per piattaforma:', (result as Game[]).reduce((acc, g) => { acc[g.platform] = (acc[g.platform] || 0) + 1; return acc; }, {} as Record<string, number>));
         setGames(result as Game[]);
       } catch (error) {
-        console.error(' Errore nel caricamento dei giochi:', error);
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        setError(`Failed to load games: ${errorMessage}`);
+        console.error('❌ Errore nel caricamento dei giochi da Tauri:', error);
+        
+        // Fallback: usa l'API Next.js se Tauri non è disponibile
+        try {
+          console.log('🔄 Tentativo fallback con API Next.js...');
+          const response = await fetch('/api/library/games');
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Response non è JSON');
+          }
+          
+          const data = await response.json();
+          console.log('🎮 Giochi caricati da API fallback:', data);
+          
+          // Trasforma i dati dell'API nel formato atteso
+          const transformedGames: Game[] = data.games.map((game: any) => ({
+            id: game.id,
+            app_id: game.id.replace('steam_', ''),
+            title: game.name,
+            platform: game.provider,
+            header_image: game.imageUrl,
+            supported_languages: game.supported_languages || ['Inglese'], // Usa dati reali dal backend
+            is_vr: game.is_vr || false,
+            engine: game.engine || null,
+            is_installed: game.is_installed || false,
+            genres: game.genres || ['Game']
+          }));
+          
+          setGames(transformedGames);
+        } catch (fallbackError) {
+          console.error('❌ Errore anche con API fallback:', fallbackError);
+          const errorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+          setError(`Impossibile caricare i giochi. Errore Tauri: ${error}. Errore API: ${errorMessage}`);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -51,28 +203,55 @@ export default function LibraryPage() {
     fetchGames();
   }, []);
 
-  // Estrai le piattaforme uniche dai giochi caricati
-  const platforms = ['All', ...new Set(games.map(game => game.platform))];
+  const handleForceRefresh = (freshGames: Game[]) => {
+    console.log('🔄 Force refresh completed, updating games list:', freshGames);
+    setGames(freshGames);
+  };
 
-  // Filtriamo e ordiniamo i giochi in base alla ricerca, piattaforma, VR e installazione
+  // Estrai le piattaforme, engine, lingue e generi unici dai giochi caricati
+  const platforms = ['All', ...new Set(games.map(game => game.platform))];
+  const engines = ['All', ...new Set(games.filter(game => game.engine).map(game => game.engine!))];
+  const allLanguages = games.flatMap(game => game.supported_languages || []);
+  const normalizedLanguages = allLanguages.map(lang => normalizeLanguage(lang));
+  const languages = ['All', ...new Set(normalizedLanguages)].sort();
+  const allGenres = games.flatMap(game => game.genres || []);
+  const genres = ['All', ...new Set(allGenres)];
+
+  // Filtriamo e ordiniamo i giochi in base alla ricerca, piattaforma, VR, installazione, lingue, engine e generi
   const filteredGames = games
     .filter((game) => {
       const matchesPlatform = selectedPlatform === 'All' || game.platform === selectedPlatform;
       const matchesSearch = (game.title ?? '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesVR = !showVROnly || game.is_vr;
       const matchesInstalled = !showInstalledOnly || game.is_installed;
-      return matchesPlatform && matchesSearch && matchesVR && matchesInstalled;
+      const matchesLanguage = selectedLanguage === 'All' || (game.supported_languages && game.supported_languages.some(lang => normalizeLanguage(lang) === selectedLanguage));
+      const matchesEngine = selectedEngine === 'All' || game.engine === selectedEngine;
+      const matchesGenre = selectedGenre === 'All' || (game.genres && game.genres.includes(selectedGenre));
+      
+      return matchesPlatform && matchesSearch && matchesVR && matchesInstalled && matchesLanguage && matchesEngine && matchesGenre;
     })
     .sort((a, b) => a.title.localeCompare(b.title)); // Ordinamento alfabetico
 
   const renderContent = () => {
     if (isLoading) {
-      // Scheletro UI per il caricamento
+      // Loader migliorato con progress
       return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          {Array.from({ length: 12 }).map((_, index) => (
-            <div key={index} className="bg-gray-800 rounded-lg aspect-[3/4] animate-pulse" />
-          ))}
+        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-2">🎮 Caricamento Libreria Giochi</h3>
+            <p className="text-muted-foreground">Connessione a Tauri e recupero metadati...</p>
+            <p className="text-xs text-muted-foreground mt-1">Se il caricamento è lento, premi F5 per forzare l'aggiornamento</p>
+          </div>
+          
+          {/* Scheletro griglia sotto il loader */}
+          <div className="w-full mt-8">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <div key={index} className="bg-gray-800/50 rounded-lg aspect-[3/4] animate-pulse" />
+              ))}
+            </div>
+          </div>
         </div>
       );
     }
@@ -99,12 +278,65 @@ export default function LibraryPage() {
       );
     }
 
-    // Griglia dei giochi filtrati
+    // Vista griglia o lista
+    if (viewMode === 'list') {
+      return (
+        <div className="space-y-2">
+          {filteredGames.map((game) => (
+            <Link key={game.id} href={`/games/${game.app_id}`}>
+              <div className="group flex items-center bg-gray-900 rounded-lg p-4 border border-transparent hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-purple-500/20 cursor-pointer">
+              {/* Thumbnail piccola */}
+              <div className="w-20 h-12 flex-shrink-0 rounded overflow-hidden bg-gray-800 mr-4">
+                {game.header_image ? (
+                  <Image
+                    src={game.header_image}
+                    alt={`Thumbnail di ${game.title}`}
+                    width={80}
+                    height={48}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-lg font-bold text-gray-600">
+                    {game.title ? game.title.charAt(0).toUpperCase() : '?'}
+                  </div>
+                )}
+              </div>
+              
+              {/* Informazioni gioco */}
+              <div className="flex-grow min-w-0">
+                <h3 className="text-lg font-semibold text-white truncate">{game.title}</h3>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <span className="text-sm text-gray-400">{game.platform}</span>
+                  {game.engine && <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">{game.engine}</span>}
+                  {game.genres && game.genres.map((genre, index) => (
+                    <span key={`${game.id}-genre-${index}`} className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">{genre}</span>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Badge e azioni */}
+              <div className="flex items-center gap-2 ml-4">
+                {game.supported_languages && game.supported_languages.length > 0 && (
+                  <LanguageFlags supportedLanguages={game.supported_languages} maxFlags={3} />
+                )}
+                {game.is_installed && <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full">✓ Installato</span>}
+                {game.is_vr && <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">🥽 VR</span>}
+                
+              </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      );
+    }
+
+    // Vista griglia (default)
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
         {filteredGames.map((game) => (
-          <Card key={game.id} className="group overflow-hidden rounded-lg bg-gray-900 border border-transparent hover:border-purple-500 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-purple-500/20">
-            <CardContent className="p-0 relative aspect-[3/4]">
+          <Link key={game.id} href={`/games/${game.app_id}`}>
+            <Card className="group overflow-hidden rounded-lg bg-gray-900 border border-transparent hover:border-purple-500 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-purple-500/20 cursor-pointer">
+            <CardContent className="p-0 relative aspect-[16/9]">
               {game.header_image ? (
                 <Image
                   src={game.header_image}
@@ -144,6 +376,7 @@ export default function LibraryPage() {
                   </div>
                 )}
               </div>
+              
             </CardContent>
             <CardFooter className="p-3 bg-black bg-opacity-60 backdrop-blur-sm absolute bottom-0 w-full transition-opacity duration-300 opacity-0 group-hover:opacity-100">
               <p className="text-sm font-semibold truncate text-white" title={game.title ?? 'Gioco senza nome'}>
@@ -151,6 +384,7 @@ export default function LibraryPage() {
               </p>
             </CardFooter>
           </Card>
+          </Link>
         ))}
       </div>
     );
@@ -205,7 +439,84 @@ export default function LibraryPage() {
         </button>
       </div>
 
-      <div className="mb-6">
+      {/* Filtri avanzati: Lingue, Engine e Generi */}
+      <div className="mb-4 space-y-3">
+        {/* Filtro Lingue */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-gray-400">🌍 Lingue:</span>
+          {languages.map(language => (
+            <button
+              key={language}
+              onClick={() => setSelectedLanguage(language)}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
+                selectedLanguage === language
+                  ? 'bg-green-600 text-white shadow-lg'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}>
+              {language === 'All' ? 'Tutte' : language}
+            </button>
+          ))}
+        </div>
+        
+        {/* Filtro Engine */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-gray-400">🎮 Engine:</span>
+          {engines.map(engine => (
+            <button
+              key={engine}
+              onClick={() => setSelectedEngine(engine)}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
+                selectedEngine === engine
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}>
+              {engine}
+            </button>
+          ))}
+        </div>
+        
+        {/* Filtro Generi */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-gray-400">🎯 Generi:</span>
+          {genres.map(genre => (
+            <button
+              key={genre}
+              onClick={() => setSelectedGenre(genre)}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
+                selectedGenre === genre
+                  ? 'bg-purple-600 text-white shadow-lg'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}>
+              {genre}
+            </button>
+          ))}
+        </div>
+        
+        {/* Vista Toggle */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-400">📋 Vista:</span>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
+              viewMode === 'grid'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}>
+            🔲 Griglia
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
+              viewMode === 'list'
+                ? 'bg-indigo-600 text-white shadow-lg'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            }`}>
+            📝 Lista
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-6 space-y-4">
         <input
           type="text"
           placeholder="Cerca per nome..."
@@ -213,7 +524,18 @@ export default function LibraryPage() {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+        
+        {/* Pulsante Force Refresh per nuovi acquisti */}
+        <div className="flex items-center justify-between bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-lg p-3">
+          <div className="text-sm text-gray-300">
+            <span className="font-semibold text-orange-400">🎯 Gioco appena acquistato non visibile?</span>
+            <br />
+            <span className="text-xs text-gray-400">Force Refresh bypassa tutta la cache per mostrare gli acquisti più recenti</span>
+          </div>
+          <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
+        </div>
       </div>
+
 
       {/* Contenuto principale (griglia, caricamento, errori) */}
       {renderContent()}

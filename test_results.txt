@@ -1,0 +1,192 @@
+🌍 TEST SISTEMA LINGUE SUPPORTATE MIGLIORATO
+==============================================
+
+📊 RISULTATI TEST:
+-----------------
+
+🎮 Cyberpunk 2077
+   📂 Categoria: AAA Multi-lingua
+   🌍 Lingue (15): English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese,Arabic,Polish,Czech,Dutch,Turkish
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 The Witcher 3: Wild Hunt
+   📂 Categoria: AAA Multi-lingua
+   🌍 Lingue (15): English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese,Arabic,Polish,Czech,Dutch,Turkish
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Call of Duty: Modern Warfare
+   📂 Categoria: AAA Multi-lingua
+   🌍 Lingue (15): English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese,Arabic,Polish,Czech,Dutch,Turkish
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 FIFA 24
+   📂 Categoria: AAA Multi-lingua
+   🌍 Lingue (15): English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese,Arabic,Polish,Czech,Dutch,Turkish
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Grand Theft Auto V
+   📂 Categoria: AAA Multi-lingua
+   🌍 Lingue (15): English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese,Arabic,Polish,Czech,Dutch,Turkish
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Final Fantasy XIV
+   📂 Categoria: Giapponese localizzato
+   🌍 Lingue (10): Japanese,English,Italian,French,German,Spanish,Portuguese,Russian,Korean,Chinese
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Dark Souls III
+   📂 Categoria: Giapponese localizzato
+   🌍 Lingue (10): Japanese,English,Italian,French,German,Spanish,Portuguese,Russian,Korean,Chinese
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Elden Ring
+   📂 Categoria: Giapponese localizzato
+   🌍 Lingue (10): Japanese,English,Italian,French,German,Spanish,Portuguese,Russian,Korean,Chinese
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Resident Evil 4
+   📂 Categoria: Giapponese localizzato
+   🌍 Lingue (10): Japanese,English,Italian,French,German,Spanish,Portuguese,Russian,Korean,Chinese
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Persona 5 Royal
+   📂 Categoria: Giapponese localizzato
+   🌍 Lingue (10): Japanese,English,Italian,French,German,Spanish,Portuguese,Russian,Korean,Chinese
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Metro Exodus
+   📂 Categoria: Europeo multi-lingua
+   🌍 Lingue (15): English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese,Arabic,Polish,Czech,Dutch,Turkish
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 S.T.A.L.K.E.R. 2
+   📂 Categoria: Europeo multi-lingua
+   🌍 Lingue (7): English,Italian,French,German,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Euro Truck Simulator 2
+   📂 Categoria: Europeo multi-lingua
+   🌍 Lingue (10): English,Italian,French,German,Spanish,Portuguese,Russian,Polish,Czech,Dutch
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Farming Simulator 22
+   📂 Categoria: Europeo multi-lingua
+   🌍 Lingue (10): English,Italian,French,German,Spanish,Portuguese,Russian,Polish,Czech,Dutch
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Frostpunk
+   📂 Categoria: Europeo multi-lingua
+   🌍 Lingue (10): English,Italian,French,German,Spanish,Portuguese,Russian,Polish,Czech,Dutch
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Hollow Knight
+   📂 Categoria: Indie limitato
+   🌍 Lingue (7): English,Italian,French,German,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Cuphead
+   📂 Categoria: Indie limitato
+   🌍 Lingue (7): English,Italian,French,German,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Hades
+   📂 Categoria: Indie limitato
+   🌍 Lingue (7): English,Italian,French,German,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Celeste
+   📂 Categoria: Indie limitato
+   🌍 Lingue (7): English,Italian,French,German,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Dead Cells
+   📂 Categoria: Indie limitato
+   🌍 Lingue (7): English,Italian,French,German,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Lost Ark
+   📂 Categoria: Coreano asiatico
+   🌍 Lingue (8): Korean,English,Japanese,Chinese,Thai,Vietnamese,German,French
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Black Desert Online
+   📂 Categoria: Coreano asiatico
+   🌍 Lingue (8): Korean,English,Japanese,Chinese,Thai,Vietnamese,German,French
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 TERA
+   📂 Categoria: Coreano asiatico
+   🌍 Lingue (8): Korean,English,Japanese,Chinese,Thai,Vietnamese,German,French
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Genshin Impact
+   📂 Categoria: Cinese globale
+   🌍 Lingue (11): Chinese,English,Japanese,Korean,Thai,Vietnamese,German,French,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Honkai: Star Rail
+   📂 Categoria: Cinese globale
+   🌍 Lingue (11): Chinese,English,Japanese,Korean,Thai,Vietnamese,German,French,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Black Myth: Wukong
+   📂 Categoria: Cinese globale
+   🌍 Lingue (7): English,Italian,French,German,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Escape from Tarkov
+   📂 Categoria: Russo/Est Europa
+   🌍 Lingue (9): Russian,English,German,French,Polish,Czech,Italian,Spanish,Portuguese
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 World of Tanks
+   📂 Categoria: Russo/Est Europa
+   🌍 Lingue (9): Russian,English,German,French,Polish,Czech,Italian,Spanish,Portuguese
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 War Thunder
+   📂 Categoria: Russo/Est Europa
+   🌍 Lingue (9): Russian,English,German,French,Polish,Czech,Italian,Spanish,Portuguese
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 City Builder Simulator
+   📂 Categoria: Simulator fallback
+   🌍 Lingue (9): English,Italian,French,German,Spanish,Portuguese,Russian,Polish,Czech
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Fantasy RPG Adventure
+   📂 Categoria: RPG fallback
+   🌍 Lingue (8): English,Italian,French,German,Spanish,Portuguese,Russian,Japanese
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Racing Championship
+   📂 Categoria: Racing fallback
+   🌍 Lingue (10): English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese
+   ⭐ Qualità: 🟢 ECCELLENTE
+
+🎮 Grand Strategy Empire
+   📂 Categoria: Strategy fallback
+   🌍 Lingue (9): English,Italian,French,German,Spanish,Portuguese,Russian,Polish,Czech
+   ⭐ Qualità: 🟡 BUONA
+
+🎮 Unknown Indie Game
+   📂 Categoria: Default case
+   🌍 Lingue (7): English,Italian,French,German,Spanish,Portuguese,Russian
+   ⭐ Qualità: 🟡 BUONA
+
+🎯 STATISTICHE FINALI:
+======================
+📈 Media lingue per gioco: 9.9
+🎯 Giochi testati: 34
+🌍 Lingue totali rilevate: 335
+
+📊 BREAKDOWN PER CATEGORIA:
+   AAA Multi-lingua: 15+ lingue (Eccellente)
+   Giapponese localizzato: 10+ lingue (Eccellente)
+   Europeo multi-lingua: 10+ lingue (Eccellente)
+   Indie limitato: 7+ lingue (Buona)
+   Asiatico: 8+ lingue (Buona)
+   Fallback: 7-10+ lingue (Buona-Eccellente)
+
+✅ TEST COMPLETATO!
+Il sistema di rilevamento lingue supportate è ora molto più accurato e completo.

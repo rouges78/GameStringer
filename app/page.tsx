@@ -4,39 +4,52 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   Gamepad2, 
-  Languages, 
-  Search,
-  Download,
-  Box,
   Clock,
   RefreshCw,
-  Store
+  Box,
+  Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import { ScanButton } from '@/components/scan-button';
+import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
 import { motion } from 'framer-motion';
 import { invoke } from '@tauri-apps/api/core';
+import { cacheManager } from '@/lib/cache-manager';
+
+// 🔧 FIX: Interfacce TypeScript proper invece di any
+
+interface ActionButtonProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  href: string;
+}
+
+interface RecentActivityProps {
+  color: string;
+  text: string;
+  time: string;
+}
+
+interface StoreStats {
+  connected: boolean;
+  games: number;
+}
+
+interface DashboardStats {
+  totalGames: number;
+  installedGames: number;
+  translations: number;
+  patches: number;
+  lastScan: Date | null;
+  storeStats: Record<string, StoreStats>;
+}
 
 // Componenti UI riutilizzabili
-const StatCard = ({ icon: Icon, title, value, change, progress, color }: any) => (
-  <Card className="bg-card/50 backdrop-blur-sm">
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-      <Icon className={`h-5 w-5 ${color}`} />
-    </CardHeader>
-    <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
-      {change && <p className="text-xs text-muted-foreground">{change}</p>}
-      {progress !== undefined && <Progress value={progress} className="mt-2 h-2" />}
-    </CardContent>
-  </Card>
-);
 
-const ActionButton = ({ icon: Icon, label, href }: any) => (
+const ActionButton = ({ icon: Icon, label, href }: ActionButtonProps) => (
   <Button variant="ghost" className="w-full justify-start" asChild>
     <Link href={href}>
       <Icon className="mr-2 h-4 w-4" />
@@ -45,7 +58,7 @@ const ActionButton = ({ icon: Icon, label, href }: any) => (
   </Button>
 );
 
-const RecentActivityItem = ({ color, text, time }: any) => (
+const RecentActivityItem = ({ color, text, time }: RecentActivityProps) => (
   <div className="flex items-start">
     <div className={`mt-1.5 h-2 w-2 rounded-full ${color} mr-3 flex-shrink-0`}></div>
     <div className="flex-grow">
@@ -57,12 +70,12 @@ const RecentActivityItem = ({ color, text, time }: any) => (
 
 // Pagina Dashboard
 export default function Dashboard() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     totalGames: 0,
     installedGames: 0,
     translations: 0,
     patches: 0,
-    lastScan: null as Date | null,
+    lastScan: null,
     storeStats: {
       steam: { connected: false, games: 0 },
       epic: { connected: false, games: 0 },
@@ -74,7 +87,7 @@ export default function Dashboard() {
     }
   });
   const [loading, setLoading] = useState(true);
-  const [activities, setActivities] = useState<any[]>([]);
+  const [activities, setActivities] = useState<RecentActivityProps[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -84,8 +97,12 @@ export default function Dashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Recupera giochi da tutti gli store usando comando Tauri aggiornato
-      const games = await invoke('get_games') as any[];
+      // 🚀 Usa cache per migliorare performance
+      const games = await cacheManager.cached(
+        'dashboard-games',
+        () => invoke('get_games') as Promise<any[]>,
+        2 * 60 * 1000 // 2 minuti
+      );
       
       // Recupera statistiche traduzioni salvate
       const savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
@@ -94,7 +111,7 @@ export default function Dashboard() {
       // Test connessioni store per statistiche reali
       const storeTests = await Promise.allSettled([
         invoke('test_steam_connection').then(result => ({ store: 'steam', result, connected: true })).catch(() => ({ store: 'steam', result: '', connected: false })),
-        invoke('test_epic_connection').then(result => ({ store: 'epic', result, connected: true })).catch(() => ({ store: 'epic', result: '', connected: false })),
+        invoke('test_epic_connection').then(result => ({ store: 'epic', result, connected: result.connected || true })).catch(() => ({ store: 'epic', result: '', connected: false })),
         invoke('test_gog_connection').then(result => ({ store: 'gog', result, connected: true })).catch(() => ({ store: 'gog', result: '', connected: false })),
         invoke('test_origin_connection').then(result => ({ store: 'origin', result, connected: true })).catch(() => ({ store: 'origin', result: '', connected: false })),
         invoke('test_ubisoft_connection').then(result => ({ store: 'ubisoft', result, connected: true })).catch(() => ({ store: 'ubisoft', result: '', connected: false })),
@@ -103,18 +120,29 @@ export default function Dashboard() {
       ]);
       
       // Processa risultati store
-      const storeStats: any = {};
+      const storeStats: Record<string, StoreStats> = {};
       storeTests.forEach((test, index) => {
         const stores = ['steam', 'epic', 'gog', 'origin', 'ubisoft', 'battlenet', 'itchio'];
         const storeName = stores[index];
         
         if (test.status === 'fulfilled') {
           const data = test.value;
-          const gamesMatch = data.result.match(/(\d+) giochi/);
-          const gamesCount = gamesMatch ? parseInt(gamesMatch[1]) : 0;
+          let gamesCount = 0;
+          let connected = data.connected;
+          
+          // 🔄 Gestisce sia formato stringa che JSON
+          if (typeof data.result === 'string') {
+            // Formato vecchio: stringa da parsare
+            const gamesMatch = data.result.match(/(\d+) giochi/);
+            gamesCount = gamesMatch ? parseInt(gamesMatch[1]) : 0;
+          } else if (typeof data.result === 'object' && data.result !== null) {
+            // Formato nuovo: oggetto JSON (Epic Games)
+            gamesCount = data.result.games_count || 0;
+            connected = data.result.connected || false;
+          }
           
           storeStats[storeName] = {
-            connected: data.connected,
+            connected: connected,
             games: gamesCount
           };
         } else {
@@ -180,147 +208,85 @@ export default function Dashboard() {
     return `${days} ${days === 1 ? 'giorno' : 'giorni'} fa`;
   };
 
-  const installedProgress = stats.totalGames > 0 ? (stats.installedGames / stats.totalGames) * 100 : 0;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Panoramica del sistema di traduzione giochi</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 p-4 sm:p-6 lg:p-8 space-y-8">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div className="relative">
+          <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-lg blur opacity-25 animate-pulse" />
+          <div className="relative bg-slate-900/80 rounded-lg p-4 border border-purple-500/20">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              Neural Dashboard
+            </h1>
+            <p className="text-gray-400 font-medium">Sistema di traduzione avanzato con intelligenza artificiale</p>
+          </div>
         </div>
-        <ScanButton />
-      </div>
+        <div className="flex gap-3">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ScanButton />
+          </motion.div>
+          <ForceRefreshButton onRefreshComplete={(games) => {
+            console.log('🔄 Dashboard: Force refresh completed, games updated');
+            // Qui potresti aggiornare le statistiche della dashboard se necessario
+          }} />
+        </div>
+      </motion.div>
 
-      { /* Sezione Statistiche */ }
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <StatCard 
-            icon={Gamepad2} 
-            title="Giochi Totali" 
-            value={loading ? '...' : stats.totalGames} 
-            change={stats.totalGames > 0 ? 'Da Steam' : 'Nessun gioco trovato'} 
-            color="text-primary" 
-          />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <StatCard 
-            icon={Download} 
-            title="Giochi Installati" 
-            value={loading ? '...' : stats.installedGames} 
-            progress={installedProgress} 
-            color="text-sky-400" 
-          />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <StatCard 
-            icon={Languages} 
-            title="Traduzioni" 
-            value={loading ? '...' : stats.translations} 
-            change={stats.translations > 0 ? 'Salvate localmente' : 'Nessuna traduzione'} 
-            color="text-emerald-400" 
-          />
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <StatCard 
-            icon={Box} 
-            title="Patch Create" 
-            value={loading ? '...' : stats.patches} 
-            change={stats.patches > 0 ? 'Pronte all\'uso' : 'Nessuna patch'} 
-            color="text-amber-400" 
-          />
-        </motion.div>
-      </div>
 
-      { /* Sezione Store Statistics - Design Migliorato */ }
+      { /* Hero Section - Design Futuristico */ }
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
+        className="relative overflow-hidden"
       >
-        <Card className="bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm border-border/50">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-3 text-lg">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Store className="h-5 w-5 text-primary" />
-              </div>
-              Stato Store
-              <Badge variant="outline" className="ml-auto">
-                {Object.values(stats.storeStats).filter((store: any) => store.connected).length} / {Object.keys(stats.storeStats).length} connessi
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {Object.entries(stats.storeStats).map(([storeName, storeData]: [string, any]) => {
-                const storeIcons: { [key: string]: any } = {
-                  steam: '🎮',
-                  epic: '🎯', 
-                  gog: '🏆',
-                  origin: '🎲',
-                  ubisoft: '⚡',
-                  battlenet: '⚔️',
-                  itchio: '🎨'
-                };
-                
-                return (
-                  <motion.div 
-                    key={storeName}
-                    whileHover={{ scale: 1.02 }}
-                    className={`p-4 rounded-xl border transition-all duration-200 ${
-                      storeData.connected 
-                        ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800' 
-                        : 'bg-gray-50 border-gray-200 dark:bg-gray-900/20 dark:border-gray-700'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{storeIcons[storeName] || '🎮'}</span>
-                        <span className="font-semibold capitalize text-sm">{storeName}</span>
-                      </div>
-                      <div className={`h-2 w-2 rounded-full ${
-                        storeData.connected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
-                      }`} />
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-foreground">{storeData.games}</div>
-                      <div className="text-xs text-muted-foreground">giochi</div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-            
-            { /* Statistiche Aggregate */ }
-            <div className="mt-6 p-4 rounded-lg bg-muted/30 border border-border/50">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-primary">
-                    {Object.values(stats.storeStats).reduce((total: number, store: any) => total + store.games, 0)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Totale Giochi</div>
+        <Card className="bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-cyan-900/20 backdrop-blur-xl border border-purple-500/20 shadow-2xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-cyan-600/10 animate-pulse" />
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500" />
+          
+          <CardContent className="relative p-6">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+              <div className="text-center lg:text-left">
+                <p className="text-lg text-gray-300 mb-4 max-w-2xl leading-relaxed">
+                  Sistema di traduzione intelligente con AI per giochi multi-piattaforma
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-400/30 px-3 py-1">
+                    🤖 AI-Powered
+                  </Badge>
+                  <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 px-3 py-1">
+                    🎮 Multi-Platform
+                  </Badge>
+                  <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-400/30 px-3 py-1">
+                    ⚡ Real-Time
+                  </Badge>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-emerald-500">
-                    {Object.values(stats.storeStats).filter((store: any) => store.connected).length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Store Attivi</div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-400/20">
+                  <div className="text-2xl font-bold text-purple-400">{stats.totalGames}</div>
+                  <div className="text-xs text-gray-400">Giochi Rilevati</div>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20">
+                  <div className="text-2xl font-bold text-blue-400">{stats.translations}</div>
+                  <div className="text-xs text-gray-400">Traduzioni</div>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500/10 to-emerald-500/10 border border-cyan-400/20">
+                  <div className="text-2xl font-bold text-cyan-400">{stats.installedGames}</div>
+                  <div className="text-xs text-gray-400">Installati</div>
+                </div>
+                <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-purple-500/10 border border-emerald-400/20">
+                  <div className="text-2xl font-bold text-emerald-400">{stats.patches}</div>
+                  <div className="text-xs text-gray-400">Patch</div>
                 </div>
               </div>
             </div>
@@ -328,75 +294,114 @@ export default function Dashboard() {
         </Card>
       </motion.div>
 
-      { /* Sezione Principale */ }
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="lg:col-span-2 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Attività Recenti</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : activities.length > 0 ? (
-              activities.map((activity, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <RecentActivityItem {...activity} />
-                </motion.div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <p>Nessuna attività recente</p>
-                <p className="text-sm mt-2">Inizia traducendo un gioco!</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card className="bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Azioni Rapide</CardTitle>
+      { /* Sezione Principale - Design Futuristico */ }
+      <div className="grid gap-8 md:grid-cols-3">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.7 }}
+          className="md:col-span-2"
+        >
+          <Card className="bg-gradient-to-br from-slate-800/30 via-slate-900/30 to-slate-800/30 backdrop-blur-xl border border-slate-600/30 shadow-2xl">
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-xl text-white">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20">
+                  <Clock className="h-5 w-5 text-cyan-400" />
+                </div>
+                Neural Activity Stream
+                <div className="ml-auto flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-sm text-gray-400">Live</span>
+                </div>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1">
-              <ActionButton icon={Gamepad2} label="Gestisci Giochi" href="/games" />
-              <ActionButton icon={Clock} label="Injekt-Translator" href="/realtime" />
-              <ActionButton icon={Box} label="Crea Patch" href="/patches" />
+            <CardContent className="space-y-4">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-full border-4 border-slate-700 border-t-cyan-500 animate-spin" />
+                    <div className="absolute inset-0 h-12 w-12 rounded-full border-4 border-transparent border-t-purple-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                  </div>
+                </div>
+              ) : activities.length > 0 ? (
+                activities.map((activity, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="group p-4 rounded-xl bg-gradient-to-r from-slate-800/30 to-slate-700/30 border border-slate-600/20 hover:border-purple-500/30 transition-all duration-300"
+                  >
+                    <RecentActivityItem {...activity} />
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <div className="mb-4 p-4 rounded-full bg-gradient-to-br from-purple-500/10 to-blue-500/10 mx-auto w-fit">
+                    <Clock className="h-8 w-8 text-gray-500" />
+                  </div>
+                  <p className="text-gray-400 text-lg mb-2">Nessuna attività rilevata</p>
+                  <p className="text-sm text-gray-500">Il sistema è in attesa di operazioni...</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8 }}
+          className="md:col-span-1"
+        >
+          <Card className="bg-gradient-to-br from-slate-800/30 via-slate-900/30 to-slate-800/30 backdrop-blur-xl border border-slate-600/30 shadow-2xl">
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-lg text-white">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20">
+                  <Gamepad2 className="h-5 w-5 text-purple-400" />
+                </div>
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="ghost" size="sm" className="w-full justify-start h-8 bg-gradient-to-r from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20 border border-purple-500/20 text-white transition-all duration-300 text-xs" asChild>
+                  <Link href="/library">
+                    <Gamepad2 className="mr-2 h-3 w-3 text-purple-400" />
+                    Libreria
+                  </Link>
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="ghost" size="sm" className="w-full justify-start h-8 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border border-blue-500/20 text-white transition-all duration-300 text-xs" asChild>
+                  <Link href="/injekt-translator">
+                    <Clock className="mr-2 h-3 w-3 text-blue-400" />
+                    Translator
+                  </Link>
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="ghost" size="sm" className="w-full justify-start h-8 bg-gradient-to-r from-cyan-500/10 to-emerald-500/10 hover:from-cyan-500/20 hover:to-emerald-500/20 border border-cyan-500/20 text-white transition-all duration-300 text-xs" asChild>
+                  <Link href="/patches">
+                    <Box className="mr-2 h-3 w-3 text-cyan-400" />
+                    Patches
+                  </Link>
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button variant="ghost" size="sm" className="w-full justify-start h-8 bg-gradient-to-r from-emerald-500/10 to-purple-500/10 hover:from-emerald-500/20 hover:to-purple-500/20 border border-emerald-500/20 text-white transition-all duration-300 text-xs" asChild>
+                  <Link href="/settings">
+                    <Settings className="mr-2 h-3 w-3 text-emerald-400" />
+                    Settings
+                  </Link>
+                </Button>
+              </motion.div>
             </CardContent>
           </Card>
 
-          <Card className="bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle>Stato Sistema</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">AI Engine</span>
-                <Badge variant="outline" className="border-green-500/50 text-green-400">Online</Badge>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Steam API</span>
-                <Badge variant="outline" className="border-green-500/50 text-green-400">Connesso</Badge>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Giochi Rilevati</span>
-                <span className="font-medium">{stats.totalGames}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Ultima Scansione</span>
-                <span className="text-muted-foreground">
-                  {stats.lastScan ? getRelativeTime(stats.lastScan) : 'Mai'}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -248,6 +248,14 @@ export default function StoreManagerPage() {
       return;
     }
 
+    // Logica specifica per Epic Games
+    if (storeId === 'epic_games') {
+      // Epic Games non ha autenticazione separata, fai solo un refresh
+      toast.info('Epic Games rileva automaticamente giochi installati e posseduti...');
+      await refreshStoreStatus(storeId);
+      return;
+    }
+
     // Per altri store, usa la logica esistente
     setStoreStatuses(prev => ({
       ...prev,
@@ -406,6 +414,155 @@ export default function StoreManagerPage() {
       toast.error('Errore connessione Steam. Verifica API Key e Steam ID.');
     } finally {
       setSteamLoading(false);
+    }
+  };
+
+  const handleEpicWebSearch = async () => {
+    try {
+      toast.info('🌐 Ricerca giochi Epic Games online...');
+      
+      const result = await invoke('get_epic_games_web');
+      console.log('Epic Web Search Result:', result);
+      
+      if (result.success && result.games.length > 0) {
+        toast.success(`🎮 Trovati ${result.games.length} giochi Epic via web!`);
+        
+        // Aggiorna il conteggio Epic Games
+        setStoreStatuses(prev => ({
+          ...prev,
+          epic_games: {
+            ...prev.epic_games,
+            connected: true,
+            gamesCount: result.games.length,
+            lastChecked: new Date(),
+            error: undefined
+          }
+        }));
+        
+        // Mostra alcuni giochi trovati
+        const gamesList = result.games.slice(0, 5).join(', ');
+        toast.info(`Giochi trovati: ${gamesList}${result.games.length > 5 ? '...' : ''}`);
+        
+      } else {
+        toast.warning('Nessun gioco Epic trovato online. Prova metodi diversi.');
+        console.log('Metodi provati:', result.methods_tried);
+      }
+      
+    } catch (error) {
+      console.error('Errore ricerca Epic Games web:', error);
+      toast.error('Errore durante la ricerca online Epic Games');
+    }
+  };
+
+  const handleEpicLegendarySearch = async () => {
+    try {
+      toast.info('🚀 Epic Games Legendary Method - Ricerca avanzata...');
+      
+      const result = await invoke('get_epic_games_by_account_id', { accountId: 'legendary-method' });
+      console.log('Epic Legendary Method Result:', result);
+      
+      if (result.success && result.games_count > 0) {
+        toast.success(`🎮 Trovati ${result.games_count} giochi Epic con metodo Legendary!`);
+        
+        // Aggiorna il conteggio Epic Games
+        setStoreStatuses(prev => ({
+          ...prev,
+          epic_games: {
+            ...prev.epic_games,
+            connected: true,
+            gamesCount: result.games_count,
+            lastChecked: new Date(),
+            error: undefined
+          }
+        }));
+        
+        // Mostra alcuni giochi trovati
+        const gamesList = result.games.slice(0, 5).join(', ');
+        toast.info(`Giochi trovati: ${gamesList}${result.games.length > 5 ? '...' : ''}`);
+        
+        // Mostra metodi usati
+        if (result.methods_tried && result.methods_tried.length > 0) {
+          console.log('Metodi provati:', result.methods_tried);
+          toast.info(`Metodi utilizzati: ${result.methods_tried.join(', ')}`);
+        }
+        
+      } else {
+        toast.warning('Nessun gioco Epic trovato con il metodo Legendary.');
+        console.log('Metodi provati:', result.methods_tried);
+        
+        if (result.methods_tried && result.methods_tried.length > 0) {
+          toast.info(`Metodi provati: ${result.methods_tried.join(', ')}`);
+        }
+      }
+      
+    } catch (error) {
+      console.error('Errore Epic Games Legendary Method:', error);
+      toast.error('Errore durante la ricerca con metodo Legendary');
+    }
+  };
+
+  const handleResetCredentials = async (storeId: string) => {
+    const store = stores.find(s => s.id === storeId);
+    if (!store) {
+      toast.error(`Store ${storeId} non trovato`);
+      return;
+    }
+
+    setStoreStatuses(prev => ({
+      ...prev,
+      [storeId]: { ...prev[storeId], loading: true }
+    }));
+
+    try {
+      toast.info(`Reset credenziali ${store.name} in corso...`);
+      
+      // 1. Gestione specifica per Steam (mostra il modal)
+      if (storeId === 'steam') {
+        // Prima disconnetti Steam
+        await handleDisconnect(storeId);
+        
+        // Aspetta un momento
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Mostra il modal per riconnessione
+        setShowSteamModal(true);
+        setSteamApiKey(''); // Pulisci campi
+        setSteamId('');
+        
+        toast.success('Steam resettato! Inserisci nuove credenziali nel modal.');
+        return; // Non fare altro per Steam
+      }
+      
+      // 2. Per altri store, disconnetti e ricontrolla
+      await handleDisconnect(storeId);
+      
+      // 3. Aspetta un momento per assicurarsi che la disconnessione sia completata
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 4. Esegui un force refresh del test
+      await refreshStoreStatus(storeId);
+      
+      // 4. Per Epic Games, prova anche a pulire eventuali cache locali
+      if (storeId === 'epic_games') {
+        try {
+          // Comando per pulire cache Epic (se implementato)
+          await invoke('clear_epic_cache');
+          console.log('Cache Epic Games pulita');
+        } catch (e) {
+          console.log('Nessuna cache Epic da pulire:', e);
+        }
+      }
+      
+      toast.success(`${store.name} resettato e ricontrollato!`);
+      
+    } catch (error) {
+      console.error(`Errore reset ${store.name}:`, error);
+      toast.error(`Errore durante il reset di ${store.name}`);
+      
+      setStoreStatuses(prev => ({
+        ...prev,
+        [storeId]: { ...prev[storeId], loading: false }
+      }));
     }
   };
 
@@ -579,14 +736,52 @@ export default function StoreManagerPage() {
                   {/* Pulsanti */}
                   <div className="space-y-2">
                     {status.connected ? (
-                      <Button 
-                        onClick={() => handleDisconnect(store.id)} 
-                        disabled={status.loading}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white"
-                      >
-                        <PowerOff className="h-4 w-4 mr-2" />
-                        Disconnetti
-                      </Button>
+                      <>
+                        <Button 
+                          onClick={() => handleDisconnect(store.id)} 
+                          disabled={status.loading}
+                          className="w-full bg-red-600 hover:bg-red-700 text-white"
+                        >
+                          <PowerOff className="h-4 w-4 mr-2" />
+                          Disconnetti
+                        </Button>
+                        
+                        {/* Pulsante Reset Credenziali per store connessi */}
+                        <Button 
+                          onClick={() => handleResetCredentials(store.id)} 
+                          disabled={status.loading}
+                          variant="outline"
+                          className="w-full border-yellow-600 text-yellow-300 hover:bg-yellow-900/30"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Reset & Ricontrolla
+                        </Button>
+                        
+                        {/* Pulsante metodi web solo per Epic Games */}
+                        {store.id === 'epic_games' && (
+                          <>
+                            <Button 
+                              onClick={() => handleEpicWebSearch()} 
+                              disabled={status.loading}
+                              variant="outline"
+                              className="w-full border-cyan-600 text-cyan-300 hover:bg-cyan-900/30"
+                            >
+                              <Power className="h-4 w-4 mr-2" />
+                              Cerca Online
+                            </Button>
+                            
+                            <Button 
+                              onClick={() => handleEpicLegendarySearch()} 
+                              disabled={status.loading}
+                              variant="outline"
+                              className="w-full border-purple-600 text-purple-300 hover:bg-purple-900/30"
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Metodo Legendary
+                            </Button>
+                          </>
+                        )}
+                      </>
                     ) : (
                       <Button 
                         onClick={() => handleConnect(store.id)} 
@@ -598,16 +793,16 @@ export default function StoreManagerPage() {
                       </Button>
                     )}
                     
-                    {/* Mostra pulsante Test solo per store diversi da Steam o se Steam non è connesso */}
-                    {(store.id !== 'steam' || !status.connected) && (
+                    {/* Pulsante Verifica Stato per store non connessi */}
+                    {!status.connected && !status.manuallyDisconnected && (
                       <Button 
                         onClick={() => refreshStoreStatus(store.id)} 
-                        disabled={status.loading || status.manuallyDisconnected}
+                        disabled={status.loading}
                         variant="outline"
                         className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
                       >
                         <RefreshCw className={`h-4 w-4 mr-2 ${status.loading ? 'animate-spin' : ''}`} />
-                        Test
+                        Verifica Stato
                       </Button>
                     )}
                   </div>

@@ -37,6 +37,10 @@ once_cell = "1.19"
 regex = "1.10"
 log = "0.4"
 urlencoding = "2.1"
+# Dipendenze per encryption sicura
+aes-gcm = "0.10"
+base64 = "0.21"
+rand = "0.8"
 
 [features]
 default = ["custom-protocol"]

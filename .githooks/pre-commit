@@ -1,0 +1,29 @@
+#!/bin/sh
+# GameStringer Pre-commit Hook - Auto Version Management
+
+echo "🚀 GameStringer Pre-commit Hook"
+
+# Controlla se ci sono modifiche nei file di versioning
+if git diff --cached --name-only | grep -qE "(version\.json|package\.json)"; then
+    echo "⚠️  Version files modificati, skip auto-increment"
+    exit 0
+fi
+
+# Auto-increment build number solo se ci sono modifiche al codice
+if git diff --cached --name-only | grep -qE "\.(ts|tsx|js|jsx|rs|toml)$"; then
+    echo "📦 Incremento build number automatico..."
+    
+    # Increment build number
+    node scripts/version-manager.js build
+    
+    # Aggiungi i file modificati al commit
+    git add version.json
+    git add package.json 2>/dev/null || true
+    git add CHANGELOG.md 2>/dev/null || true
+    
+    echo "✅ Build number incrementato automaticamente"
+else
+    echo "📄 Solo modifiche non-code, skip version increment"
+fi
+
+exit 0

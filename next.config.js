@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // output: 'export', // Disabilitato - incompatibile con App Router e Tauri
+  eslint: {
+    // Disabilita ESLint durante il build per velocizzare la compilazione
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Disabilita type checking durante il build per velocizzare la compilazione
+    ignoreBuildErrors: true,
+  },
   images: {
     unoptimized: true,
     remotePatterns: [

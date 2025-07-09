@@ -70,7 +70,7 @@ async fn get_steam_installed_games() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
     // Find Steam path from registry
-    let steam_path = find_steam_path_from_registry().await
+    let steam_path = find_steam_path_from_registry()
         .ok_or("Steam not found in registry")?;
     
     let steamapps_path = Path::new(&steam_path).join("steamapps");
@@ -120,7 +120,7 @@ async fn parse_acf_file(file_path: &Path) -> Result<InstalledGame, String> {
     }
     
     // Construct full path
-    let steam_path = find_steam_path_from_registry().await
+    let steam_path = find_steam_path_from_registry()
         .ok_or("Steam path not found")?;
     let game_path = Path::new(&steam_path)
         .join("steamapps")
@@ -159,7 +159,12 @@ pub async fn get_epic_installed_games() -> Result<Vec<InstalledGame>, String> {
             if let Some(file_name) = entry.file_name().to_str() {
                 if file_name.ends_with(".item") {
                     if let Ok(game) = parse_epic_manifest(&entry.path()).await {
-                        games.push(game);
+                        // 🚫 FILTRO: Escludi Unreal Engine dal conteggio giochi
+                        if !is_unreal_engine(&game) {
+                            games.push(game);
+                        } else {
+                            println!("[EPIC] 🔧 Escluso dal conteggio: {} (Unreal Engine)", game.name);
+                        }
                     }
                 }
             }
@@ -167,6 +172,44 @@ pub async fn get_epic_installed_games() -> Result<Vec<InstalledGame>, String> {
     }
     
     Ok(games)
+}
+
+// 🔧 Funzione per rilevare se un'installazione Epic è Unreal Engine
+fn is_unreal_engine(game: &InstalledGame) -> bool {
+    let name_lower = game.name.to_lowercase();
+    let id_lower = game.id.to_lowercase();
+    let path_lower = game.path.to_lowercase();
+    
+    // Rileva varie versioni di Unreal Engine
+    let unreal_indicators = [
+        "unreal engine", "unrealengine", "unreal_engine",
+        "ue4", "ue5", "ue_4", "ue_5",
+        "unreal editor", "unrealed",
+        "engine\\binaries", "engine/binaries",
+        "unrealtournament", // Anche Unreal Tournament può essere considerato tool
+    ];
+    
+    for indicator in &unreal_indicators {
+        if name_lower.contains(indicator) || 
+           id_lower.contains(indicator) || 
+           path_lower.contains(indicator) {
+            return true;
+        }
+    }
+    
+    // Controlli specifici per AppName Epic
+    if game.id.starts_with("epic_") {
+        let app_name = &game.id[5..]; // Rimuove "epic_" prefix
+        let app_name_lower = app_name.to_lowercase();
+        
+        if app_name_lower.starts_with("ue") || 
+           app_name_lower.contains("unreal") ||
+           app_name_lower.contains("editor") {
+            return true;
+        }
+    }
+    
+    false
 }
 
 async fn parse_epic_manifest(file_path: &Path) -> Result<InstalledGame, String> {
@@ -246,7 +289,7 @@ async fn parse_gog_registry_entry(game_key: &RegKey, game_id: &str) -> Result<In
     })
 }
 
-async fn find_steam_path_from_registry() -> Option<String> {
+pub fn find_steam_path_from_registry() -> Option<String> {
     // Try 64-bit registry first
     if let Some(path) = find_steam_path_in_hive(HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam") {
         return Some(path);

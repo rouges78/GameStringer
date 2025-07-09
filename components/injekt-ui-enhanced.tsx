@@ -276,98 +276,135 @@ export function InjektUIEnhanced() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header con statistiche */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Globe className="h-4 w-4" />
+    <div className="space-y-8">
+      {/* Header con statistiche futuristiche */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="relative bg-black/20 backdrop-blur-xl border-purple-500/20 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5" />
+          <CardHeader className="pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-200">
+              <div className="p-1.5 rounded-full bg-purple-500/20 border border-purple-400/30">
+                <Globe className="h-4 w-4 text-purple-400" />
+              </div>
               Traduzioni Totali
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{injectionStats?.totalTranslations || 0}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              {injectionStats?.totalTranslations || 0}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
               {injectionStats?.customTranslations || 0} personalizzate
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Zap className="h-4 w-4" />
+        <Card className="relative bg-black/20 backdrop-blur-xl border-blue-500/20 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5" />
+          <CardHeader className="pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-200">
+              <div className="p-1.5 rounded-full bg-blue-500/20 border border-blue-400/30">
+                <Zap className="h-4 w-4 text-blue-400" />
+              </div>
               Injection Totali
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{injectionStats?.totalInjections || 0}</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              {injectionStats?.totalInjections || 0}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
               {isInjecting ? `+${injectionCount} questa sessione` : 'Non attivo'}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Database className="h-4 w-4" />
+        <Card className="relative bg-black/20 backdrop-blur-xl border-cyan-500/20 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-emerald-500/5" />
+          <CardHeader className="pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-200">
+              <div className="p-1.5 rounded-full bg-cyan-500/20 border border-cyan-400/30">
+                <Database className="h-4 w-4 text-cyan-400" />
+              </div>
               Indirizzi Memoria
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{injectionStats?.memoryAddresses || 0}</div>
-            <p className="text-xs text-muted-foreground">Posizioni salvate</p>
+          <CardContent className="relative z-10">
+            <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
+              {injectionStats?.memoryAddresses || 0}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Posizioni salvate</p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Clock className="h-4 w-4" />
+        <Card className="relative bg-black/20 backdrop-blur-xl border-emerald-500/20 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-purple-500/5" />
+          <CardHeader className="pb-2 relative z-10">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-200">
+              <div className="p-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30">
+                <Clock className="h-4 w-4 text-emerald-400" />
+              </div>
               Ultimo Aggiornamento
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-sm font-medium">
+          <CardContent className="relative z-10">
+            <div className="text-lg font-medium text-white">
               {injectionStats?.lastUpdated 
                 ? new Date(injectionStats.lastUpdated).toLocaleTimeString()
                 : 'Mai'}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-400 mt-1 truncate">
               {selectedProcess ? selectedProcess.name : 'Nessun processo'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs principali */}
+      {/* Tabs principali futuristici */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="injection">Injection</TabsTrigger>
-          <TabsTrigger value="translations">Traduzioni</TabsTrigger>
-          <TabsTrigger value="profiles">Profili</TabsTrigger>
-          <TabsTrigger value="stats">Statistiche</TabsTrigger>
-          <TabsTrigger value="overlay">Overlay</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 bg-black/20 backdrop-blur-xl border-white/10 h-14">
+          <TabsTrigger value="injection" className="data-[state=active]:bg-purple-500/20 data-[state=active]:text-white data-[state=active]:border-purple-400/30 transition-all duration-300">
+            <Zap className="h-4 w-4 mr-2" />
+            Injection
+          </TabsTrigger>
+          <TabsTrigger value="translations" className="data-[state=active]:bg-blue-500/20 data-[state=active]:text-white data-[state=active]:border-blue-400/30 transition-all duration-300">
+            <Globe className="h-4 w-4 mr-2" />
+            Traduzioni
+          </TabsTrigger>
+          <TabsTrigger value="profiles" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-white data-[state=active]:border-cyan-400/30 transition-all duration-300">
+            <Database className="h-4 w-4 mr-2" />
+            Profili
+          </TabsTrigger>
+          <TabsTrigger value="stats" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-white data-[state=active]:border-emerald-400/30 transition-all duration-300">
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Statistiche
+          </TabsTrigger>
+          <TabsTrigger value="overlay" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-white data-[state=active]:border-orange-400/30 transition-all duration-300">
+            <Settings className="h-4 w-4 mr-2" />
+            Overlay
+          </TabsTrigger>
         </TabsList>
 
         {/* Tab Injection */}
         <TabsContent value="injection" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Processi Rilevati</CardTitle>
+          <Card className="relative bg-black/20 backdrop-blur-xl border-purple-500/20 shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5" />
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Zap className="h-5 w-5 text-purple-400" />
+                Processi Rilevati
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               <ScrollArea className="h-[300px]">
                 <div className="space-y-2">
                   {processes.map((process) => (
                     <div
                       key={process.pid}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                      className={`p-3 rounded-lg border cursor-pointer transition-all duration-300 ${
                         selectedProcess?.pid === process.pid
-                          ? 'bg-primary/10 border-primary'
-                          : 'hover:bg-muted'
+                          ? 'bg-purple-500/20 border-purple-400/50 shadow-lg shadow-purple-500/20'
+                          : 'hover:bg-white/10 border-white/10 hover:border-purple-400/30'
                       }`}
                       onClick={() => setSelectedProcess(process)}
                     >
@@ -375,14 +412,14 @@ export function InjektUIEnhanced() {
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{getGameIcon(process.name)}</span>
                           <div>
-                            <div className="font-medium">{process.name}</div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="font-medium text-white">{process.name}</div>
+                            <div className="text-sm text-gray-400">
                               PID: {process.pid} {process.windowTitle && `• ${process.windowTitle}`}
                             </div>
                           </div>
                         </div>
                         {selectedProcess?.pid === process.pid && (
-                          <Badge variant={isInjecting ? 'default' : 'secondary'}>
+                          <Badge variant={isInjecting ? 'default' : 'secondary'} className="bg-purple-500/20 text-purple-200 border-purple-400/30">
                             {isInjecting ? 'Attivo' : 'Selezionato'}
                           </Badge>
                         )}
@@ -397,7 +434,11 @@ export function InjektUIEnhanced() {
                   <Button
                     onClick={isInjecting ? stopInjection : startInjection}
                     variant={isInjecting ? 'destructive' : 'default'}
-                    className="flex-1"
+                    className={`flex-1 ${
+                      isInjecting 
+                        ? 'bg-red-500/20 hover:bg-red-500/30 border-red-400/50 text-red-200' 
+                        : 'bg-purple-500/20 hover:bg-purple-500/30 border-purple-400/50 text-purple-200'
+                    }`}
                     disabled={!selectedProcess}
                   >
                     {isInjecting ? (
@@ -416,6 +457,7 @@ export function InjektUIEnhanced() {
                     onClick={fetchProcesses}
                     variant="outline"
                     size="icon"
+                    className="bg-blue-500/20 hover:bg-blue-500/30 border-blue-400/50 text-blue-200"
                   >
                     <RefreshCw className="h-4 w-4" />
                   </Button>
@@ -426,22 +468,23 @@ export function InjektUIEnhanced() {
 
           {/* Live Stats durante injection */}
           {isInjecting && selectedProcess && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-green-500" />
+            <Card className="relative bg-black/20 backdrop-blur-xl border-emerald-500/20 shadow-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-cyan-500/5" />
+              <CardHeader className="relative z-10">
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <TrendingUp className="h-5 w-5 text-emerald-400" />
                   Injection in Corso
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 relative z-10">
                 <div>
                   <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium">Traduzioni Iniettate</span>
-                    <span className="text-sm text-muted-foreground">{injectionCount}</span>
+                    <span className="text-sm font-medium text-gray-200">Traduzioni Iniettate</span>
+                    <span className="text-sm text-emerald-400">{injectionCount}</span>
                   </div>
-                  <Progress value={Math.min((injectionCount / 100) * 100, 100)} />
+                  <Progress value={Math.min((injectionCount / 100) * 100, 100)} className="bg-white/10" />
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-400">
                   Monitoraggio attivo per {selectedProcess.name}...
                 </div>
               </CardContent>
@@ -451,11 +494,15 @@ export function InjektUIEnhanced() {
 
         {/* Tab Traduzioni */}
         <TabsContent value="translations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Traduzioni Personalizzate</CardTitle>
+          <Card className="relative bg-black/20 backdrop-blur-xl border-blue-500/20 shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5" />
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Globe className="h-5 w-5 text-blue-400" />
+                Traduzioni Personalizzate
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               {selectedProcess ? (
                 <div className="space-y-4">
                   {/* Form aggiunta traduzione */}
@@ -464,14 +511,16 @@ export function InjektUIEnhanced() {
                       placeholder="Testo originale (EN)"
                       value={newTranslation.original}
                       onChange={(e) => setNewTranslation({ ...newTranslation, original: e.target.value })}
+                      className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-blue-400/50"
                     />
                     <div className="flex gap-2">
                       <Input
                         placeholder="Traduzione (IT)"
                         value={newTranslation.translated}
                         onChange={(e) => setNewTranslation({ ...newTranslation, translated: e.target.value })}
+                        className="bg-white/10 border-white/20 text-white placeholder-gray-400 focus:border-blue-400/50"
                       />
-                      <Button onClick={addCustomTranslation} size="icon">
+                      <Button onClick={addCustomTranslation} size="icon" className="bg-blue-500/20 hover:bg-blue-500/30 border-blue-400/50 text-blue-200">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
@@ -481,16 +530,16 @@ export function InjektUIEnhanced() {
                   <ScrollArea className="h-[300px]">
                     <div className="space-y-2">
                       {customTranslations.map((trans) => (
-                        <div key={trans.original} className="flex items-center gap-2 p-2 rounded border">
+                        <div key={trans.original} className="flex items-center gap-2 p-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300">
                           <div className="flex-1 grid grid-cols-2 gap-2">
-                            <div className="text-sm">{trans.original}</div>
-                            <div className="text-sm font-medium">{trans.translated}</div>
+                            <div className="text-sm text-gray-300">{trans.original}</div>
+                            <div className="text-sm font-medium text-white">{trans.translated}</div>
                           </div>
                           <Button
                             onClick={() => removeCustomTranslation(trans.original)}
                             size="icon"
                             variant="ghost"
-                            className="h-8 w-8"
+                            className="h-8 w-8 hover:bg-red-500/20 hover:text-red-400"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -500,7 +549,7 @@ export function InjektUIEnhanced() {
                   </ScrollArea>
                 </div>
               ) : (
-                <div className="text-center text-muted-foreground py-8">
+                <div className="text-center text-gray-400 py-8">
                   Seleziona un processo per gestire le traduzioni
                 </div>
               )}
@@ -510,18 +559,22 @@ export function InjektUIEnhanced() {
 
         {/* Tab Profili */}
         <TabsContent value="profiles" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestione Profili</CardTitle>
+          <Card className="relative bg-black/20 backdrop-blur-xl border-cyan-500/20 shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5" />
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Database className="h-5 w-5 text-cyan-400" />
+                Gestione Profili
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 relative z-10">
               <div className="flex gap-2">
-                <Button onClick={exportProfile} disabled={!selectedProcess}>
+                <Button onClick={exportProfile} disabled={!selectedProcess} className="bg-cyan-500/20 hover:bg-cyan-500/30 border-cyan-400/50 text-cyan-200">
                   <Download className="mr-2 h-4 w-4" />
                   Esporta Profilo
                 </Button>
                 <Label htmlFor="import-profile" className="cursor-pointer">
-                  <Button variant="outline">
+                  <Button variant="outline" className="bg-purple-500/20 hover:bg-purple-500/30 border-purple-400/50 text-purple-200">
                     <Upload className="mr-2 h-4 w-4" />
                     Importa Profilo
                   </Button>
@@ -538,11 +591,11 @@ export function InjektUIEnhanced() {
               <ScrollArea className="h-[300px]">
                 <div className="space-y-2">
                   {profiles.map((profile) => (
-                    <div key={profile.id} className="p-3 rounded border">
+                    <div key={profile.id} className="p-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="font-medium">{profile.gameName}</div>
-                          <div className="text-sm text-muted-foreground">
+                          <div className="font-medium text-white">{profile.gameName}</div>
+                          <div className="text-sm text-gray-400">
                             {profile.processName} • {Object.keys(profile.customTranslations).length} traduzioni custom
                           </div>
                         </div>
@@ -562,41 +615,56 @@ export function InjektUIEnhanced() {
           </Card>
         </TabsContent>
 
-        {/* Tab Profili */}
+        {/* Tab Profili Translation Manager */}
         <TabsContent value="profiles" className="space-y-4">
-          <TranslationProfileManager
-            processName={selectedProcess?.name}
-            onProfileSelect={(profile) => {
-              // Carica le traduzioni del profilo selezionato
-              const translations = profile.translations.map(t => ({
-                original: t.original,
-                translated: t.translated
-              }));
-              setCustomTranslations(translations);
-              
-              // Passa alla tab traduzioni per mostrare le traduzioni caricate
-              setActiveTab('translations');
-              
-              // Mostra notifica
-              alert(`Profilo "${profile.gameName}" caricato con ${profile.translations.length} traduzioni`);
-            }}
-          />
+          <Card className="relative bg-black/20 backdrop-blur-xl border-cyan-500/20 shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5" />
+            <CardContent className="relative z-10">
+              <TranslationProfileManager
+                processName={selectedProcess?.name}
+                onProfileSelect={(profile) => {
+                  // Carica le traduzioni del profilo selezionato
+                  const translations = profile.translations.map(t => ({
+                    original: t.original,
+                    translated: t.translated
+                  }));
+                  setCustomTranslations(translations);
+                  
+                  // Passa alla tab traduzioni per mostrare le traduzioni caricate
+                  setActiveTab('translations');
+                  
+                  // Mostra notifica
+                  alert(`Profilo "${profile.gameName}" caricato con ${profile.translations.length} traduzioni`);
+                }}
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Tab Statistiche */}
         <TabsContent value="stats" className="space-y-4">
-          <InjektRealtimeStats 
-            processId={selectedProcess?.pid || null} 
-            isActive={isInjecting} 
-          />
+          <Card className="relative bg-black/20 backdrop-blur-xl border-emerald-500/20 shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5" />
+            <CardContent className="relative z-10">
+              <InjektRealtimeStats 
+                processId={selectedProcess?.pid || null} 
+                isActive={isInjecting} 
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Tab Overlay */}
         <TabsContent value="overlay" className="space-y-4">
-          <InjektOverlayConfig 
-            config={overlayConfig} 
-            onConfigChange={setOverlayConfig} 
-          />
+          <Card className="relative bg-black/20 backdrop-blur-xl border-orange-500/20 shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-500/5" />
+            <CardContent className="relative z-10">
+              <InjektOverlayConfig 
+                config={overlayConfig} 
+                onConfigChange={setOverlayConfig} 
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
