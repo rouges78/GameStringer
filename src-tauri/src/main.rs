@@ -14,10 +14,15 @@ mod multi_process_injekt;
 mod anti_cheat;
 mod performance_optimizer;
 mod advanced_ocr;
+mod translation_backends;
 mod process_utils;
 
 fn main() {
     tauri::Builder::default()
+        .manage(commands::anti_cheat::AntiCheatState::default())
+        .manage(commands::performance::PerformanceOptimizerState::default())
+        .manage(commands::advanced_ocr::AdvancedOCRState::default())
+        .manage(commands::translation_backends::TranslationBackendState::default())
         .invoke_handler(tauri::generate_handler![
             commands::steam::auto_detect_steam_config,
             commands::steam::test_steam_connection,
@@ -198,6 +203,22 @@ fn main() {
             commands::advanced_ocr::test_ocr_engines,
             commands::advanced_ocr::clear_ocr_cache,
             commands::advanced_ocr::get_ml_scoring_info,
+            // Translation Backends System
+            commands::translation_backends::initialize_translation_backends,
+            commands::translation_backends::translate_text,
+            commands::translation_backends::translate_batch,
+            commands::translation_backends::get_translation_metrics,
+            commands::translation_backends::get_backend_status,
+            commands::translation_backends::get_supported_languages,
+            commands::translation_backends::get_translation_config,
+            commands::translation_backends::update_translation_config,
+            commands::translation_backends::configure_backend_api_key,
+            commands::translation_backends::toggle_backend,
+            commands::translation_backends::test_all_backends,
+            commands::translation_backends::test_translation_quality,
+            commands::translation_backends::clear_translation_cache,
+            commands::translation_backends::get_cost_estimation,
+            commands::translation_backends::get_cost_optimization_recommendations,
             // Cache Management
             cache_manager::get_cache_stats,
             cache_manager::clear_cache,

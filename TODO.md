@@ -46,8 +46,8 @@
 - [x] **Anti-Cheat Compatibility** - ✅ COMPLETATO: Sistema anti-cheat avanzato con rilevamento 7+ sistemi, strategie bypass, modalità compatibilità e cache intelligente
 - [x] **Performance Optimization** - ✅ COMPLETATO: Sistema ottimizzazione completo con hook pooling, cache intelligente, batch processing, garbage collection, adaptive polling e metriche real-time
 - [x] **Traduzione Avanzata OCR** - ✅ COMPLETATO: Sistema OCR multiplo con Tesseract, WindowsOCR, EasyOCR, preprocessing intelligente, processamento parallelo, cache avanzata e ML scoring
-- [ ] **Traduzione ML Scoring** - Sistema ML per selezione migliore risultato OCR
-- [ ] **Backend Multipli** - Supporto DeepL, Yandex, Naver Papago per traduzioni
+- [x] **Traduzione ML Scoring** - ✅ COMPLETATO: Sistema ML scoring integrato in OCR con 5 metriche linguistiche, modelli per inglese/italiano, scoring pesato e selezione automatica miglior risultato
+- [x] **Backend Multipli** - ✅ COMPLETATO: Sistema backend multipli con DeepL, Yandex, Papago, Google Translate, rate limiting, fallback automatico, cache intelligente, ottimizzazione costi e metriche complete
 - [ ] **Supporto Offline** - Integrazione Argos Translate per uso offline
 
 ## 📦 PRIORITÀ BASSA - ESPANSIONI
