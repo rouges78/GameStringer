@@ -9,6 +9,10 @@ mod cache_manager;
 mod error_manager;
 mod memory_audit;
 mod intelligent_cache;
+mod injekt;
+mod multi_process_injekt;
+mod anti_cheat;
+mod process_utils;
 
 fn main() {
     tauri::Builder::default()
@@ -159,6 +163,19 @@ fn main() {
             commands::injekt::get_process_info,
             commands::injekt::inject_translation,
             commands::injekt::scan_process_memory,
+            // Multi-Process Injection
+            commands::injekt::start_multi_process_injection,
+            commands::injekt::stop_multi_process_injection,
+            commands::injekt::get_multi_process_stats,
+            commands::injekt::get_multi_process_active_processes,
+            commands::injekt::force_inject_process,
+            commands::injekt::list_multi_process_games,
+            // Anti-Cheat System
+            commands::anti_cheat::detect_anti_cheat_systems,
+            commands::anti_cheat::get_anti_cheat_compatibility_strategies,
+            commands::anti_cheat::get_anti_cheat_cache_stats,
+            commands::anti_cheat::clear_anti_cheat_cache,
+            commands::anti_cheat::test_anti_cheat_detection,
             // Cache Management
             cache_manager::get_cache_stats,
             cache_manager::clear_cache,

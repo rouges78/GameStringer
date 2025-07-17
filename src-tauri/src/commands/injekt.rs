@@ -1,6 +1,14 @@
 use crate::models::*;
-use serde_json;
+use crate::multi_process_injekt::{MultiProcessInjekt, MultiProcessConfig, InjectionStrategy};
+use crate::anti_cheat::{AntiCheatManager, AntiCheatDetection};
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
+use once_cell::sync::Lazy;
+
+// Singleton per gestire istanze multi-processo
+static MULTI_PROCESS_INSTANCES: Lazy<Arc<Mutex<HashMap<String, MultiProcessInjekt>>>> = 
+    Lazy::new(|| Arc::new(Mutex::new(HashMap::new())));
 
 #[tauri::command]
 pub async fn start_injection(process_id: u32, process_name: String, config: serde_json::Value) -> Result<serde_json::Value, String> {
@@ -175,4 +183,231 @@ pub async fn scan_process_memory(process_id: u32, pattern: String) -> Result<ser
     
     log::warn!("⚠️ Scansione memoria non ancora implementata");
     Ok(scan_result)
+}
+
+// === COMANDI MULTI-PROCESSO ===
+
+#[tauri::command]
+pub async fn start_multi_process_injection(
+    game_name: String,
+    primary_process: String,
+    secondary_processes: Vec<String>,
+    injection_strategy: String,
+    base_config: serde_json::Value
+) -> Result<serde_json::Value, String> {
+    log::info!("🚀 Avvio injection multi-processo per: {}", game_name);
+    
+    // Converti la strategia da stringa a enum
+    let strategy = match injection_strategy.as_str() {
+        "primary_only" => InjectionStrategy::PrimaryOnly,
+        "all_processes" => InjectionStrategy::AllProcesses,
+        "cascade" => InjectionStrategy::Cascade,
+        _ => InjectionStrategy::PrimaryOnly,
+    };
+    
+    // Crea configurazione multi-processo
+    let multi_config = MultiProcessConfig {
+        game_name: game_name.clone(),
+        primary_process,
+        secondary_processes,
+        injection_strategy: strategy,
+        sync_translations: true,
+        max_processes: 10,
+    };
+    
+    // Crea configurazione base injection
+    let injection_config = InjectionConfig {
+        target_process: game_name.clone(),
+        target_language: base_config.get("target_language")
+            .and_then(|v| v.as_str())
+            .unwrap_or("it")
+            .to_string(),
+        provider: base_config.get("provider")
+            .and_then(|v| v.as_str())
+            .unwrap_or("openai")
+            .to_string(),
+        api_key: base_config.get("api_key")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string(),
+        hook_mode: base_config.get("hook_mode")
+            .and_then(|v| v.as_str())
+            .unwrap_or("safe")
+            .to_string(),
+        cache_enabled: base_config.get("cache_enabled")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true),
+    };
+    
+    // Crea e avvia sistema multi-processo
+    match MultiProcessInjekt::new(multi_config, injection_config) {
+        Ok(mut multi_injekt) => {
+            match multi_injekt.start() {
+                Ok(()) => {
+                    // Salva l'istanza nel singleton
+                    if let Ok(mut instances) = MULTI_PROCESS_INSTANCES.lock() {
+                        instances.insert(game_name.clone(), multi_injekt);
+                    }
+                    
+                    let result = serde_json::json!({
+                        "game_name": game_name,
+                        "status": "started",
+                        "start_time": chrono::Utc::now().to_rfc3339(),
+                        "message": "Sistema multi-processo avviato con successo"
+                    });
+                    
+                    log::info!("✅ Sistema multi-processo avviato per: {}", game_name);
+                    Ok(result)
+                }
+                Err(e) => {
+                    let error_msg = format!("Errore avvio sistema multi-processo: {}", e);
+                    log::error!("❌ {}", error_msg);
+                    Err(error_msg)
+                }
+            }
+        }
+        Err(e) => {
+            let error_msg = format!("Errore creazione sistema multi-processo: {}", e);
+            log::error!("❌ {}", error_msg);
+            Err(error_msg)
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn stop_multi_process_injection(game_name: String) -> Result<serde_json::Value, String> {
+    log::info!("🛑 Arresto injection multi-processo per: {}", game_name);
+    
+    if let Ok(mut instances) = MULTI_PROCESS_INSTANCES.lock() {
+        if let Some(mut multi_injekt) = instances.remove(&game_name) {
+            match multi_injekt.stop() {
+                Ok(()) => {
+                    let result = serde_json::json!({
+                        "game_name": game_name,
+                        "status": "stopped",
+                        "stop_time": chrono::Utc::now().to_rfc3339(),
+                        "message": "Sistema multi-processo arrestato con successo"
+                    });
+                    
+                    log::info!("✅ Sistema multi-processo arrestato per: {}", game_name);
+                    Ok(result)
+                }
+                Err(e) => {
+                    let error_msg = format!("Errore arresto sistema multi-processo: {}", e);
+                    log::error!("❌ {}", error_msg);
+                    Err(error_msg)
+                }
+            }
+        } else {
+            let error_msg = format!("Sistema multi-processo non trovato per: {}", game_name);
+            log::warn!("⚠️ {}", error_msg);
+            Err(error_msg)
+        }
+    } else {
+        Err("Errore accesso istanze multi-processo".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn get_multi_process_stats(game_name: String) -> Result<serde_json::Value, String> {
+    log::info!("📊 Recupero statistiche multi-processo per: {}", game_name);
+    
+    if let Ok(instances) = MULTI_PROCESS_INSTANCES.lock() {
+        if let Some(multi_injekt) = instances.get(&game_name) {
+            let stats = multi_injekt.get_stats();
+            log::info!("✅ Statistiche recuperate per: {}", game_name);
+            Ok(stats)
+        } else {
+            let error_msg = format!("Sistema multi-processo non trovato per: {}", game_name);
+            log::warn!("⚠️ {}", error_msg);
+            Err(error_msg)
+        }
+    } else {
+        Err("Errore accesso istanze multi-processo".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn get_multi_process_active_processes(game_name: String) -> Result<serde_json::Value, String> {
+    log::info!("🔍 Recupero processi attivi per: {}", game_name);
+    
+    if let Ok(instances) = MULTI_PROCESS_INSTANCES.lock() {
+        if let Some(multi_injekt) = instances.get(&game_name) {
+            let processes = multi_injekt.get_active_processes();
+            let result = serde_json::json!({
+                "game_name": game_name,
+                "processes": processes.into_iter().map(|(pid, name, is_primary, injection_active)| {
+                    serde_json::json!({
+                        "pid": pid,
+                        "name": name,
+                        "is_primary": is_primary,
+                        "injection_active": injection_active
+                    })
+                }).collect::<Vec<_>>()
+            });
+            
+            log::info!("✅ Processi attivi recuperati per: {}", game_name);
+            Ok(result)
+        } else {
+            let error_msg = format!("Sistema multi-processo non trovato per: {}", game_name);
+            log::warn!("⚠️ {}", error_msg);
+            Err(error_msg)
+        }
+    } else {
+        Err("Errore accesso istanze multi-processo".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn force_inject_process(game_name: String, process_id: u32) -> Result<serde_json::Value, String> {
+    log::info!("🔧 Forzatura injection per processo PID: {} (gioco: {})", process_id, game_name);
+    
+    if let Ok(mut instances) = MULTI_PROCESS_INSTANCES.lock() {
+        if let Some(multi_injekt) = instances.get_mut(&game_name) {
+            match multi_injekt.force_inject_process(process_id) {
+                Ok(()) => {
+                    let result = serde_json::json!({
+                        "game_name": game_name,
+                        "process_id": process_id,
+                        "status": "injected",
+                        "timestamp": chrono::Utc::now().to_rfc3339(),
+                        "message": "Injection forzata completata con successo"
+                    });
+                    
+                    log::info!("✅ Injection forzata completata per PID: {}", process_id);
+                    Ok(result)
+                }
+                Err(e) => {
+                    let error_msg = format!("Errore forzatura injection: {}", e);
+                    log::error!("❌ {}", error_msg);
+                    Err(error_msg)
+                }
+            }
+        } else {
+            let error_msg = format!("Sistema multi-processo non trovato per: {}", game_name);
+            log::warn!("⚠️ {}", error_msg);
+            Err(error_msg)
+        }
+    } else {
+        Err("Errore accesso istanze multi-processo".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn list_multi_process_games() -> Result<serde_json::Value, String> {
+    log::info!("📋 Lista giochi con injection multi-processo attiva");
+    
+    if let Ok(instances) = MULTI_PROCESS_INSTANCES.lock() {
+        let games: Vec<String> = instances.keys().cloned().collect();
+        let result = serde_json::json!({
+            "active_games": games,
+            "total_count": games.len(),
+            "timestamp": chrono::Utc::now().to_rfc3339()
+        });
+        
+        log::info!("✅ Lista giochi recuperata: {} attivi", games.len());
+        Ok(result)
+    } else {
+        Err("Errore accesso istanze multi-processo".to_string())
+    }
 }
