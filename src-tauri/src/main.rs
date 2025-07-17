@@ -13,6 +13,7 @@ mod injekt;
 mod multi_process_injekt;
 mod anti_cheat;
 mod performance_optimizer;
+mod advanced_ocr;
 mod process_utils;
 
 fn main() {
@@ -187,6 +188,16 @@ fn main() {
             commands::performance::get_optimization_config,
             commands::performance::update_optimization_config,
             commands::performance::test_performance_optimization,
+            // Advanced OCR System
+            commands::advanced_ocr::process_image_ocr,
+            commands::advanced_ocr::batch_process_images_ocr,
+            commands::advanced_ocr::get_ocr_performance_metrics,
+            commands::advanced_ocr::get_supported_ocr_engines,
+            commands::advanced_ocr::get_ocr_config,
+            commands::advanced_ocr::update_ocr_config,
+            commands::advanced_ocr::test_ocr_engines,
+            commands::advanced_ocr::clear_ocr_cache,
+            commands::advanced_ocr::get_ml_scoring_info,
             // Cache Management
             cache_manager::get_cache_stats,
             cache_manager::clear_cache,
