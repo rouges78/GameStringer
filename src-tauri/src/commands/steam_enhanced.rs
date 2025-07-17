@@ -1,4 +1,4 @@
-use steamlocate::{SteamDir, SteamApp};
+use steamlocate::SteamDir;
 use crate::models::{GameInfo, SteamGame};
 use std::collections::HashMap;
 use log::{debug, info, warn, error};

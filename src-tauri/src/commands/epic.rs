@@ -1909,8 +1909,8 @@ fn is_valid_epic_game(name: &str) -> bool {
     // Escludere pattern tecnici
     if name.contains('\\') || name.contains('/') ||
        name.contains(':') || name.contains('|') ||
-       name.starts_with('.') || name.ends_with('.log') ||
-       name.ends_with('.tmp') || name.ends_with('.cache') {
+       name.starts_with('.') || name.ends_with(".log") ||
+       name.ends_with(".tmp") || name.ends_with(".cache") {
         return false;
     }
     

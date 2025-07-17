@@ -42,6 +42,19 @@ fn main() {
             commands::steam_enhanced::find_steam_game_by_id,
             commands::steam_enhanced::get_enhanced_steam_info,
             commands::steam_enhanced::test_steamlocate_integration,
+            // DLC Management (cross-store)
+            commands::dlc_manager::scan_all_dlc,
+            commands::dlc_manager::get_game_dlc,
+            commands::dlc_manager::get_dlc_statistics,
+            // Epic Games Enhanced (repository-based detection)
+            commands::epic_enhanced::scan_epic_games_enhanced,
+            commands::epic_enhanced::get_epic_game_enhanced,
+            commands::epic_enhanced::get_epic_statistics_enhanced,
+            // HowLongToBeat (game completion times)
+            commands::hltb_manager::search_game_hltb,
+            commands::hltb_manager::get_hltb_statistics,
+            commands::hltb_manager::cleanup_hltb_cache,
+            commands::hltb_manager::search_games_batch_hltb,
             commands::epic::get_epic_game_details,
             commands::epic::get_epic_game_cover,
             commands::epic::get_epic_covers_batch,

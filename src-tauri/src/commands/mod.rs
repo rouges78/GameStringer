@@ -1,6 +1,7 @@
 pub mod steam;
 pub mod steam_enhanced;
 pub mod epic;
+pub mod epic_enhanced;
 pub mod gog;
 pub mod origin;
 pub mod ubisoft;
@@ -12,3 +13,5 @@ pub mod games;
 pub mod utilities;
 pub mod patches;
 pub mod injekt;
+pub mod dlc_manager;
+pub mod hltb_manager;

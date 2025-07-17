@@ -15,7 +15,8 @@
 - [x] **Copertine Steam Complete** - ✅ COMPLETATO: CDN Cloudflare/Akamai + fallback intelligenti
 - [x] **VR Games Support** - ✅ COMPLETATO: Filtri VR, badge e rilevamento automatico implementati
 - [x] **Steam API Enhancement** - ✅ COMPLETATO: Integrazione steamlocate-rs per scansione Steam robusta e veloce
-- [ ] **DLC Management** - Sistema completo per gestione DLC e espansioni
+- [x] **DLC Management** - ✅ COMPLETATO: Sistema completo cross-store per gestione DLC Steam/Epic Games
+- [x] **HowLongToBeat Integration** - ✅ COMPLETATO: Sistema statistiche tempi completamento con cache intelligente
 - [ ] **Game Launch Integration** - Avvio diretto giochi da GameStringer
 
 ## 🎯 PRIORITÀ MEDIA - MIGLIORAMENTI UX

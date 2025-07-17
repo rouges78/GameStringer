@@ -5,7 +5,7 @@
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
-    "devUrl": "http://127.0.0.1:3010",
+    "devUrl": "http://127.0.0.1:3011",
     "frontendDist": "../.next"
   },
   "app": {
