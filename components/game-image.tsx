@@ -3,15 +3,20 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Gamepad2 } from 'lucide-react';
+import IntelligentPlaceholder from './intelligent-placeholder';
 
 interface GameImageProps {
   src: string;
   alt: string;
   fallbackSrc?: string | null;
   className?: string;
+  gameName?: string;
+  store?: string;
+  genre?: string;
+  engine?: string;
 }
 
-const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className }) => {
+const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className, gameName, store, genre, engine }) => {
   const [currentSrc, setCurrentSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
 
@@ -26,6 +31,20 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className 
   };
 
   if (hasError || !currentSrc) {
+    // Se abbiamo informazioni sul gioco, usa il placeholder intelligente
+    if (gameName) {
+      return (
+        <IntelligentPlaceholder
+          gameName={gameName}
+          store={store}
+          genre={genre}
+          engine={engine}
+          className={className}
+        />
+      );
+    }
+    
+    // Fallback al placeholder semplice
     return (
       <div className="w-full h-full flex items-center justify-center bg-muted">
         <Gamepad2 className="w-12 h-12 text-muted-foreground/50" />
