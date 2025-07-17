@@ -12,6 +12,7 @@ mod intelligent_cache;
 mod injekt;
 mod multi_process_injekt;
 mod anti_cheat;
+mod performance_optimizer;
 mod process_utils;
 
 fn main() {
@@ -176,6 +177,16 @@ fn main() {
             commands::anti_cheat::get_anti_cheat_cache_stats,
             commands::anti_cheat::clear_anti_cheat_cache,
             commands::anti_cheat::test_anti_cheat_detection,
+            // Performance Optimization
+            commands::performance::get_performance_metrics,
+            commands::performance::generate_performance_report,
+            commands::performance::optimize_hook_application,
+            commands::performance::optimize_translation_batch,
+            commands::performance::perform_garbage_collection,
+            commands::performance::optimize_memory_usage,
+            commands::performance::get_optimization_config,
+            commands::performance::update_optimization_config,
+            commands::performance::test_performance_optimization,
             // Cache Management
             cache_manager::get_cache_stats,
             cache_manager::clear_cache,

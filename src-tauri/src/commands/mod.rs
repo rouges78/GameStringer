@@ -15,6 +15,7 @@ pub mod utilities;
 pub mod patches;
 pub mod injekt;
 pub mod anti_cheat;
+pub mod performance;
 pub mod dlc_manager;
 pub mod hltb_manager;
 pub mod launcher;
