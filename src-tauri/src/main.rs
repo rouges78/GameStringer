@@ -5,6 +5,10 @@
 
 mod models;
 mod commands;
+mod cache_manager;
+mod error_manager;
+mod memory_audit;
+mod intelligent_cache;
 
 fn main() {
     tauri::Builder::default()
@@ -146,7 +150,33 @@ fn main() {
             commands::injekt::get_processes,
             commands::injekt::get_process_info,
             commands::injekt::inject_translation,
-            commands::injekt::scan_process_memory
+            commands::injekt::scan_process_memory,
+            // Cache Management
+            cache_manager::get_cache_stats,
+            cache_manager::clear_cache,
+            cache_manager::clear_all_caches,
+            cache_manager::optimize_caches,
+            // Error Management
+            error_manager::get_error_stats,
+            error_manager::get_error_suggestions,
+            error_manager::cleanup_error_stats,
+            // Steam Enhanced Error Management
+            commands::steam_enhanced_error::test_steam_error_handling,
+            commands::steam_enhanced_error::test_steam_cache_integration,
+            commands::steam_enhanced_error::get_steam_error_statistics,
+            commands::steam_enhanced_error::get_steam_error_suggestions,
+            // Memory Audit System
+            memory_audit::get_memory_statistics,
+            memory_audit::detect_memory_leaks,
+            memory_audit::cleanup_memory,
+            memory_audit::generate_memory_report,
+            memory_audit::reset_memory_stats,
+            memory_audit::get_allocations_by_type,
+            // Intelligent Cache System
+            intelligent_cache::get_cache_performance_stats,
+            intelligent_cache::preload_popular_cache_items,
+            intelligent_cache::cleanup_expired_cache,
+            intelligent_cache::generate_cache_report
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

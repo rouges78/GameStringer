@@ -1,5 +1,7 @@
 use tauri::State;
 use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, GameDetails, LocalGameInfo, GameStatus, SteamLibraryFolder, SharedGame, FamilySharingConfig};
+use crate::error_manager::{ErrorType, ERROR_MANAGER, classify_error};
+use crate::cache_manager::{CACHE_MANAGER, CacheType};
 use winreg::HKEY;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
