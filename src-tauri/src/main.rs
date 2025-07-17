@@ -37,6 +37,11 @@ fn main() {
             commands::steam::parse_shared_config_vdf,
             commands::steam::get_family_sharing_games,
             commands::steam::get_steam_games_with_family_sharing,
+            // Steam Enhanced (steamlocate-rs integration)
+            commands::steam_enhanced::scan_steam_with_steamlocate,
+            commands::steam_enhanced::find_steam_game_by_id,
+            commands::steam_enhanced::get_enhanced_steam_info,
+            commands::steam_enhanced::test_steamlocate_integration,
             commands::epic::get_epic_game_details,
             commands::epic::get_epic_game_cover,
             commands::epic::get_epic_covers_batch,

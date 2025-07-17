@@ -13,7 +13,8 @@
 ### 🎮 Core Gaming Features
 - [x] **Engine Detection Sistema** - ✅ COMPLETATO: Database 1000+ giochi, frontend-backend integrati
 - [x] **Copertine Steam Complete** - ✅ COMPLETATO: CDN Cloudflare/Akamai + fallback intelligenti
-- [ ] **VR Games Support** - Completare implementazione filtri e badge VR
+- [x] **VR Games Support** - ✅ COMPLETATO: Filtri VR, badge e rilevamento automatico implementati
+- [x] **Steam API Enhancement** - ✅ COMPLETATO: Integrazione steamlocate-rs per scansione Steam robusta e veloce
 - [ ] **DLC Management** - Sistema completo per gestione DLC e espansioni
 - [ ] **Game Launch Integration** - Avvio diretto giochi da GameStringer
 

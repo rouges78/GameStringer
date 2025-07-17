@@ -1,4 +1,5 @@
 pub mod steam;
+pub mod steam_enhanced;
 pub mod epic;
 pub mod gog;
 pub mod origin;
