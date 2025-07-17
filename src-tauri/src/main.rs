@@ -15,6 +15,7 @@ mod anti_cheat;
 mod performance_optimizer;
 mod advanced_ocr;
 mod translation_backends;
+mod offline_translation;
 mod process_utils;
 
 fn main() {
@@ -23,6 +24,7 @@ fn main() {
         .manage(commands::performance::PerformanceOptimizerState::default())
         .manage(commands::advanced_ocr::AdvancedOCRState::default())
         .manage(commands::translation_backends::TranslationBackendState::default())
+        .manage(commands::offline_translation::OfflineTranslationState::default())
         .invoke_handler(tauri::generate_handler![
             commands::steam::auto_detect_steam_config,
             commands::steam::test_steam_connection,
@@ -219,6 +221,24 @@ fn main() {
             commands::translation_backends::clear_translation_cache,
             commands::translation_backends::get_cost_estimation,
             commands::translation_backends::get_cost_optimization_recommendations,
+            // Offline Translation System
+            commands::offline_translation::initialize_offline_translation,
+            commands::offline_translation::translate_offline,
+            commands::offline_translation::translate_batch_offline,
+            commands::offline_translation::is_language_pair_supported_offline,
+            commands::offline_translation::get_available_offline_models,
+            commands::offline_translation::download_offline_model,
+            commands::offline_translation::remove_offline_model,
+            commands::offline_translation::get_offline_translation_stats,
+            commands::offline_translation::get_language_pair_support,
+            commands::offline_translation::get_offline_translation_config,
+            commands::offline_translation::update_offline_translation_config,
+            commands::offline_translation::clear_offline_translation_cache,
+            commands::offline_translation::cleanup_unused_offline_models,
+            commands::offline_translation::preload_popular_offline_models,
+            commands::offline_translation::test_offline_translation_quality,
+            commands::offline_translation::get_offline_model_metrics,
+            commands::offline_translation::get_offline_storage_recommendations,
             // Cache Management
             cache_manager::get_cache_stats,
             cache_manager::clear_cache,
