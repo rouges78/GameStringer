@@ -16,3 +16,4 @@ pub mod patches;
 pub mod injekt;
 pub mod dlc_manager;
 pub mod hltb_manager;
+pub mod launcher;
