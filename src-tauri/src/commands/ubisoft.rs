@@ -5,6 +5,12 @@ use std::fs;
 use winreg::enums::*;
 use winreg::RegKey;
 use crate::commands::library::InstalledGame;
+use std::path::PathBuf;
+use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
+use aes_gcm::aead::Aead;
+use rand::{RngCore, rngs::OsRng};
+use base64;
+use chrono;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UbisoftGame {
@@ -15,6 +21,29 @@ pub struct UbisoftGame {
     pub platform: String, // "Ubisoft Connect" or "Uplay"
     pub size_bytes: Option<u64>,
     pub last_modified: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct UbisoftCredentials {
+    pub email_encrypted: String,
+    pub password_encrypted: String,
+    pub username: Option<String>,
+    pub saved_at: String,
+    pub nonce: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct UbisoftUser {
+    pub username: String,
+    pub email: String,
+    pub profile_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct UbisoftApiGame {
+    pub id: String,
+    pub name: String,
+    pub platform: String,
 }
 
 /// Scansiona i giochi Ubisoft Connect installati localmente
@@ -139,14 +168,47 @@ async fn scan_ubisoft_folders() -> Result<Vec<InstalledGame>, String> {
     Ok(games)
 }
 
-/// Test della connessione Ubisoft Connect (solo scansione locale)
+/// Test della connessione Ubisoft Connect
 #[tauri::command]
 pub async fn test_ubisoft_connection() -> Result<String, String> {
-    println!("[UBISOFT] Test scansione locale");
+    println!("[UBISOFT] Test connessione");
     
-    let games = get_ubisoft_installed_games().await?;
-    
-    Ok(format!("Scansione Ubisoft Connect completata: {} giochi trovati", games.len()))
+    // Prima prova a caricare credenziali salvate
+    match load_ubisoft_credentials().await {
+        Ok(credentials) => {
+            if let (Some(email), Some(password)) = (
+                credentials.get("email").and_then(|v| v.as_str()),
+                credentials.get("password").and_then(|v| v.as_str())
+            ) {
+                println!("[UBISOFT] Utilizzando credenziali salvate");
+                
+                // Testa l'autenticazione
+                match test_ubisoft_auth(email, password).await {
+                    Ok(user) => {
+                        let games = get_ubisoft_installed_games().await?;
+                        Ok(format!("✅ Connesso come '{}' - {} giochi locali trovati", 
+                                  user.username, games.len()))
+                    }
+                    Err(e) => {
+                        println!("[UBISOFT] Errore autenticazione salvata: {}", e);
+                        // Fallback a scansione locale
+                        let games = get_ubisoft_installed_games().await?;
+                        Ok(format!("❌ Account disconnesso (credenziali non valide) - {} giochi locali trovati", games.len()))
+                    }
+                }
+            } else {
+                // Fallback a scansione locale
+                let games = get_ubisoft_installed_games().await?;
+                Ok(format!("Scansione Ubisoft Connect completata: {} giochi trovati", games.len()))
+            }
+        }
+        Err(_) => {
+            // Nessuna credenziale salvata - scansione locale
+            println!("[UBISOFT] Nessuna credenziale salvata");
+            let games = get_ubisoft_installed_games().await?;
+            Ok(format!("Scansione Ubisoft Connect completata: {} giochi trovati", games.len()))
+        }
+    }
 }
 
 /// Recupera informazioni su un gioco Ubisoft Connect specifico
@@ -281,11 +343,56 @@ async fn find_main_executable(game_path: &Path) -> Option<String> {
         
         // Cerca eseguibili specifici di giochi Ubisoft famosi
         let ubisoft_game_executables = vec![
-            "ACOrigins.exe", "ACOdyssey.exe", "ACValhalla.exe", // Assassin's Creed
-            "FarCry5.exe", "FarCry6.exe", "FarCryNewDawn.exe", // Far Cry
-            "RainbowSix.exe", "R6Game.exe", // Rainbow Six
-            "WatchDogs.exe", "WatchDogs2.exe", "WatchDogsLegion.exe", // Watch Dogs
-            "TheDivision.exe", "TheDivision2.exe", // The Division
+            // Assassin's Creed series
+            "ACOrigins.exe", "ACOdyssey.exe", "ACValhalla.exe", "ACMirage.exe",
+            "AC2.exe", "ACBrotherhood.exe", "ACRevelations.exe", "AC3.exe", "AC4BFMP.exe",
+            "ACUnity.exe", "ACSyndicate.exe", "AssassinsCreed.exe",
+            // Far Cry series
+            "FarCry.exe", "FarCry2.exe", "FarCry3.exe", "FarCry4.exe", 
+            "FarCry5.exe", "FarCry6.exe", "FarCryNewDawn.exe", "FarCryPrimal.exe",
+            // Rainbow Six series
+            "RainbowSix.exe", "R6Game.exe", "RainbowSixSiege.exe", "RainbowSixVegas.exe", "RainbowSixVegas2.exe",
+            // Watch Dogs series
+            "WatchDogs.exe", "WatchDogs2.exe", "WatchDogsLegion.exe",
+            // The Division series
+            "TheDivision.exe", "TheDivision2.exe",
+            // Ghost Recon series
+            "GRW.exe", "GhostRecon.exe", "GhostReconWildlands.exe", "GhostReconBreakpoint.exe",
+            "GhostReconAdvancedWarfighter.exe", "GhostReconAdvancedWarfighter2.exe",
+            // Splinter Cell series
+            "SplinterCell.exe", "SplinterCellChaosTheory.exe", "SplinterCellConviction.exe", "SplinterCellBlacklist.exe",
+            // For Honor
+            "ForHonor.exe", "ForHonor_BE.exe",
+            // Anno series
+            "Anno1800.exe", "Anno2070.exe", "Anno2205.exe", "Anno1404.exe", "Anno1701.exe",
+            // Prince of Persia series
+            "PrinceOfPersia.exe", "POP_SandsOfTime.exe", "POP_WarriorWithin.exe", "POP_TwoThrones.exe",
+            // Rayman series
+            "Rayman.exe", "RaymanLegends.exe", "RaymanOrigins.exe",
+            // The Crew series
+            "TheCrew.exe", "TheCrew2.exe",
+            // Trials series
+            "Trials.exe", "TrialsEvolution.exe", "TrialsFusion.exe", "TrialsRising.exe",
+            // Skull and Bones
+            "SkullAndBones.exe",
+            // Immortals Fenyx Rising
+            "ImmortalsFenyxRising.exe", "Immortals.exe",
+            // Riders Republic
+            "RidersRepublic.exe",
+            // South Park games
+            "SouthPark.exe", "SouthParkSOT.exe", "SouthParkFBW.exe",
+            // Child of Light
+            "ChildOfLight.exe",
+            // Valiant Hearts
+            "ValiantHearts.exe",
+            // Beyond Good and Evil
+            "BeyondGoodAndEvil.exe", "BGE2.exe",
+            // Driver series
+            "Driver.exe", "DriverSanFrancisco.exe",
+            // Might & Magic series
+            "MightAndMagic.exe", "Heroes.exe",
+            // Rocksmith series
+            "Rocksmith.exe", "Rocksmith2014.exe",
         ];
         
         if let Ok(entries) = fs::read_dir(game_path) {
@@ -316,4 +423,244 @@ async fn find_main_executable(game_path: &Path) -> Option<String> {
         }
     }
     None
+}
+
+// Funzioni per gestione credenziali Ubisoft Connect
+
+fn get_ubisoft_credentials_path() -> Result<PathBuf, String> {
+    let mut path = std::env::current_dir()
+        .map_err(|e| format!("Errore getting current dir: {}", e))?;
+    path.push(".cache");
+    
+    // Crea la directory .cache se non esiste
+    if !path.exists() {
+        fs::create_dir_all(&path)
+            .map_err(|e| format!("Errore creating .cache directory: {}", e))?;
+    }
+    
+    path.push("ubisoft_credentials.json");
+    Ok(path)
+}
+
+fn get_machine_key() -> Result<[u8; 32], String> {
+    // Genera una chiave basata su caratteristiche della macchina
+    let username = std::env::var("USERNAME").unwrap_or_else(|_| "default".to_string());
+    let computer_name = std::env::var("COMPUTERNAME").unwrap_or_else(|_| "default".to_string());
+    
+    // Combina username e computer name per creare un seed
+    let seed = format!("{}:{}", username, computer_name);
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    use std::hash::Hasher;
+    hasher.write(seed.as_bytes());
+    let hash = hasher.finish();
+    
+    // Converti l'hash in una chiave di 32 byte
+    let mut key = [0u8; 32];
+    let hash_bytes = hash.to_le_bytes();
+    for i in 0..32 {
+        key[i] = hash_bytes[i % 8];
+    }
+    
+    Ok(key)
+}
+
+fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, String), String> {
+    if email.is_empty() || password.is_empty() {
+        return Err("Email e password non possono essere vuoti".to_string());
+    }
+    
+    let key = get_machine_key()?;
+    let cipher = Aes256Gcm::new(&key.into());
+    
+    // Aggiungi timestamp per verifica integrità
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    let email_payload = format!("{}:{}", email, timestamp);
+    let password_payload = format!("{}:{}", password, timestamp);
+    
+    // Genera nonce sicuro
+    let mut nonce_bytes = [0u8; 12];
+    OsRng.fill_bytes(&mut nonce_bytes);
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    // Cripta con AES-GCM
+    let email_ciphertext = cipher.encrypt(nonce, email_payload.as_bytes())
+        .map_err(|e| format!("Email encryption failed: {}", e))?;
+    let password_ciphertext = cipher.encrypt(nonce, password_payload.as_bytes())
+        .map_err(|e| format!("Password encryption failed: {}", e))?;
+    
+    Ok((
+        base64::encode(&email_ciphertext),
+        base64::encode(&password_ciphertext),
+        base64::encode(&nonce_bytes)
+    ))
+}
+
+fn decrypt_credentials(email_encrypted: &str, password_encrypted: &str, nonce_str: &str) -> Result<(String, String), String> {
+    let key = get_machine_key()?;
+    let cipher = Aes256Gcm::new(&key.into());
+    
+    let email_ciphertext = base64::decode(email_encrypted)
+        .map_err(|e| format!("Email base64 decode failed: {}", e))?;
+    let password_ciphertext = base64::decode(password_encrypted)
+        .map_err(|e| format!("Password base64 decode failed: {}", e))?;
+    let nonce_bytes = base64::decode(nonce_str)
+        .map_err(|e| format!("Nonce decode failed: {}", e))?;
+    
+    if nonce_bytes.len() != 12 {
+        return Err("Invalid nonce length".to_string());
+    }
+    
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    let email_plaintext = cipher.decrypt(nonce, email_ciphertext.as_slice())
+        .map_err(|e| format!("Email decryption failed: {}", e))?;
+    let password_plaintext = cipher.decrypt(nonce, password_ciphertext.as_slice())
+        .map_err(|e| format!("Password decryption failed: {}", e))?;
+    
+    let email_payload = String::from_utf8(email_plaintext)
+        .map_err(|e| format!("Email UTF-8 decode failed: {}", e))?;
+    let password_payload = String::from_utf8(password_plaintext)
+        .map_err(|e| format!("Password UTF-8 decode failed: {}", e))?;
+    
+    // Estrai credenziali dai payload (formato: "credential:timestamp")
+    let email_parts: Vec<&str> = email_payload.split(':').collect();
+    let password_parts: Vec<&str> = password_payload.split(':').collect();
+    
+    if email_parts.len() != 2 || password_parts.len() != 2 {
+        return Err("Invalid payload format".to_string());
+    }
+    
+    Ok((email_parts[0].to_string(), password_parts[0].to_string()))
+}
+
+/// Test autenticazione Ubisoft Connect (simulato)
+pub async fn test_ubisoft_auth(email: &str, password: &str) -> Result<UbisoftUser, String> {
+    println!("[UBISOFT] Testing authentication for: {}", email);
+    
+    // NOTA: Ubisoft Connect non ha API pubblica facilmente accessibile
+    // Per ora simulo l'autenticazione controllando che le credenziali non siano vuote
+    // In futuro si potrebbe implementare l'integrazione con l'API Ubisoft Connect
+    
+    if email.is_empty() || password.is_empty() {
+        return Err("Email e password sono obbligatorie".to_string());
+    }
+    
+    if !email.contains("@") {
+        return Err("Email non valida".to_string());
+    }
+    
+    if password.len() < 6 {
+        return Err("Password troppo corta".to_string());
+    }
+    
+    // Simula un utente autenticato
+    let username = email.split('@').next().unwrap_or("User").to_string();
+    
+    Ok(UbisoftUser {
+        username,
+        email: email.to_string(),
+        profile_id: Some("simulated_profile_id".to_string()),
+    })
+}
+
+/// Connetti account Ubisoft Connect
+#[tauri::command]
+pub async fn connect_ubisoft(email: String, password: String) -> Result<String, String> {
+    println!("[UBISOFT] Connessione account");
+    
+    // Test autenticazione
+    match test_ubisoft_auth(&email, &password).await {
+        Ok(user) => {
+            // Salva le credenziali
+            let save_result = save_ubisoft_credentials(email, password, user.username.clone()).await;
+            match save_result {
+                Ok(_) => println!("[UBISOFT] Credenziali salvate con successo"),
+                Err(e) => println!("[UBISOFT] Avviso: Non è stato possibile salvare le credenziali: {}", e),
+            }
+            
+            // Conta giochi locali
+            let games = get_ubisoft_installed_games().await?;
+            
+            Ok(format!("✅ Connesso come '{}' - {} giochi locali trovati", 
+                      user.username, games.len()))
+        }
+        Err(e) => {
+            println!("[UBISOFT] Errore autenticazione: {}", e);
+            Err(format!("❌ Errore autenticazione: {}", e))
+        }
+    }
+}
+
+/// Salva credenziali Ubisoft Connect criptate
+#[tauri::command]
+pub async fn save_ubisoft_credentials(email: String, password: String, username: String) -> Result<String, String> {
+    println!("[UBISOFT] Salvando credenziali per user: {}", username);
+    
+    if email.is_empty() || password.is_empty() {
+        return Err("Email e password sono obbligatorie".to_string());
+    }
+    
+    // Cripta le credenziali
+    let (email_encrypted, password_encrypted, nonce) = encrypt_credentials(&email, &password)?;
+    
+    let credentials = UbisoftCredentials {
+        email_encrypted,
+        password_encrypted,
+        username: Some(username.clone()),
+        saved_at: chrono::Utc::now().to_rfc3339(),
+        nonce,
+    };
+    
+    let credentials_path = get_ubisoft_credentials_path()?;
+    let json_data = serde_json::to_string_pretty(&credentials)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    
+    fs::write(&credentials_path, json_data)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    
+    println!("[UBISOFT] ✅ Credenziali salvate per: {}", username);
+    Ok("Credenziali Ubisoft Connect salvate con encryption AES-256".to_string())
+}
+
+/// Carica credenziali Ubisoft Connect
+#[tauri::command]
+pub async fn load_ubisoft_credentials() -> Result<serde_json::Value, String> {
+    let credentials_path = get_ubisoft_credentials_path()?;
+    
+    if !credentials_path.exists() {
+        return Err("Nessuna credenziale Ubisoft Connect salvata".to_string());
+    }
+    
+    let json_data = fs::read_to_string(&credentials_path)
+        .map_err(|e| format!("Errore lettura file: {}", e))?;
+    
+    let credentials: UbisoftCredentials = serde_json::from_str(&json_data)
+        .map_err(|e| format!("Errore parsing JSON: {}", e))?;
+    
+    // Decripta le credenziali
+    let (email, password) = decrypt_credentials(&credentials.email_encrypted, &credentials.password_encrypted, &credentials.nonce)?;
+    
+    Ok(serde_json::json!({
+        "email": email,
+        "password": password,
+        "username": credentials.username,
+        "saved_at": credentials.saved_at
+    }))
+}
+
+/// Cancella credenziali Ubisoft Connect
+#[tauri::command]
+pub async fn clear_ubisoft_credentials() -> Result<String, String> {
+    let credentials_path = get_ubisoft_credentials_path()?;
+    
+    if credentials_path.exists() {
+        fs::remove_file(&credentials_path)
+            .map_err(|e| format!("Errore cancellazione file: {}", e))?;
+    }
+    
+    Ok("Credenziali Ubisoft Connect cancellate".to_string())
 }

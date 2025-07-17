@@ -88,21 +88,135 @@ export default function Dashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<RecentActivityProps[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(fetchDashboardData, 30000); // Aggiorna ogni 30 secondi
-    return () => clearInterval(interval);
+    
+    // Aggiornamento automatico ogni 15 secondi
+    const interval = setInterval(fetchDashboardData, 15000);
+    
+    // Aggiorna quando l'utente torna alla pagina/finestra
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('🔄 Dashboard: Page visible, refreshing data');
+        fetchDashboardData();
+      }
+    };
+    
+    const handleFocus = () => {
+      console.log('🔄 Dashboard: Window focused, refreshing data');
+      fetchDashboardData();
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
+  // Listener per storage events (quando i giochi cambiano in altre pagine)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'gameTranslations' || e.key === 'gamePatches' || e.key === 'lastSteamScan') {
+        console.log('🔄 Dashboard: Storage changed, refreshing data');
+        fetchDashboardData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const fetchDashboardData = async () => {
     try {
-      // 🚀 Usa cache per migliorare performance
-      const games = await cacheManager.cached(
-        'dashboard-games',
-        () => invoke('get_games') as Promise<any[]>,
-        2 * 60 * 1000 // 2 minuti
-      );
+      setLoading(true);
+      console.log('🔄 Dashboard: Refreshing data...');
+      
+      // 🚀 PRIORITÀ: Debug completo per capire perché non vediamo i 613 giochi
+      console.log('🔍 Dashboard: Debug sistema caricamento giochi...');
+      
+      let games: any[];
+      
+      try {
+        // Prima debug del metodo normale get_games
+        console.log('🧪 Test 1: Metodo get_games normale');
+        const normalGames = await invoke('get_games') as any[];
+        console.log('📊 get_games normale:', normalGames.length, 'giochi trovati');
+        
+        // Poi test del metodo veloce
+        console.log('🧪 Test 2: Metodo Rai Pal (get_steam_games_fast)');
+        const fastGames = await invoke('get_steam_games_fast') as any[];
+        console.log('📊 Metodo Rai Pal:', fastGames.length, 'giochi trovati');
+        
+        // Test connessione Steam diretta  
+        console.log('🧪 Test 3: Test connessione Steam API');
+        const steamTest = await invoke('test_steam_connection') as string;
+        console.log('📊 Steam connection test:', steamTest);
+        
+        // Test 4: CRITICO - Verifica credenziali Steam per API
+        console.log('🧪 Test 4: Verifica credenziali Steam API');
+        try {
+          const credentials = await invoke('load_steam_credentials') as any;
+          if (credentials) {
+            console.log('✅ Credenziali Steam trovate!');
+            console.log('🔑 Steam ID:', credentials.steam_id);
+            console.log('🔑 API Key salvata:', credentials.api_key_encrypted ? 'Sì (criptata)' : 'No');
+            
+            // Test 5: Prova chiamata diretta API Steam con credenziali
+            console.log('🧪 Test 5: Chiamata diretta API Steam');
+            try {
+              const apiGames = await invoke('get_steam_games', {
+                apiKey: '', // Rust userà credenziali salvate se vuote
+                steamId: '',
+                forceRefresh: true
+              }) as any[];
+              console.log('📊 API Steam diretta:', apiGames.length, 'giochi trovati');
+              if (apiGames.length > 0) {
+                games = apiGames;
+                console.log('🎯 SUCCESSO! Usando API Steam diretta');
+              }
+            } catch (apiError) {
+              console.error('❌ Errore API Steam diretta:', apiError);
+            }
+          } else {
+            console.error('❌ PROBLEMA: Nessuna credenziale Steam trovata!');
+            console.log('💡 SOLUZIONE: Vai in Settings per configurare API Steam');
+          }
+        } catch (credError) {
+          console.error('❌ Errore verifica credenziali:', credError);
+          console.log('💡 AZIONE: Configura credenziali Steam in Settings');
+        }
+        
+        // Usa il metodo che ha più giochi (includendo force refresh se testato)
+        if (!games || games.length === 0) {
+          if (fastGames.length > normalGames.length) {
+            console.log('🎯 Usando metodo Rai Pal (più giochi)');
+            games = fastGames;
+          } else if (normalGames.length > 0) {
+            console.log('🎯 Usando metodo normale');
+            games = normalGames;
+          } else {
+            console.log('⚠️ Tutti i metodi falliti, ultimo tentativo con cache');
+            games = await cacheManager.cached(
+              'dashboard-games',
+              () => invoke('get_games') as Promise<any[]>,
+              2 * 60 * 1000 // 2 minuti
+            );
+          }
+        }
+        
+        console.log('📈 RISULTATO FINALE:', games.length, 'giochi per la dashboard');
+        
+      } catch (error) {
+        console.error('❌ Errore completo debug giochi:', error);
+        // Fallback finale
+        games = [];
+      }
       
       // Recupera statistiche traduzioni salvate
       const savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
@@ -189,6 +303,7 @@ export default function Dashboard() {
       }
       
       setActivities(recentActivities);
+      setLastUpdate(new Date());
       setLoading(false);
     } catch (error) {
       console.error('Errore caricamento dashboard:', error);
@@ -224,6 +339,12 @@ export default function Dashboard() {
               Neural Dashboard
             </h1>
             <p className="text-gray-400 font-medium">Sistema di traduzione avanzato con intelligenza artificiale</p>
+            {lastUpdate && (
+              <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Ultimo aggiornamento: {lastUpdate.toLocaleTimeString('it-IT')}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex gap-3">
@@ -235,8 +356,25 @@ export default function Dashboard() {
           </motion.div>
           <ForceRefreshButton onRefreshComplete={(games) => {
             console.log('🔄 Dashboard: Force refresh completed, games updated');
-            // Qui potresti aggiornare le statistiche della dashboard se necessario
+            // Aggiorna la dashboard dopo il force refresh
+            setTimeout(() => fetchDashboardData(), 1000);
           }} />
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              onClick={() => fetchDashboardData()}
+              disabled={loading}
+              className="bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-300 backdrop-blur-sm"
+            >
+              {loading ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+          </motion.div>
         </div>
       </motion.div>
 

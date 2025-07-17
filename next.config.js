@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
+const isTauri = process.env.TAURI === 'true';
+
 const nextConfig = {
-  // output: 'export', // Disabilitato - incompatibile con App Router e Tauri
+  ...(isTauri && {
+    output: 'export',
+    trailingSlash: true,
+    distDir: 'out',
+  }),
   eslint: {
     // Disabilita ESLint durante il build per velocizzare la compilazione
     ignoreDuringBuilds: true,

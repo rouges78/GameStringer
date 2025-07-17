@@ -3,8 +3,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../node_modules/.prisma/client"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  output        = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -33,6 +34,13 @@ model Game {
   
   translations Translation[]
 
+  // Indexes ottimizzati per query performance
+  @@index([title])
+  @@index([platform])
+  @@index([isInstalled])
+  @@index([isVr])
+  @@index([lastPlayed])
+  @@index([platform, isInstalled])
   @@map("games")
 }
 
@@ -121,7 +129,16 @@ model Translation {
   game            Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
   suggestions     AISuggestion[]
   
+  // Indexes ottimizzati per query performance
   @@index([gameId])
+  @@index([gameId, status])
+  @@index([gameId, targetLanguage])
+  @@index([gameId, status, targetLanguage])
+  @@index([status])
+  @@index([targetLanguage])
+  @@index([filePath])
+  @@index([updatedAt])
+  @@index([confidence])
   @@map("translations")
 }
 
@@ -137,5 +154,10 @@ model AISuggestion {
   
   translation    Translation @relation(fields: [translationId], references: [id], onDelete: Cascade)
   
+  // Indexes ottimizzati per query performance
+  @@index([translationId])
+  @@index([translationId, confidence])
+  @@index([provider])
+  @@index([confidence])
   @@map("ai_suggestions")
 }

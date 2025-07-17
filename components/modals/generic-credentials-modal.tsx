@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, User, Lock, Info, AlertCircle, Shield } from 'lucide-react';
+import { Loader2, User, Info } from 'lucide-react';
 
 interface GenericCredentialsModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ const providerInfo: Record<string, { title: string; description: string; helpTex
   gog: {
     title: 'GOG Galaxy',
     description: 'Accedi con le tue credenziali GOG',
-    helpText: 'Usa le stesse credenziali che usi per accedere a GOG.com. Attenzione: GOG richiede l\'autenticazione a due fattori. Assicurati di avere abilitato l\'autenticazione a due fattori sul tuo account GOG prima di procedere.'
+    helpText: 'Usa le stesse credenziali che usi per accedere a GOG.com'
   },
   origin: {
     title: 'EA App / Origin',
@@ -41,14 +41,17 @@ const providerInfo: Record<string, { title: string; description: string; helpTex
     title: 'itch.io',
     description: 'Accedi con il tuo account itch.io',
     helpText: 'Usa email e password del tuo account itch.io'
+  },
+  rockstar: {
+    title: 'Rockstar Games',
+    description: 'Accedi con il tuo account Rockstar Social Club',
+    helpText: 'Usa le credenziali del tuo account Rockstar Social Club per accedere ai giochi come GTA V e Red Dead Redemption 2'
   }
 };
 
 export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, isLoading = false }: GenericCredentialsModalProps) {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [error, setError] = useState<string | null>(null);
-  const [needs2FA, setNeeds2FA] = useState(false);
-  const [twoFactorCode, setTwoFactorCode] = useState('');
 
   const info = providerInfo[provider] || {
     title: provider,
@@ -58,42 +61,20 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     
-    if (!needs2FA) {
-      // Prima fase: email e password
-      if (!credentials.email.trim() || !credentials.password.trim()) {
-        setError('Per favore, inserisci sia email che password.');
-        return;
-      }
+    // Validazione credenziali
+    if (!credentials.email.trim() || !credentials.password.trim()) {
+      setError('Per favore, inserisci sia email che password.');
+      return;
+    }
 
-      setError(null);
-      
-      // Per GOG, dopo aver inserito email/password, mostra il campo 2FA
-      if (provider === 'gog') {
-        setNeeds2FA(true);
-        return;
-      }
-      
-      // Per altri provider, procedi normalmente
-      try {
-        await onSubmit(credentials.email, credentials.password);
-        handleClose();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Errore durante la connessione.');
-      }
-    } else {
-      // Seconda fase: codice 2FA per GOG
-      if (!twoFactorCode.trim()) {
-        setError('Per favore, inserisci il codice 2FA.');
-        return;
-      }
-
-      setError(null);
-      try {
-        await onSubmit(credentials.email, credentials.password, twoFactorCode);
-        handleClose();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Errore durante la verifica del codice 2FA.');
-      }
+    setError(null);
+    
+    // Procedi con la connessione per tutti i provider
+    try {
+      await onSubmit(credentials.email, credentials.password);
+      handleClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Errore durante la connessione.');
     }
   };
 
@@ -102,8 +83,6 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
   const handleClose = () => {
     setCredentials({ email: '', password: '' });
     setError(null);
-    setNeeds2FA(false);
-    setTwoFactorCode('');
     onClose();
   };
 
@@ -130,75 +109,34 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
             </Alert>
           )}
 
-          {provider === 'gog' && !needs2FA && (
-            <Alert className="border-blue-600 bg-blue-50 dark:bg-blue-950">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800 dark:text-blue-200">
-                <strong>Nota:</strong> GOG richiede l'autenticazione a due fattori. 
-                Dopo aver inserito email e password, ti verrà richiesto il codice 2FA.
-              </AlertDescription>
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!needs2FA ? (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="La tua email"
-                    value={credentials.email}
-                    onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-                    onKeyDown={(e) => e.key === 'Enter' && document.getElementById('password')?.focus()}
-                    disabled={isLoading}
-                    autoComplete="email"
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="La tua email"
+                value={credentials.email}
+                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                onKeyDown={(e) => e.key === 'Enter' && document.getElementById('password')?.focus()}
+                disabled={isLoading}
+                autoComplete="email"
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="La tua password"
-                    value={credentials.password}
-                    onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                    disabled={isLoading}
-                    autoComplete="current-password"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <Alert className="border-green-600 bg-green-50 dark:bg-green-950">
-                  <Shield className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800 dark:text-green-200">
-                    <strong>Verifica 2FA richiesta</strong><br />
-                    Inserisci il codice di verifica che hai ricevuto via email o SMS.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="space-y-2">
-                  <Label htmlFor="twoFactorCode">Codice di verifica</Label>
-                  <Input
-                    id="twoFactorCode"
-                    type="text"
-                    placeholder="Inserisci il codice 2FA"
-                    value={twoFactorCode}
-                    onChange={(e) => setTwoFactorCode(e.target.value)}
-                    disabled={isLoading}
-                    autoFocus
-                    maxLength={6}
-                    className="text-center text-lg font-mono"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Il codice è composto da 6 cifre
-                  </p>
-                </div>
-              </>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="La tua password"
+                value={credentials.password}
+                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                disabled={isLoading}
+                autoComplete="current-password"
+              />
+            </div>
 
             {error && (
               <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
@@ -217,10 +155,10 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading || (!needs2FA ? (!credentials.email.trim() || !credentials.password.trim()) : !twoFactorCode.trim())}
+                disabled={isLoading || !credentials.email.trim() || !credentials.password.trim()}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {needs2FA ? 'Verifica Codice' : 'Collega Account'}
+                Collega Account
               </Button>
             </div>
           </form>

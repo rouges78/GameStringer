@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { invoke } from '@/lib/tauri-api';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { LanguageFlags } from '@/components/ui/language-flags';
 import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
 
@@ -20,6 +21,8 @@ interface Game {
   engine?: string | null; // Engine utilizzato dal gioco
   is_installed?: boolean; // Se il gioco è installato localmente
   genres?: string[]; // Generi del gioco
+  last_played?: number; // Timestamp ultimo accesso
+  isShared?: boolean; // Se il gioco è condiviso tramite Family Sharing
 }
 
 // Funzione per normalizzare i nomi delle lingue
@@ -132,31 +135,106 @@ const normalizeLanguage = (language: string): string => {
 export default function LibraryPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'alphabetical' | 'lastPlayed' | 'recentlyAdded'>('alphabetical');
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('All');
   const [showVROnly, setShowVROnly] = useState(false);
   const [showInstalledOnly, setShowInstalledOnly] = useState(false);
+  const [showSharedOnly, setShowSharedOnly] = useState(false);
   const [selectedEngine, setSelectedEngine] = useState('All');
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Funzione per testare Family Sharing con dati mock
+  const testFamilySharing = async () => {
+    console.log('[LIBRARY DEBUG] 🧪 Test Family Sharing button clicked!');
+    
+    // Giochi mock condivisi
+    const mockSharedGames: Game[] = [
+      {
+        id: 'mock-570',
+        app_id: '570',
+        title: 'Dota 2 (Family Sharing)',
+        platform: 'Steam',
+        header_image: 'https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg',
+        isShared: true,
+        is_vr: false,
+        is_installed: false
+      },
+      {
+        id: 'mock-730',
+        app_id: '730',
+        title: 'Counter-Strike 2 (Family Sharing)',
+        platform: 'Steam',
+        header_image: 'https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg',
+        isShared: true,
+        is_vr: false,
+        is_installed: false
+      },
+      {
+        id: 'mock-271590',
+        app_id: '271590',
+        title: 'Grand Theft Auto V (Family Sharing)',
+        platform: 'Steam',
+        header_image: 'https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg',
+        isShared: true,
+        is_vr: false,
+        is_installed: false
+      }
+    ];
+
+    // Aggiungi i giochi mock alla lista esistente
+    setGames(prevGames => {
+      const existingIds = new Set(prevGames.map(g => g.id));
+      const newGames = mockSharedGames.filter(g => !existingIds.has(g.id));
+      console.log(`[LIBRARY DEBUG] ✅ Aggiunti ${newGames.length} giochi mock condivisi`);
+      return [...prevGames, ...newGames];
+    });
+  };
+
   useEffect(() => {
     const fetchGames = async () => {
       try {
-        // 🚀 Prova prima con la nuova funzione veloce
-        console.log('🚀 Tentativo caricamento veloce (metodo Rai Pal)...');
-        const result = await invoke('get_games_fast');
-        console.log('✅ Giochi caricati velocemente da Tauri:', result);
+        // 🔑 Prima carica le credenziali Steam
+        console.log('🔑 Caricamento credenziali Steam...');
+        const credentials = await invoke('load_steam_credentials');
+        
+        if (!credentials || typeof credentials !== 'object' || !credentials.api_key || !credentials.steam_id) {
+          console.log('⚠️ Credenziali Steam non disponibili, uso metodo alternativo');
+          // Fallback a scan_games normale
+          const result = await invoke('scan_games');
+          console.log('✅ Giochi caricati con scan_games:', result);
+          setGames(result as Game[]);
+          return;
+        }
+        
+        // 🚀 Prova con la funzione Family Sharing usando le credenziali
+        console.log('🚀 Tentativo caricamento con Family Sharing...');
+        const result = await invoke('get_steam_games_with_family_sharing', {
+          apiKey: credentials.api_key,
+          steamId: credentials.steam_id,
+          forceRefresh: false
+        });
+        console.log('✅ Giochi caricati con Family Sharing da Tauri:', result);
         console.log('📊 Debug primi 3 giochi:', (result as Game[]).slice(0, 3));
         console.log('🥽 Giochi con VR:', (result as Game[]).filter(g => g.is_vr));
         console.log('🎯 Giochi con engine:', (result as Game[]).filter(g => g.engine));
         console.log('💾 Giochi installati:', (result as Game[]).filter(g => g.is_installed));
+        console.log('🔗 Giochi condivisi:', (result as Game[]).filter(g => g.isShared));
         console.log('📋 Totale giochi per piattaforma:', (result as Game[]).reduce((acc, g) => { acc[g.platform] = (acc[g.platform] || 0) + 1; return acc; }, {} as Record<string, number>));
         setGames(result as Game[]);
       } catch (error) {
-        console.error('❌ Errore nel caricamento dei giochi da Tauri:', error);
+        console.error('❌ Errore nel caricamento con Family Sharing:', error);
+        console.log('🔄 Fallback alla funzione veloce normale...');
+        try {
+          const result = await invoke('get_games_fast');
+          console.log('✅ Giochi caricati con funzione veloce:', result);
+          setGames(result as Game[]);
+        } catch (fallbackError) {
+          console.error('❌ Errore anche con fallback:', fallbackError);
+        }
         
         // Fallback: usa l'API Next.js se Tauri non è disponibile
         try {
@@ -224,13 +302,28 @@ export default function LibraryPage() {
       const matchesSearch = (game.title ?? '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesVR = !showVROnly || game.is_vr;
       const matchesInstalled = !showInstalledOnly || game.is_installed;
+      const matchesShared = !showSharedOnly || game.isShared;
       const matchesLanguage = selectedLanguage === 'All' || (game.supported_languages && game.supported_languages.some(lang => normalizeLanguage(lang) === selectedLanguage));
       const matchesEngine = selectedEngine === 'All' || game.engine === selectedEngine;
       const matchesGenre = selectedGenre === 'All' || (game.genres && game.genres.includes(selectedGenre));
       
-      return matchesPlatform && matchesSearch && matchesVR && matchesInstalled && matchesLanguage && matchesEngine && matchesGenre;
+      return matchesPlatform && matchesSearch && matchesVR && matchesInstalled && matchesShared && matchesLanguage && matchesEngine && matchesGenre;
     })
-    .sort((a, b) => a.title.localeCompare(b.title)); // Ordinamento alfabetico
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'recentlyAdded':
+          // Ordina per ID Steam (numeri più alti = giochi più recenti)
+          const aId = parseInt(a.app_id) || 0;
+          const bId = parseInt(b.app_id) || 0;
+          return bId - aId;
+        case 'lastPlayed':
+          // Ordina per ultimo accesso (se disponibile)
+          return (b.last_played || 0) - (a.last_played || 0);
+        default:
+          // Ordinamento alfabetico
+          return a.title.localeCompare(b.title);
+      }
+    });
 
   const renderContent = () => {
     if (isLoading) {
@@ -307,8 +400,8 @@ export default function LibraryPage() {
                 <h3 className="text-lg font-semibold text-white truncate">{game.title}</h3>
                 <div className="flex flex-wrap items-center gap-2 mt-1">
                   <span className="text-sm text-gray-400">{game.platform}</span>
-                  {game.engine && <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">{game.engine}</span>}
-                  {game.genres && game.genres.map((genre, index) => (
+                  {game.engine && game.engine !== 'Unknown' && <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded-full">{game.engine}</span>}
+                  {game.genres && game.genres.filter(genre => genre !== 'Unknown').map((genre, index) => (
                     <span key={`${game.id}-genre-${index}`} className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">{genre}</span>
                   ))}
                 </div>
@@ -321,6 +414,7 @@ export default function LibraryPage() {
                 )}
                 {game.is_installed && <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full">✓ Installato</span>}
                 {game.is_vr && <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">🥽 VR</span>}
+                {game.isShared && <span className="text-xs bg-orange-600 text-white px-2 py-1 rounded-full">🔗 Condiviso</span>}
                 
               </div>
               </div>
@@ -370,9 +464,14 @@ export default function LibraryPage() {
                     🥽 VR
                   </div>
                 )}
-                {game.engine && (
+                {game.engine && game.engine !== 'Unknown' && (
                   <div className="bg-blue-600 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full font-semibold backdrop-blur-sm">
                     {game.engine}
+                  </div>
+                )}
+                {game.isShared && (
+                  <div className="bg-orange-600 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full font-semibold backdrop-blur-sm">
+                    🔗 Condiviso
                   </div>
                 )}
               </div>
@@ -436,6 +535,17 @@ export default function LibraryPage() {
               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
           }`}>
           ✓ Solo Installati
+        </button>
+        
+        {/* Toggle per filtro Condivisi */}
+        <button
+          onClick={() => setShowSharedOnly(!showSharedOnly)}
+          className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
+            showSharedOnly
+              ? 'bg-orange-600 text-white shadow-lg'
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+          }`}>
+          🔗 Solo Condivisi
         </button>
       </div>
 
@@ -525,6 +635,22 @@ export default function LibraryPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         
+        {/* Controlli di ordinamento */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-300">Ordina per:</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="alphabetical">A-Z (Alfabetico)</option>
+              <option value="recentlyAdded">🆕 Aggiunti di recente</option>
+              <option value="lastPlayed">🎮 Giocati di recente</option>
+            </select>
+          </div>
+        </div>
+
         {/* Pulsante Force Refresh per nuovi acquisti */}
         <div className="flex items-center justify-between bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-lg p-3">
           <div className="text-sm text-gray-300">
@@ -532,7 +658,12 @@ export default function LibraryPage() {
             <br />
             <span className="text-xs text-gray-400">Force Refresh bypassa tutta la cache per mostrare gli acquisti più recenti</span>
           </div>
-          <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
+          <div className="flex gap-2">
+            <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
+            <Button variant="outline" size="sm" onClick={testFamilySharing} title="Test Family Sharing con dati mock">
+              🔗 Test Family Sharing
+            </Button>
+          </div>
         </div>
       </div>
 

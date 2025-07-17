@@ -15,7 +15,6 @@ import React, { useState, useEffect } from 'react';
 import Image, { StaticImageData } from 'next/image';
 import { useSession, signIn, signOut, isProviderConnected, getConnectedAccount } from '@/lib/auth';
 import { toast } from 'react-hot-toast';
-import { SteamFamilySharing } from '@/components/steam-family-sharing';
 import { ItchioModal } from '@/components/modals/itchio-modal';
 import { GenericCredentialsModal } from '@/components/modals/generic-credentials-modal';
 import { SteamModal } from '@/components/modals/steam-modal';
@@ -642,10 +641,6 @@ export default function StoresPage() {
 
       {/* Ubisoft modal removed - now using GenericCredentialsModal */}
 
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold tracking-tight mb-4">Steam Family Sharing</h2>
-        <SteamFamilySharing />
-      </div>
 
       {/* Steam modal removed - now using a dedicated Steam modal component */}
 

@@ -1,0 +1,12 @@
+{"timestamp":"2025-07-12T01:01:23.762Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-12T01:01:23.795Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-12T01:01:23.808Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-12T01:01:23.813Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-12T01:02:16.791Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-12T01:02:16.798Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-12T01:02:16.811Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-12T01:02:16.815Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-12T01:06:20.754Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-12T01:06:20.764Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-12T01:06:20.813Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-12T01:06:20.820Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}

@@ -14,6 +14,18 @@
 # Local environment files
 .env
 .env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Secrets and sensitive data
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+config/secrets.json
 
 # Log files
 yarn-error.log

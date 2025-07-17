@@ -85,6 +85,24 @@ pub struct SteamConfig {
     pub logged_in_users: Vec<String>,
 }
 
+// Struct for Family Sharing data
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SharedGame {
+    pub appid: u32,
+    pub name: String,
+    pub owner_steam_id: String,
+    pub owner_account_name: String,
+    pub is_shared: bool,
+}
+
+// Struct for Family Sharing configuration
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FamilySharingConfig {
+    pub shared_games: Vec<SharedGame>,
+    pub total_shared_games: u32,
+    pub authorized_users: Vec<String>,
+}
+
 // Struct for the game-details result
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GameDetails {
@@ -122,4 +140,31 @@ pub struct GameScanResult {
     pub app_id: Option<String>,
     pub source: String, // "Steam", "Epic", "GOG", etc.
     pub is_installed: bool,
+}
+
+// Strutture per la lettura avanzata di Steam
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum GameStatus {
+    Installed { path: String },
+    Owned,
+    Shared { from_steam_id: String },
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct LocalGameInfo {
+    pub appid: u32,
+    pub name: String,
+    pub status: GameStatus,
+    pub install_dir: Option<String>,
+    pub last_updated: Option<u64>,
+    pub size_on_disk: Option<u64>,
+    pub buildid: Option<u32>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct SteamLibraryFolder {
+    pub path: String,
+    pub label: String,
+    pub mounted: bool,
+    pub tool: String,
 }

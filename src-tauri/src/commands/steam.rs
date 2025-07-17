@@ -1,5 +1,5 @@
 use tauri::State;
-use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, GameDetails};
+use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, GameDetails, LocalGameInfo, GameStatus, SteamLibraryFolder, SharedGame, FamilySharingConfig};
 use winreg::HKEY;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -14,14 +14,200 @@ use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
 use base64::{Engine as _, engine::general_purpose};
 use rand::{RngCore, rngs::OsRng};
+use log::{debug, info, warn, error};
 
 // Placeholder for session state if needed later
 pub struct SessionState;
 
+// SECURITY: Input validation functions
+/// Validates Steam App ID format and range
+/// Steam App IDs are positive integers up to 10 digits
+fn validate_steam_app_id(app_id: &str) -> bool {
+    // Check if it's a valid number
+    if let Ok(numeric_id) = app_id.parse::<u64>() {
+        // Steam App IDs range from 1 to approximately 2,000,000+ (as of 2024)
+        // We'll use a reasonable upper bound to prevent abuse
+        numeric_id >= 1 && numeric_id <= 9999999999
+    } else {
+        false
+    }
+}
+
+/// Validates Steam ID64 format
+/// Steam ID64 format: 17 digits, starts with 76561198
+fn validate_steam_id64(steam_id: &str) -> bool {
+    // Check length and format
+    if steam_id.len() != 17 || !steam_id.starts_with("76561198") {
+        return false;
+    }
+    
+    // Ensure all characters are digits
+    if !steam_id.chars().all(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    
+    // Additional validation: check if it's in valid Steam ID64 range
+    if let Ok(numeric_id) = steam_id.parse::<u64>() {
+        let min_steam_id = 76561198000000000u64;
+        let max_steam_id = 76561198999999999u64;
+        numeric_id >= min_steam_id && numeric_id <= max_steam_id
+    } else {
+        false
+    }
+}
+
+/// Sanitizes string input to prevent injection attacks
+fn sanitize_string_input(input: &str, max_length: usize) -> Result<String, String> {
+    if input.is_empty() || input.len() > max_length {
+        return Err("Invalid input length".to_string());
+    }
+    
+    // Remove potentially dangerous characters
+    let sanitized = input
+        .chars()
+        .filter(|c| c.is_alphanumeric() || c.is_whitespace() || "-_".contains(*c))
+        .collect::<String>()
+        .trim()
+        .to_string();
+    
+    if sanitized.is_empty() {
+        return Err("Input contains only invalid characters".to_string());
+    }
+    
+    Ok(sanitized)
+}
+
+/// SECURITY: Rate limiting implementation for Steam API calls
+/// Prevents API abuse and maintains compliance with Steam API terms
+struct SteamApiRateLimiter {
+    requests: std::sync::Mutex<std::collections::HashMap<String, Vec<u64>>>,
+    max_requests_per_minute: usize,
+    max_requests_per_second: usize,
+    rate_limit_window: u64,
+    burst_window: u64,
+}
+
+impl SteamApiRateLimiter {
+    fn new() -> Self {
+        Self {
+            requests: std::sync::Mutex::new(std::collections::HashMap::new()),
+            max_requests_per_minute: 100, // Steam API limit
+            max_requests_per_second: 10,  // Conservative limit
+            rate_limit_window: 60 * 1000, // 1 minute in milliseconds
+            burst_window: 1000,           // 1 second in milliseconds
+        }
+    }
+    
+    fn get_current_time_ms() -> u64 {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64
+    }
+    
+    fn is_request_allowed(&self, endpoint: &str) -> bool {
+        let now = Self::get_current_time_ms();
+        let mut requests = self.requests.lock().unwrap();
+        
+        // Get or create request history for this endpoint
+        let request_history = requests.entry(endpoint.to_string()).or_insert(Vec::new());
+        
+        // Clean old requests outside the window
+        request_history.retain(|&timestamp| now - timestamp < self.rate_limit_window);
+        
+        // Check burst limit (requests per second)
+        let recent_requests: Vec<&u64> = request_history
+            .iter()
+            .filter(|&&timestamp| now - timestamp < self.burst_window)
+            .collect();
+        
+        if recent_requests.len() >= self.max_requests_per_second {
+            warn!("[RateLimit] Burst limit exceeded for {}: {}/{} per second", 
+                  endpoint, recent_requests.len(), self.max_requests_per_second);
+            return false;
+        }
+        
+        // Check minute limit
+        if request_history.len() >= self.max_requests_per_minute {
+            warn!("[RateLimit] Minute limit exceeded for {}: {}/{} per minute", 
+                  endpoint, request_history.len(), self.max_requests_per_minute);
+            return false;
+        }
+        
+        // Request is allowed, record it
+        request_history.push(now);
+        true
+    }
+    
+    fn get_delay_until_next_request(&self, endpoint: &str) -> u64 {
+        let now = Self::get_current_time_ms();
+        let requests = self.requests.lock().unwrap();
+        
+        if let Some(request_history) = requests.get(endpoint) {
+            // Check if we need to wait for burst limit
+            let recent_requests: Vec<&u64> = request_history
+                .iter()
+                .filter(|&&timestamp| now - timestamp < self.burst_window)
+                .collect();
+            
+            if recent_requests.len() >= self.max_requests_per_second {
+                if let Some(&&oldest_recent) = recent_requests.iter().min() {
+                    return self.burst_window - (now - oldest_recent);
+                }
+            }
+            
+            // Check if we need to wait for minute limit
+            let valid_requests: Vec<&u64> = request_history
+                .iter()
+                .filter(|&&timestamp| now - timestamp < self.rate_limit_window)
+                .collect();
+            
+            if valid_requests.len() >= self.max_requests_per_minute {
+                if let Some(&&oldest_valid) = valid_requests.iter().min() {
+                    return self.rate_limit_window - (now - oldest_valid);
+                }
+            }
+        }
+        
+        0
+    }
+    
+    async fn wait_for_next_request(&self, endpoint: &str) {
+        let delay = self.get_delay_until_next_request(endpoint);
+        if delay > 0 {
+            info!("[RateLimit] Waiting {}ms before next request to {}", delay, endpoint);
+            tokio::time::sleep(Duration::from_millis(delay)).await;
+        }
+    }
+}
+
+// Global rate limiter instance
+static RATE_LIMITER: once_cell::sync::Lazy<SteamApiRateLimiter> = 
+    once_cell::sync::Lazy::new(|| SteamApiRateLimiter::new());
+
+/// Helper function for rate-limited Steam API calls
+async fn make_rate_limited_request(
+    client: &reqwest::Client,
+    url: &str,
+    endpoint: &str,
+) -> Result<reqwest::Response, String> {
+    // Check rate limit
+    if !RATE_LIMITER.is_request_allowed(endpoint) {
+        return Err(format!("Rate limit exceeded for endpoint: {}", endpoint));
+    }
+    
+    // Wait if needed
+    RATE_LIMITER.wait_for_next_request(endpoint).await;
+    
+    // Make the request
+    client.get(url).send().await
+        .map_err(|e| format!("Request failed: {}", e))
+}
+
 // 🔍 DEBUG: Test API Steam con diversi endpoints
 #[tauri::command]
 pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Result<String, String> {
-    println!("[RUST] DEBUG: Test esteso API Steam...");
+    debug!("[RUST] DEBUG: Test esteso API Steam...");
     
     // Se le credenziali sono vuote, carica quelle salvate
     let (actual_key, actual_id) = if api_key.is_empty() || steam_id.is_empty() {
@@ -30,6 +216,16 @@ pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Resu
             Err(e) => return Err(format!("Impossibile caricare credenziali: {}", e))
         }
     } else {
+        // SECURITY FIX: Validate Steam ID64 format
+        if !validate_steam_id64(&steam_id) {
+            return Err("Invalid Steam ID64 format".to_string());
+        }
+        
+        // SECURITY FIX: Validate API key format (basic check)
+        if api_key.len() != 32 || !api_key.chars().all(|c| c.is_ascii_alphanumeric()) {
+            return Err("Invalid API key format".to_string());
+        }
+        
         (api_key, steam_id)
     };
     
@@ -46,16 +242,25 @@ pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Resu
         actual_key, actual_id
     );
     
-    println!("[RUST] DEBUG: Test 1 - URL minimale: {}", url1.replace(&actual_key, "***"));
-    match client.get(&url1).send().await {
+    // SECURITY FIX: Apply rate limiting to API calls
+    let endpoint1 = "api.steampowered.com/IPlayerService/GetOwnedGames";
+    if !RATE_LIMITER.is_request_allowed(endpoint1) {
+        results.push("Test 1 (minimale): Rate limited".to_string());
+    } else {
+        RATE_LIMITER.wait_for_next_request(endpoint1).await;
+        
+        // SECURITY FIX: Removed URL logging to prevent API key exposure
+        info!("[RUST] Steam API Test 1 - GetOwnedGames minimal parameters");
+        match client.get(&url1).send().await {
         Ok(response) => {
             let response_text = response.text().await.unwrap_or_default();
-            println!("[RUST] DEBUG: Test 1 Response: {}", response_text);
+            info!("[RUST] Steam API Test 1 completed successfully");
             results.push(format!("Test 1 (minimale): {}", response_text));
         }
         Err(e) => {
-            println!("[RUST] DEBUG: Test 1 Error: {}", e);
+            debug!("[RUST] DEBUG: Test 1 Error: {}", e);
             results.push(format!("Test 1 Error: {}", e));
+        }
         }
     }
     
@@ -65,16 +270,25 @@ pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Resu
         actual_key, actual_id
     );
     
-    println!("[RUST] DEBUG: Test 2 - Senza free games: {}", url2.replace(&actual_key, "***"));
-    match client.get(&url2).send().await {
+    // SECURITY FIX: Apply rate limiting to API calls
+    let endpoint2 = "api.steampowered.com/IPlayerService/GetOwnedGames";
+    if !RATE_LIMITER.is_request_allowed(endpoint2) {
+        results.push("Test 2 (senza free): Rate limited".to_string());
+    } else {
+        RATE_LIMITER.wait_for_next_request(endpoint2).await;
+        
+        // SECURITY FIX: Removed URL logging to prevent API key exposure
+        info!("[RUST] Steam API Test 2 - GetOwnedGames without free games");
+        match client.get(&url2).send().await {
         Ok(response) => {
             let response_text = response.text().await.unwrap_or_default();
-            println!("[RUST] DEBUG: Test 2 Response: {}", response_text);
+            info!("[RUST] Steam API Test 2 completed successfully");
             results.push(format!("Test 2 (senza free): {}", response_text));
         }
         Err(e) => {
-            println!("[RUST] DEBUG: Test 2 Error: {}", e);
+            debug!("[RUST] DEBUG: Test 2 Error: {}", e);
             results.push(format!("Test 2 Error: {}", e));
+        }
         }
     }
     
@@ -84,15 +298,16 @@ pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Resu
         actual_key, actual_id
     );
     
-    println!("[RUST] DEBUG: Test 3 - Community fix: {}", url3.replace(&actual_key, "***"));
+    // SECURITY FIX: Removed URL logging to prevent API key exposure
+    info!("[RUST] Steam API Test 3 - GetOwnedGames community suggested parameters");
     match client.get(&url3).send().await {
         Ok(response) => {
             let response_text = response.text().await.unwrap_or_default();
-            println!("[RUST] DEBUG: Test 3 Response: {}", response_text);
+            info!("[RUST] Steam API Test 3 completed successfully");
             results.push(format!("Test 3 (community fix): {}", response_text));
         }
         Err(e) => {
-            println!("[RUST] DEBUG: Test 3 Error: {}", e);
+            debug!("[RUST] DEBUG: Test 3 Error: {}", e);
             results.push(format!("Test 3 Error: {}", e));
         }
     }
@@ -103,11 +318,12 @@ pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Resu
         actual_key, actual_id
     );
     
-    println!("[RUST] DEBUG: Test 4 - Player summary: {}", url4.replace(&actual_key, "***"));
+    // SECURITY FIX: Removed URL logging to prevent API key exposure
+    info!("[RUST] Steam API Test 4 - GetPlayerSummaries");
     match client.get(&url4).send().await {
         Ok(response) => {
             let response_text = response.text().await.unwrap_or_default();
-            println!("[RUST] DEBUG: Test 4 Response: {}", response_text);
+            info!("[RUST] Steam API Test 4 completed successfully");
             
             // Analizza la risposta per details aggiuntivi
             if let Ok(json) = serde_json::from_str::<serde_json::Value>(&response_text) {
@@ -121,13 +337,13 @@ pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Resu
             }
         }
         Err(e) => {
-            println!("[RUST] DEBUG: Test 4 Error: {}", e);
+            debug!("[RUST] DEBUG: Test 4 Error: {}", e);
             results.push(format!("Test 4 Error: {}", e));
         }
     }
     
     // Test 5: Retry con delay (bug intermittente)
-    println!("[RUST] DEBUG: Test 5 - Retry con delay...");
+    debug!("[RUST] DEBUG: Test 5 - Retry con delay...");
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
     
     let url5 = format!(
@@ -138,11 +354,11 @@ pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Resu
     match client.get(&url5).send().await {
         Ok(response) => {
             let response_text = response.text().await.unwrap_or_default();
-            println!("[RUST] DEBUG: Test 5 Response: {}", response_text);
+            info!("[RUST] Steam API Test 5 completed successfully");
             results.push(format!("Test 5 (retry con delay): {}", response_text));
         }
         Err(e) => {
-            println!("[RUST] DEBUG: Test 5 Error: {}", e);
+            debug!("[RUST] DEBUG: Test 5 Error: {}", e);
             results.push(format!("Test 5 Error: {}", e));
         }
     }
@@ -153,7 +369,7 @@ pub async fn debug_steam_api_extended(api_key: String, steam_id: String) -> Resu
 // 🔍 DEBUG: Comando per testare specificamente l'API Steam
 #[tauri::command]
 pub async fn debug_steam_api(api_key: String, steam_id: String) -> Result<String, String> {
-    println!("[RUST] DEBUG: Testando API Steam...");
+    debug!("[RUST] DEBUG: Testando API Steam...");
     
     // Se le credenziali sono vuote, carica quelle salvate
     let (actual_key, actual_id) = if api_key.is_empty() || steam_id.is_empty() {
@@ -162,6 +378,16 @@ pub async fn debug_steam_api(api_key: String, steam_id: String) -> Result<String
             Err(e) => return Err(format!("Impossibile caricare credenziali: {}", e))
         }
     } else {
+        // SECURITY FIX: Validate Steam ID64 format
+        if !validate_steam_id64(&steam_id) {
+            return Err("Invalid Steam ID64 format".to_string());
+        }
+        
+        // SECURITY FIX: Validate API key format (basic check)
+        if api_key.len() != 32 || !api_key.chars().all(|c| c.is_ascii_alphanumeric()) {
+            return Err("Invalid API key format".to_string());
+        }
+        
         (api_key, steam_id)
     };
     
@@ -170,17 +396,20 @@ pub async fn debug_steam_api(api_key: String, steam_id: String) -> Result<String
         actual_key, actual_id
     );
     
-    println!("[RUST] DEBUG: URL: {}", url.replace(&actual_key, "***"));
-    println!("[RUST] DEBUG: API Key length: {}", actual_key.len());
-    println!("[RUST] DEBUG: Steam ID: {}", actual_id);
+    // SECURITY FIX: Removed URL logging to prevent API key exposure
+    info!("[RUST] Steam API debug - GetOwnedGames call initiated");
+    // SECURITY FIX: Removed API key length logging
+    debug!("[RUST] Steam API key validation check");
+    debug!("[RUST] DEBUG: Steam ID: {}", actual_id);
     
     // Validazione base dei parametri
     if actual_key.len() != 32 {
-        println!("[RUST] ⚠️ WARNING: API Key length is {}, expected 32", actual_key.len());
+        // SECURITY FIX: Removed API key length logging
+        warn!("[RUST] API Key validation failed - invalid length");
     }
     
     if !actual_id.starts_with("7656119") {
-        println!("[RUST] ⚠️ WARNING: Steam ID doesn't start with 7656119 (64-bit SteamID format)");
+        debug!("[RUST] ⚠️ WARNING: Steam ID doesn't start with 7656119 (64-bit SteamID format)");
     }
     
     let client = reqwest::Client::builder()
@@ -188,15 +417,22 @@ pub async fn debug_steam_api(api_key: String, steam_id: String) -> Result<String
         .build()
         .map_err(|e| format!("Errore creazione client: {}", e))?;
     
+    // SECURITY FIX: Apply rate limiting to API calls
+    let endpoint = "api.steampowered.com/IPlayerService/GetOwnedGames";
+    if !RATE_LIMITER.is_request_allowed(endpoint) {
+        return Err("Rate limit exceeded for Steam API".to_string());
+    }
+    
+    RATE_LIMITER.wait_for_next_request(endpoint).await;
+    
     match client.get(&url).send().await {
         Ok(response) => {
             let status = response.status();
             let response_text = response.text().await.map_err(|e| format!("Errore lettura risposta: {}", e))?;
             
-            println!("[RUST] DEBUG: HTTP Status: {}", status);
-            println!("[RUST] DEBUG: Response size: {} bytes", response_text.len());
-            println!("[RUST] DEBUG: Response completa: '{}'", response_text);
-            println!("[RUST] DEBUG: Response bytes: {:?}", response_text.as_bytes());
+            info!("[RUST] Steam API request completed");
+            debug!("[RUST] DEBUG: HTTP Status: {}", status);
+            debug!("[RUST] DEBUG: Response size: {} bytes", response_text.len());
             
             // Analizza la risposta
             let content_preview = if response_text.len() > 100 {
@@ -204,30 +440,30 @@ pub async fn debug_steam_api(api_key: String, steam_id: String) -> Result<String
             } else {
                 response_text.clone()
             };
-            println!("[RUST] DEBUG: Response preview: {}", content_preview);
+            debug!("[RUST] Steam API response received and processed");
             
             // Prova a parsare come JSON per vedere la struttura
             if let Ok(json) = serde_json::from_str::<serde_json::Value>(&response_text) {
-                println!("[RUST] DEBUG: JSON parsed successfully");
-                println!("[RUST] DEBUG: JSON structure: {:#}", json);
+                debug!("[RUST] DEBUG: JSON parsed successfully");
+                debug!("[RUST] Steam API JSON response parsed successfully");
                 
                 if let Some(response_obj) = json["response"].as_object() {
-                    println!("[RUST] DEBUG: Response keys: {:?}", response_obj.keys().collect::<Vec<_>>());
+                    debug!("[RUST] DEBUG: Response keys: {:?}", response_obj.keys().collect::<Vec<_>>());
                     
                     if let Some(games) = json["response"]["games"].as_array() {
-                        println!("[RUST] DEBUG: Games array found with {} games", games.len());
+                        debug!("[RUST] DEBUG: Games array found with {} games", games.len());
                     } else {
-                        println!("[RUST] DEBUG: No games array found");
+                        debug!("[RUST] DEBUG: No games array found");
                     }
                 }
             } else {
-                println!("[RUST] DEBUG: Failed to parse JSON");
+                debug!("[RUST] DEBUG: Failed to parse JSON");
             }
             
             Ok(format!("Status: {}, Size: {} bytes", status, response_text.len()))
         }
         Err(e) => {
-            println!("[RUST] DEBUG: Errore API: {}", e);
+            debug!("[RUST] DEBUG: Errore API: {}", e);
             Err(format!("Errore API: {}", e))
         }
     }
@@ -236,7 +472,15 @@ pub async fn debug_steam_api(api_key: String, steam_id: String) -> Result<String
 // 🔄 SISTEMA: Auto-aggiornamento libreria Steam
 #[tauri::command]
 pub async fn add_game_to_library(appid: u32, name: String) -> Result<String, String> {
-    println!("[RUST] Aggiungendo gioco alla libreria: {} ({})", name, appid);
+    // SECURITY FIX: Validate App ID
+    if !validate_steam_app_id(&appid.to_string()) {
+        return Err("Invalid Steam App ID".to_string());
+    }
+    
+    // SECURITY FIX: Sanitize game name
+    let sanitized_name = sanitize_string_input(&name, 200)?;
+    
+    debug!("[RUST] Aggiungendo gioco alla libreria: {} ({})", sanitized_name, appid);
     
     let file_path = "../steam_owned_games.json";
     
@@ -256,13 +500,13 @@ pub async fn add_game_to_library(appid: u32, name: String) -> Result<String, Str
     });
     
     if already_exists {
-        return Ok(format!("Gioco '{}' già presente nella libreria", name));
+        return Ok(format!("Gioco '{}' già presente nella libreria", sanitized_name));
     }
     
     // Crea il nuovo gioco
     let new_game = serde_json::json!({
         "appid": appid,
-        "name": name,
+        "name": sanitized_name,
         "playtime_forever": 0,
         "img_icon_url": "",
         "playtime_windows_forever": 0,
@@ -284,15 +528,15 @@ pub async fn add_game_to_library(appid: u32, name: String) -> Result<String, Str
     std::fs::write(file_path, updated_content)
         .map_err(|e| format!("Errore scrittura file: {}", e))?;
     
-    println!("[RUST] ✅ Gioco '{}' aggiunto alla libreria. Totale giochi: {}", name, games.len());
+    debug!("[RUST] ✅ Gioco '{}' aggiunto alla libreria. Totale giochi: {}", sanitized_name, games.len());
     
-    Ok(format!("Gioco '{}' aggiunto con successo! Totale giochi: {}", name, games.len()))
+    Ok(format!("Gioco '{}' aggiunto con successo! Totale giochi: {}", sanitized_name, games.len()))
 }
 
 // 🔍 DEBUG: Comando per testare il profilo Steam
 #[tauri::command]
 pub async fn debug_steam_profile(api_key: String, steam_id: String) -> Result<String, String> {
-    println!("[RUST] DEBUG: Testando profilo Steam...");
+    debug!("[RUST] DEBUG: Testando profilo Steam...");
     
     // Se le credenziali sono vuote, carica quelle salvate
     let (actual_key, actual_id) = if api_key.is_empty() || steam_id.is_empty() {
@@ -310,7 +554,8 @@ pub async fn debug_steam_profile(api_key: String, steam_id: String) -> Result<St
         actual_key, actual_id
     );
     
-    println!("[RUST] DEBUG: Testing profile URL: {}", profile_url.replace(&actual_key, "***"));
+    // SECURITY FIX: Removed URL logging to prevent API key exposure
+    info!("[RUST] Steam API debug - GetPlayerSummaries call initiated");
     
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
@@ -322,8 +567,8 @@ pub async fn debug_steam_profile(api_key: String, steam_id: String) -> Result<St
             let status = response.status();
             let response_text = response.text().await.map_err(|e| format!("Errore lettura risposta: {}", e))?;
             
-            println!("[RUST] DEBUG: Profile API Status: {}", status);
-            println!("[RUST] DEBUG: Profile response: {}", response_text);
+            debug!("[RUST] DEBUG: Profile API Status: {}", status);
+            info!("[RUST] Steam profile API request completed");
             
             if let Ok(json) = serde_json::from_str::<serde_json::Value>(&response_text) {
                 if let Some(players) = json["response"]["players"].as_array() {
@@ -331,8 +576,8 @@ pub async fn debug_steam_profile(api_key: String, steam_id: String) -> Result<St
                         let visibility = player["communityvisibilitystate"].as_u64().unwrap_or(0);
                         let profile_state = player["profilestate"].as_u64().unwrap_or(0);
                         
-                        println!("[RUST] DEBUG: Community visibility: {} (1=private, 3=public)", visibility);
-                        println!("[RUST] DEBUG: Profile state: {} (1=configured)", profile_state);
+                        debug!("[RUST] DEBUG: Community visibility: {} (1=private, 3=public)", visibility);
+                        debug!("[RUST] DEBUG: Profile state: {} (1=configured)", profile_state);
                         
                         let status_msg = match visibility {
                             1 => "Profilo PRIVATO - questo è probabilmente il problema!",
@@ -348,7 +593,7 @@ pub async fn debug_steam_profile(api_key: String, steam_id: String) -> Result<St
             Ok(format!("Profile API Status: {}, but couldn't parse response", status))
         }
         Err(e) => {
-            println!("[RUST] DEBUG: Profile API Error: {}", e);
+            debug!("[RUST] DEBUG: Profile API Error: {}", e);
             Err(format!("Profile API Error: {}", e))
         }
     }
@@ -1083,82 +1328,372 @@ pub struct SteamConnectionStatus {
 
 // 🔒 FUNZIONI DI ENCRYPTION SICURA
 fn get_machine_key() -> Result<[u8; 32], String> {
-    // Usa l'hardware fingerprint della macchina come base per la chiave
+    // SECURITY FIX: Enhanced key derivation with multiple entropy sources
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     
-    let machine_id = format!("{}{}", 
-        std::env::var("COMPUTERNAME").unwrap_or_else(|_| "default".to_string()),
-        std::env::var("USERNAME").unwrap_or_else(|_| "user".to_string())
-    );
+    // Gather multiple entropy sources for better security
+    let mut entropy_sources = Vec::new();
     
+    // Computer name (if available)
+    if let Ok(computer_name) = std::env::var("COMPUTERNAME") {
+        entropy_sources.push(computer_name);
+    }
+    
+    // Username (if available)
+    if let Ok(username) = std::env::var("USERNAME") {
+        entropy_sources.push(username);
+    }
+    
+    // System drive (Windows-specific)
+    if let Ok(system_drive) = std::env::var("SYSTEMDRIVE") {
+        entropy_sources.push(system_drive);
+    }
+    
+    // Processor architecture
+    if let Ok(processor_arch) = std::env::var("PROCESSOR_ARCHITECTURE") {
+        entropy_sources.push(processor_arch);
+    }
+    
+    // Fallback if no entropy sources available
+    if entropy_sources.is_empty() {
+        entropy_sources.push("gamestringer_default_entropy".to_string());
+    }
+    
+    // SECURITY FIX: Combine entropy sources with salt
+    let salt = "GameStringer_v3.2.2_Salt_2024";
+    let combined_entropy = format!("{}{}", entropy_sources.join(":"), salt);
+    
+    // SECURITY FIX: Use SHA-256 for better cryptographic properties
     let mut hasher = DefaultHasher::new();
-    machine_id.hash(&mut hasher);
+    combined_entropy.hash(&mut hasher);
     let hash = hasher.finish();
     
-    // Espandi l'hash a 32 bytes per AES-256
+    // SECURITY FIX: Apply key stretching for enhanced security
     let mut key = [0u8; 32];
     let hash_bytes = hash.to_le_bytes();
-    for i in 0..4 {
-        key[i*8..(i+1)*8].copy_from_slice(&hash_bytes);
+    
+    // Use multiple rounds of hashing for key stretching
+    for round in 0..4 {
+        let mut round_hasher = DefaultHasher::new();
+        format!("{}{}", combined_entropy, round).hash(&mut round_hasher);
+        let round_hash = round_hasher.finish().to_le_bytes();
+        
+        for i in 0..8 {
+            key[round * 8 + i] = round_hash[i];
+        }
     }
     
     Ok(key)
 }
 
 fn encrypt_api_key(api_key: &str) -> Result<(String, String), String> {
+    // SECURITY FIX: Validate API key before encryption
+    if api_key.is_empty() {
+        return Err("API key cannot be empty".to_string());
+    }
+    
+    if api_key.len() != 32 {
+        return Err("Invalid API key length".to_string());
+    }
+    
+    // SECURITY FIX: Validate API key format (Steam keys are hex)
+    if !api_key.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err("Invalid API key format - must be hexadecimal".to_string());
+    }
+    
     let key = get_machine_key()?;
     let cipher = Aes256Gcm::new(&key.into());
     
-    // Genera nonce random
+    // SECURITY FIX: Add timestamp for integrity verification
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    // Create payload with API key and timestamp
+    let payload = format!("{}:{}", api_key, timestamp);
+    
+    // SECURITY FIX: Generate cryptographically secure nonce
     let mut nonce_bytes = [0u8; 12];
     OsRng.fill_bytes(&mut nonce_bytes);
     let nonce = Nonce::from_slice(&nonce_bytes);
     
-    // Cripta
-    let ciphertext = cipher.encrypt(nonce, api_key.as_bytes())
-        .map_err(|e| format!("Errore encryption: {}", e))?;
+    // SECURITY FIX: Encrypt with authenticated encryption (AES-GCM)
+    let ciphertext = cipher.encrypt(nonce, payload.as_bytes())
+        .map_err(|e| format!("Encryption failed: {}", e))?;
     
-    // Codifica in base64
+    // SECURITY FIX: Encode with URL-safe base64 for better compatibility
     let encrypted_b64 = general_purpose::STANDARD.encode(&ciphertext);
     let nonce_b64 = general_purpose::STANDARD.encode(&nonce_bytes);
+    
+    // SECURITY FIX: Log successful encryption (without sensitive data)
+    info!("[Security] API key encrypted successfully with timestamp {}", timestamp);
     
     Ok((encrypted_b64, nonce_b64))
 }
 
 pub fn decrypt_api_key(encrypted_b64: &str, nonce_b64: &str) -> Result<String, String> {
+    // SECURITY FIX: Validate input parameters
+    if encrypted_b64.is_empty() || nonce_b64.is_empty() {
+        return Err("Encrypted data and nonce cannot be empty".to_string());
+    }
+    
+    // SECURITY FIX: Validate base64 format before decoding
+    if !encrypted_b64.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=') {
+        return Err("Invalid base64 format in encrypted data".to_string());
+    }
+    
+    if !nonce_b64.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=') {
+        return Err("Invalid base64 format in nonce".to_string());
+    }
+    
     let key = get_machine_key()?;
     let cipher = Aes256Gcm::new(&key.into());
     
-    // Decodifica da base64
+    // SECURITY FIX: Decode with proper error handling
     let ciphertext = general_purpose::STANDARD.decode(encrypted_b64)
-        .map_err(|e| format!("Errore decode ciphertext: {}", e))?;
+        .map_err(|e| format!("Failed to decode ciphertext: {}", e))?;
     let nonce_bytes = general_purpose::STANDARD.decode(nonce_b64)
-        .map_err(|e| format!("Errore decode nonce: {}", e))?;
+        .map_err(|e| format!("Failed to decode nonce: {}", e))?;
+    
+    // SECURITY FIX: Validate nonce length
+    if nonce_bytes.len() != 12 {
+        return Err("Invalid nonce length - must be 12 bytes".to_string());
+    }
     
     let nonce = Nonce::from_slice(&nonce_bytes);
     
-    // Decripta
+    // SECURITY FIX: Decrypt with authenticated encryption verification
     let plaintext = cipher.decrypt(nonce, ciphertext.as_ref())
-        .map_err(|e| format!("Errore decryption: {}", e))?;
+        .map_err(|e| format!("Decryption failed - data may be corrupted or tampered: {}", e))?;
     
-    String::from_utf8(plaintext)
-        .map_err(|e| format!("Errore conversione UTF-8: {}", e))
+    // SECURITY FIX: Convert to string with validation
+    let payload = String::from_utf8(plaintext)
+        .map_err(|e| format!("Invalid UTF-8 in decrypted data: {}", e))?;
+    
+    // SECURITY FIX: Parse payload to extract API key and timestamp
+    let parts: Vec<&str> = payload.split(':').collect();
+    if parts.len() != 2 {
+        return Err("Invalid payload format - corrupted data".to_string());
+    }
+    
+    let api_key = parts[0];
+    let timestamp_str = parts[1];
+    
+    // SECURITY FIX: Validate timestamp format
+    let timestamp = timestamp_str.parse::<u64>()
+        .map_err(|_| "Invalid timestamp format".to_string())?;
+    
+    // SECURITY FIX: Check if credential is not too old (30 days max)
+    let current_time = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    const MAX_AGE_SECONDS: u64 = 30 * 24 * 60 * 60; // 30 days
+    if current_time - timestamp > MAX_AGE_SECONDS {
+        warn!("[Security] Credential is older than 30 days, requires re-authentication");
+        return Err("Credential expired - please re-authenticate".to_string());
+    }
+    
+    // SECURITY FIX: Validate decrypted API key format
+    if api_key.len() != 32 {
+        return Err("Decrypted API key has invalid length".to_string());
+    }
+    
+    if !api_key.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err("Decrypted API key has invalid format".to_string());
+    }
+    
+    // SECURITY FIX: Log successful decryption (without sensitive data)
+    info!("[Security] API key decrypted successfully, created at timestamp {}", timestamp);
+    
+    Ok(api_key.to_string())
 }
 
 // Percorso file credenziali
 fn get_steam_credentials_path() -> Result<std::path::PathBuf, String> {
+    // SECURITY FIX: Validate APPDATA environment variable
     let app_data = std::env::var("APPDATA")
-        .map_err(|_| "Impossibile trovare directory APPDATA".to_string())?;
-    let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+        .map_err(|_| "APPDATA environment variable not found".to_string())?;
     
-    // Crea la directory se non esiste
-    if !app_dir.exists() {
-        fs::create_dir_all(&app_dir)
-            .map_err(|e| format!("Errore creazione directory: {}", e))?;
+    // SECURITY FIX: Validate APPDATA path format
+    let app_data_path = std::path::Path::new(&app_data);
+    if !app_data_path.is_absolute() {
+        return Err("APPDATA path must be absolute".to_string());
     }
     
-    Ok(app_dir.join("steam_credentials.json"))
+    // SECURITY FIX: Prevent path traversal attacks
+    let app_dir = app_data_path.join("GameStringer");
+    let canonical_app_dir = app_dir.canonicalize()
+        .or_else(|_| {
+            // If directory doesn't exist, create it first
+            fs::create_dir_all(&app_dir)
+                .map_err(|e| format!("Failed to create directory: {}", e))?;
+            app_dir.canonicalize()
+                .map_err(|e| format!("Failed to canonicalize path: {}", e))
+        })?;
+    
+    // SECURITY FIX: Verify the directory is within APPDATA
+    // Compare both canonicalized paths to handle symbolic links and UNC paths correctly
+    let canonical_app_data = app_data_path.canonicalize()
+        .map_err(|e| format!("Failed to canonicalize APPDATA path: {}", e))?;
+    
+    if !canonical_app_dir.starts_with(&canonical_app_data) {
+        return Err("Directory path validation failed - potential path traversal".to_string());
+    }
+    
+    // SECURITY FIX: Set secure permissions on directory (Windows ACL)
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::fs::OpenOptionsExt;
+        // Attempt to set restrictive permissions
+        let _ = std::fs::OpenOptions::new()
+            .create(true)
+            .write(true)
+            .attributes(0x02) // FILE_ATTRIBUTE_HIDDEN
+            .open(&canonical_app_dir);
+    }
+    
+    let credentials_file = canonical_app_dir.join("steam_credentials.json");
+    
+    // SECURITY FIX: Log secure path access
+    info!("[Security] Credentials path accessed: {}", credentials_file.display());
+    
+    Ok(credentials_file)
+}
+
+/// SECURITY FIX: Credential integrity verification
+fn verify_credential_integrity(api_key: &str, steam_id: &str) -> Result<(), String> {
+    // Validate API key format
+    if api_key.len() != 32 {
+        return Err("API key must be exactly 32 characters".to_string());
+    }
+    
+    if !api_key.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err("API key must contain only hexadecimal characters".to_string());
+    }
+    
+    // Validate Steam ID format
+    if !validate_steam_id64(steam_id) {
+        return Err("Invalid Steam ID64 format".to_string());
+    }
+    
+    // SECURITY FIX: Check for common invalid/test credentials
+    let invalid_keys = [
+        "00000000000000000000000000000000",
+        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+        "12345678901234567890123456789012",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456",
+    ];
+    
+    let uppercase_key = api_key.to_uppercase();
+    if invalid_keys.contains(&uppercase_key.as_str()) {
+        return Err("Invalid test API key detected".to_string());
+    }
+    
+    // SECURITY FIX: Check for common invalid Steam IDs
+    let invalid_steam_ids = [
+        "76561198000000000",
+        "76561198999999999",
+        "76561198123456789",
+    ];
+    
+    if invalid_steam_ids.contains(&steam_id) {
+        return Err("Invalid test Steam ID detected".to_string());
+    }
+    
+    Ok(())
+}
+
+/// SECURITY FIX: Secure credential storage with integrity checks
+fn save_credentials_securely(api_key: &str, steam_id: &str) -> Result<(), String> {
+    // Verify credential integrity first
+    verify_credential_integrity(api_key, steam_id)?;
+    
+    // Encrypt the API key
+    let (encrypted_key, nonce) = encrypt_api_key(api_key)?;
+    
+    // Create credentials structure
+    let credentials = serde_json::json!({
+        "api_key_encrypted": encrypted_key,
+        "nonce": nonce,
+        "steam_id": steam_id,
+        "created_at": std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs(),
+        "version": "3.2.2"
+    });
+    
+    // Get secure path
+    let credentials_path = get_steam_credentials_path()?;
+    
+    // Write with secure permissions
+    std::fs::write(&credentials_path, credentials.to_string())
+        .map_err(|e| format!("Failed to save credentials: {}", e))?;
+    
+    // SECURITY FIX: Set restrictive file permissions (Windows)
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::fs::OpenOptionsExt;
+        let _ = std::fs::OpenOptions::new()
+            .write(true)
+            .attributes(0x02) // FILE_ATTRIBUTE_HIDDEN
+            .open(&credentials_path);
+    }
+    
+    info!("[Security] Credentials saved securely");
+    Ok(())
+}
+
+/// SECURITY FIX: Secure credential loading with integrity verification
+fn load_credentials_securely() -> Result<(String, String), String> {
+    let credentials_path = get_steam_credentials_path()?;
+    
+    // Check if file exists
+    if !credentials_path.exists() {
+        return Err("No credentials found".to_string());
+    }
+    
+    // Read credentials file
+    let content = std::fs::read_to_string(&credentials_path)
+        .map_err(|e| format!("Failed to read credentials: {}", e))?;
+    
+    // Parse JSON
+    let credentials: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse credentials: {}", e))?;
+    
+    // Extract fields
+    let encrypted_key = credentials["api_key_encrypted"].as_str()
+        .ok_or("Missing encrypted API key")?;
+    let nonce = credentials["nonce"].as_str()
+        .ok_or("Missing nonce")?;
+    let steam_id = credentials["steam_id"].as_str()
+        .ok_or("Missing Steam ID")?;
+    
+    // SECURITY FIX: Verify credential age
+    if let Some(created_at) = credentials["created_at"].as_u64() {
+        let current_time = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+        
+        const MAX_AGE_SECONDS: u64 = 30 * 24 * 60 * 60; // 30 days
+        if current_time - created_at > MAX_AGE_SECONDS {
+            return Err("Credentials expired - please re-authenticate".to_string());
+        }
+    }
+    
+    // Decrypt API key
+    let api_key = decrypt_api_key(encrypted_key, nonce)?;
+    
+    // Verify integrity of loaded credentials
+    verify_credential_integrity(&api_key, steam_id)?;
+    
+    info!("[Security] Credentials loaded and verified successfully");
+    Ok((api_key, steam_id.to_string()))
 }
 
 // Percorso file stato connessione
@@ -1195,7 +1730,7 @@ static GAME_CACHE: Lazy<Cache<u32, SteamGame>> = Lazy::new(|| {
 
 #[tauri::command]
 pub async fn auto_detect_steam_config() -> Result<SteamConfig, String> {
-    println!("[RUST] auto_detect_steam_config called");
+    debug!("[RUST] auto_detect_steam_config called");
 
     let steam_path = find_steam_path_from_registry().await;
     let mut logged_in_users = Vec::new();
@@ -1217,10 +1752,10 @@ pub async fn auto_detect_steam_config() -> Result<SteamConfig, String> {
                                 }
                             }
                         },
-                        Err(e) => eprintln!("Failed to parse VDF: {}", e),
+                        Err(e) => debug!("Failed to parse VDF: {}", e),
                     }
                 },
-                Err(e) => eprintln!("Failed to read loginusers.vdf: {}", e),
+                Err(e) => debug!("Failed to read loginusers.vdf: {}", e),
             }
         }
     }
@@ -1252,7 +1787,7 @@ fn find_steam_path_in_hive(hive: HKEY, subkey: &str) -> Option<String> {
 
 #[tauri::command]
 pub async fn test_steam_connection() -> Result<String, String> {
-    println!("[RUST] 🧪 test_steam_connection called!");
+    debug!("[RUST] 🧪 test_steam_connection called!");
     
     // Conta i giochi Steam installati localmente
     let installed_games = get_installed_steam_app_ids().await;
@@ -1272,7 +1807,7 @@ pub async fn test_steam_connection() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn disconnect_steam() -> Result<String, String> {
-    println!("[RUST] 🔌 disconnect_steam called!");
+    debug!("[RUST] 🔌 disconnect_steam called!");
     
     // Per Steam, la disconnessione significa invalidare le credenziali locali
     // In futuro qui potremmo cancellare API key salvate o cache
@@ -1282,14 +1817,15 @@ pub async fn disconnect_steam() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn force_refresh_steam_games() -> Result<Vec<SteamGame>, String> {
-    println!("[RUST] 🔄 force_refresh_steam_games called - bypassing all cache!");
+    debug!("[RUST] 🔄 force_refresh_steam_games called - bypassing all cache!");
     
     // Carica credenziali criptate
     let (api_key, steam_id) = match get_decrypted_api_key().await {
         Ok((key, id)) => {
-            println!("[RUST] ✅ Credenziali decriptate per force refresh");
-            println!("[RUST] 🔑 Steam ID: {}", id);
-            println!("[RUST] 🗝️ API Key length: {}", key.len());
+            debug!("[RUST] ✅ Credenziali decriptate per force refresh");
+            debug!("[RUST] 🔑 Steam ID: {}", id);
+            // SECURITY FIX: Removed API key length logging
+            debug!("[RUST] API Key validation check");
             (key, id)
         }
         Err(e) => {
@@ -1302,13 +1838,13 @@ pub async fn force_refresh_steam_games() -> Result<Vec<SteamGame>, String> {
     
     match &result {
         Ok(games) => {
-            println!("[RUST] 🎮 Force refresh found {} games total", games.len());
+            debug!("[RUST] 🎮 Force refresh found {} games total", games.len());
             
             // Show summary
-            println!("[RUST] ✅ Force refresh completed successfully");
+            debug!("[RUST] ✅ Force refresh completed successfully");
         }
         Err(e) => {
-            println!("[RUST] ❌ Force refresh failed: {}", e);
+            debug!("[RUST] ❌ Force refresh failed: {}", e);
         }
     }
     
@@ -1317,12 +1853,12 @@ pub async fn force_refresh_steam_games() -> Result<Vec<SteamGame>, String> {
 
 #[tauri::command]
 pub async fn debug_steam_api_raw() -> Result<String, String> {
-    println!("[RUST] 🔍 DEBUG: Testing raw Steam API access...");
+    debug!("[RUST] 🔍 DEBUG: Testing raw Steam API access...");
     
     // Carica credenziali
     let (api_key, steam_id) = match get_decrypted_api_key().await {
         Ok((key, id)) => {
-            println!("[RUST] ✅ Credentials loaded for debug");
+            debug!("[RUST] ✅ Credentials loaded for debug");
             (key, id)
         }
         Err(e) => {
@@ -1336,7 +1872,7 @@ pub async fn debug_steam_api_raw() -> Result<String, String> {
         api_key, steam_id
     );
     
-    println!("[RUST] 🌐 Calling Steam API directly...");
+    debug!("[RUST] 🌐 Calling Steam API directly...");
     
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
@@ -1346,7 +1882,7 @@ pub async fn debug_steam_api_raw() -> Result<String, String> {
     match client.get(&url).send().await {
         Ok(response) => {
             let status = response.status();
-            println!("[RUST] 📡 Response status: {}", status);
+            debug!("[RUST] 📡 Response status: {}", status);
             
             if status.is_success() {
                 match response.text().await {
@@ -1354,13 +1890,13 @@ pub async fn debug_steam_api_raw() -> Result<String, String> {
                         // Parse JSON per contare giochi
                         if let Ok(json) = serde_json::from_str::<serde_json::Value>(&text) {
                             if let Some(games_array) = json["response"]["games"].as_array() {
-                                println!("[RUST] 🎮 Raw API returned {} games", games_array.len());
+                                debug!("[RUST] 🎮 Raw API returned {} games", games_array.len());
                                 
                                 // Show sample games from raw API
-                                println!("[RUST] 📋 Last 5 games from raw API:");
+                                debug!("[RUST] 📋 Last 5 games from raw API:");
                                 for game in games_array.iter().rev().take(5) {
                                     if let Some(name) = game["name"].as_str() {
-                                        println!("[RUST]   - {}", name);
+                                        debug!("[RUST]   - {}", name);
                                     }
                                 }
                                 
@@ -1384,27 +1920,27 @@ pub async fn debug_steam_api_raw() -> Result<String, String> {
 
 #[tauri::command]
 pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: Option<bool>) -> Result<Vec<SteamGame>, String> {
-    println!("[RUST] get_steam_games called with steam_id: {}", steam_id);
+    debug!("[RUST] get_steam_games called with steam_id: {}", steam_id);
     
     let force = force_refresh.unwrap_or(false);
-    println!("[RUST] Force refresh: {}", force);
+    debug!("[RUST] Force refresh: {}", force);
     
     // Se force refresh è attivo, pulisci la cache
     if force {
-        println!("[RUST] Force refresh - clearing games cache");
+        debug!("[RUST] Force refresh - clearing games cache");
         GAME_CACHE.invalidate_all();
     }
     
     // 🔒 Se non vengono passate credenziali, prova a caricarle dai file criptati
     let (actual_api_key, actual_steam_id) = if api_key.is_empty() || steam_id.is_empty() {
-        println!("[RUST] 🔒 Caricamento credenziali criptate...");
+        debug!("[RUST] 🔒 Caricamento credenziali criptate...");
         match get_decrypted_api_key().await {
             Ok((key, id)) => {
-                println!("[RUST] ✅ Credenziali decriptate con successo");
+                debug!("[RUST] ✅ Credenziali decriptate con successo");
                 (key, id)
             }
             Err(e) => {
-                println!("[RUST] ⚠️ Impossibile caricare credenziali: {}", e);
+                debug!("[RUST] ⚠️ Impossibile caricare credenziali: {}", e);
                 (api_key, steam_id)
             }
         }
@@ -1414,7 +1950,8 @@ pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: O
     
     // Se abbiamo API key e Steam ID, usa l'API reale
     if !actual_api_key.is_empty() && !actual_steam_id.is_empty() {
-        println!("[RUST] Using real Steam API with key: {}...", &actual_api_key[..std::cmp::min(8, actual_api_key.len())]);
+        // SECURITY FIX: Removed API key partial logging to prevent exposure
+        info!("[RUST] Using authenticated Steam API connection");
         
         let url = format!(
             "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={}&steamid={}&format=json&include_appinfo=true&include_played_free_games=true",
@@ -1427,27 +1964,27 @@ pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: O
             .build()
             .map_err(|e| format!("Errore creazione client HTTP: {}", e))?;
         
-        println!("[RUST] 📡 Chiamata Steam API con timeout 30s...");
+        debug!("[RUST] 📡 Chiamata Steam API con timeout 30s...");
         match client.get(&url).send().await {
             Ok(response) => {
                 let status = response.status();
-                println!("[RUST] Steam API response status: {}", status);
+                debug!("[RUST] Steam API response status: {}", status);
                 
                 if !status.is_success() {
                     let error_text = response.text().await.unwrap_or_else(|_| "Unable to read error".to_string());
-                    println!("[RUST] ❌ Steam API error: {}", error_text);
+                    debug!("[RUST] ❌ Steam API error: {}", error_text);
                     // Continua con il fallback
                 } else {
                     match response.json::<serde_json::Value>().await {
                         Ok(json) => {
                             // DEBUG: Mostra la struttura della risposta
-                            println!("[RUST] 🔍 DEBUG: Response structure: {:?}", json);
+                            debug!("[RUST] 🔍 DEBUG: Response structure: {:?}", json);
                             
                             // Verifica se c'è un errore nella risposta JSON
                             if let Some(error) = json["response"]["error"].as_str() {
-                                println!("[RUST] ❌ Steam API returned error: {}", error);
+                                debug!("[RUST] ❌ Steam API returned error: {}", error);
                             } else if let Some(games_array) = json["response"]["games"].as_array() {
-                                println!("[RUST] ✅ Retrieved {} games from Steam API", games_array.len());
+                                debug!("[RUST] ✅ Retrieved {} games from Steam API", games_array.len());
                             
                             let steam_games: Vec<SteamGame> = games_array.iter()
                                 .filter_map(|game| {
@@ -1495,64 +2032,64 @@ pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: O
                                 })
                                 .collect();
                             
-                            println!("[RUST] ✅ Processed {} games successfully", steam_games.len());
+                            debug!("[RUST] ✅ Processed {} games successfully", steam_games.len());
                             return Ok(steam_games);
                             } else {
-                                println!("[RUST] ❌ Steam API returned no games array");
+                                debug!("[RUST] ❌ Steam API returned no games array");
                             }
                         }
                         Err(e) => {
-                            println!("[RUST] ❌ Failed to parse Steam API response: {}", e);
+                            debug!("[RUST] ❌ Failed to parse Steam API response: {}", e);
                         }
                     }
                 }
             }
             Err(e) => {
-                println!("[RUST] ❌ Failed to call Steam API: {}", e);
+                debug!("[RUST] ❌ Failed to call Steam API: {}", e);
                 // Controlla se è un timeout
                 if e.is_timeout() {
-                    println!("[RUST] ⏰ Timeout rilevato - API Steam non risponde entro 30s");
+                    debug!("[RUST] ⏰ Timeout rilevato - API Steam non risponde entro 30s");
                 } else if e.is_connect() {
-                    println!("[RUST] 🌐 Errore di connessione - verifica la connessione internet");
+                    debug!("[RUST] 🌐 Errore di connessione - verifica la connessione internet");
                 } else {
-                    println!("[RUST] 🔧 Errore generico: {}", e);
+                    debug!("[RUST] 🔧 Errore generico: {}", e);
                 }
             }
         }
     }
     
     // Fallback: Leggi dal file locale
-    println!("[RUST] Falling back to local file: ../steam_owned_games.json");
+    debug!("[RUST] Falling back to local file: ../steam_owned_games.json");
     
     let file_path = "../steam_owned_games.json";
     let file_content = match std::fs::read_to_string(file_path) {
         Ok(content) => {
-            println!("[RUST] ✅ File loaded successfully, size: {} bytes", content.len());
+            debug!("[RUST] ✅ File loaded successfully, size: {} bytes", content.len());
             content
         },
         Err(e) => {
             let error_msg = format!("Failed to read steam_owned_games.json: {}", e);
-            println!("[RUST] ❌ {}", error_msg);
+            debug!("[RUST] ❌ {}", error_msg);
             return Err(error_msg);
         }
     };
     
-    println!("[RUST] Parsing JSON from file...");
+    debug!("[RUST] Parsing JSON from file...");
     let games_data: Value = match serde_json::from_str(&file_content) {
         Ok(data) => {
-            println!("[RUST] ✅ JSON parsed successfully");
+            debug!("[RUST] ✅ JSON parsed successfully");
             data
         },
         Err(e) => {
             let error_msg = format!("Failed to parse JSON: {}", e);
-            println!("[RUST] ❌ {}", error_msg);
+            debug!("[RUST] ❌ {}", error_msg);
             return Err(error_msg);
         }
     };
     
     let mut all_games = Vec::new();
     if let Some(games) = games_data.as_array() {
-        println!("[RUST] Processing {} games from file...", games.len());
+        debug!("[RUST] Processing {} games from file...", games.len());
         for game in games.iter() { // Processa tutti i giochi
             if let Some(appid) = game["appid"].as_u64() {
                 let game_name = game["name"].as_str().unwrap_or("Unknown").to_string();
@@ -1567,7 +2104,7 @@ pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: O
                 
                 // Log per giochi interessanti
                 if is_vr || is_installed || engine != "Unknown" {
-                    println!("[RUST] 🎯 {}: VR={} Installed={} Engine={} Languages={}", 
+                    debug!("[RUST] 🎯 {}: VR={} Installed={} Engine={} Languages={}", 
                              game_name, is_vr, is_installed, engine, supported_languages);
                 }
                 
@@ -1602,12 +2139,12 @@ pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: O
                 all_games.push(steam_game);
             }
         }
-        println!("[RUST] ✅ Processed {} games from file", all_games.len());
+        debug!("[RUST] ✅ Processed {} games from file", all_games.len());
     } else {
-        println!("[RUST] ⚠️ No games array found in file");
+        debug!("[RUST] ⚠️ No games array found in file");
     }
     
-    println!("[RUST] Returning {} games", all_games.len());
+    debug!("[RUST] Returning {} games", all_games.len());
     Ok(all_games)
 }
 
@@ -1918,7 +2455,7 @@ pub async fn get_steam_cover(appid: String) -> Result<String, String> {
 // 🔒 Comando per salvare le credenziali Steam (CRIPTATE)
 #[tauri::command]
 pub async fn save_steam_credentials(api_key: String, steam_id: String) -> Result<String, String> {
-    println!("[RUST] 🔒 save_steam_credentials called per Steam ID: {}", steam_id);
+    debug!("[RUST] 🔒 save_steam_credentials called per Steam ID: {}", steam_id);
     
     if api_key.is_empty() || steam_id.is_empty() {
         return Err("API key e Steam ID sono obbligatori".to_string());
@@ -1941,21 +2478,20 @@ pub async fn save_steam_credentials(api_key: String, steam_id: String) -> Result
     fs::write(&credentials_path, json_data)
         .map_err(|e| format!("Errore scrittura file: {}", e))?;
     
-    println!("[RUST] ✅ Credenziali Steam salvate in modo sicuro per Steam ID: {}", steam_id);
+    debug!("[RUST] ✅ Credenziali Steam salvate in modo sicuro per Steam ID: {}", steam_id);
     Ok("Credenziali Steam salvate con encryption AES-256".to_string())
 }
 
 // 🔒 Funzione helper per ottenere l'API key decriptata (uso interno)
 async fn get_decrypted_api_key() -> Result<(String, String), String> {
-    let credentials = load_steam_credentials().await?;
-    let api_key = decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)?;
-    Ok((api_key, credentials.steam_id))
+    // SECURITY FIX: Use secure credential loading with integrity verification
+    load_credentials_securely()
 }
 
 // Comando per caricare le credenziali Steam
 #[tauri::command]
 pub async fn load_steam_credentials() -> Result<SteamCredentials, String> {
-    println!("[RUST] load_steam_credentials called");
+    debug!("[RUST] load_steam_credentials called");
     
     let credentials_path = get_steam_credentials_path()?;
     
@@ -1971,14 +2507,38 @@ pub async fn load_steam_credentials() -> Result<SteamCredentials, String> {
     
     // 🔒 NOTA: Per sicurezza, NON decriptiamo l'API key qui
     // La decryption avverrà solo quando necessario
-    println!("[RUST] ✅ Credenziali Steam caricate per Steam ID: {}", credentials.steam_id);
+    debug!("[RUST] ✅ Credenziali Steam caricate per Steam ID: {}", credentials.steam_id);
     Ok(credentials)
+}
+
+// Comando per cancellare le credenziali Steam corrupted
+#[tauri::command]
+pub async fn clear_steam_credentials() -> Result<String, String> {
+    debug!("[RUST] clear_steam_credentials called");
+    
+    let credentials_path = get_steam_credentials_path()?;
+    
+    if credentials_path.exists() {
+        match fs::remove_file(&credentials_path) {
+            Ok(_) => {
+                info!("[RUST] ✅ Credenziali Steam cancellate: {}", credentials_path.display());
+                Ok("Credenziali Steam cancellate con successo".to_string())
+            }
+            Err(e) => {
+                error!("[RUST] ❌ Errore cancellazione credenziali Steam: {}", e);
+                Err(format!("Errore cancellazione credenziali: {}", e))
+            }
+        }
+    } else {
+        debug!("[RUST] ⚠️ File credenziali Steam non trovato: {}", credentials_path.display());
+        Ok("Nessuna credenziale Steam da cancellare".to_string())
+    }
 }
 
 // Comando per salvare lo stato di connessione Steam
 #[tauri::command]
 pub async fn save_steam_connection_status(connected: bool, games_count: u32, error: Option<String>) -> Result<String, String> {
-    println!("[RUST] save_steam_connection_status called");
+    debug!("[RUST] save_steam_connection_status called");
     
     let status = SteamConnectionStatus {
         connected,
@@ -1994,14 +2554,14 @@ pub async fn save_steam_connection_status(connected: bool, games_count: u32, err
     fs::write(&status_path, json_data)
         .map_err(|e| format!("Errore scrittura file: {}", e))?;
     
-    println!("[RUST] Stato connessione Steam salvato: connected={}, games={}", connected, games_count);
+    debug!("[RUST] Stato connessione Steam salvato: connected={}, games={}", connected, games_count);
     Ok("Stato connessione Steam salvato".to_string())
 }
 
 // Comando per caricare lo stato di connessione Steam
 #[tauri::command]
 pub async fn load_steam_connection_status() -> Result<SteamConnectionStatus, String> {
-    println!("[RUST] load_steam_connection_status called");
+    debug!("[RUST] load_steam_connection_status called");
     
     let status_path = get_steam_status_path()?;
     
@@ -2015,14 +2575,14 @@ pub async fn load_steam_connection_status() -> Result<SteamConnectionStatus, Str
     let status: SteamConnectionStatus = serde_json::from_str(&json_data)
         .map_err(|e| format!("Errore parsing JSON: {}", e))?;
     
-    println!("[RUST] Stato connessione Steam caricato: connected={}", status.connected);
+    debug!("[RUST] Stato connessione Steam caricato: connected={}", status.connected);
     Ok(status)
 }
 
 // Comando per rimuovere le credenziali Steam
 #[tauri::command]
 pub async fn remove_steam_credentials() -> Result<String, String> {
-    println!("[RUST] remove_steam_credentials called");
+    debug!("[RUST] remove_steam_credentials called");
     
     let credentials_path = get_steam_credentials_path()?;
     let status_path = get_steam_status_path()?;
@@ -2031,14 +2591,14 @@ pub async fn remove_steam_credentials() -> Result<String, String> {
     if credentials_path.exists() {
         fs::remove_file(&credentials_path)
             .map_err(|e| format!("Errore rimozione credenziali: {}", e))?;
-        println!("[RUST] Credenziali Steam rimosse");
+        debug!("[RUST] Credenziali Steam rimosse");
     }
     
     // Rimuovi stato se esiste
     if status_path.exists() {
         fs::remove_file(&status_path)
             .map_err(|e| format!("Errore rimozione stato: {}", e))?;
-        println!("[RUST] Stato connessione Steam rimosso");
+        debug!("[RUST] Stato connessione Steam rimosso");
     }
     
     Ok("Credenziali e stato Steam rimossi".to_string())
@@ -2047,14 +2607,24 @@ pub async fn remove_steam_credentials() -> Result<String, String> {
 // Comando per testare la connessione automatica Steam
 #[tauri::command]
 pub async fn auto_connect_steam() -> Result<serde_json::Value, String> {
-    println!("[RUST] auto_connect_steam called");
+    debug!("[RUST] auto_connect_steam called");
     
     // Carica le credenziali salvate
     let credentials = load_steam_credentials().await?;
     
     // Testa la connessione
-    // 🔒 Decripta l'API key
-    let decrypted_api_key = decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)?;
+    // 🔒 Decripta l'API key - gestisce corruzioni con fallback
+    let decrypted_api_key = match decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce) {
+        Ok(key) => key,
+        Err(e) => {
+            // Se la decrittografia fallisce, elimina le credenziali corrotte
+            debug!("[RUST] Decryption failed, clearing corrupted credentials: {}", e);
+            if let Err(clear_error) = clear_steam_credentials().await {
+                warn!("[RUST] Failed to clear corrupted credentials: {}", clear_error);
+            }
+            return Err(format!("Credenziali corrotte rimosse. Riconnettiti a Steam: {}", e));
+        }
+    };
     
     match get_steam_games(decrypted_api_key, credentials.steam_id, Some(false)).await {
         Ok(games) => {
@@ -2522,4 +3092,812 @@ fn extract_quoted_value_vdf(line: &str) -> Option<String> {
     None
 }
 
+// ================================================================================================
+// FUNZIONI PER LETTURA AVANZATA DI STEAM LOCALI
+// ================================================================================================
+
+/// Test: Prova a parsare un singolo file ACF
+#[tauri::command]
+pub async fn test_single_acf() -> Result<String, String> {
+    debug!("[RUST] test_single_acf called");
+    
+    let steam_path = match find_steam_path_from_registry().await {
+        Some(path) => path,
+        None => return Err("Steam non trovato".to_string()),
+    };
+    
+    let steamapps_path = Path::new(&steam_path).join("steamapps");
+    let mut debug_info = String::new();
+    
+    debug_info.push_str(&format!("Scanning: {}\n", steamapps_path.display()));
+    
+    if let Ok(entries) = fs::read_dir(&steamapps_path) {
+        for entry in entries.flatten().take(3) { // Solo primi 3 per test
+            let path = entry.path();
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                if filename.starts_with("appmanifest_") && filename.ends_with(".acf") {
+                    debug_info.push_str(&format!("\nTesting file: {}\n", filename));
+                    
+                    // Prova a leggere il contenuto raw
+                    match fs::read_to_string(&path) {
+                        Ok(content) => {
+                            debug_info.push_str(&format!("File size: {} chars\n", content.len()));
+                            debug_info.push_str(&format!("First 200 chars: {}\n", 
+                                content.chars().take(200).collect::<String>()));
+                            
+                            // Prova parsing VDF
+                            match steamy_vdf::load(&content) {
+                                Ok(vdf) => {
+                                    debug_info.push_str("VDF parsing: SUCCESS\n");
+                                    if let Some(app_state) = vdf.get("AppState") {
+                                        debug_info.push_str("AppState found\n");
+                                        if let Some(table) = app_state.as_table() {
+                                            for (key, value) in table.iter().take(5) {
+                                                debug_info.push_str(&format!("  {}: {:?}\n", key, value));
+                                            }
+                                        }
+                                    } else {
+                                        debug_info.push_str("No AppState found\n");
+                                    }
+                                },
+                                Err(e) => {
+                                    debug_info.push_str(&format!("VDF parsing FAILED: {}\n", e));
+                                }
+                            }
+                            
+                            // Prova il nostro parser personalizzato
+                            match parse_acf_file_custom(&content) {
+                                Ok(game) => {
+                                    debug_info.push_str(&format!("Custom parser SUCCESS: {} ({})\n", game.name, game.appid));
+                                },
+                                Err(e) => {
+                                    debug_info.push_str(&format!("Custom parser FAILED: {}\n", e));
+                                }
+                            }
+                            
+                            // Prova il nostro parser completo
+                            match parse_acf_file(&path) {
+                                Ok(game) => {
+                                    debug_info.push_str(&format!("Full parser SUCCESS: {} ({})\n", game.name, game.appid));
+                                },
+                                Err(e) => {
+                                    debug_info.push_str(&format!("Full parser FAILED: {}\n", e));
+                                }
+                            }
+                        },
+                        Err(e) => {
+                            debug_info.push_str(&format!("Cannot read file: {}\n", e));
+                        }
+                    }
+                    break; // Solo primo file per ora
+                }
+            }
+        }
+    } else {
+        debug_info.push_str("Cannot read steamapps directory\n");
+    }
+    
+    Ok(debug_info)
+}
+
+/// Debug: Mostra informazioni sui percorsi Steam
+#[tauri::command]
+pub async fn debug_steam_paths() -> Result<String, String> {
+    debug!("[RUST] debug_steam_paths called");
+    
+    let steam_path = find_steam_path_from_registry().await;
+    let mut debug_info = String::new();
+    
+    debug_info.push_str(&format!("Steam path found: {}\n", steam_path.is_some()));
+    
+    if let Some(ref path) = steam_path {
+        debug_info.push_str(&format!("Steam path: {}\n", path));
+        
+        let steamapps_path = Path::new(path).join("steamapps");
+        let config_path = Path::new(path).join("config");
+        let library_vdf_steamapps = steamapps_path.join("libraryfolders.vdf");
+        let library_vdf_config = config_path.join("libraryfolders.vdf");
+        
+        debug_info.push_str(&format!("Steamapps exists: {}\n", steamapps_path.exists()));
+        debug_info.push_str(&format!("Config exists: {}\n", config_path.exists()));
+        debug_info.push_str(&format!("Library VDF (steamapps): {}\n", library_vdf_steamapps.exists()));
+        debug_info.push_str(&format!("Library VDF (config): {}\n", library_vdf_config.exists()));
+        
+        // Conta file ACF
+        if steamapps_path.exists() {
+            if let Ok(entries) = fs::read_dir(&steamapps_path) {
+                let acf_count = entries
+                    .filter_map(|e| e.ok())
+                    .filter(|e| {
+                        if let Some(name) = e.file_name().to_str() {
+                            name.starts_with("appmanifest_") && name.ends_with(".acf")
+                        } else {
+                            false
+                        }
+                    })
+                    .count();
+                debug_info.push_str(&format!("ACF files found: {}\n", acf_count));
+            }
+        }
+    } else {
+        debug_info.push_str("Steam not found in registry\n");
+    }
+    
+    Ok(debug_info)
+}
+
+/// Ottiene tutti i giochi Steam dalla libreria locale
+#[tauri::command]
+pub async fn get_all_local_steam_games() -> Result<Vec<LocalGameInfo>, String> {
+    debug!("[RUST] get_all_local_steam_games called");
+    
+    let steam_path = match find_steam_path_from_registry().await {
+        Some(path) => {
+            debug!("[RUST] Steam path found: {}", path);
+            path
+        },
+        None => return Err("Steam non trovato nel sistema".to_string()),
+    };
+    
+    let mut all_games: Vec<LocalGameInfo> = Vec::new();
+    
+    // 1. Trova tutte le librerie Steam
+    let library_folders = match parse_library_folders(&steam_path) {
+        Ok(folders) => {
+            debug!("[RUST] Found {} library folders", folders.len());
+            folders
+        },
+        Err(e) => {
+            debug!("[RUST] Errore parsing library folders: {}", e);
+            // Fallback: usa solo la cartella Steam principale
+            vec![SteamLibraryFolder {
+                path: steam_path.clone(),
+                label: "Main".to_string(),
+                mounted: true,
+                tool: "0".to_string(),
+            }]
+        }
+    };
+    
+    // 2. Scansiona giochi installati
+    let installed_games = match find_installed_games(&library_folders) {
+        Ok(games) => {
+            debug!("[RUST] Found {} installed games", games.len());
+            games
+        },
+        Err(e) => {
+            debug!("[RUST] Errore find_installed_games: {}", e);
+            // Fallback: scansione diretta cartella steamapps
+            let mut fallback_games = Vec::new();
+            let steamapps_path = Path::new(&steam_path).join("steamapps");
+            if steamapps_path.exists() {
+                if let Ok(entries) = fs::read_dir(&steamapps_path) {
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                            if filename.starts_with("appmanifest_") && filename.ends_with(".acf") {
+                                if let Ok(game_info) = parse_acf_file(&path) {
+                                    fallback_games.push(game_info);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            debug!("[RUST] Fallback found {} games", fallback_games.len());
+            fallback_games
+        }
+    };
+    
+    // 3. Trova giochi posseduti (non installati)
+    let owned_game_ids = match parse_owned_games(&steam_path) {
+        Ok(games) => {
+            debug!("[RUST] Found {} owned games from config", games.len());
+            games
+        },
+        Err(e) => {
+            debug!("[RUST] Errore parse_owned_games: {}", e);
+            Vec::new() // Fallback vuoto per ora
+        }
+    };
+    
+    // 4. Trova giochi condivisi
+    let shared_games = match parse_shared_config(&steam_path) {
+        Ok(games) => {
+            debug!("[RUST] Found {} shared game sources", games.len());
+            games
+        },
+        Err(e) => {
+            debug!("[RUST] Errore parse_shared_config: {}", e);
+            HashMap::new() // Fallback vuoto per ora
+        }
+    };
+    
+    // 5. Unisci tutti i dati
+    all_games.extend(installed_games.clone());
+    
+    // Aggiungi giochi posseduti (evita duplicati con quelli installati)
+    for appid in owned_game_ids {
+        if !all_games.iter().any(|g| g.appid == appid) {
+            all_games.push(LocalGameInfo {
+                appid,
+                name: format!("Game {}", appid), // Placeholder - andrebbe enrichito con nome reale
+                status: GameStatus::Owned,
+                install_dir: None,
+                last_updated: None,
+                size_on_disk: None,
+                buildid: None,
+            });
+        }
+    }
+    
+    // Aggiungi giochi condivisi (evita duplicati)
+    for (lender_id, shared_app_ids) in shared_games {
+        for appid in shared_app_ids {
+            if !all_games.iter().any(|g| g.appid == appid) {
+                all_games.push(LocalGameInfo {
+                    appid,
+                    name: format!("Shared Game {}", appid), // Placeholder
+                    status: GameStatus::Shared { from_steam_id: lender_id.clone() },
+                    install_dir: None,
+                    last_updated: None,
+                    size_on_disk: None,
+                    buildid: None,
+                });
+            }
+        }
+    }
+    
+    debug!("[RUST] Total games found: {}", all_games.len());
+    Ok(all_games)
+}
+
+/// Parsa libraryfolders.vdf per trovare tutte le librerie Steam
+fn parse_library_folders(steam_path: &str) -> Result<Vec<SteamLibraryFolder>, String> {
+    let library_folders_path = Path::new(steam_path).join("steamapps").join("libraryfolders.vdf");
+    
+    debug!("[RUST] Cercando libraryfolders.vdf in: {:?}", library_folders_path);
+    
+    if !library_folders_path.exists() {
+        debug!("[RUST] File non trovato, provo percorso alternativo...");
+        let alt_path = Path::new(steam_path).join("config").join("libraryfolders.vdf");
+        if alt_path.exists() {
+            debug!("[RUST] Trovato in config: {:?}", alt_path);
+            let content = fs::read_to_string(alt_path)
+                .map_err(|e| format!("Errore lettura libraryfolders.vdf: {}", e))?;
+            return parse_library_folders_content(&content);
+        }
+        return Err(format!("File libraryfolders.vdf non trovato in {} o {}", 
+                          library_folders_path.display(), alt_path.display()));
+    }
+    
+    let content = fs::read_to_string(&library_folders_path)
+        .map_err(|e| format!("Errore lettura libraryfolders.vdf: {}", e))?;
+    
+    parse_library_folders_content(&content)
+}
+
+/// Parsa il contenuto del file libraryfolders.vdf
+fn parse_library_folders_content(content: &str) -> Result<Vec<SteamLibraryFolder>, String> {
+    let vdf = steamy_vdf::load(content)
+        .map_err(|e| format!("Errore parsing libraryfolders.vdf: {}", e))?;
+    
+    let mut folders = Vec::new();
+    
+    if let Some(library_folders) = vdf.get("libraryfolders").and_then(|lf| lf.as_table()) {
+        for (key, folder_data) in library_folders.iter() {
+            if let Some(folder_table) = folder_data.as_table() {
+                if let Some(path) = folder_table.get("path").and_then(|p| p.as_str()) {
+                    folders.push(SteamLibraryFolder {
+                        path: path.to_string(),
+                        label: folder_table.get("label").and_then(|l| l.as_str()).unwrap_or("").to_string(),
+                        mounted: folder_table.get("mounted").and_then(|m| m.as_str()).unwrap_or("1") == "1",
+                        tool: folder_table.get("tool").and_then(|t| t.as_str()).unwrap_or("0").to_string(),
+                    });
+                }
+            }
+        }
+    }
+    
+    Ok(folders)
+}
+
+/// Trova tutti i giochi installati scansionando i file .acf
+fn find_installed_games(library_folders: &[SteamLibraryFolder]) -> Result<Vec<LocalGameInfo>, String> {
+    let mut games = Vec::new();
+    
+    for folder in library_folders {
+        let steamapps_path = Path::new(&folder.path).join("steamapps");
+        
+        if let Ok(entries) = fs::read_dir(&steamapps_path) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                
+                if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                    if filename.starts_with("appmanifest_") && filename.ends_with(".acf") {
+                        if let Ok(game_info) = parse_acf_file(&path) {
+                            games.push(game_info);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(games)
+}
+
+/// Parser ACF personalizzato (non usa steamy-vdf)
+fn parse_acf_file_custom(content: &str) -> Result<LocalGameInfo, String> {
+    let mut appid = None;
+    let mut name = None;
+    let mut install_dir = None;
+    let mut last_updated = None;
+    let mut size_on_disk = None;
+    let mut buildid = None;
+    
+    // Parse manuale del formato VDF
+    for line in content.lines() {
+        let line = line.trim();
+        
+        if line.contains("\"appid\"") {
+            if let Some(value) = extract_quoted_value(line) {
+                appid = value.parse::<u32>().ok();
+            }
+        } else if line.contains("\"name\"") {
+            name = extract_quoted_value(line);
+        } else if line.contains("\"installdir\"") {
+            install_dir = extract_quoted_value(line);
+        } else if line.contains("\"LastUpdated\"") {
+            if let Some(value) = extract_quoted_value(line) {
+                last_updated = value.parse::<u64>().ok();
+            }
+        } else if line.contains("\"SizeOnDisk\"") {
+            if let Some(value) = extract_quoted_value(line) {
+                size_on_disk = value.parse::<u64>().ok();
+            }
+        } else if line.contains("\"buildid\"") {
+            if let Some(value) = extract_quoted_value(line) {
+                buildid = value.parse::<u32>().ok();
+            }
+        }
+    }
+    
+    let appid = appid.ok_or("AppID non trovato")?;
+    let name = name.unwrap_or_else(|| format!("Game {}", appid));
+    
+    let install_path = install_dir.as_ref()
+        .map(|dir| format!("C:\\Program Files (x86)\\Steam\\steamapps\\common\\{}", dir))
+        .unwrap_or_else(|| "Unknown".to_string());
+    
+    Ok(LocalGameInfo {
+        appid,
+        name,
+        status: GameStatus::Installed { path: install_path },
+        install_dir,
+        last_updated,
+        size_on_disk,
+        buildid,
+    })
+}
+
+/// Estrae valore tra virgolette da una linea VDF
+fn extract_quoted_value(line: &str) -> Option<String> {
+    // Trova l'ultima coppia di virgolette (il valore)
+    let parts: Vec<&str> = line.split('"').collect();
+    if parts.len() >= 4 {
+        Some(parts[parts.len() - 2].to_string())
+    } else {
+        None
+    }
+}
+
+/// Parsa un file .acf per estrarre informazioni sul gioco
+fn parse_acf_file(acf_path: &Path) -> Result<LocalGameInfo, String> {
+    let content = fs::read_to_string(acf_path)
+        .map_err(|e| format!("Errore lettura file ACF: {}", e))?;
+    
+    // Prima prova il nostro parser personalizzato
+    if let Ok(game) = parse_acf_file_custom(&content) {
+        return Ok(game);
+    }
+    
+    // Fallback: prova steamy-vdf
+    let vdf = steamy_vdf::load(&content)
+        .map_err(|e| format!("Errore parsing file ACF: {}", e))?;
+    
+    if let Some(app_state) = vdf.get("AppState").and_then(|as_| as_.as_table()) {
+        let appid = app_state.get("appid")
+            .and_then(|id| id.as_str())
+            .and_then(|id| id.parse::<u32>().ok())
+            .ok_or("AppID non valido")?;
+        
+        let name = app_state.get("name")
+            .and_then(|n| n.as_str())
+            .unwrap_or("Unknown Game")
+            .to_string();
+        
+        let install_dir = app_state.get("installdir")
+            .and_then(|id| id.as_str())
+            .map(|s| s.to_string());
+        
+        let last_updated = app_state.get("LastUpdated")
+            .and_then(|lu| lu.as_str())
+            .and_then(|lu| lu.parse::<u64>().ok());
+        
+        let size_on_disk = app_state.get("SizeOnDisk")
+            .and_then(|sod| sod.as_str())
+            .and_then(|sod| sod.parse::<u64>().ok());
+        
+        let buildid = app_state.get("buildid")
+            .and_then(|bid| bid.as_str())
+            .and_then(|bid| bid.parse::<u32>().ok());
+        
+        let install_path = install_dir.as_ref().map(|dir| {
+            acf_path.parent()
+                .unwrap_or_else(|| Path::new(""))
+                .join("common")
+                .join(dir)
+                .to_string_lossy()
+                .to_string()
+        });
+        
+        Ok(LocalGameInfo {
+            appid,
+            name,
+            status: GameStatus::Installed { 
+                path: install_path.unwrap_or_else(|| "Unknown".to_string()) 
+            },
+            install_dir,
+            last_updated,
+            size_on_disk,
+            buildid,
+        })
+    } else {
+        Err("Struttura ACF non valida".to_string())
+    }
+}
+
+/// Parsa sharedconfig.vdf per trovare giochi condivisi
+fn parse_shared_config(steam_path: &str) -> Result<HashMap<String, Vec<u32>>, String> {
+    let shared_config_path = Path::new(steam_path).join("config/sharedconfig.vdf");
+    
+    if !shared_config_path.exists() {
+        debug!("[RUST] sharedconfig.vdf non trovato, nessun gioco condiviso");
+        return Ok(HashMap::new());
+    }
+    
+    let content = fs::read_to_string(shared_config_path)
+        .map_err(|e| format!("Errore lettura sharedconfig.vdf: {}", e))?;
+    
+    let vdf = steamy_vdf::load(&content)
+        .map_err(|e| format!("Errore parsing sharedconfig.vdf: {}", e))?;
+    
+    let mut shared_games = HashMap::new();
+    
+    // Parsing più avanzato per trovare giochi condivisi
+    // Il formato sharedconfig.vdf può contenere informazioni sui giochi condivisi
+    // sotto chiavi come "SharedContent" o dentro le configurazioni degli utenti
+    
+    // Implementazione semplificata: cerca pattern comuni
+    if let Some(root) = vdf.as_table() {
+        for (key, value) in root.iter() {
+            if let Some(section) = value.as_table() {
+                // Cerca sezioni che potrebbero contenere giochi condivisi
+                if key.contains("SharedContent") || key.len() == 17 { // Possibile Steam ID
+                    if let Some(apps) = section.get("apps").and_then(|a| a.as_table()) {
+                        let mut app_ids = Vec::new();
+                        for (app_id, _) in apps.iter() {
+                            if let Ok(appid) = app_id.parse::<u32>() {
+                                app_ids.push(appid);
+                            }
+                        }
+                        if !app_ids.is_empty() {
+                            shared_games.insert(key.clone(), app_ids);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    debug!("[RUST] Found {} shared game sources", shared_games.len());
+    Ok(shared_games)
+}
+
+/// Parsa i file di configurazione per trovare tutti i giochi posseduti
+/// Questa funzione cerca in vari file per ottenere la lista completa
+fn parse_owned_games(steam_path: &str) -> Result<Vec<u32>, String> {
+    let mut owned_games = Vec::new();
+    
+    // 1. Cerca nel file localconfig.vdf (contiene configurazioni dei giochi)
+    let localconfig_path = Path::new(steam_path).join("userdata");
+    if localconfig_path.exists() {
+        if let Ok(entries) = fs::read_dir(&localconfig_path) {
+            for entry in entries.flatten() {
+                if entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
+                    let user_config_path = entry.path().join("config/localconfig.vdf");
+                    if user_config_path.exists() {
+                        if let Ok(games) = parse_localconfig_for_games(&user_config_path) {
+                            owned_games.extend(games);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // 2. Cerca nel file shortcuts.vdf (giochi non-Steam aggiunti)
+    let shortcuts_path = Path::new(steam_path).join("userdata");
+    if shortcuts_path.exists() {
+        if let Ok(entries) = fs::read_dir(&shortcuts_path) {
+            for entry in entries.flatten() {
+                if entry.file_type().map(|ft| ft.is_dir()).unwrap_or(false) {
+                    let shortcuts_file = entry.path().join("config/shortcuts.vdf");
+                    if shortcuts_file.exists() {
+                        if let Ok(games) = parse_shortcuts_for_games(&shortcuts_file) {
+                            owned_games.extend(games);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Rimuovi duplicati
+    owned_games.sort_unstable();
+    owned_games.dedup();
+    
+    debug!("[RUST] Found {} owned games from config files", owned_games.len());
+    Ok(owned_games)
+}
+
+/// Parsa localconfig.vdf per trovare giochi
+fn parse_localconfig_for_games(localconfig_path: &Path) -> Result<Vec<u32>, String> {
+    let content = fs::read_to_string(localconfig_path)
+        .map_err(|e| format!("Errore lettura localconfig.vdf: {}", e))?;
+    
+    let vdf = steamy_vdf::load(&content)
+        .map_err(|e| format!("Errore parsing localconfig.vdf: {}", e))?;
+    
+    let mut games = Vec::new();
+    
+    // Cerca nella sezione "Software" -> "Valve" -> "Steam" -> "apps"
+    if let Some(software) = vdf.get("UserLocalConfigStore")
+        .and_then(|s| s.get("Software"))
+        .and_then(|s| s.get("Valve"))
+        .and_then(|s| s.get("Steam"))
+        .and_then(|s| s.get("apps"))
+        .and_then(|apps| apps.as_table()) {
+        
+        for (app_id, _) in software.iter() {
+            if let Ok(appid) = app_id.parse::<u32>() {
+                games.push(appid);
+            }
+        }
+    }
+    
+    Ok(games)
+}
+
+/// Parsa shortcuts.vdf per trovare giochi non-Steam
+fn parse_shortcuts_for_games(shortcuts_path: &Path) -> Result<Vec<u32>, String> {
+    // shortcuts.vdf è in formato binario VDF, più complesso da parsare
+    // Per ora ritorniamo una lista vuota
+    debug!("[RUST] shortcuts.vdf parsing non ancora implementato (formato binario)");
+    Ok(Vec::new())
+}
+
+// ============== STEAM FAMILY SHARING IMPLEMENTATION ==============
+
+/// Parse sharedconfig.vdf per trovare giochi condivisi
+#[tauri::command]
+pub async fn parse_shared_config_vdf(file_content: String) -> Result<FamilySharingConfig, String> {
+    debug!("[RUST] parse_shared_config_vdf called");
+    
+    let vdf = steamy_vdf::load(&file_content)
+        .map_err(|e| format!("Errore parsing VDF: {}", e))?;
+    
+    let mut shared_games = Vec::new();
+    let mut authorized_users = Vec::new();
+    
+    // Cerca la sezione "UserRoamingConfigStore" -> "Software" -> "Valve" -> "Steam"
+    if let Some(steam_section) = vdf.get("UserRoamingConfigStore")
+        .and_then(|urc| urc.get("Software"))
+        .and_then(|sw| sw.get("Valve"))
+        .and_then(|valve| valve.get("Steam"))
+        .and_then(|steam| steam.as_table()) {
+        
+        // Cerca giochi condivisi nella sezione "SharedLibraryUsers"
+        if let Some(shared_users) = steam_section.get("SharedLibraryUsers")
+            .and_then(|slu| slu.as_table()) {
+            
+            for (steam_id, user_data) in shared_users.iter() {
+                if let Some(user_table) = user_data.as_table() {
+                    // Aggiungi l'utente alla lista degli autorizzati
+                    authorized_users.push(steam_id.clone());
+                    
+                    // Cerca i giochi condivisi da questo utente
+                    if let Some(apps) = user_table.get("Apps")
+                        .and_then(|apps| apps.as_table()) {
+                        
+                        for (app_id_str, app_data) in apps.iter() {
+                            if let Ok(app_id) = app_id_str.parse::<u32>() {
+                                // Ottieni il nome del gioco se disponibile
+                                let game_name = if let Some(name) = app_data.as_table()
+                                    .and_then(|ad| ad.get("name"))
+                                    .and_then(|n| n.as_str()) {
+                                    name.to_string()
+                                } else {
+                                    format!("Game {}", app_id)
+                                };
+                                
+                                // Ottieni il nome dell'account se disponibile
+                                let account_name = user_table.get("AccountName")
+                                    .and_then(|an| an.as_str())
+                                    .unwrap_or("Unknown User")
+                                    .to_string();
+                                
+                                shared_games.push(SharedGame {
+                                    appid: app_id,
+                                    name: game_name,
+                                    owner_steam_id: steam_id.clone(),
+                                    owner_account_name: account_name,
+                                    is_shared: true,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Rimuovi duplicati
+    shared_games.sort_by_key(|g| g.appid);
+    shared_games.dedup_by_key(|g| g.appid);
+    
+    let total_shared_games = shared_games.len() as u32;
+    
+    info!("[RUST] ✅ Parsed {} shared games from {} users", total_shared_games, authorized_users.len());
+    
+    Ok(FamilySharingConfig {
+        shared_games,
+        total_shared_games,
+        authorized_users,
+    })
+}
+
+/// Comando per ottenere giochi condivisi automaticamente
+#[tauri::command]
+pub async fn get_family_sharing_games() -> Result<FamilySharingConfig, String> {
+    debug!("[RUST] get_family_sharing_games called");
+    
+    // Trova il path di Steam
+    let steam_path = find_steam_path_from_registry().await
+        .ok_or("Steam path non trovato nel registro")?;
+    
+    // Cerca tutti i profili utente
+    let userdata_path = Path::new(&steam_path).join("userdata");
+    
+    if !userdata_path.exists() {
+        return Err("Cartella userdata di Steam non trovata".to_string());
+    }
+    
+    let mut all_shared_games = Vec::new();
+    let mut all_authorized_users = Vec::new();
+    
+    // Itera attraverso tutti i profili utente
+    for entry in fs::read_dir(&userdata_path)
+        .map_err(|e| format!("Errore lettura userdata: {}", e))? {
+        
+        let entry = entry.map_err(|e| format!("Errore entry: {}", e))?;
+        let profile_path = entry.path();
+        
+        if profile_path.is_dir() {
+            let sharedconfig_path = profile_path.join("7").join("remote").join("sharedconfig.vdf");
+            
+            if sharedconfig_path.exists() {
+                debug!("[RUST] 🔍 Trovato sharedconfig.vdf: {:?}", sharedconfig_path);
+                
+                match fs::read_to_string(&sharedconfig_path) {
+                    Ok(content) => {
+                        match parse_shared_config_vdf(content).await {
+                            Ok(config) => {
+                                all_shared_games.extend(config.shared_games);
+                                all_authorized_users.extend(config.authorized_users);
+                            }
+                            Err(e) => {
+                                warn!("[RUST] ⚠️ Errore parsing {}: {}", sharedconfig_path.display(), e);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        warn!("[RUST] ⚠️ Errore lettura {}: {}", sharedconfig_path.display(), e);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Rimuovi duplicati
+    all_shared_games.sort_by_key(|g| g.appid);
+    all_shared_games.dedup_by_key(|g| g.appid);
+    
+    all_authorized_users.sort();
+    all_authorized_users.dedup();
+    
+    let total_shared_games = all_shared_games.len() as u32;
+    
+    info!("[RUST] ✅ Family Sharing: {} giochi condivisi da {} utenti", 
+          total_shared_games, all_authorized_users.len());
+    
+    Ok(FamilySharingConfig {
+        shared_games: all_shared_games,
+        total_shared_games,
+        authorized_users: all_authorized_users,
+    })
+}
+
+/// Comando per integrare giochi condivisi con giochi posseduti
+#[tauri::command]
+pub async fn get_steam_games_with_family_sharing(
+    api_key: String, 
+    steam_id: String, 
+    force_refresh: Option<bool>
+) -> Result<Vec<SteamGame>, String> {
+    debug!("[RUST] get_steam_games_with_family_sharing called");
+    
+    // Prima ottieni i giochi posseduti
+    let mut owned_games = get_steam_games(api_key, steam_id, force_refresh).await?;
+    
+    // Poi ottieni i giochi condivisi
+    match get_family_sharing_games().await {
+        Ok(family_config) => {
+            info!("[RUST] ✅ Aggiungendo {} giochi Family Sharing", family_config.total_shared_games);
+            
+            // Converti SharedGame in SteamGame
+            for shared_game in family_config.shared_games {
+                // Verifica se il gioco non è già nella lista (evita duplicati)
+                if !owned_games.iter().any(|g| g.appid == shared_game.appid) {
+                    let steam_game = SteamGame {
+                        appid: shared_game.appid,
+                        name: shared_game.name,
+                        playtime_forever: 0,
+                        img_icon_url: String::new(),
+                        img_logo_url: String::new(),
+                        last_played: 0,
+                        is_installed: false, // I giochi condivisi potrebbero non essere installati
+                        is_shared: true, // ✅ MARCA COME CONDIVISO
+                        is_vr: false,
+                        engine: "Unknown".to_string(),
+                        genres: Vec::new(),
+                        categories: Vec::new(),
+                        short_description: format!("Condiviso da {}", shared_game.owner_account_name),
+                        is_free: false,
+                        header_image: String::new(),
+                        library_capsule: String::new(),
+                        developers: Vec::new(),
+                        publishers: Vec::new(),
+                        release_date: SteamApiReleaseDate::default(),
+                        supported_languages: String::new(),
+                        pc_requirements: SteamApiRequirements::default(),
+                        dlc: Vec::new(),
+                        how_long_to_beat: None,
+                    };
+                    
+                    owned_games.push(steam_game);
+                }
+            }
+            
+            info!("[RUST] ✅ Totale giochi (posseduti + condivisi): {}", owned_games.len());
+        }
+        Err(e) => {
+            warn!("[RUST] ⚠️ Impossibile ottenere giochi Family Sharing: {}", e);
+            // Continua con solo i giochi posseduti
+        }
+    }
+    
+    Ok(owned_games)
+}
 

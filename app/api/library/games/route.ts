@@ -1,62 +1,103 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
+import { logger } from '@/lib/logger';
 
-export async function GET(request: NextRequest) {
+export const GET = withErrorHandler(async function(request: NextRequest) {
   try {
-    // Per ora simuliamo i giochi Steam rilevati
-    // In futuro qui andrebbe la logica per recuperare realmente i giochi dal backend Tauri
+    const { searchParams } = new URL(request.url);
+    const provider = searchParams.get('provider');
+    const forceRefresh = searchParams.get('refresh') === 'true';
+
+    logger.info('Fetching game library', 'GAMES_API', { provider, forceRefresh });
+
+    // Check if we're in a Tauri environment
+    const isTauriEnvironment = typeof window !== 'undefined' && (window as any).__TAURI__;
     
-    const steamGames = [
-      {
-        id: 'steam_570',
-        name: 'Dota 2',
-        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg',
-        provider: 'Steam'
-      },
-      {
-        id: 'steam_730',
-        name: 'Counter-Strike 2',
-        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg',
-        provider: 'Steam'
-      },
-      {
-        id: 'steam_440',
-        name: 'Team Fortress 2',
-        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/440/header.jpg',
-        provider: 'Steam'
-      },
-      {
-        id: 'steam_1172470',
-        name: 'Apex Legends',
-        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/1172470/header.jpg',
-        provider: 'Steam'
-      },
-      {
-        id: 'steam_271590',
-        name: 'Grand Theft Auto V',
-        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg',
-        provider: 'Steam'
-      },
-      {
-        id: 'steam_1085660',
-        name: 'Destiny 2',
-        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/1085660/header.jpg',
-        provider: 'Steam'
+    if (isTauriEnvironment) {
+      // Use Tauri integration for real game detection
+      const { tauriIntegration } = await import('@/lib/tauri-integration');
+      await tauriIntegration.initialize();
+
+      let games;
+      if (provider) {
+        games = await tauriIntegration.getGamesFromStore(provider);
+      } else {
+        games = await tauriIntegration.getAllGames();
       }
-    ];
-    
-    console.log(`Restituendo ${steamGames.length} giochi Steam dalla libreria`);
-    
-    return NextResponse.json({
-      success: true,
-      games: steamGames,
-      totalGames: steamGames.length,
-      providers: ['Steam']
-    });
-    
+
+      const providers = [...new Set(games.map(g => g.provider))];
+
+      logger.info(`Retrieved ${games.length} games from library`, 'GAMES_API', { 
+        providers, 
+        gamesCount: games.length 
+      });
+
+      return NextResponse.json({
+        success: true,
+        games,
+        totalGames: games.length,
+        providers,
+        source: 'tauri'
+      });
+    } else {
+      // Web fallback - try to get games from database or return empty
+      try {
+        const { prisma } = await import('@/lib/prisma');
+        const games = await prisma.game.findMany({
+          where: provider ? { platform: provider } : {},
+          select: {
+            id: true,
+            title: true,
+            platform: true,
+            imageUrl: true,
+            isInstalled: true,
+            lastPlayed: true,
+            steamAppId: true,
+            installPath: true,
+            executablePath: true
+          }
+        });
+
+        const formattedGames = games.map(game => ({
+          id: game.id,
+          name: game.title,
+          provider: game.platform,
+          imageUrl: game.imageUrl,
+          installed: game.isInstalled,
+          lastPlayed: game.lastPlayed?.toISOString(),
+          installPath: game.installPath,
+          executablePath: game.executablePath
+        }));
+
+        const providers = [...new Set(formattedGames.map(g => g.provider))];
+
+        logger.info(`Retrieved ${formattedGames.length} games from database`, 'GAMES_API', { 
+          providers,
+          gamesCount: formattedGames.length
+        });
+
+        return NextResponse.json({
+          success: true,
+          games: formattedGames,
+          totalGames: formattedGames.length,
+          providers,
+          source: 'database'
+        });
+      } catch (dbError) {
+        logger.warn('Database unavailable, returning empty library', 'GAMES_API', { error: dbError });
+        
+        return NextResponse.json({
+          success: true,
+          games: [],
+          totalGames: 0,
+          providers: [],
+          source: 'empty',
+          message: 'No games found. Install the desktop app for full game detection.'
+        });
+      }
+    }
   } catch (error) {
-    console.error('Errore durante il recupero dei giochi:', error);
-    return NextResponse.json({
-      error: 'Errore interno del server durante il recupero dei giochi'
-    }, { status: 500 });
+    logger.error('Error fetching game library', 'GAMES_API', { error });
+    throw error;
   }
-}
+});

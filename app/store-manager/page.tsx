@@ -5,10 +5,14 @@ import { motion } from 'framer-motion';
 import { invoke } from '@/lib/tauri-api';
 import { stores } from '@/data/stores';
 import { Toaster, toast } from 'sonner';
-import { CheckCircle, XCircle, RefreshCw, Power, PowerOff, AlertTriangle, ImageOff, Gamepad2, Zap, Shield, Sparkles } from 'lucide-react';
+import { CheckCircle, XCircle, RefreshCw, Power, PowerOff, AlertTriangle, ImageOff, Gamepad2, Zap, Shield, Sparkles, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { SteamModal } from '@/components/modals/steam-modal';
+import { ItchioModal } from '@/components/modals/itchio-modal';
+import { GenericCredentialsModal } from '@/components/modals/generic-credentials-modal';
+import { EpicModal } from '@/components/modals/epic-modal';
 
 // Icone vere per ogni store
 const getStoreIcon = (storeId: string) => {
@@ -20,6 +24,7 @@ const getStoreIcon = (storeId: string) => {
     case 'ubisoft_connect': return Sparkles;
     case 'battle_net': return XCircle;
     case 'itch_io': return ImageOff;
+    case 'rockstar': return Star;
     default: return Gamepad2;
   }
 };
@@ -44,8 +49,21 @@ export default function StoreManagerPage() {
   const [totalGames, setTotalGames] = useState(0);
   const [connectedStores, setConnectedStores] = useState(0);
   
-  // Stati per il modal Steam
+  // Stati per i modals
   const [showSteamModal, setShowSteamModal] = useState(false);
+  const [showItchioModal, setShowItchioModal] = useState(false);
+  const [showEpicModal, setShowEpicModal] = useState(false);
+  const [showGenericModal, setShowGenericModal] = useState(false);
+  const [currentGenericProvider, setCurrentGenericProvider] = useState('');
+  const [modalLoading, setModalLoading] = useState(false);
+  const [legendaryStatus, setLegendaryStatus] = useState<any>(null);
+
+  // Stati per Epic Games legacy (manteniamo per compatibilità con le funzioni esistenti)
+  const [epicUsername, setEpicUsername] = useState('');
+  const [epicPassword, setEpicPassword] = useState('');
+  const [epicLoading, setEpicLoading] = useState(false);
+
+  // Stati per Steam (deprecated - manteniamo per compatibilità)
   const [steamApiKey, setSteamApiKey] = useState('');
   const [steamId, setSteamId] = useState('');
   const [steamLoading, setSteamLoading] = useState(false);
@@ -61,11 +79,192 @@ export default function StoreManagerPage() {
           console.log('Credenziali Steam caricate dal backend');
         }
       } catch (error) {
-        console.log('Nessuna credenziale Steam salvata:', error);
+        // Silently handle missing credentials - it's normal when not configured yet
+        console.debug('Steam credentials not found (normal on first run)');
       }
     };
     
+    // Only load credentials if they might exist (avoid error on first run)
     loadSteamCredentials();
+
+    // Carica credenziali Epic Games salvate  
+    const loadEpicCredentials = async () => {
+      try {
+        const credentials = await invoke('load_epic_credentials');
+        if (credentials && typeof credentials === 'object') {
+          setEpicUsername(credentials.username || '');
+          console.log('Credenziali Epic caricate dal backend');
+        }
+      } catch (error) {
+        // Silently handle missing credentials - it's normal when not configured yet
+        console.debug('Epic credentials not found (normal on first run):', error);
+      }
+    };
+    
+    loadEpicCredentials();
+    
+    // Carica credenziali itch.io salvate  
+    const loadItchioCredentials = async () => {
+      try {
+        const credentials = await invoke('load_itchio_credentials');
+        if (credentials && typeof credentials === 'object') {
+          console.log('Credenziali itch.io caricate dal backend');
+          // Imposta lo stato come connesso se ci sono credenziali valide
+          setStoreStatuses(prev => ({
+            ...prev,
+            itch_io: {
+              ...prev.itch_io,
+              connected: true,
+              loading: false,
+              name: 'itch.io'
+            }
+          }));
+        }
+      } catch (error) {
+        // Silently handle missing credentials - it's normal when not configured yet
+        console.debug('itch.io credentials not found (normal on first run):', error);
+      }
+    };
+    
+    loadItchioCredentials();
+    
+    // Carica credenziali Ubisoft Connect salvate  
+    const loadUbisoftCredentials = async () => {
+      try {
+        const credentials = await invoke('load_ubisoft_credentials');
+        if (credentials && typeof credentials === 'object') {
+          console.log('Credenziali Ubisoft Connect caricate dal backend');
+          // Imposta lo stato come connesso se ci sono credenziali valide
+          setStoreStatuses(prev => ({
+            ...prev,
+            ubisoft_connect: {
+              ...prev.ubisoft_connect,
+              connected: true,
+              loading: false,
+              name: 'Ubisoft Connect'
+            }
+          }));
+        }
+      } catch (error) {
+        // Silently handle missing credentials - it's normal when not configured yet
+        console.debug('Ubisoft Connect credentials not found (normal on first run):', error);
+      }
+    };
+    
+    loadUbisoftCredentials();
+    
+    // Carica credenziali Rockstar Games salvate  
+    const loadRockstarCredentials = async () => {
+      try {
+        const credentials = await invoke('load_rockstar_credentials');
+        if (credentials && typeof credentials === 'object') {
+          console.log('Credenziali Rockstar Games caricate dal backend');
+          // Imposta lo stato come connesso se ci sono credenziali valide
+          setStoreStatuses(prev => ({
+            ...prev,
+            rockstar: {
+              ...prev.rockstar,
+              connected: true,
+              loading: false,
+              name: 'Rockstar Games'
+            }
+          }));
+        }
+      } catch (error) {
+        // Silently handle missing credentials - it's normal when not configured yet
+        console.debug('Rockstar Games credentials not found (normal on first run):', error);
+      }
+    };
+    
+    loadRockstarCredentials();
+    
+    // Carica credenziali Origin/EA salvate  
+    const loadOriginCredentials = async () => {
+      try {
+        const credentials = await invoke('load_origin_credentials');
+        if (credentials && typeof credentials === 'object') {
+          console.log('Credenziali Origin/EA caricate dal backend');
+          // Imposta lo stato come connesso se ci sono credenziali valide
+          setStoreStatuses(prev => ({
+            ...prev,
+            origin: {
+              ...prev.origin,
+              connected: true,
+              loading: false,
+              name: 'Origin / EA App'
+            }
+          }));
+        }
+      } catch (error) {
+        // Silently handle missing credentials - it's normal when not configured yet
+        console.debug('Origin/EA credentials not found (normal on first run):', error);
+      }
+    };
+    
+    loadOriginCredentials();
+    
+    // Carica credenziali Battle.net salvate  
+    const loadBattlenetCredentials = async () => {
+      try {
+        const credentials = await invoke('load_battlenet_credentials');
+        if (credentials && typeof credentials === 'object') {
+          console.log('Credenziali Battle.net caricate dal backend');
+          // Imposta lo stato come connesso se ci sono credenziali valide
+          setStoreStatuses(prev => ({
+            ...prev,
+            battle_net: {
+              ...prev.battle_net,
+              connected: true,
+              loading: false,
+              name: 'Battle.net'
+            }
+          }));
+        }
+      } catch (error) {
+        // Silently handle missing credentials - it's normal when not configured yet
+        console.debug('Battle.net credentials not found (normal on first run):', error);
+      }
+    };
+    
+    loadBattlenetCredentials();
+    
+    // Carica credenziali GOG salvate  
+    const loadGogCredentials = async () => {
+      try {
+        const credentials = await invoke('load_gog_credentials');
+        if (credentials && typeof credentials === 'object') {
+          console.log('Credenziali GOG caricate dal backend');
+          // Imposta lo stato come connesso se ci sono credenziali valide
+          setStoreStatuses(prev => ({
+            ...prev,
+            gog: {
+              ...prev.gog,
+              connected: true,
+              loading: false,
+              name: 'GOG Galaxy'
+            }
+          }));
+        }
+      } catch (error) {
+        // Silently handle missing credentials - it's normal when not configured yet
+        console.debug('GOG credentials not found (normal on first run):', error);
+      }
+    };
+    
+    loadGogCredentials();
+    
+    // Controlla stato Legendary per Epic Games
+    const checkLegendaryStatus = async () => {
+      try {
+        const status = await invoke('check_legendary_status');
+        setLegendaryStatus(status);
+        console.log('Legendary status:', status);
+      } catch (error) {
+        console.log('Errore controllo Legendary:', error);
+      }
+    };
+    
+    checkLegendaryStatus();
   }, []);
   
   // Funzione per tentare auto-connessione Steam
@@ -241,80 +440,91 @@ export default function StoreManagerPage() {
       return;
     }
 
-    // Logica specifica per Steam
-    if (storeId === 'steam') {
-      // Mostra il modal invece del prompt
-      setShowSteamModal(true);
-      return;
-    }
-
-    // Logica specifica per Epic Games
-    if (storeId === 'epic_games') {
-      // Epic Games non ha autenticazione separata, fai solo un refresh
-      toast.info('Epic Games rileva automaticamente giochi installati e posseduti...');
-      await refreshStoreStatus(storeId);
-      return;
-    }
-
-    // Per altri store, usa la logica esistente
-    setStoreStatuses(prev => ({
-      ...prev,
-      [storeId]: { 
-        ...prev[storeId], 
-        manuallyDisconnected: false, 
-        loading: true,
-        error: undefined
-      }
-    }));
-
-    toast.info(`Avvio collegamento per ${store.name}...`);
-    
-    // Testa la connessione e aggiorna lo stato
-    try {
-      const result = await invoke(store.testCommand);
+    // Apri il modal appropriato in base al tipo di store
+    switch (storeId) {
+      case 'steam':
+        setShowSteamModal(true);
+        return;
       
-      // Se il test è riuscito, considera lo store connesso
-      if (result && typeof result === 'string' && (
-        result.includes('riuscita') || 
-        result.includes('successful') ||
-        result.includes('completata')
-      )) {
+      case 'itch_io':
+        setShowItchioModal(true);
+        return;
+      
+      case 'gog':
+      case 'origin':
+      case 'ubisoft_connect':
+      case 'battle_net':
+      case 'rockstar':
+        setCurrentGenericProvider(storeId);
+        setShowGenericModal(true);
+        return;
+      
+      case 'epic_games':
+        setShowEpicModal(true);
+        return;
+      
+      default:
+        // Per store senza modal specifico, usa la logica esistente
         setStoreStatuses(prev => ({
           ...prev,
-          [storeId]: {
-            ...prev[storeId],
-            connected: true,
-            loading: false,
-            manuallyDisconnected: false,
-            lastChecked: new Date(),
+          [storeId]: { 
+            ...prev[storeId], 
+            manuallyDisconnected: false, 
+            loading: true,
             error: undefined
           }
         }));
-        toast.success(`${store.name} connesso con successo!`);
-      } else {
-        setStoreStatuses(prev => ({
-          ...prev,
-          [storeId]: {
-            ...prev[storeId],
-            connected: false,
-            loading: false,
-            error: 'Connessione non riuscita'
+
+        toast.info(`Avvio collegamento per ${store.name}...`);
+        
+        // Testa la connessione e aggiorna lo stato
+        try {
+          const result = await invoke(store.testCommand);
+          
+          // Se il test è riuscito, considera lo store connesso
+          if (result && typeof result === 'string' && (
+            result.includes('riuscita') || 
+            result.includes('successful') ||
+            result.includes('completata')
+          )) {
+            setStoreStatuses(prev => ({
+              ...prev,
+              [storeId]: {
+                ...prev[storeId],
+                connected: true,
+                loading: false,
+                manuallyDisconnected: false,
+                lastChecked: new Date(),
+                error: undefined
+              }
+            }));
+            toast.success(`${store.name} connesso con successo!`);
+          } else {
+            setStoreStatuses(prev => ({
+              ...prev,
+              [storeId]: {
+                ...prev[storeId],
+                connected: false,
+                loading: false,
+                error: 'Connessione non riuscita'
+              }
+            }));
+            toast.error(`Impossibile connettersi a ${store.name}`);
           }
-        }));
-        toast.error(`Impossibile connettersi a ${store.name}`);
-      }
-    } catch (error) {
-      console.error(`Errore connessione ${store.name}:`, error);
-      setStoreStatuses(prev => ({
-        ...prev,
-        [storeId]: {
-          ...prev[storeId],
-          connected: false,
-          loading: false,
-          error: 'Errore di connessione'
+        } catch (error) {
+          console.error(`Errore connessione ${store.name}:`, error);
+          setStoreStatuses(prev => ({
+            ...prev,
+            [storeId]: {
+              ...prev[storeId],
+              connected: false,
+              loading: false,
+              error: 'Errore di connessione'
+            }
+          }));
+          toast.error(`Errore durante la connessione a ${store.name}`);
         }
-      }));
-      toast.error(`Errore durante la connessione a ${store.name}`);
+        break;
     }
   };
 
@@ -417,6 +627,238 @@ export default function StoreManagerPage() {
     }
   };
 
+  // Handler per SteamModal
+  const handleSteamSubmit = async (apiKey: string, steamId: string) => {
+    setModalLoading(true);
+    try {
+      // Prima salva le credenziali Steam
+      await invoke('save_steam_credentials', {
+        apiKey: apiKey,
+        steamId: steamId
+      });
+      
+      // Poi fa auto-connect per testare e ottenere i giochi
+      const result = await invoke('auto_connect_steam');
+      
+      setStoreStatuses(prev => ({
+        ...prev,
+        steam: {
+          ...prev.steam,
+          connected: true,
+          loading: false,
+          manuallyDisconnected: false,
+          gamesCount: result.games_count || 0,
+          lastChecked: new Date(),
+          error: undefined
+        }
+      }));
+      
+      toast.success(`Steam connesso con successo! ${result.games_count || 0} giochi trovati.`);
+      
+      // Aggiorna automaticamente la libreria
+      try {
+        await invoke('scan_games');
+        toast.success('Libreria aggiornata! I tuoi giochi Steam sono ora disponibili.');
+      } catch (scanError) {
+        console.error('Errore aggiornamento libreria:', scanError);
+        toast.warning('Steam connesso, ma errore nell\'aggiornamento libreria. Vai su Library e clicca "Scansiona Giochi".');
+      }
+      
+    } catch (error) {
+      console.error('Errore connessione Steam:', error);
+      setStoreStatuses(prev => ({
+        ...prev,
+        steam: {
+          ...prev.steam,
+          connected: false,
+          loading: false,
+          error: 'Errore: Verifica Steam ID'
+        }
+      }));
+      throw error; // Rilancia l'errore per far gestire al modal
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Handler per ItchioModal
+  const handleItchioSubmit = async (apiKey: string) => {
+    setModalLoading(true);
+    try {
+      // Implementa la logica di connessione itch.io
+      const result = await invoke('connect_itchio', { apiKey });
+      
+      setStoreStatuses(prev => ({
+        ...prev,
+        itch_io: {
+          ...prev.itch_io,
+          connected: true,
+          loading: false,
+          manuallyDisconnected: false,
+          gamesCount: result.games_count || 0,
+          lastChecked: new Date(),
+          error: undefined
+        }
+      }));
+      
+      toast.success(`itch.io connesso con successo! ${result.games_count || 0} giochi trovati.`);
+      
+      // Aggiorna automaticamente la libreria
+      try {
+        await invoke('scan_games');
+        toast.success('Libreria aggiornata! I tuoi giochi itch.io sono ora disponibili.');
+      } catch (scanError) {
+        console.error('Errore aggiornamento libreria:', scanError);
+        toast.warning('itch.io connesso, ma errore nell\'aggiornamento libreria.');
+      }
+      
+    } catch (error) {
+      console.error('Errore connessione itch.io:', error);
+      setStoreStatuses(prev => ({
+        ...prev,
+        itch_io: {
+          ...prev.itch_io,
+          connected: false,
+          loading: false,
+          error: 'Errore: Verifica API Key'
+        }
+      }));
+      throw error; // Rilancia l'errore per far gestire al modal
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Handler per GenericCredentialsModal
+  const handleGenericSubmit = async (email: string, password: string, twoFactorCode?: string) => {
+    setModalLoading(true);
+    try {
+      // Mappa i provider ai comandi corretti
+      let connectCommand = `connect_${currentGenericProvider}`;
+      if (currentGenericProvider === 'ubisoft_connect') {
+        connectCommand = 'connect_ubisoft';
+      } else if (currentGenericProvider === 'rockstar') {
+        connectCommand = 'connect_rockstar';
+      } else if (currentGenericProvider === 'origin') {
+        connectCommand = 'connect_origin';
+      } else if (currentGenericProvider === 'battle_net') {
+        connectCommand = 'connect_battlenet';
+      }
+      
+      const result = await invoke(connectCommand, { email, password, twoFactorCode });
+      
+      setStoreStatuses(prev => ({
+        ...prev,
+        [currentGenericProvider]: {
+          ...prev[currentGenericProvider],
+          connected: true,
+          loading: false,
+          manuallyDisconnected: false,
+          gamesCount: result.games_count || 0,
+          lastChecked: new Date(),
+          error: undefined
+        }
+      }));
+      
+      const storeName = stores.find(s => s.id === currentGenericProvider)?.name || currentGenericProvider;
+      toast.success(`${storeName} connesso con successo! ${result.games_count || 0} giochi trovati.`);
+      
+      // Aggiorna automaticamente la libreria
+      try {
+        await invoke('scan_games');
+        toast.success(`Libreria aggiornata! I tuoi giochi ${storeName} sono ora disponibili.`);
+      } catch (scanError) {
+        console.error('Errore aggiornamento libreria:', scanError);
+        toast.warning(`${storeName} connesso, ma errore nell\'aggiornamento libreria.`);
+      }
+      
+    } catch (error) {
+      console.error(`Errore connessione ${currentGenericProvider}:`, error);
+      setStoreStatuses(prev => ({
+        ...prev,
+        [currentGenericProvider]: {
+          ...prev[currentGenericProvider],
+          connected: false,
+          loading: false,
+          error: 'Errore: Verifica credenziali'
+        }
+      }));
+      throw error; // Rilancia l'errore per far gestire al modal
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  // Handler per EpicModal
+  const handleEpicSubmit = async (username: string, password: string) => {
+    setModalLoading(true);
+    try {
+      // Salva le credenziali Epic nel backend
+      await invoke('save_epic_credentials', {
+        username,
+        password
+      });
+      
+      // Testa la connessione Epic
+      const result = await invoke('get_epic_games_web');
+      
+      if (result.success && result.games.length > 0) {
+        setStoreStatuses(prev => ({
+          ...prev,
+          epic_games: {
+            ...prev.epic_games,
+            connected: true,
+            loading: false,
+            manuallyDisconnected: false,
+            gamesCount: result.games.length,
+            lastChecked: new Date(),
+            error: undefined
+          }
+        }));
+        
+        toast.success(`Epic Games connesso! ${result.games.length} giochi trovati.`);
+        
+        // Aggiorna automaticamente la libreria
+        try {
+          await invoke('scan_games');
+          toast.success('Libreria aggiornata con i giochi Epic!');
+        } catch (scanError) {
+          console.error('Errore aggiornamento libreria:', scanError);
+          toast.warning('Epic Games connesso, ma errore nell\'aggiornamento libreria.');
+        }
+      } else {
+        setStoreStatuses(prev => ({
+          ...prev,
+          epic_games: {
+            ...prev.epic_games,
+            connected: true,
+            loading: false,
+            manuallyDisconnected: false,
+            gamesCount: 0,
+            lastChecked: new Date(),
+            error: 'Nessun gioco trovato'
+          }
+        }));
+        toast.warning('Epic Games connesso ma nessun gioco trovato nella libreria');
+      }
+      
+    } catch (error) {
+      console.error('Errore connessione Epic:', error);
+      setStoreStatuses(prev => ({
+        ...prev,
+        epic_games: {
+          ...prev.epic_games,
+          connected: false,
+          loading: false,
+          error: 'Errore: Verifica username e password'
+        }
+      }));
+      throw error; // Rilancia l'errore per far gestire al modal
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   const handleEpicWebSearch = async () => {
     try {
       toast.info('🌐 Ricerca giochi Epic Games online...');
@@ -454,15 +896,115 @@ export default function StoreManagerPage() {
     }
   };
 
+  const handleEpicLogin = async () => {
+    if (!epicUsername || !epicPassword) {
+      toast.error('Inserisci username e password Epic Games');
+      return;
+    }
+
+    setEpicLoading(true);
+    try {
+      toast.info('🔐 Connessione a Epic Games...');
+      
+      // Salva le credenziali Epic nel backend
+      const saveResult = await invoke('save_epic_credentials', {
+        username: epicUsername,
+        password: epicPassword
+      });
+      
+      console.log('Epic credentials saved:', saveResult);
+      
+      // Testa la connessione Epic
+      const result = await invoke('get_epic_games_web');
+      
+      if (result.success && result.games.length > 0) {
+        toast.success(`🎮 Epic Games connesso! ${result.games.length} giochi trovati.`);
+        
+        // Aggiorna lo stato
+        setStoreStatuses(prev => ({
+          ...prev,
+          epic_games: {
+            ...prev.epic_games,
+            connected: true,
+            gamesCount: result.games.length,
+            lastChecked: new Date(),
+            error: undefined
+          }
+        }));
+        
+        console.log('Credenziali e stato Epic salvati nel backend');
+        
+        // Aggiorna automaticamente la libreria
+        console.log('🔄 Aggiornamento automatico libreria dopo connessione Epic...');
+        try {
+          const libraryResult = await invoke('scan_games');
+          console.log('✅ Libreria aggiornata con successo!', libraryResult);
+          toast.success('📚 Libreria aggiornata con i giochi Epic!');
+        } catch (libraryError) {
+          console.warn('Errore aggiornamento libreria:', libraryError);
+        }
+        
+        // Chiudi il modal
+        setShowEpicModal(false);
+        
+      } else {
+        toast.warning('Epic Games connesso ma nessun gioco trovato nella libreria');
+        
+        setStoreStatuses(prev => ({
+          ...prev,
+          epic_games: {
+            ...prev.epic_games,
+            connected: true,
+            gamesCount: 0,
+            lastChecked: new Date(),
+            error: 'Nessun gioco trovato'
+          }
+        }));
+      }
+      
+    } catch (error) {
+      console.error('Errore connessione Epic:', error);
+      setStoreStatuses(prev => ({
+        ...prev,
+        epic_games: {
+          ...prev.epic_games,
+          connected: false,
+          loading: false,
+          error: 'Errore: Verifica username e password'
+        }
+      }));
+      toast.error('Errore connessione Epic Games. Verifica le credenziali.');
+    } finally {
+      setEpicLoading(false);
+    }
+  };
+
   const handleEpicLegendarySearch = async () => {
     try {
-      toast.info('🚀 Epic Games Legendary Method - Ricerca avanzata...');
+      toast.info('🚀 Epic Games - Ricerca completa libreria...');
       
-      const result = await invoke('get_epic_games_by_account_id', { accountId: 'legendary-method' });
-      console.log('Epic Legendary Method Result:', result);
+      // Prima verifica lo stato di Legendary
+      console.log('🔍 Verifica stato Legendary...');
+      const legendaryStatus = await invoke('check_legendary_status');
+      console.log('Legendary Status:', legendaryStatus);
+      setLegendaryStatus(legendaryStatus);
       
-      if (result.success && result.games_count > 0) {
-        toast.success(`🎮 Trovati ${result.games_count} giochi Epic con metodo Legendary!`);
+      if (!legendaryStatus.installed) {
+        toast.warning('Legendary non installato - Accesso limitato a giochi installati');
+        toast.info(legendaryStatus.install_instructions || 'Installa Legendary per accedere alla libreria Epic Games');
+      } else if (!legendaryStatus.authenticated) {
+        toast.warning('Legendary non autenticato - Esegui "legendary auth"');
+      } else {
+        toast.success(`${legendaryStatus.message}`);
+      }
+      
+      // Prova a ottenere la libreria Epic Games
+      console.log('🔍 Recupero libreria Epic Games...');
+      const result = await invoke('get_epic_games_complete');
+      console.log('Epic Games Complete Result:', result);
+      
+      if (result && result.length > 0) {
+        toast.success(`🎮 Trovati ${result.length} giochi Epic Games!`);
         
         // Aggiorna il conteggio Epic Games
         setStoreStatuses(prev => ({
@@ -470,34 +1012,43 @@ export default function StoreManagerPage() {
           epic_games: {
             ...prev.epic_games,
             connected: true,
-            gamesCount: result.games_count,
+            gamesCount: result.length,
             lastChecked: new Date(),
             error: undefined
           }
         }));
         
         // Mostra alcuni giochi trovati
-        const gamesList = result.games.slice(0, 5).join(', ');
-        toast.info(`Giochi trovati: ${gamesList}${result.games.length > 5 ? '...' : ''}`);
+        const installedCount = result.filter(game => game.is_installed).length;
+        const libraryCount = result.length - installedCount;
         
-        // Mostra metodi usati
-        if (result.methods_tried && result.methods_tried.length > 0) {
-          console.log('Metodi provati:', result.methods_tried);
-          toast.info(`Metodi utilizzati: ${result.methods_tried.join(', ')}`);
+        toast.info(`📦 ${installedCount} installati, 📚 ${libraryCount} in libreria`);
+        
+        // Mostra alcuni titoli di esempio
+        const sampleGames = result.slice(0, 3).map(game => game.title).join(', ');
+        if (sampleGames) {
+          toast.info(`Esempi: ${sampleGames}${result.length > 3 ? '...' : ''}`);
         }
         
       } else {
-        toast.warning('Nessun gioco Epic trovato con il metodo Legendary.');
-        console.log('Metodi provati:', result.methods_tried);
+        toast.warning('Nessun gioco Epic trovato.');
         
-        if (result.methods_tried && result.methods_tried.length > 0) {
-          toast.info(`Metodi provati: ${result.methods_tried.join(', ')}`);
+        // Se non trova giochi, prova a suggerire soluzioni
+        if (!legendaryStatus.installed) {
+          toast.info('💡 Installa Legendary per accedere alla libreria Epic Games');
+        } else if (!legendaryStatus.authenticated) {
+          toast.info('💡 Autentica Legendary con "legendary auth" per accedere alla libreria');
         }
       }
       
     } catch (error) {
-      console.error('Errore Epic Games Legendary Method:', error);
-      toast.error('Errore durante la ricerca con metodo Legendary');
+      console.error('Errore Epic Games Complete:', error);
+      toast.error('Errore durante la ricerca Epic Games');
+      
+      // Fallback: mostra info su Legendary se l'errore è correlato
+      if (error.toString().includes('legendary') || error.toString().includes('Legendary')) {
+        toast.info('💡 Installa Legendary per accedere alla libreria Epic Games');
+      }
     }
   };
 
@@ -608,12 +1159,29 @@ export default function StoreManagerPage() {
         return;
       }
       
-      // Per altri store, usa la logica esistente
-      const disconnectCommand = storeId === 'epic_games' ? 'disconnect_epic' : 
-                               storeId === 'battle_net' ? 'disconnect_battlenet' :
-                               `disconnect_${storeId}`;
+      // Per altri store, usa clear_credentials se disconnect non è disponibile
+      let disconnectCommand;
+      if (storeId === 'epic_games') {
+        disconnectCommand = 'disconnect_epic';
+      } else if (storeId === 'gog') {
+        disconnectCommand = 'disconnect_gog';
+      } else if (storeId === 'battle_net') {
+        disconnectCommand = 'disconnect_battlenet';
+      } else if (['origin', 'ubisoft_connect', 'itch_io', 'rockstar'].includes(storeId)) {
+        // Per questi store usiamo clear_credentials
+        const clearCommand = storeId === 'ubisoft_connect' ? 'clear_ubisoft_credentials' :
+                            storeId === 'itch_io' ? 'clear_itchio_credentials' :
+                            storeId === 'rockstar' ? 'clear_rockstar_credentials' :
+                            storeId === 'origin' ? 'clear_origin_credentials' :
+                            `clear_${storeId}_credentials`;
+        await invoke(clearCommand);
+      } else {
+        disconnectCommand = `disconnect_${storeId}`;
+      }
       
-      await invoke(disconnectCommand);
+      if (disconnectCommand) {
+        await invoke(disconnectCommand);
+      }
       
       setStoreStatuses(prev => ({
         ...prev,
@@ -757,9 +1325,34 @@ export default function StoreManagerPage() {
                           Reset & Ricontrolla
                         </Button>
                         
-                        {/* Pulsante metodi web solo per Epic Games */}
+                        {/* Sezione speciale Epic Games con Legendary */}
                         {store.id === 'epic_games' && (
                           <>
+                            {/* Status Legendary */}
+                            {legendaryStatus && (
+                              <div className={`p-3 rounded-lg border text-sm ${
+                                legendaryStatus.installed && legendaryStatus.authenticated 
+                                  ? 'border-green-600 bg-green-900/20 text-green-300'
+                                  : legendaryStatus.installed 
+                                  ? 'border-yellow-600 bg-yellow-900/20 text-yellow-300'
+                                  : 'border-red-600 bg-red-900/20 text-red-300'
+                              }`}>
+                                <div className="font-medium mb-1">
+                                  🏛️ Legendary Status: {legendaryStatus.message}
+                                </div>
+                                {!legendaryStatus.installed && (
+                                  <div className="text-xs opacity-80">
+                                    {legendaryStatus.install_instructions}
+                                  </div>
+                                )}
+                                {legendaryStatus.installed && !legendaryStatus.authenticated && (
+                                  <div className="text-xs opacity-80">
+                                    Esegui: legendary auth
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
                             <Button 
                               onClick={() => handleEpicWebSearch()} 
                               disabled={status.loading}
@@ -772,12 +1365,16 @@ export default function StoreManagerPage() {
                             
                             <Button 
                               onClick={() => handleEpicLegendarySearch()} 
-                              disabled={status.loading}
+                              disabled={status.loading || !legendaryStatus?.installed}
                               variant="outline"
-                              className="w-full border-purple-600 text-purple-300 hover:bg-purple-900/30"
+                              className={`w-full ${
+                                legendaryStatus?.installed 
+                                  ? 'border-purple-600 text-purple-300 hover:bg-purple-900/30' 
+                                  : 'border-gray-600 text-gray-500 cursor-not-allowed'
+                              }`}
                             >
                               <RefreshCw className="h-4 w-4 mr-2" />
-                              Metodo Legendary
+                              {legendaryStatus?.installed ? 'Metodo Legendary' : 'Legendary non installato'}
                             </Button>
                           </>
                         )}
@@ -820,116 +1417,38 @@ export default function StoreManagerPage() {
         </div>
       </div>
 
-      {/* Modal Steam Connection */}
-      {showSteamModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 w-full max-w-md mx-4">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <Gamepad2 className="h-6 w-6 text-blue-400" />
-                <h3 className="text-xl font-semibold text-white">Connetti Steam</h3>
-              </div>
-              <button
-                onClick={() => {
-                  setShowSteamModal(false);
-                  setSteamApiKey('');
-                  setSteamId('');
-                }}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <XCircle className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Form */}
-            <div className="space-y-4">
-              {/* API Key */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Steam API Key
-                </label>
-                <input
-                  type="text"
-                  value={steamApiKey}
-                  onChange={(e) => setSteamApiKey(e.target.value)}
-                  placeholder="Inserisci la tua Steam API Key"
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Ottieni la tua API Key da:{' '}
-                  <a 
-                    href="https://steamcommunity.com/dev/apikey" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 underline"
-                  >
-                    steamcommunity.com/dev/apikey
-                  </a>
-                </p>
-              </div>
-
-              {/* Steam ID */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Steam ID
-                </label>
-                <input
-                  type="text"
-                  value={steamId}
-                  onChange={(e) => setSteamId(e.target.value)}
-                  placeholder="Inserisci il tuo Steam ID (17 cifre)"
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Trova il tuo Steam ID su:{' '}
-                  <a 
-                    href="https://steamid.io" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 underline"
-                  >
-                    steamid.io
-                  </a>
-                </p>
-              </div>
-            </div>
-
-            {/* Pulsanti */}
-            <div className="flex space-x-3 mt-6">
-              <Button
-                onClick={() => {
-                  setShowSteamModal(false);
-                  setSteamApiKey('');
-                  setSteamId('');
-                }}
-                variant="outline"
-                className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
-                disabled={steamLoading}
-              >
-                Annulla
-              </Button>
-              <Button
-                onClick={handleSteamConnect}
-                disabled={steamLoading || !steamApiKey.trim() || !steamId.trim()}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {steamLoading ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Connessione...
-                  </>
-                ) : (
-                  <>
-                    <Power className="h-4 w-4 mr-2" />
-                    Connetti
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Components */}
+      <SteamModal
+        isOpen={showSteamModal}
+        onClose={() => setShowSteamModal(false)}
+        onSubmit={handleSteamSubmit}
+        isLoading={modalLoading}
+      />
+      
+      <ItchioModal
+        isOpen={showItchioModal}
+        onClose={() => setShowItchioModal(false)}
+        onSubmit={handleItchioSubmit}
+        isLoading={modalLoading}
+      />
+      
+      <EpicModal
+        isOpen={showEpicModal}
+        onClose={() => setShowEpicModal(false)}
+        onSubmit={handleEpicSubmit}
+        isLoading={modalLoading}
+      />
+      
+      <GenericCredentialsModal
+        isOpen={showGenericModal}
+        onClose={() => {
+          setShowGenericModal(false);
+          setCurrentGenericProvider('');
+        }}
+        onSubmit={handleGenericSubmit}
+        provider={currentGenericProvider}
+        isLoading={modalLoading}
+      />
     </div>
   );
 }

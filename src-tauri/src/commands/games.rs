@@ -1,4 +1,4 @@
-use crate::commands::{steam, epic, gog, origin, ubisoft, battlenet, itchio, library};
+use crate::commands::{steam, epic, gog, origin, ubisoft, battlenet, itchio, rockstar, library};
 use crate::models::*;
 use log;
 use serde_json;
@@ -1022,8 +1022,187 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         }
     }
     
-    // TODO: Aggiungere scansione per altri launcher (GOG, Origin, etc.)
-// Epic Games è già implementato nella funzione get_games()
+    // Scansiona giochi Epic Games
+    match epic::get_epic_games_complete().await {
+        Ok(epic_games) => {
+            let epic_scan_results: Vec<GameScanResult> = epic_games.into_iter().map(|game| {
+                GameScanResult {
+                    id: format!("epic_{}", game.app_name),
+                    app_id: game.app_name.clone(),
+                    title: game.display_name.clone(),
+                    platform: "Epic Games".to_string(),
+                    header_image: game.header_image,
+                    is_vr: is_vr_game(&game.display_name),
+                    is_installed: game.is_installed.unwrap_or(false),
+                    engine: game.engine,
+                    supported_languages: game.supported_languages,
+                    genres: game.genres,
+                    last_played: game.last_played_time,
+                }
+            }).collect();
+            log::info!("✅ Trovati {} giochi Epic Games", epic_scan_results.len());
+            scan_results.extend(epic_scan_results);
+        }
+        Err(e) => {
+            log::error!("❌ Errore scansione Epic Games: {}", e);
+        }
+    }
+    
+    // Scansiona giochi GOG
+    match gog::get_gog_installed_games().await {
+        Ok(gog_games) => {
+            let gog_scan_results: Vec<GameScanResult> = gog_games.into_iter().map(|game| {
+                GameScanResult {
+                    id: game.id.clone(),
+                    app_id: game.id.clone(),
+                    title: game.name.clone(),
+                    platform: game.platform.clone(),
+                    header_image: None,
+                    is_vr: is_vr_game(&game.name),
+                    is_installed: true, // GOG scansiona solo giochi installati
+                    engine: None,
+                    supported_languages: None,
+                    genres: None,
+                    last_played: game.last_modified,
+                }
+            }).collect();
+            log::info!("✅ Trovati {} giochi GOG", gog_scan_results.len());
+            scan_results.extend(gog_scan_results);
+        }
+        Err(e) => {
+            log::error!("❌ Errore scansione GOG: {}", e);
+        }
+    }
+    
+    // Scansiona giochi Origin/EA
+    match origin::get_origin_installed_games().await {
+        Ok(origin_games) => {
+            let origin_scan_results: Vec<GameScanResult> = origin_games.into_iter().map(|game| {
+                GameScanResult {
+                    id: game.id.clone(),
+                    app_id: game.id.clone(),
+                    title: game.name.clone(),
+                    platform: game.platform.clone(),
+                    header_image: None,
+                    is_vr: is_vr_game(&game.name),
+                    is_installed: true,
+                    engine: None,
+                    supported_languages: None,
+                    genres: None,
+                    last_played: game.last_modified,
+                }
+            }).collect();
+            log::info!("✅ Trovati {} giochi Origin/EA", origin_scan_results.len());
+            scan_results.extend(origin_scan_results);
+        }
+        Err(e) => {
+            log::error!("❌ Errore scansione Origin/EA: {}", e);
+        }
+    }
+    
+    // Scansiona giochi Ubisoft Connect
+    match ubisoft::get_ubisoft_installed_games().await {
+        Ok(ubisoft_games) => {
+            let ubisoft_scan_results: Vec<GameScanResult> = ubisoft_games.into_iter().map(|game| {
+                GameScanResult {
+                    id: game.id.clone(),
+                    app_id: game.id.clone(),
+                    title: game.name.clone(),
+                    platform: game.platform.clone(),
+                    header_image: None,
+                    is_vr: is_vr_game(&game.name),
+                    is_installed: true,
+                    engine: None,
+                    supported_languages: None,
+                    genres: None,
+                    last_played: game.last_modified,
+                }
+            }).collect();
+            log::info!("✅ Trovati {} giochi Ubisoft Connect", ubisoft_scan_results.len());
+            scan_results.extend(ubisoft_scan_results);
+        }
+        Err(e) => {
+            log::error!("❌ Errore scansione Ubisoft Connect: {}", e);
+        }
+    }
+    
+    // Scansiona giochi Battle.net
+    match battlenet::get_battlenet_installed_games().await {
+        Ok(battlenet_games) => {
+            let battlenet_scan_results: Vec<GameScanResult> = battlenet_games.into_iter().map(|game| {
+                GameScanResult {
+                    id: game.id.clone(),
+                    app_id: game.id.clone(),
+                    title: game.name.clone(),
+                    platform: game.platform.clone(),
+                    header_image: None,
+                    is_vr: is_vr_game(&game.name),
+                    is_installed: true,
+                    engine: None,
+                    supported_languages: None,
+                    genres: None,
+                    last_played: game.last_modified,
+                }
+            }).collect();
+            log::info!("✅ Trovati {} giochi Battle.net", battlenet_scan_results.len());
+            scan_results.extend(battlenet_scan_results);
+        }
+        Err(e) => {
+            log::error!("❌ Errore scansione Battle.net: {}", e);
+        }
+    }
+    
+    // Scansiona giochi itch.io
+    match itchio::get_itchio_installed_games().await {
+        Ok(itchio_games) => {
+            let itchio_scan_results: Vec<GameScanResult> = itchio_games.into_iter().map(|game| {
+                GameScanResult {
+                    id: game.id.clone(),
+                    app_id: game.id.clone(),
+                    title: game.name.clone(),
+                    platform: game.platform.clone(),
+                    header_image: None,
+                    is_vr: is_vr_game(&game.name),
+                    is_installed: true,
+                    engine: None,
+                    supported_languages: None,
+                    genres: None,
+                    last_played: game.last_modified,
+                }
+            }).collect();
+            log::info!("✅ Trovati {} giochi itch.io", itchio_scan_results.len());
+            scan_results.extend(itchio_scan_results);
+        }
+        Err(e) => {
+            log::error!("❌ Errore scansione itch.io: {}", e);
+        }
+    }
+    
+    // Scansiona giochi Rockstar Games
+    match rockstar::get_rockstar_installed_games().await {
+        Ok(rockstar_games) => {
+            let rockstar_scan_results: Vec<GameScanResult> = rockstar_games.into_iter().map(|game| {
+                GameScanResult {
+                    id: game.id.clone(),
+                    app_id: game.id.clone(),
+                    title: game.name.clone(),
+                    platform: game.platform.clone(),
+                    header_image: None,
+                    is_vr: is_vr_game(&game.name),
+                    is_installed: true,
+                    engine: None,
+                    supported_languages: None,
+                    genres: None,
+                    last_played: game.last_modified,
+                }
+            }).collect();
+            log::info!("✅ Trovati {} giochi Rockstar Games", rockstar_scan_results.len());
+            scan_results.extend(rockstar_scan_results);
+        }
+        Err(e) => {
+            log::error!("❌ Errore scansione Rockstar Games: {}", e);
+        }
+    }
     
     log::info!("🎯 Scansione completata: {} giochi totali", scan_results.len());
     Ok(scan_results)

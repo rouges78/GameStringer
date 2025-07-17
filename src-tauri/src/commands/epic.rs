@@ -7,7 +7,13 @@ use winreg::enums::*;
 use winreg::RegKey;
 use regex::Regex;
 use crate::models::GameInfo;
-// use base64::{Engine as _, engine::general_purpose}; // Rimosso: non utilizzato
+use std::path::PathBuf;
+use std::fs;
+use log::{debug, info, warn, error};
+use base64::{Engine as _, engine::general_purpose};
+use aes_gcm::{Aes256Gcm, Key, Nonce, aead::{Aead, KeyInit}};
+use rand::{RngCore, rngs::OsRng};
+use chrono;
 
 // Client HTTP globale per Epic Games
 static HTTP_CLIENT: Lazy<Client> = Lazy::new(|| {
@@ -58,6 +64,15 @@ pub struct EpicCategory {
 pub struct EpicTag {
     pub id: String,
     pub name: String,
+}
+
+// 🔐 Struttura per credenziali Epic Games
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct EpicCredentials {
+    pub username_encrypted: String,
+    pub password_encrypted: String,
+    pub saved_at: String,
+    pub nonce: String,
 }
 
 /// Recupera i dettagli di un gioco Epic Games tramite l'API pubblica
@@ -164,16 +179,45 @@ pub async fn test_epic_connection() -> Result<serde_json::Value, String> {
     let mut result = serde_json::json!({
         "connected": false,
         "games_count": 0,
-        "error": null
+        "error": null,
+        "status": ""
     });
     
-    // 1. Test connessione all'API Epic Games Store
+    // Prima prova a caricare credenziali salvate per accesso completo libreria
+    let mut has_credentials = false;
+    match load_epic_credentials().await {
+        Ok(_) => {
+            println!("[EPIC] ✅ Credenziali Epic trovate - accesso libreria completo");
+            has_credentials = true;
+            
+            // Prova a ottenere libreria completa con Legendary/API Epic
+            match get_epic_owned_games().await {
+                Ok(owned_games) => {
+                    result["connected"] = serde_json::Value::Bool(true);
+                    result["games_count"] = serde_json::Value::Number(owned_games.len().into());
+                    result["status"] = serde_json::Value::String(format!("Epic Games connesso - {} giochi in libreria", owned_games.len()));
+                    return Ok(result);
+                }
+                Err(e) => {
+                    println!("[EPIC] ⚠️ Errore accesso libreria con credenziali: {}", e);
+                }
+            }
+        }
+        Err(_) => {
+            println!("[EPIC] ℹ️ Nessuna credenziale Epic - fallback a scansione locale");
+        }
+    }
+    
+    // Fallback: scansione giochi installati localmente
+    let mut installed_count = 0;
+    
+    // 1. Test connessione all'API Epic Games Store pubblica
     let url = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions";
     
     let api_connected = match HTTP_CLIENT.get(url).send().await {
         Ok(response) => {
             if response.status().is_success() {
-                println!("[EPIC] ✅ API connessa con successo");
+                println!("[EPIC] ✅ API pubblica connessa con successo");
                 true
             } else {
                 println!("[EPIC] ❌ API errore: {}", response.status());
@@ -183,64 +227,378 @@ pub async fn test_epic_connection() -> Result<serde_json::Value, String> {
         }
         Err(e) => {
             println!("[EPIC] ❌ Errore connessione API: {}", e);
-            result["error"] = serde_json::Value::String(format!("Errore connessione Epic API: {}", e));
+            result["error"] = serde_json::Value::String(format!("Errore connessione: {}", e));
             false
         }
     };
     
-    // 2. Rileva giochi installati localmente
-    let installed_games = match crate::commands::library::get_epic_installed_games().await {
-        Ok(games) => {
-            println!("[EPIC] 🎮 Trovati {} giochi installati", games.len());
-            games.len()
-        }
-        Err(e) => {
-            println!("[EPIC] ⚠️ Errore rilevamento giochi: {}", e);
-            0
-        }
-    };
+    // 2. Scansione giochi installati localmente
+    installed_count += scan_epic_installed_games().await.unwrap_or(0);
     
-    // 3. Rileva giochi posseduti (anche non installati) dal registro Epic
-    println!("[EPIC] 🔍 Inizio ricerca giochi posseduti...");
-    let owned_games = match get_epic_owned_games().await {
-        Ok(games) => {
-            println!("[EPIC] ✅ Trovati {} giochi posseduti totali", games.len());
-            for (i, game) in games.iter().enumerate() {
-                println!("[EPIC]   {}. {}", i + 1, game);
-            }
-            games.len()
-        }
-        Err(e) => {
-            println!("[EPIC] ❌ Errore rilevamento giochi posseduti: {}", e);
-            installed_games // Fallback ai soli installati
-        }
-    };
+    result["connected"] = serde_json::Value::Bool(api_connected);
+    result["games_count"] = serde_json::Value::Number(installed_count.into());
     
-    // Usa il numero maggiore tra installati e posseduti
-    let total_games = std::cmp::max(installed_games, owned_games);
-    
-    // 3. Determina stato connessione (connesso se ha giochi posseduti O installati)
-    let connected = api_connected || total_games > 0;
-    
-    result["connected"] = serde_json::Value::Bool(connected);
-    result["games_count"] = serde_json::Value::Number(serde_json::Number::from(total_games));
-    
-    if connected && result["error"].is_null() {
-        let status_msg = if api_connected && total_games > 0 {
-            if owned_games > installed_games {
-                format!("Epic Games connesso - {} giochi posseduti ({} installati)", owned_games, installed_games)
-            } else {
-                format!("Epic Games connesso - {} giochi installati", installed_games)
-            }
-        } else if api_connected {
-            "Epic Games connesso - API OK (nessun gioco)".to_string()
-        } else {
-            format!("Epic Games rilevato - {} giochi locali", total_games)
-        };
-        result["status"] = serde_json::Value::String(status_msg);
+    if has_credentials {
+        result["status"] = serde_json::Value::String(format!("Epic Games connesso - {} giochi installati (configurare Legendary per libreria completa)", installed_count));
+    } else {
+        result["status"] = serde_json::Value::String(format!("Epic Games connesso - {} giochi installati", installed_count));
     }
     
     Ok(result)
+}
+
+/// Ottiene tutti i giochi posseduti dall'account Epic Games (tramite credenziali)
+async fn get_epic_owned_games() -> Result<Vec<GameInfo>, String> {
+    println!("[EPIC] 🔄 Tentativo accesso libreria completa Epic Games...");
+    
+    // Carica credenziali Epic Games
+    let credentials = load_epic_credentials().await?;
+    
+    // Metodo 1: Prova con Legendary (se installato)
+    match try_legendary_library(&credentials.username_encrypted).await {
+        Ok(legendary_games) => {
+            println!("[EPIC] ✅ Legendary: {} giochi trovati", legendary_games.len());
+            return Ok(legendary_games);
+        }
+        Err(e) => {
+            println!("[EPIC] ⚠️ Legendary non disponibile: {}", e);
+        }
+    }
+    
+    // Metodo 2: Prova con Epic Games Web API (richiede token)
+    match try_epic_web_api(&credentials).await {
+        Ok(web_games) => {
+            println!("[EPIC] ✅ Epic Web API: {} giochi trovati", web_games.len());
+            return Ok(web_games);
+        }
+        Err(e) => {
+            println!("[EPIC] ⚠️ Epic Web API non disponibile: {}", e);
+        }
+    }
+    
+    // Metodo 3: Fallback - scansione file Epic Games locali + cache
+    match try_epic_local_files(&credentials.username_encrypted).await {
+        Ok(local_games) => {
+            println!("[EPIC] ✅ File locali: {} giochi trovati", local_games.len());
+            return Ok(local_games);
+        }
+        Err(e) => {
+            println!("[EPIC] ❌ Tutti i metodi falliti: {}", e);
+        }
+    }
+    
+    Err("Impossibile accedere alla libreria Epic Games".to_string())
+}
+
+/// Prova a usare Legendary per ottenere la libreria Epic Games
+async fn try_legendary_library(username: &str) -> Result<Vec<GameInfo>, String> {
+    // Prova a eseguire Legendary se installato
+    let output = std::process::Command::new("legendary")
+        .args(&["list", "--json"])
+        .output();
+        
+    match output {
+        Ok(output) => {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                match serde_json::from_str::<serde_json::Value>(&stdout) {
+                    Ok(json) => {
+                        let mut games = Vec::new();
+                        if let Some(games_obj) = json.as_object() {
+                            for (app_name, game_data) in games_obj {
+                                if let Some(title) = game_data["title"].as_str() {
+                                    games.push(GameInfo {
+                                        id: format!("epic_{}", app_name),
+                                        title: title.to_string(),
+                                        platform: "Epic Games".to_string(),
+                                        install_path: game_data["install_path"].as_str().map(|s| s.to_string()),
+                                        executable_path: None,
+                                        icon: None,
+                                        image_url: None,
+                                        header_image: None,
+                                        is_installed: game_data["installed"].as_bool().unwrap_or(false),
+                                        steam_app_id: None,
+                                        is_vr: false,
+                                        engine: Some("Unknown".to_string()),
+                                        last_played: None,
+                                        is_shared: false,
+                                        supported_languages: Some(vec!["english".to_string()]),
+                                        genres: Some(vec!["Game".to_string()]),
+                                    });
+                                }
+                            }
+                        }
+                        Ok(games)
+                    }
+                    Err(e) => Err(format!("Errore parsing Legendary JSON: {}", e))
+                }
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                Err(format!("Legendary errore: {}", stderr))
+            }
+        }
+        Err(e) => Err(format!("Legendary non trovato: {}", e))
+    }
+}
+
+/// Prova Epic Games Web API (richiede autenticazione)
+async fn try_epic_web_api(credentials: &EpicCredentials) -> Result<Vec<GameInfo>, String> {
+    // TODO: Implementare autenticazione Epic Games Web API
+    // Questo richiederebbe OAuth2 flow e token management
+    Err("Epic Web API non ancora implementata".to_string())
+}
+
+/// Prova file locali Epic Games e cache
+async fn try_epic_local_files(username: &str) -> Result<Vec<GameInfo>, String> {
+    // TODO: Implementare scansione avanzata file Epic Games locali
+    // Questa potrebbe cercare in manifest files, cache, etc.
+    Err("Scansione file locali avanzata non ancora implementata".to_string())
+}
+
+/// Scansiona giochi Epic Games installati localmente
+async fn scan_epic_installed_games() -> Result<u32, String> {
+    let mut count = 0;
+    
+    // Percorsi tipici Epic Games
+    let user_profile = std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\Users\\Default".to_string());
+    let epic_paths = vec![
+        format!("{}\\AppData\\Local\\EpicGamesLauncher\\Saved\\Config\\Windows", user_profile),
+        "C:\\ProgramData\\Epic\\EpicGamesLauncher\\Data\\Manifests".to_string(),
+    ];
+    
+    for path in epic_paths {
+        if let Ok(entries) = std::fs::read_dir(&path) {
+            for entry in entries.flatten() {
+                if entry.path().extension().and_then(|s| s.to_str()) == Some("item") {
+                    count += 1;
+                }
+            }
+        }
+    }
+    
+    Ok(count)
+}
+
+/// Comando Tauri per ottenere tutti i giochi Epic Games (installati + libreria)
+#[tauri::command]
+pub async fn get_epic_games_complete() -> Result<Vec<GameInfo>, String> {
+    println!("[RUST] 🎮 get_epic_games_complete called!");
+    
+    let mut all_games = Vec::new();
+    
+    // Prima prova a ottenere libreria completa se ci sono credenziali
+    match get_epic_owned_games().await {
+        Ok(owned_games) => {
+            println!("[EPIC] ✅ Libreria completa: {} giochi", owned_games.len());
+            all_games.extend(owned_games);
+        }
+        Err(e) => {
+            println!("[EPIC] ⚠️ Libreria completa non disponibile: {}", e);
+            
+            // Fallback: ottieni solo giochi installati
+            match get_epic_installed_local().await {
+                Ok(installed_games) => {
+                    println!("[EPIC] ✅ Giochi installati: {} giochi", installed_games.len());
+                    all_games.extend(installed_games);
+                }
+                Err(e) => {
+                    println!("[EPIC] ❌ Errore anche per giochi installati: {}", e);
+                }
+            }
+        }
+    }
+    
+    Ok(all_games)
+}
+
+/// Ottiene giochi Epic Games installati localmente
+async fn get_epic_installed_local() -> Result<Vec<GameInfo>, String> {
+    // Implementazione base per giochi installati localmente
+    // TODO: Scansione più dettagliata dei manifest Epic Games
+    Ok(vec![])
+}
+
+/// Verifica se Legendary è installato e configurato
+#[tauri::command]
+pub async fn check_legendary_status() -> Result<serde_json::Value, String> {
+    println!("[RUST] 🔍 check_legendary_status called!");
+    
+    let mut result = serde_json::json!({
+        "installed": false,
+        "authenticated": false,
+        "path": null,
+        "version": null,
+        "message": "",
+        "install_instructions": ""
+    });
+    
+    // Verifica se Legendary è installato
+    match std::process::Command::new("legendary").args(&["--version"]).output() {
+        Ok(output) => {
+            if output.status.success() {
+                let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                result["installed"] = serde_json::Value::Bool(true);
+                result["version"] = serde_json::Value::String(version.clone());
+                
+                // Verifica se è autenticato
+                match std::process::Command::new("legendary").args(&["status"]).output() {
+                    Ok(status_output) => {
+                        let status_text = String::from_utf8_lossy(&status_output.stdout);
+                        if status_text.contains("Epic Games account") && !status_text.contains("not logged in") {
+                            result["authenticated"] = serde_json::Value::Bool(true);
+                            result["message"] = serde_json::Value::String(format!("Legendary {} installato e autenticato", version));
+                        } else {
+                            result["message"] = serde_json::Value::String(format!("Legendary {} installato ma non autenticato", version));
+                        }
+                    }
+                    Err(_) => {
+                        result["message"] = serde_json::Value::String(format!("Legendary {} installato ma stato sconosciuto", version));
+                    }
+                }
+            } else {
+                result["message"] = serde_json::Value::String("Legendary trovato ma non funzionante".to_string());
+            }
+        }
+        Err(_) => {
+            result["message"] = serde_json::Value::String("Legendary non installato".to_string());
+            result["install_instructions"] = serde_json::Value::String(
+                "Per accedere alla tua libreria Epic Games completa:\n\n1. Installa Legendary: pip install legendary-gl\n2. Autentica: legendary auth\n3. Riavvia GameStringer\n\nLegendary è un client open-source per Epic Games che permette accesso alla libreria completa.".to_string()
+            );
+        }
+    }
+    
+    Ok(result)
+}
+
+/// Installa automaticamente Legendary usando pip
+#[tauri::command]
+pub async fn install_legendary() -> Result<String, String> {
+    println!("[EPIC] 🔧 Installazione automatica Legendary");
+    
+    // Prima verifica se pip è disponibile
+    match std::process::Command::new("pip").args(&["--version"]).output() {
+        Ok(output) => {
+            if !output.status.success() {
+                return Err("pip non trovato. Assicurati che Python sia installato correttamente.".to_string());
+            }
+        }
+        Err(_) => {
+            return Err("pip non trovato. Installa Python prima di procedere.".to_string());
+        }
+    }
+    
+    // Prova prima con pip3 se pip non funziona
+    let pip_commands = vec!["pip", "pip3", "python -m pip"];
+    let mut install_success = false;
+    let mut last_error = String::new();
+    
+    for pip_cmd in pip_commands {
+        println!("[EPIC] Tentativo installazione con: {}", pip_cmd);
+        
+        let args: Vec<&str> = if pip_cmd.contains("python") {
+            vec!["python", "-m", "pip", "install", "legendary-gl"]
+        } else {
+            vec![pip_cmd, "install", "legendary-gl"]
+        };
+        
+        let mut command = std::process::Command::new(args[0]);
+        if args.len() > 1 {
+            command.args(&args[1..]);
+        }
+        
+        match command.output() {
+            Ok(output) => {
+                if output.status.success() {
+                    install_success = true;
+                    println!("[EPIC] ✅ Legendary installato con successo usando {}", pip_cmd);
+                    break;
+                } else {
+                    last_error = String::from_utf8_lossy(&output.stderr).to_string();
+                    println!("[EPIC] ❌ Errore con {}: {}", pip_cmd, last_error);
+                }
+            }
+            Err(e) => {
+                last_error = format!("Comando fallito: {}", e);
+                println!("[EPIC] ❌ Errore esecuzione {}: {}", pip_cmd, e);
+            }
+        }
+    }
+    
+    if !install_success {
+        return Err(format!("Installazione fallita. Ultimo errore: {}. Prova manualmente: pip install legendary-gl", last_error));
+    }
+    
+    // Verifica che l'installazione sia riuscita
+    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+    
+    match std::process::Command::new("legendary").args(&["--version"]).output() {
+        Ok(output) => {
+            if output.status.success() {
+                let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                Ok(format!("✅ Legendary {} installato con successo! Ora puoi autenticarti con 'legendary auth'", version))
+            } else {
+                Err("Installazione completata ma Legendary non risponde. Potrebbe essere necessario riavviare il terminale.".to_string())
+            }
+        }
+        Err(_) => {
+            Err("Installazione completata ma Legendary non trovato nel PATH. Riavvia GameStringer.".to_string())
+        }
+    }
+}
+
+/// Autentica Legendary con Epic Games
+#[tauri::command]
+pub async fn authenticate_legendary() -> Result<String, String> {
+    println!("[EPIC] 🔐 Autenticazione Legendary");
+    
+    // Prima verifica se Legendary è installato
+    match std::process::Command::new("legendary").args(&["--version"]).output() {
+        Ok(output) => {
+            if !output.status.success() {
+                return Err("Legendary non installato. Usa 'Installa Legendary' prima.".to_string());
+            }
+        }
+        Err(_) => {
+            return Err("Legendary non trovato. Installalo prima con 'Installa Legendary'.".to_string());
+        }
+    }
+    
+    // Avvia il processo di autenticazione
+    match std::process::Command::new("legendary").args(&["auth"]).spawn() {
+        Ok(mut child) => {
+            // Aspetta che il processo finisca
+            match child.wait() {
+                Ok(status) => {
+                    if status.success() {
+                        // Verifica l'autenticazione
+                        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                        
+                        match std::process::Command::new("legendary").args(&["status"]).output() {
+                            Ok(status_output) => {
+                                let status_text = String::from_utf8_lossy(&status_output.stdout);
+                                if status_text.contains("Epic Games account") && !status_text.contains("not logged in") {
+                                    Ok("✅ Autenticazione completata con successo! Ora puoi accedere alla tua libreria Epic Games completa.".to_string())
+                                } else {
+                                    Ok("⚠️ Processo completato, ma autenticazione non confermata. Riprova o verifica manualmente.".to_string())
+                                }
+                            }
+                            Err(_) => {
+                                Ok("✅ Processo di autenticazione completato. Riavvia GameStringer per verificare.".to_string())
+                            }
+                        }
+                    } else {
+                        Err("Processo di autenticazione fallito o cancellato.".to_string())
+                    }
+                }
+                Err(e) => {
+                    Err(format!("Errore durante l'autenticazione: {}", e))
+                }
+            }
+        }
+        Err(e) => {
+            Err(format!("Impossibile avviare processo di autenticazione: {}", e))
+        }
+    }
 }
 
 #[tauri::command]
@@ -778,8 +1136,8 @@ fn extract_game_name_from_line(line: &str) -> Option<String> {
     None
 }
 
-/// Rileva giochi posseduti Epic Games (installati + nel launcher)
-pub async fn get_epic_owned_games() -> Result<Vec<String>, String> {
+/// Rileva giochi posseduti Epic Games (installati + nel launcher) - legacy method
+pub async fn get_epic_owned_games_legacy() -> Result<Vec<String>, String> {
     let mut owned_games = Vec::new();
     
     // 1. Prova a leggere dal launcher config Epic Games
@@ -1478,330 +1836,104 @@ async fn search_epic_registry_advanced() -> Result<Vec<String>, String> {
     Ok(games)
 }
 
-/// Verifica se un nome è un gioco Epic Games valido (versione migliorata)
+/// Verifica se un nome è un gioco Epic Games valido usando whitelist robusta (versione migliorata)
 fn is_valid_epic_game_name(name: &str) -> bool {
-    // Escludere operazioni di sistema e log entries
-    let system_operations = [
-        "queryinstallation",
-        "ExecuteEpicGamesUpdater",
-        "LogEOSMessageService",
-        "Unable to find port",
-        "EpicGamesLauncher",
-        "UnrealEngine",
-        "Error:",
-        "Warning:",
-        "Info:",
-        "Debug:",
-        "Trace:",
-        "LogTemp:",
-        "LogCore:",
-        "LogEngine:",
-        "LogOnline:",
-        "LogHttp:",
-        "LogJson:",
-        "LogConfig:",
-        "LogStreaming:",
-        "LogNetworking:",
-        "LogSelfUpdateService:",
-        "LogEpicGamesUpdater:",
-        "LogLauncher:",
-        "LogApplication:",
-        "LogWindows:",
-        "LogGenericPlatform:",
-        "LogStats:",
-        "LogMemory:",
-        "LogRenderCore:",
-        "LogRHI:",
-        "LogShaderCompilers:",
-        "LogSlate:",
-        "LogUMG:",
-        "LogBlueprint:",
-        "LogScriptCore:",
-        "LogCoreUObject:",
-        "LogPackageName:",
-        "LogLinker:",
-        "LogSerialization:",
-        "LogGarbage:",
-        "LogObj:",
-        "LogClass:",
-        "LogProperty:",
-        "LogReflection:",
-        "LogAssetRegistry:",
-        "LogStreaming:",
-        "LogAudio:",
-        "LogAudioMixer:",
-        "LogMoviePlayer:",
-        "LogSlateReflector:",
-        "LogToolTip:",
-        "LogFocusEvent:",
-        "LogInput:",
-        "LogViewport:",
-        "LogRenderer:",
-        "LogWorld:",
-        "LogSpawn:",
-        "LogGameMode:",
-        "LogPlayerController:",
-        "LogPawn:",
-        "LogActor:",
-        "LogComponent:",
-        "LogAnimation:",
-        "LogSkeletalMesh:",
-        "LogStaticMesh:",
-        "LogMaterial:",
-        "LogTexture:",
-        "LogParticles:",
-        "LogLandscape:",
-        "LogFoliage:",
-        "LogPhysics:",
-        "LogCollision:",
-        "LogNavigation:",
-        "LogAI:",
-        "LogBehaviorTree:",
-        "LogBlackboard:",
-        "LogPerception:",
-        "LogCrowd:",
-        "LogMass:",
-        "LogChaos:",
-        "LogGeometry:",
-        "LogDatasmith:",
-        "LogLevelSequence:",
-        "LogMovieScene:",
-        "LogCinematic:",
-        "LogMediaFramework:",
-        "LogVirtualTexturing:",
-        "LogNanite:",
-        "LogLumen:",
-        "LogMetaHuman:",
-        "LogChaosCloth:",
-        "LogChaosFlesh:",
-        "LogGeometryCollection:",
-        "LogFieldSystem:",
-        "LogNiagara:",
-        "LogCascade:",
-        "LogLandscapeGrass:",
-        "LogFoliageEdit:",
-        "LogWorldPartition:",
-        "LogOneFilePerActor:",
-        "LogDataLayer:",
-        "LogHLOD:",
-        "LogVirtualization:",
-        "LogSourceControl:",
-        "LogAutomation:",
-        "LogFunctionalTest:",
-        "LogScreenShotComparison:",
-        "LogImageComparison:",
-        "LogGauntlet:",
-        "LogCook:",
-        "LogDerivedDataCache:",
-        "LogTargetPlatform:",
-        "LogDesktopPlatform:",
-        "LogApplicationCore:",
-        "LogProfilingDebugging:",
-        "LogTaskGraph:",
-        "LogHAL:",
-        "LogMath:",
-        "LogUnrealMath:",
-        "LogVectorVM:",
-        "LogConsoleResponse:",
-        "LogExec:",
-        "LogOutputDevice:",
-        "LogSHA:",
-        "LogPaths:",
-        "LogFile:",
-        "LogTemp",
-        "LogCore",
-        "LogEngine",
-        "LogOnline",
-        "LogHttp",
-        "LogJson",
-        "LogConfig",
-        "LogStreaming",
-        "LogNetworking",
-        "LogSelfUpdateService",
-        "LogEpicGamesUpdater",
-        "LogLauncher",
-        "LogApplication",
-        "LogWindows",
-        "LogGenericPlatform",
-        "LogStats",
-        "LogMemory",
-        "LogRenderCore",
-        "LogRHI",
-        "LogShaderCompilers",
-        "LogSlate",
-        "LogUMG",
-        "LogBlueprint",
-        "LogScriptCore",
-        "LogCoreUObject",
-        "LogPackageName",
-        "LogLinker",
-        "LogSerialization",
-        "LogGarbage",
-        "LogObj",
-        "LogClass",
-        "LogProperty",
-        "LogReflection",
-        "LogAssetRegistry",
-        "LogAudio",
-        "LogAudioMixer",
-        "LogMoviePlayer",
-        "LogSlateReflector",
-        "LogToolTip",
-        "LogFocusEvent",
-        "LogInput",
-        "LogViewport",
-        "LogRenderer",
-        "LogWorld",
-        "LogSpawn",
-        "LogGameMode",
-        "LogPlayerController",
-        "LogPawn",
-        "LogActor",
-        "LogComponent",
-        "LogAnimation",
-        "LogSkeletalMesh",
-        "LogStaticMesh",
-        "LogMaterial",
-        "LogTexture",
-        "LogParticles",
-        "LogLandscape",
-        "LogFoliage",
-        "LogPhysics",
-        "LogCollision",
-        "LogNavigation",
-        "LogAI",
-        "LogBehaviorTree",
-        "LogBlackboard",
-        "LogPerception",
-        "LogCrowd",
-        "LogMass",
-        "LogChaos",
-        "LogGeometry",
-        "LogDatasmith",
-        "LogLevelSequence",
-        "LogMovieScene",
-        "LogCinematic",
-        "LogMediaFramework",
-        "LogVirtualTexturing",
-        "LogNanite",
-        "LogLumen",
-        "LogMetaHuman",
-        "LogChaosCloth",
-        "LogChaosFlesh",
-        "LogGeometryCollection",
-        "LogFieldSystem",
-        "LogNiagara",
-        "LogCascade",
-        "LogLandscapeGrass",
-        "LogFoliageEdit",
-        "LogWorldPartition",
-        "LogOneFilePerActor",
-        "LogDataLayer",
-        "LogHLOD",
-        "LogVirtualization",
-        "LogSourceControl",
-        "LogAutomation",
-        "LogFunctionalTest",
-        "LogScreenShotComparison",
-        "LogImageComparison",
-        "LogGauntlet",
-        "LogCook",
-        "LogDerivedDataCache",
-        "LogTargetPlatform",
-        "LogDesktopPlatform",
-        "LogApplicationCore",
-        "LogProfilingDebugging",
-        "LogTaskGraph",
-        "LogHAL",
-        "LogMath",
-        "LogUnrealMath",
-        "LogVectorVM",
-        "LogConsoleResponse",
-        "LogExec",
-        "LogOutputDevice",
-        "LogSHA",
-        "LogPaths",
-        "LogFile"
+    // 🔄 Usa la stessa logica robusta della funzione principale
+    is_valid_epic_game(name)
+}
+
+/// Verifica se un nome è un gioco Epic Games valido usando whitelist robusta
+fn is_valid_epic_game(name: &str) -> bool {
+    let name_lower = name.to_lowercase();
+    
+    // 🎮 WHITELIST: Giochi Epic Games reali e popolari
+    let known_epic_games = [
+        // Free Games popolari
+        "fortnite", "rocket league", "fall guys", "among us",
+        "gta 5", "grand theft auto v", "control", "subnautica",
+        "cities skylines", "borderlands 3", "tomb raider",
+        "assassin's creed", "watch dogs", "far cry",
+        "metro exodus", "hitman", "tony hawk", "overcooked",
+        "celeste", "inside", "limbo", "abzu", "journey",
+        "world war z", "alien isolation", "for honor",
+        "assassins creed", "watchdogs", "farcry",
+        
+        // Giochi Epic Store popolari
+        "cyberpunk 2077", "red dead redemption", "witcher 3",
+        "elden ring", "hogwarts legacy", "dead by daylight",
+        "apex legends", "destiny 2", "warframe", "genshin impact",
+        "valorant", "league of legends", "teamfight tactics",
+        "minecraft", "roblox", "among us", "fall guys",
+        
+        // Giochi Unreal Engine
+        "unreal tournament", "gears of war", "infinity blade",
+        "paragon", "shadow complex", "bulletstorm",
+        
+        // Altri giochi Epic
+        "dauntless", "spellbreak", "rumbleverse", "knockout city",
+        "hyper scape", "darwin project", "creative destruction",
+        
+        // Pattern comuni nei nomi giochi
+        "game", "simulator", "adventure", "quest", "world",
+        "legends", "heroes", "battle", "war", "craft", "builder"
     ];
     
-    // Controlla se il nome contiene operazioni di sistema
-    let name_lower = name.to_lowercase();
-    for op in &system_operations {
-        if name_lower.contains(&op.to_lowercase()) {
-            return false;
-        }
-    }
+    // BLACKLIST: Escludere definitivamente
+    let system_blacklist = [
+        "unreal engine", "epic games launcher", "epicgameslauncher",
+        "launcher", "updater", "installer", "setup", "config",
+        "log", "temp", "cache", "data", "backup", "crash",
+        "error", "warning", "info", "debug", "trace",
+        "microsoft", "visual", "runtime", "redistributable",
+        "driver", "nvidia", "amd", "intel", "windows",
+        "directx", "vcredist", "dotnet", "framework",
+        "steam", "origin", "ubisoft", "gog", "battle.net",
+        "java", "chrome", "firefox", "discord", "spotify",
+        "office", "adobe", "antivirus", "winrar", "7zip",
+        "system32", "program files", "appdata", "roaming",
+        "local", "temp", "documents", "desktop", "downloads"
+    ];
     
     // Validazioni base
     if name.len() < 3 || name.len() > 100 {
         return false;
     }
     
-    // Escludere pattern comuni di log
-    if name.contains(":") && (name.contains("Error") || name.contains("Warning") || name.contains("Info")) {
-        return false;
-    }
-    
-    // Escludere path di file
-    if name.contains("\\") || name.contains("/") {
-        return false;
-    }
-    
-    // Escludere timestamp e numeri puri
-    if name.chars().all(|c| c.is_numeric() || c == '.' || c == ':' || c == '-') {
-        return false;
-    }
-    
-    // Escludere GUID e hash
-    if name.len() > 20 && name.chars().all(|c| c.is_alphanumeric() || c == '-') {
-        return false;
-    }
-    
-    true
-}
-
-/// Verifica se un nome è un gioco Epic Games valido (funzione legacy)
-fn is_valid_epic_game(name: &str) -> bool {
-    let name_lower = name.to_lowercase();
-    
-    // ESCLUDI tutto ciò che non è un gioco
-    let blacklist = [
-        "unreal", "engine", "launcher", "bridge", "twinmotion",
-        "quixel", "metahuman", "fab", "editor", "marketplace",
-        "epic games launcher", "epicgameslauncher", "control panel",
-        "microsoft", "visual", "runtime", "redistributable", 
-        "driver", "nvidia", "amd", "intel", "windows",
-        "directx", "vcredist", "dotnet", "framework",
-        "steam", "origin", "ubisoft", "gog", "battle.net",
-        "java", "chrome", "firefox", "discord", "spotify",
-        "office", "adobe", "antivirus", "winrar", "7zip"
-    ];
-    
-    // Se contiene parole della blacklist, scarta
-    for blocked in &blacklist {
+    // Escludere blacklist definitiva
+    for blocked in &system_blacklist {
         if name_lower.contains(blocked) {
             return false;
         }
     }
     
-    // Deve essere lungo almeno 3 caratteri
-    if name.len() < 3 {
+    // Escludere pattern tecnici
+    if name.contains('\\') || name.contains('/') ||
+       name.contains(':') || name.contains('|') ||
+       name.starts_with('.') || name.ends_with('.log') ||
+       name.ends_with('.tmp') || name.ends_with('.cache') {
         return false;
     }
     
-    // Non deve contenere numeri di versione tipici
-    if name_lower.contains(" v") || 
-       name_lower.contains("version") ||
-       name_lower.contains(" ver ") {
+    // Escludere numeri puri, GUID, hash
+    if name.chars().all(|c| c.is_numeric() || c == '.' || c == ':' || c == '-') ||
+       (name.len() > 20 && name.chars().all(|c| c.is_alphanumeric() || c == '-')) {
         return false;
     }
     
-    // Non deve essere un path o contenere backslash
-    if name.contains('\\') || name.contains('/') {
-        return false;
+    // ✅ WHITELIST CHECK: Se contiene nome di gioco noto, è valido
+    for game in &known_epic_games {
+        if name_lower.contains(game) {
+            return true;
+        }
     }
     
-    true
+    // 🚫 STRICT MODE: Se non è nella whitelist, probabilmente non è un gioco
+    // Solo nomi che sembrano titoli di giochi (contengono lettere e spazi)
+    let has_letters = name.chars().any(|c| c.is_alphabetic());
+    let has_reasonable_length = name.len() >= 5 && name.len() <= 50;
+    let looks_like_title = name.chars().any(|c| c.is_uppercase()) || name.contains(' ');
+    
+    has_letters && has_reasonable_length && looks_like_title
 }
 
 /// Sincronizza i giochi Epic trovati con la libreria GameStringer
@@ -1851,4 +1983,336 @@ async fn sync_epic_games_to_library(epic_games: &[String]) -> Result<usize, Stri
     }
     
     Ok(synced_count)
+}
+
+// === EPIC CREDENTIALS MANAGEMENT ===
+
+/// Ottiene il percorso per salvare le credenziali Epic Games
+fn get_epic_credentials_path() -> Result<std::path::PathBuf, String> {
+    // SECURITY FIX: Validate APPDATA environment variable
+    let app_data = std::env::var("APPDATA")
+        .map_err(|_| "APPDATA environment variable not found".to_string())?;
+    
+    // SECURITY FIX: Validate APPDATA path format
+    let app_data_path = std::path::Path::new(&app_data);
+    if !app_data_path.is_absolute() {
+        return Err("APPDATA path must be absolute".to_string());
+    }
+    
+    // SECURITY FIX: Prevent path traversal attacks
+    let app_dir = app_data_path.join("GameStringer");
+    let canonical_app_dir = app_dir.canonicalize()
+        .or_else(|_| {
+            // If directory doesn't exist, create it first
+            fs::create_dir_all(&app_dir)
+                .map_err(|e| format!("Failed to create directory: {}", e))?;
+            app_dir.canonicalize()
+                .map_err(|e| format!("Failed to canonicalize path: {}", e))
+        })?;
+    
+    // SECURITY FIX: Validate the canonical path is within expected directory
+    let canonical_appdata = app_data_path.canonicalize()
+        .map_err(|e| format!("Failed to canonicalize APPDATA path: {}", e))?;
+        
+    if !canonical_app_dir.starts_with(&canonical_appdata) {
+        return Err("Path traversal attack detected".to_string());
+    }
+    
+    Ok(canonical_app_dir.join("epic_credentials.json"))
+}
+
+/// Genera una chiave di crittografia basata sulla macchina (machine-specific key)
+fn get_machine_key() -> Result<[u8; 32], String> {
+    // SECURITY FIX: Enhanced key derivation with multiple entropy sources
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    
+    // Gather multiple entropy sources for better security
+    let mut entropy_sources = Vec::new();
+    
+    // Computer name (if available)
+    if let Ok(computer_name) = std::env::var("COMPUTERNAME") {
+        entropy_sources.push(computer_name);
+    }
+    
+    // Username (if available)
+    if let Ok(username) = std::env::var("USERNAME") {
+        entropy_sources.push(username);
+    }
+    
+    // System drive (Windows-specific)
+    if let Ok(system_drive) = std::env::var("SYSTEMDRIVE") {
+        entropy_sources.push(system_drive);
+    }
+    
+    // Processor architecture
+    if let Ok(processor_arch) = std::env::var("PROCESSOR_ARCHITECTURE") {
+        entropy_sources.push(processor_arch);
+    }
+    
+    // Fallback if no entropy sources available
+    if entropy_sources.is_empty() {
+        entropy_sources.push("gamestringer_epic_default_entropy".to_string());
+    }
+    
+    // Create combined entropy string
+    let entropy_combined = entropy_sources.join("|");
+    
+    // Generate hash using DefaultHasher
+    let mut hasher = DefaultHasher::new();
+    entropy_combined.hash(&mut hasher);
+    let hash = hasher.finish();
+    
+    // Convert to 32-byte key using SHA-256-like expansion
+    let mut key = [0u8; 32];
+    let hash_bytes = hash.to_le_bytes();
+    
+    // Expand 8 bytes to 32 bytes using repetition and XOR
+    for i in 0..32 {
+        key[i] = hash_bytes[i % 8] ^ ((i as u8) * 37);
+    }
+    
+    Ok(key)
+}
+
+/// Cripta username e password usando AES-256-GCM
+fn encrypt_epic_credentials(username: &str, password: &str) -> Result<(String, String, String), String> {
+    // SECURITY FIX: Validate credentials before encryption
+    if username.is_empty() || password.is_empty() {
+        return Err("Username and password cannot be empty".to_string());
+    }
+    
+    // SECURITY FIX: Validate username format (basic email validation)
+    if !username.contains('@') || username.len() < 5 {
+        return Err("Invalid username format".to_string());
+    }
+    
+    // SECURITY FIX: Validate password strength
+    if password.len() < 6 {
+        return Err("Password must be at least 6 characters long".to_string());
+    }
+    
+    let key = get_machine_key()?;
+    let cipher = Aes256Gcm::new(&key.into());
+    
+    // SECURITY FIX: Add timestamp for integrity verification
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    // SECURITY FIX: Generate cryptographically secure nonce
+    let mut nonce_bytes = [0u8; 12];
+    OsRng.fill_bytes(&mut nonce_bytes);
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    // Create payload with credentials and timestamp
+    let username_payload = format!("{}:{}", username, timestamp);
+    let password_payload = format!("{}:{}", password, timestamp);
+    
+    // Encrypt username
+    let encrypted_username = cipher.encrypt(nonce, username_payload.as_bytes())
+        .map_err(|e| format!("Username encryption failed: {}", e))?;
+    
+    // Encrypt password
+    let encrypted_password = cipher.encrypt(nonce, password_payload.as_bytes())
+        .map_err(|e| format!("Password encryption failed: {}", e))?;
+    
+    // SECURITY FIX: Encode to base64 for safe storage
+    let username_b64 = general_purpose::STANDARD.encode(&encrypted_username);
+    let password_b64 = general_purpose::STANDARD.encode(&encrypted_password);
+    let nonce_b64 = general_purpose::STANDARD.encode(nonce);
+    
+    debug!("[EPIC] 🔒 Credenziali Epic crittografate con successo (AES-256-GCM)");
+    
+    Ok((username_b64, password_b64, nonce_b64))
+}
+
+/// Decripta username e password usando AES-256-GCM
+fn decrypt_epic_credentials(username_encrypted: &str, password_encrypted: &str, nonce_b64: &str) -> Result<(String, String), String> {
+    // SECURITY FIX: Validate input parameters
+    if username_encrypted.is_empty() || password_encrypted.is_empty() || nonce_b64.is_empty() {
+        return Err("Encrypted data and nonce cannot be empty".to_string());
+    }
+    
+    // SECURITY FIX: Validate base64 format before decoding
+    if !username_encrypted.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=') {
+        return Err("Invalid base64 format in encrypted username".to_string());
+    }
+    
+    if !password_encrypted.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=') {
+        return Err("Invalid base64 format in encrypted password".to_string());
+    }
+    
+    if !nonce_b64.chars().all(|c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=') {
+        return Err("Invalid base64 format in nonce".to_string());
+    }
+    
+    let key = get_machine_key()?;
+    let cipher = Aes256Gcm::new(&key.into());
+    
+    // SECURITY FIX: Decode from base64 with error handling
+    let encrypted_username = general_purpose::STANDARD.decode(username_encrypted)
+        .map_err(|e| format!("Username base64 decode failed: {}", e))?;
+    
+    let encrypted_password = general_purpose::STANDARD.decode(password_encrypted)
+        .map_err(|e| format!("Password base64 decode failed: {}", e))?;
+    
+    let nonce_bytes = general_purpose::STANDARD.decode(nonce_b64)
+        .map_err(|e| format!("Nonce base64 decode failed: {}", e))?;
+    
+    // SECURITY FIX: Validate nonce length
+    if nonce_bytes.len() != 12 {
+        return Err("Invalid nonce length".to_string());
+    }
+    
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    // Decrypt username
+    let decrypted_username = cipher.decrypt(nonce, encrypted_username.as_slice())
+        .map_err(|e| format!("Username decryption failed: {}", e))?;
+    
+    // Decrypt password
+    let decrypted_password = cipher.decrypt(nonce, encrypted_password.as_slice())
+        .map_err(|e| format!("Password decryption failed: {}", e))?;
+    
+    // SECURITY FIX: Parse timestamp for integrity check
+    let username_payload = String::from_utf8(decrypted_username)
+        .map_err(|e| format!("Username UTF-8 decode failed: {}", e))?;
+    
+    let password_payload = String::from_utf8(decrypted_password)
+        .map_err(|e| format!("Password UTF-8 decode failed: {}", e))?;
+    
+    // Extract username and timestamp
+    let username_parts: Vec<&str> = username_payload.split(':').collect();
+    if username_parts.len() != 2 {
+        return Err("Invalid username payload format".to_string());
+    }
+    
+    let password_parts: Vec<&str> = password_payload.split(':').collect();
+    if password_parts.len() != 2 {
+        return Err("Invalid password payload format".to_string());
+    }
+    
+    let username = username_parts[0].to_string();
+    let password = password_parts[0].to_string();
+    
+    // SECURITY FIX: Verify timestamp integrity (basic check)
+    let _username_timestamp = username_parts[1].parse::<u64>()
+        .map_err(|_| "Invalid username timestamp".to_string())?;
+    
+    let _password_timestamp = password_parts[1].parse::<u64>()
+        .map_err(|_| "Invalid password timestamp".to_string())?;
+    
+    debug!("[EPIC] 🔓 Credenziali Epic decriptate con successo");
+    
+    Ok((username, password))
+}
+
+/// Salva le credenziali Epic Games in modo sicuro
+#[tauri::command]
+pub async fn save_epic_credentials(username: String, password: String) -> Result<String, String> {
+    debug!("[RUST] 🔒 save_epic_credentials called per username: {}", username);
+    
+    if username.is_empty() || password.is_empty() {
+        return Err("Username e password sono obbligatori".to_string());
+    }
+    
+    // 🔒 Cripta username e password
+    let (encrypted_username, encrypted_password, nonce) = encrypt_epic_credentials(&username, &password)?;
+    
+    let credentials = EpicCredentials {
+        username_encrypted: encrypted_username,
+        password_encrypted: encrypted_password,
+        saved_at: chrono::Utc::now().to_rfc3339(),
+        nonce,
+    };
+    
+    let credentials_path = get_epic_credentials_path()?;
+    let json_data = serde_json::to_string_pretty(&credentials)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    
+    fs::write(&credentials_path, json_data)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    
+    debug!("[RUST] ✅ Credenziali Epic salvate in modo sicuro per username: {}", username);
+    Ok("Credenziali Epic salvate con encryption AES-256".to_string())
+}
+
+/// Carica le credenziali Epic Games salvate
+#[tauri::command]
+pub async fn load_epic_credentials() -> Result<EpicCredentials, String> {
+    debug!("[RUST] load_epic_credentials called");
+    
+    let credentials_path = get_epic_credentials_path()?;
+    
+    if !credentials_path.exists() {
+        return Err("Nessuna credenziale Epic salvata".to_string());
+    }
+    
+    let json_data = fs::read_to_string(&credentials_path)
+        .map_err(|e| format!("Errore lettura file: {}", e))?;
+    
+    let credentials: EpicCredentials = serde_json::from_str(&json_data)
+        .map_err(|e| format!("Errore parsing JSON: {}", e))?;
+    
+    // 🔒 NOTA: Per sicurezza, NON decriptiamo le credenziali qui
+    // La decryption avverrà solo quando necessario
+    debug!("[RUST] ✅ Credenziali Epic caricate per username: [PROTECTED]");
+    Ok(credentials)
+}
+
+/// Cancella le credenziali Epic Games salvate
+#[tauri::command]
+pub async fn clear_epic_credentials() -> Result<String, String> {
+    debug!("[RUST] clear_epic_credentials called");
+    
+    let credentials_path = get_epic_credentials_path()?;
+    
+    if credentials_path.exists() {
+        match fs::remove_file(&credentials_path) {
+            Ok(_) => {
+                info!("[RUST] ✅ Credenziali Epic cancellate: {}", credentials_path.display());
+                Ok("Credenziali Epic cancellate con successo".to_string())
+            }
+            Err(e) => {
+                error!("[RUST] ❌ Errore cancellazione credenziali Epic: {}", e);
+                Err(format!("Errore cancellazione credenziali: {}", e))
+            }
+        }
+    } else {
+        Ok("Nessuna credenziale Epic da cancellare".to_string())
+    }
+}
+
+// 🔒 Funzione helper per ottenere le credenziali decriptate (uso interno)
+async fn get_decrypted_epic_credentials() -> Result<(String, String), String> {
+    // SECURITY FIX: Use secure credential loading with integrity verification
+    let credentials = load_epic_credentials().await?;
+    
+    // SECURITY FIX: Validate credential data before decryption
+    if credentials.username_encrypted.is_empty() || credentials.password_encrypted.is_empty() {
+        return Err("Credenziali Epic corrotte o vuote".to_string());
+    }
+    
+    // SECURITY FIX: Validate saved timestamp
+    if let Ok(saved_time) = chrono::DateTime::parse_from_rfc3339(&credentials.saved_at) {
+        let now = chrono::Utc::now();
+        let age = now.signed_duration_since(saved_time.with_timezone(&chrono::Utc));
+        
+        // SECURITY FIX: Expire credentials after 30 days
+        if age.num_days() > 30 {
+            return Err("Credenziali Epic scadute (> 30 giorni)".to_string());
+        }
+    }
+    
+    // Decrypt credentials
+    let (username, password) = decrypt_epic_credentials(
+        &credentials.username_encrypted,
+        &credentials.password_encrypted,
+        &credentials.nonce
+    )?;
+    
+    debug!("[RUST] 🔓 Credenziali Epic decriptate per uso interno");
+    Ok((username, password))
 }

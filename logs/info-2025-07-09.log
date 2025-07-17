@@ -1,0 +1,29 @@
+{"timestamp":"2025-07-09T20:33:03.671Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T20:33:03.743Z","level":"info","message":"Secrets manager initialized with 9 secrets","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:45:10.862Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T20:45:10.880Z","level":"info","message":"Secrets manager initialized with 9 secrets","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:45:11.367Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-09T20:45:11.387Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-09T21:39:54.331Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:39:54.341Z","level":"info","message":"Secrets manager initialized with 9 secrets","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T21:39:54.428Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:39:54.506Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:10.371Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:10.461Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:10.548Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:10.627Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:10.707Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:10.789Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:10.873Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:10.950Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:11.032Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:11.112Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:11.198Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T21:41:11.282Z","level":"info","message":"Testing store connection: steam","component":"STORES_API"}
+{"timestamp":"2025-07-09T22:25:23.994Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-09T22:25:23.970Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-09T22:25:23.982Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-09T22:25:24.360Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-09T22:25:24.296Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-09T22:25:24.320Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-09T22:25:24.544Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}

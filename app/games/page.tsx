@@ -46,6 +46,7 @@ interface DisplayGame {
   lastPlayed: number;
   isVrSupported?: boolean;
   engine?: string;
+  isShared?: boolean;
   howLongToBeat?: HowLongToBeatData;
   genres?: { id: string; description: string }[];
   categories?: { id: number; description: string }[];
@@ -83,9 +84,11 @@ export default function GamesPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [installationFilter, setInstallationFilter] = useState('all'); // 'all', 'installed', 'uninstalled'
+  const [ownershipFilter, setOwnershipFilter] = useState('all'); // 'all', 'owned', 'shared'
   const [showVrOnly, setShowVrOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState('title-asc');
   const [isRefreshing, setIsRefreshing] = useState(false);
+
 
   const loadGames = async (forceRefresh = false) => {
     console.log(`[FRONTEND DEBUG] loadGames called. forceRefresh = ${forceRefresh}`);
@@ -99,7 +102,7 @@ export default function GamesPage() {
       console.log('[FRONTEND DEBUG] Session status:', status);
       console.log('[FRONTEND DEBUG] Session data:', session);
       
-      // Recupera credenziali Steam dalla sessione next-auth
+      // Recupera credenziali Steam dalla sessione auth unificata
       let steamId = 'demo_id';
       let apiKey = 'demo_key';
       
@@ -128,10 +131,19 @@ export default function GamesPage() {
       try {
         const testResult = await invoke('test_steam_connection');
         console.log('[FRONTEND DEBUG] ✅ Test Tauri riuscito:', testResult);
+        
+        // TEST FAMILY SHARING specifico
+        console.log('[FRONTEND DEBUG] 🧪 Test Family Sharing...');
+        try {
+          const familySharingTest = await invoke('get_family_sharing_games');
+          console.log('[FRONTEND DEBUG] ✅ Family Sharing test:', familySharingTest);
+        } catch (fsError) {
+          console.log('[FRONTEND DEBUG] ⚠️ Family Sharing non disponibile:', fsError);
+        }
       } catch (error) {
         console.log('[FRONTEND DEBUG] ❌ Test Tauri fallito:', error);
         setError('Errore di comunicazione con il backend Tauri');
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
       
@@ -146,7 +158,7 @@ export default function GamesPage() {
       
       const [steamGames, localData] = await Promise.race([
         Promise.all([
-          invoke('get_steam_games', {
+          invoke('get_steam_games_with_family_sharing', {
             apiKey,
             steamId,
             forceRefresh
@@ -190,6 +202,7 @@ export default function GamesPage() {
           lastPlayed: steamGame.last_played,
           isVrSupported: steamGame.isVr,
           engine: steamGame.engine,
+          isShared: steamGame.is_shared,
           howLongToBeat: steamGame.howLongToBeat,
           genres: steamGame.genres,
           categories: steamGame.categories,
@@ -234,8 +247,9 @@ export default function GamesPage() {
       .filter(game => {
         const searchMatch = game.title.toLowerCase().includes(lowercasedSearchTerm);
         const installMatch = installationFilter === 'all' || (installationFilter === 'installed' ? game.isInstalled : !game.isInstalled);
+        const ownershipMatch = ownershipFilter === 'all' || (ownershipFilter === 'owned' ? !game.isShared : game.isShared);
         const vrMatch = !showVrOnly || game.isVrSupported;
-        return searchMatch && installMatch && vrMatch;
+        return searchMatch && installMatch && ownershipMatch && vrMatch;
       })
       .sort((a, b) => {
         // Logica di priorità per la ricerca
@@ -260,9 +274,62 @@ export default function GamesPage() {
             return a.title.localeCompare(b.title);
         }
       });
-  }, [games, searchTerm, installationFilter, showVrOnly, sortOrder]);
+  }, [games, searchTerm, installationFilter, ownershipFilter, showVrOnly, sortOrder]);
 
   const vrGamesCount = useMemo(() => games.filter(g => g.isVrSupported).length, [games]);
+
+  // Funzione per testare Family Sharing con dati mock
+  const testFamilySharing = async () => {
+    console.log('[FRONTEND DEBUG] 🧪 Test Family Sharing button clicked!');
+    
+    // Giochi mock condivisi
+    const mockSharedGames: DisplayGame[] = [
+      {
+        id: 'mock-570',
+        title: 'Dota 2 (Family Sharing)',
+        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg',
+        fallbackImageUrl: null,
+        platform: 'Steam',
+        isInstalled: false,
+        playtime: 0,
+        lastPlayed: 0,
+        isShared: true,
+        isVrSupported: false
+      },
+      {
+        id: 'mock-730',
+        title: 'Counter-Strike 2 (Family Sharing)',
+        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg',
+        fallbackImageUrl: null,
+        platform: 'Steam',
+        isInstalled: false,
+        playtime: 0,
+        lastPlayed: 0,
+        isShared: true,
+        isVrSupported: false
+      },
+      {
+        id: 'mock-271590',
+        title: 'Grand Theft Auto V (Family Sharing)',
+        imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg',
+        fallbackImageUrl: null,
+        platform: 'Steam',
+        isInstalled: false,
+        playtime: 0,
+        lastPlayed: 0,
+        isShared: true,
+        isVrSupported: false
+      }
+    ];
+
+    // Aggiungi i giochi mock alla lista esistente
+    setGames(prevGames => {
+      const existingIds = new Set(prevGames.map(g => g.id));
+      const newGames = mockSharedGames.filter(g => !existingIds.has(g.id));
+      console.log(`[FRONTEND DEBUG] ✅ Aggiunti ${newGames.length} giochi mock condivisi`);
+      return [...prevGames, ...newGames];
+    });
+  };
 
   if (status === 'loading' || isLoading) {
     return (
@@ -338,8 +405,8 @@ export default function GamesPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Giochi Totali" value={games.length} icon={Gamepad2} color="text-blue-400" />
         <StatCard title="Installati" value={games.filter(g => g.isInstalled).length} icon={DownloadCloud} color="text-green-400" />
+        <StatCard title="🔗 Condivisi" value={games.filter(g => g.isShared).length} icon={Gamepad2} color="text-orange-400" />
         <StatCard title="Giochi VR" value={vrGamesCount} icon={Camera} color="text-purple-400" />
-        <StatCard title="Non Installati" value={games.length - games.filter(g => g.isInstalled).length} icon={CloudOff} color="text-orange-400" />
       </div>
 
       <div className="space-y-4">
@@ -369,13 +436,25 @@ export default function GamesPage() {
             <Button variant="outline" size="icon" onClick={() => { console.log('[FRONTEND DEBUG] Refresh button clicked!'); loadGames(true); }} disabled={isRefreshing || isLoading} title="Forza aggiornamento">
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
+            <Button variant="outline" size="sm" onClick={testFamilySharing} disabled={isLoading} title="Test Family Sharing con dati mock">
+                🔗 Test Family Sharing
+            </Button>
           </div>
         </div>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">Installazione:</span>
                 <Button variant={installationFilter === 'all' ? 'secondary' : 'outline'} size="sm" onClick={() => setInstallationFilter('all')}>Tutti</Button>
                 <Button variant={installationFilter === 'installed' ? 'secondary' : 'outline'} size="sm" onClick={() => setInstallationFilter('installed')}>Installati</Button>
                 <Button variant={installationFilter === 'uninstalled' ? 'secondary' : 'outline'} size="sm" onClick={() => setInstallationFilter('uninstalled')}>Non Installati</Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">Proprietà:</span>
+                <Button variant={ownershipFilter === 'all' ? 'secondary' : 'outline'} size="sm" onClick={() => setOwnershipFilter('all')}>Tutti</Button>
+                <Button variant={ownershipFilter === 'owned' ? 'secondary' : 'outline'} size="sm" onClick={() => setOwnershipFilter('owned')}>Posseduti</Button>
+                <Button variant={ownershipFilter === 'shared' ? 'secondary' : 'outline'} size="sm" onClick={() => setOwnershipFilter('shared')} className="text-orange-600 border-orange-500/20 hover:bg-orange-500/10">🔗 Condivisi</Button>
+              </div>
             </div>
             <div className="flex items-center space-x-2">
                 <Switch id="vr-only" checked={showVrOnly} onCheckedChange={setShowVrOnly} />
@@ -399,7 +478,7 @@ export default function GamesPage() {
             <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-xl font-semibold">Nessun gioco trovato</h3>
             <p className="text-muted-foreground mt-2">
-              {searchTerm || installationFilter !== 'all' || showVrOnly
+              {searchTerm || installationFilter !== 'all' || ownershipFilter !== 'all' || showVrOnly
                 ? 'Prova a modificare i filtri per trovare quello che cerchi.'
                 : 'La tua libreria è vuota o i giochi sono ancora in fase di caricamento.'}
             </p>

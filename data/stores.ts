@@ -13,4 +13,5 @@ export const stores: Store[] = [
   { id: 'ubisoft_connect', name: 'Ubisoft Connect', testCommand: 'test_ubisoft_connection' },
   { id: 'battle_net', name: 'Battle.net', testCommand: 'test_battlenet_connection' },
   { id: 'itch_io', name: 'itch.io', testCommand: 'test_itchio_connection' },
+  { id: 'rockstar', name: 'Rockstar Games', testCommand: 'test_rockstar_connection' },
 ];

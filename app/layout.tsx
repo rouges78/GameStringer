@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import Providers from '@/components/providers';
 import { Toaster } from 'sonner';
 import { MainLayout } from '@/components/layout/main-layout';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,14 +23,26 @@ export default function RootLayout({
   return (
     <html lang="it" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <Providers>
-            <MainLayout>
-              {children}
-            </MainLayout>
-            <Toaster richColors position="top-right" />
-          </Providers>
-        </ThemeProvider>
+        <ErrorBoundary
+          showErrorDetails={process.env.NODE_ENV === 'development'}
+        >
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+            <Providers>
+              <ErrorBoundary
+                showErrorDetails={process.env.NODE_ENV === 'development'}
+              >
+                <MainLayout>
+                  <ErrorBoundary
+                    showErrorDetails={process.env.NODE_ENV === 'development'}
+                  >
+                    {children}
+                  </ErrorBoundary>
+                </MainLayout>
+              </ErrorBoundary>
+              <Toaster richColors position="top-right" />
+            </Providers>
+          </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

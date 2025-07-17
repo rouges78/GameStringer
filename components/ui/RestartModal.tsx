@@ -17,7 +17,7 @@ export default function RestartModal({
   isOpen,
   onClose,
   title = "🔄 Riavvio Necessario",
-  message = "Per applicare le modifiche alle API next-auth, GameStringer deve essere riavviato.",
+  message = "Per applicare le modifiche al sistema di autenticazione, GameStringer deve essere riavviato.",
   onAutoRestart,
   onManualClose
 }: RestartModalProps) {

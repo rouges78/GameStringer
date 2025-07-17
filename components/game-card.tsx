@@ -16,6 +16,7 @@ interface DisplayGame {
   engine?: string;
   playtime?: number;
   lastPlayed?: number;
+  isShared?: boolean;
   howLongToBeat?: {
     main: number;
     mainExtra: number;
@@ -162,12 +163,17 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl flex flex-col bg-card"
     >
-      <Link href={`/games/${game.id}`} className="block w-full aspect-video relative">
+      <Link href={`/games/${game.id}`} className="block w-full aspect-[3/4] relative">
         {/* Badges sopra la cover */}
         <div className="absolute top-2 right-2 z-10 flex gap-2">
           {game.isVrSupported && (
             <Badge className="bg-blue-600/90 text-white border-0 animate-pulse">
               VR
+            </Badge>
+          )}
+          {game.isShared && (
+            <Badge className="bg-orange-500/90 text-white border-0">
+              🔗 Condiviso
             </Badge>
           )}
           {game.isInstalled && (
@@ -203,15 +209,15 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
       </Link>
       
       {/* Info sotto la cover: solo lingue ed engine */}
-      <div className="p-3 flex items-center justify-between gap-2">
+      <div className="p-4 flex items-center justify-between gap-3 min-h-[60px]">
         <div className="flex items-center gap-1 flex-wrap">
           {getLanguageFlags(game.supportedLanguages).length > 0 ? (
             getLanguageFlags(game.supportedLanguages).map((countryCode, i) => (
               <img 
                 key={i} 
-                src={`https://flagcdn.com/24x18/${countryCode}.png`}
+                src={`https://flagcdn.com/32x24/${countryCode}.png`}
                 alt={countryCode}
-                className="w-6 h-[18px] rounded-sm shadow-sm"
+                className="w-8 h-6 rounded-sm shadow-md border border-gray-200/20"
                 title="Lingua supportata"
                 loading="lazy"
               />

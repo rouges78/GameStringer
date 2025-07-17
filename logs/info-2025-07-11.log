@@ -1,0 +1,30 @@
+{"timestamp":"2025-07-11T16:52:52.100Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-11T16:52:52.157Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-11T16:52:52.169Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-11T16:52:52.173Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-11T16:57:19.269Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-11T16:57:19.288Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-11T16:57:19.300Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-11T16:57:19.304Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-11T17:36:34.502Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-11T17:36:34.535Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-11T17:36:34.549Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-11T17:36:34.554Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-11T18:49:12.445Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-11T18:49:12.510Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-11T18:49:12.523Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-07-11T18:49:12.536Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-07-11T19:56:00.705Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T19:56:00.708Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T19:56:00.925Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T19:56:00.951Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T19:56:00.966Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T19:56:01.450Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T19:56:01.510Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T20:08:41.148Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T20:08:41.263Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T20:08:41.412Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T20:08:41.951Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T20:08:42.188Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T20:08:42.521Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}
+{"timestamp":"2025-07-11T20:08:42.698Z","level":"info","message":"Database health monitoring started (interval: 60000ms)","component":"DATABASE_HEALTH"}

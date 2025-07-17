@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Steam Local Games</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .game-item { 
+            border: 1px solid #ddd; 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 5px;
+        }
+        .game-name { font-weight: bold; font-size: 1.2em; }
+        .game-appid { color: #666; font-size: 0.9em; }
+        .game-status { margin-top: 5px; }
+        .status-installed { color: #28a745; }
+        .status-owned { color: #007bff; }
+        .status-shared { color: #6c757d; }
+        .btn { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            cursor: pointer;
+        }
+        .btn:hover { background: #0056b3; }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+    </style>
+</head>
+<body>
+    <h1>🎮 Test Steam Local Games</h1>
+    
+    <button class="btn" onclick="testLocalGames()">Test Local Steam Games</button>
+    
+    <div id="status"></div>
+    <div id="results"></div>
+    
+    <script>
+        async function testLocalGames() {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            statusDiv.innerHTML = '<p>🔄 Caricamento giochi Steam locali...</p>';
+            resultsDiv.innerHTML = '';
+            
+            try {
+                // Simula la chiamata per ora dato che non possiamo testare Tauri direttamente
+                statusDiv.innerHTML = '<p class="error">⚠️ Nota: Questo test richiede l\'app Tauri in esecuzione</p>';
+                
+                // Mostra un esempio di come dovrebbe funzionare
+                const exampleGames = [
+                    {
+                        appid: 730,
+                        name: "Counter-Strike 2",
+                        status: { "Installed": { "path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Counter-Strike Global Offensive" } },
+                        install_dir: "Counter-Strike Global Offensive",
+                        size_on_disk: 26843545600,
+                        last_updated: 1704067200,
+                        buildid: 13842302
+                    },
+                    {
+                        appid: 1238840,
+                        name: "Baldur's Gate 3",
+                        status: { "Installed": { "path": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Baldurs Gate 3" } },
+                        install_dir: "Baldurs Gate 3",
+                        size_on_disk: 104857600000,
+                        last_updated: 1703980800,
+                        buildid: 13756432
+                    },
+                    {
+                        appid: 570,
+                        name: "Dota 2",
+                        status: "Owned",
+                        install_dir: null,
+                        size_on_disk: null,
+                        last_updated: null,
+                        buildid: null
+                    },
+                    {
+                        appid: 440,
+                        name: "Team Fortress 2",
+                        status: { "Shared": { "from_steam_id": "76561198000000000" } },
+                        install_dir: null,
+                        size_on_disk: null,
+                        last_updated: null,
+                        buildid: null
+                    }
+                ];
+                
+                displayGames(exampleGames);
+                statusDiv.innerHTML = '<p class="success">✅ Esempio di dati mostrato (per test reale avviare app Tauri)</p>';
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<p class="error">❌ Errore: ${error.message}</p>`;
+                console.error('Test error:', error);
+            }
+        }
+        
+        function displayGames(games) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!games || games.length === 0) {
+                resultsDiv.innerHTML = '<p>Nessun gioco trovato.</p>';
+                return;
+            }
+            
+            let html = `<h2>📊 Giochi trovati: ${games.length}</h2>`;
+            
+            games.forEach(game => {
+                const statusClass = getStatusClass(game.status);
+                const statusText = getStatusText(game.status);
+                
+                html += `
+                    <div class="game-item">
+                        <div class="game-name">${game.name}</div>
+                        <div class="game-appid">AppID: ${game.appid}</div>
+                        <div class="game-status ${statusClass}">
+                            📁 Status: ${statusText}
+                        </div>
+                        ${game.install_dir ? `<div>📂 Install Dir: ${game.install_dir}</div>` : ''}
+                        ${game.size_on_disk ? `<div>💾 Size: ${formatBytes(game.size_on_disk)}</div>` : ''}
+                        ${game.last_updated ? `<div>📅 Last Updated: ${new Date(game.last_updated * 1000).toLocaleString()}</div>` : ''}
+                        ${game.buildid ? `<div>🔢 Build ID: ${game.buildid}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function getStatusClass(status) {
+            if (typeof status === 'string') {
+                return status === 'Owned' ? 'status-owned' : 'status-shared';
+            }
+            if (status.Installed) return 'status-installed';
+            if (status.Shared) return 'status-shared';
+            return 'status-owned';
+        }
+        
+        function getStatusText(status) {
+            if (typeof status === 'string') {
+                return status;
+            }
+            if (status.Installed) return `Installato: ${status.Installed.path}`;
+            if (status.Shared) return `Condiviso da: ${status.Shared.from_steam_id}`;
+            return 'Posseduto';
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

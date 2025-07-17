@@ -9,11 +9,12 @@ import { Label } from '@/components/ui/label';
 interface SteamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (steamId: string) => Promise<void>;
+  onSubmit: (apiKey: string, steamId: string) => Promise<void>;
   isLoading?: boolean;
 }
 
 export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalProps) {
+  const [apiKey, setApiKey] = useState('');
   const [steamId, setSteamId] = useState('');
   const [error, setError] = useState('');
 
@@ -23,14 +24,42 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
     e.preventDefault();
     setError('');
 
-    // Validate Steam ID format (17 digits)
-    if (!/^\d{17}$/.test(steamId)) {
+    // Validazione API Key
+    if (!apiKey || apiKey.length !== 32) {
+      setError('L\'API Key deve essere di 32 caratteri');
+      return;
+    }
+
+    if (!/^[A-Fa-f0-9]{32}$/.test(apiKey)) {
+      setError('API Key non valida. Deve contenere solo caratteri esadecimali');
+      return;
+    }
+
+    // SECURITY FIX: Enhanced Steam ID64 validation
+    if (!steamId || steamId.length !== 17) {
       setError('Il SteamID deve essere un numero di 17 cifre');
       return;
     }
 
+    // Validate Steam ID64 format (must start with 76561198)
+    if (!/^76561198\d{9}$/.test(steamId)) {
+      setError('SteamID non valido. Deve iniziare con 76561198 seguito da 9 cifre');
+      return;
+    }
+
+    // Additional validation: check if it's in valid Steam ID64 range
+    const numericSteamId = BigInt(steamId);
+    const minSteamId = BigInt('76561198000000000');
+    const maxSteamId = BigInt('76561198999999999');
+    
+    if (numericSteamId < minSteamId || numericSteamId > maxSteamId) {
+      setError('SteamID fuori dall\'intervallo valido');
+      return;
+    }
+
     try {
-      await onSubmit(steamId);
+      await onSubmit(apiKey, steamId);
+      setApiKey('');
       setSteamId('');
       onClose();
     } catch (err) {
@@ -51,10 +80,26 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
 
         <h2 className="text-2xl font-bold mb-2">Collega Account Steam</h2>
         <p className="text-muted-foreground mb-6">
-          Inserisci il tuo SteamID64 per collegare il tuo account Steam e accedere alla tua libreria di giochi.
+          Inserisci la tua API Key e SteamID64 per collegare il tuo account Steam e accedere alla tua libreria di giochi.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="apikey">Steam API Key</Label>
+            <Input
+              id="apikey"
+              type="text"
+              placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              disabled={isLoading}
+              className="font-mono"
+            />
+            <p className="text-xs text-muted-foreground">
+              La tua chiave API Steam di 32 caratteri esadecimali.
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="steamid">SteamID64</Label>
             <Input
@@ -77,31 +122,43 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
             </div>
           )}
 
-          <div className="bg-muted/50 rounded-md p-4 space-y-2">
-            <p className="text-sm font-medium">Come trovare il tuo SteamID64:</p>
-            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Apri Steam e vai al tuo profilo</li>
-              <li>Copia l'URL del tuo profilo</li>
-              <li>Visita uno di questi siti per convertirlo:</li>
-            </ol>
-            <div className="flex gap-2 mt-2">
-              <a
-                href="https://steamid.io/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline text-sm flex items-center gap-1"
-              >
-                SteamID.io <ExternalLink className="h-3 w-3" />
-              </a>
-              <span className="text-muted-foreground">•</span>
-              <a
-                href="https://steamidfinder.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline text-sm flex items-center gap-1"
-              >
-                SteamID Finder <ExternalLink className="h-3 w-3" />
-              </a>
+          <div className="bg-muted/50 rounded-md p-4 space-y-3">
+            <div>
+              <p className="text-sm font-medium">Come ottenere la Steam API Key:</p>
+              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Visita <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">steamcommunity.com/dev/apikey</a></li>
+                <li>Accedi con il tuo account Steam</li>
+                <li>Inserisci un nome dominio (es: localhost)</li>
+                <li>Copia la chiave API generata</li>
+              </ol>
+            </div>
+            
+            <div>
+              <p className="text-sm font-medium">Come trovare il tuo SteamID64:</p>
+              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>Apri Steam e vai al tuo profilo</li>
+                <li>Copia l'URL del tuo profilo</li>
+                <li>Visita uno di questi siti per convertirlo:</li>
+              </ol>
+              <div className="flex gap-2 mt-2">
+                <a
+                  href="https://steamid.io/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline text-sm flex items-center gap-1"
+                >
+                  SteamID.io <ExternalLink className="h-3 w-3" />
+                </a>
+                <span className="text-muted-foreground">•</span>
+                <a
+                  href="https://steamidfinder.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline text-sm flex items-center gap-1"
+                >
+                  SteamID Finder <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
           </div>
 
@@ -114,7 +171,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
             >
               Annulla
             </Button>
-            <Button type="submit" disabled={isLoading || !steamId}>
+            <Button type="submit" disabled={isLoading || !apiKey || !steamId}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Collega Steam
             </Button>

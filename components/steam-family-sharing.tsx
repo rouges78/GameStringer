@@ -3,10 +3,24 @@
 import React, { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
-// Definizione del tipo restituito dal comando Rust
+// Definizione dei tipi restituiti dai comandi Rust
 interface SteamConfig {
   steam_path: string | null;
   logged_in_users: string[];
+}
+
+interface SharedGame {
+  appid: number;
+  name: string;
+  owner_steam_id: string;
+  owner_account_name: string;
+  is_shared: boolean;
+}
+
+interface FamilySharingConfig {
+  shared_games: SharedGame[];
+  total_shared_games: number;
+  authorized_users: string[];
 }
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,7 +55,9 @@ interface SharedAccount {
 export function SteamFamilySharing() {
   const [isDetecting, setIsDetecting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingSharedGames, setIsLoadingSharedGames] = useState(false);
   const [sharedAccounts, setSharedAccounts] = useState<SharedAccount[]>([]);
+  const [familySharingConfig, setFamilySharingConfig] = useState<FamilySharingConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [detectionProgress, setDetectionProgress] = useState(0);
@@ -70,6 +86,9 @@ export function SteamFamilySharing() {
         if (result.steam_path) {
           toast.info(`Rilevata installazione di Steam in: ${result.steam_path}`);
         }
+        
+        // Carica automaticamente i giochi condivisi
+        await loadFamilySharingGames();
       } else {
         setError("Nessun utente Steam trovato. Assicurati di aver effettuato l'accesso a Steam.");
         toast.warning('Nessun utente Steam trovato.');
@@ -86,6 +105,27 @@ export function SteamFamilySharing() {
     }
   };
 
+  const loadFamilySharingGames = async () => {
+    setIsLoadingSharedGames(true);
+    try {
+      const config = await invoke<FamilySharingConfig>('get_family_sharing_games');
+      setFamilySharingConfig(config);
+      
+      if (config.total_shared_games > 0) {
+        toast.success(`🎮 Trovati ${config.total_shared_games} giochi condivisi da ${config.authorized_users.length} utenti!`);
+      } else {
+        toast.info('Nessun gioco condiviso trovato. Verifica che Family Sharing sia attivo.');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      toast.error('Errore caricamento giochi condivisi', {
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoadingSharedGames(false);
+    }
+  };
+
   const handleFileUpload = async () => {
     if (!selectedFile) {
       toast.error('Seleziona un file prima di procedere');
@@ -97,30 +137,26 @@ export function SteamFamilySharing() {
 
     try {
       const fileContent = await selectedFile.text();
-      const response = await fetch('/api/steam/shared-config', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-        body: fileContent,
+      
+      // Usa il comando Tauri invece dell'API
+      const config = await invoke<FamilySharingConfig>('parse_shared_config_vdf', {
+        fileContent
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Errore durante l\'analisi del file');
-      }
-
-      setSharedAccounts(result.sharedAccounts || []);
-      if (result.sharedAccounts.length === 0) {
-        setError('Nessun account condiviso trovato nel file.');
+      
+      setFamilySharingConfig(config);
+      
+      if (config.total_shared_games > 0) {
+        toast.success(`✅ File caricato! Trovati ${config.total_shared_games} giochi condivisi`);
       } else {
-        toast.success(`Trovati ${result.sharedAccounts.length} account condivisi!`);
+        toast.warning('File caricato ma nessun gioco condiviso trovato');
       }
 
-    } catch (error: any) {
-      setError(error.message);
-      toast.error('Errore durante l\'analisi del file');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(errorMessage);
+      toast.error('Errore durante l\'analisi del file', {
+        description: errorMessage,
+      });
     } finally {
       setIsUploading(false);
     }
@@ -265,6 +301,7 @@ export function SteamFamilySharing() {
           </Alert>
         )}
 
+        {/* Sezione Account Condivisi */}
         {sharedAccounts.length > 0 && (
           <div className="mt-6 space-y-4">
             <div className="flex items-center justify-between">
@@ -291,13 +328,102 @@ export function SteamFamilySharing() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Sezione Giochi Condivisi */}
+        {familySharingConfig && (
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Giochi Condivisi Trovati</h3>
+              <div className="flex gap-2">
+                <Badge variant="secondary">
+                  {familySharingConfig.total_shared_games} giochi
+                </Badge>
+                <Badge variant="outline">
+                  {familySharingConfig.authorized_users.length} utenti
+                </Badge>
+              </div>
+            </div>
+
+            {familySharingConfig.total_shared_games > 0 ? (
+              <div className="space-y-4">
+                {/* Lista giochi condivisi */}
+                <div className="max-h-64 overflow-y-auto space-y-2 border rounded-lg p-4">
+                  {familySharingConfig.shared_games.slice(0, 10).map((game) => (
+                    <div
+                      key={game.appid}
+                      className="flex items-center justify-between p-2 rounded border-b last:border-b-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded bg-blue-100 flex items-center justify-center">
+                          <span className="text-xs font-bold text-blue-600">🎮</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{game.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Condiviso da {game.owner_account_name}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        ID: {game.appid}
+                      </Badge>
+                    </div>
+                  ))}
+                  
+                  {familySharingConfig.shared_games.length > 10 && (
+                    <div className="text-center py-2">
+                      <Badge variant="outline">
+                        +{familySharingConfig.shared_games.length - 10} altri giochi...
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+
+                {/* Pulsante per caricare nella libreria */}
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={loadFamilySharingGames}
+                    disabled={isLoadingSharedGames}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {isLoadingSharedGames ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FolderOpen className="mr-2 h-4 w-4" />
+                    )}
+                    Aggiorna Lista
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => {
+                      window.open('/games', '_blank');
+                    }}
+                    size="sm"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Vai alla Libreria
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Nessun gioco condiviso</AlertTitle>
+                <AlertDescription>
+                  Non sono stati trovati giochi condivisi. Verifica che il Family Sharing sia configurato correttamente.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <Alert>
               <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <AlertTitle>Configurazione completata!</AlertTitle>
+              <AlertTitle>Family Sharing Configurato!</AlertTitle>
               <AlertDescription>
-                Gli account condivisi sono stati rilevati con successo. I giochi di questi utenti
-                saranno inclusi nella tua libreria quando effettui la scansione.
+                I giochi condivisi sono stati rilevati. Saranno automaticamente inclusi nella libreria 
+                principale quando carichi i giochi Steam.
               </AlertDescription>
             </Alert>
           </div>

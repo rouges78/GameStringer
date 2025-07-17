@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useVersion } from '@/lib/version';
 import { Button } from '@/components/ui/button';
 import { 
   Home, 
@@ -22,7 +23,6 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useVersion } from '@/lib/version';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -80,7 +80,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         text: 'ON' 
       };
 
-      // Controlla Steam API
+      // Controlla Steam API tramite Tauri
       let steamApi = { 
         status: 'disconnected' as const, 
         color: 'bg-red-500', 
@@ -88,17 +88,41 @@ export function MainLayout({ children }: MainLayoutProps) {
       };
       
       try {
-        const steamSettings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
-        if (steamSettings.steam?.apiKey && steamSettings.steam?.steamId) {
-          // Se API key e Steam ID sono configurati, assume connessione
-          steamApi = { 
-            status: 'connected', 
-            color: 'bg-blue-500', 
-            text: 'OK' 
-          };
+        // Prova a caricare credenziali Steam dal backend
+        const { invoke } = await import('@/lib/tauri-api');
+        const credentials = await invoke('load_steam_credentials');
+        if (credentials && credentials.api_key && credentials.steam_id) {
+          // Test rapido connessione Steam API
+          try {
+            await invoke('test_steam_connection');
+            steamApi = { 
+              status: 'connected', 
+              color: 'bg-green-500', 
+              text: 'LIVE' 
+            };
+          } catch {
+            // Credenziali presenti ma API non risponde
+            steamApi = { 
+              status: 'error', 
+              color: 'bg-orange-500', 
+              text: 'ERR' 
+            };
+          }
         }
       } catch (error) {
-        console.error('Error checking Steam API status:', error);
+        // Fallback ai settings localStorage se Tauri non è disponibile
+        try {
+          const steamSettings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+          if (steamSettings.steam?.apiKey && steamSettings.steam?.steamId) {
+            steamApi = { 
+              status: 'connected', 
+              color: 'bg-blue-500', 
+              text: 'OK' 
+            };
+          }
+        } catch (localStorageError) {
+          console.error('Error checking Steam API status:', localStorageError);
+        }
       }
 
       // Calcola uso cache
@@ -297,16 +321,27 @@ export function MainLayout({ children }: MainLayoutProps) {
         )}>
           {/* Header */}
           <header className="h-16 bg-card border-b flex items-center justify-between px-6">
-            <div className="flex-1">
-              <h1 className="text-xl font-semibold">
-                {navigationItems.find(item => item.href === pathname)?.name || 'GameStringer'}
-              </h1>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">GS</span>
+                </div>
+                <div>
+                  <h1 className="text-xl font-semibold">GameStringer</h1>
+                  <p className="text-xs text-muted-foreground">Translation & Game Manager</p>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Sistema Online</span>
+              <div className="hidden md:flex items-center space-x-4 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>v{version}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs">Build #{buildInfo.build}</span>
+                </div>
               </div>
             </div>
           </header>

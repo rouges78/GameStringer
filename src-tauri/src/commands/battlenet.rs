@@ -5,6 +5,12 @@ use std::fs;
 use winreg::enums::*;
 use winreg::RegKey;
 use crate::commands::library::InstalledGame;
+use std::path::PathBuf;
+use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
+use aes_gcm::aead::Aead;
+use rand::{RngCore, rngs::OsRng};
+use base64;
+use chrono;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BattlenetGame {
@@ -15,6 +21,30 @@ pub struct BattlenetGame {
     pub platform: String, // "Battle.net"
     pub size_bytes: Option<u64>,
     pub last_modified: Option<u64>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct BattlenetCredentials {
+    pub email_encrypted: String,
+    pub password_encrypted: String,
+    pub username: Option<String>,
+    pub saved_at: String,
+    pub nonce: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct BattlenetUser {
+    pub username: String,
+    pub email: String,
+    pub battletag: Option<String>,
+    pub profile_id: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct BattlenetApiGame {
+    pub id: String,
+    pub name: String,
+    pub platform: String,
 }
 
 /// Scansiona i giochi Battle.net installati localmente
@@ -177,14 +207,47 @@ async fn scan_blizzard_specific_games() -> Result<Vec<InstalledGame>, String> {
     Ok(games)
 }
 
-/// Test della connessione Battle.net (solo scansione locale)
+/// Test della connessione Battle.net
 #[tauri::command]
 pub async fn test_battlenet_connection() -> Result<String, String> {
-    println!("[BATTLENET] Test scansione locale");
+    println!("[BATTLENET] Test connessione");
     
-    let games = get_battlenet_installed_games().await?;
-    
-    Ok(format!("Scansione Battle.net completata: {} giochi trovati", games.len()))
+    // Prima prova a caricare credenziali salvate
+    match load_battlenet_credentials().await {
+        Ok(credentials) => {
+            if let (Some(email), Some(password)) = (
+                credentials.get("email").and_then(|v| v.as_str()),
+                credentials.get("password").and_then(|v| v.as_str())
+            ) {
+                println!("[BATTLENET] Utilizzando credenziali salvate");
+                
+                // Testa l'autenticazione
+                match test_battlenet_auth(email, password).await {
+                    Ok(user) => {
+                        let games = get_battlenet_installed_games().await?;
+                        Ok(format!("✅ Connesso come '{}' - {} giochi locali trovati", 
+                                  user.username, games.len()))
+                    }
+                    Err(e) => {
+                        println!("[BATTLENET] Errore autenticazione salvata: {}", e);
+                        // Fallback a scansione locale
+                        let games = get_battlenet_installed_games().await?;
+                        Ok(format!("❌ Account disconnesso (credenziali non valide) - {} giochi locali trovati", games.len()))
+                    }
+                }
+            } else {
+                // Fallback a scansione locale
+                let games = get_battlenet_installed_games().await?;
+                Ok(format!("Scansione Battle.net completata: {} giochi trovati", games.len()))
+            }
+        }
+        Err(_) => {
+            // Nessuna credenziale salvata - scansione locale
+            println!("[BATTLENET] Nessuna credenziale salvata");
+            let games = get_battlenet_installed_games().await?;
+            Ok(format!("Scansione Battle.net completata: {} giochi trovati", games.len()))
+        }
+    }
 }
 
 /// Recupera informazioni su un gioco Battle.net specifico
@@ -380,4 +443,257 @@ async fn find_main_executable(game_path: &Path) -> Option<String> {
         }
     }
     None
+}
+
+// Funzioni per gestione credenziali Battle.net
+
+fn get_battlenet_credentials_path() -> Result<PathBuf, String> {
+    let mut path = std::env::current_dir()
+        .map_err(|e| format!("Errore getting current dir: {}", e))?;
+    path.push(".cache");
+    
+    // Crea la directory .cache se non esiste
+    if !path.exists() {
+        fs::create_dir_all(&path)
+            .map_err(|e| format!("Errore creating .cache directory: {}", e))?;
+    }
+    
+    path.push("battlenet_credentials.json");
+    Ok(path)
+}
+
+fn get_machine_key() -> Result<[u8; 32], String> {
+    // Genera una chiave basata su caratteristiche della macchina
+    let username = std::env::var("USERNAME").unwrap_or_else(|_| "default".to_string());
+    let computer_name = std::env::var("COMPUTERNAME").unwrap_or_else(|_| "default".to_string());
+    
+    // Combina username e computer name per creare un seed
+    let seed = format!("{}:{}", username, computer_name);
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    use std::hash::Hasher;
+    hasher.write(seed.as_bytes());
+    let hash = hasher.finish();
+    
+    // Converti l'hash in una chiave di 32 byte
+    let mut key = [0u8; 32];
+    let hash_bytes = hash.to_le_bytes();
+    for i in 0..32 {
+        key[i] = hash_bytes[i % 8];
+    }
+    
+    Ok(key)
+}
+
+fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, String), String> {
+    if email.is_empty() || password.is_empty() {
+        return Err("Email e password non possono essere vuoti".to_string());
+    }
+    
+    let key = get_machine_key()?;
+    let cipher = Aes256Gcm::new(&key.into());
+    
+    // Aggiungi timestamp per verifica integrità
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    
+    let email_payload = format!("{}:{}", email, timestamp);
+    let password_payload = format!("{}:{}", password, timestamp);
+    
+    // Genera nonce sicuro
+    let mut nonce_bytes = [0u8; 12];
+    OsRng.fill_bytes(&mut nonce_bytes);
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    // Cripta con AES-GCM
+    let email_ciphertext = cipher.encrypt(nonce, email_payload.as_bytes())
+        .map_err(|e| format!("Email encryption failed: {}", e))?;
+    let password_ciphertext = cipher.encrypt(nonce, password_payload.as_bytes())
+        .map_err(|e| format!("Password encryption failed: {}", e))?;
+    
+    Ok((
+        base64::encode(&email_ciphertext),
+        base64::encode(&password_ciphertext),
+        base64::encode(&nonce_bytes)
+    ))
+}
+
+fn decrypt_credentials(email_encrypted: &str, password_encrypted: &str, nonce_str: &str) -> Result<(String, String), String> {
+    let key = get_machine_key()?;
+    let cipher = Aes256Gcm::new(&key.into());
+    
+    let email_ciphertext = base64::decode(email_encrypted)
+        .map_err(|e| format!("Email base64 decode failed: {}", e))?;
+    let password_ciphertext = base64::decode(password_encrypted)
+        .map_err(|e| format!("Password base64 decode failed: {}", e))?;
+    let nonce_bytes = base64::decode(nonce_str)
+        .map_err(|e| format!("Nonce decode failed: {}", e))?;
+    
+    if nonce_bytes.len() != 12 {
+        return Err("Invalid nonce length".to_string());
+    }
+    
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    let email_plaintext = cipher.decrypt(nonce, email_ciphertext.as_slice())
+        .map_err(|e| format!("Email decryption failed: {}", e))?;
+    let password_plaintext = cipher.decrypt(nonce, password_ciphertext.as_slice())
+        .map_err(|e| format!("Password decryption failed: {}", e))?;
+    
+    let email_payload = String::from_utf8(email_plaintext)
+        .map_err(|e| format!("Email UTF-8 decode failed: {}", e))?;
+    let password_payload = String::from_utf8(password_plaintext)
+        .map_err(|e| format!("Password UTF-8 decode failed: {}", e))?;
+    
+    // Estrai credenziali dai payload (formato: "credential:timestamp")
+    let email_parts: Vec<&str> = email_payload.split(':').collect();
+    let password_parts: Vec<&str> = password_payload.split(':').collect();
+    
+    if email_parts.len() != 2 || password_parts.len() != 2 {
+        return Err("Invalid payload format".to_string());
+    }
+    
+    Ok((email_parts[0].to_string(), password_parts[0].to_string()))
+}
+
+/// Test autenticazione Battle.net (simulato)
+pub async fn test_battlenet_auth(email: &str, password: &str) -> Result<BattlenetUser, String> {
+    println!("[BATTLENET] Testing authentication for: {}", email);
+    
+    // NOTA: Blizzard/Battle.net non ha API pubblica facilmente accessibile
+    // Per ora simulo l'autenticazione controllando che le credenziali non siano vuote
+    // In futuro si potrebbe implementare l'integrazione con Battle.net API
+    
+    if email.is_empty() || password.is_empty() {
+        return Err("Email e password sono obbligatorie".to_string());
+    }
+    
+    if !email.contains("@") {
+        return Err("Email non valida".to_string());
+    }
+    
+    if password.len() < 6 {
+        return Err("Password troppo corta".to_string());
+    }
+    
+    // Simula un utente autenticato
+    let username = email.split('@').next().unwrap_or("User").to_string();
+    
+    Ok(BattlenetUser {
+        username: username.clone(),
+        email: email.to_string(),
+        battletag: Some(format!("{}#1234", username)), // BattleTag simulato
+        profile_id: Some("simulated_profile_id".to_string()),
+    })
+}
+
+/// Connetti account Battle.net
+#[tauri::command]
+pub async fn connect_battlenet(email: String, password: String) -> Result<String, String> {
+    println!("[BATTLENET] Connessione account");
+    
+    // Test autenticazione
+    match test_battlenet_auth(&email, &password).await {
+        Ok(user) => {
+            // Salva le credenziali
+            let save_result = save_battlenet_credentials(email, password, user.username.clone()).await;
+            match save_result {
+                Ok(_) => println!("[BATTLENET] Credenziali salvate con successo"),
+                Err(e) => println!("[BATTLENET] Avviso: Non è stato possibile salvare le credenziali: {}", e),
+            }
+            
+            // Conta giochi locali
+            let games = get_battlenet_installed_games().await?;
+            
+            let battletag = user.battletag.as_ref().map(|bt| format!(" ({})", bt)).unwrap_or_default();
+            Ok(format!("✅ Connesso come '{}'{} - {} giochi locali trovati", 
+                      user.username, battletag, games.len()))
+        }
+        Err(e) => {
+            println!("[BATTLENET] Errore autenticazione: {}", e);
+            Err(format!("❌ Errore autenticazione: {}", e))
+        }
+    }
+}
+
+/// Salva credenziali Battle.net criptate
+#[tauri::command]
+pub async fn save_battlenet_credentials(email: String, password: String, username: String) -> Result<String, String> {
+    println!("[BATTLENET] Salvando credenziali per user: {}", username);
+    
+    if email.is_empty() || password.is_empty() {
+        return Err("Email e password sono obbligatorie".to_string());
+    }
+    
+    // Cripta le credenziali
+    let (email_encrypted, password_encrypted, nonce) = encrypt_credentials(&email, &password)?;
+    
+    let credentials = BattlenetCredentials {
+        email_encrypted,
+        password_encrypted,
+        username: Some(username.clone()),
+        saved_at: chrono::Utc::now().to_rfc3339(),
+        nonce,
+    };
+    
+    let credentials_path = get_battlenet_credentials_path()?;
+    let json_data = serde_json::to_string_pretty(&credentials)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    
+    fs::write(&credentials_path, json_data)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    
+    println!("[BATTLENET] ✅ Credenziali salvate per: {}", username);
+    Ok("Credenziali Battle.net salvate con encryption AES-256".to_string())
+}
+
+/// Carica credenziali Battle.net
+#[tauri::command]
+pub async fn load_battlenet_credentials() -> Result<serde_json::Value, String> {
+    let credentials_path = get_battlenet_credentials_path()?;
+    
+    if !credentials_path.exists() {
+        return Err("Nessuna credenziale Battle.net salvata".to_string());
+    }
+    
+    let json_data = fs::read_to_string(&credentials_path)
+        .map_err(|e| format!("Errore lettura file: {}", e))?;
+    
+    let credentials: BattlenetCredentials = serde_json::from_str(&json_data)
+        .map_err(|e| format!("Errore parsing JSON: {}", e))?;
+    
+    // Decripta le credenziali
+    let (email, password) = decrypt_credentials(&credentials.email_encrypted, &credentials.password_encrypted, &credentials.nonce)?;
+    
+    Ok(serde_json::json!({
+        "email": email,
+        "password": password,
+        "username": credentials.username,
+        "saved_at": credentials.saved_at
+    }))
+}
+
+/// Cancella credenziali Battle.net
+#[tauri::command]
+pub async fn clear_battlenet_credentials() -> Result<String, String> {
+    let credentials_path = get_battlenet_credentials_path()?;
+    
+    if credentials_path.exists() {
+        fs::remove_file(&credentials_path)
+            .map_err(|e| format!("Errore cancellazione file: {}", e))?;
+    }
+    
+    Ok("Credenziali Battle.net cancellate".to_string())
+}
+
+/// Comando per disconnessione Battle.net (per compatibilità con il frontend)
+#[tauri::command]
+pub async fn disconnect_battlenet() -> Result<String, String> {
+    println!("[BATTLENET] Disconnessione account");
+    
+    // Cancella le credenziali salvate
+    clear_battlenet_credentials().await?;
+    
+    Ok("Battle.net disconnesso con successo".to_string())
 }

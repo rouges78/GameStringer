@@ -1,0 +1,15 @@
+{"timestamp":"2025-07-09T20:33:03.742Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:33:03.743Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:33:03.743Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:33:03.743Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:33:03.743Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:45:10.879Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:45:10.879Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:45:10.880Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:45:10.880Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T20:45:10.880Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T21:39:54.340Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T21:39:54.341Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T21:39:54.341Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T21:39:54.341Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-07-09T21:39:54.341Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}

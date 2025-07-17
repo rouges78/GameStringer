@@ -5,6 +5,7 @@ pub mod origin;
 pub mod ubisoft;
 pub mod battlenet;
 pub mod itchio;
+pub mod rockstar;
 pub mod library;
 pub mod games;
 pub mod utilities;
