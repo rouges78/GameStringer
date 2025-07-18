@@ -1,4 +1,4 @@
-// Temporaneamente commentato per debug
+// TEMPORANEAMENTE COMMENTATO PER DEBUG - RIPRISTINARE DOPO RISOLUZIONE
 // #![cfg_attr(
 //     all(not(debug_assertions), target_os = "windows"),
 //     windows_subsystem = "windows"

@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "identifier": "com.gamestringer.app",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build",
-    "devUrl": "http://127.0.0.1:3036",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "cd .. && npm run build",
+    "devUrl": "http://127.0.0.1:3039",
     "frontendDist": "../out"
   },
   "app": {

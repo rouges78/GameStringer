@@ -79,6 +79,13 @@
 - [x] **Correzione API Base64 Deprecate** - ✅ COMPLETATO (18/07/2025): Aggiornati tutti i moduli (rockstar, itchio, battlenet, ubisoft, origin) per usare base64::Engine invece di base64::encode/decode deprecati
 - [x] **Avvio Applicazione Desktop** - ✅ COMPLETATO (18/07/2025): GameStringer ora si avvia correttamente con processi cargo-tauri e msedgewebview2 attivi
 - [x] **Correzione Bug Async/Await OCR** - ✅ COMPLETATO (18/07/2025): Rimosso .await errato da process_image_ocr in commands/advanced_ocr.rs, compilazione ora pulita
+- [x] **Diagnosi Problema Finestra Tauri** - ✅ IDENTIFICATO (18/07/2025): Problema ricorrente finestra desktop che non si apre
+  - Frontend Next.js funziona correttamente (localhost:3039)
+  - Compilazione Rust va a buon fine (risolti 119 errori precedenti)
+  - Build statico Next.js completato (cartella `out` presente)
+  - **PROBLEMA PRINCIPALE**: Build binaria si blocca, eseguibile gamestringer.exe non viene generato
+  - **CAUSA**: Non legata a processi bloccati o cache corrotte, ma problema di configurazione più profondo
+  - **STATO**: Persistente anche dopo riavvii PC, richiede investigazione approfondita
 
 ## 📦 PRIORITÀ BASSA - ESPANSIONI
 
