@@ -59,6 +59,7 @@
 - [x] **Fix Configurazione Tauri/Next.js** - ✅ COMPLETATO (18/07/2025): Sincronizzata porta 3018 tra Next.js e Tauri, verificato avvio corretto
 - [x] **Correzione API Base64 Deprecate** - ✅ COMPLETATO (18/07/2025): Aggiornati tutti i moduli (rockstar, itchio, battlenet, ubisoft, origin) per usare base64::Engine invece di base64::encode/decode deprecati
 - [x] **Avvio Applicazione Desktop** - ✅ COMPLETATO (18/07/2025): GameStringer ora si avvia correttamente con processi cargo-tauri e msedgewebview2 attivi
+- [x] **Correzione Bug Async/Await OCR** - ✅ COMPLETATO (18/07/2025): Rimosso .await errato da process_image_ocr in commands/advanced_ocr.rs, compilazione ora pulita
 
 ## 📦 PRIORITÀ BASSA - ESPANSIONI
 

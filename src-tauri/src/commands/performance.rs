@@ -2,6 +2,24 @@ use crate::performance_optimizer::{PerformanceOptimizer, OptimizationConfig, Per
 use crate::injekt::InjektTranslator;
 use serde_json;
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
+// === STATO PERFORMANCE OPTIMIZER ===
+
+#[derive(Default)]
+pub struct PerformanceOptimizerState {
+    pub optimizer: Arc<Mutex<Option<PerformanceOptimizer>>>,
+    pub last_metrics: Arc<Mutex<Option<PerformanceMetrics>>>,
+}
+
+impl PerformanceOptimizerState {
+    pub fn new() -> Self {
+        Self {
+            optimizer: Arc::new(Mutex::new(Some(PerformanceOptimizer::new(OptimizationConfig::default())))),
+            last_metrics: Arc::new(Mutex::new(None)),
+        }
+    }
+}
 
 // === COMANDI PERFORMANCE OPTIMIZATION ===
 

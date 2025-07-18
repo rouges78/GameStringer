@@ -13,10 +13,10 @@ import {
   Settings
 } from 'lucide-react';
 import Link from 'next/link';
+import { safeInvoke as invoke, isTauriEnvironment } from '@/lib/tauri-wrapper';
 import { ScanButton } from '@/components/scan-button';
 import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
 import { motion } from 'framer-motion';
-import { invoke } from '@tauri-apps/api/core';
 import { cacheManager } from '@/lib/cache-manager';
 
 // 🔧 FIX: Interfacce TypeScript proper invece di any

@@ -389,3 +389,20 @@ impl Default for AntiCheatManager {
         Self::new()
     }
 }
+
+// === STATO ANTI-CHEAT PER TAURI ===
+
+#[derive(Debug, Default)]
+pub struct AntiCheatState {
+    pub manager: Arc<Mutex<AntiCheatManager>>,
+    pub last_detection: Arc<Mutex<Option<AntiCheatDetection>>>,
+}
+
+impl AntiCheatState {
+    pub fn new() -> Self {
+        Self {
+            manager: Arc::new(Mutex::new(AntiCheatManager::new())),
+            last_detection: Arc::new(Mutex::new(None)),
+        }
+    }
+}

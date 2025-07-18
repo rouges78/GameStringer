@@ -38,7 +38,7 @@ pub async fn process_image_ocr(
     
     let processor = AdvancedOCRProcessor::new(config);
     
-    match processor.process_image(&image_path, target_language.as_deref()).await {
+    match processor.process_image(&image_path, target_language.as_deref()) {
         Ok(result) => {
             let response = serde_json::json!({
                 "success": true,
