@@ -20,6 +20,8 @@ pub mod advanced_ocr;
 pub mod translation_backends;
 pub mod offline_translation;
 pub mod translation_logger;
+pub mod low_latency_optimizer;
+pub mod translation_pipeline;
 pub mod dlc_manager;
 pub mod hltb_manager;
 pub mod launcher;

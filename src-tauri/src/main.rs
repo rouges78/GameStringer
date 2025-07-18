@@ -17,6 +17,8 @@ mod advanced_ocr;
 mod translation_backends;
 mod offline_translation;
 mod translation_logger;
+mod low_latency_optimizer;
+mod translation_pipeline;
 mod process_utils;
 
 fn main() {
@@ -27,6 +29,8 @@ fn main() {
         .manage(commands::translation_backends::TranslationBackendState::default())
         .manage(commands::offline_translation::OfflineTranslationState::default())
         .manage(commands::translation_logger::TranslationLoggerState::default())
+        .manage(commands::low_latency_optimizer::LowLatencyOptimizerState::default())
+        .manage(commands::translation_pipeline::TranslationPipelineState::default())
         .invoke_handler(tauri::generate_handler![
             commands::steam::auto_detect_steam_config,
             commands::steam::test_steam_connection,
@@ -259,6 +263,31 @@ fn main() {
             commands::translation_logger::get_quality_stats_by_method,
             commands::translation_logger::get_quality_improvement_recommendations,
             commands::translation_logger::cleanup_old_logs,
+            // Low Latency Optimizer System
+            commands::low_latency_optimizer::initialize_low_latency_optimizer,
+            commands::low_latency_optimizer::optimize_translation,
+            commands::low_latency_optimizer::optimize_batch_translations,
+            commands::low_latency_optimizer::get_latency_statistics,
+            commands::low_latency_optimizer::auto_optimize_configuration,
+            commands::low_latency_optimizer::optimize_memory_usage,
+            commands::low_latency_optimizer::get_latency_optimizer_config,
+            commands::low_latency_optimizer::update_latency_optimizer_config,
+            commands::low_latency_optimizer::test_latency_performance,
+            commands::low_latency_optimizer::get_performance_recommendations,
+            commands::low_latency_optimizer::benchmark_optimizations,
+            commands::low_latency_optimizer::reset_performance_stats,
+            // Translation Pipeline System
+            commands::translation_pipeline::initialize_translation_pipeline,
+            commands::translation_pipeline::process_translation_pipeline,
+            commands::translation_pipeline::process_batch_translation_pipeline,
+            commands::translation_pipeline::get_pipeline_statistics,
+            commands::translation_pipeline::auto_optimize_pipeline,
+            commands::translation_pipeline::get_pipeline_config,
+            commands::translation_pipeline::update_pipeline_config,
+            commands::translation_pipeline::test_pipeline_performance,
+            commands::translation_pipeline::get_pipeline_recommendations,
+            commands::translation_pipeline::benchmark_pipeline_vs_components,
+            commands::translation_pipeline::reset_pipeline_statistics,
             // Cache Management
             cache_manager::get_cache_stats,
             cache_manager::clear_cache,
