@@ -361,9 +361,8 @@ macro_rules! cache_set {
     };
 }
 
-/// Comandi Tauri per gestione cache
-#[tauri::command]
-pub async fn get_cache_stats() -> Result<CacheStats, String> {
+/// Funzione per ottenere statistiche cache (non esposta come comando Tauri)
+pub async fn get_cache_stats_internal() -> Result<CacheStats, String> {
     Ok(CACHE_MANAGER.get_stats().await)
 }
 

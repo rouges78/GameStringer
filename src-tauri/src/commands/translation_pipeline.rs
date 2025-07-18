@@ -1,7 +1,8 @@
 use crate::translation_pipeline::{
     TranslationPipeline, PipelineConfig, PipelineRequest, PipelineResult, 
-    InputType, PipelineContext, Priority
+    InputType, PipelineContext
 };
+use crate::low_latency_optimizer::Priority;
 use std::sync::{Arc, Mutex};
 use tauri::State;
 use serde::{Deserialize, Serialize};

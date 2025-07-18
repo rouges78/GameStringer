@@ -645,9 +645,11 @@ fn encrypt_api_key(api_key: &str) -> Result<(String, String), String> {
     let ciphertext = cipher.encrypt(nonce, payload.as_bytes())
         .map_err(|e| format!("Encryption failed: {}", e))?;
     
+    use base64::{Engine as _, engine::general_purpose};
+    
     Ok((
-        base64::encode(&ciphertext),
-        base64::encode(&nonce_bytes)
+        general_purpose::STANDARD.encode(&ciphertext),
+        general_purpose::STANDARD.encode(&nonce_bytes)
     ))
 }
 
@@ -655,9 +657,11 @@ fn decrypt_api_key(encrypted_data: &str, nonce_str: &str) -> Result<String, Stri
     let key = get_machine_key()?;
     let cipher = Aes256Gcm::new(&key.into());
     
-    let ciphertext = base64::decode(encrypted_data)
+    use base64::{Engine as _, engine::general_purpose};
+    
+    let ciphertext = general_purpose::STANDARD.decode(encrypted_data)
         .map_err(|e| format!("Base64 decode failed: {}", e))?;
-    let nonce_bytes = base64::decode(nonce_str)
+    let nonce_bytes = general_purpose::STANDARD.decode(nonce_str)
         .map_err(|e| format!("Nonce decode failed: {}", e))?;
     
     if nonce_bytes.len() != 12 {

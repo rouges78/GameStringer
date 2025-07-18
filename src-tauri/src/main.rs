@@ -13,24 +13,26 @@ mod injekt;
 mod multi_process_injekt;
 mod anti_cheat;
 mod performance_optimizer;
-mod advanced_ocr;
-mod translation_backends;
-mod offline_translation;
-mod translation_logger;
-mod low_latency_optimizer;
-mod translation_pipeline;
+// TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
+// mod advanced_ocr;
+// mod translation_backends;
+// mod offline_translation;
+// mod translation_logger;
+// mod low_latency_optimizer;
+// mod translation_pipeline;
 mod process_utils;
 
 fn main() {
     tauri::Builder::default()
         .manage(commands::anti_cheat::AntiCheatState::default())
         .manage(commands::performance::PerformanceOptimizerState::default())
-        .manage(commands::advanced_ocr::AdvancedOCRState::default())
-        .manage(commands::translation_backends::TranslationBackendState::default())
-        .manage(commands::offline_translation::OfflineTranslationState::default())
-        .manage(commands::translation_logger::TranslationLoggerState::default())
-        .manage(commands::low_latency_optimizer::LowLatencyOptimizerState::default())
-        .manage(commands::translation_pipeline::TranslationPipelineState::default())
+        // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
+        // .manage(commands::advanced_ocr::AdvancedOCRState::default())
+        // .manage(commands::translation_backends::TranslationBackendState::default())
+        // .manage(commands::offline_translation::OfflineTranslationState::default())
+        // .manage(commands::translation_logger::TranslationLoggerState::default())
+        // .manage(commands::low_latency_optimizer::LowLatencyOptimizerState::default())
+        // .manage(commands::translation_pipeline::TranslationPipelineState::default())
         .invoke_handler(tauri::generate_handler![
             commands::steam::auto_detect_steam_config,
             commands::steam::test_steam_connection,
@@ -166,7 +168,6 @@ fn main() {
             commands::patches::create_patch,
             commands::patches::update_patch,
             commands::patches::export_patch,
-            commands::patches::translate_text,
             commands::patches::get_translation_suggestions,
             commands::patches::export_translations,
             commands::patches::import_translations,
@@ -201,96 +202,94 @@ fn main() {
             commands::performance::get_optimization_config,
             commands::performance::update_optimization_config,
             commands::performance::test_performance_optimization,
-            // Advanced OCR System
-            commands::advanced_ocr::process_image_ocr,
-            commands::advanced_ocr::batch_process_images_ocr,
-            commands::advanced_ocr::get_ocr_performance_metrics,
-            commands::advanced_ocr::get_supported_ocr_engines,
-            commands::advanced_ocr::get_ocr_config,
-            commands::advanced_ocr::update_ocr_config,
-            commands::advanced_ocr::test_ocr_engines,
-            commands::advanced_ocr::clear_ocr_cache,
-            commands::advanced_ocr::get_ml_scoring_info,
-            // Translation Backends System
-            commands::translation_backends::initialize_translation_backends,
-            commands::translation_backends::translate_text,
-            commands::translation_backends::translate_batch,
-            commands::translation_backends::get_translation_metrics,
-            commands::translation_backends::get_backend_status,
-            commands::translation_backends::get_supported_languages,
-            commands::translation_backends::get_translation_config,
-            commands::translation_backends::update_translation_config,
-            commands::translation_backends::configure_backend_api_key,
-            commands::translation_backends::toggle_backend,
-            commands::translation_backends::test_all_backends,
-            commands::translation_backends::test_translation_quality,
-            commands::translation_backends::clear_translation_cache,
-            commands::translation_backends::get_cost_estimation,
-            commands::translation_backends::get_cost_optimization_recommendations,
-            // Offline Translation System
-            commands::offline_translation::initialize_offline_translation,
-            commands::offline_translation::translate_offline,
-            commands::offline_translation::translate_batch_offline,
-            commands::offline_translation::is_language_pair_supported_offline,
-            commands::offline_translation::get_available_offline_models,
-            commands::offline_translation::download_offline_model,
-            commands::offline_translation::remove_offline_model,
-            commands::offline_translation::get_offline_translation_stats,
-            commands::offline_translation::get_language_pair_support,
-            commands::offline_translation::get_offline_translation_config,
-            commands::offline_translation::update_offline_translation_config,
-            commands::offline_translation::clear_offline_translation_cache,
-            commands::offline_translation::cleanup_unused_offline_models,
-            commands::offline_translation::preload_popular_offline_models,
-            commands::offline_translation::test_offline_translation_quality,
-            commands::offline_translation::get_offline_model_metrics,
-            commands::offline_translation::get_offline_storage_recommendations,
-            // Translation Logger System
-            commands::translation_logger::initialize_translation_logger,
-            commands::translation_logger::log_translation,
-            commands::translation_logger::add_human_feedback,
-            commands::translation_logger::add_translation_correction,
-            commands::translation_logger::export_translation_logs,
-            commands::translation_logger::get_logger_statistics,
-            commands::translation_logger::get_translations_for_review,
-            commands::translation_logger::generate_quality_report,
-            commands::translation_logger::get_logger_config,
-            commands::translation_logger::update_logger_config,
-            commands::translation_logger::get_supported_export_formats,
-            commands::translation_logger::search_translations,
-            commands::translation_logger::get_translations_by_game,
-            commands::translation_logger::get_translations_by_language_pair,
-            commands::translation_logger::get_quality_stats_by_method,
-            commands::translation_logger::get_quality_improvement_recommendations,
-            commands::translation_logger::cleanup_old_logs,
-            // Low Latency Optimizer System
-            commands::low_latency_optimizer::initialize_low_latency_optimizer,
-            commands::low_latency_optimizer::optimize_translation,
-            commands::low_latency_optimizer::optimize_batch_translations,
-            commands::low_latency_optimizer::get_latency_statistics,
-            commands::low_latency_optimizer::auto_optimize_configuration,
-            commands::low_latency_optimizer::optimize_memory_usage,
-            commands::low_latency_optimizer::get_latency_optimizer_config,
-            commands::low_latency_optimizer::update_latency_optimizer_config,
-            commands::low_latency_optimizer::test_latency_performance,
-            commands::low_latency_optimizer::get_performance_recommendations,
-            commands::low_latency_optimizer::benchmark_optimizations,
-            commands::low_latency_optimizer::reset_performance_stats,
-            // Translation Pipeline System
-            commands::translation_pipeline::initialize_translation_pipeline,
-            commands::translation_pipeline::process_translation_pipeline,
-            commands::translation_pipeline::process_batch_translation_pipeline,
-            commands::translation_pipeline::get_pipeline_statistics,
-            commands::translation_pipeline::auto_optimize_pipeline,
-            commands::translation_pipeline::get_pipeline_config,
-            commands::translation_pipeline::update_pipeline_config,
-            commands::translation_pipeline::test_pipeline_performance,
-            commands::translation_pipeline::get_pipeline_recommendations,
-            commands::translation_pipeline::benchmark_pipeline_vs_components,
-            commands::translation_pipeline::reset_pipeline_statistics,
+            // Advanced OCR System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
+            // commands::advanced_ocr::process_image_ocr,
+            // commands::advanced_ocr::batch_process_images_ocr,
+            // commands::advanced_ocr::get_ocr_performance_metrics,
+            // commands::advanced_ocr::get_supported_ocr_engines,
+            // commands::advanced_ocr::get_ocr_config,
+            // commands::advanced_ocr::update_ocr_config,
+            // commands::advanced_ocr::test_ocr_engines,
+            // commands::advanced_ocr::clear_ocr_cache,
+            // commands::advanced_ocr::get_ml_scoring_info,
+            // Translation Backends System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
+            // commands::translation_backends::initialize_translation_backends,
+            // commands::translation_backends::translate_text,
+            // commands::translation_backends::translate_batch,
+            // commands::translation_backends::get_translation_metrics,
+            // commands::translation_backends::get_backend_status,
+            // commands::translation_backends::get_supported_languages,
+            // commands::translation_backends::get_translation_config,
+            // commands::translation_backends::update_translation_config,
+            // commands::translation_backends::configure_backend_api_key,
+            // commands::translation_backends::toggle_backend,
+            // commands::translation_backends::test_all_backends,
+            // commands::translation_backends::test_translation_quality,
+            // commands::translation_backends::clear_translation_cache,
+            // commands::translation_backends::get_cost_estimation,
+            // commands::translation_backends::get_cost_optimization_recommendations,
+            // Offline Translation System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
+            // commands::offline_translation::initialize_offline_translation,
+            // commands::offline_translation::translate_offline,
+            // commands::offline_translation::translate_batch_offline,
+            // commands::offline_translation::is_language_pair_supported_offline,
+            // commands::offline_translation::get_available_offline_models,
+            // commands::offline_translation::download_offline_model,
+            // commands::offline_translation::remove_offline_model,
+            // commands::offline_translation::get_offline_translation_stats,
+            // commands::offline_translation::get_language_pair_support,
+            // commands::offline_translation::get_offline_translation_config,
+            // commands::offline_translation::update_offline_translation_config,
+            // commands::offline_translation::clear_offline_translation_cache,
+            // commands::offline_translation::cleanup_unused_offline_models,
+            // commands::offline_translation::preload_popular_offline_models,
+            // commands::offline_translation::test_offline_translation_quality,
+            // commands::offline_translation::get_offline_model_metrics,
+            // commands::offline_translation::get_offline_storage_recommendations,
+            // Translation Logger System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
+            // commands::translation_logger::initialize_translation_logger,
+            // commands::translation_logger::log_translation,
+            // commands::translation_logger::add_human_feedback,
+            // commands::translation_logger::add_translation_correction,
+            // commands::translation_logger::export_translation_logs,
+            // commands::translation_logger::get_logger_statistics,
+            // commands::translation_logger::get_translations_for_review,
+            // commands::translation_logger::generate_quality_report,
+            // commands::translation_logger::get_logger_config,
+            // commands::translation_logger::update_logger_config,
+            // commands::translation_logger::get_supported_export_formats,
+            // commands::translation_logger::search_translations,
+            // commands::translation_logger::get_translations_by_game,
+            // commands::translation_logger::get_translations_by_language_pair,
+            // commands::translation_logger::get_quality_stats_by_method,
+            // commands::translation_logger::get_quality_improvement_recommendations,
+            // commands::translation_logger::cleanup_old_logs,
+            // Low Latency Optimizer System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
+            // commands::low_latency_optimizer::initialize_low_latency_optimizer,
+            // commands::low_latency_optimizer::optimize_translation,
+            // commands::low_latency_optimizer::optimize_batch_translations,
+            // commands::low_latency_optimizer::get_latency_statistics,
+            // commands::low_latency_optimizer::auto_optimize_configuration,
+            // commands::low_latency_optimizer::optimize_memory_usage,
+            // commands::low_latency_optimizer::get_latency_optimizer_config,
+            // commands::low_latency_optimizer::update_latency_optimizer_config,
+            // commands::low_latency_optimizer::test_latency_performance,
+            // commands::low_latency_optimizer::get_performance_recommendations,
+            // commands::low_latency_optimizer::benchmark_optimizations,
+            // commands::low_latency_optimizer::reset_performance_stats,
+            // Translation Pipeline System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
+            // commands::translation_pipeline::initialize_translation_pipeline,
+            // commands::translation_pipeline::process_translation_pipeline,
+            // commands::translation_pipeline::process_batch_translation_pipeline,
+            // commands::translation_pipeline::get_pipeline_statistics,
+            // commands::translation_pipeline::auto_optimize_pipeline,
+            // commands::translation_pipeline::get_pipeline_config,
+            // commands::translation_pipeline::update_pipeline_config,
+            // commands::translation_pipeline::test_pipeline_performance,
+            // commands::translation_pipeline::get_pipeline_recommendations,
+            // commands::translation_pipeline::benchmark_pipeline_vs_components,
+            // commands::translation_pipeline::reset_pipeline_statistics,
             // Cache Management
-            cache_manager::get_cache_stats,
-            cache_manager::clear_cache,
             cache_manager::clear_all_caches,
             cache_manager::optimize_caches,
             // Error Management

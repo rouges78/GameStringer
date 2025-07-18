@@ -1,4 +1,4 @@
-use tauri::api::shell;
+// use tauri::api::shell; // Rimosso - non più disponibile in Tauri v2
 use std::process::Command;
 use std::path::Path;
 use serde::{Serialize, Deserialize};
