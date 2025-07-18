@@ -16,6 +16,7 @@ mod performance_optimizer;
 mod advanced_ocr;
 mod translation_backends;
 mod offline_translation;
+mod translation_logger;
 mod process_utils;
 
 fn main() {
@@ -25,6 +26,7 @@ fn main() {
         .manage(commands::advanced_ocr::AdvancedOCRState::default())
         .manage(commands::translation_backends::TranslationBackendState::default())
         .manage(commands::offline_translation::OfflineTranslationState::default())
+        .manage(commands::translation_logger::TranslationLoggerState::default())
         .invoke_handler(tauri::generate_handler![
             commands::steam::auto_detect_steam_config,
             commands::steam::test_steam_connection,
@@ -239,6 +241,24 @@ fn main() {
             commands::offline_translation::test_offline_translation_quality,
             commands::offline_translation::get_offline_model_metrics,
             commands::offline_translation::get_offline_storage_recommendations,
+            // Translation Logger System
+            commands::translation_logger::initialize_translation_logger,
+            commands::translation_logger::log_translation,
+            commands::translation_logger::add_human_feedback,
+            commands::translation_logger::add_translation_correction,
+            commands::translation_logger::export_translation_logs,
+            commands::translation_logger::get_logger_statistics,
+            commands::translation_logger::get_translations_for_review,
+            commands::translation_logger::generate_quality_report,
+            commands::translation_logger::get_logger_config,
+            commands::translation_logger::update_logger_config,
+            commands::translation_logger::get_supported_export_formats,
+            commands::translation_logger::search_translations,
+            commands::translation_logger::get_translations_by_game,
+            commands::translation_logger::get_translations_by_language_pair,
+            commands::translation_logger::get_quality_stats_by_method,
+            commands::translation_logger::get_quality_improvement_recommendations,
+            commands::translation_logger::cleanup_old_logs,
             // Cache Management
             cache_manager::get_cache_stats,
             cache_manager::clear_cache,
