@@ -4,13 +4,14 @@ use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 use serde::{Serialize, Deserialize};
 use log::{debug, info, warn, error};
+use chrono::{DateTime, Utc};
 
 /// Informazioni su allocazione di memoria
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MemoryAllocation {
     pub id: String,
     pub size_bytes: usize,
-    pub allocated_at: Instant,
+    pub allocated_at: DateTime<Utc>,
     pub location: String,
     pub allocation_type: AllocationType,
     pub is_active: bool,
@@ -32,6 +33,26 @@ pub enum AllocationType {
     ConfigData,
     TempBuffer,
     Unknown,
+}
+
+impl std::fmt::Display for AllocationType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AllocationType::Cache => write!(f, "Cache"),
+            AllocationType::HttpClient => write!(f, "HttpClient"),
+            AllocationType::JsonParsing => write!(f, "JsonParsing"),
+            AllocationType::FileBuffer => write!(f, "FileBuffer"),
+            AllocationType::StringBuffer => write!(f, "StringBuffer"),
+            AllocationType::VectorBuffer => write!(f, "VectorBuffer"),
+            AllocationType::HashMapBuffer => write!(f, "HashMapBuffer"),
+            AllocationType::ApiResponse => write!(f, "ApiResponse"),
+            AllocationType::GameData => write!(f, "GameData"),
+            AllocationType::ImageData => write!(f, "ImageData"),
+            AllocationType::ConfigData => write!(f, "ConfigData"),
+            AllocationType::TempBuffer => write!(f, "TempBuffer"),
+            AllocationType::Unknown => write!(f, "Unknown"),
+        }
+    }
 }
 
 /// Statistiche di memoria

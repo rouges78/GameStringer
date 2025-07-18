@@ -5,6 +5,7 @@ use moka::future::Cache;
 use serde::{Serialize, Deserialize};
 use tokio::sync::RwLock;
 use log::{debug, info, warn, error};
+use chrono::{DateTime, Utc};
 
 /// Configurazione per i diversi tipi di cache
 #[derive(Clone, Debug)]
@@ -25,7 +26,7 @@ impl Default for CacheConfig {
 }
 
 /// Tipi di cache supportati
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum CacheType {
     SteamGames,
     SteamCovers,
@@ -43,8 +44,8 @@ pub enum CacheType {
 /// Metadati per ogni entry nella cache
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct CacheMetadata {
-    pub created_at: Instant,
-    pub last_accessed: Instant,
+    pub created_at: DateTime<Utc>,
+    pub last_accessed: DateTime<Utc>,
     pub access_count: u64,
     pub size_bytes: usize,
 }

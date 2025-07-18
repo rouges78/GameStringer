@@ -1,6 +1,9 @@
 use crate::anti_cheat::{AntiCheatManager, AntiCheatDetection};
 use serde_json;
 
+// Re-esportazione per main.rs
+pub use crate::anti_cheat::AntiCheatState;
+
 // === COMANDI ANTI-CHEAT ===
 
 #[tauri::command]

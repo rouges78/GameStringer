@@ -172,6 +172,8 @@ pub async fn get_enhanced_steam_info() -> Result<EnhancedSteamInfo, String> {
 }
 
 /// 🔄 Converti SteamApp in GameInfo
+// TODO: Implementare quando SteamApp sarà definito o importato da steamlocate
+/*
 fn convert_steam_app_to_game_info(app: &SteamApp, library_path: &str) -> GameInfo {
     // Importa le funzioni di rilevamento dal modulo steam esistente
     use crate::commands::steam::{detect_vr_game, detect_game_engine, detect_game_genres, detect_supported_languages};
@@ -205,6 +207,7 @@ fn convert_steam_app_to_game_info(app: &SteamApp, library_path: &str) -> GameInf
         library_path: Some(library_path.to_string()),
     }
 }
+*/
 
 /// 🎯 Test della nuova implementazione steamlocate
 #[tauri::command]

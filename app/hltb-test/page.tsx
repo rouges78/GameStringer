@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '../../lib/tauri-wrapper';
 
 interface GameTimeInfo {
   game_title: string;

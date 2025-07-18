@@ -3,6 +3,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use serde::{Serialize, Deserialize};
 use tokio::sync::RwLock;
+use chrono::{DateTime, Utc};
 use log::{debug, info, warn, error};
 
 /// Tipi di errori categorizzati
@@ -60,7 +61,7 @@ pub enum ErrorType {
 }
 
 /// Severità dell'errore
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ErrorSeverity {
     Low,      // Errore minore, funzionalità può continuare
     Medium,   // Errore moderato, alcune funzionalità compromesse
@@ -84,7 +85,7 @@ pub struct ErrorInfo {
     pub severity: ErrorSeverity,
     pub message: String,
     pub context: HashMap<String, String>,
-    pub timestamp: Instant,
+    pub timestamp: DateTime<Utc>,
     pub retry_strategy: RetryStrategy,
     pub suggested_action: String,
     pub recovery_hint: Option<String>,

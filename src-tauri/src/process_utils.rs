@@ -142,3 +142,46 @@ pub fn is_process_running(pid: u32) -> bool {
         true
     }
 }
+
+/// Ottiene tutti i processi in esecuzione nel sistema
+pub fn get_running_processes() -> Result<Vec<ProcessInfo>, Box<dyn Error>> {
+    let mut processes = Vec::new();
+    
+    unsafe {
+        let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snapshot == winapi::um::handleapi::INVALID_HANDLE_VALUE {
+            return Err("Impossibile creare snapshot dei processi".into());
+        }
+        
+        let mut entry: PROCESSENTRY32 = mem::zeroed();
+        entry.dwSize = mem::size_of::<PROCESSENTRY32>() as u32;
+        
+        if Process32First(snapshot, &mut entry) != FALSE {
+            loop {
+                let name = String::from_utf8_lossy(
+                    &entry.szExeFile
+                        .iter()
+                        .take_while(|&&c| c != 0)
+                        .map(|&c| c as u8)
+                        .collect::<Vec<u8>>()
+                ).to_string();
+                
+                let window_title = get_window_title_for_process(entry.th32ProcessID);
+                
+                processes.push(ProcessInfo {
+                    pid: entry.th32ProcessID,
+                    name,
+                    window_title,
+                });
+                
+                if Process32Next(snapshot, &mut entry) == FALSE {
+                    break;
+                }
+            }
+        }
+        
+        CloseHandle(snapshot);
+    }
+    
+    Ok(processes)
+}

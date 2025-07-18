@@ -491,7 +491,7 @@ async fn scan_ubisoft_dlc() -> Result<Vec<GameDLCStats>, String> {
     info!("🔍 Scansione DLC Ubisoft Connect in corso...");
     
     // Ottieni tutti i giochi Ubisoft Connect installati
-    let ubisoft_games = match crate::commands::library::get_ubisoft_installed_games().await {
+    let ubisoft_games = match crate::commands::ubisoft::get_ubisoft_installed_games().await {
         Ok(games) => games,
         Err(e) => {
             warn!("⚠️ Errore recupero giochi Ubisoft installati: {}", e);

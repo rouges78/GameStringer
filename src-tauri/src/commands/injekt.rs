@@ -1,4 +1,5 @@
 use crate::models::*;
+use crate::injekt::InjectionConfig;
 use crate::multi_process_injekt::{MultiProcessInjekt, MultiProcessConfig, InjectionStrategy};
 use crate::anti_cheat::{AntiCheatManager, AntiCheatDetection};
 use std::collections::HashMap;
