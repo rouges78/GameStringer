@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use moka::future::Cache;
 use serde::{Serialize, Deserialize};
 use tokio::sync::RwLock;
-use log::{debug, info, warn, error};
+use log::{debug, info, warn};
 use chrono::{DateTime, Utc};
 
 /// Configurazione per i diversi tipi di cache
@@ -26,7 +26,7 @@ impl Default for CacheConfig {
 }
 
 /// Tipi di cache supportati
-#[derive(Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq, Serialize, Deserialize)]
 pub enum CacheType {
     SteamGames,
     SteamCovers,
@@ -39,6 +39,24 @@ pub enum CacheType {
     VRDetection,
     HowLongToBeat,
     GameLanguages,
+}
+
+impl std::fmt::Display for CacheType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CacheType::SteamGames => write!(f, "SteamGames"),
+            CacheType::SteamCovers => write!(f, "SteamCovers"),
+            CacheType::SteamDetails => write!(f, "SteamDetails"),
+            CacheType::EpicGames => write!(f, "EpicGames"),
+            CacheType::EpicCovers => write!(f, "EpicCovers"),
+            CacheType::GOGGames => write!(f, "GOGGames"),
+            CacheType::GOGCovers => write!(f, "GOGCovers"),
+            CacheType::GameEngines => write!(f, "GameEngines"),
+            CacheType::VRDetection => write!(f, "VRDetection"),
+            CacheType::HowLongToBeat => write!(f, "HowLongToBeat"),
+            CacheType::GameLanguages => write!(f, "GameLanguages"),
+        }
+    }
 }
 
 /// Metadati per ogni entry nella cache
@@ -202,8 +220,8 @@ impl IntelligentCacheManager {
                 .map_err(|e| format!("Errore serializzazione: {}", e))?;
             
             let metadata = CacheMetadata {
-                created_at: Instant::now(),
-                last_accessed: Instant::now(),
+                created_at: Utc::now(),
+                last_accessed: Utc::now(),
                 access_count: 1,
                 size_bytes: serialized.len(),
             };
@@ -261,7 +279,10 @@ impl IntelligentCacheManager {
         // Calcola efficienza
         let total_requests = result.total_hits + result.total_misses;
         if total_requests > 0 {
-            result.cache_efficiency = (result.total_hits as f64 / total_requests as f64) * 100.0;
+            // Safe conversion per calcolo efficienza
+            let hits = result.total_hits as f64;
+            let total = total_requests as f64;
+            result.cache_efficiency = (hits / total) * 100.0;
         }
         
         result
@@ -298,36 +319,108 @@ impl IntelligentCacheManager {
 
     /// Aggiorna statistiche memoria
     async fn update_memory_stats(&self) {
-        let mut total_memory = 0;
+        let mut total_memory = 0u64;
         
         for cache in self.caches.values() {
             // Stima approssimativa della memoria utilizzata
-            total_memory += cache.entry_count() * 1024; // Stima 1KB per entry
+            let entry_count = cache.entry_count();
+            // Bounds checking per evitare overflow
+            if let Some(memory_for_cache) = entry_count.checked_mul(1024) {
+                total_memory = total_memory.saturating_add(memory_for_cache);
+            }
         }
         
         let mut stats = self.stats.write().await;
-        stats.memory_usage_bytes = total_memory as usize;
+        // Safe conversion con bounds checking
+        stats.memory_usage_bytes = total_memory.try_into().unwrap_or(usize::MAX);
     }
 
     /// Ottimizza automaticamente le cache
     pub async fn optimize_caches(&self) {
         info!("Avvio ottimizzazione automatica cache...");
         
+        let mut total_cleaned = 0u64;
+        
         for (cache_type, cache) in &self.caches {
             let entry_count = cache.entry_count();
             let config = self.configs.get(cache_type).unwrap();
             
             // Se la cache è quasi piena, forza una pulizia
-            if entry_count as f64 > (config.max_capacity as f64 * 0.9) {
+            let threshold = (config.max_capacity as f64 * 0.9) as u64;
+            if entry_count > threshold {
                 warn!("Cache {:?} quasi piena ({}/{}), forzando pulizia...", 
                       cache_type, entry_count, config.max_capacity);
                 
+                let before_count = entry_count;
+                
                 // Forza la pulizia di entries scadute
                 cache.run_pending_tasks().await;
+                
+                let after_count = cache.entry_count();
+                let cleaned = before_count.saturating_sub(after_count);
+                total_cleaned = total_cleaned.saturating_add(cleaned);
+                
+                info!("Cache {:?}: {} entry pulite", cache_type, cleaned);
             }
         }
         
-        info!("Ottimizzazione cache completata");
+        // Aggiorna statistiche memoria dopo l'ottimizzazione
+        self.update_memory_stats().await;
+        
+        info!("Ottimizzazione cache completata: {} entry totali pulite", total_cleaned);
+    }
+
+    /// Cleanup automatico basato su soglie di memoria
+    pub async fn cleanup_if_needed(&self) -> Result<u64, String> {
+        let stats = self.get_stats().await;
+        
+        // Soglia di memoria: 100MB
+        const MEMORY_THRESHOLD: usize = 100 * 1024 * 1024;
+        
+        if stats.memory_usage_bytes > MEMORY_THRESHOLD {
+            info!("Memoria cache oltre soglia ({}MB), avvio cleanup...", 
+                  stats.memory_usage_bytes / (1024 * 1024));
+            
+            let mut total_cleaned = 0u64;
+            
+            // Pulisci le cache meno critiche per prime
+            let cleanup_order = [
+                CacheType::SteamCovers,
+                CacheType::EpicCovers,
+                CacheType::GOGCovers,
+                CacheType::GameEngines,
+                CacheType::VRDetection,
+            ];
+            
+            for cache_type in &cleanup_order {
+                if let Some(cache) = self.caches.get(cache_type) {
+                    let before_count = cache.entry_count();
+                    
+                    // Rimuovi il 30% delle entry meno recenti
+                    let _target_size = (before_count as f64 * 0.7) as u64;
+                    
+                    // Forza cleanup aggressivo
+                    cache.run_pending_tasks().await;
+                    
+                    let after_count = cache.entry_count();
+                    let cleaned = before_count.saturating_sub(after_count);
+                    total_cleaned = total_cleaned.saturating_add(cleaned);
+                    
+                    info!("Cleanup {:?}: {} entry rimosse", cache_type, cleaned);
+                    
+                    // Controlla se abbiamo liberato abbastanza memoria
+                    self.update_memory_stats().await;
+                    let current_stats = self.get_stats().await;
+                    if current_stats.memory_usage_bytes <= MEMORY_THRESHOLD {
+                        break;
+                    }
+                }
+            }
+            
+            Ok(total_cleaned)
+        } else {
+            Ok(0)
+        }
     }
 }
 
@@ -398,6 +491,20 @@ pub async fn clear_all_caches() -> Result<String, String> {
 pub async fn optimize_caches() -> Result<String, String> {
     CACHE_MANAGER.optimize_caches().await;
     Ok("Ottimizzazione cache completata".to_string())
+}
+
+#[tauri::command]
+pub async fn cleanup_cache_if_needed() -> Result<String, String> {
+    match CACHE_MANAGER.cleanup_if_needed().await {
+        Ok(cleaned) => {
+            if cleaned > 0 {
+                Ok(format!("Cleanup completato: {} entry rimosse", cleaned))
+            } else {
+                Ok("Nessun cleanup necessario".to_string())
+            }
+        }
+        Err(e) => Err(format!("Errore durante cleanup: {}", e))
+    }
 }
 
 #[tauri::command]

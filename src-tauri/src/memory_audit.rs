@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::sync::RwLock;
 use serde::{Serialize, Deserialize};
-use log::{debug, info, warn, error};
+use log::{debug, info, warn};
 use chrono::{DateTime, Utc};
 
 /// Informazioni su allocazione di memoria
@@ -110,7 +110,7 @@ pub struct MemoryAuditManager {
     config: MemoryAuditConfig,
     stats: Arc<RwLock<MemoryStats>>,
     allocations: Arc<RwLock<HashMap<String, MemoryAllocation>>>,
-    last_cleanup: Arc<RwLock<Instant>>,
+    last_cleanup: Arc<RwLock<DateTime<Utc>>>,
 }
 
 impl MemoryAuditManager {
@@ -120,7 +120,7 @@ impl MemoryAuditManager {
             config: MemoryAuditConfig::default(),
             stats: Arc::new(RwLock::new(MemoryStats::default())),
             allocations: Arc::new(RwLock::new(HashMap::new())),
-            last_cleanup: Arc::new(RwLock::new(Instant::now())),
+            last_cleanup: Arc::new(RwLock::new(Utc::now())),
         }
     }
 
@@ -139,7 +139,7 @@ impl MemoryAuditManager {
         let allocation = MemoryAllocation {
             id: id.clone(),
             size_bytes,
-            allocated_at: Instant::now(),
+            allocated_at: Utc::now(),
             location,
             allocation_type: allocation_type.clone(),
             is_active: true,
@@ -174,7 +174,7 @@ impl MemoryAuditManager {
                 stats.peak_usage = stats.current_usage;
             }
 
-            *stats.allocations_by_type.entry(allocation_type).or_insert(0) += size_bytes;
+            *stats.allocations_by_type.entry(allocation_type.clone()).or_insert(0) += size_bytes;
             stats.memory_pressure = self.calculate_memory_pressure(stats.current_usage);
         }
 
@@ -226,13 +226,13 @@ impl MemoryAuditManager {
     /// Rileva potenziali memory leak
     pub async fn detect_memory_leaks(&self) -> Vec<MemoryAllocation> {
         let allocations = self.allocations.read().await;
-        let threshold = Duration::from_secs(self.config.leak_detection_threshold_seconds);
-        let now = Instant::now();
+        let threshold = chrono::Duration::seconds(self.config.leak_detection_threshold_seconds as i64);
+        let now = Utc::now();
 
         let potential_leaks: Vec<MemoryAllocation> = allocations
             .values()
             .filter(|alloc| {
-                alloc.is_active && now.duration_since(alloc.allocated_at) > threshold
+                alloc.is_active && (now - alloc.allocated_at) > threshold
             })
             .cloned()
             .collect();
@@ -261,11 +261,13 @@ impl MemoryAuditManager {
         }
 
         let mut last_cleanup = self.last_cleanup.write().await;
-        if last_cleanup.elapsed() < self.config.memory_pressure_check_interval {
+        let elapsed_duration = Utc::now() - *last_cleanup;
+        let check_interval = chrono::Duration::from_std(self.config.memory_pressure_check_interval).unwrap_or(chrono::Duration::seconds(60));
+        if elapsed_duration < check_interval {
             return Ok(0);
         }
 
-        *last_cleanup = Instant::now();
+        *last_cleanup = Utc::now();
         drop(last_cleanup);
 
         let stats = self.stats.read().await;
@@ -283,13 +285,13 @@ impl MemoryAuditManager {
         // Pulisci allocazioni vecchie
         {
             let mut allocations = self.allocations.write().await;
-            let threshold = Duration::from_secs(self.config.leak_detection_threshold_seconds);
-            let now = Instant::now();
+            let threshold = chrono::Duration::seconds(self.config.leak_detection_threshold_seconds as i64);
+            let now = Utc::now();
 
             let keys_to_remove: Vec<String> = allocations
                 .iter()
                 .filter(|(_, alloc)| {
-                    !alloc.is_active || now.duration_since(alloc.allocated_at) > threshold
+                    !alloc.is_active || (now - alloc.allocated_at) > threshold
                 })
                 .map(|(k, _)| k.clone())
                 .collect();
@@ -371,7 +373,7 @@ impl MemoryAuditManager {
         let mut report = Vec::new();
         
         report.push("=== REPORT AUDIT MEMORIA GAMESTRINGER ===".to_string());
-        report.push(format!("Timestamp: {:?}", Instant::now()));
+        report.push(format!("Timestamp: {}", Utc::now().format("%Y-%m-%d %H:%M:%S UTC")));
         report.push("".to_string());
         
         report.push("📊 STATISTICHE GENERALI:".to_string());
@@ -392,12 +394,12 @@ impl MemoryAuditManager {
         if !stats.potential_leaks.is_empty() {
             report.push("🚨 POTENZIALI MEMORY LEAK:".to_string());
             for leak in &stats.potential_leaks {
-                let age = leak.allocated_at.elapsed();
+                let age = Utc::now() - leak.allocated_at;
                 report.push(format!("  {} - {:.2} MB - {} - Età: {:.1}s", 
                                   leak.location, 
                                   leak.size_bytes as f64 / 1024.0 / 1024.0,
                                   leak.allocation_type,
-                                  age.as_secs_f64()));
+                                  age.num_seconds() as f64));
             }
             report.push("".to_string());
         }
@@ -407,13 +409,13 @@ impl MemoryAuditManager {
         sorted_allocations.sort_by(|a, b| b.size_bytes.cmp(&a.size_bytes));
         
         for (i, alloc) in sorted_allocations.iter().take(10).enumerate() {
-            let age = alloc.allocated_at.elapsed();
+            let age = Utc::now() - alloc.allocated_at;
             report.push(format!("  {}. {} - {:.2} MB - {} - Età: {:.1}s", 
                               i + 1,
                               alloc.location, 
                               alloc.size_bytes as f64 / 1024.0 / 1024.0,
                               alloc.allocation_type,
-                              age.as_secs_f64()));
+                              age.num_seconds() as f64));
         }
         
         report.join("\n")

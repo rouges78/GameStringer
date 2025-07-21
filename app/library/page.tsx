@@ -147,6 +147,11 @@ export default function LibraryPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Anti-loop protection
+  const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
+  const [lastCredentialsCheck, setLastCredentialsCheck] = useState<number>(0);
+  const CREDENTIALS_DEBOUNCE_MS = 2000; // 2 secondi di debounce
+
   // Funzione per testare Family Sharing con dati mock
   const testFamilySharing = async () => {
     console.log('[LIBRARY DEBUG] 🧪 Test Family Sharing button clicked!');
@@ -197,93 +202,162 @@ export default function LibraryPage() {
   useEffect(() => {
     const fetchGames = async () => {
       try {
+        // Anti-loop protection: controlla se stiamo già caricando o se è troppo presto
+        const now = Date.now();
+        if (isLoadingCredentials || (now - lastCredentialsCheck) < CREDENTIALS_DEBOUNCE_MS) {
+          console.log('🛡️ Anti-loop: Skip caricamento credenziali (debounce attivo)');
+          return;
+        }
+
+        setIsLoadingCredentials(true);
+        setLastCredentialsCheck(now);
+
         // 🔑 Prima carica le credenziali Steam
         console.log('🔑 Caricamento credenziali Steam...');
         const credentials = await invoke('load_steam_credentials');
         
-        if (!credentials || typeof credentials !== 'object' || !credentials.api_key || !credentials.steam_id) {
+        if (!credentials || typeof credentials !== 'object' || !('api_key_encrypted' in credentials) || !('steam_id' in credentials)) {
           console.log('⚠️ Credenziali Steam non disponibili, uso metodo alternativo');
           // Fallback a scan_games normale
           const result = await invoke('scan_games');
           console.log('✅ Giochi caricati con scan_games:', result);
-          setGames(result as Game[]);
+          
+          // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+          const gamesWithPlatform = (result as Game[]).map(game => ({
+            ...game,
+            platform: game.platform || 'Steam'
+          }));
+          
+          setGames(gamesWithPlatform);
           return;
         }
         
         // 🚀 Prova con la funzione Family Sharing usando le credenziali
         console.log('🚀 Tentativo caricamento con Family Sharing...');
-        const result = await invoke('get_steam_games_with_family_sharing', {
-          apiKey: credentials.api_key,
-          steamId: credentials.steam_id,
-          forceRefresh: false
-        });
-        console.log('✅ Giochi caricati con Family Sharing da Tauri:', result);
-        console.log('📊 Debug primi 3 giochi:', (result as Game[]).slice(0, 3));
-        console.log('🥽 Giochi con VR:', (result as Game[]).filter(g => g.is_vr));
-        console.log('🎯 Giochi con engine:', (result as Game[]).filter(g => g.engine));
-        console.log('💾 Giochi installati:', (result as Game[]).filter(g => g.is_installed));
-        console.log('🔗 Giochi condivisi:', (result as Game[]).filter(g => g.isShared));
-        console.log('📋 Totale giochi per piattaforma:', (result as Game[]).reduce((acc, g) => { acc[g.platform] = (acc[g.platform] || 0) + 1; return acc; }, {} as Record<string, number>));
-        setGames(result as Game[]);
-      } catch (error) {
-        console.error('❌ Errore nel caricamento con Family Sharing:', error);
-        console.log('🔄 Fallback alla funzione veloce normale...');
         try {
-          const result = await invoke('get_games_fast');
-          console.log('✅ Giochi caricati con funzione veloce:', result);
-          setGames(result as Game[]);
-        } catch (fallbackError) {
-          console.error('❌ Errore anche con fallback:', fallbackError);
-        }
-        
-        // Fallback: usa l'API Next.js se Tauri non è disponibile
-        try {
-          console.log('🔄 Tentativo fallback con API Next.js...');
-          const response = await fetch('/api/library/games');
+          const result = await invoke('get_steam_games_with_family_sharing', {
+            apiKey: credentials.api_key_encrypted,
+            steamId: credentials.steam_id,
+            forceRefresh: false
+          });
+          console.log('✅ Giochi caricati con Family Sharing da Tauri:', result);
+          console.log('📊 Debug primi 3 giochi:', (result as Game[]).slice(0, 3));
+          console.log('🥽 Giochi con VR:', (result as Game[]).filter(g => g.is_vr));
+          console.log('🎯 Giochi con engine:', (result as Game[]).filter(g => g.engine));
+          console.log('💾 Giochi installati:', (result as Game[]).filter(g => g.is_installed));
+          console.log('🔗 Giochi condivisi:', (result as Game[]).filter(g => g.isShared));
+          console.log('📋 Totale giochi per piattaforma:', (result as Game[]).reduce((acc, g) => { acc[g.platform] = (acc[g.platform] || 0) + 1; return acc; }, {} as Record<string, number>));
           
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const contentType = response.headers.get('content-type');
-          if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Response non è JSON');
-          }
-          
-          const data = await response.json();
-          console.log('🎮 Giochi caricati da API fallback:', data);
-          
-          // Trasforma i dati dell'API nel formato atteso
-          const transformedGames: Game[] = data.games.map((game: any) => ({
-            id: game.id,
-            app_id: game.id.replace('steam_', ''),
-            title: game.name,
-            platform: game.provider,
-            header_image: game.imageUrl,
-            supported_languages: game.supported_languages || ['Inglese'], // Usa dati reali dal backend
-            is_vr: game.is_vr || false,
-            engine: game.engine || null,
-            is_installed: game.is_installed || false,
-            genres: game.genres || ['Game']
+          // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+          const gamesWithPlatform = (result as Game[]).map(game => ({
+            ...game,
+            platform: game.platform || 'Steam'
           }));
           
-          setGames(transformedGames);
-        } catch (fallbackError) {
-          console.error('❌ Errore anche con API fallback:', fallbackError);
-          const errorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
-          setError(`Impossibile caricare i giochi. Errore Tauri: ${error}. Errore API: ${errorMessage}`);
+          setGames(gamesWithPlatform);
+        } catch (familySharingError) {
+          console.error('❌ Errore nel caricamento con Family Sharing:', familySharingError);
+          console.log('🔄 Fallback alla funzione veloce normale...');
+          try {
+            const result = await invoke('get_games_fast');
+            console.log('✅ Giochi caricati con funzione veloce:', result);
+            
+            // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+            const gamesWithPlatform = (result as Game[]).map(game => ({
+              ...game,
+              platform: game.platform || 'Steam'
+            }));
+            
+            setGames(gamesWithPlatform);
+          } catch (fallbackError) {
+            console.error('❌ Errore anche con fallback:', fallbackError);
+            // Fallback finale a scan_games
+            const result = await invoke('scan_games');
+            console.log('✅ Giochi caricati con scan_games (fallback finale):', result);
+            
+            // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+            const gamesWithPlatform = (result as Game[]).map(game => ({
+              ...game,
+              platform: game.platform || 'Steam'
+            }));
+            
+            setGames(gamesWithPlatform);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Errore nel caricamento credenziali:', error);
+        console.log('🔄 Fallback diretto a scan_games...');
+        try {
+          const result = await invoke('scan_games');
+          console.log('✅ Giochi caricati con scan_games (fallback):', result);
+          
+          // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+          const gamesWithPlatform = (result as Game[]).map(game => ({
+            ...game,
+            platform: game.platform || 'Steam'
+          }));
+          
+          setGames(gamesWithPlatform);
+        } catch (scanError) {
+          console.error('❌ Errore anche con scan_games:', scanError);
+          
+          // Fallback: usa l'API Next.js se Tauri non è disponibile
+          try {
+            console.log('🔄 Tentativo fallback con API Next.js...');
+            const response = await fetch('/api/library/games');
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              throw new Error('Response non è JSON');
+            }
+            
+            const data = await response.json();
+            console.log('🎮 Giochi caricati da API fallback:', data);
+            
+            // Trasforma i dati dell'API nel formato atteso
+            const transformedGames: Game[] = data.games.map((game: any) => ({
+              id: game.id,
+              app_id: game.id.replace('steam_', ''),
+              title: game.name,
+              platform: game.provider,
+              header_image: game.imageUrl,
+              supported_languages: game.supported_languages || ['Inglese'], // Usa dati reali dal backend
+              is_vr: game.is_vr || false,
+              engine: game.engine || null,
+              is_installed: game.is_installed || false,
+              genres: game.genres || ['Game']
+            }));
+            
+            setGames(transformedGames);
+          } catch (fallbackError) {
+            console.error('❌ Errore anche con API fallback:', fallbackError);
+            const errorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+            setError(`Impossibile caricare i giochi. Errore: ${errorMessage}`);
+          }
         }
       } finally {
+        setIsLoadingCredentials(false);
         setIsLoading(false);
       }
     };
 
     fetchGames();
-  }, []);
+  }, [isLoadingCredentials, lastCredentialsCheck]);
 
   const handleForceRefresh = (freshGames: Game[]) => {
     console.log('🔄 Force refresh completed, updating games list:', freshGames);
-    setGames(freshGames);
+    
+    // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+    const gamesWithPlatform = freshGames.map(game => ({
+      ...game,
+      platform: game.platform || 'Steam'
+    }));
+    
+    setGames(gamesWithPlatform);
   };
 
   // Estrai le piattaforme, engine, lingue e generi unici dai giochi caricati
@@ -292,7 +366,7 @@ export default function LibraryPage() {
   const allLanguages = games.flatMap(game => game.supported_languages || []);
   const normalizedLanguages = allLanguages.map(lang => normalizeLanguage(lang));
   const languages = ['All', ...new Set(normalizedLanguages)].sort();
-  const allGenres = games.flatMap(game => game.genres || []);
+  const allGenres = games.flatMap(game => game.genres || []).filter(genre => typeof genre === 'string');
   const genres = ['All', ...new Set(allGenres)];
 
   // Filtriamo e ordiniamo i giochi in base alla ricerca, piattaforma, VR, installazione, lingue, engine e generi
@@ -321,7 +395,7 @@ export default function LibraryPage() {
           return (b.last_played || 0) - (a.last_played || 0);
         default:
           // Ordinamento alfabetico
-          return a.title.localeCompare(b.title);
+          return (a.title || '').localeCompare(b.title || '');
       }
     });
 

@@ -1,7 +1,5 @@
 use crate::performance_optimizer::{PerformanceOptimizer, OptimizationConfig, PerformanceMetrics};
-use crate::injekt::InjektTranslator;
 use serde_json;
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 // === STATO PERFORMANCE OPTIMIZER ===

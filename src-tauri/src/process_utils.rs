@@ -1,12 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::mem;
-use winapi::shared::minwindef::{DWORD, FALSE, MAX_PATH};
+use winapi::shared::minwindef::{DWORD, FALSE};
 use winapi::um::handleapi::CloseHandle;
 use winapi::um::processthreadsapi::OpenProcess;
-use winapi::um::psapi::{EnumProcesses, GetModuleBaseNameW};
+
 use winapi::um::tlhelp32::{CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS};
-use winapi::um::winnt::{HANDLE, PROCESS_QUERY_INFORMATION, PROCESS_VM_READ};
+use winapi::um::winnt::PROCESS_QUERY_INFORMATION;
 use winapi::um::winuser::{EnumWindows, GetWindowTextW, GetWindowThreadProcessId, IsWindowVisible};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

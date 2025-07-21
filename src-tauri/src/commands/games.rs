@@ -5,7 +5,7 @@ use serde_json;
 use std::path::Path;
 use tokio::fs;
 use std::collections::HashMap;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 
 // Funzione helper per rilevare giochi VR dal nome
 pub fn is_vr_game(game_name: &str) -> bool {
@@ -1027,17 +1027,20 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         Ok(epic_games) => {
             let epic_scan_results: Vec<GameScanResult> = epic_games.into_iter().map(|game| {
                 GameScanResult {
-                    id: format!("epic_{}", game.app_name),
-                    app_id: game.app_name.clone(),
-                    title: game.display_name.clone(),
+                    title: game.title.clone(),
+                    path: game.install_path.unwrap_or_else(|| "Unknown".to_string()),
+                    executable_path: game.executable_path,
+                    app_id: Some(game.id.clone()),
+                    source: "Epic Games".to_string(),
+                    is_installed: game.is_installed,
+                    id: format!("epic_{}", game.id),
                     platform: "Epic Games".to_string(),
                     header_image: game.header_image,
-                    is_vr: is_vr_game(&game.display_name),
-                    is_installed: game.is_installed.unwrap_or(false),
+                    is_vr: is_vr_game(&game.title),
                     engine: game.engine,
                     supported_languages: game.supported_languages,
                     genres: game.genres,
-                    last_played: game.last_played_time,
+                    last_played: game.last_played,
                 }
             }).collect();
             log::info!("✅ Trovati {} giochi Epic Games", epic_scan_results.len());
@@ -1053,13 +1056,16 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         Ok(gog_games) => {
             let gog_scan_results: Vec<GameScanResult> = gog_games.into_iter().map(|game| {
                 GameScanResult {
-                    id: game.id.clone(),
-                    app_id: game.id.clone(),
                     title: game.name.clone(),
+                    path: game.path.clone(),
+                    executable_path: game.executable.clone(),
+                    app_id: Some(game.id.clone()),
+                    source: "GOG".to_string(),
+                    is_installed: true, // GOG scansiona solo giochi installati
+                    id: game.id.clone(),
                     platform: game.platform.clone(),
                     header_image: None,
                     is_vr: is_vr_game(&game.name),
-                    is_installed: true, // GOG scansiona solo giochi installati
                     engine: None,
                     supported_languages: None,
                     genres: None,
@@ -1079,13 +1085,16 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         Ok(origin_games) => {
             let origin_scan_results: Vec<GameScanResult> = origin_games.into_iter().map(|game| {
                 GameScanResult {
-                    id: game.id.clone(),
-                    app_id: game.id.clone(),
                     title: game.name.clone(),
+                    path: game.path.clone(),
+                    executable_path: game.executable.clone(),
+                    app_id: Some(game.id.clone()),
+                    source: "Origin".to_string(),
+                    is_installed: true,
+                    id: game.id.clone(),
                     platform: game.platform.clone(),
                     header_image: None,
                     is_vr: is_vr_game(&game.name),
-                    is_installed: true,
                     engine: None,
                     supported_languages: None,
                     genres: None,
@@ -1105,13 +1114,16 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         Ok(ubisoft_games) => {
             let ubisoft_scan_results: Vec<GameScanResult> = ubisoft_games.into_iter().map(|game| {
                 GameScanResult {
-                    id: game.id.clone(),
-                    app_id: game.id.clone(),
                     title: game.name.clone(),
+                    path: game.path.clone(),
+                    executable_path: game.executable.clone(),
+                    app_id: Some(game.id.clone()),
+                    source: "Ubisoft Connect".to_string(),
+                    is_installed: true,
+                    id: game.id.clone(),
                     platform: game.platform.clone(),
                     header_image: None,
                     is_vr: is_vr_game(&game.name),
-                    is_installed: true,
                     engine: None,
                     supported_languages: None,
                     genres: None,
@@ -1131,13 +1143,16 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         Ok(battlenet_games) => {
             let battlenet_scan_results: Vec<GameScanResult> = battlenet_games.into_iter().map(|game| {
                 GameScanResult {
-                    id: game.id.clone(),
-                    app_id: game.id.clone(),
                     title: game.name.clone(),
+                    path: game.path.clone(),
+                    executable_path: game.executable.clone(),
+                    app_id: Some(game.id.clone()),
+                    source: "Battle.net".to_string(),
+                    is_installed: true,
+                    id: game.id.clone(),
                     platform: game.platform.clone(),
                     header_image: None,
                     is_vr: is_vr_game(&game.name),
-                    is_installed: true,
                     engine: None,
                     supported_languages: None,
                     genres: None,
@@ -1157,13 +1172,16 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         Ok(itchio_games) => {
             let itchio_scan_results: Vec<GameScanResult> = itchio_games.into_iter().map(|game| {
                 GameScanResult {
-                    id: game.id.clone(),
-                    app_id: game.id.clone(),
                     title: game.name.clone(),
+                    path: game.path.clone(),
+                    executable_path: game.executable.clone(),
+                    app_id: Some(game.id.clone()),
+                    source: "itch.io".to_string(),
+                    is_installed: true,
+                    id: game.id.clone(),
                     platform: game.platform.clone(),
                     header_image: None,
                     is_vr: is_vr_game(&game.name),
-                    is_installed: true,
                     engine: None,
                     supported_languages: None,
                     genres: None,
@@ -1183,13 +1201,16 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         Ok(rockstar_games) => {
             let rockstar_scan_results: Vec<GameScanResult> = rockstar_games.into_iter().map(|game| {
                 GameScanResult {
-                    id: game.id.clone(),
-                    app_id: game.id.clone(),
                     title: game.name.clone(),
+                    path: game.path.clone(),
+                    executable_path: game.executable.clone(),
+                    app_id: Some(game.id.clone()),
+                    source: "Rockstar Games".to_string(),
+                    is_installed: true,
+                    id: game.id.clone(),
                     platform: game.platform.clone(),
                     header_image: None,
                     is_vr: is_vr_game(&game.name),
-                    is_installed: true,
                     engine: None,
                     supported_languages: None,
                     genres: None,
@@ -1359,12 +1380,20 @@ async fn parse_steam_manifest(manifest_path: &Path) -> Result<Option<GameScanRes
                 .unwrap_or_else(|| format!("{}/game.exe", install_path));
             
             let game_result = GameScanResult {
-                title: name,
+                title: name.clone(),
                 path: install_path,
                 executable_path: Some(executable_path),
                 app_id: Some(app_id.to_string()),
                 source: "Steam".to_string(),
                 is_installed: true,
+                id: format!("steam_{}", app_id),
+                platform: "Steam".to_string(),
+                header_image: None,
+                is_vr: is_vr_game(&name),
+                engine: None,
+                supported_languages: None,
+                genres: None,
+                last_played: None,
             };
             
             return Ok(Some(game_result));

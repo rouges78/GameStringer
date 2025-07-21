@@ -145,7 +145,7 @@ async fn scan_steam_dlc() -> Result<Vec<GameDLCStats>, String> {
     info!("🔍 Scansione DLC Steam in corso...");
     
     // Ottieni tutti i giochi Steam
-    let steam_games = match steam::get_steam_games().await {
+    let steam_games = match steam::force_refresh_steam_games().await {
         Ok(games) => games,
         Err(e) => {
             error!("❌ Errore recupero giochi Steam: {}", e);
@@ -420,7 +420,7 @@ async fn get_epic_library_with_dlc() -> Result<Vec<epic::EpicLibraryItem>, Strin
 }
 
 /// 🔍 Trova il gioco base associato a un DLC Epic Games
-fn find_epic_base_game_for_dlc(dlc: &epic::EpicLibraryItem, library: &[epic::EpicLibraryItem]) -> String {
+fn find_epic_base_game_for_dlc(dlc: &epic::EpicLibraryItem, _library: &[epic::EpicLibraryItem]) -> String {
     // Strategia 1: Usa il namespace per raggruppare
     if !dlc.namespace.is_empty() {
         return dlc.namespace.clone();

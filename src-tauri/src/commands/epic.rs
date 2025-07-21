@@ -7,11 +7,11 @@ use winreg::enums::*;
 use winreg::RegKey;
 use regex::Regex;
 use crate::models::GameInfo;
-use std::path::PathBuf;
+
 use std::fs;
-use log::{debug, info, warn, error};
+use log::{debug, info, error};
 use base64::{Engine as _, engine::general_purpose};
-use aes_gcm::{Aes256Gcm, Key, Nonce, aead::{Aead, KeyInit}};
+use aes_gcm::{Aes256Gcm, Nonce, aead::{Aead, KeyInit}};
 use rand::{RngCore, rngs::OsRng};
 use chrono;
 
@@ -171,6 +171,187 @@ pub async fn get_epic_covers_batch(app_names: Vec<String>) -> Result<HashMap<Str
     Ok(covers)
 }
 
+/// Avvia il flusso OAuth Epic Games con server locale
+#[tauri::command]
+pub async fn start_epic_oauth_flow() -> Result<serde_json::Value, String> {
+    println!("[EPIC OAUTH] 🚀 Avvio flusso OAuth Epic Games");
+    
+    // Avvia un server locale temporaneo per gestire il callback
+    tokio::spawn(async {
+        if let Err(e) = start_oauth_callback_server().await {
+            println!("[EPIC OAUTH] ❌ Errore server callback: {}", e);
+        }
+    });
+    
+    // URL di autorizzazione Epic Games
+    let auth_url = "https://www.epicgames.com/id/authorize?client_id=34a02cf8f4414e29b15921876da36f9a&redirect_uri=http://localhost:8080/auth/epic/callback&response_type=code&scope=basic_profile";
+    
+    // Apri il browser
+    if let Err(e) = open::that(auth_url) {
+        return Err(format!("Errore apertura browser: {}", e));
+    }
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "message": "Flusso OAuth avviato. Completa l'autenticazione nel browser."
+    }))
+}
+
+/// Server locale temporaneo per gestire il callback OAuth
+async fn start_oauth_callback_server() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+
+    
+    println!("[EPIC OAUTH] 🌐 Avvio server callback su localhost:8080");
+    
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
+    
+    // Gestisci solo una connessione, poi chiudi il server
+    if let Ok((stream, _)) = listener.accept().await {
+        let mut buffer = [0; 1024];
+        let mut stream = stream;
+        
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        
+        if let Ok(n) = stream.read(&mut buffer).await {
+            let request = String::from_utf8_lossy(&buffer[..n]);
+            println!("[EPIC OAUTH] 📨 Request ricevuta: {}", request);
+            
+            // Estrai il code dalla query string
+            if let Some(code_start) = request.find("code=") {
+                let code_part = &request[code_start + 5..];
+                let code_end = code_part.find(&[' ', '&', '\n', '\r'][..]).unwrap_or(code_part.len());
+                let authorization_code = &code_part[..code_end];
+                
+                println!("[EPIC OAUTH] 🔑 Authorization code estratto: {}", authorization_code);
+                
+                // Scambia il code con un access token
+                match exchange_oauth_code_for_token(authorization_code).await {
+                    Ok(token_data) => {
+                        let response = format!(
+                            "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n\
+                            <html><body>\
+                            <h1>✅ Autenticazione Epic Games completata!</h1>\
+                            <p>Puoi chiudere questa finestra e tornare a GameStringer.</p>\
+                            <script>window.close();</script>\
+                            </body></html>"
+                        );
+                        let _ = stream.write_all(response.as_bytes()).await;
+                        
+                        // Salva i token
+                        if let Err(e) = save_epic_auth_data(&token_data).await {
+                            println!("[EPIC OAUTH] ⚠️ Errore salvataggio auth data: {}", e);
+                        }
+                    }
+                    Err(e) => {
+                        println!("[EPIC OAUTH] ❌ Errore exchange token: {}", e);
+                        let response = format!(
+                            "HTTP/1.1 400 Bad Request\r\nContent-Type: text/html\r\n\r\n\
+                            <html><body>\
+                            <h1>❌ Errore autenticazione Epic Games</h1>\
+                            <p>Errore: {}</p>\
+                            <p>Puoi chiudere questa finestra e riprovare.</p>\
+                            </body></html>", e
+                        );
+                        let _ = stream.write_all(response.as_bytes()).await;
+                    }
+                }
+            }
+        }
+    }
+    
+    println!("[EPIC OAUTH] 🔚 Server callback chiuso");
+    Ok(())
+}
+
+/// Scambia authorization code OAuth con access token
+async fn exchange_oauth_code_for_token(authorization_code: &str) -> Result<EpicAuthData, String> {
+    println!("[EPIC OAUTH] 🔄 Scambio authorization code: {}", authorization_code);
+    
+    let client = reqwest::Client::new();
+    
+    // Epic Games OAuth token endpoint
+    let token_url = "https://account-public-service-prod03.ol.epicgames.com/account/api/oauth/token";
+    
+    // Parametri per lo scambio del code
+    let params = [
+        ("grant_type", "authorization_code"),
+        ("code", &authorization_code),
+        ("client_id", "34a02cf8f4414e29b15921876da36f9a"), // Epic Games Launcher client ID
+        ("client_secret", "daafbccc737745039dffe53d94fc76cf"), // Epic Games Launcher client secret
+        ("redirect_uri", "https://localhost/launcher/authorized"),
+    ];
+    
+    match client
+        .post(token_url)
+        .header("Content-Type", "application/x-www-form-urlencoded")
+        .form(&params)
+        .send()
+        .await
+    {
+        Ok(response) => {
+            let status = response.status();
+            let response_text = response.text().await.unwrap_or_default();
+            
+            println!("[EPIC OAUTH] Response status: {}", status);
+            println!("[EPIC OAUTH] Response body: {}", response_text);
+            
+            if status.is_success() {
+                match serde_json::from_str::<serde_json::Value>(&response_text) {
+                    Ok(token_data) => {
+                        println!("[EPIC OAUTH] ✅ Token exchange successful");
+                        
+                        // Salva i token per uso futuro
+                        if let (Some(access_token), Some(refresh_token), Some(account_id)) = (
+                            token_data["access_token"].as_str(),
+                            token_data["refresh_token"].as_str(),
+                            token_data["account_id"].as_str(),
+                        ) {
+                            let auth_data = EpicAuthData {
+                                access_token: access_token.to_string(),
+                                refresh_token: refresh_token.to_string(),
+                                account_id: account_id.to_string(),
+                                expires_at: chrono::Utc::now().timestamp() + token_data["expires_in"].as_i64().unwrap_or(3600),
+                            };
+                            
+                            // Salva i dati di autenticazione
+                            if let Err(e) = save_epic_auth_data(&auth_data).await {
+                                println!("[EPIC OAUTH] ⚠️ Errore salvataggio auth data: {}", e);
+                            }
+                            
+                            Ok(auth_data)
+                        } else {
+                            Err("Token response mancante di campi richiesti".to_string())
+                        }
+                    }
+                    Err(e) => {
+                        println!("[EPIC OAUTH] ❌ Errore parsing JSON: {}", e);
+                        Err(format!("Errore parsing response: {}", e))
+                    }
+                }
+            } else {
+                println!("[EPIC OAUTH] ❌ Token exchange failed: {}", response_text);
+                Err(format!("Token exchange failed: {} - {}", status, response_text))
+            }
+        }
+        Err(e) => {
+            println!("[EPIC OAUTH] ❌ Request error: {}", e);
+            Err(format!("Request error: {}", e))
+        }
+    }
+}
+
+/// Salva i dati di autenticazione Epic Games
+async fn save_epic_auth_data(auth_data: &EpicAuthData) -> Result<(), String> {
+    // Implementa il salvataggio sicuro dei dati di autenticazione
+    // Per ora, stampa solo i dati (senza token sensibili)
+    println!("[EPIC OAUTH] 💾 Salvataggio auth data per account: {}", auth_data.account_id);
+    
+    // TODO: Implementare salvataggio sicuro con crittografia
+    // Simile a come viene fatto per Steam credentials
+    
+    Ok(())
+}
+
 /// Test della connessione Epic Games e rilevamento giochi installati
 #[tauri::command]
 pub async fn test_epic_connection() -> Result<serde_json::Value, String> {
@@ -291,7 +472,7 @@ async fn get_epic_owned_games() -> Result<Vec<GameInfo>, String> {
 }
 
 /// Prova a usare Legendary per ottenere la libreria Epic Games
-async fn try_legendary_library(username: &str) -> Result<Vec<GameInfo>, String> {
+async fn try_legendary_library(_username: &str) -> Result<Vec<GameInfo>, String> {
     // Prova a eseguire Legendary se installato
     let output = std::process::Command::new("legendary")
         .args(&["list", "--json"])
@@ -342,14 +523,14 @@ async fn try_legendary_library(username: &str) -> Result<Vec<GameInfo>, String> 
 }
 
 /// Prova Epic Games Web API (richiede autenticazione)
-async fn try_epic_web_api(credentials: &EpicCredentials) -> Result<Vec<GameInfo>, String> {
+async fn try_epic_web_api(_credentials: &EpicCredentials) -> Result<Vec<GameInfo>, String> {
     // TODO: Implementare autenticazione Epic Games Web API
     // Questo richiederebbe OAuth2 flow e token management
     Err("Epic Web API non ancora implementata".to_string())
 }
 
 /// Prova file locali Epic Games e cache
-async fn try_epic_local_files(username: &str) -> Result<Vec<GameInfo>, String> {
+async fn try_epic_local_files(_username: &str) -> Result<Vec<GameInfo>, String> {
     // TODO: Implementare scansione avanzata file Epic Games locali
     // Questa potrebbe cercare in manifest files, cache, etc.
     Err("Scansione file locali avanzata non ancora implementata".to_string())
@@ -1963,7 +2144,7 @@ async fn sync_epic_games_to_library(epic_games: &[String]) -> Result<usize, Stri
         // Se il gioco non esiste già nella libreria
         if !existing_names.contains(&game_name_lower) {
             // Crea un entry di gioco Epic per la libreria
-            let epic_game_entry = crate::commands::library::InstalledGame {
+            let _epic_game_entry = crate::commands::library::InstalledGame {
                 id: format!("epic_{}", game_name_lower.replace(' ', "_")),
                 name: game_name.clone(),
                 path: format!("C:\\Program Files\\Epic Games\\{}", game_name), // Path predefinito Epic

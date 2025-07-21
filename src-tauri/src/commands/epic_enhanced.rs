@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+
+use std::path::Path;
 use std::fs;
-use log::{info, warn, error, debug};
-use crate::models::GameInfo;
+use log::{info, warn, debug};
+
 
 /// 🎮 Struttura per gioco Epic Games migliorata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -258,8 +258,8 @@ async fn scan_epic_registry_enhanced() -> Result<Vec<EpicGameEnhanced>, String> 
             if let Ok(key) = root.open_subkey(reg_path) {
                 if reg_path.contains("Uninstall") {
                     // Cerca nelle chiavi di disinstallazione
-                    if let Ok(subkeys) = key.enum_keys() {
-                        for subkey_name in subkeys.flatten() {
+                    let subkeys = key.enum_keys();
+                    for subkey_name in subkeys.flatten() {
                             if let Ok(subkey) = key.open_subkey(&subkey_name) {
                                 if let Ok(publisher) = subkey.get_value::<String, _>("Publisher") {
                                     if publisher.contains("Epic Games") {
@@ -291,7 +291,6 @@ async fn scan_epic_registry_enhanced() -> Result<Vec<EpicGameEnhanced>, String> 
                                 }
                             }
                         }
-                    }
                 }
             }
         }
@@ -461,7 +460,7 @@ async fn find_main_executable_epic(game_dir: &Path) -> Option<String> {
         "Engine/Binaries/Win64/*.exe",
     ];
     
-    for pattern in &executable_patterns {
+    for _pattern in &executable_patterns {
         if let Ok(entries) = fs::read_dir(game_dir) {
             for entry in entries.flatten() {
                 if let Some(file_name) = entry.file_name().to_str() {

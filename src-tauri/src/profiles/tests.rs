@@ -1,0 +1,549 @@
+#[cfg(test)]
+mod tests {
+    use crate::profiles::encryption::ProfileEncryption;
+    use crate::profiles::manager::ProfileManager;
+    use crate::profiles::storage::ProfileStorage;
+    use crate::profiles::models::{CreateProfileRequest, ProfileSettings};
+    use crate::profiles::errors::ProfileError;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_encryption_roundtrip() {
+        let encryption = ProfileEncryption::new();
+        let password = "TestKey123!";
+        let original_data = b"Test profile data with some sensitive information";
+
+        // Test crittografia
+        let encrypted = encryption.encrypt_profile_data(original_data, password).unwrap();
+        assert!(!encrypted.is_empty());
+        assert_ne!(encrypted, original_data.to_vec());
+
+        // Test decrittografia
+        let decrypted = encryption.decrypt_profile_data(&encrypted, password).unwrap();
+        assert_eq!(decrypted, original_data.to_vec());
+    }
+
+    #[test]
+    fn test_wrong_password() {
+        let encryption = ProfileEncryption::new();
+        let password = "CorrectKey123!";
+        let wrong_password = "WrongKey456$";
+        let data = b"Secret data";
+
+        let encrypted = encryption.encrypt_profile_data(data, password).unwrap();
+        
+        // Dovrebbe fallire con password sbagliata
+        let result = encryption.decrypt_profile_data(&encrypted, wrong_password);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_password_validation() {
+        let encryption = ProfileEncryption::new();
+
+        // Password troppo corta
+        assert!(encryption.validate_password_strength("short").is_err());
+
+        // Password debole
+        assert!(encryption.validate_password_strength("password").is_err());
+
+        // Password forte
+        assert!(encryption.validate_password_strength("StrongKey123!").is_ok());
+    }
+
+    #[test]
+    fn test_generate_secure_password() {
+        let encryption = ProfileEncryption::new();
+        let password = encryption.generate_secure_password(16);
+        
+        assert_eq!(password.len(), 16);
+        assert!(encryption.validate_password_strength(&password).is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_creation() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let manager = ProfileManager::new(storage);
+
+        // Verifica stato iniziale
+        assert!(!manager.is_profile_active());
+        assert!(manager.current_profile().is_none());
+        assert!(manager.current_profile_id().is_none());
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_list_empty() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let manager = ProfileManager::new(storage);
+
+        let profiles = manager.list_profiles().await.unwrap();
+        assert!(profiles.is_empty());
+
+        let has_profiles = manager.has_profiles().await.unwrap();
+        assert!(!has_profiles);
+
+        let count = manager.count_profiles().await.unwrap();
+        assert_eq!(count, 0);
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_create_profile() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        let request = CreateProfileRequest {
+            name: "Test User".to_string(),
+            password: "SecureKey789#".to_string(),
+            avatar_path: None,
+            settings: Some(ProfileSettings::default()),
+        };
+
+        let profile = manager.create_profile(request).await.unwrap();
+        
+        assert_eq!(profile.name, "Test User");
+        assert!(!profile.id.is_empty());
+        assert!(profile.credentials.is_empty());
+
+        // Verifica che il profilo sia stato salvato
+        let profiles = manager.list_profiles().await.unwrap();
+        assert_eq!(profiles.len(), 1);
+        assert_eq!(profiles[0].name, "Test User");
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_duplicate_name() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        let request1 = CreateProfileRequest {
+            name: "Test User".to_string(),
+            password: "SecureKey789#".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+
+        let request2 = CreateProfileRequest {
+            name: "test user".to_string(), // Case insensitive
+            password: "AnotherKey456$".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+
+        // Primo profilo dovrebbe essere creato
+        manager.create_profile(request1).await.unwrap();
+
+        // Secondo profilo con nome simile dovrebbe fallire
+        let result = manager.create_profile(request2).await;
+        assert!(result.is_err());
+        
+        if let Err(ProfileError::ProfileAlreadyExists(name)) = result {
+            assert_eq!(name, "test user");
+        } else {
+            panic!("Expected ProfileAlreadyExists error");
+        }
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_weak_password() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        let request = CreateProfileRequest {
+            name: "Test User".to_string(),
+            password: "weak".to_string(), // Password troppo debole
+            avatar_path: None,
+            settings: None,
+        };
+
+        let result = manager.create_profile(request).await;
+        assert!(result.is_err());
+        
+        if let Err(ProfileError::WeakPassword(_)) = result {
+            // Corretto
+        } else {
+            panic!("Expected WeakPassword error");
+        }
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_session_stats() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Inizialmente nessuna sessione
+        assert!(manager.get_session_stats().is_none());
+        assert!(manager.get_current_session_duration().is_none());
+        assert!(manager.is_session_expired(60)); // Sempre scaduta se non c'è sessione
+
+        // Simula inizio sessione
+        manager.init_session_stats();
+        
+        assert!(manager.get_session_stats().is_some());
+        assert!(manager.get_current_session_duration().is_some());
+        assert!(!manager.is_session_expired(60)); // Non scaduta appena iniziata
+
+        // Test aggiornamento attività
+        manager.update_session_activity();
+        let stats = manager.get_session_stats().unwrap();
+        assert!(stats.last_activity >= stats.session_start);
+    }
+
+    #[tokio::test]
+    async fn test_profile_authentication() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea un profilo
+        let request = CreateProfileRequest {
+            name: "Auth Test".to_string(),
+            password: "AuthKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        manager.create_profile(request).await.unwrap();
+
+        // Test autenticazione corretta
+        let profile = manager.authenticate_profile("Auth Test", "AuthKey123!").await.unwrap();
+        assert_eq!(profile.name, "Auth Test");
+        assert!(manager.is_profile_active());
+        assert!(manager.current_profile().is_some());
+
+        // Verifica che la sessione sia inizializzata
+        assert!(manager.get_session_stats().is_some());
+    }
+
+    #[tokio::test]
+    async fn test_profile_authentication_wrong_password() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea un profilo
+        let request = CreateProfileRequest {
+            name: "Auth Test".to_string(),
+            password: "AuthKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        manager.create_profile(request).await.unwrap();
+
+        // Test autenticazione con password sbagliata
+        let result = manager.authenticate_profile("Auth Test", "WrongKey456$").await;
+        assert!(result.is_err());
+        
+        if let Err(ProfileError::InvalidPassword) = result {
+            // Corretto
+        } else {
+            panic!("Expected InvalidPassword error");
+        }
+
+        // Verifica che nessun profilo sia attivo
+        assert!(!manager.is_profile_active());
+        assert!(manager.current_profile().is_none());
+    }
+
+    #[tokio::test]
+    async fn test_profile_authentication_nonexistent() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Test autenticazione profilo inesistente
+        let result = manager.authenticate_profile("Nonexistent", "SomeKey123!").await;
+        assert!(result.is_err());
+        
+        if let Err(ProfileError::ProfileNotFound(name)) = result {
+            assert_eq!(name, "Nonexistent");
+        } else {
+            panic!("Expected ProfileNotFound error");
+        }
+    }
+
+    #[tokio::test]
+    async fn test_profile_switch() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea due profili
+        let request1 = CreateProfileRequest {
+            name: "User One".to_string(),
+            password: "UserOneKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        let request2 = CreateProfileRequest {
+            name: "User Two".to_string(),
+            password: "UserTwoKey456$".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        
+        manager.create_profile(request1).await.unwrap();
+        manager.create_profile(request2).await.unwrap();
+
+        // Autentica primo profilo
+        manager.authenticate_profile("User One", "UserOneKey123!").await.unwrap();
+        assert_eq!(manager.current_profile().unwrap().name, "User One");
+
+        // Cambia al secondo profilo
+        let switched_profile = manager.switch_profile("User Two", "UserTwoKey456$").await.unwrap();
+        assert_eq!(switched_profile.name, "User Two");
+        assert_eq!(manager.current_profile().unwrap().name, "User Two");
+    }
+
+    #[tokio::test]
+    async fn test_profile_failed_attempts() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea un profilo
+        let request = CreateProfileRequest {
+            name: "Fail Test".to_string(),
+            password: "FailKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        manager.create_profile(request).await.unwrap();
+
+        // Verifica tentativi iniziali
+        let attempts = manager.get_failed_attempts("Fail Test").await.unwrap();
+        assert_eq!(attempts, 0);
+
+        // Tenta autenticazione con password sbagliata
+        let _ = manager.authenticate_profile("Fail Test", "WrongKey").await;
+        let attempts = manager.get_failed_attempts("Fail Test").await.unwrap();
+        assert_eq!(attempts, 1);
+
+        // Verifica che il profilo possa ancora essere autenticato
+        assert!(manager.can_authenticate("Fail Test").await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_session_timeout() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea e autentica profilo
+        let request = CreateProfileRequest {
+            name: "Timeout Test".to_string(),
+            password: "TimeoutKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        manager.create_profile(request).await.unwrap();
+        manager.authenticate_profile("Timeout Test", "TimeoutKey123!").await.unwrap();
+
+        // Verifica che la sessione non sia scaduta immediatamente
+        assert!(!manager.is_session_expired(60));
+
+        // Test tempo rimanente
+        let remaining = manager.get_session_time_remaining(60);
+        assert!(remaining.is_some());
+        assert!(remaining.unwrap() > 0);
+
+        // Test rinnovo sessione
+        assert!(manager.renew_session().is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_profile_export_import() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea profilo originale
+        let request = CreateProfileRequest {
+            name: "Export Test".to_string(),
+            password: "ExportKey123!".to_string(),
+            avatar_path: None,
+            settings: Some(ProfileSettings::default()),
+        };
+        let original_profile = manager.create_profile(request).await.unwrap();
+
+        // Esporta profilo
+        let exported = manager.export_profile(&original_profile.id, "ExportKey123!", None).await.unwrap();
+        
+        // Verifica metadati export
+        assert_eq!(exported.export_metadata.profile_name, "Export Test");
+        assert_eq!(exported.export_metadata.credentials_count, 0);
+        assert!(!exported.export_metadata.has_avatar);
+        assert_eq!(exported.version, 1);
+
+        // Importa profilo con nuovo nome
+        let imported_profile = manager.import_profile(exported, "ExportKey123!", Some("Imported Test".to_string())).await.unwrap();
+        
+        // Verifica che il profilo importato sia corretto
+        assert_eq!(imported_profile.name, "Imported Test");
+        assert_ne!(imported_profile.id, original_profile.id); // ID diverso
+        assert_eq!(imported_profile.settings.theme, original_profile.settings.theme);
+
+        // Verifica che ora ci siano 2 profili
+        let profiles = manager.list_profiles().await.unwrap();
+        assert_eq!(profiles.len(), 2);
+    }
+
+    #[tokio::test]
+    async fn test_profile_export_import_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea profilo
+        let request = CreateProfileRequest {
+            name: "File Export Test".to_string(),
+            password: "FileKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        let profile = manager.create_profile(request).await.unwrap();
+
+        // Esporta in file
+        let export_path = temp_dir.path().join("test_export.profile");
+        manager.export_profile_to_file(&profile.id, "FileKey123!", export_path.to_str().unwrap(), None).await.unwrap();
+
+        // Verifica che il file esista
+        assert!(export_path.exists());
+
+        // Valida file export
+        let metadata = manager.validate_export_file(export_path.to_str().unwrap()).await.unwrap();
+        assert_eq!(metadata.profile_name, "File Export Test");
+
+        // Importa da file
+        let imported = manager.import_profile_from_file(export_path.to_str().unwrap(), "FileKey123!", Some("File Imported".to_string())).await.unwrap();
+        assert_eq!(imported.name, "File Imported");
+    }
+
+    #[tokio::test]
+    async fn test_profile_export_wrong_password() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea profilo
+        let request = CreateProfileRequest {
+            name: "Wrong Password Test".to_string(),
+            password: "CorrectKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        let profile = manager.create_profile(request).await.unwrap();
+
+        // Tenta export con password sbagliata
+        let result = manager.export_profile(&profile.id, "WrongKey456$", None).await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_profile_import_duplicate_name() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea profilo originale
+        let request = CreateProfileRequest {
+            name: "Duplicate Test".to_string(),
+            password: "DuplicateKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        let profile = manager.create_profile(request).await.unwrap();
+
+        // Esporta profilo
+        let exported = manager.export_profile(&profile.id, "DuplicateKey123!", None).await.unwrap();
+
+        // Tenta import senza cambiare nome (dovrebbe fallire)
+        let result = manager.import_profile(exported, "DuplicateKey123!", None).await;
+        assert!(result.is_err());
+        
+        if let Err(ProfileError::ProfileAlreadyExists(name)) = result {
+            assert_eq!(name, "Duplicate Test");
+        } else {
+            panic!("Expected ProfileAlreadyExists error");
+        }
+    }
+
+    #[tokio::test]
+    async fn test_profile_backup() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea profilo
+        let request = CreateProfileRequest {
+            name: "Backup Test".to_string(),
+            password: "BackupKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        let profile = manager.create_profile(request).await.unwrap();
+
+        // Crea backup
+        let backup_path = manager.create_profile_backup(&profile.id, "BackupKey123!").await.unwrap();
+        assert!(!backup_path.is_empty());
+        
+        println!("Backup creato: {}", backup_path);
+    }
+
+    #[tokio::test]
+    async fn test_credential_manager() {
+        use crate::profiles::credential_manager::{ProfileCredentialManager, PlainCredential, StoreType};
+        
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut profile_manager = ProfileManager::new(storage);
+
+        // Crea profilo
+        let request = CreateProfileRequest {
+            name: "Credential Test".to_string(),
+            password: "CredKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+        let profile = profile_manager.create_profile(request).await.unwrap();
+        
+        // Autentica profilo
+        profile_manager.authenticate_profile("Credential Test", "CredKey123!").await.unwrap();
+
+        // Crea credential manager
+        let mut cred_manager = ProfileCredentialManager::new();
+        cred_manager.set_profile_manager(profile_manager);
+
+        // Crea credenziale di test
+        let credential = PlainCredential::new(
+            StoreType::Steam,
+            "test_user".to_string(),
+            "test_password".to_string(),
+        ).with_data("api_key".to_string(), "test_api_key".to_string());
+
+        // Salva credenziale
+        cred_manager.save_credential(credential, "CredKey123!").await.unwrap();
+
+        // Verifica che la credenziale esista
+        assert!(cred_manager.has_credential(StoreType::Steam).unwrap());
+
+        // Carica credenziale
+        let loaded = cred_manager.load_credential(StoreType::Steam, "CredKey123!").await.unwrap();
+        assert_eq!(loaded.username, "test_user");
+        assert_eq!(loaded.password, "test_password");
+        assert_eq!(loaded.additional_data.get("api_key").unwrap(), "test_api_key");
+
+        // Lista credenziali
+        let stores = cred_manager.list_stored_credentials().unwrap();
+        assert_eq!(stores.len(), 1);
+        assert_eq!(stores[0], StoreType::Steam);
+
+        // Rimuovi credenziale
+        cred_manager.remove_credential(StoreType::Steam, "CredKey123!").await.unwrap();
+        assert!(!cred_manager.has_credential(StoreType::Steam).unwrap());
+    }
+}

@@ -2,21 +2,57 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
-use winapi::shared::minwindef::{DWORD, FALSE, LPVOID, TRUE};
+use winapi::shared::minwindef::{FALSE, LPVOID};
 use winapi::um::handleapi::CloseHandle;
-use winapi::um::memoryapi::{ReadProcessMemory, VirtualAllocEx, VirtualFreeEx, WriteProcessMemory, VirtualQueryEx};
-use winapi::um::processthreadsapi::{CreateRemoteThread, OpenProcess};
-use winapi::um::synchapi::WaitForSingleObject;
-use winapi::um::winnt::{HANDLE, MEM_COMMIT, MEM_RELEASE, MEM_RESERVE, PAGE_EXECUTE_READWRITE, PROCESS_ALL_ACCESS, MEMORY_BASIC_INFORMATION};
-use winapi::um::psapi::{GetModuleInformation, MODULEINFO};
+use winapi::um::memoryapi::{ReadProcessMemory, WriteProcessMemory, VirtualQueryEx};
+use winapi::um::processthreadsapi::OpenProcess;
+
+use winapi::um::winnt::{HANDLE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, PROCESS_ALL_ACCESS, MEMORY_BASIC_INFORMATION};
+
 use winapi::um::tlhelp32::{CreateToolhelp32Snapshot, Module32First, Module32Next, MODULEENTRY32, TH32CS_SNAPMODULE};
-use crate::anti_cheat::{AntiCheatManager, AntiCheatDetection, RiskLevel, CompatibilityMode};
+use crate::anti_cheat::AntiCheatManager;
 use crate::performance_optimizer::{PerformanceOptimizer, OptimizationConfig, PerformanceMetrics};
 
 use crate::process_utils::is_process_running;
+
+/// Wrapper thread-safe per HANDLE di Windows
+#[derive(Debug)]
+pub struct SafeHandle {
+    handle: HANDLE,
+}
+
+impl SafeHandle {
+    pub fn new(handle: HANDLE) -> Self {
+        Self { handle }
+    }
+    
+    pub fn get(&self) -> HANDLE {
+        self.handle
+    }
+    
+    pub fn is_null(&self) -> bool {
+        self.handle.is_null()
+    }
+}
+
+// Implementazioni unsafe per Send e Sync
+// SAFETY: HANDLE è un puntatore opaco di Windows che può essere condiviso tra thread
+// purché non venga modificato concorrentemente. Il nostro uso è thread-safe.
+unsafe impl Send for SafeHandle {}
+unsafe impl Sync for SafeHandle {}
+
+impl Drop for SafeHandle {
+    fn drop(&mut self) {
+        if !self.handle.is_null() {
+            unsafe {
+                CloseHandle(self.handle);
+            }
+        }
+    }
+}
 
 // Costanti per la stabilizzazione
 const MAX_HOOK_RETRIES: u32 = 3;
@@ -38,7 +74,7 @@ pub struct InjectionConfig {
 #[derive(Debug)]
 pub struct InjektTranslator {
     config: InjectionConfig,
-    process_handle: Option<HANDLE>,
+    process_handle: Option<Arc<SafeHandle>>,
     target_pid: Option<u32>,
     hooks: Arc<Mutex<Vec<HookPoint>>>,
     stats: Arc<Mutex<InjektStats>>,
@@ -152,7 +188,7 @@ impl InjektTranslator {
             if handle.is_null() {
                 return Err("Impossibile aprire il processo target".into());
             }
-            self.process_handle = Some(handle);
+            self.process_handle = Some(Arc::new(SafeHandle::new(handle)));
         }
         
         // Verifica compatibilità anti-cheat con sistema avanzato
@@ -280,7 +316,8 @@ impl InjektTranslator {
     fn remove_hooks(&mut self) -> Result<(), Box<dyn Error>> {
         let hooks = self.hooks.lock().unwrap();
         
-        if let Some(handle) = self.process_handle {
+        if let Some(handle_arc) = &self.process_handle {
+            let handle = handle_arc.get();
             for hook in hooks.iter() {
                 unsafe {
                     // Ripristina bytes originali
@@ -698,7 +735,8 @@ impl InjektTranslator {
         }
         
         // Verifica moduli caricati nel processo target
-        if let Some(handle) = self.process_handle {
+        if let Some(handle_arc) = &self.process_handle {
+            let handle = handle_arc.get();
             let modules = self.get_process_modules(handle)?;
             for module in modules {
                 for anti_cheat in &anti_cheat_processes {
@@ -765,7 +803,8 @@ impl InjektTranslator {
     
     /// Valida un indirizzo di memoria prima dell'hook
     fn validate_memory_address(&self, address: usize) -> Result<bool, Box<dyn Error>> {
-        if let Some(handle) = self.process_handle {
+        if let Some(handle_arc) = &self.process_handle {
+            let handle = handle_arc.get();
             unsafe {
                 let mut mbi: MEMORY_BASIC_INFORMATION = std::mem::zeroed();
                 let result = VirtualQueryEx(
@@ -838,7 +877,8 @@ impl InjektTranslator {
     
     /// Esegue l'hook effettivo
     fn perform_hook(&self, hook: &HookPoint) -> Result<(), Box<dyn Error>> {
-        if let Some(handle) = self.process_handle {
+        if let Some(handle_arc) = &self.process_handle {
+            let handle = handle_arc.get();
             unsafe {
                 // Leggi i bytes originali
                 let mut original_bytes = vec![0u8; 5];
@@ -921,12 +961,8 @@ impl InjektTranslator {
         // Rimuovi hook (ignora errori durante cleanup)
         let _ = self.remove_hooks();
         
-        // Chiudi handle processo
-        if let Some(handle) = self.process_handle.take() {
-            unsafe {
-                CloseHandle(handle);
-            }
-        }
+        // Handle processo verrà chiuso automaticamente dal Drop di SafeHandle
+        self.process_handle.take();
         
         // Reset statistiche
         if let Ok(mut stats) = self.stats.lock() {

@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use crate::error_manager::{ErrorType, ERROR_MANAGER, classify_error};
+use crate::error_manager::{ErrorType, ERROR_MANAGER};
 use crate::cache_manager::{CACHE_MANAGER, CacheType};
-use crate::models::SteamGame;
+
 use log::{debug, warn, error};
-use serde::{Serialize, Deserialize};
+
 
 /// Wrapper per chiamate Steam API con gestione errori robusta
 pub async fn steam_api_call_with_error_handling<T>(
@@ -54,7 +54,7 @@ where
     T: Clone + serde::Serialize + for<'de> serde::Deserialize<'de> + Send + Sync + 'static,
 {
     // Prova prima dalla cache
-    if let Ok(Some(cached_result)) = CACHE_MANAGER.get::<T>(cache_type.clone(), cache_key).await {
+    if let Some(cached_result) = CACHE_MANAGER.get::<T>(cache_type.clone(), cache_key).await {
         debug!("[Steam] Cache hit per chiave: {}", cache_key);
         return Ok(cached_result);
     }
@@ -195,7 +195,7 @@ pub async fn test_steam_error_handling() -> Result<String, String> {
     let mut results = Vec::new();
     
     // Test 1: Errore di rete simulato
-    let network_test = steam_api_call_with_error_handling(
+    let network_test: Result<String, String> = steam_api_call_with_error_handling(
         || Err("Connection timeout".to_string()),
         "network_request"
     ).await;
@@ -203,7 +203,7 @@ pub async fn test_steam_error_handling() -> Result<String, String> {
     results.push(format!("Test Network Error: {:?}", network_test));
     
     // Test 2: Errore API simulato
-    let api_test = steam_api_call_with_error_handling(
+    let api_test: Result<String, String> = steam_api_call_with_error_handling(
         || Err("API key invalid".to_string()),
         "invalid_credentials"
     ).await;
@@ -272,7 +272,7 @@ pub async fn test_steam_cache_integration() -> Result<String, String> {
     results.push(format!("Cover Cache Test: {:?}", cover_cache_test));
     
     // Test gestione errori in cache
-    let error_cache_test = steam_cached_operation(
+    let error_cache_test: Result<String, String> = steam_cached_operation(
         "test_error_key",
         CacheType::SteamDetails,
         || Err("Simulated cache error".to_string())

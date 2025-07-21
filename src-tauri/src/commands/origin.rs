@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
 use rand::{RngCore, rngs::OsRng};
-use base64;
+use base64::{Engine as _, engine::general_purpose};
 use chrono;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -593,17 +593,15 @@ fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, S
         .map_err(|e| format!("Password encryption failed: {}", e))?;
     
     Ok((
-        base64::encode(&email_ciphertext),
-        base64::encode(&password_ciphertext),
-        base64::encode(&nonce_bytes)
+        general_purpose::STANDARD.encode(&email_ciphertext),
+        general_purpose::STANDARD.encode(&password_ciphertext),
+        general_purpose::STANDARD.encode(&nonce_bytes)
     ))
 }
 
 fn decrypt_credentials(email_encrypted: &str, password_encrypted: &str, nonce_str: &str) -> Result<(String, String), String> {
     let key = get_machine_key()?;
     let cipher = Aes256Gcm::new(&key.into());
-    
-    use base64::{Engine as _, engine::general_purpose};
     
     let email_ciphertext = general_purpose::STANDARD.decode(email_encrypted)
         .map_err(|e| format!("Email base64 decode failed: {}", e))?;

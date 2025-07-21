@@ -1,7 +1,5 @@
 use tauri::State;
 use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, GameDetails, LocalGameInfo, GameStatus, SteamLibraryFolder, SharedGame, FamilySharingConfig};
-use crate::error_manager::{ErrorType, ERROR_MANAGER, classify_error};
-use crate::cache_manager::{CACHE_MANAGER, CacheType};
 use winreg::HKEY;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -437,7 +435,7 @@ pub async fn debug_steam_api(api_key: String, steam_id: String) -> Result<String
             debug!("[RUST] DEBUG: Response size: {} bytes", response_text.len());
             
             // Analizza la risposta
-            let content_preview = if response_text.len() > 100 {
+            let _content_preview = if response_text.len() > 100 {
                 format!("{}...", &response_text[..100])
             } else {
                 response_text.clone()

@@ -37,7 +37,15 @@ export const invoke = async <T = any>(cmd: string, args?: any): Promise<T> => {
     console.log(`Risultato comando ${cmd}:`, result);
     return result as T;
   } catch (error) {
-    console.error(`Errore durante l'invocazione del comando Tauri '${cmd}':`, error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Gestisci silenziosamente gli errori di credenziali mancanti (sono normali)
+    if (errorMessage.includes('Nessuna credenziale') || errorMessage.includes('salvata')) {
+      console.debug(`Credenziali non trovate per comando '${cmd}' (normale al primo avvio):`, errorMessage);
+    } else {
+      console.error(`Errore durante l'invocazione del comando Tauri '${cmd}':`, error);
+    }
+    
     throw error; // Rilancia l'errore originale per essere gestito dal chiamante.
   }
 };

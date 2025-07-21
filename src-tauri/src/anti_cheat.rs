@@ -66,6 +66,7 @@ pub struct AntiCheatDetection {
     pub details: HashMap<String, String>,
 }
 
+#[derive(Debug)]
 pub struct AntiCheatManager {
     known_systems: HashMap<String, AntiCheatInfo>,
     detection_cache: Arc<Mutex<HashMap<u32, AntiCheatDetection>>>,
@@ -157,9 +158,8 @@ impl AntiCheatManager {
     }
 
     pub fn detect_anti_cheat(&self, pid: u32) -> Result<AntiCheatDetection, Box<dyn Error>> {
-        // Controlla cache prima
-        {
-            let cache = self.detection_cache.lock().unwrap();
+        // Controlla cache prima con accesso sicuro
+        if let Ok(cache) = self.detection_cache.lock() {
             if let Some(cached) = cache.get(&pid) {
                 let age = Utc::now() - cached.detection_time;
                 if age < self.cache_duration {
@@ -219,9 +219,8 @@ impl AntiCheatManager {
             details,
         };
 
-        // Aggiorna cache
-        {
-            let mut cache = self.detection_cache.lock().unwrap();
+        // Aggiorna cache con accesso sicuro
+        if let Ok(mut cache) = self.detection_cache.lock() {
             cache.insert(pid, detection.clone());
         }
 
@@ -365,14 +364,17 @@ impl AntiCheatManager {
     }
 
     pub fn clear_cache(&self) {
-        let mut cache = self.detection_cache.lock().unwrap();
-        cache.clear();
+        if let Ok(mut cache) = self.detection_cache.lock() {
+            cache.clear();
+        }
     }
 
     pub fn get_cache_stats(&self) -> HashMap<String, usize> {
-        let cache = self.detection_cache.lock().unwrap();
         let mut stats = HashMap::new();
-        stats.insert("cached_detections".to_string(), cache.len());
+        
+        if let Ok(cache) = self.detection_cache.lock() {
+            stats.insert("cached_detections".to_string(), cache.len());
+        }
         stats.insert("known_systems".to_string(), self.known_systems.len());
         stats
     }

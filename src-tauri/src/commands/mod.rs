@@ -26,3 +26,5 @@ pub mod performance;
 pub mod dlc_manager;
 pub mod hltb_manager;
 pub mod launcher;
+pub mod profile_credentials;
+pub mod profiles;

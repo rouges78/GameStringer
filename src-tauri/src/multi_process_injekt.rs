@@ -6,7 +6,8 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::Duration;
+use chrono::{DateTime, Utc};
 use crate::injekt::{InjektTranslator, InjectionConfig};
 use crate::process_utils::is_process_running;
 
@@ -38,7 +39,7 @@ pub struct ProcessInfo {
     pub name: String,
     pub is_primary: bool,
     pub injection_active: bool,
-    pub last_seen: Instant,
+    pub last_seen: DateTime<Utc>,
     pub injector: Option<Arc<Mutex<InjektTranslator>>>,
 }
 
@@ -64,6 +65,11 @@ pub struct MultiProcessStats {
     pub last_process_scan: Option<String>,
     pub uptime_seconds: u64,
 }
+
+// SAFETY: MultiProcessInjekt contiene solo tipi thread-safe (Arc<Mutex<T>>, JoinHandle)
+// e può essere condiviso tra thread in modo sicuro
+unsafe impl Send for MultiProcessInjekt {}
+unsafe impl Sync for MultiProcessInjekt {}
 
 impl MultiProcessInjekt {
     pub fn new(config: MultiProcessConfig, base_config: InjectionConfig) -> Result<Self, Box<dyn Error>> {
@@ -127,7 +133,7 @@ impl MultiProcessInjekt {
         let translation_cache = Arc::clone(&self.translation_cache);
         let config = self.config.clone();
         let base_config = self.base_injection_config.clone();
-        let start_time = Instant::now();
+        let start_time = Utc::now();
         
         let monitor_thread = thread::spawn(move || {
             log::info!("🔍 Avvio monitoraggio processi multi-processo");
@@ -145,7 +151,7 @@ impl MultiProcessInjekt {
                             
                             if let Some(process_info) = processes.get_mut(&pid) {
                                 // Aggiorna processo esistente
-                                process_info.last_seen = Instant::now();
+                                process_info.last_seen = Utc::now();
                             } else {
                                 // Nuovo processo rilevato
                                 log::info!("🆕 Nuovo processo rilevato: {} (PID: {}, Primary: {})", name, pid, is_primary);
@@ -172,7 +178,7 @@ impl MultiProcessInjekt {
                                     name: name.clone(),
                                     is_primary,
                                     injection_active: false,
-                                    last_seen: Instant::now(),
+                                    last_seen: Utc::now(),
                                     injector: None,
                                 };
                                 
@@ -226,7 +232,7 @@ impl MultiProcessInjekt {
                                 .filter(|p| !p.is_primary && p.injection_active)
                                 .count() as u32;
                             stats_guard.last_process_scan = Some(chrono::Utc::now().to_rfc3339());
-                            stats_guard.uptime_seconds = start_time.elapsed().as_secs();
+                            stats_guard.uptime_seconds = Utc::now().signed_duration_since(start_time).num_seconds() as u64;
                         }
                     }
                     Err(e) => {
@@ -249,7 +255,7 @@ impl MultiProcessInjekt {
         Ok(())
     }
 
-    fn scan_game_processes(game_name: &str, primary_process: &str, secondary_processes: &[String]) -> Result<Vec<(u32, String, bool)>, Box<dyn Error>> {
+    fn scan_game_processes(_game_name: &str, primary_process: &str, secondary_processes: &[String]) -> Result<Vec<(u32, String, bool)>, Box<dyn Error>> {
         let mut discovered = Vec::new();
         
         // Usa il sistema di process_utils per ottenere i processi
@@ -272,7 +278,7 @@ impl MultiProcessInjekt {
     fn start_injection_for_process(
         process_info: &mut ProcessInfo,
         base_config: &InjectionConfig,
-        translation_cache: &Arc<Mutex<HashMap<String, String>>>
+        _translation_cache: &Arc<Mutex<HashMap<String, String>>>
     ) -> Result<(), Box<dyn Error>> {
         // Crea configurazione specifica per questo processo
         let mut process_config = base_config.clone();
@@ -296,7 +302,7 @@ impl MultiProcessInjekt {
 
     fn synchronize_translations(
         active_processes: &Arc<Mutex<HashMap<u32, ProcessInfo>>>,
-        translation_cache: &Arc<Mutex<HashMap<String, String>>>
+        _translation_cache: &Arc<Mutex<HashMap<String, String>>>
     ) {
         // Implementazione di sincronizzazione traduzioni tra processi
         // In un'implementazione reale, qui raccoglieremmo le traduzioni
@@ -311,7 +317,7 @@ impl MultiProcessInjekt {
                 log::debug!("🔄 Sincronizzazione traduzioni tra {} processi", active_count);
                 
                 // Simula sincronizzazione
-                if let Ok(mut cache) = translation_cache.lock() {
+                if let Ok(mut cache) = _translation_cache.lock() {
                     // Aggiungi traduzioni comuni
                     cache.insert("Continue".to_string(), "Continua".to_string());
                     cache.insert("New Game".to_string(), "Nuovo Gioco".to_string());

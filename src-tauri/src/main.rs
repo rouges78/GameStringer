@@ -14,6 +14,11 @@ mod injekt;
 mod multi_process_injekt;
 mod anti_cheat;
 mod performance_optimizer;
+mod profiles;
+
+use profiles::storage::ProfileStorage;
+use profiles::manager::ProfileManager;
+use commands::profiles::ProfileManagerState;
 // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
 // mod advanced_ocr;
 // mod translation_backends;
@@ -24,9 +29,17 @@ mod performance_optimizer;
 mod process_utils;
 
 fn main() {
+    // Inizializza ProfileManager
+    let profile_storage = ProfileStorage::new("profiles".into()).expect("Failed to initialize profile storage");
+    let profile_manager = ProfileManager::new(profile_storage);
+    let profile_state = ProfileManagerState {
+        manager: std::sync::Arc::new(tokio::sync::Mutex::new(profile_manager)),
+    };
+
     tauri::Builder::default()
         .manage(commands::anti_cheat::AntiCheatState::default())
         .manage(commands::performance::PerformanceOptimizerState::default())
+        .manage(profile_state)
         // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
         // .manage(commands::advanced_ocr::AdvancedOCRState::default())
         // .manage(commands::translation_backends::TranslationBackendState::default())
@@ -85,6 +98,7 @@ fn main() {
             commands::epic::get_epic_game_cover,
             commands::epic::get_epic_covers_batch,
             commands::epic::test_epic_connection,
+            commands::epic::start_epic_oauth_flow,
             commands::epic::disconnect_epic,
             commands::epic::clear_epic_cache,
             commands::epic::get_epic_games_web,
@@ -313,7 +327,26 @@ fn main() {
             intelligent_cache::get_cache_performance_stats,
             intelligent_cache::preload_popular_cache_items,
             intelligent_cache::cleanup_expired_cache,
-            intelligent_cache::generate_cache_report
+            intelligent_cache::generate_cache_report,
+            // Profile Management System
+            commands::profiles::list_profiles,
+            commands::profiles::create_profile,
+            commands::profiles::authenticate_profile,
+            commands::profiles::switch_profile,
+            commands::profiles::get_current_profile,
+            commands::profiles::logout,
+            commands::profiles::update_settings,
+            commands::profiles::export_profile,
+            commands::profiles::import_profile,
+            commands::profiles::validate_export_file,
+            commands::profiles::create_profile_backup,
+            commands::profiles::get_auth_stats,
+            commands::profiles::is_session_expired,
+            commands::profiles::renew_session,
+            commands::profiles::get_session_time_remaining,
+            commands::profiles::can_authenticate,
+            commands::profiles::unlock_profile,
+            commands::profiles::get_failed_attempts
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

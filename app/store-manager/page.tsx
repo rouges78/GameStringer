@@ -49,6 +49,10 @@ export default function StoreManagerPage() {
   const [totalGames, setTotalGames] = useState(0);
   const [connectedStores, setConnectedStores] = useState(0);
   
+  // Flag per prevenire test simultanei e loop
+  const [isTestingInProgress, setIsTestingInProgress] = useState(false);
+  const [lastTestTime, setLastTestTime] = useState<Record<string, number>>({});
+  
   // Stati per i modals
   const [showSteamModal, setShowSteamModal] = useState(false);
   const [showItchioModal, setShowItchioModal] = useState(false);
@@ -70,6 +74,66 @@ export default function StoreManagerPage() {
   
   // Carica credenziali Steam salvate dal backend
   useEffect(() => {
+    // Gestisci callback OAuth Epic Games
+    const handleEpicOAuthCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const epicCode = urlParams.get('epic_code');
+      const epicError = urlParams.get('epic_error');
+      
+      if (epicError) {
+        console.error('[EPIC OAUTH] Errore OAuth:', epicError);
+        toast.error(`Errore autenticazione Epic Games: ${epicError}`);
+        // Pulisci URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return;
+      }
+      
+      if (epicCode) {
+        console.log('[EPIC OAUTH] Authorization code ricevuto:', epicCode);
+        toast.info('🔄 Completamento autenticazione Epic Games...');
+        
+        try {
+          const result = await invoke('exchange_epic_oauth_code', { authorizationCode: epicCode });
+          console.log('[EPIC OAUTH] Token exchange result:', result);
+          
+          if (result && result.access_token) {
+            toast.success('✅ Epic Games autenticato con successo!');
+            
+            // Aggiorna stato connessione
+            setStoreStatuses(prev => ({
+              ...prev,
+              epic_games: {
+                ...prev.epic_games,
+                connected: true,
+                loading: false,
+                lastChecked: new Date().toISOString(),
+                error: null
+              }
+            }));
+            
+            // Prova a caricare i giochi
+            try {
+              await invoke('scan_games');
+              toast.success('Libreria aggiornata con i giochi Epic!');
+            } catch (scanError) {
+              console.error('Errore aggiornamento libreria:', scanError);
+              toast.warning('Epic Games connesso, ma errore nell\'aggiornamento libreria.');
+            }
+          } else {
+            toast.error('❌ Errore nel completamento autenticazione Epic Games');
+          }
+        } catch (error) {
+          console.error('[EPIC OAUTH] Errore exchange token:', error);
+          toast.error('❌ Errore nel completamento autenticazione Epic Games');
+        }
+        
+        // Pulisci URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+    
+    handleEpicOAuthCallback();
+
     const loadSteamCredentials = async () => {
       try {
         const credentials = await invoke('load_steam_credentials');
@@ -97,7 +161,12 @@ export default function StoreManagerPage() {
         }
       } catch (error) {
         // Silently handle missing credentials - it's normal when not configured yet
-        console.debug('Epic credentials not found (normal on first run):', error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('Nessuna credenziale Epic salvata')) {
+          console.debug('Epic credentials not found (normal on first run)');
+        } else {
+          console.debug('Epic credentials error:', error);
+        }
       }
     };
     
@@ -323,22 +392,29 @@ export default function StoreManagerPage() {
     setGlobalLoading(true);
 
     try {
-      // Prima tenta l'auto-connessione Steam
+      // Prima tenta l'auto-connessione Steam (silenzioso)
       const steamAutoConnected = await attemptSteamAutoConnect();
       
-      // Poi aggiorna lo stato di tutti gli store
-      const promises = stores.map(store => {
-        // Se Steam è già auto-connesso, salta il refresh
-        if (store.id === 'steam' && steamAutoConnected) {
-          return Promise.resolve();
-        }
-        return refreshStoreStatus(store.id, initialStatuses);
-      });
+      // MODIFICA: Non eseguire test automatici al caricamento per evitare loop
+      // Gli utenti possono testare manualmente cliccando "Verifica Stato"
       
-      await Promise.all(promises);
+      // Imposta tutti gli store come "non testati" invece di testarli automaticamente
+      const finalStatuses: StoreStatuses = {};
+      for (const store of stores) {
+        finalStatuses[store.id] = {
+          name: store.name,
+          connected: store.id === 'steam' && steamAutoConnected, // Solo Steam se auto-connesso
+          loading: false, // Non in loading
+          manuallyDisconnected: false,
+          error: store.id === 'steam' && steamAutoConnected ? undefined : 'Clicca "Verifica Stato" per testare',
+        };
+      }
+      
+      setStoreStatuses(finalStatuses);
+      
     } catch (error) {
-      toast.error("Errore durante il caricamento dello stato degli store.");
       console.error("Errore in getInitialStatuses:", error);
+      // Non mostrare toast di errore al caricamento iniziale
     } finally {
       setGlobalLoading(false);
     }
@@ -348,12 +424,29 @@ export default function StoreManagerPage() {
     getInitialStatuses();
   }, [getInitialStatuses]);
 
-  const refreshStoreStatus = async (storeId: string) => {
+  const refreshStoreStatus = async (storeId: string, skipDebounce: boolean = false) => {
     const store = stores.find(s => s.id === storeId);
     if (!store) {
       console.error(`Store ${storeId} non trovato`);
       return;
     }
+
+    // Debouncing: previeni chiamate troppo frequenti (minimo 2 secondi tra i test)
+    const now = Date.now();
+    const lastTest = lastTestTime[storeId] || 0;
+    if (!skipDebounce && (now - lastTest) < 2000) {
+      console.debug(`Test per ${store.name} saltato (debouncing)`);
+      return;
+    }
+
+    // Previeni test simultanei
+    if (isTestingInProgress) {
+      console.debug(`Test per ${store.name} saltato (test in corso)`);
+      return;
+    }
+
+    setLastTestTime(prev => ({ ...prev, [storeId]: now }));
+    setIsTestingInProgress(true);
 
     setStoreStatuses(prev => ({
       ...prev,
@@ -365,65 +458,82 @@ export default function StoreManagerPage() {
     }));
 
     try {
-      try {
-        const result: { connected: boolean; games_count?: number; error?: string } = await invoke(store.testCommand);
-        
-        setStoreStatuses(prev => ({
-          ...prev,
-          [storeId]: {
-            ...prev[storeId],
-            connected: result.connected,
-            gamesCount: result.games_count,
-            loading: false,
-            error: result.error || (!result.connected ? 'Test fallito' : undefined),
-            lastChecked: new Date(),
-          },
-        }));
+      const result: { connected: boolean; games_count?: number; error?: string } = await invoke(store.testCommand);
+      
+      setStoreStatuses(prev => ({
+        ...prev,
+        [storeId]: {
+          ...prev[storeId],
+          connected: result.connected,
+          gamesCount: result.games_count,
+          loading: false,
+          error: result.error || (!result.connected ? 'Test fallito' : undefined),
+          lastChecked: new Date(),
+        },
+      }));
 
-        if(result.connected) {
-           // Optional: show a success toast, but might be too noisy.
-        } else if(result.error) {
-           toast.info(`${store.name}: ${result.error}`);
+      // Gestione silenziosa degli errori comuni (credenziali mancanti)
+      if (!result.connected && result.error) {
+        const isCredentialError = result.error.includes('credenziali') || 
+                                 result.error.includes('credentials') ||
+                                 result.error.includes('Nessuna') ||
+                                 result.error.includes('salvata');
+        
+        if (!isCredentialError) {
+          // Solo mostra toast per errori reali, non per credenziali mancanti
+          toast.info(`${store.name}: ${result.error}`);
         }
-      } catch (error: any) {
-        console.error(`Errore durante il test di ${store.name}:`, error);
-        setStoreStatuses(prev => ({
-          ...prev,
-          [storeId]: {
-            ...prev[storeId],
-            loading: false,
-            error: error.message || 'Impossibile comunicare con il backend.',
-            lastChecked: new Date(),
-          },
-        }));
       }
 
     } catch (error: any) {
+      console.debug(`Test ${store.name} fallito:`, error.message);
+      
+      // Gestione silenziosa per errori comuni
+      const isCommonError = error.message?.includes('credenziali') || 
+                           error.message?.includes('credentials') ||
+                           error.message?.includes('Nessuna') ||
+                           error.message?.includes('salvata');
+
       setStoreStatuses(prev => ({
         ...prev,
         [storeId]: {
           ...prev[storeId],
           connected: false,
           loading: false,
-          error: error.toString() || 'Errore imprevisto durante il test',
+          error: isCommonError ? 'Credenziali non configurate' : (error.message || 'Errore di connessione'),
           lastChecked: new Date(),
         },
       }));
-      toast.error(`Errore critico durante il test di ${statuses[storeId]?.name || storeId}.`);
-      console.error(`Errore test ${storeId}:`, error);
+
+      // Non mostrare toast per errori comuni di credenziali mancanti
+      if (!isCommonError) {
+        toast.error(`Errore test ${store.name}: ${error.message}`);
+      }
+    } finally {
+      setIsTestingInProgress(false);
     }
   };
   
   const refreshAllStores = async () => {
+    if (isTestingInProgress) {
+      console.debug("Refresh saltato: test già in corso");
+      return;
+    }
+
     setGlobalLoading(true);
     try {
-      const promises = stores.map(store => {
+      // Esegui i test in sequenza con delay per evitare sovraccarico
+      for (const store of stores) {
         if (storeStatuses[store.id]?.manuallyDisconnected) {
-          return Promise.resolve();
+          continue; // Salta store disconnessi manualmente
         }
-        return refreshStoreStatus(store.id);
-      });
-      await Promise.all(promises);
+        
+        await refreshStoreStatus(store.id, true); // skipDebounce = true per refresh manuale
+        
+        // Piccolo delay tra i test per evitare sovraccarico
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
       toast.success("Stato di tutti gli store aggiornato.");
     } catch (error) {
       toast.error("Errore durante l'aggiornamento degli store.");

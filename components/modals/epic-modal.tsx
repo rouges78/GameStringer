@@ -304,11 +304,43 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
             )}
           </div>
 
+          {/* OAuth Button */}
+          <div className="space-y-3">
+            <div className="border-t border-gray-700 pt-3">
+              <h4 className="text-sm font-medium text-gray-300 mb-2">🔐 Autenticazione OAuth (Raccomandato)</h4>
+              <Button
+                type="button"
+                onClick={async () => {
+                  try {
+                    toast.info('🚀 Avvio autenticazione OAuth Epic Games...');
+                    const result = await invoke('start_epic_oauth_flow');
+                    console.log('[EPIC OAUTH] Flow started:', result);
+                    toast.success('🌐 Aperta finestra di autenticazione Epic Games. Completa l\'accesso nel browser.');
+                  } catch (error) {
+                    console.error('[EPIC OAUTH] Errore avvio flow:', error);
+                    toast.error('❌ Errore nell\'avvio dell\'autenticazione OAuth');
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Autentica con Epic Games OAuth
+              </Button>
+              <p className="text-xs text-gray-400 mt-1">
+                Metodo più sicuro - usa il sistema di autenticazione ufficiale Epic Games
+              </p>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-700 my-4"></div>
+
           {/* Help Text */}
           <div className="text-sm text-gray-400 space-y-1">
-            <p>• <strong>Metodo 1:</strong> Usa Legendary (raccomandato) - installa automaticamente</p>
-            <p>• <strong>Metodo 2:</strong> Usa credenziali Epic Games dirette</p>
-            <p>• Se hai 2FA attivo, inserisci il codice quando richiesto</p>
+            <p>• <strong>Metodo 1:</strong> OAuth Epic Games (più sicuro)</p>
+            <p>• <strong>Metodo 2:</strong> Usa Legendary (raccomandato per utenti avanzati)</p>
+            <p>• <strong>Metodo 3:</strong> Usa credenziali Epic Games dirette (legacy)</p>
+            <p>• Se hai 2FA attivo, usa OAuth o Legendary</p>
             <p>• Le credenziali vengono salvate in modo sicuro localmente</p>
           </div>
 

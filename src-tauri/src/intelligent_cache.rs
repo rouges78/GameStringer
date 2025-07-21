@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant, SystemTime};
 use tokio::sync::RwLock;
 use serde::{Serialize, Deserialize};
-use log::{debug, info, warn, error};
+use log::{debug, info};
 use crate::cache_manager::{CacheType, CACHE_MANAGER};
 use crate::error_manager::{ErrorType, ERROR_MANAGER};
 use crate::memory_audit::{MEMORY_AUDIT, AllocationType};
@@ -126,7 +126,7 @@ impl IntelligentCacheManager {
         
         // Prova a ottenere dalla cache base
         match CACHE_MANAGER.get::<IntelligentCacheEntry<T>>(cache_type.clone(), key).await {
-            Ok(Some(entry)) => {
+            Some(entry) => {
                 // Verifica se l'entry è ancora valida
                 if self.is_entry_valid(&entry).await {
                     // Aggiorna statistiche di accesso
@@ -146,15 +146,10 @@ impl IntelligentCacheManager {
                     Ok(None)
                 }
             }
-            Ok(None) => {
+            None => {
                 self.update_miss_stats().await;
                 debug!("[IntelligentCache] Cache miss per chiave: {}", key);
                 Ok(None)
-            }
-            Err(e) => {
-                self.update_error_stats().await;
-                error!("[IntelligentCache] Errore nel recupero cache: {}", e);
-                Err(e)
             }
         }
     }
@@ -252,7 +247,7 @@ impl IntelligentCacheManager {
     }
 
     /// Aggiorna statistiche di accesso per un'entry
-    async fn update_entry_access(&self, key: &str, cache_type: &CacheType) {
+    async fn update_entry_access(&self, key: &str, _cache_type: &CacheType) {
         // Questo richiederebbe di aggiornare l'entry nella cache
         // Per semplicità, registriamo solo l'accesso
         debug!("[IntelligentCache] Accesso registrato per: {}", key);
@@ -303,16 +298,16 @@ impl IntelligentCacheManager {
         // 2. Tra item con stessa priorità, rimuovi quelli meno recentemente usati
         // 3. Considera la dimensione per massimizzare lo spazio liberato
         
-        let mut evicted_count = 0;
-        let mut freed_space = 0;
+        let _evicted_count = 0;
+        let _freed_space = 0;
         
         // Per semplicità, implementiamo una pulizia generica
         // In una implementazione completa, dovremmo iterare su tutte le cache
         // e ordinare per priorità e ultimo accesso
         
         // Simula eviction
-        evicted_count = 10; // Placeholder
-        freed_space = needed_space * 2; // Placeholder
+        let evicted_count = 10u64; // Placeholder
+        let freed_space = needed_space * 2; // Placeholder
         
         {
             let mut stats = self.stats.write().await;
@@ -327,15 +322,15 @@ impl IntelligentCacheManager {
 
     /// Invalida un'entry specifica
     async fn invalidate_entry(&self, key: &str, cache_type: &CacheType) {
-        if let Err(e) = CACHE_MANAGER.invalidate(cache_type.clone(), key).await {
-            warn!("[IntelligentCache] Errore nell'invalidazione di {}: {}", key, e);
-        } else {
-            // Traccia deallocazione memoria
-            MEMORY_AUDIT.track_deallocation(&format!("cache_{}", key)).await;
-            
-            let mut stats = self.stats.write().await;
-            stats.invalidations += 1;
-        }
+        CACHE_MANAGER.remove(*cache_type, key).await;
+        
+        // Traccia deallocazione memoria
+        MEMORY_AUDIT.track_deallocation(&format!("cache_{}", key)).await;
+        
+        let mut stats = self.stats.write().await;
+        stats.invalidations += 1;
+        
+        debug!("[IntelligentCache] Entry invalidata: {}", key);
     }
 
     /// Aggiorna statistiche di hit
@@ -410,11 +405,11 @@ impl IntelligentCacheManager {
         info!("[IntelligentCache] Avvio pulizia entry scadute...");
         
         // Placeholder per pulizia
-        let cleaned = 25; // Simulato
+        let cleaned = 25usize; // Simulato
         
         {
             let mut stats = self.stats.write().await;
-            stats.invalidations += cleaned;
+            stats.invalidations += cleaned as u64;
         }
         
         info!("[IntelligentCache] Pulizia completata: {} entry rimosse", cleaned);

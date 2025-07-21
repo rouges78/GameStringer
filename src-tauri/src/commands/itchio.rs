@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
 use rand::{RngCore, rngs::OsRng};
-use base64;
+use base64::{Engine as _, engine::general_purpose};
 use chrono;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -144,7 +144,7 @@ async fn scan_itchio_folders() -> Result<Vec<InstalledGame>, String> {
 
 /// Scansiona database itch.io app (se disponibile)
 async fn scan_itchio_database() -> Result<Vec<InstalledGame>, String> {
-    let mut games = Vec::new();
+    let games = Vec::new();
     
     // itch.io app memorizza i dati in SQLite, ma per semplicità
     // cerchiamo i file di configurazione JSON
@@ -645,8 +645,6 @@ fn encrypt_api_key(api_key: &str) -> Result<(String, String), String> {
     let ciphertext = cipher.encrypt(nonce, payload.as_bytes())
         .map_err(|e| format!("Encryption failed: {}", e))?;
     
-    use base64::{Engine as _, engine::general_purpose};
-    
     Ok((
         general_purpose::STANDARD.encode(&ciphertext),
         general_purpose::STANDARD.encode(&nonce_bytes)
@@ -656,8 +654,6 @@ fn encrypt_api_key(api_key: &str) -> Result<(String, String), String> {
 fn decrypt_api_key(encrypted_data: &str, nonce_str: &str) -> Result<String, String> {
     let key = get_machine_key()?;
     let cipher = Aes256Gcm::new(&key.into());
-    
-    use base64::{Engine as _, engine::general_purpose};
     
     let ciphertext = general_purpose::STANDARD.decode(encrypted_data)
         .map_err(|e| format!("Base64 decode failed: {}", e))?;

@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use serde::{Serialize, Deserialize};
 use tokio::sync::RwLock;
 use chrono::{DateTime, Utc};
 use log::{debug, info, warn, error};
 
 /// Tipi di errori categorizzati
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ErrorType {
     // Errori di rete
     NetworkTimeout,
@@ -48,6 +48,7 @@ pub enum ErrorType {
     CacheCorrupted,
     CacheExpired,
     CacheSerializationError,
+    CacheWriteError,
     
     // Errori di configurazione
     ConfigMissing,
@@ -154,7 +155,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::Medium,
             message: "Timeout di rete durante la richiesta".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::ExponentialBackoff {
                 max_retries: 3,
                 base_delay_ms: 1000,
@@ -169,7 +170,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::High,
             message: "Impossibile stabilire connessione di rete".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::LinearBackoff {
                 max_retries: 5,
                 delay_ms: 2000,
@@ -184,7 +185,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::High,
             message: "Chiave API non valida o scaduta".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::NoRetry,
             suggested_action: "Verifica e aggiorna la chiave API".to_string(),
             recovery_hint: Some("Vai alle impostazioni per inserire una nuova chiave API".to_string()),
@@ -195,7 +196,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::Medium,
             message: "Limite di rate API raggiunto".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::ExponentialBackoff {
                 max_retries: 10,
                 base_delay_ms: 5000,
@@ -211,7 +212,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::High,
             message: "Steam non è installato sul sistema".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::NoRetry,
             suggested_action: "Installa Steam per accedere ai giochi Steam".to_string(),
             recovery_hint: Some("Scarica Steam da https://store.steampowered.com/".to_string()),
@@ -223,7 +224,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::Medium,
             message: "Errore nel parsing dei dati JSON".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::LinearBackoff {
                 max_retries: 2,
                 delay_ms: 1000,
@@ -244,7 +245,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::Medium,
             message: "File o directory non trovato".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::LinearBackoff { max_retries: 2, delay_ms: 500 },
             suggested_action: "Verifica che il file esista nel percorso specificato".to_string(),
             recovery_hint: Some("Controlla i permessi e l'integrità del filesystem".to_string()),
@@ -256,7 +257,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::Low,
             message: "Cache corrotta, verrà rigenerata".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::NoRetry,
             suggested_action: "La cache verrà automaticamente pulita e rigenerata".to_string(),
             recovery_hint: Some("Nessuna azione richiesta, il sistema si auto-ripara".to_string()),
@@ -294,7 +295,7 @@ impl RobustErrorManager {
             .unwrap_or_else(|| self.create_unknown_error());
 
         error_info.context = context;
-        error_info.timestamp = Instant::now();
+        error_info.timestamp = Utc::now();
 
         // Aggiorna statistiche
         self.update_stats(&error_info).await;
@@ -322,7 +323,7 @@ impl RobustErrorManager {
             severity: ErrorSeverity::Medium,
             message: "Errore sconosciuto".to_string(),
             context: HashMap::new(),
-            timestamp: Instant::now(),
+            timestamp: Utc::now(),
             retry_strategy: RetryStrategy::LinearBackoff { max_retries: 1, delay_ms: 1000 },
             suggested_action: "Contatta il supporto tecnico".to_string(),
             recovery_hint: None,
@@ -356,9 +357,11 @@ impl RobustErrorManager {
             .map(|(error_type, _)| error_type.clone());
         
         // Calcola rate degli errori
+        let window_duration = chrono::Duration::seconds((self.config.error_rate_window_minutes * 60) as i64);
+        let cutoff_time = Utc::now() - window_duration;
         let recent_errors_in_window = stats.recent_errors
             .iter()
-            .filter(|e| e.timestamp.elapsed() < Duration::from_secs(self.config.error_rate_window_minutes * 60))
+            .filter(|e| e.timestamp > cutoff_time)
             .count();
         
         stats.error_rate_per_minute = recent_errors_in_window as f64 / self.config.error_rate_window_minutes as f64;
@@ -460,7 +463,7 @@ impl RobustErrorManager {
     /// Pulisce statistiche vecchie
     pub async fn cleanup_old_stats(&self) {
         let mut stats = self.stats.write().await;
-        let cutoff = Instant::now() - Duration::from_secs(self.config.error_rate_window_minutes * 60);
+        let cutoff = Utc::now() - chrono::Duration::seconds((self.config.error_rate_window_minutes * 60) as i64);
         
         stats.recent_errors.retain(|e| e.timestamp > cutoff);
         
@@ -550,5 +553,63 @@ pub fn classify_error(error_message: &str) -> ErrorType {
         ErrorType::SteamNotInstalled
     } else {
         ErrorType::Unknown
+    }
+}
+
+/// Implementazione Display per ErrorType
+impl std::fmt::Display for ErrorType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            // Errori di rete
+            ErrorType::NetworkTimeout => write!(f, "Network Timeout"),
+            ErrorType::NetworkConnectionFailed => write!(f, "Network Connection Failed"),
+            ErrorType::NetworkDnsResolution => write!(f, "DNS Resolution Error"),
+            ErrorType::NetworkSSLError => write!(f, "SSL/TLS Error"),
+            
+            // Errori API
+            ErrorType::ApiKeyInvalid => write!(f, "Invalid API Key"),
+            ErrorType::ApiRateLimited => write!(f, "API Rate Limited"),
+            ErrorType::ApiQuotaExceeded => write!(f, "API Quota Exceeded"),
+            ErrorType::ApiEndpointNotFound => write!(f, "API Endpoint Not Found"),
+            ErrorType::ApiServerError => write!(f, "API Server Error"),
+            ErrorType::ApiUnauthorized => write!(f, "API Unauthorized"),
+            
+            // Errori di parsing
+            ErrorType::JsonParseError => write!(f, "JSON Parse Error"),
+            ErrorType::XmlParseError => write!(f, "XML Parse Error"),
+            ErrorType::VdfParseError => write!(f, "VDF Parse Error"),
+            ErrorType::RegexParseError => write!(f, "Regex Parse Error"),
+            
+            // Errori di filesystem
+            ErrorType::FileNotFound => write!(f, "File Not Found"),
+            ErrorType::FilePermissionDenied => write!(f, "File Permission Denied"),
+            ErrorType::FileCorrupted => write!(f, "File Corrupted"),
+            ErrorType::DirectoryNotFound => write!(f, "Directory Not Found"),
+            
+            // Errori di store specifici
+            ErrorType::SteamNotInstalled => write!(f, "Steam Not Installed"),
+            ErrorType::SteamNotRunning => write!(f, "Steam Not Running"),
+            ErrorType::EpicNotInstalled => write!(f, "Epic Games Not Installed"),
+            ErrorType::GOGNotInstalled => write!(f, "GOG Not Installed"),
+            ErrorType::OriginNotInstalled => write!(f, "Origin Not Installed"),
+            ErrorType::UbisoftNotInstalled => write!(f, "Ubisoft Connect Not Installed"),
+            ErrorType::BattlenetNotInstalled => write!(f, "Battle.net Not Installed"),
+            
+            // Errori di cache
+            ErrorType::CacheCorrupted => write!(f, "Cache Corrupted"),
+            ErrorType::CacheExpired => write!(f, "Cache Expired"),
+            ErrorType::CacheSerializationError => write!(f, "Cache Serialization Error"),
+            ErrorType::CacheWriteError => write!(f, "Cache Write Error"),
+            
+            // Errori di configurazione
+            ErrorType::ConfigMissing => write!(f, "Configuration Missing"),
+            ErrorType::ConfigInvalid => write!(f, "Configuration Invalid"),
+            ErrorType::CredentialsMissing => write!(f, "Credentials Missing"),
+            
+            // Errori generici
+            ErrorType::Unknown => write!(f, "Unknown Error"),
+            ErrorType::ValidationError => write!(f, "Validation Error"),
+            ErrorType::InternalError => write!(f, "Internal Error"),
+        }
     }
 }

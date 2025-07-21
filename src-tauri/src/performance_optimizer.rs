@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
-use std::thread;
+use std::time::Duration;
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
 
@@ -47,12 +46,13 @@ impl Default for OptimizationConfig {
     }
 }
 
+#[derive(Debug)]
 pub struct PerformanceOptimizer {
     config: OptimizationConfig,
     metrics: Arc<Mutex<PerformanceMetrics>>,
     hook_pool: Arc<Mutex<Vec<HookHandle>>>,
     translation_cache: Arc<Mutex<HashMap<String, CachedTranslation>>>,
-    last_gc: Arc<Mutex<Instant>>,
+    last_gc: Arc<Mutex<DateTime<Utc>>>,
     adaptive_polling_interval: Arc<Mutex<Duration>>,
 }
 
@@ -60,7 +60,7 @@ pub struct PerformanceOptimizer {
 struct HookHandle {
     id: usize,
     is_active: bool,
-    last_used: Instant,
+    last_used: DateTime<Utc>,
     performance_score: f32,
 }
 
@@ -68,13 +68,14 @@ struct HookHandle {
 struct CachedTranslation {
     text: String,
     translated: String,
-    timestamp: Instant,
+    timestamp: DateTime<Utc>,
     hit_count: u32,
     priority: u8,
 }
 
 impl PerformanceOptimizer {
     pub fn new(config: OptimizationConfig) -> Self {
+        let polling_interval = config.polling_interval_ms;
         Self {
             config,
             metrics: Arc::new(Mutex::new(PerformanceMetrics {
@@ -90,14 +91,20 @@ impl PerformanceOptimizer {
             })),
             hook_pool: Arc::new(Mutex::new(Vec::new())),
             translation_cache: Arc::new(Mutex::new(HashMap::new())),
-            last_gc: Arc::new(Mutex::new(Instant::now())),
-            adaptive_polling_interval: Arc::new(Mutex::new(Duration::from_millis(config.polling_interval_ms))),
+            last_gc: Arc::new(Mutex::new(Utc::now())),
+            adaptive_polling_interval: Arc::new(Mutex::new(Duration::from_millis(polling_interval))),
         }
+    }
+
+    /// Costruttore alternativo che clona la configurazione
+    /// Utile quando il config deve essere riutilizzato dopo la creazione dell'optimizer
+    pub fn from_config(config: &OptimizationConfig) -> Self {
+        Self::new(config.clone())
     }
 
     /// Ottimizza l'applicazione degli hook con pooling e lazy loading
     pub fn optimize_hook_application(&self, hook_count: usize) -> Result<Vec<usize>, String> {
-        let start_time = Instant::now();
+        let start_time = Utc::now();
         let mut optimized_hooks = Vec::new();
 
         if self.config.enable_hook_pooling {
@@ -109,7 +116,7 @@ impl PerformanceOptimizer {
             for hook in pool.iter_mut() {
                 if !hook.is_active && reused_count < hook_count {
                     hook.is_active = true;
-                    hook.last_used = Instant::now();
+                    hook.last_used = Utc::now();
                     optimized_hooks.push(hook.id);
                     reused_count += 1;
                 }
@@ -120,7 +127,7 @@ impl PerformanceOptimizer {
                 let new_hook = HookHandle {
                     id: pool.len() + i,
                     is_active: true,
-                    last_used: Instant::now(),
+                    last_used: Utc::now(),
                     performance_score: 1.0,
                 };
                 optimized_hooks.push(new_hook.id);
@@ -136,7 +143,7 @@ impl PerformanceOptimizer {
         }
 
         // Aggiorna metriche
-        let application_time = start_time.elapsed().as_millis() as u64;
+        let application_time = Utc::now().signed_duration_since(start_time).num_milliseconds() as u64;
         if let Ok(mut metrics) = self.metrics.lock() {
             metrics.hook_application_time_ms = application_time;
             metrics.timestamp = Utc::now();
@@ -148,47 +155,73 @@ impl PerformanceOptimizer {
 
     /// Ottimizza la cache delle traduzioni con algoritmi intelligenti
     pub fn optimize_translation_cache(&self, text: &str) -> Option<String> {
-        let start_time = Instant::now();
+        let start_time = Utc::now();
         
-        if let Ok(mut cache) = self.translation_cache.lock() {
-            // Controlla cache hit
-            if let Some(cached) = cache.get_mut(text) {
-                cached.hit_count += 1;
-                cached.timestamp = Instant::now();
-                
-                // Aggiorna metriche cache hit
-                self.update_cache_metrics(true);
-                
-                log::debug!("💾 Cache hit per: {} (hits: {})", text, cached.hit_count);
-                return Some(cached.translated.clone());
+        // Pattern di accesso sicuro: scope limitato per il lock
+        let cache_result = {
+            match self.translation_cache.lock() {
+                Ok(mut cache) => {
+                    // Controlla cache hit
+                    if let Some(cached) = cache.get_mut(text) {
+                        cached.hit_count += 1;
+                        cached.timestamp = Utc::now();
+                        
+                        log::debug!("💾 Cache hit per: {} (hits: {})", text, cached.hit_count);
+                        Some((cached.translated.clone(), true)) // (result, is_hit)
+                    } else {
+                        // Cache miss - implementa strategia di eviction se necessario
+                        if cache.len() >= self.config.cache_size_limit {
+                            self.evict_cache_entries(&mut cache);
+                        }
+                        Some((String::new(), false)) // Placeholder per cache miss
+                    }
+                }
+                Err(e) => {
+                    log::warn!("🔒 Errore accesso cache traduzioni: {:?}", e);
+                    None
+                }
             }
+        };
 
-            // Cache miss - implementa strategia di eviction se necessario
-            if cache.len() >= self.config.cache_size_limit {
-                self.evict_cache_entries(&mut cache);
+        // Aggiorna metriche fuori dal lock per evitare conflitti di borrowing
+        match cache_result {
+            Some((result, is_hit)) => {
+                self.update_cache_metrics(is_hit);
+                if is_hit {
+                    Some(result)
+                } else {
+                    let lookup_time = Utc::now().signed_duration_since(start_time).num_milliseconds();
+                    log::debug!("🔍 Cache lookup: {}ms", lookup_time);
+                    None
+                }
             }
-            
-            self.update_cache_metrics(false);
+            None => {
+                let lookup_time = Utc::now().signed_duration_since(start_time).num_milliseconds();
+                log::debug!("🔍 Cache lookup failed: {}ms", lookup_time);
+                None
+            }
         }
-
-        let lookup_time = start_time.elapsed().as_millis();
-        log::debug!("🔍 Cache lookup: {}ms", lookup_time);
-        None
     }
 
     /// Aggiunge traduzione alla cache con priorità intelligente
     pub fn cache_translation(&self, original: String, translated: String, priority: u8) {
-        if let Ok(mut cache) = self.translation_cache.lock() {
-            let cached_translation = CachedTranslation {
-                text: original.clone(),
-                translated,
-                timestamp: Instant::now(),
-                hit_count: 0,
-                priority,
-            };
+        // Pattern di accesso sicuro con error handling
+        match self.translation_cache.lock() {
+            Ok(mut cache) => {
+                let cached_translation = CachedTranslation {
+                    text: original.clone(),
+                    translated,
+                    timestamp: Utc::now(),
+                    hit_count: 0,
+                    priority,
+                };
 
-            cache.insert(original, cached_translation);
-            log::debug!("💾 Traduzione cached con priorità: {}", priority);
+                cache.insert(original, cached_translation);
+                log::debug!("💾 Traduzione cached con priorità: {}", priority);
+            }
+            Err(e) => {
+                log::warn!("🔒 Errore accesso cache per inserimento: {:?}", e);
+            }
         }
     }
 
@@ -219,34 +252,37 @@ impl PerformanceOptimizer {
 
     /// Esegue garbage collection intelligente
     pub fn perform_garbage_collection(&self) -> Result<usize, String> {
-        let start_time = Instant::now();
+        let start_time = Utc::now();
         let mut cleaned_items = 0;
 
         // Controlla se è tempo di GC
         {
             let last_gc = self.last_gc.lock().map_err(|_| "Errore accesso last_gc")?;
-            if last_gc.elapsed().as_secs() < self.config.gc_interval_seconds {
+            if Utc::now().signed_duration_since(*last_gc).num_seconds() < self.config.gc_interval_seconds as i64 {
                 return Ok(0); // Non è ancora tempo
             }
         }
 
-        // Pulizia cache traduzioni
-        if let Ok(mut cache) = self.translation_cache.lock() {
+        // Pulizia cache traduzioni con accesso sicuro
+        if let Some(cache_cleaned) = self.safe_cache_write(|cache| {
             let before_size = cache.len();
-            let cutoff_time = Instant::now() - Duration::from_secs(3600); // 1 ora
+            let cutoff_time = Utc::now() - chrono::Duration::seconds(3600); // 1 ora
 
             cache.retain(|_, translation| {
                 translation.timestamp > cutoff_time || translation.hit_count > 5
             });
 
-            cleaned_items += before_size - cache.len();
-            log::info!("🧹 Cache GC: {} traduzioni rimosse", before_size - cache.len());
+            let cleaned = before_size - cache.len();
+            log::info!("🧹 Cache GC: {} traduzioni rimosse", cleaned);
+            cleaned
+        }) {
+            cleaned_items += cache_cleaned;
         }
 
         // Pulizia hook pool
         if let Ok(mut pool) = self.hook_pool.lock() {
             let before_size = pool.len();
-            let cutoff_time = Instant::now() - Duration::from_secs(300); // 5 minuti
+            let cutoff_time = Utc::now() - chrono::Duration::seconds(300); // 5 minuti
 
             pool.retain(|hook| {
                 hook.is_active || hook.last_used > cutoff_time
@@ -258,10 +294,10 @@ impl PerformanceOptimizer {
 
         // Aggiorna timestamp ultimo GC
         if let Ok(mut last_gc) = self.last_gc.lock() {
-            *last_gc = Instant::now();
+            *last_gc = Utc::now();
         }
 
-        let gc_time = start_time.elapsed().as_millis();
+        let gc_time = Utc::now().signed_duration_since(start_time).num_milliseconds();
         log::info!("🧹 Garbage collection completato: {} items puliti in {}ms", cleaned_items, gc_time);
 
         Ok(cleaned_items)
@@ -273,7 +309,7 @@ impl PerformanceOptimizer {
             return Ok(translations);
         }
 
-        let start_time = Instant::now();
+        let start_time = Utc::now();
         let mut optimized_batch = Vec::new();
         let mut cache_hits = 0;
 
@@ -299,7 +335,7 @@ impl PerformanceOptimizer {
             }
         }
 
-        let processing_time = start_time.elapsed().as_millis();
+        let processing_time = Utc::now().signed_duration_since(start_time).num_milliseconds();
         let efficiency = (cache_hits as f32 / translations.len() as f32) * 100.0;
 
         log::info!("📦 Batch processing: {} traduzioni, {:.1}% cache hit, {}ms", 
@@ -314,7 +350,7 @@ impl PerformanceOptimizer {
             return Ok(0);
         }
 
-        let start_time = Instant::now();
+        let start_time = Utc::now();
         let mut memory_saved = 0u64;
 
         // Comprimi cache traduzioni meno utilizzate
@@ -329,7 +365,7 @@ impl PerformanceOptimizer {
             }
         }
 
-        let compression_time = start_time.elapsed().as_millis();
+        let compression_time = Utc::now().signed_duration_since(start_time).num_milliseconds();
         log::info!("🗜️ Compressione memoria: {}KB salvati in {}ms", memory_saved / 1024, compression_time);
 
         Ok(memory_saved)
@@ -352,6 +388,56 @@ impl PerformanceOptimizer {
         }
     }
 
+    /// Aggiorna la configurazione dell'optimizer
+    pub fn update_config(&mut self, new_config: OptimizationConfig) {
+        self.config = new_config;
+        log::info!("🔧 Configurazione Performance Optimizer aggiornata");
+    }
+
+    /// Ottiene una copia della configurazione corrente
+    pub fn get_config(&self) -> OptimizationConfig {
+        self.config.clone()
+    }
+
+    /// Pulisce la cache delle traduzioni in modo sicuro
+    pub fn clear_translation_cache(&self) -> Result<usize, String> {
+        match self.safe_cache_write(|cache| {
+            let size = cache.len();
+            cache.clear();
+            size
+        }) {
+            Some(cleared_count) => {
+                log::info!("🧹 Cache traduzioni pulita: {} entry rimosse", cleared_count);
+                Ok(cleared_count)
+            }
+            None => Err("Errore accesso cache per pulizia".to_string())
+        }
+    }
+
+    /// Ottiene statistiche della cache in modo sicuro
+    pub fn get_cache_stats(&self) -> HashMap<String, serde_json::Value> {
+        let mut stats = HashMap::new();
+        
+        if let Some(cache_info) = self.safe_cache_read(|cache| {
+            let total_entries = cache.len();
+            let high_priority = cache.values().filter(|t| t.priority >= 8).count();
+            let recent_entries = cache.values().filter(|t| {
+                let age = Utc::now().signed_duration_since(t.timestamp);
+                age.num_hours() < 1
+            }).count();
+            
+            (total_entries, high_priority, recent_entries)
+        }) {
+            let (total, high_priority, recent) = cache_info;
+            stats.insert("total_entries".to_string(), serde_json::json!(total));
+            stats.insert("high_priority_entries".to_string(), serde_json::json!(high_priority));
+            stats.insert("recent_entries".to_string(), serde_json::json!(recent));
+            stats.insert("cache_limit".to_string(), serde_json::json!(self.config.cache_size_limit));
+        }
+        
+        stats
+    }
+
     /// Genera report di performance dettagliato
     pub fn generate_performance_report(&self) -> Result<HashMap<String, serde_json::Value>, String> {
         let metrics = self.get_performance_metrics()?;
@@ -364,9 +450,9 @@ impl PerformanceOptimizer {
         report.insert("translation_throughput".to_string(), serde_json::json!(metrics.translation_throughput));
         report.insert("error_rate".to_string(), serde_json::json!(metrics.error_rate));
 
-        // Statistiche cache
-        if let Ok(cache) = self.translation_cache.lock() {
-            report.insert("cache_size".to_string(), serde_json::json!(cache.len()));
+        // Statistiche cache con accesso sicuro
+        if let Some(cache_size) = self.safe_cache_read(|cache| cache.len()) {
+            report.insert("cache_size".to_string(), serde_json::json!(cache_size));
             report.insert("cache_limit".to_string(), serde_json::json!(self.config.cache_size_limit));
         }
 
@@ -384,9 +470,37 @@ impl PerformanceOptimizer {
 
     // === METODI PRIVATI ===
 
+    /// Helper per accesso sicuro alla cache in lettura
+    fn safe_cache_read<F, R>(&self, operation: F) -> Option<R>
+    where
+        F: FnOnce(&HashMap<String, CachedTranslation>) -> R,
+    {
+        match self.translation_cache.lock() {
+            Ok(cache) => Some(operation(&cache)),
+            Err(e) => {
+                log::warn!("🔒 Errore accesso cache in lettura: {:?}", e);
+                None
+            }
+        }
+    }
+
+    /// Helper per accesso sicuro alla cache in scrittura
+    fn safe_cache_write<F, R>(&self, operation: F) -> Option<R>
+    where
+        F: FnOnce(&mut HashMap<String, CachedTranslation>) -> R,
+    {
+        match self.translation_cache.lock() {
+            Ok(mut cache) => Some(operation(&mut cache)),
+            Err(e) => {
+                log::warn!("🔒 Errore accesso cache in scrittura: {:?}", e);
+                None
+            }
+        }
+    }
+
     fn evict_cache_entries(&self, cache: &mut HashMap<String, CachedTranslation>) {
         // Strategia LRU con priorità
-        let mut entries: Vec<_> = cache.iter().collect();
+        let mut entries: Vec<_> = cache.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
         entries.sort_by(|a, b| {
             // Ordina per priorità (alta prima) poi per timestamp (vecchio prima)
             b.1.priority.cmp(&a.1.priority)
@@ -396,7 +510,7 @@ impl PerformanceOptimizer {
         // Rimuovi il 20% delle entry meno importanti
         let remove_count = cache.len() / 5;
         for (key, _) in entries.iter().take(remove_count) {
-            cache.remove(*key);
+            cache.remove(key);
         }
 
         log::debug!("🗑️ Cache eviction: {} entry rimosse", remove_count);

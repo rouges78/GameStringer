@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::time::timeout;
+use tokio::task;
 use log::{info, warn, error};
 
 // Re-export della struct Game dalla crate howlongtobeat
@@ -102,8 +103,12 @@ impl HLTBManager {
 
         info!("🔍 Ricerca HowLongToBeat per: {}", game_title);
 
-        // Ricerca con timeout
-        let search_result = match timeout(Duration::from_secs(10), howlongtobeat::search(normalized_title.clone())).await {
+        // Ricerca con timeout usando spawn_blocking per operazione CPU-bound
+        let normalized_title_clone = normalized_title.clone();
+        let search_result = match timeout(
+            Duration::from_secs(10),
+            task::spawn_blocking(move || howlongtobeat::search(normalized_title_clone))
+        ).await {
             Ok(Ok(games)) => games,
             Ok(Err(e)) => {
                 error!("❌ Errore ricerca HowLongToBeat: {:?}", e);

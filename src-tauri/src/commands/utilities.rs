@@ -1,6 +1,4 @@
-use crate::models::*;
 use serde_json;
-use std::collections::HashMap;
 
 #[tauri::command]
 pub async fn get_howlongtobeat_info(game_name: String) -> Result<serde_json::Value, String> {

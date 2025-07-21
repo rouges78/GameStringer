@@ -1,9 +1,6 @@
-use tauri::command;
 use serde::{Serialize, Deserialize};
-use crate::models::*;
 use std::path::Path;
 use std::fs;
-use tokio::fs as async_fs;
 use winreg::enums::*;
 use winreg::RegKey;
 
@@ -220,11 +217,11 @@ async fn parse_epic_manifest(file_path: &Path) -> Result<InstalledGame, String> 
         .map_err(|e| format!("Failed to parse Epic manifest JSON: {}", e))?;
     
     let app_name = manifest["AppName"].as_str().unwrap_or("Unknown").to_string();
-    let display_name = manifest["DisplayName"].as_str().unwrap_or(&app_name).to_string();
+    let _display_name = manifest["DisplayName"].as_str().unwrap_or(&app_name).to_string();
     let install_location = manifest["InstallLocation"].as_str().unwrap_or("").to_string();
     let name = manifest["DisplayName"].as_str().unwrap_or("Unknown").to_string();
     let app_id = manifest["AppName"].as_str().unwrap_or("").to_string();
-    let size_on_disk = manifest["SizeOnDisk"].as_u64().unwrap_or(0);
+    let _size_on_disk = manifest["SizeOnDisk"].as_u64().unwrap_or(0);
     
     let game_path = Path::new(&install_location);
     let metadata = game_path.metadata().ok();

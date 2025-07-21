@@ -1,7 +1,6 @@
 use steamlocate::SteamDir;
-use crate::models::{GameInfo, SteamGame};
-use std::collections::HashMap;
-use log::{debug, info, warn, error};
+use crate::models::GameInfo;
+use log::{info, warn, error};
 use serde::{Serialize, Deserialize};
 
 /// 🚀 STEAMLOCATE-RS INTEGRATION
@@ -23,12 +22,12 @@ pub async fn scan_steam_with_steamlocate() -> Result<Vec<GameInfo>, String> {
     
     // Localizza l'installazione Steam
     let steam_dir = match SteamDir::locate() {
-        Some(dir) => {
+        Ok(dir) => {
             info!("✅ Steam trovato in: {}", dir.path().display());
             dir
         },
-        None => {
-            warn!("❌ Steam non trovato sul sistema");
+        Err(e) => {
+            warn!("❌ Steam non trovato sul sistema: {:?}", e);
             return Err("Steam non installato o non trovato".to_string());
         }
     };
@@ -93,8 +92,8 @@ pub async fn find_steam_game_by_id(app_id: u32) -> Result<Option<GameInfo>, Stri
     info!("🔍 Ricerca gioco Steam con ID: {}", app_id);
     
     let steam_dir = match SteamDir::locate() {
-        Some(dir) => dir,
-        None => return Err("Steam non trovato".to_string()),
+        Ok(dir) => dir,
+        Err(_) => return Err("Steam non trovato".to_string()),
     };
 
     match steam_dir.find_app(app_id) {
@@ -120,8 +119,8 @@ pub async fn get_enhanced_steam_info() -> Result<EnhancedSteamInfo, String> {
     info!("📊 Raccolta informazioni Steam avanzate");
     
     let steam_dir = match SteamDir::locate() {
-        Some(dir) => dir,
-        None => return Err("Steam non trovato".to_string()),
+        Ok(dir) => dir,
+        Err(_) => return Err("Steam non trovato".to_string()),
     };
 
     let steam_path = steam_dir.path().display().to_string();
@@ -172,42 +171,30 @@ pub async fn get_enhanced_steam_info() -> Result<EnhancedSteamInfo, String> {
 }
 
 /// 🔄 Converti SteamApp in GameInfo
-// TODO: Implementare quando SteamApp sarà definito o importato da steamlocate
-/*
-fn convert_steam_app_to_game_info(app: &SteamApp, library_path: &str) -> GameInfo {
-    // Importa le funzioni di rilevamento dal modulo steam esistente
-    use crate::commands::steam::{detect_vr_game, detect_game_engine, detect_game_genres, detect_supported_languages};
-    
+// Funzione temporanea semplificata - da implementare quando SteamApp sarà disponibile
+fn convert_steam_app_to_game_info(app: &steamlocate::App, library_path: &str) -> GameInfo {
     let app_id_str = app.app_id.to_string();
     let name = app.name.clone().unwrap_or_else(|| format!("App {}", app.app_id));
     
-    // Usa le funzioni di rilevamento esistenti
-    let is_vr = detect_vr_game(&name, app.app_id);
-    let engine = detect_game_engine(&name, app.app_id);
-    let genres = detect_game_genres(&name, app.app_id);
-    let supported_languages = detect_supported_languages(&name, app.app_id);
-    
     GameInfo {
         id: app_id_str.clone(),
-        app_id: app_id_str,
         title: name,
         platform: "Steam".to_string(),
-        header_image: None, // Sarà popolato successivamente se necessario
-        supported_languages: if supported_languages.is_empty() { 
-            None 
-        } else { 
-            Some(supported_languages.split(',').map(|s| s.trim().to_string()).collect()) 
-        },
-        is_vr: Some(is_vr),
-        engine: if engine == "Unknown" { None } else { Some(engine) },
-        is_installed: Some(app.name.is_some()), // Se ha un nome, probabilmente è installato
-        genres: if genres.is_empty() { None } else { Some(genres) },
-        last_played: None, // Potrebbe essere aggiunto in futuro
-        install_path: app.install_dir.clone(),
-        library_path: Some(library_path.to_string()),
+        install_path: Some(library_path.to_string()),
+        executable_path: None,
+        icon: None,
+        image_url: None,
+        header_image: None,
+        is_installed: true,
+        steam_app_id: Some(app.app_id),
+        is_vr: false, // Default, da implementare rilevamento
+        engine: None, // Default, da implementare rilevamento
+        last_played: None,
+        is_shared: false,
+        supported_languages: None, // Default, da implementare rilevamento
+        genres: None, // Default, da implementare rilevamento
     }
 }
-*/
 
 /// 🎯 Test della nuova implementazione steamlocate
 #[tauri::command]
@@ -215,8 +202,8 @@ pub async fn test_steamlocate_integration() -> Result<String, String> {
     info!("🧪 Test integrazione steamlocate-rs");
     
     let steam_dir = match SteamDir::locate() {
-        Some(dir) => dir,
-        None => return Ok("❌ Steam non trovato per il test".to_string()),
+        Ok(dir) => dir,
+        Err(_) => return Ok("❌ Steam non trovato per il test".to_string()),
     };
 
     let mut report = String::new();

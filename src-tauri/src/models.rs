@@ -140,6 +140,15 @@ pub struct GameScanResult {
     pub app_id: Option<String>,
     pub source: String, // "Steam", "Epic", "GOG", etc.
     pub is_installed: bool,
+    // Campi aggiunti per compatibilità con il codice esistente
+    pub id: String,
+    pub platform: String,
+    pub header_image: Option<String>,
+    pub is_vr: bool,
+    pub engine: Option<String>,
+    pub supported_languages: Option<Vec<String>>,
+    pub genres: Option<Vec<String>>,
+    pub last_played: Option<u64>,
 }
 
 // Strutture per la lettura avanzata di Steam

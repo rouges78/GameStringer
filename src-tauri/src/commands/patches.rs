@@ -1,6 +1,4 @@
-use crate::models::*;
 use serde_json;
-use std::collections::HashMap;
 
 #[tauri::command]
 pub async fn get_patches(patch_id: Option<String>) -> Result<serde_json::Value, String> {
@@ -8,7 +6,7 @@ pub async fn get_patches(patch_id: Option<String>) -> Result<serde_json::Value, 
         if let Some(ref id) = patch_id { format!(" con ID: {}", id) } else { "".to_string() });
     
     // TODO: Implementare patch manager con database/file system
-    if let Some(id) = patch_id {
+    if let Some(_id) = patch_id {
         // Recupera patch specifica
         log::warn!("⚠️ Recupero patch specifica non ancora implementato");
         Err("Patch non trovata".to_string())
@@ -76,7 +74,7 @@ pub async fn export_patch(patch_id: String, format: String) -> Result<serde_json
 }
 
 #[tauri::command]
-pub async fn translate_text(text: String, provider: String, api_key: String, target_lang: String) -> Result<serde_json::Value, String> {
+pub async fn translate_text(text: String, provider: String, _api_key: String, target_lang: String) -> Result<serde_json::Value, String> {
     log::info!("🌐 Traduzione testo con {}: '{}' -> {}", provider, 
         if text.len() > 50 { format!("{}...", &text[..50]) } else { text.clone() }, 
         target_lang);
