@@ -5,7 +5,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import Providers from '@/components/providers';
 import { Toaster } from 'sonner';
-import { MainLayout } from '@/components/layout/main-layout';
+import { ProfileWrapper } from '@/components/profiles/profile-wrapper';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -31,13 +31,13 @@ export default function RootLayout({
               <ErrorBoundary
                 showErrorDetails={process.env.NODE_ENV === 'development'}
               >
-                <MainLayout>
+                <ProfileWrapper>
                   <ErrorBoundary
                     showErrorDetails={process.env.NODE_ENV === 'development'}
                   >
                     {children}
                   </ErrorBoundary>
-                </MainLayout>
+                </ProfileWrapper>
               </ErrorBoundary>
               <Toaster richColors position="top-right" />
             </Providers>

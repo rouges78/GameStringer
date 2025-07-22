@@ -1786,23 +1786,49 @@ fn find_steam_path_in_hive(hive: HKEY, subkey: &str) -> Option<String> {
 }
 
 #[tauri::command]
-pub async fn test_steam_connection() -> Result<String, String> {
+pub async fn test_steam_connection(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<String, String> {
     debug!("[RUST] 🧪 test_steam_connection called!");
     
-    // Conta i giochi Steam installati localmente
-    let installed_games = get_installed_steam_app_ids().await;
-    let installed_count = installed_games.len();
+    let manager = profile_state.manager.lock().await;
     
-    // Tenta di recuperare il conteggio totale dei giochi posseduti
-    // Nota: per funzionare completamente servirebbe una Steam API Key e Steam ID
-    let total_message = if installed_count > 0 {
-        // Se ci sono giochi installati, probabilmente ce ne sono molti altri posseduti
-        format!("{} installati (~{} stimati posseduti)", installed_count, installed_count * 10)
-    } else {
-        format!("{} installati", installed_count)
-    };
-    
-    Ok(format!("Steam connection test successful! {} giochi trovati", total_message))
+    // Verifica se ci sono credenziali Steam nel profilo attivo
+    match manager.load_credential_for_active_profile(crate::profiles::StoreType::Steam).await {
+        Ok(Some(credential)) => {
+            // Testa la connessione con le credenziali del profilo
+            let steam_id = credential.additional_data.get("steam_id")
+                .unwrap_or(&credential.username)
+                .clone();
+            
+            // Verifica integrità delle credenziali
+            if let Err(e) = verify_credential_integrity(&credential.password, &steam_id) {
+                return Err(format!("Credenziali Steam non valide: {}", e));
+            }
+            
+            // Conta i giochi Steam installati localmente
+            let installed_games = get_installed_steam_app_ids().await;
+            let installed_count = installed_games.len();
+            
+            let total_message = if installed_count > 0 {
+                format!("{} installati (~{} stimati posseduti)", installed_count, installed_count * 10)
+            } else {
+                format!("{} installati", installed_count)
+            };
+            
+            Ok(format!("Steam connection test successful! {} giochi trovati (Steam ID: {})", total_message, steam_id))
+        },
+        Ok(None) => {
+            // Nessuna credenziale salvata, testa solo i giochi installati localmente
+            let installed_games = get_installed_steam_app_ids().await;
+            let installed_count = installed_games.len();
+            
+            Ok(format!("Steam connection test (local only): {} giochi installati trovati. Salva le credenziali per accedere alla libreria completa.", installed_count))
+        },
+        Err(e) => {
+            Err(format!("Errore test connessione Steam: {}", e))
+        }
+    }
 }
 
 #[tauri::command]
@@ -1816,17 +1842,28 @@ pub async fn disconnect_steam() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn force_refresh_steam_games() -> Result<Vec<SteamGame>, String> {
+pub async fn force_refresh_steam_games(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<Vec<SteamGame>, String> {
     debug!("[RUST] 🔄 force_refresh_steam_games called - bypassing all cache!");
     
-    // Carica credenziali criptate
-    let (api_key, steam_id) = match get_decrypted_api_key().await {
-        Ok((key, id)) => {
-            debug!("[RUST] ✅ Credenziali decriptate per force refresh");
-            debug!("[RUST] 🔑 Steam ID: {}", id);
-            // SECURITY FIX: Removed API key length logging
+    let manager = profile_state.manager.lock().await;
+    
+    // Carica credenziali dal profilo attivo
+    let (api_key, steam_id) = match manager.load_credential_for_active_profile(crate::profiles::StoreType::Steam).await {
+        Ok(Some(credential)) => {
+            let steam_id = credential.additional_data.get("steam_id")
+                .unwrap_or(&credential.username)
+                .clone();
+            
+            debug!("[RUST] ✅ Credenziali caricate dal profilo attivo per force refresh");
+            debug!("[RUST] 🔑 Steam ID: {}", steam_id);
             debug!("[RUST] API Key validation check");
-            (key, id)
+            
+            (credential.password, steam_id)
+        }
+        Ok(None) => {
+            return Err("Nessuna credenziale Steam salvata nel profilo attivo".to_string());
         }
         Err(e) => {
             return Err(format!("Impossibile caricare credenziali per force refresh: {}", e));
@@ -1919,7 +1956,12 @@ pub async fn debug_steam_api_raw() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: Option<bool>) -> Result<Vec<SteamGame>, String> {
+pub async fn get_steam_games(
+    api_key: String, 
+    steam_id: String, 
+    force_refresh: Option<bool>,
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<Vec<SteamGame>, String> {
     debug!("[RUST] get_steam_games called with steam_id: {}", steam_id);
     
     let force = force_refresh.unwrap_or(false);
@@ -1931,16 +1973,24 @@ pub async fn get_steam_games(api_key: String, steam_id: String, force_refresh: O
         GAME_CACHE.invalidate_all();
     }
     
-    // 🔒 Se non vengono passate credenziali, prova a caricarle dai file criptati
+    // 🔒 Se non vengono passate credenziali, prova a caricarle dal profilo attivo
     let (actual_api_key, actual_steam_id) = if api_key.is_empty() || steam_id.is_empty() {
-        debug!("[RUST] 🔒 Caricamento credenziali criptate...");
-        match get_decrypted_api_key().await {
-            Ok((key, id)) => {
-                debug!("[RUST] ✅ Credenziali decriptate con successo");
-                (key, id)
+        debug!("[RUST] 🔒 Caricamento credenziali dal profilo attivo...");
+        let manager = profile_state.manager.lock().await;
+        match manager.load_credential_for_active_profile(crate::profiles::StoreType::Steam).await {
+            Ok(Some(credential)) => {
+                let steam_id = credential.additional_data.get("steam_id")
+                    .unwrap_or(&credential.username)
+                    .clone();
+                debug!("[RUST] ✅ Credenziali caricate dal profilo attivo");
+                (credential.password, steam_id)
+            }
+            Ok(None) => {
+                debug!("[RUST] ⚠️ Nessuna credenziale Steam nel profilo attivo, uso parametri forniti");
+                (api_key, steam_id)
             }
             Err(e) => {
-                debug!("[RUST] ⚠️ Impossibile caricare credenziali: {}", e);
+                debug!("[RUST] ⚠️ Errore caricamento credenziali dal profilo: {}", e);
                 (api_key, steam_id)
             }
         }
@@ -2452,86 +2502,351 @@ pub async fn get_steam_cover(appid: String) -> Result<String, String> {
 }
 
 // Comando per salvare le credenziali Steam
-// 🔒 Comando per salvare le credenziali Steam (CRIPTATE)
+// 🔒 Comando per salvare le credenziali Steam (CRIPTATE) - AGGIORNATO PER PROFILI
 #[tauri::command]
-pub async fn save_steam_credentials(api_key: String, steam_id: String) -> Result<String, String> {
+pub async fn save_steam_credentials(
+    api_key: String, 
+    steam_id: String,
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<String, String> {
     debug!("[RUST] 🔒 save_steam_credentials called per Steam ID: {}", steam_id);
     
     if api_key.is_empty() || steam_id.is_empty() {
         return Err("API key e Steam ID sono obbligatori".to_string());
     }
     
-    // 🔒 Cripta l'API key
-    let (encrypted_api_key, nonce) = encrypt_api_key(&api_key)?;
+    // Usa il ProfileManager per salvare le credenziali
+    let mut manager = profile_state.manager.lock().await;
     
-    let credentials = SteamCredentials {
-        api_key_encrypted: encrypted_api_key,
-        steam_id: steam_id.clone(),
-        saved_at: chrono::Utc::now().to_rfc3339(),
-        nonce,
-    };
+    // Crea credenziale per Steam
+    let mut credential = crate::profiles::PlainCredential::new(
+        crate::profiles::StoreType::Steam,
+        steam_id.clone(),
+        api_key
+    );
     
-    let credentials_path = get_steam_credentials_path()?;
-    let json_data = serde_json::to_string_pretty(&credentials)
-        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    // Aggiungi Steam ID come dato aggiuntivo
+    credential = credential.with_data("steam_id".to_string(), steam_id.clone());
     
-    fs::write(&credentials_path, json_data)
-        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    // Salva tramite il profile manager
+    manager.save_credential_for_active_profile(credential).await
+        .map_err(|e| format!("Errore salvataggio credenziali Steam: {}", e))?;
     
-    debug!("[RUST] ✅ Credenziali Steam salvate in modo sicuro per Steam ID: {}", steam_id);
-    Ok("Credenziali Steam salvate con encryption AES-256".to_string())
+    debug!("[RUST] ✅ Credenziali Steam salvate nel profilo attivo per Steam ID: {}", steam_id);
+    Ok("Credenziali Steam salvate nel profilo attivo".to_string())
 }
 
-// 🔒 Funzione helper per ottenere l'API key decriptata (uso interno)
+// 🔒 Funzione helper per ottenere l'API key decriptata (uso interno) - AGGIORNATO PER PROFILI
+async fn get_decrypted_api_key_from_profile(
+    profile_manager: &crate::profiles::ProfileManager
+) -> Result<(String, String), String> {
+    match profile_manager.load_credential_for_active_profile(crate::profiles::StoreType::Steam).await {
+        Ok(Some(credential)) => {
+            let steam_id = credential.additional_data.get("steam_id")
+                .unwrap_or(&credential.username)
+                .clone();
+            
+            // Verifica integrità delle credenziali
+            verify_credential_integrity(&credential.password, &steam_id)?;
+            
+            Ok((credential.password, steam_id))
+        },
+        Ok(None) => {
+            Err("Nessuna credenziale Steam salvata nel profilo attivo".to_string())
+        },
+        Err(e) => {
+            Err(format!("Errore caricamento credenziali Steam: {}", e))
+        }
+    }
+}
+
+// 🔒 Funzione helper interna per get_steam_games
+async fn get_steam_games_internal(api_key: String, steam_id: String, force_refresh: Option<bool>) -> Result<Vec<SteamGame>, String> {
+    let force = force_refresh.unwrap_or(false);
+    debug!("[RUST] get_steam_games_internal called with force: {}", force);
+    
+    // Se force refresh è attivo, pulisci la cache
+    if force {
+        debug!("[RUST] Force refresh - clearing games cache");
+        GAME_CACHE.invalidate_all();
+    }
+    
+    // 🔒 Se non vengono passate credenziali, prova a caricarle dai file criptati (legacy)
+    let (actual_api_key, actual_steam_id) = if api_key.is_empty() || steam_id.is_empty() {
+        debug!("[RUST] 🔒 Caricamento credenziali legacy...");
+        match get_decrypted_api_key().await {
+            Ok((key, id)) => {
+                debug!("[RUST] ✅ Credenziali legacy caricate");
+                (key, id)
+            }
+            Err(e) => {
+                debug!("[RUST] ⚠️ Impossibile caricare credenziali legacy: {}", e);
+                (api_key, steam_id)
+            }
+        }
+    } else {
+        (api_key, steam_id)
+    };
+    
+    // Continua con la logica esistente...
+    // [Il resto della funzione rimane uguale]
+    
+    // Se abbiamo API key e Steam ID, usa l'API reale
+    if !actual_api_key.is_empty() && !actual_steam_id.is_empty() {
+        // SECURITY FIX: Removed API key partial logging to prevent exposure
+        info!("[RUST] Using authenticated Steam API connection");
+        
+        let url = format!(
+            "https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key={}&steamid={}&format=json&include_appinfo=true&include_played_free_games=true",
+            actual_api_key, actual_steam_id
+        );
+        
+        // 🔧 FIX: Crea client con timeout configurato
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(30))
+            .build()
+            .map_err(|e| format!("Errore creazione client HTTP: {}", e))?;
+        
+        debug!("[RUST] 📡 Chiamata Steam API con timeout 30s...");
+        match client.get(&url).send().await {
+            Ok(response) => {
+                let status = response.status();
+                debug!("[RUST] Steam API response status: {}", status);
+                
+                if !status.is_success() {
+                    let error_text = response.text().await.unwrap_or_else(|_| "Unable to read error".to_string());
+                    debug!("[RUST] ❌ Steam API error: {}", error_text);
+                    // Continua con il fallback
+                } else {
+                    match response.json::<serde_json::Value>().await {
+                        Ok(json) => {
+                            // DEBUG: Mostra la struttura della risposta
+                            debug!("[RUST] 🔍 DEBUG: Response structure: {:?}", json);
+                            
+                            // Verifica se c'è un errore nella risposta JSON
+                            if let Some(error) = json["response"]["error"].as_str() {
+                                debug!("[RUST] ❌ Steam API returned error: {}", error);
+                            } else if let Some(games_array) = json["response"]["games"].as_array() {
+                                debug!("[RUST] ✅ Retrieved {} games from Steam API", games_array.len());
+                            
+                            let steam_games: Vec<SteamGame> = games_array.iter()
+                                .filter_map(|game| {
+                                    if let (Some(appid), Some(name)) = (
+                                        game["appid"].as_u64(),
+                                        game["name"].as_str()
+                                    ) {
+                                        let appid_u32 = appid as u32;
+                                        let game_name = name.to_string();
+                                        
+                                        // 🎮 Rilevamento intelligente delle caratteristiche
+                                        let is_vr = detect_vr_game(&game_name, appid_u32);
+                                        let is_installed = detect_steam_installation(appid_u32);
+                                        let engine = detect_game_engine(&game_name, appid_u32);
+                                        let supported_languages = detect_supported_languages(&game_name, appid_u32);
+                                        
+                                        Some(SteamGame {
+                                            appid: appid_u32,
+                                            name: game_name,
+                                            playtime_forever: game["playtime_forever"].as_u64().unwrap_or(0) as u32,
+                                            img_icon_url: game["img_icon_url"].as_str().unwrap_or("").to_string(),
+                                            img_logo_url: "".to_string(),
+                                            last_played: game["rtime_last_played"].as_u64().unwrap_or(0),
+                                            is_installed,           // 💾 Rilevamento automatico installazione
+                                            is_shared: false,
+                                            is_vr,                  // 🥽 Rilevamento automatico VR
+                                            engine,                 // 🎮 Rilevamento automatico engine
+                                            genres: vec![],
+                                            categories: vec![],
+                                            short_description: "".to_string(),
+                                            is_free: false,
+                                            header_image: format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg", appid_u32),
+                                            library_capsule: "".to_string(),
+                                            developers: vec![],
+                                            publishers: vec![],
+                                            release_date: SteamApiReleaseDate::default(),
+                                            supported_languages,    // 🌍 Rilevamento automatico lingue
+                                            pc_requirements: SteamApiRequirements::default(),
+                                            dlc: vec![],
+                                            how_long_to_beat: None,
+                                        })
+                                    } else {
+                                        None
+                                    }
+                                })
+                                .collect();
+                            
+                            debug!("[RUST] ✅ Processed {} games successfully", steam_games.len());
+                            return Ok(steam_games);
+                            } else {
+                                debug!("[RUST] ❌ Steam API returned no games array");
+                            }
+                        }
+                        Err(e) => {
+                            debug!("[RUST] ❌ Failed to parse Steam API response: {}", e);
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                debug!("[RUST] ❌ Failed to call Steam API: {}", e);
+                // Controlla se è un timeout
+                if e.is_timeout() {
+                    debug!("[RUST] ⏰ Timeout rilevato - API Steam non risponde entro 30s");
+                } else if e.is_connect() {
+                    debug!("[RUST] 🌐 Errore di connessione - verifica la connessione internet");
+                } else {
+                    debug!("[RUST] 🔧 Errore generico: {}", e);
+                }
+            }
+        }
+    }
+    
+    // Fallback: Leggi dal file locale
+    debug!("[RUST] Falling back to local file: ../steam_owned_games.json");
+    
+    let file_path = "../steam_owned_games.json";
+    let file_content = match std::fs::read_to_string(file_path) {
+        Ok(content) => {
+            debug!("[RUST] ✅ File loaded successfully, size: {} bytes", content.len());
+            content
+        },
+        Err(e) => {
+            let error_msg = format!("Failed to read steam_owned_games.json: {}", e);
+            debug!("[RUST] ❌ {}", error_msg);
+            return Err(error_msg);
+        }
+    };
+    
+    debug!("[RUST] Parsing JSON from file...");
+    let games_data: Value = match serde_json::from_str(&file_content) {
+        Ok(data) => {
+            debug!("[RUST] ✅ JSON parsed successfully");
+            data
+        },
+        Err(e) => {
+            let error_msg = format!("Failed to parse JSON: {}", e);
+            debug!("[RUST] ❌ {}", error_msg);
+            return Err(error_msg);
+        }
+    };
+    
+    let mut all_games = Vec::new();
+    if let Some(games) = games_data.as_array() {
+        debug!("[RUST] Processing {} games from file...", games.len());
+        for game in games.iter() { // Processa tutti i giochi
+            if let Some(appid) = game["appid"].as_u64() {
+                let game_name = game["name"].as_str().unwrap_or("Unknown").to_string();
+                let appid_u32 = appid as u32;
+                
+                // 🎮 Rilevamento intelligente delle caratteristiche
+                let is_vr = detect_vr_game(&game_name, appid_u32);
+                let is_installed = detect_steam_installation(appid_u32);
+                let engine = detect_game_engine(&game_name, appid_u32);
+                let supported_languages = detect_supported_languages(&game_name, appid_u32);
+                
+                all_games.push(SteamGame {
+                    appid: appid_u32,
+                    name: game_name,
+                    playtime_forever: game["playtime_forever"].as_u64().unwrap_or(0) as u32,
+                    img_icon_url: game["img_icon_url"].as_str().unwrap_or("").to_string(),
+                    img_logo_url: "".to_string(),
+                    last_played: game["rtime_last_played"].as_u64().unwrap_or(0),
+                    is_installed,           // 💾 Rilevamento automatico installazione
+                    is_shared: false,
+                    is_vr,                  // 🥽 Rilevamento automatico VR
+                    engine,                 // 🎮 Rilevamento automatico engine
+                    genres: vec![],
+                    categories: vec![],
+                    short_description: "".to_string(),
+                    is_free: false,
+                    header_image: format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg", appid_u32),
+                    library_capsule: "".to_string(),
+                    developers: vec![],
+                    publishers: vec![],
+                    release_date: SteamApiReleaseDate::default(),
+                    supported_languages,    // 🌍 Rilevamento automatico lingue
+                    pc_requirements: SteamApiRequirements::default(),
+                    dlc: vec![],
+                    how_long_to_beat: None,
+                });
+            }
+        }
+    }
+    
+    debug!("[RUST] ✅ Loaded {} games from local file", all_games.len());
+    Ok(all_games)
+}
+
+// 🔒 Funzione helper per compatibilità con il sistema legacy
 async fn get_decrypted_api_key() -> Result<(String, String), String> {
     // SECURITY FIX: Use secure credential loading with integrity verification
     load_credentials_securely()
 }
 
-// Comando per caricare le credenziali Steam
+// Comando per caricare le credenziali Steam - AGGIORNATO PER PROFILI
 #[tauri::command]
-pub async fn load_steam_credentials() -> Result<SteamCredentials, String> {
+pub async fn load_steam_credentials(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<SteamCredentials, String> {
     debug!("[RUST] load_steam_credentials called");
     
-    let credentials_path = get_steam_credentials_path()?;
+    let manager = profile_state.manager.lock().await;
     
-    if !credentials_path.exists() {
-        return Err("Nessuna credenziale Steam salvata".to_string());
+    // Carica credenziali Steam dal profilo attivo
+    match manager.load_credential_for_active_profile(crate::profiles::StoreType::Steam).await {
+        Ok(Some(credential)) => {
+            // Estrai Steam ID dai dati aggiuntivi
+            let steam_id = credential.additional_data.get("steam_id")
+                .unwrap_or(&credential.username)
+                .clone();
+            
+            // Cripta l'API key per compatibilità con il formato esistente
+            let (encrypted_api_key, nonce) = encrypt_api_key(&credential.password)?;
+            
+            let credentials = SteamCredentials {
+                api_key_encrypted: encrypted_api_key,
+                steam_id: steam_id.clone(),
+                saved_at: credential.created_at.to_rfc3339(),
+                nonce,
+            };
+            
+            debug!("[RUST] ✅ Credenziali Steam caricate dal profilo attivo per Steam ID: {}", steam_id);
+            Ok(credentials)
+        },
+        Ok(None) => {
+            Err("Nessuna credenziale Steam salvata nel profilo attivo".to_string())
+        },
+        Err(e) => {
+            Err(format!("Errore caricamento credenziali Steam: {}", e))
+        }
     }
-    
-    let json_data = fs::read_to_string(&credentials_path)
-        .map_err(|e| format!("Errore lettura file: {}", e))?;
-    
-    let credentials: SteamCredentials = serde_json::from_str(&json_data)
-        .map_err(|e| format!("Errore parsing JSON: {}", e))?;
-    
-    // 🔒 NOTA: Per sicurezza, NON decriptiamo l'API key qui
-    // La decryption avverrà solo quando necessario
-    debug!("[RUST] ✅ Credenziali Steam caricate per Steam ID: {}", credentials.steam_id);
-    Ok(credentials)
 }
 
-// Comando per cancellare le credenziali Steam corrupted
+// Comando per cancellare le credenziali Steam - AGGIORNATO PER PROFILI
 #[tauri::command]
-pub async fn clear_steam_credentials() -> Result<String, String> {
+pub async fn clear_steam_credentials(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<String, String> {
     debug!("[RUST] clear_steam_credentials called");
     
-    let credentials_path = get_steam_credentials_path()?;
+    let mut manager = profile_state.manager.lock().await;
     
-    if credentials_path.exists() {
-        match fs::remove_file(&credentials_path) {
-            Ok(_) => {
-                info!("[RUST] ✅ Credenziali Steam cancellate: {}", credentials_path.display());
-                Ok("Credenziali Steam cancellate con successo".to_string())
-            }
-            Err(e) => {
+    // Rimuovi credenziali Steam dal profilo attivo
+    match manager.remove_credential_for_active_profile(crate::profiles::StoreType::Steam).await {
+        Ok(_) => {
+            info!("[RUST] ✅ Credenziali Steam cancellate dal profilo attivo");
+            Ok("Credenziali Steam cancellate con successo dal profilo attivo".to_string())
+        },
+        Err(e) => {
+            // Se non ci sono credenziali da rimuovere, non è un errore
+            if e.to_string().contains("not found") || e.to_string().contains("non trovata") {
+                debug!("[RUST] ⚠️ Nessuna credenziale Steam trovata nel profilo attivo");
+                Ok("Nessuna credenziale Steam da cancellare nel profilo attivo".to_string())
+            } else {
                 error!("[RUST] ❌ Errore cancellazione credenziali Steam: {}", e);
                 Err(format!("Errore cancellazione credenziali: {}", e))
             }
         }
-    } else {
-        debug!("[RUST] ⚠️ File credenziali Steam non trovato: {}", credentials_path.display());
-        Ok("Nessuna credenziale Steam da cancellare".to_string())
     }
 }
 

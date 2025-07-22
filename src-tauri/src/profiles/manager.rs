@@ -70,6 +70,8 @@ pub struct ExportedProfile {
     pub signature: String,
 }
 
+
+
 /// Metadati export profilo
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExportMetadata {
@@ -87,6 +89,101 @@ pub struct ExportMetadata {
     pub has_avatar: bool,
     /// Numero credenziali
     pub credentials_count: usize,
+}
+
+/// Risultato migrazione credenziali legacy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LegacyMigrationResult {
+    /// Store migrati con successo
+    pub migrated_stores: Vec<String>,
+    /// Store falliti con errore
+    pub failed_stores: Vec<(String, String)>,
+    /// Totale migrati
+    pub total_migrated: u32,
+    /// Totale falliti
+    pub total_failed: u32,
+    /// Timestamp migrazione
+    pub migrated_at: DateTime<Utc>,
+}
+
+impl Default for LegacyMigrationResult {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl LegacyMigrationResult {
+    pub fn new() -> Self {
+        Self {
+            migrated_stores: Vec::new(),
+            failed_stores: Vec::new(),
+            total_migrated: 0,
+            total_failed: 0,
+            migrated_at: Utc::now(),
+        }
+    }
+}
+
+/// Informazioni credenziale legacy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LegacyCredentialInfo {
+    /// Nome store
+    pub store: String,
+    /// Percorso file
+    pub file_path: String,
+    /// Data creazione
+    pub created_at: DateTime<Utc>,
+    /// Dimensione file
+    pub file_size: u64,
+}
+
+/// Informazioni impostazioni legacy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LegacySettingsInfo {
+    /// Tipo di file
+    pub file_type: String,
+    /// Percorso file
+    pub file_path: String,
+    /// Data creazione
+    pub created_at: DateTime<Utc>,
+    /// Dimensione file
+    pub file_size: u64,
+}
+
+/// Risultato migrazione impostazioni legacy
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LegacySettingsMigrationResult {
+    /// File migrati con successo
+    pub migrated_files: Vec<String>,
+    /// File falliti con errore
+    pub failed_files: Vec<(String, String)>,
+    /// Impostazioni migrate
+    pub migrated_settings: Vec<String>,
+    /// Totale migrati
+    pub total_migrated: u32,
+    /// Totale falliti
+    pub total_failed: u32,
+    /// Timestamp migrazione
+    pub migrated_at: DateTime<Utc>,
+}
+
+impl Default for LegacySettingsMigrationResult {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl LegacySettingsMigrationResult {
+    pub fn new() -> Self {
+        Self {
+            migrated_files: Vec::new(),
+            failed_files: Vec::new(),
+            migrated_settings: Vec::new(),
+            total_migrated: 0,
+            total_failed: 0,
+            migrated_at: Utc::now(),
+        }
+    }
 }
 
 /// Manager principale per gestione profili utente
@@ -889,6 +986,357 @@ impl ProfileManager {
     pub async fn get_storage_stats(&self) -> ProfileResult<crate::profiles::storage::StorageStats> {
         self.storage.get_storage_stats().await
             .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))
+    }
+
+    /// Salva credenziale per il profilo attivo
+    pub async fn save_credential_for_active_profile(&mut self, credential: crate::profiles::credential_manager::PlainCredential) -> ProfileResult<()> {
+        if let Some(profile) = &mut self.current_profile {
+            // Crea credenziale crittografata
+            let encrypted = EncryptedCredential {
+                store: credential.store.as_str().to_string(),
+                encrypted_data: serde_json::to_string(&credential)
+                    .map_err(|e| ProfileError::CorruptedProfile(format!("Errore serializzazione credenziale: {}", e)))?,
+                nonce: String::new(),
+                salt: String::new(),
+                created_at: credential.created_at,
+                updated_at: credential.last_used,
+                encryption_version: 1,
+            };
+
+            profile.add_credential(encrypted);
+            
+            // Salva profilo aggiornato
+            self.storage.save_profile(profile, "").await
+                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+
+            Ok(())
+        } else {
+            Err(ProfileError::Unauthorized)
+        }
+    }
+
+    /// Carica credenziale per il profilo attivo
+    pub async fn load_credential_for_active_profile(&self, store: crate::profiles::credential_manager::StoreType) -> ProfileResult<Option<crate::profiles::credential_manager::PlainCredential>> {
+        if let Some(profile) = &self.current_profile {
+            if let Some(encrypted) = profile.get_credential(store.as_str()) {
+                // Deserializza credenziale
+                let credential: crate::profiles::credential_manager::PlainCredential = serde_json::from_str(&encrypted.encrypted_data)
+                    .map_err(|e| ProfileError::CorruptedProfile(format!("Formato credenziale invalido: {}", e)))?;
+
+                Ok(Some(credential))
+            } else {
+                Ok(None)
+            }
+        } else {
+            Err(ProfileError::Unauthorized)
+        }
+    }
+
+    /// Rimuove credenziale per il profilo attivo
+    pub async fn remove_credential_for_active_profile(&mut self, store: crate::profiles::credential_manager::StoreType) -> ProfileResult<()> {
+        if let Some(profile) = &mut self.current_profile {
+            profile.remove_credential(store.as_str());
+            
+            // Salva profilo aggiornato
+            self.storage.save_profile(profile, "").await
+                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+
+            Ok(())
+        } else {
+            Err(ProfileError::Unauthorized)
+        }
+    }
+
+    /// Migra credenziali legacy al profilo attivo
+    pub async fn migrate_legacy_credentials(&mut self) -> ProfileResult<LegacyMigrationResult> {
+        let mut result = LegacyMigrationResult::new();
+
+        // Migra credenziali Steam legacy
+        match self.migrate_steam_legacy_credentials().await {
+            Ok(migrated) => {
+                if migrated {
+                    result.migrated_stores.push("Steam".to_string());
+                    result.total_migrated += 1;
+                }
+            }
+            Err(e) => {
+                result.failed_stores.push(("Steam".to_string(), e.to_string()));
+                result.total_failed += 1;
+            }
+        }
+
+        // Qui si possono aggiungere altre migrazioni per Epic, Ubisoft, etc.
+        
+        println!("[PROFILE MANAGER] 🔄 Migrazione legacy completata: {} successi, {} fallimenti", 
+                 result.total_migrated, result.total_failed);
+
+        Ok(result)
+    }
+
+    /// Migra credenziali Steam legacy
+    async fn migrate_steam_legacy_credentials(&mut self) -> ProfileResult<bool> {
+        // Percorso file credenziali Steam legacy
+        let app_data = std::env::var("APPDATA")
+            .map_err(|_| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "APPDATA not found")))?;
+        
+        let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+        let credentials_path = app_dir.join("steam_credentials.json");
+
+        // Verifica se esistono credenziali legacy
+        if !credentials_path.exists() {
+            return Ok(false); // Nessuna credenziale da migrare
+        }
+
+        // Leggi credenziali legacy
+        let content = tokio::fs::read_to_string(&credentials_path).await
+            .map_err(|e| ProfileError::IoError(e))?;
+
+        let legacy_credentials: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| ProfileError::CorruptedProfile(format!("Formato credenziali legacy invalido: {}", e)))?;
+
+        // Estrai dati dalle credenziali legacy
+        let encrypted_api_key = legacy_credentials["api_key_encrypted"].as_str()
+            .ok_or_else(|| ProfileError::CorruptedProfile("API key mancante nelle credenziali legacy".to_string()))?;
+        let nonce = legacy_credentials["nonce"].as_str()
+            .ok_or_else(|| ProfileError::CorruptedProfile("Nonce mancante nelle credenziali legacy".to_string()))?;
+        let steam_id = legacy_credentials["steam_id"].as_str()
+            .ok_or_else(|| ProfileError::CorruptedProfile("Steam ID mancante nelle credenziali legacy".to_string()))?;
+
+        // Decrittografa l'API key usando le funzioni legacy
+        let api_key = self.decrypt_legacy_api_key(encrypted_api_key, nonce)?;
+
+        // Crea credenziale per il nuovo sistema
+        let credential = crate::profiles::credential_manager::PlainCredential::new(
+            crate::profiles::credential_manager::StoreType::Steam,
+            steam_id.to_string(),
+            api_key,
+        ).with_data("steam_id".to_string(), steam_id.to_string());
+
+        // Salva nel profilo attivo
+        self.save_credential_for_active_profile(credential).await?;
+
+        // Crea backup delle credenziali legacy prima di eliminarle
+        let backup_path = credentials_path.with_extension("json.backup");
+        if let Err(e) = tokio::fs::copy(&credentials_path, &backup_path).await {
+            println!("[PROFILE MANAGER] ⚠️ Impossibile creare backup credenziali legacy: {}", e);
+        }
+
+        // Elimina credenziali legacy
+        if let Err(e) = tokio::fs::remove_file(&credentials_path).await {
+            println!("[PROFILE MANAGER] ⚠️ Impossibile eliminare credenziali legacy: {}", e);
+        }
+
+        println!("[PROFILE MANAGER] ✅ Credenziali Steam migrate con successo");
+        Ok(true)
+    }
+
+    /// Decrittografa API key legacy usando le funzioni del sistema legacy
+    fn decrypt_legacy_api_key(&self, encrypted_key: &str, nonce: &str) -> ProfileResult<String> {
+        // Implementazione semplificata - in un sistema reale dovremmo
+        // importare le funzioni di decrittografia dal modulo Steam
+        // Per ora restituiamo un errore che indica che serve implementazione
+        Err(ProfileError::EncryptionError(
+            "Decrittografia legacy non ancora implementata - serve integrazione con funzioni Steam".to_string()
+        ))
+    }
+
+    /// Verifica se esistono credenziali legacy da migrare
+    pub async fn has_legacy_credentials(&self) -> ProfileResult<bool> {
+        let app_data = std::env::var("APPDATA")
+            .map_err(|_| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "APPDATA not found")))?;
+        
+        let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+        let steam_credentials_path = app_dir.join("steam_credentials.json");
+
+        Ok(steam_credentials_path.exists())
+    }
+
+    /// Ottiene informazioni sulle credenziali legacy disponibili
+    pub async fn get_legacy_credentials_info(&self) -> ProfileResult<Vec<LegacyCredentialInfo>> {
+        let mut info = Vec::new();
+
+        // Controlla credenziali Steam legacy
+        if let Ok(true) = self.has_legacy_credentials().await {
+            let app_data = std::env::var("APPDATA")
+                .map_err(|_| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "APPDATA not found")))?;
+            
+            let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+            let credentials_path = app_dir.join("steam_credentials.json");
+
+            if let Ok(metadata) = tokio::fs::metadata(&credentials_path).await {
+                info.push(LegacyCredentialInfo {
+                    store: "Steam".to_string(),
+                    file_path: credentials_path.to_string_lossy().to_string(),
+                    created_at: metadata.created().ok()
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|d| chrono::DateTime::from_timestamp(d.as_secs() as i64, 0))
+                        .flatten()
+                        .unwrap_or_else(|| chrono::Utc::now()),
+                    file_size: metadata.len(),
+                });
+            }
+        }
+
+        Ok(info)
+    }
+
+    /// Verifica se esistono impostazioni legacy da migrare
+    pub async fn has_legacy_settings(&self) -> ProfileResult<bool> {
+        let app_data = std::env::var("APPDATA")
+            .map_err(|_| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "APPDATA not found")))?;
+        
+        let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+        
+        // Controlla vari possibili file di impostazioni legacy
+        let legacy_files = vec![
+            app_dir.join("preferences.json"),
+            app_dir.join("settings.json"),
+            app_dir.join("config.json"),
+            app_dir.join("user_preferences.json"),
+        ];
+
+        for file in legacy_files {
+            if file.exists() {
+                return Ok(true);
+            }
+        }
+
+        Ok(false)
+    }
+
+    /// Ottiene informazioni sulle impostazioni legacy disponibili
+    pub async fn get_legacy_settings_info(&self) -> ProfileResult<Vec<LegacySettingsInfo>> {
+        let mut info = Vec::new();
+
+        let app_data = std::env::var("APPDATA")
+            .map_err(|_| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "APPDATA not found")))?;
+        
+        let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+        
+        // Controlla vari possibili file di impostazioni legacy
+        let legacy_files = vec![
+            ("preferences.json", "Preferenze utente"),
+            ("settings.json", "Impostazioni applicazione"),
+            ("config.json", "Configurazione generale"),
+            ("user_preferences.json", "Preferenze personalizzate"),
+        ];
+
+        for (filename, description) in legacy_files {
+            let file_path = app_dir.join(filename);
+            if file_path.exists() {
+                if let Ok(metadata) = tokio::fs::metadata(&file_path).await {
+                    info.push(LegacySettingsInfo {
+                        file_type: description.to_string(),
+                        file_path: file_path.to_string_lossy().to_string(),
+                        created_at: metadata.created().ok()
+                            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                            .map(|d| chrono::DateTime::from_timestamp(d.as_secs() as i64, 0))
+                            .flatten()
+                            .unwrap_or_else(|| chrono::Utc::now()),
+                        file_size: metadata.len(),
+                    });
+                }
+            }
+        }
+
+        Ok(info)
+    }
+
+    /// Migra impostazioni legacy al profilo attivo
+    pub async fn migrate_legacy_settings(&mut self, settings_manager: &mut crate::profiles::settings_manager::ProfileSettingsManager) -> ProfileResult<LegacySettingsMigrationResult> {
+        let mut result = LegacySettingsMigrationResult::new();
+
+        if let Some(profile) = &self.current_profile {
+            let profile_id = profile.id.clone();
+
+            // Cerca file di impostazioni legacy
+            let app_data = std::env::var("APPDATA")
+                .map_err(|_| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::NotFound, "APPDATA not found")))?;
+            
+            let app_dir = std::path::Path::new(&app_data).join("GameStringer");
+            
+            // Prova a migrare da diversi possibili file legacy
+            let legacy_files = vec![
+                app_dir.join("preferences.json"),
+                app_dir.join("settings.json"),
+                app_dir.join("config.json"),
+                app_dir.join("user_preferences.json"),
+            ];
+
+            for legacy_file in legacy_files {
+                if legacy_file.exists() {
+                    match self.migrate_settings_from_file(&legacy_file, &profile_id, settings_manager).await {
+                        Ok(migrated_settings) => {
+                            result.migrated_files.push(legacy_file.to_string_lossy().to_string());
+                            result.migrated_settings.extend(migrated_settings);
+                            result.total_migrated += 1;
+                        }
+                        Err(e) => {
+                            result.failed_files.push((
+                                legacy_file.to_string_lossy().to_string(),
+                                e.to_string()
+                            ));
+                            result.total_failed += 1;
+                        }
+                    }
+                }
+            }
+
+            println!("[PROFILE MANAGER] 🔄 Migrazione impostazioni completata: {} successi, {} fallimenti", 
+                     result.total_migrated, result.total_failed);
+        } else {
+            return Err(ProfileError::Unauthorized);
+        }
+
+        Ok(result)
+    }
+
+    /// Migra impostazioni da un file specifico
+    async fn migrate_settings_from_file(
+        &self,
+        file_path: &std::path::Path,
+        profile_id: &str,
+        settings_manager: &mut crate::profiles::settings_manager::ProfileSettingsManager
+    ) -> ProfileResult<Vec<String>> {
+        let content = tokio::fs::read_to_string(file_path).await
+            .map_err(|e| ProfileError::IoError(e))?;
+
+        let legacy_data: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| ProfileError::CorruptedProfile(format!("Formato impostazioni legacy invalido: {}", e)))?;
+
+        // Usa il sistema di migrazione esistente nel ProfileSettingsManager
+        match settings_manager.migrate_legacy_settings(legacy_data).await {
+            Ok(profile_settings) => {
+                // Salva le impostazioni migrate nel profilo
+                settings_manager.save_profile_settings(profile_id, &profile_settings).await?;
+
+                // Crea backup del file legacy
+                let backup_path = file_path.with_extension("json.backup");
+                if let Err(e) = tokio::fs::copy(file_path, &backup_path).await {
+                    println!("[PROFILE MANAGER] ⚠️ Impossibile creare backup impostazioni legacy: {}", e);
+                }
+
+                // Elimina file legacy
+                if let Err(e) = tokio::fs::remove_file(file_path).await {
+                    println!("[PROFILE MANAGER] ⚠️ Impossibile eliminare impostazioni legacy: {}", e);
+                }
+
+                // Restituisce lista delle impostazioni migrate
+                let migrated_settings = vec![
+                    format!("Lingua: {}", profile_settings.language),
+                    format!("Tema: {:?}", profile_settings.theme),
+                    format!("Auto-login: {}", profile_settings.auto_login),
+                    format!("Notifiche desktop: {}", profile_settings.notifications.desktop_enabled),
+                    format!("Auto-refresh libreria: {}", profile_settings.game_library.auto_refresh),
+                ];
+
+                println!("[PROFILE MANAGER] ✅ Impostazioni migrate da: {}", file_path.display());
+                Ok(migrated_settings)
+            }
+            Err(e) => {
+                Err(ProfileError::CorruptedProfile(format!("Errore migrazione impostazioni: {}", e)))
+            }
+        }
     }
 }
 

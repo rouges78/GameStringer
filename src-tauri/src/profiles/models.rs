@@ -114,14 +114,14 @@ pub struct LibrarySettings {
 }
 
 /// Vista libreria
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum LibraryView {
     Grid,
     List,
 }
 
 /// Ordinamento libreria
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum LibrarySort {
     Alphabetical,
     LastPlayed,
@@ -360,5 +360,184 @@ impl CreateProfileRequest {
         }
         
         Ok(())
+    }
+}
+
+/// Statistiche generali del sistema profili
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfilesSystemStats {
+    /// Numero totale di profili
+    pub total_profiles: u32,
+    /// Numero di profili attivi (usati di recente)
+    pub active_profiles: u32,
+    /// Numero di profili bloccati
+    pub locked_profiles: u32,
+    /// Dimensione totale dati profili (in bytes)
+    pub total_data_size: u64,
+    /// Numero totale di credenziali salvate
+    pub total_credentials: u32,
+    /// Numero totale di backup
+    pub total_backups: u32,
+    /// Ultimo controllo integrità
+    pub last_integrity_check: Option<DateTime<Utc>>,
+    /// Statistiche di utilizzo
+    pub usage_stats: SystemUsageStats,
+}
+
+/// Statistiche di utilizzo del sistema
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemUsageStats {
+    /// Tempo totale di utilizzo (in secondi)
+    pub total_usage_time: u64,
+    /// Numero di autenticazioni totali
+    pub total_authentications: u64,
+    /// Numero di cambi profilo
+    pub profile_switches: u64,
+    /// Numero di export/import
+    pub export_import_operations: u64,
+    /// Errori di autenticazione
+    pub authentication_errors: u64,
+}
+
+/// Controllo salute del sistema profili
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfilesHealthCheck {
+    /// Stato generale del sistema
+    pub overall_status: HealthStatus,
+    /// Controlli individuali
+    pub checks: Vec<HealthCheckResult>,
+    /// Raccomandazioni per miglioramenti
+    pub recommendations: Vec<String>,
+    /// Timestamp del controllo
+    pub checked_at: DateTime<Utc>,
+}
+
+/// Stato di salute
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum HealthStatus {
+    /// Tutto funziona correttamente
+    Healthy,
+    /// Ci sono avvisi ma il sistema funziona
+    Warning,
+    /// Ci sono errori critici
+    Critical,
+}
+
+/// Risultato di un controllo di salute
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HealthCheckResult {
+    /// Nome del controllo
+    pub check_name: String,
+    /// Stato del controllo
+    pub status: HealthStatus,
+    /// Messaggio descrittivo
+    pub message: String,
+    /// Dettagli aggiuntivi
+    pub details: Option<String>,
+}
+
+/// Configurazione del sistema profili
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfilesSystemConfig {
+    /// Timeout sessione di default (in minuti)
+    pub default_session_timeout: u32,
+    /// Numero massimo di tentativi di autenticazione
+    pub max_auth_attempts: u32,
+    /// Durata blocco dopo tentativi falliti (in minuti)
+    pub lockout_duration: u32,
+    /// Abilita backup automatico
+    pub auto_backup_enabled: bool,
+    /// Intervallo backup automatico (in ore)
+    pub auto_backup_interval: u32,
+    /// Numero massimo di backup da mantenere
+    pub max_backups_to_keep: u32,
+    /// Abilita controlli integrità automatici
+    pub auto_integrity_check: bool,
+    /// Intervallo controlli integrità (in ore)
+    pub integrity_check_interval: u32,
+    /// Abilita pulizia automatica dati temporanei
+    pub auto_cleanup_temp_data: bool,
+    /// Intervallo pulizia dati temporanei (in ore)
+    pub cleanup_interval: u32,
+    /// Dimensione massima cache per profilo (in MB)
+    pub max_cache_size_mb: u32,
+    /// Abilita logging dettagliato
+    pub verbose_logging: bool,
+}
+
+impl Default for ProfilesSystemStats {
+    fn default() -> Self {
+        Self {
+            total_profiles: 0,
+            active_profiles: 0,
+            locked_profiles: 0,
+            total_data_size: 0,
+            total_credentials: 0,
+            total_backups: 0,
+            last_integrity_check: None,
+            usage_stats: SystemUsageStats::default(),
+        }
+    }
+}
+
+impl Default for SystemUsageStats {
+    fn default() -> Self {
+        Self {
+            total_usage_time: 0,
+            total_authentications: 0,
+            profile_switches: 0,
+            export_import_operations: 0,
+            authentication_errors: 0,
+        }
+    }
+}
+
+impl Default for ProfilesSystemConfig {
+    fn default() -> Self {
+        Self {
+            default_session_timeout: 60, // 1 ora
+            max_auth_attempts: 5,
+            lockout_duration: 15, // 15 minuti
+            auto_backup_enabled: true,
+            auto_backup_interval: 24, // 24 ore
+            max_backups_to_keep: 10,
+            auto_integrity_check: true,
+            integrity_check_interval: 168, // 1 settimana
+            auto_cleanup_temp_data: true,
+            cleanup_interval: 24, // 24 ore
+            max_cache_size_mb: 100,
+            verbose_logging: false,
+        }
+    }
+}
+
+impl ProfilesHealthCheck {
+    /// Crea un nuovo controllo di salute
+    pub fn new() -> Self {
+        Self {
+            overall_status: HealthStatus::Healthy,
+            checks: Vec::new(),
+            recommendations: Vec::new(),
+            checked_at: Utc::now(),
+        }
+    }
+    
+    /// Aggiunge un controllo
+    pub fn add_check(&mut self, check: HealthCheckResult) {
+        // Aggiorna lo stato generale basandosi sui controlli
+        match check.status {
+            HealthStatus::Critical => self.overall_status = HealthStatus::Critical,
+            HealthStatus::Warning if self.overall_status == HealthStatus::Healthy => {
+                self.overall_status = HealthStatus::Warning;
+            },
+            _ => {}
+        }
+        
+        self.checks.push(check);
+    }
+    
+    /// Aggiunge una raccomandazione
+    pub fn add_recommendation(&mut self, recommendation: String) {
+        self.recommendations.push(recommendation);
     }
 }

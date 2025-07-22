@@ -23,6 +23,9 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ProfileHeader } from '@/components/profiles/profile-header';
+import { AuthStatusSidebar } from '@/components/auth/auth-status-sidebar';
+import { ProfileNotifications } from '@/components/profiles/profile-notifications';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -237,6 +240,9 @@ export function MainLayout({ children }: MainLayoutProps) {
             })}
           </nav>
           
+          {/* Auth Status Section */}
+          <AuthStatusSidebar isExpanded={sidebarOpen} />
+          
           {/* System Status Section */}
           <div className="p-2 border-t border-b bg-gradient-to-r from-slate-800/50 to-slate-700/50">
             {sidebarOpen ? (
@@ -334,6 +340,23 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* System Status Indicators */}
+              <div className="hidden lg:flex items-center space-x-3">
+                <div className="flex items-center space-x-1 text-xs">
+                  <div className={`w-2 h-2 ${systemStatus.neuralEngine.color} rounded-full animate-pulse`}></div>
+                  <span className="text-muted-foreground">Neural</span>
+                </div>
+                <div className="flex items-center space-x-1 text-xs">
+                  <div className={`w-2 h-2 ${systemStatus.steamApi.color} rounded-full animate-pulse`}></div>
+                  <span className="text-muted-foreground">Steam</span>
+                </div>
+                <div className="flex items-center space-x-1 text-xs">
+                  <div className={`w-2 h-2 ${systemStatus.cache.color} rounded-full animate-pulse`}></div>
+                  <span className="text-muted-foreground">Cache</span>
+                </div>
+              </div>
+              
+              {/* Version Info */}
               <div className="hidden md:flex items-center space-x-4 text-sm text-muted-foreground">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -343,6 +366,9 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <span className="text-xs">Build #{buildInfo.build}</span>
                 </div>
               </div>
+              
+              {/* Profile Header */}
+              <ProfileHeader />
             </div>
           </header>
 
@@ -351,6 +377,9 @@ export function MainLayout({ children }: MainLayoutProps) {
             {children}
           </main>
         </div>
+        
+        {/* Profile Notifications */}
+        <ProfileNotifications />
       </div>
   );
 }

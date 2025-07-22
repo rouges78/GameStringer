@@ -18,7 +18,9 @@ mod profiles;
 
 use profiles::storage::ProfileStorage;
 use profiles::manager::ProfileManager;
+use profiles::settings_manager::ProfileSettingsManager;
 use commands::profiles::ProfileManagerState;
+use commands::profile_settings::ProfileSettingsManagerState;
 // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
 // mod advanced_ocr;
 // mod translation_backends;
@@ -36,10 +38,17 @@ fn main() {
         manager: std::sync::Arc::new(tokio::sync::Mutex::new(profile_manager)),
     };
 
+    // Inizializza ProfileSettingsManager
+    let settings_manager = ProfileSettingsManager::new("profiles".into()).expect("Failed to initialize settings manager");
+    let settings_state = ProfileSettingsManagerState {
+        manager: std::sync::Arc::new(tokio::sync::Mutex::new(settings_manager)),
+    };
+
     tauri::Builder::default()
         .manage(commands::anti_cheat::AntiCheatState::default())
         .manage(commands::performance::PerformanceOptimizerState::default())
         .manage(profile_state)
+        .manage(settings_state)
         // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
         // .manage(commands::advanced_ocr::AdvancedOCRState::default())
         // .manage(commands::translation_backends::TranslationBackendState::default())
@@ -336,6 +345,7 @@ fn main() {
             commands::profiles::get_current_profile,
             commands::profiles::logout,
             commands::profiles::update_settings,
+            commands::profiles::delete_profile,
             commands::profiles::export_profile,
             commands::profiles::import_profile,
             commands::profiles::validate_export_file,
@@ -346,7 +356,35 @@ fn main() {
             commands::profiles::get_session_time_remaining,
             commands::profiles::can_authenticate,
             commands::profiles::unlock_profile,
-            commands::profiles::get_failed_attempts
+            commands::profiles::get_failed_attempts,
+
+            // Profile Settings Management System
+            commands::profile_settings::load_profile_settings,
+            commands::profile_settings::save_profile_settings,
+            commands::profile_settings::delete_profile_settings,
+            commands::profile_settings::load_global_settings,
+            commands::profile_settings::save_global_settings,
+            commands::profile_settings::migrate_legacy_settings,
+            commands::profile_settings::profile_settings_to_legacy,
+            commands::profile_settings::list_profiles_with_settings,
+            commands::profile_settings::get_current_profile_settings,
+            commands::profile_settings::save_current_profile_settings,
+            commands::profile_settings::initialize_settings_system,
+
+            // Migration System
+            commands::migration::check_legacy_credentials,
+            commands::migration::get_legacy_credentials_info,
+            commands::migration::migrate_legacy_credentials_wizard,
+            commands::migration::backup_legacy_credentials,
+            commands::migration::restore_legacy_credentials,
+            commands::migration::cleanup_legacy_credentials,
+            commands::migration::check_legacy_settings,
+            commands::migration::get_legacy_settings_info,
+            commands::migration::migrate_legacy_settings_to_profile,
+            commands::migration::backup_legacy_settings,
+            commands::migration::cleanup_legacy_settings,
+            commands::migration::migration_wizard,
+
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

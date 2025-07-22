@@ -69,65 +69,123 @@
   - Modificare comandi Tauri per gestione profili
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 3.2 Aggiornare sistema settings per profili
+- [x] 3.2 Aggiornare sistema settings per profili
+
+
+
+
+
+
+
+
+
+
+
+
+
   - Modificare gestione impostazioni per profilo attivo
   - Implementare caricamento/salvataggio settings per profilo
   - Aggiungere migrazione settings esistenti
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
 - [ ] 4. Creare interfaccia utente per gestione profili
-- [ ] 4.1 Creare componente ProfileSelector
+- [x] 4.1 Creare componente ProfileSelector
+
+
+
   - Implementare schermata selezione profilo all'avvio
   - Aggiungere lista profili con avatar e info
   - Creare form autenticazione con password
   - _Requirements: 1.1, 1.4, 5.2_
 
-- [ ] 4.2 Creare componente CreateProfile
+- [x] 4.2 Creare componente CreateProfile
+
   - Implementare form creazione nuovo profilo
   - Aggiungere selezione avatar e validazione nome
   - Creare sistema impostazione password profilo
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 4.3 Creare componente ProfileManager
+- [x] 4.3 Creare componente ProfileManager
+
+
+
   - Implementare pannello gestione profilo corrente
   - Aggiungere opzioni cambio profilo e logout
   - Creare interfaccia export/import profili
   - _Requirements: 2.3, 4.1, 4.2, 4.3_
 
 - [ ] 5. Implementare routing e protezione pagine
-- [ ] 5.1 Creare sistema routing basato su autenticazione
+- [x] 5.1 Creare sistema routing basato su autenticazione
+
+
+
+
+
   - Implementare protezione pagine con controllo profilo attivo
   - Creare redirect automatico a selezione profilo
   - Aggiungere persistenza sessione profilo
   - _Requirements: 1.4, 2.3, 5.2_
 
-- [ ] 5.2 Aggiornare layout applicazione per profili
+
+
+
+- [x] 5.2 Aggiornare layout applicazione per profili
+
   - Modificare header per mostrare profilo attivo
   - Aggiungere menu profilo con opzioni rapide
+
+
   - Implementare indicatori stato autenticazione
   - _Requirements: 3.2, 3.3_
 
 - [ ] 6. Implementare comandi Tauri per profili
-- [ ] 6.1 Creare comandi Tauri per gestione profili
+- [x] 6.1 Creare comandi Tauri per gestione profili
+
+
+
+
+
+
+
+
+
   - Implementare list_profiles, create_profile, authenticate_profile
   - Aggiungere switch_profile, delete_profile
   - Creare export_profile, import_profile
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 4.1, 4.2_
 
-- [ ] 6.2 Aggiornare comandi credenziali esistenti
+- [x] 6.2 Aggiornare comandi credenziali esistenti
+
+
+
+
+
+
+
+
+
+
+
+
   - Modificare save/load credenziali per profilo attivo
   - Aggiornare test connessioni per isolamento profili
   - Implementare pulizia credenziali al cambio profilo
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
 - [ ] 7. Implementare migrazione dati esistenti
-- [ ] 7.1 Creare sistema migrazione credenziali esistenti
+- [x] 7.1 Creare sistema migrazione credenziali esistenti
+
+
+
   - Implementare rilevamento credenziali pre-profili
   - Creare wizard migrazione per primo profilo
   - Aggiungere backup automatico prima migrazione
   - _Requirements: 2.1, 2.2_
 
-- [ ] 7.2 Implementare migrazione settings esistenti
+- [x] 7.2 Implementare migrazione settings esistenti
+
+
+
   - Rilevare impostazioni pre-profili
   - Migrare settings al primo profilo creato
   - Mantenere compatibilità con versioni precedenti

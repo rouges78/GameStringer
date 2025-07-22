@@ -142,6 +142,21 @@ pub async fn update_settings(
     }
 }
 
+/// Comando: Elimina profilo
+#[command]
+pub async fn delete_profile(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+    password: String,
+) -> Result<ProfileResponse<bool>, String> {
+    let mut manager = profile_state.manager.lock().await;
+    
+    match manager.delete_profile(&profile_id, &password).await {
+        Ok(_) => Ok(ProfileResponse::success(true)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
 /// Comando: Esporta profilo in file
 #[command]
 pub async fn export_profile(
@@ -291,6 +306,205 @@ pub async fn get_failed_attempts(
     
     match manager.get_failed_attempts(&name).await {
         Ok(attempts) => Ok(ProfileResponse::success(attempts)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+/// Comando: Ottieni informazioni dettagliate profilo
+#[command]
+pub async fn get_profile_info(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+) -> Result<ProfileResponse<ProfileInfo>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.get_profile_info(&profile_id).await {
+        Ok(Some(info)) => Ok(ProfileResponse::success(info)),
+        Ok(None) => Ok(ProfileResponse::error("Profilo non trovato".to_string())),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Aggiorna avatar profilo
+#[command]
+pub async fn update_profile_avatar(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+    avatar_path: Option<String>,
+) -> Result<ProfileResponse<bool>, String> {
+    let mut manager = profile_state.manager.lock().await;
+    
+    match manager.update_profile_avatar(&profile_id, avatar_path).await {
+        Ok(_) => Ok(ProfileResponse::success(true)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Cambia password profilo
+#[command]
+pub async fn change_profile_password(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+    old_password: String,
+    new_password: String,
+) -> Result<ProfileResponse<bool>, String> {
+    let mut manager = profile_state.manager.lock().await;
+    
+    match manager.change_profile_password(&profile_id, &old_password, &new_password).await {
+        Ok(_) => Ok(ProfileResponse::success(true)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Ottieni statistiche utilizzo profilo
+#[command]
+pub async fn get_profile_usage_stats(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+) -> Result<ProfileResponse<crate::profiles::manager::ProfileUsageStats>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.get_profile_usage_stats(&profile_id).await {
+        Ok(stats) => Ok(ProfileResponse::success(stats)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Verifica integrità profilo
+#[command]
+pub async fn verify_profile_integrity(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+) -> Result<ProfileResponse<bool>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.verify_profile_integrity(&profile_id).await {
+        Ok(is_valid) => Ok(ProfileResponse::success(is_valid)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Ripara profilo corrotto
+#[command]
+pub async fn repair_profile(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+    password: String,
+) -> Result<ProfileResponse<bool>, String> {
+    let mut manager = profile_state.manager.lock().await;
+    
+    match manager.repair_profile(&profile_id, &password).await {
+        Ok(_) => Ok(ProfileResponse::success(true)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Ottieni lista backup profilo
+#[command]
+pub async fn list_profile_backups(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+) -> Result<ProfileResponse<Vec<String>>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.list_profile_backups(&profile_id).await {
+        Ok(backups) => Ok(ProfileResponse::success(backups)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Ripristina profilo da backup
+#[command]
+pub async fn restore_profile_from_backup(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+    backup_path: String,
+    password: String,
+) -> Result<ProfileResponse<bool>, String> {
+    let mut manager = profile_state.manager.lock().await;
+    
+    match manager.restore_profile_from_backup(&profile_id, &backup_path, &password).await {
+        Ok(_) => Ok(ProfileResponse::success(true)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Pulisci dati temporanei profilo
+#[command]
+pub async fn cleanup_profile_temp_data(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+) -> Result<ProfileResponse<u64>, String> {
+    let mut manager = profile_state.manager.lock().await;
+    
+    match manager.cleanup_profile_temp_data(&profile_id).await {
+        Ok(bytes_cleaned) => Ok(ProfileResponse::success(bytes_cleaned)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Ottieni dimensione dati profilo
+#[command]
+pub async fn get_profile_data_size(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+) -> Result<ProfileResponse<u64>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.get_profile_data_size(&profile_id).await {
+        Ok(size) => Ok(ProfileResponse::success(size)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Ottieni statistiche generali sistema profili
+#[command]
+pub async fn get_profiles_system_stats(
+    profile_state: State<'_, ProfileManagerState>,
+) -> Result<ProfileResponse<ProfilesSystemStats>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.get_system_stats().await {
+        Ok(stats) => Ok(ProfileResponse::success(stats)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Verifica salute sistema profili
+#[command]
+pub async fn check_profiles_system_health(
+    profile_state: State<'_, ProfileManagerState>,
+) -> Result<ProfileResponse<ProfilesHealthCheck>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.check_system_health().await {
+        Ok(health) => Ok(ProfileResponse::success(health)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Ottieni configurazione sistema profili
+#[command]
+pub async fn get_profiles_system_config(
+    profile_state: State<'_, ProfileManagerState>,
+) -> Result<ProfileResponse<ProfilesSystemConfig>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.get_system_config().await {
+        Ok(config) => Ok(ProfileResponse::success(config)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
+/// Comando: Aggiorna configurazione sistema profili
+#[command]
+pub async fn update_profiles_system_config(
+    profile_state: State<'_, ProfileManagerState>,
+    config: ProfilesSystemConfig,
+) -> Result<ProfileResponse<bool>, String> {
+    let mut manager = profile_state.manager.lock().await;
+    
+    match manager.update_system_config(config).await {
+        Ok(_) => Ok(ProfileResponse::success(true)),
         Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
     }
 }

@@ -28,3 +28,5 @@ pub mod hltb_manager;
 pub mod launcher;
 pub mod profile_credentials;
 pub mod profiles;
+pub mod profile_settings;
+pub mod migration;
