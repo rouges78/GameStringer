@@ -331,20 +331,22 @@ pub fn detect_game_engine(game_name: &str) -> Option<String> {
 
 
 #[tauri::command]
-pub async fn force_refresh_all_games() -> Result<Vec<GameInfo>, String> {
+pub async fn force_refresh_all_games(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<Vec<GameInfo>, String> {
     log::info!("🔄 FORCE REFRESH: Bypassing all cache, refreshing all games...");
     
     let mut all_games = Vec::new();
     
     // Forza refresh Steam bypassando cache (la funzione force_refresh_steam_games non esiste)
     log::info!("🔄 Tentativo caricamento credenziali Steam per refresh...");
-    match steam::load_steam_credentials().await {
+    match steam::load_steam_credentials(profile_state.clone()).await {
         Ok(credentials) => {
             log::info!("🔑 Credenziali trovate, forzo refresh Steam API...");
             let decrypted_api_key = steam::decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)
                 .map_err(|e| format!("Errore decryption: {}", e))?;
             
-            match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(true)).await { // Force refresh = true
+            match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(true), profile_state.clone()).await { // Force refresh = true
                 Ok(steam_games) => {
                     log::info!("✅ FORCE REFRESH: Trovati {} giochi Steam con dati freschi", steam_games.len());
                     
@@ -639,7 +641,9 @@ async fn load_games_from_cache() -> Result<Vec<GameInfo>, String> {
 }
 
 #[tauri::command]
-pub async fn get_games() -> Result<Vec<GameInfo>, String> {
+pub async fn get_games(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<Vec<GameInfo>, String> {
     log::info!("🎮 Recupero lista giochi completa...");
     
     // 🚀 NUOVO APPROCCIO: Usa metodo diretto come Rai Pal (veloce e affidabile)
@@ -660,14 +664,14 @@ pub async fn get_games() -> Result<Vec<GameInfo>, String> {
     let mut all_games = Vec::new();
     
     // Prima prova a caricare giochi Steam con metadati completi
-    match steam::load_steam_credentials().await {
+    match steam::load_steam_credentials(profile_state.clone()).await {
         Ok(credentials) => {
             log::info!("🔑 Credenziali Steam trovate, recupero giochi con metadati completi...");
             // 🔒 Decripta l'API key
             let decrypted_api_key = steam::decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)
                 .map_err(|e| format!("Errore decryption API key: {}", e))?;
             
-            match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(false)).await {
+            match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(false), profile_state.clone()).await {
                 Ok(steam_games) => {
                     log::info!("✅ Trovati {} giochi Steam con metadati completi", steam_games.len());
                     

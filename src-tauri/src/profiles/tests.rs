@@ -3,9 +3,13 @@ mod tests {
     use crate::profiles::encryption::ProfileEncryption;
     use crate::profiles::manager::ProfileManager;
     use crate::profiles::storage::ProfileStorage;
-    use crate::profiles::models::{CreateProfileRequest, ProfileSettings};
+    use crate::profiles::models::{CreateProfileRequest, ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings};
     use crate::profiles::errors::ProfileError;
+    use crate::profiles::rate_limiter::{RateLimiterConfig, RateLimitResult};
+    use crate::profiles::secure_memory::SecureMemory;
     use tempfile::TempDir;
+    use tokio;
+    use std::time::Duration;
 
     #[test]
     fn test_encryption_roundtrip() {
@@ -545,5 +549,408 @@ mod tests {
         // Rimuovi credenziale
         cred_manager.remove_credential(StoreType::Steam, "CredKey123!").await.unwrap();
         assert!(!cred_manager.has_credential(StoreType::Steam).unwrap());
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_authentication() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea un profilo
+        let request = CreateProfileRequest {
+            name: "Auth Test".to_string(),
+            password: "AuthKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+
+        let profile = manager.create_profile(request).await.unwrap();
+        let profile_id = profile.id.clone();
+
+        // Test autenticazione con password corretta
+        let auth_result = manager.authenticate_profile("Auth Test", "AuthKey123!").await;
+        assert!(auth_result.is_ok());
+        
+        let authenticated_profile = auth_result.unwrap();
+        assert_eq!(authenticated_profile.name, "Auth Test");
+        assert!(manager.is_profile_active());
+        assert_eq!(manager.current_profile_id().unwrap(), profile_id);
+
+        // Test logout
+        manager.logout().unwrap();
+        assert!(!manager.is_profile_active());
+        assert!(manager.current_profile().is_none());
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_wrong_password() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea un profilo
+        let request = CreateProfileRequest {
+            name: "Wrong Pass Test".to_string(),
+            password: "CorrectKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+
+        manager.create_profile(request).await.unwrap();
+
+        // Test autenticazione con password sbagliata
+        let auth_result = manager.authenticate_profile("Wrong Pass Test", "WrongKey456$").await;
+        assert!(auth_result.is_err());
+        
+        if let Err(ProfileError::InvalidCredentials) = auth_result {
+            // Corretto
+        } else {
+            panic!("Expected InvalidCredentials error");
+        }
+
+        // Verifica che nessun profilo sia attivo
+        assert!(!manager.is_profile_active());
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_rate_limiting() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Configura rate limiter per test rapidi
+        let config = RateLimiterConfig {
+            max_attempts: 3,
+            block_duration_seconds: 2,
+            reset_after_seconds: 10,
+            exponential_backoff: false,
+            backoff_factor: 1.0,
+            max_block_duration_seconds: 10,
+        };
+        manager.set_rate_limiter_config(config);
+
+        // Crea un profilo
+        let request = CreateProfileRequest {
+            name: "Rate Limit Test".to_string(),
+            password: "RateKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+
+        let profile = manager.create_profile(request).await.unwrap();
+
+        // Effettua tentativi falliti fino al blocco
+        for i in 1..=3 {
+            let result = manager.authenticate_profile("Rate Limit Test", "WrongPassword").await;
+            assert!(result.is_err());
+            
+            if i < 3 {
+                // I primi tentativi dovrebbero essere InvalidCredentials
+                if let Err(ProfileError::InvalidCredentials) = result {
+                    // Corretto
+                } else {
+                    panic!("Expected InvalidCredentials error on attempt {}", i);
+                }
+            } else {
+                // Il terzo tentativo dovrebbe essere bloccato
+                if let Err(ProfileError::TooManyAttempts(_)) = result {
+                    // Corretto
+                } else {
+                    panic!("Expected TooManyAttempts error on attempt {}", i);
+                }
+            }
+        }
+
+        // Verifica che il profilo sia bloccato
+        let blocked_result = manager.authenticate_profile("Rate Limit Test", "RateKey123!").await;
+        assert!(blocked_result.is_err());
+        
+        if let Err(ProfileError::TooManyAttempts(_)) = blocked_result {
+            // Corretto
+        } else {
+            panic!("Expected TooManyAttempts error for blocked profile");
+        }
+
+        // Reset manuale dei tentativi
+        manager.reset_login_attempts(&profile.id);
+
+        // Ora dovrebbe funzionare con la password corretta
+        let success_result = manager.authenticate_profile("Rate Limit Test", "RateKey123!").await;
+        assert!(success_result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_secure_memory() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Test SecureMemory per password
+        let mut secure_password = SecureMemory::new("TestPassword123!".to_string());
+        
+        // Verifica che i dati siano accessibili
+        assert_eq!(*secure_password, "TestPassword123!");
+        
+        // Test pulizia
+        secure_password.clear();
+        assert_eq!(*secure_password, "");
+
+        // Test con drop automatico
+        {
+            let _secure_data = SecureMemory::new("SensitiveData".to_string());
+            // Dovrebbe essere pulito automaticamente quando esce dallo scope
+        }
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_crud_operations() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // CREATE - Crea profilo
+        let request = CreateProfileRequest {
+            name: "CRUD Test".to_string(),
+            password: "CrudKey123!".to_string(),
+            avatar_path: Some("/path/to/avatar.png".to_string()),
+            settings: Some(ProfileSettings {
+                theme: Theme::Dark,
+                language: "it".to_string(),
+                auto_login: true,
+                notifications: NotificationSettings {
+                    desktop_enabled: true,
+                    sound_enabled: false,
+                    new_games: true,
+                    updates: true,
+                    deals: false,
+                },
+                game_library: LibrarySettings {
+                    auto_refresh: true,
+                    show_hidden: false,
+                    sort_by: "name".to_string(),
+                    view_mode: "grid".to_string(),
+                },
+                security: SecuritySettings {
+                    session_timeout: 3600,
+                    require_password_for_sensitive: true,
+                    auto_lock_enabled: true,
+                    two_factor_enabled: false,
+                },
+            }),
+        };
+
+        let created_profile = manager.create_profile(request).await.unwrap();
+        assert_eq!(created_profile.name, "CRUD Test");
+        assert_eq!(created_profile.avatar_path, Some("/path/to/avatar.png".to_string()));
+        assert_eq!(created_profile.settings.theme, Theme::Dark);
+
+        // READ - Lista profili
+        let profiles = manager.list_profiles().await.unwrap();
+        assert_eq!(profiles.len(), 1);
+        assert_eq!(profiles[0].name, "CRUD Test");
+
+        // READ - Ottieni profilo specifico
+        let profile_info = manager.get_profile_info(&created_profile.id).await.unwrap();
+        assert!(profile_info.is_some());
+        assert_eq!(profile_info.unwrap().name, "CRUD Test");
+
+        // UPDATE - Autentica e aggiorna impostazioni
+        manager.authenticate_profile("CRUD Test", "CrudKey123!").await.unwrap();
+        
+        let mut new_settings = created_profile.settings.clone();
+        new_settings.theme = Theme::Light;
+        new_settings.language = "en".to_string();
+        
+        manager.update_settings(new_settings.clone(), "CrudKey123!").await.unwrap();
+        
+        let current_settings = manager.get_settings().unwrap();
+        assert_eq!(current_settings.theme, Theme::Light);
+        assert_eq!(current_settings.language, "en");
+
+        // DELETE - Logout e elimina profilo
+        manager.logout().unwrap();
+        manager.delete_profile(&created_profile.id, "CrudKey123!").await.unwrap();
+
+        // Verifica eliminazione
+        let profiles_after_delete = manager.list_profiles().await.unwrap();
+        assert!(profiles_after_delete.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_error_handling() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Test profilo non esistente
+        let auth_result = manager.authenticate_profile("NonExistent", "password").await;
+        assert!(auth_result.is_err());
+        if let Err(ProfileError::ProfileNotFound(name)) = auth_result {
+            assert_eq!(name, "NonExistent");
+        } else {
+            panic!("Expected ProfileNotFound error");
+        }
+
+        // Test operazioni senza autenticazione
+        let settings_result = manager.get_settings();
+        assert!(settings_result.is_none());
+
+        let update_result = manager.update_current_profile("password").await;
+        assert!(update_result.is_err());
+        if let Err(ProfileError::Unauthorized) = update_result {
+            // Corretto
+        } else {
+            panic!("Expected Unauthorized error");
+        }
+
+        // Test nome profilo invalido
+        let invalid_request = CreateProfileRequest {
+            name: "".to_string(), // Nome vuoto
+            password: "ValidKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+
+        let create_result = manager.create_profile(invalid_request).await;
+        assert!(create_result.is_err());
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_edge_cases() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Test con caratteri speciali nel nome
+        let special_request = CreateProfileRequest {
+            name: "Test User 🎮 (Gaming)".to_string(),
+            password: "SpecialKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+
+        let special_profile = manager.create_profile(special_request).await.unwrap();
+        assert_eq!(special_profile.name, "Test User 🎮 (Gaming)");
+
+        // Test autenticazione case-insensitive
+        let auth_result = manager.authenticate_profile("test user 🎮 (gaming)", "SpecialKey123!").await;
+        assert!(auth_result.is_ok());
+
+        // Test profilo più recente
+        let most_recent = manager.get_most_recent_profile().await.unwrap();
+        assert!(most_recent.is_some());
+        assert_eq!(most_recent.unwrap().name, "Test User 🎮 (Gaming)");
+
+        // Test statistiche autenticazione
+        let auth_stats = manager.get_auth_stats().await.unwrap();
+        assert_eq!(auth_stats.total_profiles, 1);
+        assert_eq!(auth_stats.locked_profiles, 0);
+        assert!(auth_stats.current_session_active);
+    }
+
+    #[tokio::test]
+    async fn test_profile_manager_session_timeout() {
+        let temp_dir = TempDir::new().unwrap();
+        let storage = ProfileStorage::new(temp_dir.path().to_path_buf()).unwrap();
+        let mut manager = ProfileManager::new(storage);
+
+        // Crea e autentica profilo
+        let request = CreateProfileRequest {
+            name: "Timeout Test".to_string(),
+            password: "TimeoutKey123!".to_string(),
+            avatar_path: None,
+            settings: None,
+        };
+
+        manager.create_profile(request).await.unwrap();
+        manager.authenticate_profile("Timeout Test", "TimeoutKey123!").await.unwrap();
+
+        // Test timeout con valore molto basso (1 secondo)
+        tokio::time::sleep(Duration::from_millis(1100)).await;
+        
+        let is_expired = manager.is_session_expired(1);
+        assert!(is_expired);
+
+        // Test logout automatico con timeout
+        let logout_result = manager.logout_with_timeout(1).unwrap();
+        assert!(logout_result); // Dovrebbe aver fatto logout
+        assert!(!manager.is_profile_active());
+
+        // Test rinnovo sessione
+        manager.authenticate_profile("Timeout Test", "TimeoutKey123!").await.unwrap();
+        manager.renew_session().unwrap();
+        
+        let time_remaining = manager.get_session_time_remaining(60);
+        assert!(time_remaining.is_some());
+        assert!(time_remaining.unwrap() > 50); // Dovrebbe essere vicino a 60
+    }
+
+    #[test]
+    fn test_encryption_edge_cases() {
+        let encryption = ProfileEncryption::new();
+
+        // Test con dati vuoti
+        let empty_data = b"";
+        let password = "TestKey123!";
+        
+        let encrypted = encryption.encrypt_profile_data(empty_data, password).unwrap();
+        let decrypted = encryption.decrypt_profile_data(&encrypted, password).unwrap();
+        assert_eq!(decrypted, empty_data.to_vec());
+
+        // Test con dati molto grandi
+        let large_data = vec![0u8; 1024 * 1024]; // 1MB
+        let encrypted_large = encryption.encrypt_profile_data(&large_data, password).unwrap();
+        let decrypted_large = encryption.decrypt_profile_data(&encrypted_large, password).unwrap();
+        assert_eq!(decrypted_large, large_data);
+
+        // Test con password molto lunga
+        let long_password = "A".repeat(100);
+        let encrypted_long_pass = encryption.encrypt_profile_data(b"test", &long_password).unwrap();
+        let decrypted_long_pass = encryption.decrypt_profile_data(&encrypted_long_pass, &long_password).unwrap();
+        assert_eq!(decrypted_long_pass, b"test".to_vec());
+
+        // Test generazione password con lunghezze diverse
+        for length in [12, 16, 32, 64] {
+            let password = encryption.generate_secure_password(length);
+            assert_eq!(password.len(), length);
+            assert!(encryption.validate_password_strength(&password).is_ok());
+        }
+    }
+
+    #[test]
+    fn test_rate_limiter_edge_cases() {
+        use crate::profiles::rate_limiter::{RateLimiter, RateLimiterConfig};
+
+        // Test con configurazione estrema
+        let config = RateLimiterConfig {
+            max_attempts: 1,
+            block_duration_seconds: 1,
+            reset_after_seconds: 2,
+            exponential_backoff: true,
+            backoff_factor: 10.0,
+            max_block_duration_seconds: 5,
+        };
+
+        let limiter = RateLimiter::new(config);
+        let user_id = "test_user";
+
+        // Primo tentativo fallito dovrebbe bloccare immediatamente
+        let result = limiter.register_failed_attempt(user_id);
+        if let RateLimitResult::Blocked { remaining_seconds, .. } = result {
+            assert_eq!(remaining_seconds, 1);
+        } else {
+            panic!("Expected immediate block");
+        }
+
+        // Test reset
+        limiter.reset_attempts(user_id);
+        let check_result = limiter.check_rate_limit(user_id);
+        assert!(matches!(check_result, RateLimitResult::Allowed));
+
+        // Test tentativo riuscito
+        limiter.register_successful_attempt(user_id);
+        let info = limiter.get_attempt_info(user_id);
+        assert!(info.is_none()); // Dovrebbe essere rimosso
     }
 }

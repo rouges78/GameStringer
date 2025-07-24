@@ -18,6 +18,9 @@ pub enum ProfileError {
     #[error("Password troppo debole: {0}")]
     WeakPassword(String),
     
+    #[error("Input non valido: {0}")]
+    InvalidInput(String),
+    
     #[error("Errore di crittografia: {0}")]
     EncryptionError(String),
     
@@ -36,8 +39,11 @@ pub enum ProfileError {
     #[error("Operazione non autorizzata")]
     Unauthorized,
     
-    #[error("Limite tentativi superato")]
-    TooManyAttempts,
+    #[error("Troppi tentativi di accesso falliti. Riprova tra {0} secondi")]
+    TooManyAttempts(u64),
+    
+    #[error("Credenziali non valide")]
+    InvalidCredentials,
 }
 
 /// Risultato per operazioni sui profili

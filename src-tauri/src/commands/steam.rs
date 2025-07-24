@@ -1847,31 +1847,33 @@ pub async fn force_refresh_steam_games(
 ) -> Result<Vec<SteamGame>, String> {
     debug!("[RUST] 🔄 force_refresh_steam_games called - bypassing all cache!");
     
-    let manager = profile_state.manager.lock().await;
-    
-    // Carica credenziali dal profilo attivo
-    let (api_key, steam_id) = match manager.load_credential_for_active_profile(crate::profiles::StoreType::Steam).await {
-        Ok(Some(credential)) => {
-            let steam_id = credential.additional_data.get("steam_id")
-                .unwrap_or(&credential.username)
-                .clone();
-            
-            debug!("[RUST] ✅ Credenziali caricate dal profilo attivo per force refresh");
-            debug!("[RUST] 🔑 Steam ID: {}", steam_id);
-            debug!("[RUST] API Key validation check");
-            
-            (credential.password, steam_id)
-        }
-        Ok(None) => {
-            return Err("Nessuna credenziale Steam salvata nel profilo attivo".to_string());
-        }
-        Err(e) => {
-            return Err(format!("Impossibile caricare credenziali per force refresh: {}", e));
+    let (api_key, steam_id) = {
+        let manager = profile_state.manager.lock().await;
+        
+        // Carica credenziali dal profilo attivo
+        match manager.load_credential_for_active_profile(crate::profiles::StoreType::Steam).await {
+            Ok(Some(credential)) => {
+                let steam_id = credential.additional_data.get("steam_id")
+                    .unwrap_or(&credential.username)
+                    .clone();
+                
+                debug!("[RUST] ✅ Credenziali caricate dal profilo attivo per force refresh");
+                debug!("[RUST] 🔑 Steam ID: {}", steam_id);
+                debug!("[RUST] API Key validation check");
+                
+                (credential.password, steam_id)
+            }
+            Ok(None) => {
+                return Err("Nessuna credenziale Steam salvata nel profilo attivo".to_string());
+            }
+            Err(e) => {
+                return Err(format!("Impossibile caricare credenziali per force refresh: {}", e));
+            }
         }
     };
     
     // Forza refresh senza cache
-    let result = get_steam_games(api_key, steam_id, Some(true)).await;
+    let result = get_steam_games(api_key, steam_id, Some(true), profile_state).await;
     
     match &result {
         Ok(games) => {
@@ -2921,11 +2923,13 @@ pub async fn remove_steam_credentials() -> Result<String, String> {
 
 // Comando per testare la connessione automatica Steam
 #[tauri::command]
-pub async fn auto_connect_steam() -> Result<serde_json::Value, String> {
+pub async fn auto_connect_steam(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<serde_json::Value, String> {
     debug!("[RUST] auto_connect_steam called");
     
     // Carica le credenziali salvate
-    let credentials = load_steam_credentials().await?;
+    let credentials = load_steam_credentials(profile_state.clone()).await?;
     
     // Testa la connessione
     // 🔒 Decripta l'API key - gestisce corruzioni con fallback
@@ -2934,14 +2938,14 @@ pub async fn auto_connect_steam() -> Result<serde_json::Value, String> {
         Err(e) => {
             // Se la decrittografia fallisce, elimina le credenziali corrotte
             debug!("[RUST] Decryption failed, clearing corrupted credentials: {}", e);
-            if let Err(clear_error) = clear_steam_credentials().await {
+            if let Err(clear_error) = clear_steam_credentials(profile_state.clone()).await {
                 warn!("[RUST] Failed to clear corrupted credentials: {}", clear_error);
             }
             return Err(format!("Credenziali corrotte rimosse. Riconnettiti a Steam: {}", e));
         }
     };
     
-    match get_steam_games(decrypted_api_key, credentials.steam_id, Some(false)).await {
+    match get_steam_games(decrypted_api_key, credentials.steam_id, Some(false), profile_state).await {
         Ok(games) => {
             let games_count = games.len() as u32;
             
@@ -4159,12 +4163,13 @@ pub async fn get_family_sharing_games() -> Result<FamilySharingConfig, String> {
 pub async fn get_steam_games_with_family_sharing(
     api_key: String, 
     steam_id: String, 
-    force_refresh: Option<bool>
+    force_refresh: Option<bool>,
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
 ) -> Result<Vec<SteamGame>, String> {
     debug!("[RUST] get_steam_games_with_family_sharing called");
     
     // Prima ottieni i giochi posseduti
-    let mut owned_games = get_steam_games(api_key, steam_id, force_refresh).await?;
+    let mut owned_games = get_steam_games(api_key, steam_id, force_refresh, profile_state).await?;
     
     // Poi ottieni i giochi condivisi
     match get_family_sharing_games().await {

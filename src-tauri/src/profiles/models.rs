@@ -511,6 +511,16 @@ impl Default for ProfilesSystemConfig {
     }
 }
 
+/// Statistiche utilizzo profilo
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfileUsageStats {
+    pub profile_id: String,
+    pub total_logins: u64,
+    pub last_login: DateTime<Utc>,
+    pub session_count: u64,
+    pub average_session_duration: u64,
+}
+
 impl ProfilesHealthCheck {
     /// Crea un nuovo controllo di salute
     pub fn new() -> Self {

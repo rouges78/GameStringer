@@ -1,5 +1,5 @@
 use crate::profiles::manager::ProfileManager;
-use crate::profiles::models::{CreateProfileRequest, ProfileInfo, ProfileSettings, UserProfile};
+use crate::profiles::models::{CreateProfileRequest, ProfileInfo, ProfileSettings, UserProfile, ProfilesSystemStats, ProfilesHealthCheck, ProfilesSystemConfig, ProfileUsageStats};
 use crate::profiles::errors::ProfileError;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -360,7 +360,7 @@ pub async fn change_profile_password(
 pub async fn get_profile_usage_stats(
     profile_state: State<'_, ProfileManagerState>,
     profile_id: String,
-) -> Result<ProfileResponse<crate::profiles::manager::ProfileUsageStats>, String> {
+) -> Result<ProfileResponse<ProfileUsageStats>, String> {
     let manager = profile_state.manager.lock().await;
     
     match manager.get_profile_usage_stats(&profile_id).await {
@@ -406,7 +406,7 @@ pub async fn list_profile_backups(
 ) -> Result<ProfileResponse<Vec<String>>, String> {
     let manager = profile_state.manager.lock().await;
     
-    match manager.list_profile_backups(&profile_id).await {
+    match manager.list_profile_backups().await {
         Ok(backups) => Ok(ProfileResponse::success(backups)),
         Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
     }

@@ -50,7 +50,9 @@ pub struct DLCScanResult {
 
 /// 🚀 Comando principale: Scansione completa DLC cross-store
 #[tauri::command]
-pub async fn scan_all_dlc() -> Result<DLCScanResult, String> {
+pub async fn scan_all_dlc(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<DLCScanResult, String> {
     info!("🎮 Avvio scansione completa DLC cross-store");
     let start_time = std::time::Instant::now();
     
@@ -61,7 +63,7 @@ pub async fn scan_all_dlc() -> Result<DLCScanResult, String> {
     let mut total_dlc_installed = 0;
     
     // 🎯 Scansione Steam DLC
-    match scan_steam_dlc().await {
+    match scan_steam_dlc(profile_state.clone()).await {
         Ok(steam_stats) => {
             info!("✅ Steam DLC: {} giochi con DLC trovati", steam_stats.len());
             for stats in &steam_stats {
@@ -141,11 +143,13 @@ pub async fn scan_all_dlc() -> Result<DLCScanResult, String> {
 }
 
 /// 🎮 Scansione DLC Steam utilizzando API esistenti
-async fn scan_steam_dlc() -> Result<Vec<GameDLCStats>, String> {
+async fn scan_steam_dlc(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<Vec<GameDLCStats>, String> {
     info!("🔍 Scansione DLC Steam in corso...");
     
     // Ottieni tutti i giochi Steam
-    let steam_games = match steam::force_refresh_steam_games().await {
+    let steam_games = match steam::force_refresh_steam_games(profile_state).await {
         Ok(games) => games,
         Err(e) => {
             error!("❌ Errore recupero giochi Steam: {}", e);
@@ -672,13 +676,17 @@ async fn scan_gog_dlc() -> Result<Vec<GameDLCStats>, String> {
 
 /// 🔍 Comando per ottenere DLC di un gioco specifico
 #[tauri::command]
-pub async fn get_game_dlc(game_id: String, store: String) -> Result<GameDLCStats, String> {
+pub async fn get_game_dlc(
+    game_id: String, 
+    store: String,
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<GameDLCStats, String> {
     info!("🔍 Recupero DLC per gioco: {} ({})", game_id, store);
     
     match store.as_str() {
         "Steam" => {
             // Cerca nei risultati della scansione Steam
-            match scan_steam_dlc().await {
+            match scan_steam_dlc(profile_state).await {
                 Ok(steam_stats) => {
                     for stats in steam_stats {
                         if stats.game_id == game_id {
@@ -729,10 +737,12 @@ pub async fn get_game_dlc(game_id: String, store: String) -> Result<GameDLCStats
 
 /// 📊 Comando per ottenere statistiche aggregate DLC
 #[tauri::command]
-pub async fn get_dlc_statistics() -> Result<serde_json::Value, String> {
+pub async fn get_dlc_statistics(
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<serde_json::Value, String> {
     info!("📊 Calcolo statistiche DLC aggregate");
     
-    match scan_all_dlc().await {
+    match scan_all_dlc(profile_state).await {
         Ok(scan_result) => {
             let mut stats_by_store: HashMap<String, serde_json::Value> = HashMap::new();
             

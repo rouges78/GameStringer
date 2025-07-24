@@ -30,3 +30,4 @@ pub mod profile_credentials;
 pub mod profiles;
 pub mod profile_settings;
 pub mod migration;
+pub mod validation;

@@ -1217,10 +1217,13 @@ name = "gamestringer"
 version = "3.2.1"
 dependencies = [
  "aes-gcm",
+ "anyhow",
  "argon2",
  "base64 0.21.7",
  "bincode",
  "chrono",
+ "crc32fast",
+ "flate2",
  "howlongtobeat",
  "log",
  "moka",

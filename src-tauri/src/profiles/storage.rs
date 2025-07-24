@@ -1,6 +1,7 @@
 use crate::profiles::models::{UserProfile, ProfileInfo};
 use crate::profiles::errors::{StorageError, StorageResult};
 use crate::profiles::encryption::ProfileEncryption;
+use crate::profiles::secure_memory::SecureMemory;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -180,6 +181,12 @@ impl ProfileStorage {
         
         println!("[PROFILE STORAGE] ✅ Profilo '{}' caricato", profile.name);
         Ok(profile)
+    }
+
+    /// Carica un profilo decrittografato usando SecureMemory per la password
+    pub async fn load_profile_secure(&self, id: &str, password: &SecureMemory<String>) -> StorageResult<UserProfile> {
+        // Usa il metodo esistente con la password estratta da SecureMemory
+        self.load_profile(id, &**password).await
     }
     
     /// Lista informazioni di tutti i profili

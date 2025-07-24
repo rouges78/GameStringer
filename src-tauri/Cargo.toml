@@ -48,6 +48,9 @@ sha2 = "0.10"
 log = "0.4"
 urlencoding = "2.1"
 base64 = "0.21"
+flate2 = "1.0"
+crc32fast = "1.3"
+anyhow = "1.0"
 bincode = "1.3"
 
 [dev-dependencies]

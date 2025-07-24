@@ -385,6 +385,17 @@ fn main() {
             commands::migration::cleanup_legacy_settings,
             commands::migration::migration_wizard,
 
+            // Validation System
+            commands::validation::validate_profile_name,
+            commands::validation::validate_password,
+            commands::validation::validate_unique_profile_name,
+            commands::validation::sanitize_input,
+            commands::validation::get_validation_config,
+            commands::validation::update_validation_config,
+            commands::validation::validate_profile_creation,
+            commands::validation::generate_password_suggestions,
+            commands::validation::check_password_strength_realtime,
+
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
