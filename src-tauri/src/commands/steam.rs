@@ -708,7 +708,7 @@ fn detect_vr_game(name: &str, appid: u32) -> bool {
 }
 
 // 🎮 Rilevamento engine di sviluppo (DATABASE MASSIVO)
-fn detect_game_engine(name: &str, appid: u32) -> String {
+fn detect_game_engine(name: &str, _appid: u32) -> String {
     let name_lower = name.to_lowercase();
     
     // 🔶 UNITY ENGINE (1000+ giochi)
@@ -798,11 +798,11 @@ fn detect_game_engine(name: &str, appid: u32) -> String {
     // 🎲 INDIE ENGINES
     let godot_games = ["sonic colors ultimate", "the interactive adventures of dog mendonça"];
     let gamemaker_games = ["undertale", "hyper light drifter", "hotline miami", "spelunky", "nuclear throne"];
-    let construct_games = ["the next penelope"];
-    let defold_games = ["baba is you"];
+    let _construct_games = ["the next penelope"];
+    let _defold_games = ["baba is you"];
     
     // 🌐 WEB/FLASH ENGINES
-    let javascript_games = ["agar.io", "slither.io", "diep.io"];
+    let _javascript_games = ["agar.io", "slither.io", "diep.io"];
     
     // Controllo specifico per nome (ordinato per priorità)
     if rage_games.iter().any(|&game| name_lower.contains(game)) {
@@ -1168,7 +1168,7 @@ fn detect_supported_languages(name: &str, appid: u32) -> String {
     ];
     
     // 🌍 PUBLISHER-BASED LANGUAGE DETECTION
-    let publisher_languages = [
+    let _publisher_languages = [
         // EA Games - Supporto completo
         ("electronic arts", "English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese,Arabic,Polish,Czech"),
         ("ea sports", "English,Italian,French,German,Spanish,Portuguese,Russian,Japanese,Korean,Chinese,Arabic,Polish,Czech"),
@@ -1371,7 +1371,7 @@ fn get_machine_key() -> Result<[u8; 32], String> {
     
     // SECURITY FIX: Apply key stretching for enhanced security
     let mut key = [0u8; 32];
-    let hash_bytes = hash.to_le_bytes();
+    let _hash_bytes = hash.to_le_bytes();
     
     // Use multiple rounds of hashing for key stretching
     for round in 0..4 {
@@ -3280,17 +3280,17 @@ async fn read_library_folders(steam_path: &str) -> Result<Vec<String>, String> {
     log::info!("📁 Directory Steam principale: {}", steam_path);
     
     // Parse migliorato del VDF - gestisce anche strutture annidate
-    let mut current_section = String::new();
-    let mut brace_count = 0;
+    let mut _current_section = String::new();
+    let mut _brace_count = 0;
     
     for line in content.lines() {
         let line = line.trim();
         
         if line.contains('{') {
-            brace_count += 1;
+            _brace_count += 1;
         }
         if line.contains('}') {
-            brace_count -= 1;
+            _brace_count -= 1;
         }
         
         // Cerca "path" in qualsiasi sezione
@@ -3317,7 +3317,7 @@ async fn read_library_folders(steam_path: &str) -> Result<Vec<String>, String> {
         
         // Metodo alternativo: cerca anche pattern numerici come "1", "2", "3" che rappresentano librerie
         if line.starts_with('"') && line.len() < 10 && line.chars().nth(1).map_or(false, |c| c.is_numeric()) {
-            current_section = line.trim_matches('"').to_string();
+            _current_section = line.trim_matches('"').to_string();
         }
     }
     
@@ -3337,7 +3337,7 @@ async fn parse_acf_to_gameinfo(file_path: &Path, library_path: &str) -> Result<G
     let mut app_id = String::new();
     let mut name = String::new();
     let mut install_dir = String::new();
-    let mut size_on_disk = String::new();
+    let mut _size_on_disk = String::new();
     let mut last_updated = String::new();
     
     for line in content.lines() {
@@ -3349,7 +3349,7 @@ async fn parse_acf_to_gameinfo(file_path: &Path, library_path: &str) -> Result<G
         } else if line.starts_with("\"installdir\"") {
             install_dir = extract_quoted_value_vdf(line).unwrap_or_default();
         } else if line.starts_with("\"SizeOnDisk\"") {
-            size_on_disk = extract_quoted_value_vdf(line).unwrap_or_default();
+            _size_on_disk = extract_quoted_value_vdf(line).unwrap_or_default();
         } else if line.starts_with("\"LastUpdated\"") {
             last_updated = extract_quoted_value_vdf(line).unwrap_or_default();
         }
@@ -3704,7 +3704,7 @@ fn parse_library_folders_content(content: &str) -> Result<Vec<SteamLibraryFolder
     let mut folders = Vec::new();
     
     if let Some(library_folders) = vdf.get("libraryfolders").and_then(|lf| lf.as_table()) {
-        for (key, folder_data) in library_folders.iter() {
+        for (_key, folder_data) in library_folders.iter() {
             if let Some(folder_table) = folder_data.as_table() {
                 if let Some(path) = folder_table.get("path").and_then(|p| p.as_str()) {
                     folders.push(SteamLibraryFolder {
@@ -3782,15 +3782,15 @@ fn parse_acf_file_custom(content: &str) -> Result<LocalGameInfo, String> {
         }
     }
     
-    let appid = appid.ok_or("AppID non trovato")?;
-    let name = name.unwrap_or_else(|| format!("Game {}", appid));
+    let appid_value = appid.ok_or("AppID non trovato")?;
+    let name = name.unwrap_or_else(|| format!("Game {}", appid_value));
     
     let install_path = install_dir.as_ref()
         .map(|dir| format!("C:\\Program Files (x86)\\Steam\\steamapps\\common\\{}", dir))
         .unwrap_or_else(|| "Unknown".to_string());
     
     Ok(LocalGameInfo {
-        appid,
+        appid: appid_value,
         name,
         status: GameStatus::Installed { path: install_path },
         install_dir,
@@ -4000,7 +4000,7 @@ fn parse_localconfig_for_games(localconfig_path: &Path) -> Result<Vec<u32>, Stri
 }
 
 /// Parsa shortcuts.vdf per trovare giochi non-Steam
-fn parse_shortcuts_for_games(shortcuts_path: &Path) -> Result<Vec<u32>, String> {
+fn parse_shortcuts_for_games(_shortcuts_path: &Path) -> Result<Vec<u32>, String> {
     // shortcuts.vdf è in formato binario VDF, più complesso da parsare
     // Per ora ritorniamo una lista vuota
     debug!("[RUST] shortcuts.vdf parsing non ancora implementato (formato binario)");

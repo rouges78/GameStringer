@@ -3,9 +3,9 @@
   "major": 3,
   "minor": 2,
   "patch": 2,
-  "buildNumber": 58,
-  "buildDate": "2025-07-21T11:35:29.500Z",
-  "gitHash": "f06876e0",
+  "buildNumber": 63,
+  "buildDate": "2025-08-07T02:40:33.125Z",
+  "gitHash": "9c3bebd0",
   "branch": "main",
   "changelog": {
     "3.2.1": {

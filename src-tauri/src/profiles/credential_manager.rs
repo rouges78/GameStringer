@@ -118,28 +118,28 @@ impl PlainCredential {
 /// Manager per credenziali integrate con profili
 pub struct ProfileCredentialManager {
     /// Riferimento al profile manager
-    profile_manager: Option<ProfileManager>,
+    _profile_manager: Option<ProfileManager>,  // Riservato per integrazione futura
     /// Sistema di crittografia
-    encryption: ProfileEncryption,
+    _encryption: ProfileEncryption,  // Riservato per crittografia credenziali
 }
 
 impl ProfileCredentialManager {
     /// Crea nuovo credential manager
     pub fn new() -> Self {
         Self {
-            profile_manager: None,
-            encryption: ProfileEncryption::new(),
+            _profile_manager: None,
+            _encryption: ProfileEncryption::new(),
         }
     }
 
     /// Imposta il profile manager
     pub fn set_profile_manager(&mut self, manager: ProfileManager) {
-        self.profile_manager = Some(manager);
+        self._profile_manager = Some(manager);
     }
 
     /// Salva credenziale per il profilo attivo
     pub async fn save_credential(&mut self, credential: PlainCredential, profile_password: &str) -> ProfileResult<()> {
-        let manager = self.profile_manager.as_mut()
+        let manager = self._profile_manager.as_mut()
             .ok_or(ProfileError::Unauthorized)?;
 
         // Verifica che ci sia un profilo attivo
@@ -148,7 +148,7 @@ impl ProfileCredentialManager {
         }
 
         // Crittografa la credenziale
-        let encrypted = credential.encrypt(&self.encryption, profile_password)?;
+        let encrypted = credential.encrypt(&self._encryption, profile_password)?;
 
         // Salva nel profilo attivo
         manager.add_credential(encrypted, profile_password).await?;
@@ -159,7 +159,7 @@ impl ProfileCredentialManager {
 
     /// Carica credenziale per il profilo attivo
     pub async fn load_credential(&self, store: StoreType, profile_password: &str) -> ProfileResult<PlainCredential> {
-        let manager = self.profile_manager.as_ref()
+        let manager = self._profile_manager.as_ref()
             .ok_or(ProfileError::Unauthorized)?;
 
         // Verifica che ci sia un profilo attivo
@@ -174,7 +174,7 @@ impl ProfileCredentialManager {
         // Decodifica da base64 e decrittografa i dati
         let encrypted_bytes = base64::decode(&encrypted.encrypted_data)
             .map_err(|e| ProfileError::CorruptedProfile(format!("Errore decodifica base64: {}", e)))?;
-        let decrypted_data = self.encryption.decrypt_profile_data(&encrypted_bytes, profile_password)?;
+        let decrypted_data = self._encryption.decrypt_profile_data(&encrypted_bytes, profile_password)?;
 
         // Deserializza credenziale
         let credential_json = String::from_utf8(decrypted_data)
@@ -192,7 +192,7 @@ impl ProfileCredentialManager {
 
     /// Rimuove credenziale per il profilo attivo
     pub async fn remove_credential(&mut self, store: StoreType, profile_password: &str) -> ProfileResult<()> {
-        let manager = self.profile_manager.as_mut()
+        let manager = self._profile_manager.as_mut()
             .ok_or(ProfileError::Unauthorized)?;
 
         // Verifica che ci sia un profilo attivo
@@ -209,7 +209,7 @@ impl ProfileCredentialManager {
 
     /// Lista tutti gli store con credenziali salvate
     pub fn list_stored_credentials(&self) -> ProfileResult<Vec<StoreType>> {
-        let manager = self.profile_manager.as_ref()
+        let manager = self._profile_manager.as_ref()
             .ok_or(ProfileError::Unauthorized)?;
 
         let profile = manager.current_profile()
@@ -224,7 +224,7 @@ impl ProfileCredentialManager {
 
     /// Verifica se esiste credenziale per uno store
     pub fn has_credential(&self, store: StoreType) -> ProfileResult<bool> {
-        let manager = self.profile_manager.as_ref()
+        let manager = self._profile_manager.as_ref()
             .ok_or(ProfileError::Unauthorized)?;
 
         let profile = manager.current_profile()
@@ -235,7 +235,7 @@ impl ProfileCredentialManager {
 
     /// Ottiene informazioni sulle credenziali senza decrittografarle
     pub fn get_credential_info(&self, store: StoreType) -> ProfileResult<Option<CredentialInfo>> {
-        let manager = self.profile_manager.as_ref()
+        let manager = self._profile_manager.as_ref()
             .ok_or(ProfileError::Unauthorized)?;
 
         let profile = manager.current_profile()
@@ -260,23 +260,23 @@ impl ProfileCredentialManager {
         // Migra credenziali Steam
         if let Ok(steam_creds) = self.load_legacy_steam_credentials().await {
             match self.save_credential(steam_creds, profile_password).await {
-                Ok(_) => result.migrated.push(StoreType::Steam),
-                Err(e) => result.failed.push((StoreType::Steam, e.to_string())),
+                Ok(_) => result._migrated.push(StoreType::Steam),
+                Err(e) => result._failed.push((StoreType::Steam, e.to_string())),
             }
         }
 
         // Migra credenziali Ubisoft
         if let Ok(ubisoft_creds) = self.load_legacy_ubisoft_credentials().await {
             match self.save_credential(ubisoft_creds, profile_password).await {
-                Ok(_) => result.migrated.push(StoreType::Ubisoft),
-                Err(e) => result.failed.push((StoreType::Ubisoft, e.to_string())),
+                Ok(_) => result._migrated.push(StoreType::Ubisoft),
+                Err(e) => result._failed.push((StoreType::Ubisoft, e.to_string())),
             }
         }
 
         // Aggiungi altri store qui...
 
         println!("[CREDENTIAL MANAGER] 🔄 Migrazione completata: {} successi, {} fallimenti", 
-                 result.migrated.len(), result.failed.len());
+                 result._migrated.len(), result._failed.len());
 
         Ok(result)
     }
@@ -306,8 +306,8 @@ pub struct CredentialInfo {
 /// Risultato migrazione credenziali legacy
 #[derive(Debug, Clone, Default)]
 pub struct MigrationResult {
-    pub migrated: Vec<StoreType>,
-    pub failed: Vec<(StoreType, String)>,
+    pub _migrated: Vec<StoreType>,  // Lista store migrati con successo
+    pub _failed: Vec<(StoreType, String)>,  // Lista store falliti con errore
 }
 
 impl Default for ProfileCredentialManager {

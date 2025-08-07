@@ -1,0 +1,187 @@
+warning: unused import: `Deserialize`
+warning: unused import: `std::path::PathBuf`
+warning: unused import: `Deserialize`
+warning: unused import: `std::path::PathBuf`
+warning: unused import: `Deserialize`
+warning: unexpected `cfg` condition value: `gc`
+warning: unused import: `PasswordHash`
+warning: unused imports: `LibrarySettings`, `NotificationSettings`, and `SecuritySettings`
+warning: unused import: `DateTime`
+warning: unused imports: `GzDecoder` and `GzEncoder`
+warning: unused import: `Read`
+warning: unused import: `models::*`
+warning: unused import: `storage::*`
+warning: unused import: `encryption::*`
+warning: unused import: `errors::*`
+warning: unused import: `settings_manager::*`
+warning: unused import: `rate_limiter::*`
+warning: unused import: `secure_memory::*`
+warning: unused import: `compression::*`
+warning: unused import: `cleanup::*`
+warning: use of deprecated function `base64::encode`: Use Engine::encode
+warning: use of deprecated function `base64::decode`: Use Engine::decode
+warning: variable `current_section` is assigned to, but never used
+warning: variable `brace_count` is assigned to, but never used
+warning: value assigned to `current_section` is never read
+warning: variable `size_on_disk` is assigned to, but never used
+warning: value assigned to `size_on_disk` is never read
+warning: unused variable: `position`
+warning: unused variable: `profile_id`
+warning: unused variable: `manager`
+warning: unused variable: `manager`
+warning: unused variable: `profile_id`
+warning: unused variable: `password`
+warning: unused variable: `profile_id`
+warning: unused variable: `config`
+warning: unused variable: `path`
+warning: unused variable: `construct_games`
+warning: unused variable: `defold_games`
+warning: unused variable: `javascript_games`
+warning: unused variable: `appid`
+warning: unused variable: `publisher_languages`
+warning: unused variable: `hash_bytes`
+warning: unused variable: `key`
+warning: unused variable: `shortcuts_path`
+warning: unused variable: `pid`
+warning: unused variable: `handle`
+warning: unused variable: `key`
+warning: unused variable: `encrypted_key`
+warning: unused variable: `nonce`
+warning: unused variable: `profile`
+warning: unused variable: `password`
+warning: unused variable: `profile`
+warning: unused variable: `password`
+warning: variable does not need to be mutable
+warning: variable `has_files` is assigned to, but never used
+warning: value assigned to `has_files` is never read
+warning: value assigned to `has_files` is never read
+warning: type `GogUser` is more private than the item `test_gog_auth`
+warning: type `OriginUser` is more private than the item `test_origin_auth`
+warning: type `UbisoftUser` is more private than the item `test_ubisoft_auth`
+warning: type `BattlenetUser` is more private than the item `test_battlenet_auth`
+warning: type `ItchioUser` is more private than the item `test_itchio_api`
+warning: type `ItchioApiGame` is more private than the item `get_itchio_owned_games`
+warning: type `RockstarUser` is more private than the item `test_rockstar_auth`
+warning: function `make_rate_limited_request` is never used
+warning: function `save_credentials_securely` is never used
+warning: function `parse_shared_games_xml` is never used
+warning: function `enrich_game_details` is never used
+warning: function `get_decrypted_api_key_from_profile` is never used
+warning: function `get_steam_games_internal` is never used
+warning: function `steam_api_request_with_error_handling` is never used
+warning: function `filesystem_operation_with_error_handling` is never used
+warning: function `classify_steam_error` is never used
+warning: function `search_epic_configs_by_account_id` is never used
+warning: function `search_epic_web_cache` is never used
+warning: function `search_registry_by_account_id` is never used
+warning: function `extract_games_from_file_content` is never used
+warning: function `get_epic_owned_games_legacy` is never used
+warning: function `try_parse_epic_config` is never used
+warning: function `read_epic_registry_games` is never used
+warning: function `is_valid_epic_game_name` is never used
+warning: function `decrypt_epic_credentials` is never used
+warning: function `get_decrypted_epic_credentials` is never used
+warning: function `get_gog_installed_games` is never used
+warning: function `parse_gog_registry_entry` is never used
+warning: function `translate_text` is never used
+warning: fields `optimizer` and `last_metrics` are never read
+warning: associated function `new` is never used
+warning: struct `CredentialManagerState` is never constructed
+warning: associated function `new` is never used
+warning: fields `store`, `username`, `password`, `additional_data`, and `profile_password` are never read
+warning: fields `store` and `profile_password` are never read
+warning: function `save_profile_credential` is never used
+warning: function `load_profile_credential` is never used
+warning: function `remove_profile_credential` is never used
+warning: function `list_profile_credentials` is never used
+warning: function `has_profile_credential` is never used
+warning: function `get_profile_credential_info` is never used
+warning: function `migrate_legacy_credentials` is never used
+warning: function `test_profile_credential_connection` is never used
+warning: function `test_steam_connection` is never used
+warning: function `test_ubisoft_connection` is never used
+warning: function `test_epic_connection` is never used
+warning: function `clear_all_profile_credentials` is never used
+warning: function `get_profile_info` is never used
+warning: function `update_profile_avatar` is never used
+warning: function `change_profile_password` is never used
+warning: function `get_profile_usage_stats` is never used
+warning: function `verify_profile_integrity` is never used
+warning: function `repair_profile` is never used
+warning: function `list_profile_backups` is never used
+warning: function `restore_profile_from_backup` is never used
+warning: function `cleanup_profile_temp_data` is never used
+warning: function `get_profile_data_size` is never used
+warning: function `get_profiles_system_stats` is never used
+warning: function `check_profiles_system_health` is never used
+warning: function `get_profiles_system_config` is never used
+warning: function `update_profiles_system_config` is never used
+warning: field `metadata` is never read
+warning: methods `remove`, `clear_cache`, `get_stats`, `get_cache_info`, and `cleanup_if_needed` are never used
+warning: function `get_cache_stats_internal` is never used
+warning: function `clear_cache_type` is never used
+warning: function `cleanup_cache_if_needed` is never used
+warning: function `get_all_cache_info` is never used
+warning: field `notification_threshold` is never read
+warning: function `classify_error` is never used
+warning: fields `max_tracked_allocations` and `detailed_tracking` are never read
+warning: methods `track_allocation` and `track_deallocation` are never used
+warning: constant `MB` is never used
+warning: constant `GB` is never used
+warning: associated function `new` is never used
+warning: fields `persistence_enabled` and `auto_invalidation_enabled` are never read
+warning: field `invalidation_rules` is never read
+warning: multiple methods are never used
+warning: method `is_null` is never used
+warning: constant `MAX_HOOK_RETRIES` is never used
+warning: constant `HOOK_RETRY_DELAY` is never used
+warning: constant `MEMORY_VALIDATION_SIZE` is never used
+warning: fields `hook_type`, `module_name`, `retry_count`, `last_error`, and `created_at` are never read
+warning: struct `ProcessModule` is never constructed
+warning: struct `InjectionError` is never constructed
+warning: enum `ErrorType` is never used
+warning: multiple methods are never used
+warning: field `pid` is never read
+warning: fields `manager` and `last_detection` are never read
+warning: associated function `new` is never used
+warning: field `adaptive_polling_interval` is never read
+warning: field `performance_score` is never read
+warning: field `text` is never read
+warning: multiple associated items are never used
+warning: static `GLOBAL_OPTIMIZER` is never used
+warning: function `get_global_optimizer` is never used
+warning: function `initialize_global_optimizer` is never used
+warning: associated items `new` and `update_usage_stats` are never used
+warning: associated items `new`, `add_check`, and `add_recommendation` are never used
+warning: methods `save_avatar`, `delete_avatar`, and `get_storage_stats` are never used
+warning: multiple associated items are never used
+warning: field `rng` is never read
+warning: multiple methods are never used
+warning: variants `DirectoryError` and `InsufficientSpace` are never constructed
+warning: associated function `from_str` is never used
+warning: methods `update_last_used` and `encrypt` are never used
+warning: fields `profile_manager` and `encryption` are never read
+warning: multiple methods are never used
+warning: fields `migrated` and `failed` are never read
+warning: method `to_string` is never used
+warning: methods `get_attempt_info`, `reset_attempts`, `get_config`, and `set_config` are never used
+warning: methods `get` and `set` are never used
+warning: method `clear_string` is never used
+warning: method `clear_bytes` is never used
+warning: function `secure_clear_string` is never used
+warning: function `secure_clear_bytes` is never used
+warning: function `secure_clear_array` is never used
+warning: fields `level`, `min_size_for_compression`, and `enable_compression` are never read
+warning: struct `ProfileCompressor` is never constructed
+warning: multiple associated items are never used
+warning: struct `CompressionStats` is never constructed
+warning: method `compression_percentage` is never used
+warning: struct `BatchCompressor` is never constructed
+warning: associated items `new`, `compress_batch`, `decompress_batch`, and `get_batch_stats` are never used
+warning: struct `BatchCompressionStats` is never constructed
+warning: methods `average_compression_percentage` and `compression_efficiency` are never used
+warning: struct `ProfileCleanupManager` is never constructed
+warning: multiple associated items are never used
+warning: struct `DirStats` is never constructed
+warning: methods `total_files` and `total_size` are never used
+warning: the following packages contain code that will be rejected by a future version of Rust: nom v1.2.4, xml5ever v0.16.2

@@ -28,14 +28,7 @@ interface CreateProfileDialogProps {
   onProfileCreated: (profileId: string) => void;
 }
 
-const AVATAR_PRESETS = [
-  { id: 'user-1', src: '/avatars/user-1.png', name: 'Avatar 1' },
-  { id: 'user-2', src: '/avatars/user-2.png', name: 'Avatar 2' },
-  { id: 'user-3', src: '/avatars/user-3.png', name: 'Avatar 3' },
-  { id: 'user-4', src: '/avatars/user-4.png', name: 'Avatar 4' },
-  { id: 'user-5', src: '/avatars/user-5.png', name: 'Avatar 5' },
-  { id: 'user-6', src: '/avatars/user-6.png', name: 'Avatar 6' },
-];
+import { AVATAR_GRADIENTS, getAvatarGradient, getInitials } from '@/lib/avatar-utils';
 
 export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: CreateProfileDialogProps) {
   const [formData, setFormData] = useState({
@@ -50,16 +43,16 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
   const [error, setError] = useState<string | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
 
-  const { createProfile } = useProfiles();
+  const { createProfile, authenticateProfile } = useProfiles();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError(null);
   };
 
-  const handleAvatarSelect = (avatarPath: string) => {
-    setSelectedAvatar(avatarPath);
-    setFormData(prev => ({ ...prev, avatarPath }));
+  const handleAvatarSelect = (gradientId: string) => {
+    setSelectedAvatar(gradientId);
+    setFormData(prev => ({ ...prev, avatarPath: gradientId }));
   };
 
   const validateForm = (): string | null => {
@@ -111,17 +104,24 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     const success = await createProfile(request);
     
     if (success) {
-      // Reset form
-      setFormData({
-        name: '',
-        password: '',
-        confirmPassword: '',
-        avatarPath: '',
-      });
-      setSelectedAvatar(null);
-      onOpenChange(false);
-      // Note: onProfileCreated will be called by the parent when currentProfile changes
+      // Autentica automaticamente il profilo appena creato
+      const authSuccess = await authenticateProfile(request.name, request.password);
+      
+      if (authSuccess) {
+        // Reset form
+        setFormData({
+          name: '',
+          password: '',
+          confirmPassword: '',
+          avatarPath: '',
+        });
+        setSelectedAvatar(null);
+        onOpenChange(false);
+      } else {
+        setError('Profilo creato ma errore durante l\'autenticazione automatica');
+      }
     } else {
+      console.error('errore durante creazione profilo');
       setError('Errore durante la creazione del profilo');
     }
     
@@ -142,14 +142,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -172,8 +165,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             {/* Current Avatar Preview */}
             <div className="flex justify-center">
               <Avatar className="h-20 w-20 border-2 border-border">
-                <AvatarImage src={formData.avatarPath} alt="Avatar preview" />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-semibold">
+                <AvatarFallback className={`bg-gradient-to-br ${getAvatarGradient(formData.avatarPath)} text-white text-lg font-semibold`}>
                   {formData.name ? getInitials(formData.name) : <Camera className="h-8 w-8" />}
                 </AvatarFallback>
               </Avatar>
@@ -181,21 +173,21 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
 
             {/* Avatar Presets */}
             <div className="grid grid-cols-6 gap-2">
-              {AVATAR_PRESETS.map((avatar) => (
+              {AVATAR_GRADIENTS.map((avatar) => (
                 <button
                   key={avatar.id}
                   type="button"
-                  onClick={() => handleAvatarSelect(avatar.src)}
+                  onClick={() => handleAvatarSelect(avatar.id)}
                   className={`relative rounded-full p-1 transition-all ${
-                    selectedAvatar === avatar.src
+                    selectedAvatar === avatar.id
                       ? 'ring-2 ring-primary bg-primary/10'
                       : 'hover:bg-muted'
                   }`}
+                  title={avatar.name}
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={avatar.src} alt={avatar.name} />
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
+                    <AvatarFallback className={`bg-gradient-to-br ${avatar.gradient} text-white text-sm font-semibold`}>
+                      {formData.name ? getInitials(formData.name) : <User className="h-4 w-4" />}
                     </AvatarFallback>
                   </Avatar>
                 </button>

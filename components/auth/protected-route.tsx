@@ -135,8 +135,11 @@ export function ProtectedRoute({
     );
   }
 
+  // Check if we should skip authentication (for development/testing)
+  const SKIP_AUTH_FOR_TESTING = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
+  
   // Not authenticated - show profile selector or fallback
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !SKIP_AUTH_FOR_TESTING) {
     if (fallback) {
       return <>{fallback}</>;
     }

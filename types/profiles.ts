@@ -170,6 +170,7 @@ export interface UseProfilesReturn {
   switchProfile: (name: string, password: string) => Promise<boolean>;
   logout: () => Promise<boolean>;
   refreshProfiles: () => Promise<void>;
+  deleteProfile: (profileId: string, password: string) => Promise<boolean>;
 }
 
 export interface UseProfileSettingsReturn {

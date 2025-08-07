@@ -1,0 +1,44 @@
+warning: unused import: `Deserialize`
+  = note: `#[warn(unused_imports)]` on by default
+warning: unused import: `std::path::PathBuf`
+warning: unused import: `Deserialize`
+warning: unused import: `std::path::PathBuf`
+warning: unused import: `Deserialize`
+warning: unused import: `PasswordHash`
+warning: unused imports: `LibrarySettings`, `NotificationSettings`, and `SecuritySettings`
+warning: unused import: `DateTime`
+warning: unused imports: `GzDecoder` and `GzEncoder`
+warning: unused import: `Read`
+warning: unused import: `models::*`
+warning: unused import: `storage::*`
+warning: unused import: `encryption::*`
+warning: unused import: `errors::*`
+warning: unused import: `settings_manager::*`
+warning: unused import: `rate_limiter::*`
+warning: unused import: `secure_memory::*`
+warning: unused import: `compression::*`
+warning: unused import: `cleanup::*`
+warning: unused variable: `position`
+    = note: `#[warn(unused_variables)]` on by default
+warning: unused variable: `profile_id`
+warning: unused variable: `manager`
+warning: unused variable: `manager`
+warning: unused variable: `profile_id`
+warning: unused variable: `password`
+warning: unused variable: `profile_id`
+warning: unused variable: `config`
+warning: unused variable: `path`
+warning: unused variable: `appid`
+warning: unused variable: `key`
+warning: unused variable: `shortcuts_path`
+warning: unused variable: `pid`
+warning: unused variable: `handle`
+warning: unused variable: `key`
+warning: unused variable: `encrypted_key`
+warning: unused variable: `nonce`
+warning: unused variable: `profile`
+warning: unused variable: `password`
+warning: unused variable: `profile`
+warning: unused variable: `password`
+warning: variable does not need to be mutable
+   = note: `#[warn(unused_mut)]` on by default

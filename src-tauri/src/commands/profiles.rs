@@ -1,11 +1,11 @@
 use crate::profiles::manager::ProfileManager;
 use crate::profiles::models::{CreateProfileRequest, ProfileInfo, ProfileSettings, UserProfile, ProfilesSystemStats, ProfilesHealthCheck, ProfilesSystemConfig, ProfileUsageStats};
 use crate::profiles::errors::ProfileError;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tauri::{command, State};
-use std::path::PathBuf;
+// PathBuf rimosso - non utilizzato
 
 /// Stato globale per il ProfileManager
 pub struct ProfileManagerState {
@@ -402,7 +402,7 @@ pub async fn repair_profile(
 #[command]
 pub async fn list_profile_backups(
     profile_state: State<'_, ProfileManagerState>,
-    profile_id: String,
+    _profile_id: String,  // Riservato per future funzionalità
 ) -> Result<ProfileResponse<Vec<String>>, String> {
     let manager = profile_state.manager.lock().await;
     

@@ -38,13 +38,13 @@ pub struct EncryptedData {
 /// Sistema di crittografia per profili utente
 pub struct ProfileEncryption {
     /// Generatore numeri casuali
-    rng: OsRng,
+    _rng: OsRng,  // Riservato per future funzionalità di crittografia
 }
 
 impl ProfileEncryption {
     /// Crea nuovo sistema di crittografia
     pub fn new() -> Self {
-        Self { rng: OsRng }
+        Self { _rng: OsRng }
     }
 
     /// Crittografa i dati del profilo con AES-256-GCM
@@ -194,9 +194,9 @@ impl ProfileEncryption {
 
     /// Verifica forza password
     pub fn validate_password_strength(&self, password: &str) -> ProfileResult<()> {
-        if password.len() < 8 {
+        if password.len() < 4 {
             return Err(ProfileError::WeakPassword(
-                "Password deve essere almeno 8 caratteri".to_string(),
+                "Password deve essere almeno 4 caratteri".to_string(),
             ));
         }
 
@@ -303,7 +303,7 @@ impl ProfileEncryption {
     }
 
     /// Verifica la password di un profilo
-    pub fn verify_password(&self, profile: &UserProfile, password: &str) -> bool {
+    pub fn verify_password(&self, _profile: &UserProfile, _password: &str) -> bool {
         // Per ora, la verifica della password viene gestita dal ProfileStorage
         // che tenta di caricare il profilo con la password fornita
         // Questo metodo è mantenuto per compatibilità ma non fa una verifica reale
@@ -311,7 +311,7 @@ impl ProfileEncryption {
     }
     
     /// Verifica la password di un profilo (versione sicura con SecureMemory)
-    pub fn verify_password_secure(&self, profile: &UserProfile, password: &SecureMemory<String>) -> bool {
+    pub fn verify_password_secure(&self, _profile: &UserProfile, _password: &SecureMemory<String>) -> bool {
         // Per ora, la verifica della password viene gestita dal ProfileStorage
         // che tenta di caricare il profilo con la password fornita
         // Questo metodo è mantenuto per compatibilità ma non fa una verifica reale

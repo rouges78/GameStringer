@@ -228,7 +228,7 @@ impl AntiCheatManager {
     }
 
     pub fn get_compatibility_strategies(&self, anti_cheat_name: &str) -> Vec<BypassStrategy> {
-        for (key, info) in &self.known_systems {
+        for (_key, info) in &self.known_systems {
             if info.name.to_lowercase().contains(&anti_cheat_name.to_lowercase()) {
                 return info.bypass_strategies.clone();
             }

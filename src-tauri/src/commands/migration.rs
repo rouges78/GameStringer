@@ -2,7 +2,7 @@
 use crate::commands::profiles::ProfileManagerState;
 use crate::commands::profile_settings::ProfileSettingsManagerState;
 use crate::profiles::manager::{LegacyMigrationResult, LegacyCredentialInfo, LegacySettingsInfo, LegacySettingsMigrationResult};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tauri::{command, State};
 
 /// Risposta generica per operazioni migrazione
@@ -179,7 +179,7 @@ pub async fn restore_legacy_credentials(
 pub async fn cleanup_legacy_credentials(
     profile_state: State<'_, ProfileManagerState>,
 ) -> Result<MigrationResponse<u32>, String> {
-    let manager = profile_state.manager.lock().await;
+    let _manager = profile_state.manager.lock().await;  // Riservato per future funzionalità
     
     let app_data = std::env::var("APPDATA")
         .map_err(|_| "APPDATA environment variable not found".to_string())?;
@@ -337,7 +337,7 @@ async fn create_legacy_settings_backup() -> Result<Vec<String>, String> {
 pub async fn cleanup_legacy_settings(
     profile_state: State<'_, ProfileManagerState>,
 ) -> Result<MigrationResponse<u32>, String> {
-    let manager = profile_state.manager.lock().await;
+    let _manager = profile_state.manager.lock().await;  // Riservato per future funzionalità
     
     let app_data = std::env::var("APPDATA")
         .map_err(|_| "APPDATA environment variable not found".to_string())?;

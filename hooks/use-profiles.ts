@@ -69,7 +69,9 @@ export function useProfiles(): UseProfilesReturn {
   const createProfile = useCallback(async (request: CreateProfileRequest): Promise<boolean> => {
     try {
       setError(null);
+      console.log('Creazione profilo con request:', request);
       const response = await invoke<ProfileResponse<UserProfile>>('create_profile', { request });
+      console.log('Risposta creazione profilo:', response);
       
       if (response.success && response.data) {
         // Ricarica lista profili
@@ -78,6 +80,7 @@ export function useProfiles(): UseProfilesReturn {
         setCurrentProfile(response.data);
         return true;
       } else {
+        console.error('Errore creazione profilo:', response.error);
         setError(response.error || 'Errore creazione profilo');
         return false;
       }
@@ -166,6 +169,30 @@ export function useProfiles(): UseProfilesReturn {
     ]);
   }, [loadProfiles, loadCurrentProfile]);
 
+  // Elimina profilo
+  const deleteProfile = useCallback(async (profileId: string, password: string): Promise<boolean> => {
+    try {
+      setError(null);
+      const response = await invoke<ProfileResponse<boolean>>('delete_profile', { 
+        profile_id: profileId, 
+        password 
+      });
+      
+      if (response.success) {
+        // Ricarica lista profili
+        await loadProfiles();
+        return true;
+      } else {
+        setError(response.error || 'Errore eliminazione profilo');
+        return false;
+      }
+    } catch (err) {
+      console.error('Errore eliminazione profilo:', err);
+      setError('Errore di connessione al backend');
+      return false;
+    }
+  }, [loadProfiles]);
+
   return {
     profiles,
     currentProfile,
@@ -176,5 +203,6 @@ export function useProfiles(): UseProfilesReturn {
     switchProfile,
     logout,
     refreshProfiles,
+    deleteProfile,
   };
 }

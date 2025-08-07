@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { ProfileAuthProvider } from '@/lib/profile-auth';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { MainLayout } from '@/components/layout/main-layout';
 import { sessionPersistence } from '@/lib/session-persistence';
+import { isProtectedRoute } from '@/lib/route-config';
 import { Loader2 } from 'lucide-react';
 
 interface ProfileWrapperProps {
@@ -13,6 +15,7 @@ interface ProfileWrapperProps {
 
 export function ProfileWrapper({ children }: ProfileWrapperProps) {
   const [isInitializing, setIsInitializing] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     const initialize = async () => {
@@ -53,18 +56,12 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
     );
   }
 
+  // Determina se la route corrente richiede autenticazione
+  const requireAuth = isProtectedRoute(pathname);
+
   return (
     <ProfileAuthProvider>
-      <ProtectedRoute
-        fallback={
-          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-white mb-2">Accesso Richiesto</h1>
-              <p className="text-blue-200">Seleziona un profilo per continuare</p>
-            </div>
-          </div>
-        }
-      >
+      <ProtectedRoute requireAuth={requireAuth}>
         <MainLayout>
           {children}
         </MainLayout>

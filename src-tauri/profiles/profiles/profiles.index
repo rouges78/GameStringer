@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "profiles": {
+    "8dfc60e1-8c45-4a6c-a153-00a93d780859": {
+      "id": "8dfc60e1-8c45-4a6c-a153-00a93d780859",
+      "name": "rouges",
+      "file_path": "profile_8dfc60e1-8c45-4a6c-a153-00a93d780859.json.enc",
+      "avatar_path": "gradient-2",
+      "created_at": "2025-08-06T23:18:59.780790600Z",
+      "last_accessed": "2025-08-06T23:18:59.780791700Z",
+      "is_locked": false,
+      "failed_attempts": 0,
+      "last_failed_attempt": null,
+      "file_hash": "4ce9c4f89468e2d137ab3d37d6ac8c764efb9d35f60e908cdbf8d714d9a37ea2"
+    },
+    "20864d02-10b5-482c-8aba-abf7b4782bcc": {
+      "id": "20864d02-10b5-482c-8aba-abf7b4782bcc",
+      "name": "Test5",
+      "file_path": "profile_20864d02-10b5-482c-8aba-abf7b4782bcc.json.enc",
+      "avatar_path": "gradient-5",
+      "created_at": "2025-08-07T00:56:01.009377300Z",
+      "last_accessed": "2025-08-07T00:56:01.009378500Z",
+      "is_locked": false,
+      "failed_attempts": 0,
+      "last_failed_attempt": null,
+      "file_hash": "a22247c6d0173dc55189f907ad96da1d67ca5134814f9510e1a2a9854164d70f"
+    },
+    "5803506d-1a76-4f14-9465-84b75a8020cd": {
+      "id": "5803506d-1a76-4f14-9465-84b75a8020cd",
+      "name": "rouges78",
+      "file_path": "profile_5803506d-1a76-4f14-9465-84b75a8020cd.json.enc",
+      "avatar_path": null,
+      "created_at": "2025-08-06T23:13:58.739245600Z",
+      "last_accessed": "2025-08-06T23:13:58.739246500Z",
+      "is_locked": false,
+      "failed_attempts": 0,
+      "last_failed_attempt": null,
+      "file_hash": "789a4722452816549061412d4bf7bf2e2c49aec1b2d4932270b96ea022a053a0"
+    },
+    "8978bf18-f8c0-40b3-8b5b-aa36ec9245a6": {
+      "id": "8978bf18-f8c0-40b3-8b5b-aa36ec9245a6",
+      "name": "Test55",
+      "file_path": "profile_8978bf18-f8c0-40b3-8b5b-aa36ec9245a6.json.enc",
+      "avatar_path": "gradient-3",
+      "created_at": "2025-08-07T01:06:52.826147500Z",
+      "last_accessed": "2025-08-07T01:06:52.826148800Z",
+      "is_locked": false,
+      "failed_attempts": 0,
+      "last_failed_attempt": null,
+      "file_hash": "33e91b63471cf766d81afeb79ed7e025950b0f35f6c33222830dc190a43ea5ec"
+    }
+  },
+  "last_updated": "2025-08-07T01:06:54.154193400Z"
+}

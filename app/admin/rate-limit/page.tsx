@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { withAuth } from '@/components/auth/protected-route';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +31,7 @@ interface RateLimitStats {
   };
 }
 
-export default function RateLimitDashboardPage() {
+function RateLimitDashboardPage() {
   const [stats, setStats] = useState<RateLimitStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -273,3 +274,6 @@ export default function RateLimitDashboardPage() {
     </div>
   );
 }
+
+// Export with authentication protection
+export default withAuth(RateLimitDashboardPage, { requireAuth: true });

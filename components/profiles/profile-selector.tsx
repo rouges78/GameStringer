@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { 
   User, 
   Lock, 
@@ -20,12 +21,15 @@ import {
   Shield,
   AlertTriangle,
   CheckCircle,
-  Loader2
+  Loader2,
+  MoreVertical,
+  Trash2
 } from 'lucide-react';
 import { useProfiles } from '@/hooks/use-profiles';
 import { ProfileInfo } from '@/types/profiles';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { getAvatarGradient, getInitials } from '@/lib/avatar-utils';
 
 interface ProfileSelectorProps {
   onProfileSelected: (profileId: string) => void;
@@ -43,8 +47,10 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
   const [password, setPassword] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
-  const { authenticateProfile } = useProfiles();
+  const { authenticateProfile, deleteProfile } = useProfiles();
 
   const handleAuthenticate = async () => {
     if (!password.trim()) {
@@ -73,14 +79,27 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const handleDeleteProfile = async () => {
+    if (!password.trim()) {
+      setAuthError('Inserisci la password per eliminare il profilo');
+      return;
+    }
+
+    setIsDeleting(true);
+    setAuthError(null);
+
+    const success = await deleteProfile(profile.id, password);
+    
+    if (!success) {
+      setAuthError('Password non corretta o errore eliminazione');
+    }
+    
+    setIsDeleting(false);
+    setShowDeleteConfirm(false);
+    setPassword('');
   };
+
+
 
   const getLastAccessedText = (lastAccessed: string) => {
     try {
@@ -111,8 +130,7 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
         <CardHeader className="pb-3">
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={profile.avatar_path} alt={profile.name} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+              <AvatarFallback className={`bg-gradient-to-br ${getAvatarGradient(profile.avatar_path)} text-white font-semibold`}>
                 {getInitials(profile.name)}
               </AvatarFallback>
             </Avatar>
@@ -312,15 +330,34 @@ export function ProfileSelector({ onProfileSelected, onCreateProfile }: ProfileS
           transition={{ delay: 0.2 }}
           className="text-center"
         >
-          <Button
-            onClick={onCreateProfile}
-            variant="outline"
-            size="lg"
-            className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
-          >
-            <Plus className="mr-2 h-5 w-5" />
-            Crea Nuovo Profilo
-          </Button>
+          <div className="space-y-4">
+            <Button
+              onClick={onCreateProfile}
+              variant="outline"
+              size="lg"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Crea Nuovo Profilo
+            </Button>
+            
+            {/* Temporary Skip Button for Testing */}
+            {profiles.length > 0 && (
+              <div>
+                <Button
+                  onClick={() => {
+                    // Simulate successful authentication for testing
+                    onProfileSelected(profiles[0].id);
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/60 hover:text-white/80 text-xs"
+                >
+                  Skip Auth (Testing)
+                </Button>
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* Footer */}

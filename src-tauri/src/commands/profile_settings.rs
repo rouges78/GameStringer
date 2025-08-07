@@ -1,12 +1,12 @@
 use crate::profiles::settings_manager::{ProfileSettingsManager, GlobalSettings, SettingsMigrationResult};
 use crate::profiles::models::ProfileSettings;
 use crate::profiles::errors::ProfileError;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tauri::{command, State};
-use std::path::PathBuf;
+// PathBuf rimosso - non utilizzato
 
 /// Stato globale per il ProfileSettingsManager
 pub struct ProfileSettingsManagerState {

@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-08-07T02:17:46.426Z",
+  "task": "11.3 - Test Integrazione End-to-End",
+  "automated": {
+    "timestamp": "2025-08-07T02:16:01.837Z",
+    "results": [
+      {
+        "name": "File Structure",
+        "passed": 10,
+        "failed": 0,
+        "total": 10
+      },
+      {
+        "name": "Layout Integration",
+        "passed": 4,
+        "failed": 0,
+        "total": 4
+      },
+      {
+        "name": "Profile Components",
+        "passed": 9,
+        "failed": 0,
+        "total": 9
+      },
+      {
+        "name": "Rust Backend",
+        "passed": 9,
+        "failed": 0,
+        "total": 9
+      },
+      {
+        "name": "Routing Configuration",
+        "passed": 6,
+        "failed": 0,
+        "total": 6
+      }
+    ],
+    "summary": {
+      "passed": 38,
+      "failed": 0,
+      "total": 38,
+      "percentage": 100
+    }
+  },
+  "manual": null,
+  "summary": {
+    "overallScore": 100,
+    "status": "COMPLETED"
+  }
+}

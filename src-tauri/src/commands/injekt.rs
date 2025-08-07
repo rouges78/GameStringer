@@ -152,7 +152,7 @@ pub async fn get_process_info(process_id: u32) -> Result<serde_json::Value, Stri
 }
 
 #[tauri::command]
-pub async fn inject_translation(process_id: u32, original_text: String, translated_text: String, position: Option<serde_json::Value>) -> Result<(), String> {
+pub async fn inject_translation(process_id: u32, original_text: String, translated_text: String, _position: Option<serde_json::Value>) -> Result<(), String> {
     log::info!("💉 Iniezione traduzione in PID {}: '{}' -> '{}'", 
         process_id, 
         if original_text.len() > 30 { format!("{}...", &original_text[..30]) } else { original_text.clone() },

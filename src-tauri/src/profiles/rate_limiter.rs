@@ -93,7 +93,7 @@ impl RateLimiter {
         // Cleanup periodico per evitare memory leak
         self.cleanup_if_needed();
 
-        let mut attempts = self.attempts.lock().unwrap();
+        let attempts = self.attempts.lock().unwrap();
         let now = Utc::now();
 
         // Se l'identificatore non esiste nella mappa, è il primo tentativo

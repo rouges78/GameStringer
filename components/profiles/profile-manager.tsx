@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -26,10 +26,13 @@ import {
   Loader2,
   RefreshCw,
   FileText,
-  Lock,\n  Database
+  Lock,
+  Database
 } from 'lucide-react';
 import { useProfiles } from '@/hooks/use-profiles';
-import { useProfileSettings } from '@/hooks/use-profile-settings';\nimport { MigrationWizard } from './migration-wizard';\nimport { SettingsMigrationWizard } from './settings-migration-wizard';
+import { useProfileSettings } from '@/hooks/use-profile-settings';
+import { MigrationWizard } from './migration-wizard';
+import { SettingsMigrationWizard } from './settings-migration-wizard';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 

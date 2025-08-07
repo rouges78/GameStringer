@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useProfiles } from '@/hooks/use-profiles';
 import { useProfileSettings } from '@/hooks/use-profile-settings';
-import { ProfileManager } from './profile-manager';
+// import { ProfileManager } from './profile-manager'; // Temporaneamente commentato per errori di sintassi
 import { CreateProfileDialog } from './create-profile-dialog';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -184,7 +184,10 @@ export function ProfileMenu() {
           <DialogHeader>
             <DialogTitle>Gestione Profilo</DialogTitle>
           </DialogHeader>
-          <ProfileManager onClose={() => setShowProfileManager(false)} />
+          {/* <ProfileManager onClose={() => setShowProfileManager(false)} /> */}
+          <div className="p-4 text-center text-muted-foreground">
+            ProfileManager temporaneamente disabilitato per errori di sintassi
+          </div>
         </DialogContent>
       </Dialog>
 

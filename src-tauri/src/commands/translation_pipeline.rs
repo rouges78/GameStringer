@@ -166,7 +166,7 @@ pub async fn get_pipeline_statistics(
         .ok_or("Pipeline traduzione non inizializzata")?;
     
     let stats = pipeline.get_pipeline_stats().await?;
-    let config = PipelineConfig::default(); // In produzione, esporre get_config()
+    let _config = PipelineConfig::default(); // In produzione, esporre get_config()
     
     let success_rate = if stats.total_requests > 0 {
         stats.successful_requests as f32 / stats.total_requests as f32

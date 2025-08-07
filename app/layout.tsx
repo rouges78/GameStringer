@@ -31,6 +31,7 @@ export default function RootLayout({
               <ErrorBoundary
                 showErrorDetails={process.env.NODE_ENV === 'development'}
               >
+                {/* ProfileWrapper integra ProfileAuthProvider e ProtectedRoute */}
                 <ProfileWrapper>
                   <ErrorBoundary
                     showErrorDetails={process.env.NODE_ENV === 'development'}

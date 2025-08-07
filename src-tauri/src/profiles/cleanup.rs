@@ -202,7 +202,7 @@ impl ProfileCleanupManager {
         self.collect_files_with_size(&self.cache_dir, &mut files_with_size)?;
 
         // Ordina per data di accesso (più vecchi prima)
-        files_with_size.sort_by_key(|(path, _, accessed)| *accessed);
+        files_with_size.sort_by_key(|(_path, _, accessed)| *accessed);
 
         let mut total_size = files_with_size.iter().map(|(_, size, _)| size).sum::<u64>();
 
@@ -358,7 +358,7 @@ impl ProfileCleanupManager {
         }
 
         let entries = fs::read_dir(dir)?;
-        let mut has_files = false;
+        let mut _has_files = false;
 
         for entry in entries {
             let entry = entry?;
@@ -378,10 +378,10 @@ impl ProfileCleanupManager {
                         log::debug!("Removed empty directory: {:?}", path);
                     }
                 } else {
-                    has_files = true;
+                    _has_files = true;
                 }
             } else {
-                has_files = true;
+                _has_files = true;
             }
         }
 

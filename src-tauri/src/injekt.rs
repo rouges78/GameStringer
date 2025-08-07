@@ -717,7 +717,7 @@ impl InjektTranslator {
     // === FUNZIONI DI STABILIZZAZIONE AVANZATE ===
     
     /// Rileva sistemi anti-cheat comuni
-    fn detect_anti_cheat(&self, pid: u32) -> Result<bool, Box<dyn Error>> {
+    fn detect_anti_cheat(&self, _pid: u32) -> Result<bool, Box<dyn Error>> {
         let anti_cheat_processes = vec![
             "BattlEye", "EasyAntiCheat", "VAC", "PunkBuster", "XIGNCODE",
             "nProtect", "Themida", "VMProtect", "Denuvo", "ACE"
@@ -752,7 +752,7 @@ impl InjektTranslator {
     }
     
     /// Ottiene i moduli caricati in un processo
-    fn get_process_modules(&self, handle: HANDLE) -> Result<Vec<ProcessModule>, Box<dyn Error>> {
+    fn get_process_modules(&self, _handle: HANDLE) -> Result<Vec<ProcessModule>, Box<dyn Error>> {
         let mut modules = Vec::new();
         
         unsafe {

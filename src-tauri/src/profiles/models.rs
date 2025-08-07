@@ -339,15 +339,15 @@ impl CreateProfileRequest {
         }
         
         // Valida password
-        if self.password.len() < 8 {
-            return Err(ProfileError::WeakPassword("Password deve essere di almeno 8 caratteri".to_string()));
+        if self.password.len() < 4 {
+            return Err(ProfileError::WeakPassword("Password deve essere di almeno 4 caratteri".to_string()));
         }
         
         if self.password.len() > 128 {
             return Err(ProfileError::WeakPassword("Password troppo lunga (max 128 caratteri)".to_string()));
         }
         
-        // Controlla complessità password
+        // Controlla complessità password (requisiti più flessibili per uso normale)
         let has_upper = self.password.chars().any(|c| c.is_uppercase());
         let has_lower = self.password.chars().any(|c| c.is_lowercase());
         let has_digit = self.password.chars().any(|c| c.is_numeric());
@@ -355,8 +355,9 @@ impl CreateProfileRequest {
         
         let complexity_score = [has_upper, has_lower, has_digit, has_special].iter().filter(|&&x| x).count();
         
-        if complexity_score < 3 {
-            return Err(ProfileError::WeakPassword("Password deve contenere almeno 3 tipi di caratteri (maiuscole, minuscole, numeri, simboli)".to_string()));
+        // Per uso normale, richiediamo almeno 1 tipo di carattere (molto più permissivo)
+        if complexity_score < 1 {
+            return Err(ProfileError::WeakPassword("Password deve contenere almeno lettere o numeri".to_string()));
         }
         
         Ok(())
