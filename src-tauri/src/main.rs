@@ -311,7 +311,7 @@ fn main() {
 
             // Memory Audit System
 
-            // Intelligent Cache System
+            // Intelligent Cache System - Sistema rimosso per cleanup warning
 
             // Profile Management System
             commands::profiles::list_profiles,

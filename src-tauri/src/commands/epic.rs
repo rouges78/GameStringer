@@ -1065,41 +1065,7 @@ async fn search_epic_configs_by_account_id(account_id: &str) -> Result<Vec<Strin
     }
 }
 
-/// Cerca nella cache web Epic Games
-async fn search_epic_web_cache(account_id: &str) -> Result<Vec<String>, String> {
-    let user_profile = std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\Users\\Default".to_string());
-    
-    let cache_paths = vec![
-        format!("{}\\AppData\\Local\\EpicGamesLauncher\\Saved\\webcache", user_profile),
-        format!("{}\\AppData\\Local\\EpicGamesLauncher\\Saved\\webcache_4430", user_profile),
-    ];
-    
-    let mut games = Vec::new();
-    
-    for cache_path in cache_paths {
-        let path = std::path::Path::new(&cache_path);
-        if path.exists() {
-            // Scansiona ricorsivamente la cache
-            if let Ok(entries) = std::fs::read_dir(path) {
-                for entry in entries.flatten() {
-                    if entry.path().is_file() {
-                        if let Ok(content) = std::fs::read_to_string(entry.path()) {
-                            if content.contains(account_id) {
-                                games.extend(extract_games_from_file_content(&content));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    if games.is_empty() {
-        Err("Nessun gioco trovato nella cache web".to_string())
-    } else {
-        Ok(games)
-    }
-}
+// Rimosso: search_epic_web_cache - funzione cache web non utilizzata (Task 4.2)
 
 /// Cerca nel registro Windows per l'Account ID
 async fn search_registry_by_account_id(account_id: &str) -> Result<Vec<String>, String> {

@@ -181,19 +181,17 @@ pub async fn clear_cache() -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_cache_stats() -> Result<serde_json::Value, String> {
-    log::info!("📊 Recupero statistiche cache");
+    log::info!("📊 Recupero statistiche cache (sistema cache intelligente rimosso)");
     
-    // TODO: Implementare statistiche reali della cache
+    // Sistema cache intelligente rimosso per cleanup warning (Task 4.2)
+    // Manteniamo solo statistiche base per compatibilità
     let stats = serde_json::json!({
-        "steam_games_cached": 0,
-        "game_details_cached": 0,
-        "howlongtobeat_cached": 0,
-        "steamgriddb_cached": 0,
-        "total_cache_size_mb": 0.0,
-        "last_cleanup": null,
-        "cache_hit_rate": 0.0
+        "cache_system_status": "removed",
+        "translation_cache_active": true,
+        "intelligent_cache_active": false,
+        "note": "Sistema cache intelligente rimosso per cleanup warning"
     });
     
-    log::info!("✅ Statistiche cache recuperate");
+    log::info!("✅ Statistiche cache base recuperate");
     Ok(stats)
 }
