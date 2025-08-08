@@ -7,7 +7,7 @@ use aes_gcm::{
     Aes256Gcm, Key, Nonce,
 };
 use pbkdf2::{
-    password_hash::{PasswordHash, PasswordHasher, SaltString},
+    password_hash::{PasswordHasher, SaltString},
     Pbkdf2,
 };
 use rand::RngCore;
@@ -36,6 +36,16 @@ pub struct EncryptedData {
 }
 
 /// Sistema di crittografia per profili utente
+/// 
+/// Implementa crittografia AES-256-GCM con derivazione chiave PBKDF2 per la sicurezza
+/// dei profili utente. Alcuni metodi sono marcati con #[allow(dead_code)] perché fanno
+/// parte dell'API di sicurezza che deve essere mantenuta per:
+/// - Validazione forza password
+/// - Generazione password sicure  
+/// - Verifica hash password
+/// - Informazioni crittografia
+/// 
+/// Questi metodi sono essenziali per la sicurezza anche se non utilizzati attualmente.
 pub struct ProfileEncryption {
     /// Generatore numeri casuali
     _rng: OsRng,  // Riservato per future funzionalità di crittografia
@@ -193,7 +203,7 @@ impl ProfileEncryption {
     }
 
     /// Verifica forza password
-    #[allow(dead_code)] // API per validazione password
+    #[allow(dead_code)] // API per validazione password - utilizzata nei test e per sicurezza
     pub fn validate_password_strength(&self, password: &str) -> ProfileResult<()> {
         if password.len() < 4 {
             return Err(ProfileError::WeakPassword(
@@ -239,8 +249,16 @@ impl ProfileEncryption {
         Ok(())
     }
 
+    /// Genera salt sicuro per crittografia
+    #[allow(dead_code)] // API per generazione salt - sicurezza crittografica
+    pub fn generate_secure_salt(&self) -> [u8; SALT_LENGTH] {
+        let mut salt = [0u8; SALT_LENGTH];
+        OsRng.fill_bytes(&mut salt);
+        salt
+    }
+
     /// Genera password sicura casuale
-    #[allow(dead_code)] // API per generazione password
+    #[allow(dead_code)] // API per generazione password - utilizzata nei test e per sicurezza
     pub fn generate_secure_password(&self, length: usize) -> String {
         use rand::seq::SliceRandom;
 
@@ -277,7 +295,7 @@ impl ProfileEncryption {
     }
 
     /// Calcola hash password per verifica (non per crittografia)
-    #[allow(dead_code)] // API per hash password
+    #[allow(dead_code)] // API per hash password - sistema di autenticazione sicura
     pub fn hash_password_for_verification(&self, password: &str) -> ProfileResult<String> {
         use argon2::{Argon2, PasswordHasher};
 
@@ -292,7 +310,7 @@ impl ProfileEncryption {
     }
 
     /// Verifica password contro hash
-    #[allow(dead_code)] // API per verifica hash password
+    #[allow(dead_code)] // API per verifica hash password - sistema di autenticazione sicura
     pub fn verify_password_hash(&self, password: &str, hash: &str) -> ProfileResult<bool> {
         use argon2::{Argon2, PasswordHash, PasswordVerifier};
 
@@ -307,7 +325,7 @@ impl ProfileEncryption {
     }
 
     /// Verifica la password di un profilo
-    #[allow(dead_code)] // API per verifica password profilo
+    #[allow(dead_code)] // API per verifica password profilo - compatibilità futura
     pub fn verify_password(&self, _profile: &UserProfile, _password: &str) -> bool {
         // Per ora, la verifica della password viene gestita dal ProfileStorage
         // che tenta di caricare il profilo con la password fornita
@@ -316,7 +334,7 @@ impl ProfileEncryption {
     }
     
     /// Verifica la password di un profilo (versione sicura con SecureMemory)
-    #[allow(dead_code)] // API per verifica password sicura
+    #[allow(dead_code)] // API per verifica password sicura - protezione memoria
     pub fn verify_password_secure(&self, _profile: &UserProfile, _password: &SecureMemory<String>) -> bool {
         // Per ora, la verifica della password viene gestita dal ProfileStorage
         // che tenta di caricare il profilo con la password fornita
@@ -325,7 +343,7 @@ impl ProfileEncryption {
     }
 
     /// Ottieni informazioni crittografia da dati crittografati
-    #[allow(dead_code)] // API per informazioni crittografia
+    #[allow(dead_code)] // API per informazioni crittografia - diagnostica e debug
     pub fn get_encryption_info(&self, encrypted_data: &[u8]) -> ProfileResult<EncryptionInfo> {
         let encrypted: EncryptedData = bincode::deserialize(encrypted_data)
             .map_err(|e| ProfileError::EncryptionError(format!("Errore deserializzazione: {}", e)))?;
