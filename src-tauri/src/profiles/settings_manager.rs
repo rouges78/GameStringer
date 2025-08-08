@@ -1,11 +1,11 @@
 // Modulo per gestione settings per profili
-use crate::profiles::models::{ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings, LibraryView, LibrarySort};
+use crate::profiles::models::{ProfileSettings, Theme, LibraryView, LibrarySort};
 use crate::profiles::errors::{ProfileError, ProfileResult};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::PathBuf;
 use tokio::fs;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 
 /// Gestore settings per profili
 #[derive(Debug)]

@@ -3,6 +3,7 @@ use crate::profiles::models::EncryptedCredential;
 use crate::profiles::manager::ProfileManager;
 use crate::profiles::errors::{ProfileError, ProfileResult};
 use crate::profiles::encryption::ProfileEncryption;
+use base64::{Engine as _, engine::general_purpose};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -101,7 +102,7 @@ impl PlainCredential {
         let encrypted_data = encryption.encrypt_profile_data(credential_json.as_bytes(), password)?;
 
         // Converte Vec<u8> in String base64
-        let encrypted_data_str = base64::encode(&encrypted_data);
+        let encrypted_data_str = general_purpose::STANDARD.encode(&encrypted_data);
 
         Ok(EncryptedCredential {
             store: self.store.as_str().to_string(),
@@ -172,7 +173,7 @@ impl ProfileCredentialManager {
             .ok_or_else(|| ProfileError::ProfileNotFound(format!("Credenziale {} non trovata", store.as_str())))?;
 
         // Decodifica da base64 e decrittografa i dati
-        let encrypted_bytes = base64::decode(&encrypted.encrypted_data)
+        let encrypted_bytes = general_purpose::STANDARD.decode(&encrypted.encrypted_data)
             .map_err(|e| ProfileError::CorruptedProfile(format!("Errore decodifica base64: {}", e)))?;
         let decrypted_data = self._encryption.decrypt_profile_data(&encrypted_bytes, profile_password)?;
 

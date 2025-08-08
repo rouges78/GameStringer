@@ -4,9 +4,8 @@ use tokio::sync::Mutex;
 use tokio::time::{interval, Duration as TokioDuration};
 
 use crate::notifications::{
-    errors::{NotificationError, NotificationResult},
+    errors::NotificationResult,
     storage::NotificationStorage,
-    models::NotificationPreferences,
 };
 
 /// Configurazione per il sistema di pulizia automatica
