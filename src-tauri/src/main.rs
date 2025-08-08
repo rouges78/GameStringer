@@ -44,7 +44,7 @@ fn main() {
 
     tauri::Builder::default()
         .manage(commands::anti_cheat::AntiCheatState::default())
-        // .manage(commands::performance::PerformanceOptimizerState::default()) // Rimosso per cleanup warning
+
         .manage(profile_state)
         .manage(settings_state)
         // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
@@ -214,12 +214,12 @@ fn main() {
             commands::anti_cheat::get_anti_cheat_cache_stats,
             commands::anti_cheat::clear_anti_cheat_cache,
             commands::anti_cheat::test_anti_cheat_detection,
-            // Performance Optimization
+            // Performance Optimization - Sistema rimosso per cleanup warning
 
             // Advanced OCR System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
             // commands::advanced_ocr::process_image_ocr,
             // commands::advanced_ocr::batch_process_images_ocr,
-            // commands::advanced_ocr::get_ocr_performance_metrics,
+            // commands::advanced_ocr::get_ocr_performance_metrics, // Sistema performance rimosso
             // commands::advanced_ocr::get_supported_ocr_engines,
             // commands::advanced_ocr::get_ocr_config,
             // commands::advanced_ocr::update_ocr_config,
@@ -287,10 +287,10 @@ fn main() {
             // commands::low_latency_optimizer::optimize_memory_usage,
             // commands::low_latency_optimizer::get_latency_optimizer_config,
             // commands::low_latency_optimizer::update_latency_optimizer_config,
-            // commands::low_latency_optimizer::test_latency_performance,
-            // commands::low_latency_optimizer::get_performance_recommendations,
+            // commands::low_latency_optimizer::test_latency_performance, // Sistema performance rimosso
+            // commands::low_latency_optimizer::get_performance_recommendations, // Sistema performance rimosso
             // commands::low_latency_optimizer::benchmark_optimizations,
-            // commands::low_latency_optimizer::reset_performance_stats,
+            // commands::low_latency_optimizer::reset_performance_stats, // Sistema performance rimosso
             // Translation Pipeline System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
             // commands::translation_pipeline::initialize_translation_pipeline,
             // commands::translation_pipeline::process_translation_pipeline,
@@ -299,7 +299,7 @@ fn main() {
             // commands::translation_pipeline::auto_optimize_pipeline,
             // commands::translation_pipeline::get_pipeline_config,
             // commands::translation_pipeline::update_pipeline_config,
-            // commands::translation_pipeline::test_pipeline_performance,
+            // commands::translation_pipeline::test_pipeline_performance, // Sistema performance rimosso
             // commands::translation_pipeline::get_pipeline_recommendations,
             // commands::translation_pipeline::benchmark_pipeline_vs_components,
             // commands::translation_pipeline::reset_pipeline_statistics,
