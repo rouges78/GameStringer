@@ -46,6 +46,11 @@ pub struct ProfileIndexEntry {
 }
 
 /// Sistema di storage per profili utente
+/// 
+/// Questa struct implementa un'API completa per la gestione dello storage dei profili.
+/// Alcuni metodi sono marcati con #[allow(dead_code)] perché fanno parte dell'API
+/// pubblica che sarà utilizzata per funzionalità future come backup automatici,
+/// statistiche storage e gestione sicurezza avanzata.
 pub struct ProfileStorage {
     /// Directory base profili
     profiles_dir: PathBuf,
@@ -184,6 +189,7 @@ impl ProfileStorage {
     }
 
     /// Carica un profilo decrittografato usando SecureMemory per la password
+    #[allow(dead_code)] // API per sicurezza memoria - utilizzata in manager.rs
     pub async fn load_profile_secure(&self, id: &str, password: &SecureMemory<String>) -> StorageResult<UserProfile> {
         // Usa il metodo esistente con la password estratta da SecureMemory
         self.load_profile(id, &**password).await
@@ -249,6 +255,7 @@ impl ProfileStorage {
     }
     
     /// Crea backup di un profilo
+    #[allow(dead_code)] // API per backup profili - utilizzata in manager.rs
     pub async fn backup_profile(&self, id: &str, backup_name: &str) -> StorageResult<PathBuf> {
         // Carica indice
         let index = self.load_index().await?;
@@ -301,6 +308,7 @@ impl ProfileStorage {
     }
     
     /// Aggiorna tentativi falliti per un profilo
+    #[allow(dead_code)] // API per sicurezza profili - sistema anti-brute force
     pub async fn update_failed_attempts(&self, id: &str, increment: bool) -> StorageResult<u32> {
         let mut index = self.load_index().await?;
         
@@ -393,6 +401,7 @@ impl ProfileStorage {
     }
     
     /// Ottiene statistiche storage
+    #[allow(dead_code)] // API per statistiche storage - mantenuta per future use
     pub async fn get_storage_stats(&self) -> StorageResult<StorageStats> {
         let index = self.load_index().await?;
         

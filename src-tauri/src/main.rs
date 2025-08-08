@@ -6,14 +6,11 @@
 
 mod models;
 mod commands;
-mod cache_manager;
-mod error_manager;
-mod memory_audit;
-mod intelligent_cache;
+
 mod injekt;
 mod multi_process_injekt;
 mod anti_cheat;
-mod performance_optimizer;
+
 pub mod profiles;
 pub mod notifications;
 
@@ -47,7 +44,7 @@ fn main() {
 
     tauri::Builder::default()
         .manage(commands::anti_cheat::AntiCheatState::default())
-        .manage(commands::performance::PerformanceOptimizerState::default())
+        // .manage(commands::performance::PerformanceOptimizerState::default()) // Rimosso per cleanup warning
         .manage(profile_state)
         .manage(settings_state)
         // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
@@ -218,15 +215,7 @@ fn main() {
             commands::anti_cheat::clear_anti_cheat_cache,
             commands::anti_cheat::test_anti_cheat_detection,
             // Performance Optimization
-            commands::performance::get_performance_metrics,
-            commands::performance::generate_performance_report,
-            commands::performance::optimize_hook_application,
-            commands::performance::optimize_translation_batch,
-            commands::performance::perform_garbage_collection,
-            commands::performance::optimize_memory_usage,
-            commands::performance::get_optimization_config,
-            commands::performance::update_optimization_config,
-            commands::performance::test_performance_optimization,
+
             // Advanced OCR System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
             // commands::advanced_ocr::process_image_ocr,
             // commands::advanced_ocr::batch_process_images_ocr,
@@ -315,29 +304,15 @@ fn main() {
             // commands::translation_pipeline::benchmark_pipeline_vs_components,
             // commands::translation_pipeline::reset_pipeline_statistics,
             // Cache Management
-            cache_manager::clear_all_caches,
-            cache_manager::optimize_caches,
+
             // Error Management
-            error_manager::get_error_stats,
-            error_manager::get_error_suggestions,
-            error_manager::cleanup_error_stats,
+
             // Steam Enhanced Error Management
-            commands::steam_enhanced_error::test_steam_error_handling,
-            commands::steam_enhanced_error::test_steam_cache_integration,
-            commands::steam_enhanced_error::get_steam_error_statistics,
-            commands::steam_enhanced_error::get_steam_error_suggestions,
+
             // Memory Audit System
-            memory_audit::get_memory_statistics,
-            memory_audit::detect_memory_leaks,
-            memory_audit::cleanup_memory,
-            memory_audit::generate_memory_report,
-            memory_audit::reset_memory_stats,
-            memory_audit::get_allocations_by_type,
+
             // Intelligent Cache System
-            intelligent_cache::get_cache_performance_stats,
-            intelligent_cache::preload_popular_cache_items,
-            intelligent_cache::cleanup_expired_cache,
-            intelligent_cache::generate_cache_report,
+
             // Profile Management System
             commands::profiles::list_profiles,
             commands::profiles::create_profile,

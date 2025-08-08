@@ -1,6 +1,6 @@
 pub mod steam;
 pub mod steam_enhanced;
-pub mod steam_enhanced_error;
+
 pub mod epic;
 pub mod epic_enhanced;
 pub mod gog;
@@ -15,7 +15,7 @@ pub mod utilities;
 pub mod patches;
 pub mod injekt;
 pub mod anti_cheat;
-pub mod performance;
+
 // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
 // pub mod advanced_ocr;
 // pub mod translation_backends;

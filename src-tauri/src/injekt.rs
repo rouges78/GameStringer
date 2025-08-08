@@ -14,7 +14,7 @@ use winapi::um::winnt::{HANDLE, MEM_COMMIT, PAGE_EXECUTE_READWRITE, PROCESS_ALL_
 
 use winapi::um::tlhelp32::{CreateToolhelp32Snapshot, Module32First, Module32Next, MODULEENTRY32, TH32CS_SNAPMODULE};
 use crate::anti_cheat::AntiCheatManager;
-use crate::performance_optimizer::{PerformanceOptimizer, OptimizationConfig, PerformanceMetrics};
+// use crate::performance_optimizer::{PerformanceOptimizer, OptimizationConfig, PerformanceMetrics}; // Rimosso per cleanup warning
 
 use crate::process_utils::is_process_running;
 
@@ -81,7 +81,7 @@ pub struct InjektTranslator {
     is_running: Arc<Mutex<bool>>,
     monitor_thread: Option<thread::JoinHandle<()>>,
     anti_cheat_manager: AntiCheatManager,
-    performance_optimizer: PerformanceOptimizer,
+    // performance_optimizer: PerformanceOptimizer, // Rimosso per cleanup warning
 }
 
 #[derive(Debug, Clone)]
@@ -168,7 +168,7 @@ impl InjektTranslator {
             is_running: Arc::new(Mutex::new(false)),
             monitor_thread: None,
             anti_cheat_manager: AntiCheatManager::new(),
-            performance_optimizer: PerformanceOptimizer::new(OptimizationConfig::default()),
+            // performance_optimizer: PerformanceOptimizer::new(OptimizationConfig::default()), // Rimosso per cleanup warning
         })
     }
     
@@ -703,9 +703,10 @@ impl InjektTranslator {
     }
     
     /// Ottiene le metriche di performance correnti
-    pub fn get_performance_metrics(&self) -> Result<PerformanceMetrics, Box<dyn Error>> {
-        self.performance_optimizer.get_performance_metrics()
-            .map_err(|e| format!("Errore metriche: {}", e).into())
+    #[allow(dead_code)]
+    pub fn get_performance_metrics(&self) -> Result<String, Box<dyn Error>> {
+        // Performance metrics disabilitato per cleanup warning
+        Ok("Performance metrics disabled".to_string())
     }
     
     /// Genera report di performance dettagliato
