@@ -53,7 +53,7 @@ pub struct PerformanceOptimizer {
     hook_pool: Arc<Mutex<Vec<HookHandle>>>,
     translation_cache: Arc<Mutex<HashMap<String, CachedTranslation>>>,
     last_gc: Arc<Mutex<DateTime<Utc>>>,
-    adaptive_polling_interval: Arc<Mutex<Duration>>,
+    _adaptive_polling_interval: Arc<Mutex<Duration>>,  // Riservato per polling adattivo
 }
 
 #[derive(Debug, Clone)]
@@ -61,12 +61,12 @@ struct HookHandle {
     id: usize,
     is_active: bool,
     last_used: DateTime<Utc>,
-    performance_score: f32,
+    _performance_score: f32,  // Riservato per scoring performance
 }
 
 #[derive(Debug, Clone)]
 struct CachedTranslation {
-    text: String,
+    _text: String,  // Riservato per cache testo originale
     translated: String,
     timestamp: DateTime<Utc>,
     hit_count: u32,
@@ -92,12 +92,13 @@ impl PerformanceOptimizer {
             hook_pool: Arc::new(Mutex::new(Vec::new())),
             translation_cache: Arc::new(Mutex::new(HashMap::new())),
             last_gc: Arc::new(Mutex::new(Utc::now())),
-            adaptive_polling_interval: Arc::new(Mutex::new(Duration::from_millis(polling_interval))),
+            _adaptive_polling_interval: Arc::new(Mutex::new(Duration::from_millis(polling_interval))),
         }
     }
 
     /// Costruttore alternativo che clona la configurazione
     /// Utile quando il config deve essere riutilizzato dopo la creazione dell'optimizer
+    #[allow(dead_code)] // API per creazione da config
     pub fn from_config(config: &OptimizationConfig) -> Self {
         Self::new(config.clone())
     }
@@ -128,7 +129,7 @@ impl PerformanceOptimizer {
                     id: pool.len() + i,
                     is_active: true,
                     last_used: Utc::now(),
-                    performance_score: 1.0,
+                    _performance_score: 1.0,
                 };
                 optimized_hooks.push(new_hook.id);
                 pool.push(new_hook);
@@ -204,12 +205,13 @@ impl PerformanceOptimizer {
     }
 
     /// Aggiunge traduzione alla cache con priorità intelligente
+    #[allow(dead_code)] // API per cache traduzioni
     pub fn cache_translation(&self, original: String, translated: String, priority: u8) {
         // Pattern di accesso sicuro con error handling
         match self.translation_cache.lock() {
             Ok(mut cache) => {
                 let cached_translation = CachedTranslation {
-                    text: original.clone(),
+                    _text: original.clone(),
                     translated,
                     timestamp: Utc::now(),
                     hit_count: 0,
@@ -226,6 +228,7 @@ impl PerformanceOptimizer {
     }
 
     /// Ottimizza l'intervallo di polling in modo adattivo
+    #[allow(dead_code)] // API per polling adattivo
     pub fn optimize_polling_interval(&self, current_load: f32) {
         if !self.config.enable_adaptive_polling {
             return;
@@ -242,7 +245,7 @@ impl PerformanceOptimizer {
             Duration::from_millis(self.config.polling_interval_ms)
         };
 
-        if let Ok(mut interval) = self.adaptive_polling_interval.lock() {
+        if let Ok(mut interval) = self._adaptive_polling_interval.lock() {
             *interval = new_interval;
         }
 
@@ -389,17 +392,20 @@ impl PerformanceOptimizer {
     }
 
     /// Aggiorna la configurazione dell'optimizer
+    #[allow(dead_code)] // API per aggiornamento config
     pub fn update_config(&mut self, new_config: OptimizationConfig) {
         self.config = new_config;
         log::info!("🔧 Configurazione Performance Optimizer aggiornata");
     }
 
     /// Ottiene una copia della configurazione corrente
+    #[allow(dead_code)] // API per accesso config
     pub fn get_config(&self) -> OptimizationConfig {
         self.config.clone()
     }
 
     /// Pulisce la cache delle traduzioni in modo sicuro
+    #[allow(dead_code)] // API per pulizia cache
     pub fn clear_translation_cache(&self) -> Result<usize, String> {
         match self.safe_cache_write(|cache| {
             let size = cache.len();
@@ -415,6 +421,7 @@ impl PerformanceOptimizer {
     }
 
     /// Ottiene statistiche della cache in modo sicuro
+    #[allow(dead_code)] // API per statistiche cache
     pub fn get_cache_stats(&self) -> HashMap<String, serde_json::Value> {
         let mut stats = HashMap::new();
         
@@ -533,13 +540,16 @@ impl PerformanceOptimizer {
 // Implementa thread-safe singleton per l'optimizer globale
 use once_cell::sync::Lazy;
 
+#[allow(dead_code)] // Optimizer globale per future funzionalità
 static GLOBAL_OPTIMIZER: Lazy<Arc<Mutex<Option<PerformanceOptimizer>>>> = 
     Lazy::new(|| Arc::new(Mutex::new(None)));
 
+#[allow(dead_code)] // API per accesso optimizer globale
 pub fn get_global_optimizer() -> Result<Arc<Mutex<Option<PerformanceOptimizer>>>, String> {
     Ok(GLOBAL_OPTIMIZER.clone())
 }
 
+#[allow(dead_code)] // API per inizializzazione optimizer globale
 pub fn initialize_global_optimizer(config: OptimizationConfig) -> Result<(), String> {
     let mut optimizer = GLOBAL_OPTIMIZER.lock().map_err(|_| "Errore inizializzazione optimizer")?;
     *optimizer = Some(PerformanceOptimizer::new(config));

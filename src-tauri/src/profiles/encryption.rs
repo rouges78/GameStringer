@@ -193,6 +193,7 @@ impl ProfileEncryption {
     }
 
     /// Verifica forza password
+    #[allow(dead_code)] // API per validazione password
     pub fn validate_password_strength(&self, password: &str) -> ProfileResult<()> {
         if password.len() < 4 {
             return Err(ProfileError::WeakPassword(
@@ -239,6 +240,7 @@ impl ProfileEncryption {
     }
 
     /// Genera password sicura casuale
+    #[allow(dead_code)] // API per generazione password
     pub fn generate_secure_password(&self, length: usize) -> String {
         use rand::seq::SliceRandom;
 
@@ -275,6 +277,7 @@ impl ProfileEncryption {
     }
 
     /// Calcola hash password per verifica (non per crittografia)
+    #[allow(dead_code)] // API per hash password
     pub fn hash_password_for_verification(&self, password: &str) -> ProfileResult<String> {
         use argon2::{Argon2, PasswordHasher};
 
@@ -289,6 +292,7 @@ impl ProfileEncryption {
     }
 
     /// Verifica password contro hash
+    #[allow(dead_code)] // API per verifica hash password
     pub fn verify_password_hash(&self, password: &str, hash: &str) -> ProfileResult<bool> {
         use argon2::{Argon2, PasswordHash, PasswordVerifier};
 
@@ -303,6 +307,7 @@ impl ProfileEncryption {
     }
 
     /// Verifica la password di un profilo
+    #[allow(dead_code)] // API per verifica password profilo
     pub fn verify_password(&self, _profile: &UserProfile, _password: &str) -> bool {
         // Per ora, la verifica della password viene gestita dal ProfileStorage
         // che tenta di caricare il profilo con la password fornita
@@ -311,6 +316,7 @@ impl ProfileEncryption {
     }
     
     /// Verifica la password di un profilo (versione sicura con SecureMemory)
+    #[allow(dead_code)] // API per verifica password sicura
     pub fn verify_password_secure(&self, _profile: &UserProfile, _password: &SecureMemory<String>) -> bool {
         // Per ora, la verifica della password viene gestita dal ProfileStorage
         // che tenta di caricare il profilo con la password fornita
@@ -319,6 +325,7 @@ impl ProfileEncryption {
     }
 
     /// Ottieni informazioni crittografia da dati crittografati
+    #[allow(dead_code)] // API per informazioni crittografia
     pub fn get_encryption_info(&self, encrypted_data: &[u8]) -> ProfileResult<EncryptionInfo> {
         let encrypted: EncryptedData = bincode::deserialize(encrypted_data)
             .map_err(|e| ProfileError::EncryptionError(format!("Errore deserializzazione: {}", e)))?;

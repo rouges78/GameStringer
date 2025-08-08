@@ -310,6 +310,8 @@ pub async fn get_failed_attempts(
     }
 }
 /// Comando: Ottieni informazioni dettagliate profilo
+/// API pubblica per accesso informazioni profilo dettagliate
+#[allow(dead_code)]
 #[command]
 pub async fn get_profile_info(
     profile_state: State<'_, ProfileManagerState>,
@@ -325,6 +327,8 @@ pub async fn get_profile_info(
 }
 
 /// Comando: Aggiorna avatar profilo
+/// API pubblica per gestione avatar profili
+#[allow(dead_code)]
 #[command]
 pub async fn update_profile_avatar(
     profile_state: State<'_, ProfileManagerState>,
@@ -340,6 +344,8 @@ pub async fn update_profile_avatar(
 }
 
 /// Comando: Cambia password profilo
+/// API pubblica per cambio password profili
+#[allow(dead_code)]
 #[command]
 pub async fn change_profile_password(
     profile_state: State<'_, ProfileManagerState>,
@@ -356,6 +362,8 @@ pub async fn change_profile_password(
 }
 
 /// Comando: Ottieni statistiche utilizzo profilo
+/// API pubblica per statistiche utilizzo profili
+#[allow(dead_code)]
 #[command]
 pub async fn get_profile_usage_stats(
     profile_state: State<'_, ProfileManagerState>,
@@ -370,6 +378,8 @@ pub async fn get_profile_usage_stats(
 }
 
 /// Comando: Verifica integrità profilo
+/// API pubblica per verifica integrità profili
+#[allow(dead_code)]
 #[command]
 pub async fn verify_profile_integrity(
     profile_state: State<'_, ProfileManagerState>,
@@ -384,6 +394,8 @@ pub async fn verify_profile_integrity(
 }
 
 /// Comando: Ripara profilo corrotto
+/// API pubblica per riparazione profili corrotti
+#[allow(dead_code)]
 #[command]
 pub async fn repair_profile(
     profile_state: State<'_, ProfileManagerState>,
@@ -399,6 +411,8 @@ pub async fn repair_profile(
 }
 
 /// Comando: Ottieni lista backup profilo
+/// API pubblica per gestione backup profili
+#[allow(dead_code)]
 #[command]
 pub async fn list_profile_backups(
     profile_state: State<'_, ProfileManagerState>,
@@ -413,6 +427,8 @@ pub async fn list_profile_backups(
 }
 
 /// Comando: Ripristina profilo da backup
+/// API pubblica per ripristino backup profili
+#[allow(dead_code)]
 #[command]
 pub async fn restore_profile_from_backup(
     profile_state: State<'_, ProfileManagerState>,
@@ -429,6 +445,8 @@ pub async fn restore_profile_from_backup(
 }
 
 /// Comando: Pulisci dati temporanei profilo
+/// API pubblica per pulizia dati temporanei profili
+#[allow(dead_code)]
 #[command]
 pub async fn cleanup_profile_temp_data(
     profile_state: State<'_, ProfileManagerState>,
@@ -443,6 +461,8 @@ pub async fn cleanup_profile_temp_data(
 }
 
 /// Comando: Ottieni dimensione dati profilo
+/// API pubblica per analisi dimensioni profili
+#[allow(dead_code)]
 #[command]
 pub async fn get_profile_data_size(
     profile_state: State<'_, ProfileManagerState>,
@@ -457,6 +477,8 @@ pub async fn get_profile_data_size(
 }
 
 /// Comando: Ottieni statistiche generali sistema profili
+/// API pubblica per statistiche sistema profili
+#[allow(dead_code)]
 #[command]
 pub async fn get_profiles_system_stats(
     profile_state: State<'_, ProfileManagerState>,
@@ -470,6 +492,8 @@ pub async fn get_profiles_system_stats(
 }
 
 /// Comando: Verifica salute sistema profili
+/// API pubblica per controllo salute sistema profili
+#[allow(dead_code)]
 #[command]
 pub async fn check_profiles_system_health(
     profile_state: State<'_, ProfileManagerState>,
@@ -483,6 +507,8 @@ pub async fn check_profiles_system_health(
 }
 
 /// Comando: Ottieni configurazione sistema profili
+/// API pubblica per configurazione sistema profili
+#[allow(dead_code)]
 #[command]
 pub async fn get_profiles_system_config(
     profile_state: State<'_, ProfileManagerState>,
@@ -496,6 +522,8 @@ pub async fn get_profiles_system_config(
 }
 
 /// Comando: Aggiorna configurazione sistema profili
+/// API pubblica per aggiornamento configurazione sistema profili
+#[allow(dead_code)]
 #[command]
 pub async fn update_profiles_system_config(
     profile_state: State<'_, ProfileManagerState>,

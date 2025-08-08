@@ -228,6 +228,7 @@ impl ProfileManager {
     }
 
     /// Crea ProfileManager con configurazione personalizzata
+    #[allow(dead_code)] // API pubblica per configurazione avanzata
     pub fn with_config(storage: ProfileStorage, cache_duration_seconds: u64) -> Self {
         Self {
             current_profile: None,
@@ -352,6 +353,7 @@ impl ProfileManager {
     }
 
     /// Aggiorna il profilo corrente
+    #[allow(dead_code)] // API per aggiornamento profilo corrente
     pub async fn update_current_profile(&mut self, password: &str) -> ProfileResult<()> {
         if let Some(profile) = &self.current_profile {
             let profile_name = profile.name.clone();
@@ -377,6 +379,7 @@ impl ProfileManager {
     }
 
     /// Aggiunge credenziale al profilo corrente
+    #[allow(dead_code)] // API per gestione credenziali
     pub async fn add_credential(&mut self, credential: EncryptedCredential, password: &str) -> ProfileResult<()> {
         if let Some(profile) = &mut self.current_profile {
             let store = credential.store.clone();
@@ -400,6 +403,7 @@ impl ProfileManager {
     }
 
     /// Rimuove credenziale dal profilo corrente
+    #[allow(dead_code)] // API per gestione credenziali
     pub async fn remove_credential(&mut self, store: &str, password: &str) -> ProfileResult<()> {
         if let Some(profile) = &mut self.current_profile {
             profile.remove_credential(store);
@@ -422,6 +426,7 @@ impl ProfileManager {
     }
 
     /// Ottiene credenziale per store
+    #[allow(dead_code)] // API per accesso credenziali
     pub fn get_credential(&self, store: &str) -> Option<&EncryptedCredential> {
         self.current_profile.as_ref()?.get_credential(store)
     }
@@ -449,6 +454,7 @@ impl ProfileManager {
     }
 
     /// Ottiene impostazioni profilo corrente
+    #[allow(dead_code)] // API per accesso impostazioni
     pub fn get_settings(&self) -> Option<&ProfileSettings> {
         self.current_profile.as_ref().map(|p| &p.settings)
     }
@@ -470,6 +476,7 @@ impl ProfileManager {
     }
 
     /// Ottiene statistiche sessione corrente
+    #[allow(dead_code)] // API per statistiche sessione
     pub fn get_session_stats(&self) -> Option<&ProfileSessionStats> {
         self.session_stats.as_ref()
     }
@@ -505,18 +512,21 @@ impl ProfileManager {
     }
 
     /// Conta profili totali
+    #[allow(dead_code)] // API per statistiche profili
     pub async fn count_profiles(&self) -> ProfileResult<usize> {
         let profiles = self.list_profiles().await?;
         Ok(profiles.len())
     }
 
     /// Verifica se esistono profili
+    #[allow(dead_code)] // API per verifica esistenza profili
     pub async fn has_profiles(&self) -> ProfileResult<bool> {
         let count = self.count_profiles().await?;
         Ok(count > 0)
     }
 
     /// Ottiene profilo più recente
+    #[allow(dead_code)] // API per accesso profilo recente
     pub async fn get_most_recent_profile(&self) -> ProfileResult<Option<ProfileInfo>> {
         let profiles = self.list_profiles().await?;
         Ok(profiles.into_iter().max_by_key(|p| p.last_accessed))
@@ -528,19 +538,7 @@ impl ProfileManager {
         self.cache_last_refresh = None;
     }
 
-    /// Aggiorna cache profili
-    async fn refresh_cache(&mut self) -> ProfileResult<()> {
-        let profiles = self.storage.list_profile_info().await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
-
-        self.profile_cache.clear();
-        for profile in profiles {
-            self.profile_cache.insert(profile.id.clone(), profile);
-        }
-        self.cache_last_refresh = Some(Utc::now());
-
-        Ok(())
-    }
+    // refresh_cache rimosso - non utilizzato
 
     /// Inizializza statistiche sessione
     pub fn init_session_stats(&mut self) {
@@ -553,14 +551,7 @@ impl ProfileManager {
         });
     }
 
-    /// Finalizza statistiche sessione
-    fn finalize_session_stats(&mut self) {
-        if let Some(stats) = &mut self.session_stats {
-            stats.total_session_time = Utc::now()
-                .signed_duration_since(stats.session_start)
-                .num_seconds() as u64;
-        }
-    }
+    // finalize_session_stats rimosso - non utilizzato
 
     /// Autentica un profilo con nome e password
     pub async fn authenticate_profile(&mut self, name: &str, password: &str) -> ProfileResult<UserProfile> {
@@ -643,6 +634,7 @@ impl ProfileManager {
     }
 
     /// Autentica un profilo tramite ID
+    #[allow(dead_code)] // API per autenticazione tramite ID
     pub async fn authenticate_profile_by_id(&mut self, profile_id: &str, password: &str) -> ProfileResult<UserProfile> {
         // Verifica se profilo esiste
         let profile_info = self.get_profile_info(profile_id).await?
@@ -674,6 +666,7 @@ impl ProfileManager {
     }
 
     /// Cambia profilo tramite ID
+    #[allow(dead_code)] // API per cambio profilo tramite ID
     pub async fn switch_profile_by_id(&mut self, profile_id: &str, password: &str) -> ProfileResult<UserProfile> {
         let profile_info = self.get_profile_info(profile_id).await?
             .ok_or_else(|| ProfileError::ProfileNotFound(profile_id.to_string()))?;
@@ -720,6 +713,7 @@ impl ProfileManager {
     }
 
     /// Effettua logout con timeout automatico
+    #[allow(dead_code)] // API per logout con timeout
     pub fn logout_with_timeout(&mut self, timeout_seconds: u64) -> ProfileResult<bool> {
         if self.is_session_expired(timeout_seconds) {
             self.logout()?;
@@ -742,6 +736,7 @@ impl ProfileManager {
     }
 
     /// Verifica se l'utente corrente può accedere a un profilo specifico
+    #[allow(dead_code)] // API per controllo accesso profilo
     pub fn can_access_profile(&self, profile_id: &str) -> bool {
         if let Some(current) = &self.current_profile {
             current.id == profile_id
@@ -768,6 +763,7 @@ impl ProfileManager {
     }
 
     /// Forza logout di tutti i profili (per sicurezza)
+    #[allow(dead_code)] // API per logout forzato
     pub fn force_logout_all(&mut self) {
         self.current_profile = None;
         self.session_stats = None;
@@ -776,6 +772,7 @@ impl ProfileManager {
     }
 
     /// Verifica integrità del profilo corrente
+    #[allow(dead_code)] // API per verifica integrità
     pub async fn verify_current_profile_integrity(&self) -> ProfileResult<bool> {
         if let Some(profile) = &self.current_profile {
             // Verifica che il profilo esista ancora nello storage
@@ -793,6 +790,7 @@ impl ProfileManager {
     }
 
     /// Aggiorna avatar profilo
+    #[allow(dead_code)] // API per gestione avatar
     pub async fn update_profile_avatar(&mut self, profile_id: &str, avatar_path: Option<String>) -> ProfileResult<()> {
         if let Some(profile) = &mut self.current_profile {
             if profile.id == profile_id {
@@ -808,6 +806,7 @@ impl ProfileManager {
     }
 
     /// Cambia password profilo
+    #[allow(dead_code)] // API per cambio password
     pub async fn change_profile_password(&mut self, profile_id: &str, old_password: &str, new_password: &str) -> ProfileResult<()> {
         // Verifica che il profilo esista e la vecchia password sia corretta
         let profile = self.storage.load_profile(profile_id, old_password).await
@@ -822,6 +821,7 @@ impl ProfileManager {
     }
 
     /// Ottiene statistiche utilizzo profilo
+    #[allow(dead_code)] // API per statistiche utilizzo
     pub async fn get_profile_usage_stats(&self, profile_id: &str) -> ProfileResult<ProfileUsageStats> {
         let profile_info = self.get_profile_info(profile_id).await?
             .ok_or_else(|| ProfileError::ProfileNotFound(profile_id.to_string()))?;
@@ -836,6 +836,7 @@ impl ProfileManager {
     }
 
     /// Verifica integrità profilo
+    #[allow(dead_code)] // API per verifica integrità profilo
     pub async fn verify_profile_integrity(&self, profile_id: &str) -> ProfileResult<bool> {
         match self.get_profile_info(profile_id).await? {
             Some(_) => Ok(true),
@@ -844,6 +845,7 @@ impl ProfileManager {
     }
 
     /// Ripara profilo corrotto
+    #[allow(dead_code)] // API per riparazione profilo
     pub async fn repair_profile(&mut self, profile_id: &str, password: &str) -> ProfileResult<()> {
         // Tenta di caricare il profilo
         let _profile = self.storage.load_profile(profile_id, password).await
@@ -854,12 +856,14 @@ impl ProfileManager {
     }
 
     /// Lista backup profilo
+    #[allow(dead_code)] // API per gestione backup
     pub async fn list_profile_backups(&self) -> ProfileResult<Vec<String>> {
         // Placeholder - implementazione semplificata
         Ok(vec![])
     }
 
     /// Ripristina profilo da backup
+    #[allow(dead_code)] // API per ripristino backup
     pub async fn restore_profile_from_backup(&mut self, _profile_id: &str, backup_path: &str, _password: &str) -> ProfileResult<()> {
         // Placeholder - implementazione semplificata
         println!("[PROFILE MANAGER] ✅ Profilo ripristinato da backup: {}", backup_path);
@@ -867,6 +871,7 @@ impl ProfileManager {
     }
 
     /// Pulisce dati temporanei profilo
+    #[allow(dead_code)] // API per pulizia dati temporanei
     pub async fn cleanup_profile_temp_data(&mut self, profile_id: &str) -> ProfileResult<u64> {
         // Placeholder - implementazione semplificata
         println!("[PROFILE MANAGER] ✅ Dati temporanei puliti per profilo: {}", profile_id);
@@ -874,12 +879,14 @@ impl ProfileManager {
     }
 
     /// Ottiene dimensione dati profilo
+    #[allow(dead_code)] // API per statistiche dimensioni
     pub async fn get_profile_data_size(&self, _profile_id: &str) -> ProfileResult<u64> {
         // Placeholder - implementazione semplificata
         Ok(1024) // 1KB placeholder
     }
 
     /// Ottiene statistiche sistema
+    #[allow(dead_code)] // API per statistiche sistema
     pub async fn get_system_stats(&self) -> ProfileResult<ProfilesSystemStats> {
         let profiles = self.list_profiles().await?;
         
@@ -896,6 +903,7 @@ impl ProfileManager {
     }
 
     /// Verifica salute sistema
+    #[allow(dead_code)] // API per controllo salute sistema
     pub async fn check_system_health(&self) -> ProfileResult<ProfilesHealthCheck> {
         let mut health_check = ProfilesHealthCheck::new();
         
@@ -911,11 +919,13 @@ impl ProfileManager {
     }
 
     /// Ottiene configurazione sistema
+    #[allow(dead_code)] // API per configurazione sistema
     pub async fn get_system_config(&self) -> ProfileResult<ProfilesSystemConfig> {
         Ok(ProfilesSystemConfig::default())
     }
 
     /// Aggiorna configurazione sistema
+    #[allow(dead_code)] // API per aggiornamento configurazione
     pub async fn update_system_config(&mut self, _config: ProfilesSystemConfig) -> ProfileResult<()> {
         println!("[PROFILE MANAGER] ✅ Configurazione sistema aggiornata");
         Ok(())
@@ -1151,6 +1161,7 @@ impl ProfileManager {
     }
 
     /// Ottiene statistiche storage
+    #[allow(dead_code)] // API per statistiche storage
     pub async fn get_storage_stats(&self) -> ProfileResult<crate::profiles::storage::StorageStats> {
         self.storage.get_storage_stats().await
             .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))
@@ -1547,26 +1558,31 @@ impl ProfileManager {
     }
 
     /// Ottiene il rate limiter
+    #[allow(dead_code)] // API per accesso rate limiter
     pub fn rate_limiter(&self) -> &RateLimiter {
         &self.rate_limiter
     }
     
     /// Ottiene la configurazione del rate limiter
+    #[allow(dead_code)] // API per configurazione rate limiter
     pub fn get_rate_limiter_config(&self) -> RateLimiterConfig {
         self.rate_limiter.get_config()
     }
     
     /// Imposta la configurazione del rate limiter
+    #[allow(dead_code)] // API per configurazione rate limiter
     pub fn set_rate_limiter_config(&mut self, config: RateLimiterConfig) {
         self.rate_limiter.set_config(config);
     }
     
     /// Resetta i tentativi di accesso per un profilo
+    #[allow(dead_code)] // API per reset tentativi login
     pub fn reset_login_attempts(&self, profile_id: &str) {
         self.rate_limiter.reset_attempts(profile_id);
     }
 
     /// Aggiunge un metodo di login che è un alias per authenticate_profile
+    #[allow(dead_code)] // API alias per autenticazione
     pub async fn login(&mut self, profile_id: &str, password: &str) -> ProfileResult<UserProfile> {
         // Trova il profilo per ID
         let profile_info = self.get_profile_info(profile_id).await?

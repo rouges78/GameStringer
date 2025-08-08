@@ -14,7 +14,8 @@ mod injekt;
 mod multi_process_injekt;
 mod anti_cheat;
 mod performance_optimizer;
-mod profiles;
+pub mod profiles;
+pub mod notifications;
 
 use profiles::storage::ProfileStorage;
 use profiles::manager::ProfileManager;

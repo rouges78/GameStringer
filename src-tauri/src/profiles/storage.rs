@@ -277,6 +277,7 @@ impl ProfileStorage {
     }
     
     /// Salva avatar profilo
+    #[allow(dead_code)] // API per gestione avatar
     pub async fn save_avatar(&self, profile_id: &str, avatar_data: &[u8], extension: &str) -> StorageResult<String> {
         let avatar_filename = format!("avatar_{}.{}", profile_id, extension);
         let avatar_path = self.avatars_dir.join(&avatar_filename);
@@ -289,6 +290,7 @@ impl ProfileStorage {
     }
     
     /// Elimina avatar profilo
+    #[allow(dead_code)] // API per gestione avatar
     pub async fn delete_avatar(&self, avatar_filename: &str) -> StorageResult<()> {
         let avatar_path = self.avatars_dir.join(avatar_filename);
         if avatar_path.exists() {

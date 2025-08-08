@@ -187,8 +187,8 @@ mod end_to_end_tests {
         
         println!("✅ Workflow completo testato con successo!");
     }
-}   
- #[tokio::test]
+
+    #[tokio::test]
     async fn test_profile_switching_and_data_isolation() {
         let (mut manager, _temp_dir) = create_test_manager().await;
 
@@ -975,7 +975,6 @@ mod end_to_end_tests {
             ("Mom", "MomSecurePass456!", Theme::Light, "it"),
             ("Teen", "TeenGamePass789!", Theme::Auto, "en"),
             ("Kid", "KidSafePass012!", Theme::Light, "it"),
-        ];t, "it"),
         ];
         
         let mut created_profiles = Vec::new();
@@ -1205,4 +1204,4 @@ mod end_to_end_tests {
 
         println!("✅ Test scenario famiglia multi-utente completato con successo!");
     }
-}}
+}
