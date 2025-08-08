@@ -11,7 +11,8 @@
   - Creare piano di priorità per cleanup
   - _Requirements: 1.1, 1.2, 1.3_
 
-- [ ] 1.2 Identificare codice sicuro da rimuovere vs codice da mantenere
+- [-] 1.2 Identificare codice sicuro da rimuovere vs codice da mantenere
+
   - Analizzare funzioni/struct completamente inutilizzate
   - Identificare codice per future feature da marcare con #[allow]
   - Creare lista di elementi da rimuovere definitivamente
@@ -32,33 +33,49 @@
   - Ottimizzare pattern di utilizzo variabili
   - _Requirements: 2.3, 5.1, 5.2_
 
-- [ ] 2.2 Rimuovere assegnazioni non necessarie
+- [x] 2.2 Rimuovere assegnazioni non necessarie
+
+
+
+
+
   - Eliminare assegnazioni a variabili mai lette
   - Semplificare espressioni che non vengono utilizzate
   - Ottimizzare flusso di controllo
   - _Requirements: 2.3, 5.1, 5.2_
 
 - [ ] 3. Pulizia dead code - Profile System
-- [ ] 3.1 Pulire warning ProfileManager (25+ warning)
+- [x] 3.1 Pulire warning ProfileManager (25+ warning)
+
+
   - Valutare metodi non utilizzati in ProfileManager
   - Marcare con #[allow(dead_code)] metodi API pubblici
   - Rimuovere metodi completamente inutilizzati
   - _Requirements: 2.1, 2.2, 3.1_
 
-- [ ] 3.2 Pulire warning ProfileStorage (15+ warning)
+- [x] 3.2 Pulire warning ProfileStorage (15+ warning)
+
+
+
   - Analizzare metodi storage non utilizzati
   - Mantenere API completa per future use
   - Rimuovere implementazioni duplicate o obsolete
   - _Requirements: 2.1, 2.2, 3.1_
 
-- [ ] 3.3 Pulire warning ProfileEncryption (10+ warning)
+- [x] 3.3 Pulire warning ProfileEncryption (10+ warning)
+
+
+
   - Valutare metodi crittografia non utilizzati
   - Mantenere metodi di sicurezza anche se non usati ora
   - Documentare scopo dei metodi mantenuti
   - _Requirements: 2.1, 2.2, 3.1_
 
 - [ ] 4. Pulizia dead code - Performance System
-- [ ] 4.1 Pulire warning PerformanceOptimizer (25+ warning)
+- [x] 4.1 Pulire warning PerformanceOptimizer (25+ warning)
+
+
+
   - Analizzare se sistema performance è utilizzato
   - Decidere se rimuovere completamente o marcare unused
   - Mantenere hook essenziali per injection system
