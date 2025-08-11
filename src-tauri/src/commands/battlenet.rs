@@ -32,8 +32,19 @@ struct BattlenetCredentials {
     pub nonce: String,
 }
 
+/// Represents a Battle.net user account with authentication details
+/// 
+/// This structure contains the essential information for a Battle.net user account,
+/// including username, email, battletag, and optional profile identifier.
+/// 
+/// # Fields
+/// 
+/// * `username` - The Battle.net username
+/// * `email` - The user's email address
+/// * `battletag` - Optional Battle.net BattleTag
+/// * `profile_id` - Optional Battle.net profile identifier
 #[derive(Debug, Serialize, Deserialize)]
-struct BattlenetUser {
+pub struct BattlenetUser {
     pub username: String,
     pub email: String,
     pub battletag: Option<String>,

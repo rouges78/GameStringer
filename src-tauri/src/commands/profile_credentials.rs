@@ -1,4 +1,8 @@
 // Comandi Tauri per gestione credenziali profili
+// FUTURE USE: Complete credential management API for profile system
+// This module provides secure credential storage and management functionality
+// that will be used when the profile system is fully integrated with game launchers
+
 use crate::profiles::{ProfileCredentialManager, PlainCredential, StoreType, CredentialInfo, MigrationResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -6,11 +10,16 @@ use std::sync::Mutex;
 use tauri::State;
 
 /// Stato globale del credential manager
+/// FUTURE USE: Will be used for managing credentials across different game stores
+#[allow(dead_code)]
 pub struct CredentialManagerState {
     pub manager: Mutex<ProfileCredentialManager>,
 }
 
 impl CredentialManagerState {
+    /// Creates a new credential manager state
+    /// FUTURE USE: Will be initialized when profile system is fully deployed
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             manager: Mutex::new(ProfileCredentialManager::new()),
@@ -19,6 +28,8 @@ impl CredentialManagerState {
 }
 
 /// Richiesta per salvare credenziale
+/// FUTURE USE: Request structure for saving game store credentials
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct SaveCredentialRequest {
     pub store: String,
@@ -29,6 +40,8 @@ pub struct SaveCredentialRequest {
 }
 
 /// Richiesta per caricare credenziale
+/// FUTURE USE: Request structure for loading stored credentials
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct LoadCredentialRequest {
     pub store: String,
@@ -47,6 +60,8 @@ pub struct LoadCredentialResponse {
 }
 
 /// Salva credenziale per il profilo attivo
+/// FUTURE USE: Tauri command for securely saving game store credentials
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn save_profile_credential(
     request: SaveCredentialRequest,
@@ -78,6 +93,8 @@ pub async fn save_profile_credential(
 }
 
 /// Carica credenziale per il profilo attivo
+/// FUTURE USE: Tauri command for loading stored credentials
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn load_profile_credential(
     request: LoadCredentialRequest,
@@ -103,6 +120,8 @@ pub async fn load_profile_credential(
 }
 
 /// Rimuove credenziale per il profilo attivo
+/// FUTURE USE: Tauri command for removing stored credentials
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn remove_profile_credential(
     store: String,
@@ -122,6 +141,8 @@ pub async fn remove_profile_credential(
 }
 
 /// Lista store con credenziali salvate
+/// FUTURE USE: Tauri command for listing available credential stores
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn list_profile_credentials(
     state: State<'_, CredentialManagerState>,
@@ -136,6 +157,8 @@ pub async fn list_profile_credentials(
 }
 
 /// Verifica se esiste credenziale per uno store
+/// FUTURE USE: Tauri command for checking credential existence
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn has_profile_credential(
     store: String,
@@ -152,6 +175,8 @@ pub async fn has_profile_credential(
 }
 
 /// Ottiene informazioni credenziale senza dati sensibili
+/// FUTURE USE: Tauri command for getting credential metadata
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn get_profile_credential_info(
     store: String,
@@ -168,6 +193,8 @@ pub async fn get_profile_credential_info(
 }
 
 /// Migra credenziali dal sistema legacy
+/// FUTURE USE: Tauri command for migrating existing credentials
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn migrate_legacy_credentials(
     profile_password: String,
@@ -181,6 +208,8 @@ pub async fn migrate_legacy_credentials(
 }
 
 /// Testa connessione con credenziali salvate
+/// FUTURE USE: Tauri command for testing credential validity
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn test_profile_credential_connection(
     store: String,
@@ -206,6 +235,8 @@ pub async fn test_profile_credential_connection(
 }
 
 /// Test connessione Steam
+/// FUTURE USE: Helper function for testing Steam API connectivity
+#[allow(dead_code)]
 async fn test_steam_connection(credential: &PlainCredential) -> Result<String, String> {
     // Implementazione placeholder - dovrebbe chiamare le API Steam
     if credential.username.is_empty() || credential.password.is_empty() {
@@ -216,6 +247,8 @@ async fn test_steam_connection(credential: &PlainCredential) -> Result<String, S
 }
 
 /// Test connessione Ubisoft
+/// FUTURE USE: Helper function for testing Ubisoft Connect API connectivity
+#[allow(dead_code)]
 async fn test_ubisoft_connection(credential: &PlainCredential) -> Result<String, String> {
     // Implementazione placeholder - dovrebbe chiamare le API Ubisoft
     if credential.username.is_empty() || credential.password.is_empty() {
@@ -226,6 +259,8 @@ async fn test_ubisoft_connection(credential: &PlainCredential) -> Result<String,
 }
 
 /// Test connessione Epic
+/// FUTURE USE: Helper function for testing Epic Games Store API connectivity
+#[allow(dead_code)]
 async fn test_epic_connection(credential: &PlainCredential) -> Result<String, String> {
     // Implementazione placeholder - dovrebbe chiamare le API Epic
     if credential.username.is_empty() || credential.password.is_empty() {
@@ -236,6 +271,8 @@ async fn test_epic_connection(credential: &PlainCredential) -> Result<String, St
 }
 
 /// Pulisce tutte le credenziali del profilo attivo
+/// FUTURE USE: Tauri command for clearing all stored credentials
+#[allow(dead_code)]
 #[tauri::command]
 pub async fn clear_all_profile_credentials(
     profile_password: String,

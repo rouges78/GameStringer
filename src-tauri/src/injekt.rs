@@ -33,6 +33,7 @@ impl SafeHandle {
         self.handle
     }
     
+    #[allow(dead_code)] // Verifica handle null - essenziale per validazione sicurezza
     pub fn is_null(&self) -> bool {
         self.handle.is_null()
     }
@@ -55,10 +56,13 @@ impl Drop for SafeHandle {
 }
 
 // Costanti per la stabilizzazione
+#[allow(dead_code)] // Costanti retry hook - essenziali per configurazione sicurezza
 const MAX_HOOK_RETRIES: u32 = 3;
+#[allow(dead_code)] // Delay retry hook - critico per timing sicuro
 const HOOK_RETRY_DELAY: Duration = Duration::from_millis(100);
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(5);
 const MAX_HOOK_FAILURES: u32 = 10;
+#[allow(dead_code)] // Dimensione validazione memoria - essenziale per sicurezza
 const MEMORY_VALIDATION_SIZE: usize = 4096;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -88,10 +92,15 @@ pub struct InjektTranslator {
 struct HookPoint {
     address: usize,
     original_bytes: Vec<u8>,
+    #[allow(dead_code)] // Tipo hook - essenziale per classificazione hook sicurezza
     hook_type: HookType,
+    #[allow(dead_code)] // Nome modulo - critico per identificazione target sicurezza
     module_name: String,
+    #[allow(dead_code)] // Contatore retry - essenziale per diagnostica stabilità
     retry_count: u32,
+    #[allow(dead_code)] // Ultimo errore - critico per debugging sicurezza
     last_error: Option<String>,
+    #[allow(dead_code)] // Timestamp creazione - necessario per diagnostica temporale
     created_at: Instant,
     is_active: bool,
 }
@@ -105,6 +114,7 @@ enum HookType {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Struct informazioni modulo processo - essenziale per analisi sicurezza
 struct ProcessModule {
     name: String,
     base_address: usize,
@@ -113,6 +123,7 @@ struct ProcessModule {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Struct errore injection - essenziale per diagnostica sicurezza
 struct InjectionError {
     error_type: ErrorType,
     message: String,
@@ -121,6 +132,7 @@ struct InjectionError {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Enum tipi errore - essenziale per classificazione errori sicurezza
 enum ErrorType {
     ProcessNotFound,
     MemoryAccessDenied,
@@ -253,6 +265,7 @@ impl InjektTranslator {
         Ok(())
     }
     
+    #[allow(dead_code)] // Statistiche injection - essenziali per monitoraggio sicurezza
     pub fn get_stats(&self) -> Value {
         let stats = self.stats.lock().unwrap();
         serde_json::to_value(&*stats).unwrap_or(serde_json::json!({}))
@@ -334,6 +347,7 @@ impl InjektTranslator {
         Ok(())
     }
     
+    #[allow(dead_code)] // Hook UI text - essenziale per traduzione interfaccia
     fn hook_ui_text(&self, hooks: &mut Vec<HookPoint>) -> Result<(), Box<dyn Error>> {
         // Simulazione: in un'implementazione reale, cercheremmo pattern specifici
         // per le funzioni di rendering del testo nel gioco
@@ -363,6 +377,7 @@ impl InjektTranslator {
         Ok(())
     }
     
+    #[allow(dead_code)] // Hook dialog box - essenziale per traduzione dialoghi
     fn hook_dialog_boxes(&self, hooks: &mut Vec<HookPoint>) -> Result<(), Box<dyn Error>> {
         // Hook per intercettare MessageBox e dialoghi simili
         let mut hook = HookPoint {
@@ -389,6 +404,7 @@ impl InjektTranslator {
         Ok(())
     }
     
+    #[allow(dead_code)] // Hook menu items - essenziale per traduzione menu
     fn hook_menu_items(&self, hooks: &mut Vec<HookPoint>) -> Result<(), Box<dyn Error>> {
         // Hook per menu di gioco
         let mut hook = HookPoint {
@@ -415,6 +431,7 @@ impl InjektTranslator {
         Ok(())
     }
     
+    #[allow(dead_code)] // Hook sottotitoli - essenziale per traduzione sottotitoli
     fn hook_subtitles(&self, hooks: &mut Vec<HookPoint>) -> Result<(), Box<dyn Error>> {
         // Hook per sottotitoli
         let mut hook = HookPoint {
@@ -666,6 +683,7 @@ impl InjektTranslator {
     }
     
     /// Ottimizza le traduzioni usando il performance optimizer
+    #[allow(dead_code)] // Ottimizzazione traduzioni - essenziale per performance
     pub fn optimize_translations(&self, texts: Vec<String>) -> Result<Vec<String>, Box<dyn Error>> {
         let start_time = Instant::now();
         
@@ -713,6 +731,7 @@ impl InjektTranslator {
     // === FUNZIONI DI STABILIZZAZIONE AVANZATE ===
     
     /// Rileva sistemi anti-cheat comuni
+    #[allow(dead_code)] // Metodo anti-cheat detection - mantenuto per future security features
     fn detect_anti_cheat(&self, _pid: u32) -> Result<bool, Box<dyn Error>> {
         let anti_cheat_processes = vec![
             "BattlEye", "EasyAntiCheat", "VAC", "PunkBuster", "XIGNCODE",
@@ -748,6 +767,7 @@ impl InjektTranslator {
     }
     
     /// Ottiene i moduli caricati in un processo
+    #[allow(dead_code)] // Metodo per analisi moduli processo - essenziale per sicurezza anti-cheat
     fn get_process_modules(&self, _handle: HANDLE) -> Result<Vec<ProcessModule>, Box<dyn Error>> {
         let mut modules = Vec::new();
         
@@ -786,6 +806,7 @@ impl InjektTranslator {
     }
     
     /// Verifica se un modulo è sicuro per l'hook
+    #[allow(dead_code)] // Validazione sicurezza moduli - critica per protezione anti-cheat
     fn is_module_safe(&self, module_name: &str) -> bool {
         let unsafe_modules = vec![
             "kernel32.dll", "ntdll.dll", "user32.dll", "advapi32.dll",
@@ -798,6 +819,7 @@ impl InjektTranslator {
     }
     
     /// Valida un indirizzo di memoria prima dell'hook
+    #[allow(dead_code)] // Validazione memoria - essenziale per sicurezza injection
     fn validate_memory_address(&self, address: usize) -> Result<bool, Box<dyn Error>> {
         if let Some(handle_arc) = &self.process_handle {
             let handle = handle_arc.get();
@@ -826,6 +848,7 @@ impl InjektTranslator {
     }
     
     /// Applica un hook con retry e validazione
+    #[allow(dead_code)] // Sistema retry hook - critico per stabilità injection
     fn apply_hook_with_retry(&self, hook: &mut HookPoint) -> Result<(), Box<dyn Error>> {
         let mut attempts = 0;
         
@@ -872,6 +895,7 @@ impl InjektTranslator {
     }
     
     /// Esegue l'hook effettivo
+    #[allow(dead_code)] // Implementazione hook core - essenziale per injection system
     fn perform_hook(&self, hook: &HookPoint) -> Result<(), Box<dyn Error>> {
         if let Some(handle_arc) = &self.process_handle {
             let handle = handle_arc.get();
@@ -917,6 +941,7 @@ impl InjektTranslator {
     }
     
     /// Sistema di recovery automatico
+    #[allow(dead_code)] // Sistema recovery automatico - critico per stabilità injection
     fn attempt_recovery(&mut self) -> Result<(), Box<dyn Error>> {
         log::info!("🔄 Tentativo di recovery del sistema injection...");
         

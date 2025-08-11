@@ -6,6 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SimpleIntegrationTest } from '@/components/debug/simple-integration-test';
+import Script from 'next/script';
 
 export default function DebugPage() {
   const [apiKey, setApiKey] = useState('');
@@ -106,8 +109,17 @@ export default function DebugPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <Card>
+    <>
+      <Script src="/test-integration.js" />
+      <div className="container mx-auto p-6 max-w-4xl">
+      <Tabs defaultValue="steam-api" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="steam-api">Debug Steam API</TabsTrigger>
+          <TabsTrigger value="tauri-integration">Test Integrazione Tauri</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="steam-api">
+          <Card>
         <CardHeader>
           <CardTitle>🔍 Debug API Steam</CardTitle>
           <CardDescription>
@@ -285,6 +297,13 @@ export default function DebugPage() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+        
+        <TabsContent value="tauri-integration">
+          <SimpleIntegrationTest />
+        </TabsContent>
+      </Tabs>
     </div>
+    </>
   );
 }

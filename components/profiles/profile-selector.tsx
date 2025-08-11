@@ -191,6 +191,7 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         onKeyPress={handleKeyPress}
+                        onClick={(e) => e.stopPropagation()}
                         placeholder="Inserisci la password"
                         className="pr-10"
                         disabled={isAuthenticating}
@@ -200,7 +201,10 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
                         variant="ghost"
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowPassword(!showPassword);
+                        }}
                         disabled={isAuthenticating}
                       >
                         {showPassword ? (
@@ -220,7 +224,10 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
                   )}
 
                   <Button 
-                    onClick={handleAuthenticate}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAuthenticate();
+                    }}
                     disabled={isAuthenticating || !password.trim()}
                     className="w-full"
                   >
@@ -313,12 +320,13 @@ export function ProfileSelector({ onProfileSelected, onCreateProfile }: ProfileS
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <AnimatePresence>
             {profiles.map((profile) => (
-              <ProfileCard
-                key={profile.id}
-                profile={profile}
-                onSelect={handleProfileAuthenticated}
-                isSelected={selectedProfileId === profile.id}
-              />
+              <div key={profile.id} onClick={() => handleProfileSelect(profile)}>
+                <ProfileCard
+                  profile={profile}
+                  onSelect={handleProfileAuthenticated}
+                  isSelected={selectedProfileId === profile.id}
+                />
+              </div>
             ))}
           </AnimatePresence>
         </div>

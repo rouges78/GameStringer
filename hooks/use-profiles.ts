@@ -55,11 +55,17 @@ export function useProfiles(): UseProfilesReturn {
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
-      await Promise.all([
-        loadProfiles(),
-        loadCurrentProfile()
-      ]);
-      setIsLoading(false);
+      try {
+        await Promise.all([
+          loadProfiles(),
+          loadCurrentProfile()
+        ]);
+      } catch (error) {
+        console.error('Errore durante inizializzazione sistema profili:', error);
+        setError('Errore inizializzazione sistema profili');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     initialize();

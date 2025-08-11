@@ -15,19 +15,12 @@ pub mod utilities;
 pub mod patches;
 pub mod injekt;
 pub mod anti_cheat;
-
-// TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
-// pub mod advanced_ocr;
-// pub mod translation_backends;
-// pub mod offline_translation;
-// pub mod translation_logger;
-// pub mod low_latency_optimizer;
-// pub mod translation_pipeline;
 pub mod dlc_manager;
-pub mod hltb_manager;
+// pub mod hltb_manager; // Rimosso per eliminare dipendenza xml5ever
 pub mod launcher;
 pub mod profile_credentials;
 pub mod profiles;
 pub mod profile_settings;
 pub mod migration;
 pub mod validation;
+pub mod notifications;

@@ -620,6 +620,21 @@ impl NotificationStorage {
             updated_at,
         }))
     }
+
+    /// Elimina le preferenze notifiche per un profilo
+    pub async fn delete_preferences(&self, profile_id: &str) -> NotificationResult<()> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        conn.execute(
+            "DELETE FROM notification_preferences WHERE profile_id = ?1",
+            params![profile_id],
+        )?;
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -728,4 +743,401 @@ mod tests {
         let unread_count = storage.count_unread_notifications("test_profile").await.unwrap();
         assert_eq!(unread_count, 1);
     }
-}
+}    // ==
+=== SYSTEM NOTIFICATION STORAGE METHODS =====
+
+    /// Carica le notifiche di sistema da tutti i profili
+    pub async fn load_system_notifications(&self, filter: &NotificationFilter) -> NotificationResult<Vec<Notification>> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        let mut query = "SELECT * FROM notifications WHERE notification_type = 'system'".to_string();
+        let mut params: Vec<Box<dyn rusqlite::ToSql>> = vec![];
+        let mut param_index = 1;
+
+        // Applica filtri aggiuntivi
+        if let Some(ref priority) = filter.priority {
+            query.push_str(&format!(" AND priority = ?{}", param_index));
+            params.push(Box::new(priority.to_string()));
+            param_index += 1;
+        }
+
+        if let Some(ref category) = filter.category {
+            query.push_str(&format!(" AND JSON_EXTRACT(metadata, '$.category') = ?{}", param_index));
+            params.push(Box::new(category.clone()));
+            param_index += 1;
+        }
+
+        // Filtra solo notifiche non scadute
+        let now = Utc::now().to_rfc3339();
+        query.push_str(&format!(" AND (expires_at IS NULL OR expires_at > ?{})", param_index));
+        params.push(Box::new(now));
+
+        // Ordinamento per data di creazione (più recenti prima)
+        query.push_str(" ORDER BY created_at DESC");
+
+        // Limite se specificato
+        if let Some(limit) = filter.limit {
+            query.push_str(&format!(" LIMIT {}", limit));
+        }
+
+        let mut stmt = conn.prepare(&query)?;
+        let notification_iter = stmt.query_map(
+            params.iter().map(|p| p.as_ref()).collect::<Vec<_>>().as_slice(),
+            |row| self.row_to_notification(row),
+        )?;
+
+        let mut notifications = Vec::new();
+        for notification in notification_iter {
+            notifications.push(notification??);
+        }
+
+        Ok(notifications)
+    }
+
+    /// Ottiene statistiche delle notifiche di sistema
+    pub async fn get_system_notification_stats(&self) -> NotificationResult<crate::notifications::models::SystemNotificationStats> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        let mut stats = crate::notifications::models::SystemNotificationStats::default();
+        let now = Utc::now().to_rfc3339();
+
+        // Conta notifiche di sistema attive (non scadute)
+        stats.total_active = conn.query_row(
+            "SELECT COUNT(*) FROM notifications WHERE notification_type = 'system' AND (expires_at IS NULL OR expires_at > ?1)",
+            params![now],
+            |row| row.get::<_, i64>(0),
+        )? as u32;
+
+        // Conta notifiche urgenti attive
+        stats.urgent_active = conn.query_row(
+            "SELECT COUNT(*) FROM notifications WHERE notification_type = 'system' AND priority = 'urgent' AND (expires_at IS NULL OR expires_at > ?1)",
+            params![now],
+            |row| row.get::<_, i64>(0),
+        )? as u32;
+
+        // Conta notifiche ad alta priorità attive
+        stats.high_priority_active = conn.query_row(
+            "SELECT COUNT(*) FROM notifications WHERE notification_type = 'system' AND priority = 'high' AND (expires_at IS NULL OR expires_at > ?1)",
+            params![now],
+            |row| row.get::<_, i64>(0),
+        )? as u32;
+
+        // Conta profili unici che hanno ricevuto notifiche di sistema
+        stats.total_profiles_reached = conn.query_row(
+            "SELECT COUNT(DISTINCT profile_id) FROM notifications WHERE notification_type = 'system'",
+            [],
+            |row| row.get::<_, i64>(0),
+        )? as u32;
+
+        // Calcola media notifiche per profilo
+        if stats.total_profiles_reached > 0 {
+            let total_system_notifications: i64 = conn.query_row(
+                "SELECT COUNT(*) FROM notifications WHERE notification_type = 'system'",
+                [],
+                |row| row.get(0),
+            )?;
+            stats.average_notifications_per_profile = total_system_notifications as f64 / stats.total_profiles_reached as f64;
+        }
+
+        // Notifica di sistema più vecchia
+        let oldest_result: Result<String, rusqlite::Error> = conn.query_row(
+            "SELECT created_at FROM notifications WHERE notification_type = 'system' ORDER BY created_at ASC LIMIT 1",
+            [],
+            |row| row.get(0),
+        );
+
+        if let Ok(oldest_str) = oldest_result {
+            if let Ok(oldest_date) = DateTime::parse_from_rfc3339(&oldest_str) {
+                stats.oldest_system_notification = Some(oldest_date.with_timezone(&Utc));
+            }
+        }
+
+        // Notifica di sistema più recente
+        let newest_result: Result<String, rusqlite::Error> = conn.query_row(
+            "SELECT created_at FROM notifications WHERE notification_type = 'system' ORDER BY created_at DESC LIMIT 1",
+            [],
+            |row| row.get(0),
+        );
+
+        if let Ok(newest_str) = newest_result {
+            if let Ok(newest_date) = DateTime::parse_from_rfc3339(&newest_str) {
+                stats.newest_system_notification = Some(newest_date.with_timezone(&Utc));
+            }
+        }
+
+        // Conta notifiche di sistema scadute nell'ultima settimana
+        let week_ago = (Utc::now() - chrono::Duration::days(7)).to_rfc3339();
+        stats.expired_last_week = conn.query_row(
+            "SELECT COUNT(*) FROM notifications WHERE notification_type = 'system' AND expires_at IS NOT NULL AND expires_at < ?1 AND expires_at > ?2",
+            params![now, week_ago],
+            |row| row.get::<_, i64>(0),
+        )? as u32;
+
+        Ok(stats)
+    }
+
+    /// Elimina una notifica di sistema da tutti i profili
+    pub async fn delete_system_notification_from_all_profiles(&self, notification_id: &str) -> NotificationResult<u32> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        // Prima verifica che sia una notifica di sistema
+        let is_system: Result<String, rusqlite::Error> = conn.query_row(
+            "SELECT notification_type FROM notifications WHERE id = ?1 LIMIT 1",
+            params![notification_id],
+            |row| row.get(0),
+        );
+
+        match is_system {
+            Ok(notification_type) if notification_type == "system" => {
+                // Elimina tutte le istanze di questa notifica di sistema
+                let rows_affected = conn.execute(
+                    "DELETE FROM notifications WHERE JSON_EXTRACT(metadata, '$.broadcast_id') = (SELECT JSON_EXTRACT(metadata, '$.broadcast_id') FROM notifications WHERE id = ?1 LIMIT 1)",
+                    params![notification_id],
+                )?;
+                Ok(rows_affected as u32)
+            },
+            Ok(_) => Err(NotificationError::InvalidContent("La notifica specificata non è una notifica di sistema".to_string())),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Err(NotificationError::NotificationNotFound(notification_id.to_string())),
+            Err(e) => Err(NotificationError::DatabaseError(e)),
+        }
+    }
+
+    /// Aggiorna la scadenza di una notifica di sistema
+    pub async fn update_system_notification_expiry(&self, notification_id: &str, new_expiry: Option<DateTime<Utc>>) -> NotificationResult<u32> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        let new_expiry_str = new_expiry.map(|dt| dt.to_rfc3339());
+
+        // Aggiorna tutte le istanze di questa notifica di sistema
+        let rows_affected = conn.execute(
+            "UPDATE notifications SET expires_at = ?1 WHERE JSON_EXTRACT(metadata, '$.broadcast_id') = (SELECT JSON_EXTRACT(metadata, '$.broadcast_id') FROM notifications WHERE id = ?2 LIMIT 1) AND notification_type = 'system'",
+            params![new_expiry_str, notification_id],
+        )?;
+
+        if rows_affected == 0 {
+            return Err(NotificationError::NotificationNotFound(notification_id.to_string()));
+        }
+
+        Ok(rows_affected as u32)
+    }
+
+    /// Aggiorna la priorità di una notifica di sistema
+    pub async fn update_system_notification_priority(&self, notification_id: &str, new_priority: NotificationPriority) -> NotificationResult<u32> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        // Aggiorna tutte le istanze di questa notifica di sistema
+        let rows_affected = conn.execute(
+            "UPDATE notifications SET priority = ?1 WHERE JSON_EXTRACT(metadata, '$.broadcast_id') = (SELECT JSON_EXTRACT(metadata, '$.broadcast_id') FROM notifications WHERE id = ?2 LIMIT 1) AND notification_type = 'system'",
+            params![new_priority.to_string(), notification_id],
+        )?;
+
+        if rows_affected == 0 {
+            return Err(NotificationError::NotificationNotFound(notification_id.to_string()));
+        }
+
+        Ok(rows_affected as u32)
+    }
+
+    /// Ottiene lo stato di lettura di una notifica di sistema
+    pub async fn get_system_notification_read_status(&self, notification_id: &str) -> NotificationResult<crate::notifications::models::SystemNotificationReadStatus> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        // Prima ottieni i dettagli base della notifica
+        let (title, created_at, broadcast_id): (String, String, String) = conn.query_row(
+            "SELECT title, created_at, JSON_EXTRACT(metadata, '$.broadcast_id') FROM notifications WHERE id = ?1 AND notification_type = 'system' LIMIT 1",
+            params![notification_id],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )?;
+
+        let created_at_dt = DateTime::parse_from_rfc3339(&created_at)
+            .map_err(|_| NotificationError::StorageError("Formato data non valido".to_string()))?
+            .with_timezone(&Utc);
+
+        // Conta totale destinatari
+        let total_recipients: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM notifications WHERE JSON_EXTRACT(metadata, '$.broadcast_id') = ?1 AND notification_type = 'system'",
+            params![broadcast_id],
+            |row| row.get(0),
+        )?;
+
+        // Conta quanti hanno letto
+        let read_count: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM notifications WHERE JSON_EXTRACT(metadata, '$.broadcast_id') = ?1 AND notification_type = 'system' AND read_at IS NOT NULL",
+            params![broadcast_id],
+            |row| row.get(0),
+        )?;
+
+        // Calcola percentuale
+        let read_percentage = if total_recipients > 0 {
+            (read_count as f64 / total_recipients as f64) * 100.0
+        } else {
+            0.0
+        };
+
+        // Ottieni profili che hanno letto
+        let mut stmt = conn.prepare(
+            "SELECT profile_id, read_at FROM notifications WHERE JSON_EXTRACT(metadata, '$.broadcast_id') = ?1 AND notification_type = 'system' AND read_at IS NOT NULL"
+        )?;
+
+        let read_iter = stmt.query_map(params![broadcast_id], |row| {
+            let profile_id: String = row.get(0)?;
+            let read_at_str: String = row.get(1)?;
+            Ok((profile_id, read_at_str))
+        })?;
+
+        let mut read_by_profiles = Vec::new();
+        for read_result in read_iter {
+            let (profile_id, read_at_str) = read_result?;
+            if let Ok(read_at_dt) = DateTime::parse_from_rfc3339(&read_at_str) {
+                read_by_profiles.push(crate::notifications::models::ProfileReadInfo {
+                    profile_id,
+                    profile_name: None, // TODO: Integrare con ProfileManager per ottenere i nomi
+                    read_at: read_at_dt.with_timezone(&Utc),
+                });
+            }
+        }
+
+        // Ottieni profili che non hanno letto
+        let mut stmt = conn.prepare(
+            "SELECT profile_id FROM notifications WHERE JSON_EXTRACT(metadata, '$.broadcast_id') = ?1 AND notification_type = 'system' AND read_at IS NULL"
+        )?;
+
+        let unread_iter = stmt.query_map(params![broadcast_id], |row| {
+            Ok(row.get::<_, String>(0)?)
+        })?;
+
+        let mut unread_by_profiles = Vec::new();
+        for unread_result in unread_iter {
+            unread_by_profiles.push(unread_result?);
+        }
+
+        Ok(crate::notifications::models::SystemNotificationReadStatus {
+            notification_id: notification_id.to_string(),
+            title,
+            created_at: created_at_dt,
+            total_recipients: total_recipients as u32,
+            read_count: read_count as u32,
+            read_percentage,
+            read_by_profiles,
+            unread_by_profiles,
+        })
+    }
+
+    /// Forza la scadenza di notifiche di sistema vecchie
+    pub async fn expire_old_system_notifications(&self, cutoff_date: DateTime<Utc>) -> NotificationResult<u32> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        let cutoff_str = cutoff_date.to_rfc3339();
+        let now_str = Utc::now().to_rfc3339();
+
+        // Imposta la scadenza a "ora" per tutte le notifiche di sistema create prima della data di cutoff
+        let rows_affected = conn.execute(
+            "UPDATE notifications SET expires_at = ?1 WHERE notification_type = 'system' AND created_at < ?2 AND (expires_at IS NULL OR expires_at > ?1)",
+            params![now_str, cutoff_str],
+        )?;
+
+        Ok(rows_affected as u32)
+    }
+
+    /// Ottiene lista profili per amministrazione notifiche
+    pub async fn get_profiles_for_notification_admin(&self) -> NotificationResult<Vec<crate::notifications::models::ProfileNotificationSummary>> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        // Query per ottenere statistiche per ogni profilo
+        let mut stmt = conn.prepare(
+            r#"
+            SELECT 
+                n.profile_id,
+                COUNT(*) as total_notifications,
+                COUNT(CASE WHEN n.read_at IS NULL THEN 1 END) as unread_notifications,
+                COUNT(CASE WHEN n.notification_type = 'system' AND n.read_at IS NULL THEN 1 END) as unread_system_notifications,
+                MAX(n.created_at) as last_notification,
+                COALESCE(p.global_enabled, 1) as notifications_enabled,
+                COALESCE(JSON_EXTRACT(p.type_settings, '$.system.enabled'), 1) as system_notifications_enabled
+            FROM notifications n
+            LEFT JOIN notification_preferences p ON n.profile_id = p.profile_id
+            GROUP BY n.profile_id
+            ORDER BY last_notification DESC
+            "#
+        )?;
+
+        let profile_iter = stmt.query_map([], |row| {
+            let profile_id: String = row.get("profile_id")?;
+            let total_notifications: i64 = row.get("total_notifications")?;
+            let unread_notifications: i64 = row.get("unread_notifications")?;
+            let unread_system_notifications: i64 = row.get("unread_system_notifications")?;
+            let last_notification_str: Option<String> = row.get("last_notification")?;
+            let notifications_enabled: bool = row.get("notifications_enabled")?;
+            let system_notifications_enabled: bool = row.get("system_notifications_enabled")?;
+
+            let last_seen = if let Some(last_str) = last_notification_str {
+                DateTime::parse_from_rfc3339(&last_str)
+                    .ok()
+                    .map(|dt| dt.with_timezone(&Utc))
+            } else {
+                None
+            };
+
+            Ok(crate::notifications::models::ProfileNotificationSummary {
+                profile_id,
+                profile_name: None, // TODO: Integrare con ProfileManager per ottenere i nomi
+                total_notifications: total_notifications as u32,
+                unread_notifications: unread_notifications as u32,
+                unread_system_notifications: unread_system_notifications as u32,
+                last_seen,
+                notifications_enabled,
+                system_notifications_enabled,
+            })
+        })?;
+
+        let mut profiles = Vec::new();
+        for profile_result in profile_iter {
+            profiles.push(profile_result?);
+        }
+
+        Ok(profiles)
+    }
+
+    /// Ottiene tutti gli ID profilo che hanno notifiche
+    pub async fn get_all_profile_ids(&self) -> NotificationResult<Vec<String>> {
+        let conn_guard = self.get_connection()?;
+        let conn = conn_guard
+            .as_ref()
+            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+
+        let mut stmt = conn.prepare("SELECT DISTINCT profile_id FROM notifications")?;
+        let profile_iter = stmt.query_map([], |row| {
+            Ok(row.get::<_, String>(0)?)
+        })?;
+
+        let mut profile_ids = Vec::new();
+        for profile_result in profile_iter {
+            profile_ids.push(profile_result?);
+        }
+
+        Ok(profile_ids)
+    }

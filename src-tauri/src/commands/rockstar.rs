@@ -32,8 +32,18 @@ struct RockstarCredentials {
     pub nonce: String,
 }
 
+/// Represents a Rockstar Games user account with authentication details
+/// 
+/// This structure contains the essential information for a Rockstar Games user account,
+/// including username, email, and optional profile identifier.
+/// 
+/// # Fields
+/// 
+/// * `username` - The Rockstar Games username
+/// * `email` - The user's email address
+/// * `profile_id` - Optional Rockstar profile identifier
 #[derive(Debug, Serialize, Deserialize)]
-struct RockstarUser {
+pub struct RockstarUser {
     pub username: String,
     pub email: String,
     pub profile_id: Option<String>,

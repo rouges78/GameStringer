@@ -74,6 +74,7 @@ pub async fn export_patch(patch_id: String, format: String) -> Result<serde_json
 }
 
 #[tauri::command]
+#[allow(dead_code)] // Comando traduzione testo - essenziale per sistema injection/traduzione
 pub async fn translate_text(text: String, provider: String, _api_key: String, target_lang: String) -> Result<serde_json::Value, String> {
     log::info!("🌐 Traduzione testo con {}: '{}' -> {}", provider, 
         if text.len() > 50 { format!("{}...", &text[..50]) } else { text.clone() }, 

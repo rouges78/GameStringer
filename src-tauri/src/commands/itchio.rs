@@ -437,8 +437,19 @@ fn clean_itchio_game_name(folder_name: &str) -> String {
         .join(" ")
 }
 
+/// Represents an itch.io user account with profile details
+/// 
+/// This structure contains the essential information for an itch.io user account,
+/// including username, display name, profile URL, and user ID.
+/// 
+/// # Fields
+/// 
+/// * `username` - The itch.io username
+/// * `display_name` - Optional display name for the user
+/// * `url` - Optional profile URL
+/// * `id` - Optional numeric user ID
 #[derive(Debug, Serialize, Deserialize)]
-struct ItchioUser {
+pub struct ItchioUser {
     pub username: String,
     pub display_name: Option<String>,
     pub url: Option<String>,
@@ -450,8 +461,21 @@ struct ItchioProfileResponse {
     pub user: ItchioUser,
 }
 
+/// Represents an itch.io game from the API
+/// 
+/// This structure contains information about a game available on itch.io,
+/// including metadata and links.
+/// 
+/// # Fields
+/// 
+/// * `id` - Unique game identifier
+/// * `title` - Game title
+/// * `url` - Game page URL
+/// * `short_text` - Optional short description
+/// * `cover_url` - Optional cover image URL
+/// * `user` - Optional game author information
 #[derive(Debug, Serialize, Deserialize)]
-struct ItchioApiGame {
+pub struct ItchioApiGame {
     pub id: u64,
     pub title: String,
     pub url: String,

@@ -36,6 +36,8 @@ export function ProtectedRoute({
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [isRenewing, setIsRenewing] = useState(false);
 
+
+
   // Handle profile selection
   const handleProfileSelected = async (profileId: string) => {
     await updateGlobalSettings({
@@ -49,11 +51,24 @@ export function ProtectedRoute({
   };
 
   // Handle profile created
-  const handleProfileCreated = async (profileId: string) => {
+  const handleProfileCreated = async (profileName: string) => {
+    console.log('🎯 ProtectedRoute: handleProfileCreated chiamato con:', profileName);
+    console.log('🔍 Stato corrente isAuthenticated:', isAuthenticated);
+    console.log('🔍 Profilo corrente:', currentProfile?.name);
+    
+    // Aggiorna le impostazioni globali
     await updateGlobalSettings({
-      last_profile: profileId
+      last_profile: profileName
     });
+    console.log('✅ Impostazioni globali aggiornate');
+    
+    // Chiudi il dialog
     setShowCreateDialog(false);
+    console.log('✅ Dialog di creazione chiuso');
+    
+    // ✅ CHIAMA ANCHE handleProfileSelected per completare il flusso
+    console.log('🔄 Chiamando handleProfileSelected per completare il flusso');
+    await handleProfileSelected(profileName);
   };
 
   // Handle session renewal

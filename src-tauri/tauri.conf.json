@@ -5,7 +5,7 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd .. && npm run build",
-    "devUrl": "http://127.0.0.1:3075",
+    "devUrl": "http://127.0.0.1:3094",
     "frontendDist": "../out"
   },
   "app": {
@@ -27,6 +27,37 @@
       "csp": null
     },
     "withGlobalTauri": true
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "fs": {
+        "all": false,
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,
+        "exists": true,
+        "scope": [
+          "$APPDATA",
+          "$APPDATA/**",
+          "$APPCONFIG",
+          "$APPCONFIG/**",
+          "$APPLOCALDATA",
+          "$APPLOCALDATA/**"
+        ]
+      },
+      "path": {
+        "all": true
+      },
+      "shell": {
+        "all": false,
+        "open": true
+      }
+    }
   },
   "bundle": {
     "active": true,

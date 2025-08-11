@@ -104,24 +104,26 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     const success = await createProfile(request);
     
     if (success) {
-      // Autentica automaticamente il profilo appena creato
-      const authSuccess = await authenticateProfile(request.name, request.password);
+      console.log('✅ Profilo creato con successo:', request.name);
       
-      if (authSuccess) {
-        // Reset form
-        setFormData({
-          name: '',
-          password: '',
-          confirmPassword: '',
-          avatarPath: '',
-        });
-        setSelectedAvatar(null);
-        onOpenChange(false);
-      } else {
-        setError('Profilo creato ma errore durante l\'autenticazione automatica');
-      }
+      // Reset form
+      setFormData({
+        name: '',
+        password: '',
+        confirmPassword: '',
+        avatarPath: '',
+      });
+      setSelectedAvatar(null);
+      
+      // ✅ CHIAMA IL CALLBACK CON I DATI COMPLETI PER L'AUTENTICAZIONE
+      console.log('🔄 Chiamando onProfileCreated con dati per autenticazione');
+      onProfileCreated(request.name);
+      
+      // Chiudi il dialog
+      onOpenChange(false);
+      console.log('✅ Dialog chiuso, il ProtectedRoute dovrebbe gestire l\'autenticazione');
     } else {
-      console.error('errore durante creazione profilo');
+      console.error('❌ Errore durante creazione profilo');
       setError('Errore durante la creazione del profilo');
     }
     

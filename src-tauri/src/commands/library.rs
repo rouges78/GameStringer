@@ -241,6 +241,8 @@ async fn parse_epic_manifest(file_path: &Path) -> Result<InstalledGame, String> 
     })
 }
 
+/// FUTURE USE: Will be used for detecting GOG installed games
+#[allow(dead_code)]
 async fn get_gog_installed_games() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
@@ -260,6 +262,8 @@ async fn get_gog_installed_games() -> Result<Vec<InstalledGame>, String> {
     Ok(games)
 }
 
+/// FUTURE USE: Helper function for parsing GOG registry entries
+#[allow(dead_code)]
 async fn parse_gog_registry_entry(game_key: &RegKey, game_id: &str) -> Result<InstalledGame, String> {
     let name: String = game_key.get_value("gameName")
         .or_else(|_| game_key.get_value("gameID"))

@@ -1,5 +1,5 @@
 use tauri::State;
-use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, GameDetails, LocalGameInfo, GameStatus, SteamLibraryFolder, SharedGame, FamilySharingConfig};
+use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, GameDetails, LocalGameInfo, GameStatus, SteamLibraryFolder, FamilySharingConfig};
 use winreg::HKEY;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -10,6 +10,7 @@ use reqwest::Client;
 use serde::{Serialize, Deserialize};
 use std::fs;
 use std::path::Path;
+use keyvalues_serde as kv;
 use aes_gcm::{Aes256Gcm, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
 use base64::{Engine as _, engine::general_purpose};
@@ -18,6 +19,54 @@ use log::{debug, info, warn, error};
 
 // Placeholder for session state if needed later
 pub struct SessionState;
+
+// Struct per deserializzare loginusers.vdf
+#[derive(Debug, Deserialize)]
+struct LoginUsersVdf {
+    users: HashMap<String, UserData>,
+}
+
+#[derive(Debug, Deserialize)]
+struct UserData {
+    #[serde(rename = "AccountName")]
+    account_name: Option<String>,
+}
+
+// Struct per deserializzare libraryfolders.vdf
+#[derive(Debug, Deserialize)]
+struct LibraryFoldersVdf {
+    libraryfolders: HashMap<String, LibraryFolderData>,
+}
+
+#[derive(Debug, Deserialize)]
+struct LibraryFolderData {
+    path: Option<String>,
+    label: Option<String>,
+    mounted: Option<String>,
+    tool: Option<String>,
+}
+
+// Struct per deserializzare file ACF
+#[derive(Debug, Deserialize)]
+struct AcfFile {
+    #[serde(rename = "AppState")]
+    app_state: AcfAppState,
+}
+
+#[derive(Debug, Deserialize)]
+struct AcfAppState {
+    appid: Option<String>,
+    name: Option<String>,
+    #[serde(rename = "StateFlags")]
+    #[allow(dead_code)] // Campo necessario per parsing completo ACF - contiene flag di stato del gioco
+    state_flags: Option<String>,
+    #[serde(rename = "LastUpdated")]
+    last_updated: Option<String>,
+    #[serde(rename = "SizeOnDisk")]
+    size_on_disk: Option<String>,
+    #[serde(rename = "installdir")]
+    install_dir: Option<String>,
+}
 
 // SECURITY: Input validation functions
 /// Validates Steam App ID format and range
@@ -186,6 +235,8 @@ static RATE_LIMITER: once_cell::sync::Lazy<SteamApiRateLimiter> =
     once_cell::sync::Lazy::new(|| SteamApiRateLimiter::new());
 
 /// Helper function for rate-limited Steam API calls
+/// FUTURE USE: Will be used for implementing proper rate limiting for Steam API calls
+#[allow(dead_code)]
 async fn make_rate_limited_request(
     client: &reqwest::Client,
     url: &str,
@@ -1608,6 +1659,8 @@ fn verify_credential_integrity(api_key: &str, steam_id: &str) -> Result<(), Stri
 }
 
 /// SECURITY FIX: Secure credential storage with integrity checks
+/// FUTURE USE: Will be used for secure Steam credential storage
+#[allow(dead_code)]
 fn save_credentials_securely(api_key: &str, steam_id: &str) -> Result<(), String> {
     // Verify credential integrity first
     verify_credential_integrity(api_key, steam_id)?;
@@ -1740,14 +1793,12 @@ pub async fn auto_detect_steam_config() -> Result<SteamConfig, String> {
         if login_users_path.exists() {
             match fs::read_to_string(login_users_path) {
                 Ok(content) => {
-                    match steamy_vdf::load(&content) {
+                    match kv::from_str::<LoginUsersVdf>(&content) {
                         Ok(vdf) => {
-                            if let Some(users) = vdf.get("users").and_then(|u| u.as_table()) {
-                                for (steam_id, user_data) in users.iter() {
-                                    if let Some(account_name) = user_data.as_table().and_then(|ud| ud.get("AccountName")).and_then(|an| an.as_str()) {
-                                        if !account_name.is_empty() {
-                                            logged_in_users.push(steam_id.clone());
-                                        }
+                            for (steam_id, user_data) in vdf.users.iter() {
+                                if let Some(account_name) = &user_data.account_name {
+                                    if !account_name.is_empty() {
+                                        logged_in_users.push(steam_id.clone());
                                     }
                                 }
                             }
@@ -2200,6 +2251,8 @@ pub async fn get_steam_games(
     Ok(all_games)
 }
 
+/// FUTURE USE: Will parse Steam shared games configuration
+#[allow(dead_code)]
 async fn parse_shared_games_xml() -> Vec<SteamGame> {
     // Simplified implementation - in real version would parse sharedconfig.vdf
     Vec::new()
@@ -2230,6 +2283,8 @@ async fn get_installed_steam_app_ids() -> HashSet<u32> {
     installed
 }
 
+/// FUTURE USE: Will enrich game details with additional Steam API data
+#[allow(dead_code)]
 async fn enrich_game_details(app_id: u32) -> Result<SteamGame, String> {
     // Check cache first
     if let Some(cached) = GAME_CACHE.get(&app_id).await {
@@ -2539,6 +2594,8 @@ pub async fn save_steam_credentials(
 }
 
 // 🔒 Funzione helper per ottenere l'API key decriptata (uso interno) - AGGIORNATO PER PROFILI
+/// FUTURE USE: Will be used for profile-based Steam API key management
+#[allow(dead_code)]
 async fn get_decrypted_api_key_from_profile(
     profile_manager: &crate::profiles::ProfileManager
 ) -> Result<(String, String), String> {
@@ -2563,6 +2620,8 @@ async fn get_decrypted_api_key_from_profile(
 }
 
 // 🔒 Funzione helper interna per get_steam_games
+/// FUTURE USE: Internal helper for Steam games retrieval with caching
+#[allow(dead_code)]
 async fn get_steam_games_internal(api_key: String, steam_id: String, force_refresh: Option<bool>) -> Result<Vec<SteamGame>, String> {
     let force = force_refresh.unwrap_or(false);
     debug!("[RUST] get_steam_games_internal called with force: {}", force);
@@ -3445,12 +3504,12 @@ pub async fn test_single_acf() -> Result<String, String> {
                                 content.chars().take(200).collect::<String>()));
                             
                             // Prova parsing VDF
-                            match steamy_vdf::load(&content) {
+                            match kv::from_str::<serde_json::Value>(&content) {
                                 Ok(vdf) => {
                                     debug_info.push_str("VDF parsing: SUCCESS\n");
                                     if let Some(app_state) = vdf.get("AppState") {
                                         debug_info.push_str("AppState found\n");
-                                        if let Some(table) = app_state.as_table() {
+                                        if let Some(table) = app_state.as_object() {
                                             for (key, value) in table.iter().take(5) {
                                                 debug_info.push_str(&format!("  {}: {:?}\n", key, value));
                                             }
@@ -3698,23 +3757,19 @@ fn parse_library_folders(steam_path: &str) -> Result<Vec<SteamLibraryFolder>, St
 
 /// Parsa il contenuto del file libraryfolders.vdf
 fn parse_library_folders_content(content: &str) -> Result<Vec<SteamLibraryFolder>, String> {
-    let vdf = steamy_vdf::load(content)
+    let vdf = kv::from_str::<LibraryFoldersVdf>(content)
         .map_err(|e| format!("Errore parsing libraryfolders.vdf: {}", e))?;
     
     let mut folders = Vec::new();
     
-    if let Some(library_folders) = vdf.get("libraryfolders").and_then(|lf| lf.as_table()) {
-        for (_key, folder_data) in library_folders.iter() {
-            if let Some(folder_table) = folder_data.as_table() {
-                if let Some(path) = folder_table.get("path").and_then(|p| p.as_str()) {
-                    folders.push(SteamLibraryFolder {
-                        path: path.to_string(),
-                        label: folder_table.get("label").and_then(|l| l.as_str()).unwrap_or("").to_string(),
-                        mounted: folder_table.get("mounted").and_then(|m| m.as_str()).unwrap_or("1") == "1",
-                        tool: folder_table.get("tool").and_then(|t| t.as_str()).unwrap_or("0").to_string(),
-                    });
-                }
-            }
+    for (_key, folder_data) in vdf.libraryfolders.iter() {
+        if let Some(path) = &folder_data.path {
+            folders.push(SteamLibraryFolder {
+                path: path.clone(),
+                label: folder_data.label.as_deref().unwrap_or("").to_string(),
+                mounted: folder_data.mounted.as_deref().unwrap_or("1") == "1",
+                tool: folder_data.tool.as_deref().unwrap_or("0").to_string(),
+            });
         }
     }
     
@@ -3821,60 +3876,52 @@ fn parse_acf_file(acf_path: &Path) -> Result<LocalGameInfo, String> {
         return Ok(game);
     }
     
-    // Fallback: prova steamy-vdf
-    let vdf = steamy_vdf::load(&content)
+    // Fallback: prova keyvalues-serde
+    let vdf = kv::from_str::<AcfFile>(&content)
         .map_err(|e| format!("Errore parsing file ACF: {}", e))?;
     
-    if let Some(app_state) = vdf.get("AppState").and_then(|as_| as_.as_table()) {
-        let appid = app_state.get("appid")
-            .and_then(|id| id.as_str())
-            .and_then(|id| id.parse::<u32>().ok())
-            .ok_or("AppID non valido")?;
+    let appid = vdf.app_state.appid
+        .as_ref()
+        .and_then(|id| id.parse::<u32>().ok())
+        .ok_or("AppID non valido")?;
+    
+    let name = vdf.app_state.name
+        .as_deref()
+        .unwrap_or("Unknown Game")
+        .to_string();
         
-        let name = app_state.get("name")
-            .and_then(|n| n.as_str())
-            .unwrap_or("Unknown Game")
-            .to_string();
+    let install_dir = vdf.app_state.install_dir.clone();
+    
+    let last_updated = vdf.app_state.last_updated
+        .as_ref()
+        .and_then(|lu| lu.parse::<u64>().ok());
+    
+    let size_on_disk = vdf.app_state.size_on_disk
+        .as_ref()
+        .and_then(|sod| sod.parse::<u64>().ok());
+    
+    let buildid = None; // buildid non è nella struct, possiamo aggiungerlo se necessario
         
-        let install_dir = app_state.get("installdir")
-            .and_then(|id| id.as_str())
-            .map(|s| s.to_string());
-        
-        let last_updated = app_state.get("LastUpdated")
-            .and_then(|lu| lu.as_str())
-            .and_then(|lu| lu.parse::<u64>().ok());
-        
-        let size_on_disk = app_state.get("SizeOnDisk")
-            .and_then(|sod| sod.as_str())
-            .and_then(|sod| sod.parse::<u64>().ok());
-        
-        let buildid = app_state.get("buildid")
-            .and_then(|bid| bid.as_str())
-            .and_then(|bid| bid.parse::<u32>().ok());
-        
-        let install_path = install_dir.as_ref().map(|dir| {
-            acf_path.parent()
-                .unwrap_or_else(|| Path::new(""))
-                .join("common")
-                .join(dir)
-                .to_string_lossy()
-                .to_string()
-        });
-        
-        Ok(LocalGameInfo {
-            appid,
-            name,
-            status: GameStatus::Installed { 
-                path: install_path.unwrap_or_else(|| "Unknown".to_string()) 
-            },
-            install_dir,
-            last_updated,
-            size_on_disk,
-            buildid,
-        })
-    } else {
-        Err("Struttura ACF non valida".to_string())
-    }
+    let install_path = install_dir.as_ref().map(|dir| {
+        acf_path.parent()
+            .unwrap_or_else(|| Path::new(""))
+            .join("common")
+            .join(dir)
+            .to_string_lossy()
+            .to_string()
+    });
+    
+    Ok(LocalGameInfo {
+        appid,
+        name,
+        status: GameStatus::Installed { 
+            path: install_path.unwrap_or_else(|| "Unknown".to_string()) 
+        },
+        install_dir,
+        last_updated,
+        size_on_disk,
+        buildid,
+    })
 }
 
 /// Parsa sharedconfig.vdf per trovare giochi condivisi
@@ -3889,7 +3936,7 @@ fn parse_shared_config(steam_path: &str) -> Result<HashMap<String, Vec<u32>>, St
     let content = fs::read_to_string(shared_config_path)
         .map_err(|e| format!("Errore lettura sharedconfig.vdf: {}", e))?;
     
-    let vdf = steamy_vdf::load(&content)
+    let vdf = kv::from_str::<serde_json::Value>(&content)
         .map_err(|e| format!("Errore parsing sharedconfig.vdf: {}", e))?;
     
     let mut shared_games = HashMap::new();
@@ -3899,12 +3946,12 @@ fn parse_shared_config(steam_path: &str) -> Result<HashMap<String, Vec<u32>>, St
     // sotto chiavi come "SharedContent" o dentro le configurazioni degli utenti
     
     // Implementazione semplificata: cerca pattern comuni
-    if let Some(root) = vdf.as_table() {
+    if let Some(root) = vdf.as_object() {
         for (key, value) in root.iter() {
-            if let Some(section) = value.as_table() {
+            if let Some(section) = value.as_object() {
                 // Cerca sezioni che potrebbero contenere giochi condivisi
                 if key.contains("SharedContent") || key.len() == 17 { // Possibile Steam ID
-                    if let Some(apps) = section.get("apps").and_then(|a| a.as_table()) {
+                    if let Some(apps) = section.get("apps").and_then(|a| a.as_object()) {
                         let mut app_ids = Vec::new();
                         for (app_id, _) in apps.iter() {
                             if let Ok(appid) = app_id.parse::<u32>() {
@@ -3972,31 +4019,11 @@ fn parse_owned_games(steam_path: &str) -> Result<Vec<u32>, String> {
 }
 
 /// Parsa localconfig.vdf per trovare giochi
-fn parse_localconfig_for_games(localconfig_path: &Path) -> Result<Vec<u32>, String> {
-    let content = fs::read_to_string(localconfig_path)
-        .map_err(|e| format!("Errore lettura localconfig.vdf: {}", e))?;
-    
-    let vdf = steamy_vdf::load(&content)
-        .map_err(|e| format!("Errore parsing localconfig.vdf: {}", e))?;
-    
-    let mut games = Vec::new();
-    
-    // Cerca nella sezione "Software" -> "Valve" -> "Steam" -> "apps"
-    if let Some(software) = vdf.get("UserLocalConfigStore")
-        .and_then(|s| s.get("Software"))
-        .and_then(|s| s.get("Valve"))
-        .and_then(|s| s.get("Steam"))
-        .and_then(|s| s.get("apps"))
-        .and_then(|apps| apps.as_table()) {
-        
-        for (app_id, _) in software.iter() {
-            if let Ok(appid) = app_id.parse::<u32>() {
-                games.push(appid);
-            }
-        }
-    }
-    
-    Ok(games)
+fn parse_localconfig_for_games(_localconfig_path: &Path) -> Result<Vec<u32>, String> {
+    // TODO: Implementare parser VDF alternativo dopo rimozione steamy_vdf
+    debug!("[RUST] parse_localconfig_for_games temporaneamente disabilitata");
+    Ok(Vec::new())
+
 }
 
 /// Parsa shortcuts.vdf per trovare giochi non-Steam
@@ -4011,80 +4038,16 @@ fn parse_shortcuts_for_games(_shortcuts_path: &Path) -> Result<Vec<u32>, String>
 
 /// Parse sharedconfig.vdf per trovare giochi condivisi
 #[tauri::command]
-pub async fn parse_shared_config_vdf(file_content: String) -> Result<FamilySharingConfig, String> {
-    debug!("[RUST] parse_shared_config_vdf called");
+pub async fn parse_shared_config_vdf(_file_content: String) -> Result<FamilySharingConfig, String> {
+    debug!("[RUST] parse_shared_config_vdf temporaneamente disabilitata");
     
-    let vdf = steamy_vdf::load(&file_content)
-        .map_err(|e| format!("Errore parsing VDF: {}", e))?;
-    
-    let mut shared_games = Vec::new();
-    let mut authorized_users = Vec::new();
-    
-    // Cerca la sezione "UserRoamingConfigStore" -> "Software" -> "Valve" -> "Steam"
-    if let Some(steam_section) = vdf.get("UserRoamingConfigStore")
-        .and_then(|urc| urc.get("Software"))
-        .and_then(|sw| sw.get("Valve"))
-        .and_then(|valve| valve.get("Steam"))
-        .and_then(|steam| steam.as_table()) {
-        
-        // Cerca giochi condivisi nella sezione "SharedLibraryUsers"
-        if let Some(shared_users) = steam_section.get("SharedLibraryUsers")
-            .and_then(|slu| slu.as_table()) {
-            
-            for (steam_id, user_data) in shared_users.iter() {
-                if let Some(user_table) = user_data.as_table() {
-                    // Aggiungi l'utente alla lista degli autorizzati
-                    authorized_users.push(steam_id.clone());
-                    
-                    // Cerca i giochi condivisi da questo utente
-                    if let Some(apps) = user_table.get("Apps")
-                        .and_then(|apps| apps.as_table()) {
-                        
-                        for (app_id_str, app_data) in apps.iter() {
-                            if let Ok(app_id) = app_id_str.parse::<u32>() {
-                                // Ottieni il nome del gioco se disponibile
-                                let game_name = if let Some(name) = app_data.as_table()
-                                    .and_then(|ad| ad.get("name"))
-                                    .and_then(|n| n.as_str()) {
-                                    name.to_string()
-                                } else {
-                                    format!("Game {}", app_id)
-                                };
-                                
-                                // Ottieni il nome dell'account se disponibile
-                                let account_name = user_table.get("AccountName")
-                                    .and_then(|an| an.as_str())
-                                    .unwrap_or("Unknown User")
-                                    .to_string();
-                                
-                                shared_games.push(SharedGame {
-                                    appid: app_id,
-                                    name: game_name,
-                                    owner_steam_id: steam_id.clone(),
-                                    owner_account_name: account_name,
-                                    is_shared: true,
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    // Rimuovi duplicati
-    shared_games.sort_by_key(|g| g.appid);
-    shared_games.dedup_by_key(|g| g.appid);
-    
-    let total_shared_games = shared_games.len() as u32;
-    
-    info!("[RUST] ✅ Parsed {} shared games from {} users", total_shared_games, authorized_users.len());
-    
+    // TODO: Implementare parser VDF alternativo dopo rimozione steamy_vdf
     Ok(FamilySharingConfig {
-        shared_games,
-        total_shared_games,
-        authorized_users,
+        shared_games: Vec::new(),
+        total_shared_games: 0,
+        authorized_users: Vec::new(),
     })
+
 }
 
 /// Comando per ottenere giochi condivisi automaticamente

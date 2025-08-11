@@ -429,3 +429,126 @@ pub struct NotificationStats {
     /// Data della notifica più recente
     pub newest_notification: Option<DateTime<Utc>>,
 }
+
+/// Conteggi dettagliati delle notifiche
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct NotificationCounts {
+    /// Numero totale di notifiche
+    pub total: u32,
+    /// Numero di notifiche non lette
+    pub unread: u32,
+    /// Numero di notifiche urgenti non lette
+    pub urgent_unread: u32,
+    /// Numero di notifiche ad alta priorità non lette
+    pub high_priority_unread: u32,
+    /// Numero di notifiche scadute
+    pub expired: u32,
+}
+
+/// Opzioni di ordinamento per le notifiche
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum NotificationSortBy {
+    /// Ordina per data di creazione
+    CreatedAt,
+    /// Ordina per priorità
+    Priority,
+    /// Ordina per tipo
+    Type,
+    /// Ordina per stato di lettura
+    ReadStatus,
+}
+
+/// Aggiornamenti parziali per le preferenze notifiche
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PartialNotificationPreferences {
+    /// Notifiche globalmente abilitate
+    pub global_enabled: Option<bool>,
+    /// Suoni abilitati
+    pub sound_enabled: Option<bool>,
+    /// Notifiche desktop abilitate
+    pub desktop_enabled: Option<bool>,
+    /// Impostazioni per tipo (solo i tipi da aggiornare)
+    pub type_settings: Option<HashMap<NotificationType, TypePreference>>,
+    /// Ore di silenzio
+    pub quiet_hours: Option<QuietHoursSettings>,
+    /// Numero massimo notifiche
+    pub max_notifications: Option<u32>,
+    /// Giorni dopo cui eliminare automaticamente
+    pub auto_delete_after_days: Option<u32>,
+}
+
+// ===== SYSTEM NOTIFICATION MODELS =====
+
+/// Statistiche delle notifiche di sistema
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct SystemNotificationStats {
+    /// Numero totale di notifiche di sistema attive
+    pub total_active: u32,
+    /// Numero di notifiche urgenti attive
+    pub urgent_active: u32,
+    /// Numero di notifiche ad alta priorità attive
+    pub high_priority_active: u32,
+    /// Numero totale di profili che hanno ricevuto notifiche di sistema
+    pub total_profiles_reached: u32,
+    /// Numero medio di notifiche per profilo
+    pub average_notifications_per_profile: f64,
+    /// Data della notifica di sistema più vecchia
+    pub oldest_system_notification: Option<DateTime<Utc>>,
+    /// Data della notifica di sistema più recente
+    pub newest_system_notification: Option<DateTime<Utc>>,
+    /// Numero di notifiche di sistema scadute nell'ultima settimana
+    pub expired_last_week: u32,
+}
+
+/// Stato di lettura di una notifica di sistema
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemNotificationReadStatus {
+    /// ID della notifica
+    pub notification_id: String,
+    /// Titolo della notifica
+    pub title: String,
+    /// Data di creazione
+    pub created_at: DateTime<Utc>,
+    /// Numero totale di profili che hanno ricevuto la notifica
+    pub total_recipients: u32,
+    /// Numero di profili che hanno letto la notifica
+    pub read_count: u32,
+    /// Percentuale di lettura
+    pub read_percentage: f64,
+    /// Lista dei profili che hanno letto (con timestamp)
+    pub read_by_profiles: Vec<ProfileReadInfo>,
+    /// Lista dei profili che non hanno ancora letto
+    pub unread_by_profiles: Vec<String>,
+}
+
+/// Informazioni di lettura per profilo
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfileReadInfo {
+    /// ID del profilo
+    pub profile_id: String,
+    /// Nome del profilo (se disponibile)
+    pub profile_name: Option<String>,
+    /// Data di lettura
+    pub read_at: DateTime<Utc>,
+}
+
+/// Riassunto profilo per amministrazione notifiche
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfileNotificationSummary {
+    /// ID del profilo
+    pub profile_id: String,
+    /// Nome del profilo (se disponibile)
+    pub profile_name: Option<String>,
+    /// Numero totale di notifiche
+    pub total_notifications: u32,
+    /// Numero di notifiche non lette
+    pub unread_notifications: u32,
+    /// Numero di notifiche di sistema non lette
+    pub unread_system_notifications: u32,
+    /// Data ultimo accesso
+    pub last_seen: Option<DateTime<Utc>>,
+    /// Preferenze notifiche abilitate
+    pub notifications_enabled: bool,
+    /// Notifiche di sistema abilitate
+    pub system_notifications_enabled: bool,
+}

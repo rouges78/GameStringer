@@ -27,47 +27,75 @@
   - Aggiungere test per verifica pulizia automatica
   - _Requisiti: 6.3, 3.4_
 
-- [ ] 3. Sviluppare NotificationManager core
-- [ ] 3.1 Implementare creazione e gestione notifiche
+- [x] 3. Sviluppare NotificationManager core
+
+
+
+
+- [x] 3.1 Implementare creazione e gestione notifiche
+
+
   - Creare metodi per creazione notifiche con validazione
   - Implementare filtri e ordinamento notifiche
   - Aggiungere gestione stati notifica (letta/non letta)
   - _Requisiti: 1.1, 1.3, 2.2_
 
-- [ ] 3.2 Implementare sistema preferenze notifiche per profilo
+- [x] 3.2 Implementare sistema preferenze notifiche per profilo
+
+
   - Creare gestione preferenze personalizzate per profilo
   - Implementare logica applicazione preferenze
   - Aggiungere supporto impostazioni predefinite
   - _Requisiti: 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 4. Integrare sistema notifiche con ProfileManager esistente
-- [ ] 4.1 Implementare eventi profilo per notifiche automatiche
+- [x] 4. Integrare sistema notifiche con ProfileManager esistente
+
+
+
+
+
+- [x] 4.1 Implementare eventi profilo per notifiche automatiche
+
+
   - Creare listener per eventi ProfileManager
   - Implementare notifiche automatiche per creazione/autenticazione profilo
   - Aggiungere notifiche per errori e operazioni profilo
   - _Requisiti: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 4.2 Implementare isolamento notifiche per profilo
+- [x] 4.2 Implementare isolamento notifiche per profilo
+
+
   - Garantire che ogni profilo veda solo le proprie notifiche
   - Implementare pulizia notifiche al cambio profilo
   - Aggiungere controlli autorizzazione per accesso notifiche
   - _Requisiti: 3.3, 4.1_
 
-- [ ] 5. Creare comandi Tauri per API notifiche
-- [ ] 5.1 Implementare comandi base per gestione notifiche
+- [x] 5. Creare comandi Tauri per API notifiche
+
+
+
+
+- [x] 5.1 Implementare comandi base per gestione notifiche
+
+
   - Creare comandi per CRUD notifiche
   - Implementare comandi per gestione preferenze
   - Aggiungere comandi per statistiche e conteggi
   - _Requisiti: 1.1, 2.1, 2.2, 2.3_
 
-- [ ] 5.2 Implementare comandi per notifiche sistema
+- [x] 5.2 Implementare comandi per notifiche sistema
+
+
   - Creare comandi per notifiche broadcast a tutti i profili
   - Implementare gestione priorità e scadenze notifiche sistema
   - Aggiungere comandi per amministrazione notifiche
   - _Requisiti: 6.1, 6.2, 6.3, 6.4_
 
 - [ ] 6. Sviluppare componenti UI base per notifiche
-- [ ] 6.1 Creare componente NotificationToast
+- [-] 6.1 Creare componente NotificationToast
+
+
+
   - Implementare toast notification con animazioni
   - Aggiungere supporto per azioni e dismissal automatico
   - Implementare posizionamento non invasivo

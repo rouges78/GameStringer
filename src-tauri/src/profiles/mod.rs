@@ -25,6 +25,7 @@ pub use encryption::*;
 pub use errors::*;
 pub use credential_manager::*;
 pub use settings_manager::*;
+pub use validation::*;
 pub use rate_limiter::*;
 pub use secure_memory::*;
 

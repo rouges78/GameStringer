@@ -32,8 +32,18 @@ struct OriginCredentials {
     pub nonce: String,
 }
 
+/// Represents an Origin/EA App user account with authentication details
+/// 
+/// This structure contains the essential information for an Origin user account,
+/// including username, email, and optional profile identifier.
+/// 
+/// # Fields
+/// 
+/// * `username` - The Origin username
+/// * `email` - The user's email address
+/// * `profile_id` - Optional Origin profile identifier
 #[derive(Debug, Serialize, Deserialize)]
-struct OriginUser {
+pub struct OriginUser {
     pub username: String,
     pub email: String,
     pub profile_id: Option<String>,

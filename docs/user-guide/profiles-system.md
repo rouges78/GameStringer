@@ -19,18 +19,29 @@ Quando avvii GameStringer per la prima volta con il sistema profili:
 
 1. **Schermata di Benvenuto**
    - Vedrai una schermata che ti invita a creare il tuo primo profilo
+   - Se hai dati da una versione precedente, vedrai il **Wizard di Migrazione**
    - Clicca su **"Crea Nuovo Profilo"**
 
 2. **Compilazione Dati**
    - **Nome Profilo**: Scegli un nome identificativo (es. "Mario", "Famiglia", "Gaming")
+     - Deve essere unico (non può esistere un altro profilo con lo stesso nome)
+     - Lunghezza: 3-50 caratteri
+     - Caratteri consentiti: lettere, numeri, spazi, trattini
    - **Avatar**: Seleziona un colore/gradiente per il tuo profilo
-   - **Password**: Imposta una password sicura (minimo 4 caratteri)
+   - **Password**: Imposta una password sicura
+     - Minimo 4 caratteri (consigliati 8+)
+     - Può contenere lettere, numeri e simboli
+     - Verrà crittografata e non può essere recuperata
 
 3. **Conferma Creazione**
    - Clicca **"Crea Profilo"**
+   - Il sistema creerà e crittograferà il profilo
    - Verrai automaticamente autenticato e portato alla dashboard
 
-> 💡 **Suggerimento**: Scegli una password che ricorderai facilmente ma che sia sicura!
+> 💡 **Suggerimenti**:
+> - Scegli una password che ricorderai facilmente ma che sia sicura
+> - Annota la password in un luogo sicuro se necessario
+> - Fai subito un backup del profilo dopo la creazione
 
 ---
 
@@ -87,28 +98,43 @@ Quando avvii GameStringer per la prima volta con il sistema profili:
 Ogni profilo mantiene separatamente:
 
 #### 🔑 Credenziali Store
-- **Steam API Key e Steam ID**
-- **Epic Games credenziali**
-- **GOG, Origin, Ubisoft** credenziali
-- **Itch.io** credenziali
+- **Steam**: API Key, Steam ID, credenziali login
+- **Epic Games**: Client ID, Client Secret, token di accesso
+- **GOG**: Credenziali account (se configurate)
+- **Origin/EA**: Credenziali account
+- **Ubisoft Connect**: Credenziali account
+- **Battle.net**: Credenziali account
+- **Itch.io**: API Key e credenziali
+- **Rockstar Games**: Credenziali account
 
 #### 🎮 Libreria Giochi
-- Lista giochi personalizzata
-- Traduzioni salvate
-- Patch applicate
-- Preferenze giochi
+- Lista giochi personalizzata per ogni store
+- Traduzioni salvate e applicate
+- Patch e modifiche applicate
+- Preferenze specifiche per gioco
+- Cache metadati giochi
+- Cronologia traduzioni
 
 #### 🎨 Impostazioni Interfaccia
 - **Tema**: Scuro, Chiaro, Automatico
-- **Lingua**: Italiano, Inglese, etc.
-- **Notifiche**: Configurazioni personalizzate
-- **Layout**: Preferenze visualizzazione
+- **Lingua**: Italiano, Inglese, Francese, Tedesco, Spagnolo
+- **Notifiche**: Configurazioni personalizzate per tipo
+- **Layout**: Preferenze visualizzazione dashboard
+- **Accessibilità**: Impostazioni per screen reader e navigazione
 
 #### 📊 Dati Applicazione
-- Cache traduzioni
-- Cronologia attività
-- Backup automatici
-- Log personalizzati
+- Cache traduzioni e metadati
+- Cronologia attività e operazioni
+- Backup automatici personalizzati
+- Log e diagnostica personalizzati
+- Impostazioni di performance
+- Preferenze di sincronizzazione
+
+#### 🔐 Sicurezza
+- Sessioni di autenticazione separate
+- Timeout personalizzati
+- Impostazioni di sicurezza avanzate
+- Audit log delle operazioni
 
 ### Configurazione Impostazioni
 
@@ -123,6 +149,44 @@ Ogni profilo mantiene separatamente:
 3. **Salvataggio Automatico**
    - Non è necessario salvare manualmente
    - Le modifiche sono immediate e persistenti
+
+---
+
+## ⚡ Limiti e Considerazioni
+
+### Limiti Tecnici
+
+#### Numero Profili
+- **Massimo consigliato**: 15 profili attivi
+- **Limite tecnico**: Nessun limite rigido
+- **Performance**: Più profili = caricamento iniziale più lento
+
+#### Dimensioni Dati
+- **Profilo singolo**: ~10-50 MB (dipende da traduzioni e cache)
+- **Backup profilo**: File .gsp di dimensioni variabili
+- **Spazio totale**: Calcola ~100 MB per profilo attivo
+
+#### Compatibilità
+- **Versioni**: Sistema profili disponibile dalla 3.2.2+
+- **Migrazione**: Automatica da versioni 3.0.x - 3.2.1
+- **Rollback**: Non possibile tornare a versioni senza profili
+
+### Best Practices
+
+#### Organizzazione Profili
+- **Nomi Descrittivi**: Usa nomi chiari ("Mario Gaming", "Famiglia", "Lavoro")
+- **Profili Specifici**: Crea profili per scopi diversi invece di uno generico
+- **Pulizia Regolare**: Elimina profili non utilizzati
+
+#### Gestione Password
+- **Password Uniche**: Usa password diverse per ogni profilo
+- **Sicurezza**: Bilancia sicurezza e facilità di ricordo
+- **Backup**: Annota le password in un gestore password sicuro
+
+#### Manutenzione
+- **Backup Regolari**: Esporta profili almeno una volta al mese
+- **Pulizia Cache**: Periodicamente pulisci cache e dati temporanei
+- **Aggiornamenti**: Mantieni GameStringer sempre aggiornato
 
 ---
 
@@ -244,6 +308,63 @@ Ogni profilo mantiene separatamente:
 
 ---
 
+## 🔧 Funzionalità Avanzate
+
+### Comandi Rapidi
+
+#### Scorciatoie Tastiera
+- **Ctrl+Shift+P**: Apri menu profilo
+- **Ctrl+Shift+L**: Logout rapido
+- **Ctrl+Shift+S**: Cambia profilo
+- **F12**: Apri pannello debug (solo sviluppo)
+
+#### Operazioni Batch
+- **Export Multipli**: Esporta più profili contemporaneamente
+- **Pulizia Cache**: Pulisci cache di tutti i profili
+- **Backup Automatico**: Configura backup automatici programmati
+
+### Integrazione Sistema
+
+#### File di Configurazione
+```
+~/.gamestringer/
+├── profiles/
+│   ├── profile_[id].json.enc    # Profili crittografati
+│   └── profiles.index           # Indice profili
+├── avatars/                     # Avatar personalizzati
+├── backups/                     # Backup automatici
+└── logs/                        # Log per profilo
+```
+
+#### Variabili Ambiente
+- `GAMESTRINGER_PROFILES_DIR`: Directory personalizzata profili
+- `GAMESTRINGER_SKIP_AUTH`: Salta autenticazione (solo sviluppo)
+- `GAMESTRINGER_DEBUG_PROFILES`: Debug sistema profili
+
+### API e Comandi Tauri
+
+Il sistema profili espone questi comandi per l'interfaccia:
+
+#### Gestione Profili
+- `list_profiles()`: Lista tutti i profili disponibili
+- `create_profile(data)`: Crea nuovo profilo
+- `authenticate_profile(id, password)`: Autentica profilo
+- `switch_profile(id, password)`: Cambia profilo attivo
+- `delete_profile(id, password)`: Elimina profilo
+
+#### Import/Export
+- `export_profile(id, password)`: Esporta profilo
+- `import_profile(data, password)`: Importa profilo
+- `validate_profile_backup(data)`: Valida backup profilo
+
+#### Impostazioni
+- `get_current_profile()`: Ottieni profilo attivo
+- `get_profile_settings(id)`: Ottieni impostazioni profilo
+- `update_profile_settings(id, settings)`: Aggiorna impostazioni
+- `load_global_settings()`: Carica impostazioni globali
+
+---
+
 ## 📱 Migrazione da Versione Precedente
 
 ### Processo Automatico
@@ -334,4 +455,24 @@ Quando contatti il supporto, includi:
 
 ---
 
-*Questa guida è aggiornata alla versione 3.2.2 di GameStringer con sistema profili.*
+---
+
+## 🔄 Aggiornamenti Recenti
+
+### Versione 3.2.2+ - Novità Sistema Profili
+- ✅ **Sistema profili completamente implementato** e testato
+- ✅ **Migrazione automatica** da versioni precedenti
+- ✅ **Crittografia AES-256** per massima sicurezza
+- ✅ **Isolamento completo** tra profili
+- ✅ **Backup/ripristino** profili con export/import
+- ✅ **Integrazione completa** con tutti i sistemi esistenti
+
+### Compatibilità
+- **Versione minima**: 3.2.2
+- **Sistemi supportati**: Windows, macOS, Linux
+- **Migrazione**: Automatica da versioni 3.0.x - 3.2.1
+- **Backup**: Compatibile con versioni future
+
+---
+
+*Questa guida è aggiornata alla versione 3.2.2+ di GameStringer con sistema profili completo.*

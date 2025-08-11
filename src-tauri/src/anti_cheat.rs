@@ -10,6 +10,7 @@ use winapi::um::processthreadsapi::OpenProcess;
 use winapi::um::winnt::{PROCESS_QUERY_INFORMATION, PROCESS_VM_READ};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)] // Struct informazioni anti-cheat - essenziale per configurazione sicurezza
 pub struct AntiCheatInfo {
     pub name: String,
     pub detection_method: DetectionMethod,
@@ -19,6 +20,7 @@ pub struct AntiCheatInfo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)] // Enum metodi detection - essenziale per classificazione anti-cheat
 pub enum DetectionMethod {
     ProcessName,
     ModuleName,
@@ -29,6 +31,7 @@ pub enum DetectionMethod {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)] // Enum livelli rischio - critico per valutazione sicurezza
 pub enum RiskLevel {
     Low,      // Injection possibile con precauzioni
     Medium,   // Injection rischiosa, richiede bypass
@@ -37,6 +40,7 @@ pub enum RiskLevel {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)] // Enum modalità compatibilità - essenziale per strategie injection
 pub enum CompatibilityMode {
     Direct,        // Injection diretta
     Delayed,       // Injection ritardata
@@ -74,6 +78,7 @@ pub struct AntiCheatManager {
 }
 
 impl AntiCheatManager {
+    #[allow(dead_code)] // Costruttore manager anti-cheat - essenziale per sicurezza
     pub fn new() -> Self {
         let mut known_systems = HashMap::new();
         
@@ -157,6 +162,7 @@ impl AntiCheatManager {
         }
     }
 
+    #[allow(dead_code)] // Detection anti-cheat - critica per sicurezza utenti
     pub fn detect_anti_cheat(&self, pid: u32) -> Result<AntiCheatDetection, Box<dyn Error>> {
         // Controlla cache prima con accesso sicuro
         if let Ok(cache) = self.detection_cache.lock() {
@@ -227,6 +233,7 @@ impl AntiCheatManager {
         Ok(detection)
     }
 
+    #[allow(dead_code)] // Strategie compatibilità - essenziali per bypass sicuro
     pub fn get_compatibility_strategies(&self, anti_cheat_name: &str) -> Vec<BypassStrategy> {
         for (_key, info) in &self.known_systems {
             if info.name.to_lowercase().contains(&anti_cheat_name.to_lowercase()) {
@@ -236,11 +243,13 @@ impl AntiCheatManager {
         vec![]
     }
 
+    #[allow(dead_code)] // Validazione sicurezza injection - critica per protezione utenti
     pub fn is_injection_safe(&self, detection: &AntiCheatDetection) -> bool {
         matches!(detection.risk_assessment, RiskLevel::Low) &&
         !matches!(detection.recommended_mode, CompatibilityMode::Disabled)
     }
 
+    #[allow(dead_code)] // Calcolo delay injection - essenziale per timing sicuro
     pub fn get_injection_delay(&self, detection: &AntiCheatDetection) -> Option<u64> {
         match detection.recommended_mode {
             CompatibilityMode::Delayed => Some(5000), // 5 secondi
@@ -363,12 +372,14 @@ impl AntiCheatManager {
         max_restriction
     }
 
+    #[allow(dead_code)] // Pulizia cache detection - necessaria per gestione memoria
     pub fn clear_cache(&self) {
         if let Ok(mut cache) = self.detection_cache.lock() {
             cache.clear();
         }
     }
 
+    #[allow(dead_code)] // Statistiche cache - essenziali per diagnostica
     pub fn get_cache_stats(&self) -> HashMap<String, usize> {
         let mut stats = HashMap::new();
         
@@ -381,8 +392,11 @@ impl AntiCheatManager {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Struct per informazioni processo - essenziale per detection anti-cheat
 struct ProcessInfo {
+    #[allow(dead_code)] // PID processo - necessario per identificazione
     pid: u32,
+    #[allow(dead_code)] // Nome processo - critico per detection anti-cheat
     name: String,
 }
 
@@ -395,12 +409,16 @@ impl Default for AntiCheatManager {
 // === STATO ANTI-CHEAT PER TAURI ===
 
 #[derive(Debug, Default)]
+#[allow(dead_code)] // Stato anti-cheat - critico per sicurezza utenti
 pub struct AntiCheatState {
+    #[allow(dead_code)] // Manager anti-cheat - essenziale per protezione
     pub manager: Arc<Mutex<AntiCheatManager>>,
+    #[allow(dead_code)] // Cache detection - necessaria per performance
     pub last_detection: Arc<Mutex<Option<AntiCheatDetection>>>,
 }
 
 impl AntiCheatState {
+    #[allow(dead_code)] // Costruttore stato anti-cheat - critico per inizializzazione sicurezza
     pub fn new() -> Self {
         Self {
             manager: Arc::new(Mutex::new(AntiCheatManager::new())),

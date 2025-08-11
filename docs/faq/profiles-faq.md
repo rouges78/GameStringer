@@ -34,10 +34,14 @@
 
 #### Q: Quanto sono sicure le mie credenziali?
 **A**: Molto sicure! Utilizziamo:
-- Crittografia AES-256-GCM per tutti i dati sensibili
-- PBKDF2 per la derivazione delle chiavi
-- Isolamento completo tra profili
-- Pulizia automatica della memoria
+- **Crittografia AES-256-GCM** per tutti i dati sensibili
+- **PBKDF2 con 100.000 iterazioni** per la derivazione delle chiavi
+- **Salt unici** per ogni profilo (prevenzione rainbow table)
+- **Nonce casuali** per ogni operazione di crittografia
+- **Isolamento completo** tra profili (nessuna condivisione dati)
+- **Pulizia automatica memoria** al cambio profilo
+- **Verifica integrità** con MAC per prevenire manomissioni
+- **Timeout sessioni** automatico per sicurezza aggiuntiva
 
 #### Q: Cosa succede se qualcuno accede al mio computer?
 **A**: Senza la password del profilo, non può accedere ai tuoi dati. Inoltre:
@@ -87,12 +91,17 @@
 - Prima di modifiche importanti al sistema
 
 #### Q: Il backup include anche le traduzioni e patch?
-**A**: Sì, il backup include tutti i dati del profilo:
-- Credenziali store
-- Impostazioni personalizzate
-- Traduzioni salvate
-- Patch applicate
-- Cronologia attività
+**A**: Sì, il backup include **tutti** i dati del profilo:
+- **Credenziali store** (Steam, Epic, GOG, etc.) - crittografate
+- **Impostazioni personalizzate** (tema, lingua, preferenze)
+- **Traduzioni salvate** e cronologia traduzioni
+- **Patch applicate** e modifiche giochi
+- **Cache metadati** giochi e store
+- **Cronologia attività** e log operazioni
+- **Configurazioni avanzate** (performance, sicurezza)
+- **Avatar personalizzato** e preferenze UI
+
+Il file di backup (.gsp) è completamente **crittografato** e **portabile** tra diversi computer.
 
 ---
 
@@ -185,6 +194,49 @@
 
 #### Q: Posso creare un profilo "ospite" senza password?
 **A**: No, tutti i profili richiedono una password per motivi di sicurezza. Puoi però creare un profilo con una password semplice per ospiti.
+
+---
+
+### 🔧 Aspetti Tecnici
+
+#### Q: Dove vengono salvati fisicamente i profili?
+**A**: I profili sono salvati in:
+- **Windows**: `%APPDATA%\gamestringer\profiles\`
+- **macOS**: `~/Library/Application Support/gamestringer/profiles/`
+- **Linux**: `~/.config/gamestringer/profiles/`
+
+Ogni profilo è un file `.json.enc` crittografato con nome univoco.
+
+#### Q: Posso spostare i profili su un altro disco?
+**A**: Sì, puoi:
+1. Esportare tutti i profili (backup .gsp)
+2. Disinstallare e reinstallare GameStringer nella nuova posizione
+3. Importare i profili dai backup
+
+Oppure usare la variabile ambiente `GAMESTRINGER_PROFILES_DIR`.
+
+#### Q: Che algoritmi di crittografia usate esattamente?
+**A**: Dettagli tecnici della crittografia:
+- **Algoritmo simmetrico**: AES-256-GCM
+- **Key derivation**: PBKDF2-SHA256 con 100.000 iterazioni
+- **Salt**: 32 byte casuali per profilo
+- **Nonce**: 12 byte casuali per operazione
+- **MAC**: Incluso in GCM per verifica integrità
+- **Password hashing**: Argon2id per verifica password
+
+#### Q: I profili sono compatibili tra versioni diverse?
+**A**: Compatibilità versioni:
+- **Forward**: Profili 3.2.2 funzionano su versioni successive
+- **Backward**: Profili nuovi NON funzionano su versioni precedenti
+- **Migrazione**: Automatica durante aggiornamenti
+- **Formato**: Il formato .gsp è stabile e mantenuto
+
+#### Q: Posso accedere ai dati del profilo programmaticamente?
+**A**: Per sviluppatori:
+- **API Tauri**: Comandi disponibili per integrazioni
+- **File crittografati**: Non accessibili direttamente senza password
+- **SDK**: Non disponibile, usa i comandi Tauri esposti
+- **Database**: SQLite interno per metadati (non credenziali)
 
 ---
 

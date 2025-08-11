@@ -1015,6 +1015,8 @@ pub async fn get_epic_games_by_account_id(_account_id: String) -> Result<serde_j
 }
 
 /// Cerca configurazioni Epic Games che contengono l'Account ID
+/// FUTURE USE: Will be used for Epic Games account-based game discovery
+#[allow(dead_code)]
 async fn search_epic_configs_by_account_id(account_id: &str) -> Result<Vec<String>, String> {
     let user_profile = std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\Users\\Default".to_string());
     
@@ -1068,6 +1070,8 @@ async fn search_epic_configs_by_account_id(account_id: &str) -> Result<Vec<Strin
 // Rimosso: search_epic_web_cache - funzione cache web non utilizzata (Task 4.2)
 
 /// Cerca nel registro Windows per l'Account ID
+/// FUTURE USE: Will be used for Epic Games registry-based game discovery
+#[allow(dead_code)]
 async fn search_registry_by_account_id(account_id: &str) -> Result<Vec<String>, String> {
     let mut games = Vec::new();
     
@@ -1111,6 +1115,8 @@ async fn search_registry_by_account_id(account_id: &str) -> Result<Vec<String>, 
 }
 
 /// Estrae nomi di giochi dal contenuto di un file (versione migliorata)
+/// FUTURE USE: Helper function for extracting game names from Epic config files
+#[allow(dead_code)]
 fn extract_games_from_file_content(content: &str) -> Vec<String> {
     use std::collections::HashSet;
     
@@ -1284,6 +1290,8 @@ fn extract_game_name_from_line(line: &str) -> Option<String> {
 }
 
 /// Rileva giochi posseduti Epic Games (installati + nel launcher) - legacy method
+/// FUTURE USE: Legacy method for Epic Games detection, kept for compatibility
+#[allow(dead_code)]
 pub async fn get_epic_owned_games_legacy() -> Result<Vec<String>, String> {
     let mut owned_games = Vec::new();
     
@@ -1338,6 +1346,8 @@ pub async fn get_epic_owned_games_legacy() -> Result<Vec<String>, String> {
 }
 
 /// Prova a parsare vari file di configurazione Epic Games (versione migliorata)
+/// FUTURE USE: Will be used for parsing Epic Games configuration files
+#[allow(dead_code)]
 async fn try_parse_epic_config(config_path: &str) -> Result<Vec<String>, String> {
     use std::path::Path;
     use std::fs;
@@ -1403,6 +1413,8 @@ async fn try_parse_epic_config(config_path: &str) -> Result<Vec<String>, String>
 }
 
 /// Legge giochi Epic dal registro Windows
+/// FUTURE USE: Will be used for reading Epic Games from Windows registry
+#[allow(dead_code)]
 async fn read_epic_registry_games() -> Result<Vec<String>, String> {
     
     let mut games = Vec::new();
@@ -1984,6 +1996,8 @@ async fn search_epic_registry_advanced() -> Result<Vec<String>, String> {
 }
 
 /// Verifica se un nome è un gioco Epic Games valido usando whitelist robusta (versione migliorata)
+/// FUTURE USE: Helper function for validating Epic Games names
+#[allow(dead_code)]
 fn is_valid_epic_game_name(name: &str) -> bool {
     // 🔄 Usa la stessa logica robusta della funzione principale
     is_valid_epic_game(name)
@@ -2276,6 +2290,8 @@ fn encrypt_epic_credentials(username: &str, password: &str) -> Result<(String, S
 }
 
 /// Decripta username e password usando AES-256-GCM
+/// FUTURE USE: Will be used for decrypting stored Epic Games credentials
+#[allow(dead_code)]
 fn decrypt_epic_credentials(username_encrypted: &str, password_encrypted: &str, nonce_b64: &str) -> Result<(String, String), String> {
     // SECURITY FIX: Validate input parameters
     if username_encrypted.is_empty() || password_encrypted.is_empty() || nonce_b64.is_empty() {
@@ -2433,6 +2449,8 @@ pub async fn clear_epic_credentials() -> Result<String, String> {
 }
 
 // 🔒 Funzione helper per ottenere le credenziali decriptate (uso interno)
+/// FUTURE USE: Internal helper for getting decrypted Epic Games credentials
+#[allow(dead_code)]
 async fn get_decrypted_epic_credentials() -> Result<(String, String), String> {
     // SECURITY FIX: Use secure credential loading with integrity verification
     let credentials = load_epic_credentials().await?;

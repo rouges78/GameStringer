@@ -190,8 +190,12 @@
 
 
 
-- [ ] 12. Documentazione e deployment
-- [ ] 12.1 Aggiornare documentazione utente
+- [x] 12. Documentazione e deployment
+
+
+- [x] 12.1 Aggiornare documentazione utente
+
+
   - Creare guida utilizzo sistema profili
   - Documentare processo migrazione da versione precedente
 
@@ -200,7 +204,9 @@
   - Aggiungere FAQ per problemi comuni
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [ ] 12.2 Preparare release notes
+- [x] 12.2 Preparare release notes
+
+
   - Documentare nuove funzionalità sistema profili
   - Elencare breaking changes e migration path
   - Aggiungere note sicurezza e best practices

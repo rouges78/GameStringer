@@ -439,29 +439,23 @@ mod profile_manager_integration_tests {
         // In un test reale, queste operazioni dovrebbero essere thread-safe
         
         // Aggiorna impostazioni
-        let settings_task = async {
-            let mut new_settings = ProfileSettings::default();
-            new_settings.theme = Theme::Light;
-            manager.update_settings(new_settings, "SecurePass123!").await
-        };
+        let mut new_settings = ProfileSettings::default();
+        new_settings.theme = Theme::Light;
+        manager.update_settings(new_settings, "SecurePass123!").await
+            .expect("Settings update failed");
 
         // Aggiungi credenziale
-        let credential_task = async {
-            let credential = EncryptedCredential {
-                store: "test_store".to_string(),
-                encrypted_data: "test_data".to_string(),
-                nonce: "test_nonce".to_string(),
-                salt: "test_salt".to_string(),
-                created_at: chrono::Utc::now(),
-                updated_at: chrono::Utc::now(),
-                encryption_version: 1,
-            };
-            manager.add_credential(credential, "SecurePass123!").await
+        let credential = EncryptedCredential {
+            store: "test_store".to_string(),
+            encrypted_data: "test_data".to_string(),
+            nonce: "test_nonce".to_string(),
+            salt: "test_salt".to_string(),
+            created_at: chrono::Utc::now(),
+            updated_at: chrono::Utc::now(),
+            encryption_version: 1,
         };
-
-        // Esegui operazioni (in questo caso sequenzialmente per semplicità)
-        settings_task.await.expect("Settings update failed");
-        credential_task.await.expect("Credential addition failed");
+        manager.add_credential(credential, "SecurePass123!").await
+            .expect("Credential addition failed");
 
         // Verifica che entrambe le operazioni abbiano avuto successo
         let current_settings = manager.get_settings().expect("No current settings");
@@ -519,10 +513,13 @@ mod profile_manager_integration_tests {
         assert_eq!(authenticated_profile.name, "CompleteUser");
         assert!(manager.is_profile_active());
         
-        let current = manager.current_profile().expect("No current profile after authentication");
-        assert_eq!(current.name, "CompleteUser");
-        assert_eq!(current.settings.theme, Theme::Dark);
-        assert_eq!(current.settings.language, "it");
+        // Verifica profilo corrente
+        {
+            let current = manager.current_profile().expect("No current profile after authentication");
+            assert_eq!(current.name, "CompleteUser");
+            assert_eq!(current.settings.theme, Theme::Dark);
+            assert_eq!(current.settings.language, "it");
+        }
 
         // FASE 3: Uso del profilo - operazioni tipiche
         
@@ -548,7 +545,7 @@ mod profile_manager_integration_tests {
         }
 
         // 3b. Modifica impostazioni multiple volte
-        let mut updated_settings = current.settings.clone();
+        let mut updated_settings = ProfileSettings::default();
         updated_settings.theme = Theme::Light;
         updated_settings.language = "en".to_string();
         updated_settings.notifications.desktop_enabled = false;
@@ -610,15 +607,16 @@ mod profile_manager_integration_tests {
         assert!(session_stats.settings_changes >= 2); // Almeno 2 modifiche impostazioni
 
         // FASE 7: Test export profilo
-        let export_data = manager.export_profile("CompletePass123!").await
+        let current_profile_id = manager.current_profile_id().unwrap().to_string();
+        let export_data = manager.export_profile(&current_profile_id, "CompletePass123!", None).await
             .expect("Failed to export profile");
         
-        assert!(!export_data.is_empty());
+        assert!(!export_data.encrypted_data.is_empty());
         
         // FASE 8: Test import profilo (su nuovo manager)
         let (mut import_manager, _import_temp_dir) = create_test_manager().await;
         
-        let imported_profile = import_manager.import_profile(export_data, "CompletePass123!").await
+        let imported_profile = import_manager.import_profile(export_data, "CompletePass123!", None).await
             .expect("Failed to import profile");
         
         assert_eq!(imported_profile.name, "CompleteUser");
@@ -799,17 +797,18 @@ mod profile_manager_integration_tests {
         }
 
         // Export del profilo
-        let export_data = source_manager.export_profile("ExportPass123!").await
+        let current_profile_id = source_manager.current_profile_id().unwrap().to_string();
+        let export_data = source_manager.export_profile(&current_profile_id, "ExportPass123!", None).await
             .expect("Failed to export complex profile");
 
         // Verifica che i dati export non siano vuoti e sembrino validi
-        assert!(!export_data.is_empty());
-        assert!(export_data.len() > 100); // Dovrebbe essere sostanzioso
+        assert!(!export_data.encrypted_data.is_empty());
+        assert!(export_data.encrypted_data.len() > 100); // Dovrebbe essere sostanzioso
 
         // Test import su manager pulito
         let (mut target_manager, _target_temp_dir) = create_test_manager().await;
         
-        let imported_profile = target_manager.import_profile(export_data.clone(), "ExportPass123!").await
+        let imported_profile = target_manager.import_profile(export_data.clone(), "ExportPass123!", None).await
             .expect("Failed to import complex profile");
 
         // Verifica metadati profilo
@@ -847,15 +846,15 @@ mod profile_manager_integration_tests {
 
         // Test import con password errata
         let (mut wrong_manager, _wrong_temp_dir) = create_test_manager().await;
-        let wrong_result = wrong_manager.import_profile(export_data.clone(), "WrongPassword").await;
+        let wrong_result = wrong_manager.import_profile(export_data.clone(), "WrongPassword", None).await;
         assert!(wrong_result.is_err(), "Import should fail with wrong password");
 
         // Test import di dati corrotti
         let mut corrupted_data = export_data.clone();
-        corrupted_data[50] = corrupted_data[50].wrapping_add(1); // Corrompi un byte
+        corrupted_data.encrypted_data[50] = corrupted_data.encrypted_data[50].wrapping_add(1); // Corrompi un byte
         
         let (mut corrupt_manager, _corrupt_temp_dir) = create_test_manager().await;
-        let corrupt_result = corrupt_manager.import_profile(corrupted_data, "ExportPass123!").await;
+        let corrupt_result = corrupt_manager.import_profile(corrupted_data, "ExportPass123!", None).await;
         assert!(corrupt_result.is_err(), "Import should fail with corrupted data");
     }
 }

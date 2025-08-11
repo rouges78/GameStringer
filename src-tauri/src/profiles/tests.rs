@@ -3,7 +3,7 @@ mod tests {
     use crate::profiles::encryption::ProfileEncryption;
     use crate::profiles::manager::ProfileManager;
     use crate::profiles::storage::ProfileStorage;
-    use crate::profiles::models::{CreateProfileRequest, ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings};
+    use crate::profiles::models::{CreateProfileRequest, ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings, LibrarySort, LibraryView};
     use crate::profiles::errors::ProfileError;
     use crate::profiles::rate_limiter::{RateLimiterConfig, RateLimitResult};
     use crate::profiles::secure_memory::SecureMemory;
@@ -728,14 +728,15 @@ mod tests {
                 game_library: LibrarySettings {
                     auto_refresh: true,
                     show_hidden: false,
-                    sort_by: "name".to_string(),
-                    view_mode: "grid".to_string(),
+                    default_sort: LibrarySort::Alphabetical,
+                    default_view: LibraryView::Grid,
+                    refresh_interval: 30,
                 },
                 security: SecuritySettings {
                     session_timeout: 3600,
                     require_password_for_sensitive: true,
-                    auto_lock_enabled: true,
-                    two_factor_enabled: false,
+                    auto_lock_failed_attempts: 3,
+                    lock_duration: 300,
                 },
             }),
         };

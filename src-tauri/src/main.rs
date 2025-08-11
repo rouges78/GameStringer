@@ -19,13 +19,11 @@ use profiles::manager::ProfileManager;
 use profiles::settings_manager::ProfileSettingsManager;
 use commands::profiles::ProfileManagerState;
 use commands::profile_settings::ProfileSettingsManagerState;
-// TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
-// mod advanced_ocr;
-// mod translation_backends;
-// mod offline_translation;
-// mod translation_logger;
-// mod low_latency_optimizer;
-// mod translation_pipeline;
+use commands::notifications::NotificationManagerState;
+use notifications::storage::NotificationStorage;
+use notifications::manager::NotificationManager;
+use notifications::profile_integration::ProfileNotificationIntegration;
+
 mod process_utils;
 
 fn main() {
@@ -42,11 +40,25 @@ fn main() {
         manager: std::sync::Arc::new(tokio::sync::Mutex::new(settings_manager)),
     };
 
+    // Inizializza NotificationManager
+    let notification_storage = NotificationStorage::new("notifications".into()).expect("Failed to initialize notification storage");
+    let notification_manager = NotificationManager::new(notification_storage);
+    let notification_manager_arc = std::sync::Arc::new(tokio::sync::Mutex::new(notification_manager));
+    
+    // Inizializza ProfileNotificationIntegration
+    let profile_integration = ProfileNotificationIntegration::new(std::sync::Arc::clone(&notification_manager_arc));
+    
+    let notification_state = NotificationManagerState {
+        manager: notification_manager_arc,
+        profile_integration: std::sync::Arc::new(tokio::sync::Mutex::new(profile_integration)),
+    };
+
     tauri::Builder::default()
         .manage(commands::anti_cheat::AntiCheatState::default())
 
         .manage(profile_state)
         .manage(settings_state)
+        .manage(notification_state)
         // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
         // .manage(commands::advanced_ocr::AdvancedOCRState::default())
         // .manage(commands::translation_backends::TranslationBackendState::default())
@@ -96,11 +108,11 @@ fn main() {
             commands::epic_enhanced::scan_epic_games_enhanced,
             commands::epic_enhanced::get_epic_game_enhanced,
             commands::epic_enhanced::get_epic_statistics_enhanced,
-            // HowLongToBeat (game completion times)
-            commands::hltb_manager::search_game_hltb,
-            commands::hltb_manager::get_hltb_statistics,
-            commands::hltb_manager::cleanup_hltb_cache,
-            commands::hltb_manager::search_games_batch_hltb,
+            // HowLongToBeat (game completion times) - Rimosso per eliminare dipendenza xml5ever
+            // commands::hltb_manager::search_game_hltb,
+            // commands::hltb_manager::get_hltb_statistics,
+            // commands::hltb_manager::cleanup_hltb_cache,
+            // commands::hltb_manager::search_games_batch_hltb,
             commands::epic::get_epic_game_details,
             commands::epic::get_epic_game_cover,
             commands::epic::get_epic_covers_batch,
@@ -371,6 +383,49 @@ fn main() {
             commands::validation::validate_profile_creation,
             commands::validation::generate_password_suggestions,
             commands::validation::check_password_strength_realtime,
+
+            // Notification System
+            commands::notifications::create_notification,
+            commands::notifications::get_notifications,
+            commands::notifications::get_notifications_sorted,
+            commands::notifications::mark_notification_as_read,
+            commands::notifications::mark_multiple_notifications_as_read,
+            commands::notifications::mark_all_notifications_as_read,
+            commands::notifications::delete_notification,
+            commands::notifications::get_unread_notifications_count,
+            commands::notifications::get_notification_counts,
+            commands::notifications::clear_all_notifications,
+            commands::notifications::get_notification_preferences,
+            commands::notifications::update_notification_preferences,
+            commands::notifications::update_partial_notification_preferences,
+            commands::notifications::toggle_notification_type,
+            commands::notifications::reset_notification_preferences_to_default,
+            commands::notifications::handle_profile_event,
+            commands::notifications::handle_profile_switch,
+            commands::notifications::cleanup_profile_notifications,
+            commands::notifications::generate_notification_security_report,
+            commands::notifications::verify_profile_notifications_integrity,
+            commands::notifications::get_high_priority_unread_notifications,
+            commands::notifications::cleanup_expired_notifications,
+            commands::notifications::create_authentication_error_notification,
+            commands::notifications::create_profile_locked_notification,
+            commands::notifications::create_credential_operation_notification,
+            commands::notifications::create_settings_update_notification,
+            commands::notifications::create_backup_notification,
+            
+            // System Notification Commands
+            commands::notifications::create_system_broadcast_notification,
+            commands::notifications::create_urgent_system_notification,
+            commands::notifications::create_maintenance_notification,
+            commands::notifications::create_update_available_notification,
+            commands::notifications::get_active_system_notifications,
+            commands::notifications::get_system_notification_stats,
+            commands::notifications::delete_system_notification_from_all_profiles,
+            commands::notifications::update_system_notification_expiry,
+            commands::notifications::update_system_notification_priority,
+            commands::notifications::get_system_notification_read_status,
+            commands::notifications::expire_old_system_notifications,
+            commands::notifications::get_profiles_for_notification_admin,
 
         ])
         .run(tauri::generate_context!())

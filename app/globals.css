@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import toast notification styles */
+@import '../components/notifications/toast-styles.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;

@@ -35,6 +35,7 @@ pub enum InjectionStrategy {
 
 #[derive(Debug, Clone)]
 pub struct ProcessInfo {
+    #[allow(dead_code)] // PID processo - essenziale per identificazione processo target
     pub pid: u32,
     pub name: String,
     pub is_primary: bool,

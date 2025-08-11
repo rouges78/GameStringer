@@ -19,6 +19,7 @@ import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
 import { motion } from 'framer-motion';
 import { cacheManager } from '@/lib/cache-manager';
 
+
 // 🔧 FIX: Interfacce TypeScript proper invece di any
 
 interface ActionButtonProps {

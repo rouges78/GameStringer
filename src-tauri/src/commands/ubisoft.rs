@@ -32,8 +32,18 @@ struct UbisoftCredentials {
     pub nonce: String,
 }
 
+/// Represents a Ubisoft Connect user account with authentication details
+/// 
+/// This structure contains the essential information for a Ubisoft Connect user account,
+/// including username, email, and optional profile identifier.
+/// 
+/// # Fields
+/// 
+/// * `username` - The Ubisoft Connect username
+/// * `email` - The user's email address
+/// * `profile_id` - Optional Ubisoft profile identifier
 #[derive(Debug, Serialize, Deserialize)]
-struct UbisoftUser {
+pub struct UbisoftUser {
     pub username: String,
     pub email: String,
     pub profile_id: Option<String>,
