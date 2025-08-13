@@ -64,12 +64,12 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
     const success = await authenticateProfile(profile.name, password);
     
     if (success) {
-      // ✅ FIX: Chiamiamo onSelect SOLO dopo un piccolo delay per evitare conflitti di stato
-      // Questo permette al sistema di aggiornare completamente lo stato prima del routing
-      console.log('✅ Login completato, transizione fluida per:', profile.name);
-      setTimeout(() => {
-        onSelect(profile);
-      }, 100);
+      // ✅ FIX DEFINITIVO: NON chiamare onSelect!
+      // authenticateProfile già gestisce TUTTO: aggiorna currentProfile, sincronizza la sessione, ecc.
+      // Chiamare onSelect causa un doppio aggiornamento che provoca il riavvio dell'app
+      console.log('✅ Login completato con successo per:', profile.name);
+      console.log('🚫 NON chiamiamo onSelect per evitare riavvio app');
+      // NON FARE NULLA QUI - authenticateProfile ha già fatto tutto il necessario
     } else {
       setAuthError('Password non corretta');
       setPassword('');

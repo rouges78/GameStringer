@@ -55,32 +55,11 @@ export function ProtectedRoute({
   const handleProfileSelected = async (profileId: string) => {
     console.log('🎯 ProtectedRoute: handleProfileSelected chiamato con profileId:', profileId);
     
-    // ✅ FIX: NON fare nulla qui se già autenticato per evitare riavvii
-    // L'autenticazione è già stata gestita da authenticateProfile in useProfiles
-    if (isAuthenticated && currentProfile) {
-      console.log('✅ Già autenticato, skip refresh per evitare riavvio');
-      return;
-    }
-    
-    // Aggiorna le impostazioni globali solo se necessario
-    await updateGlobalSettings({
-      last_profile: profileId
-    });
-    console.log('✅ Impostazioni globali aggiornate');
-    
-    // 🔄 FORZA REFRESH dello stato di autenticazione
-    console.log('🔄 Forzando refresh stato autenticazione...');
-    
-    // Aspetta un momento per permettere al backend di aggiornare lo stato
-    setTimeout(() => {
-      console.log('🔄 Refresh completato, stato dovrebbe essere aggiornato');
-      // Forza un re-render controllando lo stato corrente
-      console.log('🔍 Stato corrente dopo refresh:', {
-        isAuthenticated,
-        currentProfile: currentProfile?.name,
-        isLoading
-      });
-    }, 500);
+    // ✅ FIX DEFINITIVO: Non fare NULLA qui!
+    // L'autenticazione è già stata completamente gestita da authenticateProfile in useProfiles
+    // Qualsiasi azione aggiuntiva qui causa il riavvio dell'app
+    console.log('✅ Autenticazione già gestita da useProfiles, nessuna azione necessaria qui');
+    return;
   };
 
   // Handle profile creation

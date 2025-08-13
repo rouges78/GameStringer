@@ -7,6 +7,7 @@ import Providers from '@/components/providers';
 import { Toaster } from 'sonner';
 import { ProfileWrapper } from '@/components/profiles/profile-wrapper';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoginDebugMonitor } from '@/components/debug/login-debug-monitor';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -41,6 +42,8 @@ export default function RootLayout({
                 </ProfileWrapper>
               </ErrorBoundary>
               <Toaster richColors position="top-right" />
+              {/* Debug Monitor per analizzare il problema di riavvio */}
+              {process.env.NODE_ENV === 'development' && <LoginDebugMonitor />}
             </Providers>
           </ThemeProvider>
         </ErrorBoundary>

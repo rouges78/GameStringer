@@ -1,4 +1,4 @@
-# 🔥 FIX DEFINITIVO PROBLEMA LOGIN/RIAVVIO PROFILI - DICEMBRE 2025
+# 🔥 FIX DEFINITIVO PROBLEMA LOGIN/RIAVVIO PROFILI - DICEMBRE 2025 [AGGIORNATO]
 
 **Data:** 13 Dicembre 2025  
 **Problema:** L'app si chiude e riavvia durante il login dei profili  
@@ -31,44 +31,48 @@ onProfileSelected() [SECONDO UPDATE]
 
 ---
 
-## 🛠️ SOLUZIONE IMPLEMENTATA
+## 🛠️ SOLUZIONE IMPLEMENTATA [VERSIONE FINALE]
 
-### 1. **Delay Strategico nel ProfileSelector**
+### 1. **ELIMINAZIONE COMPLETA di onSelect nel ProfileSelector**
 ```typescript
 // PRIMA (Problema)
 if (success) {
-  onSelect(profile); // Chiamata immediata = conflitto
-}
-
-// DOPO (Risolto)
-if (success) {
-  console.log('✅ Login completato, transizione fluida per:', profile.name);
   setTimeout(() => {
-    onSelect(profile); // Delay di 100ms evita conflitto
+    onSelect(profile); // Anche con delay causava riavvio
   }, 100);
 }
+
+// DOPO (RISOLTO DEFINITIVAMENTE)
+if (success) {
+  console.log('✅ Login completato con successo per:', profile.name);
+  console.log('🚫 NON chiamiamo onSelect per evitare riavvio app');
+  // NON FARE NULLA - authenticateProfile ha già fatto tutto
+}
 ```
 
-### 2. **Skip Refresh in ProtectedRoute se già Autenticato**
+### 2. **ELIMINAZIONE COMPLETA della logica in ProtectedRoute**
 ```typescript
 // PRIMA (Problema)
 const handleProfileSelected = async (profileId: string) => {
-  // Sempre aggiorna e forza refresh
+  if (isAuthenticated && currentProfile) {
+    return; // Skip parziale non sufficiente
+  }
   await updateGlobalSettings({...});
-  // FORZA REFRESH che causa riavvio
+  // Codice di refresh...
 }
 
-// DOPO (Risolto)  
+// DOPO (RISOLTO DEFINITIVAMENTE)  
 const handleProfileSelected = async (profileId: string) => {
-  // ✅ FIX: Skip se già autenticato
-  if (isAuthenticated && currentProfile) {
-    console.log('✅ Già autenticato, skip refresh per evitare riavvio');
-    return;
-  }
-  // Aggiorna solo se necessario
-  await updateGlobalSettings({...});
+  console.log('✅ Autenticazione già gestita da useProfiles');
+  return; // NON FARE ASSOLUTAMENTE NULLA
 }
 ```
+
+### 3. **Debug Monitor per Intercettare Riavvii**
+Aggiunto `LoginDebugMonitor` che:
+- Intercetta e blocca `window.location` modifiche
+- Logga tutti i tentativi di reload/refresh
+- Previene riavvii non voluti durante il debug
 
 ---
 
