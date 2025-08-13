@@ -27,6 +27,9 @@ secrets/
 *.pfx
 config/secrets.json
 
+# GameStringer data directory (profiles, settings, etc.)
+/gamestringer_data/
+
 # Log files
 yarn-error.log
 npm-debug.log*

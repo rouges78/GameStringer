@@ -9,7 +9,7 @@ class PortManager {
     this.portFile = path.join(this.rootDir, '.port');
     this.tauriConfigFile = path.join(this.rootDir, 'src-tauri', 'tauri.conf.json');
     this.packageJsonFile = path.join(this.rootDir, 'package.json');
-    this.defaultPort = 3002;
+    this.defaultPort = 3101; // Allineato con la porta che Next.js cerca di usare
   }
 
   // Legge la porta dal file .port

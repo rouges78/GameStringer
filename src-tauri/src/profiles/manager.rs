@@ -590,15 +590,10 @@ impl ProfileManager {
                 // Registra il tentativo riuscito nel rate limiter
                 self.rate_limiter.register_successful_attempt(&profile_info.id);
 
-                // 🚨 DISABILITATO - Evita aggiornamenti che causano crash
-                // let _ = self.storage.update_failed_attempts(&profile_info.id, false).await;
-
-                // 🚨 COMPLETAMENTE DISABILITATO - Evita qualsiasi modifica che causa crash
-                // TODO: Investigare perché update_last_access + save_profile causa crash
-                // profile.update_last_access();
-                // let _ = self.storage.save_profile(&profile, password).await;
-
-                // Imposta come profilo corrente
+                // Aggiorna il timestamp di ultimo accesso
+                profile.update_last_access();
+                
+                // Imposta come profilo corrente con il timestamp aggiornato
                 self.current_profile = Some(profile.clone());
                 
                 // Inizializza statistiche sessione
@@ -607,7 +602,15 @@ impl ProfileManager {
                 // Invalida cache
                 self.invalidate_cache();
 
-                println!("[PROFILE MANAGER] ✅ Profilo '{}' autenticato con successo", profile.name);
+                // Ora possiamo salvare in sicurezza dato che i file sono fuori da src-tauri
+                // e non causeranno più il riavvio di Tauri in development
+                if let Err(e) = self.storage.save_profile(&profile, password).await {
+                    println!("[PROFILE MANAGER] ⚠️ Impossibile salvare profilo '{}': {:?}", profile.name, e);
+                    // Non fallire l'autenticazione se il salvataggio fallisce
+                }
+                
+                println!("[PROFILE MANAGER] ✅ Profilo '{}' autenticato e salvato con successo", profile.name);
+                
                 Ok(profile)
             }
             Err(_) => {

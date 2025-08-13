@@ -18,7 +18,10 @@ export function LoginDebugMonitor() {
         typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
       ).join(' ');
       
-      setLogs(prev => [...prev, `[LOG] ${new Date().toISOString()}: ${message}`]);
+      // Usa setTimeout per evitare setState durante il rendering
+      setTimeout(() => {
+        setLogs(prev => [...prev, `[LOG] ${new Date().toISOString()}: ${message}`]);
+      }, 0);
     };
     
     console.error = (...args) => {
@@ -27,7 +30,10 @@ export function LoginDebugMonitor() {
         typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
       ).join(' ');
       
-      setLogs(prev => [...prev, `[ERROR] ${new Date().toISOString()}: ${message}`]);
+      // Usa setTimeout per evitare setState durante il rendering
+      setTimeout(() => {
+        setLogs(prev => [...prev, `[ERROR] ${new Date().toISOString()}: ${message}`]);
+      }, 0);
     };
     
     console.warn = (...args) => {
@@ -36,7 +42,10 @@ export function LoginDebugMonitor() {
         typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
       ).join(' ');
       
-      setLogs(prev => [...prev, `[WARN] ${new Date().toISOString()}: ${message}`]);
+      // Usa setTimeout per evitare setState durante il rendering
+      setTimeout(() => {
+        setLogs(prev => [...prev, `[WARN] ${new Date().toISOString()}: ${message}`]);
+      }, 0);
     };
     
     // Monitora eventi di navigazione
@@ -65,19 +74,28 @@ export function LoginDebugMonitor() {
       return originalReplaceState.apply(history, args);
     };
     
-    // Intercetta window.location modifiche
-    let locationDescriptor = Object.getOwnPropertyDescriptor(window, 'location');
-    Object.defineProperty(window, 'location', {
-      get: function() {
-        return locationDescriptor?.get?.call(window);
-      },
-      set: function(value) {
-        console.error('🚨 TENTATIVO DI MODIFICARE window.location:', value);
-        console.error('Stack trace:', new Error().stack);
-        // Blocca la modifica per debug
-        // return locationDescriptor?.set?.call(window, value);
+    // Intercetta tentativi di modificare window.location (solo se non già definito)
+    try {
+      const descriptor = Object.getOwnPropertyDescriptor(window, 'location');
+      if (!descriptor || descriptor.configurable) {
+        const originalLocation = window.location;
+        Object.defineProperty(window, 'location', {
+          get() {
+            return originalLocation;
+          },
+          set(value) {
+            console.warn('🚫 [LoginDebugMonitor] Tentativo di modificare window.location bloccato:', value);
+            setLogs(prev => [...prev, `[WARN] ${new Date().toISOString()}: Tentativo di modificare window.location: ${value}`]);
+            // Non permettere la modifica
+            return originalLocation;
+          },
+          configurable: true
+        });
       }
-    });
+    } catch (e) {
+      console.log('⚠️ [LoginDebugMonitor] Non posso intercettare window.location:', e.message);
+      setLogs(prev => [...prev, `[ERROR] ${new Date().toISOString()}: Non posso intercettare window.location: ${e.message}`]);
+    }
     
     return () => {
       console.log = originalLog;

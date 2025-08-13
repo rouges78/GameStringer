@@ -28,15 +28,24 @@ use commands::profile_settings::ProfileSettingsManagerState;
 mod process_utils;
 
 fn main() {
+    // Usa la directory dei dati dell'app per evitare che Tauri riavvii quando i file cambiano
+    let app_data_dir = if cfg!(debug_assertions) {
+        // In dev, usa una directory temporanea fuori da src-tauri
+        std::path::PathBuf::from("../gamestringer_data")
+    } else {
+        // In produzione, usa la directory dei dati dell'app
+        std::path::PathBuf::from("profiles")
+    };
+    
     // Inizializza ProfileManager
-    let profile_storage = ProfileStorage::new("profiles".into()).expect("Failed to initialize profile storage");
+    let profile_storage = ProfileStorage::new(app_data_dir.clone()).expect("Failed to initialize profile storage");
     let profile_manager = ProfileManager::new(profile_storage);
     let profile_state = ProfileManagerState {
         manager: std::sync::Arc::new(tokio::sync::Mutex::new(profile_manager)),
     };
 
     // Inizializza ProfileSettingsManager
-    let settings_manager = ProfileSettingsManager::new("profiles".into()).expect("Failed to initialize settings manager");
+    let settings_manager = ProfileSettingsManager::new(app_data_dir).expect("Failed to initialize settings manager");
     let settings_state = ProfileSettingsManagerState {
         manager: std::sync::Arc::new(tokio::sync::Mutex::new(settings_manager)),
     };
