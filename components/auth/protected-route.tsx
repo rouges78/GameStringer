@@ -55,7 +55,14 @@ export function ProtectedRoute({
   const handleProfileSelected = async (profileId: string) => {
     console.log('🎯 ProtectedRoute: handleProfileSelected chiamato con profileId:', profileId);
     
-    // Aggiorna le impostazioni globali
+    // ✅ FIX: NON fare nulla qui se già autenticato per evitare riavvii
+    // L'autenticazione è già stata gestita da authenticateProfile in useProfiles
+    if (isAuthenticated && currentProfile) {
+      console.log('✅ Già autenticato, skip refresh per evitare riavvio');
+      return;
+    }
+    
+    // Aggiorna le impostazioni globali solo se necessario
     await updateGlobalSettings({
       last_profile: profileId
     });

@@ -64,7 +64,12 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
     const success = await authenticateProfile(profile.name, password);
     
     if (success) {
-      onSelect(profile);
+      // ✅ FIX: Chiamiamo onSelect SOLO dopo un piccolo delay per evitare conflitti di stato
+      // Questo permette al sistema di aggiornare completamente lo stato prima del routing
+      console.log('✅ Login completato, transizione fluida per:', profile.name);
+      setTimeout(() => {
+        onSelect(profile);
+      }, 100);
     } else {
       setAuthError('Password non corretta');
       setPassword('');
