@@ -121,13 +121,28 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   // Debug log per tracking stato autenticazione
   useEffect(() => {
     console.log('🔐 ProfileAuth stato aggiornato:', {
-      currentProfile: currentProfile?.name,
+      currentProfile: currentProfile?.name || 'null',
+      currentProfileId: currentProfile?.id || 'null',
       isAuthenticated,
       isSessionExpired,
       sessionTimeRemaining,
       isLoading,
-      hasCurrentProfile: !!currentProfile
+      hasCurrentProfile: !!currentProfile,
+      calculatedAuth: !!currentProfile && (!isSessionExpired || sessionTimeRemaining === null),
+      timestamp: new Date().toISOString()
     });
+    
+    // 🚨 IMPORTANTE: Se abbiamo un currentProfile ma non siamo considerati autenticati,
+    // potrebbe esserci un problema di timing
+    if (currentProfile && !isAuthenticated) {
+      console.warn('⚠️ PROBLEMA: Abbiamo currentProfile ma isAuthenticated=false!');
+      console.warn('🔍 Dettagli problema:', {
+        hasCurrentProfile: !!currentProfile,
+        isSessionExpired,
+        sessionTimeRemaining,
+        shouldBeAuthenticated: !!currentProfile && (!isSessionExpired || sessionTimeRemaining === null)
+      });
+    }
   }, [currentProfile, isAuthenticated, isSessionExpired, sessionTimeRemaining, isLoading]);
 
   const value: ProfileAuthContextType = {

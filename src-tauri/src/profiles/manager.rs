@@ -590,14 +590,13 @@ impl ProfileManager {
                 // Registra il tentativo riuscito nel rate limiter
                 self.rate_limiter.register_successful_attempt(&profile_info.id);
 
-                // Reset tentativi falliti (legacy)
-                let _ = self.storage.update_failed_attempts(&profile_info.id, false).await;
+                // 🚨 DISABILITATO - Evita aggiornamenti che causano crash
+                // let _ = self.storage.update_failed_attempts(&profile_info.id, false).await;
 
-                // Aggiorna ultimo accesso
-                profile.update_last_access();
-                
-                // Salva aggiornamento ultimo accesso
-                let _ = self.storage.save_profile(&profile, password).await;
+                // 🚨 COMPLETAMENTE DISABILITATO - Evita qualsiasi modifica che causa crash
+                // TODO: Investigare perché update_last_access + save_profile causa crash
+                // profile.update_last_access();
+                // let _ = self.storage.save_profile(&profile, password).await;
 
                 // Imposta come profilo corrente
                 self.current_profile = Some(profile.clone());

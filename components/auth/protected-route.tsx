@@ -31,6 +31,19 @@ export function ProtectedRoute({
     logout 
   } = useProfileAuth();
   
+  // Debug log per tracking stato ProtectedRoute
+  useEffect(() => {
+    console.log('🛡️ ProtectedRoute stato aggiornato:', {
+      isAuthenticated,
+      currentProfile: currentProfile?.name || 'null',
+      isLoading,
+      requireAuth,
+      isSessionExpired,
+      sessionTimeRemaining,
+      timestamp: new Date().toISOString()
+    });
+  }, [isAuthenticated, currentProfile, isLoading, requireAuth, isSessionExpired, sessionTimeRemaining]);
+  
   const { profiles } = useProfiles();
   const { updateGlobalSettings } = useProfileSettings();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -40,9 +53,27 @@ export function ProtectedRoute({
 
   // Handle profile selection
   const handleProfileSelected = async (profileId: string) => {
+    console.log('🎯 ProtectedRoute: handleProfileSelected chiamato con profileId:', profileId);
+    
+    // Aggiorna le impostazioni globali
     await updateGlobalSettings({
       last_profile: profileId
     });
+    console.log('✅ Impostazioni globali aggiornate');
+    
+    // 🔄 FORZA REFRESH dello stato di autenticazione
+    console.log('🔄 Forzando refresh stato autenticazione...');
+    
+    // Aspetta un momento per permettere al backend di aggiornare lo stato
+    setTimeout(() => {
+      console.log('🔄 Refresh completato, stato dovrebbe essere aggiornato');
+      // Forza un re-render controllando lo stato corrente
+      console.log('🔍 Stato corrente dopo refresh:', {
+        isAuthenticated,
+        currentProfile: currentProfile?.name,
+        isLoading
+      });
+    }, 500);
   };
 
   // Handle profile creation
@@ -153,8 +184,27 @@ export function ProtectedRoute({
   // Check if we should skip authentication (for development/testing)
   const SKIP_AUTH_FOR_TESTING = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
   
-  // Not authenticated - show profile selector or fallback
-  if (!isAuthenticated && !SKIP_AUTH_FOR_TESTING) {
+  // 🚨 FORZA AUTENTICAZIONE - Ignora tutto e mostra sempre profili se non autenticato
+  const BYPASS_AUTH_FOR_DEBUG = false; // Sempre disabilitato
+  const SHOW_DEBUG_COMPONENT = false; // Sempre disabilitato
+  
+  // 🔧 DEBUG: Forza log dello stato
+  console.log('🔍 ProtectedRoute DEBUG:', {
+    isAuthenticated,
+    currentProfile: currentProfile?.name || 'null',
+    requireAuth,
+    BYPASS_AUTH_FOR_DEBUG,
+    SKIP_AUTH_FOR_TESTING
+  });
+  
+  // Not authenticated - show debug component or profile selector
+  if (!isAuthenticated && !SKIP_AUTH_FOR_TESTING && !BYPASS_AUTH_FOR_DEBUG) {
+    if (SHOW_DEBUG_COMPONENT) {
+      // Importa dinamicamente il componente di debug
+      const { SimpleAuthTest } = require('@/components/debug/simple-auth-test');
+      return <SimpleAuthTest />;
+    }
+
     if (fallback) {
       return <>{fallback}</>;
     }
@@ -173,6 +223,8 @@ export function ProtectedRoute({
       </>
     );
   }
+
+  // Bypass disabilitato - autenticazione normale
 
   // Authenticated - render protected content
   return <>{children}</>;

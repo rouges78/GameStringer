@@ -20,19 +20,37 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
   useEffect(() => {
     const initialize = async () => {
       try {
-        // Setup activity tracking for session persistence
-        sessionPersistence.setupActivityTracking();
+        console.log('🔄 ProfileWrapper: Inizializzazione...');
         
-        // Try to restore previous session
-        await sessionPersistence.restoreSession();
+        // ✅ RIABILITATO con protezione anti-loop
+        try {
+          // Setup activity tracking for session persistence con debouncing
+          sessionPersistence.setupActivityTracking();
+          
+          // Try to restore previous session con timeout
+          const restorePromise = sessionPersistence.restoreSession();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Session restore timeout')), 5000)
+          );
+          
+          await Promise.race([restorePromise, timeoutPromise]);
+          
+          // Clean up any expired sessions
+          sessionPersistence.cleanup();
+          
+          console.log('✅ ProfileWrapper: Session persistence riabilitato con successo');
+        } catch (sessionError) {
+          console.warn('⚠️ ProfileWrapper: Session persistence fallito, continuando senza:', sessionError);
+          // Non bloccare l'inizializzazione se la session persistence fallisce
+        }
         
-        // Clean up any expired sessions
-        sessionPersistence.cleanup();
+        console.log('✅ ProfileWrapper: Inizializzazione completata');
       } catch (error) {
-        console.error('Error initializing session persistence:', error);
+        console.error('❌ ProfileWrapper: Error initializing:', error);
       } finally {
         // Small delay to prevent flash
         setTimeout(() => {
+          console.log('🏁 ProfileWrapper: setIsInitializing(false)');
           setIsInitializing(false);
         }, 300);
       }

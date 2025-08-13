@@ -40,28 +40,39 @@ export function useProfiles(): UseProfilesReturn {
     try {
       const response = await invoke<ProfileResponse<UserProfile | null>>('get_current_profile');
       
+      console.log('🔍 useProfiles: get_current_profile response:', {
+        success: response.success,
+        hasData: !!response.data,
+        profileName: response.data?.name || 'null',
+        profileId: response.data?.id || 'null',
+        error: response.error || 'none'
+      });
+      
       if (response.success) {
         setCurrentProfile(response.data || null);
       } else {
+        console.warn('⚠️ useProfiles: get_current_profile failed:', response.error);
         setCurrentProfile(null);
       }
     } catch (err) {
-      console.error('Errore caricamento profilo corrente:', err);
+      console.error('❌ useProfiles: Errore caricamento profilo corrente:', err);
       setCurrentProfile(null);
     }
   }, []);
 
-  // Inizializzazione
+  // Inizializzazione - SENZA DIPENDENZE per evitare loop infinito
   useEffect(() => {
     const initialize = async () => {
       setIsLoading(true);
       try {
+        console.log('🔄 useProfiles: Inizializzazione...');
         await Promise.all([
           loadProfiles(),
           loadCurrentProfile()
         ]);
+        console.log('✅ useProfiles: Inizializzazione completata');
       } catch (error) {
-        console.error('Errore durante inizializzazione sistema profili:', error);
+        console.error('❌ useProfiles: Errore durante inizializzazione sistema profili:', error);
         setError('Errore inizializzazione sistema profili');
       } finally {
         setIsLoading(false);
@@ -69,7 +80,7 @@ export function useProfiles(): UseProfilesReturn {
     };
 
     initialize();
-  }, [loadProfiles, loadCurrentProfile]);
+  }, []); // 🚨 NESSUNA DIPENDENZA per evitare loop infinito
 
   // Crea nuovo profilo
   const createProfile = useCallback(async (request: CreateProfileRequest): Promise<boolean> => {
@@ -97,51 +108,99 @@ export function useProfiles(): UseProfilesReturn {
     }
   }, [loadProfiles]);
 
-  // Autentica profilo
+  // Autentica profilo con transizione fluida
   const authenticateProfile = useCallback(async (name: string, password: string): Promise<boolean> => {
     try {
       setError(null);
+      console.log('🔐 useProfiles: Tentativo autenticazione per:', name);
+      
       const response = await invoke<ProfileResponse<UserProfile>>('authenticate_profile', { 
         name, 
         password 
       });
       
       if (response.success && response.data) {
+        console.log('✅ useProfiles: Autenticazione riuscita per:', response.data.name);
+        
+        // Transizione fluida - aggiorna stato senza ricaricare tutto
         setCurrentProfile(response.data);
-        // Ricarica lista per aggiornare last_accessed
-        await loadProfiles();
+        
+        // Aggiorna session persistence in background
+        setTimeout(async () => {
+          try {
+            const { sessionPersistence } = await import('@/lib/session-persistence');
+            await sessionPersistence.syncWithBackend();
+            console.log('🔄 Session persistence sincronizzata');
+          } catch (error) {
+            console.warn('⚠️ Errore sync session persistence:', error);
+          }
+        }, 100);
+        
+        // Ricarica profili in background senza bloccare UI
+        setTimeout(() => {
+          loadProfiles().catch(error => {
+            console.warn('⚠️ Errore ricarica profili in background:', error);
+          });
+        }, 500);
+        
+        console.log('🔄 useProfiles: Transizione completata, currentProfile impostato');
         return true;
       } else {
+        console.error('❌ useProfiles: Autenticazione fallita:', response.error);
         setError(response.error || 'Errore autenticazione');
         return false;
       }
     } catch (err) {
-      console.error('Errore autenticazione profilo:', err);
+      console.error('❌ useProfiles: Errore autenticazione profilo:', err);
       setError('Errore di connessione al backend');
       return false;
     }
   }, [loadProfiles]);
 
-  // Cambia profilo
+  // Cambia profilo con transizione fluida
   const switchProfile = useCallback(async (name: string, password: string): Promise<boolean> => {
     try {
       setError(null);
+      console.log('🔄 useProfiles: Cambio profilo a:', name);
+      
       const response = await invoke<ProfileResponse<UserProfile>>('switch_profile', { 
         name, 
         password 
       });
       
       if (response.success && response.data) {
+        console.log('✅ useProfiles: Cambio profilo riuscito per:', response.data.name);
+        
+        // Transizione fluida - aggiorna stato immediatamente
         setCurrentProfile(response.data);
-        // Ricarica lista per aggiornare last_accessed
-        await loadProfiles();
+        
+        // Aggiorna session persistence in background
+        setTimeout(async () => {
+          try {
+            const { sessionPersistence } = await import('@/lib/session-persistence');
+            await sessionPersistence.syncWithBackend();
+            console.log('🔄 Session persistence sincronizzata dopo switch');
+          } catch (error) {
+            console.warn('⚠️ Errore sync session persistence dopo switch:', error);
+          }
+        }, 100);
+        
+        // Ricarica lista in background per aggiornare last_accessed
+        setTimeout(() => {
+          loadProfiles().catch(error => {
+            console.warn('⚠️ Errore ricarica profili dopo switch:', error);
+          });
+        }, 500);
+        
+        console.log('🔄 useProfiles: Switch completato senza riavvio');
         return true;
       } else {
+        console.error('❌ useProfiles: Errore cambio profilo:', response.error);
         setError(response.error || 'Errore cambio profilo');
         return false;
       }
     } catch (err) {
-      console.error('Errore cambio profilo:', err);
+      console.error('❌ useProfiles: Errore cambio profilo:', err);
       setError('Errore di connessione al backend');
       return false;
     }

@@ -217,6 +217,15 @@ export const NotificationToastProvider: React.FC<NotificationToastProviderProps>
   return (
     <NotificationToastContext.Provider value={contextValue}>
       {children}
+      
+      {/* Live region per annunci globali */}
+      <div 
+        id="notification-announcements"
+        aria-live="polite" 
+        aria-atomic="true" 
+        className="sr-only"
+      />
+      
       <ToastContainer
         maxToasts={maxToasts}
         position={position}

@@ -3,9 +3,9 @@
   "major": 3,
   "minor": 2,
   "patch": 2,
-  "buildNumber": 69,
-  "buildDate": "2025-08-11T16:04:14.844Z",
-  "gitHash": "504d7905",
+  "buildNumber": 80,
+  "buildDate": "2025-08-13T10:27:39.702Z",
+  "gitHash": "705f88dd",
   "branch": "rust-warnings-cleanup-auto",
   "changelog": {
     "3.2.1": {

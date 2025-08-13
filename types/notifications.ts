@@ -113,18 +113,43 @@ export interface TauriNotificationAPI {
 
 // Hook personalizzati
 export interface UseNotificationsReturn {
+  // Stato base
   notifications: Notification[];
   unreadCount: number;
   isLoading: boolean;
   error: string | null;
+  hasMore: boolean;
+  lastUpdated: Date | null;
   
-  // Actions
+  // Operazioni CRUD
   createNotification: (request: CreateNotificationRequest) => Promise<boolean>;
   markAsRead: (notificationId: string) => Promise<boolean>;
   deleteNotification: (notificationId: string) => Promise<boolean>;
   clearAllNotifications: () => Promise<boolean>;
+  
+  // Operazioni batch
+  markMultipleAsRead: (notificationIds: string[]) => Promise<number>;
+  markAllAsRead: () => Promise<number>;
+  
+  // Caricamento e refresh
   refreshNotifications: () => Promise<void>;
   loadMoreNotifications: () => Promise<void>;
+  
+  // Funzioni di utilità
+  getNotificationsByType: (type: NotificationType) => Notification[];
+  getNotificationsByPriority: (priority: NotificationPriority) => Notification[];
+  getUnreadNotifications: () => Notification[];
+  hasUnreadNotifications: () => boolean;
+  getNotificationById: (id: string) => Notification | undefined;
+  filterNotifications: (predicate: (notification: Notification) => boolean) => Notification[];
+  searchNotifications: (query: string) => Notification[];
+  getNotificationStats: () => {
+    total: number;
+    unread: number;
+    byType: Record<NotificationType, number>;
+    byPriority: Record<NotificationPriority, number>;
+    lastUpdated: Date | null;
+  };
 }
 
 export interface UseNotificationPreferencesReturn {
@@ -137,6 +162,16 @@ export interface UseNotificationPreferencesReturn {
   resetToDefaults: () => Promise<boolean>;
   toggleNotificationType: (type: NotificationType, enabled: boolean) => Promise<boolean>;
   updateQuietHours: (quietHours: QuietHoursSettings) => Promise<boolean>;
+  updateGlobalSetting: (setting: 'globalEnabled' | 'soundEnabled' | 'desktopEnabled', value: boolean) => Promise<boolean>;
+  updateLimits: (maxNotifications?: number, autoDeleteAfterDays?: number) => Promise<boolean>;
+  
+  // Utilities
+  isTypeEnabled: (type: NotificationType) => boolean;
+  getEnabledTypesCount: () => number;
+  isInQuietHours: () => boolean;
+  
+  // Reload
+  reload: () => Promise<void>;
 }
 
 // Costanti

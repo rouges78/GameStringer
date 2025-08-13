@@ -4,6 +4,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import NotificationToast from './notification-toast';
 import { Notification, NotificationPriority } from '@/types/notifications';
+import { useUIInterferenceDetector } from '@/lib/ui-interference-detector';
+import { useNotificationQueue } from '@/lib/notification-queue-manager';
 
 interface ToastNotification extends Notification {
   toastId: string;
@@ -15,49 +17,113 @@ interface ToastContainerProps {
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
   autoHideDuration?: number;
   stackSpacing?: number;
+  enableAntiInterference?: boolean;
+  enableDynamicPositioning?: boolean;
 }
 
 const ToastContainer: React.FC<ToastContainerProps> = ({
   maxToasts = 5,
   position = 'top-right',
   autoHideDuration = 5000,
-  stackSpacing = 8
+  stackSpacing = 8,
+  enableAntiInterference = true,
+  enableDynamicPositioning = true
 }) => {
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [mounted, setMounted] = useState(false);
+
+  // Sistema anti-interferenza
+  const { 
+    hasInterferences, 
+    hasHighPriorityInterferences,
+    getOptimalToastPosition 
+  } = useUIInterferenceDetector({
+    enableDynamicPositioning,
+    debugMode: false
+  });
+
+  // Sistema di coda per gestire interferenze
+  const { 
+    enqueue, 
+    stats: queueStats 
+  } = useNotificationQueue({
+    maxQueueSize: maxToasts * 2,
+    urgentBypassQueue: true,
+    priorityBoost: true,
+    debugMode: false
+  });
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Funzione per aggiungere una nuova toast
+  // Funzione per aggiungere una nuova toast con sistema anti-interferenza
   const addToast = useCallback((notification: Notification) => {
-    const toastNotification: ToastNotification = {
-      ...notification,
-      toastId: `toast-${notification.id}-${Date.now()}`,
-      showTime: Date.now()
-    };
+    if (!enableAntiInterference) {
+      // Comportamento originale senza anti-interferenza
+      const toastNotification: ToastNotification = {
+        ...notification,
+        toastId: `toast-${notification.id}-${Date.now()}`,
+        showTime: Date.now()
+      };
 
-    setToasts(prev => {
-      // Rimuovi toast più vecchie se superiamo il limite
-      let newToasts = [...prev, toastNotification];
-      
-      if (newToasts.length > maxToasts) {
-        // Mantieni le toast urgenti e rimuovi le più vecchie non urgenti
-        const urgentToasts = newToasts.filter(t => t.priority === NotificationPriority.URGENT);
-        const nonUrgentToasts = newToasts.filter(t => t.priority !== NotificationPriority.URGENT);
+      setToasts(prev => {
+        let newToasts = [...prev, toastNotification];
         
-        // Ordina per tempo di visualizzazione (più recenti prima)
-        nonUrgentToasts.sort((a, b) => b.showTime - a.showTime);
+        if (newToasts.length > maxToasts) {
+          const urgentToasts = newToasts.filter(t => t.priority === NotificationPriority.URGENT);
+          const nonUrgentToasts = newToasts.filter(t => t.priority !== NotificationPriority.URGENT);
+          
+          nonUrgentToasts.sort((a, b) => b.showTime - a.showTime);
+          
+          const toastsToKeep = Math.max(0, maxToasts - urgentToasts.length);
+          newToasts = [...urgentToasts, ...nonUrgentToasts.slice(0, toastsToKeep)];
+        }
         
-        // Mantieni solo le toast più recenti
-        const toastsToKeep = Math.max(0, maxToasts - urgentToasts.length);
-        newToasts = [...urgentToasts, ...nonUrgentToasts.slice(0, toastsToKeep)];
-      }
-      
-      return newToasts;
-    });
-  }, [maxToasts]);
+        return newToasts;
+      });
+      return;
+    }
+
+    // Sistema anti-interferenza attivo
+    const shouldQueue = hasHighPriorityInterferences && 
+                       notification.priority !== NotificationPriority.URGENT;
+
+    if (shouldQueue) {
+      // Accoda la notifica
+      enqueue(notification, {
+        onShow: () => {
+          console.log(`[ToastContainer] Notifica mostrata dalla coda: ${notification.title}`);
+        },
+        onDequeue: () => {
+          console.log(`[ToastContainer] Notifica rimossa dalla coda: ${notification.title}`);
+        }
+      });
+    } else {
+      // Mostra immediatamente
+      const toastNotification: ToastNotification = {
+        ...notification,
+        toastId: `toast-${notification.id}-${Date.now()}`,
+        showTime: Date.now()
+      };
+
+      setToasts(prev => {
+        let newToasts = [...prev, toastNotification];
+        
+        if (newToasts.length > maxToasts) {
+          const urgentToasts = newToasts.filter(t => t.priority === NotificationPriority.URGENT);
+          const nonUrgentToasts = newToasts.filter(t => t.priority !== NotificationPriority.URGENT);
+          
+          nonUrgentToasts.sort((a, b) => b.showTime - a.showTime);
+          
+          const toastsToKeep = Math.max(0, maxToasts - urgentToasts.length);
+          newToasts = [...urgentToasts, ...nonUrgentToasts.slice(0, toastsToKeep)];
+        }
+        
+        return newToasts;
+      });
+    }
+  }, [maxToasts, enableAntiInterference, hasHighPriorityInterferences, enqueue]);
 
   // Funzione per rimuovere una toast
   const removeToast = useCallback((toastId: string) => {
@@ -86,14 +152,31 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
     }
   }, [toasts]);
 
-  // Calcola la posizione di ogni toast per evitare sovrapposizioni
-  const getToastStyle = (index: number) => {
+  // Calcola la posizione di ogni toast con supporto dinamico
+  const getToastStyle = (index: number, toast: ToastNotification) => {
+    if (enableDynamicPositioning && hasInterferences) {
+      // Usa posizionamento dinamico per evitare interferenze
+      const optimalPosition = getOptimalToastPosition(position, { width: 400, height: 100 });
+      const isTopPosition = position.includes('top');
+      const offset = index * (80 + stackSpacing);
+      
+      return {
+        transform: `translateY(${isTopPosition ? offset : -offset}px)`,
+        zIndex: hasInterferences ? 9999 - index : 1000 - index,
+        left: `${optimalPosition.x}px`,
+        top: `${optimalPosition.y + (isTopPosition ? offset : -offset)}px`,
+        right: 'auto',
+        bottom: 'auto'
+      };
+    }
+    
+    // Posizionamento standard
     const isTopPosition = position.includes('top');
-    const offset = index * (80 + stackSpacing); // Altezza approssimativa toast + spacing
+    const offset = index * (80 + stackSpacing);
     
     return {
       transform: `translateY(${isTopPosition ? offset : -offset}px)`,
-      zIndex: 1000 - index // Toast più recenti sopra
+      zIndex: hasInterferences ? 9999 - index : 1000 - index
     };
   };
 
@@ -109,11 +192,29 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 pointer-events-none z-50">
+    <div 
+      className="fixed inset-0 pointer-events-none z-50"
+      role="region"
+      aria-label="Notifiche toast"
+      aria-live="polite"
+      aria-atomic="false"
+    >
+      {/* Descrizione nascosta per screen reader */}
+      <div className="sr-only">
+        Area notifiche toast. {toasts.length > 0 
+          ? `${toasts.length} notifiche attive.` 
+          : 'Nessuna notifica attiva.'
+        }
+        {enableAntiInterference && queueStats.totalQueued > 0 && 
+          ` ${queueStats.totalQueued} notifiche in coda.`
+        }
+        {hasInterferences && ' Rilevate interferenze UI.'}
+      </div>
+      
       {toasts.map((toast, index) => (
         <div
           key={toast.toastId}
-          style={getToastStyle(index)}
+          style={getToastStyle(index, toast)}
           className="absolute"
         >
           <NotificationToast
@@ -122,6 +223,7 @@ const ToastContainer: React.FC<ToastContainerProps> = ({
             onAction={handleToastAction}
             autoHideDuration={autoHideDuration}
             position={position}
+            enableDynamicPositioning={enableDynamicPositioning}
           />
         </div>
       ))}

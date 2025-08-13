@@ -89,7 +89,7 @@ impl NotificationCleanupManager {
         *is_running = true;
         drop(is_running);
 
-        let storage = Arc::clone(&self.storage);
+        let storage: Arc<NotificationStorage> = Arc::clone(&self.storage);
         let stats = Arc::clone(&self.stats);
         let is_running = Arc::clone(&self.is_running);
         let config = self.config.clone();

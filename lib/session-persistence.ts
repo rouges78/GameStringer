@@ -116,15 +116,41 @@ class SessionPersistence {
     }
   }
 
-  // Restore session on app startup
+  // Restore session on app startup con timeout e protezione
   async restoreSession(): Promise<boolean> {
+    console.log('🔄 Tentativo restore session...');
+    
     const session = this.loadSession();
-    if (!session) return false;
+    if (!session) {
+      console.log('📭 Nessuna session salvata');
+      return false;
+    }
 
+    try {
+      // Timeout per evitare hang
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Session restore timeout')), 3000)
+      );
+
+      const restorePromise = this.performRestore(session);
+      
+      const result = await Promise.race([restorePromise, timeoutPromise]);
+      console.log('✅ Session restore completato:', result);
+      return result;
+      
+    } catch (error) {
+      console.error('❌ Error restoring session:', error);
+      this.clearSession();
+      return false;
+    }
+  }
+
+  private async performRestore(session: SessionData): Promise<boolean> {
     try {
       // Try to restore the session in the backend
       const canAuth = await invoke<boolean>('can_authenticate');
       if (!canAuth) {
+        console.log('❌ Backend non può autenticare');
         this.clearSession();
         return false;
       }
@@ -132,49 +158,101 @@ class SessionPersistence {
       // Check if the session is still valid in the backend
       const isExpired = await invoke<boolean>('is_session_expired');
       if (isExpired) {
+        console.log('⏰ Session scaduta, tentativo rinnovo...');
+        
         // Try to renew if recent activity
         if (this.shouldRenewSession()) {
           const renewed = await invoke<boolean>('renew_session');
           if (renewed) {
+            console.log('✅ Session rinnovata');
             await this.syncWithBackend();
             return true;
           }
         }
         
+        console.log('❌ Impossibile rinnovare session');
         this.clearSession();
         return false;
       }
 
       // Session is valid, sync with backend
+      console.log('✅ Session valida, sync con backend...');
       await this.syncWithBackend();
       return true;
+      
     } catch (error) {
-      console.error('Error restoring session:', error);
-      this.clearSession();
-      return false;
+      console.error('❌ Errore durante restore:', error);
+      throw error;
     }
   }
 
-  // Setup activity tracking
+  // Setup activity tracking con protezione anti-loop
   setupActivityTracking(): void {
-    // Track user activity
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    // Evita setup multipli
+    if ((window as any).__sessionTrackingSetup) {
+      console.log('🔄 Session tracking già configurato, skip');
+      return;
+    }
+    
+    console.log('🔄 Configurazione session tracking...');
+    
+    // Track user activity con debouncing
+    const events = ['mousedown', 'keypress', 'scroll', 'touchstart', 'click'];
+    let activityTimeout: NodeJS.Timeout | null = null;
     
     const updateActivity = () => {
-      this.updateLastActivity();
+      // Debounce per evitare spam di aggiornamenti
+      if (activityTimeout) {
+        clearTimeout(activityTimeout);
+      }
+      
+      activityTimeout = setTimeout(() => {
+        this.updateLastActivity();
+      }, 2000); // Aggiorna massimo ogni 2 secondi
     };
 
+    const listeners: Array<() => void> = [];
+    
     events.forEach(event => {
-      document.addEventListener(event, updateActivity, { passive: true });
+      const listener = () => updateActivity();
+      document.addEventListener(event, listener, { passive: true });
+      listeners.push(() => document.removeEventListener(event, listener));
     });
 
-    // Periodic sync with backend
-    setInterval(async () => {
-      const session = this.loadSession();
-      if (session) {
-        await this.syncWithBackend();
+    // Periodic sync con protezione
+    let syncInProgress = false;
+    const syncInterval = setInterval(async () => {
+      if (syncInProgress) {
+        console.log('🔄 Sync già in corso, skip');
+        return;
       }
-    }, 60000); // Sync every minute
+      
+      try {
+        syncInProgress = true;
+        const session = this.loadSession();
+        if (session) {
+          await this.syncWithBackend();
+        }
+      } catch (error) {
+        console.error('❌ Errore sync session:', error);
+      } finally {
+        syncInProgress = false;
+      }
+    }, 120000); // Sync ogni 2 minuti invece di 1
+
+    // Cleanup function globale
+    (window as any).__sessionTrackingCleanup = () => {
+      console.log('🧹 Cleanup session tracking...');
+      if (activityTimeout) clearTimeout(activityTimeout);
+      clearInterval(syncInterval);
+      listeners.forEach(cleanup => cleanup());
+      delete (window as any).__sessionTrackingSetup;
+      delete (window as any).__sessionTrackingCleanup;
+    };
+    
+    // Marca come configurato
+    (window as any).__sessionTrackingSetup = true;
+    console.log('✅ Session tracking configurato');
   }
 
   // Clean up expired sessions

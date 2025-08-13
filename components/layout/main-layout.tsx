@@ -26,6 +26,9 @@ import { usePathname } from 'next/navigation';
 import { ProfileHeader } from '@/components/profiles/profile-header';
 import { AuthStatusSidebar } from '@/components/auth/auth-status-sidebar';
 import { ProfileNotifications } from '@/components/profiles/profile-notifications';
+import { NotificationIndicator } from '@/components/notifications/notification-indicator';
+import { NotificationCenter } from '@/components/notifications/notification-center';
+import { useNotificationShortcuts } from '@/hooks/use-global-shortcuts';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -51,6 +54,14 @@ interface SystemStatus {
 export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
+  
+  // Global keyboard shortcuts for notifications
+  useNotificationShortcuts(
+    () => setNotificationCenterOpen(true),
+    () => setNotificationCenterOpen(prev => !prev)
+  );
+  
   const [systemStatus, setSystemStatus] = useState<SystemStatus>({
     neuralEngine: { status: 'online', color: 'bg-green-500', text: 'ON' },
     steamApi: { status: 'connected', color: 'bg-blue-500', text: 'OK' },
@@ -367,6 +378,12 @@ export function MainLayout({ children }: MainLayoutProps) {
                 </div>
               </div>
               
+              {/* Notification Indicator */}
+              <NotificationIndicator 
+                onClick={() => setNotificationCenterOpen(true)}
+                className="hidden sm:flex"
+              />
+              
               {/* Profile Header */}
               <ProfileHeader />
             </div>
@@ -380,6 +397,12 @@ export function MainLayout({ children }: MainLayoutProps) {
         
         {/* Profile Notifications */}
         <ProfileNotifications />
+        
+        {/* Notification Center */}
+        <NotificationCenter 
+          isOpen={notificationCenterOpen}
+          onClose={() => setNotificationCenterOpen(false)}
+        />
       </div>
   );
 }

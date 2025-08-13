@@ -48,6 +48,7 @@ import {
   Wifi
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProfileNotificationSettings } from '@/components/notifications/profile-notification-settings';
 import { useVersion } from '@/lib/version';
 
 // Type declaration for Tauri
@@ -782,38 +783,7 @@ export default function SettingsPage() {
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Bell className="h-5 w-5 text-orange-500" />
-                <span>Preferenze Notifiche</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {Object.entries(settings.notifications).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>
-                      {key === 'gameAdded' && 'Gioco Aggiunto'}
-                      {key === 'translationComplete' && 'Traduzione Completata'}
-                      {key === 'errors' && 'Errori Sistema'}
-                      {key === 'updates' && 'Aggiornamenti Disponibili'}
-                    </Label>
-                    <p className="text-sm text-muted-foreground">
-                      {key === 'gameAdded' && 'Notifica quando un nuovo gioco viene aggiunto alla libreria'}
-                      {key === 'translationComplete' && 'Notifica quando una traduzione è completata'}
-                      {key === 'errors' && 'Notifica errori e problemi del sistema'}
-                      {key === 'updates' && 'Notifica quando sono disponibili aggiornamenti'}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={value}
-                    onCheckedChange={(checked) => updateSetting('notifications', key, checked)}
-                  />
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <ProfileNotificationSettings />
         </TabsContent>
 
         {/* Debug & Test Tab */}

@@ -1,11 +1,12 @@
 {
+  "$schema": "https://schema.tauri.app/config/2.0.0",
   "productName": "GameStringer",
-  "version": "1.0.0",
+  "version": "3.2.2",
   "identifier": "com.gamestringer.app",
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd .. && npm run build",
-    "devUrl": "http://127.0.0.1:3094",
+    "devUrl": "http://127.0.0.1:3101",
     "frontendDist": "../out"
   },
   "app": {
@@ -28,37 +29,6 @@
     },
     "withGlobalTauri": true
   },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "fs": {
-        "all": false,
-        "readFile": true,
-        "writeFile": true,
-        "readDir": true,
-        "createDir": true,
-        "removeDir": true,
-        "removeFile": true,
-        "renameFile": true,
-        "exists": true,
-        "scope": [
-          "$APPDATA",
-          "$APPDATA/**",
-          "$APPCONFIG",
-          "$APPCONFIG/**",
-          "$APPLOCALDATA",
-          "$APPLOCALDATA/**"
-        ]
-      },
-      "path": {
-        "all": true
-      },
-      "shell": {
-        "all": false,
-        "open": true
-      }
-    }
-  },
   "bundle": {
     "active": true,
     "targets": "all",
@@ -69,5 +39,19 @@
       "icons/icon.ico"
     ]
   },
-  "plugins": {}
+  "plugins": {
+    "fs": {
+      "scope": [
+        "$APPDATA",
+        "$APPDATA/**",
+        "$APPCONFIG",
+        "$APPCONFIG/**",
+        "$APPLOCALDATA",
+        "$APPLOCALDATA/**"
+      ]
+    },
+    "shell": {
+      "open": true
+    }
+  }
 }

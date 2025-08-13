@@ -184,10 +184,7 @@ export function ProfileMenu() {
           <DialogHeader>
             <DialogTitle>Gestione Profilo</DialogTitle>
           </DialogHeader>
-          {/* <ProfileManager onClose={() => setShowProfileManager(false)} /> */}
-          <div className="p-4 text-center text-muted-foreground">
-            ProfileManager temporaneamente disabilitato per errori di sintassi
-          </div>
+          <ProfileManager onClose={() => setShowProfileManager(false)} />
         </DialogContent>
       </Dialog>
 

@@ -22,7 +22,7 @@ impl NotificationAccessControl {
     }
 
     /// Verifica autorizzazione per operazioni su notifiche
-    pub fn verify_notification_access(profile_id: &str, notification_id: &str, notifications: &[Notification]) -> NotificationResult<&Notification> {
+    pub fn verify_notification_access<'a>(profile_id: &str, notification_id: &str, notifications: &'a [Notification]) -> NotificationResult<&'a Notification> {
         let notification = notifications
             .iter()
             .find(|n| n.id == notification_id)
@@ -36,7 +36,7 @@ impl NotificationAccessControl {
     }
 
     /// Verifica autorizzazione per operazioni su notifiche (versione mutabile)
-    pub fn verify_notification_access_mut(profile_id: &str, notification_id: &str, notifications: &mut [Notification]) -> NotificationResult<&mut Notification> {
+    pub fn verify_notification_access_mut<'a>(profile_id: &str, notification_id: &str, notifications: &'a mut [Notification]) -> NotificationResult<&'a mut Notification> {
         let notification = notifications
             .iter_mut()
             .find(|n| n.id == notification_id)
@@ -50,7 +50,7 @@ impl NotificationAccessControl {
     }
 
     /// Valida che un filtro non cerchi di accedere a notifiche di altri profili
-    pub fn validate_filter_for_profile(profile_id: &str, filter: &NotificationFilter) -> NotificationResult<()> {
+    pub fn validate_filter_for_profile(_profile_id: &str, _filter: &NotificationFilter) -> NotificationResult<()> {
         // Per ora il filtro non contiene profile_id, quindi non c'è nulla da validare
         // In futuro potremmo aggiungere controlli più sofisticati
         Ok(())
