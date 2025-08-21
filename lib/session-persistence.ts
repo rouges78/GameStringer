@@ -98,7 +98,9 @@ class SessionPersistence {
       const currentProfile = await invoke<any>('get_current_profile');
       
       if (currentProfile?.success && currentProfile.data) {
-        const sessionTimeRemaining = await invoke<number>('get_session_time_remaining');
+        const sessionTimeRemaining = await invoke<number>('get_session_time_remaining', {
+          timeoutSeconds: 1800 // 30 minuti
+        });
         
         const sessionData: SessionData = {
           profileId: currentProfile.data.id,
@@ -148,9 +150,9 @@ class SessionPersistence {
   private async performRestore(session: SessionData): Promise<boolean> {
     try {
       // Try to restore the session in the backend
-      const canAuth = await invoke<boolean>('can_authenticate');
+      const canAuth = await invoke<boolean>('can_authenticate', { name: session.profileName });
       if (!canAuth) {
-        console.log('❌ Backend non può autenticare');
+        console.log(' Backend non può autenticare');
         this.clearSession();
         return false;
       }
@@ -158,7 +160,7 @@ class SessionPersistence {
       // Check if the session is still valid in the backend
       const isExpired = await invoke<boolean>('is_session_expired');
       if (isExpired) {
-        console.log('⏰ Session scaduta, tentativo rinnovo...');
+        console.log(' Session scaduta, tentativo rinnovo...');
         
         // Try to renew if recent activity
         if (this.shouldRenewSession()) {

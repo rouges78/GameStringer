@@ -1,14 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useProfileAuth } from '@/lib/profile-auth';
 import { ProfileSelector } from '@/components/profiles/profile-selector';
 import { CreateProfileDialog } from '@/components/profiles/create-profile-dialog';
-import { useProfiles } from '@/hooks/use-profiles';
 import { useProfileSettings } from '@/hooks/use-profile-settings';
-import { Loader2, Shield, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -24,41 +21,19 @@ export function ProtectedRoute({
   const { 
     isAuthenticated, 
     currentProfile, 
-    isLoading, 
-    sessionTimeRemaining,
-    isSessionExpired,
-    renewSession,
-    logout 
+    isLoading
   } = useProfileAuth();
   
-  // Debug log per tracking stato ProtectedRoute
-  useEffect(() => {
-    console.log('🛡️ ProtectedRoute stato aggiornato:', {
-      isAuthenticated,
-      currentProfile: currentProfile?.name || 'null',
-      isLoading,
-      requireAuth,
-      isSessionExpired,
-      sessionTimeRemaining,
-      timestamp: new Date().toISOString()
-    });
-  }, [isAuthenticated, currentProfile, isLoading, requireAuth, isSessionExpired, sessionTimeRemaining]);
   
-  const { profiles } = useProfiles();
   const { updateGlobalSettings } = useProfileSettings();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [isRenewing, setIsRenewing] = useState(false);
 
 
 
   // Handle profile selection
   const handleProfileSelected = async (profileId: string) => {
-    console.log('🎯 ProtectedRoute: handleProfileSelected chiamato con profileId:', profileId);
-    
-    // ✅ FIX DEFINITIVO: Non fare NULLA qui!
-    // L'autenticazione è già stata completamente gestita da authenticateProfile in useProfiles
-    // Qualsiasi azione aggiuntiva qui causa il riavvio dell'app
-    console.log('✅ Autenticazione già gestita da useProfiles, nessuna azione necessaria qui');
+    // Authentication is handled by authenticateProfile in useProfiles
+    // No additional action needed here to avoid app restart
     return;
   };
 
@@ -69,35 +44,15 @@ export function ProtectedRoute({
 
   // Handle profile created
   const handleProfileCreated = async (profileName: string) => {
-    console.log('🎯 ProtectedRoute: handleProfileCreated chiamato con:', profileName);
-    console.log('🔍 Stato corrente isAuthenticated:', isAuthenticated);
-    console.log('🔍 Profilo corrente:', currentProfile?.name);
-    
-    // Aggiorna le impostazioni globali
+    // Update global settings
     await updateGlobalSettings({
       last_profile: profileName
     });
-    console.log('✅ Impostazioni globali aggiornate');
     
-    // Chiudi il dialog
+    // Close dialog
     setShowCreateDialog(false);
-    console.log('✅ Dialog di creazione chiuso');
-    
-    // ✅ CHIAMA ANCHE handleProfileSelected per completare il flusso
-    console.log('🔄 Chiamando handleProfileSelected per completare il flusso');
-    await handleProfileSelected(profileName);
-  };
-
-  // Handle session renewal
-  const handleRenewSession = async () => {
-    setIsRenewing(true);
-    const success = await renewSession();
-    setIsRenewing(false);
-    
-    if (!success) {
-      // If renewal fails, logout
-      await logout();
-    }
+    // Authentication is already handled in CreateProfileDialog
+    // ProtectedRoute will detect currentProfile and render children
   };
 
   // If auth is not required, render children directly
@@ -120,67 +75,20 @@ export function ProtectedRoute({
     );
   }
 
-  // Session expired - show renewal option
-  if (isSessionExpired && currentProfile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md bg-slate-800/50 border-slate-700">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
-              <Clock className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-white">Sessione Scaduta</CardTitle>
-            <CardDescription className="text-slate-300">
-              La tua sessione per il profilo "{currentProfile.name}" è scaduta.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center text-sm text-slate-400">
-              Per motivi di sicurezza, le sessioni scadono automaticamente dopo un periodo di inattività.
-            </div>
-            <div className="flex flex-col gap-2">
-              <Button 
-                onClick={handleRenewSession}
-                disabled={isRenewing}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                {isRenewing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Rinnovo sessione...
-                  </>
-                ) : (
-                  'Rinnova Sessione'
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={logout}
-                className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
-              >
-                Cambia Profilo
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   // Check if we should skip authentication (for development/testing)
   const SKIP_AUTH_FOR_TESTING = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
   
-  // 🚨 FORZA AUTENTICAZIONE - Ignora tutto e mostra sempre profili se non autenticato
-  const BYPASS_AUTH_FOR_DEBUG = false; // Sempre disabilitato
-  const SHOW_DEBUG_COMPONENT = false; // Sempre disabilitato
+  const BYPASS_AUTH_FOR_DEBUG = false;
+  const SHOW_DEBUG_COMPONENT = false;
   
-  // 🔧 DEBUG: Forza log dello stato
-  console.log('🔍 ProtectedRoute DEBUG:', {
+  // TEMPORARY DEBUG - Verifica perché dashboard non appare
+  console.log('🛡️ ProtectedRoute Status:', {
     isAuthenticated,
     currentProfile: currentProfile?.name || 'null',
+    isLoading,
     requireAuth,
-    BYPASS_AUTH_FOR_DEBUG,
-    SKIP_AUTH_FOR_TESTING
+    SKIP_AUTH_FOR_TESTING,
+    BYPASS_AUTH_FOR_DEBUG
   });
   
   // Not authenticated - show debug component or profile selector

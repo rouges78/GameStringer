@@ -42,7 +42,7 @@ interface ProfileCardProps {
   isSelected: boolean;
 }
 
-function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
+function ProfileCard({ profile, onSelect: _onSelect, isSelected }: ProfileCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -64,12 +64,9 @@ function ProfileCard({ profile, onSelect, isSelected }: ProfileCardProps) {
     const success = await authenticateProfile(profile.name, password);
     
     if (success) {
-      // ✅ FIX DEFINITIVO: NON chiamare onSelect!
-      // authenticateProfile già gestisce TUTTO: aggiorna currentProfile, sincronizza la sessione, ecc.
-      // Chiamare onSelect causa un doppio aggiornamento che provoca il riavvio dell'app
       console.log('✅ Login completato con successo per:', profile.name);
-      console.log('🚫 NON chiamiamo onSelect per evitare riavvio app');
-      // NON FARE NULLA QUI - authenticateProfile ha già fatto tutto il necessario
+      // 🔄 Nessuna chiamata a onSelect: la UI si aggiorna tramite lo stato globale
+      // e l'evento "profile-auth-changed". ProtectedRoute rileverà isAuthenticated=true.
     } else {
       setAuthError('Password non corretta');
       setPassword('');
@@ -353,23 +350,7 @@ export function ProfileSelector({ onProfileSelected, onCreateProfile }: ProfileS
               <Plus className="mr-2 h-5 w-5" />
               Crea Nuovo Profilo
             </Button>
-            
-            {/* Temporary Skip Button for Testing */}
-            {profiles.length > 0 && (
-              <div>
-                <Button
-                  onClick={() => {
-                    // Simulate successful authentication for testing
-                    onProfileSelected(profiles[0].id);
-                  }}
-                  variant="ghost"
-                  size="sm"
-                  className="text-white/60 hover:text-white/80 text-xs"
-                >
-                  Skip Auth (Testing)
-                </Button>
-              </div>
-            )}
+            {/* Skip Auth (Testing) rimosso: usare NEXT_PUBLIC_SKIP_AUTH=true in sviluppo */}
           </div>
         </motion.div>
 

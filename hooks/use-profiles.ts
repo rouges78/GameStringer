@@ -10,6 +10,17 @@ import {
   ProfileResponse 
 } from '@/types/profiles';
 
+// Broadcast helper for cross-instance synchronization
+const dispatchAuthChanged = () => {
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('profile-auth-changed'));
+    }
+  } catch (e) {
+    console.warn('dispatchAuthChanged failed:', e);
+  }
+};
+
 export function useProfiles(): UseProfilesReturn {
   const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(null);
@@ -20,7 +31,15 @@ export function useProfiles(): UseProfilesReturn {
   const loadProfiles = useCallback(async () => {
     try {
       setError(null);
-      const response = await invoke<ProfileResponse<ProfileInfo[]>>('list_profiles');
+      
+      // Timeout per attendere il backend Tauri
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Backend timeout')), 10000)
+      );
+      
+      const invokePromise = invoke<ProfileResponse<ProfileInfo[]>>('list_profiles');
+      
+      const response = await Promise.race([invokePromise, timeoutPromise]) as ProfileResponse<ProfileInfo[]>;
       
       if (response.success && response.data) {
         setProfiles(response.data);
@@ -30,7 +49,7 @@ export function useProfiles(): UseProfilesReturn {
       }
     } catch (err) {
       console.error('Errore caricamento profili:', err);
-      setError('Errore di connessione al backend');
+      setError('Backend Tauri non disponibile - attendere avvio completo');
       setProfiles([]);
     }
   }, []);
@@ -38,7 +57,14 @@ export function useProfiles(): UseProfilesReturn {
   // Carica profilo corrente
   const loadCurrentProfile = useCallback(async () => {
     try {
-      const response = await invoke<ProfileResponse<UserProfile | null>>('get_current_profile');
+      // Timeout per attendere il backend Tauri
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Backend timeout')), 10000)
+      );
+      
+      const invokePromise = invoke<ProfileResponse<UserProfile | null>>('get_current_profile');
+      
+      const response = await Promise.race([invokePromise, timeoutPromise]) as ProfileResponse<UserProfile | null>;
       
       console.log('🔍 useProfiles: get_current_profile response:', {
         success: response.success,
@@ -82,6 +108,22 @@ export function useProfiles(): UseProfilesReturn {
     initialize();
   }, []); // 🚨 NESSUNA DIPENDENZA per evitare loop infinito
 
+  // Listen for auth changes from other instances and refresh current profile
+  useEffect(() => {
+    const handler = () => {
+      console.log('🔔 useProfiles: received profile-auth-changed -> reloading current profile');
+      loadCurrentProfile().catch(err => console.warn('useProfiles loadCurrentProfile error:', err));
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('profile-auth-changed', handler);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('profile-auth-changed', handler);
+      }
+    };
+  }, [loadCurrentProfile]);
+
   // Crea nuovo profilo
   const createProfile = useCallback(async (request: CreateProfileRequest): Promise<boolean> => {
     try {
@@ -95,6 +137,8 @@ export function useProfiles(): UseProfilesReturn {
         await loadProfiles();
         // Imposta come profilo corrente
         setCurrentProfile(response.data);
+        // Notify other instances
+        dispatchAuthChanged();
         return true;
       } else {
         console.error('Errore creazione profilo:', response.error);
@@ -124,6 +168,8 @@ export function useProfiles(): UseProfilesReturn {
         
         // Transizione fluida - aggiorna stato senza ricaricare tutto
         setCurrentProfile(response.data);
+        // Notify other instances immediately
+        dispatchAuthChanged();
         
         // Aggiorna session persistence in background
         setTimeout(async () => {
@@ -173,6 +219,8 @@ export function useProfiles(): UseProfilesReturn {
         
         // Transizione fluida - aggiorna stato immediatamente
         setCurrentProfile(response.data);
+        // Notify other instances
+        dispatchAuthChanged();
         
         // Aggiorna session persistence in background
         setTimeout(async () => {
@@ -214,6 +262,8 @@ export function useProfiles(): UseProfilesReturn {
       
       if (response.success) {
         setCurrentProfile(null);
+        // Notify other instances
+        dispatchAuthChanged();
         return true;
       } else {
         setError(response.error || 'Errore logout');
@@ -246,6 +296,8 @@ export function useProfiles(): UseProfilesReturn {
       if (response.success) {
         // Ricarica lista profili
         await loadProfiles();
+        // If the deleted profile was current, other instances should refresh
+        dispatchAuthChanged();
         return true;
       } else {
         setError(response.error || 'Errore eliminazione profilo');

@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd .. && npm run build",
-    "devUrl": "http://127.0.0.1:3102",
+    "devUrl": "http://127.0.0.1:3112",
     "frontendDist": "../out"
   },
   "app": {

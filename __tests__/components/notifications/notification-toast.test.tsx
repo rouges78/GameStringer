@@ -460,7 +460,7 @@ describe('NotificationToast', () => {
 
       const toast = screen.getByRole('alert');
       expect(toast).toHaveAttribute('tabIndex', '0');
-      
+
       toast.focus();
       expect(toast).toHaveFocus();
     });

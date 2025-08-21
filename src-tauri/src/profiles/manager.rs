@@ -602,15 +602,10 @@ impl ProfileManager {
                 // Invalida cache
                 self.invalidate_cache();
 
-                // Ora possiamo salvare in sicurezza dato che i file sono fuori da src-tauri
-                // e non causeranno più il riavvio di Tauri in development
-                if let Err(e) = self.storage.save_profile(&profile, password).await {
-                    println!("[PROFILE MANAGER] ⚠️ Impossibile salvare profilo '{}': {:?}", profile.name, e);
-                    // Non fallire l'autenticazione se il salvataggio fallisce
-                }
-                
-                println!("[PROFILE MANAGER] ✅ Profilo '{}' autenticato e salvato con successo", profile.name);
-                
+                // Non salvare su disco durante l'autenticazione per evitare riavvii/crash in dev
+                // Il salvataggio su disco avverrà in operazioni esplicite (es. update_settings, logout, ecc.)
+                println!("[PROFILE MANAGER] ✅ Profilo '{}' autenticato con successo", profile.name);
+
                 Ok(profile)
             }
             Err(_) => {

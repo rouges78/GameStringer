@@ -32,18 +32,14 @@ pub struct ValidationConfig {
 impl Default for ValidationConfig {
     fn default() -> Self {
         let mut reserved_names = HashSet::new();
+        // Solo nomi veramente critici per il sistema
         reserved_names.insert("admin".to_string());
         reserved_names.insert("root".to_string());
         reserved_names.insert("system".to_string());
-        reserved_names.insert("default".to_string());
-        reserved_names.insert("guest".to_string());
-        reserved_names.insert("user".to_string());
-        reserved_names.insert("test".to_string());
-        reserved_names.insert("temp".to_string());
-        reserved_names.insert("temporary".to_string());
         reserved_names.insert("null".to_string());
         reserved_names.insert("undefined".to_string());
-        reserved_names.insert("anonymous".to_string());
+        // Rimossi: guest, user, test, temp, temporary, anonymous, default
+        // Questi sono troppo comuni e limitano inutilmente gli utenti
 
         Self {
             min_profile_name_length: 2,

@@ -22,64 +22,88 @@ interface ProfileAuthProviderProps {
 }
 
 export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
-  const { currentProfile, isLoading, logout: profileLogout } = useProfiles();
+  const { currentProfile, isLoading, logout: profileLogout, refreshProfiles } = useProfiles();
+  
+  // Force re-render when currentProfile changes
+  const [renderKey, setRenderKey] = useState(0);
+  useEffect(() => {
+    setRenderKey(prev => prev + 1);
+  }, [currentProfile]);
+  
+  // Listen to auth changes from other hook instances and refresh local state
+  useEffect(() => {
+    const handler = () => {
+      console.log('🔔 ProfileAuthProvider: received profile-auth-changed -> refreshing profiles');
+      refreshProfiles().catch(err => console.warn('ProfileAuthProvider refreshProfiles error:', err));
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('profile-auth-changed', handler);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('profile-auth-changed', handler);
+      }
+    };
+  }, [refreshProfiles]);
   const { globalSettings } = useProfileSettings();
   const [sessionTimeRemaining, setSessionTimeRemaining] = useState<number | null>(null);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
 
-  // Check session status periodically
-  useEffect(() => {
-    if (!currentProfile) {
-      // Reset session state when no profile
-      setIsSessionExpired(false);
-      setSessionTimeRemaining(null);
-      return;
-    }
+  // Check session status periodically - DISABILITATO per evitare conflitti con autenticazione semplice
+  // useEffect(() => {
+  //   if (!currentProfile) {
+  //     // Reset session state when no profile
+  //     setIsSessionExpired(false);
+  //     setSessionTimeRemaining(null);
+  //     return;
+  //   }
 
-    // Reset session expired for new profile
-    setIsSessionExpired(false);
+  //   // Reset session expired for new profile
+  //   setIsSessionExpired(false);
 
-    const checkSession = async () => {
-      try {
-        // Check if session is expired via Tauri command (timeout: 30 minuti = 1800 secondi)
-        const { invoke } = await import('@/lib/tauri-api');
-        const response = await invoke<{success: boolean, data: boolean}>('is_session_expired', { 
-          timeout_seconds: 1800 
-        });
+  //   const checkSession = async () => {
+  //     try {
+  //       // Check if session is expired via Tauri command (timeout: 30 minuti = 1800 secondi)
+  //       const { invoke } = await import('@/lib/tauri-api');
+  //       const response = await invoke<{success: boolean, data: boolean}>('is_session_expired', { 
+  //         timeout_seconds: 1800 
+  //       });
         
-        if (response.success) {
-          setIsSessionExpired(response.data);
+  //       if (response.success) {
+  //         setIsSessionExpired(response.data);
 
-          if (!response.data) {
-            // Get remaining session time
-            const timeResponse = await invoke<{success: boolean, data: number}>('get_session_time_remaining');
-            if (timeResponse.success) {
-              setSessionTimeRemaining(timeResponse.data);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error checking session status:', error);
-        // Non impostare expired=true per errori di connessione
-        // setIsSessionExpired(true);
-      }
-    };
+  //         if (!response.data) {
+  //           // Get remaining session time
+  //           const timeResponse = await invoke<{success: boolean, data: number}>('get_session_time_remaining', {
+  //             timeout_seconds: 1800 // 30 minuti
+  //           });
+  //           if (timeResponse.success) {
+  //             setSessionTimeRemaining(timeResponse.data);
+  //           }
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('Error checking session status:', error);
+  //       // Non impostare expired=true per errori di connessione
+  //       // setIsSessionExpired(true);
+  //     }
+  //   };
 
-    // Check immediately
-    checkSession();
+  //   // Check immediately
+  //   checkSession();
 
-    // Check every 30 seconds
-    const interval = setInterval(checkSession, 30000);
+  //   // Check every 30 seconds
+  //   const interval = setInterval(checkSession, 30000);
 
-    return () => clearInterval(interval);
-  }, [currentProfile]);
+  //   return () => clearInterval(interval);
+  // }, [currentProfile]);
 
-  // Auto-logout when session expires
-  useEffect(() => {
-    if (isSessionExpired && currentProfile) {
-      handleLogout();
-    }
-  }, [isSessionExpired, currentProfile]);
+  // Auto-logout when session expires - DISABILITATO per evitare conflitti
+  // useEffect(() => {
+  //   if (isSessionExpired && currentProfile) {
+  //     handleLogout();
+  //   }
+  // }, [isSessionExpired, currentProfile]);
 
   const renewSession = async (): Promise<boolean> => {
     try {
@@ -89,7 +113,9 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
       if (response.success && response.data) {
         setIsSessionExpired(false);
         // Refresh session time
-        const timeResponse = await invoke<{success: boolean, data: number}>('get_session_time_remaining');
+        const timeResponse = await invoke<{success: boolean, data: number}>('get_session_time_remaining', {
+          timeout_seconds: 1800 // 30 minuti
+        });
         if (timeResponse.success) {
           setSessionTimeRemaining(timeResponse.data);
         }
@@ -114,36 +140,24 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   };
 
   // Calcola stato autenticazione
-  // Per profili appena creati o quando il sistema sessioni non è ancora inizializzato,
-  // considera autenticato se c'è un currentProfile
-  const isAuthenticated = !!currentProfile && (!isSessionExpired || sessionTimeRemaining === null);
+  // SEMPLIFICATO: Se c'è un currentProfile, l'utente è autenticato
+  const isAuthenticated = !!currentProfile;
   
-  // Debug log per tracking stato autenticazione
-  useEffect(() => {
-    console.log('🔐 ProfileAuth stato aggiornato:', {
-      currentProfile: currentProfile?.name || 'null',
-      currentProfileId: currentProfile?.id || 'null',
-      isAuthenticated,
+  // TEMPORARY DEBUG - Verifica stato autenticazione
+  console.log('🔐 ProfileAuth Status:', {
+    currentProfile: currentProfile?.name || 'null',
+    isAuthenticated,
+    isLoading
+  });
+
+  // Alert for authentication problems (keep for debugging critical issues)
+  if (currentProfile && !isAuthenticated) {
+    console.error('Authentication issue: currentProfile present but isAuthenticated = false', {
+      profileName: currentProfile.name,
       isSessionExpired,
-      sessionTimeRemaining,
-      isLoading,
-      hasCurrentProfile: !!currentProfile,
-      calculatedAuth: !!currentProfile && (!isSessionExpired || sessionTimeRemaining === null),
-      timestamp: new Date().toISOString()
+      sessionTimeRemaining
     });
-    
-    // 🚨 IMPORTANTE: Se abbiamo un currentProfile ma non siamo considerati autenticati,
-    // potrebbe esserci un problema di timing
-    if (currentProfile && !isAuthenticated) {
-      console.warn('⚠️ PROBLEMA: Abbiamo currentProfile ma isAuthenticated=false!');
-      console.warn('🔍 Dettagli problema:', {
-        hasCurrentProfile: !!currentProfile,
-        isSessionExpired,
-        sessionTimeRemaining,
-        shouldBeAuthenticated: !!currentProfile && (!isSessionExpired || sessionTimeRemaining === null)
-      });
-    }
-  }, [currentProfile, isAuthenticated, isSessionExpired, sessionTimeRemaining, isLoading]);
+  }
 
   const value: ProfileAuthContextType = {
     isAuthenticated,

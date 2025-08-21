@@ -89,7 +89,45 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [keyboardNavigationActive, setKeyboardNavigationActive] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
 
-  // Carica notifiche quando si apre il centro
+  // Enhanced keyboard navigation - DEVE essere prima degli useEffect che lo usano
+  const { focusManager } = useKeyboardNavigation({
+    isActive: isOpen,
+    onEscape: () => {
+      if (isSelectMode) {
+        setIsSelectMode(false);
+        setSelectedNotifications(new Set());
+        setSelectedNotificationIndex(-1);
+      } else if (searchQuery) {
+        setSearchQuery('');
+        setSelectedNotificationIndex(-1);
+      } else {
+        onClose();
+      }
+    },
+    onEnter: () => {
+      // Gestione click notifica - implementazione semplificata
+      if (selectedNotificationIndex >= 0) {
+        // Marca come letta se non letta
+        const notification = processedNotifications?.[selectedNotificationIndex];
+        if (notification && !notification.readAt) {
+          handleMarkAsRead(notification.id);
+        }
+      }
+    },
+    onCtrlF: () => {
+      focusManager?.focusSearch();
+    },
+    onDelete: () => {
+      if (selectedNotificationIndex >= 0) {
+        const notification = processedNotifications?.[selectedNotificationIndex];
+        if (notification) {
+          handleDelete(notification.id);
+        }
+      }
+    },
+  });
+
+  // Gestione apertura/chiusura con focus management
   useEffect(() => {
     if (isOpen) {
       refreshNotifications();
@@ -100,12 +138,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       
       // Focus management
       setTimeout(() => {
-        focusManager.focusNotificationCenter();
+        focusManager?.focusNotificationCenter();
         setKeyboardNavigationActive(true);
       }, 100);
     } else {
       // Restore focus when closing
-      focusManager.restoreFocus();
+      focusManager?.restoreFocus();
       setKeyboardNavigationActive(false);
     }
   }, [isOpen, refreshNotifications, focusManager]);
@@ -125,73 +163,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       return () => window.removeEventListener('resize', updateHeight);
     }
   }, [isOpen]);
-
-  // Enhanced keyboard navigation
-  const { focusManager } = useKeyboardNavigation({
-    isActive: isOpen,
-    onEscape: () => {
-      if (isSelectMode) {
-        setIsSelectMode(false);
-        setSelectedNotifications(new Set());
-        announceBatchOperation('select', 0);
-      } else {
-        onClose();
-      }
-    },
-    onCtrlA: () => {
-      if (isSelectMode) {
-        handleSelectAll();
-      } else {
-        markAllAsRead();
-      }
-    },
-    onCtrlDelete: () => {
-      if (isSelectMode && selectedNotifications.size > 0) {
-        handleBatchDelete();
-      } else {
-        handleClearAll();
-      }
-    },
-    onCtrlF: () => {
-      focusManager.focusSearch();
-    },
-    onDelete: () => {
-      if (selectedNotificationIndex >= 0 && selectedNotificationIndex < processedNotifications.length) {
-        const notification = processedNotifications[selectedNotificationIndex];
-        handleDelete(notification.id);
-      }
-    },
-    onEnter: () => {
-      if (selectedNotificationIndex >= 0 && selectedNotificationIndex < processedNotifications.length) {
-        const notification = processedNotifications[selectedNotificationIndex];
-        if (isSelectMode) {
-          handleToggleSelect(notification.id);
-        } else if (!notification.readAt) {
-          handleMarkAsRead(notification.id);
-        }
-      }
-    },
-    onSpace: () => {
-      if (isSelectMode && selectedNotificationIndex >= 0 && selectedNotificationIndex < processedNotifications.length) {
-        const notification = processedNotifications[selectedNotificationIndex];
-        handleToggleSelect(notification.id);
-      }
-    }
-  });
-
-  // Notification list navigation
-  useNotificationListNavigation(
-    processedNotifications,
-    selectedNotificationIndex,
-    setSelectedNotificationIndex,
-    (index) => {
-      const notification = processedNotifications[index];
-      if (notification && !notification.readAt) {
-        handleMarkAsRead(notification.id);
-      }
-    },
-    isOpen && keyboardNavigationActive
-  );
 
   // Filtra, cerca e ordina notifiche
   const processedNotifications = useMemo(() => {
