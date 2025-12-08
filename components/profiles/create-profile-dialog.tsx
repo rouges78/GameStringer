@@ -42,8 +42,36 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [customImage, setCustomImage] = useState<string | null>(null);
 
   const { createProfile, authenticateProfile } = useProfiles();
+
+  // Gestione upload immagine personalizzata
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Verifica tipo file
+    if (!file.type.startsWith('image/')) {
+      setError('Seleziona un file immagine valido');
+      return;
+    }
+    
+    // Verifica dimensione (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('L\'immagine deve essere inferiore a 2MB');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      setCustomImage(base64);
+      setSelectedAvatar(null); // Deseleziona i preset
+      setFormData(prev => ({ ...prev, avatarPath: `custom:${base64}` }));
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -52,6 +80,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
 
   const handleAvatarSelect = (gradientId: string) => {
     setSelectedAvatar(gradientId);
+    setCustomImage(null); // Reset immagine custom quando si seleziona un preset
     setFormData(prev => ({ ...prev, avatarPath: gradientId }));
   };
 
@@ -149,6 +178,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
         avatarPath: '',
       });
       setSelectedAvatar(null);
+      setCustomImage(null);
       setError(null);
       onOpenChange(false);
     }
@@ -174,14 +204,30 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
           <div className="space-y-3">
             <Label className="text-sm font-medium">Avatar del Profilo</Label>
             
-            {/* Current Avatar Preview */}
+            {/* Current Avatar Preview - Cliccabile per upload */}
             <div className="flex justify-center">
-              <Avatar className="h-20 w-20 border-2 border-border">
-                <AvatarFallback className={`bg-gradient-to-br ${getAvatarGradient(formData.avatarPath)} text-white text-lg font-semibold`}>
-                  {formData.name ? getInitials(formData.name) : <Camera className="h-8 w-8" />}
-                </AvatarFallback>
-              </Avatar>
+              <label className="cursor-pointer group relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  disabled={isCreating}
+                />
+                <Avatar className="h-20 w-20 border-2 border-border group-hover:border-primary transition-colors">
+                  {customImage ? (
+                    <AvatarImage src={customImage} alt="Avatar personalizzato" />
+                  ) : null}
+                  <AvatarFallback className={`bg-gradient-to-br ${getAvatarGradient(formData.avatarPath)} text-white text-lg font-semibold`}>
+                    {formData.name ? getInitials(formData.name) : <Camera className="h-8 w-8" />}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Upload className="h-6 w-6 text-white" />
+                </div>
+              </label>
             </div>
+            <p className="text-xs text-center text-muted-foreground">Clicca per caricare un'immagine</p>
 
             {/* Avatar Presets */}
             <div className="grid grid-cols-6 gap-2">

@@ -741,3 +741,42 @@ pub fn get_steam_install_path() -> Result<String, String> {
         }
     }
 }
+
+/// 📁 Trova il percorso reale di un gioco cercando in tutte le librerie Steam
+#[tauri::command]
+pub fn find_game_install_path(install_dir: String) -> Result<String, String> {
+    info!("🔍 Ricerca percorso gioco: {}", install_dir);
+    
+    match SteamDir::locate() {
+        Ok(steam_dir) => {
+            // Prima cerca nella cartella principale di Steam
+            let main_path = steam_dir.path().join("steamapps").join("common").join(&install_dir);
+            if main_path.exists() {
+                let path_str = main_path.to_string_lossy().to_string();
+                info!("✅ Gioco trovato in cartella principale: {}", path_str);
+                return Ok(path_str);
+            }
+            
+            // Itera su tutte le librerie Steam secondarie
+            if let Ok(libraries) = steam_dir.libraries() {
+                for library in libraries {
+                    if let Ok(lib) = library {
+                        let game_path = lib.path().join("steamapps").join("common").join(&install_dir);
+                        if game_path.exists() {
+                            let path_str = game_path.to_string_lossy().to_string();
+                            info!("✅ Gioco trovato in libreria secondaria: {}", path_str);
+                            return Ok(path_str);
+                        }
+                    }
+                }
+            }
+            
+            warn!("❌ Gioco non trovato in nessuna libreria: {}", install_dir);
+            Err(format!("Gioco '{}' non trovato in nessuna libreria Steam", install_dir))
+        },
+        Err(e) => {
+            warn!("❌ Steam non trovato: {:?}", e);
+            Err("Steam non trovato sul sistema".to_string())
+        }
+    }
+}

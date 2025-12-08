@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,8 @@ import {
   Languages,
   Zap,
   Eye,
-  Globe
+  Globe,
+  Sparkles
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -32,6 +33,7 @@ import InlineTranslator from '@/components/inline-translator';
 
 export default function GameDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const gameId = params.id as string;
   
   const [game, setGame] = useState<any>(null);
@@ -629,13 +631,24 @@ export default function GameDetailPage() {
               <CardContent>
                 {game.detectedFiles.length > 0 ? (
                   <div className="space-y-3">
+                    {/* Pulsante per tradurre tutti i file */}
+                    <div className="flex justify-end mb-4">
+                      <Button 
+                        onClick={() => router.push(`/translator?gameId=${gameId}`)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Apri Neural Translator
+                      </Button>
+                    </div>
+                    
                     {game.detectedFiles.map((file: string, index: number) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted/70 transition-colors"
                       >
                         <div className="flex items-center space-x-3">
                           <FileText className="h-4 w-4 text-muted-foreground" />
@@ -646,6 +659,15 @@ export default function GameDetailPage() {
                           <Button size="sm" variant="outline">
                             <Eye className="h-4 w-4 mr-2" />
                             Anteprima
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="default"
+                            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                            onClick={() => router.push(`/translator?gameId=${gameId}&file=${encodeURIComponent(file)}`)}
+                          >
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Traduci
                           </Button>
                         </div>
                       </motion.div>

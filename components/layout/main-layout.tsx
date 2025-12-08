@@ -88,49 +88,26 @@ export function MainLayout({ children }: MainLayoutProps) {
         text: 'ON' 
       };
 
-      // Controlla Steam API tramite Tauri
-      let steamApi = { 
-        status: 'disconnected' as const, 
+      // Controlla Steam API tramite test_steam_connection (stesso dello Stores Manager)
+      let steamApi: { status: 'connected' | 'disconnected' | 'error'; color: string; text: string } = { 
+        status: 'disconnected', 
         color: 'bg-red-500', 
         text: 'OFF' 
       };
       
       try {
-        // Prova a caricare credenziali Steam dal backend
         const { invoke } = await import('@/lib/tauri-api');
-        const credentials = await invoke('load_steam_credentials');
-        if (credentials && credentials.api_key && credentials.steam_id) {
-          // Test rapido connessione Steam API
-          try {
-            await invoke('test_steam_connection');
-            steamApi = { 
-              status: 'connected', 
-              color: 'bg-green-500', 
-              text: 'LIVE' 
-            };
-          } catch {
-            // Credenziali presenti ma API non risponde
-            steamApi = { 
-              status: 'error', 
-              color: 'bg-orange-500', 
-              text: 'ERR' 
-            };
-          }
+        const result = await invoke('test_steam_connection');
+        // Se non lancia errore, Steam è connesso
+        if (result) {
+          steamApi = { 
+            status: 'connected', 
+            color: 'bg-green-500', 
+            text: 'ON' 
+          };
         }
-      } catch (error) {
-        // Fallback ai settings localStorage se Tauri non è disponibile
-        try {
-          const steamSettings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
-          if (steamSettings.steam?.apiKey && steamSettings.steam?.steamId) {
-            steamApi = { 
-              status: 'connected', 
-              color: 'bg-blue-500', 
-              text: 'OK' 
-            };
-          }
-        } catch (localStorageError) {
-          console.error('Error checking Steam API status:', localStorageError);
-        }
+      } catch {
+        // Steam non connesso - resta OFF
       }
 
       // Calcola uso cache
@@ -267,23 +244,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                     <span className="text-gray-300">Steam API</span>
                     <div className="flex items-center gap-1">
                       <div className={`w-1.5 h-1.5 ${systemStatus.steamApi.color} rounded-full animate-pulse`}></div>
-                      <span className={`text-xs ${
-                        systemStatus.steamApi.color === 'bg-blue-500' ? 'text-blue-400' : 
-                        systemStatus.steamApi.color === 'bg-yellow-500' ? 'text-yellow-400' : 'text-red-400'
-                      }`}>
+                      <span className={`text-xs ${systemStatus.steamApi.color === 'bg-green-500' ? 'text-green-400' : 'text-red-400'}`}>
                         {systemStatus.steamApi.text}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-300">Cache</span>
-                    <div className="flex items-center gap-1">
-                      <div className={`w-1.5 h-1.5 ${systemStatus.cache.color} rounded-full animate-pulse`}></div>
-                      <span className={`text-xs ${
-                        systemStatus.cache.color === 'bg-purple-500' ? 'text-purple-400' : 
-                        systemStatus.cache.color === 'bg-yellow-500' ? 'text-yellow-400' : 'text-red-400'
-                      }`}>
-                        {systemStatus.cache.text}
                       </span>
                     </div>
                   </div>
@@ -298,10 +260,6 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <div 
                   className={`w-2 h-2 ${systemStatus.steamApi.color} rounded-full animate-pulse`} 
                   title={`Steam API - ${systemStatus.steamApi.text}`}
-                ></div>
-                <div 
-                  className={`w-2 h-2 ${systemStatus.cache.color} rounded-full animate-pulse`} 
-                  title={`Cache - ${systemStatus.cache.text}`}
                 ></div>
               </div>
             )}

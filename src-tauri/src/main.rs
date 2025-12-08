@@ -113,6 +113,7 @@ fn main() {
             commands::steam_enhanced::load_steam_games_cache,
             commands::steam_enhanced::fetch_steam_game_details,
             commands::steam_enhanced::get_steam_install_path,
+            commands::steam_enhanced::find_game_install_path,
             // DLC Management (cross-store)
             commands::dlc_manager::scan_all_dlc,
             commands::dlc_manager::get_game_dlc,

@@ -62,6 +62,7 @@ const TranslatorPage = () => {
   const [isReadingFiles, setIsReadingFiles] = useState(false);
   const [gameFiles, setGameFiles] = useState<FileHandle[]>([]);
   const [selectedFile, setSelectedFile] = useState<FileHandle | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
 
   // Stati per la traduzione
   const [isReadingFile, setIsReadingFile] = useState(false);
@@ -139,6 +140,7 @@ const TranslatorPage = () => {
   const handleGameSelect = async (gameId: string) => {
     setSupportedLanguages(null); // Reset
     setFoundPath(null); // Reset percorso
+    setScanError(null); // Reset errore scansione
     setIsFindingPath(true);
 
     const game = games.find(g => g.id === gameId);
@@ -147,20 +149,17 @@ const TranslatorPage = () => {
     if (game) {
       setCurrentStep('confirm-path');
       
-      // Cerca automaticamente il percorso di installazione
+      // Cerca automaticamente il percorso di installazione in TUTTE le librerie Steam
       if (game.installPath) {
-        // Prova a costruire il percorso completo Steam
         try {
-          const steamPath = await invoke<string>('get_steam_install_path');
-          if (steamPath) {
-            const fullPath = `${steamPath}\\steamapps\\common\\${game.installPath}`;
-            setFoundPath(fullPath);
-            console.log('[Translator] Percorso trovato:', fullPath);
-          }
+          // Usa il nuovo comando che cerca in tutte le librerie Steam
+          const fullPath = await invoke<string>('find_game_install_path', { installDir: game.installPath });
+          setFoundPath(fullPath);
+          console.log('[Translator] Percorso trovato:', fullPath);
         } catch (err) {
-          console.warn('[Translator] Impossibile ottenere percorso Steam:', err);
-          // Fallback: usa solo il nome della cartella
-          setFoundPath(game.installPath);
+          console.warn('[Translator] Gioco non trovato nelle librerie Steam:', err);
+          // Non imposta nessun percorso - l'utente dovrà selezionare manualmente
+          setFoundPath(null);
         }
       }
       setIsFindingPath(false);
@@ -238,13 +237,15 @@ const TranslatorPage = () => {
             throw new Error(errorData.error || 'Errore durante la scansione dei file.');
         }
 
-        const files: FileHandle[] = await response.json();
+        const data = await response.json();
+        // L'API può restituire un array o un oggetto con .files
+        const files: FileHandle[] = Array.isArray(data) ? data : (data.files || []);
         setGameFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
         setCurrentStep('select-file');
     } catch (err: any) {
-        setApiError(err.message); // Mostra l'errore all'utente
-        console.error('Errore durante la scansione dei file:', err);
-        // Rimane al passo corrente per mostrare l'errore
+      setScanError(err.message); // Mostra l'errore inline, non blocca la pagina
+      console.error('Errore durante la scansione dei file:', err);
+      // Rimane al passo corrente per mostrare l'errore
     } finally {
         setIsReadingFiles(false);
     }
@@ -272,8 +273,9 @@ const TranslatorPage = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ filePath: file.path }),
             });
-            if (!response.ok) throw new Error((await response.json()).error || 'Errore lettura file.');
-            content = (await response.json()).content;
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Errore lettura file.');
+            content = data.content;
         } else if (file.handle) {
             // @ts-ignore
             const fileHandle = await file.handle.getFile();
@@ -713,6 +715,34 @@ const TranslatorPage = () => {
 
             {/* Path Selection */}
             <div className="space-y-4">
+              {/* Errore scansione */}
+              {scanError && (
+                <div className="p-4 rounded-xl bg-destructive/10 border border-destructive/20">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium text-destructive">
+                        Percorso non accessibile
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1 break-all">
+                        {scanError}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Il gioco potrebbe non essere installato. Usa il pulsante sotto per selezionare manualmente la cartella.
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => setScanError(null)} 
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                  >
+                    Chiudi
+                  </Button>
+                </div>
+              )}
+
               {isFindingPath ? (
                 <div className="flex items-center justify-center py-8 gap-3">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -802,9 +832,9 @@ const TranslatorPage = () => {
             ) : gameFiles.length > 0 ? (
               <ScrollArea className="h-[400px]">
                 <div className="space-y-2">
-                  {gameFiles.map((file) => (
+                  {gameFiles.map((file, index) => (
                     <button
-                      key={file.name}
+                      key={file.path || `${file.name}-${index}`}
                       onClick={() => handleFileSelect(file)}
                       className={cn(
                         "w-full flex items-center gap-3 p-4 rounded-xl border transition-all",
