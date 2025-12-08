@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { 
   Home, 
   Gamepad2, 
-  Zap, 
   FileText, 
   Store, 
   Settings,
@@ -37,8 +36,7 @@ interface MainLayoutProps {
 const navigationItems = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Libreria', href: '/library', icon: Gamepad2 },
-  { name: 'Translator Pro', href: '/translator/pro', icon: Brain },
-  { name: 'Neural Translator', href: '/translator', icon: Zap },
+  { name: 'Neural Translator', href: '/translator/pro', icon: Brain },
   { name: 'Editor', href: '/editor', icon: FileText },
   { name: 'Stores Manager', href: '/store-manager', icon: Store },
   { name: 'Impostazioni', href: '/settings', icon: Settings },
