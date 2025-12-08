@@ -409,6 +409,14 @@ fn main() {
             commands::glossary::import_glossary,
             commands::glossary::search_glossary,
 
+            // Translation Memory System
+            commands::translation_memory::load_translation_memory,
+            commands::translation_memory::save_translation_memory,
+            commands::translation_memory::list_translation_memories,
+            commands::translation_memory::delete_translation_memory,
+            commands::translation_memory::export_translation_memory_tmx,
+            commands::translation_memory::import_translation_memory_tmx,
+
             // NOTIFICATION SYSTEM TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
             // commands::notifications::create_notification,
             // commands::notifications::get_notifications,

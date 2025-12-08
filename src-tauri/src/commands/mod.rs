@@ -24,4 +24,5 @@ pub mod profile_settings;
 pub mod migration;
 pub mod validation;
 pub mod glossary;
+pub mod translation_memory;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO
