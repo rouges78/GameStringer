@@ -1,6 +1,6 @@
 [package]
 name = "gamestringer"
-version = "3.2.1"
+version = "3.2.2"
 description = "GameStringer - AI Game Translation System"
 authors = ["GameStringer Team"]
 license = ""
@@ -17,10 +17,10 @@ name = "gamestringer"
 path = "src/lib.rs"
 
 [build-dependencies]
-tauri-build = { version = "2.0", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2.0", features = [] }
+tauri = { version = "2", features = [] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 winreg = "0.52"
@@ -52,6 +52,8 @@ crc32fast = "1.3"
 anyhow = "1.0"
 bincode = "1.3"
 keyvalues-serde = "0.2.2"
+dirs = "6.0.0"
+new-vdf-parser = "0.2.0"
 
 [dev-dependencies]
 tempfile = "3.8"

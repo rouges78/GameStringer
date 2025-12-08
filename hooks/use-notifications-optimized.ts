@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Notification, NotificationFilter, NotificationPreferences, CreateNotificationRequest } from '@/types/notifications';
 
@@ -22,6 +22,124 @@ interface UseNotificationsOptimizedOptions {
   enableBatching?: boolean;
   batchSize?: number;
   enableVirtualization?: boolean;
+}
+
+// --- Helpers: camelCase <-> snake_case mappers ---
+function toSnakeFilter(filter: NotificationFilter | undefined): any {
+  if (!filter) return {};
+  return {
+    notification_type: filter.type,
+    priority: filter.priority,
+    unread_only: filter.unreadOnly,
+    category: filter.category,
+    limit: filter.limit,
+    offset: filter.offset,
+  };
+}
+
+function toSnakeCreateRequest(req: CreateNotificationRequest, fallbackProfileId: string): any {
+  return {
+    profile_id: req.profileId ?? fallbackProfileId,
+    notification_type: req.type,
+    title: req.title,
+    message: req.message,
+    icon: req.icon,
+    action_url: req.actionUrl,
+    priority: req.priority,
+    expires_at: req.expiresAt,
+    metadata: req.metadata
+      ? {
+          source: req.metadata.source,
+          category: req.metadata.category,
+          tags: req.metadata.tags,
+          custom_data: req.metadata.customData,
+        }
+      : undefined,
+  };
+}
+
+function fromSnakeNotification(n: any): Notification {
+  return {
+    id: n.id,
+    profileId: n.profile_id,
+    type: n.notification_type,
+    title: n.title,
+    message: n.message,
+    icon: n.icon,
+    actionUrl: n.action_url,
+    priority: n.priority,
+    createdAt: n.created_at,
+    readAt: n.read_at ?? undefined,
+    expiresAt: n.expires_at ?? undefined,
+    metadata: {
+      source: n.metadata?.source,
+      category: n.metadata?.category,
+      tags: n.metadata?.tags ?? [],
+      customData: n.metadata?.custom_data,
+    },
+  };
+}
+
+function toSnakePreferences(p: NotificationPreferences): any {
+  const typeSettings: Record<string, any> = {};
+  Object.entries(p.typeSettings).forEach(([key, val]) => {
+    typeSettings[key as any] = {
+      enabled: val.enabled,
+      priority: val.priority,
+      show_toast: val.showToast,
+      play_sound: val.playSound,
+      persist_in_center: val.persistInCenter,
+    };
+  });
+  return {
+    profile_id: p.profileId,
+    global_enabled: p.globalEnabled,
+    sound_enabled: p.soundEnabled,
+    desktop_enabled: p.desktopEnabled,
+    type_settings: typeSettings,
+    quiet_hours: p.quietHours
+      ? {
+          enabled: p.quietHours.enabled,
+          start_time: p.quietHours.startTime,
+          end_time: p.quietHours.endTime,
+          allow_urgent: p.quietHours.allowUrgent,
+        }
+      : undefined,
+    max_notifications: p.maxNotifications,
+    auto_delete_after_days: p.autoDeleteAfterDays,
+    updated_at: p.updatedAt,
+  };
+}
+
+function fromSnakePreferences(p: any): NotificationPreferences {
+  const typeSettings: NotificationPreferences['typeSettings'] = {} as any;
+  Object.entries(p.type_settings || {}).forEach(([key, val]: [string, any]) => {
+    typeSettings[key as any] = {
+      enabled: val.enabled,
+      priority: val.priority,
+      showToast: val.show_toast,
+      playSound: val.play_sound,
+      persistInCenter: val.persist_in_center,
+    };
+  });
+  return {
+    profileId: p.profile_id,
+    globalEnabled: p.global_enabled,
+    soundEnabled: p.sound_enabled,
+    desktopEnabled: p.desktop_enabled,
+    typeSettings,
+    quietHours: p.quiet_hours
+      ? {
+          enabled: p.quiet_hours.enabled,
+          startTime: p.quiet_hours.start_time,
+          endTime: p.quiet_hours.end_time,
+          allowUrgent: p.quiet_hours.allow_urgent,
+        }
+      : undefined,
+    maxNotifications: p.max_notifications,
+    autoDeleteAfterDays: p.auto_delete_after_days,
+    updatedAt: p.updated_at,
+  };
 }
 
 export function useNotificationsOptimized({
@@ -88,10 +206,13 @@ export function useNotificationsOptimized({
     setError(null);
 
     try {
-      const [notificationsResult, unreadCountResult] = await Promise.all([
-        invoke<Notification[]>('get_notifications', { profileId, filter }),
-        invoke<number>('get_unread_notifications_count', { profileId }),
+      const mappedFilter = toSnakeFilter(filter);
+      const [notificationsRaw, unreadCountResult] = await Promise.all([
+        invoke<any[]>('get_notifications', { profile_id: profileId, filter: mappedFilter }),
+        invoke<number>('get_unread_notifications_count', { profile_id: profileId }),
       ]);
+
+      const notificationsResult = (notificationsRaw || []).map(fromSnakeNotification);
 
       // Aggiorna cache
       cacheRef.current[profileId] = {
@@ -130,12 +251,12 @@ export function useNotificationsOptimized({
         limit,
       };
 
-      const result = await invoke<Notification[]>('get_notifications_paginated', {
-        profileId,
-        filter: pageFilter,
+      const resultRaw = await invoke<any[]>('get_notifications', {
+        profile_id: profileId,
+        filter: toSnakeFilter(pageFilter),
       });
 
-      return result;
+      return (resultRaw || []).map(fromSnakeNotification);
     } catch (err) {
       console.error('Errore caricamento pagina notifiche:', err);
       return [];
@@ -155,27 +276,23 @@ export function useNotificationsOptimized({
 
       if (queue.markAsRead.length > 0) {
         promises.push(
-          invoke('batch_mark_notifications_as_read', {
-            profileId,
-            notificationIds: queue.markAsRead,
+          invoke('mark_multiple_notifications_as_read', {
+            profile_id: profileId,
+            notification_ids: queue.markAsRead,
           })
         );
       }
 
       if (queue.delete.length > 0) {
-        promises.push(
-          invoke('batch_delete_notifications', {
-            notificationIds: queue.delete,
-          })
-        );
+        promises.push(Promise.all(
+          queue.delete.map(id =>
+            invoke('delete_notification', { notification_id: id, profile_id: profileId })
+          )
+        ));
       }
 
       if (queue.update.length > 0) {
-        promises.push(
-          invoke('batch_update_notifications', {
-            notifications: queue.update,
-          })
-        );
+        // Nessun comando backend per update in batch: solo aggiornamento locale più sotto
       }
 
       await Promise.all(promises);
@@ -246,7 +363,7 @@ export function useNotificationsOptimized({
       scheduleBatchProcessing();
     } else {
       try {
-        await invoke('mark_notification_as_read', { profileId, notificationId });
+        await invoke('mark_notification_as_read', { profile_id: profileId, notification_id: notificationId });
         
         setNotifications(prev =>
           prev.map(n =>
@@ -272,7 +389,7 @@ export function useNotificationsOptimized({
       scheduleBatchProcessing();
     } else {
       try {
-        await invoke('delete_notification', { notificationId });
+        await invoke('delete_notification', { notification_id: notificationId, profile_id: profileId });
         
         setNotifications(prev => prev.filter(n => n.id !== notificationId));
         
@@ -293,7 +410,7 @@ export function useNotificationsOptimized({
   // Marca tutte come lette
   const markAllAsRead = useCallback(async () => {
     try {
-      await invoke('mark_all_notifications_as_read', { profileId });
+      await invoke('mark_all_notifications_as_read', { profile_id: profileId });
       
       setNotifications(prev =>
         prev.map(n => ({ ...n, readAt: n.readAt || new Date().toISOString() }))
@@ -310,7 +427,7 @@ export function useNotificationsOptimized({
   // Elimina tutte le notifiche
   const clearAllNotifications = useCallback(async () => {
     try {
-      await invoke('clear_all_notifications', { profileId });
+      await invoke('clear_all_notifications', { profile_id: profileId });
       
       setNotifications([]);
       setUnreadCount(0);
@@ -325,10 +442,11 @@ export function useNotificationsOptimized({
   // Crea nuova notifica
   const createNotification = useCallback(async (request: CreateNotificationRequest) => {
     try {
-      const newNotification = await invoke<Notification>('create_notification', {
-        profileId,
-        request,
+      const mappedRequest = toSnakeCreateRequest(request, profileId);
+      const createdRaw = await invoke<any>('create_notification', {
+        request: mappedRequest,
       });
+      const newNotification = fromSnakeNotification(createdRaw);
       
       setNotifications(prev => [newNotification, ...prev]);
       
@@ -349,8 +467,8 @@ export function useNotificationsOptimized({
 
   // Ascolta eventi real-time
   useEffect(() => {
-    const unlistenPromise = listen<Notification>('notification-created', (event) => {
-      const notification = event.payload;
+    const unlistenPromise = listen<any>('notification-created', (event) => {
+      const notification = fromSnakeNotification(event.payload);
       if (notification.profileId === profileId) {
         setNotifications(prev => [notification, ...prev]);
         
@@ -449,7 +567,8 @@ export function useNotificationPreferencesOptimized(profileId: string) {
     setError(null);
 
     try {
-      const result = await invoke<NotificationPreferences>('get_notification_preferences', { profileId });
+      const resultRaw = await invoke<any>('get_notification_preferences', { profile_id: profileId });
+      const result = fromSnakePreferences(resultRaw);
       
       cacheRef.current[profileId] = {
         preferences: result,
@@ -474,7 +593,8 @@ export function useNotificationPreferencesOptimized(profileId: string) {
     const updatedPreferences = { ...preferences, ...newPreferences };
     
     try {
-      await invoke('update_notification_preferences', { profileId, preferences: updatedPreferences });
+      const mapped = toSnakePreferences(updatedPreferences);
+      await invoke('update_notification_preferences', { preferences: mapped });
       
       cacheRef.current[profileId] = {
         preferences: updatedPreferences,

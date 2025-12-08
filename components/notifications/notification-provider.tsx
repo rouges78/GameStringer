@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+
 import { useNotifications } from '@/hooks/use-notifications';
 import { useNotificationPreferences } from '@/hooks/use-notification-preferences';
 // Rimossa dipendenza da useProfileAuth per evitare dipendenza circolare
@@ -80,7 +81,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   // Metodi di convenienza per creare notifiche con toast
   const showSuccessNotification = async (title: string, message: string, actionUrl?: string): Promise<boolean> => {
+    if (!currentProfileId) return false;
     return await notificationsHook.createNotification({
+      profileId: currentProfileId,
       type: NotificationType.PROFILE,
       title,
       message,
@@ -96,7 +99,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   const showErrorNotification = async (title: string, message: string, actionUrl?: string): Promise<boolean> => {
+    if (!currentProfileId) return false;
     return await notificationsHook.createNotification({
+      profileId: currentProfileId,
       type: NotificationType.SECURITY,
       title,
       message,
@@ -112,7 +117,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   const showInfoNotification = async (title: string, message: string, actionUrl?: string): Promise<boolean> => {
+    if (!currentProfileId) return false;
     return await notificationsHook.createNotification({
+      profileId: currentProfileId,
       type: NotificationType.SYSTEM,
       title,
       message,
@@ -128,7 +135,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   const showWarningNotification = async (title: string, message: string, actionUrl?: string): Promise<boolean> => {
+    if (!currentProfileId) return false;
     return await notificationsHook.createNotification({
+      profileId: currentProfileId,
       type: NotificationType.SYSTEM,
       title,
       message,
@@ -347,16 +356,18 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
         console.log('Inizializzazione sistema notifiche per profilo:', currentProfileId);
 
         // Inizializza il sistema di notifiche Tauri se disponibile
-        if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-          const { invoke } = (window as any).__TAURI__.tauri;
-          
-          try {
-            await invoke('initialize_notification_system', {
-              profile_id: currentProfileId
-            });
-            console.log('Sistema notifiche Tauri inizializzato');
-          } catch (error) {
-            console.warn('Errore inizializzazione sistema notifiche Tauri:', error);
+        if (typeof window !== 'undefined') {
+          const tauri = (window as any).__TAURI__;
+          const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: any) => Promise<any>);
+          if (invoke) {
+            try {
+              await invoke('initialize_notification_system', {
+                profile_id: currentProfileId
+              });
+              console.log('Sistema notifiche Tauri inizializzato');
+            } catch (error) {
+              console.warn('Errore inizializzazione sistema notifiche Tauri:', error);
+            }
           }
         }
 
@@ -448,30 +459,33 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     }
 
     // Setup Tauri event listeners se disponibili
-    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-      const { event } = (window as any).__TAURI__;
+    if (typeof window !== 'undefined') {
+      const tauri = (window as any).__TAURI__;
+      const event = tauri?.event;
 
-      const setupTauriEventListeners = async () => {
-        try {
-          if (enableSystemEvents) {
-            const unlistenSystem = await event.listen('system-event', (event: any) => {
-              handleSystemEvent(event.payload.type, event.payload.data);
-            });
-            cleanup.push(unlistenSystem);
+      if (event?.listen) {
+        const setupTauriEventListeners = async () => {
+          try {
+            if (enableSystemEvents) {
+              const unlistenSystem = await event.listen('system-event', (event: any) => {
+                handleSystemEvent(event.payload.type, event.payload.data);
+              });
+              cleanup.push(unlistenSystem);
+            }
+
+            if (enableProfileEvents) {
+              const unlistenProfile = await event.listen('profile-event', (event: any) => {
+                handleProfileEvent(event.payload.type, event.payload.profileId, event.payload.data);
+              });
+              cleanup.push(unlistenProfile);
+            }
+          } catch (error) {
+            console.warn('Errore nel setup Tauri event listeners:', error);
           }
+        };
 
-          if (enableProfileEvents) {
-            const unlistenProfile = await event.listen('profile-event', (event: any) => {
-              handleProfileEvent(event.payload.type, event.payload.profileId, event.payload.data);
-            });
-            cleanup.push(unlistenProfile);
-          }
-        } catch (error) {
-          console.warn('Errore nel setup Tauri event listeners:', error);
-        }
-      };
-
-      setupTauriEventListeners();
+        setupTauriEventListeners();
+      }
     }
 
     systemEventListenersRef.current = cleanup;
@@ -486,12 +500,14 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   useEffect(() => {
     return () => {
       // Cleanup sistema notifiche quando il provider viene smontato
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
-        
-        invoke('cleanup_notification_system').catch((error: any) => {
-          console.warn('Errore nel cleanup sistema notifiche:', error);
-        });
+      if (typeof window !== 'undefined') {
+        const tauri = (window as any).__TAURI__;
+        const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: any) => Promise<any>);
+        if (invoke) {
+          invoke('cleanup_notification_system').catch((error: any) => {
+            console.warn('Errore nel cleanup sistema notifiche:', error);
+          });
+        }
       }
 
       // Cleanup event listeners

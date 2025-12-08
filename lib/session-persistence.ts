@@ -1,6 +1,7 @@
 'use client';
 
 import { invoke } from '@/lib/tauri-api';
+import type { ProfileResponse, UserProfile } from '@/types/profiles';
 
 export interface SessionData {
   profileId: string;
@@ -95,17 +96,18 @@ class SessionPersistence {
   // Auto-save session when profile changes
   async syncWithBackend(): Promise<void> {
     try {
-      const currentProfile = await invoke<any>('get_current_profile');
+      const currentProfile = await invoke<ProfileResponse<UserProfile | null>>('get_current_profile');
       
       if (currentProfile?.success && currentProfile.data) {
-        const sessionTimeRemaining = await invoke<number>('get_session_time_remaining', {
-          timeoutSeconds: 1800 // 30 minuti
+        const timeResponse = await invoke<ProfileResponse<number | null>>('get_session_time_remaining', {
+          timeoutSeconds: 1800 // 30 minuti - Tauri 2.x converte automaticamente in snake_case
         });
+        const remaining = timeResponse?.success && typeof timeResponse.data === 'number' ? timeResponse.data : 0;
         
         const sessionData: SessionData = {
           profileId: currentProfile.data.id,
           profileName: currentProfile.data.name,
-          expiresAt: Date.now() + sessionTimeRemaining,
+          expiresAt: Date.now() + remaining,
           lastActivity: Date.now()
         };
 
@@ -150,21 +152,23 @@ class SessionPersistence {
   private async performRestore(session: SessionData): Promise<boolean> {
     try {
       // Try to restore the session in the backend
-      const canAuth = await invoke<boolean>('can_authenticate', { name: session.profileName });
-      if (!canAuth) {
+      const canAuthResp = await invoke<ProfileResponse<boolean>>('can_authenticate', { name: session.profileName });
+      if (!(canAuthResp?.success && canAuthResp.data)) {
         console.log(' Backend non può autenticare');
         this.clearSession();
         return false;
       }
 
       // Check if the session is still valid in the backend
-      const isExpired = await invoke<boolean>('is_session_expired');
+      const expiredResp = await invoke<ProfileResponse<boolean>>('is_session_expired', { timeoutSeconds: 1800 });
+      const isExpired = expiredResp?.success ? !!expiredResp.data : true;
       if (isExpired) {
         console.log(' Session scaduta, tentativo rinnovo...');
         
         // Try to renew if recent activity
         if (this.shouldRenewSession()) {
-          const renewed = await invoke<boolean>('renew_session');
+          const renewedResp = await invoke<ProfileResponse<boolean>>('renew_session');
+          const renewed = renewedResp?.success && !!renewedResp.data;
           if (renewed) {
             console.log('✅ Session rinnovata');
             await this.syncWithBackend();

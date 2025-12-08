@@ -15,7 +15,10 @@ export async function safeInvoke<T>(command: string, args?: any): Promise<T> {
       const { invoke } = await import('@tauri-apps/api/core');
       return await invoke<T>(command, args);
     } catch (error) {
-      console.error(`[TAURI] Errore chiamata ${command}:`, error);
+      // Per i comandi di test connessione, non loggare come errore bloccante
+      const isConnectivityTest = /^test_.*_connection$/.test(command);
+      const logger = isConnectivityTest ? console.warn : console.error;
+      logger(`[TAURI] Errore chiamata ${command}:`, error);
       throw error;
     }
   } else {
@@ -29,6 +32,12 @@ export async function safeInvoke<T>(command: string, args?: any): Promise<T> {
 function getMockResponse<T>(command: string, args?: any): Promise<T> {
   const mockResponses: Record<string, any> = {
     'get_games': [],
+    'get_steam_games_with_family_sharing': generateMockGames(),
+    'force_refresh_all_games': generateMockGames(),
+    'list_profiles': [],
+    'create_profile': { id: 'mock-profile-id', name: 'Mock Profile' },
+    'authenticate_profile': { success: true, profile: { id: 'mock-profile-id', name: 'Mock Profile' } },
+    'get_current_profile': null,
     'test_steam_connection': { connected: false, error: 'Non disponibile in ambiente web' },
     'test_epic_connection': { connected: false, error: 'Non disponibile in ambiente web' },
     'test_gog_connection': { connected: false, error: 'Non disponibile in ambiente web' },
@@ -43,6 +52,45 @@ function getMockResponse<T>(command: string, args?: any): Promise<T> {
 
   const response = mockResponses[command] || null;
   return Promise.resolve(response as T);
+}
+
+// Genera giochi mock per test
+function generateMockGames() {
+  return [
+    {
+      id: '1',
+      name: 'Counter-Strike 2',
+      icon: '/api/placeholder/32/32',
+      header_image: '/api/placeholder/460/215',
+      is_vr: false,
+      engine: 'Source 2',
+      genres: ['Action', 'FPS'],
+      family_sharing: false,
+      owned_by: 'self'
+    },
+    {
+      id: '2', 
+      name: 'Dota 2',
+      icon: '/api/placeholder/32/32',
+      header_image: '/api/placeholder/460/215',
+      is_vr: false,
+      engine: 'Source 2',
+      genres: ['MOBA', 'Strategy'],
+      family_sharing: true,
+      owned_by: 'family_member'
+    },
+    {
+      id: '3',
+      name: 'Half-Life: Alyx',
+      icon: '/api/placeholder/32/32', 
+      header_image: '/api/placeholder/460/215',
+      is_vr: true,
+      engine: 'Source 2',
+      genres: ['Action', 'Adventure', 'VR'],
+      family_sharing: false,
+      owned_by: 'self'
+    }
+  ];
 }
 
 // Esporta anche la funzione invoke originale per compatibilità

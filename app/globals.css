@@ -3,8 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import toast notification styles */
-@import '../components/notifications/toast-styles.css';
+/* Toast styles (inline - file rimosso) */
 
 @layer base {
   :root {
@@ -138,4 +137,144 @@
   );
   background-size: 200px;
   animation: shimmer 1.5s infinite;
+}
+
+/* Progress Indicators Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes progress-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Progress Bar Utilities */
+.progress-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.progress-indeterminate {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    currentColor,
+    transparent
+  );
+  animation: indeterminate 2s infinite linear;
+}
+
+/* Progress Modal Animations */
+.progress-modal-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.progress-modal-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 200ms, transform 200ms;
+}
+
+.progress-modal-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.progress-modal-exit-active {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 200ms, transform 200ms;
+}
+
+/* Progress Notification Animations */
+.progress-notification-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.progress-notification-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms ease-out;
+}
+
+.progress-notification-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.progress-notification-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 300ms, transform 300ms ease-in;
+}
+
+/* Smooth progress transitions */
+.progress-smooth {
+  transition: width 0.3s ease-out;
+}
+
+/* Progress glow effect */
+.progress-glow {
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Minimized operation bounce */
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(100%);
+  }
+  50% {
+    transform: scale(1.05) translateY(-10%);
+  }
+  70% {
+    transform: scale(0.9) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.progress-minimized-enter {
+  animation: bounce-in 0.6s ease-out;
 }

@@ -138,14 +138,27 @@ export default function Dashboard() {
       setLoading(true);
       console.log('🔄 Dashboard: Refreshing data...');
       
-      // 🚀 PRIORITÀ: Debug completo per capire perché non vediamo i 613 giochi
-      console.log('🔍 Dashboard: Debug sistema caricamento giochi...');
+      let games: any[] = [];
       
-      let games: any[];
-      
+      // 🚀 PRIMA: Prova a caricare dalla cache locale (veloce!)
+      console.log('📂 Dashboard: Tentativo caricamento dalla cache...');
       try {
-        // Prima debug del metodo normale get_games
-        console.log('🧪 Test 1: Metodo get_games normale');
+        const cachedGames = await invoke('load_steam_games_cache') as any[];
+        if (cachedGames && cachedGames.length > 0) {
+          console.log(`✅ Dashboard: Cache trovata con ${cachedGames.length} giochi!`);
+          games = cachedGames;
+        }
+      } catch (cacheError) {
+        console.log('📂 Dashboard: Cache non disponibile, caricamento normale...');
+      }
+      
+      // Se la cache è vuota, usa i metodi tradizionali
+      if (games.length === 0) {
+        console.log('🔍 Dashboard: Debug sistema caricamento giochi...');
+        
+        try {
+          // Prima debug del metodo normale get_games
+          console.log('🧪 Test 1: Metodo get_games normale');
         const normalGames = await invoke('get_games') as any[];
         console.log('📊 get_games normale:', normalGames.length, 'giochi trovati');
         
@@ -218,6 +231,7 @@ export default function Dashboard() {
         // Fallback finale
         games = [];
       }
+      } // Fine if (games.length === 0)
       
       // Recupera statistiche traduzioni salvate
       const savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');

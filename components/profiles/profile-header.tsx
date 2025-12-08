@@ -15,6 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   User, 
@@ -28,7 +34,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Download,
-  Upload
+  Upload,
+  Info
 } from 'lucide-react';
 import { ProfileManager } from './profile-manager';
 import { CreateProfileDialog } from './create-profile-dialog';
@@ -158,7 +165,7 @@ export function ProfileHeader() {
                 </span>
                 <div className="flex items-center space-x-2 mt-1">
                   <span className="text-xs text-muted-foreground">
-                    {profiles.length} profil{profiles.length !== 1 ? 'i' : 'o'}
+                    {profiles.length} profil{profiles.length !== 1 ? 'i' : 'o'} disponibil{profiles.length !== 1 ? 'i' : 'e'}
                   </span>
                   <div className={cn(
                     "flex items-center space-x-1 px-1.5 py-0.5 rounded-full text-xs",
@@ -189,9 +196,14 @@ export function ProfileHeader() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col flex-1">
-                  <p className="text-sm font-medium leading-none">
-                    {currentProfile.name}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium leading-none">
+                      {currentProfile.name}
+                    </p>
+                    <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600">
+                      Attivo
+                    </Badge>
+                  </div>
                   <p className="text-xs leading-none text-muted-foreground mt-1">
                     ID: {currentProfile.id.slice(0, 8)}...
                   </p>
@@ -231,10 +243,23 @@ export function ProfileHeader() {
               
               {/* Profile Stats */}
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex flex-col items-center p-2 bg-muted/50 rounded-lg">
-                  <span className="font-medium">{profiles.length}</span>
-                  <span className="text-muted-foreground">Profili</span>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex flex-col items-center p-2 bg-muted/50 rounded-lg cursor-help">
+                        <div className="flex items-center gap-1">
+                          <span className="font-medium">{profiles.length}</span>
+                          <Info className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                        <span className="text-muted-foreground">Profili Creati</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">Numero totale di profili nel sistema.</p>
+                      <p className="text-xs">Solo uno può essere attivo alla volta.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <div className="flex flex-col items-center p-2 bg-muted/50 rounded-lg">
                   <span className="font-medium">
                     {settings?.theme || 'Auto'}

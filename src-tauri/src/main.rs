@@ -109,6 +109,10 @@ fn main() {
             commands::steam_enhanced::find_steam_game_by_id,
             commands::steam_enhanced::get_enhanced_steam_info,
             commands::steam_enhanced::test_steamlocate_integration,
+            commands::steam_enhanced::scan_all_steam_games_fast,
+            commands::steam_enhanced::load_steam_games_cache,
+            commands::steam_enhanced::fetch_steam_game_details,
+            commands::steam_enhanced::get_steam_install_path,
             // DLC Management (cross-store)
             commands::dlc_manager::scan_all_dlc,
             commands::dlc_manager::get_game_dlc,
@@ -392,6 +396,18 @@ fn main() {
             commands::validation::validate_profile_creation,
             commands::validation::generate_password_suggestions,
             commands::validation::check_password_strength_realtime,
+
+            // Glossary System
+            commands::glossary::create_glossary,
+            commands::glossary::get_glossary,
+            commands::glossary::list_glossaries,
+            commands::glossary::add_glossary_entry,
+            commands::glossary::update_glossary_entry,
+            commands::glossary::delete_glossary_entry,
+            commands::glossary::update_glossary_metadata,
+            commands::glossary::export_glossary,
+            commands::glossary::import_glossary,
+            commands::glossary::search_glossary,
 
             // NOTIFICATION SYSTEM TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
             // commands::notifications::create_notification,

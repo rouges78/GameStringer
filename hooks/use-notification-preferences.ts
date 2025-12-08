@@ -19,7 +19,7 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carica le preferenze dal backend
+  // Carica le preferenze - sistema notifiche temporaneamente disabilitato
   const loadPreferences = useCallback(async () => {
     if (!activeProfileId) {
       setIsLoading(false);
@@ -27,40 +27,15 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await invoke('get_notification_preferences', {
-        profile_id: activeProfileId
-      });
-
-      if (response.success && response.data) {
-        setPreferences(response.data);
-      } else {
-        // Se non ci sono preferenze salvate, usa quelle predefinite
-        const defaultPrefs: NotificationPreferences = {
-          ...DEFAULT_NOTIFICATION_PREFERENCES,
-          profileId: activeProfileId,
-          updatedAt: new Date().toISOString()
-        };
-        setPreferences(defaultPrefs);
-      }
-    } catch (err) {
-      console.error('Errore nel caricamento delle preferenze notifiche:', err);
-      setError(err instanceof Error ? err.message : 'Errore sconosciuto');
-
-      // Fallback alle preferenze predefinite
-      const defaultPrefs: NotificationPreferences = {
-        ...DEFAULT_NOTIFICATION_PREFERENCES,
-        profileId: activeProfileId,
-        updatedAt: new Date().toISOString()
-      };
-      setPreferences(defaultPrefs);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [profileId]);
+    // Sistema notifiche disabilitato - usa direttamente i default
+    const defaultPrefs: NotificationPreferences = {
+      ...DEFAULT_NOTIFICATION_PREFERENCES,
+      profileId: activeProfileId,
+      updatedAt: new Date().toISOString()
+    };
+    setPreferences(defaultPrefs);
+    setIsLoading(false);
+  }, [activeProfileId]);
 
   // Carica le preferenze quando cambia il profilo
   useEffect(() => {
@@ -72,22 +47,8 @@ export const useNotificationPreferences = (profileId?: string): UseNotificationP
     if (activeProfileId) {
       // Usa il comando di sincronizzazione se disponibile
       const syncPreferences = async () => {
-        try {
-          const response = await invoke('sync_notification_preferences_on_profile_switch', {
-            old_profile_id: null, // Non abbiamo traccia del profilo precedente qui
-            new_profile_id: activeProfileId
-          });
-
-          if (response) {
-            setPreferences(response);
-            setIsLoading(false);
-            return;
-          }
-        } catch (error) {
-          console.warn('Comando di sincronizzazione non disponibile, uso caricamento standard');
-        }
-
-        // Fallback al caricamento standard
+        // Sistema notifiche temporaneamente disabilitato - usa direttamente il fallback
+        // Il comando sync_notification_preferences_on_profile_switch non è disponibile
         loadPreferences();
       };
 

@@ -2,14 +2,14 @@
 mod profile_manager_integration_tests {
     use crate::profiles::manager::ProfileManager;
     use crate::profiles::storage::ProfileStorage;
-    use crate::profiles::models::{CreateProfileRequest, ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings, EncryptedCredential};
+    use crate::profiles::models::{CreateProfileRequest, ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings};
     use crate::profiles::errors::ProfileError;
     use crate::profiles::rate_limiter::{RateLimiterConfig, RateLimitResult};
     use crate::profiles::secure_memory::SecureMemory;
     use tempfile::TempDir;
     use tokio;
-    use std::time::Duration;
-    use std::collections::HashMap;
+    // use std::time::Duration; // Unused import
+    // use std::collections::HashMap; // Unused import
 
     /// Helper per creare un ProfileManager temporaneo per i test
     async fn create_test_manager() -> (ProfileManager, TempDir) {

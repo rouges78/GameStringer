@@ -107,31 +107,58 @@ export function LoginDebugMonitor() {
     };
   }, []);
   
+  const [isExpanded, setIsExpanded] = useState(false);
+  const errorCount = logs.filter(l => l.includes('[ERROR]')).length;
+  const warnCount = logs.filter(l => l.includes('[WARN]')).length;
+
+  // Versione minimale: solo un piccolo indicatore
+  if (!isExpanded) {
+    return (
+      <button
+        onClick={() => setIsExpanded(true)}
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-1 px-2 py-1 rounded-full bg-black/70 text-white text-xs hover:bg-black/90 transition-colors"
+        title="Apri Debug Monitor"
+      >
+        <span>🔍</span>
+        {errorCount > 0 && <span className="bg-red-500 px-1.5 rounded-full">{errorCount}</span>}
+        {warnCount > 0 && <span className="bg-yellow-500 text-black px-1.5 rounded-full">{warnCount}</span>}
+        {errorCount === 0 && warnCount === 0 && <span className="text-green-400">OK</span>}
+      </button>
+    );
+  }
+
   return (
-    <Card className="fixed bottom-4 right-4 w-96 max-h-96 overflow-auto z-50 bg-black/90 text-white">
-      <CardHeader className="py-2">
-        <CardTitle className="text-sm">🔍 Login Debug Monitor</CardTitle>
+    <Card className="fixed bottom-4 right-4 w-80 max-h-64 overflow-auto z-50 bg-black/95 text-white border-gray-700">
+      <CardHeader className="py-1.5 px-3 flex flex-row items-center justify-between">
+        <CardTitle className="text-xs">🔍 Debug</CardTitle>
+        <button 
+          onClick={() => setIsExpanded(false)}
+          className="text-gray-400 hover:text-white text-sm"
+        >
+          ✕
+        </button>
       </CardHeader>
-      <CardContent className="py-2">
-        <div className="text-xs font-mono space-y-1 max-h-64 overflow-y-auto">
-          {logs.slice(-20).map((log, i) => (
+      <CardContent className="py-1.5 px-3">
+        <div className="text-[10px] font-mono space-y-0.5 max-h-40 overflow-y-auto">
+          {logs.slice(-15).map((log, i) => (
             <div 
               key={i} 
-              className={
+              className={`truncate ${
                 log.includes('[ERROR]') || log.includes('🚨') ? 'text-red-400' : 
                 log.includes('[WARN]') ? 'text-yellow-400' : 
                 'text-green-400'
-              }
+              }`}
+              title={log}
             >
-              {log}
+              {log.substring(log.indexOf(']:') + 2).slice(0, 80)}
             </div>
           ))}
         </div>
         <button 
           onClick={() => setLogs([])} 
-          className="mt-2 text-xs bg-red-600 px-2 py-1 rounded"
+          className="mt-1 text-[10px] bg-red-600 px-2 py-0.5 rounded"
         >
-          Clear Logs
+          Clear
         </button>
       </CardContent>
     </Card>

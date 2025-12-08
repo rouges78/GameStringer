@@ -8,10 +8,8 @@ import { Button } from '@/components/ui/button';
 import { 
   Home, 
   Gamepad2, 
-  Languages, 
   Zap, 
   FileText, 
-  Archive, 
   Store, 
   Settings,
   Menu,
@@ -26,6 +24,7 @@ import { usePathname } from 'next/navigation';
 import { ProfileHeader } from '@/components/profiles/profile-header';
 import { AuthStatusSidebar } from '@/components/auth/auth-status-sidebar';
 import { ProfileNotifications } from '@/components/profiles/profile-notifications';
+import { DefaultProfileAlert } from '@/components/profiles/default-profile-alert';
 import { NotificationIndicator } from '@/components/notifications/notification-indicator';
 import { NotificationCenter } from '@/components/notifications/notification-center';
 import { useNotificationShortcuts } from '@/hooks/use-global-shortcuts';
@@ -37,10 +36,8 @@ interface MainLayoutProps {
 const navigationItems = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Libreria', href: '/library', icon: Gamepad2 },
-  { name: 'Neural Translator', href: '/injekt-translator', icon: Zap },
+  { name: 'Neural Translator', href: '/translator', icon: Zap },
   { name: 'Editor', href: '/editor', icon: FileText },
-  { name: 'Dialogue Patcher', href: '/dialogue-patcher', icon: Languages },
-  { name: 'Patch', href: '/patches', icon: Archive },
   { name: 'Stores Manager', href: '/store-manager', icon: Store },
   { name: 'Impostazioni', href: '/settings', icon: Settings },
 ];
@@ -78,11 +75,8 @@ export function MainLayout({ children }: MainLayoutProps) {
       setSidebarOpen(JSON.parse(savedSidebarState));
     }
     
-    // Aggiorna status del sistema
+    // Aggiorna status del sistema solo all'avvio (no polling continuo)
     updateSystemStatus();
-    const statusInterval = setInterval(updateSystemStatus, 10000); // Ogni 10 secondi
-    
-    return () => clearInterval(statusInterval);
   }, []);
 
   const updateSystemStatus = async () => {
@@ -188,13 +182,13 @@ export function MainLayout({ children }: MainLayoutProps) {
           {/* Header con logo e toggle */}
           <div className="relative flex items-center justify-center h-16 px-2 border-b">
             {sidebarOpen && (
-              <div className="flex items-center flex-1 px-2">
+              <div className="flex items-center justify-center flex-1">
                 <Image 
                   src="/logo.png" 
                   alt="GameStringer Logo" 
-                  width={200} 
-                  height={50} 
-                  className="w-full h-auto max-h-10" 
+                  width={180} 
+                  height={45} 
+                  className="h-9 w-auto object-contain" 
                   priority 
                 />
               </div>
@@ -388,6 +382,11 @@ export function MainLayout({ children }: MainLayoutProps) {
               <ProfileHeader />
             </div>
           </header>
+
+          {/* Default Profile Alert */}
+          <div className="px-6 pt-4">
+            <DefaultProfileAlert />
+          </div>
 
           {/* Content */}
           <main className="flex-1 overflow-auto">

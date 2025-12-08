@@ -1376,7 +1376,7 @@ export default function StoreManagerPage() {
 
                 {/* Contenuto della card */}
                 <div className="p-4">
-                  {/* Status */}
+                  {/* Status con conteggio giochi */}
                   <div className="mb-4">
                     {status.loading ? (
                       <div className="flex items-center text-blue-400">
@@ -1384,22 +1384,32 @@ export default function StoreManagerPage() {
                         <span className="text-sm">Verifica in corso...</span>
                       </div>
                     ) : status.connected ? (
-                      <div className="flex items-center text-green-400">
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        <span className="text-sm">Connesso</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center text-green-400">
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          <span className="text-sm font-medium">Connesso</span>
+                        </div>
+                        {status.gamesCount !== undefined && status.gamesCount > 0 && (
+                          <div className="bg-green-900/30 border border-green-700 rounded-lg px-3 py-2">
+                            <span className="text-green-300 text-lg font-bold">{status.gamesCount}</span>
+                            <span className="text-green-400 text-sm ml-1">giochi trovati</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <div className="flex items-center text-red-400">
+                      <div className="flex items-center text-gray-400">
                         <XCircle className="h-4 w-4 mr-2" />
                         <span className="text-sm">Non connesso</span>
                       </div>
                     )}
                   </div>
 
-                  {/* Descrizione */}
-                  <p className="text-gray-400 text-sm mb-4">
-                    Collega il tuo account {status.name} per importare i tuoi giochi.
-                  </p>
+                  {/* Descrizione solo se non connesso */}
+                  {!status.connected && (
+                    <p className="text-gray-400 text-sm mb-4">
+                      Collega il tuo account {status.name} per importare i tuoi giochi.
+                    </p>
+                  )}
 
                   {/* Messaggio di errore */}
                   {status.error && !status.loading && (
@@ -1411,82 +1421,75 @@ export default function StoreManagerPage() {
                     </div>
                   )}
 
-                  {/* Pulsanti */}
+                  {/* Pulsanti - Semplificati */}
                   <div className="space-y-2">
                     {status.connected ? (
                       <>
-                        <Button 
-                          onClick={() => handleDisconnect(store.id)} 
-                          disabled={status.loading}
-                          className="w-full bg-red-600 hover:bg-red-700 text-white"
-                        >
-                          <PowerOff className="h-4 w-4 mr-2" />
-                          Disconnetti
-                        </Button>
+                        {/* Pulsante principale: Aggiorna o Disconnetti */}
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={() => refreshStoreStatus(store.id)} 
+                            disabled={status.loading}
+                            variant="outline"
+                            className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-700"
+                          >
+                            <RefreshCw className={`h-4 w-4 mr-2 ${status.loading ? 'animate-spin' : ''}`} />
+                            Aggiorna
+                          </Button>
+                          <Button 
+                            onClick={() => handleDisconnect(store.id)} 
+                            disabled={status.loading}
+                            variant="outline"
+                            className="border-red-600 text-red-400 hover:bg-red-900/30"
+                          >
+                            <PowerOff className="h-4 w-4" />
+                          </Button>
+                        </div>
                         
-                        {/* Pulsante Reset Credenziali per store connessi */}
-                        <Button 
-                          onClick={() => handleResetCredentials(store.id)} 
-                          disabled={status.loading}
-                          variant="outline"
-                          className="w-full border-yellow-600 text-yellow-300 hover:bg-yellow-900/30"
-                        >
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Reset & Ricontrolla
-                        </Button>
-                        
-                        {/* Sezione speciale Epic Games con Legendary */}
-                        {store.id === 'epic_games' && (
-                          <>
-                            {/* Status Legendary */}
-                            {legendaryStatus && (
-                              <div className={`p-3 rounded-lg border text-sm ${
+                        {/* Sezione speciale Epic Games con Legendary - Collapsata */}
+                        {store.id === 'epic_games' && legendaryStatus && (
+                          <details className="group">
+                            <summary className="cursor-pointer text-sm text-gray-400 hover:text-gray-300 py-1">
+                              ⚙️ Opzioni avanzate Epic
+                            </summary>
+                            <div className="mt-2 space-y-2">
+                              <div className={`p-2 rounded-lg border text-xs ${
                                 legendaryStatus.installed && legendaryStatus.authenticated 
                                   ? 'border-green-600 bg-green-900/20 text-green-300'
                                   : legendaryStatus.installed 
                                   ? 'border-yellow-600 bg-yellow-900/20 text-yellow-300'
-                                  : 'border-red-600 bg-red-900/20 text-red-300'
+                                  : 'border-gray-600 bg-gray-900/20 text-gray-400'
                               }`}>
-                                <div className="font-medium mb-1">
-                                  🏛️ Legendary Status: {legendaryStatus.message}
-                                </div>
-                                {!legendaryStatus.installed && (
-                                  <div className="text-xs opacity-80">
-                                    {legendaryStatus.install_instructions}
-                                  </div>
-                                )}
-                                {legendaryStatus.installed && !legendaryStatus.authenticated && (
-                                  <div className="text-xs opacity-80">
-                                    Esegui: legendary auth
-                                  </div>
-                                )}
+                                Legendary: {legendaryStatus.message}
                               </div>
-                            )}
-                            
-                            <Button 
-                              onClick={() => handleEpicWebSearch()} 
-                              disabled={status.loading}
-                              variant="outline"
-                              className="w-full border-cyan-600 text-cyan-300 hover:bg-cyan-900/30"
-                            >
-                              <Power className="h-4 w-4 mr-2" />
-                              Cerca Online
-                            </Button>
-                            
-                            <Button 
-                              onClick={() => handleEpicLegendarySearch()} 
-                              disabled={status.loading || !legendaryStatus?.installed}
-                              variant="outline"
-                              className={`w-full ${
-                                legendaryStatus?.installed 
-                                  ? 'border-purple-600 text-purple-300 hover:bg-purple-900/30' 
-                                  : 'border-gray-600 text-gray-500 cursor-not-allowed'
-                              }`}
-                            >
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                              {legendaryStatus?.installed ? 'Metodo Legendary' : 'Legendary non installato'}
-                            </Button>
-                          </>
+                              
+                              <div className="flex gap-2">
+                                <Button 
+                                  onClick={() => handleEpicWebSearch()} 
+                                  disabled={status.loading}
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex-1 border-cyan-600 text-cyan-300 hover:bg-cyan-900/30 text-xs"
+                                >
+                                  Web
+                                </Button>
+                                
+                                <Button 
+                                  onClick={() => handleEpicLegendarySearch()} 
+                                  disabled={status.loading || !legendaryStatus?.installed}
+                                  variant="outline"
+                                  size="sm"
+                                  className={`flex-1 text-xs ${
+                                    legendaryStatus?.installed 
+                                      ? 'border-purple-600 text-purple-300 hover:bg-purple-900/30' 
+                                      : 'border-gray-600 text-gray-500 cursor-not-allowed'
+                                  }`}
+                                >
+                                  Legendary
+                                </Button>
+                              </div>
+                            </div>
+                          </details>
                         )}
                       </>
                     ) : (
@@ -1497,19 +1500,6 @@ export default function StoreManagerPage() {
                       >
                         <Power className="h-4 w-4 mr-2" />
                         Collega Account
-                      </Button>
-                    )}
-                    
-                    {/* Pulsante Verifica Stato per store non connessi */}
-                    {!status.connected && !status.manuallyDisconnected && (
-                      <Button 
-                        onClick={() => refreshStoreStatus(store.id)} 
-                        disabled={status.loading}
-                        variant="outline"
-                        className="w-full border-gray-600 text-gray-300 hover:bg-gray-700"
-                      >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${status.loading ? 'animate-spin' : ''}`} />
-                        Verifica Stato
                       </Button>
                     )}
                   </div>

@@ -51,20 +51,22 @@ export default function GameDetailPage() {
           // Carica dati base del gioco da Tauri
           const response = await fetch(`/api/steam/games/${gameId}`);
           
-          // Carica dettagli estesi da Steam API
+          // Carica dettagli estesi da Steam API tramite Tauri (bypass CORS)
           let steamApiData = null;
           try {
-            const steamResponse = await fetch(`https://store.steampowered.com/api/appdetails?appids=${gameId}&l=it&cc=IT`);
-            const steamJson = await steamResponse.json();
-            if (steamJson[gameId]?.success) {
-              steamApiData = steamJson[gameId].data;
-            }
+            const { invoke } = await import('@tauri-apps/api/core');
+            steamApiData = await invoke('fetch_steam_game_details', { appId: parseInt(gameId) });
+            console.log('[GameDetail] Steam API data via Tauri:', steamApiData);
           } catch (error) {
             console.warn('Impossibile caricare dettagli Steam API:', error);
           }
           
           if (response.ok) {
             const data = await response.json();
+            
+            // Debug: log dei dati Steam API
+            console.log('[GameDetail] Steam API data:', steamApiData);
+            console.log('[GameDetail] Local data:', data);
             
             // Combina dati base con dettagli Steam API
             const enhancedGame = {
@@ -80,7 +82,9 @@ export default function GameDetailPage() {
               description: steamApiData?.short_description?.replace(/<[^>]*>?/gm, '') || data.short_description || 'Nessuna descrizione disponibile.',
               detailedDescription: steamApiData?.detailed_description?.replace(/<[^>]*>?/gm, '') || null,
               aboutGame: steamApiData?.about_the_game?.replace(/<[^>]*>?/gm, '') || null,
-              coverUrl: steamApiData?.header_image || data.header_image || `https://steamcdn-a.akamaihd.net/steam/apps/${data.appid}/library_600x900.jpg`,
+              // Cover: prima prova verticale, poi header orizzontale come fallback
+              coverUrl: `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/library_600x900.jpg`,
+              headerUrl: steamApiData?.header_image || data.header_image || `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/header.jpg`,
               screenshots: steamApiData?.screenshots || [],
               movies: steamApiData?.movies || [],
               metacritic: steamApiData?.metacritic || null,
@@ -88,7 +92,16 @@ export default function GameDetailPage() {
               background: steamApiData?.background || null,
               website: steamApiData?.website || null,
               legal_notice: steamApiData?.legal_notice || null,
-              recommendations: steamApiData?.recommendations || null
+              recommendations: steamApiData?.recommendations || null,
+              // Campi espliciti da Steam API
+              developers: steamApiData?.developers || [],
+              publishers: steamApiData?.publishers || [],
+              release_date: steamApiData?.release_date || null,
+              genres: steamApiData?.genres || [],
+              categories: steamApiData?.categories || [],
+              supported_languages: steamApiData?.supported_languages || null,
+              pc_requirements: steamApiData?.pc_requirements || null,
+              is_free: steamApiData?.is_free || false,
             };
 
             setGame(enhancedGame);
@@ -260,12 +273,18 @@ export default function GameDetailPage() {
         >
           <Card className="bg-black/20 backdrop-blur-xl border-white/10 shadow-2xl">
             <CardContent className="p-6">
-              <div className="relative aspect-[3/4] bg-muted rounded-xl overflow-hidden mb-6 shadow-lg">
+              <div className="relative aspect-video bg-muted rounded-xl overflow-hidden mb-6 shadow-lg">
                 <Image
-                  src={game.coverUrl}
+                  src={game.headerUrl || game.coverUrl}
                   alt={game.title}
                   fill
                   className="object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src.includes('library_600x900')) {
+                      target.src = game.headerUrl || `https://cdn.akamai.steamstatic.com/steam/apps/${gameId}/header.jpg`;
+                    }
+                  }}
                 />
                 {game.is_vr && (
                   <div className="absolute top-3 right-3">

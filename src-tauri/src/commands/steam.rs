@@ -3245,34 +3245,60 @@ async fn read_all_owned_games(steam_path: &str) -> Result<Vec<GameInfo>, String>
     Ok(games)
 }
 
-// Trova l'utente Steam attivo da loginusers.vdf
+// Trova l'utente Steam attivo scansionando la cartella userdata
+// NOTA: userdata usa SteamID32, non SteamID64!
 async fn find_active_steam_user(steam_path: &str) -> Result<String, String> {
-    let loginusers_path = Path::new(steam_path).join("config").join("loginusers.vdf");
+    let userdata_path = Path::new(steam_path).join("userdata");
     
-    if !loginusers_path.exists() {
-        return Err("File loginusers.vdf non trovato".to_string());
+    if !userdata_path.exists() {
+        return Err("Cartella userdata non trovata".to_string());
     }
     
-    let content = fs::read_to_string(&loginusers_path)
-        .map_err(|e| format!("Errore lettura loginusers.vdf: {}", e))?;
+    // Scansiona le cartelle in userdata e trova quella con il localconfig.vdf più recente
+    let mut best_user: Option<(String, std::time::SystemTime)> = None;
     
-    // Parse VDF per trovare l'ultimo utente attivo
-    // Il formato è: "76561198XXXXXXXXX" { "AccountName" "username" ... }
-    for line in content.lines() {
-        let line = line.trim();
-        if line.starts_with('"') && line.contains("76561") {
-            // Il formato è: "76561198XXXXXXXXX"
-            if let Some(start) = line.find('"') {
-                if let Some(end) = line[start + 1..].find('"') {
-                    let user_id = &line[start + 1..start + 1 + end];
-                    log::info!("🔍 Trovato utente Steam: {}", user_id);
-                    return Ok(user_id.to_string());
+    if let Ok(entries) = fs::read_dir(&userdata_path) {
+        for entry in entries.flatten() {
+            if let Ok(file_type) = entry.file_type() {
+                if file_type.is_dir() {
+                    let user_id = entry.file_name().to_string_lossy().to_string();
+                    
+                    // Verifica che sia un ID numerico valido
+                    if user_id.parse::<u64>().is_ok() {
+                        let localconfig = entry.path().join("config").join("localconfig.vdf");
+                        
+                        if localconfig.exists() {
+                            if let Ok(metadata) = fs::metadata(&localconfig) {
+                                if let Ok(modified) = metadata.modified() {
+                                    match &best_user {
+                                        None => {
+                                            log::info!("🔍 Trovato utente Steam: {} (primo)", user_id);
+                                            best_user = Some((user_id, modified));
+                                        }
+                                        Some((_, best_time)) if modified > *best_time => {
+                                            log::info!("🔍 Trovato utente Steam più recente: {}", user_id);
+                                            best_user = Some((user_id, modified));
+                                        }
+                                        _ => {
+                                            log::debug!("🔍 Utente Steam {} ignorato (meno recente)", user_id);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
     
-    Err("Nessun utente Steam trovato in loginusers.vdf".to_string())
+    match best_user {
+        Some((user_id, _)) => {
+            log::info!("👤 Utente Steam attivo selezionato: {}", user_id);
+            Ok(user_id)
+        }
+        None => Err("Nessun utente Steam trovato in userdata".to_string())
+    }
 }
 
 // Legge i giochi posseduti da localconfig.vdf
@@ -4038,16 +4064,91 @@ fn parse_shortcuts_for_games(_shortcuts_path: &Path) -> Result<Vec<u32>, String>
 
 /// Parse sharedconfig.vdf per trovare giochi condivisi
 #[tauri::command]
-pub async fn parse_shared_config_vdf(_file_content: String) -> Result<FamilySharingConfig, String> {
-    debug!("[RUST] parse_shared_config_vdf temporaneamente disabilitata");
+pub async fn parse_shared_config_vdf(file_content: String) -> Result<FamilySharingConfig, String> {
+    debug!("[RUST] parse_shared_config_vdf called");
     
-    // TODO: Implementare parser VDF alternativo dopo rimozione steamy_vdf
+    let mut shared_games = Vec::new();
+    let mut authorized_users = Vec::new();
+    
+    // Parser VDF semplice - cerca pattern per giochi e utenti autorizzati
+    // Il formato VDF è simile a JSON ma con sintassi diversa
+    
+    // Cerca la sezione "AuthorizedDevice" per utenti autorizzati
+    // Pattern: "AuthorizedDevice" { "0" { "steamid" "..." } }
+    let auth_regex = regex::Regex::new(r#""steamid"\s*"(\d+)""#)
+        .map_err(|e| format!("Errore regex: {}", e))?;
+    
+    for cap in auth_regex.captures_iter(&file_content) {
+        if let Some(steam_id) = cap.get(1) {
+            let id = steam_id.as_str().to_string();
+            if !authorized_users.contains(&id) {
+                authorized_users.push(id);
+                debug!("[RUST] 🔗 Trovato utente autorizzato: {}", steam_id.as_str());
+            }
+        }
+    }
+    
+    // Cerca la sezione "apps" per i giochi
+    // Pattern: "apps" { "12345" { ... } }
+    // Cerca tutti i numeri che sembrano appid (5-7 cifre)
+    let apps_regex = regex::Regex::new(r#""(\d{4,7})"\s*\{[^}]*"LastPlayed"\s*"(\d+)"[^}]*\}"#)
+        .map_err(|e| format!("Errore regex apps: {}", e))?;
+    
+    for cap in apps_regex.captures_iter(&file_content) {
+        if let Some(appid_match) = cap.get(1) {
+            if let Ok(appid) = appid_match.as_str().parse::<u32>() {
+                // Evita duplicati
+                if !shared_games.iter().any(|g: &crate::models::SharedGame| g.appid == appid) {
+                    shared_games.push(crate::models::SharedGame {
+                        appid,
+                        name: format!("Game {}", appid), // Nome placeholder, verrà arricchito dopo
+                        owner_steam_id: authorized_users.first().cloned().unwrap_or_default(),
+                        owner_account_name: String::new(),
+                        is_shared: true,
+                    });
+                }
+            }
+        }
+    }
+    
+    // Se non abbiamo trovato giochi con il pattern LastPlayed, prova un pattern più semplice
+    if shared_games.is_empty() {
+        // Cerca nella sezione "Software" -> "Valve" -> "Steam" -> "apps"
+        let simple_apps_regex = regex::Regex::new(r#""apps"\s*\{([^}]+)\}"#)
+            .map_err(|e| format!("Errore regex simple: {}", e))?;
+        
+        if let Some(apps_section) = simple_apps_regex.captures(&file_content) {
+            if let Some(apps_content) = apps_section.get(1) {
+                let appid_regex = regex::Regex::new(r#""(\d{4,7})""#)
+                    .map_err(|e| format!("Errore regex appid: {}", e))?;
+                
+                for cap in appid_regex.captures_iter(apps_content.as_str()) {
+                    if let Some(appid_match) = cap.get(1) {
+                        if let Ok(appid) = appid_match.as_str().parse::<u32>() {
+                            if !shared_games.iter().any(|g: &crate::models::SharedGame| g.appid == appid) {
+                                shared_games.push(crate::models::SharedGame {
+                                    appid,
+                                    name: format!("Game {}", appid),
+                                    owner_steam_id: authorized_users.first().cloned().unwrap_or_default(),
+                                    owner_account_name: String::new(),
+                                    is_shared: true,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    let total = shared_games.len() as u32;
+    info!("[RUST] ✅ VDF Parser: trovati {} giochi, {} utenti autorizzati", total, authorized_users.len());
+    
     Ok(FamilySharingConfig {
-        shared_games: Vec::new(),
-        total_shared_games: 0,
-        authorized_users: Vec::new(),
+        shared_games,
+        total_shared_games: total,
+        authorized_users,
     })
-
 }
 
 /// Comando per ottenere giochi condivisi automaticamente

@@ -8,6 +8,8 @@ import { Toaster } from 'sonner';
 import { ProfileWrapper } from '@/components/profiles/profile-wrapper';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoginDebugMonitor } from '@/components/debug/login-debug-monitor';
+import { ProgressProvider } from '@/components/progress/progress-provider';
+import { ProgressUIManager } from '@/components/progress/progress-ui-manager';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -29,21 +31,25 @@ export default function RootLayout({
         >
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <Providers>
-              <ErrorBoundary
-                showErrorDetails={process.env.NODE_ENV === 'development'}
-              >
-                {/* ProfileWrapper integra ProfileAuthProvider e ProtectedRoute */}
-                <ProfileWrapper>
-                  <ErrorBoundary
-                    showErrorDetails={process.env.NODE_ENV === 'development'}
-                  >
-                    {children}
-                  </ErrorBoundary>
-                </ProfileWrapper>
-              </ErrorBoundary>
-              <Toaster richColors position="top-right" />
-              {/* Debug Monitor per analizzare il problema di riavvio */}
-              {process.env.NODE_ENV === 'development' && <LoginDebugMonitor />}
+              <ProgressProvider>
+                <ErrorBoundary
+                  showErrorDetails={process.env.NODE_ENV === 'development'}
+                >
+                  {/* ProfileWrapper integra ProfileAuthProvider e ProtectedRoute */}
+                  <ProfileWrapper>
+                    <ErrorBoundary
+                      showErrorDetails={process.env.NODE_ENV === 'development'}
+                    >
+                      {children}
+                    </ErrorBoundary>
+                  </ProfileWrapper>
+                </ErrorBoundary>
+                <Toaster richColors position="top-right" />
+                {/* Progress UI Manager */}
+                <ProgressUIManager />
+                {/* Debug Monitor disabilitato - problema risolto */}
+                {/* {process.env.NODE_ENV === 'development' && <LoginDebugMonitor />} */}
+              </ProgressProvider>
             </Providers>
           </ThemeProvider>
         </ErrorBoundary>

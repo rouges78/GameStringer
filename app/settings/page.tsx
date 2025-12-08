@@ -14,38 +14,20 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Separator } from '@/components/ui/separator';
 import { 
-  Settings as SettingsIcon,
   Save,
   RotateCcw,
-  Shield,
   Bell,
-  Languages,
-  Folder,
-  Download,
   RefreshCw,
-  AlertTriangle,
-  CheckCircle,
-  User,
-  Key,
-  Globe,
   Zap,
   Database,
-  Gamepad2,
   Brain,
-  FolderOpen,
   Trash2,
-  Plus,
   Monitor,
-  Palette,
-  Volume2,
   Eye,
   EyeOff,
   Bug,
   TestTube,
-  Search,
-  Cpu,
-  HardDrive,
-  Wifi
+  Cpu
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProfileNotificationSettings } from '@/components/notifications/profile-notification-settings';
@@ -59,14 +41,6 @@ declare global {
 }
 
 interface Settings {
-  // Steam API
-  steam: {
-    apiKey: string;
-    steamId: string;
-    autoConnect: boolean;
-    cacheTimeout: number;
-  };
-  
   // Translation
   translation: {
     provider: string;
@@ -108,12 +82,6 @@ export default function SettingsPage() {
   const router = useRouter();
   const { version, buildInfo, formatDate } = useVersion();
   const [settings, setSettings] = useState<Settings>({
-    steam: {
-      apiKey: '',
-      steamId: '',
-      autoConnect: true,
-      cacheTimeout: 3600
-    },
     translation: {
       provider: 'openai',
       apiKey: '',
@@ -146,7 +114,7 @@ export default function SettingsPage() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [showApiKeys, setShowApiKeys] = useState<{ [key: string]: boolean }>({});
-  const [activeTab, setActiveTab] = useState('steam');
+  const [activeTab, setActiveTab] = useState('translation');
 
   // Debug API functions
   const [debugResults, setDebugResults] = useState<string[]>([]);
@@ -205,36 +173,6 @@ export default function SettingsPage() {
 
   const clearDebugResults = () => {
     setDebugResults([]);
-  };
-
-  const testSteamAPI = async () => {
-    setIsDebugging(true);
-    try {
-      addDebugResult('🔍 Testing Steam API connection...');
-      
-      if (!settings.steam.apiKey || !settings.steam.steamId) {
-        addDebugResult('❌ API Key or Steam ID missing');
-        return;
-      }
-
-      // Check if running in Tauri context
-      if (typeof window !== 'undefined' && window.__TAURI_IPC__) {
-        const { invoke } = await import('@tauri-apps/api/core');
-        const result = await invoke('debug_steam_api');
-        addDebugResult(`✅ Steam API result: ${result}`);
-      } else {
-        // Fallback for browser testing
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        addDebugResult('✅ Steam API connection successful (browser mode)');
-        addDebugResult('📊 Profile visibility: Public');
-        addDebugResult('🎮 Games found: 350+');
-      }
-      
-    } catch (error) {
-      addDebugResult(`❌ Error: ${error}`);
-    } finally {
-      setIsDebugging(false);
-    }
   };
 
   const testGameLibrary = async () => {
@@ -326,11 +264,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 h-12">
-          <TabsTrigger value="steam" className="flex items-center space-x-2">
-            <Gamepad2 className="h-4 w-4" />
-            <span>Steam API</span>
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 h-12">
           <TabsTrigger value="translation" className="flex items-center space-x-2">
             <Brain className="h-4 w-4" />
             <span>Traduzione</span>
@@ -352,166 +286,6 @@ export default function SettingsPage() {
             <span>Debug & Test</span>
           </TabsTrigger>
         </TabsList>
-
-        {/* Steam API Tab */}
-        <TabsContent value="steam" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Key className="h-5 w-5 text-blue-500" />
-                <span>Configurazione Steam API</span>
-                <Badge variant="outline">Richiesto</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="steam-api-key">Steam API Key</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="steam-api-key"
-                      type={showApiKeys.steam ? "text" : "password"}
-                      value={settings.steam.apiKey}
-                      onChange={(e) => updateSetting('steam', 'apiKey', e.target.value)}
-                      placeholder="Inserisci la tua Steam API Key"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowApiKeys(prev => ({ ...prev, steam: !prev.steam }))}
-                    >
-                      {showApiKeys.steam ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Ottieni la tua API key da{' '}
-                    <a href="https://steamcommunity.com/dev/apikey" target="_blank" className="text-blue-500 hover:underline">
-                      steamcommunity.com/dev/apikey
-                    </a>
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="steam-id">Steam ID</Label>
-                  <Input
-                    id="steam-id"
-                    value={settings.steam.steamId}
-                    onChange={(e) => updateSetting('steam', 'steamId', e.target.value)}
-                    placeholder="76561198XXXXXXXXX"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Il tuo Steam ID a 64 bit
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Connessione Automatica</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Connetti automaticamente a Steam all'avvio
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.steam.autoConnect}
-                    onCheckedChange={(checked) => updateSetting('steam', 'autoConnect', checked)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Timeout Cache (secondi): {settings.steam.cacheTimeout}</Label>
-                  <Slider
-                    value={[settings.steam.cacheTimeout]}
-                    onValueChange={(value) => updateSetting('steam', 'cacheTimeout', value[0])}
-                    max={7200}
-                    min={300}
-                    step={300}
-                    className="w-full"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Durata della cache per i dati Steam
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Family Sharing Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Gamepad2 className="h-5 w-5 text-orange-500" />
-                <span>Steam Family Sharing</span>
-                <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">Attivo</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-green-600 mb-2">Family Sharing Implementato</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Il sistema Steam Family Sharing è completamente implementato e funzionante. I giochi condivisi vengono rilevati automaticamente e mostrati con badge distintivi.
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => router.push('/store-manager')}
-                        className="text-blue-600 border-blue-500/20 hover:bg-blue-500/10"
-                      >
-                        <SettingsIcon className="h-4 w-4 mr-2" />
-                        Store Manager
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => router.push('/games')}
-                        className="text-purple-600 border-purple-500/20 hover:bg-purple-500/10"
-                      >
-                        <Gamepad2 className="h-4 w-4 mr-2" />
-                        Vai alla Libreria
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>✅ Parsing automatico file VDF Steam</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>✅ Badge "🔗 Condiviso" per identificare giochi condivisi</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>✅ Integrazione completa con libreria giochi</span>
-                </div>
-                <div className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                  <span>✅ Filtri per giochi posseduti vs condivisi</span>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Come funziona Family Sharing:</Label>
-                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-                  <li>• Rileva automaticamente file Steam sharedconfig.vdf</li>
-                  <li>• Mostra giochi condivisi con badge arancioni "🔗 Condiviso"</li>
-                  <li>• Filtra per giochi posseduti vs condivisi</li>
-                  <li>• Integrato con la libreria giochi principale</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* Translation Tab */}
         <TabsContent value="translation" className="space-y-6">
@@ -798,17 +572,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Test Buttons */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button
-                  onClick={testSteamAPI}
-                  disabled={isDebugging}
-                  variant="outline"
-                  className="h-16 flex flex-col items-center justify-center space-y-2"
-                >
-                  <Gamepad2 className="h-5 w-5" />
-                  <span>Test Steam API</span>
-                </Button>
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button
                   onClick={testGameLibrary}
                   disabled={isDebugging}

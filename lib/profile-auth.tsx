@@ -114,7 +114,7 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
         setIsSessionExpired(false);
         // Refresh session time
         const timeResponse = await invoke<{success: boolean, data: number}>('get_session_time_remaining', {
-          timeout_seconds: 1800 // 30 minuti
+          timeoutSeconds: 1800 // 30 minuti - Tauri 2.x converte automaticamente in snake_case
         });
         if (timeResponse.success) {
           setSessionTimeRemaining(timeResponse.data);

@@ -3,7 +3,7 @@
  * Verifica tutte le chiamate API e la comunicazione bidirezionale
  */
 
-const { invoke } = require('@tauri-apps/api/tauri');
+const { invoke } = require('@tauri-apps/api/core');
 
 class TauriIntegrationTester {
   constructor() {

@@ -30,19 +30,18 @@ import { ProfileInfo } from '@/types/profiles';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { getAvatarGradient, getInitials } from '@/lib/avatar-utils';
+import { AlphabetBackground } from '@/components/ui/alphabet-background';
 
 interface ProfileSelectorProps {
-  onProfileSelected: (profileId: string) => void;
   onCreateProfile: () => void;
 }
 
 interface ProfileCardProps {
   profile: ProfileInfo;
-  onSelect: (profile: ProfileInfo) => void;
   isSelected: boolean;
 }
 
-function ProfileCard({ profile, onSelect: _onSelect, isSelected }: ProfileCardProps) {
+function ProfileCard({ profile, isSelected }: ProfileCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -219,32 +218,122 @@ function ProfileCard({ profile, onSelect: _onSelect, isSelected }: ProfileCardPr
                   </div>
 
                   {authError && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>{authError}</AlertDescription>
-                    </Alert>
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      className="bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/40 rounded-xl p-4 flex items-center gap-3"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xl">🔐</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-red-300">Oops! Accesso negato</p>
+                        <p className="text-sm text-red-200/70">{authError}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setAuthError(null)}
+                        className="text-red-300 hover:text-red-200 hover:bg-red-500/20"
+                      >
+                        ✕
+                      </Button>
+                    </motion.div>
                   )}
 
-                  <Button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAuthenticate();
-                    }}
-                    disabled={isAuthenticating || !password.trim()}
-                    className="w-full"
-                  >
-                    {isAuthenticating ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Autenticazione...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Accedi al Profilo
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAuthenticate();
+                      }}
+                      disabled={isAuthenticating || !password.trim()}
+                      className="flex-1"
+                    >
+                      {isAuthenticating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Autenticazione...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          Accedi al Profilo
+                        </>
+                      )}
+                    </Button>
+                    
+                    {!showDeleteConfirm ? (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteConfirm(true);
+                        }}
+                        disabled={isAuthenticating || isDeleting}
+                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    ) : null}
+                  </div>
+                  
+                  {/* Doppia conferma eliminazione */}
+                  {showDeleteConfirm && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg space-y-3"
+                    >
+                      <div className="flex items-center gap-2 text-destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span className="text-sm font-medium">Conferma eliminazione</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Inserisci la password e conferma per eliminare definitivamente il profilo "{profile.name}". 
+                        Questa azione è irreversibile.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeleteConfirm(false);
+                            setAuthError(null);
+                          }}
+                          disabled={isDeleting}
+                          className="flex-1"
+                        >
+                          Annulla
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProfile();
+                          }}
+                          disabled={isDeleting || !password.trim()}
+                          className="flex-1"
+                        >
+                          {isDeleting ? (
+                            <>
+                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                              Eliminazione...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="mr-2 h-3 w-3" />
+                              Elimina Profilo
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -255,9 +344,14 @@ function ProfileCard({ profile, onSelect: _onSelect, isSelected }: ProfileCardPr
   );
 }
 
-export function ProfileSelector({ onProfileSelected, onCreateProfile }: ProfileSelectorProps) {
-  const { profiles, isLoading, error } = useProfiles();
+export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
+  const { profiles, currentProfile, isLoading, error } = useProfiles();
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  
+  // Determina il profilo attivo - SOLO UNO può essere attivo alla volta
+  // currentProfile viene dal backend che garantisce un solo profilo attivo
+  const activeProfileId = currentProfile?.id || null;
+  const isActive = (profile: ProfileInfo) => profile.id === activeProfileId;
 
   const handleProfileSelect = (profile: ProfileInfo) => {
     if (profile.is_locked) return;
@@ -269,14 +363,13 @@ export function ProfileSelector({ onProfileSelected, onCreateProfile }: ProfileS
     }
   };
 
-  const handleProfileAuthenticated = (profile: ProfileInfo) => {
-    onProfileSelected(profile.id);
-  };
+  
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center relative">
+        <AlphabetBackground letterCount={80} />
+        <Card className="w-full max-w-md relative z-10">
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin mb-4" />
             <p className="text-muted-foreground">Caricamento profili...</p>
@@ -287,8 +380,9 @@ export function ProfileSelector({ onProfileSelected, onCreateProfile }: ProfileS
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      <AlphabetBackground letterCount={80} />
+      <div className="w-full max-w-4xl relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -302,6 +396,16 @@ export function ProfileSelector({ onProfileSelected, onCreateProfile }: ProfileS
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">GameStringer</h1>
           <p className="text-xl text-blue-200">Seleziona il tuo profilo per continuare</p>
+          {profiles.length > 0 && (
+            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-400/30 rounded-lg">
+              <Badge variant="secondary" className="bg-blue-500 text-white">
+                {profiles.length}
+              </Badge>
+              <span className="text-sm text-blue-200">
+                profil{profiles.length !== 1 ? 'i' : 'o'} disponibil{profiles.length !== 1 ? 'i' : 'e'}
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* Error Alert */}
@@ -325,7 +429,6 @@ export function ProfileSelector({ onProfileSelected, onCreateProfile }: ProfileS
               <div key={profile.id} onClick={() => handleProfileSelect(profile)}>
                 <ProfileCard
                   profile={profile}
-                  onSelect={handleProfileAuthenticated}
                   isSelected={selectedProfileId === profile.id}
                 />
               </div>

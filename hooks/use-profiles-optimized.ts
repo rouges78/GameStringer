@@ -147,7 +147,9 @@ export function useProfilesOptimized(): UseProfilesOptimizedReturn {
     setError(null);
 
     try {
-      const response = await invoke<any>('create_profile', { name, password });
+      const response = await invoke<any>('create_profile', { 
+        request: { name, password, avatar_path: null }
+      });
       
       if (response.success) {
         await loadProfiles(); // Ricarica lista profili

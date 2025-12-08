@@ -338,15 +338,16 @@ pub async fn force_refresh_all_games(
     
     let mut all_games = Vec::new();
     
-    // Forza refresh Steam bypassando cache (la funzione force_refresh_steam_games non esiste)
+    // Forza refresh Steam bypassando cache usando il metodo completo con Family Sharing
     log::info!("🔄 Tentativo caricamento credenziali Steam per refresh...");
     match steam::load_steam_credentials(profile_state.clone()).await {
         Ok(credentials) => {
-            log::info!("🔑 Credenziali trovate, forzo refresh Steam API...");
+            log::info!("🔑 Credenziali trovate, forzo refresh Steam API con Family Sharing...");
             let decrypted_api_key = steam::decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)
                 .map_err(|e| format!("Errore decryption: {}", e))?;
             
-            match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(true), profile_state.clone()).await { // Force refresh = true
+            // Usa get_steam_games_with_family_sharing invece di get_steam_games per avere tutti i dati
+            match steam::get_steam_games_with_family_sharing(decrypted_api_key, credentials.steam_id, Some(true), profile_state.clone()).await {
                 Ok(steam_games) => {
                     log::info!("✅ FORCE REFRESH: Trovati {} giochi Steam con dati freschi", steam_games.len());
                     

@@ -33,6 +33,7 @@ model Game {
   updatedAt DateTime @updatedAt
   
   translations Translation[]
+  memoryEntries TranslationMemoryEntry[]
 
   // Indexes ottimizzati per query performance
   @@index([title])
@@ -86,6 +87,7 @@ model User {
 
   @@map("users")
   preferences   UserPreference[]
+  tutorialProgress TutorialProgress[]
 }
 
 model VerificationToken {
@@ -160,4 +162,125 @@ model AISuggestion {
   @@index([provider])
   @@index([confidence])
   @@map("ai_suggestions")
+}
+
+// Modello per il progresso dei tutorial
+model TutorialProgress {
+  id                String   @id @default(cuid())
+  userId            String
+  tutorialId        String
+  currentStep       Int      @default(0)
+  completed         Boolean  @default(false)
+  skipped           Boolean  @default(false)
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  preferences       String?  // JSON string per preferenze tutorial
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, tutorialId])
+  @@index([userId])
+  @@index([tutorialId])
+  @@index([completed])
+  @@map("tutorial_progress")
+}
+
+// Modello per Translation Memory
+model TranslationMemoryEntry {
+  id              String   @id @default(cuid())
+  sourceText      String
+  targetText      String
+  sourceLanguage  String
+  targetLanguage  String
+  context         String?
+  confidence      Float    @default(1.0)
+  usageCount      Int      @default(1)
+  projectId       String?
+  gameId          String?
+  filePath        String?
+  tags            String?  // JSON array di tags
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  project         TranslationProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  game            Game?               @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  
+  // Indexes per fuzzy search e performance
+  @@index([sourceLanguage, targetLanguage])
+  @@index([sourceText])
+  @@index([projectId])
+  @@index([gameId])
+  @@index([confidence])
+  @@index([usageCount])
+  @@index([updatedAt])
+  @@map("translation_memory")
+}
+
+// Modello per il Glossary
+model GlossaryEntry {
+  id              String   @id @default(cuid())
+  term            String
+  translation     String
+  sourceLanguage  String
+  targetLanguage  String
+  definition      String?
+  category        String?
+  projectId       String?
+  approved        Boolean  @default(false)
+  notes           String?
+  createdBy       String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  project         TranslationProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  
+  @@index([term])
+  @@index([sourceLanguage, targetLanguage])
+  @@index([projectId])
+  @@index([category])
+  @@index([approved])
+  @@map("glossary")
+}
+
+// Modello per i progetti di traduzione
+model TranslationProject {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  sourceLanguage  String
+  targetLanguages String   // JSON array di lingue target
+  settings        String   // JSON per impostazioni progetto
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  memoryEntries   TranslationMemoryEntry[]
+  glossaryEntries GlossaryEntry[]
+  
+  @@index([name])
+  @@index([sourceLanguage])
+  @@map("translation_projects")
+}
+
+// Modello per le operazioni batch
+model BatchOperation {
+  id              String   @id @default(cuid())
+  operationType   String   // translate, export, import, etc.
+  status          String   @default("pending") // pending, running, completed, failed, cancelled
+  totalItems      Int
+  completedItems  Int      @default(0)
+  failedItems     Int      @default(0)
+  progress        Float    @default(0)
+  results         String?  // JSON con risultati dettagliati
+  error           String?
+  
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  
+  @@index([status])
+  @@index([operationType])
+  @@index([startedAt])
+  @@map("batch_operations")
 }

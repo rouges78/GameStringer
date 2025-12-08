@@ -234,7 +234,7 @@ pub async fn get_auth_stats(
 }
 
 /// Comando: Verifica se sessione è scaduta
-#[command]
+#[command(rename_all = "camelCase")]
 pub async fn is_session_expired(
     profile_state: State<'_, ProfileManagerState>,
     timeout_seconds: u64,
@@ -258,7 +258,7 @@ pub async fn renew_session(
 }
 
 /// Comando: Ottieni tempo rimanente sessione
-#[command]
+#[command(rename_all = "camelCase")]
 pub async fn get_session_time_remaining(
     profile_state: State<'_, ProfileManagerState>,
     timeout_seconds: u64,

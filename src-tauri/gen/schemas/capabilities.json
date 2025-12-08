@@ -1,1 +1,1 @@
-{}
+{"app-events":{"identifier":"app-events","description":"Permette al frontend di ascoltare eventi Tauri (event.listen)","local":true,"permissions":["core:event:default","core:event:allow-listen"]}}

@@ -1,0 +1,32 @@
+{"timestamp":"2025-12-08T01:09:34.932Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T01:09:35.046Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T01:09:35.071Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T01:09:35.077Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T01:59:21.375Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T01:59:21.388Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T01:59:21.404Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T01:59:21.409Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:13:09.808Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:13:09.816Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:13:09.832Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:13:09.837Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:15:43.809Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:15:43.814Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:15:43.829Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:15:43.834Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:19:41.318Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:19:41.325Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:19:41.346Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:19:41.351Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:21:15.845Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:21:15.852Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:21:15.871Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:21:15.878Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:22:54.803Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:22:54.813Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:22:54.828Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:22:54.833Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:23:04.774Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:23:04.781Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}
+{"timestamp":"2025-12-08T02:23:04.795Z","level":"info","message":"Fetching game library","component":"GAMES_API","metadata":{"provider":null,"forceRefresh":false}}
+{"timestamp":"2025-12-08T02:23:04.800Z","level":"info","message":"Retrieved 401 games from database","component":"GAMES_API","metadata":{"providers":["Steam"],"gamesCount":401}}

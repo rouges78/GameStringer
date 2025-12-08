@@ -30,13 +30,6 @@ export function ProtectedRoute({
 
 
 
-  // Handle profile selection
-  const handleProfileSelected = async (profileId: string) => {
-    // Authentication is handled by authenticateProfile in useProfiles
-    // No additional action needed here to avoid app restart
-    return;
-  };
-
   // Handle profile creation
   const handleCreateProfile = () => {
     setShowCreateDialog(true);
@@ -82,21 +75,22 @@ export function ProtectedRoute({
   const SHOW_DEBUG_COMPONENT = false;
   
   // TEMPORARY DEBUG - Verifica perché dashboard non appare
-  console.log('🛡️ ProtectedRoute Status:', {
-    isAuthenticated,
-    currentProfile: currentProfile?.name || 'null',
-    isLoading,
-    requireAuth,
-    SKIP_AUTH_FOR_TESTING,
-    BYPASS_AUTH_FOR_DEBUG
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🛡️ ProtectedRoute Status:', {
+      isAuthenticated,
+      currentProfile: currentProfile?.name || 'null',
+      isLoading,
+      requireAuth,
+      SKIP_AUTH_FOR_TESTING,
+      BYPASS_AUTH_FOR_DEBUG
+    });
+  }
   
   // Not authenticated - show debug component or profile selector
   if (!isAuthenticated && !SKIP_AUTH_FOR_TESTING && !BYPASS_AUTH_FOR_DEBUG) {
     if (SHOW_DEBUG_COMPONENT) {
-      // Importa dinamicamente il componente di debug
-      const { SimpleAuthTest } = require('@/components/debug/simple-auth-test');
-      return <SimpleAuthTest />;
+      // Componente di debug caricato dinamicamente con Next.js
+      return <DebugSimpleAuthTest />;
     }
 
     if (fallback) {
@@ -106,7 +100,6 @@ export function ProtectedRoute({
     return (
       <>
         <ProfileSelector
-          onProfileSelected={handleProfileSelected}
           onCreateProfile={handleCreateProfile}
         />
         <CreateProfileDialog

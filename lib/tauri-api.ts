@@ -32,16 +32,25 @@ export const invoke = async <T = any>(cmd: string, args?: any): Promise<T> => {
   }
 
   try {
-    console.log(`Invocando comando Tauri: ${cmd}`, args);
-    const result = await tauriInvoke(cmd, args);
+    // Tauri converte automaticamente camelCase JS → snake_case Rust
+    // Non serve normalizzazione manuale
+    const safeArgs = args;
+
+    console.log(`Invocando comando Tauri: ${cmd}`, safeArgs);
+    const result = await tauriInvoke(cmd, safeArgs);
     console.log(`Risultato comando ${cmd}:`, result);
     return result as T;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     
-    // Gestisci silenziosamente gli errori di credenziali mancanti (sono normali)
+    // Gestisci con messaggi carini gli errori di credenziali mancanti (sono normali)
     if (errorMessage.includes('Nessuna credenziale') || errorMessage.includes('salvata')) {
-      console.debug(`Credenziali non trovate per comando '${cmd}' (normale al primo avvio):`, errorMessage);
+      console.info(`💡 ${cmd}: Credenziali non configurate (normale al primo avvio). Vai su Settings per configurarle! 🎮`);
+      
+      // Crea un errore più carino per l'utente
+      const friendlyError = new Error(`💡 Credenziali non configurate. Vai su Settings per configurare Steam! 🎮`);
+      friendlyError.name = 'CredentialsNotConfigured';
+      throw friendlyError;
     } else {
       console.error(`Errore durante l'invocazione del comando Tauri '${cmd}':`, error);
     }

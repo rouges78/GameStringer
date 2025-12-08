@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ensureArray } from '@/lib/array-utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -91,7 +92,8 @@ export default function EditorPage() {
       const response = await fetch('/api/games');
       if (response.ok) {
         const data = await response.json();
-        setGames(data.map((g: any) => ({
+        const safeGames = ensureArray(data);
+        setGames(safeGames.map((g: any) => ({
           id: g.id,
           title: g.title,
           platform: 'Unknown'
@@ -99,6 +101,7 @@ export default function EditorPage() {
       }
     } catch (error) {
       console.error('Errore nel caricamento dei giochi:', error);
+      setGames([]); // Fallback sicuro
     }
   };
 

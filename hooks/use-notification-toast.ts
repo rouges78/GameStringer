@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNotificationToast } from '@/components/notifications/notification-toast-provider';
 import { Notification, NotificationPreferences, shouldShowNotification } from '@/types/notifications';
+import { invoke } from '@/lib/tauri-api';
 
 interface UseNotificationToastIntegrationOptions {
   profileId?: string;
@@ -25,14 +26,10 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
   useEffect(() => {
     const loadPreferences = async () => {
       try {
-        // Integrazione con il sistema Tauri per caricare le preferenze
-        if (typeof window !== 'undefined' && window.__TAURI__) {
-          const { invoke } = window.__TAURI__.tauri;
-          const result = await invoke('get_notification_preferences', { profileId });
-
-          if (result.success && result.data) {
-            setPreferences(result.data);
-          }
+        // Usa wrapper invoke (gestisce ambiente Tauri/web). In web può lanciare: gestiamo con try/catch
+        const result = await invoke('get_notification_preferences', { profile_id: profileId });
+        if ((result as any)?.success && (result as any)?.data) {
+          setPreferences((result as any).data as NotificationPreferences);
         }
       } catch (error) {
         console.error('Errore nel caricamento delle preferenze notifiche:', error);
@@ -72,23 +69,28 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
     // Ascolta eventi personalizzati per nuove notifiche
     window.addEventListener('new-notification', handleNewNotification as EventListener);
 
-    // Ascolta eventi Tauri se disponibili
-    if (typeof window !== 'undefined' && window.__TAURI__) {
-      const { event } = window.__TAURI__;
-
-      const unlistenPromise = event.listen('notification-created', (event) => {
-        const notification = event.payload as Notification;
-        handleNewNotification(new CustomEvent('new-notification', { detail: notification }));
-      });
-
-      return () => {
-        window.removeEventListener('new-notification', handleNewNotification as EventListener);
-        unlistenPromise.then(unlisten => unlisten());
-      };
+    // Ascolta eventi Tauri se disponibili (con guardie)
+    let unlistenPromise: Promise<(() => void) | void> | null = null;
+    if (typeof window !== 'undefined') {
+      const tauri: any = (window as any).__TAURI__;
+      const listenFn = tauri?.event?.listen as
+        | ((event: string, cb: (e: any) => void) => Promise<() => void>)
+        | undefined;
+      if (listenFn) {
+        unlistenPromise = listenFn('notification-created', (evt: any) => {
+          const notification = evt?.payload as Notification;
+          handleNewNotification(new CustomEvent('new-notification', { detail: notification }));
+        });
+      }
     }
 
     return () => {
       window.removeEventListener('new-notification', handleNewNotification as EventListener);
+      if (unlistenPromise) {
+        unlistenPromise.then((unlisten) => {
+          if (typeof unlisten === 'function') unlisten();
+        });
+      }
     };
   }, [autoShowNewNotifications, profileId, preferences, respectPreferences, showToast, lastNotificationId]);
 
@@ -109,18 +111,14 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
   // Funzione per aggiornare le preferenze
   const updatePreferences = useCallback(async (newPreferences: Partial<NotificationPreferences>) => {
     try {
-      if (typeof window !== 'undefined' && window.__TAURI__) {
-        const { invoke } = window.__TAURI__.tauri;
-        const updatedPreferences = { ...preferences, ...newPreferences };
+      const updatedPreferences = { ...preferences, ...newPreferences };
+      const result = await invoke('update_notification_preferences', {
+        preferences: updatedPreferences
+      });
 
-        const result = await invoke('update_notification_preferences', {
-          preferences: updatedPreferences
-        });
-
-        if (result.success) {
-          setPreferences(updatedPreferences as NotificationPreferences);
-          return true;
-        }
+      if ((result as any)?.success) {
+        setPreferences(updatedPreferences as NotificationPreferences);
+        return true;
       }
       return false;
     } catch (error) {

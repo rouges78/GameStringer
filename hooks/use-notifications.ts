@@ -58,11 +58,21 @@ export const useNotifications = (options?: {
       };
 
       // Prova prima con Tauri API
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
+      const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+      if (tauri?.tauri?.invoke) {
+        const invoke = (tauri.tauri.invoke as any);
+        // Mappa il filtro in snake_case per il backend Rust
+        const snakeCaseFilter: any = {
+          notification_type: (finalFilter as any).type ?? undefined,
+          priority: finalFilter.priority ?? undefined,
+          unread_only: (finalFilter as any).unreadOnly ?? undefined,
+          category: finalFilter.category ?? undefined,
+          limit: finalFilter.limit ?? undefined,
+          offset: finalFilter.offset ?? undefined
+        };
         const result: NotificationResponse<Notification[]> = await invoke('get_notifications', {
           profile_id: currentProfile.id,
-          filter: finalFilter
+          filter: snakeCaseFilter
         });
 
         if (result.success && result.data) {
@@ -146,8 +156,9 @@ export const useNotifications = (options?: {
     if (!currentProfile) return;
 
     try {
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
+      const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+      if (tauri?.tauri?.invoke) {
+        const invoke = (tauri.tauri.invoke as any);
         const result: NotificationResponse<number> = await invoke('get_unread_notifications_count', {
           profile_id: currentProfile.id
         });
@@ -199,10 +210,30 @@ export const useNotifications = (options?: {
         priority: request.priority || NotificationPriority.NORMAL
       };
 
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
+      const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+      if (tauri?.tauri?.invoke) {
+        const invoke = (tauri.tauri.invoke as any);
+        // Mappa la richiesta in snake_case per il backend Rust
+        const snakeCaseRequest: any = {
+          profile_id: fullRequest.profileId,
+          notification_type: fullRequest.type,
+          title: fullRequest.title,
+          message: fullRequest.message,
+          icon: fullRequest.icon ?? undefined,
+          action_url: fullRequest.actionUrl ?? undefined,
+          priority: fullRequest.priority ?? undefined,
+          expires_at: fullRequest.expiresAt ?? undefined,
+          metadata: fullRequest.metadata
+            ? {
+                source: fullRequest.metadata.source,
+                category: fullRequest.metadata.category,
+                tags: fullRequest.metadata.tags,
+                custom_data: (fullRequest.metadata as any).customData ?? undefined
+              }
+            : undefined
+        };
         const result: NotificationResponse<Notification> = await invoke('create_notification', {
-          request: fullRequest
+          request: snakeCaseRequest
         });
 
         if (result.success && result.data) {
@@ -285,8 +316,9 @@ export const useNotifications = (options?: {
     }
 
     try {
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
+      const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+      if (tauri?.tauri?.invoke) {
+        const invoke = (tauri.tauri.invoke as any);
         const result: NotificationResponse<void> = await invoke('mark_notification_as_read', {
           notification_id: notificationId,
           profile_id: currentProfile.id
@@ -354,11 +386,12 @@ export const useNotifications = (options?: {
     if (!currentProfile) return false;
 
     try {
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
+      const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+      if (tauri?.tauri?.invoke) {
+        const invoke = (tauri.tauri.invoke as any);
         const result: NotificationResponse<boolean> = await invoke('delete_notification', {
-          notificationId,
-          profileId: currentProfile.id
+          notification_id: notificationId,
+          profile_id: currentProfile.id
         });
 
         if (result.success) {
@@ -391,10 +424,11 @@ export const useNotifications = (options?: {
     if (!currentProfile) return false;
 
     try {
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
+      const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+      if (tauri?.tauri?.invoke) {
+        const invoke = (tauri.tauri.invoke as any);
         const result: NotificationResponse<number> = await invoke('clear_all_notifications', {
-          profileId: currentProfile.id
+          profile_id: currentProfile.id
         });
 
         if (result.success) {
@@ -453,8 +487,9 @@ export const useNotifications = (options?: {
     }
 
     try {
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
+      const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+      if (tauri?.tauri?.invoke) {
+        const invoke = (tauri.tauri.invoke as any);
         const result: NotificationResponse<number> = await invoke('mark_multiple_notifications_as_read', {
           notification_ids: notificationIds,
           profile_id: currentProfile.id
@@ -514,8 +549,9 @@ export const useNotifications = (options?: {
     setUnreadCount(0);
 
     try {
-      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-        const { invoke } = (window as any).__TAURI__.tauri;
+      const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+      if (tauri?.tauri?.invoke) {
+        const invoke = (tauri.tauri.invoke as any);
         const result: NotificationResponse<number> = await invoke('mark_all_notifications_as_read', {
           profile_id: currentProfile.id
         });
@@ -658,9 +694,9 @@ export const useNotifications = (options?: {
     });
 
     // Setup Tauri event listeners se disponibili
-    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-      const { event } = (window as any).__TAURI__;
-
+    const tauri = typeof window !== 'undefined' ? (window as any).__TAURI__ : undefined;
+    const event = tauri?.event;
+    if (event?.listen) {
       const setupTauriListeners = async () => {
         try {
           const unlistenCreated = await event.listen('notification-created', handleNewNotification);

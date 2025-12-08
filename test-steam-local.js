@@ -1,5 +1,5 @@
 // Test rapido per verificare la sintassi del nuovo comando Steam local
-const { invoke } = require('@tauri-apps/api/tauri');
+const { invoke } = require('@tauri-apps/api/core');
 
 async function testLocalSteamGames() {
     console.log('🧪 Testing get_all_local_steam_games...');

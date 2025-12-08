@@ -9,6 +9,7 @@ import {
   UseProfilesReturn,
   ProfileResponse 
 } from '@/types/profiles';
+import { ensureArray } from '@/lib/array-utils';
 
 // Broadcast helper for cross-instance synchronization
 const dispatchAuthChanged = () => {
@@ -42,7 +43,24 @@ export function useProfiles(): UseProfilesReturn {
       const response = await Promise.race([invokePromise, timeoutPromise]) as ProfileResponse<ProfileInfo[]>;
       
       if (response.success && response.data) {
-        setProfiles(response.data);
+        // Proteggi array da valori non validi
+        const safeProfiles = ensureArray<ProfileInfo>(response.data);
+        
+        // Se non ci sono profili, crea un profilo di default
+        if (safeProfiles.length === 0) {
+          console.log('📝 Nessun profilo trovato, creazione profilo di default...');
+          await createDefaultProfile();
+          // Ricarica i profili dopo la creazione
+          const newResponse = await invoke<ProfileResponse<ProfileInfo[]>>('list_profiles');
+          if (newResponse.success && newResponse.data) {
+            const newProfiles = ensureArray<ProfileInfo>(newResponse.data);
+            setProfiles(newProfiles);
+          } else {
+            setProfiles(safeProfiles);
+          }
+        } else {
+          setProfiles(safeProfiles);
+        }
       } else {
         setError(response.error || 'Errore caricamento profili');
         setProfiles([]);
@@ -272,6 +290,33 @@ export function useProfiles(): UseProfilesReturn {
     } catch (err) {
       console.error('Errore logout:', err);
       setError('Errore di connessione al backend');
+      return false;
+    }
+  }, []);
+
+  // Crea profilo di default
+  const createDefaultProfile = useCallback(async () => {
+    try {
+      const defaultProfileData: CreateProfileRequest = {
+        name: 'Default',
+        password: 'password123',
+        avatar_path: null
+      };
+      
+      console.log('🔧 Creazione profilo di default...');
+      const response = await invoke<ProfileResponse<UserProfile>>('create_profile', {
+        request: defaultProfileData
+      });
+      
+      if (response.success) {
+        console.log('✅ Profilo di default creato:', response.data?.name);
+        return true;
+      } else {
+        console.error('❌ Errore creazione profilo di default:', response.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Errore creazione profilo di default:', error);
       return false;
     }
   }, []);

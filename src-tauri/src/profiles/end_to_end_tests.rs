@@ -3,10 +3,10 @@ mod end_to_end_tests {
     use crate::profiles::manager::ProfileManager;
     use crate::profiles::storage::ProfileStorage;
     use crate::profiles::models::{CreateProfileRequest, ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings, EncryptedCredential};
-    use crate::profiles::errors::ProfileError;
+    // use crate::profiles::errors::ProfileError; // Unused import
     use tempfile::TempDir;
     use tokio;
-    use std::collections::HashMap;
+    // use std::collections::HashMap; // Unused import
 
     /// Helper per creare un ProfileManager temporaneo per i test
     async fn create_test_manager() -> (ProfileManager, TempDir) {

@@ -8,6 +8,8 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LanguageFlags } from '@/components/ui/language-flags';
 import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
+import { ensureArray, validateArray } from '@/lib/array-utils';
+import { toast } from 'sonner';
 
 // Definiamo l'interfaccia per un singolo gioco, assicurandoci che corrisponda al backend
 interface Game {
@@ -135,6 +137,17 @@ const normalizeLanguage = (language: string): string => {
 export default function LibraryPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Safe setter per games con validazione
+  const setGamesWithValidation = (value: unknown) => {
+    const validGames = ensureArray<Game>(value);
+    
+    if (!validateArray(value, 'LibraryPage.setGames')) {
+      console.error('[LibraryPage] Tentativo di impostare games con valore non-array:', typeof value, value);
+    }
+    
+    setGames(validGames);
+  };
   const [sortBy, setSortBy] = useState<'alphabetical' | 'lastPlayed' | 'recentlyAdded'>('alphabetical');
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -146,57 +159,111 @@ export default function LibraryPage() {
   const [selectedGenre, setSelectedGenre] = useState('All');
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false); // Filtri nascosti stile Rai Pal
 
   // Anti-loop protection
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [lastCredentialsCheck, setLastCredentialsCheck] = useState<number>(0);
   const CREDENTIALS_DEBOUNCE_MS = 2000; // 2 secondi di debounce
 
-  // Funzione per testare Family Sharing con dati mock
+  // 🚀 SCAN COMPLETO - Combina API Steam + File Locali
   const testFamilySharing = async () => {
-    console.log('[LIBRARY DEBUG] 🧪 Test Family Sharing button clicked!');
+    console.log('[LIBRARY DEBUG] 🚀 SCAN COMPLETO Steam...');
+    setIsLoading(true);
     
-    // Giochi mock condivisi
-    const mockSharedGames: Game[] = [
-      {
-        id: 'mock-570',
-        app_id: '570',
-        title: 'Dota 2 (Family Sharing)',
-        platform: 'Steam',
-        header_image: 'https://cdn.akamai.steamstatic.com/steam/apps/570/header.jpg',
-        isShared: true,
-        is_vr: false,
-        is_installed: false
-      },
-      {
-        id: 'mock-730',
-        app_id: '730',
-        title: 'Counter-Strike 2 (Family Sharing)',
-        platform: 'Steam',
-        header_image: 'https://cdn.akamai.steamstatic.com/steam/apps/730/header.jpg',
-        isShared: true,
-        is_vr: false,
-        is_installed: false
-      },
-      {
-        id: 'mock-271590',
-        app_id: '271590',
-        title: 'Grand Theft Auto V (Family Sharing)',
-        platform: 'Steam',
-        header_image: 'https://cdn.akamai.steamstatic.com/steam/apps/271590/header.jpg',
-        isShared: true,
-        is_vr: false,
-        is_installed: false
+    try {
+      // 1️⃣ Prima ottieni i giochi dall'API (hanno i nomi corretti)
+      const credentials = await invoke('load_steam_credentials') as { steam_id: string; api_key_encrypted: string } | null;
+      let apiGames: Map<string, Game> = new Map();
+      
+      if (credentials) {
+        try {
+          const apiResult = await invoke('get_steam_games', {
+            apiKey: credentials.api_key_encrypted,
+            steamId: credentials.steam_id,
+            forceRefresh: true
+          }) as any[];
+          
+          console.log(`[LIBRARY DEBUG] 📊 API Steam: ${apiResult.length} giochi con nomi`);
+          
+          apiResult.forEach((g: any) => {
+            apiGames.set(String(g.appid), {
+              id: `steam_${g.appid}`,
+              app_id: String(g.appid),
+              title: g.name,
+              platform: 'Steam',
+              header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${g.appid}/header.jpg`,
+              isShared: false,
+              is_vr: false,
+              is_installed: false
+            });
+          });
+        } catch (e) {
+          console.warn('[LIBRARY DEBUG] ⚠️ API Steam fallita, uso solo file locali');
+        }
       }
-    ];
-
-    // Aggiungi i giochi mock alla lista esistente
-    setGames(prevGames => {
-      const existingIds = new Set(prevGames.map(g => g.id));
-      const newGames = mockSharedGames.filter(g => !existingIds.has(g.id));
-      console.log(`[LIBRARY DEBUG] ✅ Aggiunti ${newGames.length} giochi mock condivisi`);
-      return [...prevGames, ...newGames];
-    });
+      
+      // 2️⃣ Poi scan locale per trovare TUTTI i giochi (inclusi Family Sharing)
+      const localGames = await invoke('scan_all_steam_games_fast') as Array<{
+        id: string;
+        title: string;
+        platform: string;
+        install_path: string | null;
+        header_image: string | null;
+        is_installed: boolean;
+        steam_app_id: number | null;
+        is_shared: boolean;
+      }>;
+      
+      console.log(`[LIBRARY DEBUG] 📂 File locali: ${localGames.length} giochi trovati`);
+      
+      // 3️⃣ Combina: usa nomi API dove disponibili, altrimenti usa dati locali
+      const finalGames: Game[] = [];
+      const seenIds = new Set<string>();
+      
+      for (const local of localGames) {
+        const appId = local.steam_app_id ? String(local.steam_app_id) : local.id.replace('steam_', '').replace('steam_shared_', '');
+        
+        if (seenIds.has(appId)) continue;
+        seenIds.add(appId);
+        
+        // Usa dati API se disponibili (hanno nomi corretti)
+        const apiGame = apiGames.get(appId);
+        
+        finalGames.push({
+          id: local.id,
+          app_id: appId,
+          title: apiGame?.title || local.title,
+          platform: 'Steam',
+          header_image: `https://cdn.akamai.steamstatic.com/steam/apps/${appId}/header.jpg`,
+          isShared: local.is_shared,
+          is_vr: false,
+          is_installed: local.is_installed
+        });
+      }
+      
+      // Ordina per titolo
+      finalGames.sort((a, b) => a.title.localeCompare(b.title));
+      
+      setGames(finalGames);
+      
+      // Mostra notifica con risultati
+      const gamesWithName = finalGames.filter(g => !g.title.startsWith('Game ') && !g.title.startsWith('Shared Game ')).length;
+      toast.success('🎮 Scansione Family Sharing completata!', {
+        description: `Trovati ${finalGames.length} giochi totali (${gamesWithName} con nome)`,
+        duration: 5000,
+      });
+      
+      console.log(`[LIBRARY] ✅ TOTALE: ${finalGames.length} giochi (${gamesWithName} con nome)`);
+      
+    } catch (error) {
+      console.error('[LIBRARY] ❌ Errore scan:', error);
+      toast.error('Errore durante la scansione', {
+        description: String(error),
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -212,23 +279,63 @@ export default function LibraryPage() {
         setIsLoadingCredentials(true);
         setLastCredentialsCheck(now);
 
-        // 🔑 Prima carica le credenziali Steam
+        // 🚀 PRIMA: Prova a caricare dalla cache locale (veloce!)
+        console.log('📂 Tentativo caricamento dalla cache...');
+        try {
+          const cachedGames = await invoke('load_steam_games_cache') as any[];
+          if (cachedGames && cachedGames.length > 0) {
+            console.log(`✅ Cache trovata: ${cachedGames.length} giochi`);
+            const convertedGames: Game[] = cachedGames.map((g: any) => ({
+              id: g.id,
+              app_id: g.steam_app_id ? String(g.steam_app_id) : g.id.replace('steam_', ''),
+              title: g.title,
+              platform: g.platform || 'Steam',
+              header_image: g.header_image || `https://cdn.akamai.steamstatic.com/steam/apps/${g.steam_app_id}/header.jpg`,
+              isShared: g.is_shared,
+              is_vr: g.is_vr || false,
+              is_installed: g.is_installed
+            }));
+            setGames(convertedGames);
+            setIsLoading(false);
+            setIsLoadingCredentials(false);
+            return; // Usa la cache, non serve altro
+          }
+        } catch (cacheError) {
+          console.log('📂 Cache non disponibile, caricamento normale...');
+        }
+
+        // 🔑 Fallback: carica le credenziali Steam
         console.log('🔑 Caricamento credenziali Steam...');
-        const credentials = await invoke('load_steam_credentials');
+        let credentials;
+        try {
+          credentials = await invoke('load_steam_credentials');
+        } catch (credError) {
+          console.error('❌ Errore nel caricamento credenziali Steam:', credError);
+          console.log('🔄 Procedendo senza credenziali...');
+          credentials = null;
+        }
         
         if (!credentials || typeof credentials !== 'object' || !('api_key_encrypted' in credentials) || !('steam_id' in credentials)) {
           console.log('⚠️ Credenziali Steam non disponibili, uso metodo alternativo');
           // Fallback a scan_games normale
-          const result = await invoke('scan_games');
-          console.log('✅ Giochi caricati con scan_games:', result);
-          
-          // Aggiungi platform: 'Steam' a tutti i giochi se mancante
-          const gamesWithPlatform = (result as Game[]).map(game => ({
-            ...game,
-            platform: game.platform || 'Steam'
-          }));
-          
-          setGames(gamesWithPlatform);
+          try {
+            const result = await invoke('scan_games');
+            console.log('✅ Giochi caricati con scan_games:', result);
+            
+            // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+            const safeResult = ensureArray<Game>(result);
+            const gamesWithPlatform = safeResult.map(game => ({
+              ...game,
+              platform: game.platform || 'Steam'
+            }));
+            
+            setGamesWithValidation(gamesWithPlatform);
+          } catch (scanError) {
+            console.error('❌ Errore anche con scan_games iniziale:', scanError);
+            console.log('⚠️ Impostazione games a array vuoto');
+            setGamesWithValidation([]);
+            setError('Impossibile caricare i giochi. Verifica la connessione a Steam.');
+          }
           return;
         }
         
@@ -238,68 +345,98 @@ export default function LibraryPage() {
           const result = await invoke('get_steam_games_with_family_sharing', {
             apiKey: credentials.api_key_encrypted,
             steamId: credentials.steam_id,
-            forceRefresh: false
+            forceRefresh: true
           });
           console.log('✅ Giochi caricati con Family Sharing da Tauri:', result);
-          console.log('📊 Debug primi 3 giochi:', (result as Game[]).slice(0, 3));
-          console.log('🥽 Giochi con VR:', (result as Game[]).filter(g => g.is_vr));
-          console.log('🎯 Giochi con engine:', (result as Game[]).filter(g => g.engine));
-          console.log('💾 Giochi installati:', (result as Game[]).filter(g => g.is_installed));
-          console.log('🔗 Giochi condivisi:', (result as Game[]).filter(g => g.isShared));
-          console.log('📋 Totale giochi per piattaforma:', (result as Game[]).reduce((acc, g) => { acc[g.platform] = (acc[g.platform] || 0) + 1; return acc; }, {} as Record<string, number>));
+          const safeResult = ensureArray<Game>(result);
+          console.log('📊 Debug primi 3 giochi:', safeResult.slice(0, 3));
+          console.log('🥽 Giochi con VR:', safeResult.filter(g => g.is_vr));
+          console.log('🎯 Giochi con engine:', safeResult.filter(g => g.engine));
+          console.log('💾 Giochi installati:', safeResult.filter(g => g.is_installed));
+          console.log('🔗 Giochi condivisi:', safeResult.filter(g => g.isShared));
+          console.log('📋 Totale giochi per piattaforma:', safeResult.reduce((acc, g) => { acc[g.platform] = (acc[g.platform] || 0) + 1; return acc; }, {} as Record<string, number>));
           
           // Aggiungi platform: 'Steam' a tutti i giochi se mancante
-          const gamesWithPlatform = (result as Game[]).map(game => ({
+          const gamesWithPlatform = safeResult.map(game => ({
             ...game,
             platform: game.platform || 'Steam'
           }));
           
-          setGames(gamesWithPlatform);
+          setGamesWithValidation(gamesWithPlatform);
         } catch (familySharingError) {
-          console.error('❌ Errore nel caricamento con Family Sharing:', familySharingError);
+          const errorMsg = familySharingError instanceof Error ? familySharingError.message : String(familySharingError);
+          console.error('❌ Errore nel caricamento con Family Sharing:', {
+            error: errorMsg,
+            type: typeof familySharingError,
+            stack: familySharingError instanceof Error ? familySharingError.stack : undefined
+          });
           console.log('🔄 Fallback alla funzione veloce normale...');
           try {
             const result = await invoke('get_games_fast');
             console.log('✅ Giochi caricati con funzione veloce:', result);
             
             // Aggiungi platform: 'Steam' a tutti i giochi se mancante
-            const gamesWithPlatform = (result as Game[]).map(game => ({
+            const safeResult = ensureArray<Game>(result);
+            const gamesWithPlatform = safeResult.map(game => ({
               ...game,
               platform: game.platform || 'Steam'
             }));
             
-            setGames(gamesWithPlatform);
+            setGamesWithValidation(gamesWithPlatform);
           } catch (fallbackError) {
-            console.error('❌ Errore anche con fallback:', fallbackError);
+            const fallbackMsg = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+            console.error('❌ Errore anche con fallback get_games_fast:', {
+              error: fallbackMsg,
+              type: typeof fallbackError
+            });
             // Fallback finale a scan_games
-            const result = await invoke('scan_games');
-            console.log('✅ Giochi caricati con scan_games (fallback finale):', result);
-            
-            // Aggiungi platform: 'Steam' a tutti i giochi se mancante
-            const gamesWithPlatform = (result as Game[]).map(game => ({
-              ...game,
-              platform: game.platform || 'Steam'
-            }));
-            
-            setGames(gamesWithPlatform);
+            try {
+              const result = await invoke('scan_games');
+              console.log('✅ Giochi caricati con scan_games (fallback finale):', result);
+              
+              // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+              const safeResult = ensureArray<Game>(result);
+              const gamesWithPlatform = safeResult.map(game => ({
+                ...game,
+                platform: game.platform || 'Steam'
+              }));
+              
+              setGamesWithValidation(gamesWithPlatform);
+            } catch (scanFinalError) {
+              const scanMsg = scanFinalError instanceof Error ? scanFinalError.message : String(scanFinalError);
+              console.error('❌ Errore anche con scan_games finale:', scanMsg);
+              console.log('⚠️ Impostazione games a array vuoto dopo tutti i fallback');
+              setGamesWithValidation([]);
+              setError(`Impossibile caricare i giochi dopo tutti i tentativi. Ultimo errore: ${scanMsg}`);
+            }
           }
         }
       } catch (error) {
-        console.error('❌ Errore nel caricamento credenziali:', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error('❌ Errore nel caricamento credenziali:', {
+          error: errorMsg,
+          type: typeof error,
+          stack: error instanceof Error ? error.stack : undefined
+        });
         console.log('🔄 Fallback diretto a scan_games...');
         try {
           const result = await invoke('scan_games');
           console.log('✅ Giochi caricati con scan_games (fallback):', result);
           
           // Aggiungi platform: 'Steam' a tutti i giochi se mancante
-          const gamesWithPlatform = (result as Game[]).map(game => ({
+          const safeResult = ensureArray<Game>(result);
+          const gamesWithPlatform = safeResult.map(game => ({
             ...game,
             platform: game.platform || 'Steam'
           }));
           
-          setGames(gamesWithPlatform);
+          setGamesWithValidation(gamesWithPlatform);
         } catch (scanError) {
-          console.error('❌ Errore anche con scan_games:', scanError);
+          const scanMsg = scanError instanceof Error ? scanError.message : String(scanError);
+          console.error('❌ Errore anche con scan_games:', {
+            error: scanMsg,
+            type: typeof scanError
+          });
           
           // Fallback: usa l'API Next.js se Tauri non è disponibile
           try {
@@ -319,7 +456,8 @@ export default function LibraryPage() {
             console.log('🎮 Giochi caricati da API fallback:', data);
             
             // Trasforma i dati dell'API nel formato atteso
-            const transformedGames: Game[] = data.games.map((game: any) => ({
+            const safeGames = ensureArray(data.games);
+            const transformedGames: Game[] = safeGames.map((game: any) => ({
               id: game.id,
               app_id: game.id.replace('steam_', ''),
               title: game.name,
@@ -332,11 +470,17 @@ export default function LibraryPage() {
               genres: game.genres || ['Game']
             }));
             
-            setGames(transformedGames);
+            setGamesWithValidation(transformedGames);
           } catch (fallbackError) {
-            console.error('❌ Errore anche con API fallback:', fallbackError);
-            const errorMessage = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
-            setError(`Impossibile caricare i giochi. Errore: ${errorMessage}`);
+            const fallbackMsg = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+            console.error('❌ Errore anche con API fallback:', {
+              error: fallbackMsg,
+              type: typeof fallbackError,
+              stack: fallbackError instanceof Error ? fallbackError.stack : undefined
+            });
+            console.log('⚠️ Impostazione games a array vuoto dopo tutti i fallback API');
+            setGamesWithValidation([]);
+            setError(`Impossibile caricare i giochi. Errore: ${fallbackMsg}`);
           }
         }
       } finally {
@@ -352,26 +496,32 @@ export default function LibraryPage() {
     console.log('🔄 Force refresh completed, updating games list:', freshGames);
     
     // Aggiungi platform: 'Steam' a tutti i giochi se mancante
-    const gamesWithPlatform = freshGames.map(game => ({
+    const safeFreshGames = ensureArray<Game>(freshGames);
+    const gamesWithPlatform = safeFreshGames.map(game => ({
       ...game,
       platform: game.platform || 'Steam'
     }));
     
-    setGames(gamesWithPlatform);
+    setGamesWithValidation(gamesWithPlatform);
   };
 
   // Estrai le piattaforme, engine, lingue e generi unici dai giochi caricati
-  const platforms = ['All', ...new Set(games.map(game => game.platform))];
-  const engines = ['All', ...new Set(games.filter(game => game.engine).map(game => game.engine!))];
-  const allLanguages = games.flatMap(game => game.supported_languages || []);
+  const safeGames = ensureArray<Game>(games);
+  const platforms = ['All', ...new Set(safeGames.map(game => game.platform))];
+  const engines = ['All', ...new Set(safeGames.filter(game => game.engine).map(game => game.engine!))];
+  const allLanguages = safeGames.flatMap(game => game.supported_languages || []);
   const normalizedLanguages = allLanguages.map(lang => normalizeLanguage(lang));
   const languages = ['All', ...new Set(normalizedLanguages)].sort();
-  const allGenres = games.flatMap(game => game.genres || []).filter(genre => typeof genre === 'string');
+  const allGenres = safeGames.flatMap(game => game.genres || []).filter(genre => typeof genre === 'string');
   const genres = ['All', ...new Set(allGenres)];
 
   // Filtriamo e ordiniamo i giochi in base alla ricerca, piattaforma, VR, installazione, lingue, engine e generi
-  const filteredGames = games
+  const filteredGames = safeGames
     .filter((game) => {
+      // 🚫 Nascondi giochi senza nome valido (mostrano "Game XXXXX")
+      const hasValidName = game.title && !game.title.match(/^(Game|Shared Game) \d+$/);
+      if (!hasValidName) return false;
+      
       const matchesPlatform = selectedPlatform === 'All' || game.platform === selectedPlatform;
       const matchesSearch = (game.title ?? '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesVR = !showVROnly || game.is_vr;
@@ -449,8 +599,8 @@ export default function LibraryPage() {
     if (viewMode === 'list') {
       return (
         <div className="space-y-2">
-          {filteredGames.map((game) => (
-            <Link key={game.id} href={`/games/${game.app_id}`}>
+          {filteredGames.map((game, index) => (
+            <Link key={game.id || `list-game-${index}`} href={`/games/${game.app_id}`}>
               <div className="group flex items-center bg-gray-900 rounded-lg p-4 border border-transparent hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-purple-500/20 cursor-pointer">
               {/* Thumbnail piccola */}
               <div className="w-20 h-12 flex-shrink-0 rounded overflow-hidden bg-gray-800 mr-4">
@@ -501,21 +651,28 @@ export default function LibraryPage() {
     // Vista griglia (default)
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-        {filteredGames.map((game) => (
-          <Link key={game.id} href={`/games/${game.app_id}`}>
+        {filteredGames.map((game, index) => (
+          <Link key={game.id || `game-${index}`} href={`/games/${game.app_id}`}>
             <Card className="group overflow-hidden rounded-lg bg-gray-900 border border-transparent hover:border-purple-500 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-purple-500/20 cursor-pointer">
             <CardContent className="p-0 relative aspect-[16/9]">
-              {game.header_image ? (
+              {game.header_image && !game.title.startsWith('Game ') ? (
                 <Image
                   src={game.header_image}
-                  alt={`Copertina di ${game.title}`}
+                  alt={game.title}
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                   className="absolute inset-0 h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    // Fallback se l'immagine non carica
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-gray-600 bg-gray-800">
-                  {game.title ? game.title.charAt(0).toUpperCase() : '?'}
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-900/50 to-blue-900/50">
+                  <span className="text-4xl font-bold text-purple-400/60">
+                    {game.title ? game.title.replace('Game ', '').charAt(0).toUpperCase() : '?'}
+                  </span>
                 </div>
               )}
               
@@ -575,169 +732,163 @@ export default function LibraryPage() {
         </p>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        {platforms.map(platform => (
-          <button
-            key={platform}
-            onClick={() => setSelectedPlatform(platform)}
-            className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
-              selectedPlatform === platform
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}>
-            {platform}
-          </button>
-        ))}
-        
-        {/* Toggle per filtro VR */}
-        <button
-          onClick={() => setShowVROnly(!showVROnly)}
-          className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
-            showVROnly
-              ? 'bg-purple-600 text-white shadow-lg'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}>
-          🥽 Solo VR
-        </button>
-        
-        {/* Toggle per filtro Installato */}
-        <button
-          onClick={() => setShowInstalledOnly(!showInstalledOnly)}
-          className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
-            showInstalledOnly
-              ? 'bg-green-600 text-white shadow-lg'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}>
-          ✓ Solo Installati
-        </button>
-        
-        {/* Toggle per filtro Condivisi */}
-        <button
-          onClick={() => setShowSharedOnly(!showSharedOnly)}
-          className={`px-4 py-2 text-sm font-semibold rounded-full transition-colors duration-200 ${
-            showSharedOnly
-              ? 'bg-orange-600 text-white shadow-lg'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}>
-          🔗 Solo Condivisi
-        </button>
-      </div>
-
-      {/* Filtri avanzati: Lingue, Engine e Generi */}
-      <div className="mb-4 space-y-3">
-        {/* Filtro Lingue */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-gray-400">🌍 Lingue:</span>
-          {languages.map(language => (
-            <button
-              key={language}
-              onClick={() => setSelectedLanguage(language)}
-              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
-                selectedLanguage === language
-                  ? 'bg-green-600 text-white shadow-lg'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}>
-              {language === 'All' ? 'Tutte' : language}
-            </button>
-          ))}
-        </div>
-        
-        {/* Filtro Engine */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-gray-400">🎮 Engine:</span>
-          {engines.map(engine => (
-            <button
-              key={engine}
-              onClick={() => setSelectedEngine(engine)}
-              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
-                selectedEngine === engine
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}>
-              {engine}
-            </button>
-          ))}
-        </div>
-        
-        {/* Filtro Generi */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-gray-400">🎯 Generi:</span>
-          {genres.map(genre => (
-            <button
-              key={genre}
-              onClick={() => setSelectedGenre(genre)}
-              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
-                selectedGenre === genre
-                  ? 'bg-purple-600 text-white shadow-lg'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}>
-              {genre}
-            </button>
-          ))}
-        </div>
-        
-        {/* Vista Toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-400">📋 Vista:</span>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
-              viewMode === 'grid'
-                ? 'bg-indigo-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}>
-            🔲 Griglia
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors duration-200 ${
-              viewMode === 'list'
-                ? 'bg-indigo-600 text-white shadow-lg'
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}>
-            📝 Lista
-          </button>
-        </div>
-      </div>
-
-      <div className="mb-6 space-y-4">
+      {/* Barra compatta con ricerca e toggle filtri */}
+      <div className="flex items-center gap-3 mb-4">
+        {/* Ricerca */}
         <input
           type="text"
           placeholder="Cerca per nome..."
-          className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+          className="flex-1 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         
-        {/* Controlli di ordinamento */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-300">Ordina per:</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="alphabetical">A-Z (Alfabetico)</option>
-              <option value="recentlyAdded">🆕 Aggiunti di recente</option>
-              <option value="lastPlayed">🎮 Giocati di recente</option>
-            </select>
-          </div>
+        {/* Ordinamento */}
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as any)}
+          className="bg-gray-800 border border-gray-600 rounded-lg px-2 py-2 text-white text-xs focus:outline-none"
+        >
+          <option value="alphabetical">A-Z (Alfabetico)</option>
+          <option value="recentlyAdded">🆕 Aggiunti di recente</option>
+          <option value="lastPlayed">🎮 Giocati di recente</option>
+        </select>
+        
+        {/* Toggle Filtri */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`px-3 py-2 text-xs font-medium rounded-lg transition-all ${
+            showFilters 
+              ? 'bg-purple-600 text-white' 
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+          }`}
+        >
+          🎛️ Filtri {showFilters ? '▲' : '▼'}
+        </button>
+        
+        {/* Vista Toggle */}
+        <div className="flex rounded-lg overflow-hidden border border-gray-600">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`px-2 py-2 text-xs ${viewMode === 'grid' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+          >
+            ▦
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-2 py-2 text-xs ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+          >
+            ☰
+          </button>
         </div>
+      </div>
 
-        {/* Pulsante Force Refresh per nuovi acquisti */}
-        <div className="flex items-center justify-between bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/30 rounded-lg p-3">
-          <div className="text-sm text-gray-300">
-            <span className="font-semibold text-orange-400">🎯 Gioco appena acquistato non visibile?</span>
-            <br />
-            <span className="text-xs text-gray-400">Force Refresh bypassa tutta la cache per mostrare gli acquisti più recenti</span>
+      {/* Pannello Filtri Collassabile */}
+      {showFilters && (
+        <div className="mb-4 p-3 bg-gray-800/30 border border-gray-700 rounded-lg space-y-3 animate-in slide-in-from-top-2 duration-200">
+          {/* Piattaforme + Quick Filters */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {platforms.map(platform => (
+              <button
+                key={platform}
+                onClick={() => setSelectedPlatform(platform)}
+                className={`px-2 py-1 text-[10px] font-medium rounded transition-colors ${
+                  selectedPlatform === platform
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
+                }`}>
+                {platform}
+              </button>
+            ))}
+            <span className="text-gray-600 mx-1">|</span>
+            <button
+              onClick={() => setShowVROnly(!showVROnly)}
+              className={`px-2 py-1 text-[10px] font-medium rounded transition-colors ${
+                showVROnly ? 'bg-purple-600 text-white' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
+              }`}>
+              🥽 VR
+            </button>
+            <button
+              onClick={() => setShowInstalledOnly(!showInstalledOnly)}
+              className={`px-2 py-1 text-[10px] font-medium rounded transition-colors ${
+                showInstalledOnly ? 'bg-green-600 text-white' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
+              }`}>
+              ✓ Installati
+            </button>
+            <button
+              onClick={() => setShowSharedOnly(!showSharedOnly)}
+              className={`px-2 py-1 text-[10px] font-medium rounded transition-colors ${
+                showSharedOnly ? 'bg-orange-600 text-white' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
+              }`}>
+              🔗 Condivisi
+            </button>
           </div>
-          <div className="flex gap-2">
-            <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
-            <Button variant="outline" size="sm" onClick={testFamilySharing} title="Test Family Sharing con dati mock">
-              🔗 Test Family Sharing
-            </Button>
+          
+          {/* Lingue */}
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="text-[10px] text-gray-500 w-12">Lingue:</span>
+            {languages.slice(0, 8).map(language => (
+              <button
+                key={language}
+                onClick={() => setSelectedLanguage(language)}
+                className={`px-1.5 py-0.5 text-[10px] rounded transition-colors ${
+                  selectedLanguage === language
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
+                }`}>
+                {language === 'All' ? 'Tutte' : language}
+              </button>
+            ))}
           </div>
+          
+          {/* Engine */}
+          {engines.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="text-[10px] text-gray-500 w-12">Engine:</span>
+              {engines.slice(0, 6).map(engine => (
+                <button
+                  key={engine}
+                  onClick={() => setSelectedEngine(engine)}
+                  className={`px-1.5 py-0.5 text-[10px] rounded transition-colors ${
+                    selectedEngine === engine
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
+                  }`}>
+                  {engine}
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* Generi */}
+          {genres.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1">
+              <span className="text-[10px] text-gray-500 w-12">Generi:</span>
+              {genres.slice(0, 8).map(genre => (
+                <button
+                  key={genre}
+                  onClick={() => setSelectedGenre(genre)}
+                  className={`px-1.5 py-0.5 text-[10px] rounded transition-colors ${
+                    selectedGenre === genre
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
+                  }`}>
+                  {genre}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pulsante Force Refresh compatto */}
+      <div className="flex items-center justify-between bg-gray-800/30 border border-gray-700 rounded-lg p-2 mb-4">
+        <span className="text-xs text-gray-400">🎯 Gioco non visibile?</span>
+        <div className="flex gap-2">
+          <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
+          <Button variant="outline" size="sm" onClick={testFamilySharing} className="text-xs h-7">
+            🔗 Family Sharing
+          </Button>
         </div>
       </div>
 

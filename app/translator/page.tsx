@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Select,
   SelectContent,
@@ -13,9 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, AlertTriangle, Gamepad2, FolderSearch, FileText, ArrowLeft, Languages, Wand2, CheckCircle } from 'lucide-react';
-import { Combobox, ComboboxOption } from '@/components/ui/combobox';
-import { LanguageFlags } from '@/components/ui/language-flags';
+import { 
+  Loader2, AlertTriangle, FolderOpen, FileText, ArrowLeft, 
+  Languages, Wand2, CheckCircle, Book, Search, ChevronRight, Sparkles,
+  FolderSearch, X, Zap
+} from 'lucide-react';
+import { GlossaryManager } from '@/components/glossary/glossary-manager';
+import { invoke } from '@/lib/tauri-api';
+import { GameGlossary } from '@/types/glossary';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 // --- Tipi di Dati ---
 interface Game {
@@ -25,8 +33,8 @@ interface Game {
   engine?: string;
   supportedLanguages?: string;
   coverUrl?: string;
+  installPath?: string; // Percorso di installazione del gioco
 }
-
 
 interface FileHandle {
   name: string;
@@ -70,35 +78,53 @@ const TranslatorPage = () => {
   const [isIniFile, setIsIniFile] = useState(false);
   const [supportedLanguages, setSupportedLanguages] = useState<string | null>(null);
 
+  // Stati per il glossario
+  const [glossary, setGlossary] = useState<GameGlossary | null>(null);
+  const [showGlossary, setShowGlossary] = useState(false);
+
   // --- EFFETTI ---
 
-  // Caricamento iniziale dei giochi
+  // Caricamento iniziale dei giochi - usa direttamente Tauri
   useEffect(() => {
     const fetchGames = async () => {
       try {
-        const response = await fetch('/api/library/games');
-        if (!response.ok) {
-          throw new Error('Errore nel caricamento della libreria dei giochi.');
-        }
-        const backendGames = await response.json();
-        if (Array.isArray(backendGames)) {
-            const games: Game[] = backendGames.map((g: any) => ({
-                id: g.appId, // Traduzione da appId a id
-                name: g.name,
-                provider: 'steam', // Aggiunto provider di default
-                engine: g.engine,
-                supportedLanguages: g.supportedLanguages,
-                coverUrl: g.coverUrl,
-            }));
+        // Carica dalla cache Tauri direttamente
+        const cachedGames = await invoke('load_steam_games_cache');
+        console.log('[Translator] Cache Tauri:', cachedGames);
+        
+        if (Array.isArray(cachedGames) && cachedGames.length > 0) {
+            // Log per debug - mostra struttura primo gioco
+            const installedGames = (cachedGames as any[]).filter((g: any) => g.is_installed);
+            console.log(`[Translator] Totale cache: ${cachedGames.length}, Installati: ${installedGames.length}`);
+            if (installedGames.length > 0) {
+                console.log('[Translator] Esempio gioco installato:', JSON.stringify(installedGames[0], null, 2));
+                console.log('[Translator] Chiavi disponibili:', Object.keys(installedGames[0]));
+            }
+            
+            // Usa i giochi installati con nome - il campo è "title" non "name"!
+            const games: Game[] = installedGames
+                .filter((g: any) => g.title && g.title.trim() !== '')
+                .map((g: any) => ({
+                    id: String(g.steam_app_id || g.id),
+                    name: g.title,
+                    provider: g.platform || 'steam',
+                    engine: g.engine,
+                    supportedLanguages: g.supported_languages,
+                    coverUrl: g.header_image || g.image_url,
+                    installPath: g.install_path || null,
+                }));
 
-            // Filtra i duplicati basati sul nome del gioco, poi ordina
             const uniqueGamesMap = new Map(games.map((game) => [game.name, game]));
             const uniqueGames = Array.from(uniqueGamesMap.values());
             setGames(uniqueGames.sort((a, b) => a.name.localeCompare(b.name)));
+            console.log(`[Translator] Caricati ${uniqueGames.length} giochi`);
+            console.log(`[Translator] Caricati ${uniqueGames.length} giochi installati`);
         } else {
-            throw new Error("Formato dati della libreria non valido.");
+            console.warn('[Translator] Cache vuota, nessun gioco trovato');
+            setGames([]);
         }
       } catch (err) {
+        console.error('[Translator] Errore caricamento:', err);
         setApiError(err instanceof Error ? err.message : String(err));
       } finally {
         setLoading(false);
@@ -112,12 +138,32 @@ const TranslatorPage = () => {
   // Gestione selezione gioco e ricerca automatica percorso
   const handleGameSelect = async (gameId: string) => {
     setSupportedLanguages(null); // Reset
+    setFoundPath(null); // Reset percorso
+    setIsFindingPath(true);
 
     const game = games.find(g => g.id === gameId);
     setSelectedGame(game || null);
 
     if (game) {
       setCurrentStep('confirm-path');
+      
+      // Cerca automaticamente il percorso di installazione
+      if (game.installPath) {
+        // Prova a costruire il percorso completo Steam
+        try {
+          const steamPath = await invoke<string>('get_steam_install_path');
+          if (steamPath) {
+            const fullPath = `${steamPath}\\steamapps\\common\\${game.installPath}`;
+            setFoundPath(fullPath);
+            console.log('[Translator] Percorso trovato:', fullPath);
+          }
+        } catch (err) {
+          console.warn('[Translator] Impossibile ottenere percorso Steam:', err);
+          // Fallback: usa solo il nome della cartella
+          setFoundPath(game.installPath);
+        }
+      }
+      setIsFindingPath(false);
       // Recupera le lingue supportate in background
       try {
         const response = await fetch(`/api/steam/game-details/${game.id}`);
@@ -300,6 +346,22 @@ const TranslatorPage = () => {
     setTranslatedContent(''); // Pulisce la traduzione precedente
   };
 
+  // Applica il glossario al testo tradotto
+  const applyGlossary = (text: string): string => {
+    if (!glossary || glossary.entries.length === 0) return text;
+    
+    let result = text;
+    for (const entry of glossary.entries) {
+      if (entry.caseSensitive) {
+        result = result.split(entry.original).join(entry.translation);
+      } else {
+        const regex = new RegExp(entry.original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        result = result.replace(regex, entry.translation);
+      }
+    }
+    return result;
+  };
+
   // Avvio traduzione
   const handleStartTranslation = async () => {
     if (!apiKey || !originalContent) {
@@ -310,6 +372,54 @@ const TranslatorPage = () => {
     setTranslatorError(null);
     setTranslatedContent('');
     try {
+      // Costruisci contesto completo dal glossario per l'IA
+      let fullContext = '';
+      
+      if (glossary) {
+        const contextParts: string[] = [];
+        
+        // Contesto del gioco
+        if (glossary.metadata.genre) {
+          contextParts.push(`Genere: ${glossary.metadata.genre}`);
+        }
+        if (glossary.metadata.setting) {
+          contextParts.push(`Ambientazione: ${glossary.metadata.setting}`);
+        }
+        if (glossary.metadata.tone) {
+          contextParts.push(`Tono della traduzione: ${glossary.metadata.tone}`);
+        }
+        if (glossary.metadata.worldContext) {
+          contextParts.push(`Contesto: ${glossary.metadata.worldContext}`);
+        }
+        
+        // Personaggi
+        if (glossary.metadata.characters && glossary.metadata.characters.length > 0) {
+          const charDescs = glossary.metadata.characters.map(c => {
+            let desc = c.name;
+            if (c.personality) desc += ` (${c.personality})`;
+            if (c.speechStyle) desc += ` - parla in modo ${c.speechStyle}`;
+            if (c.gender && c.gender !== 'unknown') desc += ` [${c.gender === 'male' ? 'M' : c.gender === 'female' ? 'F' : 'N'}]`;
+            return desc;
+          });
+          contextParts.push(`Personaggi: ${charDescs.join('; ')}`);
+        }
+        
+        // Termini da non tradurre
+        if (glossary.metadata.doNotTranslate?.length > 0) {
+          contextParts.push(`NON TRADURRE MAI questi termini: ${glossary.metadata.doNotTranslate.join(', ')}`);
+        }
+        
+        // Glossario termini
+        if (glossary.entries.length > 0) {
+          const terms = glossary.entries.slice(0, 50).map(e => `"${e.original}" → "${e.translation}"`).join(', ');
+          contextParts.push(`GLOSSARIO (usa SEMPRE queste traduzioni): ${terms}`);
+        }
+        
+        if (contextParts.length > 0) {
+          fullContext = '\n\n' + contextParts.join('\n');
+        }
+      }
+
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -317,14 +427,18 @@ const TranslatorPage = () => {
           text: originalContent, 
           provider,
           apiKey,
-          targetLang: 'it' 
+          targetLang: 'it',
+          context: fullContext
         }),
       });
       const data = await response.json();
       if (!response.ok) {
         throw new Error(data.error || 'Errore sconosciuto dal server');
       }
-      setTranslatedContent(data.translatedText);
+      
+      // Applica glossario post-traduzione per sicurezza
+      const finalText = applyGlossary(data.translatedText);
+      setTranslatedContent(finalText);
     } catch (err) {
       setTranslatorError(err instanceof Error ? err.message : 'Si è verificato un errore');
     } finally {
@@ -359,289 +473,544 @@ const TranslatorPage = () => {
     }
   };
 
-  const gameOptions: ComboboxOption[] = games.map(g => ({
-    value: g.id,
-    label: (
-      <div className="flex items-center justify-between w-full">
-        <span>{g.name}</span>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          {g.engine && <span>⚙️ {g.engine}</span>}
-          {g.supportedLanguages && <LanguageFlags supportedLanguages={g.supportedLanguages.split(',')} />}
-        </div>
-      </div>
-    ),
-    searchValue: g.name,
-  }));
+  // Stato per la ricerca giochi
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Filtra giochi in base alla ricerca
+  const filteredGames = useMemo(() => {
+    if (!searchQuery.trim()) return games;
+    const query = searchQuery.toLowerCase();
+    return games.filter(g => g.name.toLowerCase().includes(query));
+  }, [games, searchQuery]);
 
-  // --- VISTE ---
+  // Step indicator
+  const steps = [
+    { id: 'select-game', label: 'Gioco', icon: Languages },
+    { id: 'confirm-path', label: 'Cartella', icon: FolderOpen },
+    { id: 'select-file', label: 'File', icon: FileText },
+    { id: 'translate', label: 'Traduci', icon: Sparkles },
+  ];
 
-  const SelectGameView = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Gamepad2 className="mr-2 h-6 w-6"/>
-          Passo 1: Seleziona il Gioco
-        </CardTitle>
-        <CardDescription>Scegli il titolo di cui vuoi tradurre i file di testo.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-4">
-              <Combobox
-                options={gameOptions}
-                value={selectedGame?.id || ''}
-                onChange={handleGameSelect}
-                placeholder="Cerca un gioco..."
-                emptyPlaceholder="Nessun gioco trovato."
-              />
-              {supportedLanguages && supportedLanguages.length > 0 && <LanguageFlags supportedLanguages={supportedLanguages.split(',')} />}
-            </div>
-      </CardContent>
-    </Card>
-  );
-
-  const ConfirmPathView = () => {
-    return (
-      <>
-        <Button variant="ghost" onClick={handleBack} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Torna alla selezione del gioco
-        </Button>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <FolderSearch className="mr-2 h-6 w-6"/>
-              Passo 2: Conferma Percorso per "{selectedGame?.name}"
-            </CardTitle>
-            <CardDescription>Verifica il percorso di installazione o selezionalo manualmente.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {isFindingPath ? (
-              <div className="flex justify-center items-center py-10">
-                <Loader2 className="h-8 w-8 animate-spin" />
-                <span className="ml-3">Ricerca del percorso del gioco in corso...</span>
-              </div>
-            ) : foundPath ? (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center">
-                    <CheckCircle className="h-6 w-6 text-green-600 mr-3"/>
-                    <div>
-                        <p className="text-sm font-semibold text-green-800">Percorso di installazione trovato!</p>
-                        <p className="text-sm text-green-700 font-mono break-all">{foundPath}</p>
-                    </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 text-center">Clicca per avviare la ricerca dei file di testo in questa cartella.</p>
-                <Button onClick={handleConfirmPath} className="w-full mt-4" disabled={isReadingFiles}>
-                  {isReadingFiles ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Ricerca in corso...</> : 'Conferma e cerca i file'}
-                </Button>
-              </div>
-            ) : (
-                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-                    <p className="text-sm font-semibold text-yellow-800">Percorso non trovato automaticamente.</p>
-                    <p className="text-xs text-yellow-700">Nessun problema, puoi selezionarlo tu.</p>
-                </div>
-            )}
-             <Button onClick={handleManualFolderSelect} variant="outline" className="w-full" disabled={isReadingFiles}>
-                <FolderSearch className="mr-2 h-4 w-4" />
-                {isReadingFiles ? 'Analisi cartella...' : 'Seleziona manualmente la cartella'}
-            </Button>
-          </CardContent>
-        </Card>
-      </>
-    );
-  };
-
-  const FileSelectionView = () => (
-     <>
-      <Button variant="ghost" onClick={handleBack} className="mb-4">
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Torna alla conferma del percorso
-      </Button>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <FileText className="mr-2 h-6 w-6"/>
-            Passo 3: Seleziona il File da Tradurre
-          </CardTitle>
-           <CardDescription>
-            Sono stati trovati {gameFiles.length} file di testo compatibili.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-           {isReadingFiles ? (
-            <div className="flex justify-center items-center py-6">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : gameFiles.length > 0 ? (
-            <div className="border rounded-md max-h-80 overflow-y-auto">
-              {gameFiles.map((file) => (
-                <div 
-                  key={file.name} 
-                  onClick={() => handleFileSelect(file)}
-                  className="p-3 flex justify-between items-center cursor-pointer hover:bg-muted border-b last:border-b-0"
-                >
-                  <div className="flex items-center">
-                    <FileText className="h-4 w-4 mr-3 text-muted-foreground"/>
-                    <span className="font-medium">{file.name}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground">{Math.round(file.size / 1024)} KB</span>
-                </div>
-              ))}
-            </div>
-          ) : (
-             <div className="text-center py-10 text-muted-foreground">
-                <p>Nessun file di testo (.txt, .json, .xml) trovato nella cartella selezionata.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </>
-  );
-
-  const TranslateView = () => {
-    // Calcolo costo stimato
-    const getEstimatedCost = () => {
-        const chars = originalContent.length;
-        if (chars === 0) return '0.0000';
-        switch (provider) {
-        case 'openai': return ((chars / 4) / 1000 * 0.50).toFixed(4); // Stima basata su gpt-4o
-        case 'deepl': return (chars / 1000000 * 25).toFixed(4);
-        case 'google': return (chars / 1000000 * 20).toFixed(4);
-        default: return '0.0000';
-        }
-    };
-    
-    return (
-        <>
-        <Button variant="ghost" onClick={handleBack} className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Torna alla selezione file
-        </Button>
-        <Card>
-            <CardHeader>
-            <CardTitle className="flex items-center">
-                <Wand2 className="mr-2 h-5 w-5"/>
-                Passo 4: Traduci "{selectedFile?.name}"
-            </CardTitle>
-            </CardHeader>
-            <CardContent>
-            {isReadingFile ? (
-                <div className="flex justify-center items-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
-            ) : (
-                <div className="grid md:grid-cols-2 gap-6 h-full">
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="original-text">Testo Originale</Label>
-                  {isMultiLangFile && availableLanguages.length > 0 && (
-                    <Select value={selectedSourceLanguage} onValueChange={(lang) => handleSourceLanguageChange(lang, parsedStrings)}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Seleziona Lingua" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableLanguages.map(lang => (
-                          <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-                <Textarea
-                  id="original-text"
-                  value={originalContent}
-                  readOnly
-                  className="h-full min-h-[400px] bg-background/50 font-mono text-sm"
-                  placeholder="Il contenuto del file apparirà qui."
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="translated-text">Traduzione</Label>
-                <Textarea
-                  id="translated-text"
-                  value={translatedContent}
-                  readOnly
-                  className="h-full min-h-[400px] bg-background/50 font-mono text-sm"
-                  placeholder="La traduzione apparirà qui."
-                />
-              </div>
-            </div>
-            )}
-            {translatorError && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
-                    <AlertTriangle className="h-5 w-5 text-red-600 mr-3"/>
-                    <p className="text-sm text-red-800">{translatorError}</p>
-                </div>
-            )}
-            <div className="mt-6 p-4 border rounded-lg bg-slate-50">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium">Servizio AI</label>
-                        <Select value={provider} onValueChange={(value: 'openai' | 'deepl' | 'google') => setProvider(value)}>
-                            <SelectTrigger><SelectValue placeholder="Seleziona un provider" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="openai">OpenAI (gpt-4o)</SelectItem>
-                                <SelectItem value="deepl">DeepL</SelectItem>
-                                <SelectItem value="google">Google Translate</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-medium">API Key</label>
-                        <Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="La tua chiave API" />
-                    </div>
-                    <div className="text-sm text-muted-foreground self-center pt-5">
-                        Costo Stimato: <strong>${getEstimatedCost()}</strong>
-                    </div>
-                </div>
-                {translatorError && <p className="text-sm text-red-500 mt-2">{translatorError}</p>}
-                <Button onClick={handleStartTranslation} disabled={isTranslating || !apiKey || isReadingFile || !originalContent} className="mt-4 w-full">
-                    {isTranslating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Traduzione in corso...</> : <><Wand2 className="mr-2 h-4 w-4" /> Avvia Traduzione AI</>}
-                </Button>
-            </div>
-            </CardContent>
-        </Card>
-        </>
-    );
-  }
-
-  const renderCurrentStep = () => {
-    switch(currentStep) {
-        case 'select-game':
-            return <SelectGameView />;
-        case 'confirm-path':
-            return <ConfirmPathView />;
-        case 'select-file':
-            return <FileSelectionView />;
-        case 'translate':
-            return <TranslateView />;
-        default:
-            return <p>Stato non valido</p>;
-    }
-  }
-
+  const currentStepIndex = steps.findIndex(s => s.id === currentStep);
 
   // --- RENDER PRINCIPALE ---
   if (loading) {
-    return <div className="flex justify-center items-center h-screen"><Loader2 className="h-12 w-12 animate-spin text-primary"/></div>
+    return (
+      <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-primary/20 rounded-full" />
+          <div className="absolute inset-0 w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+        <p className="text-muted-foreground">Caricamento giochi installati...</p>
+      </div>
+    );
   }
 
   if (apiError) {
-    return <div className="p-6 text-center text-red-500"><AlertTriangle className="mx-auto h-10 w-10 mb-3"/> <p className="text-lg">{apiError}</p></div>
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <div className="p-4 rounded-full bg-destructive/10">
+          <AlertTriangle className="h-10 w-10 text-destructive" />
+        </div>
+        <p className="text-lg text-destructive">{apiError}</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Riprova
+        </Button>
+      </div>
+    );
   }
 
   return (
-    <div className="p-6">
-        <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight flex items-center">
-                <Languages className="mr-3 h-8 w-8"/>
-                GameStringer AI Translator
-            </h1>
-            <p className="text-muted-foreground">Traduci i testi dei tuoi giochi preferiti con l'aiuto dell'IA.</p>
+    <div className="p-6 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
+            <Languages className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Neural Translator</h1>
+            <p className="text-sm text-muted-foreground">Traduci i testi dei tuoi giochi con l'IA</p>
+          </div>
         </div>
+      </div>
 
-        <div className="mx-auto max-w-2xl">
-            {renderCurrentStep()}
+      {/* Step Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = index === currentStepIndex;
+            const isCompleted = index < currentStepIndex;
+            
+            return (
+              <div key={step.id} className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
+                    isActive && "bg-primary text-primary-foreground shadow-lg shadow-primary/25",
+                    isCompleted && "bg-green-500 text-white",
+                    !isActive && !isCompleted && "bg-muted text-muted-foreground"
+                  )}>
+                    {isCompleted ? (
+                      <CheckCircle className="h-5 w-5" />
+                    ) : (
+                      <Icon className="h-5 w-5" />
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-xs mt-1.5 font-medium",
+                    isActive && "text-primary",
+                    isCompleted && "text-green-500",
+                    !isActive && !isCompleted && "text-muted-foreground"
+                  )}>
+                    {step.label}
+                  </span>
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={cn(
+                    "w-16 h-0.5 mx-2 transition-colors duration-300",
+                    index < currentStepIndex ? "bg-green-500" : "bg-muted"
+                  )} />
+                )}
+              </div>
+            );
+          })}
         </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-4xl mx-auto">
+        {/* Step 1: Select Game */}
+        {currentStep === 'select-game' && (
+          <div className="space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cerca tra i tuoi giochi installati..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-12 bg-background/50 border-border/50"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                  onClick={() => setSearchQuery('')}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Games count */}
+            <div className="flex items-center justify-between text-sm text-muted-foreground px-1">
+              <span>{filteredGames.length} giochi trovati</span>
+              {searchQuery && <span>Filtro: "{searchQuery}"</span>}
+            </div>
+
+            {/* Games Grid */}
+            <ScrollArea className="h-[500px] pr-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {filteredGames.map((game) => (
+                  <button
+                    key={game.id}
+                    onClick={() => handleGameSelect(game.id)}
+                    className={cn(
+                      "group relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-200",
+                      "hover:border-primary/50 hover:bg-primary/5 hover:shadow-md",
+                      "text-left w-full"
+                    )}
+                  >
+                    {/* Game Cover */}
+                    <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                      {game.coverUrl ? (
+                        <Image
+                          src={game.coverUrl}
+                          alt={game.name}
+                          fill
+                          className="object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Languages className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Game Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                        {game.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          {game.provider}
+                        </Badge>
+                        {game.engine && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {game.engine}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Arrow */}
+                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </button>
+                ))}
+              </div>
+
+              {filteredGames.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <Search className="h-10 w-10 mb-3 opacity-50" />
+                  <p>Nessun gioco trovato</p>
+                  <p className="text-sm">Prova con un altro termine di ricerca</p>
+                </div>
+              )}
+            </ScrollArea>
+          </div>
+        )}
+
+        {/* Step 2: Confirm Path */}
+        {currentStep === 'confirm-path' && selectedGame && (
+          <div className="space-y-6">
+            {/* Back button */}
+            <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Cambia gioco
+            </Button>
+
+            {/* Selected Game Card */}
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/50 border">
+              <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                {selectedGame.coverUrl ? (
+                  <Image
+                    src={selectedGame.coverUrl}
+                    alt={selectedGame.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Languages className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">{selectedGame.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  Seleziona la cartella con i file di testo da tradurre
+                </p>
+              </div>
+            </div>
+
+            {/* Path Selection */}
+            <div className="space-y-4">
+              {isFindingPath ? (
+                <div className="flex items-center justify-center py-8 gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-muted-foreground">Ricerca percorso...</span>
+                </div>
+              ) : foundPath ? (
+                <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium text-green-600 dark:text-green-400">
+                        Percorso trovato!
+                      </p>
+                      <p className="text-sm text-muted-foreground font-mono mt-1 break-all">
+                        {foundPath}
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={handleConfirmPath} 
+                    className="w-full mt-4" 
+                    disabled={isReadingFiles}
+                  >
+                    {isReadingFiles ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Scansione in corso...
+                      </>
+                    ) : (
+                      <>
+                        <FolderSearch className="mr-2 h-4 w-4" />
+                        Cerca file di testo
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="p-6 rounded-xl border-2 border-dashed border-muted-foreground/25 text-center">
+                  <FolderOpen className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground mb-1">
+                    Seleziona la cartella del gioco
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 mb-4">
+                    Cerca la cartella contenente i file di localizzazione
+                  </p>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleManualFolderSelect} 
+                variant="outline" 
+                className="w-full h-12"
+                disabled={isReadingFiles}
+              >
+                <FolderOpen className="mr-2 h-4 w-4" />
+                {isReadingFiles ? 'Analisi in corso...' : 'Seleziona cartella manualmente'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Select File */}
+        {currentStep === 'select-file' && (
+          <div className="space-y-6">
+            {/* Back button */}
+            <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Cambia cartella
+            </Button>
+
+            {/* Files Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">File trovati</h2>
+                <p className="text-sm text-muted-foreground">
+                  {gameFiles.length} file di testo compatibili
+                </p>
+              </div>
+            </div>
+
+            {/* Files List */}
+            {isReadingFiles ? (
+              <div className="flex items-center justify-center py-12 gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-muted-foreground">Scansione file...</span>
+              </div>
+            ) : gameFiles.length > 0 ? (
+              <ScrollArea className="h-[400px]">
+                <div className="space-y-2">
+                  {gameFiles.map((file) => (
+                    <button
+                      key={file.name}
+                      onClick={() => handleFileSelect(file)}
+                      className={cn(
+                        "w-full flex items-center gap-3 p-4 rounded-xl border transition-all",
+                        "hover:border-primary/50 hover:bg-primary/5 text-left"
+                      )}
+                    >
+                      <div className="p-2 rounded-lg bg-muted">
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(file.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  ))}
+                </div>
+              </ScrollArea>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <FileText className="h-10 w-10 mb-3 opacity-50" />
+                <p>Nessun file di testo trovato</p>
+                <p className="text-sm">Prova a selezionare un'altra cartella</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 4: Translate */}
+        {currentStep === 'translate' && selectedFile && (
+          <div className="space-y-6">
+            {/* Back button */}
+            <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Cambia file
+            </Button>
+
+            {/* File Info */}
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">{selectedFile.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {(selectedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            </div>
+
+            {isReadingFile ? (
+              <div className="flex items-center justify-center py-12 gap-3">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-muted-foreground">Lettura file...</span>
+              </div>
+            ) : (
+              <>
+                {/* Translation Panels */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">Testo Originale</Label>
+                      {isMultiLangFile && availableLanguages.length > 0 && (
+                        <Select 
+                          value={selectedSourceLanguage} 
+                          onValueChange={(lang) => handleSourceLanguageChange(lang, parsedStrings)}
+                        >
+                          <SelectTrigger className="w-[140px] h-8">
+                            <SelectValue placeholder="Lingua" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableLanguages.map(lang => (
+                              <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                    <Textarea
+                      value={originalContent}
+                      readOnly
+                      className="h-[300px] font-mono text-sm bg-muted/30 resize-none"
+                      placeholder="Il contenuto del file apparirà qui."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Traduzione Italiana</Label>
+                    <Textarea
+                      value={translatedContent}
+                      readOnly
+                      className="h-[300px] font-mono text-sm bg-muted/30 resize-none"
+                      placeholder="La traduzione apparirà qui."
+                    />
+                  </div>
+                </div>
+
+                {/* Error */}
+                {translatorError && (
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    <p className="text-sm text-destructive">{translatorError}</p>
+                  </div>
+                )}
+
+                {/* Translation Settings */}
+                <div className="p-4 rounded-xl bg-muted/30 border space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Servizio AI</Label>
+                      <Select 
+                        value={provider} 
+                        onValueChange={(value: 'openai' | 'deepl' | 'google') => setProvider(value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="openai">
+                            <div className="flex items-center gap-2">
+                              <Zap className="h-4 w-4" />
+                              OpenAI GPT-4o
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="deepl">DeepL</SelectItem>
+                          <SelectItem value="google">Google Translate</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">API Key</Label>
+                      <Input 
+                        type="password" 
+                        value={apiKey} 
+                        onChange={(e) => setApiKey(e.target.value)} 
+                        placeholder="Inserisci la tua API key"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <div className="text-sm text-muted-foreground">
+                        Costo stimato: <span className="font-semibold text-foreground">
+                          ${((originalContent.length / 4) / 1000 * 0.50).toFixed(4)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Glossary Toggle */}
+                  <div className="flex items-center gap-3 pt-2 border-t">
+                    <Button 
+                      variant={showGlossary ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => setShowGlossary(!showGlossary)}
+                    >
+                      <Book className="mr-2 h-4 w-4" />
+                      Glossario {glossary?.entries.length ? `(${glossary.entries.length})` : ''}
+                    </Button>
+                    {glossary && glossary.entries.length > 0 && (
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-600">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Attivo
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Translate Button */}
+                  <Button 
+                    onClick={handleStartTranslation} 
+                    disabled={isTranslating || !apiKey || !originalContent}
+                    className="w-full h-12 text-base"
+                    size="lg"
+                  >
+                    {isTranslating ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Traduzione in corso...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-5 w-5" />
+                        Avvia Traduzione AI
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Glossary Panel */}
+                {showGlossary && selectedGame && (
+                  <div className="border rounded-xl overflow-hidden">
+                    <GlossaryManager
+                      gameId={selectedGame.id}
+                      gameName={selectedGame.name}
+                      sourceLanguage="en"
+                      targetLanguage="it"
+                      onGlossaryChange={setGlossary}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
-  )
+  );
 }
 
 export default TranslatorPage;
