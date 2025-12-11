@@ -285,7 +285,7 @@ export default function TranslationWizardPage() {
       const results = await invoke<any[]>('scan_localization_files', { 
         path: installPath,
         extensions,
-        maxDepth: 10  // Increased depth for Unity _Data subfolders
+        max_depth: 10  // Increased depth for Unity _Data subfolders
       });
 
       console.log('[Wizard] Scan results:', results?.length || 0, 'files');
