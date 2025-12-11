@@ -1,37 +1,28 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ensureArray } from '@/lib/array-utils';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { 
+  FileText, Save, Languages, Search, Edit3, 
+  CheckCircle, AlertCircle, Lightbulb, Copy, Download, Upload, 
+  Loader2, Trash2, BarChart3, ChevronRight, Sparkles, 
+  ArrowLeftRight, LayoutPanelLeft, X
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  FileText, 
-  Save, 
-  RotateCcw, 
-  Languages, 
-  Search, 
-  Filter,
-  Edit3,
-  CheckCircle,
-  AlertCircle,
-  Lightbulb,
-  Copy,
-  ArrowLeftRight,
-  Download,
-  Upload,
-  Loader2,
-  Trash2,
-  BarChart3
-} from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
 import { TranslationImportDialog } from '@/components/translation-import-dialog';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { ensureArray } from '@/lib/array-utils';
+import { cn } from '@/lib/utils';
 
+// --- Types ---
 interface Game {
   id: string;
   title: string;
@@ -63,6 +54,7 @@ interface Translation {
 }
 
 export default function EditorPage() {
+  // --- State ---
   const [translations, setTranslations] = useState<Translation[]>([]);
   const [selectedTranslation, setSelectedTranslation] = useState<Translation | null>(null);
   const [games, setGames] = useState<Game[]>([]);
@@ -77,18 +69,41 @@ export default function EditorPage() {
   const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  // Carica i giochi disponibili
+  // --- Derived State ---
+  const filteredTranslations = useMemo(() => {
+    return translations.filter(t => {
+      const matchesGame = filterGame === 'all' || t.gameId === filterGame;
+      const matchesStatus = filterStatus === 'all' || t.status === filterStatus;
+      const matchesSearch = !searchTerm || 
+        t.originalText.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        t.translatedText.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesGame && matchesStatus && matchesSearch;
+    });
+  }, [translations, filterGame, filterStatus, searchTerm]);
+
+  const stats = useMemo(() => {
+    const total = filteredTranslations.length;
+    const completed = filteredTranslations.filter(t => t.status === 'completed' || t.status === 'reviewed').length;
+    const pending = filteredTranslations.filter(t => t.status === 'pending').length;
+    const edited = filteredTranslations.filter(t => t.status === 'edited').length;
+    return { total, completed, pending, edited };
+  }, [filteredTranslations]);
+
+  // --- Effects ---
   useEffect(() => {
     fetchGames();
   }, []);
 
-  // Carica file dal Neural Translator (se presente in sessionStorage)
+  useEffect(() => {
+    fetchTranslations();
+  }, [filterGame, filterStatus]);
+
+  // Load from session storage (Neural Translator integration)
   useEffect(() => {
     const editorFileData = sessionStorage.getItem('editorFile');
     if (editorFileData) {
       try {
         const data = JSON.parse(editorFileData);
-        // Crea una traduzione temporanea dal file del Neural Translator
         const translatorTranslation: Translation = {
           id: `translator-${Date.now()}`,
           gameId: data.gameId || 'unknown',
@@ -112,44 +127,34 @@ export default function EditorPage() {
         
         setTranslations([translatorTranslation]);
         setSelectedTranslation(translatorTranslation);
-        
-        // Rimuovi i dati dalla sessionStorage dopo averli caricati
         sessionStorage.removeItem('editorFile');
         
         toast({
-          title: "File caricato dal Neural Translator",
+          title: "File caricato",
           description: `${data.filename} pronto per la modifica`,
         });
-        
         setIsLoading(false);
-        return;
       } catch (err) {
-        console.error('Error loading editor file from sessionStorage:', err);
+        console.error('Error loading editor file:', err);
         sessionStorage.removeItem('editorFile');
       }
     }
   }, [toast]);
 
-  // Carica le traduzioni
-  useEffect(() => {
-    fetchTranslations();
-  }, [filterGame, filterStatus, searchTerm]);
-
+  // --- Actions ---
   const fetchGames = async () => {
     try {
       const response = await fetch('/api/games');
       if (response.ok) {
         const data = await response.json();
-        const safeGames = ensureArray(data);
-        setGames(safeGames.map((g: any) => ({
+        setGames(ensureArray(data).map((g: any) => ({
           id: g.id,
           title: g.title,
           platform: 'Unknown'
         })));
       }
     } catch (error) {
-      console.error('Errore nel caricamento dei giochi:', error);
-      setGames([]); // Fallback sicuro
+      console.error('Error loading games:', error);
     }
   };
 
@@ -159,28 +164,19 @@ export default function EditorPage() {
       const params = new URLSearchParams();
       if (filterGame !== 'all') params.append('gameId', filterGame);
       if (filterStatus !== 'all') params.append('status', filterStatus);
-      if (searchTerm) params.append('search', searchTerm);
-
+      
       const response = await fetch(`/api/translations?${params}`);
       if (response.ok) {
         const data = await response.json();
         setTranslations(data);
-        
-        // Se c'è una traduzione selezionata, aggiornala con i nuovi dati
         if (selectedTranslation) {
           const updated = data.find((t: Translation) => t.id === selectedTranslation.id);
-          if (updated) {
-            setSelectedTranslation(updated);
-          }
+          if (updated) setSelectedTranslation(updated);
         }
       }
     } catch (error) {
-      console.error('Errore nel caricamento delle traduzioni:', error);
-      toast({
-        title: 'Errore',
-        description: 'Impossibile caricare le traduzioni',
-        variant: 'destructive'
-      });
+      console.error('Error loading translations:', error);
+      toast({ title: 'Errore', description: 'Impossibile caricare le traduzioni', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -188,43 +184,26 @@ export default function EditorPage() {
 
   const updateTranslation = async (updates: Partial<Translation>) => {
     if (!selectedTranslation) return;
-    
     setIsSaving(true);
     setHasUnsavedChanges(false);
+    
     try {
+      const updatedTranslation = { ...selectedTranslation, ...updates, isManualEdit: true };
+      setSelectedTranslation(updatedTranslation);
+      setTranslations(prev => prev.map(t => t.id === updatedTranslation.id ? updatedTranslation : t));
+
       const response = await fetch('/api/translations', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: selectedTranslation.id,
-          ...updates,
-          isManualEdit: true
-        })
+        body: JSON.stringify({ id: selectedTranslation.id, ...updates, isManualEdit: true })
       });
 
-      if (response.ok) {
-        const updatedTranslation = await response.json();
-        setSelectedTranslation(updatedTranslation);
-        
-        // Aggiorna anche la lista
-        setTranslations(prev => prev.map(t => 
-          t.id === updatedTranslation.id ? updatedTranslation : t
-        ));
-        
-        toast({
-          title: 'Salvato',
-          description: 'Traduzione aggiornata con successo'
-        });
-      } else {
-        throw new Error('Errore nel salvataggio');
-      }
+      if (!response.ok) throw new Error('Failed to save');
+      
+      toast({ title: 'Salvato', description: 'Traduzione aggiornata' });
     } catch (error) {
-      console.error('Errore nell\'aggiornamento della traduzione:', error);
-      toast({
-        title: 'Errore',
-        description: 'Impossibile salvare la traduzione',
-        variant: 'destructive'
-      });
+      console.error('Error saving translation:', error);
+      toast({ title: 'Errore', description: 'Impossibile salvare le modifiche', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
@@ -232,9 +211,7 @@ export default function EditorPage() {
 
   const generateSuggestions = async () => {
     if (!selectedTranslation) return;
-    
     setIsGeneratingSuggestions(true);
-    
     try {
       const response = await fetch('/api/translations/suggestions', {
         method: 'POST',
@@ -248,103 +225,48 @@ export default function EditorPage() {
 
       if (response.ok) {
         const suggestions = await response.json();
-        
-        // Aggiorna la traduzione selezionata con i nuovi suggerimenti
-        const updatedTranslation = {
-          ...selectedTranslation,
-          suggestions
-        };
-        
-        setSelectedTranslation(updatedTranslation);
-        setTranslations(prev => prev.map(t => 
-          t.id === selectedTranslation.id ? updatedTranslation : t
-        ));
-        
-        toast({
-          title: 'Suggerimenti generati',
-          description: `${suggestions.length} suggerimenti AI generati`
-        });
+        const updated = { ...selectedTranslation, suggestions };
+        setSelectedTranslation(updated);
+        setTranslations(prev => prev.map(t => t.id === updated.id ? updated : t));
+        toast({ title: 'Suggerimenti generati', description: `${suggestions.length} suggerimenti trovati` });
       }
     } catch (error) {
-      console.error('Errore nella generazione dei suggerimenti:', error);
-      toast({
-        title: 'Errore',
-        description: 'Impossibile generare suggerimenti',
-        variant: 'destructive'
-      });
+      toast({ title: 'Errore', description: 'Impossibile generare suggerimenti', variant: 'destructive' });
     } finally {
       setIsGeneratingSuggestions(false);
     }
   };
 
-  const applySuggestion = (suggestion: string) => {
-    updateTranslation({ translatedText: suggestion });
-  };
-
-  // Salvataggio automatico con debounce
   const handleTranslationChange = useCallback((newText: string) => {
     if (!selectedTranslation) return;
-    
-    // Aggiorna lo stato locale immediatamente
-    setSelectedTranslation({
-      ...selectedTranslation,
-      translatedText: newText
-    });
-    
+    setSelectedTranslation(prev => prev ? ({ ...prev, translatedText: newText }) : null);
     setHasUnsavedChanges(true);
     
-    // Cancella il timeout precedente se esiste
-    if (saveTimeoutId) {
-      clearTimeout(saveTimeoutId);
-    }
+    if (saveTimeoutId) clearTimeout(saveTimeoutId);
     
-    // Imposta un nuovo timeout per il salvataggio automatico dopo 2 secondi
     const newTimeoutId = setTimeout(() => {
       updateTranslation({ translatedText: newText });
     }, 2000);
-    
     setSaveTimeoutId(newTimeoutId);
   }, [selectedTranslation, saveTimeoutId]);
 
-  // Salvataggio manuale immediato
   const handleManualSave = () => {
     if (!selectedTranslation || !hasUnsavedChanges) return;
-    
-    // Cancella il timeout del salvataggio automatico
-    if (saveTimeoutId) {
-      clearTimeout(saveTimeoutId);
-      setSaveTimeoutId(null);
-    }
-    
+    if (saveTimeoutId) clearTimeout(saveTimeoutId);
     updateTranslation({ translatedText: selectedTranslation.translatedText });
   };
 
   const deleteTranslation = async (id: string) => {
-    if (!confirm('Sei sicuro di voler eliminare questa traduzione?')) return;
-    
+    if (!confirm('Eliminare questa traduzione?')) return;
     try {
-      const response = await fetch(`/api/translations?id=${id}`, {
-        method: 'DELETE'
-      });
-
+      const response = await fetch(`/api/translations?id=${id}`, { method: 'DELETE' });
       if (response.ok) {
         setTranslations(prev => prev.filter(t => t.id !== id));
-        if (selectedTranslation?.id === id) {
-          setSelectedTranslation(null);
-        }
-        
-        toast({
-          title: 'Eliminata',
-          description: 'Traduzione eliminata con successo'
-        });
+        if (selectedTranslation?.id === id) setSelectedTranslation(null);
+        toast({ title: 'Eliminata', description: 'Traduzione rimossa' });
       }
     } catch (error) {
-      console.error('Errore nell\'eliminazione della traduzione:', error);
-      toast({
-        title: 'Errore',
-        description: 'Impossibile eliminare la traduzione',
-        variant: 'destructive'
-      });
+      toast({ title: 'Errore', description: 'Impossibile eliminare', variant: 'destructive' });
     }
   };
 
@@ -352,7 +274,7 @@ export default function EditorPage() {
     if (!filterGame || filterGame === 'all') {
       toast({
         title: 'Seleziona un gioco',
-        description: 'Devi selezionare un gioco specifico per esportare le traduzioni',
+        description: 'Devi selezionare un gioco specifico per esportare',
         variant: 'destructive'
       });
       return;
@@ -376,35 +298,26 @@ export default function EditorPage() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         
-        toast({
-          title: 'Esportazione completata',
-          description: `Traduzioni esportate in formato ${format.toUpperCase()}`
-        });
+        toast({ title: 'Esportazione completata', description: `Traduzioni esportate in ${format.toUpperCase()}` });
       }
     } catch (error) {
-      console.error('Errore nell\'esportazione:', error);
-      toast({
-        title: 'Errore',
-        description: 'Impossibile esportare le traduzioni',
-        variant: 'destructive'
-      });
+      toast({ title: 'Errore', description: 'Impossibile esportare', variant: 'destructive' });
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-500/10 text-green-500';
-      case 'reviewed': return 'bg-blue-500/10 text-blue-500';
-      case 'edited': return 'bg-purple-500/10 text-purple-500';
-      case 'pending': return 'bg-gray-500/10 text-gray-500';
-      default: return 'bg-gray-500/10 text-gray-500';
+      case 'completed': return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'reviewed': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 'edited': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+      case 'pending': return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="h-3 w-3" />;
-      case 'reviewed': return <CheckCircle className="h-3 w-3" />;
+      case 'completed': case 'reviewed': return <CheckCircle className="h-3 w-3" />;
       case 'edited': return <Edit3 className="h-3 w-3" />;
       case 'pending': return <AlertCircle className="h-3 w-3" />;
       default: return null;
@@ -412,392 +325,302 @@ export default function EditorPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Editor Traduzioni</h1>
-          <p className="text-muted-foreground">Workspace collaborativo per revisione traduzioni</p>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Link href="/editor/dashboard">
-            <Button variant="outline">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Dashboard
-            </Button>
-          </Link>
-          <Button variant="outline" onClick={() => setShowImportDialog(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            Importa
-          </Button>
-          
-          <Select onValueChange={(format) => exportTranslations(format as any)}>
-            <SelectTrigger className="w-32">
-              <Download className="h-4 w-4 mr-2" />
-              <span>Esporta</span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="json">JSON</SelectItem>
-              <SelectItem value="csv">CSV</SelectItem>
-              <SelectItem value="po">PO (gettext)</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button 
-            disabled={!selectedTranslation || isSaving}
-            onClick={() => selectedTranslation && updateTranslation({})}
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4 mr-2" />
+    <div className="flex h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-purple-900/5 to-slate-900 overflow-hidden">
+      {/* --- SIDEBAR: LIST & FILTERS --- */}
+      <div className="w-80 border-r border-border/40 bg-slate-900/50 flex flex-col">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-border/40 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold flex items-center gap-2 text-sm">
+              <FileText className="h-4 w-4 text-purple-400" />
+              <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Explorer</span>
+            </h2>
+            <div className="flex items-center gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowImportDialog(true)}>
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Importa file</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Select onValueChange={(format) => exportTranslations(format as any)}>
+                      <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent">
+                        <Download className="h-4 w-4" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="json">JSON</SelectItem>
+                        <SelectItem value="csv">CSV</SelectItem>
+                        <SelectItem value="po">PO (gettext)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TooltipTrigger>
+                  <TooltipContent>Esporta</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link href="/editor/dashboard">
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <BarChart3 className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>Dashboard</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input 
+              placeholder="Cerca..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8 pl-8 text-xs bg-slate-800/50 border-slate-700"
+            />
+            {searchTerm && (
+              <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6" onClick={() => setSearchTerm('')}>
+                <X className="h-3 w-3" />
+              </Button>
             )}
-            Salva
-          </Button>
-        </div>
-      </div>
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="flex gap-2">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="h-7 text-xs flex-1 bg-slate-800/50 border-slate-700">
+                <SelectValue placeholder="Stato" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutti gli stati</SelectItem>
+                <SelectItem value="pending">In attesa</SelectItem>
+                <SelectItem value="completed">Completati</SelectItem>
+                <SelectItem value="edited">Modificati</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterGame} onValueChange={setFilterGame}>
+              <SelectTrigger className="h-7 text-xs flex-1 bg-slate-800/50 border-slate-700">
+                <SelectValue placeholder="Gioco" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutti i giochi</SelectItem>
+                {games.map(g => (
+                  <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
+            <span>{filteredTranslations.length} elementi</span>
+            <div className="flex gap-2">
+              <span className="text-green-400">{stats.completed} ✓</span>
+              <span className="text-yellow-400">{stats.pending} ⏳</span>
+            </div>
+          </div>
+        </div>
+
         {/* Translation List */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <FileText className="h-5 w-5" />
-              <span>Traduzioni</span>
-              <Badge variant="secondary">{translations.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Filters */}
-            <div className="space-y-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Cerca traduzioni..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tutti gli stati</SelectItem>
-                    <SelectItem value="pending">In attesa</SelectItem>
-                    <SelectItem value="completed">Completate</SelectItem>
-                    <SelectItem value="reviewed">Revisionate</SelectItem>
-                    <SelectItem value="edited">Modificate</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select value={filterGame} onValueChange={setFilterGame}>
-                  <SelectTrigger className="text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tutti i giochi</SelectItem>
-                    {games.map(game => (
-                      <SelectItem key={game.id} value={game.id}>
-                        {game.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        <ScrollArea className="flex-1">
+          {isLoading ? (
+            <div className="flex justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
             </div>
-
-            {/* Translation List */}
-            <div className="space-y-2 max-h-[600px] overflow-y-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center p-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                </div>
-              ) : translations.length === 0 ? (
-                <div className="text-center p-8 text-muted-foreground">
-                  <Languages className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p>Nessuna traduzione trovata</p>
-                </div>
-              ) : (
-                translations.map((translation, index) => (
-                  <motion.div
-                    key={translation.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={`p-3 border rounded-lg cursor-pointer transition-colors group ${
-                      selectedTranslation?.id === translation.id 
-                        ? 'border-primary bg-primary/5' 
-                        : 'hover:bg-muted/50'
-                    }`}
-                    onClick={() => setSelectedTranslation(translation)}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Badge className={getStatusColor(translation.status)} variant="secondary">
-                          <span className="flex items-center space-x-1">
-                            {getStatusIcon(translation.status)}
-                            <span>{translation.status}</span>
-                          </span>
-                        </Badge>
-                        {translation.confidence > 0 && (
-                          <span className="text-xs text-muted-foreground">
-                            {Math.round(translation.confidence * 100)}%
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {translation.isManualEdit && (
-                          <Edit3 className="h-3 w-3 text-purple-500" />
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteTranslation(translation.id);
-                          }}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm font-medium mb-1 line-clamp-2">
-                      {translation.originalText}
-                    </p>
-                    
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {translation.game.title} • {translation.filePath.split('/').pop()}
-                    </p>
-                    
-                    {translation.translatedText && (
-                      <p className="text-xs text-primary line-clamp-2">
-                        {translation.translatedText}
-                      </p>
-                    )}
-                  </motion.div>
-                ))
-              )}
+          ) : filteredTranslations.length === 0 ? (
+            <div className="text-center p-8 text-muted-foreground text-sm">
+              <Languages className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p>Nessuna traduzione</p>
+              <p className="text-xs mt-1 opacity-70">Importa file o usa Neural Translator</p>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Editor Workspace */}
-        <div className="lg:col-span-2 space-y-6">
-          {selectedTranslation ? (
-            <>
-              {/* Translation Header */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Languages className="h-5 w-5" />
-                        <span>Editor Traduzione</span>
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {selectedTranslation.game.title} • {selectedTranslation.filePath}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getStatusColor(selectedTranslation.status)}>
-                        {selectedTranslation.status}
-                      </Badge>
-                      <Badge variant="outline">
-                        {selectedTranslation.sourceLanguage.toUpperCase()} → {selectedTranslation.targetLanguage.toUpperCase()}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              {/* Split View Editor */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Original Text */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium">Testo Originale ({selectedTranslation.sourceLanguage.toUpperCase()})</label>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            navigator.clipboard.writeText(selectedTranslation.originalText);
-                            toast({
-                              title: 'Copiato',
-                              description: 'Testo originale copiato negli appunti'
-                            });
-                          }}
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Textarea
-                        value={selectedTranslation.originalText}
-                        readOnly
-                        className="min-h-[120px] bg-muted/30 text-sm"
-                      />
-                      {selectedTranslation.context && (
-                        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs">
-                          <span className="font-medium">Contesto: </span>
-                          {selectedTranslation.context}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Translation */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium">Traduzione ({selectedTranslation.targetLanguage.toUpperCase()})</label>
-                        <div className="flex items-center space-x-2">
-                          {selectedTranslation.confidence > 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              {Math.round(selectedTranslation.confidence * 100)}% confidenza
-                            </Badge>
-                          )}
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={generateSuggestions}
-                            disabled={isGeneratingSuggestions}
-                          >
-                            {isGeneratingSuggestions ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Lightbulb className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                      <Textarea
-                        value={selectedTranslation.translatedText}
-                        onChange={(e) => handleTranslationChange(e.target.value)}
-                        className="min-h-[120px] text-sm"
-                        placeholder="Inserisci o modifica la traduzione..."
-                      />
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <span>
-                            {selectedTranslation.isManualEdit ? 'Modificato manualmente' : 'Traduzione AI'}
-                          </span>
-                          {hasUnsavedChanges && (
-                            <Badge variant="outline" className="text-xs">
-                              Modifiche non salvate
-                            </Badge>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={handleManualSave}
-                          disabled={!hasUnsavedChanges || isSaving}
-                          className="h-8"
-                        >
-                          {isSaving ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Salvataggio...
-                            </>
-                          ) : (
-                            <>
-                              <Save className="h-4 w-4 mr-2" />
-                              Salva
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-2">
-                        Ultimo aggiornamento: {new Date(selectedTranslation.updatedAt).toLocaleString('it-IT')}
-                        {hasUnsavedChanges && ' • Salvataggio automatico in 2 secondi'}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* AI Suggestions */}
-              {selectedTranslation.suggestions.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Lightbulb className="h-5 w-5" />
-                        <span>Suggerimenti AI</span>
-                        <Badge variant="secondary">{selectedTranslation.suggestions.length}</Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      {selectedTranslation.suggestions.map((suggestion, index) => (
-                        <motion.div
-                          key={suggestion.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex-1">
-                            <p className="text-sm">{suggestion.suggestion}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {Math.round(suggestion.confidence * 100)}%
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {suggestion.provider}
-                              </span>
-                            </div>
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => applySuggestion(suggestion.suggestion)}
-                          >
-                            Applica
-                          </Button>
-                        </motion.div>
-                      ))}
-                      
-                      {isGeneratingSuggestions && (
-                        <div className="flex items-center justify-center p-6">
-                          <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-                          <span className="text-sm text-muted-foreground">Generando nuovi suggerimenti...</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </>
           ) : (
-            /* Empty State */
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Edit3 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Seleziona una Traduzione</h3>
-                <p className="text-muted-foreground mb-6">
-                  Scegli una traduzione dalla lista per iniziare a modificarla nell'editor.
-                </p>
-                <Button 
-                  onClick={() => setSelectedTranslation(translations[0])}
-                  disabled={translations.length === 0}
+            <div className="flex flex-col">
+              {filteredTranslations.map((t, index) => (
+                <motion.button
+                  key={t.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.02 }}
+                  onClick={() => setSelectedTranslation(t)}
+                  className={cn(
+                    "flex flex-col items-start p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-all text-left group relative",
+                    selectedTranslation?.id === t.id && "bg-purple-500/10 border-l-2 border-l-purple-500"
+                  )}
                 >
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Modifica Prima Traduzione
-                </Button>
-              </CardContent>
-            </Card>
+                  <div className="flex items-center justify-between w-full mb-1">
+                    <span className="text-[10px] font-medium text-slate-500 truncate max-w-[140px]">
+                      {t.game.title}
+                    </span>
+                    <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5 gap-0.5", getStatusColor(t.status))}>
+                      {getStatusIcon(t.status)}
+                      <span className="ml-0.5">{t.status}</span>
+                    </Badge>
+                  </div>
+                  <p className={cn(
+                    "text-sm line-clamp-1 w-full",
+                    selectedTranslation?.id === t.id ? "text-white" : "text-slate-300"
+                  )}>
+                    {t.originalText}
+                  </p>
+                  <p className="text-xs text-slate-500 line-clamp-1 mt-0.5 w-full">
+                    {t.translatedText || <span className="italic opacity-50">— non tradotto —</span>}
+                  </p>
+                  
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-red-500/20" onClick={(e) => { e.stopPropagation(); deleteTranslation(t.id); }}>
+                      <Trash2 className="h-3 w-3 text-red-400" />
+                    </Button>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
           )}
-        </div>
+        </ScrollArea>
       </div>
-      
+
+      {/* --- MAIN AREA: EDITOR --- */}
+      <div className="flex-1 flex flex-col bg-slate-950/50 relative">
+        {selectedTranslation ? (
+          <>
+            {/* Toolbar */}
+            <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 bg-slate-900/30">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="p-1.5 rounded-md bg-purple-500/20">
+                  <Languages className="h-4 w-4 text-purple-400" />
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <span className="truncate max-w-[150px]">{selectedTranslation.game.title}</span>
+                    <ChevronRight className="h-3 w-3" />
+                    <span className="truncate max-w-[150px] text-slate-500">{selectedTranslation.filePath.split('/').pop()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 gap-1 border-slate-700 text-slate-400">
+                      {selectedTranslation.sourceLanguage.toUpperCase()} <ArrowLeftRight className="h-2.5 w-2.5" /> {selectedTranslation.targetLanguage.toUpperCase()}
+                    </Badge>
+                    {selectedTranslation.confidence > 0 && (
+                      <span className="text-[10px] text-green-400">{Math.round(selectedTranslation.confidence * 100)}%</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={generateSuggestions} disabled={isGeneratingSuggestions}>
+                  {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-purple-400" />}
+                  AI
+                </Button>
+                <Separator orientation="vertical" className="h-5 bg-slate-700" />
+                <Button 
+                  size="sm" 
+                  className={cn("h-8 text-xs", hasUnsavedChanges ? "bg-purple-600 hover:bg-purple-700" : "bg-slate-700")}
+                  onClick={handleManualSave} 
+                  disabled={!hasUnsavedChanges || isSaving}
+                >
+                  {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+                  Salva
+                </Button>
+              </div>
+            </div>
+
+            {/* Split Editor */}
+            <div className="flex-1 flex overflow-hidden">
+              {/* Original Panel */}
+              <div className="flex-1 flex flex-col border-r border-slate-800 min-w-[300px]">
+                <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Originale</span>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                    navigator.clipboard.writeText(selectedTranslation.originalText);
+                    toast({ title: 'Copiato negli appunti' });
+                  }}>
+                    <Copy className="h-3 w-3 text-slate-500" />
+                  </Button>
+                </div>
+                <ScrollArea className="flex-1 p-6">
+                  <p className="text-base leading-relaxed text-slate-300 whitespace-pre-wrap">
+                    {selectedTranslation.originalText}
+                  </p>
+                  
+                  {selectedTranslation.context && (
+                    <div className="mt-6 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                      <div className="flex items-center gap-2 mb-1.5 text-blue-400">
+                        <Lightbulb className="h-3.5 w-3.5" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider">Contesto</span>
+                      </div>
+                      <p className="text-xs text-slate-400 italic">
+                        {selectedTranslation.context}
+                      </p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+
+              {/* Translation Panel */}
+              <div className="flex-1 flex flex-col min-w-[300px] bg-slate-900/20">
+                <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
+                  <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Traduzione</span>
+                  {hasUnsavedChanges && (
+                    <Badge variant="outline" className="text-[9px] h-4 border-yellow-500/30 text-yellow-400 animate-pulse">
+                      Non salvato
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex-1 p-4">
+                  <Textarea
+                    value={selectedTranslation.translatedText}
+                    onChange={(e) => handleTranslationChange(e.target.value)}
+                    className="w-full h-full min-h-[200px] resize-none border-slate-700 bg-slate-800/30 text-base leading-relaxed focus-visible:ring-purple-500/50 placeholder:text-slate-600"
+                    placeholder="Inserisci la traduzione..."
+                    spellCheck={false}
+                  />
+                </div>
+                
+                {/* Suggestions Panel */}
+                {selectedTranslation.suggestions.length > 0 && (
+                  <div className="border-t border-slate-800 bg-slate-900/30 p-3 max-h-[180px] overflow-y-auto">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="h-3 w-3 text-purple-400" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Suggerimenti AI</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {selectedTranslation.suggestions.map((s, i) => (
+                        <div key={i} className="flex items-center justify-between group p-2 rounded-md hover:bg-slate-800/50 border border-transparent hover:border-slate-700 transition-all">
+                          <p className="text-xs text-slate-400 flex-1 line-clamp-2">{s.suggestion}</p>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-6 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-purple-400 hover:text-purple-300"
+                            onClick={() => handleTranslationChange(s.suggestion)}
+                          >
+                            Usa
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-8">
+            <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-6 border border-slate-700">
+              <LayoutPanelLeft className="h-8 w-8 opacity-50" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-slate-400">Nessuna selezione</h3>
+            <p className="text-sm text-center max-w-xs opacity-70">
+              Seleziona una stringa dalla lista per iniziare a modificare la traduzione
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Import Dialog */}
       <TranslationImportDialog
         open={showImportDialog}
