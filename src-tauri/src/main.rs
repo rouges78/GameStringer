@@ -11,6 +11,7 @@ mod injekt;
 mod multi_process_injekt;
 mod anti_cheat;
 mod engine_detector;
+mod translation_bridge;
 
 pub mod profiles;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
@@ -73,6 +74,7 @@ fn main() {
         .manage(profile_state)
         .manage(settings_state)
         // .manage(notification_state) // TEMPORANEAMENTE DISABILITATO
+        .manage(commands::translation_bridge::TranslationBridgeState::new())
         // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
         // .manage(commands::advanced_ocr::AdvancedOCRState::default())
         // .manage(commands::translation_backends::TranslationBackendState::default())
@@ -432,6 +434,20 @@ fn main() {
 
             // Unity Patcher
             commands::unity_patcher::install_unity_autotranslator,
+
+            // Translation Bridge (In-Game Translation System)
+            commands::translation_bridge::translation_bridge_start,
+            commands::translation_bridge::translation_bridge_stop,
+            commands::translation_bridge::translation_bridge_status,
+            commands::translation_bridge::translation_bridge_stats,
+            commands::translation_bridge::translation_bridge_dictionary_stats,
+            commands::translation_bridge::translation_bridge_load_translations,
+            commands::translation_bridge::translation_bridge_load_json,
+            commands::translation_bridge::translation_bridge_set_languages,
+            commands::translation_bridge::translation_bridge_add_translation,
+            commands::translation_bridge::translation_bridge_get_translation,
+            commands::translation_bridge::translation_bridge_export_json,
+            commands::translation_bridge::translation_bridge_clear,
 
             // NOTIFICATION SYSTEM TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
             // commands::notifications::create_notification,

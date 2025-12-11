@@ -59,6 +59,10 @@ keyvalues-serde = "0.2.2"
 dirs = "6.0.0"
 new-vdf-parser = "0.2.0"
 zip = "0.6"
+shared_memory = "0.12.4"
+interprocess = "2.2.3"
+parking_lot = "0.12.5"
+tracing = "0.1.43"
 
 [dev-dependencies]
 tempfile = "3.8"
