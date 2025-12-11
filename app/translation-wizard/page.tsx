@@ -452,14 +452,33 @@ export default function TranslationWizardPage() {
     window.location.href = `/translator/pro?${params}`;
   };
 
-  const openInEditor = (file: LocalizationFile) => {
-    sessionStorage.setItem('editorFile', JSON.stringify({
-      gameId: analysisResult?.game.id,
-      gameName: analysisResult?.game.title,
-      filePath: file.path,
-      filename: file.name
-    }));
-    window.location.href = '/editor';
+  const openInEditor = async (file: LocalizationFile) => {
+    try {
+      // Read file content before opening editor
+      const content = await invoke<string>('read_text_file', { 
+        path: file.path, 
+        maxBytes: 500000 // 500KB max for editor
+      });
+      
+      sessionStorage.setItem('editorFile', JSON.stringify({
+        gameId: analysisResult?.game.id,
+        gameName: analysisResult?.game.title,
+        filePath: file.path,
+        filename: file.name,
+        originalContent: content,
+        content: content,
+        sourceLanguage: 'en',
+        targetLanguage: targetLanguage
+      }));
+      window.location.href = '/editor';
+    } catch (error) {
+      console.error('Error reading file:', error);
+      toast({
+        title: 'Errore',
+        description: 'Impossibile leggere il file',
+        variant: 'destructive'
+      });
+    }
   };
 
   // --- Render ---

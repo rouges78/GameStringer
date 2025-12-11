@@ -485,7 +485,7 @@ fn scan_directory_recursive(
     }
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn read_text_file(path: String, max_bytes: Option<u64>) -> Result<String, String> {
     println!("[RUST] read_text_file called for path: {}", path);
     

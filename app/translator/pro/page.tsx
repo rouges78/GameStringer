@@ -464,31 +464,53 @@ export default function TranslatorProPage() {
       return;
     }
     
-    // Se c'è un percorso, cerca i file tramite Tauri
+    // Se c'è un percorso, cerca i file tramite Tauri commands
     setIsLoadingFiles(true);
     try {
       const fullPath = await invoke<string>('find_game_install_path', { installDir: selectedGame.installPath });
-      const response = await fetch('/api/library/scan-files', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ directoryPath: fullPath }),
+      console.log('[TranslatorPro] Scanning path:', fullPath);
+      
+      // Use same scan command as Translation Wizard
+      const extensions = ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings', 'ini'];
+      const scannedFiles = await invoke<any[]>('scan_localization_files', {
+        path: fullPath,
+        extensions,
+        maxDepth: 10
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        const files = Array.isArray(data) ? data : (data.files || []);
-        
+      console.log('[TranslatorPro] Found files:', scannedFiles?.length || 0);
+      
+      if (Array.isArray(scannedFiles) && scannedFiles.length > 0) {
         const newFiles: SelectedFile[] = [];
-        for (const file of files) {
+        
+        // Filter for likely localization files (same logic as Wizard)
+        const locFiles = scannedFiles.filter(file => {
+          const fileName = (file.name || '').toLowerCase();
+          const filePath = (file.path || '').toLowerCase();
+          const isLocFile = 
+            fileName.includes('local') || 
+            fileName.includes('lang') || 
+            fileName.includes('text') ||
+            fileName.includes('string') ||
+            fileName.includes('dialog') ||
+            fileName.includes('dialogue') ||
+            fileName.includes('translation') ||
+            fileName.includes('resource') ||
+            filePath.includes('example') ||
+            filePath.includes('localization');
+          const sizeThreshold = file.extension === 'txt' ? 50000 : 5000;
+          return isLocFile || file.size > sizeThreshold;
+        });
+        
+        // Read and parse each file
+        for (const file of locFiles.slice(0, 20)) { // Limit to 20 files
           try {
-            const readResponse = await fetch('/api/library/read-file', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ filePath: file.path }),
+            const content = await invoke<string>('read_text_file', { 
+              path: file.path, 
+              maxBytes: 500000 
             });
             
-            if (readResponse.ok) {
-              const { content } = await readResponse.json();
+            if (content) {
               try {
                 const parseResult = parseFile(content, file.name);
                 
@@ -515,47 +537,57 @@ export default function TranslatorProPage() {
           const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
           return [...prev, ...uniqueNewFiles];
         });
+      } else {
+        console.warn('[TranslatorPro] No files found, opening file picker');
+        // Fallback to file picker if no files found
+        openFilePicker();
       }
     } catch (err) {
       console.error('Error searching game files:', err);
       // Fallback: apri il file picker
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.multiple = true;
-      input.accept = '.json,.po,.pot,.xliff,.xlf,.resx,.strings,.ini,.csv,.properties,.txt';
-      input.onchange = async (e) => {
-        const files = (e.target as HTMLInputElement).files;
-        if (!files) return;
-        
-        const newFiles: SelectedFile[] = [];
-        for (const file of Array.from(files)) {
-          try {
-            const content = await file.text();
-            const parseResult = parseFile(content, file.name);
-            
-            if (parseResult.strings.length > 0) {
-              newFiles.push({
-                name: file.name,
-                content,
-                format: parseResult.format,
-                parseResult
-              });
-            }
-          } catch (err) {
-            console.error(`Error parsing ${file.name}:`, err);
-          }
-        }
-        
-        setSelectedFiles(prev => {
-          const existingNames = new Set(prev.map(f => f.name));
-          const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
-          return [...prev, ...uniqueNewFiles];
-        });
-      };
-      input.click();
-    } finally {
-      setIsLoadingFiles(false);
+      openFilePicker();
     }
+    setIsLoadingFiles(false);
+    return;
+  };
+  
+  const openFilePicker = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.json,.po,.pot,.xliff,.xlf,.resx,.strings,.ini,.csv,.properties,.txt';
+    input.onchange = async (e) => {
+      const files = (e.target as HTMLInputElement).files;
+      if (!files) return;
+      
+      setIsLoadingFiles(true);
+      const newFiles: SelectedFile[] = [];
+      for (const file of Array.from(files)) {
+        try {
+          const content = await file.text();
+          const parseResult = parseFile(content, file.name);
+          
+          if (parseResult.strings.length > 0) {
+            newFiles.push({
+              name: file.name,
+              content,
+              format: parseResult.format,
+              parseResult
+            });
+          }
+        } catch (err) {
+          console.error(`Error parsing ${file.name}:`, err);
+        }
+      }
+      
+      setSelectedFiles(prev => {
+        const existingNames = new Set(prev.map(f => f.name));
+        const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
+        return [...prev, ...uniqueNewFiles];
+      });
+      setIsLoadingFiles(false);
+    };
+    input.click();
   };
   
   const handleStartTranslation = async () => {
