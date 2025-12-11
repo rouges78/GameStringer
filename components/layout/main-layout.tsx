@@ -16,7 +16,8 @@ import {
   Bug,
   ChevronRight,
   ChevronLeft,
-  Brain
+  Brain,
+  Wand2
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -36,6 +37,7 @@ interface MainLayoutProps {
 const navigationItems = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Libreria', href: '/library', icon: Gamepad2 },
+  { name: 'Translation Wizard', href: '/translation-wizard', icon: Wand2 },
   { name: 'Neural Translator', href: '/translator/pro', icon: Brain },
   { name: 'Editor', href: '/editor', icon: FileText },
   { name: 'Stores Manager', href: '/store-manager', icon: Store },

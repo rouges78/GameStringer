@@ -394,3 +394,126 @@ pub async fn scan_game_files(game_path: String) -> Result<Vec<String>, String> {
     // For now, return a placeholder
     Err("Not yet implemented".to_string())
 }
+
+// --- Translation Wizard Commands ---
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ScannedFile {
+    pub path: String,
+    pub name: String,
+    pub size: u64,
+    pub extension: String,
+}
+
+#[tauri::command]
+pub async fn list_directory_files(path: String) -> Result<Vec<String>, String> {
+    println!("[RUST] list_directory_files called for path: {}", path);
+    
+    let dir_path = Path::new(&path);
+    if !dir_path.exists() {
+        return Err(format!("Directory not found: {}", path));
+    }
+    
+    let mut files = Vec::new();
+    
+    if let Ok(entries) = fs::read_dir(dir_path) {
+        for entry in entries.flatten() {
+            if let Some(name) = entry.file_name().to_str() {
+                files.push(name.to_string());
+            }
+        }
+    }
+    
+    Ok(files)
+}
+
+#[tauri::command]
+pub async fn scan_localization_files(
+    path: String, 
+    extensions: Vec<String>,
+    max_depth: u32
+) -> Result<Vec<ScannedFile>, String> {
+    println!("[RUST] scan_localization_files called for path: {} with extensions: {:?}", path, extensions);
+    
+    let dir_path = Path::new(&path);
+    if !dir_path.exists() {
+        return Err(format!("Directory not found: {}", path));
+    }
+    
+    let mut files = Vec::new();
+    scan_directory_recursive(dir_path, &extensions, max_depth, 0, &mut files);
+    
+    println!("[RUST] Found {} localization files", files.len());
+    Ok(files)
+}
+
+fn scan_directory_recursive(
+    dir: &Path, 
+    extensions: &[String], 
+    max_depth: u32, 
+    current_depth: u32,
+    files: &mut Vec<ScannedFile>
+) {
+    if current_depth > max_depth {
+        return;
+    }
+    
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            
+            if path.is_dir() {
+                scan_directory_recursive(&path, extensions, max_depth, current_depth + 1, files);
+            } else if path.is_file() {
+                if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                    let ext_lower = ext.to_lowercase();
+                    if extensions.iter().any(|e| e.to_lowercase() == ext_lower) {
+                        if let Ok(metadata) = fs::metadata(&path) {
+                            files.push(ScannedFile {
+                                path: path.to_string_lossy().to_string(),
+                                name: path.file_name()
+                                    .map(|n| n.to_string_lossy().to_string())
+                                    .unwrap_or_default(),
+                                size: metadata.len(),
+                                extension: ext_lower,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn read_text_file(path: String, max_bytes: Option<u64>) -> Result<String, String> {
+    println!("[RUST] read_text_file called for path: {}", path);
+    
+    let file_path = Path::new(&path);
+    if !file_path.exists() {
+        return Err(format!("File not found: {}", path));
+    }
+    
+    let max = max_bytes.unwrap_or(1_000_000); // Default 1MB max
+    
+    match fs::metadata(&file_path) {
+        Ok(metadata) => {
+            if metadata.len() > max {
+                // Read only first max_bytes
+                match fs::read(&file_path) {
+                    Ok(bytes) => {
+                        let truncated = &bytes[..std::cmp::min(bytes.len(), max as usize)];
+                        Ok(String::from_utf8_lossy(truncated).to_string())
+                    }
+                    Err(e) => Err(format!("Failed to read file: {}", e))
+                }
+            } else {
+                match fs::read_to_string(&file_path) {
+                    Ok(content) => Ok(content),
+                    Err(e) => Err(format!("Failed to read file: {}", e))
+                }
+            }
+        }
+        Err(e) => Err(format!("Failed to get file metadata: {}", e))
+    }
+}
