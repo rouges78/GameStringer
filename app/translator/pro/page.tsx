@@ -114,6 +114,26 @@ export default function TranslatorProPage() {
   const [useTranslationMemory, setUseTranslationMemory] = useState(true);
   const [runQualityChecks, setRunQualityChecks] = useState(true);
   
+  // Carica API key salvata quando cambia provider
+  useEffect(() => {
+    const savedKey = localStorage.getItem(`gamestringer_apikey_${provider}`);
+    if (savedKey) {
+      setApiKey(savedKey);
+    } else {
+      setApiKey('');
+    }
+  }, [provider]);
+  
+  // Salva API key quando viene modificata
+  const handleApiKeyChange = (newKey: string) => {
+    setApiKey(newKey);
+    if (newKey) {
+      localStorage.setItem(`gamestringer_apikey_${provider}`, newKey);
+    } else {
+      localStorage.removeItem(`gamestringer_apikey_${provider}`);
+    }
+  };
+  
   // Translation
   const [isTranslating, setIsTranslating] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -615,6 +635,7 @@ export default function TranslatorProPage() {
           gameName: selectedGame?.name,
           useTranslationMemory,
           runQualityChecks,
+          apiKey, // Passa l'API key inserita dall'utente
           onProgress: (p) => {
             console.log('[Neural Translator] Progress:', p.completed, '/', p.total);
             setProgress(p);
@@ -1243,8 +1264,8 @@ export default function TranslatorProPage() {
                   <Input
                     type="password"
                     value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="Inserisci la tua API key"
+                    onChange={(e) => handleApiKeyChange(e.target.value)}
+                    placeholder="Inserisci la tua API key (salvata automaticamente)"
                   />
                 </div>
                 
@@ -1417,6 +1438,11 @@ export default function TranslatorProPage() {
                         <span>{progress.completed}/{progress.total} stringhe</span>
                         <span>{progress.fromMemory} da memoria</span>
                       </div>
+                      {progress.startTime && (
+                        <p className="text-xs text-muted-foreground">
+                          Tempo trascorso: {formatTimeRemaining(Math.floor((Date.now() - progress.startTime) / 1000))}
+                        </p>
+                      )}
                       {progress.estimatedTimeRemaining && (
                         <p className="text-sm text-muted-foreground">
                           Tempo rimanente: ~{formatTimeRemaining(progress.estimatedTimeRemaining)}
@@ -1427,6 +1453,20 @@ export default function TranslatorProPage() {
                           "{progress.currentItem}..."
                         </p>
                       )}
+                      
+                      {/* Cancel button */}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="mt-4 border-destructive/50 text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          setIsTranslating(false);
+                          setError('Traduzione annullata dall\'utente');
+                        }}
+                      >
+                        <Square className="mr-2 h-3 w-3" />
+                        Annulla traduzione
+                      </Button>
                     </div>
                   )}
                 </>

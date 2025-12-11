@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#c4b5fd"/>
+      <stop offset="100%" style="stop-color:#a5b4fc"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background rounded square -->
+  <rect x="32" y="32" width="448" height="448" rx="80" fill="url(#bgGrad)"/>
+  
+  <!-- Inner glow effect -->
+  <rect x="48" y="48" width="416" height="416" rx="72" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
+  
+  <!-- Main "G" letter stylized as controller/string -->
+  <g filter="url(#glow)">
+    <!-- G shape base -->
+    <path d="M256 96c-88.4 0-160 71.6-160 160s71.6 160 160 160c44.2 0 84.2-17.9 113.1-46.9" 
+          stroke="white" stroke-width="40" stroke-linecap="round" fill="none"/>
+    
+    <!-- G horizontal bar (like a string) -->
+    <path d="M256 256h104" stroke="white" stroke-width="40" stroke-linecap="round"/>
+    
+    <!-- String/text lines emanating -->
+    <g stroke="url(#textGrad)" stroke-width="8" stroke-linecap="round" opacity="0.9">
+      <line x1="380" y1="180" x2="440" y2="140"/>
+      <line x1="390" y1="220" x2="460" y2="200"/>
+      <line x1="380" y1="260" x2="450" y2="270"/>
+      <line x1="360" y1="300" x2="420" y2="330"/>
+    </g>
+    
+    <!-- Small dots representing text/characters -->
+    <g fill="url(#textGrad)" opacity="0.8">
+      <circle cx="450" cy="135" r="8"/>
+      <circle cx="470" cy="195" r="6"/>
+      <circle cx="460" cy="275" r="7"/>
+      <circle cx="430" cy="340" r="5"/>
+    </g>
+  </g>
+  
+  <!-- Gamepad button hints -->
+  <g fill="rgba(255,255,255,0.3)">
+    <circle cx="140" cy="200" r="12"/>
+    <circle cx="180" cy="240" r="12"/>
+    <circle cx="140" cy="280" r="12"/>
+    <circle cx="100" cy="240" r="12"/>
+  </g>
+</svg>

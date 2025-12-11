@@ -36,6 +36,31 @@ interface AISuggestion {
   provider: string;
 }
 
+interface ParsedLine {
+  lineNumber: number;
+  id: string;
+  key: string;
+  originalText: string;
+  translatedText: string;
+  raw: string;
+  languageColumns?: string[]; // Per file multi-lingua: array di testi per ogni lingua
+}
+
+// Lingue supportate per file multi-lingua (ordine tipico nei file di localizzazione)
+const SUPPORTED_LANGUAGES = [
+  { code: 'fr', name: 'Francese' },
+  { code: 'en', name: 'Inglese' },
+  { code: 'de', name: 'Tedesco' },
+  { code: 'es', name: 'Spagnolo' },
+  { code: 'pl', name: 'Polacco' },
+  { code: 'zh', name: 'Cinese' },
+  { code: 'ja', name: 'Giapponese' },
+  { code: 'ko', name: 'Coreano' },
+  { code: 'ru', name: 'Russo' },
+  { code: 'pt', name: 'Portoghese' },
+  { code: 'it', name: 'Italiano' },
+];
+
 interface Translation {
   id: string;
   gameId: string;
@@ -51,12 +76,137 @@ interface Translation {
   updatedAt: string;
   game: Game;
   suggestions: AISuggestion[];
+  parsedLines?: ParsedLine[];
+}
+
+// Rileva se un file è multi-lingua (ha colonne separate per ogni lingua)
+function detectMultiLanguageFormat(content: string): boolean {
+  const lines = content.split('\n').filter(l => l.trim());
+  if (lines.length < 2) return false;
+  
+  // Controlla se le righe hanno pattern con ,, (separatori vuoti tra lingue)
+  const sampleLine = lines.find(l => l.includes(',,'));
+  return !!sampleLine;
+}
+
+// Parser per file di localizzazione (CSV-like, dialoghi)
+function parseLocalizationContent(content: string, sourceLanguageIndex?: number): ParsedLine[] {
+  const lines = content.split('\n');
+  const parsed: ParsedLine[] = [];
+  const isMultiLang = detectMultiLanguageFormat(content);
+  
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    
+    // Pattern Decarnation/Unity: #ID,key,subkey,speaker,Speaker,text (6+ colonne)
+    // Esempio: #2-05_Bargain,Bargain_dialog2.10,,gloria,Gloria,"Tu penses que..."
+    const parts = trimmed.split(',');
+    if (parts.length >= 5 && trimmed.startsWith('#')) {
+      // Estrai ID e key dalle prime colonne
+      const id = parts[0].replace(/^#/, '');
+      const key = parts[1] || '';
+      // Il testo è tutto dopo la 5a colonna (speaker name)
+      const textParts = parts.slice(5);
+      const text = textParts.join(',').replace(/^"|"$/g, '').trim();
+      
+      if (text) {
+        parsed.push({
+          lineNumber: index + 1,
+          id,
+          key,
+          originalText: text,
+          translatedText: '',
+          raw: line
+        });
+        return;
+      }
+    }
+    
+    // Pattern CSV generico con almeno 4 colonne (potenzialmente multi-lingua)
+    if (parts.length >= 4) {
+      const id = parts[0].replace(/^#/, '') || `line_${index}`;
+      const key = parts[1] || '';
+      
+      // Per file multi-lingua: estrai le colonne di testo separate da ,,
+      const textPart = parts.slice(3).join(',');
+      // Split per ,, per separare le lingue (pattern: "testo_fr,,testo_en,,testo_de")
+      const langColumns = textPart.split(',,').map(t => t.replace(/^"|"$/g, '').trim()).filter(t => t);
+      
+      // Se abbiamo più colonne lingua, è un file multi-lingua
+      if (isMultiLang && langColumns.length > 1) {
+        const selectedText = sourceLanguageIndex !== undefined && langColumns[sourceLanguageIndex] 
+          ? langColumns[sourceLanguageIndex] 
+          : langColumns[0]; // Default: prima lingua
+        
+        parsed.push({
+          lineNumber: index + 1,
+          id,
+          key,
+          originalText: selectedText,
+          translatedText: '',
+          raw: line,
+          languageColumns: langColumns
+        });
+        return;
+      }
+      
+      // Altrimenti usa tutto il testo
+      const text = textPart.replace(/^"|"$/g, '').trim();
+      if (text && text.length > 2) {
+        parsed.push({
+          lineNumber: index + 1,
+          id,
+          key,
+          originalText: text,
+          translatedText: '',
+          raw: line
+        });
+        return;
+      }
+    }
+    
+    // Pattern key=value (INI style)
+    const iniMatch = trimmed.match(/^([^=]+)=(.*)$/);
+    if (iniMatch) {
+      parsed.push({
+        lineNumber: index + 1,
+        id: `line_${index}`,
+        key: iniMatch[1],
+        originalText: iniMatch[2],
+        translatedText: '',
+        raw: line
+      });
+      return;
+    }
+    
+    // Linea generica (testo semplice, non commenti)
+    if (trimmed.length > 3 && !trimmed.startsWith('//') && !trimmed.startsWith('#') && !trimmed.startsWith('[')) {
+      parsed.push({
+        lineNumber: index + 1,
+        id: `line_${index}`,
+        key: '',
+        originalText: trimmed,
+        translatedText: '',
+        raw: line
+      });
+    }
+  });
+  
+  return parsed;
 }
 
 export default function EditorPage() {
   // --- State ---
   const [translations, setTranslations] = useState<Translation[]>([]);
   const [selectedTranslation, setSelectedTranslation] = useState<Translation | null>(null);
+  const [selectedLine, setSelectedLine] = useState<ParsedLine | null>(null);
+  const [viewMode, setViewMode] = useState<'lines' | 'full'>('lines');
+  const [isMultiLangFile, setIsMultiLangFile] = useState(false);
+  const [sourceLanguageIndex, setSourceLanguageIndex] = useState(0);
+  const [targetLanguageIndex, setTargetLanguageIndex] = useState<number | null>(null); // null = nuova traduzione
+  const [detectedLanguages, setDetectedLanguages] = useState<string[]>([]);
+  const [rawContent, setRawContent] = useState<string>(''); // Per ri-parsare quando cambia lingua
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -104,11 +254,36 @@ export default function EditorPage() {
     if (editorFileData) {
       try {
         const data = JSON.parse(editorFileData);
+        const content = data.originalContent || data.content || '';
+        setRawContent(content);
+        
+        // Rileva se è un file multi-lingua
+        const isMultiLang = detectMultiLanguageFormat(content);
+        setIsMultiLangFile(isMultiLang);
+        
+        // Se multi-lingua, rileva le lingue disponibili dalla prima riga con dati
+        if (isMultiLang) {
+          const lines = content.split('\n').filter((l: string) => l.trim());
+          // Trova una riga con molti ,, per contare le lingue
+          const sampleLines = lines.filter((l: string) => l.includes(',,'));
+          if (sampleLines.length > 0) {
+            // Conta quante volte appare ,, + 1 = numero di lingue
+            const maxSeparators = Math.max(...sampleLines.slice(0, 10).map((l: string) => (l.match(/,,/g) || []).length));
+            const langCount = maxSeparators + 1;
+            // Genera nomi lingue basati sul numero di colonne trovate
+            const defaultLangs = ['Francese', 'Inglese', 'Tedesco', 'Spagnolo', 'Polacco', 'Cinese', 'Giapponese', 'Coreano', 'Russo', 'Portoghese'];
+            setDetectedLanguages(defaultLangs.slice(0, Math.min(langCount, defaultLangs.length)));
+            console.log(`[Editor] Rilevate ${langCount} lingue nel file multi-lingua`);
+          }
+        }
+        
+        const parsedLines = parseLocalizationContent(content, 0);
+        
         const translatorTranslation: Translation = {
           id: `translator-${Date.now()}`,
           gameId: data.gameId || 'unknown',
           filePath: data.filePath || data.filename,
-          originalText: data.originalContent || '',
+          originalText: content,
           translatedText: data.content || '',
           targetLanguage: data.targetLanguage || 'it',
           sourceLanguage: data.sourceLanguage || 'en',
@@ -122,16 +297,22 @@ export default function EditorPage() {
             title: data.gameName || 'Gioco sconosciuto',
             platform: 'Neural Translator'
           },
-          suggestions: []
+          suggestions: [],
+          parsedLines
         };
         
         setTranslations([translatorTranslation]);
         setSelectedTranslation(translatorTranslation);
+        if (parsedLines.length > 0) {
+          setSelectedLine(parsedLines[0]);
+        }
         sessionStorage.removeItem('editorFile');
         
         toast({
           title: "File caricato",
-          description: `${data.filename} pronto per la modifica`,
+          description: isMultiLang 
+            ? `${data.filename} - ${parsedLines.length} stringhe (multi-lingua rilevato)`
+            : `${data.filename} - ${parsedLines.length} stringhe trovate`,
         });
         setIsLoading(false);
       } catch (err) {
@@ -140,6 +321,17 @@ export default function EditorPage() {
       }
     }
   }, [toast]);
+
+  // Ri-parsa quando cambia la lingua sorgente
+  useEffect(() => {
+    if (rawContent && isMultiLangFile && selectedTranslation) {
+      const parsedLines = parseLocalizationContent(rawContent, sourceLanguageIndex);
+      setSelectedTranslation(prev => prev ? { ...prev, parsedLines } : null);
+      if (parsedLines.length > 0) {
+        setSelectedLine(parsedLines[0]);
+      }
+    }
+  }, [sourceLanguageIndex]);
 
   // --- Actions ---
   const fetchGames = async () => {
@@ -210,7 +402,23 @@ export default function EditorPage() {
   };
 
   const generateSuggestions = async () => {
-    if (!selectedTranslation) return;
+    if (!selectedTranslation || !selectedLine) {
+      toast({ 
+        title: 'Seleziona una stringa', 
+        description: 'Seleziona prima una stringa da tradurre',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    // Per ora mostra un messaggio che la funzionalità AI non è ancora implementata
+    toast({ 
+      title: 'AI non disponibile', 
+      description: 'La traduzione automatica AI sarà disponibile in una futura versione. Per ora usa la traduzione manuale.',
+    });
+    return;
+    
+    // TODO: Implementare integrazione con API di traduzione (DeepL, Google Translate, etc.)
     setIsGeneratingSuggestions(true);
     try {
       const response = await fetch('/api/translations/suggestions', {
@@ -253,7 +461,51 @@ export default function EditorPage() {
   const handleManualSave = () => {
     if (!selectedTranslation || !hasUnsavedChanges) return;
     if (saveTimeoutId) clearTimeout(saveTimeoutId);
-    updateTranslation({ translatedText: selectedTranslation.translatedText });
+    
+    // Se stiamo lavorando con parsedLines (file multi-stringa), aggiungi le stringhe tradotte all'Explorer
+    if (selectedTranslation.parsedLines) {
+      const translatedLines = selectedTranslation.parsedLines.filter(l => l.translatedText);
+      
+      // Crea Translation objects per ogni stringa tradotta e aggiungile alla lista
+      const newTranslations: Translation[] = translatedLines.map(line => ({
+        id: `${selectedTranslation.id}-line-${line.lineNumber}`,
+        gameId: selectedTranslation.gameId,
+        filePath: selectedTranslation.filePath,
+        originalText: line.originalText,
+        translatedText: line.translatedText,
+        targetLanguage: 'it',
+        sourceLanguage: selectedTranslation.sourceLanguage,
+        status: 'edited' as const,
+        confidence: 100,
+        isManualEdit: true,
+        context: `${line.key || `Riga ${line.lineNumber}`} - ${selectedTranslation.game.title}`,
+        updatedAt: new Date().toISOString(),
+        game: selectedTranslation.game,
+        suggestions: []
+      }));
+      
+      // Aggiorna la lista translations rimuovendo duplicati e aggiungendo nuove
+      setTranslations(prev => {
+        const existingIds = new Set(prev.map(t => t.id));
+        const toAdd = newTranslations.filter(t => !existingIds.has(t.id));
+        const toUpdate = newTranslations.filter(t => existingIds.has(t.id));
+        
+        let updated = prev.map(t => {
+          const match = toUpdate.find(u => u.id === t.id);
+          return match || t;
+        });
+        
+        return [...updated, ...toAdd];
+      });
+      
+      setHasUnsavedChanges(false);
+      toast({ 
+        title: 'Salvato', 
+        description: `${translatedLines.length} traduzioni salvate` 
+      });
+    } else {
+      updateTranslation({ translatedText: selectedTranslation.translatedText });
+    }
   };
 
   const deleteTranslation = async (id: string) => {
@@ -489,123 +741,246 @@ export default function EditorPage() {
         {selectedTranslation ? (
           <>
             {/* Toolbar */}
-            <div className="h-12 border-b border-slate-800 flex items-center justify-between px-4 bg-slate-900/30">
-              <div className="flex items-center gap-3 overflow-hidden">
-                <div className="p-1.5 rounded-md bg-purple-500/20">
-                  <Languages className="h-4 w-4 text-purple-400" />
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <span className="truncate max-w-[150px]">{selectedTranslation.game.title}</span>
-                    <ChevronRight className="h-3 w-3" />
-                    <span className="truncate max-w-[150px] text-slate-500">{selectedTranslation.filePath.split('/').pop()}</span>
+            <div className="h-auto min-h-12 border-b border-slate-800 flex flex-col gap-2 px-4 py-2 bg-slate-900/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="p-1.5 rounded-md bg-purple-500/20">
+                    <Languages className="h-4 w-4 text-purple-400" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5 gap-1 border-slate-700 text-slate-400">
-                      {selectedTranslation.sourceLanguage.toUpperCase()} <ArrowLeftRight className="h-2.5 w-2.5" /> {selectedTranslation.targetLanguage.toUpperCase()}
-                    </Badge>
-                    {selectedTranslation.confidence > 0 && (
-                      <span className="text-[10px] text-green-400">{Math.round(selectedTranslation.confidence * 100)}%</span>
-                    )}
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                      <span className="truncate max-w-[150px]">{selectedTranslation.game.title}</span>
+                      <ChevronRight className="h-3 w-3" />
+                      <span className="truncate max-w-[150px] text-slate-500">{selectedTranslation.filePath.split('/').pop()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isMultiLangFile && (
+                        <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-green-500/30 text-green-400">
+                          Multi-lingua
+                        </Badge>
+                      )}
+                      {selectedTranslation.confidence > 0 && (
+                        <span className="text-[10px] text-green-400">{Math.round(selectedTranslation.confidence * 100)}%</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={generateSuggestions} disabled={isGeneratingSuggestions}>
-                  {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-purple-400" />}
-                  AI
-                </Button>
-                <Separator orientation="vertical" className="h-5 bg-slate-700" />
-                <Button 
-                  size="sm" 
-                  className={cn("h-8 text-xs", hasUnsavedChanges ? "bg-purple-600 hover:bg-purple-700" : "bg-slate-700")}
-                  onClick={handleManualSave} 
-                  disabled={!hasUnsavedChanges || isSaving}
-                >
-                  {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
-                  Salva
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={generateSuggestions} disabled={isGeneratingSuggestions}>
+                    {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-purple-400" />}
+                    AI
+                  </Button>
+                  <Separator orientation="vertical" className="h-5 bg-slate-700" />
+                  <Button 
+                    size="sm" 
+                    className={cn("h-8 text-xs", hasUnsavedChanges ? "bg-purple-600 hover:bg-purple-700" : "bg-slate-700")}
+                    onClick={handleManualSave} 
+                    disabled={!hasUnsavedChanges || isSaving}
+                  >
+                    {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+                    Salva
+                  </Button>
+                </div>
               </div>
+              
+              {/* Language Selector for multi-language files */}
+              {isMultiLangFile && detectedLanguages.length > 0 && (
+                <div className="flex items-center gap-4 pt-1 border-t border-slate-800/50">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-500 uppercase">Traduci da:</span>
+                    <Select value={String(sourceLanguageIndex)} onValueChange={(v) => setSourceLanguageIndex(Number(v))}>
+                      <SelectTrigger className="h-7 w-[130px] text-xs bg-slate-800/50 border-slate-700">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {detectedLanguages.map((lang, idx) => (
+                          <SelectItem key={idx} value={String(idx)}>{lang}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <ArrowLeftRight className="h-3 w-3 text-slate-600" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-purple-400 uppercase font-bold">→ Italiano</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Split Editor */}
             <div className="flex-1 flex overflow-hidden">
-              {/* Original Panel */}
-              <div className="flex-1 flex flex-col border-r border-slate-800 min-w-[300px]">
-                <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Originale</span>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
-                    navigator.clipboard.writeText(selectedTranslation.originalText);
-                    toast({ title: 'Copiato negli appunti' });
-                  }}>
-                    <Copy className="h-3 w-3 text-slate-500" />
-                  </Button>
-                </div>
-                <ScrollArea className="flex-1 p-6">
-                  <p className="text-base leading-relaxed text-slate-300 whitespace-pre-wrap">
-                    {selectedTranslation.originalText}
-                  </p>
-                  
-                  {selectedTranslation.context && (
-                    <div className="mt-6 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
-                      <div className="flex items-center gap-2 mb-1.5 text-blue-400">
-                        <Lightbulb className="h-3.5 w-3.5" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider">Contesto</span>
-                      </div>
-                      <p className="text-xs text-slate-400 italic">
-                        {selectedTranslation.context}
-                      </p>
+              {/* Strings List Panel (when parsed lines exist) */}
+              {selectedTranslation.parsedLines && selectedTranslation.parsedLines.length > 0 ? (
+                <div className="w-[320px] flex flex-col border-r border-slate-800 bg-slate-900/30">
+                  <div className="px-3 py-2 bg-slate-900/50 border-b border-slate-800">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        Progresso
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {Math.round((selectedTranslation.parsedLines.filter(l => l.translatedText).length / selectedTranslation.parsedLines.length) * 100)}%
+                      </span>
                     </div>
-                  )}
-                </ScrollArea>
-              </div>
-
-              {/* Translation Panel */}
-              <div className="flex-1 flex flex-col min-w-[300px] bg-slate-900/20">
-                <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Traduzione</span>
-                  {hasUnsavedChanges && (
-                    <Badge variant="outline" className="text-[9px] h-4 border-yellow-500/30 text-yellow-400 animate-pulse">
-                      Non salvato
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex-1 p-4">
-                  <Textarea
-                    value={selectedTranslation.translatedText}
-                    onChange={(e) => handleTranslationChange(e.target.value)}
-                    className="w-full h-full min-h-[200px] resize-none border-slate-700 bg-slate-800/30 text-base leading-relaxed focus-visible:ring-purple-500/50 placeholder:text-slate-600"
-                    placeholder="Inserisci la traduzione..."
-                    spellCheck={false}
-                  />
-                </div>
-                
-                {/* Suggestions Panel */}
-                {selectedTranslation.suggestions.length > 0 && (
-                  <div className="border-t border-slate-800 bg-slate-900/30 p-3 max-h-[180px] overflow-y-auto">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="h-3 w-3 text-purple-400" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Suggerimenti AI</span>
+                    <div className="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-300"
+                        style={{ 
+                          width: `${(selectedTranslation.parsedLines.filter(l => l.translatedText).length / selectedTranslation.parsedLines.length) * 100}%` 
+                        }}
+                      />
                     </div>
-                    <div className="space-y-1.5">
-                      {selectedTranslation.suggestions.map((s, i) => (
-                        <div key={i} className="flex items-center justify-between group p-2 rounded-md hover:bg-slate-800/50 border border-transparent hover:border-slate-700 transition-all">
-                          <p className="text-xs text-slate-400 flex-1 line-clamp-2">{s.suggestion}</p>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            className="h-6 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-purple-400 hover:text-purple-300"
-                            onClick={() => handleTranslationChange(s.suggestion)}
-                          >
-                            Usa
-                          </Button>
-                        </div>
-                      ))}
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-green-400 text-xs font-medium">
+                        {selectedTranslation.parsedLines.filter(l => l.translatedText).length} tradotte
+                      </span>
+                      <span className="text-slate-500 text-xs">
+                        {selectedTranslation.parsedLines.length - selectedTranslation.parsedLines.filter(l => l.translatedText).length} rimanenti
+                      </span>
                     </div>
                   </div>
-                )}
-              </div>
+                  <ScrollArea className="flex-1">
+                    <div className="p-1">
+                      {selectedTranslation.parsedLines.map((line, idx) => (
+                        <button
+                          key={line.lineNumber}
+                          onClick={() => setSelectedLine(line)}
+                          className={cn(
+                            "w-full text-left p-2 rounded-md mb-0.5 transition-all border-l-2",
+                            "hover:bg-slate-800/50",
+                            selectedLine?.lineNumber === line.lineNumber 
+                              ? "bg-purple-500/20 border-l-purple-500" 
+                              : line.translatedText 
+                                ? "border-l-green-500/50 bg-green-500/5" 
+                                : "border-l-transparent"
+                          )}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={cn(
+                              "text-[9px] font-mono",
+                              line.translatedText ? "text-green-500" : "text-slate-600"
+                            )}>
+                              {line.translatedText ? "✓" : "○"} #{line.lineNumber}
+                            </span>
+                            {line.key && (
+                              <span className="text-[9px] text-purple-400 truncate max-w-[100px]">{line.key}</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
+                            {line.originalText}
+                          </p>
+                          {line.translatedText && (
+                            <p className="text-[10px] text-green-400/70 line-clamp-1 mt-1 italic">
+                              {line.translatedText}
+                            </p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              ) : (
+                /* Original Panel (fallback for non-parsed content) */
+                <div className="flex-1 flex flex-col border-r border-slate-800 min-w-[300px]">
+                  <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Originale</span>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                      navigator.clipboard.writeText(selectedTranslation.originalText);
+                      toast({ title: 'Copiato negli appunti' });
+                    }}>
+                      <Copy className="h-3 w-3 text-slate-500" />
+                    </Button>
+                  </div>
+                  <ScrollArea className="flex-1 p-6">
+                    <p className="text-base leading-relaxed text-slate-300 whitespace-pre-wrap">
+                      {selectedTranslation.originalText}
+                    </p>
+                  </ScrollArea>
+                </div>
+              )}
+
+              {/* Selected String Editor */}
+              {selectedTranslation.parsedLines && selectedTranslation.parsedLines.length > 0 && selectedLine ? (
+                <div className="flex-1 flex flex-col min-w-[400px]">
+                  {/* Original text of selected line */}
+                  <div className="border-b border-slate-800">
+                    <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Originale</span>
+                        <span className="text-[9px] text-slate-600">Riga {selectedLine.lineNumber}</span>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                        navigator.clipboard.writeText(selectedLine.originalText);
+                        toast({ title: 'Copiato negli appunti' });
+                      }}>
+                        <Copy className="h-3 w-3 text-slate-500" />
+                      </Button>
+                    </div>
+                    <div className="p-4 max-h-[200px] overflow-y-auto">
+                      <p className="text-sm leading-relaxed text-slate-300 whitespace-pre-wrap">
+                        {selectedLine.originalText}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Translation input */}
+                  <div className="flex-1 flex flex-col">
+                    <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Traduzione</span>
+                      {selectedLine.translatedText && (
+                        <Badge variant="outline" className="text-[9px] h-4 border-green-500/30 text-green-400">
+                          Tradotto
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex-1 p-4">
+                      <Textarea
+                        value={selectedLine.translatedText}
+                        onChange={(e) => {
+                          const newText = e.target.value;
+                          setSelectedLine(prev => prev ? { ...prev, translatedText: newText } : null);
+                          // Update in parsedLines array
+                          if (selectedTranslation.parsedLines) {
+                            const updatedLines = selectedTranslation.parsedLines.map(l => 
+                              l.lineNumber === selectedLine.lineNumber ? { ...l, translatedText: newText } : l
+                            );
+                            setSelectedTranslation({ ...selectedTranslation, parsedLines: updatedLines });
+                          }
+                          setHasUnsavedChanges(true);
+                        }}
+                        className="w-full h-full min-h-[150px] resize-none border-slate-700 bg-slate-800/30 text-sm leading-relaxed focus-visible:ring-purple-500/50 placeholder:text-slate-600"
+                        placeholder="Inserisci la traduzione per questa stringa..."
+                        spellCheck={false}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : selectedTranslation.parsedLines && selectedTranslation.parsedLines.length > 0 ? (
+                <div className="flex-1 flex items-center justify-center text-slate-500">
+                  <p className="text-sm">Seleziona una stringa dalla lista</p>
+                </div>
+              ) : (
+                /* Original full editor for non-parsed content */
+                <div className="flex-1 flex flex-col min-w-[300px] bg-slate-900/20">
+                  <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Traduzione</span>
+                    {hasUnsavedChanges && (
+                      <Badge variant="outline" className="text-[9px] h-4 border-yellow-500/30 text-yellow-400 animate-pulse">
+                        Non salvato
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex-1 p-4">
+                    <Textarea
+                      value={selectedTranslation.translatedText}
+                      onChange={(e) => handleTranslationChange(e.target.value)}
+                      className="w-full h-full min-h-[200px] resize-none border-slate-700 bg-slate-800/30 text-base leading-relaxed focus-visible:ring-purple-500/50 placeholder:text-slate-600"
+                      placeholder="Inserisci la traduzione..."
+                      spellCheck={false}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : (

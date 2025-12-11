@@ -508,8 +508,9 @@ pub async fn read_text_file(path: String, max_bytes: Option<u64>) -> Result<Stri
                     Err(e) => Err(format!("Failed to read file: {}", e))
                 }
             } else {
-                match fs::read_to_string(&file_path) {
-                    Ok(content) => Ok(content),
+                // Usa read + from_utf8_lossy per gestire file non-UTF8 (binari, encoding diversi)
+                match fs::read(&file_path) {
+                    Ok(bytes) => Ok(String::from_utf8_lossy(&bytes).to_string()),
                     Err(e) => Err(format!("Failed to read file: {}", e))
                 }
             }

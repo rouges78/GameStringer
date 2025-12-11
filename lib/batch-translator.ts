@@ -94,6 +94,10 @@ export interface BatchOptions {
   delayBetweenBatches: number; // ms tra batch
   maxRetries: number;
   retryDelay: number;          // ms
+  timeoutPerItem: number;      // ms - timeout per singola traduzione
+  
+  // API options
+  apiKey?: string;             // API key per il provider selezionato
   
   // Context options
   glossaryTerms?: Array<{ original: string; translation: string }>;
@@ -133,6 +137,7 @@ export const DEFAULT_BATCH_OPTIONS: BatchOptions = {
   delayBetweenBatches: 500,
   maxRetries: 3,
   retryDelay: 1000,
+  timeoutPerItem: 30000, // 30 secondi timeout per singola traduzione
 };
 
 // ============================================================================
@@ -482,15 +487,22 @@ export class BatchTranslator {
       context += item.metadata.context;
     }
 
-    // Translate with memory support
-    const result = await translateWithMemory(item.sourceText, {
+    // Translate with memory support (con timeout)
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout: traduzione troppo lenta')), this.job!.options.timeoutPerItem);
+    });
+    
+    const translatePromise = translateWithMemory(item.sourceText, {
       sourceLang: this.job.sourceLanguage,
       targetLang: this.job.targetLanguage,
       context: context || undefined,
       gameId: this.job.gameId,
       provider: this.job.provider,
+      apiKey: this.job.options.apiKey,
       forceApi: !this.job.options.useTranslationMemory
     });
+    
+    const result = await Promise.race([translatePromise, timeoutPromise]);
 
     item.translatedText = result.translation;
     item.fromMemory = result.source === 'memory';

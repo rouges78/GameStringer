@@ -1,0 +1,64 @@
+{"timestamp":"2025-12-11T15:23:40.161Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:40.161Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:40.161Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:40.161Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:40.161Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:57.662Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:57.662Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:57.662Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:57.662Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:23:57.662Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:25:34.240Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:25:49.259Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:25:51.273Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:25:56.291Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:26:16.310Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:27:36.330Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:27:43.101Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:27:48.119Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:28:08.139Z","level":"warn","message":"Rate limit exceeded","component":"RATE_LIMITER","metadata":{"identifier":"translation:::ffff:127.0.0.1","count":50,"maxRequests":50,"windowMs":600000,"path":"/api/translate","method":"POST"}}
+{"timestamp":"2025-12-11T15:29:28.614Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:28.615Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:28.615Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:28.615Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:28.615Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:51.493Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:51.493Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:51.493Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:51.493Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:29:51.493Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:21.573Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:21.573Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:21.573Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:21.573Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:21.573Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:51.656Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:51.656Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:51.656Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:51.656Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:51.657Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:55.646Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:55.646Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:55.646Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:55.646Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:30:55.647Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:22.578Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:22.578Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:22.578Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:22.578Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:22.578Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:52.629Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:52.630Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:52.630Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:52.630Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:31:52.630Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:32:22.662Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:32:22.662Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:32:22.662Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:32:22.662Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:32:22.662Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:34:24.494Z","level":"warn","message":"Invalid format for secret: OPENAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:34:24.494Z","level":"warn","message":"Invalid format for secret: ABACUSAI_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:34:24.494Z","level":"warn","message":"Invalid format for secret: STEAM_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:34:24.494Z","level":"warn","message":"Invalid format for secret: STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}
+{"timestamp":"2025-12-11T15:34:24.494Z","level":"warn","message":"Invalid secrets detected: OPENAI_API_KEY, ABACUSAI_API_KEY, STEAM_API_KEY, STEAMGRIDDB_API_KEY","component":"SECRETS_MANAGER"}

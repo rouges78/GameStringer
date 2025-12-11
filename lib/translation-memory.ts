@@ -681,7 +681,8 @@ export async function translateWithMemory(
       targetLanguage: targetLang,
       sourceLanguage: sourceLang,
       provider,
-      context
+      context,
+      apiKey: options.apiKey // Passa l'API key dall'interfaccia
     })
   });
 

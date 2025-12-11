@@ -86,7 +86,7 @@ export function AlphabetBackground({
     const animate = () => {
       if (!ctx || !canvas) return;
 
-      // Sfondo blu scuro con gradiente (Original User Preference)
+      // Sfondo blu scuro con gradiente
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
       gradient.addColorStop(0, '#0a1628');
       gradient.addColorStop(0.5, '#0d1f3c');
@@ -116,7 +116,7 @@ export function AlphabetBackground({
         ctx.translate(px, py);
         ctx.rotate((letter.rotation * Math.PI) / 180);
         
-        // Colore blu leggermente più chiaro dello sfondo (Original User Preference)
+        // Colore blu leggermente più chiaro dello sfondo
         ctx.fillStyle = `rgba(59, 130, 246, ${letter.opacity})`;
         ctx.font = `${letter.size}px "Segoe UI", Arial, sans-serif`;
         ctx.textAlign = 'center';

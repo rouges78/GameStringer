@@ -10,6 +10,7 @@ interface TranslationRequest {
   sourceLanguage?: string;
   provider?: string;
   context?: string;
+  apiKey?: string; // API key passata dall'interfaccia utente
 }
 
 interface TranslationResponse {
@@ -28,7 +29,7 @@ const translationCache = new Map<string, TranslationResponse>();
 export const POST = withRateLimit(withErrorHandler(async function(request: NextRequest) {
   try {
     const body: TranslationRequest = await request.json();
-    const { text, targetLanguage, sourceLanguage = 'auto', provider = 'openai', context } = body;
+    const { text, targetLanguage, sourceLanguage = 'auto', provider = 'openai', context, apiKey: userApiKey } = body;
 
     if (!text || !targetLanguage) {
       throw new ValidationError('Missing required fields: text, targetLanguage');
@@ -67,7 +68,7 @@ export const POST = withRateLimit(withErrorHandler(async function(request: NextR
         translationResult = await translateWithGemini(text, targetLanguage, sourceLanguage, context);
         break;
       case 'claude':
-        translationResult = await translateWithClaude(text, targetLanguage, sourceLanguage, context);
+        translationResult = await translateWithClaude(text, targetLanguage, sourceLanguage, context, userApiKey);
         break;
       case 'deepseek':
         translationResult = await translateWithDeepSeek(text, targetLanguage, sourceLanguage, context);
@@ -350,12 +351,14 @@ async function translateWithClaude(
   text: string,
   targetLanguage: string,
   sourceLanguage: string,
-  context?: string
+  context?: string,
+  userApiKey?: string
 ): Promise<TranslationResponse> {
-  const apiKey = secretsManager.get('ANTHROPIC_API_KEY');
+  // Usa l'API key dell'utente se fornita, altrimenti prova dal secretsManager
+  const apiKey = userApiKey || secretsManager.get('ANTHROPIC_API_KEY');
   
-  if (!apiKey || !secretsManager.isAvailable('ANTHROPIC_API_KEY')) {
-    throw new Error('Anthropic API key not configured. Set ANTHROPIC_API_KEY in settings.');
+  if (!apiKey) {
+    throw new Error('API key Anthropic non configurata. Inserisci la tua API key nel campo apposito.');
   }
 
   try {
