@@ -412,10 +412,11 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
   }
 
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative bg-slate-950">
+      <div className="h-screen w-full relative overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <AlphabetBackground letterCount={80} />
-        <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
-          {/* Header */}
+        <div className="min-h-full w-full flex flex-col items-center justify-center p-4 relative z-10">
+          <div className="w-full max-w-5xl flex flex-col items-center">
+            {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -524,5 +525,6 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
           </motion.div>
         </div>
       </div>
-    );
+    </div>
+  );
 }
