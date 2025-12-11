@@ -154,73 +154,80 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      className="h-full"
     >
-      <Card className={`cursor-pointer transition-all duration-200 ${
+      <div 
+        className={`relative overflow-hidden rounded-2xl transition-all duration-300 h-full flex flex-col ${
         isSelected 
-          ? 'ring-2 ring-primary shadow-lg' 
-          : 'hover:shadow-md hover:border-primary/50'
-      } ${profile.is_locked ? 'border-red-200 bg-red-50/50 dark:bg-red-950/20' : ''}`}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={avatarSrc || undefined} alt={profile.name} />
-              <AvatarFallback className={`bg-gradient-to-br ${getAvatarGradient(profile.avatar_path)} text-white font-semibold`}>
-                {getInitials(profile.name)}
-              </AvatarFallback>
-            </Avatar>
+          ? 'ring-2 ring-violet-500 shadow-2xl shadow-violet-500/20 bg-slate-900/80 backdrop-blur-xl' 
+          : 'hover:shadow-xl hover:shadow-violet-500/10 hover:-translate-y-1 bg-slate-900/40 border border-slate-800 hover:border-violet-500/30 backdrop-blur-md'
+        } ${profile.is_locked ? 'border-red-500/30 bg-red-950/30' : ''}`}
+      >
+        {/* Decorative gradient */}
+        <div className={`absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-blue-500/5 opacity-0 ${isSelected ? 'opacity-100' : 'group-hover:opacity-100'} transition-opacity duration-500 pointer-events-none`} />
+
+        <div className="p-5 relative z-10">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Avatar className="h-14 w-14 ring-2 ring-slate-950/50 shadow-lg">
+                <AvatarImage src={avatarSrc || undefined} alt={profile.name} className="object-cover" />
+                <AvatarFallback className={`bg-gradient-to-br ${getAvatarGradient(profile.avatar_path)} text-white font-bold text-lg`}>
+                  {getInitials(profile.name)}
+                </AvatarFallback>
+              </Avatar>
+              {profile.is_locked && (
+                <div className="absolute -bottom-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-md">
+                  <Lock className="w-3 h-3" />
+                </div>
+              )}
+            </div>
             
             <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2">
-                <CardTitle className="text-lg truncate">{profile.name}</CardTitle>
-                {profile.is_locked && (
-                  <Badge variant="destructive" className="text-xs">
-                    <Lock className="w-3 h-3 mr-1" />
-                    Bloccato
-                  </Badge>
-                )}
-                {profile.failed_attempts > 0 && !profile.is_locked && (
-                  <Badge variant="outline" className="text-xs text-orange-600">
-                    <AlertTriangle className="w-3 h-3 mr-1" />
-                    {profile.failed_attempts} tentativi
-                  </Badge>
-                )}
+              <div className="flex items-center space-x-2 mb-0.5">
+                <h3 className={`text-lg font-bold truncate transition-colors ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                  {profile.name}
+                </h3>
               </div>
               
-              <CardDescription className="flex items-center space-x-1 text-sm">
-                <Clock className="w-3 h-3" />
-                <span>Ultimo accesso: {getLastAccessedText(profile.last_accessed)}</span>
-              </CardDescription>
+              <div className="flex items-center text-xs text-slate-400 font-medium">
+                <Clock className="w-3 h-3 mr-1.5 opacity-70" />
+                <span>{getLastAccessedText(profile.last_accessed)}</span>
+              </div>
+
+              {(profile.failed_attempts > 0 && !profile.is_locked) && (
+                <Badge variant="outline" className="mt-2 text-[10px] border-orange-500/50 text-orange-400 bg-orange-500/10 h-5 px-1.5">
+                  <AlertTriangle className="w-2.5 h-2.5 mr-1" />
+                  {profile.failed_attempts} tentativi falliti
+                </Badge>
+              )}
             </div>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="pt-0">
+        <AnimatePresence>
           {isSelected && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="space-y-4"
+              className="px-5 pb-5 relative z-10"
             >
-              <Separator />
+              <div className="h-px w-full bg-slate-800/50 mb-4" />
               
               {profile.is_locked ? (
-                <Alert className="border-red-200 bg-red-50 dark:bg-red-950/20">
-                  <Shield className="h-4 w-4" />
-                  <AlertDescription>
-                    Questo profilo è temporaneamente bloccato a causa di troppi tentativi di accesso falliti.
-                    Riprova più tardi o contatta l'amministratore.
+                <Alert className="border-red-500/20 bg-red-500/10 text-red-200">
+                  <Shield className="h-4 w-4 text-red-400" />
+                  <AlertDescription className="text-xs ml-2">
+                    Profilo bloccato. Contatta l'amministratore.
                   </AlertDescription>
                 </Alert>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor={`password-${profile.id}`} className="text-sm font-medium">
-                      Password profilo
+                    <Label htmlFor={`password-${profile.id}`} className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                      Password
                     </Label>
-                    <div className="relative">
+                    <div className="relative group/input">
                       <Input
                         id={`password-${profile.id}`}
                         type={showPassword ? 'text' : 'password'}
@@ -229,14 +236,15 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
                         onKeyPress={handleKeyPress}
                         onClick={(e) => e.stopPropagation()}
                         placeholder="Inserisci la password"
-                        className="pr-10"
+                        className="pr-10 bg-slate-950/50 border-slate-700/50 focus:border-violet-500/50 focus:ring-violet-500/20 text-slate-100 placeholder:text-slate-600 transition-all h-10"
                         disabled={isAuthenticating}
+                        autoFocus
                       />
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        className="absolute right-0 top-0 h-full px-3 text-slate-500 hover:text-slate-300 hover:bg-transparent"
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowPassword(!showPassword);
@@ -252,16 +260,17 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
                     </div>
                     
                     {/* Checkbox Ricordami */}
-                    <div className="flex items-center space-x-2 mt-2">
+                    <div className="flex items-center space-x-2">
                       <Checkbox
                         id={`remember-${profile.id}`}
                         checked={rememberPassword}
                         onCheckedChange={(checked) => setRememberPassword(checked === true)}
                         onClick={(e) => e.stopPropagation()}
+                        className="border-slate-600 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600 w-4 h-4 rounded"
                       />
                       <label
                         htmlFor={`remember-${profile.id}`}
-                        className="text-sm text-muted-foreground cursor-pointer select-none"
+                        className="text-xs text-slate-400 cursor-pointer select-none hover:text-slate-300 transition-colors"
                         onClick={(e) => e.stopPropagation()}
                       >
                         Ricorda password
@@ -271,47 +280,33 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
 
                   {authError && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      className="bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-500/40 rounded-xl p-4 flex items-center gap-3"
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-start gap-2"
                     >
-                      <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xl">🔐</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-red-300">Oops! Accesso negato</p>
-                        <p className="text-sm text-red-200/70">{authError}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setAuthError(null)}
-                        className="text-red-300 hover:text-red-200 hover:bg-red-500/20"
-                      >
-                        ✕
-                      </Button>
+                      <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-300">{authError}</p>
                     </motion.div>
                   )}
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pt-1">
                     <Button 
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAuthenticate();
                       }}
                       disabled={isAuthenticating || !password.trim()}
-                      className="flex-1"
+                      className="flex-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white border-0 shadow-lg shadow-violet-900/20 h-10"
                     >
                       {isAuthenticating ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Autenticazione...
+                          <span className="text-sm">Accesso...</span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          Accedi al Profilo
+                          <span className="text-sm font-medium">Accedi</span>
+                          <CheckCircle className="ml-2 h-4 w-4 opacity-80" />
                         </>
                       )}
                     </Button>
@@ -325,7 +320,7 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
                           setShowDeleteConfirm(true);
                         }}
                         disabled={isAuthenticating || isDeleting}
-                        className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        className="border-slate-700 bg-slate-800/50 text-slate-400 hover:text-red-400 hover:bg-red-950/30 hover:border-red-900/50 w-10 h-10 shrink-0"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -337,19 +332,14 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
-                      className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg space-y-3"
+                      className="p-3 bg-red-950/20 border border-red-900/30 rounded-lg space-y-3"
                     >
-                      <div className="flex items-center gap-2 text-destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span className="text-sm font-medium">Conferma eliminazione</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Inserisci la password e conferma per eliminare definitivamente il profilo "{profile.name}". 
-                        Questa azione è irreversibile.
+                      <p className="text-xs text-red-200/80 leading-relaxed">
+                        Eliminare <strong>{profile.name}</strong>? Azione irreversibile.
                       </p>
                       <div className="flex gap-2">
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -357,7 +347,7 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
                             setAuthError(null);
                           }}
                           disabled={isDeleting}
-                          className="flex-1"
+                          className="flex-1 h-8 text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-800"
                         >
                           Annulla
                         </Button>
@@ -369,19 +359,9 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
                             handleDeleteProfile();
                           }}
                           disabled={isDeleting || !password.trim()}
-                          className="flex-1"
+                          className="flex-1 h-8 text-xs bg-red-600/80 hover:bg-red-500"
                         >
-                          {isDeleting ? (
-                            <>
-                              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                              Eliminazione...
-                            </>
-                          ) : (
-                            <>
-                              <Trash2 className="mr-2 h-3 w-3" />
-                              Elimina Profilo
-                            </>
-                          )}
+                          {isDeleting ? '...' : 'Conferma'}
                         </Button>
                       </div>
                     </motion.div>
@@ -390,8 +370,8 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
               )}
             </motion.div>
           )}
-        </CardContent>
-      </Card>
+        </AnimatePresence>
+      </div>
     </motion.div>
   );
 }
@@ -431,94 +411,118 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative">
-      <AlphabetBackground letterCount={80} />
-      <div className="w-full max-w-4xl relative z-10">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-              <User className="w-8 h-8 text-white" />
-            </div>
-          </div>
-          <h1 className="text-4xl font-bold text-white mb-2">GameStringer</h1>
-          <p className="text-xl text-blue-200">Seleziona il tuo profilo per continuare</p>
-          {profiles.length > 0 && (
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-400/30 rounded-lg">
-              <Badge variant="secondary" className="bg-blue-500 text-white">
-                {profiles.length}
-              </Badge>
-              <span className="text-sm text-blue-200">
-                profil{profiles.length !== 1 ? 'i' : 'o'} disponibil{profiles.length !== 1 ? 'i' : 'e'}
-              </span>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Error Alert */}
-        {error && (
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 relative bg-slate-950">
+        <AlphabetBackground letterCount={80} />
+        <div className="w-full max-w-5xl relative z-10 flex flex-col items-center">
+          {/* Header */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
           >
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-
-        {/* Profiles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-          <AnimatePresence>
-            {profiles.map((profile) => (
-              <div key={profile.id} onClick={() => handleProfileSelect(profile)}>
-                <ProfileCard
-                  profile={profile}
-                  isSelected={selectedProfileId === profile.id}
-                />
-              </div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* Create Profile Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-center"
-        >
-          <div className="space-y-4">
-            <Button
-              onClick={onCreateProfile}
-              variant="outline"
-              size="lg"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30"
+            <motion.div 
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-3xl shadow-2xl flex items-center justify-center border border-white/10"
             >
-              <Plus className="mr-2 h-5 w-5" />
-              Crea Nuovo Profilo
-            </Button>
-            {/* Skip Auth (Testing) rimosso: usare NEXT_PUBLIC_SKIP_AUTH=true in sviluppo */}
-          </div>
-        </motion.div>
+              <User className="w-10 h-10 text-white" />
+            </motion.div>
+            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200 mb-3 tracking-tight">
+              GameStringer
+            </h1>
+            <p className="text-lg text-slate-400 font-medium">Seleziona il tuo profilo per continuare</p>
+            
+            {profiles.length > 0 && (
+              <div className="mt-6">
+                <Badge variant="outline" className="px-4 py-1.5 rounded-full bg-slate-800/50 border-slate-700 text-slate-300 backdrop-blur-sm">
+                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
+                  {profiles.length} {profiles.length === 1 ? 'profilo disponibile' : 'profili disponibili'}
+                </Badge>
+              </div>
+            )}
+          </motion.div>
 
-        {/* Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-center mt-8 text-blue-200/60 text-sm"
-        >
-          <p>© 2024 GameStringer - Sistema di Gestione Profili</p>
-        </motion.div>
+          {/* Error Alert */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-8 w-full max-w-md"
+            >
+              <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-200">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+
+          {/* Profiles Grid - Flex centered layout */}
+          <div className="flex flex-wrap justify-center gap-6 w-full mb-12">
+            <AnimatePresence mode="popLayout">
+              {profiles.map((profile) => (
+                <div key={profile.id} onClick={() => handleProfileSelect(profile)} className="w-full max-w-[350px]">
+                  <ProfileCard
+                    profile={profile}
+                    isSelected={selectedProfileId === profile.id}
+                  />
+                </div>
+              ))}
+            </AnimatePresence>
+            
+            {/* Create Profile Card Button (Inline if few profiles, otherwise below) */}
+            {profiles.length === 0 && (
+               <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                onClick={onCreateProfile}
+                className="w-full max-w-[350px] cursor-pointer group"
+              >
+                 <div className="h-full min-h-[140px] rounded-xl border-2 border-dashed border-slate-700 hover:border-violet-500/50 bg-slate-900/30 hover:bg-slate-800/50 transition-all duration-300 flex flex-col items-center justify-center p-6 text-slate-400 hover:text-violet-300">
+                    <div className="w-12 h-12 rounded-full bg-slate-800 group-hover:bg-violet-500/20 flex items-center justify-center mb-3 transition-colors">
+                      <Plus className="w-6 h-6" />
+                    </div>
+                    <span className="font-medium">Crea il primo profilo</span>
+                 </div>
+               </motion.div>
+            )}
+          </div>
+
+          {/* Create Profile Button (Bottom) */}
+          {profiles.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Button
+                onClick={onCreateProfile}
+                variant="ghost"
+                className="text-slate-400 hover:text-white hover:bg-slate-800/50 px-6 py-6 h-auto rounded-xl border border-transparent hover:border-slate-700 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-medium">Nuovo Profilo</div>
+                    <div className="text-xs text-slate-500">Aggiungi un altro utente</div>
+                  </div>
+                </div>
+              </Button>
+            </motion.div>
+          )}
+
+          {/* Footer */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="fixed bottom-6 text-center text-slate-600 text-xs"
+          >
+            <p>© 2024 GameStringer</p>
+          </motion.div>
+        </div>
       </div>
-    </div>
-  );
+    );
 }
