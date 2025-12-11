@@ -363,20 +363,37 @@ export default function TranslationWizardPage() {
         const content = await invoke<string>('read_text_file', { path: file.path, maxBytes: 50000 });
         
         if (content) {
-          // Detect languages from content
+          // Detect languages from CSV headers or structured content
+          // Look for language codes in headers, not just mentions in text
           const languages: string[] = [];
-          const contentLower = content.toLowerCase();
+          const firstLines = content.split('\n').slice(0, 5).join('\n').toLowerCase();
           
-          if (contentLower.includes('english') || contentLower.includes(',en,') || contentLower.includes('"en"')) languages.push('en');
-          if (contentLower.includes('french') || contentLower.includes('français') || contentLower.includes(',fr,')) languages.push('fr');
-          if (contentLower.includes('german') || contentLower.includes('deutsch') || contentLower.includes(',de,')) languages.push('de');
-          if (contentLower.includes('spanish') || contentLower.includes('español') || contentLower.includes(',es,')) languages.push('es');
-          if (contentLower.includes('italian') || contentLower.includes('italiano') || contentLower.includes(',it,')) languages.push('it');
-          if (contentLower.includes('portuguese') || contentLower.includes('português') || contentLower.includes(',pt,')) languages.push('pt');
-          if (contentLower.includes('polish') || contentLower.includes('polski') || contentLower.includes(',pl,')) languages.push('pl');
-          if (contentLower.includes('russian') || contentLower.includes('русский') || contentLower.includes(',ru,')) languages.push('ru');
-          if (contentLower.includes('chinese') || contentLower.includes('中文') || contentLower.includes(',zh,')) languages.push('zh');
-          if (contentLower.includes('japanese') || contentLower.includes('日本語') || contentLower.includes(',ja,')) languages.push('ja');
+          // For CSV files, check if there's actual content in that language column
+          // A language is "supported" only if it has a dedicated column with translations
+          const hasLanguageColumn = (langCode: string, langNames: string[]) => {
+            // Check for column headers like ",en," or ",English," or "English,,"
+            const headerPatterns = [
+              `,${langCode},`, `"${langCode}"`, `${langCode}\t`,
+              ...langNames.map(n => `,${n},`),
+              ...langNames.map(n => `"${n}"`),
+            ];
+            return headerPatterns.some(p => firstLines.includes(p.toLowerCase()));
+          };
+          
+          if (hasLanguageColumn('en', ['english'])) languages.push('en');
+          if (hasLanguageColumn('fr', ['french', 'français', 'francais'])) languages.push('fr');
+          if (hasLanguageColumn('de', ['german', 'deutsch'])) languages.push('de');
+          if (hasLanguageColumn('es', ['spanish', 'español', 'espanol'])) languages.push('es');
+          if (hasLanguageColumn('pt', ['portuguese', 'português', 'portugues'])) languages.push('pt');
+          if (hasLanguageColumn('pl', ['polish', 'polski'])) languages.push('pl');
+          if (hasLanguageColumn('ru', ['russian', 'русский'])) languages.push('ru');
+          if (hasLanguageColumn('zh', ['chinese', '中文', 'simplified chinese'])) languages.push('zh');
+          if (hasLanguageColumn('ja', ['japanese', '日本語'])) languages.push('ja');
+          
+          // Italian - be more strict: only count if there's actual Italian content column
+          // NOT just a mention of "italian" in comments
+          const hasItalianColumn = hasLanguageColumn('it', ['italian', 'italiano']);
+          if (hasItalianColumn) languages.push('it');
 
           // Estimate string count
           let stringCount = 0;
@@ -394,7 +411,7 @@ export default function TranslationWizardPage() {
             ...file,
             languages: languages.length > 0 ? languages : ['en'],
             stringCount,
-            hasItalian: languages.includes('it')
+            hasItalian: hasItalianColumn
           });
         }
       } catch {
