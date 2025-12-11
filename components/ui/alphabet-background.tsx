@@ -86,11 +86,16 @@ export function AlphabetBackground({
     const animate = () => {
       if (!ctx || !canvas) return;
 
-      // Sfondo blu scuro con gradiente
+      // Sfondo scuro profondo (slate-950)
+      // Usiamo clearRect perché il componente genitore ha già un bg-slate-950
+      // Ma per sicurezza ridisegniamo un fondo semitrasparente o pulito
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Opzionale: gradiente di sfondo se vogliamo che il canvas gestisca il colore
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#0a1628');
-      gradient.addColorStop(0.5, '#0d1f3c');
-      gradient.addColorStop(1, '#0a1628');
+      gradient.addColorStop(0, '#020617'); // slate-950
+      gradient.addColorStop(0.5, '#0f172a'); // slate-900
+      gradient.addColorStop(1, '#020617'); // slate-950
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -116,8 +121,9 @@ export function AlphabetBackground({
         ctx.translate(px, py);
         ctx.rotate((letter.rotation * Math.PI) / 180);
         
-        // Colore blu leggermente più chiaro dello sfondo
-        ctx.fillStyle = `rgba(59, 130, 246, ${letter.opacity})`;
+        // Colore violetto/indaco molto tenue
+        // hsl(255, 80%, 70%) è circa un violetto chiaro
+        ctx.fillStyle = `hsla(250, 60%, 70%, ${letter.opacity})`;
         ctx.font = `${letter.size}px "Segoe UI", Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
