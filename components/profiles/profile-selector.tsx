@@ -25,6 +25,7 @@ import {
   MoreVertical,
   Trash2
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useProfiles } from '@/hooks/use-profiles';
 import { ProfileInfo } from '@/types/profiles';
 import { formatDistanceToNow } from 'date-fns';
@@ -44,11 +45,21 @@ interface ProfileCardProps {
 function ProfileCard({ profile, isSelected }: ProfileCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('');
+  const [rememberPassword, setRememberPassword] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
+
+  // Carica password salvata al mount
+  useEffect(() => {
+    const savedPassword = localStorage.getItem(`gs_pwd_${profile.id}`);
+    if (savedPassword) {
+      setPassword(atob(savedPassword)); // Decode base64
+      setRememberPassword(true);
+    }
+  }, [profile.id]);
   
   const { authenticateProfile, deleteProfile, getProfileAvatar } = useProfiles();
 
@@ -78,11 +89,20 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
     
     if (success) {
       console.log('✅ Login completato con successo per:', profile.name);
+      // Salva o rimuovi password in base alla checkbox
+      if (rememberPassword) {
+        localStorage.setItem(`gs_pwd_${profile.id}`, btoa(password)); // Encode base64
+      } else {
+        localStorage.removeItem(`gs_pwd_${profile.id}`);
+      }
       // 🔄 Nessuna chiamata a onSelect: la UI si aggiorna tramite lo stato globale
       // e l'evento "profile-auth-changed". ProtectedRoute rileverà isAuthenticated=true.
     } else {
       setAuthError('Password non corretta');
       setPassword('');
+      // Rimuovi password salvata se errata
+      localStorage.removeItem(`gs_pwd_${profile.id}`);
+      setRememberPassword(false);
     }
     
     setIsAuthenticating(false);
@@ -229,6 +249,23 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
                           <Eye className="h-4 w-4" />
                         )}
                       </Button>
+                    </div>
+                    
+                    {/* Checkbox Ricordami */}
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Checkbox
+                        id={`remember-${profile.id}`}
+                        checked={rememberPassword}
+                        onCheckedChange={(checked) => setRememberPassword(checked === true)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <label
+                        htmlFor={`remember-${profile.id}`}
+                        className="text-sm text-muted-foreground cursor-pointer select-none"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        Ricorda password
+                      </label>
                     </div>
                   </div>
 
