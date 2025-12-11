@@ -427,7 +427,7 @@ pub async fn list_directory_files(path: String) -> Result<Vec<String>, String> {
     Ok(files)
 }
 
-#[tauri::command]
+#[tauri::command(rename_all = "camelCase")]
 pub async fn scan_localization_files(
     path: String, 
     extensions: Vec<String>,
