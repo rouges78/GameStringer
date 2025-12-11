@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,6 +81,14 @@ type Step = 'select-game' | 'select-files' | 'configure' | 'translate' | 'result
 // ============================================================================
 
 export default function TranslatorProPage() {
+  // === URL PARAMS (from Translation Wizard) ===
+  const searchParams = useSearchParams();
+  const wizardGameId = searchParams.get('gameId');
+  const wizardGameName = searchParams.get('gameName');
+  const wizardInstallPath = searchParams.get('installPath');
+  const wizardMethod = searchParams.get('method');
+  const wizardTargetLang = searchParams.get('targetLang');
+  
   // === STATES ===
   
   // Navigation
@@ -90,6 +99,7 @@ export default function TranslatorProPage() {
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [wizardApplied, setWizardApplied] = useState(false);
   
   // File selection
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
@@ -151,6 +161,42 @@ export default function TranslatorProPage() {
     
     loadGames();
   }, []);
+  
+  // Apply Translation Wizard parameters when games are loaded
+  useEffect(() => {
+    if (wizardApplied || loading || games.length === 0) return;
+    
+    if (wizardGameId && wizardGameName) {
+      console.log('[TranslatorPro] Applying Wizard params:', { wizardGameId, wizardGameName, wizardInstallPath });
+      
+      // Find the game in the list or create a temporary one
+      let game = games.find(g => g.id === wizardGameId || g.name === wizardGameName);
+      
+      if (!game && wizardGameName) {
+        // Create a temporary game entry from wizard data
+        game = {
+          id: wizardGameId,
+          name: wizardGameName,
+          provider: 'steam',
+          installPath: wizardInstallPath || undefined,
+        };
+      }
+      
+      if (game) {
+        setSelectedGame(game);
+        setCurrentStep('select-files');
+        
+        // Apply target language if provided
+        if (wizardTargetLang) {
+          setTargetLanguage(wizardTargetLang);
+        }
+        
+        console.log('[TranslatorPro] Game pre-selected from Wizard:', game.name);
+      }
+      
+      setWizardApplied(true);
+    }
+  }, [games, loading, wizardApplied, wizardGameId, wizardGameName, wizardInstallPath, wizardTargetLang]);
   
   // Initialize Neural Translator
   useEffect(() => {
@@ -784,6 +830,22 @@ export default function TranslatorProPage() {
         {/* Step 2: Select Files */}
         {currentStep === 'select-files' && (
           <div className="space-y-6">
+            {/* Wizard Banner */}
+            {wizardGameId && wizardMethod && (
+              <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
+                <Sparkles className="h-5 w-5 text-purple-400" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-purple-300">
+                    Arrivi dal Translation Wizard
+                  </p>
+                  <p className="text-xs text-purple-400/70">
+                    Metodo consigliato: {wizardMethod === 'file' ? '📁 Modifica File' : wizardMethod === 'bridge' ? '🔌 Translation Bridge' : '🔧 Manuale'}
+                    {wizardTargetLang && ` • Lingua: ${wizardTargetLang.toUpperCase()}`}
+                  </p>
+                </div>
+              </div>
+            )}
+            
             <Button variant="ghost" size="sm" onClick={() => setCurrentStep('select-game')} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
               Cambia gioco
