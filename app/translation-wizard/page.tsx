@@ -279,13 +279,13 @@ export default function TranslationWizardPage() {
     const locFiles: LocalizationFile[] = [];
     
     try {
-      // Use the new scan_localization_files command
-      const extensions = ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings'];
+      // Use the new scan_localization_files command with deeper search
+      const extensions = ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings', 'ini'];
       
       const results = await invoke<any[]>('scan_localization_files', { 
         path: installPath,
         extensions,
-        maxDepth: 5
+        maxDepth: 10  // Increased depth for Unity _Data subfolders
       });
 
       console.log('[Wizard] Scan results:', results?.length || 0, 'files');
@@ -293,6 +293,9 @@ export default function TranslationWizardPage() {
       if (Array.isArray(results)) {
         for (const file of results) {
           const fileName = (file.name || '').toLowerCase();
+          const filePath = (file.path || '').toLowerCase();
+          
+          // Check filename OR path for localization indicators
           const isLocFile = 
             fileName.includes('local') || 
             fileName.includes('lang') || 
@@ -302,10 +305,18 @@ export default function TranslationWizardPage() {
             fileName.includes('dialogue') ||
             fileName.includes('translation') ||
             fileName.includes('i18n') ||
-            fileName.includes('l10n');
+            fileName.includes('l10n') ||
+            fileName.includes('resource') ||
+            // Also check path for Unity extracted assets
+            filePath.includes('example') ||
+            filePath.includes('localization') ||
+            filePath.includes('language');
 
-          // Include if it's a localization file OR if it's large enough to be interesting
-          if (isLocFile || file.size > 5000) {
+          // Include if it's a localization file OR if it's large enough (>50KB likely has translations)
+          // For txt files, be more generous with size threshold
+          const sizeThreshold = file.extension === 'txt' ? 50000 : 5000;
+          
+          if (isLocFile || file.size > sizeThreshold) {
             locFiles.push({
               path: file.path,
               name: file.name,
@@ -318,6 +329,10 @@ export default function TranslationWizardPage() {
           }
         }
       }
+      
+      // Sort by size descending (larger files more likely to be main localization)
+      locFiles.sort((a, b) => b.size - a.size);
+      
     } catch (error) {
       console.error('[Wizard] Scan error:', error);
     }
