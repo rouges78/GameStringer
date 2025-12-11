@@ -12,6 +12,7 @@ mod multi_process_injekt;
 mod anti_cheat;
 mod engine_detector;
 mod translation_bridge;
+mod activity_history;
 
 pub mod profiles;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
@@ -75,6 +76,7 @@ fn main() {
         .manage(settings_state)
         // .manage(notification_state) // TEMPORANEAMENTE DISABILITATO
         .manage(commands::translation_bridge::TranslationBridgeState::new())
+        .manage(commands::activity_history::ActivityHistoryState::default())
         // TEMPORANEAMENTE DISABILITATI PER ERRORI COMPILAZIONE
         // .manage(commands::advanced_ocr::AdvancedOCRState::default())
         // .manage(commands::translation_backends::TranslationBackendState::default())
@@ -448,6 +450,14 @@ fn main() {
             commands::translation_bridge::translation_bridge_get_translation,
             commands::translation_bridge::translation_bridge_export_json,
             commands::translation_bridge::translation_bridge_clear,
+
+            // Activity History System
+            commands::activity_history::activity_add,
+            commands::activity_history::activity_get,
+            commands::activity_history::activity_get_recent,
+            commands::activity_history::activity_count_by_type,
+            commands::activity_history::activity_delete,
+            commands::activity_history::activity_clear,
 
             // NOTIFICATION SYSTEM TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
             // commands::notifications::create_notification,

@@ -28,4 +28,5 @@ pub mod translation_memory;
 pub mod file_manager;
 pub mod unity_patcher;
 pub mod translation_bridge;
+pub mod activity_history;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO

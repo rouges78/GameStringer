@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { safeInvoke as invoke, isTauriEnvironment } from '@/lib/tauri-wrapper';
 import { ScanButton } from '@/components/scan-button';
 import { cacheManager } from '@/lib/cache-manager';
+import { activityHistory, Activity, activityIcons, activityColors } from '@/lib/activity-history';
 
 
 interface RecentActivityProps {
@@ -255,36 +256,36 @@ export default function Dashboard() {
         storeStats
       });
 
-      // Genera attività recenti basate sui dati reali
-      const recentActivities = [];
-      
-      if (savedTranslations.length > 0) {
-        const lastTranslation = savedTranslations[savedTranslations.length - 1];
-        recentActivities.push({
-          color: 'bg-purple-500',
-          text: `${lastTranslation.gameName}: Traduzione completata`,
-          time: getRelativeTime(new Date(lastTranslation.date))
-        });
+      // Carica attività recenti dal backend
+      try {
+        const recentFromBackend = await activityHistory.getRecent(5);
+        const recentActivities = recentFromBackend.map((a: Activity) => ({
+          color: `bg-${activityColors[a.activity_type]}-500`,
+          text: a.title,
+          time: activityHistory.formatRelativeTime(a.timestamp)
+        }));
+        setActivities(recentActivities);
+      } catch (e) {
+        // Fallback a localStorage se backend non disponibile
+        const recentActivities = [];
+        if (savedTranslations.length > 0) {
+          const lastTranslation = savedTranslations[savedTranslations.length - 1];
+          recentActivities.push({
+            color: 'bg-purple-500',
+            text: `${lastTranslation.gameName}: Traduzione completata`,
+            time: getRelativeTime(new Date(lastTranslation.date))
+          });
+        }
+        if (savedPatches.length > 0) {
+          const lastPatch = savedPatches[savedPatches.length - 1];
+          recentActivities.push({
+            color: 'bg-orange-500',
+            text: `${lastPatch.gameName}: Patch creata`,
+            time: getRelativeTime(new Date(lastPatch.date))
+          });
+        }
+        setActivities(recentActivities);
       }
-      
-      if (savedPatches.length > 0) {
-        const lastPatch = savedPatches[savedPatches.length - 1];
-        recentActivities.push({
-          color: 'bg-orange-500',
-          text: `${lastPatch.gameName}: Patch creata`,
-          time: getRelativeTime(new Date(lastPatch.date))
-        });
-      }
-      
-      if (stats.lastScan) {
-        recentActivities.push({
-          color: 'bg-green-500',
-          text: 'Steam: Sincronizzazione completata',
-          time: getRelativeTime(stats.lastScan)
-        });
-      }
-      
-      setActivities(recentActivities);
       setLastUpdate(new Date());
       setLoading(false);
     } catch (error) {
