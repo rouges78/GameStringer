@@ -20,7 +20,7 @@ import {
   Languages, CheckCircle, Search, ChevronRight, Sparkles,
   Upload, Download, Brain, Shield, Zap, Clock, DollarSign,
   Play, Pause, Square, RotateCcw, FileCode, Database,
-  ChevronDown, ChevronUp, Filter, Settings2, Info
+  ChevronDown, ChevronUp, Filter, Settings2, Info, Cpu, Wind
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -42,6 +42,14 @@ import {
   type FileFormat,
 } from '@/lib/neural-translator';
 import { translationMemory } from '@/lib/translation-memory';
+import { getFlagEmoji, LanguageFlags } from '@/components/ui/language-flags';
+
+// Mappa codici lingua a codici paese per bandierine
+const langToCountry: Record<string, string> = {
+  'en': 'GB', 'it': 'IT', 'de': 'DE', 'fr': 'FR', 'es': 'ES',
+  'ja': 'JP', 'zh': 'CN', 'ko': 'KR', 'pt': 'BR', 'ru': 'RU',
+  'pl': 'PL', 'nl': 'NL', 'tr': 'TR', 'ar': 'SA', 'th': 'TH'
+};
 
 // ============================================================================
 // TYPES
@@ -53,6 +61,7 @@ interface Game {
   provider: string;
   coverUrl?: string;
   installPath?: string;
+  supportedLanguages?: string;
 }
 
 interface SelectedFile {
@@ -61,6 +70,7 @@ interface SelectedFile {
   content: string;
   format: FileFormat;
   parseResult: ParseResult;
+  checked?: boolean; // Per la selezione multipla
 }
 
 type Step = 'select-game' | 'select-files' | 'configure' | 'translate' | 'results';
@@ -84,9 +94,10 @@ export default function TranslatorProPage() {
   // File selection
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [previewFile, setPreviewFile] = useState<SelectedFile | null>(null);
   
   // Configuration
-  const [provider, setProvider] = useState<'openai' | 'deepl' | 'google'>('openai');
+  const [provider, setProvider] = useState<'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google'>('openai');
   const [apiKey, setApiKey] = useState('');
   const [sourceLanguage, setSourceLanguage] = useState('en');
   const [targetLanguage, setTargetLanguage] = useState('it');
@@ -122,6 +133,7 @@ export default function TranslatorProPage() {
               provider: g.platform || 'steam',
               coverUrl: g.header_image || g.image_url,
               installPath: g.install_path,
+              supportedLanguages: g.supported_languages || '',
             }));
           
           const uniqueGames = Array.from(
@@ -150,6 +162,32 @@ export default function TranslatorProPage() {
     init();
   }, [sourceLanguage, targetLanguage]);
   
+  // Save API key to secretsManager when it changes
+  useEffect(() => {
+    if (!apiKey) return;
+    
+    // Map provider to API key name
+    const keyMap: Record<string, string> = {
+      'openai': 'OPENAI_API_KEY',
+      'gpt5': 'OPENAI_API_KEY',
+      'gemini': 'GEMINI_API_KEY',
+      'claude': 'ANTHROPIC_API_KEY',
+      'deepseek': 'DEEPSEEK_API_KEY',
+      'mistral': 'MISTRAL_API_KEY',
+      'openrouter': 'OPENROUTER_API_KEY',
+    };
+    
+    const keyName = keyMap[provider];
+    if (keyName) {
+      // Save API key via API route
+      fetch('/api/secrets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: keyName, value: apiKey })
+      }).catch(err => console.error('Failed to save API key:', err));
+    }
+  }, [apiKey, provider]);
+  
   // === COMPUTED ===
   
   const filteredGames = useMemo(() => {
@@ -158,13 +196,107 @@ export default function TranslatorProPage() {
     return games.filter(g => g.name.toLowerCase().includes(q));
   }, [games, searchQuery]);
   
-  const totalStrings = useMemo(() => {
-    return selectedFiles.reduce((sum, f) => sum + f.parseResult.strings.length, 0);
+  // File selezionati per la traduzione (checked !== false)
+  const checkedFiles = useMemo(() => {
+    return selectedFiles.filter(f => f.checked !== false);
   }, [selectedFiles]);
   
+  const totalStrings = useMemo(() => {
+    return checkedFiles.reduce((sum, f) => sum + f.parseResult.strings.length, 0);
+  }, [checkedFiles]);
+  
+  // Sistema di raccomandazione provider basato sul contenuto
+  const recommendedProvider = useMemo(() => {
+    if (checkedFiles.length === 0) return null;
+    
+    const allText = checkedFiles.flatMap(f => 
+      f.parseResult.strings.map(s => s.value)
+    ).join(' ').toLowerCase();
+    
+    const avgLength = allText.length / Math.max(1, totalStrings);
+    const hasVariables = /%[sd@]|{\w+}|\$\w+|\[\w+\]/i.test(allText);
+    const hasHtml = /<[^>]+>/i.test(allText);
+    const hasEmoji = /[\u{1F300}-\u{1F9FF}]/u.test(allText);
+    
+    // Analisi tipo contenuto
+    const isUI = avgLength < 30 && (
+      /button|menu|settings|options|save|load|exit|quit|start|continue/i.test(allText)
+    );
+    const isDialogue = avgLength > 50 && /said|asked|replied|"/i.test(allText);
+    const isCreative = /story|tale|legend|hero|adventure|quest/i.test(allText);
+    const isTechnical = /error|warning|failed|success|loading|connecting/i.test(allText);
+    
+    // Lingue target speciali
+    const isAsianTarget = ['zh', 'ja', 'ko', 'cn'].includes(targetLanguage);
+    const isEuropeanTarget = ['de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'cs', 'hr'].includes(targetLanguage);
+    const isRareLanguage = ['ar', 'hi', 'th', 'vi', 'id', 'tr'].includes(targetLanguage);
+    
+    // Raccomandazioni basate su ricerca
+    // Claude: migliore per documenti lunghi, coerenza, 78% output "good" (Lokalise 2025)
+    // GPT-4: gold standard per consistenza, 50+ lingue
+    // Gemini: ottimo per lingue regionali (Telugu), veloce
+    // DeepSeek: eccellente per Cinese↔Inglese, tecnico
+    // Mistral: open source, buono per privacy, multilingua
+    
+    if (isCreative || isDialogue) {
+      return {
+        provider: 'claude',
+        reason: 'Claude eccelle in traduzioni creative e dialoghi lunghi con coerenza stilistica',
+        confidence: 0.9
+      };
+    }
+    
+    if (isAsianTarget || (isTechnical && isAsianTarget)) {
+      return {
+        provider: 'deepseek',
+        reason: 'DeepSeek V3 è ottimizzato per traduzioni Cinese↔Inglese e contenuti tecnici',
+        confidence: 0.85
+      };
+    }
+    
+    if (isUI && hasVariables) {
+      return {
+        provider: 'gemini',
+        reason: 'Gemini gestisce bene variabili e stringhe UI corte, rispetta la Translation Memory',
+        confidence: 0.8
+      };
+    }
+    
+    if (totalStrings > 500) {
+      return {
+        provider: 'claude',
+        reason: 'Claude ha context window enorme, ideale per progetti grandi con terminologia consistente',
+        confidence: 0.85
+      };
+    }
+    
+    if (isEuropeanTarget && isUI) {
+      return {
+        provider: 'gpt5',
+        reason: 'GPT-4o è il gold standard per lingue europee ad alta risorsa',
+        confidence: 0.85
+      };
+    }
+    
+    if (isRareLanguage) {
+      return {
+        provider: 'openrouter',
+        reason: 'OpenRouter permette di scegliere modelli specializzati per lingue meno comuni',
+        confidence: 0.7
+      };
+    }
+    
+    // Default: GPT-4o per bilanciamento qualità/costo
+    return {
+      provider: 'gpt5',
+      reason: 'GPT-4o offre il miglior bilanciamento qualità/consistenza per la maggior parte dei casi',
+      confidence: 0.75
+    };
+  }, [checkedFiles, totalStrings, targetLanguage]);
+  
   const costEstimate = useMemo(() => {
-    if (selectedFiles.length === 0) return null;
-    const allStrings = selectedFiles.flatMap(f => 
+    if (checkedFiles.length === 0) return null;
+    const allStrings = checkedFiles.flatMap(f => 
       f.parseResult.strings.map(s => ({ text: s.value }))
     );
     return estimateBatchCost(allStrings, {
@@ -176,10 +308,28 @@ export default function TranslatorProPage() {
   
   // === HANDLERS ===
   
-  const handleGameSelect = (game: Game) => {
+  const handleGameSelect = async (game: Game) => {
     setSelectedGame(game);
     setSelectedFiles([]);
     setCurrentStep('select-files');
+    
+    // Fetch dettagli Steam per ottenere le lingue supportate
+    if (game.id && !game.supportedLanguages) {
+      try {
+        const appId = parseInt(game.id.replace('steam_', ''));
+        if (!isNaN(appId)) {
+          const details = await invoke('fetch_steam_game_details', { appId });
+          if (details && typeof details === 'object' && 'supported_languages' in details) {
+            const langs = (details as any).supported_languages;
+            if (langs) {
+              setSelectedGame(prev => prev ? { ...prev, supportedLanguages: langs } : prev);
+            }
+          }
+        }
+      } catch (err) {
+        console.log('[TranslatorPro] Could not fetch game details:', err);
+      }
+    }
   };
   
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,7 +357,11 @@ export default function TranslatorProPage() {
       }
     }
     
-    setSelectedFiles(prev => [...prev, ...newFiles]);
+    setSelectedFiles(prev => {
+          const existingNames = new Set(prev.map(f => f.name));
+          const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
+          return [...prev, ...uniqueNewFiles];
+        });
     setIsLoadingFiles(false);
   };
   
@@ -215,8 +369,152 @@ export default function TranslatorProPage() {
     setSelectedFiles(prev => prev.filter(f => f.name !== filename));
   };
   
+  const handleSearchGameFiles = async () => {
+    if (!selectedGame?.installPath) {
+      // Se non c'è un percorso di installazione, apri il file picker
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.accept = '.json,.po,.pot,.xliff,.xlf,.resx,.strings,.ini,.csv,.properties,.txt';
+      input.webkitdirectory = true;
+      input.onchange = async (e) => {
+        const files = (e.target as HTMLInputElement).files;
+        if (!files) return;
+        
+        setIsLoadingFiles(true);
+        const newFiles: SelectedFile[] = [];
+        
+        for (const file of Array.from(files)) {
+          // Filtra solo i file di traduzione
+          const ext = file.name.split('.').pop()?.toLowerCase();
+          if (!ext || !SUPPORTED_FORMATS.includes(ext as any)) continue;
+          
+          try {
+            const content = await file.text();
+            const parseResult = parseFile(content, file.name);
+            
+            if (parseResult.strings.length > 0) {
+              newFiles.push({
+                name: file.name,
+                path: file.webkitRelativePath || file.name,
+                content,
+                format: parseResult.format,
+                parseResult
+              });
+            }
+          } catch (err) {
+            console.error(`Error parsing ${file.name}:`, err);
+          }
+        }
+        
+        setSelectedFiles(prev => {
+          const existingNames = new Set(prev.map(f => f.name));
+          const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
+          return [...prev, ...uniqueNewFiles];
+        });
+        setIsLoadingFiles(false);
+      };
+      input.click();
+      return;
+    }
+    
+    // Se c'è un percorso, cerca i file tramite Tauri
+    setIsLoadingFiles(true);
+    try {
+      const fullPath = await invoke<string>('find_game_install_path', { installDir: selectedGame.installPath });
+      const response = await fetch('/api/library/scan-files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ directoryPath: fullPath }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        const files = Array.isArray(data) ? data : (data.files || []);
+        
+        const newFiles: SelectedFile[] = [];
+        for (const file of files) {
+          try {
+            const readResponse = await fetch('/api/library/read-file', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ filePath: file.path }),
+            });
+            
+            if (readResponse.ok) {
+              const { content } = await readResponse.json();
+              try {
+                const parseResult = parseFile(content, file.name);
+                
+                if (parseResult.strings.length > 0) {
+                  newFiles.push({
+                    name: file.name,
+                    path: file.path,
+                    content,
+                    format: parseResult.format,
+                    parseResult
+                  });
+                }
+              } catch (parseErr) {
+                console.warn(`Skipping ${file.name}: not a valid translation file`);
+              }
+            }
+          } catch (err) {
+            console.error(`Error reading ${file.name}:`, err);
+          }
+        }
+        
+        setSelectedFiles(prev => {
+          const existingNames = new Set(prev.map(f => f.name));
+          const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
+          return [...prev, ...uniqueNewFiles];
+        });
+      }
+    } catch (err) {
+      console.error('Error searching game files:', err);
+      // Fallback: apri il file picker
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.multiple = true;
+      input.accept = '.json,.po,.pot,.xliff,.xlf,.resx,.strings,.ini,.csv,.properties,.txt';
+      input.onchange = async (e) => {
+        const files = (e.target as HTMLInputElement).files;
+        if (!files) return;
+        
+        const newFiles: SelectedFile[] = [];
+        for (const file of Array.from(files)) {
+          try {
+            const content = await file.text();
+            const parseResult = parseFile(content, file.name);
+            
+            if (parseResult.strings.length > 0) {
+              newFiles.push({
+                name: file.name,
+                content,
+                format: parseResult.format,
+                parseResult
+              });
+            }
+          } catch (err) {
+            console.error(`Error parsing ${file.name}:`, err);
+          }
+        }
+        
+        setSelectedFiles(prev => {
+          const existingNames = new Set(prev.map(f => f.name));
+          const uniqueNewFiles = newFiles.filter(f => !existingNames.has(f.name));
+          return [...prev, ...uniqueNewFiles];
+        });
+      };
+      input.click();
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+  
   const handleStartTranslation = async () => {
-    if (selectedFiles.length === 0) return;
+    const filesToTranslate = selectedFiles.filter(f => f.checked !== false);
+    if (filesToTranslate.length === 0) return;
     
     setIsTranslating(true);
     setIsPaused(false);
@@ -224,8 +522,13 @@ export default function TranslatorProPage() {
     setProgress(null);
     setTranslatedFiles(new Map());
     
+    console.log('[Neural Translator] Starting translation with provider:', provider);
+    console.log('[Neural Translator] Files to translate:', filesToTranslate.length);
+    console.log('[Neural Translator] API Key present:', !!apiKey);
+    
     try {
-      for (const file of selectedFiles) {
+      for (const file of filesToTranslate) {
+        console.log('[Neural Translator] Translating file:', file.name);
         const result = await translateFile(file.content, file.name, {
           sourceLanguage,
           targetLanguage,
@@ -234,7 +537,10 @@ export default function TranslatorProPage() {
           gameName: selectedGame?.name,
           useTranslationMemory,
           runQualityChecks,
-          onProgress: (p) => setProgress(p)
+          onProgress: (p) => {
+            console.log('[Neural Translator] Progress:', p.completed, '/', p.total);
+            setProgress(p);
+          }
         });
         
         setCurrentJob(result.job);
@@ -260,6 +566,58 @@ export default function TranslatorProPage() {
     a.download = `${targetLanguage}_${filename}`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+  
+  const handleSaveFile = async (filename: string) => {
+    const content = translatedFiles.get(filename);
+    const originalFile = selectedFiles.find(f => f.name === filename);
+    if (!content || !originalFile?.path) return;
+    
+    try {
+      const result = await invoke<{ success: boolean; backup_path?: string; message: string }>('save_file_with_backup', {
+        filePath: originalFile.path,
+        content,
+        createBackup: true,
+      });
+      
+      if (result.success) {
+        alert(`✅ File salvato!\n${result.backup_path ? `Backup creato: ${result.backup_path}` : ''}`);
+      }
+    } catch (err) {
+      console.error('Error saving file:', err);
+      alert(`❌ Errore nel salvataggio: ${err}`);
+    }
+  };
+  
+  const handleSaveAllFiles = async () => {
+    for (const [filename] of translatedFiles.entries()) {
+      await handleSaveFile(filename);
+    }
+  };
+  
+  const handleOpenInEditor = (filename: string) => {
+    const content = translatedFiles.get(filename);
+    const originalFile = selectedFiles.find(f => f.name === filename);
+    if (!content) return;
+    
+    // Salva i dati in sessionStorage per l'Editor
+    const editorData = {
+      filename: `${targetLanguage}_${filename}`,
+      originalFilename: filename,
+      content,
+      originalContent: originalFile?.content || '',
+      format: originalFile?.format || 'json',
+      gameId: selectedGame?.id,
+      gameName: selectedGame?.name,
+      filePath: originalFile?.path,
+      sourceLanguage,
+      targetLanguage,
+    };
+    
+    sessionStorage.setItem('editorFile', JSON.stringify(editorData));
+    
+    // Naviga all'Editor
+    window.location.href = '/editor';
   };
   
   const handleDownloadAll = () => {
@@ -406,9 +764,14 @@ export default function TranslatorProPage() {
                       <h3 className="font-medium text-sm truncate group-hover:text-purple-500">
                         {game.name}
                       </h3>
-                      <Badge variant="secondary" className="text-[10px] mt-1">
-                        {game.provider}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px]">
+                          {game.provider}
+                        </Badge>
+                        {game.supportedLanguages && (
+                          <LanguageFlags supportedLanguages={game.supportedLanguages} maxFlags={5} />
+                        )}
+                      </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-purple-500" />
                   </button>
@@ -438,17 +801,56 @@ export default function TranslatorProPage() {
                     </div>
                   )}
                 </div>
-                <div>
+                <div className="flex-1">
                   <h2 className="text-lg font-semibold">{selectedGame.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Seleziona i file di localizzazione da tradurre
-                  </p>
+                  {selectedGame.supportedLanguages ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <LanguageFlags supportedLanguages={selectedGame.supportedLanguages} maxFlags={8} />
+                      <span className="text-xs text-muted-foreground">
+                        {selectedGame.supportedLanguages.replace(/<[^>]*>?/gm, '').split(',').length} lingue
+                      </span>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Seleziona i file di localizzazione da tradurre
+                    </p>
+                  )}
                 </div>
               </div>
             )}
             
+            {/* Search Game Files Button - PROMINENT */}
+            <Button
+              variant="default"
+              size="lg"
+              className="w-full h-16 gap-3 text-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              onClick={handleSearchGameFiles}
+              disabled={isLoadingFiles}
+            >
+              {isLoadingFiles ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  Ricerca in corso...
+                </>
+              ) : (
+                <>
+                  <Search className="h-6 w-6" />
+                  🔍 Cerca file di traduzione del gioco
+                </>
+              )}
+            </Button>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">oppure carica manualmente</span>
+              </div>
+            </div>
+            
             {/* File Upload */}
-            <div className="border-2 border-dashed rounded-xl p-8 text-center">
+            <div className="border-2 border-dashed rounded-xl p-6 text-center">
               <input
                 type="file"
                 multiple
@@ -458,12 +860,12 @@ export default function TranslatorProPage() {
                 id="file-upload"
               />
               <label htmlFor="file-upload" className="cursor-pointer">
-                <Upload className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground mb-1">
+                <Upload className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+                <p className="text-sm text-muted-foreground mb-1">
                   Trascina i file qui o clicca per selezionare
                 </p>
                 <p className="text-xs text-muted-foreground/70">
-                  Formati supportati: {SUPPORTED_FORMATS.join(', ')}
+                  Formati: {SUPPORTED_FORMATS.join(', ')}
                 </p>
               </label>
             </div>
@@ -471,32 +873,134 @@ export default function TranslatorProPage() {
             {/* Selected Files */}
             {selectedFiles.length > 0 && (
               <div className="space-y-3">
-                <h3 className="font-medium">File selezionati ({selectedFiles.length})</h3>
-                {selectedFiles.map((file) => (
-                  <div key={file.name} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
-                    <FileCode className="h-5 w-5 text-purple-500" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{file.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {FORMAT_DESCRIPTIONS[file.format]} • {file.parseResult.strings.length} stringhe
-                      </p>
-                    </div>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">
+                    File da tradurre ({selectedFiles.filter(f => f.checked !== false).length}/{selectedFiles.length})
+                  </h3>
+                  <div className="flex gap-2">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      onClick={() => handleRemoveFile(file.name)}
-                      className="text-destructive hover:text-destructive"
+                      onClick={() => {
+                        setSelectedFiles(prev => prev.map(f => ({ ...f, checked: true })));
+                      }}
+                      className="h-7 text-xs"
                     >
-                      ✕
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Tutti
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedFiles(prev => prev.map(f => ({ ...f, checked: false })));
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      <Square className="h-3 w-3 mr-1" />
+                      Nessuno
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Elimina i file NON selezionati (checked = false)
+                        const checkedFiles = selectedFiles.filter(f => f.checked !== false);
+                        if (checkedFiles.length > 0) {
+                          setSelectedFiles(checkedFiles);
+                        } else {
+                          setSelectedFiles([]);
+                        }
+                        setPreviewFile(null);
+                      }}
+                      className="h-7 text-xs text-destructive hover:text-destructive"
+                    >
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Rimuovi non selezionati
                     </Button>
                   </div>
-                ))}
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* File List */}
+                  <div className="space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <div 
+                        key={file.path || `${file.name}-${index}`} 
+                        className={cn(
+                          "flex items-center gap-3 p-3 rounded-lg border bg-card cursor-pointer transition-all",
+                          file.checked === false ? "opacity-50 border-dashed" : "",
+                          previewFile?.name === file.name ? "border-purple-500 bg-purple-500/5" : "hover:border-purple-500/50"
+                        )}
+                        onClick={() => setPreviewFile(file)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={file.checked !== false}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setSelectedFiles(prev => prev.map(f => 
+                              f.name === file.name ? { ...f, checked: e.target.checked } : f
+                            ));
+                          }}
+                          className="h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                        />
+                        <FileCode className="h-5 w-5 text-purple-500" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {FORMAT_DESCRIPTIONS[file.format]} • {file.parseResult.strings.length} stringhe
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); handleRemoveFile(file.name); }}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          ✕
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* File Preview */}
+                  <div className="border rounded-xl p-4 bg-muted/30">
+                    {previewFile ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-medium text-sm">{previewFile.name}</h4>
+                          <Badge variant="secondary">{previewFile.format.toUpperCase()}</Badge>
+                        </div>
+                        <ScrollArea className="h-[300px]">
+                          <div className="space-y-2">
+                            {previewFile.parseResult.strings.slice(0, 50).map((str, i) => (
+                              <div key={i} className="p-2 rounded bg-background border text-xs">
+                                <p className="font-mono text-muted-foreground truncate">{str.key}</p>
+                                <p className="mt-1">{str.value}</p>
+                              </div>
+                            ))}
+                            {previewFile.parseResult.strings.length > 50 && (
+                              <p className="text-xs text-muted-foreground text-center py-2">
+                                ... e altre {previewFile.parseResult.strings.length - 50} stringhe
+                              </p>
+                            )}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                        <FileText className="h-10 w-10 mb-3 opacity-50" />
+                        <p className="text-sm">Clicca su un file per vedere l'anteprima</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 
                 <div className="flex justify-between items-center pt-4">
                   <p className="text-sm text-muted-foreground">
                     Totale: <strong>{totalStrings}</strong> stringhe da tradurre
                   </p>
-                  <Button onClick={() => setCurrentStep('configure')} disabled={selectedFiles.length === 0}>
+                  <Button onClick={() => setCurrentStep('configure')} disabled={checkedFiles.length === 0}>
                     Continua
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
@@ -518,7 +1022,7 @@ export default function TranslatorProPage() {
             <div className="grid grid-cols-3 gap-4">
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
                 <FileText className="h-6 w-6 mx-auto text-purple-500 mb-2" />
-                <p className="text-2xl font-bold">{selectedFiles.length}</p>
+                <p className="text-2xl font-bold">{checkedFiles.length}</p>
                 <p className="text-xs text-muted-foreground">File</p>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
@@ -533,6 +1037,54 @@ export default function TranslatorProPage() {
               </div>
             </div>
             
+            {/* AI Recommendation */}
+            {recommendedProvider && (
+              <div className={cn(
+                "p-4 rounded-xl border-2 transition-all",
+                provider === recommendedProvider.provider 
+                  ? "border-green-500 bg-green-500/10" 
+                  : "border-yellow-500 bg-yellow-500/10"
+              )}>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500">
+                    <Sparkles className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-semibold">🤖 Raccomandazione AI</h4>
+                      <Badge variant="secondary" className="text-xs">
+                        {Math.round(recommendedProvider.confidence * 100)}% confidenza
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {recommendedProvider.reason}
+                    </p>
+                    {provider !== recommendedProvider.provider && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setProvider(recommendedProvider.provider as any)}
+                        className="gap-2"
+                      >
+                        <CheckCircle className="h-3 w-3" />
+                        Usa {recommendedProvider.provider === 'gpt5' ? 'GPT-4o' : 
+                             recommendedProvider.provider === 'claude' ? 'Claude' :
+                             recommendedProvider.provider === 'gemini' ? 'Gemini' :
+                             recommendedProvider.provider === 'deepseek' ? 'DeepSeek' :
+                             recommendedProvider.provider}
+                      </Button>
+                    )}
+                    {provider === recommendedProvider.provider && (
+                      <p className="text-sm text-green-600 font-medium flex items-center gap-1">
+                        <CheckCircle className="h-4 w-4" />
+                        Provider consigliato selezionato
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* Configuration */}
             <div className="grid md:grid-cols-2 gap-6">
               {/* Left Column */}
@@ -546,8 +1098,44 @@ export default function TranslatorProPage() {
                     <SelectContent>
                       <SelectItem value="openai">
                         <div className="flex items-center gap-2">
-                          <Zap className="h-4 w-4" />
-                          OpenAI GPT-4o
+                          <Zap className="h-4 w-4 text-green-500" />
+                          OpenAI GPT-4o Mini
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="gpt5">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-emerald-500" />
+                          ChatGPT-5 (GPT-4o)
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="gemini">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-blue-500" />
+                          Google Gemini 2.5
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="claude">
+                        <div className="flex items-center gap-2">
+                          <Brain className="h-4 w-4 text-orange-500" />
+                          Claude Sonnet 4
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="deepseek">
+                        <div className="flex items-center gap-2">
+                          <Cpu className="h-4 w-4 text-cyan-500" />
+                          DeepSeek V3
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="mistral">
+                        <div className="flex items-center gap-2">
+                          <Wind className="h-4 w-4 text-indigo-500" />
+                          Mistral Large
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="openrouter">
+                        <div className="flex items-center gap-2">
+                          <Languages className="h-4 w-4 text-purple-500" />
+                          OpenRouter (Multi-Model)
                         </div>
                       </SelectItem>
                       <SelectItem value="deepl">DeepL</SelectItem>
@@ -571,15 +1159,19 @@ export default function TranslatorProPage() {
                     <Label>Lingua origine</Label>
                     <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Seleziona lingua" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="de">Deutsch</SelectItem>
-                        <SelectItem value="fr">Français</SelectItem>
-                        <SelectItem value="es">Español</SelectItem>
-                        <SelectItem value="ja">日本語</SelectItem>
-                        <SelectItem value="zh">中文</SelectItem>
+                        <SelectItem value="en"><span className="flex items-center gap-2">{getFlagEmoji('GB')} English</span></SelectItem>
+                        <SelectItem value="de"><span className="flex items-center gap-2">{getFlagEmoji('DE')} Deutsch</span></SelectItem>
+                        <SelectItem value="fr"><span className="flex items-center gap-2">{getFlagEmoji('FR')} Français</span></SelectItem>
+                        <SelectItem value="es"><span className="flex items-center gap-2">{getFlagEmoji('ES')} Español</span></SelectItem>
+                        <SelectItem value="ja"><span className="flex items-center gap-2">{getFlagEmoji('JP')} 日本語</span></SelectItem>
+                        <SelectItem value="zh"><span className="flex items-center gap-2">{getFlagEmoji('CN')} 中文</span></SelectItem>
+                        <SelectItem value="ko"><span className="flex items-center gap-2">{getFlagEmoji('KR')} 한국어</span></SelectItem>
+                        <SelectItem value="ru"><span className="flex items-center gap-2">{getFlagEmoji('RU')} Русский</span></SelectItem>
+                        <SelectItem value="pt"><span className="flex items-center gap-2">{getFlagEmoji('BR')} Português</span></SelectItem>
+                        <SelectItem value="pl"><span className="flex items-center gap-2">{getFlagEmoji('PL')} Polski</span></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -587,14 +1179,20 @@ export default function TranslatorProPage() {
                     <Label>Lingua destinazione</Label>
                     <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Seleziona lingua" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="it">Italiano</SelectItem>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="de">Deutsch</SelectItem>
-                        <SelectItem value="fr">Français</SelectItem>
-                        <SelectItem value="es">Español</SelectItem>
+                        <SelectItem value="it"><span className="flex items-center gap-2">{getFlagEmoji('IT')} Italiano</span></SelectItem>
+                        <SelectItem value="en"><span className="flex items-center gap-2">{getFlagEmoji('GB')} English</span></SelectItem>
+                        <SelectItem value="de"><span className="flex items-center gap-2">{getFlagEmoji('DE')} Deutsch</span></SelectItem>
+                        <SelectItem value="fr"><span className="flex items-center gap-2">{getFlagEmoji('FR')} Français</span></SelectItem>
+                        <SelectItem value="es"><span className="flex items-center gap-2">{getFlagEmoji('ES')} Español</span></SelectItem>
+                        <SelectItem value="ja"><span className="flex items-center gap-2">{getFlagEmoji('JP')} 日本語</span></SelectItem>
+                        <SelectItem value="zh"><span className="flex items-center gap-2">{getFlagEmoji('CN')} 中文</span></SelectItem>
+                        <SelectItem value="ko"><span className="flex items-center gap-2">{getFlagEmoji('KR')} 한국어</span></SelectItem>
+                        <SelectItem value="ru"><span className="flex items-center gap-2">{getFlagEmoji('RU')} Русский</span></SelectItem>
+                        <SelectItem value="pt"><span className="flex items-center gap-2">{getFlagEmoji('BR')} Português</span></SelectItem>
+                        <SelectItem value="pl"><span className="flex items-center gap-2">{getFlagEmoji('PL')} Polski</span></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -681,15 +1279,46 @@ export default function TranslatorProPage() {
               {isTranslating ? (
                 <>
                   <div className="relative w-20 h-20 mx-auto mb-4">
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-pulse" />
+                    <div className={cn(
+                      "absolute inset-0 rounded-full animate-pulse transition-colors duration-500",
+                      progress?.isRateLimited 
+                        ? "bg-amber-500" 
+                        : "bg-gradient-to-r from-violet-500 to-fuchsia-500"
+                    )} />
                     <div className="absolute inset-2 rounded-full bg-background flex items-center justify-center">
-                      <Brain className="h-8 w-8 text-purple-500 animate-pulse" />
+                      {progress?.isRateLimited ? (
+                        <Clock className="h-8 w-8 text-amber-500 animate-pulse" />
+                      ) : (
+                        <Brain className="h-8 w-8 text-purple-500 animate-pulse" />
+                      )}
                     </div>
                   </div>
-                  <h2 className="text-xl font-semibold mb-2">Traduzione in corso...</h2>
+                  
+                  <h2 className="text-xl font-semibold mb-2">
+                    {progress?.isRateLimited ? 'In attesa API...' : 'Traduzione in corso...'}
+                  </h2>
+                  
+                  {progress?.statusMessage && (
+                    <div className={cn(
+                      "inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-4",
+                      progress.isRateLimited 
+                        ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                        : "bg-muted text-muted-foreground"
+                    )}>
+                      {progress.isRateLimited && <AlertTriangle className="h-3 w-3" />}
+                      {progress.statusMessage}
+                    </div>
+                  )}
+
                   {progress && (
                     <div className="max-w-md mx-auto space-y-3">
-                      <Progress value={progress.percentage} className="h-2" />
+                      <Progress 
+                        value={progress.percentage} 
+                        className={cn(
+                          "h-2 transition-all",
+                          progress.isRateLimited ? "[&>div]:bg-amber-500" : ""
+                        )} 
+                      />
                       <div className="flex justify-between text-sm text-muted-foreground">
                         <span>{progress.completed}/{progress.total} stringhe</span>
                         <span>{progress.fromMemory} da memoria</span>
@@ -699,7 +1328,7 @@ export default function TranslatorProPage() {
                           Tempo rimanente: ~{formatTimeRemaining(progress.estimatedTimeRemaining)}
                         </p>
                       )}
-                      {progress.currentItem && (
+                      {progress.currentItem && !progress.isRateLimited && (
                         <p className="text-xs text-muted-foreground truncate">
                           "{progress.currentItem}..."
                         </p>
@@ -758,10 +1387,16 @@ export default function TranslatorProPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium">File tradotti</h3>
-                <Button variant="outline" size="sm" onClick={handleDownloadAll}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Scarica tutti
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={handleSaveAllFiles}>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Salva tutti (con backup)
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDownloadAll}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Scarica tutti
+                  </Button>
+                </div>
               </div>
               
               {Array.from(translatedFiles.entries()).map(([filename, content]) => (
@@ -773,9 +1408,17 @@ export default function TranslatorProPage() {
                       {(content.length / 1024).toFixed(1)} KB
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => handleDownloadFile(filename)}>
-                    <Download className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleOpenInEditor(filename)} title="Apri nell'Editor">
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleSaveFile(filename)} title="Salva con backup">
+                      <CheckCircle className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDownloadFile(filename)} title="Scarica">
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

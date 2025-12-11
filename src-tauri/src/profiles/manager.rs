@@ -10,6 +10,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
+use base64::{Engine as _, engine::general_purpose};
 
 /// Eventi del ProfileManager
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,8 +73,6 @@ pub struct ExportedProfile {
     /// Firma digitale per verifica integrità
     pub signature: String,
 }
-
-
 
 /// Metadati export profilo
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -288,11 +287,49 @@ impl ProfileManager {
         // Genera ID unico
         let profile_id = Uuid::new_v4().to_string();
 
+        // Gestione Avatar Personalizzato
+        let mut final_avatar_path = request.avatar_path.clone();
+        if let Some(path) = &request.avatar_path {
+            if path.starts_with("custom:") {
+                // Rimuovi prefisso "custom:"
+                let base64_full = path.strip_prefix("custom:").unwrap_or("");
+                
+                // Se c'è l'header data URI (es. data:image/png;base64,...), rimuovilo
+                let clean_base64 = if let Some(idx) = base64_full.find(',') {
+                     &base64_full[idx+1..]
+                } else {
+                     base64_full
+                };
+
+                // Decodifica
+                if let Ok(data) = general_purpose::STANDARD.decode(clean_base64) {
+                     // Determina estensione (default png)
+                     let ext = "png"; 
+                     
+                     // Salva usando lo storage
+                     match self.storage.save_avatar(&profile_id, &data, ext).await {
+                        Ok(filename) => {
+                             let filename_clone = filename.clone();
+                             println!("[PROFILE MANAGER] ✅ Avatar personalizzato salvato: {}", filename_clone);
+                             final_avatar_path = Some(filename);
+                        },
+                        Err(e) => {
+                            println!("[PROFILE MANAGER] ⚠️ Errore salvataggio avatar: {}", e);
+                            // Fallback: non salvare avatar o mantenere stringa (meglio mantenere null per evitare crash su stringhe lunghe)
+                            final_avatar_path = None; 
+                        }
+                     }
+                } else {
+                    println!("[PROFILE MANAGER] ⚠️ Errore decodifica base64 avatar");
+                }
+            }
+        }
+
         // Crea profilo
         let profile = UserProfile {
             id: profile_id.clone(),
             name: request.name.clone(),
-            avatar_path: request.avatar_path.clone(),
+            avatar_path: final_avatar_path,
             created_at: Utc::now(),
             last_accessed: Utc::now(),
             settings: request.settings.unwrap_or_default(),
@@ -841,15 +878,39 @@ impl ProfileManager {
         }
     }
 
-    /// Ripara profilo corrotto
-    #[allow(dead_code)] // API per riparazione profilo
-    pub async fn repair_profile(&mut self, profile_id: &str, password: &str) -> ProfileResult<()> {
-        // Tenta di caricare il profilo
-        let _profile = self.storage.load_profile(profile_id, password).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+    /// Ripara un profilo corrotto (Placeholder)
+    #[allow(dead_code)]
+    pub async fn repair_profile(&mut self, profile_id: &str, _password: &str) -> ProfileResult<()> {
+        // Implementazione placeholder che verifica solo l'esistenza
+        if self.get_profile_info(profile_id).await?.is_some() {
+            println!("[PROFILE MANAGER] Profilo '{}' riparato (simulazione)", profile_id);
+            Ok(())
+        } else {
+             Err(ProfileError::ProfileNotFound(profile_id.to_string()))
+        }
+    }
 
-        println!("[PROFILE MANAGER] ✅ Profilo verificato/riparato");
-        Ok(())
+    /// Ottiene l'avatar del profilo in formato base64
+    pub async fn get_profile_avatar(&self, profile_id: &str) -> ProfileResult<Option<String>> {
+        let profile_info = self.get_profile_info(profile_id).await?
+            .ok_or_else(|| ProfileError::ProfileNotFound(profile_id.to_string()))?;
+
+        if let Some(avatar_filename) = profile_info.avatar_path {
+            // Se è un gradiente predefinito, restituisci quello
+            if avatar_filename.starts_with("gradient-") {
+                return Ok(Some(avatar_filename));
+            }
+
+            // Carica i dati dell'avatar dallo storage
+            let data = self.storage.load_avatar(&avatar_filename).await
+                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            
+            // Codifica in base64
+            let base64_data = general_purpose::STANDARD.encode(&data);
+            return Ok(Some(format!("data:image/png;base64,{}", base64_data)));
+        }
+
+        Ok(None)
     }
 
     /// Lista backup profilo

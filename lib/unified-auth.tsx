@@ -78,9 +78,11 @@ const STORAGE_KEYS = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 // Utility functions
-const isClient = () => typeof window !== 'undefined';
+function isClient(): boolean {
+  return typeof window !== 'undefined';
+}
 
-const getStorageItem = <T,>(key: string): T | null => {
+function getStorageItem<T>(key: string): T | null {
   if (!isClient()) return null;
   try {
     const item = localStorage.getItem(key);
@@ -89,18 +91,18 @@ const getStorageItem = <T,>(key: string): T | null => {
     clientLogger.error('Failed to get storage item', 'UNIFIED_AUTH', { key, error });
     return null;
   }
-};
+}
 
-const setStorageItem = <T>(key: string, value: T): void => {
+function setStorageItem<T>(key: string, value: T): void {
   if (!isClient()) return;
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
     clientLogger.error('Failed to set storage item', 'UNIFIED_AUTH', { key, error });
   }
-};
+}
 
-const removeStorageItem = (key: string): void => {
+function removeStorageItem(key: string): void {
   if (!isClient()) return;
   try {
     localStorage.removeItem(key);

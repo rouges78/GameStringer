@@ -26,7 +26,7 @@ export interface UseProfilesOptimizedReturn {
   // Actions
   loadProfiles: () => Promise<void>;
   createProfile: (name: string, password: string) => Promise<void>;
-  deleteProfile: (profileId: string) => Promise<void>;
+  deleteProfile: (profileId: string, password: string) => Promise<void>;
   login: (profileId: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   
@@ -88,8 +88,8 @@ export function useProfilesOptimized(): UseProfilesOptimizedReturn {
         const formattedProfiles: Profile[] = backendProfiles.map((profile: any) => ({
           id: profile.id,
           name: profile.name,
-          avatar: profile.avatar,
-          lastAccess: profile.last_access || 0,
+          avatar: profile.avatar_path,
+          lastAccess: profile.last_accessed || 0,
           isLocked: profile.is_locked || false,
           hasCredentials: profile.has_credentials || false
         }));
@@ -170,12 +170,12 @@ export function useProfilesOptimized(): UseProfilesOptimizedReturn {
   /**
    * Elimina profilo
    */
-  const deleteProfile = useCallback(async (profileId: string) => {
+  const deleteProfile = useCallback(async (profileId: string, password: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await invoke<any>('delete_profile', { profileId });
+      const response = await invoke<any>('delete_profile', { profileId, password });
       
       if (response.success) {
         // Rimuovi dalla cache
@@ -202,10 +202,14 @@ export function useProfilesOptimized(): UseProfilesOptimizedReturn {
     setError(null);
 
     try {
-      const response = await invoke<any>('authenticate_profile', { profileId, password });
+      const profile = profiles.find(p => p.id === profileId);
+      if (!profile) {
+        throw new Error('Profilo non trovato');
+      }
+
+      const response = await invoke<any>('authenticate_profile', { name: profile.name, password });
       
       if (response.success) {
-        const profile = profiles.find(p => p.id === profileId);
         if (profile) {
           setCurrentProfile(profile);
           
@@ -230,7 +234,7 @@ export function useProfilesOptimized(): UseProfilesOptimizedReturn {
    */
   const logout = useCallback(async () => {
     try {
-      await invoke('logout_profile');
+      await invoke('logout');
       setCurrentProfile(null);
     } catch (err) {
       console.error('Error during logout:', err);

@@ -6,10 +6,11 @@ import Link from 'next/link';
 import { invoke } from '@/lib/tauri-api';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LanguageFlags } from '@/components/ui/language-flags';
+import { LanguageFlags, languageToCountryCode, getFlagEmoji, getCountryCode } from '@/components/ui/language-flags';
 import { ForceRefreshButton } from '@/components/ui/force-refresh-button';
 import { ensureArray, validateArray } from '@/lib/array-utils';
 import { toast } from 'sonner';
+import * as CountryFlags from 'country-flag-icons/react/3x2';
 
 // Definiamo l'interfaccia per un singolo gioco, assicurandoci che corrisponda al backend
 interface Game {
@@ -160,6 +161,7 @@ export default function LibraryPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false); // Filtri nascosti stile Rai Pal
+  const [showUnplayedOnly, setShowUnplayedOnly] = useState(false); // Nuovo filtro Backlog
 
   // Anti-loop protection
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
@@ -527,11 +529,12 @@ export default function LibraryPage() {
       const matchesVR = !showVROnly || game.is_vr;
       const matchesInstalled = !showInstalledOnly || game.is_installed;
       const matchesShared = !showSharedOnly || game.isShared;
+      const matchesUnplayed = !showUnplayedOnly || (!game.last_played || game.last_played === 0);
       const matchesLanguage = selectedLanguage === 'All' || (game.supported_languages && game.supported_languages.some(lang => normalizeLanguage(lang) === selectedLanguage));
       const matchesEngine = selectedEngine === 'All' || game.engine === selectedEngine;
       const matchesGenre = selectedGenre === 'All' || (game.genres && game.genres.includes(selectedGenre));
       
-      return matchesPlatform && matchesSearch && matchesVR && matchesInstalled && matchesShared && matchesLanguage && matchesEngine && matchesGenre;
+      return matchesPlatform && matchesSearch && matchesVR && matchesInstalled && matchesShared && matchesUnplayed && matchesLanguage && matchesEngine && matchesGenre;
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -822,23 +825,53 @@ export default function LibraryPage() {
               }`}>
               🔗 Condivisi
             </button>
+            <button
+              onClick={() => setShowUnplayedOnly(!showUnplayedOnly)}
+              className={`px-2 py-1 text-[10px] font-medium rounded transition-colors ${
+                showUnplayedOnly ? 'bg-pink-600 text-white' : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
+              }`}>
+              📦 Backlog
+            </button>
           </div>
           
           {/* Lingue */}
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-[10px] text-gray-500 w-12">Lingue:</span>
-            {languages.slice(0, 8).map(language => (
-              <button
-                key={language}
-                onClick={() => setSelectedLanguage(language)}
-                className={`px-1.5 py-0.5 text-[10px] rounded transition-colors ${
-                  selectedLanguage === language
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600'
-                }`}>
-                {language === 'All' ? 'Tutte' : language}
-              </button>
-            ))}
+            {languages.slice(0, 12).map(language => {
+              const countryCode = getCountryCode(language);
+              const FlagComponent = countryCode ? (CountryFlags as any)[countryCode] : null;
+              const isSelected = selectedLanguage === language;
+              
+              return (
+                <button
+                  key={language}
+                  onClick={() => setSelectedLanguage(language)}
+                  title={language === 'All' ? 'Tutte le lingue' : language}
+                  className={`relative group flex items-center justify-center w-8 h-6 rounded border transition-all ${
+                    isSelected
+                      ? 'bg-green-600/20 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]'
+                      : 'bg-gray-800/50 border-gray-700 hover:border-gray-500 hover:bg-gray-700'
+                  }`}
+                >
+                  {language === 'All' ? (
+                    <span className="text-xs">🌐</span>
+                  ) : FlagComponent ? (
+                    <div className={`w-5 h-3.5 shadow-sm rounded-[1px] overflow-hidden ${isSelected ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`}>
+                      <FlagComponent className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <span className="text-[10px] uppercase font-bold text-gray-400">
+                      {language.substring(0, 2)}
+                    </span>
+                  )}
+                  
+                  {/* Tooltip on hover */}
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/90 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-gray-700">
+                    {language === 'All' ? 'Tutte' : language}
+                  </span>
+                </button>
+              );
+            })}
           </div>
           
           {/* Engine */}

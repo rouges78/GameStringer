@@ -199,9 +199,9 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Avatar Selection */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Label className="text-sm font-medium">Avatar del Profilo</Label>
             
             {/* Current Avatar Preview - Cliccabile per upload */}
@@ -214,38 +214,38 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                   className="hidden"
                   disabled={isCreating}
                 />
-                <Avatar className="h-20 w-20 border-2 border-border group-hover:border-primary transition-colors">
+                <Avatar className="h-16 w-16 border-2 border-border group-hover:border-primary transition-colors">
                   {customImage ? (
                     <AvatarImage src={customImage} alt="Avatar personalizzato" />
                   ) : null}
                   <AvatarFallback className={`bg-gradient-to-br ${getAvatarGradient(formData.avatarPath)} text-white text-lg font-semibold`}>
-                    {formData.name ? getInitials(formData.name) : <Camera className="h-8 w-8" />}
+                    {formData.name ? getInitials(formData.name) : <Camera className="h-6 w-6" />}
                   </AvatarFallback>
                 </Avatar>
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Upload className="h-6 w-6 text-white" />
+                  <Upload className="h-5 w-5 text-white" />
                 </div>
               </label>
             </div>
-            <p className="text-xs text-center text-muted-foreground">Clicca per caricare un'immagine</p>
+            <p className="text-[10px] text-center text-muted-foreground">Clicca per caricare un'immagine</p>
 
             {/* Avatar Presets */}
-            <div className="grid grid-cols-6 gap-2">
+            <div className="grid grid-cols-6 gap-1.5">
               {AVATAR_GRADIENTS.map((avatar) => (
                 <button
                   key={avatar.id}
                   type="button"
                   onClick={() => handleAvatarSelect(avatar.id)}
-                  className={`relative rounded-full p-1 transition-all ${
+                  className={`relative rounded-full p-0.5 transition-all ${
                     selectedAvatar === avatar.id
                       ? 'ring-2 ring-primary bg-primary/10'
                       : 'hover:bg-muted'
                   }`}
                   title={avatar.name}
                 >
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className={`bg-gradient-to-br ${avatar.gradient} text-white text-sm font-semibold`}>
-                      {formData.name ? getInitials(formData.name) : <User className="h-4 w-4" />}
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className={`bg-gradient-to-br ${avatar.gradient} text-white text-xs font-semibold`}>
+                      {formData.name ? getInitials(formData.name) : <User className="h-3 w-3" />}
                     </AvatarFallback>
                   </Avatar>
                 </button>
@@ -254,8 +254,8 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
           </div>
 
           {/* Profile Name */}
-          <div className="space-y-2">
-            <Label htmlFor="profile-name" className="text-sm font-medium">
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-name" className="text-xs font-medium">
               Nome Profilo *
             </Label>
             <Input
@@ -266,15 +266,13 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
               placeholder="Inserisci il nome del profilo"
               disabled={isCreating}
               maxLength={50}
+              className="h-9"
             />
-            <p className="text-xs text-muted-foreground">
-              {formData.name.length}/50 caratteri
-            </p>
           </div>
 
           {/* Password */}
-          <div className="space-y-2">
-            <Label htmlFor="profile-password" className="text-sm font-medium">
+          <div className="space-y-1.5">
+            <Label htmlFor="profile-password" className="text-xs font-medium">
               Password *
             </Label>
             <div className="relative">
@@ -284,7 +282,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 placeholder="Inserisci la password"
-                className="pr-10"
+                className="pr-10 h-9"
                 disabled={isCreating}
               />
               <Button
@@ -296,17 +294,17 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                 disabled={isCreating}
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="h-3 w-3" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-3 w-3" />
                 )}
               </Button>
             </div>
           </div>
 
           {/* Confirm Password */}
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password" className="text-sm font-medium">
+          <div className="space-y-1.5">
+            <Label htmlFor="confirm-password" className="text-xs font-medium">
               Conferma Password *
             </Label>
             <div className="relative">
@@ -316,7 +314,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                 placeholder="Conferma la password"
-                className="pr-10"
+                className="pr-10 h-9"
                 disabled={isCreating}
               />
               <Button
@@ -328,9 +326,9 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
                 disabled={isCreating}
               >
                 {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className="h-3 w-3" />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-3 w-3" />
                 )}
               </Button>
             </div>
@@ -338,23 +336,23 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
 
           {/* Error Alert */}
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="py-2">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="text-xs">{error}</AlertDescription>
             </Alert>
           )}
 
           {/* Security Info */}
           <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
-            <CardContent className="pt-4">
+            <CardContent className="p-3">
               <div className="flex items-start space-x-2">
-                <CheckCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-blue-800 dark:text-blue-200">
-                  <p className="font-medium mb-1">Sicurezza del Profilo</p>
-                  <ul className="text-xs space-y-1 text-blue-700 dark:text-blue-300">
-                    <li>• I tuoi dati saranno crittografati con AES-256</li>
-                    <li>• La password non viene mai salvata in chiaro</li>
-                    <li>• Ogni profilo ha i propri settings isolati</li>
+                <CheckCircle className="h-3 w-3 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-blue-800 dark:text-blue-200">
+                  <p className="font-medium mb-0.5">Sicurezza del Profilo</p>
+                  <ul className="text-[10px] space-y-0.5 text-blue-700 dark:text-blue-300">
+                    <li>• Crittografia AES-256</li>
+                    <li>• Password protetta</li>
+                    <li>• Settings isolati</li>
                   </ul>
                 </div>
               </div>
@@ -362,7 +360,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
           </Card>
 
           {/* Actions */}
-          <div className="flex space-x-3 pt-4">
+          <div className="flex space-x-3 pt-2">
             <Button
               type="button"
               variant="outline"

@@ -2,9 +2,9 @@
 mod profile_manager_integration_tests {
     use crate::profiles::manager::ProfileManager;
     use crate::profiles::storage::ProfileStorage;
-    use crate::profiles::models::{CreateProfileRequest, ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings};
+    use crate::profiles::models::{EncryptedCredential, CreateProfileRequest, ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings};
     use crate::profiles::errors::ProfileError;
-    use crate::profiles::rate_limiter::{RateLimiterConfig, RateLimitResult};
+    use crate::profiles::rate_limiter::RateLimiterConfig;
     use crate::profiles::secure_memory::SecureMemory;
     use tempfile::TempDir;
     use tokio;
@@ -26,6 +26,7 @@ mod profile_manager_integration_tests {
             password: password.to_string(),
             avatar_path: None,
             settings: Some(ProfileSettings {
+                version: 1,
                 theme: Theme::Dark,
                 language: "it".to_string(),
                 auto_login: false,
@@ -176,7 +177,8 @@ mod profile_manager_integration_tests {
         manager.authenticate_profile("TestUser", "SecurePass123!").await.expect("Failed to authenticate");
 
         // Test: Aggiornamento impostazioni
-        let mut new_settings = ProfileSettings {
+        let new_settings = ProfileSettings {
+            version: 1,
             theme: Theme::Light,
             language: "en".to_string(),
             auto_login: true,
@@ -264,7 +266,8 @@ mod profile_manager_integration_tests {
 
         // Test: Durata sessione
         let duration = manager.get_current_session_duration().expect("No session duration");
-        assert!(duration >= 0);
+        // duration is u64, so it is always >= 0
+        assert!(duration < 3600*24); // Sanity check: session shouldn't be insanely long
 
         // Test: Timeout sessione
         assert!(!manager.is_session_expired(3600)); // 1 ora
@@ -476,6 +479,7 @@ mod profile_manager_integration_tests {
             password: "CompletePass123!".to_string(),
             avatar_path: Some("/path/to/avatar.png".to_string()),
             settings: Some(ProfileSettings {
+                version: 1,
                 theme: Theme::Dark,
                 language: "it".to_string(),
                 auto_login: true,
@@ -568,7 +572,7 @@ mod profile_manager_integration_tests {
 
         // FASE 4: Verifica isolamento dati - crea secondo profilo
         let second_request = create_test_profile_request("SecondUser", "SecondPass456!");
-        let second_profile = manager.create_profile(second_request).await
+        let _second_profile = manager.create_profile(second_request).await
             .expect("Failed to create second profile");
 
         // Cambia al secondo profilo
@@ -742,6 +746,7 @@ mod profile_manager_integration_tests {
             password: "ExportPass123!".to_string(),
             avatar_path: Some("/path/to/complex/avatar.jpg".to_string()),
             settings: Some(ProfileSettings {
+                version: 1,
                 theme: Theme::Light,
                 language: "es".to_string(),
                 auto_login: false,
@@ -768,7 +773,7 @@ mod profile_manager_integration_tests {
             }),
         };
 
-        let profile = source_manager.create_profile(request).await
+        let _profile = source_manager.create_profile(request).await
             .expect("Failed to create export test profile");
         
         source_manager.authenticate_profile("ExportTestUser", "ExportPass123!").await

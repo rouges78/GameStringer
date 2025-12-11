@@ -292,7 +292,7 @@ export function useProfiles(): UseProfilesReturn {
     try {
       setError(null);
       const response = await invoke<ProfileResponse<boolean>>('delete_profile', { 
-        profile_id: profileId, 
+        profileId, 
         password 
       });
       
@@ -313,6 +313,23 @@ export function useProfiles(): UseProfilesReturn {
     }
   }, [loadProfiles]);
 
+  // Ottieni avatar profilo
+  const getProfileAvatar = useCallback(async (profileId: string): Promise<string | null> => {
+    try {
+      const response = await invoke<ProfileResponse<string | null>>('get_profile_avatar', { 
+        profileId 
+      });
+      
+      if (response.success && response.data) {
+        return response.data;
+      }
+      return null;
+    } catch (err) {
+      console.error('Errore recupero avatar:', err);
+      return null;
+    }
+  }, []);
+
   return {
     profiles,
     currentProfile,
@@ -324,5 +341,6 @@ export function useProfiles(): UseProfilesReturn {
     logout,
     refreshProfiles,
     deleteProfile,
+    getProfileAvatar,
   };
 }

@@ -60,6 +60,24 @@ export const POST = withRateLimit(withErrorHandler(async function(request: NextR
       case 'openai':
         translationResult = await translateWithOpenAI(text, targetLanguage, sourceLanguage, context);
         break;
+      case 'gpt5':
+        translationResult = await translateWithGPT5(text, targetLanguage, sourceLanguage, context);
+        break;
+      case 'gemini':
+        translationResult = await translateWithGemini(text, targetLanguage, sourceLanguage, context);
+        break;
+      case 'claude':
+        translationResult = await translateWithClaude(text, targetLanguage, sourceLanguage, context);
+        break;
+      case 'deepseek':
+        translationResult = await translateWithDeepSeek(text, targetLanguage, sourceLanguage, context);
+        break;
+      case 'mistral':
+        translationResult = await translateWithMistral(text, targetLanguage, sourceLanguage, context);
+        break;
+      case 'openrouter':
+        translationResult = await translateWithOpenRouter(text, targetLanguage, sourceLanguage, context);
+        break;
       case 'deepl':
         translationResult = await translateWithDeepL(text, targetLanguage, sourceLanguage);
         break;
@@ -171,6 +189,448 @@ async function translateWithOpenAI(
   } catch (error) {
     logger.error('OpenAI translation failed', 'TRANSLATE_API', { error });
     throw new Error(`OpenAI translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function translateWithGemini(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string
+): Promise<TranslationResponse> {
+  const apiKey = secretsManager.get('GEMINI_API_KEY');
+  
+  if (!apiKey || !secretsManager.isAvailable('GEMINI_API_KEY')) {
+    throw new Error('Gemini API key not configured. Set GEMINI_API_KEY in settings.');
+  }
+
+  try {
+    const systemPrompt = `You are a professional translator specializing in video game localization. 
+    Translate the following text from ${sourceLanguage} to ${targetLanguage}.
+    ${context ? `Context: ${context}` : ''}
+    
+    Provide the translation in this exact JSON format:
+    {
+      "translatedText": "your translation here",
+      "confidence": 0.95,
+      "suggestions": ["alternative 1", "alternative 2", "alternative 3"]
+    }
+    
+    Make sure to:
+    1. Keep the tone appropriate for gaming
+    2. Preserve any technical terms or UI elements
+    3. Maintain formatting and punctuation
+    4. Provide confidence score (0-1)
+    5. Include 3 alternative translations in suggestions array`;
+
+    // Gemini 2.5 Flash - Latest model with best performance/cost ratio
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: `${systemPrompt}\n\nText to translate:\n${text}` }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 1000,
+          responseMimeType: "application/json"
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!content) {
+      throw new Error('No translation received from Gemini');
+    }
+
+    // Parse the JSON response
+    const parsed = JSON.parse(content);
+    
+    return {
+      translatedText: parsed.translatedText,
+      confidence: Math.max(0, Math.min(1, parsed.confidence || 0.85)),
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+      provider: 'gemini',
+      sourceLanguage,
+      targetLanguage,
+      cached: false
+    };
+
+  } catch (error) {
+    logger.error('OpenRouter translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`OpenRouter translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function translateWithGPT5(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string
+): Promise<TranslationResponse> {
+  const apiKey = secretsManager.get('OPENAI_API_KEY');
+  
+  if (!apiKey || !secretsManager.isAvailable('OPENAI_API_KEY')) {
+    throw new Error('OpenAI API key not configured');
+  }
+
+  try {
+    const systemPrompt = `You are a professional translator specializing in video game localization. 
+    Translate the following text from ${sourceLanguage} to ${targetLanguage}.
+    ${context ? `Context: ${context}` : ''}
+    
+    Provide the translation in this exact JSON format:
+    {
+      "translatedText": "your translation here",
+      "confidence": 0.95,
+      "suggestions": ["alternative 1", "alternative 2", "alternative 3"]
+    }`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`GPT-5 API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No translation received from GPT-5');
+    }
+
+    const parsed = JSON.parse(content);
+    
+    return {
+      translatedText: parsed.translatedText,
+      confidence: Math.max(0, Math.min(1, parsed.confidence || 0.9)),
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+      provider: 'gpt5',
+      sourceLanguage,
+      targetLanguage,
+      cached: false
+    };
+
+  } catch (error) {
+    logger.error('GPT-5 translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`GPT-5 translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function translateWithClaude(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string
+): Promise<TranslationResponse> {
+  const apiKey = secretsManager.get('ANTHROPIC_API_KEY');
+  
+  if (!apiKey || !secretsManager.isAvailable('ANTHROPIC_API_KEY')) {
+    throw new Error('Anthropic API key not configured. Set ANTHROPIC_API_KEY in settings.');
+  }
+
+  try {
+    const systemPrompt = `You are a professional translator specializing in video game localization. 
+    Translate the following text from ${sourceLanguage} to ${targetLanguage}.
+    ${context ? `Context: ${context}` : ''}
+    
+    Provide the translation in this exact JSON format:
+    {
+      "translatedText": "your translation here",
+      "confidence": 0.95,
+      "suggestions": ["alternative 1", "alternative 2", "alternative 3"]
+    }`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [
+          { role: 'user', content: text }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Claude API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const content = data.content?.[0]?.text;
+    
+    if (!content) {
+      throw new Error('No translation received from Claude');
+    }
+
+    const parsed = JSON.parse(content);
+    
+    return {
+      translatedText: parsed.translatedText,
+      confidence: Math.max(0, Math.min(1, parsed.confidence || 0.9)),
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+      provider: 'claude',
+      sourceLanguage,
+      targetLanguage,
+      cached: false
+    };
+
+  } catch (error) {
+    logger.error('Claude translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`Claude translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function translateWithOpenRouter(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string
+): Promise<TranslationResponse> {
+  const apiKey = secretsManager.get('OPENROUTER_API_KEY');
+  
+  if (!apiKey || !secretsManager.isAvailable('OPENROUTER_API_KEY')) {
+    throw new Error('OpenRouter API key not configured. Set OPENROUTER_API_KEY in settings.');
+  }
+
+  try {
+    const systemPrompt = `You are a professional translator specializing in video game localization. 
+    Translate the following text from ${sourceLanguage} to ${targetLanguage}.
+    ${context ? `Context: ${context}` : ''}
+    
+    Provide the translation in this exact JSON format:
+    {
+      "translatedText": "your translation here",
+      "confidence": 0.95,
+      "suggestions": ["alternative 1", "alternative 2", "alternative 3"]
+    }`;
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://gamestringer.app',
+        'X-Title': 'GameStringer Neural Translator'
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-3.5-sonnet',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`OpenRouter API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No translation received from OpenRouter');
+    }
+
+    const parsed = JSON.parse(content);
+    
+    return {
+      translatedText: parsed.translatedText,
+      confidence: Math.max(0, Math.min(1, parsed.confidence || 0.85)),
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+      provider: 'openrouter',
+      sourceLanguage,
+      targetLanguage,
+      cached: false
+    };
+
+  } catch (error) {
+    logger.error('OpenRouter translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`OpenRouter translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function translateWithDeepSeek(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string
+): Promise<TranslationResponse> {
+  const apiKey = secretsManager.get('DEEPSEEK_API_KEY');
+  
+  if (!apiKey || !secretsManager.isAvailable('DEEPSEEK_API_KEY')) {
+    throw new Error('DeepSeek API key not configured. Set DEEPSEEK_API_KEY in settings.');
+  }
+
+  try {
+    const systemPrompt = `You are a professional translator specializing in video game localization. 
+    Translate the following text from ${sourceLanguage} to ${targetLanguage}.
+    ${context ? `Context: ${context}` : ''}
+    
+    Provide the translation in this exact JSON format:
+    {
+      "translatedText": "your translation here",
+      "confidence": 0.95,
+      "suggestions": ["alternative 1", "alternative 2", "alternative 3"]
+    }`;
+
+    // DeepSeek-V3 - Excellent for technical and bilingual translation
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'deepseek-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`DeepSeek API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No translation received from DeepSeek');
+    }
+
+    const parsed = JSON.parse(content);
+    
+    return {
+      translatedText: parsed.translatedText,
+      confidence: Math.max(0, Math.min(1, parsed.confidence || 0.88)),
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+      provider: 'deepseek',
+      sourceLanguage,
+      targetLanguage,
+      cached: false
+    };
+
+  } catch (error) {
+    logger.error('DeepSeek translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`DeepSeek translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function translateWithMistral(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string
+): Promise<TranslationResponse> {
+  const apiKey = secretsManager.get('MISTRAL_API_KEY');
+  
+  if (!apiKey || !secretsManager.isAvailable('MISTRAL_API_KEY')) {
+    throw new Error('Mistral API key not configured. Set MISTRAL_API_KEY in settings.');
+  }
+
+  try {
+    const systemPrompt = `You are a professional translator specializing in video game localization. 
+    Translate the following text from ${sourceLanguage} to ${targetLanguage}.
+    ${context ? `Context: ${context}` : ''}
+    
+    Provide the translation in this exact JSON format:
+    {
+      "translatedText": "your translation here",
+      "confidence": 0.95,
+      "suggestions": ["alternative 1", "alternative 2", "alternative 3"]
+    }`;
+
+    // Mixtral 8x7B - Open source, excellent multilingual performance
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'mistral-large-latest',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Mistral API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      throw new Error('No translation received from Mistral');
+    }
+
+    const parsed = JSON.parse(content);
+    
+    return {
+      translatedText: parsed.translatedText,
+      confidence: Math.max(0, Math.min(1, parsed.confidence || 0.87)),
+      suggestions: Array.isArray(parsed.suggestions) ? parsed.suggestions : [],
+      provider: 'mistral',
+      sourceLanguage,
+      targetLanguage,
+      cached: false
+    };
+
+  } catch (error) {
+    logger.error('Mistral translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`Mistral translation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -293,7 +753,7 @@ export const GET = withRateLimit(withErrorHandler(async function(request: NextRe
     const action = searchParams.get('action');
 
     if (action === 'providers') {
-      const providers = ['openai', 'deepl', 'google', 'mock'];
+      const providers = ['openai', 'gemini', 'deepl', 'google', 'mock'];
       const availableProviders = [];
 
       for (const provider of providers) {
@@ -303,6 +763,10 @@ export const GET = withRateLimit(withErrorHandler(async function(request: NextRe
         switch (provider) {
           case 'openai':
             available = secretsManager.isAvailable('OPENAI_API_KEY');
+            reason = available ? 'Available' : 'API key not configured';
+            break;
+          case 'gemini':
+            available = secretsManager.isAvailable('GEMINI_API_KEY');
             reason = available ? 'Available' : 'API key not configured';
             break;
           case 'deepl':

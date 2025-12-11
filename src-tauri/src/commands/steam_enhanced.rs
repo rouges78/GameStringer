@@ -267,7 +267,7 @@ pub async fn test_steamlocate_integration() -> Result<String, String> {
 struct AppInfoData {
     name: String,
     is_dlc: bool,
-    parent_appid: Option<u32>,
+    _parent_appid: Option<u32>,
 }
 
 /// 📖 Legge i nomi e tipi dei giochi da appinfo.vdf (cache Steam con TUTTI i nomi)
@@ -325,7 +325,7 @@ fn load_game_info_from_appinfo(steam_path: &std::path::Path) -> HashMap<u32, App
             app_info.insert(appid, AppInfoData {
                 name,
                 is_dlc,
-                parent_appid,
+                _parent_appid: parent_appid,
             });
         }
     }

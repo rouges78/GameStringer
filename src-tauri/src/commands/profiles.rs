@@ -143,7 +143,7 @@ pub async fn update_settings(
 }
 
 /// Comando: Elimina profilo
-#[command]
+#[command(rename_all = "camelCase")]
 pub async fn delete_profile(
     profile_state: State<'_, ProfileManagerState>,
     profile_id: String,
@@ -294,7 +294,7 @@ pub async fn unlock_profile(
         Ok(_) => Ok(ProfileResponse::success(true)),
         Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
     }
-}
+} // Added closing bracket here
 
 /// Comando: Ottieni tentativi falliti
 #[command]
@@ -309,10 +309,10 @@ pub async fn get_failed_attempts(
         Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
     }
 }
-/// Comando: Ottieni informazioni dettagliate profilo
+
 /// API pubblica per accesso informazioni profilo dettagliate
 #[allow(dead_code)]
-#[command]
+#[command(rename_all = "camelCase")]
 pub async fn get_profile_info(
     profile_state: State<'_, ProfileManagerState>,
     profile_id: String,
@@ -329,7 +329,7 @@ pub async fn get_profile_info(
 /// Comando: Aggiorna avatar profilo
 /// API pubblica per gestione avatar profili
 #[allow(dead_code)]
-#[command]
+#[command(rename_all = "camelCase")]
 pub async fn update_profile_avatar(
     profile_state: State<'_, ProfileManagerState>,
     profile_id: String,
@@ -343,10 +343,24 @@ pub async fn update_profile_avatar(
     }
 }
 
+/// Comando: Ottieni avatar profilo (base64)
+#[command(rename_all = "camelCase")]
+pub async fn get_profile_avatar(
+    profile_state: State<'_, ProfileManagerState>,
+    profile_id: String,
+) -> Result<ProfileResponse<Option<String>>, String> {
+    let manager = profile_state.manager.lock().await;
+    
+    match manager.get_profile_avatar(&profile_id).await {
+        Ok(avatar_data) => Ok(ProfileResponse::success(avatar_data)),
+        Err(err) => Ok(ProfileResponse::error(profile_error_to_string(err))),
+    }
+}
+
 /// Comando: Cambia password profilo
 /// API pubblica per cambio password profili
 #[allow(dead_code)]
-#[command]
+#[command(rename_all = "camelCase")]
 pub async fn change_profile_password(
     profile_state: State<'_, ProfileManagerState>,
     profile_id: String,

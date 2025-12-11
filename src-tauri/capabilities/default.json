@@ -1,0 +1,32 @@
+{
+  "identifier": "default",
+  "description": "Default permissions for the application",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:webview:default",
+    "core:webview:allow-internal-toggle-devtools",
+    "core:webview:allow-set-webview-zoom",
+    "core:window:default",
+    "core:event:default",
+    "core:path:default",
+    "core:app:default",
+    "core:image:default",
+    "core:resources:default",
+    "core:menu:default",
+    "core:tray:default",
+    "fs:default",
+    "fs:allow-read-text-file",
+    "fs:allow-read-file",
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
+    "fs:allow-read-dir",
+    "fs:allow-exists",
+    "fs:allow-mkdir",
+    "fs:allow-remove",
+    "fs:allow-rename",
+    "shell:allow-open",
+    "shell:allow-execute",
+    "process:default"
+  ]
+}

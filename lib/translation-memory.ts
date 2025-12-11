@@ -501,21 +501,56 @@ export class TranslationMemoryManager {
    * Salva la memoria su disco
    */
   async save(): Promise<void> {
-    if (!this.memory) return;
+    if (!this.memory) {
+      console.warn('[TM] Tentativo di salvataggio senza memoria inizializzata');
+      return;
+    }
 
     try {
+      console.log('[TM] Inizio processo di salvataggio...');
+
+      // Calcola statistiche fresche per sicurezza
+      const calculatedStats = this.calculateStats(this.memory.units);
+
+      // Costruisci payload esplicito
+      const memoryPayload = {
+        id: String(this.memory.id),
+        name: String(this.memory.name),
+        sourceLanguage: String(this.memory.sourceLanguage),
+        targetLanguage: String(this.memory.targetLanguage),
+        units: this.memory.units,
+        stats: {
+          totalUnits: Number(calculatedStats.totalUnits),
+          verifiedUnits: Number(calculatedStats.verifiedUnits),
+          totalUsageCount: Number(calculatedStats.totalUsageCount),
+          averageConfidence: Number(calculatedStats.averageConfidence),
+          byProvider: calculatedStats.byProvider || {},
+          byContext: calculatedStats.byContext || {}
+        },
+        createdAt: this.memory.createdAt,
+        updatedAt: new Date().toISOString()
+      };
+
+      console.log('[TM] Payload pronto. Stats:', JSON.stringify(memoryPayload.stats));
+
       await invoke('save_translation_memory', {
-        memory: this.memory
+        memory: memoryPayload
       });
-      console.log(`[TM] Salvata memoria con ${this.memory.units.length} unità`);
+      
+      console.log(`[TM] ✅ Salvataggio completato con successo (${this.memory.units.length} unità)`);
+      
+      // Aggiorna stato locale
+      this.memory.updatedAt = memoryPayload.updatedAt;
+      this.memory.stats = calculatedStats;
+      
     } catch (error) {
-      console.error('[TM] Errore salvataggio:', error);
+      console.error('[TM] ❌ CRITICAL ERROR saving memory:', error);
+      
       // Fallback: salva in localStorage
       try {
-        localStorage.setItem(
-          `tm_${this.memory.sourceLanguage}_${this.memory.targetLanguage}`,
-          JSON.stringify(this.memory)
-        );
+        const key = `tm_${this.memory.sourceLanguage}_${this.memory.targetLanguage}`;
+        localStorage.setItem(key, JSON.stringify(this.memory));
+        console.log(`[TM] ✅ Salvato in localStorage come fallback (key: ${key})`);
       } catch (e) {
         console.error('[TM] Fallback localStorage fallito:', e);
       }

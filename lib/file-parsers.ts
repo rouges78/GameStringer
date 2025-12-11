@@ -435,8 +435,20 @@ export function parseJSON(content: string): ParseResult {
   const strings: ParsedString[] = [];
   const metadata: ParseResult['metadata'] = {};
   
+  // Quick validation: check if content looks like JSON
+  const trimmed = content.trim();
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+    // Not JSON, return empty result
+    return { format: 'json', strings, metadata };
+  }
+  
   try {
-    const data = JSON.parse(content);
+    // Basic JSONC support: remove comments
+    const cleanContent = content
+      .replace(/\/\*[\s\S]*?\*\//g, '') // Remove block comments
+      .replace(/^\s*\/\/.*$/gm, '');    // Remove line comments
+      
+    const data = JSON.parse(cleanContent);
     
     // Detect format and parse
     if (Array.isArray(data)) {
@@ -456,7 +468,9 @@ export function parseJSON(content: string): ParseResult {
       flattenJSON(data, '', strings);
     }
   } catch (e) {
-    console.error('JSON parse error:', e);
+    // Invalid JSON, return empty result instead of throwing
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    console.warn(`JSON parse error: ${errorMessage}. Content snippet: ${content.substring(0, 50)}...`);
   }
   
   return { format: 'json', strings, metadata };
@@ -878,7 +892,11 @@ export function parseFile(content: string, filename?: string): ParseResult {
     case 'strings':
       return parseStrings(content);
     case 'json':
-      return parseJSON(content);
+      try {
+        return parseJSON(content);
+      } catch {
+        return { format: 'json', strings: [], metadata: {} };
+      }
     case 'ini':
       return parseINI(content);
     case 'properties':

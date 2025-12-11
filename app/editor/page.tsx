@@ -82,6 +82,54 @@ export default function EditorPage() {
     fetchGames();
   }, []);
 
+  // Carica file dal Neural Translator (se presente in sessionStorage)
+  useEffect(() => {
+    const editorFileData = sessionStorage.getItem('editorFile');
+    if (editorFileData) {
+      try {
+        const data = JSON.parse(editorFileData);
+        // Crea una traduzione temporanea dal file del Neural Translator
+        const translatorTranslation: Translation = {
+          id: `translator-${Date.now()}`,
+          gameId: data.gameId || 'unknown',
+          filePath: data.filePath || data.filename,
+          originalText: data.originalContent || '',
+          translatedText: data.content || '',
+          targetLanguage: data.targetLanguage || 'it',
+          sourceLanguage: data.sourceLanguage || 'en',
+          status: 'pending',
+          confidence: 85,
+          isManualEdit: false,
+          context: `Tradotto con Neural Translator - ${data.gameName || 'Gioco sconosciuto'}`,
+          updatedAt: new Date().toISOString(),
+          game: {
+            id: data.gameId || 'unknown',
+            title: data.gameName || 'Gioco sconosciuto',
+            platform: 'Neural Translator'
+          },
+          suggestions: []
+        };
+        
+        setTranslations([translatorTranslation]);
+        setSelectedTranslation(translatorTranslation);
+        
+        // Rimuovi i dati dalla sessionStorage dopo averli caricati
+        sessionStorage.removeItem('editorFile');
+        
+        toast({
+          title: "File caricato dal Neural Translator",
+          description: `${data.filename} pronto per la modifica`,
+        });
+        
+        setIsLoading(false);
+        return;
+      } catch (err) {
+        console.error('Error loading editor file from sessionStorage:', err);
+        sessionStorage.removeItem('editorFile');
+      }
+    }
+  }, [toast]);
+
   // Carica le traduzioni
   useEffect(() => {
     fetchTranslations();

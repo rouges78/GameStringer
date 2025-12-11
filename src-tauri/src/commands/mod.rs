@@ -25,4 +25,6 @@ pub mod migration;
 pub mod validation;
 pub mod glossary;
 pub mod translation_memory;
+pub mod file_manager;
+pub mod unity_patcher;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO

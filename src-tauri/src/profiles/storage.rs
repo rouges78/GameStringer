@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use tokio::fs as async_fs;
+use uuid::Uuid;
 
 /// Indice dei profili (non crittografato)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,6 +44,16 @@ pub struct ProfileIndexEntry {
     pub last_failed_attempt: Option<DateTime<Utc>>,
     /// Hash integrità file
     pub file_hash: String,
+    /// Indica se il profilo ha credenziali salvate (default false per retrocompatibilità)
+    #[serde(default)]
+    pub has_credentials: bool,
+    /// Versione dei settings (default 1 per retrocompatibilità)
+    #[serde(default = "default_settings_version")]
+    pub settings_version: u32,
+}
+
+fn default_settings_version() -> u32 {
+    1
 }
 
 /// Sistema di storage per profili utente
@@ -209,6 +220,8 @@ impl ProfileStorage {
                 last_accessed: entry.last_accessed,
                 is_locked: entry.is_locked,
                 failed_attempts: entry.failed_attempts,
+                has_credentials: entry.has_credentials,
+                settings_version: entry.settings_version,
             });
         }
         
@@ -282,36 +295,33 @@ impl ProfileStorage {
         println!("[PROFILE STORAGE] ✅ Backup profilo creato: {}", backup_path.display());
         Ok(backup_path)
     }
-    
+
+    /// Carica avatar profilo
+    #[allow(dead_code)] // API per gestione avatar
+    pub async fn load_avatar(&self, avatar_filename: &str) -> StorageResult<Vec<u8>> {
+        let avatar_path = self.avatars_dir.join(avatar_filename);
+        if !avatar_path.exists() {
+            return Err(StorageError::FileNotFound(format!("Avatar non trovato: {}", avatar_filename)));
+        }
+        
+        let data = async_fs::read(&avatar_path).await?;
+        Ok(data)
+    }
+
     /// Salva avatar profilo
     #[allow(dead_code)] // API per gestione avatar
-    pub async fn save_avatar(&self, profile_id: &str, avatar_data: &[u8], extension: &str) -> StorageResult<String> {
-        let avatar_filename = format!("avatar_{}.{}", profile_id, extension);
-        let avatar_path = self.avatars_dir.join(&avatar_filename);
+    pub async fn save_avatar(&self, _profile_id: &str, data: &[u8], extension: &str) -> StorageResult<String> {
+        let filename = format!("avatar_{}.{}", Uuid::new_v4(), extension);
+        let avatar_path = self.avatars_dir.join(&filename);
         
-        // Salva file avatar
-        async_fs::write(&avatar_path, avatar_data).await?;
+        async_fs::write(&avatar_path, data).await?;
         
-        println!("[PROFILE STORAGE] ✅ Avatar salvato: {}", avatar_path.display());
-        Ok(avatar_filename)
+        Ok(filename)
     }
     
-    /// Elimina avatar profilo
-    #[allow(dead_code)] // API per gestione avatar
-    pub async fn delete_avatar(&self, avatar_filename: &str) -> StorageResult<()> {
-        let avatar_path = self.avatars_dir.join(avatar_filename);
-        if avatar_path.exists() {
-            async_fs::remove_file(&avatar_path).await?;
-            println!("[PROFILE STORAGE] ✅ Avatar eliminato: {}", avatar_path.display());
-        }
-        Ok(())
-    }
-    
-    /// Aggiorna tentativi falliti per un profilo
-    #[allow(dead_code)] // API per sicurezza profili - sistema anti-brute force
+    /// Aggiorna tentativi falliti di un profilo
     pub async fn update_failed_attempts(&self, id: &str, increment: bool) -> StorageResult<u32> {
         let mut index = self.load_index().await?;
-        
         let failed_attempts = if let Some(entry) = index.profiles.get_mut(id) {
             if increment {
                 entry.failed_attempts += 1;
@@ -379,6 +389,8 @@ impl ProfileStorage {
             failed_attempts: 0,
             last_failed_attempt: None,
             file_hash: file_hash.to_string(),
+            has_credentials: !profile.credentials.is_empty(),
+            settings_version: profile.settings.version,
         };
         
         index.profiles.insert(profile.id.clone(), entry);

@@ -68,15 +68,19 @@ class ProfilePreloader {
 
       const profiles = response.data || [];
       const sortedProfiles = profiles
-        .sort((a: any, b: any) => (b.last_access || 0) - (a.last_access || 0))
+        .sort((a: any, b: any) => {
+            const timeA = a.last_accessed ? new Date(a.last_accessed).getTime() : 0;
+            const timeB = b.last_accessed ? new Date(b.last_accessed).getTime() : 0;
+            return timeB - timeA;
+        })
         .slice(0, 3);
 
       const preloadPromises = sortedProfiles.map((profile: any) => 
         this.preloadProfile(profile.id, {
           id: profile.id,
           name: profile.name,
-          avatar: profile.avatar,
-          lastAccess: profile.last_access || 0,
+          avatar: profile.avatar_path,
+          lastAccess: profile.last_accessed ? new Date(profile.last_accessed).getTime() : 0,
           isLocked: profile.is_locked || false,
           hasCredentials: profile.has_credentials || false,
           settingsVersion: profile.settings_version || 1
@@ -89,8 +93,8 @@ class ProfilePreloader {
       const metadata: ProfileMetadata[] = sortedProfiles.map((profile: any) => ({
         id: profile.id,
         name: profile.name,
-        avatar: profile.avatar,
-        lastAccess: profile.last_access || 0,
+        avatar: profile.avatar_path,
+        lastAccess: profile.last_accessed ? new Date(profile.last_accessed).getTime() : 0,
         isLocked: profile.is_locked || false,
         hasCredentials: profile.has_credentials || false,
         settingsVersion: profile.settings_version || 1
@@ -160,14 +164,8 @@ class ProfilePreloader {
    * Preload metadati credenziali per un profilo
    */
   private async preloadCredentialMetadata(profileId: string): Promise<void> {
-    try {
-      // Questo potrebbe essere un check leggero per vedere se il profilo ha credenziali
-      // senza caricare effettivamente le credenziali sensibili
-      await invoke('check_profile_credentials_exist', { profileId });
-    } catch (error) {
-      // Non è critico se questo fallisce
-      console.debug(`Could not preload credential metadata for ${profileId}:`, error);
-    }
+    // Non è necessario fare una chiamata separata al backend
+    return Promise.resolve();
   }
 
   /**
@@ -230,15 +228,15 @@ class ProfilePreloader {
       if (existing?.isReady) return existing;
 
       // Carica metadati dal backend
-      const response = await invoke<any>('get_profile_metadata', { profileId });
+      const response = await invoke<any>('get_profile_info', { profileId });
       if (!response.success) return null;
 
       const profile = response.data;
       const metadata: ProfileMetadata = {
         id: profile.id,
         name: profile.name,
-        avatar: profile.avatar,
-        lastAccess: profile.last_access || 0,
+        avatar: profile.avatar_path,
+        lastAccess: profile.last_accessed ? new Date(profile.last_accessed).getTime() : 0,
         isLocked: profile.is_locked || false,
         hasCredentials: profile.has_credentials || false,
         settingsVersion: profile.settings_version || 1

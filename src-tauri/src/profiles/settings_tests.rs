@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::profiles::settings_manager::{ProfileSettingsManager, GlobalSettings, SettingsMigrationResult};
-    use crate::profiles::models::{ProfileSettings, Theme, NotificationSettings, LibrarySettings, SecuritySettings, LibraryView, LibrarySort};
+    // use super::*; // Unused
+    use crate::profiles::settings_manager::{ProfileSettingsManager, GlobalSettings};
+    use crate::profiles::models::{ProfileSettings, Theme, LibraryView, LibrarySort};
     use tempfile::TempDir;
     use tokio;
 

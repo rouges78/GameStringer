@@ -478,12 +478,22 @@ const TranslatorPage = () => {
   // Stato per la ricerca giochi
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Stato per la ricerca file
+  const [fileSearchQuery, setFileSearchQuery] = useState('');
+  
   // Filtra giochi in base alla ricerca
   const filteredGames = useMemo(() => {
     if (!searchQuery.trim()) return games;
     const query = searchQuery.toLowerCase();
     return games.filter(g => g.name.toLowerCase().includes(query));
   }, [games, searchQuery]);
+
+  // Filtra file in base alla ricerca
+  const filteredFiles = useMemo(() => {
+    if (!fileSearchQuery.trim()) return gameFiles;
+    const query = fileSearchQuery.toLowerCase();
+    return gameFiles.filter(f => f.name.toLowerCase().includes(query));
+  }, [gameFiles, fileSearchQuery]);
 
   // Step indicator
   const steps = [
@@ -818,10 +828,42 @@ const TranslatorPage = () => {
               <div>
                 <h2 className="text-lg font-semibold">File trovati</h2>
                 <p className="text-sm text-muted-foreground">
-                  {gameFiles.length} file di testo compatibili
+                  {filteredFiles.length}/{gameFiles.length} file di testo compatibili
                 </p>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManualFolderSelect}
+                className="gap-2"
+              >
+                <FolderSearch className="h-4 w-4" />
+                Cerca altra cartella
+              </Button>
             </div>
+
+            {/* Search Files */}
+            {gameFiles.length > 0 && (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Cerca file per nome..."
+                  value={fileSearchQuery}
+                  onChange={(e) => setFileSearchQuery(e.target.value)}
+                  className="pl-10 h-10 bg-background/50 border-border/50"
+                />
+                {fileSearchQuery && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setFileSearchQuery('')}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
 
             {/* Files List */}
             {isReadingFiles ? (
@@ -829,10 +871,10 @@ const TranslatorPage = () => {
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 <span className="text-muted-foreground">Scansione file...</span>
               </div>
-            ) : gameFiles.length > 0 ? (
+            ) : filteredFiles.length > 0 ? (
               <ScrollArea className="h-[400px]">
                 <div className="space-y-2">
-                  {gameFiles.map((file, index) => (
+                  {filteredFiles.map((file, index) => (
                     <button
                       key={file.path || `${file.name}-${index}`}
                       onClick={() => handleFileSelect(file)}

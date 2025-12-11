@@ -23,13 +23,15 @@ import {
   Zap,
   Eye,
   Globe,
-  Sparkles
+  Sparkles,
+  AlertTriangle
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { mockGames, mockTranslations } from '@/lib/mock-data';
 import InlineTranslator from '@/components/inline-translator';
+import { LanguageFlags } from '@/components/ui/language-flags';
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -44,6 +46,49 @@ export default function GameDetailPage() {
   const [dlcGames, setDlcGames] = useState<any[]>([]);
   const [showTranslation, setShowTranslation] = useState(false);
   const [steamDetails, setSteamDetails] = useState<any>(null);
+
+  const [isInstallingPatch, setIsInstallingPatch] = useState(false);
+  const [patchStatus, setPatchStatus] = useState<{success: boolean, message: string} | null>(null);
+
+  const handleInstallUnityPatch = async () => {
+    if (!game || !game.installPath) return;
+    
+    setIsInstallingPatch(true);
+    setPatchStatus(null);
+    
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      // Assume Decarnation.exe based on game name or similar, defaulting to the executable detection logic if implemented.
+      // For now passing game path. The backend expects game_path and game_exe_name.
+      // We'll try to guess exe name or just pass a generic one if the backend handles discovery, 
+      // but our backend command takes specific args.
+      // Let's use the game name for exe as a guess or look at detected files if we had them.
+      const exeName = game.detectedFiles?.find((f: string) => f.endsWith('.exe')) || `${game.name}.exe`;
+      
+      const result: any = await invoke('install_unity_autotranslator', { 
+        gamePath: game.installPath,
+        gameExeName: exeName
+      });
+      
+      setPatchStatus({
+        success: result.success,
+        message: result.message
+      });
+      
+      if (result.success) {
+        // Refresh game detected files to see new BepInEx files
+        scanGameFiles();
+      }
+    } catch (error: any) {
+      console.error('Errore installazione patch:', error);
+      setPatchStatus({
+        success: false,
+        message: typeof error === 'string' ? error : 'Errore sconosciuto durante l\'installazione'
+      });
+    } finally {
+      setIsInstallingPatch(false);
+    }
+  };
 
   useEffect(() => {
     if (gameId) {
@@ -476,9 +521,15 @@ export default function GameDetailPage() {
                   {game.supported_languages && (
                     <div className="flex items-center space-x-3">
                       <Languages className="h-5 w-5 text-gray-400" />
-                      <div>
-                        <p className="text-sm font-medium text-white">Lingue Supportate</p>
-                        <p className="text-xs text-gray-300">{game.supported_languages.replace(/<[^>]*>?/gm, '').substring(0, 50)}...</p>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-white mb-1">Lingue Supportate</p>
+                        <LanguageFlags 
+                          supportedLanguages={game.supported_languages.replace(/<[^>]*>?/gm, '')} 
+                          maxFlags={12} 
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          {game.supported_languages.replace(/<[^>]*>?/gm, '').split(',').length} lingue
+                        </p>
                       </div>
                     </div>
                   )}
@@ -767,21 +818,143 @@ export default function GameDetailPage() {
           <TabsContent value="patches" className="space-y-4">
             <Card className="bg-black/20 backdrop-blur-xl border-white/10">
               <CardHeader>
-                <CardTitle className="text-white">Patch Generate</CardTitle>
+                <CardTitle className="text-white">
+                  {game.engine === 'Unity' ? 'Strumenti Unity Engine' :
+                   game.engine === 'Unreal Engine' ? 'Strumenti Unreal Engine' :
+                   game.engine === 'RPG Maker' ? 'Strumenti RPG Maker' :
+                   game.engine === 'Ren\'Py' ? "Strumenti Ren'Py" :
+                   'Strumenti di Traduzione'}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <Archive className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2 text-white">Nessuna patch creata</h3>
-                  <p className="text-gray-300 mb-4">
-                    Completa alcune traduzioni per generare patch.
-                  </p>
-                  <Link href="/patches">
-                    <Button>
-                      <Archive className="h-4 w-4 mr-2" />
-                      Gestisci Patch
-                    </Button>
-                  </Link>
+                <div className="flex flex-col gap-4">
+                  
+                  {/* UNITY ENGINE TOOLS */}
+                  {game.engine === 'Unity' && (
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Zap className="h-5 w-5 text-blue-400 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-blue-100">Unity AutoTranslator (BepInEx)</h4>
+                          <p className="text-sm text-blue-200/70 mt-1">
+                            Installa automaticamente BepInEx e XUnity.AutoTranslator per tradurre il gioco in tempo reale.
+                            Ideale per giochi Unity come questo che non hanno file di testo accessibili.
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 flex items-center gap-3">
+                        <Button 
+                          onClick={handleInstallUnityPatch} 
+                          disabled={isInstallingPatch || !game.is_installed}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          {isInstallingPatch ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Installazione in corso...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="h-4 w-4 mr-2" />
+                              Installa Patch Unity
+                            </>
+                          )}
+                        </Button>
+                        
+                        {!game.is_installed && (
+                          <span className="text-xs text-red-400">Installa il gioco prima di applicare la patch.</span>
+                        )}
+                      </div>
+
+                      {patchStatus && (
+                        <div className={`mt-4 p-3 rounded text-sm ${patchStatus.success ? 'bg-green-500/20 text-green-200' : 'bg-red-500/20 text-red-200'}`}>
+                          {patchStatus.success && <Sparkles className="inline h-4 w-4 mr-2" />}
+                          {patchStatus.message}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* UNREAL ENGINE TOOLS */}
+                  {game.engine === 'Unreal Engine' && (
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Zap className="h-5 w-5 text-orange-400 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-orange-100">Unreal Engine Tools</h4>
+                          <p className="text-sm text-orange-200/70 mt-1">
+                            Per i giochi Unreal Engine, GameStringer può analizzare i file .pak (se non criptati) o usare mod loader.
+                            Al momento suggeriamo di cercare file .locres o .po nella cartella Content/Localization.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                         <Button variant="outline" className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10">
+                           <FileText className="h-4 w-4 mr-2" />
+                           Guida Traduzione Unreal
+                         </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* RPG MAKER TOOLS */}
+                  {game.engine === 'RPG Maker' && (
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Zap className="h-5 w-5 text-green-400 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-green-100">RPG Maker Translator</h4>
+                          <p className="text-sm text-green-200/70 mt-1">
+                            I giochi RPG Maker usano spesso file .json o data non criptati nella cartella www/data.
+                            Puoi provare a scansionare i file direttamente per trovare i testi dei dialoghi.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* REN'PY TOOLS */}
+                  {game.engine === 'Ren\'Py' && (
+                    <div className="bg-pink-500/10 border border-pink-500/20 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Zap className="h-5 w-5 text-pink-400 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-pink-100">Ren'Py Translator</h4>
+                          <p className="text-sm text-pink-200/70 mt-1">
+                            Ren'Py supporta nativamente le traduzioni nella cartella game/tl.
+                            Vai nella sezione 'File Rilevati' e cerca file .rpy o .rpa.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* GENERIC / UNKNOWN ENGINE */}
+                  {(!game.engine || game.engine === 'Unknown') && (
+                    <div className="bg-gray-500/10 border border-gray-500/20 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-gray-400 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-gray-100">Engine Non Riconosciuto</h4>
+                          <p className="text-sm text-gray-200/70 mt-1">
+                            Non siamo riusciti a determinare con certezza il motore di gioco.
+                            Prova a scansionare i file (Tab 'File Rilevati') per vedere se troviamo testi traducibili (.txt, .xml, .json, .csv).
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="border-t border-white/10 pt-4">
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Patch Tradizionali</h4>
+                    {/* Placeholder per patch tradizionali */}
+                    <div className="text-center py-4">
+                      <p className="text-gray-500 text-sm">
+                        Nessuna patch manuale creata. Usa il traduttore neurale per generare file di traduzione.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

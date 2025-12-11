@@ -119,7 +119,7 @@ export async function translateFile(
   options: {
     sourceLanguage?: string;
     targetLanguage?: string;
-    provider?: 'openai' | 'deepl' | 'google';
+    provider?: 'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google';
     gameId?: string;
     gameName?: string;
     onProgress?: (progress: BatchProgress) => void;

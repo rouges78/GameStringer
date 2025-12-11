@@ -17,49 +17,73 @@ pub struct InstalledGame {
 
 #[tauri::command]
 pub async fn get_library_games() -> Result<Vec<InstalledGame>, String> {
-    println!("[RUST] get_library_games called");
+    println!("[RUST] get_library_games called - PARALLEL MODE 🚀");
     
+    // Avvia tutte le scansioni in parallelo
+    let steam_task = tokio::spawn(get_steam_installed_games());
+    let epic_task = tokio::spawn(get_epic_installed_games());
+    let gog_task = tokio::spawn(crate::commands::gog::get_gog_installed_games());
+    let origin_task = tokio::spawn(crate::commands::origin::get_origin_installed_games());
+    let ubisoft_task = tokio::spawn(crate::commands::ubisoft::get_ubisoft_installed_games());
+    let battlenet_task = tokio::spawn(crate::commands::battlenet::get_battlenet_installed_games());
+    let itchio_task = tokio::spawn(crate::commands::itchio::get_itchio_installed_games());
+
     let mut games = Vec::new();
-    
-    // 1. Scan Steam games from registry and .acf files
-    if let Ok(steam_games) = get_steam_installed_games().await {
-        games.extend(steam_games);
+
+    // Raccogli i risultati man mano che arrivano (o tutti insieme alla fine)
+    // Steam
+    match steam_task.await {
+        Ok(Ok(res)) => games.extend(res),
+        Ok(Err(e)) => println!("[RUST] Steam scan error: {}", e),
+        Err(e) => println!("[RUST] Steam task error: {}", e),
     }
-    
-    // 2. Scan Epic Games
-    if let Ok(epic_games) = get_epic_installed_games().await {
-        games.extend(epic_games);
+
+    // Epic
+    match epic_task.await {
+        Ok(Ok(res)) => games.extend(res),
+        Ok(Err(e)) => println!("[RUST] Epic scan error: {}", e),
+        Err(e) => println!("[RUST] Epic task error: {}", e),
     }
-    
-    // 3. Scan GOG Games
-    if let Ok(gog_games) = crate::commands::gog::get_gog_installed_games().await {
-        games.extend(gog_games);
+
+    // GOG
+    match gog_task.await {
+        Ok(Ok(res)) => games.extend(res),
+        Ok(Err(e)) => println!("[RUST] GOG scan error: {}", e),
+        Err(e) => println!("[RUST] GOG task error: {}", e),
     }
-    
-    // 4. Scan Origin/EA App Games
-    if let Ok(origin_games) = crate::commands::origin::get_origin_installed_games().await {
-        games.extend(origin_games);
+
+    // Origin
+    match origin_task.await {
+        Ok(Ok(res)) => games.extend(res),
+        Ok(Err(e)) => println!("[RUST] Origin scan error: {}", e),
+        Err(e) => println!("[RUST] Origin task error: {}", e),
     }
-    
-    // 5. Scan Ubisoft Connect Games
-    if let Ok(ubisoft_games) = crate::commands::ubisoft::get_ubisoft_installed_games().await {
-        games.extend(ubisoft_games);
+
+    // Ubisoft
+    match ubisoft_task.await {
+        Ok(Ok(res)) => games.extend(res),
+        Ok(Err(e)) => println!("[RUST] Ubisoft scan error: {}", e),
+        Err(e) => println!("[RUST] Ubisoft task error: {}", e),
     }
-    
-    // 6. Scan Battle.net Games
-    if let Ok(battlenet_games) = crate::commands::battlenet::get_battlenet_installed_games().await {
-        games.extend(battlenet_games);
+
+    // Battle.net
+    match battlenet_task.await {
+        Ok(Ok(res)) => games.extend(res),
+        Ok(Err(e)) => println!("[RUST] Battle.net scan error: {}", e),
+        Err(e) => println!("[RUST] Battle.net task error: {}", e),
     }
-    
-    // 7. Scan itch.io Games
-    if let Ok(itchio_games) = crate::commands::itchio::get_itchio_installed_games().await {
-        games.extend(itchio_games);
+
+    // itch.io
+    match itchio_task.await {
+        Ok(Ok(res)) => games.extend(res),
+        Ok(Err(e)) => println!("[RUST] itch.io scan error: {}", e),
+        Err(e) => println!("[RUST] itch.io task error: {}", e),
     }
     
     // Sort alphabetically
     games.sort_by(|a, b| a.name.cmp(&b.name));
     
-    println!("[RUST] Returning {} library games", games.len());
+    println!("[RUST] Returning {} library games (Fast Parallel Scan)", games.len());
     Ok(games)
 }
 

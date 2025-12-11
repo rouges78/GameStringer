@@ -2,7 +2,7 @@ import React from 'react';
 import * as CountryFlags from 'country-flag-icons/react/3x2';
 
 // Mappa migliorata e più robusta dalle lingue di Steam ai codici paese ISO 3166-1 alpha-2
-const languageToCountryCode: { [key: string]: string } = {
+export const languageToCountryCode: { [key: string]: string } = {
     'english': 'GB',
     'french': 'FR',
     'italian': 'IT',
@@ -42,7 +42,7 @@ const languageToCountryCode: { [key: string]: string } = {
 };
 
 // 🏁 Fallback emoji bandiere per paesi non supportati
-const getFlagEmoji = (countryCode: string): string => {
+export const getFlagEmoji = (countryCode: string): string => {
     const flagEmojis: { [key: string]: string } = {
         'GB': '🇬🇧', 'FR': '🇫🇷', 'IT': '🇮🇹', 'DE': '🇩🇪', 'ES': '🇪🇸',
         'MX': '🇲🇽', 'JP': '🇯🇵', 'KR': '🇰🇷', 'PL': '🇵🇱', 'BR': '🇧🇷',
@@ -82,35 +82,33 @@ export const LanguageFlags: React.FC<LanguageFlagsProps> = ({ supportedLanguages
     console.log('🎯 Codici bandiere finali:', flagCodes);
 
     if (flagCodes.length === 0) {
-        // Debug: mostra bandiere di test se non ci sono dati
-        console.log('⚠️ Nessuna bandiera da mostrare, usando test');
-        const testFlags = ['IT', 'GB', 'FR'];
-        return (
-            <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-400 mr-2">TEST:</span>
-                {testFlags.map(code => (
-                    <span key={code} className="text-lg" title={`Test: ${code}`}>
-                        {getFlagEmoji(code)}
-                    </span>
-                ))}
-            </div>
-        );
+        return null;
     }
 
     return (
         <div className="flex items-center gap-1.5">
-            {flagCodes.map(code => {
+            {flagCodes.map((code, index) => {
                 // Dinamicamente prende il componente bandiera
                 const FlagComponent = (CountryFlags as any)[code];
-                console.log(`🏴 Rendering bandiera ${code}: FlagComponent=${!!FlagComponent}`);
                 
-                // Per ora forziamo sempre il fallback emoji per debug
+                if (FlagComponent) {
+                    return (
+                        <div 
+                            key={`${code}-${index}`}
+                            className="w-5 h-3.5 shadow-sm rounded-[1px] overflow-hidden hover:scale-110 transition-transform cursor-default relative group"
+                            title={`Language: ${code}`}
+                        >
+                            <FlagComponent className="w-full h-full object-cover" />
+                        </div>
+                    );
+                }
+
+                // Fallback emoji
                 return (
                     <span 
-                        key={code} 
-                        className="text-lg hover:scale-110 transition-transform cursor-default" 
+                        key={`${code}-${index}`} 
+                        className="text-lg hover:scale-110 transition-transform cursor-default leading-none" 
                         title={`Language: ${code}`}
-                        style={{ display: 'inline-block' }}
                     >
                         {getFlagEmoji(code)}
                     </span>
@@ -118,4 +116,9 @@ export const LanguageFlags: React.FC<LanguageFlagsProps> = ({ supportedLanguages
             })}
         </div>
     );
+};
+
+// Export helper per ottenere codice paese da lingua (utile per filtri esterni)
+export const getCountryCode = (language: string): string | undefined => {
+    return languageToCountryCode[language.toLowerCase().trim()];
 };

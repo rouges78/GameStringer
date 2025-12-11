@@ -8,49 +8,72 @@ use log::{info, warn};
 /// Gestisce il salvataggio e caricamento delle memorie traduttive
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct TranslationUnit {
     pub id: String,
+    #[serde(alias = "source_text")]
     pub source_text: String,
+    #[serde(alias = "target_text")]
     pub target_text: String,
+    #[serde(alias = "source_language")]
     pub source_language: String,
+    #[serde(alias = "target_language")]
     pub target_language: String,
     pub context: Option<String>,
+    #[serde(alias = "game_id")]
     pub game_id: Option<String>,
     pub provider: String,
     pub confidence: f64,
     pub verified: bool,
+    #[serde(alias = "usage_count")]
     pub usage_count: u32,
+    #[serde(alias = "created_at")]
     pub created_at: String,
+    #[serde(alias = "updated_at")]
     pub updated_at: String,
     pub metadata: Option<TranslationUnitMetadata>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct TranslationUnitMetadata {
+    #[serde(alias = "character_limit")]
     pub character_limit: Option<u32>,
     pub tags: Option<Vec<String>>,
     pub notes: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct TMStats {
+    #[serde(alias = "total_units")]
     pub total_units: u32,
+    #[serde(alias = "verified_units")]
     pub verified_units: u32,
+    #[serde(alias = "total_usage_count")]
     pub total_usage_count: u32,
+    #[serde(alias = "average_confidence")]
     pub average_confidence: f64,
+    #[serde(alias = "by_provider")]
     pub by_provider: std::collections::HashMap<String, u32>,
+    #[serde(alias = "by_context")]
     pub by_context: std::collections::HashMap<String, u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct TranslationMemory {
     pub id: String,
     pub name: String,
+    #[serde(alias = "source_language")]
     pub source_language: String,
+    #[serde(alias = "target_language")]
     pub target_language: String,
     pub units: Vec<TranslationUnit>,
     pub stats: TMStats,
+    #[serde(alias = "created_at")]
     pub created_at: String,
+    #[serde(alias = "updated_at")]
     pub updated_at: String,
 }
 
@@ -276,7 +299,7 @@ pub fn import_translation_memory_tmx(
         let id = cap.get(1).map_or("", |m| m.as_str());
         let lang1 = cap.get(2).map_or("", |m| m.as_str());
         let text1 = cap.get(3).map_or("", |m| m.as_str());
-        let lang2 = cap.get(4).map_or("", |m| m.as_str());
+        let _lang2 = cap.get(4).map_or("", |m| m.as_str());
         let text2 = cap.get(5).map_or("", |m| m.as_str());
         
         // Determina source e target

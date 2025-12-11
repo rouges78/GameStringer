@@ -171,6 +171,7 @@ export interface UseProfilesReturn {
   logout: () => Promise<boolean>;
   refreshProfiles: () => Promise<void>;
   deleteProfile: (profileId: string, password: string) => Promise<boolean>;
+  getProfileAvatar: (profileId: string) => Promise<string | null>;
 }
 
 export interface UseProfileSettingsReturn {

@@ -23,6 +23,7 @@ mod end_to_end_tests {
             password: password.to_string(),
             avatar_path: None,
             settings: Some(ProfileSettings {
+                version: 1,
                 theme: Theme::Dark,
                 language: "it".to_string(),
                 auto_login: false,
@@ -114,7 +115,8 @@ mod end_to_end_tests {
         println!("✅ Credenziali Steam ed Epic aggiunte");
 
         // 3.2: Modifica impostazioni profilo
-        let mut updated_settings = ProfileSettings {
+        let updated_settings = ProfileSettings {
+            version: 1,
             theme: Theme::Light,
             language: "en".to_string(),
             auto_login: true,
@@ -197,11 +199,11 @@ mod end_to_end_tests {
         
         // Crea profilo Gaming
         let gaming_request = create_test_profile_request("GamingProfile", "GamingPass123!");
-        let gaming_profile = manager.create_profile(gaming_request).await.expect("Failed to create gaming profile");
+        let _gaming_profile = manager.create_profile(gaming_request).await.expect("Failed to create gaming profile");
         
         // Crea profilo Work
         let work_request = create_test_profile_request("WorkProfile", "WorkPass456!");
-        let work_profile = manager.create_profile(work_request).await.expect("Failed to create work profile");
+        let _work_profile = manager.create_profile(work_request).await.expect("Failed to create work profile");
         
         println!("✅ Profili Gaming e Work creati");
 
@@ -214,6 +216,7 @@ mod end_to_end_tests {
         
         // Configura impostazioni Gaming
         let gaming_settings = ProfileSettings {
+            version: 1,
             theme: Theme::Dark,
             language: "it".to_string(),
             auto_login: false,
@@ -281,6 +284,7 @@ mod end_to_end_tests {
         
         // Configura impostazioni Work (diverse da Gaming)
         let work_settings = ProfileSettings {
+            version: 1,
             theme: Theme::Light,
             language: "en".to_string(),
             auto_login: true,
@@ -418,7 +422,7 @@ mod end_to_end_tests {
         
         // Crea profilo complesso con molti dati
         let request = create_test_profile_request("ComplexUser", "ComplexPass123!");
-        let profile = source_manager.create_profile(request).await.expect("Failed to create profile");
+        let _profile = source_manager.create_profile(request).await.expect("Failed to create profile");
         
         // Autentica
         source_manager.authenticate_profile("ComplexUser", "ComplexPass123!")
@@ -426,6 +430,7 @@ mod end_to_end_tests {
         
         // Configura impostazioni dettagliate
         let detailed_settings = ProfileSettings {
+            version: 1,
             theme: Theme::Auto,
             language: "fr".to_string(),
             auto_login: true,
@@ -512,7 +517,7 @@ mod end_to_end_tests {
             settings: Some(pre_export_settings.clone()),
         };
         
-        let imported_profile = target_manager.create_profile(import_request)
+        let _imported_profile = target_manager.create_profile(import_request)
             .await.expect("Failed to import profile");
         
         // Autentica il profilo importato
@@ -615,7 +620,7 @@ mod end_to_end_tests {
             settings: Some(imported_settings.clone()),
         };
         
-        let secure_imported = target_manager.create_profile(secure_import_request)
+        let _secure_imported = target_manager.create_profile(secure_import_request)
             .await.expect("Failed to create secure imported profile");
         
         // Verifica che il profilo con password diversa funzioni
@@ -648,6 +653,7 @@ mod end_to_end_tests {
             password: "MainUserPass123!".to_string(),
             avatar_path: Some("/avatars/main_user.png".to_string()),
             settings: Some(ProfileSettings {
+                version: 1,
                 theme: Theme::Dark,
                 language: "it".to_string(),
                 auto_login: false,
@@ -674,7 +680,7 @@ mod end_to_end_tests {
             }),
         };
 
-        let profile1 = manager.create_profile(profile1_request).await
+        let _profile1 = manager.create_profile(profile1_request).await
             .expect("Failed to create MainUser profile");
         
         // Autentica profilo
@@ -724,6 +730,7 @@ mod end_to_end_tests {
             password: "SecondUserPass456!".to_string(),
             avatar_path: Some("/avatars/second_user.png".to_string()),
             settings: Some(ProfileSettings {
+                version: 1,
                 theme: Theme::Auto,
                 language: "fr".to_string(),
                 auto_login: true,
@@ -750,7 +757,7 @@ mod end_to_end_tests {
             }),
         };
 
-        let profile2 = manager.create_profile(profile2_request).await
+        let _profile2 = manager.create_profile(profile2_request).await
             .expect("Failed to create SecondUser profile");
 
         // Cambia al secondo profilo
@@ -859,7 +866,7 @@ mod end_to_end_tests {
             settings: Some(main_export_data.settings.clone()),
         };
 
-        let imported_main = import_manager.create_profile(main_import_request).await
+        let _imported_main = import_manager.create_profile(main_import_request).await
             .expect("Failed to import MainUser profile");
 
         import_manager.authenticate_profile("MainUser", "MainUserPass123!").await
@@ -879,7 +886,7 @@ mod end_to_end_tests {
             settings: Some(second_export_data.settings.clone()),
         };
 
-        let imported_second = import_manager.create_profile(second_import_request).await
+        let _imported_second = import_manager.create_profile(second_import_request).await
             .expect("Failed to import SecondUser profile");
 
         import_manager.switch_profile("SecondUser", "SecondUserPass456!").await

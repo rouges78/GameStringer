@@ -130,205 +130,22 @@ async fn load_steam_games_from_json() -> Result<Vec<GameInfo>, String> {
 
 // 🎮 DATABASE MASSIVO: Rilevamento engine per 1000+ giochi popolari
 pub fn detect_game_engine(game_name: &str) -> Option<String> {
-    let name_lower = game_name.to_lowercase();
-    
-    // 🔶 UNITY ENGINE (500+ giochi)
-    let unity_games = [
-        "hollow knight", "cuphead", "ori and", "cities skylines", "kerbal space program",
-        "subnautica", "the forest", "green hell", "rust", "7 days to die",
-        "valheim", "raft", "slime rancher", "a hat in time", "shovel knight",
-        "katana zero", "hotline miami", "nuclear throne", "risk of rain",
-        "dead cells", "enter the gungeon", "spelunky", "celeste", "super meat boy",
-        "the binding of isaac", "fez", "braid", "limbo", "inside", "little nightmares",
-        "ori and the blind forest", "ori and the will", "steamworld", "papers please",
-        "firewatch", "the witness", "what remains of edith finch", "stanley parable",
-        "untitled goose game", "among us", "fall guys", "phasmophobia", "devour",
-        "human fall flat", "gang beasts", "overcooked", "moving out", "tools up",
-        "hearthstone", "legends of runeterra", "gwent", "slay the spire", "monster train",
-        "dicey dungeons", "darkest dungeon", "ftl", "into the breach", "gunfire reborn",
-        "hades", "bastion", "transistor", "pyre", "disco elysium", "divinity",
-        "pillars of eternity", "tyranny", "pathfinder", "wasteland 3", "shadowrun",
-        "xcom", "battletech", "phoenix point", "mutant year zero", "gears tactics",
-        "crusader kings", "europa universalis", "hearts of iron", "stellaris", "victoria",
-        "cities xl", "tropico", "anno", "frostpunk", "this war of mine",
-        "astroneer", "axiom verge", "beat saber", "beholder", "bendy and",
-        "bioshock infinite", "blackwake", "blasphemous", "bloons", "brawlhalla",
-        "broforce", "brothers", "burnout paradise", "call of the sea", "carrion",
-        "castle crashers", "cat quest", "chicory", "child of light", "chivalry",
-        "clone drone", "coffee talk", "conan exiles", "control", "cook serve delicious",
-        "crash bandicoot", "crosscode", "crypt of the necrodancer", "cyberpunk 2077",
-        "dredge", "dying light", "escape from tarkov", "factorio", "far cry",
-        "fifa", "final fantasy", "for honor", "forager", "ghost of tsushima",
-        "god of war", "golf with your friends", "grounded", "guilty gear",
-        "half-life alyx", "hand of fate", "helldivers", "hitman", "horizon",
-        "house flipper", "hyper light drifter", "i am bread", "inscryption", "it takes two",
-        "journey", "jurassic world", "kena", "kingdom", "la noire",
-        "layers of fear", "league of legends", "life is strange", "little big planet",
-        "loop hero", "madden nfl", "mario kart", "mass effect", "minecraft",
-        "mirror's edge", "mortal kombat", "nba 2k", "need for speed", "nhl",
-        "nioh", "no man's sky", "octodad", "outer wilds", "overwatch",
-        "payday", "persona", "planet coaster", "plants vs zombies", "portal knights",
-        "project zomboid", "psychonauts", "quake champions", "rainbow six", "rayman",
-        "resident evil", "rocket league", "saints row", "sea of thieves", "sekiro",
-        "shadow of the colossus", "shenmue", "sherlock holmes", "sid meier", "sim city",
-        "sims", "sonic", "spider-man", "spyro", "star wars", "stardew valley",
-        "street fighter", "superhot", "team fortress", "tekken", "terraria",
-        "the crew", "the division", "the elder scrolls", "the last of us", "the sims",
-        "the witcher", "titanfall", "tomb raider", "total war", "two point hospital",
-        "undertale", "unravel", "valorant", "vampire survivors", "warframe",
-        "watch dogs", "we happy few", "world of warcraft", "yakuza", "zelda"
-    ];
-    
-    // 🔷 UNREAL ENGINE (400+ giochi)
-    let unreal_games = [
-        "fortnite", "rocket league", "borderlands", "gears", "bioshock", "mass effect",
-        "batman arkham", "injustice", "mortal kombat", "tekken", "street fighter",
-        "final fantasy", "kingdom hearts", "dragon quest", "nier", "persona",
-        "yakuza", "judgment", "lost judgment", "like a dragon", "shenmue",
-        "dead by daylight", "friday the 13th", "texas chain saw", "evil dead",
-        "outlast", "layers of fear", "observer", "blair witch", "the medium",
-        "amnesia", "soma", "alien isolation", "resident evil", "silent hill",
-        "dead space", "the callisto protocol", "scorn", "visage", "phasmophobia",
-        "valorant", "apex legends", "pubg", "fall guys", "among us",
-        "overwatch", "paladins", "smite", "paragon", "dauntless",
-        "sea of thieves", "grounded", "state of decay", "crackdown", "quantum break",
-        "alan wake", "control", "max payne", "remedy", "northgard",
-        "satisfactory", "deep rock galactic", "astroneer", "subnautica", "the forest",
-        "green hell", "raft", "valheim", "rust", "ark", "conan exiles",
-        "atlas", "last oasis", "new world", "lost ark", "black desert",
-        "blade and soul", "tera", "archeage", "aion", "guild wars",
-        "elder scrolls online", "neverwinter", "star trek online", "dc universe",
-        "warframe", "destiny", "anthem", "division", "ghost recon",
-        "splinter cell", "rainbow six", "for honor", "assassin's creed", "watch dogs",
-        "far cry", "trials", "steep", "riders republic", "the crew",
-        "burnout", "need for speed", "dirt", "grid", "f1", "forza",
-        "gran turismo", "project cars", "assetto corsa", "wreckfest",
-        "cyberpunk 2077", "witcher", "metro", "stalker", "dying light",
-        "dead island", "left 4 dead", "back 4 blood", "world war z", "killing floor",
-        "payday", "hotline miami", "katana zero", "my friend pedro", "superhot",
-        "john wick hex", "max payne", "stranglehold", "sleeping dogs", "true crime",
-        "mafia", "godfather", "scarface", "saints row", "grand theft auto",
-        "red dead", "la noire", "bully", "manhunt", "midnight club",
-        "driver", "wheelman", "the getaway", "kane and lynch", "hitman",
-        "splinter cell", "metal gear", "death stranding", "horizon", "days gone",
-        "the last of us", "uncharted", "god of war", "ghost of tsushima", "spider-man",
-        "ratchet and clank", "sly cooper", "jak and daxter", "crash bandicoot", "spyro",
-        "rayman", "beyond good and evil", "prince of persia", "splinter cell", "ghost recon"
-    ];
-    
-    // 🟢 SOURCE ENGINE (200+ giochi)
-    let source_games = [
-        "half-life", "portal", "team fortress", "counter-strike", "left 4 dead",
-        "dota", "garry's mod", "black mesa", "stanley parable", "dear esther",
-        "insurgency", "day of defeat", "alien swarm", "dino d-day", "nuclear dawn",
-        "zombie panic", "synergy", "smod", "minerva", "research and development",
-        "aperture tag", "portal stories", "thinking with time machine", "portal reloaded",
-        "hunt down the freeman", "prospekt", "entropy zero", "lambda wars", "empires",
-        "fortress forever", "fistful of frags", "no more room in hell", "neotokyo", "the ship",
-        "bloody good time", "zeno clash", "e.y.e", "revelations 2012", "dark messiah",
-        "vampire bloodlines", "sin episodes", "hl2 episode", "lost coast", "deathmatch"
-    ];
-    
-    // 🔴 CREATION ENGINE (Bethesda)
-    let creation_games = [
-        "skyrim", "fallout 4", "fallout 76", "starfield", "elder scrolls",
-        "tes", "oblivion", "morrowind", "daggerfall", "arena",
-        "fallout 3", "new vegas", "fallout shelter", "elder scrolls online", "blades"
-    ];
-    
-    // 🟡 ID TECH (id Software)
-    let idtech_games = [
-        "doom", "quake", "wolfenstein", "rage", "commander keen",
-        "hexen", "heretic", "strife", "return to castle", "enemy territory",
-        "quake wars", "brink", "the new order", "old blood", "new colossus",
-        "youngblood", "cyberpilot", "eternal", "ancient gods", "sigil",
-        "master levels", "final doom", "doom 64", "doom 3", "resurrection of evil",
-        "lost mission", "quake 2", "quake 3", "quake 4", "quake live",
-        "quake champions", "arena", "team arena", "ground zero", "the reckoning"
-    ];
-    
-    // 🟠 FROSTBITE (EA/DICE)
-    let frostbite_games = [
-        "battlefield", "fifa", "madden", "nhl", "nba live",
-        "need for speed", "mass effect andromeda", "dragon age inquisition", "anthem",
-        "star wars battlefront", "plants vs zombies", "garden warfare", "mirror's edge catalyst",
-        "a way out", "it takes two", "bad company", "battlefield 3", "battlefield 4",
-        "battlefield 1", "battlefield v", "battlefield 2042", "hardline"
-    ];
-    
-    // 🔵 CRYENGINE (Crytek)
-    let cryengine_games = [
-        "crysis", "far cry", "hunt showdown", "ryse", "warface",
-        "kingdom come", "prey", "robinson", "the climb", "back to dinosaur island",
-        "warhead", "wars", "maximum edition", "remastered", "deliverance",
-        "son of rome", "legendary edition", "breakpoint", "wildlands", "evolved",
-        "primal", "blood dragon", "instincts", "vengeance", "predator"
-    ];
-    
-    // Controllo Unity
-    for game in &unity_games {
-        if name_lower.contains(game) {
-            return Some("Unity".to_string());
-        }
-    }
-    
-    // Controllo Unreal
-    for game in &unreal_games {
-        if name_lower.contains(game) {
-            return Some("Unreal Engine".to_string());
-        }
-    }
-    
-    // Controllo Source
-    for game in &source_games {
-        if name_lower.contains(game) {
-            return Some("Source Engine".to_string());
-        }
-    }
-    
-    // Controllo Creation
-    for game in &creation_games {
-        if name_lower.contains(game) {
-            return Some("Creation Engine".to_string());
-        }
-    }
-    
-    // Controllo ID Tech
-    for game in &idtech_games {
-        if name_lower.contains(game) {
-            return Some("id Tech".to_string());
-        }
-    }
-    
-    // Controllo Frostbite
-    for game in &frostbite_games {
-        if name_lower.contains(game) {
-            return Some("Frostbite".to_string());
-        }
-    }
-    
-    // Controllo CryEngine
-    for game in &cryengine_games {
-        if name_lower.contains(game) {
-            return Some("CryEngine".to_string());
-        }
-    }
-    
-    // Controlli generici per pattern comuni
-    if name_lower.contains("unity") {
-        return Some("Unity".to_string());
-    }
-    if name_lower.contains("unreal") {
-        return Some("Unreal Engine".to_string());
-    }
-    if name_lower.contains("source") {
-        return Some("Source Engine".to_string());
-    }
-    
-    None
+    crate::engine_detector::detect_engine_by_name(game_name)
 }
 
 
+
+// 🎮 SMART ENGINE DETECTION
+pub fn detect_game_engine_smart(name: &str, install_path: Option<&String>) -> Option<String> {
+    let path = install_path.map(std::path::Path::new);
+    let result = crate::engine_detector::detect_engine_smart(name, path);
+    
+    if result == "Unknown" {
+        None
+    } else {
+        Some(result)
+    }
+}
 
 #[tauri::command]
 pub async fn force_refresh_all_games(
@@ -450,7 +267,7 @@ pub async fn force_refresh_all_games(
                     is_installed: true,
                     steam_app_id: None,
                     is_vr: epic_game.name.to_lowercase().contains("vr") || epic_game.name.to_lowercase().contains("virtual reality"),
-                    engine: if epic_game.name.to_lowercase().contains("unreal") { Some("Unreal Engine".to_string()) } else { None },
+                    engine: detect_game_engine_smart(&epic_game.name, Some(&epic_game.path)),
                     last_played: epic_game.last_modified,
                     is_shared: false,
                     supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
@@ -475,7 +292,7 @@ pub async fn force_refresh_all_games(
 // 🚀 NUOVA FUNZIONE: Caricamento veloce come Rai Pal
 #[tauri::command]
 pub async fn get_games_fast() -> Result<Vec<GameInfo>, String> {
-    log::info!("🚀 Caricamento veloce giochi (metodo Rai Pal)...");
+    log::info!("🚀 Caricamento veloce giochi (metodo Rai Pal) - PARALLEL MODE...");
     
     let start_time = std::time::Instant::now();
     let mut all_games = Vec::new();
@@ -484,36 +301,45 @@ pub async fn get_games_fast() -> Result<Vec<GameInfo>, String> {
     match load_games_from_cache().await {
         Ok(cached_games) => {
             log::info!("⚡ Caricamento ISTANTANEO dalla cache: {} giochi", cached_games.len());
+            // Continuiamo comunque in background per aggiornare se necessario o ritorniamo subito?
+            // Per ora ritorniamo subito per massima velocità, l'utente può fare refresh manuale
             return Ok(cached_games);
         }
         Err(e) => {
-            log::info!("🔄 Cache non disponibile ({}), caricamento da Steam...", e);
+            log::info!("🔄 Cache non disponibile ({}), caricamento completo...", e);
         }
     }
     
-    // 1. Prova prima la lettura veloce diretta Steam
-    match steam::get_steam_games_fast().await {
-        Ok(steam_games) => {
+    // Avvia task in parallelo
+    let steam_task = tokio::spawn(steam::get_steam_games_fast());
+    let epic_task = tokio::spawn(library::get_epic_installed_games());
+    let gog_task = tokio::spawn(gog::get_gog_installed_games());
+    let origin_task = tokio::spawn(origin::get_origin_installed_games());
+    let ubisoft_task = tokio::spawn(ubisoft::get_ubisoft_installed_games());
+    let battlenet_task = tokio::spawn(battlenet::get_battlenet_installed_games());
+    let itchio_task = tokio::spawn(itchio::get_itchio_installed_games());
+    let rockstar_task = tokio::spawn(rockstar::get_rockstar_installed_games());
+    
+    // 1. Steam Result
+    match steam_task.await {
+        Ok(Ok(steam_games)) => {
             log::info!("✅ Lettura veloce Steam: {} giochi trovati", steam_games.len());
             all_games.extend(steam_games);
         }
-        Err(e) => {
+        Ok(Err(e)) => {
             log::warn!("⚠️ Lettura veloce Steam fallita: {}, usando fallback", e);
-            // Fallback al metodo JSON se disponibile
             if let Ok(fallback_games) = load_steam_games_from_json().await {
                 log::info!("✅ Fallback JSON: {} giochi caricati", fallback_games.len());
                 all_games.extend(fallback_games);
             }
         }
+        Err(e) => log::error!("🔥 Panic in Steam task: {}", e),
     }
     
-    // 2. Aggiungi altri store velocemente (sono già ottimizzati)
-    
-    // Epic Games (già veloce, scan filesystem)
-    match library::get_epic_installed_games().await {
-        Ok(epic_games) => {
+    // 2. Epic Games Result
+    match epic_task.await {
+        Ok(Ok(epic_games)) => {
             log::info!("🎮 Epic Games: {} giochi trovati", epic_games.len());
-            
             for epic_game in epic_games {
                 let game_info = GameInfo {
                     id: epic_game.id.clone(),
@@ -522,12 +348,12 @@ pub async fn get_games_fast() -> Result<Vec<GameInfo>, String> {
                     install_path: Some(epic_game.path.clone()),
                     executable_path: epic_game.executable.clone(),
                     icon: None,
-                    image_url: None, // Saltiamo le copertine per velocità
+                    image_url: None,
                     header_image: None,
                     is_installed: true,
                     steam_app_id: None,
                     is_vr: is_vr_game(&epic_game.name),
-                    engine: detect_game_engine(&epic_game.name),
+                    engine: detect_game_engine_smart(&epic_game.name, Some(&epic_game.path)),
                     last_played: epic_game.last_modified,
                     is_shared: false,
                     supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
@@ -536,14 +362,14 @@ pub async fn get_games_fast() -> Result<Vec<GameInfo>, String> {
                 all_games.push(game_info);
             }
         }
-        Err(e) => log::warn!("⚠️ Epic Games errore: {}", e),
+        Ok(Err(e)) => log::warn!("⚠️ Epic Games errore: {}", e),
+        Err(e) => log::error!("🔥 Panic in Epic task: {}", e),
     }
     
-    // GOG Games (già veloce, scan registry)
-    match gog::get_gog_installed_games().await {
-        Ok(gog_games) => {
+    // 3. GOG Result
+    match gog_task.await {
+        Ok(Ok(gog_games)) => {
             log::info!("🎮 GOG: {} giochi trovati", gog_games.len());
-            
             for gog_game in gog_games {
                 let game_info = GameInfo {
                     id: gog_game.id.clone(),
@@ -557,7 +383,7 @@ pub async fn get_games_fast() -> Result<Vec<GameInfo>, String> {
                     is_installed: true,
                     steam_app_id: None,
                     is_vr: is_vr_game(&gog_game.name),
-                    engine: detect_game_engine(&gog_game.name),
+                    engine: detect_game_engine_smart(&gog_game.name, Some(&gog_game.path)),
                     last_played: gog_game.last_modified,
                     is_shared: false,
                     supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
@@ -566,11 +392,167 @@ pub async fn get_games_fast() -> Result<Vec<GameInfo>, String> {
                 all_games.push(game_info);
             }
         }
-        Err(e) => log::warn!("⚠️ GOG errore: {}", e),
+        Ok(Err(e)) => log::warn!("⚠️ GOG errore: {}", e),
+        Err(e) => log::error!("🔥 Panic in GOG task: {}", e),
+    }
+
+    // 4. Origin/EA Result
+    match origin_task.await {
+        Ok(Ok(origin_games)) => {
+            log::info!("🎮 Origin/EA: {} giochi trovati", origin_games.len());
+            for origin_game in origin_games {
+                let game_info = GameInfo {
+                    id: origin_game.id.clone(),
+                    title: origin_game.name.clone(),
+                    platform: origin_game.platform.clone(),
+                    install_path: Some(origin_game.path.clone()),
+                    executable_path: origin_game.executable.clone(),
+                    icon: None,
+                    image_url: None,
+                    header_image: None,
+                    is_installed: true,
+                    steam_app_id: None,
+                    is_vr: is_vr_game(&origin_game.name),
+                    engine: detect_game_engine_smart(&origin_game.name, Some(&origin_game.path)),
+                    last_played: origin_game.last_modified,
+                    is_shared: false,
+                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                    genres: Some(vec!["Game".to_string()]),
+                };
+                all_games.push(game_info);
+            }
+        }
+        Ok(Err(e)) => log::warn!("⚠️ Origin/EA errore: {}", e),
+        Err(e) => log::error!("🔥 Panic in Origin task: {}", e),
+    }
+
+    // 5. Ubisoft Connect Result
+    match ubisoft_task.await {
+        Ok(Ok(ubisoft_games)) => {
+            log::info!("🎮 Ubisoft: {} giochi trovati", ubisoft_games.len());
+            for ubisoft_game in ubisoft_games {
+                let game_info = GameInfo {
+                    id: ubisoft_game.id.clone(),
+                    title: ubisoft_game.name.clone(),
+                    platform: ubisoft_game.platform.clone(),
+                    install_path: Some(ubisoft_game.path.clone()),
+                    executable_path: ubisoft_game.executable.clone(),
+                    icon: None,
+                    image_url: None,
+                    header_image: None,
+                    is_installed: true,
+                    steam_app_id: None,
+                    is_vr: is_vr_game(&ubisoft_game.name),
+                    engine: detect_game_engine_smart(&ubisoft_game.name, Some(&ubisoft_game.path)),
+                    last_played: ubisoft_game.last_modified,
+                    is_shared: false,
+                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                    genres: Some(vec!["Game".to_string()]),
+                };
+                all_games.push(game_info);
+            }
+        }
+        Ok(Err(e)) => log::warn!("⚠️ Ubisoft errore: {}", e),
+        Err(e) => log::error!("🔥 Panic in Ubisoft task: {}", e),
+    }
+
+    // 6. Battle.net Result
+    match battlenet_task.await {
+        Ok(Ok(battlenet_games)) => {
+            log::info!("🎮 Battle.net: {} giochi trovati", battlenet_games.len());
+            for battlenet_game in battlenet_games {
+                let game_info = GameInfo {
+                    id: battlenet_game.id.clone(),
+                    title: battlenet_game.name.clone(),
+                    platform: battlenet_game.platform.clone(),
+                    install_path: Some(battlenet_game.path.clone()),
+                    executable_path: battlenet_game.executable.clone(),
+                    icon: None,
+                    image_url: None,
+                    header_image: None,
+                    is_installed: true,
+                    steam_app_id: None,
+                    is_vr: is_vr_game(&battlenet_game.name),
+                    engine: detect_game_engine_smart(&battlenet_game.name, Some(&battlenet_game.path)),
+                    last_played: battlenet_game.last_modified,
+                    is_shared: false,
+                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                    genres: Some(vec!["Game".to_string()]),
+                };
+                all_games.push(game_info);
+            }
+        }
+        Ok(Err(e)) => log::warn!("⚠️ Battle.net errore: {}", e),
+        Err(e) => log::error!("🔥 Panic in Battle.net task: {}", e),
+    }
+
+    // 7. itch.io Result
+    match itchio_task.await {
+        Ok(Ok(itchio_games)) => {
+            log::info!("🎮 itch.io: {} giochi trovati", itchio_games.len());
+            for itchio_game in itchio_games {
+                let game_info = GameInfo {
+                    id: itchio_game.id.clone(),
+                    title: itchio_game.name.clone(),
+                    platform: itchio_game.platform.clone(),
+                    install_path: Some(itchio_game.path.clone()),
+                    executable_path: itchio_game.executable.clone(),
+                    icon: None,
+                    image_url: None,
+                    header_image: None,
+                    is_installed: true,
+                    steam_app_id: None,
+                    is_vr: is_vr_game(&itchio_game.name),
+                    engine: detect_game_engine_smart(&itchio_game.name, Some(&itchio_game.path)),
+                    last_played: itchio_game.last_modified,
+                    is_shared: false,
+                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                    genres: Some(vec!["Game".to_string()]),
+                };
+                all_games.push(game_info);
+            }
+        }
+        Ok(Err(e)) => log::warn!("⚠️ itch.io errore: {}", e),
+        Err(e) => log::error!("🔥 Panic in itch.io task: {}", e),
+    }
+
+    // 8. Rockstar Games Result
+    match rockstar_task.await {
+        Ok(Ok(rockstar_games)) => {
+            log::info!("🎮 Rockstar Games: {} giochi trovati", rockstar_games.len());
+            for rockstar_game in rockstar_games {
+                let game_info = GameInfo {
+                    id: rockstar_game.id.clone(),
+                    title: rockstar_game.name.clone(),
+                    platform: rockstar_game.platform.clone(),
+                    install_path: Some(rockstar_game.path.clone()),
+                    executable_path: rockstar_game.executable.clone(),
+                    icon: None,
+                    image_url: None,
+                    header_image: None,
+                    is_installed: true,
+                    steam_app_id: None,
+                    is_vr: is_vr_game(&rockstar_game.name),
+                    engine: detect_game_engine_smart(&rockstar_game.name, Some(&rockstar_game.path)),
+                    last_played: rockstar_game.last_modified,
+                    is_shared: false,
+                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
+                    genres: Some(vec!["Game".to_string()]),
+                };
+                all_games.push(game_info);
+            }
+        }
+        Ok(Err(e)) => log::warn!("⚠️ Rockstar Games errore: {}", e),
+        Err(e) => log::error!("🔥 Panic in Rockstar task: {}", e),
     }
     
     let elapsed = start_time.elapsed();
-    log::info!("✅ CARICAMENTO VELOCE COMPLETATO: {} giochi in {:?} (metodo Rai Pal)", all_games.len(), elapsed);
+    log::info!("✅ CARICAMENTO PARALLELO COMPLETATO: {} giochi in {:?} (metodo Rai Pal)", all_games.len(), elapsed);
+    
+    // Salva in cache per la prossima volta
+    if let Err(e) = save_games_to_cache(&all_games).await {
+        log::warn!("⚠️ Errore salvataggio cache: {}", e);
+    }
     
     Ok(all_games)
 }
@@ -1012,24 +994,34 @@ pub async fn get_game_by_id(game_id: String) -> Result<Option<GameInfo>, String>
 
 #[tauri::command]
 pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
-    log::info!("🔎 Avvio scansione giochi...");
+    log::info!("🔎 Avvio scansione giochi - PARALLEL MODE...");
     
+    let start_time = std::time::Instant::now();
     let mut scan_results = Vec::new();
     
-    // Scansiona giochi Steam
-    match scan_steam_games().await {
-        Ok(mut steam_games) => {
+    // Avvia task in parallelo
+    let steam_task = tokio::spawn(scan_steam_games());
+    let epic_task = tokio::spawn(epic::get_epic_games_complete());
+    let gog_task = tokio::spawn(gog::get_gog_installed_games());
+    let origin_task = tokio::spawn(origin::get_origin_installed_games());
+    let ubisoft_task = tokio::spawn(ubisoft::get_ubisoft_installed_games());
+    let battlenet_task = tokio::spawn(battlenet::get_battlenet_installed_games());
+    let itchio_task = tokio::spawn(itchio::get_itchio_installed_games());
+    let rockstar_task = tokio::spawn(rockstar::get_rockstar_installed_games());
+    
+    // 1. Steam
+    match steam_task.await {
+        Ok(Ok(mut steam_games)) => {
             log::info!("✅ Trovati {} giochi Steam", steam_games.len());
             scan_results.append(&mut steam_games);
         }
-        Err(e) => {
-            log::error!("❌ Errore scansione Steam: {}", e);
-        }
+        Ok(Err(e)) => log::error!("❌ Errore scansione Steam: {}", e),
+        Err(e) => log::error!("🔥 Panic in Steam task: {}", e),
     }
     
-    // Scansiona giochi Epic Games
-    match epic::get_epic_games_complete().await {
-        Ok(epic_games) => {
+    // 2. Epic Games
+    match epic_task.await {
+        Ok(Ok(epic_games)) => {
             let epic_scan_results: Vec<GameScanResult> = epic_games.into_iter().map(|game| {
                 GameScanResult {
                     title: game.title.clone(),
@@ -1051,14 +1043,13 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
             log::info!("✅ Trovati {} giochi Epic Games", epic_scan_results.len());
             scan_results.extend(epic_scan_results);
         }
-        Err(e) => {
-            log::error!("❌ Errore scansione Epic Games: {}", e);
-        }
+        Ok(Err(e)) => log::error!("❌ Errore scansione Epic Games: {}", e),
+        Err(e) => log::error!("🔥 Panic in Epic task: {}", e),
     }
     
-    // Scansiona giochi GOG
-    match gog::get_gog_installed_games().await {
-        Ok(gog_games) => {
+    // 3. GOG
+    match gog_task.await {
+        Ok(Ok(gog_games)) => {
             let gog_scan_results: Vec<GameScanResult> = gog_games.into_iter().map(|game| {
                 GameScanResult {
                     title: game.name.clone(),
@@ -1066,7 +1057,7 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
                     executable_path: game.executable.clone(),
                     app_id: Some(game.id.clone()),
                     source: "GOG".to_string(),
-                    is_installed: true, // GOG scansiona solo giochi installati
+                    is_installed: true,
                     id: game.id.clone(),
                     platform: game.platform.clone(),
                     header_image: None,
@@ -1080,14 +1071,13 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
             log::info!("✅ Trovati {} giochi GOG", gog_scan_results.len());
             scan_results.extend(gog_scan_results);
         }
-        Err(e) => {
-            log::error!("❌ Errore scansione GOG: {}", e);
-        }
+        Ok(Err(e)) => log::error!("❌ Errore scansione GOG: {}", e),
+        Err(e) => log::error!("🔥 Panic in GOG task: {}", e),
     }
     
-    // Scansiona giochi Origin/EA
-    match origin::get_origin_installed_games().await {
-        Ok(origin_games) => {
+    // 4. Origin/EA
+    match origin_task.await {
+        Ok(Ok(origin_games)) => {
             let origin_scan_results: Vec<GameScanResult> = origin_games.into_iter().map(|game| {
                 GameScanResult {
                     title: game.name.clone(),
@@ -1109,14 +1099,13 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
             log::info!("✅ Trovati {} giochi Origin/EA", origin_scan_results.len());
             scan_results.extend(origin_scan_results);
         }
-        Err(e) => {
-            log::error!("❌ Errore scansione Origin/EA: {}", e);
-        }
+        Ok(Err(e)) => log::error!("❌ Errore scansione Origin: {}", e),
+        Err(e) => log::error!("🔥 Panic in Origin task: {}", e),
     }
     
-    // Scansiona giochi Ubisoft Connect
-    match ubisoft::get_ubisoft_installed_games().await {
-        Ok(ubisoft_games) => {
+    // 5. Ubisoft Connect
+    match ubisoft_task.await {
+        Ok(Ok(ubisoft_games)) => {
             let ubisoft_scan_results: Vec<GameScanResult> = ubisoft_games.into_iter().map(|game| {
                 GameScanResult {
                     title: game.name.clone(),
@@ -1138,14 +1127,13 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
             log::info!("✅ Trovati {} giochi Ubisoft Connect", ubisoft_scan_results.len());
             scan_results.extend(ubisoft_scan_results);
         }
-        Err(e) => {
-            log::error!("❌ Errore scansione Ubisoft Connect: {}", e);
-        }
+        Ok(Err(e)) => log::error!("❌ Errore scansione Ubisoft Connect: {}", e),
+        Err(e) => log::error!("🔥 Panic in Ubisoft task: {}", e),
     }
     
-    // Scansiona giochi Battle.net
-    match battlenet::get_battlenet_installed_games().await {
-        Ok(battlenet_games) => {
+    // 6. Battle.net
+    match battlenet_task.await {
+        Ok(Ok(battlenet_games)) => {
             let battlenet_scan_results: Vec<GameScanResult> = battlenet_games.into_iter().map(|game| {
                 GameScanResult {
                     title: game.name.clone(),
@@ -1167,14 +1155,13 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
             log::info!("✅ Trovati {} giochi Battle.net", battlenet_scan_results.len());
             scan_results.extend(battlenet_scan_results);
         }
-        Err(e) => {
-            log::error!("❌ Errore scansione Battle.net: {}", e);
-        }
+        Ok(Err(e)) => log::error!("❌ Errore scansione Battle.net: {}", e),
+        Err(e) => log::error!("🔥 Panic in Battle.net task: {}", e),
     }
     
-    // Scansiona giochi itch.io
-    match itchio::get_itchio_installed_games().await {
-        Ok(itchio_games) => {
+    // 7. itch.io
+    match itchio_task.await {
+        Ok(Ok(itchio_games)) => {
             let itchio_scan_results: Vec<GameScanResult> = itchio_games.into_iter().map(|game| {
                 GameScanResult {
                     title: game.name.clone(),
@@ -1196,14 +1183,13 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
             log::info!("✅ Trovati {} giochi itch.io", itchio_scan_results.len());
             scan_results.extend(itchio_scan_results);
         }
-        Err(e) => {
-            log::error!("❌ Errore scansione itch.io: {}", e);
-        }
+        Ok(Err(e)) => log::error!("❌ Errore scansione itch.io: {}", e),
+        Err(e) => log::error!("🔥 Panic in itch.io task: {}", e),
     }
     
-    // Scansiona giochi Rockstar Games
-    match rockstar::get_rockstar_installed_games().await {
-        Ok(rockstar_games) => {
+    // 8. Rockstar Games
+    match rockstar_task.await {
+        Ok(Ok(rockstar_games)) => {
             let rockstar_scan_results: Vec<GameScanResult> = rockstar_games.into_iter().map(|game| {
                 GameScanResult {
                     title: game.name.clone(),
@@ -1225,12 +1211,12 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
             log::info!("✅ Trovati {} giochi Rockstar Games", rockstar_scan_results.len());
             scan_results.extend(rockstar_scan_results);
         }
-        Err(e) => {
-            log::error!("❌ Errore scansione Rockstar Games: {}", e);
-        }
+        Ok(Err(e)) => log::error!("❌ Errore scansione Rockstar Games: {}", e),
+        Err(e) => log::error!("🔥 Panic in Rockstar task: {}", e),
     }
     
-    log::info!("🎯 Scansione completata: {} giochi totali", scan_results.len());
+    let elapsed = start_time.elapsed();
+    log::info!("🎯 Scansione completata: {} giochi totali in {:?}", scan_results.len(), elapsed);
     Ok(scan_results)
 }
 
@@ -1386,7 +1372,7 @@ async fn parse_steam_manifest(manifest_path: &Path) -> Result<Option<GameScanRes
             
             let game_result = GameScanResult {
                 title: name.clone(),
-                path: install_path,
+                path: install_path.clone(),
                 executable_path: Some(executable_path),
                 app_id: Some(app_id.to_string()),
                 source: "Steam".to_string(),
@@ -1395,7 +1381,7 @@ async fn parse_steam_manifest(manifest_path: &Path) -> Result<Option<GameScanRes
                 platform: "Steam".to_string(),
                 header_image: None,
                 is_vr: is_vr_game(&name),
-                engine: None,
+                engine: detect_game_engine_smart(&name, Some(&install_path)),
                 supported_languages: None,
                 genres: None,
                 last_played: None,

@@ -20,7 +20,7 @@ export interface BatchTranslationJob {
   gameName?: string;
   sourceLanguage: string;
   targetLanguage: string;
-  provider: 'openai' | 'deepl' | 'google';
+  provider: 'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google';
   status: BatchJobStatus;
   items: BatchTranslationItem[];
   progress: BatchProgress;
@@ -71,6 +71,8 @@ export interface BatchProgress {
   percentage: number;
   estimatedTimeRemaining?: number;  // secondi
   startTime?: number;
+  statusMessage?: string;           // Messaggio di stato per l'utente
+  isRateLimited?: boolean;          // Se true, stiamo aspettando per rate limit
 }
 
 export interface BatchOptions {
@@ -162,7 +164,7 @@ export class BatchTranslator {
       gameName?: string;
       sourceLanguage?: string;
       targetLanguage?: string;
-      provider?: 'openai' | 'deepl' | 'google';
+      provider?: 'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google';
     }
   ): BatchTranslationJob {
     const mergedOptions = { ...DEFAULT_BATCH_OPTIONS, ...options };
@@ -397,21 +399,57 @@ export class BatchTranslator {
         this.job.progress.failed++;
         this.job.results.failedItems++;
 
-        // Retry logic
+        // Retry logic with Exponential Backoff
         if (this.job.options.maxRetries > 0) {
+          let currentRetryDelay = this.job.options.retryDelay;
+
           for (let retry = 0; retry < this.job.options.maxRetries; retry++) {
-            await this.sleep(this.job.options.retryDelay);
+            const isRateLimit = item.error?.includes('429') || item.error?.includes('Too Many Requests');
+            
+            // Se è un rate limit, aumenta aggressivamente il delay
+            if (isRateLimit) {
+              currentRetryDelay = Math.max(currentRetryDelay * 2, 5000 * (retry + 1)); // Min 5s, poi 10s, 15s...
+              console.warn(`[BatchTranslator] ⚠️ Rate limit 429 rilevato. Attesa ${currentRetryDelay}ms prima del retry ${retry + 1}/${this.job.options.maxRetries}`);
+              
+              // Rallenta anche il delay tra batch futuri per evitare di colpire subito il muro di nuovo
+              this.job.options.delayBetweenBatches = Math.max(this.job.options.delayBetweenBatches * 1.5, 2000);
+
+              // Aggiorna stato per UI
+              this.job.progress.isRateLimited = true;
+              this.job.progress.statusMessage = `⚠️ Rate limit API rilevato. In pausa per ${(currentRetryDelay/1000).toFixed(0)}s...`;
+              this.updateProgress();
+            }
+
+            await this.sleep(currentRetryDelay);
+            
+            // Reset stato rate limit dopo attesa
+            if (isRateLimit) {
+              this.job.progress.isRateLimited = false;
+              this.job.progress.statusMessage = undefined;
+              this.updateProgress();
+            }
+            
             try {
               await this.translateItem(item);
+              // Success!
               item.status = 'completed';
               item.error = undefined;
               this.job.progress.failed--;
               this.job.progress.completed++;
               this.job.results.failedItems--;
               this.job.results.translatedItems++;
+              
+              if (item.fromMemory) {
+                this.job.progress.fromMemory++;
+                this.job.results.fromMemoryItems++;
+              }
+
+              this.onItemCompleteCallback?.(item);
               break;
             } catch (retryError) {
-              // Continue to next retry
+              item.error = retryError instanceof Error ? retryError.message : String(retryError);
+              // Aumenta delay per il prossimo tentativo (Exponential Backoff)
+              currentRetryDelay *= 2;
             }
           }
         }
@@ -553,7 +591,7 @@ export async function translateBatch(
     gameName?: string;
     sourceLanguage?: string;
     targetLanguage?: string;
-    provider?: 'openai' | 'deepl' | 'google';
+    provider?: 'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google';
     onProgress?: (progress: BatchProgress) => void;
     onItemComplete?: (item: BatchTranslationItem) => void;
   } & Partial<BatchOptions>
@@ -578,7 +616,7 @@ export async function translateBatch(
 export function estimateBatchCost(
   items: Array<{ text: string }>,
   options: {
-    provider?: 'openai' | 'deepl' | 'google';
+    provider?: 'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google';
     useTranslationMemory?: boolean;
     tmHitRate?: number;  // Stima % hit rate TM (default 30%)
   } = {}

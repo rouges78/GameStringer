@@ -48,8 +48,22 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
   
-  const { authenticateProfile, deleteProfile } = useProfiles();
+  const { authenticateProfile, deleteProfile, getProfileAvatar } = useProfiles();
+
+  useEffect(() => {
+    const loadAvatar = async () => {
+      if (profile.avatar_path && !profile.avatar_path.startsWith('gradient-')) {
+        const src = await getProfileAvatar(profile.id);
+        if (src) {
+          setAvatarSrc(src);
+        }
+      }
+    };
+    
+    loadAvatar();
+  }, [profile.avatar_path, profile.id, getProfileAvatar]);
 
   const handleAuthenticate = async () => {
     if (!password.trim()) {
@@ -131,6 +145,7 @@ function ProfileCard({ profile, isSelected }: ProfileCardProps) {
         <CardHeader className="pb-3">
           <div className="flex items-center space-x-3">
             <Avatar className="h-12 w-12">
+              <AvatarImage src={avatarSrc || undefined} alt={profile.name} />
               <AvatarFallback className={`bg-gradient-to-br ${getAvatarGradient(profile.avatar_path)} text-white font-semibold`}>
                 {getInitials(profile.name)}
               </AvatarFallback>

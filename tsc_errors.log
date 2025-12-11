@@ -1,0 +1,165 @@
+.next/types/app/api/steam/games/[id]/route.ts(49,7): error TS2344: Type '{ __tag__: "GET"; __param_position__: "second"; __param_type__: { params: { id: string; }; }; }' does not satisfy the constraint 'ParamCheck<RouteContext>'.
+  The types of '__param_type__.params' are incompatible between these types.
+    Type '{ id: string; }' is missing the following properties from type 'Promise<any>': then, catch, finally, [Symbol.toStringTag]
+.next/types/validator.ts(155,11): error TS1360: Type 'typeof import("C:/dev/GameStringer/app/api/games/[id]/route")' does not satisfy the expected type 'RouteHandlerConfig<"/api/games/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { id: string; }; }) => Promise<NextResponse<{ error: string; }> | NextResponse<{ translationStats: { total: number; completed: number; pending: number; reviewed: number; edited: number; averageConfidence: number; }; ... 14 more ...; updatedAt: Date; }> | NextResponse<...>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+.next/types/validator.ts(197,11): error TS1360: Type 'typeof import("C:/dev/GameStringer/app/api/steam/games/[id]/route")' does not satisfy the expected type 'RouteHandlerConfig<"/api/steam/games/[id]">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: NextRequest, { params }: { params: { id: string; }; }) => Promise<NextResponse<any>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{ id: string; }>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{ id: string; }>; }' is not assignable to type '{ params: { id: string; }; }'.
+          Types of property 'params' are incompatible.
+            Property 'id' is missing in type 'Promise<{ id: string; }>' but required in type '{ id: string; }'.
+__tests__/batch/batch-integration.test.tsx(3,40): error TS2307: Cannot find module '@/components/batch/batch-selection-provider' or its corresponding type declarations.
+__tests__/batch/batch-integration.test.tsx(4,36): error TS2307: Cannot find module '@/components/batch/batch-action-toolbar' or its corresponding type declarations.
+__tests__/batch/batch-integration.test.tsx(5,40): error TS2307: Cannot find module '@/components/batch/batch-selection-checkbox' or its corresponding type declarations.
+__tests__/batch/batch-selection-provider.test.tsx(3,59): error TS2307: Cannot find module '@/components/batch/batch-selection-provider' or its corresponding type declarations.
+__tests__/components/notifications/notification-settings.test.tsx(111,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(118,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(127,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(140,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(147,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(161,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(173,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(183,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(198,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(213,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(238,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(248,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(272,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(294,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(318,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(342,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(382,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(396,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(428,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(459,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(490,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(507,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(518,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(532,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(546,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(561,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(578,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(588,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(612,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(623,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(631,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(639,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(649,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(660,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(680,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(695,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-settings.test.tsx(706,15): error TS2739: Type '{}' is missing the following properties from type 'NotificationSettingsProps': preferences, onPreferencesChange
+__tests__/components/notifications/notification-toast-simple.test.tsx(5,31): error TS2307: Cannot find module '@/components/notifications/notification-toast' or its corresponding type declarations.
+__tests__/components/notifications/notification-toast-simple.test.tsx(66,3): error TS2304: Cannot find name 'afterEach'.
+__tests__/components/notifications/notification-toast.test.tsx(6,31): error TS2307: Cannot find module '@/components/notifications/notification-toast' or its corresponding type declarations.
+__tests__/hooks/use-notifications.test.ts(151,64): error TS2345: Argument of type '{ type: NotificationType; title: string; message: string; priority: NotificationPriority; }' is not assignable to parameter of type 'CreateNotificationRequest'.
+  Property 'profileId' is missing in type '{ type: NotificationType; title: string; message: string; priority: NotificationPriority; }' but required in type 'CreateNotificationRequest'.
+__tests__/hooks/use-notifications.test.ts(497,64): error TS2345: Argument of type '{ type: NotificationType; title: string; message: string; priority: NotificationPriority; }' is not assignable to parameter of type 'CreateNotificationRequest'.
+  Property 'profileId' is missing in type '{ type: NotificationType; title: string; message: string; priority: NotificationPriority; }' but required in type 'CreateNotificationRequest'.
+__tests__/translation-memory/database-performance.test.ts(63,44): error TS2345: Argument of type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' is not assignable to parameter of type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+  Property 'usageCount' is missing in type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' but required in type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+__tests__/translation-memory/database-performance.test.ts(143,44): error TS2345: Argument of type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' is not assignable to parameter of type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+  Property 'usageCount' is missing in type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' but required in type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+__tests__/translation-memory/integration.test.ts(58,64): error TS2345: Argument of type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' is not assignable to parameter of type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+  Property 'usageCount' is missing in type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' but required in type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+__tests__/translation-memory/integration.test.ts(299,55): error TS2345: Argument of type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' is not assignable to parameter of type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+  Property 'usageCount' is missing in type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' but required in type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+__tests__/translation-memory/integration.test.ts(335,55): error TS2345: Argument of type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' is not assignable to parameter of type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+  Property 'usageCount' is missing in type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' but required in type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+__tests__/translation-memory/integration.test.ts(344,55): error TS2345: Argument of type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' is not assignable to parameter of type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+  Property 'usageCount' is missing in type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' but required in type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+__tests__/translation-memory/integration.test.ts(353,55): error TS2345: Argument of type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' is not assignable to parameter of type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+  Property 'usageCount' is missing in type '{ sourceText: string; targetText: string; sourceLanguage: string; targetLanguage: string; confidence: number; }' but required in type 'Omit<TranslationMemoryEntry, "id" | "createdAt" | "updatedAt">'.
+__tests__/translation-memory/memory-suggestions.test.tsx(4,35): error TS2307: Cannot find module '@/components/translation-memory/memory-suggestions' or its corresponding type declarations.
+__tests__/translation-memory/memory-suggestions.test.tsx(5,43): error TS2307: Cannot find module '@/components/translation-memory/translation-memory-provider' or its corresponding type declarations.
+__tests__/translation-memory/memory-suggestions.test.tsx(81,45): error TS2554: Expected 1 arguments, but got 0.
+__tests__/translation-memory/translation-memory-provider.test.tsx(4,65): error TS2307: Cannot find module '@/components/translation-memory/translation-memory-provider' or its corresponding type declarations.
+__tests__/translation-memory/translation-memory-provider.test.tsx(105,80): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+__tests__/translation-memory/translation-memory-provider.test.tsx(106,51): error TS1308: 'await' expressions are only allowed within async functions and at the top levels of modules.
+__tests__/tutorial/tutorial-configs.test.ts(177,7): error TS2552: Cannot find name 'allTutorials'. Did you mean 'getAllTutorials'?
+__tests__/tutorial/tutorial-configs.test.ts(185,7): error TS2552: Cannot find name 'allTutorials'. Did you mean 'getAllTutorials'?
+__tests__/tutorial/tutorial-configs.test.ts(198,7): error TS2552: Cannot find name 'allTutorials'. Did you mean 'getAllTutorials'?
+__tests__/tutorial/tutorial-configs.test.ts(213,7): error TS2552: Cannot find name 'allTutorials'. Did you mean 'getAllTutorials'?
+__tests__/tutorial/tutorial-configs.test.ts(225,7): error TS2552: Cannot find name 'allTutorials'. Did you mean 'getAllTutorials'?
+__tests__/tutorial/tutorial-configs.test.ts(240,7): error TS2552: Cannot find name 'allTutorials'. Did you mean 'getAllTutorials'?
+__tests__/tutorial/tutorial-integration.test.tsx(4,34): error TS2307: Cannot find module '@/components/tutorial/tutorial-provider' or its corresponding type declarations.
+__tests__/tutorial/tutorial-integration.test.tsx(5,33): error TS2307: Cannot find module '@/components/tutorial/tutorial-overlay' or its corresponding type declarations.
+__tests__/tutorial/tutorial-integration.test.tsx(6,30): error TS2307: Cannot find module '@/components/tutorial/tutorial-menu' or its corresponding type declarations.
+__tests__/tutorial/tutorial-provider.test.tsx(4,47): error TS2307: Cannot find module '@/components/tutorial/tutorial-provider' or its corresponding type declarations.
+app/api/games/[id]/route.ts(43,52): error TS2339: Property 'status' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; gameId: string; filePath: string; originalText: string; translatedText: string; targetLanguage: string; sourceLanguage: string; status: string; confidence: number; isManualEdit: boolean; context: string; } | { ...; } | { ...; } | { ...; }'.
+  Property 'status' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; gameId: string; filePath: string; targetLanguage: string; sourceLanguage: string; confidence: number; context: string; sourceText: string; targetText: string; usageCount: number; projectId: string; tags: string; }'.
+app/api/games/[id]/route.ts(44,50): error TS2339: Property 'status' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; gameId: string; filePath: string; originalText: string; translatedText: string; targetLanguage: string; sourceLanguage: string; status: string; confidence: number; isManualEdit: boolean; context: string; } | { ...; } | { ...; } | { ...; }'.
+  Property 'status' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; gameId: string; filePath: string; targetLanguage: string; sourceLanguage: string; confidence: number; context: string; sourceText: string; targetText: string; usageCount: number; projectId: string; tags: string; }'.
+app/api/games/[id]/route.ts(45,51): error TS2339: Property 'status' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; gameId: string; filePath: string; originalText: string; translatedText: string; targetLanguage: string; sourceLanguage: string; status: string; confidence: number; isManualEdit: boolean; context: string; } | { ...; } | { ...; } | { ...; }'.
+  Property 'status' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; gameId: string; filePath: string; targetLanguage: string; sourceLanguage: string; confidence: number; context: string; sourceText: string; targetText: string; usageCount: number; projectId: string; tags: string; }'.
+app/api/games/[id]/route.ts(46,49): error TS2339: Property 'status' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; gameId: string; filePath: string; originalText: string; translatedText: string; targetLanguage: string; sourceLanguage: string; status: string; confidence: number; isManualEdit: boolean; context: string; } | { ...; } | { ...; } | { ...; }'.
+  Property 'status' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; gameId: string; filePath: string; targetLanguage: string; sourceLanguage: string; confidence: number; context: string; sourceText: string; targetText: string; usageCount: number; projectId: string; tags: string; }'.
+app/api/library/sync/route.ts(181,5): error TS2741: Property 'duration' is missing in type '{ success: true; gamesAdded: number; gamesUpdated: number; gamesRemoved: number; totalGames: number; providers: any[]; errors: string[]; }' but required in type 'SyncResult'.
+app/page.tsx(210,99): error TS2339: Property 'connected' does not exist on type 'unknown'.
+app/page.tsx(236,38): error TS2339: Property 'games_count' does not exist on type 'object'.
+app/page.tsx(237,37): error TS2339: Property 'connected' does not exist on type 'object'.
+app/store-manager/page.tsx(103,30): error TS2345: Argument of type '(prev: StoreStatuses) => { epic_games: { connected: true; loading: false; lastChecked: string; error: any; name: string; gamesCount?: number; manuallyDisconnected?: boolean; }; }' is not assignable to parameter of type 'SetStateAction<StoreStatuses>'.
+  Type '(prev: StoreStatuses) => { epic_games: { connected: true; loading: false; lastChecked: string; error: any; name: string; gamesCount?: number; manuallyDisconnected?: boolean; }; }' is not assignable to type '(prevState: StoreStatuses) => StoreStatuses'.
+    Type '{ epic_games: { connected: true; loading: false; lastChecked: string; error: any; name: string; gamesCount?: number; manuallyDisconnected?: boolean; }; }' is not assignable to type 'StoreStatuses'.
+      Property 'epic_games' is incompatible with index signature.
+        Type '{ connected: true; loading: false; lastChecked: string; error: any; name: string; gamesCount?: number; manuallyDisconnected?: boolean; }' is not assignable to type 'StoreStatus'.
+          Types of property 'lastChecked' are incompatible.
+            Type 'string' is not assignable to type 'Date'.
+app/translator/enhanced/page.tsx(99,29): error TS2345: Argument of type 'TranslationFile[]' is not assignable to parameter of type 'SetStateAction<string>'.
+components/audio-translation.tsx(16,3): error TS2305: Module '"lucide-react"' has no exported member 'Waveform'.
+components/auth/protected-route.tsx(93,15): error TS2304: Cannot find name 'DebugSimpleAuthTest'.
+components/notifications/index.ts(3,46): error TS2307: Cannot find module './notification-toast' or its corresponding type declarations.
+components/notifications/index.ts(4,74): error TS2307: Cannot find module './toast-container' or its corresponding type declarations.
+components/notifications/notification-toast-provider.tsx(4,28): error TS2307: Cannot find module './toast-container' or its corresponding type declarations.
+components/notifications/profile-notification-settings.tsx(151,9): error TS2322: Type '{ preferences: NotificationPreferences; onUpdatePreferences: (newPreferences: NotificationPreferences) => Promise<boolean>; onResetToDefaults: () => Promise<...>; isLoading: boolean; className: string; }' is not assignable to type 'IntrinsicAttributes & NotificationSettingsProps'.
+  Property 'onUpdatePreferences' does not exist on type 'IntrinsicAttributes & NotificationSettingsProps'.
+hooks/use-progress-operations.ts(29,7): error TS2322: Type 'unknown' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+hooks/use-progress-operations.ts(48,7): error TS2740: Type '{}' is missing the following properties from type '{ success: boolean; result?: R; error?: Error; item: T; }[]': length, pop, push, concat, and 35 more.
+hooks/use-progress-operations.ts(71,7): error TS2740: Type '{}' is missing the following properties from type 'T[]': length, pop, push, concat, and 35 more.
+hooks/use-progress-operations.ts(122,7): error TS2322: Type 'unknown' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+hooks/use-progress-operations.ts(176,7): error TS2322: Type 'unknown' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'unknown'.
+hooks/use-tutorial-trigger.ts(5,29): error TS2307: Cannot find module '@/components/tutorial/tutorial-provider' or its corresponding type declarations.
+lib/db-queries.ts(159,5): error TS2322: Type '{ id?: string; createdAt?: Date; updatedAt?: Date; gameId: string; filePath: string; originalText: string; translatedText?: string; targetLanguage?: string; sourceLanguage?: string; status?: string; confidence?: number; isManualEdit?: boolean; context?: string | null; }' is not assignable to type '(Without<TranslationCreateInput, TranslationUncheckedCreateInput> & TranslationUncheckedCreateInput) | (Without<...> & TranslationCreateInput)'.
+  Type '{ id?: string; createdAt?: Date; updatedAt?: Date; gameId: string; filePath: string; originalText: string; translatedText?: string; targetLanguage?: string; sourceLanguage?: string; status?: string; confidence?: number; isManualEdit?: boolean; context?: string | null; }' is not assignable to type 'Without<TranslationUncheckedCreateInput, TranslationCreateInput> & TranslationCreateInput'.
+    Type '{ id?: string; createdAt?: Date; updatedAt?: Date; gameId: string; filePath: string; originalText: string; translatedText?: string; targetLanguage?: string; sourceLanguage?: string; status?: string; confidence?: number; isManualEdit?: boolean; context?: string | null; }' is not assignable to type 'Without<TranslationUncheckedCreateInput, TranslationCreateInput>'.
+      Types of property 'gameId' are incompatible.
+        Type 'string' is not assignable to type 'never'.
+lib/patch-manager.ts(443,25): error TS2339: Property 'createWriteStream' does not exist on type 'typeof import("node:fs/promises")'.
+lib/prisma.ts(37,57): error TS2345: Argument of type '{ log: readonly ["query", "info", "warn", "error"] | readonly ["error"]; datasources: { db: { url: string; }; }; __internal: { engine: { binaryTargets: string[]; }; }; }' is not assignable to parameter of type 'Subset<PrismaClientOptions, PrismaClientOptions>'.
+  Types of property 'log' are incompatible.
+    Type 'readonly ["query", "info", "warn", "error"] | readonly ["error"]' is not assignable to type '(LogLevel | LogDefinition)[]'.
+      The type 'readonly ["query", "info", "warn", "error"]' is 'readonly' and cannot be assigned to the mutable type '(LogLevel | LogDefinition)[]'.
+lib/rate-limiter.ts(47,58): error TS2339: Property 'ip' does not exist on type 'NextRequest'.
+lib/rate-limiter.ts(146,75): error TS2339: Property 'ip' does not exist on type 'NextRequest'.
+lib/rate-limiter.ts(157,75): error TS2339: Property 'ip' does not exist on type 'NextRequest'.
+lib/rate-limiter.ts(168,75): error TS2339: Property 'ip' does not exist on type 'NextRequest'.
+lib/rate-limiter.ts(186,75): error TS2339: Property 'ip' does not exist on type 'NextRequest'.
+lib/rate-limiter.ts(204,75): error TS2339: Property 'ip' does not exist on type 'NextRequest'.
+lib/request-logger.ts(108,19): error TS2339: Property 'ip' does not exist on type 'NextRequest'.
+lib/translation-batch-operations-with-progress.ts(6,44): error TS2305: Module '"@/lib/types/batch-operations"' has no exported member 'TranslationBatchItem'.
+lib/translation-batch-operations-with-progress.ts(15,3): error TS2305: Module '"./translation-batch-operations"' has no exported member 'batchApproveProcessor'.
+lib/translation-batch-operations-with-progress.ts(16,3): error TS2724: '"./translation-batch-operations"' has no exported member named 'batchRejectProcessor'. Did you mean 'batchDeleteProcessor'?
+lib/translation-batch-operations-with-progress.ts(67,11): error TS2345: Argument of type '(items: TranslationBatchItem[], options: ExportOptions) => Promise<any>' is not assignable to parameter of type '(item: BatchItem) => Promise<any>'.
+  Target signature provides too few arguments. Expected 2 or more, but got 1.
+lib/translation-batch-operations-with-progress.ts(94,11): error TS2345: Argument of type '(importData: any, options: ImportOptions) => Promise<BatchResult>' is not assignable to parameter of type '(item: BatchItem) => Promise<BatchResult>'.
+  Target signature provides too few arguments. Expected 2 or more, but got 1.
+lib/translation-batch-operations-with-progress.ts(259,7): error TS2345: Argument of type '(items: TranslationBatchItem[], options: ExportOptions) => Promise<any>' is not assignable to parameter of type '(item: BatchItem) => Promise<any>'.
+  Target signature provides too few arguments. Expected 2 or more, but got 1.
+lib/translation-batch-operations-with-progress.ts(274,44): error TS2554: Expected 1 arguments, but got 2.
+vitest.config.ts(2,19): error TS2307: Cannot find module '@vitejs/plugin-react' or its corresponding type declarations.
+  There are types at 'C:/dev/GameStringer/node_modules/@vitejs/plugin-react/dist/index.d.ts', but this result could not be resolved under your current 'moduleResolution' setting. Consider updating to 'node16', 'nodenext', or 'bundler'.
+vitest.config.ts(12,5): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ reporter: ("text" | "html" | "json")[]; exclude: string[]; }' is not assignable to type '({ provider: "istanbul"; } & CoverageIstanbulOptions) | ({ provider: "v8"; } & CoverageV8Options) | ({ provider: "custom"; } & CustomProviderOptions)'.
+      Type '{ reporter: ("text" | "html" | "json")[]; exclude: string[]; }' is not assignable to type '{ provider: "v8"; } & CoverageV8Options'.
+        Property 'provider' is missing in type '{ reporter: ("text" | "html" | "json")[]; exclude: string[]; }' but required in type '{ provider: "v8"; }'.

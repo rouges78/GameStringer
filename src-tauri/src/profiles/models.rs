@@ -43,6 +43,14 @@ pub struct ProfileInfo {
     pub is_locked: bool,
     /// Numero di tentativi di accesso falliti
     pub failed_attempts: u32,
+    /// Indica se il profilo ha credenziali salvate
+    pub has_credentials: bool,
+    /// Versione dei settings
+    pub settings_version: u32,
+}
+
+fn default_settings_version() -> u32 {
+    1
 }
 
 /// Richiesta per creare un nuovo profilo
@@ -61,6 +69,9 @@ pub struct CreateProfileRequest {
 /// Impostazioni personalizzate del profilo
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProfileSettings {
+    /// Versione settings
+    #[serde(default = "default_settings_version")]
+    pub version: u32,
     /// Tema dell'interfaccia
     pub theme: Theme,
     /// Lingua dell'interfaccia
@@ -193,6 +204,7 @@ pub struct UsageStats {
 impl Default for ProfileSettings {
     fn default() -> Self {
         Self {
+            version: 1,
             theme: Theme::Auto,
             language: "it".to_string(),
             auto_login: false,
@@ -302,21 +314,6 @@ impl UserProfile {
     /// Aggiorna le statistiche di utilizzo
     pub fn update_usage_stats(&mut self, session_duration: u64) {
         self.metadata.usage_stats.total_usage_time += session_duration;
-    }
-}
-
-/// Implementazioni per ProfileInfo
-impl From<&UserProfile> for ProfileInfo {
-    fn from(profile: &UserProfile) -> Self {
-        Self {
-            id: profile.id.clone(),
-            name: profile.name.clone(),
-            avatar_path: profile.avatar_path.clone(),
-            created_at: profile.created_at,
-            last_accessed: profile.last_accessed,
-            is_locked: false, // TODO: implementare logica blocco
-            failed_attempts: 0, // TODO: implementare conteggio tentativi
-        }
     }
 }
 

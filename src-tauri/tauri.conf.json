@@ -6,12 +6,13 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd .. && npm run build:tauri-only",
-    "devUrl": "http://127.0.0.1:3127",
+    "devUrl": "http://127.0.0.1:3135",
     "frontendDist": "../out"
   },
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "GameStringer",
         "width": 1200,
         "height": 800,
@@ -25,7 +26,11 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": [
+        "default",
+        "app-events"
+      ]
     },
     "withGlobalTauri": true
   },
@@ -38,20 +43,5 @@
       "icons/128x128@2x.png",
       "icons/icon.ico"
     ]
-  },
-  "plugins": {
-    "fs": {
-      "scope": [
-        "$APPDATA",
-        "$APPDATA/**",
-        "$APPCONFIG",
-        "$APPCONFIG/**",
-        "$APPLOCALDATA",
-        "$APPLOCALDATA/**"
-      ]
-    },
-    "shell": {
-      "open": true
-    }
   }
 }

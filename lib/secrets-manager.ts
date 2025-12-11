@@ -44,7 +44,39 @@ export class SecretsManager {
         value: process.env.OPENAI_API_KEY || '',
         isRequired: false,
         description: 'OpenAI API key for translation services',
-        validationPattern: /^sk-[a-zA-Z0-9]{32,}$/
+        validationPattern: /^sk-[a-zA-Z0-9-_]{32,}$/
+      },
+      ANTHROPIC_API_KEY: {
+        key: 'ANTHROPIC_API_KEY',
+        value: process.env.ANTHROPIC_API_KEY || '',
+        isRequired: false,
+        description: 'Anthropic API key for Claude translation services',
+        validationPattern: /^sk-ant-[a-zA-Z0-9-_]{32,}$/
+      },
+      GEMINI_API_KEY: {
+        key: 'GEMINI_API_KEY',
+        value: process.env.GEMINI_API_KEY || '',
+        isRequired: false,
+        description: 'Google Gemini API key for translation services'
+      },
+      DEEPSEEK_API_KEY: {
+        key: 'DEEPSEEK_API_KEY',
+        value: process.env.DEEPSEEK_API_KEY || '',
+        isRequired: false,
+        description: 'DeepSeek API key for translation services'
+      },
+      MISTRAL_API_KEY: {
+        key: 'MISTRAL_API_KEY',
+        value: process.env.MISTRAL_API_KEY || '',
+        isRequired: false,
+        description: 'Mistral API key for translation services'
+      },
+      OPENROUTER_API_KEY: {
+        key: 'OPENROUTER_API_KEY',
+        value: process.env.OPENROUTER_API_KEY || '',
+        isRequired: false,
+        description: 'OpenRouter API key for multi-model translation services',
+        validationPattern: /^sk-or-[a-zA-Z0-9-_]{32,}$/
       },
       ABACUSAI_API_KEY: {
         key: 'ABACUSAI_API_KEY',
@@ -203,8 +235,23 @@ export class SecretsManager {
   }
 
   public isAvailable(key: string): boolean {
-    const value = this.get(key);
+    const value = this.secrets.get(key);
     return value !== undefined && value !== '' && value !== 'placeholder';
+  }
+
+  /**
+   * Set a secret value at runtime (e.g., from UI input)
+   * This allows users to provide API keys without environment variables
+   */
+  public set(key: string, value: string): void {
+    if (!value || value.trim() === '') {
+      this.secrets.delete(key);
+      logger.debug(`Removed secret: ${key}`, 'SECRETS_MANAGER');
+      return;
+    }
+    
+    this.secrets.set(key, value.trim());
+    logger.debug(`Set secret: ${key}`, 'SECRETS_MANAGER');
   }
 
   public getSecretsList(): string[] {

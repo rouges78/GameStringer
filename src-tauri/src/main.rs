@@ -10,6 +10,7 @@ mod commands;
 mod injekt;
 mod multi_process_injekt;
 mod anti_cheat;
+mod engine_detector;
 
 pub mod profiles;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
@@ -63,6 +64,10 @@ fn main() {
     // };
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_process::init())
         .manage(commands::anti_cheat::AntiCheatState::default())
 
         .manage(profile_state)
@@ -353,6 +358,7 @@ fn main() {
             commands::profiles::validate_export_file,
             commands::profiles::create_profile_backup,
             commands::profiles::get_auth_stats,
+            commands::profiles::get_profile_avatar,
             commands::profiles::is_session_expired,
             commands::profiles::renew_session,
             commands::profiles::get_session_time_remaining,
@@ -417,6 +423,15 @@ fn main() {
             commands::translation_memory::delete_translation_memory,
             commands::translation_memory::export_translation_memory_tmx,
             commands::translation_memory::import_translation_memory_tmx,
+
+            // File Manager
+            commands::file_manager::save_file_with_backup,
+            commands::file_manager::read_file_content,
+            commands::file_manager::list_file_backups,
+            commands::file_manager::restore_backup,
+
+            // Unity Patcher
+            commands::unity_patcher::install_unity_autotranslator,
 
             // NOTIFICATION SYSTEM TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
             // commands::notifications::create_notification,
