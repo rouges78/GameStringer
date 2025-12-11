@@ -132,20 +132,26 @@ export default function TranslationWizardPage() {
     setAnalysisStatus('Ricerca cartella di installazione...');
 
     try {
-      // Step 1: Find installation path
+      // Step 1: Find installation path - always use find_game_install_path for full path
       setAnalysisProgress(10);
-      let installPath = game.install_path;
+      let installPath: string | null = null;
       
-      if (!installPath) {
-        try {
-          installPath = await invoke<string>('find_game_install_path', { installDir: game.title });
-        } catch {
-          // Fallback to common paths
+      // install_path from cache is usually just the folder name, not full path
+      // Use find_game_install_path to get the complete path
+      const searchDir = game.install_path || game.title;
+      try {
+        installPath = await invoke<string>('find_game_install_path', { installDir: searchDir });
+        console.log('[Wizard] Found install path:', installPath);
+      } catch (e) {
+        console.warn('[Wizard] find_game_install_path failed:', e);
+        // If install_path looks like a full path (contains : or starts with /), use it directly
+        if (game.install_path && (game.install_path.includes(':') || game.install_path.startsWith('/'))) {
+          installPath = game.install_path;
         }
       }
 
       if (!installPath) {
-        throw new Error('Percorso di installazione non trovato');
+        throw new Error('Percorso di installazione non trovato. Assicurati che il gioco sia installato.');
       }
 
       // Step 2: Detect game engine
@@ -273,21 +279,20 @@ export default function TranslationWizardPage() {
     const locFiles: LocalizationFile[] = [];
     
     try {
-      // Scan for common localization file patterns
-      const patterns = [
-        '*.json', '*.csv', '*.xml', '*.txt', '*.po', '*.pot', 
-        '*.lang', '*.loc', '*.strings', '*.resx'
-      ];
+      // Use the new scan_localization_files command
+      const extensions = ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings'];
       
-      const results = await invoke<any[]>('scan_game_files', { 
+      const results = await invoke<any[]>('scan_localization_files', { 
         path: installPath,
-        extensions: ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings'],
+        extensions,
         maxDepth: 5
       });
 
+      console.log('[Wizard] Scan results:', results?.length || 0, 'files');
+
       if (Array.isArray(results)) {
         for (const file of results) {
-          const fileName = file.name?.toLowerCase() || '';
+          const fileName = (file.name || '').toLowerCase();
           const isLocFile = 
             fileName.includes('local') || 
             fileName.includes('lang') || 
@@ -299,13 +304,13 @@ export default function TranslationWizardPage() {
             fileName.includes('i18n') ||
             fileName.includes('l10n');
 
-          if (isLocFile || file.size > 1000) {
-            const ext = fileName.split('.').pop() || 'unknown';
+          // Include if it's a localization file OR if it's large enough to be interesting
+          if (isLocFile || file.size > 5000) {
             locFiles.push({
               path: file.path,
               name: file.name,
               size: file.size,
-              type: ext as any,
+              type: (file.extension || 'unknown') as any,
               languages: [],
               stringCount: 0,
               hasItalian: false
@@ -314,7 +319,7 @@ export default function TranslationWizardPage() {
         }
       }
     } catch (error) {
-      console.error('Scan error:', error);
+      console.error('[Wizard] Scan error:', error);
     }
 
     // If no files found, check for Unity/Unreal assets
