@@ -1,0 +1,286 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  output        = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modello per i giochi scansionati
+model Game {
+  id             String    @id @default(cuid())
+  title          String
+  platform       String
+  installPath    String? // Non più univoco, può essere nullo
+  executablePath String?
+  icon           String?
+  imageUrl       String?
+  isInstalled    Boolean   @default(false)
+  steamAppId     Int?      @unique
+  isVr           Boolean   @default(false)
+  engine         String?
+  lastPlayed     DateTime?
+  isShared       Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  translations Translation[]
+  memoryEntries TranslationMemoryEntry[]
+
+  // Indexes ottimizzati per query performance
+  @@index([title])
+  @@index([platform])
+  @@index([isInstalled])
+  @@index([isVr])
+  @@index([lastPlayed])
+  @@index([platform, isInstalled])
+  @@map("games")
+}
+
+// Modelli per NextAuth.js
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("users")
+  preferences   UserPreference[]
+  tutorialProgress TutorialProgress[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model UserPreference {
+  id     String @id @default(cuid())
+  userId String
+  key    String
+  value  String
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, key])
+  @@map("user_preferences")
+}
+
+// Modello per le traduzioni
+model Translation {
+  id              String   @id @default(cuid())
+  gameId          String
+  filePath        String
+  originalText    String
+  translatedText  String   @default("")
+  targetLanguage  String
+  sourceLanguage  String   @default("en")
+  status          String   @default("pending") // pending, completed, reviewed, edited
+  confidence      Float    @default(0)
+  isManualEdit    Boolean  @default(false)
+  context         String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  game            Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  suggestions     AISuggestion[]
+  
+  // Indexes ottimizzati per query performance
+  @@index([gameId])
+  @@index([gameId, status])
+  @@index([gameId, targetLanguage])
+  @@index([gameId, status, targetLanguage])
+  @@index([status])
+  @@index([targetLanguage])
+  @@index([filePath])
+  @@index([updatedAt])
+  @@index([confidence])
+  @@map("translations")
+}
+
+// Modello per i suggerimenti AI
+model AISuggestion {
+  id             String      @id @default(cuid())
+  translationId  String
+  suggestion     String
+  confidence     Float       @default(0)
+  provider       String      @default("openai") // openai, deepl, google, etc.
+  
+  createdAt      DateTime    @default(now())
+  
+  translation    Translation @relation(fields: [translationId], references: [id], onDelete: Cascade)
+  
+  // Indexes ottimizzati per query performance
+  @@index([translationId])
+  @@index([translationId, confidence])
+  @@index([provider])
+  @@index([confidence])
+  @@map("ai_suggestions")
+}
+
+// Modello per il progresso dei tutorial
+model TutorialProgress {
+  id                String   @id @default(cuid())
+  userId            String
+  tutorialId        String
+  currentStep       Int      @default(0)
+  completed         Boolean  @default(false)
+  skipped           Boolean  @default(false)
+  startedAt         DateTime @default(now())
+  completedAt       DateTime?
+  preferences       String?  // JSON string per preferenze tutorial
+  
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, tutorialId])
+  @@index([userId])
+  @@index([tutorialId])
+  @@index([completed])
+  @@map("tutorial_progress")
+}
+
+// Modello per Translation Memory
+model TranslationMemoryEntry {
+  id              String   @id @default(cuid())
+  sourceText      String
+  targetText      String
+  sourceLanguage  String
+  targetLanguage  String
+  context         String?
+  confidence      Float    @default(1.0)
+  usageCount      Int      @default(1)
+  projectId       String?
+  gameId          String?
+  filePath        String?
+  tags            String?  // JSON array di tags
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  project         TranslationProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  game            Game?               @relation(fields: [gameId], references: [id], onDelete: SetNull)
+  
+  // Indexes per fuzzy search e performance
+  @@index([sourceLanguage, targetLanguage])
+  @@index([sourceText])
+  @@index([projectId])
+  @@index([gameId])
+  @@index([confidence])
+  @@index([usageCount])
+  @@index([updatedAt])
+  @@map("translation_memory")
+}
+
+// Modello per il Glossary
+model GlossaryEntry {
+  id              String   @id @default(cuid())
+  term            String
+  translation     String
+  sourceLanguage  String
+  targetLanguage  String
+  definition      String?
+  category        String?
+  projectId       String?
+  approved        Boolean  @default(false)
+  notes           String?
+  createdBy       String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  project         TranslationProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  
+  @@index([term])
+  @@index([sourceLanguage, targetLanguage])
+  @@index([projectId])
+  @@index([category])
+  @@index([approved])
+  @@map("glossary")
+}
+
+// Modello per i progetti di traduzione
+model TranslationProject {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  sourceLanguage  String
+  targetLanguages String   // JSON array di lingue target
+  settings        String   // JSON per impostazioni progetto
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  memoryEntries   TranslationMemoryEntry[]
+  glossaryEntries GlossaryEntry[]
+  
+  @@index([name])
+  @@index([sourceLanguage])
+  @@map("translation_projects")
+}
+
+// Modello per le operazioni batch
+model BatchOperation {
+  id              String   @id @default(cuid())
+  operationType   String   // translate, export, import, etc.
+  status          String   @default("pending") // pending, running, completed, failed, cancelled
+  totalItems      Int
+  completedItems  Int      @default(0)
+  failedItems     Int      @default(0)
+  progress        Float    @default(0)
+  results         String?  // JSON con risultati dettagliati
+  error           String?
+  
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  
+  @@index([status])
+  @@index([operationType])
+  @@index([startedAt])
+  @@map("batch_operations")
+}

@@ -1,0 +1,8 @@
+is_global = true
+build_property.RootNamespace = UIToolkitTranslator
+build_property.ProjectDir = C:\dev\GameStringer\tools\UIToolkitTranslator\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.CsWinRTUseWindowsUIXamlProjections = false
+build_property.EffectiveAnalysisLevelStyle = 
+build_property.EnableCodeStyleSeverity = 

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR Overlay</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    #overlay-root {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .translation-box {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.85);
+      color: #00ff88;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      pointer-events: none;
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.2s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .drag-handle {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 24px;
+      background: rgba(0, 0, 0, 0.5);
+      cursor: move;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .drag-handle:hover {
+      opacity: 1;
+    }
+    .close-btn {
+      position: fixed;
+      top: 4px;
+      right: 8px;
+      width: 16px;
+      height: 16px;
+      background: rgba(255, 0, 0, 0.6);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .close-btn:hover {
+      opacity: 1;
+      background: rgba(255, 0, 0, 0.9);
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay-root"></div>
+  <script type="module">
+    const { invoke } = window.__TAURI__.core;
+    const { getCurrentWindow } = window.__TAURI__.window;
+    
+    const root = document.getElementById('overlay-root');
+    let lastTexts = [];
+    
+    // SUBITO click-through - non bloccare mai l'input
+    getCurrentWindow().setIgnoreCursorEvents(true).catch(() => {});
+    
+    async function updateOverlay() {
+      try {
+        const texts = await invoke('get_detected_texts');
+        
+        // Solo testi con traduzione
+        const translated = texts.filter(t => t.translated);
+        
+        // Controlla se è cambiato
+        const hash = JSON.stringify(translated.map(t => t.text + t.translated));
+        const lastHash = JSON.stringify(lastTexts.map(t => t.text + t.translated));
+        
+        if (hash === lastHash) return;
+        lastTexts = translated;
+        
+        // Aggiorna DOM
+        root.innerHTML = '';
+        
+        for (const t of translated) {
+          const box = document.createElement('div');
+          box.className = 'translation-box';
+          box.textContent = t.translated;
+          box.style.left = `${t.x}px`;
+          box.style.top = `${t.y + t.height + 4}px`;
+          root.appendChild(box);
+        }
+      } catch (e) {
+        // OCR non attivo
+      }
+    }
+    
+    // Aggiorna ogni 300ms
+    setInterval(updateOverlay, 300);
+  </script>
+</body>
+</html>

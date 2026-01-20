@@ -1,0 +1,91 @@
+# GameStringer Source Available License
+
+Version 1.0, January 2026
+
+Copyright (c) 2026 GameStringer
+
+## Terms and Conditions
+
+### 1. Definitions
+
+- "Software" refers to GameStringer and all its source code, documentation, and associated files.
+- "You" refers to any individual or entity accessing or using the Software.
+- "Commercial Use" means any use of the Software intended for or directed toward commercial advantage or monetary compensation.
+- "Derivative Work" means any modification, adaptation, or work based on the Software.
+
+### 2. Grant of Rights
+
+Subject to the terms of this License, You are granted a limited, non-exclusive, non-transferable license to:
+
+✅ **PERMITTED:**
+- View and study the source code
+- Download and use the Software for personal, non-commercial purposes
+- Modify the Software for personal, non-commercial use
+- Share unmodified copies of the Software with attribution
+- Use the Software for educational purposes
+- Use the Software for non-commercial game translation projects
+
+❌ **NOT PERMITTED:**
+- Use the Software for any Commercial Use without written permission
+- Sell, sublicense, or distribute the Software for profit
+- Create and distribute Derivative Works for Commercial Use
+- Remove or alter any copyright notices or this License
+- Use the Software to create a competing commercial product
+- Offer the Software as a service (SaaS) without written permission
+- Redistribute modified versions without clear attribution and this License
+
+### 3. Commercial Licensing
+
+For Commercial Use, including but not limited to:
+- Integration into commercial products
+- Offering as a paid service
+- Use by companies with revenue exceeding €100,000/year
+
+You must obtain a separate commercial license. Contact: rouges78@gmail.com
+
+### 4. Attribution
+
+Any permitted use of the Software must include:
+- Clear attribution to "GameStringer" and the original author
+- A link to the original repository
+- This License file in its entirety
+
+### 5. Contributions
+
+By submitting contributions (pull requests, issues, etc.), you agree that:
+- Your contributions become part of the Software under this License
+- You grant the copyright holder a perpetual, worldwide, royalty-free license to use your contributions
+
+### 6. No Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### 7. Termination
+
+This License automatically terminates if You violate any of its terms. Upon termination, You must cease all use and destroy all copies of the Software.
+
+### 8. Governing Law
+
+This License shall be governed by and construed in accordance with the laws of Italy, without regard to its conflict of law provisions.
+
+---
+
+## Summary (Not Legal Advice)
+
+| Use Case | Allowed? |
+|----------|----------|
+| Personal use | ✅ Yes |
+| Educational use | ✅ Yes |
+| Fan translation projects | ✅ Yes |
+| View/study source code | ✅ Yes |
+| Modify for personal use | ✅ Yes |
+| Commercial use | ❌ Requires license |
+| Sell or redistribute | ❌ No |
+| Create competing product | ❌ No |
+| Offer as SaaS | ❌ Requires license |
+
+---
+
+For commercial licensing inquiries, contact: rouges78@gmail.com

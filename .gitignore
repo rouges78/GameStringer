@@ -1,0 +1,91 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Build artifacts
+/.next/
+/out/
+/dist/
+*.tsbuildinfo
+
+# Tauri build artifacts
+/src-tauri/target/
+/src-tauri/Cargo.lock
+
+# Build artifacts (DLLs, tools output)
+/tools/AssetRipper/Output*/
+/ue-translator-dll/build/
+/unity-translator-dll/build/
+*.pdb
+*.rlib
+*.rmeta
+*.obj
+*.lib
+*.exe
+!scripts/*.exe
+
+# Local environment files
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Secrets and sensitive data
+secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+config/secrets.json
+
+# GameStringer data directory (profiles, settings, etc.)
+/gamestringer_data/
+
+# Log files
+/logs/
+yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Prisma
+**/dev.db
+**/dev.db-journal
+
+# IDE configuration
+.vscode/
+.idea/
+
+# OS-generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.port
+/temp/
+
+# Test artifacts
+*.exe
+*.pdb
+/tests/integration/*.html
+/tests/integration/*.vdf
+
+# Cache
+.cache/
+.cache_old/
+
+# AI tools
+.claude/
+.kiro/

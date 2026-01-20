@@ -1,0 +1,473 @@
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { 
+  Gamepad2, 
+  Clock,
+  RefreshCw,
+  Box,
+  Settings,
+  Languages,
+  CheckCircle,
+  AlertCircle,
+  BarChart3,
+  Sparkles,
+  Zap,
+  TrendingUp,
+  FolderOpen,
+  Layers,
+  Globe,
+  Wand2,
+  Play
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import Link from 'next/link';
+import { safeInvoke as invoke, isTauriEnvironment } from '@/lib/tauri-wrapper';
+import { ScanButton } from '@/components/scan-button';
+import { cacheManager } from '@/lib/cache-manager';
+import { activityHistory, Activity, activityIcons, activityColors } from '@/lib/activity-history';
+
+
+interface RecentActivityProps {
+  color: string;
+  text: string;
+  time: string;
+}
+
+interface StoreStats {
+  connected: boolean;
+  games: number;
+}
+
+interface TranslationStats {
+  total: number;
+  completed: number;
+  pending: number;
+  edited: number;
+}
+
+interface DashboardStats {
+  totalGames: number;
+  installedGames: number;
+  translations: number;
+  patches: number;
+  lastScan: Date | null;
+  storeStats: Record<string, StoreStats>;
+  // Nuove statistiche dettagliate
+  engineStats: Record<string, number>;
+  platformStats: Record<string, number>;
+  translationStats: TranslationStats;
+}
+
+// Pagina Dashboard
+export default function Dashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalGames: 0,
+    installedGames: 0,
+    translations: 0,
+    patches: 0,
+    lastScan: null,
+    storeStats: {
+      steam: { connected: false, games: 0 },
+      epic: { connected: false, games: 0 },
+      gog: { connected: false, games: 0 },
+      origin: { connected: false, games: 0 },
+      ubisoft: { connected: false, games: 0 },
+      battlenet: { connected: false, games: 0 },
+      itchio: { connected: false, games: 0 }
+    },
+    engineStats: {},
+    platformStats: {},
+    translationStats: { total: 0, completed: 0, pending: 0, edited: 0 }
+  });
+  const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState<RecentActivityProps[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+    
+    // Aggiornamento automatico ogni 2 minuti (ridotto da 15s)
+    const interval = setInterval(fetchDashboardData, 120000);
+    
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Listener per storage events (quando i giochi cambiano in altre pagine)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'gameTranslations' || e.key === 'gamePatches' || e.key === 'lastSteamScan') {
+        console.log('🔄 Dashboard: Storage changed, refreshing data');
+        fetchDashboardData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      let games: any[] = [];
+      
+      // Carica i giochi dell'utente (owned + shared), non la cache completa
+      try {
+        const userGames = await invoke('get_steam_games', {
+          apiKey: '',
+          steamId: '',
+          forceRefresh: false
+        }) as any[];
+        
+        if (userGames && userGames.length > 0) {
+          games = userGames;
+        }
+      } catch (e) {
+        // Fallback: usa get_games
+        try {
+          const fallbackGames = await invoke('get_games') as any[];
+          if (fallbackGames && fallbackGames.length > 0) {
+            games = fallbackGames;
+          }
+        } catch (fallbackError) {
+          console.log('Dashboard: Nessun gioco caricato');
+        }
+      }
+      
+      // Recupera statistiche traduzioni da localStorage E dalle attività
+      let savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
+      let savedPatches = JSON.parse(localStorage.getItem('gamePatches') || '[]');
+      
+      // Sincronizza con attività dal backend se i contatori sono vuoti
+      if (savedTranslations.length === 0 || savedPatches.length === 0) {
+        try {
+          const allActivities = await activityHistory.getRecent(100);
+          const translationActivities = allActivities.filter((a: Activity) => 
+            a.activity_type === 'translation' && a.title?.includes('completata')
+          );
+          const patchActivities = allActivities.filter((a: Activity) => 
+            a.activity_type === 'patch' || a.title?.includes('Applicat')
+          );
+          
+          // Popola traduzioni da attività se vuoto
+          if (savedTranslations.length === 0 && translationActivities.length > 0) {
+            savedTranslations = translationActivities.map((a: Activity) => ({
+              id: a.id,
+              gameId: a.game_id,
+              gameName: a.game_name,
+              status: 'completed',
+              timestamp: a.timestamp
+            }));
+            localStorage.setItem('gameTranslations', JSON.stringify(savedTranslations));
+          }
+          
+          // Popola patch da attività se vuoto
+          if (savedPatches.length === 0 && patchActivities.length > 0) {
+            savedPatches = patchActivities.map((a: Activity) => ({
+              id: a.id,
+              gameId: a.game_id,
+              gameName: a.game_name,
+              status: 'applied',
+              timestamp: a.timestamp
+            }));
+            localStorage.setItem('gamePatches', JSON.stringify(savedPatches));
+          }
+          
+          // Se ci sono traduzioni ma nessuna patch, assumiamo che siano state applicate
+          if (savedPatches.length === 0 && savedTranslations.length > 0) {
+            savedPatches = savedTranslations.map((t: any) => ({
+              id: `patch_${t.id}`,
+              gameId: t.gameId,
+              gameName: t.gameName,
+              status: 'applied',
+              timestamp: t.timestamp
+            }));
+            localStorage.setItem('gamePatches', JSON.stringify(savedPatches));
+          }
+        } catch (e) {
+          console.log('Dashboard: Errore sincronizzazione attività', e);
+        }
+      }
+      
+      // Store stats non necessarie per la dashboard - rimosse per evitare errori
+      const storeStats: Record<string, StoreStats> = {
+        steam: { connected: games.length > 0, games: games.length },
+        epic: { connected: false, games: 0 },
+        gog: { connected: false, games: 0 },
+        origin: { connected: false, games: 0 },
+        ubisoft: { connected: false, games: 0 },
+        battlenet: { connected: false, games: 0 },
+        itchio: { connected: false, games: 0 }
+      };
+      
+      // Calcola statistiche per motore di gioco
+      const engineStats: Record<string, number> = {};
+      games.forEach((g: any) => {
+        const engine = g.engine || 'Unknown';
+        engineStats[engine] = (engineStats[engine] || 0) + 1;
+      });
+      
+      // Calcola statistiche per piattaforma
+      const platformStats: Record<string, number> = {};
+      games.forEach((g: any) => {
+        const platform = g.platform || 'Unknown';
+        platformStats[platform] = (platformStats[platform] || 0) + 1;
+      });
+      
+      // Calcola statistiche traduzioni
+      const translationStats: TranslationStats = {
+        total: savedTranslations.length,
+        completed: savedTranslations.filter((t: any) => t.status === 'completed').length,
+        pending: savedTranslations.filter((t: any) => t.status === 'pending' || !t.status).length,
+        edited: savedTranslations.filter((t: any) => t.status === 'edited').length
+      };
+      
+      setStats({
+        totalGames: games.length,
+        installedGames: games.filter((g: any) => g.is_installed).length,
+        translations: savedTranslations.length,
+        patches: savedPatches.length,
+        lastScan: new Date(localStorage.getItem('lastSteamScan') || Date.now()),
+        storeStats,
+        engineStats,
+        platformStats,
+        translationStats
+      });
+
+      // Carica attività recenti dal backend
+      try {
+        const recentFromBackend = await activityHistory.getRecent(5);
+        const recentActivities = recentFromBackend.map((a: Activity) => ({
+          color: `bg-${activityColors[a.activity_type]}-500`,
+          text: a.title,
+          time: activityHistory.formatRelativeTime(a.timestamp)
+        }));
+        setActivities(recentActivities);
+      } catch (e) {
+        // Fallback a localStorage se backend non disponibile
+        const recentActivities = [];
+        if (savedTranslations.length > 0) {
+          const lastTranslation = savedTranslations[savedTranslations.length - 1];
+          recentActivities.push({
+            color: 'bg-purple-500',
+            text: `${lastTranslation.gameName}: Traduzione completata`,
+            time: getRelativeTime(new Date(lastTranslation.date))
+          });
+        }
+        if (savedPatches.length > 0) {
+          const lastPatch = savedPatches[savedPatches.length - 1];
+          recentActivities.push({
+            color: 'bg-orange-500',
+            text: `${lastPatch.gameName}: Patch creata`,
+            time: getRelativeTime(new Date(lastPatch.date))
+          });
+        }
+        setActivities(recentActivities);
+      }
+      setLastUpdate(new Date());
+      setLoading(false);
+    } catch (error) {
+      console.error('Errore caricamento dashboard:', error);
+      setLoading(false);
+    }
+  };
+
+  const getRelativeTime = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    
+    if (minutes < 60) return `${minutes} min fa`;
+    if (hours < 24) return `${hours} ${hours === 1 ? 'ora' : 'ore'} fa`;
+    return `${days} ${days === 1 ? 'giorno' : 'giorni'} fa`;
+  };
+
+
+  return (
+    <div className="h-full bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 p-4 overflow-hidden">
+      {/* Header compatto */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-bold text-slate-300">
+            Dashboard
+          </h1>
+          {lastUpdate && (
+            <span className="text-[10px] text-gray-500 flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5" />
+              {lastUpdate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <ScanButton />
+          <Button
+            onClick={() => fetchDashboardData()}
+            disabled={loading}
+            size="sm"
+            variant="ghost"
+            className="h-7 w-7 p-0"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Grid - compatto */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="p-2.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-center">
+          <div className="text-lg font-bold text-purple-400">{stats.totalGames}</div>
+          <div className="text-[10px] text-gray-500">Giochi</div>
+        </div>
+        <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
+          <div className="text-lg font-bold text-blue-400">{stats.installedGames}</div>
+          <div className="text-[10px] text-gray-500">Installati</div>
+        </div>
+        <div className="p-2.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-center">
+          <div className="text-lg font-bold text-cyan-400">{stats.translations}</div>
+          <div className="text-[10px] text-gray-500">Traduzioni</div>
+        </div>
+        <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
+          <div className="text-lg font-bold text-emerald-400">{stats.patches}</div>
+          <div className="text-[10px] text-gray-500">Patch</div>
+        </div>
+      </div>
+
+      {/* Main content - layout 2 colonne pulito */}
+      <div className="grid grid-cols-2 gap-3 flex-1">
+        {/* Attività Recenti - più grande */}
+        <div className="rounded-lg bg-slate-800/30 border border-slate-700/50 p-4 overflow-hidden">
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="h-4 w-4 text-cyan-400" />
+            <span className="text-sm font-medium text-gray-300">Attività Recenti</span>
+            <div className="ml-auto h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+          </div>
+          
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="h-6 w-6 text-cyan-500 animate-spin" />
+            </div>
+          ) : activities.length > 0 ? (
+            <div className="space-y-2">
+              {/* Filtra duplicati consecutivi */}
+              {activities
+                .filter((activity, index, arr) => 
+                  index === 0 || activity.text !== arr[index - 1].text
+                )
+                .slice(0, 5)
+                .map((activity, index) => (
+                  <div key={index} className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-700/30 text-xs">
+                    <div className={`h-2 w-2 rounded-full ${activity.color}`} />
+                    <span className="text-gray-300 flex-1 truncate">{activity.text}</span>
+                    <span className="text-gray-500 text-[10px] whitespace-nowrap">{activity.time}</span>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+              <Clock className="h-8 w-8 mb-2 opacity-30" />
+              <span className="text-sm">Nessuna attività recente</span>
+              <span className="text-[10px] opacity-70 mt-1">Le tue azioni appariranno qui</span>
+            </div>
+          )}
+        </div>
+
+        {/* Azioni Rapide - più grande */}
+        <div className="rounded-lg bg-slate-800/30 border border-slate-700/50 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Gamepad2 className="h-4 w-4 text-purple-400" />
+            <span className="text-sm font-medium text-gray-300">Azioni Rapide</span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <Link href="/library" className="flex flex-col items-center gap-2 p-3 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 transition-colors text-gray-300 border border-purple-500/20">
+              <Gamepad2 className="h-5 w-5 text-purple-400" />
+              <span className="text-xs font-medium">Libreria</span>
+            </Link>
+            <Link href="/translator/pro" className="flex flex-col items-center gap-2 p-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 transition-colors text-gray-300 border border-blue-500/20">
+              <Languages className="h-5 w-5 text-blue-400" />
+              <span className="text-xs font-medium">Traduci</span>
+            </Link>
+            <Link href="/unity-patcher" className="flex flex-col items-center gap-2 p-3 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 transition-colors text-gray-300 border border-cyan-500/20">
+              <Box className="h-5 w-5 text-cyan-400" />
+              <span className="text-xs font-medium">Patcher</span>
+            </Link>
+            <Link href="/store-manager" className="flex flex-col items-center gap-2 p-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors text-gray-300 border border-emerald-500/20">
+              <Settings className="h-5 w-5 text-emerald-400" />
+              <span className="text-xs font-medium">Store</span>
+            </Link>
+            <Link href="/stats" className="flex flex-col items-center gap-2 p-3 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors text-gray-300 border border-indigo-500/20 col-span-2">
+              <BarChart3 className="h-5 w-5 text-indigo-400" />
+              <span className="text-xs font-medium">Statistiche Dettagliate</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Traduzioni - card compatta */}
+        <div className="col-span-2 rounded-lg bg-slate-800/30 border border-slate-700/50 p-4 overflow-hidden">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Languages className="h-4 w-4 text-cyan-400" />
+              <span className="text-sm font-medium text-gray-300">Stato Traduzioni</span>
+            </div>
+            <Link href="/translator/pro" className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+              Nuova traduzione →
+            </Link>
+          </div>
+          
+          {stats.translationStats.total > 0 ? (
+            <div className="flex items-center gap-6">
+              {/* Barra progresso */}
+              <div className="flex-1">
+                <div className="flex justify-between text-xs mb-1.5">
+                  <span className="text-gray-400">Progresso generale</span>
+                  <span className="text-cyan-400 font-medium">
+                    {Math.round((stats.translationStats.completed / stats.translationStats.total) * 100)}%
+                  </span>
+                </div>
+                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full transition-all"
+                    style={{ width: `${(stats.translationStats.completed / stats.translationStats.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+              
+              {/* Stats inline */}
+              <div className="flex gap-4">
+                <div className="text-center">
+                  <div className="text-lg font-bold text-green-400">{stats.translationStats.completed}</div>
+                  <div className="text-[10px] text-gray-500">Completate</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-bold text-yellow-400">{stats.translationStats.pending}</div>
+                  <div className="text-[10px] text-gray-500">In attesa</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3 text-gray-500">
+                <Languages className="h-6 w-6 opacity-30" />
+                <div>
+                  <span className="text-sm">Nessuna traduzione attiva</span>
+                  <p className="text-[10px] opacity-70">Usa il Neural Translator per iniziare</p>
+                </div>
+              </div>
+              <Link href="/translator/pro" className="px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 text-xs hover:bg-cyan-500/30 transition-colors">
+                Inizia a tradurre
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

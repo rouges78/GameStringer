@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Steam Local - Semplice</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 5px; 
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .status { 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .game-item { 
+            border: 1px solid #ddd; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .game-name { font-weight: bold; font-size: 1.1em; color: #333; }
+        .game-details { margin-top: 8px; color: #666; font-size: 0.9em; }
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+            gap: 15px; 
+            margin: 20px 0; 
+        }
+        .stat-card { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 5px; 
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        .stat-number { font-size: 2em; font-weight: bold; color: #007bff; }
+        .stat-label { color: #6c757d; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Test Steam Local Integration</h1>
+        <p>Test diretto del comando <code>get_all_local_steam_games</code></p>
+        
+        <div>
+            <button class="btn" onclick="checkTauri()">🔍 Verifica Tauri</button>
+            <button class="btn" onclick="testSteamLocal()" id="testBtn">🎮 Test Steam Local</button>
+            <button class="btn" onclick="testOldSteamAPI()">🌐 Test API Steam (Vecchio)</button>
+        </div>
+        
+        <div id="status"></div>
+        <div id="stats"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let tauriAvailable = false;
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="${type} status">${message}</div>`;
+        }
+        
+        function checkTauri() {
+            showStatus('🔍 Verifico disponibilità Tauri...', 'info');
+            
+            if (window.__TAURI__) {
+                tauriAvailable = true;
+                showStatus('✅ Tauri disponibile! Tutti i comandi sono attivi.', 'success');
+                document.getElementById('testBtn').disabled = false;
+            } else {
+                showStatus('❌ Tauri non disponibile. Assicurati di essere nell\'app desktop Tauri.', 'error');
+                document.getElementById('testBtn').disabled = true;
+            }
+        }
+        
+        async function testSteamLocal() {
+            if (!tauriAvailable) {
+                showStatus('❌ Tauri non disponibile. Clicca prima "Verifica Tauri".', 'error');
+                return;
+            }
+            
+            showStatus('🔄 Eseguo test Steam Local Integration...', 'info');
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('stats').innerHTML = '';
+            
+            try {
+                const { invoke } = window.__TAURI__;
+                console.log('🚀 Chiamando get_all_local_steam_games...');
+                
+                const result = await invoke('get_all_local_steam_games');
+                
+                console.log('✅ Risposta ricevuta:', result);
+                
+                if (Array.isArray(result)) {
+                    showStatus(`🎉 SUCCESSO! Trovati ${result.length} giochi Steam`, 'success');
+                    
+                    // Calcola statistiche
+                    const installed = result.filter(g => 
+                        typeof g.status === 'object' && g.status.Installed
+                    );
+                    const owned = result.filter(g => g.status === 'Owned');
+                    const shared = result.filter(g => 
+                        typeof g.status === 'object' && g.status.Shared
+                    );
+                    
+                    // Mostra statistiche
+                    document.getElementById('stats').innerHTML = `
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-number">${result.length}</div>
+                                <div class="stat-label">Totale Giochi</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${installed.length}</div>
+                                <div class="stat-label">Installati</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${owned.length}</div>
+                                <div class="stat-label">Posseduti</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">${shared.length}</div>
+                                <div class="stat-label">Condivisi</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Mostra primi 10 giochi
+                    let html = '<h3>📋 Primi 10 Giochi Trovati:</h3>';
+                    result.slice(0, 10).forEach((game, index) => {
+                        const statusText = getStatusText(game.status);
+                        html += `
+                            <div class="game-item">
+                                <div class="game-name">${game.name}</div>
+                                <div class="game-details">
+                                    <strong>AppID:</strong> ${game.appid} | 
+                                    <strong>Status:</strong> ${statusText}
+                                    ${game.install_dir ? ` | <strong>Cartella:</strong> ${game.install_dir}` : ''}
+                                    ${game.size_on_disk ? ` | <strong>Dimensione:</strong> ${formatBytes(game.size_on_disk)}` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('results').innerHTML = html;
+                    
+                } else {
+                    showStatus('⚠️ Risposta ricevuta ma formato non valido', 'error');
+                    console.log('Formato risposta:', typeof result, result);
+                }
+                
+            } catch (error) {
+                showStatus(`❌ Errore: ${error}`, 'error');
+                console.error('Errore dettagliato:', error);
+            }
+        }
+        
+        function getStatusText(status) {
+            if (status === 'Owned') return 'Posseduto';
+            if (typeof status === 'object' && status.Installed) return `Installato (${status.Installed.path})`;
+            if (typeof status === 'object' && status.Shared) return `Condiviso da ${status.Shared.from_steam_id}`;
+            return 'Sconosciuto';
+        }
+        
+        function formatBytes(bytes) {
+            if (!bytes) return 'N/A';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        async function testOldSteamAPI() {
+            showStatus('🌐 Test API Steam non implementato in questa pagina', 'info');
+        }
+        
+        // Auto-check Tauri al caricamento
+        window.addEventListener('load', () => {
+            setTimeout(checkTauri, 1000);
+        });
+    </script>
+</body>
+</html>

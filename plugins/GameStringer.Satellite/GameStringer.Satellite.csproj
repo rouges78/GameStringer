@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>GameStringer.Satellite</AssemblyName>
+    <Description>GameStringer In-Game Translation Plugin for Unity (BepInEx)</Description>
+    <Version>1.0.0</Version>
+    <Authors>GameStringer</Authors>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- BepInEx 6 for IL2CPP support -->
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.*" />
+    <PackageReference Include="BepInEx.Core" Version="6.0.0-be.*" />
+    <PackageReference Include="HarmonyX" Version="2.12.*" />
+    
+    <!-- For Mono games, use BepInEx 5 -->
+    <!-- <PackageReference Include="BepInEx.Core" Version="5.4.*" /> -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Unity assemblies - these will be provided by the game -->
+    <Reference Include="UnityEngine">
+      <HintPath>$(UnityAssembliesPath)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(UnityAssembliesPath)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(UnityAssembliesPath)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(UnityAssembliesPath)\Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

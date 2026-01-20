@@ -1,0 +1,456 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Rainbow gradient animation */
+@keyframes rainbow-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Toast animations */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes toast-progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* Sonner toast custom styles */
+[data-sonner-toaster] {
+  --normal-bg: hsl(var(--card));
+  --normal-border: hsl(var(--border));
+  --normal-text: hsl(var(--foreground));
+}
+
+[data-sonner-toast] {
+  animation: toast-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="success"] {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.1)) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-icon] {
+  color: rgb(16, 185, 129) !important;
+}
+
+[data-sonner-toast][data-type="error"] {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.1)) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-icon] {
+  color: rgb(239, 68, 68) !important;
+}
+
+[data-sonner-toast][data-type="warning"] {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.1)) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-icon] {
+  color: rgb(245, 158, 11) !important;
+}
+
+[data-sonner-toast][data-type="info"] {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.1)) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-icon] {
+  color: rgb(59, 130, 246) !important;
+}
+
+/* Toast progress bar */
+[data-sonner-toast]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.3;
+  animation: toast-progress 4s linear forwards;
+  border-radius: 0 0 12px 12px;
+}
+
+@layer base {
+  :root {
+    /* Light theme - Colori scuri e leggibili */
+    --background: 220 20% 97%;
+    --foreground: 220 20% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+    --primary: 262.1 83.3% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 15% 88%;
+    --secondary-foreground: 220 20% 15%;
+    --muted: 220 15% 92%;
+    --muted-foreground: 220 10% 35%;
+    --accent: 262.1 50% 92%;
+    --accent-foreground: 262.1 83.3% 35%;
+    --destructive: 0 84.2% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142.1 76.2% 30%;
+    --success-foreground: 0 0% 100%;
+    --border: 220 15% 80%;
+    --input: 220 15% 85%;
+    --ring: 262.1 83.3% 45%;
+    --radius: 0.5rem;
+    
+    /* Light theme specific colors */
+    --sidebar-bg: 220 20% 94%;
+    --header-bg: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262.1 83.3% 57.8%;
+    
+    /* Dark theme specific colors */
+    --sidebar-bg: 222.2 84% 3%;
+    --header-bg: 222.2 84% 6%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Light theme overrides for colored components */
+:root:not(.dark) {
+  /* Fix text colors for light theme */
+  .text-purple-300, .text-purple-400 { color: rgb(126, 34, 206) !important; }
+  .text-violet-300, .text-violet-400 { color: rgb(124, 58, 237) !important; }
+  .text-fuchsia-300, .text-fuchsia-400 { color: rgb(192, 38, 211) !important; }
+  .text-pink-400 { color: rgb(219, 39, 119) !important; }
+  .text-cyan-300, .text-cyan-400 { color: rgb(6, 182, 212) !important; }
+  .text-cyan-100 { color: rgb(8, 145, 178) !important; }
+  .text-emerald-300, .text-emerald-400 { color: rgb(16, 185, 129) !important; }
+  .text-blue-200, .text-blue-300, .text-blue-400 { color: rgb(37, 99, 235) !important; }
+  .text-amber-400 { color: rgb(217, 119, 6) !important; }
+  .text-orange-200, .text-orange-400 { color: rgb(234, 88, 12) !important; }
+  .text-indigo-400 { color: rgb(99, 102, 241) !important; }
+  .text-gray-400 { color: rgb(107, 114, 128) !important; }
+  .text-green-400 { color: rgb(22, 163, 74) !important; }
+  .text-yellow-400 { color: rgb(202, 138, 4) !important; }
+  .text-sky-400 { color: rgb(14, 165, 233) !important; }
+  .text-teal-400 { color: rgb(20, 184, 166) !important; }
+  
+  /* Fix muted text */
+  .text-violet-200\/50, .text-violet-200\/60 { color: rgb(91, 33, 182) !important; }
+  .text-cyan-300\/50 { color: rgb(6, 148, 162) !important; }
+  .text-emerald-200\/50, .text-emerald-200\/70 { color: rgb(5, 150, 105) !important; }
+  .text-purple-300\/50 { color: rgb(126, 34, 206) !important; }
+  .text-blue-300\/50 { color: rgb(37, 99, 235) !important; }
+  .text-orange-300\/50 { color: rgb(234, 88, 12) !important; }
+  .text-sky-200\/50, .text-sky-200\/60 { color: rgb(14, 165, 233) !important; }
+  
+  /* Fix backgrounds for light theme */
+  .bg-cyan-500\/5, .bg-cyan-950\/30 { background-color: rgb(236, 254, 255) !important; }
+  .bg-purple-500\/5 { background-color: rgb(250, 245, 255) !important; }
+  .bg-emerald-500\/5 { background-color: rgb(236, 253, 245) !important; }
+  .bg-violet-500\/10 { background-color: rgb(245, 243, 255) !important; }
+  .bg-blue-500\/10 { background-color: rgb(239, 246, 255) !important; }
+  .bg-orange-500\/10 { background-color: rgb(255, 247, 237) !important; }
+  .bg-amber-500\/10 { background-color: rgb(255, 251, 235) !important; }
+  .bg-indigo-500\/10 { background-color: rgb(238, 242, 255) !important; }
+  
+  /* Fix card backgrounds */
+  .bg-purple-500\/20, .bg-purple-500\/10 { background-color: rgb(243, 232, 255) !important; }
+  .bg-blue-500\/20 { background-color: rgb(219, 234, 254) !important; }
+  .bg-emerald-500\/20 { background-color: rgb(209, 250, 229) !important; }
+  .bg-orange-500\/20 { background-color: rgb(255, 237, 213) !important; }
+  .bg-cyan-500\/10 { background-color: rgb(207, 250, 254) !important; }
+  
+  /* Fix borders */
+  .border-cyan-500\/20, .border-cyan-500\/10 { border-color: rgb(165, 243, 252) !important; }
+  .border-purple-500\/20 { border-color: rgb(216, 180, 254) !important; }
+  .border-emerald-500\/20 { border-color: rgb(167, 243, 208) !important; }
+  .border-violet-500\/20 { border-color: rgb(196, 181, 253) !important; }
+  .border-blue-500\/20 { border-color: rgb(191, 219, 254) !important; }
+  .border-orange-500\/20 { border-color: rgb(254, 215, 170) !important; }
+  .border-amber-500\/30 { border-color: rgb(252, 211, 77) !important; }
+  .border-indigo-500\/20 { border-color: rgb(199, 210, 254) !important; }
+  .border-gray-500\/30 { border-color: rgb(209, 213, 219) !important; }
+  .border-white\/10 { border-color: rgb(229, 231, 235) !important; }
+}
+
+
+
+/* Custom scrollbar - Hidden but functional */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 0px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: transparent;
+}
+
+/* Utility to hide scrollbar cross-browser */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Line clamp utilities */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0px,
+    hsl(var(--muted-foreground) / 0.1) 40px,
+    hsl(var(--muted)) 80px
+  );
+  background-size: 200px;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Progress Indicators Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes progress-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Progress Bar Utilities */
+.progress-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.progress-indeterminate {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    currentColor,
+    transparent
+  );
+  animation: indeterminate 2s infinite linear;
+}
+
+/* Progress Modal Animations */
+.progress-modal-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.progress-modal-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 200ms, transform 200ms;
+}
+
+.progress-modal-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.progress-modal-exit-active {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 200ms, transform 200ms;
+}
+
+/* Progress Notification Animations */
+.progress-notification-enter {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.progress-notification-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms ease-out;
+}
+
+.progress-notification-exit {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.progress-notification-exit-active {
+  opacity: 0;
+  transform: translateX(100%);
+  transition: opacity 300ms, transform 300ms ease-in;
+}
+
+/* Smooth progress transitions */
+.progress-smooth {
+  transition: width 0.3s ease-out;
+}
+
+/* Progress glow effect */
+.progress-glow {
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Minimized operation bounce */
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(100%);
+  }
+  50% {
+    transform: scale(1.05) translateY(-10%);
+  }
+  70% {
+    transform: scale(0.9) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.progress-minimized-enter {
+  animation: bounce-in 0.6s ease-out;
+}

@@ -1,0 +1,280 @@
+{
+  "version": "1.0.0",
+  "major": 1,
+  "minor": 0,
+  "patch": 0,
+  "prerelease": null,
+  "buildNumber": 100,
+  "buildDate": "2026-01-20T00:00:00.000Z",
+  "gitHash": "",
+  "branch": "main",
+  "changelog": {
+    "0.9.9-beta": {
+      "date": "2026-01-19",
+      "type": "feature",
+      "changes": [
+        "Ultima versione beta prima del release ufficiale 1.0.0",
+        "Sistema i18n completo (Italiano/English)",
+        "Integrazione Ko-fi e GitHub Sponsors",
+        "Ottimizzazioni finali e bug fix"
+      ]
+    },
+    "0.9.8-beta": {
+      "date": "2026-01-18",
+      "type": "feature",
+      "changes": [
+        "Esporta/Importa Profilo: backup e restore profili come JSON",
+        "OCR Service: Tesseract.js integrato per riconoscimento testo",
+        "Screen Capture: cattura schermo con fallback browser getDisplayMedia",
+        "Hero headers tutti compatti con text shadow uniforme",
+        "Community Hub ridisegnato con stile compatto",
+        "Libreria header minimalista con icona gradient",
+        "Rimosso mini logo GS dalla sidebar chiusa"
+      ]
+    },
+    "0.9.7-beta": {
+      "date": "2026-01-18",
+      "type": "feature",
+      "changes": [
+        "Hero headers compatti per tutti gli strumenti (Overlay, Fixer, Crawler, Voice, Injector, Patcher)",
+        "Dashboard ridisegnata con gradiente viola e card animate",
+        "Menu profilo glassmorphism con effetto vetro",
+        "Game Patcher header unificato con quick links",
+        "Attività recenti espanse a 9 elementi",
+        "Rimossi indicatori Neural/Steam/Cache dall'header",
+        "Text shadows migliorati per leggibilità su gradienti chiari"
+      ]
+    },
+    "0.9.6-beta": {
+      "date": "2026-01-12",
+      "type": "feature",
+      "changes": [
+        "Command Palette (Ctrl+K): ricerca globale stile VS Code",
+        "Skeleton Loaders: loading states eleganti per tutte le pagine",
+        "Empty States: illustrazioni e CTA per stati vuoti",
+        "Drag & Drop Zone: trascina file per tradurre",
+        "Info Tooltips: spiegazioni hover per funzioni complesse",
+        "Sidebar animata: hover effects, glow, transizioni fluide",
+        "Toast migliorati: gradienti colorati, progress bar, animazioni",
+        "Keyboard Shortcuts: Ctrl+L libreria, Ctrl+T traduci, etc."
+      ]
+    },
+    "0.9.5-beta": {
+      "date": "2026-01-12",
+      "type": "feature",
+      "changes": [
+        "Steam Workshop Browser: cerca e scarica traduzioni dalla community",
+        "Filtri per lingua, ordinamento (popolarità, recenti, rating)",
+        "Visualizzazione dettagli: subscribers, favorites, views, rating",
+        "Download simulato con stato installazione",
+        "Link diretto a Steam Workshop per ogni item"
+      ]
+    },
+    "0.9.4-beta": {
+      "date": "2026-01-12",
+      "type": "feature",
+      "changes": [
+        "Dashboard completamente ridisegnata con hero header viola/fuchsia",
+        "Card Azioni Rapide con icone grandi e gradienti colorati",
+        "Link rapidi a Batch, Progetti, Statistiche, Impostazioni",
+        "Attività recenti in card dedicata con design cyan",
+        "Progress bar traduzioni con card emerald"
+      ]
+    },
+    "0.9.3-beta": {
+      "date": "2026-01-12",
+      "type": "feature",
+      "changes": [
+        "Statistiche Traduzione: dashboard dettagliata con grafici",
+        "Grafico attività settimanale con barre",
+        "Stats: traduzioni totali, stringhe, parole, progress medio",
+        "Conteggio progetti completati e in corso",
+        "Lingue target più usate con percentuali",
+        "Tempo stimato rimanente per progetti attivi"
+      ]
+    },
+    "0.9.2-beta": {
+      "date": "2026-01-12",
+      "type": "feature",
+      "changes": [
+        "Project Manager: salva/carica progetti di traduzione (.gsproj)",
+        "Esporta traduzioni in JSON, CSV, PO (Gettext)",
+        "Glossario progetto per consistenza terminologica",
+        "Statistiche progetto: file, stringhe, progress",
+        "Tab Panoramica, File, Glossario, Impostazioni"
+      ]
+    },
+    "0.9.1-beta": {
+      "date": "2026-01-12",
+      "type": "feature",
+      "changes": [
+        "Batch Translation: coda di traduzione per più file simultanei",
+        "Supporto drag & drop file e cartelle nella coda",
+        "Progress tracking per ogni job con tempo stimato",
+        "Pausa/riprendi/stop elaborazione coda",
+        "Gradiente dinamico pagina gioco basato sul genere (Horror=rosso, RPG=viola, etc.)"
+      ]
+    },
+    "0.9.0-beta": {
+      "date": "2026-01-12",
+      "type": "feature",
+      "changes": [
+        "Pagina Dettaglio Gioco: nuovo hero header con gradiente indigo/purple/fuchsia",
+        "Stats dinamiche: piattaforma, stato installazione, data uscita, generi, traduzioni",
+        "Background immagine gioco integrato nell'header",
+        "Metacritic score con colori dinamici (verde/giallo/rosso)"
+      ]
+    },
+    "0.8.9-beta": {
+      "date": "2026-01-08",
+      "type": "feature",
+      "changes": [
+        "Sidebar riorganizzata: da 17 a 6 elementi per navigazione pulita",
+        "Header hero colorati per pagine Traduci, Patcher, Community, Impostazioni",
+        "Dialog Impostazioni Profilo con design viola/pink e card colorate",
+        "Dialog Sicurezza Profilo con design cyan/emerald",
+        "Link rapidi agli strumenti secondari nelle pagine principali",
+        "Fix accessibilità DialogTitle con VisuallyHidden"
+      ]
+    },
+    "0.8.8-beta": {
+      "date": "2026-01-08",
+      "type": "feature",
+      "changes": [
+        "Wizard Onboarding per primo avvio con configurazione guidata",
+        "Indicatore stato offline nell'header con feature disponibili",
+        "Sistema cache offline per traduzioni, giochi e pack",
+        "Tooltip contestuali per aiuto in-app",
+        "Servizio offline-support per funzionalità senza internet"
+      ]
+    },
+    "0.8.7-beta": {
+      "date": "2026-01-08",
+      "type": "feature",
+      "changes": [
+        "Visual Translation Editor per preview stringhe su screenshot",
+        "Editor overlay con drag & drop, font, colori, opacità",
+        "Esportazione immagini PNG e progetti .gsvte",
+        "Nexus Mods Integration per cercare patch italiane",
+        "Ricerca automatica traduzioni per gioco",
+        "Download diretto da Nexus Mods (richiede API key)"
+      ]
+    },
+    "0.8.6-beta": {
+      "date": "2026-01-08",
+      "type": "feature",
+      "changes": [
+        "Community Translation Hub per condivisione traduzioni",
+        "Sistema Translation Packs con download/upload",
+        "Rating e recensioni per pack traduzioni",
+        "Statistiche community in tempo reale",
+        "Filtri avanzati per ricerca pack",
+        "Supporto 10 lingue per traduzioni"
+      ]
+    },
+    "0.8.5-beta": {
+      "date": "2026-01-08",
+      "type": "feature",
+      "changes": [
+        "AI Translation Assistant con supporto LLM locali (Ollama, LM Studio)",
+        "Traduzioni context-aware per genere gioco (RPG, Horror, etc.)",
+        "Glossario personalizzabile per consistenza terminologica",
+        "Supporto voci personaggi con stile e formalità",
+        "Generazione alternative di traduzione",
+        "Cronologia traduzioni con riutilizzo rapido"
+      ]
+    },
+    "0.8.4-beta": {
+      "date": "2026-01-08",
+      "type": "patch",
+      "changes": [
+        "Dialog Impostazioni Profilo (notifiche, libreria, sessione)",
+        "Dialog Sicurezza Profilo (cambio password, eliminazione)",
+        "Menu profilo completamente funzionale",
+        "Integrazione ThemeSelector nelle impostazioni profilo"
+      ]
+    },
+    "0.8.3-beta": {
+      "date": "2026-01-08",
+      "type": "patch",
+      "changes": [
+        "Parser Godot Engine (.tres, .tscn, .cfg, .translation)",
+        "Parser Ren'Py (.rpy) per visual novel",
+        "Telltale Patcher: backup automatico e ripristino",
+        "Telltale Patcher: verifica installazione",
+        "Theme toggle (chiaro/scuro/auto) nell'header",
+        "Script version-manager sincronizza tutti i file versione"
+      ]
+    },
+    "0.8.2-beta": {
+      "date": "2026-01-08",
+      "type": "patch",
+      "changes": [
+        "Telltale Patcher per Wolf Among Us, Walking Dead, Batman",
+        "Parser Telltale (.langdb, .landb, .dlog)",
+        "Fix immagini giochi nella pagina dettaglio",
+        "Steam API 403 rate limiting gestito gracefully",
+        "Tauri CLI aggiornato a v2.5.0"
+      ]
+    },
+    "0.8.1-beta": {
+      "date": "2026-01-04",
+      "type": "patch",
+      "changes": [
+        "Dizionario righe compatte",
+        "Estensioni layout unificato con Parser",
+        "Campanella notifiche gialla fosforescente",
+        "Placeholder colorati per copertine mancanti"
+      ]
+    },
+    "0.8.0-beta": {
+      "date": "2026-01-02",
+      "type": "minor",
+      "changes": [
+        "Integrazione Epic Games Store via Legendary CLI",
+        "Filtro asset/plugin Unreal Engine (41 giochi)",
+        "Badge piattaforma Epic Games nella scheda gioco",
+        "Versione cliccabile per vedere changelog"
+      ]
+    },
+    "3.2.1": {
+      "date": "2025-01-07",
+      "type": "patch",
+      "changes": [
+        "Sistema versioning automatico implementato",
+        "System Status spostato nella sidebar",
+        "Dashboard layout migliorato",
+        "Quick Actions compattate"
+      ]
+    },
+    "3.2.0": {
+      "date": "2025-01-06",
+      "type": "minor",
+      "changes": [
+        "Pagina impostazioni completamente ridisegnata",
+        "Debug tools integrati nelle impostazioni",
+        "Sidebar collassabile con animazioni",
+        "Steam API debugging migliorato"
+      ]
+    },
+    "3.1.0": {
+      "date": "2025-01-05",
+      "type": "minor",
+      "changes": [
+        "Force refresh implementato per Steam games",
+        "Sistema manual game addition",
+        "Badge system per VR games",
+        "Dashboard design futuristico"
+      ]
+    },
+    "3.2.2": {
+      "date": "2025-07-07",
+      "type": "patch",
+      "changes": [
+        "Implementato sistema versioning automatico completo",
+        "Integrazione UI dinamica",
+        "Git hooks configurati"
+      ]
+    }
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "passed": 14,
+  "failed": 11,
+  "warnings": 0,
+  "tests": [
+    {
+      "name": "Homepage",
+      "url": "http://localhost:3001/",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Patches Page",
+      "url": "http://localhost:3001/patches",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Editor Page",
+      "url": "http://localhost:3001/editor",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Stores Page",
+      "url": "http://localhost:3001/stores",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Library Page",
+      "url": "http://localhost:3001/library",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Dashboard Page",
+      "url": "http://localhost:3001/dashboard",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Games API",
+      "url": "http://localhost:3001/api/games",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Patches API",
+      "url": "http://localhost:3001/api/patches",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Translations API",
+      "url": "http://localhost:3001/api/translations",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Auth Session",
+      "url": "http://localhost:3001/api/auth/session",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "Stores Test Connection",
+      "url": "http://localhost:3001/api/stores/test-connection",
+      "status": 0,
+      "success": false,
+      "error": "fetch failed"
+    },
+    {
+      "name": "File: Patches Page Component",
+      "path": "C:\\dev\\GameStringer\\app\\patches\\page.tsx",
+      "exists": true,
+      "success": true
+    },
+    {
+      "name": "File: Editor Page Component",
+      "path": "C:\\dev\\GameStringer\\app\\editor\\page.tsx",
+      "exists": true,
+      "success": true
+    },
+    {
+      "name": "File: Stores Page Component",
+      "path": "C:\\dev\\GameStringer\\app\\stores\\page.tsx",
+      "exists": true,
+      "success": true
+    },
+    {
+      "name": "File: Games API Route",
+      "path": "C:\\dev\\GameStringer\\app\\api\\games\\route.ts",
+      "exists": true,
+      "success": true
+    },
+    {
+      "name": "File: Patches API Route",
+      "path": "C:\\dev\\GameStringer\\app\\api\\patches\\route.ts",
+      "exists": true,
+      "success": true
+    },
+    {
+      "name": "File: Translations API Route",
+      "path": "C:\\dev\\GameStringer\\app\\api\\translations\\route.ts",
+      "exists": true,
+      "success": true
+    },
+    {
+      "name": "File: Database Schema",
+      "path": "C:\\dev\\GameStringer\\prisma\\schema.prisma",
+      "exists": true,
+      "success": true
+    },
+    {
+      "name": "File: Environment Config",
+      "path": "C:\\dev\\GameStringer\\.env.local",
+      "exists": true,
+      "success": true
+    }
+  ]
+}

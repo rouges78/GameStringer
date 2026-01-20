@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-08-11T12:20:34.683Z",
+  "results": [
+    {
+      "name": "File Structure",
+      "passed": 10,
+      "failed": 0,
+      "total": 10
+    },
+    {
+      "name": "Layout Integration",
+      "passed": 4,
+      "failed": 0,
+      "total": 4
+    },
+    {
+      "name": "Profile Components",
+      "passed": 9,
+      "failed": 0,
+      "total": 9
+    },
+    {
+      "name": "Rust Backend",
+      "passed": 9,
+      "failed": 0,
+      "total": 9
+    },
+    {
+      "name": "Routing Configuration",
+      "passed": 6,
+      "failed": 0,
+      "total": 6
+    }
+  ],
+  "summary": {
+    "passed": 38,
+    "failed": 0,
+    "total": 38,
+    "percentage": 100
+  }
+}

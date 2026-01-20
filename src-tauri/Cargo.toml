@@ -1,0 +1,89 @@
+[package]
+name = "gamestringer"
+version = "0.9.9"
+description = "GameStringer - AI Game Translation System"
+authors = ["GameStringer Team"]
+license = ""
+repository = ""
+edition = "2021"
+default-run = "gamestringer"
+
+[[bin]]
+name = "gamestringer"
+path = "src/main.rs"
+
+[lib]
+name = "gamestringer"
+path = "src/lib.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-fs = "2.0.0"
+tauri-plugin-shell = "2.0.0"
+tauri-plugin-dialog = "2.0.0"
+tauri-plugin-process = "2.0.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+winreg = "0.52"
+steamlocate = "2.0"
+tokio = { version = "1", features = ["full"] }
+winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "handleapi", "memoryapi", "tlhelp32", "psapi", "synchapi", "winnt"] }
+chrono = { version = "0.4", features = ["serde"] }
+windows = { version = "0.51", features = [
+    "Win32_Foundation", 
+    "Win32_System_Diagnostics_Debug", 
+    "Win32_System_Memory", 
+    "Win32_System_Threading", 
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_WinRT",
+    "Media_Ocr",
+    "Graphics_Imaging",
+    "Storage_Streams",
+    "Foundation",
+    "Foundation_Collections"
+] }
+# Dipendenze per migrazione API
+reqwest = { version = "0.11", features = ["json"] }
+moka = { version = "0.12", features = ["future"] }
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"] }
+rand = "0.8"
+once_cell = "1.19"
+regex = "1.10"
+open = "5.0"
+uuid = { version = "1.0", features = ["v4", "serde"] }
+thiserror = "1.0"
+argon2 = "0.5"
+aes-gcm = "0.10"
+pbkdf2 = { version = "0.12", features = ["simple"] }
+sha2 = "0.10"
+log = "0.4"
+urlencoding = "2.1"
+base64 = "0.21"
+rusqlite = { version = "0.29", features = ["bundled", "chrono"] }
+flate2 = "1.0"
+crc32fast = "1.3"
+anyhow = "1.0"
+bincode = "1.3"
+keyvalues-serde = "0.2.2"
+dirs = "6.0.0"
+new-vdf-parser = "0.2.0"
+zip = "0.6"
+shared_memory = "0.12.4"
+interprocess = "2.2.3"
+parking_lot = "0.12.5"
+tracing = "0.1.43"
+futures = "0.3"
+lz4_flex = "0.11"
+byteorder = "1.5"
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+

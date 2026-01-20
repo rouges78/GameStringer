@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-07-10T18:04:58.530Z",
+  "summary": {
+    "totalTests": 22,
+    "totalPassed": 22,
+    "totalFailed": 0,
+    "successRate": "100.0"
+  },
+  "testSuites": {
+    "test-family-sharing.js": {
+      "description": "VDF Parser & Core Functionality",
+      "passed": 7,
+      "failed": 0,
+      "total": 7,
+      "duration": 97,
+      "exitCode": 0,
+      "output": "📄 [2025-07-10T18:04:58.302Z] 🚀 Starting Steam Family Sharing Test Suite\n📄 [2025-07-10T18:04:58.305Z] 🧪 Running test: VDF test file exists\n✅ [2025-07-10T18:04:58.306Z] ✅ PASS: VDF test file exists\n📄 [2025-07-10T18:04:58.306Z] 🧪 Running test: VDF parser handles valid data\n✅ [2025-07-10T18:04:58.308Z] ✅ PASS: VDF parser handles valid data\n📄 [2025-07-10T18:04:58.308Z] 🧪 Running test: Specific games are detected correctly\n✅ [2025-07-10T18:04:58.310Z] ✅ PASS: Specific games are detected correctly\n📄 [2025-07-10T18:04:58.310Z] 🧪 Running test: User ownership is correct\n✅ [2025-07-10T18:04:58.311Z] ✅ PASS: User ownership is correct\n📄 [2025-07-10T18:04:58.311Z] 🧪 Running test: Parser handles empty/corrupted files\n✅ [2025-07-10T18:04:58.311Z] ✅ PASS: Parser handles empty/corrupted files\n📄 [2025-07-10T18:04:58.311Z] 🧪 Running test: Steam ID validation works\n✅ [2025-07-10T18:04:58.312Z] ✅ PASS: Steam ID validation works\n📄 [2025-07-10T18:04:58.312Z] 🧪 Running test: Performance with many games\n📄 [2025-07-10T18:04:58.315Z] ⏱️ Performance test: parsed 1000 games in 3ms\n✅ [2025-07-10T18:04:58.315Z] ✅ PASS: Performance with many games\n📄 [2025-07-10T18:04:58.315Z] \n📊 TEST SUMMARY\n📄 [2025-07-10T18:04:58.315Z] Total Tests: 7\n✅ [2025-07-10T18:04:58.315Z] Passed: 7\n✅ [2025-07-10T18:04:58.315Z] Failed: 0\n📄 [2025-07-10T18:04:58.316Z] Success Rate: 100.0%\n",
+      "error": ""
+    },
+    "test-edge-cases.js": {
+      "description": "Edge Cases & Error Handling",
+      "passed": 8,
+      "failed": 0,
+      "total": 8,
+      "duration": 131,
+      "exitCode": 0,
+      "output": "📄 [2025-07-10T18:04:58.405Z] 🚀 Starting Edge Cases and Error Handling Tests\n📄 [2025-07-10T18:04:58.410Z] 🧪 Running edge case test: Handles malformed VDF gracefully\n✅ [2025-07-10T18:04:58.410Z] ✅ PASS: Handles malformed VDF gracefully\n📄 [2025-07-10T18:04:58.410Z] 🧪 Running edge case test: Sanitizes special characters and prevents XSS\n✅ [2025-07-10T18:04:58.411Z] ✅ PASS: Sanitizes special characters and prevents XSS\n📄 [2025-07-10T18:04:58.411Z] 🧪 Running edge case test: Handles empty files correctly\n✅ [2025-07-10T18:04:58.411Z] ✅ PASS: Handles empty files correctly\n📄 [2025-07-10T18:04:58.411Z] 🧪 Running edge case test: Handles null/undefined input\n✅ [2025-07-10T18:04:58.411Z] ✅ PASS: Handles null/undefined input\n📄 [2025-07-10T18:04:58.411Z] 🧪 Running edge case test: Validates Steam IDs correctly\n✅ [2025-07-10T18:04:58.411Z] ✅ PASS: Validates Steam IDs correctly\n📄 [2025-07-10T18:04:58.411Z] 🧪 Running edge case test: Handles extreme App IDs\n✅ [2025-07-10T18:04:58.412Z] ✅ PASS: Handles extreme App IDs\n📄 [2025-07-10T18:04:58.412Z] 🧪 Running edge case test: Handles Unicode characters\n✅ [2025-07-10T18:04:58.412Z] ✅ PASS: Handles Unicode characters\n📄 [2025-07-10T18:04:58.412Z] 🧪 Running edge case test: Performance with very large files\n📄 [2025-07-10T18:04:58.447Z] ⏱️ Large file test: parsed 10000 games in 35ms\n✅ [2025-07-10T18:04:58.447Z] ✅ PASS: Performance with very large files\n📄 [2025-07-10T18:04:58.447Z] \n📊 EDGE CASE TEST SUMMARY\n📄 [2025-07-10T18:04:58.447Z] Total Tests: 8\n✅ [2025-07-10T18:04:58.447Z] Passed: 8\n✅ [2025-07-10T18:04:58.447Z] Failed: 0\n📄 [2025-07-10T18:04:58.447Z] Success Rate: 100.0%\n",
+      "error": ""
+    },
+    "test-ui-integration.js": {
+      "description": "UI Integration & Component Logic",
+      "passed": 7,
+      "failed": 0,
+      "total": 7,
+      "duration": 78,
+      "exitCode": 0,
+      "output": "📄 [2025-07-10T18:04:58.514Z] 🚀 Starting UI Integration Tests\n📄 [2025-07-10T18:04:58.522Z] 🧪 Running UI test: Auto-detect Steam config works\n✅ [2025-07-10T18:04:58.524Z] ✅ PASS: Auto-detect Steam config works\n📄 [2025-07-10T18:04:58.524Z] 🧪 Running UI test: File upload parsing works\n✅ [2025-07-10T18:04:58.524Z] ✅ PASS: File upload parsing works\n📄 [2025-07-10T18:04:58.524Z] 🧪 Running UI test: Handles upload errors gracefully\n✅ [2025-07-10T18:04:58.524Z] ✅ PASS: Handles upload errors gracefully\n📄 [2025-07-10T18:04:58.524Z] 🧪 Running UI test: Games page loads shared games correctly\n✅ [2025-07-10T18:04:58.524Z] ✅ PASS: Games page loads shared games correctly\n📄 [2025-07-10T18:04:58.525Z] 🧪 Running UI test: SteamGame to DisplayGame conversion works\n✅ [2025-07-10T18:04:58.525Z] ✅ PASS: SteamGame to DisplayGame conversion works\n📄 [2025-07-10T18:04:58.525Z] 🧪 Running UI test: Badge rendering logic works correctly\n✅ [2025-07-10T18:04:58.525Z] ✅ PASS: Badge rendering logic works correctly\n📄 [2025-07-10T18:04:58.525Z] 🧪 Running UI test: Component state management works\n✅ [2025-07-10T18:04:58.525Z] ✅ PASS: Component state management works\n📄 [2025-07-10T18:04:58.525Z] \n📊 UI INTEGRATION TEST SUMMARY\n📄 [2025-07-10T18:04:58.525Z] Total Tests: 7\n✅ [2025-07-10T18:04:58.525Z] Passed: 7\n✅ [2025-07-10T18:04:58.525Z] Failed: 0\n📄 [2025-07-10T18:04:58.525Z] Success Rate: 100.0%\n",
+      "error": ""
+    }
+  },
+  "recommendations": "All tests passed! Steam Family Sharing implementation is ready for production."
+}

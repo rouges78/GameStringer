@@ -1,0 +1,417 @@
+{
+  "timestamp": "2025-08-11T12:18:12.005Z",
+  "tests": [
+    {
+      "name": "ProfileWrapper in layout",
+      "status": "PASS",
+      "details": "ProfileWrapper integrato correttamente",
+      "category": "startup",
+      "timestamp": "2025-08-11T12:18:12.008Z"
+    },
+    {
+      "name": "ProfileSelector component",
+      "status": "PASS",
+      "details": "Componente ProfileSelector presente",
+      "category": "startup",
+      "timestamp": "2025-08-11T12:18:12.009Z"
+    },
+    {
+      "name": "useProfiles hook",
+      "status": "PASS",
+      "details": "Hook useProfiles presente",
+      "category": "startup",
+      "timestamp": "2025-08-11T12:18:12.009Z"
+    },
+    {
+      "name": "ProfileAuth provider",
+      "status": "PASS",
+      "details": "Provider ProfileAuth presente",
+      "category": "startup",
+      "timestamp": "2025-08-11T12:18:12.009Z"
+    },
+    {
+      "name": "CreateProfileDialog - CreateProfileDialog export",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.010Z"
+    },
+    {
+      "name": "CreateProfileDialog - Form validation",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.010Z"
+    },
+    {
+      "name": "CreateProfileDialog - Password field",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.010Z"
+    },
+    {
+      "name": "CreateProfileDialog - Name field",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.010Z"
+    },
+    {
+      "name": "CreateProfileDialog - Submit handler",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.011Z"
+    },
+    {
+      "name": "Rust backend - create_profile command",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.011Z"
+    },
+    {
+      "name": "Rust backend - Tauri command annotation",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.011Z"
+    },
+    {
+      "name": "Rust backend - Profile validation",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.011Z"
+    },
+    {
+      "name": "Rust backend - Error handling",
+      "status": "PASS",
+      "details": "",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.011Z"
+    },
+    {
+      "name": "ProfileManager create method",
+      "status": "PASS",
+      "details": "Metodo create_profile presente",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.012Z"
+    },
+    {
+      "name": "Storage system",
+      "status": "PASS",
+      "details": "Sistema storage presente",
+      "category": "creation",
+      "timestamp": "2025-08-11T12:18:12.012Z"
+    },
+    {
+      "name": "authenticate_profile command",
+      "status": "PASS",
+      "details": "Comando presente",
+      "category": "authentication",
+      "timestamp": "2025-08-11T12:18:12.013Z"
+    },
+    {
+      "name": "Encryption - Password hashing",
+      "status": "PASS",
+      "details": "",
+      "category": "authentication",
+      "timestamp": "2025-08-11T12:18:12.013Z"
+    },
+    {
+      "name": "Encryption - Encryption functions",
+      "status": "PASS",
+      "details": "",
+      "category": "authentication",
+      "timestamp": "2025-08-11T12:18:12.013Z"
+    },
+    {
+      "name": "Encryption - Key derivation",
+      "status": "PASS",
+      "details": "",
+      "category": "authentication",
+      "timestamp": "2025-08-11T12:18:12.013Z"
+    },
+    {
+      "name": "ProtectedRoute component",
+      "status": "PASS",
+      "details": "Componente presente e integrato",
+      "category": "authentication",
+      "timestamp": "2025-08-11T12:18:12.013Z"
+    },
+    {
+      "name": "Session management",
+      "status": "PASS",
+      "details": "Sistema sessioni presente",
+      "category": "authentication",
+      "timestamp": "2025-08-11T12:18:12.014Z"
+    },
+    {
+      "name": "get_current_profile command",
+      "status": "PASS",
+      "details": "Comando presente",
+      "category": "authentication",
+      "timestamp": "2025-08-11T12:18:12.014Z"
+    },
+    {
+      "name": "logout command",
+      "status": "PASS",
+      "details": "Comando logout presente",
+      "category": "switching",
+      "timestamp": "2025-08-11T12:18:12.015Z"
+    },
+    {
+      "name": "ProfileManager - Switch profile method",
+      "status": "PASS",
+      "details": "",
+      "category": "switching",
+      "timestamp": "2025-08-11T12:18:12.015Z"
+    },
+    {
+      "name": "ProfileManager - Clear session method",
+      "status": "PASS",
+      "details": "",
+      "category": "switching",
+      "timestamp": "2025-08-11T12:18:12.015Z"
+    },
+    {
+      "name": "ProfileManager - State management",
+      "status": "PASS",
+      "details": "",
+      "category": "switching",
+      "timestamp": "2025-08-11T12:18:12.016Z"
+    },
+    {
+      "name": "ProfileWrapper - State cleanup",
+      "status": "PASS",
+      "details": "",
+      "category": "switching",
+      "timestamp": "2025-08-11T12:18:12.016Z"
+    },
+    {
+      "name": "ProfileWrapper - Profile switching",
+      "status": "WARN",
+      "details": "Funzionalità non chiaramente identificata",
+      "category": "switching",
+      "timestamp": "2025-08-11T12:18:12.016Z"
+    },
+    {
+      "name": "ProfileWrapper - Effect cleanup",
+      "status": "PASS",
+      "details": "",
+      "category": "switching",
+      "timestamp": "2025-08-11T12:18:12.016Z"
+    },
+    {
+      "name": "useProfiles switch functionality",
+      "status": "PASS",
+      "details": "Funzionalità cambio profilo presente",
+      "category": "switching",
+      "timestamp": "2025-08-11T12:18:12.016Z"
+    },
+    {
+      "name": "Storage - File I/O operations",
+      "status": "PASS",
+      "details": "",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.017Z"
+    },
+    {
+      "name": "Storage - Data serialization",
+      "status": "PASS",
+      "details": "",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.017Z"
+    },
+    {
+      "name": "Storage - Error handling",
+      "status": "PASS",
+      "details": "",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.017Z"
+    },
+    {
+      "name": "Storage - Path management",
+      "status": "PASS",
+      "details": "",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.017Z"
+    },
+    {
+      "name": "Data models - UserProfile struct",
+      "status": "PASS",
+      "details": "",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.018Z"
+    },
+    {
+      "name": "Data models - Serialization support",
+      "status": "PASS",
+      "details": "",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.018Z"
+    },
+    {
+      "name": "Data models - Deserialization support",
+      "status": "PASS",
+      "details": "",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.018Z"
+    },
+    {
+      "name": "Data models - ProfileSettings struct",
+      "status": "PASS",
+      "details": "",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.018Z"
+    },
+    {
+      "name": "Browser storage integration",
+      "status": "PASS",
+      "details": "Integrazione storage browser presente",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.018Z"
+    },
+    {
+      "name": "Tauri filesystem permissions",
+      "status": "FAIL",
+      "details": "Permessi filesystem non configurati",
+      "category": "persistence",
+      "timestamp": "2025-08-11T12:18:12.018Z"
+    },
+    {
+      "name": "Test file: complete-integration-test.tsx",
+      "status": "PASS",
+      "details": "File test presente",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.019Z"
+    },
+    {
+      "name": "Test file: end-to-end-flow-test.tsx",
+      "status": "PASS",
+      "details": "File test presente",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.019Z"
+    },
+    {
+      "name": "Test file: test-profiles-integration.js",
+      "status": "PASS",
+      "details": "File test presente",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.019Z"
+    },
+    {
+      "name": "Test file: integration_tests.rs",
+      "status": "PASS",
+      "details": "File test presente",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.019Z"
+    },
+    {
+      "name": "Test file: end_to_end_tests.rs",
+      "status": "PASS",
+      "details": "File test presente",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.020Z"
+    },
+    {
+      "name": "Tauri command: list_profiles",
+      "status": "PASS",
+      "details": "Comando registrato",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.020Z"
+    },
+    {
+      "name": "Tauri command: create_profile",
+      "status": "PASS",
+      "details": "Comando registrato",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.020Z"
+    },
+    {
+      "name": "Tauri command: authenticate_profile",
+      "status": "PASS",
+      "details": "Comando registrato",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.020Z"
+    },
+    {
+      "name": "Tauri command: get_current_profile",
+      "status": "PASS",
+      "details": "Comando registrato",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.020Z"
+    },
+    {
+      "name": "Tauri command: logout",
+      "status": "PASS",
+      "details": "Comando registrato",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.020Z"
+    },
+    {
+      "name": "Tauri command: delete_profile",
+      "status": "PASS",
+      "details": "Comando registrato",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.021Z"
+    },
+    {
+      "name": "TypeScript - UserProfile interface",
+      "status": "PASS",
+      "details": "",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.021Z"
+    },
+    {
+      "name": "TypeScript - ProfileSettings interface",
+      "status": "PASS",
+      "details": "",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.021Z"
+    },
+    {
+      "name": "TypeScript - AuthResponse interface",
+      "status": "PASS",
+      "details": "",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.021Z"
+    },
+    {
+      "name": "Development script",
+      "status": "PASS",
+      "details": "Script sviluppo presente",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.022Z"
+    },
+    {
+      "name": "npm dev:profiles script",
+      "status": "PASS",
+      "details": "Script npm configurato",
+      "category": "e2e",
+      "timestamp": "2025-08-11T12:18:12.022Z"
+    },
+    {
+      "name": "Rust compilation",
+      "status": "PASS",
+      "details": "Backend compila senza errori",
+      "category": "compilation",
+      "timestamp": "2025-08-11T12:18:18.440Z"
+    },
+    {
+      "name": "TypeScript compilation",
+      "status": "FAIL",
+      "details": "Errore esecuzione tsc: spawn npx ENOENT",
+      "category": "compilation",
+      "timestamp": "2025-08-11T12:18:18.445Z"
+    }
+  ],
+  "summary": {
+    "total": 58,
+    "passed": 55,
+    "failed": 2,
+    "warnings": 1
+  }
+}
