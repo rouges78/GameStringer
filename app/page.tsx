@@ -266,7 +266,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Attività Recenti - In primo piano */}
+      {/* Recent Activity */}
       <Card className="border-cyan-500/20 bg-cyan-500/5">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-3">
@@ -309,7 +309,7 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Azioni Rapide - Full Width */}
+      {/* Quick Actions */}
       <Card className="border-purple-500/20 bg-purple-500/5">
           <CardContent className="p-4">
             <h3 className="text-sm font-semibold text-purple-300 mb-4 flex items-center gap-2">

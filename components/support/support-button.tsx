@@ -55,14 +55,14 @@ export function SupportButton({
           className={`text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 group ${className}`}
         >
           <Heart className="h-4 w-4 animate-pulse fill-pink-500 drop-shadow-[0_0_8px_rgba(236,72,153,0.8)] group-hover:scale-125 transition-transform" />
-          {showLabel && <span className="ml-1.5">Supporta</span>}
+          {showLabel && <span className="ml-1.5">Support</span>}
         </Button>
       </DropdownMenuTrigger>
       
       <DropdownMenuContent align="end" className="w-56 z-[70]">
         <DropdownMenuLabel className="flex items-center gap-2">
           <Heart className="h-4 w-4 text-pink-500" />
-          Supporta GameStringer
+          Support GameStringer
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
@@ -73,7 +73,7 @@ export function SupportButton({
           <Coffee className="h-4 w-4 mr-2 text-yellow-500" />
           <div className="flex-1">
             <p className="font-medium">Ko-fi</p>
-            <p className="text-xs text-muted-foreground">Offrimi un caffè ☕</p>
+            <p className="text-xs text-muted-foreground">Buy me a coffee ☕</p>
           </div>
           <ExternalLink className="h-3 w-3 text-muted-foreground" />
         </DropdownMenuItem>
@@ -85,7 +85,7 @@ export function SupportButton({
           <Github className="h-4 w-4 mr-2" />
           <div className="flex-1">
             <p className="font-medium">GitHub Sponsors</p>
-            <p className="text-xs text-muted-foreground">Sponsorizza su GitHub</p>
+            <p className="text-xs text-muted-foreground">Sponsor on GitHub</p>
           </div>
           <ExternalLink className="h-3 w-3 text-muted-foreground" />
         </DropdownMenuItem>
@@ -94,8 +94,8 @@ export function SupportButton({
         
         <div className="px-2 py-2">
           <p className="text-[10px] text-muted-foreground text-center">
-            GameStringer è gratuito e open source.<br />
-            Il tuo supporto aiuta lo sviluppo! 💜
+            GameStringer is free and open source.<br />
+            Your support helps development! 💜
           </p>
         </div>
       </DropdownMenuContent>

@@ -66,7 +66,7 @@ export default function ActivityHistoryPage() {
   const [filter, setFilter] = useState<ActivityType | 'all'>('all');
   const [counts, setCounts] = useState<Record<string, number>>({});
 
-  // Carica attività
+  // Load activities
   const loadActivities = useCallback(async (pageNum: number = 0, activityType?: ActivityType) => {
     setIsLoading(true);
     try {
@@ -83,19 +83,19 @@ export default function ActivityHistoryPage() {
         setHasMore(result.has_more);
       }
     } catch (error) {
-      console.error('Errore caricamento attività:', error);
+      console.error('Error loading activities:', error);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Carica conteggi per tipo
+  // Load counts by type
   const loadCounts = useCallback(async () => {
     const result = await activityHistory.countByType();
     setCounts(result);
   }, []);
 
-  // Caricamento iniziale
+  // Initial load
   useEffect(() => {
     loadActivities(0, filter === 'all' ? undefined : filter);
     loadCounts();
@@ -217,7 +217,7 @@ export default function ActivityHistoryPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Filtra per:</span>
+            <span className="text-sm text-muted-foreground">Filter by:</span>
           </div>
           <Select value={filter} onValueChange={(v) => setFilter(v as ActivityType | 'all')}>
             <SelectTrigger className="w-48">
@@ -235,7 +235,7 @@ export default function ActivityHistoryPage() {
           
           {filter !== 'all' && (
             <Button variant="ghost" size="sm" onClick={() => setFilter('all')}>
-              Rimuovi filtro
+              Clear filter
             </Button>
           )}
         </div>
@@ -245,18 +245,18 @@ export default function ActivityHistoryPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Clock className="h-5 w-5" />
-              Attività Recenti
+              Recent Activity
             </CardTitle>
             <CardDescription>
-              {total} risultati {filter !== 'all' && `(filtro: ${activityNames[filter]})`}
+              {total} results {filter !== 'all' && `(filter: ${activityNames[filter]})`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {activities.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Nessuna attività registrata</p>
-                <p className="text-sm mt-1">Le tue azioni verranno tracciate qui</p>
+                <p>No activity recorded</p>
+                <p className="text-sm mt-1">Your actions will be tracked here</p>
               </div>
             ) : (
               <ScrollArea className="h-[500px]">

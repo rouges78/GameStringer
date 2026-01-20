@@ -12,7 +12,7 @@ interface I18nContextType {
 const I18nContext = createContext<I18nContextType | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('it');
+  const [language, setLanguageState] = useState<Language>('en');
 
   // Load language from localStorage on mount
   useEffect(() => {

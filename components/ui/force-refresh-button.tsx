@@ -54,7 +54,7 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
           is_vr: false,
           engine: null,
           is_installed: false,
-          genres: ['Action']
+          genres: ['Refresh']
         }));
         
         if (onRefreshComplete) {
@@ -87,7 +87,7 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
       ) : (
         <>
           <Zap className="inline-block mr-1 h-3 w-3" />
-          Aggiorna
+          Refresh
         </>
       )}
     </button>

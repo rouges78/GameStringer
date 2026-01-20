@@ -927,14 +927,14 @@ export default function LibraryPage() {
 
       {/* Pulsante Force Refresh compatto */}
       <div className="flex items-center justify-between bg-gray-800/30 border border-gray-700 rounded-lg px-3 py-1.5 mb-4">
-        <span className="text-[10px] text-gray-500">🎯 Gioco non visibile?</span>
+        <span className="text-[10px] text-gray-500">🎯 Game not visible?</span>
         <div className="flex gap-1.5">
           <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
           <button 
             onClick={testFamilySharing} 
             className="text-[10px] px-2 py-1 bg-gray-700/50 text-gray-400 hover:bg-gray-600 rounded transition-colors"
           >
-            🔗 Condivisi
+            🔗 Shared
           </button>
           <button 
             onClick={async () => {
@@ -950,7 +950,7 @@ export default function LibraryPage() {
             }} 
             className="text-[10px] px-2 py-1 bg-blue-700/50 text-blue-300 hover:bg-blue-600 rounded transition-colors"
           >
-            ⬇️ Aggiorna DB
+            ⬇️ Update DB
           </button>
         </div>
       </div>
