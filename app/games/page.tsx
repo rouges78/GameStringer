@@ -501,7 +501,7 @@ export default function GamesPage() {
             <p className="text-muted-foreground mt-2">
               {searchTerm || installationFilter !== 'all' || ownershipFilter !== 'all' || showVrOnly
                 ? 'Try adjusting filters to find what you are looking for.'
-                : 'Your library is empty or games are still loading...'
+                : 'Your library is empty or games are still loading...'}
             </p>
           </div>
       )}

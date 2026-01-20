@@ -13,7 +13,7 @@ import {
   Download, 
   Upload,
   Headphones,
-  Waveform,
+  AudioWaveform,
   Settings,
   Trash2,
   Copy,
