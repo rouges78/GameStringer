@@ -497,11 +497,11 @@ export default function GamesPage() {
       ) : (
          <div className="text-center p-16 bg-background/30 rounded-lg">
             <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold">No game trovato</h3>
+            <h3 className="text-xl font-semibold">No games found</h3>
             <p className="text-muted-foreground mt-2">
               {searchTerm || installationFilter !== 'all' || ownershipFilter !== 'all' || showVrOnly
-                ? 'Prova a modificare i filtri per trovare quello che cerchi.'
-                : 'La tua library è vuota o i games sono ancora in fase di Loading...
+                ? 'Try adjusting filters to find what you are looking for.'
+                : 'Your library is empty or games are still loading...'
             </p>
           </div>
       )}

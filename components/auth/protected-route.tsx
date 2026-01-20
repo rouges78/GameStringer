@@ -62,7 +62,7 @@ export function ProtectedRoute({
             <Loader2 className="w-8 h-8 text-white animate-spin" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">GameStringer</h1>
-          <p className="text-blue-200">Loading...stema di authentication...</p>
+          <p className="text-blue-200">Loading authentication...</p>
         </div>
       </div>
     );
@@ -72,7 +72,6 @@ export function ProtectedRoute({
   const SKIP_AUTH_FOR_TESTING = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
   
   const BYPASS_AUTH_FOR_DEBUG = false;
-  const SHOW_DEBUG_COMPONENT = false;
   
   // TEMPORARY DEBUG - Verifica perché dashboard non appare
   if (process.env.NODE_ENV === 'development') {
@@ -88,11 +87,6 @@ export function ProtectedRoute({
   
   // Not authenticated - show debug component or profile selector
   if (!isAuthenticated && !SKIP_AUTH_FOR_TESTING && !BYPASS_AUTH_FOR_DEBUG) {
-    if (SHOW_DEBUG_COMPONENT) {
-      // Componente di debug caricato dinamicamente con Next.js
-      return <DebugSimpleAuthTest />;
-    }
-
     if (fallback) {
       return <>{fallback}</>;
     }
