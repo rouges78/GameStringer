@@ -66,7 +66,7 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
   }
 
   if (hasError || !currentSrc) {
-    // Se abbiamo informazioni sul gioco, usa il placeholder intelligente
+    // Se abbiamo informazioni sul game, usa il placeholder intelligente
     if (gameName) {
       return (
         <IntelligentPlaceholder
@@ -102,3 +102,6 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
 };
 
 export default GameImage;
+
+
+

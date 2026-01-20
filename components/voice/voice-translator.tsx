@@ -694,3 +694,6 @@ export function VoiceTranslator() {
     </div>
   );
 }
+
+
+

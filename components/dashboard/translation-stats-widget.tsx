@@ -107,7 +107,7 @@ export function TranslationStatsWidget() {
         { lang: '🇩🇪 Deutsch', count: Math.floor(translations.length * 0.05) },
       ].filter(l => l.count > 0);
 
-      // Progetti (mock basato su giochi unici)
+      // Progetti (mock basato su games unici)
       const uniqueGames = new Set(translations.map((t: any) => t.game_id || t.game_name).filter(Boolean));
       const completedProjects = Math.floor(uniqueGames.size * 0.6);
       const activeProjects = uniqueGames.size - completedProjects;
@@ -133,7 +133,7 @@ export function TranslationStatsWidget() {
         estimatedTimeRemaining,
       });
     } catch (error) {
-      console.error('Errore Loading...atistiche:', error);
+      console.error('error Loading...atistiche:', error);
     } finally {
       setIsLoading(false);
     }
@@ -348,3 +348,6 @@ export function TranslationStatsWidget() {
 }
 
 export default TranslationStatsWidget;
+
+
+

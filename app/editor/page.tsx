@@ -231,7 +231,7 @@ export default function EditorPage() {
   const [detectedLanguages, setDetectedLanguages] = useState<string[]>([]);
   const [rawContent, setRawContent] = useState<string>(''); // Per ri-parsare quando cambia lingua
   const [games, setGames] = useState<Game[]>([]);
-  const [gameProjects, setGameProjects] = useState<GameProject[]>([]); // Gerarchia giochi con traduzioni
+  const [gameProjects, setGameProjects] = useState<GameProject[]>([]); // Gerarchia games con traduzioni
   const [selectedProject, setSelectedProject] = useState<GameProject | null>(null);
   const [selectedFile, setSelectedFile] = useState<TranslatedFile | null>(null);
   const [explorerView, setExplorerView] = useState<'games' | 'files' | 'strings'>('games');
@@ -273,7 +273,7 @@ export default function EditorPage() {
   }, []);
 
   useEffect(() => {
-    // Non caricare traduzioni dal server se ci sono risultati parziali da Neural Translator
+    // Non caricare traduzioni dal server se ci sono results parziali da Neural Translator
     const hasPartialData = localStorage.getItem('gamestringer_partial_translations');
     const hasEditorFile = sessionStorage.getItem('editorFile');
     if (!hasPartialData && !hasEditorFile) {
@@ -323,11 +323,11 @@ export default function EditorPage() {
           status: 'pending',
           confidence: 85,
           isManualEdit: false,
-          context: `Tradotto con Neural Translator - ${data.gameName || 'Gioco sconosciuto'}`,
+          context: `Tradotto con Neural Translator - ${data.gameName || 'game sconosciuto'}`,
           updatedAt: new Date().toISOString(),
           game: {
             id: data.gameId || 'unknown',
-            title: data.gameName || 'Gioco sconosciuto',
+            title: data.gameName || 'game sconosciuto',
             platform: 'Neural Translator'
           },
           suggestions: [],
@@ -380,7 +380,7 @@ export default function EditorPage() {
             updatedAt: new Date(data.timestamp).toISOString(),
             game: {
               id: data.gameId || 'unknown',
-              title: data.gameName || 'Gioco sconosciuto',
+              title: data.gameName || 'game sconosciuto',
               platform: 'Neural Translator'
             },
             suggestions: [],
@@ -392,7 +392,7 @@ export default function EditorPage() {
           }
           
           toast({
-            title: "Risultati parziali caricati",
+            title: "results parziali caricati",
             description: `${data.completed}/${data.total} stringhe tradotte da ${data.gameName || 'Neural Translator'}`,
           });
           
@@ -446,7 +446,7 @@ export default function EditorPage() {
         const dictData = await invoke<any[]>('list_installed_dictionaries');
         for (const dict of ensureArray(dictData) as any[]) {
           const gameId = dict.game_id || dict.id || 'unknown';
-          const gameName = dict.game_name || 'Gioco sconosciuto';
+          const gameName = dict.game_name || 'game sconosciuto';
           
           if (!projectsMap.has(gameId)) {
             projectsMap.set(gameId, {
@@ -476,14 +476,14 @@ export default function EditorPage() {
         console.warn('[Editor] Dizionari non disponibili:', dictError);
       }
       
-      // Carica anche dai giochi con traduzioni salvate (API Next.js come fallback)
+      // Carica anche dai games con traduzioni saved (API Next.js come fallback)
       try {
         const transResponse = await fetch('/api/translations');
         const transData = transResponse.ok ? await transResponse.json() : [];
         
         for (const trans of ensureArray(transData) as any[]) {
           const gameId = trans.gameId || 'unknown';
-          const gameName = trans.game?.title || 'Gioco sconosciuto';
+          const gameName = trans.game?.title || 'game sconosciuto';
           
           if (!projectsMap.has(gameId)) {
             projectsMap.set(gameId, {
@@ -505,13 +505,13 @@ export default function EditorPage() {
         console.warn('[Editor] Traduzioni non disponibili:', transError);
       }
       
-      // Se non ci sono progetti, mostra i giochi dalla libreria che hanno file di localizzazione
+      // Se non ci sono progetti, mostra i games dalla library che hanno file di localizzazione
       if (projectsMap.size === 0) {
         try {
           const gamesResponse = await fetch('/api/games');
           const gamesData = gamesResponse.ok ? await gamesResponse.json() : [];
           
-          // Filtra giochi con traduzioni (quelli che hanno translationStats)
+          // Filtra games con traduzioni (quelli che hanno translationStats)
           for (const game of ensureArray(gamesData) as any[]) {
             if (game.translationStats && game.translationStats.total > 0) {
               projectsMap.set(game.id, {
@@ -538,7 +538,7 @@ export default function EditorPage() {
             }
           }
         } catch (gamesError) {
-          console.warn('[Editor] Giochi non disponibili:', gamesError);
+          console.warn('[Editor] games non disponibili:', gamesError);
         }
       }
       
@@ -568,7 +568,7 @@ export default function EditorPage() {
       }
     } catch (error) {
       console.error('Error loading translations:', error);
-      toast({ title: 'Errore', description: 'Impossibile caricare le traduzioni', variant: 'destructive' });
+      toast({ title: 'error', description: 'Impossibile caricare le traduzioni', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -592,7 +592,7 @@ export default function EditorPage() {
 
       if (!response.ok) throw new Error('Failed to save');
       
-      // Integrazione con Dictionaries: salva automaticamente nel dizionario del gioco
+      // Integrazione con Dictionaries: salva automaticamente nel dizionario del game
       if (updates.translatedText && selectedTranslation.originalText) {
         try {
           await fetch('/api/dictionaries/add', {
@@ -613,10 +613,10 @@ export default function EditorPage() {
         }
       }
       
-      toast({ title: 'Salvato', description: 'Traduzione aggiornata e salvata nel dizionario' });
+      toast({ title: 'Salvato', description: 'Traduzione updated e salvata nel dizionario' });
     } catch (error) {
       console.error('Error saving translation:', error);
-      toast({ title: 'Errore', description: 'Impossibile salvare le modifiche', variant: 'destructive' });
+      toast({ title: 'error', description: 'Impossibile salvare le modifiche', variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
@@ -660,7 +660,7 @@ export default function EditorPage() {
         toast({ title: 'Suggerimenti generati', description: `${suggestions.length} suggerimenti trovati` });
       }
     } catch (error) {
-      toast({ title: 'Errore', description: 'Impossibile generare suggerimenti', variant: 'destructive' });
+      toast({ title: 'error', description: 'Impossibile generare suggerimenti', variant: 'destructive' });
     } finally {
       setIsGeneratingSuggestions(false);
     }
@@ -741,9 +741,9 @@ export default function EditorPage() {
           data.items = updatedItems;
           data.timestamp = Date.now();
           localStorage.setItem('gamestringer_partial_translations', JSON.stringify(data));
-          console.log('[Editor] Salvate modifiche manuali in localStorage:', translatedLines.length);
+          console.log('[Editor] saved modifiche manuali in localStorage:', translatedLines.length);
         } catch (err) {
-          console.error('[Editor] Errore salvataggio localStorage:', err);
+          console.error('[Editor] error salvataggio localStorage:', err);
         }
       } else {
         // Crea nuovi dati se non esistono
@@ -773,7 +773,7 @@ export default function EditorPage() {
       // Traccia attività
       activityHistory.add({
         activity_type: 'translation',
-        title: `Modifiche salvate: ${selectedTranslation.game.title}`,
+        title: `Modifiche saved: ${selectedTranslation.game.title}`,
         description: `${translatedLines.length} stringhe modificate`,
         game_name: selectedTranslation.game.title,
         game_id: selectedTranslation.gameId,
@@ -781,7 +781,7 @@ export default function EditorPage() {
       
       toast({ 
         title: 'Salvato', 
-        description: `${translatedLines.length} traduzioni salvate` 
+        description: `${translatedLines.length} traduzioni saved` 
       });
     } else {
       updateTranslation({ translatedText: selectedTranslation.translatedText });
@@ -806,7 +806,7 @@ export default function EditorPage() {
         toast({ title: 'Eliminata', description: 'Traduzione rimossa' });
       }
     } catch (error) {
-      toast({ title: 'Errore', description: 'Impossibile eliminare', variant: 'destructive' });
+      toast({ title: 'error', description: 'Impossibile eliminare', variant: 'destructive' });
     }
   };
 
@@ -814,7 +814,7 @@ export default function EditorPage() {
     if (!filterGame || filterGame === 'all') {
       toast({
         title: 'Select a game',
-        description: 'Devi selezionare un gioco specifico per esportare',
+        description: 'Devi selezionare un game specifico per esportare',
         variant: 'destructive'
       });
       return;
@@ -841,7 +841,7 @@ export default function EditorPage() {
         toast({ title: 'Esportazione completata', description: `Traduzioni esportate in ${format.toUpperCase()}` });
       }
     } catch (error) {
-      toast({ title: 'Errore', description: 'Impossibile esportare', variant: 'destructive' });
+      toast({ title: 'error', description: 'Impossibile esportare', variant: 'destructive' });
     }
   };
 
@@ -935,10 +935,10 @@ export default function EditorPage() {
             </Select>
             <Select value={filterGame} onValueChange={setFilterGame}>
               <SelectTrigger className="h-7 text-xs flex-1 bg-slate-800/50 border-slate-700">
-                <SelectValue placeholder="Gioco" />
+                <SelectValue placeholder="game" />
               </SelectTrigger>
               <SelectContent className="z-50">
-                <SelectItem value="all">Tutti i giochi</SelectItem>
+                <SelectItem value="all">Tutti i games</SelectItem>
                 {games.map(g => (
                   <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
                 ))}
@@ -955,19 +955,19 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Explorer List - Gerarchia Giochi → File → Stringhe */}
+        {/* Explorer List - Gerarchia games → File → Stringhe */}
         <ScrollArea className="flex-1">
           {isLoading ? (
             <div className="flex justify-center p-8">
               <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
             </div>
           ) : explorerView === 'games' ? (
-            // Vista Giochi
+            // Vista games
             gameProjects.length === 0 ? (
               <div className="text-center p-8 text-muted-foreground text-sm">
                 <Languages className="h-10 w-10 mx-auto mb-3 opacity-20" />
                 <p>Nessun progetto</p>
-                <p className="text-xs mt-1 opacity-70">Traduci un gioco con Neural Translator</p>
+                <p className="text-xs mt-1 opacity-70">Traduci un game con Neural Translator</p>
               </div>
             ) : (
               <div className="flex flex-col">
@@ -1002,7 +1002,7 @@ export default function EditorPage() {
               </div>
             )
           ) : explorerView === 'files' && selectedProject ? (
-            // Vista File del gioco selezionato
+            // Vista File del game selezionato
             <div className="flex flex-col">
               {/* Header con back button */}
               <div className="flex items-center gap-2 p-3 border-b border-slate-700 bg-slate-800/50 sticky top-0 z-10">
@@ -1366,3 +1366,6 @@ export default function EditorPage() {
     </div>
   );
 }
+
+
+

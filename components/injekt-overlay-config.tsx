@@ -138,7 +138,7 @@ export function InjektOverlayConfig({ config, onConfigChange }: InjektOverlayCon
           setLocalConfig(imported);
           onConfigChange(imported);
         } catch (error) {
-          console.error('Errore importazione configurazione:', error);
+          console.error('error importazione configurazione:', error);
         }
       };
       reader.readAsText(file);
@@ -734,3 +734,6 @@ function getOverlayPosition(position: string, offset: { x: number; y: number }) 
 
   return style;
 }
+
+
+

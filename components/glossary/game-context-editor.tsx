@@ -179,7 +179,7 @@ export function GameContextEditor({
               <div>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Settings className="h-4 w-4" />
-                  Contesto del Gioco
+                  Contesto del game
                 </CardTitle>
                 <CardDescription className="text-xs mt-1">
                   Aiuta l'IA a capire il contesto per traduzioni migliori
@@ -262,7 +262,7 @@ export function GameContextEditor({
               <Textarea
                 value={metadata.worldContext || ''}
                 onChange={(e) => handleMetadataChange('worldContext', e.target.value)}
-                placeholder="Descrivi brevemente il mondo di gioco, la storia, elementi importanti..."
+                placeholder="Descrivi brevemente il mondo di game, la storia, elementi importanti..."
                 className="text-xs h-16 resize-none"
                 disabled={disabled}
               />
@@ -433,3 +433,6 @@ export function GameContextEditor({
     </Collapsible>
   );
 }
+
+
+

@@ -30,14 +30,14 @@ type Store = {
 };
 
 const stores: Store[] = [
-  { id: 'steam', name: 'Steam', logoUrl: '/logos/steam.png', description: 'Collega il tuo account Steam per importare i tuoi giochi.' },
-  { id: 'epic', name: 'Epic Games', logoUrl: '/logos/epic-games.png', description: 'Collega il tuo account Epic Games per importare i tuoi giochi.' },
-  { id: 'ubisoft', name: 'Ubisoft Connect', logoUrl: '/logos/ubisoft-connect.png', description: 'Collega il tuo account Ubisoft Connect per importare i tuoi giochi.' },
-  { id: 'itchio', name: 'itch.io', logoUrl: '/logos/itch-io.png', description: 'Collega il tuo account itch.io per importare i tuoi giochi.' },
-  { id: 'gog', name: 'GOG', logoUrl: '/logos/gog.png', description: 'Collega il tuo account GOG per importare i tuoi giochi.' },
-  { id: 'origin', name: 'EA App / Origin', logoUrl: '/logos/ea-app.png', description: 'Collega il tuo account EA per importare i tuoi giochi.' },
-  { id: 'battlenet', name: 'Battle.net', logoUrl: '/logos/battlenet.png', description: 'Collega il tuo account Battle.net per importare i tuoi giochi.' },
-  { id: 'rockstar', name: 'Rockstar', logoUrl: '/logos/rockstar.png', description: 'La connessione con Rockstar non è ancora supportata.' },
+  { id: 'steam', name: 'Steam', logoUrl: '/logos/steam.png', description: 'Collega il tuo account Steam per importare i tuoi games.' },
+  { id: 'epic', name: 'Epic Games', logoUrl: '/logos/epic-games.png', description: 'Collega il tuo account Epic Games per importare i tuoi games.' },
+  { id: 'ubisoft', name: 'Ubisoft Connect', logoUrl: '/logos/ubisoft-connect.png', description: 'Collega il tuo account Ubisoft Connect per importare i tuoi games.' },
+  { id: 'itchio', name: 'itch.io', logoUrl: '/logos/itch-io.png', description: 'Collega il tuo account itch.io per importare i tuoi games.' },
+  { id: 'gog', name: 'GOG', logoUrl: '/logos/gog.png', description: 'Collega il tuo account GOG per importare i tuoi games.' },
+  { id: 'origin', name: 'EA App / Origin', logoUrl: '/logos/ea-app.png', description: 'Collega il tuo account EA per importare i tuoi games.' },
+  { id: 'battlenet', name: 'Battle.net', logoUrl: '/logos/battlenet.png', description: 'Collega il tuo account Battle.net per importare i tuoi games.' },
+  { id: 'rockstar', name: 'Rockstar', logoUrl: '/logos/rockstar.png', description: 'La connection con Rockstar non è ancora supportata.' },
 ];
 
 const utilityServices: Store[] = [
@@ -45,13 +45,13 @@ const utilityServices: Store[] = [
     id: 'howlongtobeat',
     name: 'HowLongToBeat',
     icon: <Clock className="h-12 w-12 text-blue-500" />,
-    description: 'Ottieni informazioni sui tempi di completamento dei tuoi giochi.'
+    description: 'Ottieni informazioni sui tempi di completamento dei tuoi games.'
   },
   {
     id: 'steamgriddb',
     name: 'SteamGridDB',
     icon: <Gamepad2 className="h-12 w-12 text-purple-500" />,
-    description: 'Scarica artwork e copertine personalizzate per i tuoi giochi.'
+    description: 'Scarica artwork e copertine personalizzate per i tuoi games.'
   },
   {
     id: 'achievements',
@@ -63,7 +63,7 @@ const utilityServices: Store[] = [
     id: 'playtime',
     name: 'Playtime Stats',
     icon: <BarChart3 className="h-12 w-12 text-green-500" />,
-    description: 'Analizza le tue statistiche di gioco aggregate.'
+    description: 'Analizza le tue statistiche di game aggregate.'
   },
 ];
 
@@ -80,13 +80,13 @@ export default function StoresPage() {
     update();
   }, []);
 
-  // Carica credenziali Ubisoft dal backend Tauri all'avvio
+  // Carica Credentials Ubisoft dal backend Tauri all'avvio
   useEffect(() => {
     const loadUbisoftCredentials = async () => {
       try {
         const credentials = await invoke<any>('load_ubisoft_credentials');
         if (credentials && credentials.email) {
-          console.log('[UBISOFT] Credenziali caricate dal backend:', credentials.email);
+          console.log('[UBISOFT] Credentials loaded dal backend:', credentials.email);
           setUbisoftConnected(true);
         }
       } catch (error) {
@@ -216,7 +216,7 @@ export default function StoresPage() {
         });
         
         if (response.ok) {
-          toast.success('HowLongToBeat attivato! Le informazioni sui tempi di gioco verranno mostrate automaticamente.');
+          toast.success('HowLongToBeat attivato! Le informazioni sui tempi di game verranno mostrate automaticamente.');
           setUtilityPreferences(prev => ({ ...prev, [utilityId]: { enabled: true } }));
         } else {
           throw new Error('Failed to save preference');
@@ -239,7 +239,7 @@ export default function StoresPage() {
         }
       }
     } catch (error) {
-      toast.error(`Errore durante l'attivazione di ${utilityId}`);
+      toast.error(`error durante l'attivazione di ${utilityId}`);
     }
     
     setLoadingProvider(null);
@@ -264,7 +264,7 @@ export default function StoresPage() {
         throw new Error('Failed to delete preference');
       }
     } catch (error) {
-      toast.error(`Errore durante la disattivazione di ${utilityId}`);
+      toast.error(`error durante la disattivazione di ${utilityId}`);
     }
     
     setLoadingProvider(null);
@@ -280,7 +280,7 @@ export default function StoresPage() {
         await signIn('epicgames', { callbackUrl: '/stores' });
       } catch (error) {
         console.error('Epic Games auth error:', error);
-        toast.error('Errore durante la connessione con Epic Games. Verifica le credenziali OAuth.');
+        toast.error('error durante la connection con Epic Games. Verifica le Credentials OAuth.');
         setLoadingProvider(null);
       }
       return;
@@ -320,11 +320,11 @@ export default function StoresPage() {
     const backendProviderId = getBackendProviderId(providerId);
     
     try {
-      // Cancella credenziali dal backend Tauri per Ubisoft
+      // Cancella Credentials dal backend Tauri per Ubisoft
       if (providerId === 'ubisoft') {
         await invoke('clear_ubisoft_credentials');
         setUbisoftConnected(false);
-        console.log('[UBISOFT] Credenziali cancellate dal backend');
+        console.log('[UBISOFT] Credentials cancellate dal backend');
       }
       
       const response = await fetch('/api/auth/disconnect', {
@@ -346,11 +346,11 @@ export default function StoresPage() {
         await update();
       } else {
         const result = await response.json();
-        toast.error(`Errore durante la disconnessione: ${result.error}`);
+        toast.error(`error durante la disconnection: ${result.error}`);
       }
     } catch (error: any) {
       console.error('Disconnect error:', error);
-      toast.error(error?.message || 'Errore durante la disconnessione');
+      toast.error(error?.message || 'error durante la disconnection');
     }
     setLoadingProvider(null);
   };
@@ -362,7 +362,7 @@ export default function StoresPage() {
     }
     setLoadingProvider('ubisoft');
     try {
-      // Chiama il backend Tauri per autenticare e salvare le credenziali criptate
+      // Chiama il backend Tauri per autenticare e salvare le Credentials criptate
       const backendResult = await invoke<string>('connect_ubisoft', { email, password });
       console.log('[UBISOFT] Backend result:', backendResult);
       
@@ -376,7 +376,7 @@ export default function StoresPage() {
       });
 
       if (result?.error) {
-        toast.error(result.error || 'Errore durante la connessione con Ubisoft.');
+        toast.error(result.error || 'error durante la connection con Ubisoft.');
       } else {
         setUbisoftConnected(true);
         toast.success(backendResult || 'Account Ubisoft collegato con successo!');
@@ -386,7 +386,7 @@ export default function StoresPage() {
       }
     } catch (error: any) {
       console.error('Ubisoft auth error:', error);
-      toast.error(error?.message || error || 'Errore durante la connessione con Ubisoft. Verifica le credenziali.');
+      toast.error(error?.message || error || 'error durante la connection con Ubisoft. Verifica le Credentials.');
     }
     setLoadingProvider(null);
   };
@@ -410,12 +410,12 @@ export default function StoresPage() {
       });
 
       if (result?.error) {
-        // Se GOG richiede 2FA, l'errore dovrebbe indicarlo
+        // Se GOG richiede 2FA, l'error dovrebbe indicarlo
         if (genericModalProvider === 'gog' && result.error.includes('2FA')) {
           toast.error('Per favore inserisci il codice 2FA');
           // La modale gestirà la richiesta del codice 2FA
         } else {
-          toast.error(result.error || `Errore durante la connessione con ${genericModalProvider}.`);
+          toast.error(result.error || `error durante la connection con ${genericModalProvider}.`);
         }
       } else {
         toast.success(`Account ${genericModalProvider} collegato con successo!`);
@@ -425,7 +425,7 @@ export default function StoresPage() {
       }
     } catch (error) {
       console.error(`${genericModalProvider} auth error:`, error);
-      toast.error(`Errore durante la connessione con ${genericModalProvider}.`);
+      toast.error(`error durante la connection con ${genericModalProvider}.`);
     }
     setLoadingProvider(null);
   };
@@ -439,7 +439,7 @@ export default function StoresPage() {
     });
 
     if (result?.error) {
-      toast.error(result.error || 'Errore durante la connessione con Steam.');
+      toast.error(result.error || 'error durante la connection con Steam.');
       throw new Error(result.error);
     } else {
       toast.success('Account Steam collegato con successo!');
@@ -465,7 +465,7 @@ export default function StoresPage() {
         await update();
       }
     } catch (error) {
-      toast.error('Errore durante la connessione con itch.io');
+      toast.error('error durante la connection con itch.io');
       throw error;
     } finally {
       setLoadingProvider(null);
@@ -473,7 +473,7 @@ export default function StoresPage() {
   };
 
   const steamAccount = session?.user?.accounts?.find(acc => acc.provider === 'steam-credentials');
-  // Non mostrare l'avviso se Steam è collegato correttamente tramite il nuovo sistema auth
+  // Do not show l'avviso se Steam è collegato correttamente tramite il nuovo sistema auth
   const isSteamIdInvalid = false; // Disabilitato: Steam funziona correttamente con il nuovo sistema auth
 
   const testConnectionUtility = async (utilityId: string) => {
@@ -534,12 +534,12 @@ export default function StoresPage() {
       setTestResults(prev => ({ ...prev, [providerId]: result }));
       
       if (result.connected) {
-        toast.success(`Connessione ${providerId} verificata!`);
+        toast.success(`connection ${providerId} verificata!`);
       } else {
-        toast.error(`Problema con ${providerId}: ${result.error || 'Connessione non riuscita'}`);
+        toast.error(`Problema con ${providerId}: ${result.error || 'connection non riuscita'}`);
       }
     } catch (error) {
-      toast.error(`Errore nel test di ${providerId}`);
+      toast.error(`error nel test di ${providerId}`);
       setTestResults(prev => ({ ...prev, [providerId]: { error: 'Test fallito' } }));
     }
     setTestingProvider(null);
@@ -552,7 +552,7 @@ export default function StoresPage() {
           <CardHeader>
             <CardTitle className="text-yellow-700 dark:text-yellow-400">Azione Richiesta: Correggi il tuo SteamID</CardTitle>
             <CardDescription>
-              Abbiamo rilevato che il tuo SteamID potrebbe non essere corretto. Per risolvere il problema della scansione dei giochi, per favore inserisci il tuo <strong>SteamID numerico a 17 cifre</strong> qui sotto e clicca su "Correggi".
+              Abbiamo rilevato che il tuo SteamID potrebbe non essere corretto. Per risolvere il problema della scansione dei games, per favore inserisci il tuo <strong>SteamID numerico a 17 cifre</strong> qui sotto e clicca su "Correggi".
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -576,7 +576,7 @@ export default function StoresPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Connessioni Store</h1>
         <p className="text-muted-foreground mb-4">
-          Collega i tuoi account per sincronizzare la tua libreria di giochi e accedere a funzionalità avanzate.
+          Collega i tuoi account per sincronizzare la tua library di games e accedere a funzionalità avanzate.
         </p>
         <div className="flex justify-center">
           <Button asChild variant="outline" className="mb-4">
@@ -639,7 +639,7 @@ export default function StoresPage() {
                           size="icon"
                           disabled={testingProvider === store.id}
                           onClick={() => testConnection(store.id)}
-                          title="Test connessione"
+                          title="Test connection"
                         >
                           {testingProvider === store.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -655,7 +655,7 @@ export default function StoresPage() {
                       {testResults[store.id] && (
                         <div className="text-xs text-muted-foreground">
                           {testResults[store.id].connected ? (
-                            <span className="text-green-600">✓ Connessione verificata</span>
+                            <span className="text-green-600">✓ connection verificata</span>
                           ) : (
                             <span className="text-red-600">✗ {testResults[store.id].error}</span>
                           )}
@@ -695,7 +695,7 @@ export default function StoresPage() {
       <div className="mt-12">
         <h2 className="text-2xl font-bold tracking-tight mb-4">Servizi Utility</h2>
         <p className="text-muted-foreground mb-6">
-          Collega servizi aggiuntivi per arricchire la tua esperienza di gioco con informazioni e funzionalità extra.
+          Collega servizi aggiuntivi per arricchire la tua esperienza di game con informazioni e funzionalità extra.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -829,3 +829,5 @@ export default function StoresPage() {
     </div>
   );
 }
+
+

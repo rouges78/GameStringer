@@ -204,7 +204,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
       
       saveSecuritySettings({ ...settings, twoFactorEnabled: false });
       logActivity('2FA disabilitato');
-      toast.success('Autenticazione a due fattori disabilitata');
+      toast.success('authentication a due fattori disabilitata');
       setTwoFactorCode('');
       setIsSettingUp2FA(false);
     } else {
@@ -225,7 +225,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
       // Verify code (demo: accept any 6 digit code)
       saveSecuritySettings({ ...settings, twoFactorEnabled: true });
       logActivity('2FA abilitato');
-      toast.success('Autenticazione a due fattori abilitata!');
+      toast.success('authentication a due fattori abilitata!');
       setTwoFactorCode('');
       setIsSettingUp2FA(false);
     }
@@ -625,3 +625,6 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
     </Dialog>
   );
 }
+
+
+

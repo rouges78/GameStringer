@@ -22,3 +22,6 @@ export default function TranslatorRedirect() {
     </div>
   );
 }
+
+
+

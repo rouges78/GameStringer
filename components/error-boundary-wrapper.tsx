@@ -55,7 +55,7 @@ export function ErrorBoundaryWrapper({
             errorInfo={errorInfo}
             resetError={resetError}
             errorId={errorId}
-            title={`Errore in ${context}`}
+            title={`error in ${context}`}
           />
         );
     }
@@ -130,3 +130,5 @@ export function LoadingErrorBoundary({
     </ErrorBoundaryWrapper>
   );
 }
+
+

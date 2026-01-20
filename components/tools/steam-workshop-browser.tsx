@@ -59,7 +59,7 @@ export function SteamWorkshopBrowser() {
         {
           id: 'ws_001',
           title: 'Traduzione Italiana Completa',
-          description: 'Traduzione completa del gioco in italiano con supporto per tutti i DLC.',
+          description: 'Traduzione completa del game in italiano con supporto per tutti i DLC.',
           author: 'ItalianTranslators',
           gameName: 'The Witcher 3',
           targetLanguage: 'it',
@@ -422,3 +422,6 @@ export function SteamWorkshopBrowser() {
 }
 
 export default SteamWorkshopBrowser;
+
+
+

@@ -345,7 +345,7 @@ export function TranslationFixer() {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription className="text-xs">
-                Dopo aver modificato la configurazione, riavvia il gioco per applicare le modifiche.
+                Dopo aver modificato la configurazione, riavvia il game per applicare le modifiche.
               </AlertDescription>
             </Alert>
           </div>
@@ -365,3 +365,6 @@ export function TranslationFixer() {
     </div>
   );
 }
+
+
+

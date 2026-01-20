@@ -138,7 +138,7 @@ const ContextAwareTranslation: React.FC<ContextAwareTranslationProps> = ({
     let translatedText = text;
     const alternatives: string[] = [];
 
-    // Applica terminologia di gioco
+    // Applica terminologia di game
     if (settings.useGameTerminology) {
       Object.entries(gameContext.terminology).forEach(([term, translation]) => {
         translatedText = translatedText.replace(new RegExp(term, 'gi'), translation);
@@ -567,3 +567,6 @@ const ContextAwareTranslation: React.FC<ContextAwareTranslationProps> = ({
 };
 
 export default ContextAwareTranslation;
+
+
+

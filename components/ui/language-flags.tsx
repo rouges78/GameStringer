@@ -178,6 +178,9 @@ export const LanguageFlags: React.FC<LanguageFlagsProps> = ({ supportedLanguages
 // Export helper per ottenere codice paese da lingua (utile per filtri esterni)
 export const getCountryCode = (language: string): string | undefined => {
     const trimmed = language.trim();
-    // Prima prova esatto, poi minuscolo
+    // First prova esatto, poi minuscolo
     return languageToCountryCode[trimmed] || languageToCountryCode[trimmed.toLowerCase()];
 };
+
+
+

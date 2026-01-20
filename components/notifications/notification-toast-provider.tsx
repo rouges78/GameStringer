@@ -43,7 +43,7 @@ export const NotificationToastProvider: React.FC<NotificationToastProviderProps>
 
     window.addEventListener('profile-changed', handleProfileChange as EventListener);
     
-    // Prova a ottenere il profilo corrente dal localStorage o da altri sistemi
+    // Try a ottenere il profilo corrente dal localStorage o da altri sistemi
     const savedProfile = localStorage.getItem('currentProfileId');
     if (savedProfile) {
       setCurrentProfileId(savedProfile);
@@ -268,3 +268,5 @@ export const useToast = () => {
 };
 
 export default NotificationToastProvider;
+
+

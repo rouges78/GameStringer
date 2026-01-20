@@ -18,7 +18,7 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
       console.log('🔄 Starting force refresh...');
       
       try {
-        // Prova prima con Tauri force refresh
+        // Try prima con Tauri force refresh
         const freshGames = await invoke('force_refresh_all_games');
         console.log('✅ Force refresh completed con Tauri:', freshGames);
         
@@ -43,7 +43,7 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
         const data = await response.json();
         console.log('✅ Force refresh completed con API fallback:', data);
         
-        // Trasforma i dati dell'API nel formato atteso
+        // Transform i dati dell'API nel formato atteso
         const transformedGames = data.games.map((game: any) => ({
           id: game.id,
           app_id: game.id.replace('steam_', ''),
@@ -93,3 +93,5 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
     </button>
   );
 }
+
+

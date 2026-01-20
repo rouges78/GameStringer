@@ -47,7 +47,7 @@ export const useResponsive = () => {
       setCurrentBreakpoint(breakpoint);
     };
 
-    // Imposta dimensioni iniziali
+    // Set dimensioni iniziali
     handleResize();
     
     window.addEventListener('resize', handleResize);
@@ -164,3 +164,6 @@ export const useResponsiveClasses = () => {
     }),
   };
 };
+
+
+

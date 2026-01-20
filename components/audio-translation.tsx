@@ -296,7 +296,7 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
     }
   };
 
-  // Gestisci upload file
+  // Handle upload file
   const handleFileUpload = (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
@@ -758,3 +758,6 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
 };
 
 export default AudioTranslation;
+
+
+

@@ -202,7 +202,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
       }
     }
 
-    // Ordinamento
+    // Sortmento
     filtered.sort((a, b) => {
       let aValue: any, bValue: any;
       
@@ -1002,3 +1002,5 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 };
 
 export default NotificationCenter;
+
+

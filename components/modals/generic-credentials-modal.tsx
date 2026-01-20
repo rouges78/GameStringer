@@ -19,23 +19,23 @@ interface GenericCredentialsModalProps {
 const providerInfo: Record<string, { title: string; description: string; helpText?: string }> = {
   gog: {
     title: 'GOG Galaxy',
-    description: 'Accedi con le tue credenziali GOG',
-    helpText: 'Usa le stesse credenziali che usi per accedere a GOG.com'
+    description: 'Accedi con le tue Credentials GOG',
+    helpText: 'Usa le stesse Credentials che usi per accedere a GOG.com'
   },
   origin: {
     title: 'EA App / Origin',
     description: 'Accedi con il tuo account EA',
-    helpText: 'Usa le credenziali del tuo account EA (ex Origin)'
+    helpText: 'Usa le Credentials del tuo account EA (ex Origin)'
   },
   battlenet: {
     title: 'Battle.net',
     description: 'Accedi con il tuo account Blizzard',
-    helpText: 'Usa le credenziali del tuo account Battle.net'
+    helpText: 'Usa le Credentials del tuo account Battle.net'
   },
   ubisoft: {
     title: 'Ubisoft Connect',
     description: 'Accedi con il tuo account Ubisoft',
-    helpText: 'Usa le credenziali di Ubisoft Connect (ex Uplay)'
+    helpText: 'Usa le Credentials di Ubisoft Connect (ex Uplay)'
   },
   itchio: {
     title: 'itch.io',
@@ -45,7 +45,7 @@ const providerInfo: Record<string, { title: string; description: string; helpTex
   rockstar: {
     title: 'Rockstar Games',
     description: 'Accedi con il tuo account Rockstar Social Club',
-    helpText: 'Usa le credenziali del tuo account Rockstar Social Club per accedere ai giochi come GTA V e Red Dead Redemption 2'
+    helpText: 'Usa le Credentials del tuo account Rockstar Social Club per accedere ai games come GTA V e Red Dead Redemption 2'
   }
 };
 
@@ -61,7 +61,7 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
     
-    // Validazione credenziali
+    // Validazione Credentials
     if (!credentials.email.trim() || !credentials.password.trim()) {
       setError('Per favore, inserisci sia email che password.');
       return;
@@ -69,7 +69,7 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
 
     setError(null);
     
-    // Procedi con la connessione per tutti i provider
+    // Procedi con la connection per tutti i provider
     try {
       await onSubmit(credentials.email, credentials.password);
       handleClose();
@@ -167,3 +167,6 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
     </Dialog>
   );
 }
+
+
+

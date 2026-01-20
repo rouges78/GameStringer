@@ -224,7 +224,7 @@ export function ProgressModal({
             )}
           </div>
 
-          {/* Messaggio di errore */}
+          {/* Messaggio di error */}
           {hasError && operation.error && (
             <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <div className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">
@@ -236,7 +236,7 @@ export function ProgressModal({
             </div>
           )}
 
-          {/* Risultato */}
+          {/* result */}
           {isCompleted && !hasError && operation.result && (
             <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
               <div className="text-sm font-medium text-green-800 dark:text-green-200 mb-1">
@@ -329,3 +329,5 @@ export function ProgressManager({
     </>
   );
 }
+
+

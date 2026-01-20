@@ -48,3 +48,6 @@ const HowLongToBeatDisplay: React.FC<HowLongToBeatDisplayProps> = ({ data }) => 
 };
 
 export default HowLongToBeatDisplay;
+
+
+

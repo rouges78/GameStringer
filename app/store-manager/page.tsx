@@ -73,25 +73,25 @@ export default function StoreManagerPage() {
   const [steamId, setSteamId] = useState('');
   const [steamLoading, setSteamLoading] = useState(false);
   
-  // Carica credenziali Steam salvate dal backend
+  // Carica Credentials Steam saved dal backend
   useEffect(() => {
-    // Gestisci callback OAuth Epic Games
+    // Handle callback OAuth Epic Games
     const handleEpicOAuthCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const epicCode = urlParams.get('epic_code');
       const epicError = urlParams.get('epic_error');
       
       if (epicError) {
-        console.error('[EPIC OAUTH] Errore OAuth:', epicError);
-        toast.error(`Errore autenticazione Epic Games: ${epicError}`);
-        // Pulisci URL
+        console.error('[EPIC OAUTH] error OAuth:', epicError);
+        toast.error(`error authentication Epic Games: ${epicError}`);
+        // Clean URL
         window.history.replaceState({}, document.title, window.location.pathname);
         return;
       }
       
       if (epicCode) {
         console.log('[EPIC OAUTH] Authorization code ricevuto:', epicCode);
-        toast.info('🔄 Completamento autenticazione Epic Games...');
+        toast.info('🔄 Completamento authentication Epic Games...');
         
         try {
           const result = await invoke('exchange_epic_oauth_code', { authorizationCode: epicCode });
@@ -100,7 +100,7 @@ export default function StoreManagerPage() {
           if (result && result.access_token) {
             toast.success('✅ Epic Games autenticato con successo!');
             
-            // Aggiorna stato connessione
+            // Aggiorna stato connection
             setStoreStatuses(prev => ({
               ...prev,
               epic_games: {
@@ -112,23 +112,23 @@ export default function StoreManagerPage() {
               }
             }));
             
-            // Prova a caricare i giochi
+            // Try a caricare i games
             try {
               await invoke('scan_games');
-              toast.success('Libreria aggiornata con i giochi Epic!');
+              toast.success('library updated con i games Epic!');
             } catch (scanError) {
-              console.error('Errore aggiornamento libreria:', scanError);
-              toast.warning('Epic Games connesso, ma errore nell\'aggiornamento libreria.');
+              console.error('error update library:', scanError);
+              toast.warning('Epic Games connected, ma error nell\'update library.');
             }
           } else {
-            toast.error('❌ Errore nel completamento autenticazione Epic Games');
+            toast.error('❌ error nel completamento authentication Epic Games');
           }
         } catch (error) {
-          console.error('[EPIC OAUTH] Errore exchange token:', error);
-          toast.error('❌ Errore nel completamento autenticazione Epic Games');
+          console.error('[EPIC OAUTH] error exchange token:', error);
+          toast.error('❌ error nel completamento authentication Epic Games');
         }
         
-        // Pulisci URL
+        // Clean URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     };
@@ -141,7 +141,7 @@ export default function StoreManagerPage() {
         if (credentials && typeof credentials === 'object') {
           setSteamApiKey(credentials.api_key || '');
           setSteamId(credentials.steam_id || '');
-          console.log('Credenziali Steam caricate dal backend');
+          console.log('Credentials Steam loaded dal backend');
         }
       } catch (error) {
         // Silently handle missing credentials - it's normal when not configured yet
@@ -152,13 +152,13 @@ export default function StoreManagerPage() {
     // Only load credentials if they might exist (avoid error on first run)
     loadSteamCredentials();
 
-    // Carica credenziali Epic Games salvate  
+    // Carica Credentials Epic Games saved  
     const loadEpicCredentials = async () => {
       try {
         const credentials = await invoke('load_epic_credentials');
         if (credentials && typeof credentials === 'object') {
           setEpicUsername(credentials.username || '');
-          console.log('Credenziali Epic caricate dal backend');
+          console.log('Credentials Epic loaded dal backend');
         }
       } catch (error) {
         // Silently handle missing credentials - it's normal when not configured yet
@@ -173,13 +173,13 @@ export default function StoreManagerPage() {
     
     loadEpicCredentials();
     
-    // Carica credenziali itch.io salvate  
+    // Carica Credentials itch.io saved  
     const loadItchioCredentials = async () => {
       try {
         const credentials = await invoke('load_itchio_credentials');
         if (credentials && typeof credentials === 'object') {
-          console.log('Credenziali itch.io caricate dal backend');
-          // Imposta lo stato come connesso se ci sono credenziali valide
+          console.log('Credentials itch.io loaded dal backend');
+          // Set lo stato come connected se ci sono Credentials valide
           setStoreStatuses(prev => ({
             ...prev,
             itch_io: {
@@ -198,13 +198,13 @@ export default function StoreManagerPage() {
     
     loadItchioCredentials();
     
-    // Carica credenziali Ubisoft Connect salvate  
+    // Carica Credentials Ubisoft Connect saved  
     const loadUbisoftCredentials = async () => {
       try {
         const credentials = await invoke('load_ubisoft_credentials');
         if (credentials && typeof credentials === 'object') {
-          console.log('Credenziali Ubisoft Connect caricate dal backend');
-          // Imposta lo stato come connesso se ci sono credenziali valide
+          console.log('Credentials Ubisoft Connect loaded dal backend');
+          // Set lo stato come connected se ci sono Credentials valide
           setStoreStatuses(prev => ({
             ...prev,
             ubisoft_connect: {
@@ -223,13 +223,13 @@ export default function StoreManagerPage() {
     
     loadUbisoftCredentials();
     
-    // Carica credenziali Rockstar Games salvate  
+    // Carica Credentials Rockstar Games saved  
     const loadRockstarCredentials = async () => {
       try {
         const credentials = await invoke('load_rockstar_credentials');
         if (credentials && typeof credentials === 'object') {
-          console.log('Credenziali Rockstar Games caricate dal backend');
-          // Imposta lo stato come connesso se ci sono credenziali valide
+          console.log('Credentials Rockstar Games loaded dal backend');
+          // Set lo stato come connected se ci sono Credentials valide
           setStoreStatuses(prev => ({
             ...prev,
             rockstar: {
@@ -248,13 +248,13 @@ export default function StoreManagerPage() {
     
     loadRockstarCredentials();
     
-    // Carica credenziali Origin/EA salvate  
+    // Carica Credentials Origin/EA saved  
     const loadOriginCredentials = async () => {
       try {
         const credentials = await invoke('load_origin_credentials');
         if (credentials && typeof credentials === 'object') {
-          console.log('Credenziali Origin/EA caricate dal backend');
-          // Imposta lo stato come connesso se ci sono credenziali valide
+          console.log('Credentials Origin/EA loaded dal backend');
+          // Set lo stato come connected se ci sono Credentials valide
           setStoreStatuses(prev => ({
             ...prev,
             origin: {
@@ -273,13 +273,13 @@ export default function StoreManagerPage() {
     
     loadOriginCredentials();
     
-    // Carica credenziali Battle.net salvate  
+    // Carica Credentials Battle.net saved  
     const loadBattlenetCredentials = async () => {
       try {
         const credentials = await invoke('load_battlenet_credentials');
         if (credentials && typeof credentials === 'object') {
-          console.log('Credenziali Battle.net caricate dal backend');
-          // Imposta lo stato come connesso se ci sono credenziali valide
+          console.log('Credentials Battle.net loaded dal backend');
+          // Set lo stato come connected se ci sono Credentials valide
           setStoreStatuses(prev => ({
             ...prev,
             battle_net: {
@@ -298,13 +298,13 @@ export default function StoreManagerPage() {
     
     loadBattlenetCredentials();
     
-    // Carica credenziali GOG salvate  
+    // Carica Credentials GOG saved  
     const loadGogCredentials = async () => {
       try {
         const credentials = await invoke('load_gog_credentials');
         if (credentials && typeof credentials === 'object') {
-          console.log('Credenziali GOG caricate dal backend');
-          // Imposta lo stato come connesso se ci sono credenziali valide
+          console.log('Credentials GOG loaded dal backend');
+          // Set lo stato come connected se ci sono Credentials valide
           setStoreStatuses(prev => ({
             ...prev,
             gog: {
@@ -339,28 +339,28 @@ export default function StoreManagerPage() {
               connected: true,
               loading: false,
               manuallyDisconnected: false,
-              gamesCount: 81, // Numero approssimativo, verrà aggiornato
+              gamesCount: 81, // Numero approssimativo, verrà updated
               lastChecked: new Date(),
               error: undefined
             }
           }));
         }
       } catch (error) {
-        console.log('Errore controllo Legendary:', error);
+        console.log('error controllo Legendary:', error);
       }
     };
     
     checkLegendaryStatus();
   }, []);
   
-  // Funzione per tentare auto-connessione Steam
+  // Funzione per tentare auto-connection Steam
   const attemptSteamAutoConnect = async () => {
     try {
-      console.log('Tentativo auto-connessione Steam...');
+      console.log('Tentativo auto-connection Steam...');
       const result = await invoke('auto_connect_steam');
       
       if (result && typeof result === 'object') {
-        // Auto-connessione riuscita
+        // Auto-connection riuscita
         setStoreStatuses(prev => ({
           ...prev,
           steam: {
@@ -374,23 +374,23 @@ export default function StoreManagerPage() {
           }
         }));
         
-        console.log('Steam auto-connesso:', result.message);
+        console.log('Steam auto-connected:', result.message);
         
-        // Trigger automatico aggiornamento libreria anche per auto-connessione
+        // Trigger automatico update library anche per auto-connection
         try {
-          console.log('🔄 Aggiornamento automatico libreria dopo auto-connessione Steam...');
+          console.log('🔄 update automatico library dopo auto-connection Steam...');
           await invoke('scan_games');
-          console.log('✅ Libreria aggiornata automaticamente!');
+          console.log('✅ library updated automaticamente!');
         } catch (scanError) {
-          console.error('Errore aggiornamento libreria auto:', scanError);
-          // Non mostrare toast per auto-connessione, è silenzioso
+          console.error('error update library auto:', scanError);
+          // Do not show toast per auto-connection, è silenzioso
         }
         
         return true;
       }
     } catch (error) {
-      console.log('Auto-connessione Steam fallita:', error);
-      // Non mostrare errore all'utente, è normale se non ci sono credenziali
+      console.log('Auto-connection Steam fallita:', error);
+      // Do not show error all'utente, è normale se non ci sono Credentials
     }
     return false;
   };
@@ -409,11 +409,11 @@ export default function StoreManagerPage() {
     setGlobalLoading(true);
 
     try {
-      // Tenta sempre l'auto-connessione Steam all'avvio
-      // Questo legge le credenziali salvate (anche da Impostazioni)
-      console.log('[STORE-MANAGER] Tentativo auto-connessione Steam...');
+      // Tenta sempre l'auto-connection Steam all'avvio
+      // Questo legge le Credentials saved (anche da Impostazioni)
+      console.log('[STORE-MANAGER] Tentativo auto-connection Steam...');
       
-      // Prima imposta tutti gli store come non connessi (tranne Steam che è in loading)
+      // First imposta tutti gli store come non connessi (tranne Steam che è in loading)
       const baseStatuses: StoreStatuses = {};
       for (const store of stores) {
         baseStatuses[store.id] = {
@@ -425,11 +425,11 @@ export default function StoreManagerPage() {
       }
       setStoreStatuses(baseStatuses);
       
-      // Ora tenta l'auto-connessione Steam
+      // Ora tenta l'auto-connection Steam
       const steamAutoConnected = await attemptSteamAutoConnect();
-      console.log('[STORE-MANAGER] Steam auto-connesso:', steamAutoConnected);
+      console.log('[STORE-MANAGER] Steam auto-connected:', steamAutoConnected);
       
-      // Se Steam non si è connesso, aggiorna lo stato per rimuovere il loading
+      // Se Steam non si è connected, aggiorna lo stato per rimuovere il loading
       if (!steamAutoConnected) {
         setStoreStatuses(prev => ({
           ...prev,
@@ -441,8 +441,8 @@ export default function StoreManagerPage() {
       }
       
     } catch (error) {
-      console.error("Errore in getInitialStatuses:", error);
-      // Non mostrare toast di errore al Loading...iziale
+      console.error("error in getInitialStatuses:", error);
+      // Do not show toast di error al Loading...iziale
     } finally {
       setGlobalLoading(false);
     }
@@ -500,15 +500,15 @@ export default function StoreManagerPage() {
         },
       }));
 
-      // Gestione silenziosa degli errori comuni (credenziali mancanti)
+      // Gestione silenziosa degli errori comuni (Credentials mancanti)
       if (!result.connected && result.error) {
-        const isCredentialError = result.error.includes('credenziali') || 
+        const isCredentialError = result.error.includes('Credentials') || 
                                  result.error.includes('credentials') ||
                                  result.error.includes('Nessuna') ||
                                  result.error.includes('salvata');
         
         if (!isCredentialError) {
-          // Solo mostra toast per errori reali, non per credenziali mancanti
+          // Only show toast per errori reali, non per Credentials mancanti
           toast.info(`${store.name}: ${result.error}`);
         }
       }
@@ -517,7 +517,7 @@ export default function StoreManagerPage() {
       console.debug(`Test ${store.name} fallito:`, error.message);
       
       // Gestione silenziosa per errori comuni
-      const isCommonError = error.message?.includes('credenziali') || 
+      const isCommonError = error.message?.includes('Credentials') || 
                            error.message?.includes('credentials') ||
                            error.message?.includes('Nessuna') ||
                            error.message?.includes('salvata');
@@ -528,14 +528,14 @@ export default function StoreManagerPage() {
           ...prev[storeId],
           connected: false,
           loading: false,
-          error: isCommonError ? 'Credenziali non configurate' : (error.message || 'Errore di connessione'),
+          error: isCommonError ? 'Credentials non configurate' : (error.message || 'error di connection'),
           lastChecked: new Date(),
         },
       }));
 
-      // Non mostrare toast per errori comuni di credenziali mancanti
+      // Do not show toast per errori comuni di Credentials mancanti
       if (!isCommonError) {
-        toast.error(`Errore test ${store.name}: ${error.message}`);
+        toast.error(`error test ${store.name}: ${error.message}`);
       }
     } finally {
       setIsTestingInProgress(false);
@@ -562,10 +562,10 @@ export default function StoreManagerPage() {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      toast.success("Stato di tutti gli store aggiornato.");
+      toast.success("Stato di tutti gli store updated.");
     } catch (error) {
-      toast.error("Errore durante l'aggiornamento degli store.");
-      console.error("Errore in refreshAllStores:", error);
+      toast.error("error durante l'update degli store.");
+      console.error("error in refreshAllStores:", error);
     } finally {
       setGlobalLoading(false);
     }
@@ -615,11 +615,11 @@ export default function StoreManagerPage() {
 
         toast.info(`Avvio collegamento per ${store.name}...`);
         
-        // Testa la connessione e aggiorna lo stato
+        // Testa la connection e aggiorna lo stato
         try {
           const result = await invoke(store.testCommand);
           
-          // Se il test è riuscito, considera lo store connesso
+          // Se il test è riuscito, considera lo store connected
           if (result && typeof result === 'string' && (
             result.includes('riuscita') || 
             result.includes('successful') ||
@@ -636,7 +636,7 @@ export default function StoreManagerPage() {
                 error: undefined
               }
             }));
-            toast.success(`${store.name} connesso con successo!`);
+            toast.success(`${store.name} connected con successo!`);
           } else {
             setStoreStatuses(prev => ({
               ...prev,
@@ -644,14 +644,14 @@ export default function StoreManagerPage() {
                 ...prev[storeId],
                 connected: false,
                 loading: false,
-                error: 'Connessione non riuscita'
+                error: 'connection non riuscita'
               }
             }));
             toast.error(`Impossibile connettersi a ${store.name}`);
           }
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          // Non mostrare come errore se è semplicemente "non installato"
+          // Do not show come error se è semplicemente "non installato"
           if (errorMsg.includes('non installato') || errorMsg.includes('non trovato')) {
             console.info(`ℹ️ ${store.name}: ${errorMsg}`);
             setStoreStatuses(prev => ({
@@ -665,24 +665,24 @@ export default function StoreManagerPage() {
             }));
             toast.info(`${store.name} non è installato su questo PC`);
           } else {
-            console.error(`Errore connessione ${store.name}:`, error);
+            console.error(`error connection ${store.name}:`, error);
             setStoreStatuses(prev => ({
               ...prev,
               [storeId]: {
                 ...prev[storeId],
                 connected: false,
                 loading: false,
-                error: 'Errore di connessione'
+                error: 'error di connection'
               }
             }));
-            toast.error(`Errore durante la connessione a ${store.name}`);
+            toast.error(`error durante la connection a ${store.name}`);
           }
         }
         break;
     }
   };
 
-  // Funzione per gestire la connessione Steam dal modal
+  // Funzione per gestire la connection Steam dal modal
   const handleSteamConnect = async () => {
     if (!steamApiKey.trim()) {
       toast.error('API Key richiesta per Steam');
@@ -696,7 +696,7 @@ export default function StoreManagerPage() {
 
     setSteamLoading(true);
     
-    // Imposta loading nello stato
+    // Set loading nello stato
     setStoreStatuses(prev => ({
       ...prev,
       steam: { 
@@ -707,14 +707,14 @@ export default function StoreManagerPage() {
     }));
 
     try {
-      // Testa la connessione con le credenziali fornite
+      // Testa la connection con le Credentials fornite
       const result = await invoke('get_steam_games', { 
         apiKey: steamApiKey.trim(), 
         steamId: steamId.trim(), 
         forceRefresh: true 
       });
       
-      // Se arriva qui, la connessione è riuscita
+      // Se arriva qui, la connection è riuscita
       setStoreStatuses(prev => ({
         ...prev,
         steam: {
@@ -728,9 +728,9 @@ export default function StoreManagerPage() {
         }
       }));
       
-      toast.success(`Steam connesso con successo! ${Array.isArray(result) ? result.length : 0} giochi trovati.`);
+      toast.success(`Steam connected con successo! ${Array.isArray(result) ? result.length : 0} games trovati.`);
       
-      // Salva credenziali e stato nel backend
+      // Salva Credentials e stato nel backend
       try {
         await invoke('save_steam_credentials', { 
           apiKey: steamApiKey.trim(), 
@@ -743,29 +743,29 @@ export default function StoreManagerPage() {
           error: null
         });
         
-        console.log('Credenziali e stato Steam salvati nel backend');
+        console.log('Credentials e stato Steam salvati nel backend');
       } catch (saveError) {
-        console.error('Errore salvataggio backend:', saveError);
+        console.error('error salvataggio backend:', saveError);
       }
       
-      // Trigger automatico aggiornamento libreria
+      // Trigger automatico update library
       try {
-        console.log('🔄 Aggiornamento automatico libreria dopo connessione Steam...');
-        toast.info('Aggiornamento libreria in corso...');
+        console.log('🔄 update automatico library dopo connection Steam...');
+        toast.info('update library in corso...');
         
         await invoke('scan_games');
-        console.log('✅ Libreria aggiornata con successo!');
-        toast.success('Libreria aggiornata! I tuoi giochi Steam sono ora disponibili.');
+        console.log('✅ library updated con successo!');
+        toast.success('library updated! I tuoi games Steam sono ora disponibili.');
       } catch (scanError) {
-        console.error('Errore aggiornamento libreria:', scanError);
-        toast.warning('Steam connesso, ma errore nell\'aggiornamento libreria. Vai su Library e clicca "Scansiona Giochi".');
+        console.error('error update library:', scanError);
+        toast.warning('Steam connected, ma error nell\'update library. Vai su Library e clicca "Scansiona games".');
       }
       
       // Chiudi il modal ma mantieni i campi per riconnessioni future
       setShowSteamModal(false);
       
     } catch (error) {
-      console.error('Errore connessione Steam:', error);
+      console.error('error connection Steam:', error);
       setStoreStatuses(prev => ({
         ...prev,
         steam: {
@@ -775,7 +775,7 @@ export default function StoreManagerPage() {
           error: 'Error: Verifica API Key e Steam ID'
         }
       }));
-      toast.error('Errore connessione Steam. Verifica API Key e Steam ID.');
+      toast.error('error connection Steam. Verifica API Key e Steam ID.');
     } finally {
       setSteamLoading(false);
     }
@@ -785,13 +785,13 @@ export default function StoreManagerPage() {
   const handleSteamSubmit = async (apiKey: string, steamId: string) => {
     setModalLoading(true);
     try {
-      // Prima salva le credenziali Steam
+      // First salva le Credentials Steam
       await invoke('save_steam_credentials', {
         apiKey: apiKey,
         steamId: steamId
       });
       
-      // Poi fa auto-connect per testare e ottenere i giochi
+      // Poi fa auto-connect per testare e ottenere i games
       const result = await invoke('auto_connect_steam');
       
       setStoreStatuses(prev => ({
@@ -807,22 +807,22 @@ export default function StoreManagerPage() {
         }
       }));
       
-      toast.success(`Steam connesso con successo! ${result.games_count || 0} giochi trovati.`);
+      toast.success(`Steam connected con successo! ${result.games_count || 0} games trovati.`);
       
-      // Aggiorna automaticamente la libreria
+      // Aggiorna automaticamente la library
       try {
         await invoke('scan_games');
-        toast.success('Libreria aggiornata! I tuoi giochi Steam sono ora disponibili.');
+        toast.success('library updated! I tuoi games Steam sono ora disponibili.');
       } catch (scanError) {
-        console.error('Errore aggiornamento libreria:', scanError);
-        toast.warning('Steam connesso, ma errore nell\'aggiornamento libreria. Vai su Library e clicca "Scansiona Giochi".');
+        console.error('error update library:', scanError);
+        toast.warning('Steam connected, ma error nell\'update library. Vai su Library e clicca "Scansiona games".');
       }
       
     } catch (error: any) {
       const errMsg = String(error);
-      // Non loggare errori di credenziali corrotte - già gestiti
-      if (!errMsg.includes('Credenziali corrotte') && !errMsg.includes('Riconnettiti')) {
-        console.error('Errore connessione Steam:', error);
+      // Non loggare errori di Credentials corrotte - già gestiti
+      if (!errMsg.includes('Credentials corrotte') && !errMsg.includes('Riconnettiti')) {
+        console.error('error connection Steam:', error);
       }
       setStoreStatuses(prev => ({
         ...prev,
@@ -830,10 +830,10 @@ export default function StoreManagerPage() {
           ...prev.steam,
           connected: false,
           loading: false,
-          error: errMsg.includes('Credenziali corrotte') ? 'Riconnettiti a Steam' : 'Error: Verifica Steam ID'
+          error: errMsg.includes('Credentials corrotte') ? 'Riconnettiti a Steam' : 'Error: Verifica Steam ID'
         }
       }));
-      throw error; // Rilancia l'errore per far gestire al modal
+      throw error; // Rilancia l'error per far gestire al modal
     } finally {
       setModalLoading(false);
     }
@@ -843,7 +843,7 @@ export default function StoreManagerPage() {
   const handleItchioSubmit = async (apiKey: string) => {
     setModalLoading(true);
     try {
-      // Implementa la logica di connessione itch.io
+      // Implementa la logica di connection itch.io
       const result = await invoke('connect_itchio', { apiKey });
       
       setStoreStatuses(prev => ({
@@ -859,19 +859,19 @@ export default function StoreManagerPage() {
         }
       }));
       
-      toast.success(`itch.io connesso con successo! ${result.games_count || 0} giochi trovati.`);
+      toast.success(`itch.io connected con successo! ${result.games_count || 0} games trovati.`);
       
-      // Aggiorna automaticamente la libreria
+      // Aggiorna automaticamente la library
       try {
         await invoke('scan_games');
-        toast.success('Libreria aggiornata! I tuoi giochi itch.io sono ora disponibili.');
+        toast.success('library updated! I tuoi games itch.io sono ora disponibili.');
       } catch (scanError) {
-        console.error('Errore aggiornamento libreria:', scanError);
-        toast.warning('itch.io connesso, ma errore nell\'aggiornamento libreria.');
+        console.error('error update library:', scanError);
+        toast.warning('itch.io connected, ma error nell\'update library.');
       }
       
     } catch (error) {
-      console.error('Errore connessione itch.io:', error);
+      console.error('error connection itch.io:', error);
       setStoreStatuses(prev => ({
         ...prev,
         itch_io: {
@@ -881,7 +881,7 @@ export default function StoreManagerPage() {
           error: 'Error: Verifica API Key'
         }
       }));
-      throw error; // Rilancia l'errore per far gestire al modal
+      throw error; // Rilancia l'error per far gestire al modal
     } finally {
       setModalLoading(false);
     }
@@ -919,29 +919,29 @@ export default function StoreManagerPage() {
       }));
       
       const storeName = stores.find(s => s.id === currentGenericProvider)?.name || currentGenericProvider;
-      toast.success(`${storeName} connesso con successo! ${result.games_count || 0} giochi trovati.`);
+      toast.success(`${storeName} connected con successo! ${result.games_count || 0} games trovati.`);
       
-      // Aggiorna automaticamente la libreria
+      // Aggiorna automaticamente la library
       try {
         await invoke('scan_games');
-        toast.success(`Libreria aggiornata! I tuoi giochi ${storeName} sono ora disponibili.`);
+        toast.success(`library updated! I tuoi games ${storeName} sono ora disponibili.`);
       } catch (scanError) {
-        console.error('Errore aggiornamento libreria:', scanError);
-        toast.warning(`${storeName} connesso, ma errore nell\'aggiornamento libreria.`);
+        console.error('error update library:', scanError);
+        toast.warning(`${storeName} connected, ma error nell\'update library.`);
       }
       
     } catch (error) {
-      console.error(`Errore connessione ${currentGenericProvider}:`, error);
+      console.error(`error connection ${currentGenericProvider}:`, error);
       setStoreStatuses(prev => ({
         ...prev,
         [currentGenericProvider]: {
           ...prev[currentGenericProvider],
           connected: false,
           loading: false,
-          error: 'Error: Verifica credenziali'
+          error: 'Error: Verifica Credentials'
         }
       }));
-      throw error; // Rilancia l'errore per far gestire al modal
+      throw error; // Rilancia l'error per far gestire al modal
     } finally {
       setModalLoading(false);
     }
@@ -951,13 +951,13 @@ export default function StoreManagerPage() {
   const handleEpicSubmit = async (username: string, password: string) => {
     setModalLoading(true);
     try {
-      // Salva le credenziali Epic nel backend
+      // Salva le Credentials Epic nel backend
       await invoke('save_epic_credentials', {
         username,
         password
       });
       
-      // Testa la connessione Epic
+      // Testa la connection Epic
       const result = await invoke('get_epic_games_web');
       
       if (result.success && result.games.length > 0) {
@@ -974,15 +974,15 @@ export default function StoreManagerPage() {
           }
         }));
         
-        toast.success(`Epic Games connesso! ${result.games.length} giochi trovati.`);
+        toast.success(`Epic Games connected! ${result.games.length} games trovati.`);
         
-        // Aggiorna automaticamente la libreria
+        // Aggiorna automaticamente la library
         try {
           await invoke('scan_games');
-          toast.success('Libreria aggiornata con i giochi Epic!');
+          toast.success('library updated con i games Epic!');
         } catch (scanError) {
-          console.error('Errore aggiornamento libreria:', scanError);
-          toast.warning('Epic Games connesso, ma errore nell\'aggiornamento libreria.');
+          console.error('error update library:', scanError);
+          toast.warning('Epic Games connected, ma error nell\'update library.');
         }
       } else {
         setStoreStatuses(prev => ({
@@ -997,11 +997,11 @@ export default function StoreManagerPage() {
             error: 'No game trovato'
           }
         }));
-        toast.warning('Epic Games connesso ma No game trovato nella libreria');
+        toast.warning('Epic Games connected ma No game trovato nella library');
       }
       
     } catch (error) {
-      console.error('Errore connessione Epic:', error);
+      console.error('error connection Epic:', error);
       setStoreStatuses(prev => ({
         ...prev,
         epic_games: {
@@ -1011,7 +1011,7 @@ export default function StoreManagerPage() {
           error: 'Error: Verifica username e password'
         }
       }));
-      throw error; // Rilancia l'errore per far gestire al modal
+      throw error; // Rilancia l'error per far gestire al modal
     } finally {
       setModalLoading(false);
     }
@@ -1019,13 +1019,13 @@ export default function StoreManagerPage() {
 
   const handleEpicWebSearch = async () => {
     try {
-      toast.info('🌐 Ricerca giochi Epic Games online...');
+      toast.info('🌐 Ricerca games Epic Games online...');
       
       const result = await invoke('get_epic_games_web');
       console.log('Epic Web Search Result:', result);
       
       if (result.success && result.games.length > 0) {
-        toast.success(`🎮 Trovati ${result.games.length} giochi Epic via web!`);
+        toast.success(`🎮 Trovati ${result.games.length} games Epic via web!`);
         
         // Aggiorna il conteggio Epic Games
         setStoreStatuses(prev => ({
@@ -1039,9 +1039,9 @@ export default function StoreManagerPage() {
           }
         }));
         
-        // Mostra alcuni giochi trovati
+        // Mostra alcuni games trovati
         const gamesList = result.games.slice(0, 5).join(', ');
-        toast.info(`Giochi trovati: ${gamesList}${result.games.length > 5 ? '...' : ''}`);
+        toast.info(`games trovati: ${gamesList}${result.games.length > 5 ? '...' : ''}`);
         
       } else {
         toast.warning('No game Epic trovato online. Prova metodi diversi.');
@@ -1049,8 +1049,8 @@ export default function StoreManagerPage() {
       }
       
     } catch (error) {
-      console.error('Errore ricerca Epic Games web:', error);
-      toast.error('Errore durante la ricerca online Epic Games');
+      console.error('error ricerca Epic Games web:', error);
+      toast.error('error durante la ricerca online Epic Games');
     }
   };
 
@@ -1062,9 +1062,9 @@ export default function StoreManagerPage() {
 
     setEpicLoading(true);
     try {
-      toast.info('🔐 Connessione a Epic Games...');
+      toast.info('🔐 connection a Epic Games...');
       
-      // Salva le credenziali Epic nel backend
+      // Salva le Credentials Epic nel backend
       const saveResult = await invoke('save_epic_credentials', {
         username: epicUsername,
         password: epicPassword
@@ -1072,11 +1072,11 @@ export default function StoreManagerPage() {
       
       console.log('Epic credentials saved:', saveResult);
       
-      // Testa la connessione Epic
+      // Testa la connection Epic
       const result = await invoke('get_epic_games_web');
       
       if (result.success && result.games.length > 0) {
-        toast.success(`🎮 Epic Games connesso! ${result.games.length} giochi trovati.`);
+        toast.success(`🎮 Epic Games connected! ${result.games.length} games trovati.`);
         
         // Aggiorna lo stato
         setStoreStatuses(prev => ({
@@ -1090,23 +1090,23 @@ export default function StoreManagerPage() {
           }
         }));
         
-        console.log('Credenziali e stato Epic salvati nel backend');
+        console.log('Credentials e stato Epic salvati nel backend');
         
-        // Aggiorna automaticamente la libreria
-        console.log('🔄 Aggiornamento automatico libreria dopo connessione Epic...');
+        // Aggiorna automaticamente la library
+        console.log('🔄 update automatico library dopo connection Epic...');
         try {
           const libraryResult = await invoke('scan_games');
-          console.log('✅ Libreria aggiornata con successo!', libraryResult);
-          toast.success('📚 Libreria aggiornata con i giochi Epic!');
+          console.log('✅ library updated con successo!', libraryResult);
+          toast.success('📚 library updated con i games Epic!');
         } catch (libraryError) {
-          console.warn('Errore aggiornamento libreria:', libraryError);
+          console.warn('error update library:', libraryError);
         }
         
         // Chiudi il modal
         setShowEpicModal(false);
         
       } else {
-        toast.warning('Epic Games connesso ma No game trovato nella libreria');
+        toast.warning('Epic Games connected ma No game trovato nella library');
         
         setStoreStatuses(prev => ({
           ...prev,
@@ -1121,7 +1121,7 @@ export default function StoreManagerPage() {
       }
       
     } catch (error) {
-      console.error('Errore connessione Epic:', error);
+      console.error('error connection Epic:', error);
       setStoreStatuses(prev => ({
         ...prev,
         epic_games: {
@@ -1131,7 +1131,7 @@ export default function StoreManagerPage() {
           error: 'Error: Verifica username e password'
         }
       }));
-      toast.error('Errore connessione Epic Games. Verifica le credenziali.');
+      toast.error('error connection Epic Games. Verifica le Credentials.');
     } finally {
       setEpicLoading(false);
     }
@@ -1139,30 +1139,30 @@ export default function StoreManagerPage() {
 
   const handleEpicLegendarySearch = async () => {
     try {
-      toast.info('🚀 Epic Games - Ricerca completa libreria...');
+      toast.info('🚀 Epic Games - Ricerca completa library...');
       
-      // Prima verifica lo stato di Legendary
+      // First verifica lo stato di Legendary
       console.log('🔍 Verifica stato Legendary...');
       const legendaryStatus = await invoke('check_legendary_status');
       console.log('Legendary Status:', legendaryStatus);
       setLegendaryStatus(legendaryStatus);
       
       if (!legendaryStatus.installed) {
-        toast.warning('Legendary non installato - Accesso limitato a giochi installati');
-        toast.info(legendaryStatus.install_instructions || 'Installa Legendary per accedere alla libreria Epic Games');
+        toast.warning('Legendary non installato - Accesso limitato a games installati');
+        toast.info(legendaryStatus.install_instructions || 'Installa Legendary per accedere alla library Epic Games');
       } else if (!legendaryStatus.authenticated) {
         toast.warning('Legendary non autenticato - Esegui "legendary auth"');
       } else {
         toast.success(`${legendaryStatus.message}`);
       }
       
-      // Prova a ottenere la libreria Epic Games
-      console.log('🔍 Recupero libreria Epic Games...');
+      // Try a ottenere la library Epic Games
+      console.log('🔍 Recupero library Epic Games...');
       const result = await invoke('get_epic_games_complete');
       console.log('Epic Games Complete Result:', result);
       
       if (result && result.length > 0) {
-        toast.success(`🎮 Trovati ${result.length} giochi Epic Games!`);
+        toast.success(`🎮 Trovati ${result.length} games Epic Games!`);
         
         // Aggiorna il conteggio Epic Games
         setStoreStatuses(prev => ({
@@ -1176,11 +1176,11 @@ export default function StoreManagerPage() {
           }
         }));
         
-        // Mostra alcuni giochi trovati
+        // Mostra alcuni games trovati
         const installedCount = result.filter(game => game.is_installed).length;
         const libraryCount = result.length - installedCount;
         
-        toast.info(`📦 ${installedCount} installati, 📚 ${libraryCount} in libreria`);
+        toast.info(`📦 ${installedCount} installati, 📚 ${libraryCount} in library`);
         
         // Mostra alcuni titoli di esempio
         const sampleGames = result.slice(0, 3).map(game => game.title).join(', ');
@@ -1191,21 +1191,21 @@ export default function StoreManagerPage() {
       } else {
         toast.warning('No game Epic trovato.');
         
-        // Se non trova giochi, prova a suggerire soluzioni
+        // Se non trova games, prova a suggerire soluzioni
         if (!legendaryStatus.installed) {
-          toast.info('💡 Installa Legendary per accedere alla libreria Epic Games');
+          toast.info('💡 Installa Legendary per accedere alla library Epic Games');
         } else if (!legendaryStatus.authenticated) {
-          toast.info('💡 Autentica Legendary con "legendary auth" per accedere alla libreria');
+          toast.info('💡 Autentica Legendary con "legendary auth" per accedere alla library');
         }
       }
       
     } catch (error) {
-      console.error('Errore Epic Games Complete:', error);
-      toast.error('Errore durante la ricerca Epic Games');
+      console.error('error Epic Games Complete:', error);
+      toast.error('error durante la ricerca Epic Games');
       
-      // Fallback: mostra info su Legendary se l'errore è correlato
+      // Fallback: mostra info su Legendary se l'error è correlato
       if (error.toString().includes('legendary') || error.toString().includes('Legendary')) {
-        toast.info('💡 Installa Legendary per accedere alla libreria Epic Games');
+        toast.info('💡 Installa Legendary per accedere alla library Epic Games');
       }
     }
   };
@@ -1223,29 +1223,29 @@ export default function StoreManagerPage() {
     }));
 
     try {
-      toast.info(`Reset credenziali ${store.name} in corso...`);
+      toast.info(`Reset Credentials ${store.name} in corso...`);
       
       // 1. Gestione specifica per Steam (mostra il modal)
       if (storeId === 'steam') {
-        // Prima disconnetti Steam
+        // First disconnetti Steam
         await handleDisconnect(storeId);
         
         // Aspetta un momento
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Mostra il modal per riconnessione
+        // Mostra il modal per riconnection
         setShowSteamModal(true);
-        setSteamApiKey(''); // Pulisci campi
+        setSteamApiKey(''); // Clean campi
         setSteamId('');
         
-        toast.success('Steam resettato! Inserisci nuove credenziali nel modal.');
+        toast.success('Steam resettato! Inserisci nuove Credentials nel modal.');
         return; // Non fare altro per Steam
       }
       
       // 2. Per altri store, disconnetti e ricontrolla
       await handleDisconnect(storeId);
       
-      // 3. Aspetta un momento per assicurarsi che la disconnessione sia completata
+      // 3. Aspetta un momento per assicurarsi che la disconnection sia completata
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 4. Esegui un force refresh del test
@@ -1265,8 +1265,8 @@ export default function StoreManagerPage() {
       toast.success(`${store.name} resettato e ricontrollato!`);
       
     } catch (error) {
-      console.error(`Errore reset ${store.name}:`, error);
-      toast.error(`Errore durante il reset di ${store.name}`);
+      console.error(`error reset ${store.name}:`, error);
+      toast.error(`error durante il reset di ${store.name}`);
       
       setStoreStatuses(prev => ({
         ...prev,
@@ -1305,15 +1305,15 @@ export default function StoreManagerPage() {
           [storeId]: disconnectedStatus
         }));
         
-        // Rimuovi credenziali e stato dal backend
+        // Rimuovi Credentials e stato dal backend
         try {
           await invoke('remove_steam_credentials');
-          console.log('Credenziali Steam rimosse dal backend');
+          console.log('Credentials Steam rimosse dal backend');
         } catch (error) {
-          console.error('Errore rimozione credenziali Steam:', error);
+          console.error('error rimozione Credentials Steam:', error);
         }
         
-        toast.success(`${store.name} disconnesso con successo.`);
+        toast.success(`${store.name} disconnected con successo.`);
         return;
       }
       
@@ -1349,14 +1349,14 @@ export default function StoreManagerPage() {
           loading: false,
           manuallyDisconnected: true,
           gamesCount: 0,
-          error: 'Disconnesso dall\'utente'
+          error: 'Disconnected dall\'utente'
         }
       }));
-      toast.success(`${store.name} disconnesso.`);
+      toast.success(`${store.name} disconnected.`);
 
     } catch (error) {
-      console.error(`Errore disconnessione ${store.name}:`, error);
-      toast.error(`Errore durante la disconnessione di ${store.name}.`);
+      console.error(`error disconnection ${store.name}:`, error);
+      toast.error(`error durante la disconnection di ${store.name}.`);
       // Restore previous state on error
       setStoreStatuses(prev => ({
         ...prev,
@@ -1389,7 +1389,7 @@ export default function StoreManagerPage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-white">Store</h1>
-            <p className="text-xs text-slate-400">Collega i tuoi account per sincronizzare la libreria</p>
+            <p className="text-xs text-slate-400">Collega i tuoi account per sincronizzare la library</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
@@ -1398,7 +1398,7 @@ export default function StoreManagerPage() {
             </div>
             <div className="text-right">
               <span className="text-lg font-bold text-blue-400">{totalGames}</span>
-              <span className="text-xs text-slate-500 ml-1">giochi</span>
+              <span className="text-xs text-slate-500 ml-1">games</span>
             </div>
           </div>
         </div>
@@ -1430,11 +1430,11 @@ export default function StoreManagerPage() {
                       <h3 className="text-sm font-semibold text-white">{status.name}</h3>
                       {status.connected ? (
                         <span className="text-xs text-green-400">
-                          {status.gamesCount ? `${status.gamesCount} giochi` : 'Connesso'}
+                          {status.gamesCount ? `${status.gamesCount} games` : 'connected'}
                         </span>
                       ) : (
                         <span className="text-xs text-slate-500">
-                          {status.loading ? 'Verifica...' : 'Non connesso'}
+                          {status.loading ? 'Verifica...' : 'Non connected'}
                         </span>
                       )}
                     </div>
@@ -1530,3 +1530,6 @@ export default function StoreManagerPage() {
     </div>
   );
 }
+
+
+

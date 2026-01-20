@@ -542,3 +542,6 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
 }
 
 export default GlossaryManager;
+
+
+

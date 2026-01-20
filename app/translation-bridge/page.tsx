@@ -91,7 +91,7 @@ export default function TranslationBridgePage() {
         if (ok) {
           setSuccess('Translation Bridge avviato');
         } else {
-          setError('Errore avvio Translation Bridge');
+          setError('error avvio Translation Bridge');
         }
       }
       await refreshStats();
@@ -171,7 +171,7 @@ export default function TranslationBridgePage() {
       }
       
       const count = await translationBridge.loadTranslations(sourceLang, targetLang, translations);
-      setSuccess(`Caricate ${count} traduzioni`);
+      setSuccess(`loaded ${count} traduzioni`);
       setBulkTranslations('');
       await refreshStats();
     } catch (e) {
@@ -468,7 +468,7 @@ World=Mondo`}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Risultato</Label>
+                    <Label>result</Label>
                     <Input
                       value={testResult ?? ''}
                       readOnly
@@ -612,3 +612,6 @@ World=Mondo`}
     </div>
   );
 }
+
+
+

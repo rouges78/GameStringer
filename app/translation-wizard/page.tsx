@@ -72,7 +72,7 @@ export default function TranslationWizardPage() {
   
   // Error boundary effect
   useEffect(() => {
-    const handleError = (event: ErrorEvent) => {
+    const handleError = (event: errorvent) => {
       console.error('[TranslationWizard] Render error:', event.error);
       setRenderError(event.message);
     };
@@ -148,7 +148,7 @@ export default function TranslationWizardPage() {
       }
     } catch (error) {
       console.error('Error loading games:', error);
-      toast({ title: 'Errore', description: 'Impossibile caricare i giochi', variant: 'destructive' });
+      toast({ title: 'error', description: 'Impossibile caricare i games', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -181,12 +181,12 @@ export default function TranslationWizardPage() {
       }
 
       if (!installPath) {
-        throw new Error('Percorso di installazione non trovato. Assicurati che il gioco sia installato.');
+        throw new Error('Percorso di installazione non trovato. Assicurati che il game sia installato.');
       }
 
       // Step 2: Detect game engine
       setAnalysisProgress(25);
-      setAnalysisStatus('Rilevamento engine di gioco...');
+      setAnalysisStatus('Rilevamento engine di game...');
       const engine = await detectGameEngine(installPath);
 
       // Step 3: Scan for localization files
@@ -213,11 +213,11 @@ export default function TranslationWizardPage() {
 
       if (analyzedFiles.length > 0 && analyzedFiles.some(f => f.type !== 'asset' && f.type !== 'unknown')) {
         recommendedMethod = 'file';
-        recommendation = `Trovati ${analyzedFiles.length} file di localizzazione accessibili. Puoi tradurre direttamente i file e sostituirli nel gioco.`;
+        recommendation = `Trovati ${analyzedFiles.length} file di localizzazione accessibili. Puoi tradurre direttamente i file e sostituirli nel game.`;
         difficulty = 'easy';
       } else if (engine === 'Unity' || engine === 'Unreal') {
         recommendedMethod = 'bridge';
-        recommendation = `Gioco ${engine} con asset compilati. Usa Translation Bridge per tradurre i testi in tempo reale senza modificare i file.`;
+        recommendation = `game ${engine} con asset compilati. Usa Translation Bridge per tradurre i testi in tempo reale senza modificare i file.`;
         difficulty = 'medium';
       } else {
         recommendedMethod = 'manual';
@@ -226,7 +226,7 @@ export default function TranslationWizardPage() {
       }
 
       if (hasItalian) {
-        recommendation = '✅ Il gioco supporta già l\'italiano! Puoi comunque migliorare la traduzione esistente.';
+        recommendation = '✅ Il game supporta già l\'italiano! Puoi comunque migliorare la traduzione esistente.';
         difficulty = 'easy';
       }
 
@@ -255,8 +255,8 @@ export default function TranslationWizardPage() {
     } catch (error) {
       console.error('Analysis error:', error);
       toast({ 
-        title: 'Errore analisi', 
-        description: error instanceof Error ? error.message : 'Errore durante l\'analisi',
+        title: 'error analisi', 
+        description: error instanceof Error ? error.message : 'error durante l\'analisi',
         variant: 'destructive' 
       });
       setStep('select-game');
@@ -504,7 +504,7 @@ export default function TranslationWizardPage() {
     } catch (error) {
       console.error('Error reading file:', error);
       toast({
-        title: 'Errore',
+        title: 'error',
         description: 'Impossibile leggere il file',
         variant: 'destructive'
       });
@@ -547,7 +547,7 @@ export default function TranslationWizardPage() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
         <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-6 max-w-md">
-          <h2 className="text-red-400 font-bold mb-2">Errore di rendering</h2>
+          <h2 className="text-red-400 font-bold mb-2">error di rendering</h2>
           <p className="text-slate-300 text-sm">{renderError}</p>
           <Button className="mt-4" onClick={() => window.location.reload()}>
             Ricarica pagina
@@ -571,7 +571,7 @@ export default function TranslationWizardPage() {
             </h1>
           </div>
           <p className="text-slate-400 text-sm">
-            Analizza automaticamente i giochi e scopri come tradurli
+            Analizza automaticamente i games e scopri come tradurli
           </p>
         </div>
 
@@ -593,7 +593,7 @@ export default function TranslationWizardPage() {
                     Select a game
                   </CardTitle>
                   <CardDescription>
-                    Scegli il gioco che vuoi tradurre dalla tua libreria
+                    Scegli il game che vuoi tradurre dalla tua library
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -624,7 +624,7 @@ export default function TranslationWizardPage() {
                             <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shrink-0">
                               <FileText className="h-4 w-4 text-purple-400" />
                             </div>
-                            {/* Info gioco */}
+                            {/* Info game */}
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white text-sm truncate">{game.title}</p>
                               <p className="text-[10px] text-slate-500 truncate">
@@ -872,7 +872,7 @@ export default function TranslationWizardPage() {
                   onClick={() => { setStep('select-game'); setAnalysisResult(null); }}
                   className="border-slate-600"
                 >
-                  ← Scegli altro gioco
+                  ← Scegli altro game
                 </Button>
                 
                 <div className="flex items-center gap-3">
@@ -905,3 +905,6 @@ export default function TranslationWizardPage() {
     </div>
   );
 }
+
+
+

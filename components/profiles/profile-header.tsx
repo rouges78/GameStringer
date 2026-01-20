@@ -74,7 +74,7 @@ export function ProfileHeader() {
     const loadAvatar = async () => {
       if (!currentProfile) return;
       
-      // Prima controlla localStorage
+      // First controlla localStorage
       const saved = localStorage.getItem(`avatar_${currentProfile.name}`);
       if (saved) {
         setAvatarUrl(saved);
@@ -416,3 +416,5 @@ export function ProfileHeader() {
     </>
   );
 }
+
+

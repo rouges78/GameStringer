@@ -179,7 +179,7 @@ const CHANGELOG_CONTENT = `
 **UI Refinements**
 - Hero headers tutti compatti con text shadow uniforme
 - Community Hub ridisegnato stile compatto
-- Libreria header minimalista con icona gradient
+- library header minimalista con icona gradient
 - Rimosso mini logo GS dalla sidebar chiusa
 
 ---
@@ -228,9 +228,9 @@ const CHANGELOG_CONTENT = `
 - Parser Telltale (.langdb, .landb, .dlog)
 
 **Fix**
-- Immagini giochi nella pagina dettaglio
+- Immagini games nella pagina dettaglio
 - Steam API 403 rate limiting gestito gracefully
-- Tauri CLI aggiornato a v2.5.0
+- Tauri CLI updated a v2.5.0
 
 ---
 
@@ -291,7 +291,7 @@ const CHANGELOG_CONTENT = `
 
 **Miglioramenti**
 - Persistenza IDs nel backend (non più persi al riavvio)
-- Da 107 a ~276 giochi Family Sharing visibili
+- Da 107 a ~276 games Family Sharing visibili
 
 ---
 
@@ -303,7 +303,7 @@ const CHANGELOG_CONTENT = `
 - Supporto OpenAI, Claude, Gemini, DeepSeek
 
 **Miglioramenti**
-- Da 50 a 426+ giochi Steam rilevati
+- Da 50 a 426+ games Steam rilevati
 
 ---
 
@@ -335,7 +335,7 @@ const CHANGELOG_CONTENT = `
 - Startup time ridotto
 
 **Fix**
-- Epic Games Parser: da 1939 a ~31 giochi reali
+- Epic Games Parser: da 1939 a ~31 games reali
 - Steam Family Sharing con badge 🔗
 
 ---
@@ -348,7 +348,7 @@ const CHANGELOG_CONTENT = `
 - Ordinamento "Recenti" nella Library
 
 **Fix**
-- OCR Overlay non blocca più i giochi
+- OCR Overlay non blocca più i games
 
 ---
 
@@ -495,7 +495,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       try {
         const { invoke } = await import('@/lib/tauri-api');
         const result = await invoke('test_steam_connection');
-        // Se non lancia errore, Steam è connesso
+        // Se non lancia error, Steam è connected
         if (result) {
           steamApi = { 
             status: 'connected', 
@@ -504,7 +504,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           };
         }
       } catch {
-        // Steam non connesso - resta OFF
+        // Steam non connected - resta OFF
       }
 
       // Calcola uso cache
@@ -926,3 +926,6 @@ export function MainLayout({ children }: MainLayoutProps) {
       </div>
   );
 }
+
+
+

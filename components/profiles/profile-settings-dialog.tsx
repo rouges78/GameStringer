@@ -153,7 +153,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Nuovi giochi</Label>
+                <Label className="text-sm">Nuovi games</Label>
                 <Switch
                   checked={localSettings.notifications.new_games}
                   onCheckedChange={(checked) => 
@@ -196,7 +196,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2 text-emerald-300">
                 <LayoutGrid className="h-4 w-4" />
-                Libreria
+                library
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -221,7 +221,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                 </Select>
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Mostra giochi nascosti</Label>
+                <Label className="text-sm">Mostra games nascosti</Label>
                 <Switch
                   checked={localSettings.game_library.show_hidden}
                   onCheckedChange={(checked) => 
@@ -233,7 +233,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Aggiornamento automatico</Label>
+                <Label className="text-sm">update automatico</Label>
                 <Switch
                   checked={localSettings.game_library.auto_refresh}
                   onCheckedChange={(checked) => 
@@ -304,3 +304,6 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
     </Dialog>
   );
 }
+
+
+

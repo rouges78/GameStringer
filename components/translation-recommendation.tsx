@@ -75,7 +75,7 @@ export function TranslationRecommendation({ gamePath, gameName, onActionClick }:
           method_description: 'Traduzione in tempo reale tramite riconoscimento ottico dei caratteri',
           reliability: 70,
           recommended_ai: 'gemini',
-          reason: 'Path di installazione non trovato. OCR Overlay funziona con qualsiasi gioco senza bisogno del path.',
+          reason: 'Path di installazione non trovato. OCR Overlay funziona con qualsiasi game senza bisogno del path.',
           alternatives: [],
           has_existing_patch: false,
           has_localization_files: false,
@@ -112,7 +112,7 @@ export function TranslationRecommendation({ gamePath, gameName, onActionClick }:
     if (onActionClick) {
       onActionClick(route);
     } else if (route.startsWith('steam://')) {
-      // Avvia gioco tramite Steam - apri URL nel sistema
+      // Avvia game tramite Steam - apri URL nel sistema
       window.open(route, '_blank');
     } else {
       router.push(route);
@@ -124,7 +124,7 @@ export function TranslationRecommendation({ gamePath, gameName, onActionClick }:
       <Card className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30">
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-6 w-6 animate-spin text-purple-400 mr-2" />
-          <span className="text-muted-foreground">Analisi gioco in corso...</span>
+          <span className="text-muted-foreground">Analisi game in corso...</span>
         </CardContent>
       </Card>
     );
@@ -136,7 +136,7 @@ export function TranslationRecommendation({ gamePath, gameName, onActionClick }:
         <CardContent className="py-6">
           <div className="flex items-center gap-2 text-orange-400">
             <AlertTriangle className="h-5 w-5" />
-            <span>Impossibile analizzare il gioco</span>
+            <span>Impossibile analizzare il game</span>
           </div>
           {error && <p className="text-sm text-muted-foreground mt-2">{error}</p>}
         </CardContent>
@@ -209,3 +209,6 @@ export function TranslationRecommendation({ gamePath, gameName, onActionClick }:
     </Card>
   );
 }
+
+
+

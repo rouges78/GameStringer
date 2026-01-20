@@ -22,21 +22,21 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',
     title: 'Benvenuto in GameStringer!',
-    description: 'Il software professionale per la localizzazione di videogiochi. Traduci giochi Unity, Unreal, Godot, RPG Maker e altri engine con AI avanzata.',
+    description: 'Il software professionale per la localizzazione di videogames. Traduci games Unity, Unreal, Godot, RPG Maker e altri engine con AI avanzata.',
     icon: <Sparkles className="h-8 w-8 text-purple-400" />,
     position: 'center'
   },
   {
     id: 'dashboard',
     title: 'Dashboard',
-    description: 'Panoramica completa: giochi recenti, traduzioni in corso, statistiche e accesso rapido a tutte le funzioni.',
+    description: 'Panoramica completa: games recenti, traduzioni in corso, statistiche e accesso rapido a tutte le funzioni.',
     icon: <Home className="h-8 w-8 text-cyan-400" />,
     position: 'center'
   },
   {
     id: 'library',
-    title: 'Libreria Giochi',
-    description: 'Tutti i tuoi giochi da Steam, Epic, GOG, Ubisoft, EA e altre piattaforme. Include supporto Family Sharing e filtri avanzati per lingua e backlog.',
+    title: 'library games',
+    description: 'Tutti i tuoi games da Steam, Epic, GOG, Ubisoft, EA e altre piattaforme. Include supporto Family Sharing e filtri avanzati per lingua e backlog.',
     icon: <Library className="h-8 w-8 text-purple-400" />,
     position: 'center'
   },
@@ -50,7 +50,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 'unity-patcher',
     title: 'Game Patcher',
-    description: 'Installa automaticamente mod di traduzione per giochi Unity (BepInEx + XUnity), con supporto per Unity 4.x fino a 2023. Rileva engine e suggerisce tool alternativi.',
+    description: 'Installa automaticamente mod di traduzione per games Unity (BepInEx + XUnity), con supporto per Unity 4.x fino a 2023. Rileva engine e suggerisce tool alternativi.',
     icon: <Gamepad2 className="h-8 w-8 text-emerald-400" />,
     position: 'center'
   },
@@ -64,7 +64,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 'complete',
     title: 'Pronto per iniziare!',
-    description: 'Esplora la Libreria per i tuoi giochi, usa il Translator Pro per tradurre file, o il Game Patcher per mod automatiche. Buona localizzazione!',
+    description: 'Esplora la library per i tuoi games, usa il Translator Pro per tradurre file, o il Game Patcher per mod automatiche. Buona localizzazione!',
     icon: <CheckCircle className="h-8 w-8 text-green-400" />,
     position: 'center'
   }
@@ -259,3 +259,6 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
 }
 
 export default InteractiveTutorial;
+
+
+

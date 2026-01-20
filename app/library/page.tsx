@@ -17,25 +17,25 @@ import { loadLibraryFilters, saveLibraryFilters, fuzzyMatch, useDebouncedValue }
 import { Gamepad2 } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
 
-// Definiamo l'interfaccia per un singolo gioco, assicurandoci che corrisponda al backend
+// Define l'interfaccia per un singolo game, assicurandoci che corrisponda al backend
 interface Game {
   id: string;
   app_id: string;
   title: string;
   platform: string;
   header_image: string | null;
-  supported_languages?: string[]; // Lingue supportate dal gioco
-  is_vr?: boolean; // Se il gioco supporta VR
-  engine?: string | null; // Engine utilizzato dal gioco
-  is_installed?: boolean; // Se il gioco è installato localmente
+  supported_languages?: string[]; // Lingue supportate dal game
+  is_vr?: boolean; // Se il game supporta VR
+  engine?: string | null; // Engine utilizzato dal game
+  is_installed?: boolean; // Se il game è installato localmente
   install_dir?: string; // Directory di installazione
-  genres?: string[]; // Generi del gioco
+  genres?: string[]; // Generi del game
   last_played?: number; // Timestamp ultimo accesso
-  isShared?: boolean; // Se il gioco è condiviso tramite Family Sharing
-  added_date?: number; // Data di aggiunta alla libreria (timestamp)
+  isShared?: boolean; // Se il game è condiviso tramite Family Sharing
+  added_date?: number; // Data di aggiunta alla library (timestamp)
 }
 
-// Helper per generare URL pagina dettaglio gioco
+// Helper per generare URL pagina dettaglio game
 const getGameDetailUrl = (game: Game): string => {
   const params = new URLSearchParams();
   params.set('name', game.title || '');
@@ -50,7 +50,7 @@ const getGameDetailUrl = (game: Game): string => {
   return `/games/${game.id || game.app_id}?${params.toString()}`;
 }
 
-// Componente per immagine gioco con fallback
+// Componente per immagine game con fallback
 const GameImageWithFallback = ({ game, sizes }: { game: Game; sizes: string }) => {
   const [hasError, setHasError] = React.useState(false);
   
@@ -259,7 +259,7 @@ export default function LibraryPage() {
     setIsLoading(true);
     
     try {
-      // 1️⃣ Prima ottieni i giochi dall'API (hanno i nomi corretti)
+      // 1️⃣ Prima ottieni i games dall'API (hanno i nomi corretti)
       const credentials = await invoke('load_steam_credentials') as { steam_id: string; api_key_encrypted: string } | null;
       let apiGames: Map<string, Game> = new Map();
       
@@ -290,7 +290,7 @@ export default function LibraryPage() {
         }
       }
       
-      // 2️⃣ Poi scan locale per trovare TUTTI i giochi (inclusi Family Sharing)
+      // 2️⃣ Poi scan locale per trovare TUTTI i games (inclusi Family Sharing)
       const localGames = await invoke('scan_all_steam_games_fast') as Array<{
         id: string;
         title: string;
@@ -336,12 +336,12 @@ export default function LibraryPage() {
         });
       }
       
-      // Ordina per titolo
+      // Sort per titolo
       finalGames.sort((a, b) => a.title.localeCompare(b.title));
       
       setGames(finalGames);
       
-      // Mostra notifica con risultati
+      // Mostra notifica con results
       const gamesWithName = finalGames.filter(g => !g.title.startsWith('Game ') && !g.title.startsWith('Shared Game ')).length;
       toast.success('🎮 Family Sharing scan completed!', {
         description: `Found ${finalGames.length} total games (${gamesWithName} with name)`,
@@ -351,7 +351,7 @@ export default function LibraryPage() {
       console.log(`[LIBRARY] ✅ TOTAL: ${finalGames.length} games (${gamesWithName} with name)`);
       
     } catch (error) {
-      console.error('[LIBRARY] ❌ Errore scan:', error);
+      console.error('[LIBRARY] ❌ error scan:', error);
       toast.error('Error during scan', {
         description: String(error),
       });
@@ -366,7 +366,7 @@ export default function LibraryPage() {
         setIsLoading(true);
         console.log('🚀 FULL LIBRARY LOADING (Owned + Family Sharing)...');
 
-        // 1️⃣ SCAN LOCALE - Trova giochi INSTALLATI e SHARED (per arricchire dati API)
+        // 1️⃣ SCAN LOCALE - Trova games INSTALLATI e SHARED (per arricchire dati API)
         let localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null }> = new Map();
         try {
           const scanResult = await invoke('scan_all_steam_games_fast') as Array<{
@@ -382,7 +382,7 @@ export default function LibraryPage() {
             supported_languages?: string | null;
           }>;
           
-          // Filtra solo giochi installati o shared (non tutti gli app ID)
+          // Filtra solo games installati o shared (non tutti gli app ID)
           const relevantGames = scanResult.filter(g => g.is_installed || g.is_shared);
           console.log(`📂 Local scan: ${relevantGames.length} relevant games (of ${scanResult.length} total)`);
           
@@ -399,7 +399,7 @@ export default function LibraryPage() {
           console.warn('⚠️ Local scan failed:', scanError);
         }
         
-        // Mappa finale dei giochi
+        // Mappa finale dei games
         let finalGamesMap: Map<string, Game> = new Map();
 
         // 2️⃣ API STEAM - Arricchisce con nomi corretti e dettagli
@@ -407,17 +407,17 @@ export default function LibraryPage() {
         try {
           console.log('🔑 Loading Steam credentials...');
           credentials = await invoke('load_steam_credentials');
-          console.log('🔑 Credenziali caricate:', credentials ? 'OK' : 'NULL', credentials);
+          console.log('🔑 Credentials loaded:', credentials ? 'OK' : 'NULL', credentials);
         } catch (credError) {
           console.warn('⚠️ Credentials loading error:', credError);
           credentials = null;
         }
         
-        // 2️⃣ API STEAM - Fonte principale per i giochi OWNED
+        // 2️⃣ API STEAM - Fonte principale per i games OWNED
         const creds = credentials as { api_key_encrypted?: string; steam_id?: string };
         if (creds && creds.api_key_encrypted && creds.steam_id) {
           try {
-            // Passa le credenziali caricate dal profilo
+            // Passa le Credentials loaded dal profilo
             const apiResult = await invoke('get_steam_games', {
               apiKey: creds.api_key_encrypted,  // API key dal profilo
               steamId: creds.steam_id,          // Steam ID dal profilo
@@ -426,7 +426,7 @@ export default function LibraryPage() {
             
             console.log(`📊 Steam API: ${apiResult.length} owned games`);
             
-            // Aggiungi tutti i giochi dall'API (questi sono i giochi OWNED confermati)
+            // Aggiungi tutti i games dall'API (questi sono i games OWNED confermati)
             for (const g of apiResult) {
               const appId = String(g.appid);
               const localData = localScanData.get(appId);
@@ -451,8 +451,8 @@ export default function LibraryPage() {
           }
         }
         
-        // 3️⃣ Aggiungi giochi SHARED dallo scan locale (non presenti nell'API owned)
-        // Un gioco è SHARED se: (a) marcato is_shared, oppure (b) installato ma non nell'API owned
+        // 3️⃣ Aggiungi games SHARED dallo scan locale (non presenti nell'API owned)
+        // Un game è SHARED se: (a) marcato is_shared, oppure (b) installato ma non nell'API owned
         for (const [appId, localData] of localScanData) {
           if (!finalGamesMap.has(appId)) {
             // Se non è nell'API owned, è probabilmente shared (specialmente se installato)
@@ -492,7 +492,7 @@ export default function LibraryPage() {
             last_played?: number;
           }>;
           
-          // Filtra solo giochi NON-Steam (Steam già caricato sopra)
+          // Filtra solo games NON-Steam (Steam già caricato sopra)
           const nonSteamGames = otherStoreGames.filter(g => 
             g.platform !== 'Steam' && !g.id.startsWith('steam_')
           );
@@ -523,7 +523,7 @@ export default function LibraryPage() {
           console.warn('⚠️ Other stores scan error:', otherStoreError);
         }
 
-        // 5️⃣ RISULTATO FINALE
+        // 5️⃣ result FINALE
         const finalGames = Array.from(finalGamesMap.values());
         const steamCount = finalGames.filter(g => g.platform === 'Steam').length;
         const epicCount = finalGames.filter(g => g.platform === 'Epic Games').length;
@@ -551,7 +551,7 @@ export default function LibraryPage() {
   const handleForceRefresh = (freshGames: Game[]) => {
     console.log('🔄 Force refresh completed, updating games list:', freshGames);
     
-    // Aggiungi platform: 'Steam' a tutti i giochi se mancante
+    // Aggiungi platform: 'Steam' a tutti i games se mancante
     const safeFreshGames = ensureArray<Game>(freshGames);
     const gamesWithPlatform = safeFreshGames.map(game => ({
       ...game,
@@ -561,7 +561,7 @@ export default function LibraryPage() {
     setGamesWithValidation(gamesWithPlatform);
   };
 
-  // Estrai le piattaforme, engine, lingue e generi unici dai giochi caricati
+  // Estrai le piattaforme, engine, lingue e generi unici dai games caricati
   const safeGames = ensureArray<Game>(games);
   const platforms = ['All', ...new Set(safeGames.map(game => game.platform))];
   const engines = ['All', ...new Set(safeGames.filter(game => game.engine && game.engine.toLowerCase() !== 'unknown').map(game => game.engine!))];
@@ -571,10 +571,10 @@ export default function LibraryPage() {
   const allGenres = safeGames.flatMap(game => game.genres || []).filter(genre => typeof genre === 'string');
   const genres = ['All', ...new Set(allGenres)];
 
-  // Filtriamo e ordiniamo i giochi (multiselezione)
+  // Filtriamo e ordiniamo i games (multiselezione)
   const filteredGames = safeGames
     .filter((game) => {
-      // 🚫 Nascondi giochi senza nome valido
+      // 🚫 Nascondi games senza nome valido
       const hasValidName = game.title && !game.title.match(/^(Game|Shared Game) \d+$/);
       if (!hasValidName) return false;
       
@@ -604,8 +604,8 @@ export default function LibraryPage() {
     .sort((a, b) => {
       switch (sortBy) {
         case 'recentlyAdded':
-          // Ordina per data di aggiunta (dal più recente)
-          // I giochi senza added_date vanno in fondo
+          // Sort per data di aggiunta (dal più recente)
+          // I games senza added_date vanno in fondo
           const aAdded = a.added_date || 0;
           const bAdded = b.added_date || 0;
           if (aAdded === 0 && bAdded === 0) {
@@ -614,13 +614,13 @@ export default function LibraryPage() {
           }
           return bAdded - aAdded;
         case 'lastPlayed':
-          // Ordina per ultimo accesso (se disponibile)
+          // Sort per ultimo accesso (se disponibile)
           return (b.last_played || 0) - (a.last_played || 0);
         case 'playtime':
-          // Ordina per tempo di gioco (se disponibile)
+          // Sort per tempo di game (se disponibile)
           return ((b as any).playtime_forever || 0) - ((a as any).playtime_forever || 0);
         default:
-          // Ordinamento alfabetico
+          // Sortmento alfabetico
           return (a.title || '').localeCompare(b.title || '');
       }
     });
@@ -654,7 +654,7 @@ export default function LibraryPage() {
     }
 
     if (filteredGames.length === 0) {
-      // Messaggio per quando non ci sono risultati
+      // Messaggio per quando non ci sono results
       return (
         <div className="text-center py-10">
           <p className="text-gray-400 mb-2">
@@ -775,7 +775,7 @@ export default function LibraryPage() {
       );
     };
 
-    // Per pochi giochi, usa rendering normale
+    // Per pochi games, usa rendering normale
     if (filteredGames.length <= 30) {
       return (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1.5">
@@ -784,7 +784,7 @@ export default function LibraryPage() {
       );
     }
 
-    // Per molti giochi, usa virtualizzazione
+    // Per molti games, usa virtualizzazione
     return (
       <VirtuosoGrid
         style={{ height: 'calc(100vh - 280px)' }}
@@ -961,3 +961,6 @@ export default function LibraryPage() {
     </div>
   );
 }
+
+
+

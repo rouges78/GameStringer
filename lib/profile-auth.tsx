@@ -49,7 +49,7 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   const [sessionTimeRemaining, setSessionTimeRemaining] = useState<number | null>(null);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
 
-  // Check session status periodically - DISABILITATO per evitare conflitti con autenticazione semplice
+  // Check session status periodically - DISABILITATO per evitare conflitti con authentication semplice
   // useEffect(() => {
   //   if (!currentProfile) {
   //     // Reset session state when no profile
@@ -84,7 +84,7 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   //       }
   //     } catch (error) {
   //       console.error('Error checking session status:', error);
-  //       // Non impostare expired=true per errori di connessione
+  //       // Non impostare expired=true per errori di connection
   //       // setIsSessionExpired(true);
   //     }
   //   };
@@ -139,11 +139,11 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
     }
   };
 
-  // Calcola stato autenticazione
+  // Calcola stato authentication
   // SEMPLIFICATO: Se c'è un currentProfile, l'utente è autenticato
   const isAuthenticated = !!currentProfile;
   
-  // TEMPORARY DEBUG - Verifica stato autenticazione
+  // TEMPORARY DEBUG - Verifica stato authentication
   console.log('🔐 ProfileAuth Status:', {
     currentProfile: currentProfile?.name || 'null',
     isAuthenticated,
@@ -183,3 +183,5 @@ export function useProfileAuth() {
   }
   return context;
 }
+
+

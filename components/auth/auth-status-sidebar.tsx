@@ -218,3 +218,5 @@ export function AuthStatusSidebar({ isExpanded }: AuthStatusSidebarProps) {
     </div>
   );
 }
+
+

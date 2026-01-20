@@ -47,7 +47,7 @@ export function CommandPalette() {
   const commands: CommandItem[] = useMemo(() => [
     // Navigation
     { id: 'dashboard', title: 'Dashboard', description: 'Go to dashboard', icon: <Home className="h-4 w-4" />, action: () => router.push('/'), keywords: ['home', 'main'], category: 'navigation' },
-    { id: 'library', title: 'Library', description: 'Browse your games', icon: <Gamepad2 className="h-4 w-4" />, action: () => router.push('/library'), keywords: ['games', 'giochi'], category: 'navigation' },
+    { id: 'library', title: 'Library', description: 'Browse your games', icon: <Gamepad2 className="h-4 w-4" />, action: () => router.push('/library'), keywords: ['games', 'games'], category: 'navigation' },
     { id: 'translator', title: 'Translate', description: 'AI Translation Assistant', icon: <Sparkles className="h-4 w-4" />, action: () => router.push('/ai-translator'), keywords: ['translate', 'ai'], category: 'navigation' },
     { id: 'patcher', title: 'Patcher', description: 'Unity/Unreal Patcher', icon: <Wand2 className="h-4 w-4" />, action: () => router.push('/unity-patcher'), keywords: ['unity', 'patch', 'bepinex'], category: 'navigation' },
     { id: 'community', title: 'Community', description: 'Community hub', icon: <Globe className="h-4 w-4" />, action: () => router.push('/community-hub'), keywords: ['hub', 'share'], category: 'navigation' },
@@ -231,3 +231,6 @@ export function CommandPalette() {
 }
 
 export default CommandPalette;
+
+
+

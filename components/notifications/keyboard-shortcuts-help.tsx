@@ -26,3 +26,6 @@ export function KeyboardShortcutsHelp({ isOpen, onClose }: KeyboardShortcutsHelp
     </div>
   );
 }
+
+
+

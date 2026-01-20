@@ -306,3 +306,6 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
 }
 
 export default TranslationHistoryPanel;
+
+
+

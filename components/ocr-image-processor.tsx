@@ -132,7 +132,7 @@ const OCRImageProcessor: React.FC<OCRImageProcessorProps> = ({
       id: `ocr-${Date.now()}`,
       text: `Testo estratto dall'immagine...
       
-Questo è un esempio di testo che potrebbe essere estratto da un'immagine di gioco.
+Questo è un esempio di testo che potrebbe essere estratto da un'immagine di game.
 Potrebbero esserci dialoghi, menu, istruzioni o altri elementi testuali.
 
 Il sistema OCR può riconoscere diversi tipi di font e stili di testo,
@@ -272,7 +272,7 @@ anche in condizioni di illuminazione non ottimali.`,
     URL.revokeObjectURL(url);
   };
 
-  // Elimina risultato
+  // Elimina result
   const deleteResult = (id: string) => {
     setResults(prev => prev.filter(r => r.id !== id));
     toast.success('Result deleted');
@@ -518,7 +518,7 @@ anche in condizioni di illuminazione non ottimali.`,
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-base">
-                      Risultato OCR
+                      result OCR
                     </CardTitle>
                     <Badge variant="secondary">
                       {result.confidence.toFixed(1)}% confidenza
@@ -607,3 +607,6 @@ anche in condizioni di illuminazione non ottimali.`,
 };
 
 export default OCRImageProcessor;
+
+
+

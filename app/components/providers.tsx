@@ -1,6 +1,6 @@
 'use client';
 
-// Sistema di autenticazione unificato - sostituisce NextAuth
+// Sistema di authentication unificato - sostituisce NextAuth
 import React from 'react';
 import { AuthProvider } from '@/lib/unified-auth';
 
@@ -15,3 +15,6 @@ export default function Providers({ children }: ProvidersProps) {
     </AuthProvider>
   );
 }
+
+
+

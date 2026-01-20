@@ -90,7 +90,7 @@ const IntelligentPlaceholder: React.FC<IntelligentPlaceholderProps> = ({
     return IconComponent;
   };
 
-  // Genera iniziali dal nome del gioco
+  // Genera iniziali dal nome del game
   const getGameInitials = (name: string) => {
     return name
       .split(' ')
@@ -100,7 +100,7 @@ const IntelligentPlaceholder: React.FC<IntelligentPlaceholderProps> = ({
       .join('');
   };
 
-  // Genera un pattern di sfondo basato sul nome del gioco
+  // Genera un pattern di sfondo basato sul nome del game
   const getPatternOpacity = () => {
     const hash = gameName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     return (hash % 30 + 10) / 100; // Opacità tra 0.1 e 0.4
@@ -133,12 +133,12 @@ const IntelligentPlaceholder: React.FC<IntelligentPlaceholderProps> = ({
           <StoreIcon className="w-8 h-8 opacity-80" />
         </div>
         
-        {/* Iniziali del gioco */}
+        {/* Iniziali del game */}
         <div className="text-2xl font-bold mb-2 text-center leading-tight">
           {initials}
         </div>
         
-        {/* Nome del gioco troncato */}
+        {/* Nome del game troncato */}
         <div className="text-xs text-center opacity-80 max-w-full">
           <div className="truncate px-2">
             {gameName.length > 20 ? `${gameName.substring(0, 20)}...` : gameName}
@@ -172,3 +172,6 @@ const IntelligentPlaceholder: React.FC<IntelligentPlaceholderProps> = ({
 };
 
 export default IntelligentPlaceholder;
+
+
+

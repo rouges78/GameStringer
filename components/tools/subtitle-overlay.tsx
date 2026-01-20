@@ -73,10 +73,10 @@ export function SubtitleOverlay() {
     if (!isActive || isPaused) return;
 
     const samples = [
-      { original: 'Welcome to the game!', translated: 'Benvenuto nel gioco!' },
+      { original: 'Welcome to the game!', translated: 'Benvenuto nel game!' },
       { original: 'Press any key to continue', translated: 'Premi un tasto per continuare' },
       { original: 'Loading...', translated: 'Loading...' },
-      { original: 'Game saved successfully', translated: 'Gioco salvato con successo' },
+      { original: 'Game saved successfully', translated: 'game salvato con successo' },
       { original: 'Are you sure you want to quit?', translated: 'Sei sicuro di voler uscire?' },
     ];
 
@@ -620,3 +620,6 @@ export function SubtitleOverlay() {
     </div>
   );
 }
+
+
+

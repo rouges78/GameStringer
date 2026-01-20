@@ -133,7 +133,7 @@ export default function StreamingTranslatorPage() {
                 Contesto (opzionale)
               </label>
               <Textarea
-                placeholder="Es: Dialogo in un gioco horror, tono formale..."
+                placeholder="Es: Dialogo in un game horror, tono formale..."
                 value={context}
                 onChange={e => setContext(e.target.value)}
                 className="h-16 resize-none"
@@ -195,7 +195,7 @@ export default function StreamingTranslatorPage() {
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">
               💡 <strong>Streaming LLM</strong>: La traduzione appare in tempo reale mentre l'AI genera il testo.
-              Questo migliora l'esperienza utente mostrando i risultati immediatamente invece di aspettare il completamento.
+              Questo migliora l'esperienza utente mostrando i results immediatamente invece di aspettare il completamento.
             </p>
           </CardContent>
         </Card>
@@ -203,3 +203,6 @@ export default function StreamingTranslatorPage() {
     </div>
   );
 }
+
+
+

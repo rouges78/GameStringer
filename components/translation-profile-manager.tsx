@@ -113,7 +113,7 @@ export function TranslationProfileManager({
       filtered = translationProfileManager.searchProfiles(searchQuery);
     }
 
-    // Ordina per rating e data
+    // Sort per rating e data
     filtered.sort((a, b) => {
       const ratingDiff = (b.metadata.rating || 0) - (a.metadata.rating || 0);
       if (ratingDiff !== 0) return ratingDiff;
@@ -800,3 +800,6 @@ export function TranslationProfileManager({
     </div>
   );
 }
+
+
+

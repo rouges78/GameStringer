@@ -85,9 +85,9 @@ export function StoreManager({ stores }: StoreManagerProps) {
         const gamesCount = gamesMatch ? parseInt(gamesMatch[1]) : undefined;
         
         return {
-          connected: !result.toLowerCase().includes('errore'),
+          connected: !result.toLowerCase().includes('error'),
           gamesCount,
-          error: result.toLowerCase().includes('errore') ? result : undefined
+          error: result.toLowerCase().includes('error') ? result : undefined
         };
       }
       
@@ -313,3 +313,6 @@ export function StoreManager({ stores }: StoreManagerProps) {
     </div>
   );
 }
+
+
+

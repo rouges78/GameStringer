@@ -124,7 +124,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
     // Sessione più lunga
     const longestSession = Math.max(...gameStats.map(game => game.averageSessionLength), 0);
 
-    // Streak corrente (giorni consecutivi di gioco)
+    // Streak corrente (giorni consecutivi di game)
     const currentStreak = calculateCurrentStreak(gameStats);
 
     return {
@@ -205,7 +205,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
     return `${Math.round(value)}%`;
   };
 
-  // Top giochi per tempo di gioco
+  // Top games per tempo di game
   const topGamesByPlaytime = useMemo(() => {
     return [...filteredStats]
       .sort((a, b) => b.totalPlaytime - a.totalPlaytime)
@@ -379,7 +379,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
           </div>
         </TabsContent>
 
-        {/* Giochi */}
+        {/* games */}
         <TabsContent value="games" className="space-y-6">
           <Card>
             <CardHeader>
@@ -478,7 +478,7 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
                       className="h-2"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>{genre.games} giochi</span>
+                      <span>{genre.games} games</span>
                       <span>{genre.achievements} achievement</span>
                     </div>
                   </div>
@@ -493,3 +493,6 @@ const DetailedStatistics: React.FC<DetailedStatisticsProps> = ({
 };
 
 export default DetailedStatistics;
+
+
+

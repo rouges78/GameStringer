@@ -40,7 +40,7 @@ const GAME_TYPE_PRESETS = [
     id: 'auto', 
     name: 'Auto-Detect', 
     icon: Wand2, 
-    description: 'Rileva automaticamente il tipo di gioco',
+    description: 'Rileva automaticamente il tipo di game',
     color: 'bg-purple-500'
   },
   { 
@@ -68,7 +68,7 @@ const GAME_TYPE_PRESETS = [
     id: 'pc98', 
     name: 'PC-98', 
     icon: Monitor, 
-    description: 'Giochi giapponesi PC-98',
+    description: 'games giapponesi PC-98',
     color: 'bg-pink-500'
   },
   { 
@@ -193,7 +193,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
 
       <Tabs defaultValue="presets" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="presets">Preset Giochi</TabsTrigger>
+          <TabsTrigger value="presets">Preset games</TabsTrigger>
           <TabsTrigger value="advanced">Impostazioni Avanzate</TabsTrigger>
         </TabsList>
 
@@ -427,8 +427,8 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
         <CardContent className="py-3">
           <h4 className="font-medium text-sm text-green-600 mb-2">💡 Suggerimenti</h4>
           <ul className="text-xs text-muted-foreground space-y-1">
-            <li>• Per giochi <strong>8-bit</strong>: usa upscale 4x e threshold alto</li>
-            <li>• Per giochi <strong>DOS</strong>: attiva "Remove Dithering" per palette limitate</li>
+            <li>• Per games <strong>8-bit</strong>: usa upscale 4x e threshold alto</li>
+            <li>• Per games <strong>DOS</strong>: attiva "Remove Dithering" per palette limitate</li>
             <li>• Per testo <strong>giapponese</strong> (PC-98): usa upscale 4x con sharpen</li>
             <li>• Se il testo è scuro su sfondo chiaro, prova "Inverti Colori"</li>
           </ul>
@@ -437,3 +437,6 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
     </div>
   );
 }
+
+
+

@@ -62,7 +62,7 @@ export function UpdateNotification() {
     }
   };
 
-  // Non mostrare se non c'è aggiornamento o è stato dismissato
+  // Do not show se non c'è update o è stato dismissato
   if (!updateInfo || !updateInfo.update_available || dismissed) {
     return null;
   }
@@ -123,3 +123,6 @@ export function UpdateNotification() {
     </div>
   );
 }
+
+
+

@@ -128,12 +128,12 @@ export default function OcrTranslatorPage() {
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('[OCR] Errore risposta API:', response.status, errorData);
-        const errorMsg = errorData.error || errorData.message || `Errore API: ${response.status}`;
+        console.error('[OCR] error risposta API:', response.status, errorData);
+        const errorMsg = errorData.error || errorData.message || `error API: ${response.status}`;
         setTranslationError(errorMsg);
       }
     } catch (e) {
-      console.error('[OCR] Errore traduzione:', e);
+      console.error('[OCR] error traduzione:', e);
       setTranslationError(`Error: ${e}`);
     } finally {
       pendingTranslations.delete(text);
@@ -244,7 +244,7 @@ export default function OcrTranslatorPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-violet-500/20 to-red-500/20 text-violet-400 text-xs">2</span>
-                Seleziona finestra del gioco
+                Seleziona finestra del game
               </div>
               <Button variant="ghost" size="sm" onClick={loadWindows} disabled={isRunning}>
                 <RefreshCw className="h-4 w-4" />
@@ -267,8 +267,8 @@ export default function OcrTranslatorPage() {
               <div className="flex items-start gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
                 <span className="text-base">⚠️</span>
                 <div>
-                  <span className="font-medium">Fullscreen non supportato:</span> Se il gioco è in fullscreen esclusivo, 
-                  passa a <span className="font-semibold">Borderless</span> o <span className="font-semibold">Windowed</span> nelle opzioni video del gioco.
+                  <span className="font-medium">Fullscreen non supportato:</span> Se il game è in fullscreen esclusivo, 
+                  passa a <span className="font-semibold">Borderless</span> o <span className="font-semibold">Windowed</span> nelle opzioni video del game.
                 </div>
               </div>
             </div>
@@ -361,9 +361,9 @@ export default function OcrTranslatorPage() {
                 try {
                   await invoke('toggle_ocr_overlay', { show: !overlayOpen });
                   setOverlayOpen(!overlayOpen);
-                  toast.success(overlayOpen ? 'Overlay chiuso' : 'Overlay aperto - Traduzioni visibili sul gioco');
+                  toast.success(overlayOpen ? 'Overlay chiuso' : 'Overlay aperto - Traduzioni visibili sul game');
                 } catch (e) {
-                  toast.error(`Errore overlay: ${e}`);
+                  toast.error(`error overlay: ${e}`);
                 }
               }}
               variant="outline"
@@ -377,7 +377,7 @@ export default function OcrTranslatorPage() {
         </CardContent>
       </Card>
 
-      {/* Risultati */}
+      {/* results */}
       {(isRunning || detectedTexts.length > 0) && (
         <Card>
           <CardContent className="p-4">
@@ -427,9 +427,12 @@ export default function OcrTranslatorPage() {
 
       {/* Info */}
       <div className="text-center text-xs text-muted-foreground space-y-1">
-        <p>💡 L'OCR funziona con qualsiasi gioco, anche quelli non supportati da XUnity</p>
-        <p>Le traduzioni usano Google Gemini AI per risultati accurati</p>
+        <p>💡 L'OCR funziona con qualsiasi game, anche quelli non supportati da XUnity</p>
+        <p>Le traduzioni usano Google Gemini AI per results accurati</p>
       </div>
     </div>
   );
 }
+
+
+

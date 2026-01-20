@@ -168,7 +168,7 @@ export default function TranslatorProPage() {
   
   // Carica API key salvata quando cambia provider (fallback per provider specifico)
   useEffect(() => {
-    // Prima controlla se c'è una key specifica per questo provider
+    // First controlla se c'è una key specifica per questo provider
     const savedKey = localStorage.getItem(`gamestringer_apikey_${provider}`);
     if (savedKey) {
       setApiKey(savedKey);
@@ -210,7 +210,7 @@ export default function TranslatorProPage() {
     translatedText: string;
     fromMemory: boolean;
     metadata?: any;
-  }>>([]); // Accumula risultati durante la traduzione
+  }>>([]); // Accumula results durante la traduzione
   
   // Results
   const [translatedFiles, setTranslatedFiles] = useState<Map<string, string>>(new Map());
@@ -500,7 +500,7 @@ export default function TranslatorProPage() {
     setSelectedGame(game);
     setSelectedFiles([]);
     setEngineInfo(null);
-    setFilesWarning(null); // Reset warning quando si cambia gioco
+    setFilesWarning(null); // Reset warning quando si cambia game
     setCurrentStep('select-files');
     
     // Fetch dettagli Steam per ottenere le lingue supportate
@@ -521,12 +521,12 @@ export default function TranslatorProPage() {
       }
     }
     
-    // Rileva engine del gioco automaticamente
+    // Rileva engine del game automaticamente
     setIsCheckingEngine(true);
     setLocalizationInfo(null);
     try {
       let foundPath = '';
-      // Prova a trovare il percorso
+      // Try a trovare il percorso
       try {
         foundPath = await invoke<string>('find_game_install_path', { installDir: game.name });
       } catch { /* non trovato */ }
@@ -794,7 +794,7 @@ export default function TranslatorProPage() {
           setFilesWarning({
             type: engineInfo?.is_unity ? 'xunity_suggested' : 'config',
             message: engineInfo?.is_unity 
-              ? '⚠️ I file trovati sono di configurazione, non di localizzazione. Per tradurre questo gioco Unity, usa XUnity AutoTranslator.'
+              ? '⚠️ I file trovati sono di configurazione, non di localizzazione. Per tradurre questo game Unity, usa XUnity AutoTranslator.'
               : '⚠️ I file trovati sono di configurazione tecnica, non contengono testo traducibile per il giocatore.',
             configFiles: configFiles.map(f => f.name)
           });
@@ -820,7 +820,7 @@ export default function TranslatorProPage() {
         if (engineInfo?.is_unity) {
           setFilesWarning({
             type: 'xunity_suggested',
-            message: '📁 Nessun file di localizzazione trovato. Questo gioco Unity potrebbe non avere file di testo esterni. Usa XUnity AutoTranslator per tradurre il testo in-game.',
+            message: '📁 Nessun file di localizzazione trovato. Questo game Unity potrebbe non avere file di testo esterni. Usa XUnity AutoTranslator per tradurre il testo in-game.',
             configFiles: []
           });
         } else {
@@ -891,7 +891,7 @@ export default function TranslatorProPage() {
     setError(null);
     setProgress(null);
     setTranslatedFiles(new Map());
-    setTranslatedItems([]); // Reset risultati accumulati
+    setTranslatedItems([]); // Reset results accumulati
     
     console.log('[Neural Translator] Starting translation with provider:', provider);
     console.log('[Neural Translator] Files to translate:', filesToTranslate.length);
@@ -914,7 +914,7 @@ export default function TranslatorProPage() {
             setProgress(p);
           },
           onItemComplete: (item) => {
-            // Accumula risultati tradotti per salvataggio parziale
+            // Accumula results tradotti per salvataggio parziale
             if (item.status === 'completed' && item.translatedText) {
               setTranslatedItems(prev => [...prev, {
                 id: item.id,
@@ -974,7 +974,7 @@ export default function TranslatorProPage() {
         
         if (tmBatch.length > 0) {
           await translationMemory.addBatch(tmBatch);
-          console.log(`[Neural Translator] ✅ Salvate ${tmBatch.length} traduzioni in TM`);
+          console.log(`[Neural Translator] ✅ saved ${tmBatch.length} traduzioni in TM`);
         }
       }
       
@@ -1016,7 +1016,7 @@ export default function TranslatorProPage() {
       }
     } catch (err) {
       console.error('Error saving file:', err);
-      alert(`❌ Errore nel salvataggio: ${err}`);
+      alert(`❌ error nel salvataggio: ${err}`);
     }
   };
   
@@ -1129,7 +1129,7 @@ export default function TranslatorProPage() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('[ExportPatch] API Error:', errorText);
-        throw new Error(`Errore nella generazione del pacchetto: ${response.status}`);
+        throw new Error(`error nella generazione del pacchetto: ${response.status}`);
       }
       
       // Scarica il file ZIP usando Tauri save dialog
@@ -1189,8 +1189,8 @@ export default function TranslatorProPage() {
     } catch (error) {
       console.error('[ExportPatch] Error:', error);
       toast({
-        title: 'Errore esportazione',
-        description: error instanceof Error ? error.message : 'Errore sconosciuto',
+        title: 'error esportazione',
+        description: error instanceof Error ? error.message : 'error sconosciuto',
         variant: 'destructive',
       });
     }
@@ -1228,8 +1228,8 @@ export default function TranslatorProPage() {
       
       if (!currentGamePath) {
         toast({
-          title: 'Gioco non trovato',
-          description: 'Non riesco a trovare la cartella del gioco. Usa "Scarica tutti" e copia manualmente.',
+          title: 'game non trovato',
+          description: 'Non riesco a trovare la cartella del game. Usa "Scarica tutti" e copia manualmente.',
           variant: 'destructive',
         });
         setApplyStatus('error');
@@ -1258,10 +1258,10 @@ export default function TranslatorProPage() {
           setApplyStatus('done');
           toast({
             title: '✅ Traduzione applicata!',
-            description: `File salvato in: ${savedPath.split(/[/\\]/).pop()}. Seleziona Italiano nelle opzioni del gioco!`,
+            description: `File salvato in: ${savedPath.split(/[/\\]/).pop()}. Seleziona Italiano nelle opzioni del game!`,
           });
         } catch (e) {
-          throw new Error(`Errore salvataggio file: ${e}`);
+          throw new Error(`error salvataggio file: ${e}`);
         }
       }
       // METODO 2: XUnity AutoTranslator (per Unity senza file loc diretti)
@@ -1311,14 +1311,14 @@ export default function TranslatorProPage() {
         
         setApplyStatus('done');
         toast({
-          title: '✅ Applicato al gioco!',
-          description: `${dictionaryLines.length} traduzioni XUnity. Avvia il gioco!`,
+          title: '✅ Applicato al game!',
+          description: `${dictionaryLines.length} traduzioni XUnity. Avvia il game!`,
         });
       }
       // METODO 3: Nessun metodo disponibile - fallback a salvataggio diretto
       else {
         console.log('[ApplyToGame] METODO 3 - Fallback salvataggio diretto');
-        // Salva i file tradotti direttamente nella cartella del gioco
+        // Salva i file tradotti direttamente nella cartella del game
         let savedCount = 0;
         for (const [filename, content] of translatedFiles.entries()) {
           try {
@@ -1327,7 +1327,7 @@ export default function TranslatorProPage() {
             await invoke('write_text_file', { path: targetPath, content });
             savedCount++;
           } catch (e) {
-            console.warn('[ApplyToGame] Errore salvataggio file:', filename, e);
+            console.warn('[ApplyToGame] error salvataggio file:', filename, e);
           }
         }
         
@@ -1335,7 +1335,7 @@ export default function TranslatorProPage() {
           setApplyStatus('done');
           toast({
             title: '✅ File salvati!',
-            description: `${savedCount} file tradotti salvati nella cartella del gioco.`,
+            description: `${savedCount} file tradotti salvati nella cartella del game.`,
           });
         } else {
           toast({
@@ -1359,7 +1359,7 @@ export default function TranslatorProPage() {
       
       if (tmBatch.length > 0) {
         await translationMemory.addBatch(tmBatch);
-        console.log(`[ApplyToGame] Salvate ${tmBatch.length} traduzioni in TM`);
+        console.log(`[ApplyToGame] saved ${tmBatch.length} traduzioni in TM`);
       }
       
       // Salva statistica patch per dashboard
@@ -1380,7 +1380,7 @@ export default function TranslatorProPage() {
       await activityHistory.add({
         activity_type: 'patch',
         title: `Patch applicata: ${selectedGame.name}`,
-        description: `${tmBatch.length} traduzioni applicate al gioco`,
+        description: `${tmBatch.length} traduzioni applicate al game`,
         game_name: selectedGame.name,
         game_id: selectedGame.id,
         metadata: {
@@ -1390,10 +1390,10 @@ export default function TranslatorProPage() {
       });
       
     } catch (e) {
-      console.error('Errore applicazione:', e);
+      console.error('error applicazione:', e);
       setApplyStatus('error');
       toast({
-        title: 'Errore',
+        title: 'error',
         description: `${e}. Usa "Scarica tutti" e copia manualmente.`,
         variant: 'destructive',
       });
@@ -1405,11 +1405,11 @@ export default function TranslatorProPage() {
   // === STEP INDICATOR ===
   
   const steps = [
-    { id: 'select-game', label: 'Gioco', icon: Languages },
+    { id: 'select-game', label: 'game', icon: Languages },
     { id: 'select-files', label: 'File', icon: FileText },
     { id: 'configure', label: 'Configura', icon: Settings2 },
     { id: 'translate', label: 'Traduci', icon: Sparkles },
-    { id: 'results', label: 'Risultati', icon: CheckCircle },
+    { id: 'results', label: 'results', icon: CheckCircle },
   ];
   
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
@@ -1430,9 +1430,9 @@ export default function TranslatorProPage() {
   
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Hero Header con immagine gioco fusa */}
+      {/* Hero Header con immagine game fusa */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-red-600 via-purple-600 to-fuchsia-600 p-4 mb-6">
-        {/* Immagine gioco fusa nello sfondo */}
+        {/* Immagine game fusa nello sfondo */}
         {selectedGame?.coverUrl && (
           <>
             <div className="absolute inset-0">
@@ -1520,7 +1520,7 @@ export default function TranslatorProPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca tra i tuoi giochi..."
+                placeholder="Cerca tra i tuoi games..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 h-12"
@@ -1528,7 +1528,7 @@ export default function TranslatorProPage() {
             </div>
             
             <div className="text-sm text-muted-foreground px-1">
-              {filteredGames.length} giochi trovati
+              {filteredGames.length} games trovati
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -1569,7 +1569,7 @@ export default function TranslatorProPage() {
             </div>
             {filteredGames.length > 20 && (
               <p className="text-xs text-muted-foreground text-center mt-2">
-                Usa la ricerca per trovare altri {filteredGames.length - 20} giochi
+                Usa la ricerca per trovare altri {filteredGames.length - 20} games
               </p>
             )}
           </div>
@@ -1596,7 +1596,7 @@ export default function TranslatorProPage() {
             
             <Button variant="ghost" size="sm" onClick={() => setCurrentStep('select-game')} className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Cambia gioco
+              Cambia game
             </Button>
             
             {/* Selected Game - Compact */}
@@ -1635,7 +1635,7 @@ export default function TranslatorProPage() {
                 {isCheckingEngine ? (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    Analisi gioco...
+                    Analisi game...
                   </div>
                 ) : (
                   <>
@@ -1684,7 +1684,7 @@ export default function TranslatorProPage() {
                                   toast({ title: '✓ Caricato!', description: `${parseResult.strings.length} stringhe` });
                                 }
                               } catch (e) {
-                                toast({ title: 'Errore', description: `${e}`, variant: 'destructive' });
+                                toast({ title: 'error', description: `${e}`, variant: 'destructive' });
                               } finally {
                                 setIsLoadingFiles(false);
                               }
@@ -1762,7 +1762,7 @@ export default function TranslatorProPage() {
                 {filesWarning.type === 'xunity_suggested' && engineInfo?.is_unity && (
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">
-                      XUnity AutoTranslator intercetta il testo del gioco in tempo reale e permette di tradurlo.
+                      XUnity AutoTranslator intercetta il testo del game in tempo reale e permette di tradurlo.
                     </p>
                     <Button 
                       size="sm" 
@@ -2040,7 +2040,7 @@ export default function TranslatorProPage() {
                         </div>
                       </SelectItem>
                       
-                      {/* 🎯 BEST QUALITY - Alta qualità per giochi */}
+                      {/* 🎯 BEST QUALITY - Alta qualità per games */}
                       <SelectItem value="claude">
                         <div className="flex items-center gap-2">
                           <Brain className="h-4 w-4 text-orange-500" />
@@ -2190,7 +2190,7 @@ export default function TranslatorProPage() {
                   </label>
                   {showAllFiles && (
                     <p className="text-xs text-yellow-400/70">
-                      ⚠️ Bypassa il filtro intelligente. Riseleziona il gioco dopo aver attivato.
+                      ⚠️ Bypassa il filtro intelligente. Riseleziona il game dopo aver attivato.
                     </p>
                   )}
                 </div>
@@ -2255,7 +2255,7 @@ export default function TranslatorProPage() {
                     </div>
                   </div>
                   
-                  {/* Nome del gioco */}
+                  {/* Nome del game */}
                   {selectedGame && (
                     <div className="flex items-center justify-center gap-2 mb-3">
                       <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex-shrink-0">
@@ -2335,7 +2335,7 @@ export default function TranslatorProPage() {
                             onClick={() => {
                               setIsTranslating(false);
                               
-                              // Salva i risultati parziali in localStorage per persistenza
+                              // Salva i results parziali in localStorage per persistenza
                               if (translatedItems.length > 0 && selectedFiles.length > 0) {
                                 const partialResults = {
                                   timestamp: Date.now(),
@@ -2356,9 +2356,9 @@ export default function TranslatorProPage() {
                                 };
                                 
                                 localStorage.setItem('gamestringer_partial_translations', JSON.stringify(partialResults));
-                                console.log('[Neural Translator] Salvati', partialResults.items.length, 'risultati parziali in localStorage');
+                                console.log('[Neural Translator] Salvati', partialResults.items.length, 'results parziali in localStorage');
                                 
-                                // Genera i file tradotti dai risultati parziali
+                                // Genera i file tradotti dai results parziali
                                 const newTranslatedFiles = new Map<string, string>();
                                 for (const file of selectedFiles) {
                                   // Trova le traduzioni per questo file
@@ -2387,7 +2387,7 @@ export default function TranslatorProPage() {
                                 }
                                 setTranslatedFiles(newTranslatedFiles);
                                 
-                                // Crea un job parziale per mostrare i risultati
+                                // Crea un job parziale per mostrare i results
                                 const fromMemory = translatedItems.filter(i => i.fromMemory).length;
                                 const partialJob: BatchTranslationJob = {
                                   id: `partial_${Date.now()}`,
@@ -2444,13 +2444,13 @@ export default function TranslatorProPage() {
                               
                               setCurrentStep('results');
                               toast({
-                                title: 'Risultati parziali salvati',
+                                title: 'results parziali salvati',
                                 description: `${progress.completed} stringhe tradotte su ${progress.total}. Puoi riprendere più tardi.`,
                               });
                             }}
                           >
                             <Save className="mr-2 h-3 w-3" />
-                            Salva risultati parziali ({progress.completed}/{progress.total})
+                            Salva results parziali ({progress.completed}/{progress.total})
                           </Button>
                         )}
                         
@@ -2474,7 +2474,7 @@ export default function TranslatorProPage() {
               ) : error ? (
                 <>
                   <AlertTriangle className="h-16 w-16 mx-auto text-destructive mb-4" />
-                  <h2 className="text-xl font-semibold mb-2">Errore</h2>
+                  <h2 className="text-xl font-semibold mb-2">error</h2>
                   <p className="text-muted-foreground mb-4">{error}</p>
                   <Button onClick={() => setCurrentStep('configure')}>
                     <RotateCcw className="mr-2 h-4 w-4" />
@@ -2486,7 +2486,7 @@ export default function TranslatorProPage() {
                   <CheckCircle className="h-16 w-16 mx-auto text-green-500 mb-4" />
                   <h2 className="text-xl font-semibold mb-2">Completato!</h2>
                   <Button onClick={() => setCurrentStep('results')}>
-                    Vedi risultati
+                    Vedi results
                     <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 </>
@@ -2630,7 +2630,7 @@ export default function TranslatorProPage() {
                 {isApplying ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    {applyStatus === 'finding' && 'Cerco gioco...'}
+                    {applyStatus === 'finding' && 'Cerco game...'}
                     {applyStatus === 'checking' && 'Verifico...'}
                     {applyStatus === 'installing' && 'Installo patcher...'}
                     {applyStatus === 'applying' && 'Applico...'}
@@ -2643,12 +2643,12 @@ export default function TranslatorProPage() {
                 ) : (
                   <>
                     <Rocket className="h-5 w-5" />
-                    Applica al gioco
+                    Applica al game
                   </>
                 )}
               </Button>
               
-              {/* PLAY BUTTON - Sempre visibile se c'è un gioco Steam */}
+              {/* PLAY BUTTON - Sempre visibile se c'è un game Steam */}
               {selectedGame?.id?.startsWith('steam_') && (
                 <a 
                   href={`steam://rungameid/${selectedGame.id.replace('steam_', '')}`}
@@ -2699,3 +2699,6 @@ export default function TranslatorProPage() {
     </div>
   );
 }
+
+
+

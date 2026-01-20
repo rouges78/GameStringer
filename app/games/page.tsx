@@ -37,7 +37,7 @@ import type { SteamGame, LocalGame, HowLongToBeatData } from '@/lib/types';
 
 // Tipo unificato per la visualizzazione nell'interfaccia
 interface DisplayGame {
-  id: string; // Usiamo appid di steam o id del gioco locale
+  id: string; // Usiamo appid di steam o id del game locale
   title: string;
   imageUrl: string;
   fallbackImageUrl: string | null;
@@ -103,7 +103,7 @@ export default function GamesPage() {
       console.log('[FRONTEND DEBUG] Session status:', status);
       console.log('[FRONTEND DEBUG] Session data:', session);
       
-      // Recupera credenziali Steam dalla sessione auth unificata
+      // Recupera Credentials Steam dalla sessione auth unificata
       let steamId = 'demo_id';
       let apiKey = 'demo_key';
       
@@ -124,7 +124,7 @@ export default function GamesPage() {
         apiKey = localStorage.getItem('steamApiKey') || 'demo_key';
         console.log('[FRONTEND DEBUG] API Key usata:', apiKey);
       } else {
-        console.log('[FRONTEND DEBUG] ❌ Nessuna sessione attiva, uso credenziali demo');
+        console.log('[FRONTEND DEBUG] ❌ Nessuna sessione attiva, uso Credentials demo');
       }
       
       // TEST: Verifica comunicazione Tauri
@@ -143,12 +143,12 @@ export default function GamesPage() {
         }
       } catch (error) {
         console.log('[FRONTEND DEBUG] ❌ Test Tauri fallito:', error);
-        setError('Errore di comunicazione con il backend Tauri');
+        setError('error di comunicazione con il backend Tauri');
         setIsLoading(false);
         return;
       }
       
-      // Carica in parallelo i giochi da Steam (via Tauri) e quelli locali
+      // Carica in parallelo i games da Steam (via Tauri) e quelli locali
       console.log('[FRONTEND DEBUG] 🚀 Chiamata Tauri get_steam_games con:', { apiKey, steamId, forceRefresh });
       console.log('[FRONTEND DEBUG] 🚀 Chiamata Tauri get_library_games...');
       
@@ -169,8 +169,8 @@ export default function GamesPage() {
         timeoutPromise
       ]) as [SteamGame[], { games: LocalGame[] }];
       
-      console.log('[FRONTEND DEBUG] ✅ Risposta get_steam_games:', steamGames?.length || 0, 'giochi');
-      console.log('[FRONTEND DEBUG] ✅ Risposta get_library_games:', localData?.games?.length || 0, 'giochi');
+      console.log('[FRONTEND DEBUG] ✅ Risposta get_steam_games:', steamGames?.length || 0, 'games');
+      console.log('[FRONTEND DEBUG] ✅ Risposta get_library_games:', localData?.games?.length || 0, 'games');
 
       const localGames: LocalGame[] = localData.games || [];
 
@@ -188,7 +188,7 @@ export default function GamesPage() {
           .map(g => [g.steamAppId!, g])
       );
 
-      // Definiamo un tipo per i giochi che verranno visualizzati, combinando le fonti
+      // Define un tipo per i games che verranno visualizzati, combinando le fonti
       const displayGames: DisplayGame[] = steamGames.map(steamGame => {
         const localGame = localGameMap.get(steamGame.appid);
         
@@ -219,10 +219,10 @@ export default function GamesPage() {
 
       setGames(displayGames);
       
-      // Precarica dati HowLongToBeat in background per i primi 20 giochi
+      // Precarica dati HowLongToBeat in background per i primi 20 games
       const gameNames = displayGames.slice(0, 20).map(g => g.title);
       prefetchHltb(gameNames).then(() => {
-        // Aggiorna i giochi con i dati HLTB dalla cache
+        // Aggiorna i games con i dati HLTB dalla cache
         setGames(prev => prev.map(game => {
           const hltb = getHltbFromCache(game.title);
           if (hltb?.found) {
@@ -240,7 +240,7 @@ export default function GamesPage() {
       });
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Errore sconosciuto.');
+      setError(err instanceof Error ? err.message : 'error sconosciuto.');
       setGames([]);
     } finally {
       if (forceRefresh) {
@@ -256,7 +256,7 @@ export default function GamesPage() {
       loadGames();
     } else if (status === 'unauthenticated') {
       setIsLoading(false);
-      setError('Devi aver effettuato l\'accesso con Steam per vedere i tuoi giochi.');
+      setError('Devi aver effettuato l\'accesso con Steam per vedere i tuoi games.');
     }
     // Non fare nulla mentre lo stato è 'loading'
   }, [status]);
@@ -303,7 +303,7 @@ export default function GamesPage() {
   const testFamilySharing = async () => {
     console.log('[FRONTEND DEBUG] 🧪 Test Family Sharing button clicked!');
     
-    // Giochi mock condivisi
+    // games mock condivisi
     const mockSharedGames: DisplayGame[] = [
       {
         id: 'mock-570',
@@ -343,11 +343,11 @@ export default function GamesPage() {
       }
     ];
 
-    // Aggiungi i giochi mock alla lista esistente
+    // Aggiungi i games mock alla lista esistente
     setGames(prevGames => {
       const existingIds = new Set(prevGames.map(g => g.id));
       const newGames = mockSharedGames.filter(g => !existingIds.has(g.id));
-      console.log(`[FRONTEND DEBUG] ✅ Aggiunti ${newGames.length} giochi mock condivisi`);
+      console.log(`[FRONTEND DEBUG] ✅ Aggiunti ${newGames.length} games mock condivisi`);
       return [...prevGames, ...newGames];
     });
   };
@@ -358,8 +358,8 @@ export default function GamesPage() {
         <div className="text-center">
           <RefreshCw className="mx-auto h-12 w-12 animate-spin text-blue-500" />
           <p className="mt-4 text-lg text-muted-foreground">Loading... corso...</p>
-          {status === 'loading' && <p className="text-sm text-muted-foreground/50">Verifica autenticazione...</p>}
-          {isLoading && status === 'authenticated' && <p className="text-sm text-muted-foreground/50">Recupero la tua libreria Steam...</p>}
+          {status === 'loading' && <p className="text-sm text-muted-foreground/50">Verifica authentication...</p>}
+          {isLoading && status === 'authenticated' && <p className="text-sm text-muted-foreground/50">Recupero la tua library Steam...</p>}
         </div>
       </div>
     );
@@ -369,8 +369,8 @@ export default function GamesPage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center p-8 bg-card/50 backdrop-blur-sm rounded-lg border">
-          <h2 className="text-2xl font-bold">Connessione Store Richiesta</h2>
-          <p className="mt-2 text-muted-foreground">Per favore, collega i tuoi store per visualizzare la libreria giochi.</p>
+          <h2 className="text-2xl font-bold">connection Store Richiesta</h2>
+          <p className="mt-2 text-muted-foreground">Per favore, collega i tuoi store per visualizzare la library games.</p>
           <Button onClick={() => window.location.href = '/stores'} className="mt-6">
             Collega Store
           </Button>
@@ -387,7 +387,7 @@ export default function GamesPage() {
             <ServerCrash className="h-8 w-8 text-blue-400" />
           </div>
           <h2 className="text-2xl font-semibold text-white mb-3">🎮 No game Trovato</h2>
-          <p className="text-white/70 mb-2 leading-relaxed">Per iniziare a vedere i tuoi giochi, collega prima uno store:</p>
+          <p className="text-white/70 mb-2 leading-relaxed">Per iniziare a vedere i tuoi games, collega prima uno store:</p>
           <p className="text-blue-400 font-medium mb-6">Steam • Epic Games • GOG • Ubisoft • itch.io</p>
           {error && (
             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
@@ -419,15 +419,15 @@ export default function GamesPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Libreria Giochi</h1>
-        <p className="text-muted-foreground">{filteredAndSortedGames.length} giochi mostrati su {games.length} totali.</p>
+        <h1 className="text-3xl font-bold">library games</h1>
+        <p className="text-muted-foreground">{filteredAndSortedGames.length} games mostrati su {games.length} totali.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Giochi Totali" value={games.length} icon={Gamepad2} color="text-blue-400" />
+        <StatCard title="games Totali" value={games.length} icon={Gamepad2} color="text-blue-400" />
         <StatCard title="Installati" value={games.filter(g => g.isInstalled).length} icon={DownloadCloud} color="text-green-400" />
         <StatCard title="🔗 Condivisi" value={games.filter(g => g.isShared).length} icon={Gamepad2} color="text-orange-400" />
-        <StatCard title="Giochi VR" value={vrGamesCount} icon={Camera} color="text-purple-400" />
+        <StatCard title="games VR" value={vrGamesCount} icon={Camera} color="text-purple-400" />
       </div>
 
       <div className="space-y-4">
@@ -436,7 +436,7 @@ export default function GamesPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Cerca giochi..."
+              placeholder="Cerca games..."
               className="pl-10 w-full bg-background/50"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -454,7 +454,7 @@ export default function GamesPage() {
                 <SelectItem value="playtime-desc">Più giocati</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon" onClick={() => { console.log('[FRONTEND DEBUG] Refresh button clicked!'); loadGames(true); }} disabled={isRefreshing || isLoading} title="Forza aggiornamento">
+            <Button variant="outline" size="icon" onClick={() => { console.log('[FRONTEND DEBUG] Refresh button clicked!'); loadGames(true); }} disabled={isRefreshing || isLoading} title="Forza update">
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </Button>
             <Button variant="outline" size="sm" onClick={testFamilySharing} disabled={isLoading} title="Test Family Sharing con dati mock">
@@ -501,10 +501,12 @@ export default function GamesPage() {
             <p className="text-muted-foreground mt-2">
               {searchTerm || installationFilter !== 'all' || ownershipFilter !== 'all' || showVrOnly
                 ? 'Prova a modificare i filtri per trovare quello che cerchi.'
-                : 'La tua libreria è vuota o i giochi sono ancora in fase di Loading...
+                : 'La tua library è vuota o i games sono ancora in fase di Loading...
             </p>
           </div>
       )}
     </div>
   );
 }
+
+

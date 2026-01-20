@@ -300,3 +300,5 @@ export function RouteErrorBoundary({ children, ...props }: ErrorBoundaryProps) {
     </ErrorBoundary>
   );
 }
+
+

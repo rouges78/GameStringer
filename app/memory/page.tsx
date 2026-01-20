@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils';
 import { translationMemory, type TranslationUnit, type TMStats } from '@/lib/translation-memory';
 import { invoke } from '@/lib/tauri-api';
 
-// Cache per i nomi dei giochi
+// Cache per i nomi dei games
 const gameNameCache: Record<string, string> = {};
 
 export default function MemoryPage() {
@@ -66,7 +66,7 @@ export default function MemoryPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // Filtra unità per ricerca e gioco (esclude dati corrotti)
+  // Filtra unità per ricerca e game (esclude dati corrotti)
   const filteredUnits = units.filter(unit => {
     // Escludi dati corrotti (numeri puri, date, metadata)
     const isCorrupted = 
@@ -88,13 +88,13 @@ export default function MemoryPage() {
     return matchesSearch && matchesGame;
   });
 
-  // Lista giochi unici
+  // Lista games unici
   const uniqueGames = [...new Set(units.map(u => u.gameId).filter(Boolean))];
 
-  // Stato per i nomi dei giochi risolti
+  // Stato per i nomi dei games risolti
   const [gameNames, setGameNames] = useState<Record<string, string>>({});
 
-  // Risolvi nomi giochi dagli ID
+  // Risolvi nomi games dagli ID
   useEffect(() => {
     const resolveGameNames = async () => {
       const idsToResolve = uniqueGames.filter(id => id && !gameNameCache[id]);
@@ -104,13 +104,13 @@ export default function MemoryPage() {
       }
       
       try {
-        // Carica tutti i giochi una sola volta
+        // Carica tutti i games una sola volta
         const games = await invoke<any[]>('get_games_fast');
         
         for (const gameId of idsToResolve) {
           if (!gameId) continue;
           
-          // Cerca il gioco con varie strategie
+          // Cerca il game con varie strategie
           const game = games?.find(g => {
             if (!g?.id) return false;
             // Match esatto
@@ -162,7 +162,7 @@ export default function MemoryPage() {
     }
   }, [uniqueGames.join(',')]);
 
-  // Helper per ottenere il nome del gioco
+  // Helper per ottenere il nome del game
   const getGameName = (gameId: string | undefined) => {
     if (!gameId) return 'Unknown';
     return gameNames[gameId] || gameId;
@@ -418,3 +418,6 @@ export default function MemoryPage() {
     </div>
   );
 }
+
+
+

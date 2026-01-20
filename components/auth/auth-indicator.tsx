@@ -86,3 +86,5 @@ export function AuthIndicator({ showDetails = false, className }: AuthIndicatorP
     </div>
   );
 }
+
+

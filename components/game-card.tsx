@@ -260,3 +260,6 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
 };
 
 export default GameCard;
+
+
+

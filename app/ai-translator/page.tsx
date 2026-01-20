@@ -19,9 +19,9 @@ export default function AITranslatorPage() {
   
   return (
     <div className="container mx-auto p-4 space-y-4">
-      {/* Hero Header - Con immagine gioco fusa */}
+      {/* Hero Header - Con immagine game fusa */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3">
-        {/* Immagine gioco fusa nello sfondo */}
+        {/* Immagine game fusa nello sfondo */}
         {gameImage && (
           <>
             <div className="absolute inset-0">
@@ -113,3 +113,6 @@ export default function AITranslatorPage() {
     </div>
   );
 }
+
+
+

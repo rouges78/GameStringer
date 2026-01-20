@@ -18,7 +18,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'GameStringer - AI Game Translation',
-  description: 'GameStringer è un sistema avanzato per la traduzione automatica e manuale di videogiochi.',
+  description: 'GameStringer è un sistema avanzato per la traduzione automatica e manuale di videogames.',
 };
 
 export default function RootLayout({
@@ -68,3 +68,6 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+

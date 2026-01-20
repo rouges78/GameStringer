@@ -99,7 +99,7 @@ export function TranslationBatchEditor({
       });
     } catch (error) {
       toast({
-        title: 'Errore',
+        title: 'error',
         description: 'Impossibile salvare le traduzioni',
         variant: 'destructive'
       });
@@ -127,7 +127,7 @@ export function TranslationBatchEditor({
       });
     } catch (error) {
       toast({
-        title: 'Errore',
+        title: 'error',
         description: 'Impossibile generare suggerimenti',
         variant: 'destructive'
       });
@@ -170,7 +170,7 @@ export function TranslationBatchEditor({
       });
     } catch (error) {
       toast({
-        title: 'Errore',
+        title: 'error',
         description: 'Impossibile incollare da appunti',
         variant: 'destructive'
       });
@@ -325,3 +325,5 @@ export function TranslationBatchEditor({
     </Card>
   );
 }
+
+

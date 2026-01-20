@@ -82,7 +82,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
     languages: []
   });
 
-  // Estrai opzioni uniche dai giochi
+  // Estrai opzioni uniche dai games
   const extractOptions = () => {
     const stores = [...new Set(games.map(g => g.store).filter(Boolean))];
     const genres = [...new Set(games.map(g => g.genre).filter(Boolean))];
@@ -153,7 +153,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
       return game.rating >= filters.ratingRange[0] && game.rating <= filters.ratingRange[1];
     });
 
-    // Filtri tempo di gioco
+    // Filtri tempo di game
     filtered = filtered.filter(game => {
       if (!game.playtime) return true;
       return game.playtime >= filters.playtimeRange[0] && game.playtime <= filters.playtimeRange[1];
@@ -364,11 +364,11 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 
           <Separator />
 
-          {/* Filtri Tempo di Gioco */}
+          {/* Filtri Tempo di game */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Tempo di Gioco (ore): {filters.playtimeRange[0]} - {filters.playtimeRange[1]}
+              Tempo di game (ore): {filters.playtimeRange[0]} - {filters.playtimeRange[1]}
             </Label>
             <Slider
               value={filters.playtimeRange}
@@ -463,3 +463,6 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
 };
 
 export default AdvancedFilters;
+
+
+

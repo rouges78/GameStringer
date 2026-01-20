@@ -50,7 +50,7 @@ interface Game {
 }
 
 export function UnityPatcher() {
-  // URL params per preselezionare il gioco (da Neural Translator Pro)
+  // URL params per preselezionare il game (da Neural Translator Pro)
   const searchParams = useSearchParams();
   const urlGameId = searchParams.get('gameId');
   const urlGameName = searchParams.get('gameName');
@@ -115,7 +115,7 @@ export function UnityPatcher() {
     loadUnityGames();
   }, []);
 
-  // Preseleziona gioco da URL params (quando arriva da Neural Translator Pro)
+  // Preseleziona game da URL params (quando arriva da Neural Translator Pro)
   useEffect(() => {
     if (urlGameApplied || isLoadingGames || unityGames.length === 0) return;
     if (!urlGameId && !urlGameName) return;
@@ -144,7 +144,7 @@ export function UnityPatcher() {
     
     if (matchedGame) {
       console.log('[UnityPatcher] Game preselected from URL:', getGameName(matchedGame));
-      // Seleziona il gioco direttamente
+      // Seleziona il game direttamente
       setSelectedGame(matchedGame);
       setStatus('idle');
       setLogs([]);
@@ -182,7 +182,7 @@ export function UnityPatcher() {
   const loadUnityGames = async () => {
     setIsLoadingGames(true);
     try {
-      // Usa scan_all_steam_games_fast come la libreria Raipal
+      // Usa scan_all_steam_games_fast come la library Raipal
       const localGames = await invoke<Array<{
         id: string;
         title: string;
@@ -195,9 +195,9 @@ export function UnityPatcher() {
         engine?: string | null;
       }>>('scan_all_steam_games_fast');
       
-      // Filtra solo giochi INSTALLATI (hanno install_path)
+      // Filtra solo games INSTALLATI (hanno install_path)
       const installedGames = localGames.filter(g => g.is_installed && g.install_path);
-      // Debug: console.log(`[UNITY PATCHER] Giochi installati: ${installedGames.length}`);
+      // Debug: console.log(`[UNITY PATCHER] games installati: ${installedGames.length}`);
       
       // Debug: mostra i motori rilevati
       const engines = installedGames.reduce((acc, g) => {
@@ -207,9 +207,9 @@ export function UnityPatcher() {
       }, {} as Record<string, number>);
       // Debug: console.log(`[UNITY PATCHER] Motori rilevati:`, engines);
       
-      // Mostra tutti i giochi con engine noto, ordinati per engine
+      // Mostra tutti i games con engine noto, ordinati per engine
       const allGamesWithEngine = installedGames
-        .filter(g => g.engine) // Solo giochi con engine rilevato
+        .filter(g => g.engine) // Solo games con engine rilevato
         .map(g => ({
           appid: g.steam_app_id || undefined,
           app_id: g.steam_app_id ? String(g.steam_app_id) : g.id,
@@ -229,7 +229,7 @@ export function UnityPatcher() {
           return getGameName(a).localeCompare(getGameName(b));
         });
       
-      // Debug: console.log(`[PATCHER] Giochi con engine: ${allGamesWithEngine.length}`);
+      // Debug: console.log(`[PATCHER] games con engine: ${allGamesWithEngine.length}`);
       setUnityGames(allGamesWithEngine);
       setHasSteamCredentials(true); // Non serve più, ma manteniamo per UI
     } catch (err) {
@@ -289,7 +289,7 @@ export function UnityPatcher() {
     setEngineCheck(null);
     setPatchInfo(null);
     
-    // Se il gioco ha install_dir, usalo automaticamente
+    // Se il game ha install_dir, usalo automaticamente
     if (game.install_dir) {
       setGamePath(game.install_dir);
       // Verify engine and search for executable
@@ -352,7 +352,7 @@ export function UnityPatcher() {
         setProgress(0);
         setEngineCheck(null);
         
-        // Verifica il motore di gioco
+        // Verifica il motore di game
         try {
           const check = await invoke<{ is_unity: boolean; is_unreal: boolean; engine_name: string; can_patch: boolean; message: string }>('check_game_engine', { gamePath: selected });
           setEngineCheck(check);
@@ -770,3 +770,6 @@ export function UnityPatcher() {
     </div>
   );
 }
+
+
+

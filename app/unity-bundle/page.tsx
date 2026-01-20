@@ -125,7 +125,7 @@ export default function UnityBundlePage() {
         setStrings([]);
       }
     } catch (e) {
-      console.error("Errore selezione:", e);
+      console.error("error selezione:", e);
     }
   };
 
@@ -145,7 +145,7 @@ export default function UnityBundlePage() {
         setError(res.message);
       }
     } catch (e) {
-      setError(`Errore analisi: ${e}`);
+      setError(`error analisi: ${e}`);
     } finally {
       setAnalyzing(false);
     }
@@ -173,7 +173,7 @@ export default function UnityBundlePage() {
         setError(res.message);
       }
     } catch (e) {
-      setError(`Errore estrazione: ${e}`);
+      setError(`error estrazione: ${e}`);
     } finally {
       setExtracting(false);
     }
@@ -231,7 +231,7 @@ export default function UnityBundlePage() {
             consecutiveErrors = 0; // Reset errori
           }
         } catch (err) {
-          console.error("Errore traduzione:", err);
+          console.error("error traduzione:", err);
           translatedStrings.push({ ...entry, translated: entry.value });
         }
         
@@ -255,7 +255,7 @@ export default function UnityBundlePage() {
       
       setCurrentStep(3);
     } catch (e) {
-      setError(`Errore traduzione: ${e}`);
+      setError(`error traduzione: ${e}`);
     } finally {
       setTranslating(false);
     }
@@ -295,7 +295,7 @@ export default function UnityBundlePage() {
       setUabeaStep(1);
       setCurrentStep(4);
     } catch (e) {
-      setError(`Errore export: ${e}`);
+      setError(`error export: ${e}`);
     } finally {
       setCreatingBundle(false);
     }
@@ -306,7 +306,7 @@ export default function UnityBundlePage() {
       await invoke("open_uabea");
       setUabeaStep(2);
     } catch (e) {
-      setError(`Errore apertura UABEA: ${e}`);
+      setError(`error apertura UABEA: ${e}`);
     }
   };
 
@@ -587,3 +587,6 @@ export default function UnityBundlePage() {
     </div>
   );
 }
+
+
+

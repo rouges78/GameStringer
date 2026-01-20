@@ -692,3 +692,6 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
 }
 
 export default BatchTranslationQueue;
+
+
+

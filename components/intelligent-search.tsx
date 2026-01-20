@@ -501,3 +501,6 @@ const IntelligentSearch: React.FC<IntelligentSearchProps> = ({
 };
 
 export default IntelligentSearch;
+
+
+

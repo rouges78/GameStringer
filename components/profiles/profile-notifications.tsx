@@ -88,7 +88,7 @@ export function ProfileNotifications() {
     //     id: 'welcome',
     //     type: 'info',
     //     title: 'Benvenuto!',
-    //     message: `Ciao ${currentProfile.name}! Il tuo profilo è ora attivo. Tutte le tue impostazioni e credenziali sono isolate e sicure.`,
+    //     message: `Ciao ${currentProfile.name}! Il tuo profilo è ora attivo. Tutte le tue impostazioni e Credentials sono isolate e sicure.`,
     //     dismissible: true,
     //     autoHide: 10000
     //   });
@@ -207,3 +207,5 @@ export function ProfileNotifications() {
     </div>
   );
 }
+
+

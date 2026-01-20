@@ -88,7 +88,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
         setStats(data);
       }
     } catch (error) {
-      console.error('Errore Loading...atistiche:', error);
+      console.error('error Loading...atistiche:', error);
     }
   };
 
@@ -325,3 +325,6 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
     </div>
   );
 }
+
+
+

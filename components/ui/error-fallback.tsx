@@ -282,7 +282,7 @@ export function LoadingErrorFallback({
   );
 }
 
-// Componente per errori di autenticazione
+// Componente per errori di authentication
 interface AuthErrorFallbackProps extends Omit<ErrorFallbackProps, 'title' | 'description'> {
   onLogin?: () => void;
 }
@@ -334,3 +334,5 @@ export function AuthErrorFallback({
     </div>
   );
 }
+
+

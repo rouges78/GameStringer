@@ -101,7 +101,7 @@ export default function ActivityHistoryPage() {
     loadCounts();
   }, [filter, loadActivities, loadCounts]);
 
-  // Cambio pagina
+  // Page change
   const handlePageChange = (newPage: number) => {
     loadActivities(newPage, filter === 'all' ? undefined : filter);
   };
@@ -349,3 +349,6 @@ export default function ActivityHistoryPage() {
     </div>
   );
 }
+
+
+

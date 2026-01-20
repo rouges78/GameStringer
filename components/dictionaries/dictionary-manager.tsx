@@ -108,7 +108,7 @@ export function DictionaryManager() {
       return;
     }
     
-    // Prova a trovare il percorso automaticamente (silenzioso)
+    // Try a trovare il percorso automaticamente (silenzioso)
     let path = '';
     try {
       path = await invoke<string>('find_game_install_path', { installDir: selectedDict.game_name });
@@ -265,3 +265,6 @@ export function DictionaryManager() {
     </div>
   );
 }
+
+
+

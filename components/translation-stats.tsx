@@ -166,12 +166,12 @@ export function TranslationStats({ translations }: TranslationStatsProps) {
           </CardContent>
         </Card>
 
-        {/* Statistiche per gioco */}
+        {/* Statistiche per game */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <FileText className="h-5 w-5" />
-              <span>Per Gioco</span>
+              <span>Per game</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -192,3 +192,5 @@ export function TranslationStats({ translations }: TranslationStatsProps) {
     </div>
   );
 }
+
+

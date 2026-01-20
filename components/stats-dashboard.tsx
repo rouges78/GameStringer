@@ -309,6 +309,9 @@ export function updateTranslationStats(
     localStorage.setItem('daily_translation_stats', JSON.stringify(filtered));
 
   } catch (error) {
-    console.error('Errore aggiornamento statistiche:', error);
+    console.error('error update statistiche:', error);
   }
 }
+
+
+

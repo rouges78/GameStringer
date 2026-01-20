@@ -258,3 +258,5 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
     </Card>
   );
 }
+
+

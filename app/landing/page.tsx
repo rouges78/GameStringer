@@ -68,7 +68,7 @@ const STATS = [
   { value: '10+', label: 'Engine Supportati' },
   { value: '7+', label: 'Provider AI' },
   { value: '100%', label: 'Gratuito' },
-  { value: '∞', label: 'Giochi Traducibili' },
+  { value: '∞', label: 'games Traducibili' },
 ];
 
 export default function LandingPage() {
@@ -92,11 +92,11 @@ export default function LandingPage() {
           </div>
           
           <p className="text-xl text-slate-300 mb-4 max-w-2xl mx-auto">
-            La suite completa per tradurre videogiochi con AI
+            La suite completa per tradurre videogames con AI
           </p>
           <p className="text-slate-400 mb-8 max-w-xl mx-auto">
             Open source, gratuito, supporta qualsiasi engine. 
-            Traduci giochi indie, retro e AAA con intelligenza artificiale.
+            Traduci games indie, retro e AAA con intelligenza artificiale.
           </p>
           
           {/* CTA Buttons */}
@@ -126,10 +126,10 @@ export default function LandingPage() {
       {/* Features */}
       <section className="max-w-6xl mx-auto px-6 py-20">
         <h2 className="text-3xl font-bold text-center text-white mb-4">
-          Tutto quello che serve per tradurre giochi
+          Tutto quello che serve per tradurre games
         </h2>
         <p className="text-slate-400 text-center mb-12 max-w-2xl mx-auto">
-          Un ecosistema completo di strumenti AI per localizzazione videogiochi
+          Un ecosistema completo di strumenti AI per localizzazione videogames
         </p>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -171,9 +171,9 @@ export default function LandingPage() {
         
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            { step: '1', title: 'Seleziona il gioco', desc: 'Scegli dalla libreria Steam/Epic o aggiungi manualmente' },
+            { step: '1', title: 'Seleziona il game', desc: 'Scegli dalla library Steam/Epic o aggiungi manualmente' },
             { step: '2', title: 'Configura la traduzione', desc: 'Scegli provider AI, lingua target e profilo personaggio' },
-            { step: '3', title: 'Traduci e gioca', desc: 'Le traduzioni vengono iniettate automaticamente nel gioco' },
+            { step: '3', title: 'Traduci e gioca', desc: 'Le traduzioni vengono iniettate automaticamente nel game' },
           ].map((item, i) => (
             <div key={i} className="text-center">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4 text-white font-bold text-xl">
@@ -191,7 +191,7 @@ export default function LandingPage() {
         <Card className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border-purple-500/30">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-4">
-              Pronto a tradurre i tuoi giochi preferiti?
+              Pronto a tradurre i tuoi games preferiti?
             </h2>
             <p className="text-slate-300 mb-6">
               Scarica GameStringer gratuitamente e inizia subito
@@ -233,3 +233,6 @@ export default function LandingPage() {
     </div>
   );
 }
+
+
+

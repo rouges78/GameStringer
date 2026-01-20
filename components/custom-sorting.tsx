@@ -178,7 +178,7 @@ const CustomSorting: React.FC<CustomSortingProps> = ({
         const aValue = a[rule.field];
         const bValue = b[rule.field];
         
-        // Gestisci valori null/undefined
+        // Handle valori null/undefined
         if (aValue == null && bValue == null) continue;
         if (aValue == null) return rule.direction === 'asc' ? 1 : -1;
         if (bValue == null) return rule.direction === 'asc' ? -1 : 1;
@@ -484,3 +484,6 @@ const CustomSorting: React.FC<CustomSortingProps> = ({
 };
 
 export default CustomSorting;
+
+
+

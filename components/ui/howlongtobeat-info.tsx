@@ -173,7 +173,7 @@ export function HowLongToBeatInfo({ gameName, currentPlaytime = 0 }: HowLongToBe
         {currentPlaytime > 0 && (
           <div className="pt-2 border-t">
             <p className="text-sm text-muted-foreground">
-              Tempo di gioco attuale: <span className="font-semibold">{currentPlaytime} ore</span>
+              Tempo di game attuale: <span className="font-semibold">{currentPlaytime} ore</span>
             </p>
           </div>
         )}
@@ -181,3 +181,5 @@ export function HowLongToBeatInfo({ gameName, currentPlaytime = 0 }: HowLongToBe
     </Card>
   );
 }
+
+

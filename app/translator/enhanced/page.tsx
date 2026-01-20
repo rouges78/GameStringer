@@ -98,7 +98,7 @@ export default function EnhancedTranslatorPage() {
       
       setCurrentOperationId(operationId);
     } catch (error) {
-      console.error('Errore nel Loading...le:', error);
+      console.error('error nel Loading...le:', error);
     }
   };
 
@@ -126,7 +126,7 @@ export default function EnhancedTranslatorPage() {
     const mockTranslations: Record<string, string> = {
       'Hello': 'Ciao',
       'World': 'Mondo',
-      'Game': 'Gioco',
+      'Game': 'game',
       'Start': 'Inizia',
       'Options': 'Opzioni',
       'Quit': 'Esci'
@@ -160,7 +160,7 @@ export default function EnhancedTranslatorPage() {
         }
       );
 
-      // Aggiorna tasks con risultati
+      // Aggiorna tasks con results
       setTranslationTasks(prev => prev.map(task => {
         const resultItem = result.results.find(r => r.itemId === task.id);
         if (resultItem?.success) {
@@ -180,7 +180,7 @@ export default function EnhancedTranslatorPage() {
       }));
 
     } catch (error) {
-      console.error('Errore nella traduzione:', error);
+      console.error('error nella traduzione:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -213,13 +213,13 @@ export default function EnhancedTranslatorPage() {
         }
       );
     } catch (error) {
-      console.error('Errore nella traduzione batch:', error);
+      console.error('error nella traduzione batch:', error);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Esporta risultati
+  // Esporta results
   const handleExportResults = async () => {
     if (translationTasks.length === 0) {
       alert('Nessuna traduzione da esportare');
@@ -270,7 +270,7 @@ export default function EnhancedTranslatorPage() {
         }
       );
     } catch (error) {
-      console.error('Errore nell\'esportazione:', error);
+      console.error('error nell\'esportazione:', error);
     }
   };
 
@@ -424,7 +424,7 @@ export default function EnhancedTranslatorPage() {
               variant="outline"
             >
               <Download className="h-4 w-4 mr-2" />
-              Esporta Risultati
+              Esporta results
             </Button>
           </div>
         </CardContent>
@@ -469,13 +469,13 @@ export default function EnhancedTranslatorPage() {
         </Card>
       )}
 
-      {/* Risultati Traduzione */}
+      {/* results Traduzione */}
       {translationTasks.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5" />
-              Risultati Traduzione
+              results Traduzione
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -538,3 +538,5 @@ export default function EnhancedTranslatorPage() {
     </div>
   );
 }
+
+

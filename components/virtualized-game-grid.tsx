@@ -39,19 +39,19 @@ interface VirtualizedGameGridProps {
 }
 
 /**
- * Griglia virtualizzata per liste di giochi
+ * Griglia virtualizzata per liste di games
  * Renderizza solo gli elementi visibili nel viewport, riducendo drasticamente l'uso di memoria
  * 
  * Benefici:
- * - Con 500 giochi: ~50MB → ~5MB di memoria per DOM
- * - Scroll fluido anche con migliaia di giochi
+ * - Con 500 games: ~50MB → ~5MB di memoria per DOM
+ * - Scroll fluido anche con migliaia di games
  * - Lazy loading automatico
  */
 const VirtualizedGameGrid: React.FC<VirtualizedGameGridProps> = ({ games, className }) => {
   // Memoizza la lista per evitare re-render inutili
   const memoizedGames = useMemo(() => games, [games]);
 
-  // Se pochi giochi, usa rendering normale (virtualizzazione non necessaria)
+  // Se pochi games, usa rendering normale (virtualizzazione non necessaria)
   if (games.length <= 20) {
     return (
       <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 ${className || ''}`}>
@@ -81,3 +81,6 @@ const VirtualizedGameGrid: React.FC<VirtualizedGameGridProps> = ({ games, classN
 };
 
 export default VirtualizedGameGrid;
+
+
+

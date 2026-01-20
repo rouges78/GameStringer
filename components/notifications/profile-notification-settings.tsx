@@ -89,7 +89,7 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
     );
   }
 
-  // Mostra errore se non c'è un profilo corrente
+  // Mostra error se non c'è un profilo corrente
   if (!currentProfile) {
     return (
       <div className={className}>
@@ -103,7 +103,7 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
     );
   }
 
-  // Mostra errore se ci sono problemi nel Loading...lle preferenze
+  // Mostra error se ci sono problemi nel Loading...lle preferenze
   if (error) {
     return (
       <div className={className}>
@@ -170,3 +170,5 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
 };
 
 export default ProfileNotificationSettings;
+
+
