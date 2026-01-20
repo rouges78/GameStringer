@@ -590,7 +590,7 @@ export default function TranslationWizardPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Search className="h-5 w-5 text-purple-400" />
-                    Seleziona un Gioco
+                    Select a game
                   </CardTitle>
                   <CardDescription>
                     Scegli il gioco che vuoi tradurre dalla tua libreria
@@ -600,7 +600,7 @@ export default function TranslationWizardPage() {
                   <div className="relative mb-4">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
-                      placeholder="Cerca gioco..."
+                      placeholder="Search game..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 bg-slate-900/50 border-slate-600"
@@ -655,7 +655,7 @@ export default function TranslationWizardPage() {
                         {filteredGames.length === 0 && (
                           <div className="text-center py-12 text-slate-500">
                             <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                            <p>Nessun gioco trovato</p>
+                            <p>No game trovato</p>
                             <p className="text-sm mt-1">Prova a cercare con un altro termine</p>
                           </div>
                         )}

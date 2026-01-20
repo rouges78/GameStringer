@@ -62,7 +62,7 @@ export function ProtectedRoute({
             <Loader2 className="w-8 h-8 text-white animate-spin" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">GameStringer</h1>
-          <p className="text-blue-200">Caricamento sistema di autenticazione...</p>
+          <p className="text-blue-200">Loading...stema di autenticazione...</p>
         </div>
       </div>
     );

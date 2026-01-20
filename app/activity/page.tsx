@@ -224,7 +224,7 @@ export default function ActivityHistoryPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tutte le attività</SelectItem>
+              <SelectItem value="all">All activities</SelectItem>
               {(Object.keys(activityNames) as ActivityType[]).map((type) => (
                 <SelectItem key={type} value={type}>
                   {activityIcons[type]} {activityNames[type]}

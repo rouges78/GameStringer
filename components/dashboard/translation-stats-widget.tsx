@@ -133,7 +133,7 @@ export function TranslationStatsWidget() {
         estimatedTimeRemaining,
       });
     } catch (error) {
-      console.error('Errore caricamento statistiche:', error);
+      console.error('Errore Loading...atistiche:', error);
     } finally {
       setIsLoading(false);
     }

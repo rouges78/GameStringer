@@ -88,7 +88,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
         setStats(data);
       }
     } catch (error) {
-      console.error('Errore caricamento statistiche:', error);
+      console.error('Errore Loading...atistiche:', error);
     }
   };
 
@@ -97,7 +97,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
       <Card>
         <CardContent className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">
-            {isActive ? 'Caricamento statistiche...' : 'Nessuna sessione attiva'}
+            {isActive ? 'Loading...atistiche...' : 'Nessuna sessione attiva'}
           </p>
         </CardContent>
       </Card>

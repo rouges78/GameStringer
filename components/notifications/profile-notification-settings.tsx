@@ -103,7 +103,7 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
     );
   }
 
-  // Mostra errore se ci sono problemi nel caricamento delle preferenze
+  // Mostra errore se ci sono problemi nel Loading...lle preferenze
   if (error) {
     return (
       <div className={className}>

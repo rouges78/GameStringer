@@ -357,7 +357,7 @@ export default function GamesPage() {
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
           <RefreshCw className="mx-auto h-12 w-12 animate-spin text-blue-500" />
-          <p className="mt-4 text-lg text-muted-foreground">Caricamento in corso...</p>
+          <p className="mt-4 text-lg text-muted-foreground">Loading... corso...</p>
           {status === 'loading' && <p className="text-sm text-muted-foreground/50">Verifica autenticazione...</p>}
           {isLoading && status === 'authenticated' && <p className="text-sm text-muted-foreground/50">Recupero la tua libreria Steam...</p>}
         </div>
@@ -386,7 +386,7 @@ export default function GamesPage() {
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full flex items-center justify-center mb-6">
             <ServerCrash className="h-8 w-8 text-blue-400" />
           </div>
-          <h2 className="text-2xl font-semibold text-white mb-3">🎮 Nessun Gioco Trovato</h2>
+          <h2 className="text-2xl font-semibold text-white mb-3">🎮 No game Trovato</h2>
           <p className="text-white/70 mb-2 leading-relaxed">Per iniziare a vedere i tuoi giochi, collega prima uno store:</p>
           <p className="text-blue-400 font-medium mb-6">Steam • Epic Games • GOG • Ubisoft • itch.io</p>
           {error && (
@@ -497,11 +497,11 @@ export default function GamesPage() {
       ) : (
          <div className="text-center p-16 bg-background/30 rounded-lg">
             <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold">Nessun gioco trovato</h3>
+            <h3 className="text-xl font-semibold">No game trovato</h3>
             <p className="text-muted-foreground mt-2">
               {searchTerm || installationFilter !== 'all' || ownershipFilter !== 'all' || showVrOnly
                 ? 'Prova a modificare i filtri per trovare quello che cerchi.'
-                : 'La tua libreria è vuota o i giochi sono ancora in fase di caricamento.'}
+                : 'La tua libreria è vuota o i giochi sono ancora in fase di Loading...
             </p>
           </div>
       )}

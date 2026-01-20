@@ -134,7 +134,7 @@ export default function OcrTranslatorPage() {
       }
     } catch (e) {
       console.error('[OCR] Errore traduzione:', e);
-      setTranslationError(`Errore: ${e}`);
+      setTranslationError(`Error: ${e}`);
     } finally {
       pendingTranslations.delete(text);
     }
@@ -183,7 +183,7 @@ export default function OcrTranslatorPage() {
         toast.success('OCR avviato - Traduzioni in tempo reale');
       }
     } catch (e) {
-      toast.error(`Errore: ${e}`);
+      toast.error(`Error: ${e}`);
     }
   };
 

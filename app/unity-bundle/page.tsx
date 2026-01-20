@@ -285,7 +285,7 @@ export default function UnityBundlePage() {
         }
       }
       
-      // Salva file dump
+      // Save file dump
       await invoke("save_uabea_dump", {
         path,
         content: dumpContent

@@ -442,7 +442,7 @@ export default function StoreManagerPage() {
       
     } catch (error) {
       console.error("Errore in getInitialStatuses:", error);
-      // Non mostrare toast di errore al caricamento iniziale
+      // Non mostrare toast di errore al Loading...iziale
     } finally {
       setGlobalLoading(false);
     }
@@ -772,7 +772,7 @@ export default function StoreManagerPage() {
           ...prev.steam,
           connected: false,
           loading: false,
-          error: 'Errore: Verifica API Key e Steam ID'
+          error: 'Error: Verifica API Key e Steam ID'
         }
       }));
       toast.error('Errore connessione Steam. Verifica API Key e Steam ID.');
@@ -830,7 +830,7 @@ export default function StoreManagerPage() {
           ...prev.steam,
           connected: false,
           loading: false,
-          error: errMsg.includes('Credenziali corrotte') ? 'Riconnettiti a Steam' : 'Errore: Verifica Steam ID'
+          error: errMsg.includes('Credenziali corrotte') ? 'Riconnettiti a Steam' : 'Error: Verifica Steam ID'
         }
       }));
       throw error; // Rilancia l'errore per far gestire al modal
@@ -878,7 +878,7 @@ export default function StoreManagerPage() {
           ...prev.itch_io,
           connected: false,
           loading: false,
-          error: 'Errore: Verifica API Key'
+          error: 'Error: Verifica API Key'
         }
       }));
       throw error; // Rilancia l'errore per far gestire al modal
@@ -938,7 +938,7 @@ export default function StoreManagerPage() {
           ...prev[currentGenericProvider],
           connected: false,
           loading: false,
-          error: 'Errore: Verifica credenziali'
+          error: 'Error: Verifica credenziali'
         }
       }));
       throw error; // Rilancia l'errore per far gestire al modal
@@ -994,10 +994,10 @@ export default function StoreManagerPage() {
             manuallyDisconnected: false,
             gamesCount: 0,
             lastChecked: new Date(),
-            error: 'Nessun gioco trovato'
+            error: 'No game trovato'
           }
         }));
-        toast.warning('Epic Games connesso ma nessun gioco trovato nella libreria');
+        toast.warning('Epic Games connesso ma No game trovato nella libreria');
       }
       
     } catch (error) {
@@ -1008,7 +1008,7 @@ export default function StoreManagerPage() {
           ...prev.epic_games,
           connected: false,
           loading: false,
-          error: 'Errore: Verifica username e password'
+          error: 'Error: Verifica username e password'
         }
       }));
       throw error; // Rilancia l'errore per far gestire al modal
@@ -1044,7 +1044,7 @@ export default function StoreManagerPage() {
         toast.info(`Giochi trovati: ${gamesList}${result.games.length > 5 ? '...' : ''}`);
         
       } else {
-        toast.warning('Nessun gioco Epic trovato online. Prova metodi diversi.');
+        toast.warning('No game Epic trovato online. Prova metodi diversi.');
         console.log('Metodi provati:', result.methods_tried);
       }
       
@@ -1106,7 +1106,7 @@ export default function StoreManagerPage() {
         setShowEpicModal(false);
         
       } else {
-        toast.warning('Epic Games connesso ma nessun gioco trovato nella libreria');
+        toast.warning('Epic Games connesso ma No game trovato nella libreria');
         
         setStoreStatuses(prev => ({
           ...prev,
@@ -1115,7 +1115,7 @@ export default function StoreManagerPage() {
             connected: true,
             gamesCount: 0,
             lastChecked: new Date(),
-            error: 'Nessun gioco trovato'
+            error: 'No game trovato'
           }
         }));
       }
@@ -1128,7 +1128,7 @@ export default function StoreManagerPage() {
           ...prev.epic_games,
           connected: false,
           loading: false,
-          error: 'Errore: Verifica username e password'
+          error: 'Error: Verifica username e password'
         }
       }));
       toast.error('Errore connessione Epic Games. Verifica le credenziali.');
@@ -1189,7 +1189,7 @@ export default function StoreManagerPage() {
         }
         
       } else {
-        toast.warning('Nessun gioco Epic trovato.');
+        toast.warning('No game Epic trovato.');
         
         // Se non trova giochi, prova a suggerire soluzioni
         if (!legendaryStatus.installed) {

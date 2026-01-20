@@ -75,7 +75,7 @@ export function SubtitleOverlay() {
     const samples = [
       { original: 'Welcome to the game!', translated: 'Benvenuto nel gioco!' },
       { original: 'Press any key to continue', translated: 'Premi un tasto per continuare' },
-      { original: 'Loading...', translated: 'Caricamento...' },
+      { original: 'Loading...', translated: 'Loading...' },
       { original: 'Game saved successfully', translated: 'Gioco salvato con successo' },
       { original: 'Are you sure you want to quit?', translated: 'Sei sicuro di voler uscire?' },
     ];

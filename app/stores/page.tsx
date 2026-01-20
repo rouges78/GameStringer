@@ -178,8 +178,8 @@ export default function StoresPage() {
       setFixMessage('');
       await update();
     } else {
-      toast.error(`Errore: ${result.error}`);
-      setFixMessage(`Errore: ${result.error}`);
+      toast.error(`Error: ${result.error}`);
+      setFixMessage(`Error: ${result.error}`);
     }
     setLoadingProvider(null);
   };

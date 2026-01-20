@@ -956,7 +956,7 @@ export default function LibraryPage() {
       </div>
 
 
-      {/* Contenuto principale (griglia, caricamento, errori) */}
+      {/* Contenuto principale (griglia, Loading...rrori) */}
       {renderContent()}
     </div>
   );

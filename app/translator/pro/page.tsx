@@ -1200,7 +1200,7 @@ export default function TranslatorProPage() {
   const handleApplyToGame = async () => {
     console.log('[ApplyToGame] Inizio - selectedGame:', selectedGame?.name, 'translatedFiles:', translatedFiles.size);
     if (!selectedGame || translatedFiles.size === 0) {
-      console.log('[ApplyToGame] Uscita anticipata - nessun gioco o file');
+      console.log('[ApplyToGame] Uscita anticipata - No game o file');
       return;
     }
     
@@ -1423,7 +1423,7 @@ export default function TranslatorProPage() {
           <div className="w-16 h-16 border-4 border-primary/20 rounded-full" />
           <div className="absolute inset-0 w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
-        <p className="text-muted-foreground">Caricamento...</p>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     );
   }
@@ -2439,7 +2439,7 @@ export default function TranslatorProPage() {
                                 };
                                 setCurrentJob(partialJob);
                               } else {
-                                console.warn('[Neural Translator] Nessun risultato da salvare:', translatedItems.length);
+                                console.warn('[Neural Translator] No results da salvare:', translatedItems.length);
                               }
                               
                               setCurrentStep('results');

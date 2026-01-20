@@ -361,7 +361,7 @@ export default function EditorPage() {
     if (partialData) {
       try {
         const data = JSON.parse(partialData);
-        console.log('[Editor] Caricamento risultati parziali:', data.items?.length, 'traduzioni');
+        console.log('[Editor] Loading...sultati parziali:', data.items?.length, 'traduzioni');
         
         // Crea traduzioni dall'array di items
         if (data.items && data.items.length > 0) {
@@ -813,7 +813,7 @@ export default function EditorPage() {
   const exportTranslations = async (format: 'json' | 'csv' | 'po') => {
     if (!filterGame || filterGame === 'all') {
       toast({
-        title: 'Seleziona un gioco',
+        title: 'Select a game',
         description: 'Devi selezionare un gioco specifico per esportare',
         variant: 'destructive'
       });

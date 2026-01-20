@@ -60,7 +60,7 @@ export default function EnhancedTranslatorPage() {
   const { executeTranslationBatch } = useProgressBatch();
   const { operation: currentOperation, isActive } = useProgressDisplay(currentOperationId || undefined);
 
-  // Carica file
+  // Load file
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = Array.from(event.target.files || []);
     
@@ -71,7 +71,7 @@ export default function EnhancedTranslatorPage() {
           
           for (let i = 0; i < uploadedFiles.length; i++) {
             const file = uploadedFiles[i];
-            updateProgress((i / uploadedFiles.length) * 100, `Caricamento ${file.name}...`);
+            updateProgress((i / uploadedFiles.length) * 100, `Loading...file.name}...`);
             
             const content = await file.text();
             newFiles.push({
@@ -90,7 +90,7 @@ export default function EnhancedTranslatorPage() {
           return newFiles;
         },
         {
-          title: `Caricamento di ${uploadedFiles.length} file`,
+          title: `Loading... ${uploadedFiles.length} file`,
           description: 'Lettura e analisi file in corso...',
           canCancel: false
         }
@@ -98,7 +98,7 @@ export default function EnhancedTranslatorPage() {
       
       setCurrentOperationId(operationId);
     } catch (error) {
-      console.error('Errore nel caricamento file:', error);
+      console.error('Errore nel Loading...le:', error);
     }
   };
 
@@ -347,12 +347,12 @@ export default function EnhancedTranslatorPage() {
         </CardContent>
       </Card>
 
-      {/* Caricamento File */}
+      {/* Loading...le */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Caricamento File
+            Loading...le
           </CardTitle>
         </CardHeader>
         <CardContent>

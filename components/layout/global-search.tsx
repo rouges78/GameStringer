@@ -128,7 +128,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
         <ScrollArea className="max-h-[300px]">
           {filteredItems.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
-              Nessun risultato per "{query}"
+              No results per "{query}"
             </div>
           ) : (
             <div className="p-2">
