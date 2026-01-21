@@ -1,14 +1,36 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "major": 1,
   "minor": 0,
-  "patch": 0,
+  "patch": 1,
   "prerelease": null,
-  "buildNumber": 100,
-  "buildDate": "2026-01-20T00:00:00.000Z",
+  "buildNumber": 101,
+  "buildDate": "2026-01-21T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.1": {
+      "date": "2026-01-21",
+      "type": "patch",
+      "changes": [
+        "Nuovo layout 3:1 per pagina dettaglio gioco",
+        "Screenshot gallery espansa (12 screenshot)",
+        "Raccomandazione traduzione full-width",
+        "Traduzioni EN complete per gameDetails",
+        "Trama completa nell'header hero"
+      ]
+    },
+    "1.0.0": {
+      "date": "2026-01-20",
+      "type": "major",
+      "changes": [
+        "Release pubblica ufficiale",
+        "Sistema i18n completo (Italiano/English)",
+        "Hero Image Fusion per tutte le pagine",
+        "Screenshot Gallery nella pagina dettaglio",
+        "GitHub Sponsors integrato"
+      ]
+    },
     "0.9.9-beta": {
       "date": "2026-01-19",
       "type": "feature",
