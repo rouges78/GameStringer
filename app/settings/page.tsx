@@ -427,38 +427,6 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-2">
-                  <Label>{t('settings.language')}</Label>
-                  <div className="flex gap-2">
-                    <Select 
-                      value={settings.system.language} 
-                      onValueChange={(value) => updateSetting('system', 'language', value)}
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="it">🇮🇹 Italiano</SelectItem>
-                        <SelectItem value="en">🇺🇸 English</SelectItem>
-                        <SelectItem value="es" disabled className="opacity-50">🇪🇸 Español (coming soon)</SelectItem>
-                        <SelectItem value="fr" disabled className="opacity-50">🇫🇷 Français (coming soon)</SelectItem>
-                        <SelectItem value="de" disabled className="opacity-50">🇩🇪 Deutsch (coming soon)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        localStorage.setItem('gameStringerSettings', JSON.stringify(settings));
-                        toast.info(t('common.restart'));
-                        window.location.reload();
-                      }}
-                    >
-                      {t('settings.apply')}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">{t('settings.languageHint')}</p>
-                </div>
               </div>
 
               <div className="space-y-4">

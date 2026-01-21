@@ -78,7 +78,7 @@ export function UpdateNotification() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <h3 className="text-white font-semibold text-sm">
-                Update available!
+                Aggiornamento disponibile!
               </h3>
               <button
                 onClick={handleDismiss}
@@ -89,8 +89,8 @@ export function UpdateNotification() {
             </div>
             
             <p className="text-white/80 text-xs mt-1">
-              Version <span className="font-mono">{updateInfo.latest_version}</span> available
-              <span className="text-white/60"> (current: {updateInfo.current_version})</span>
+              Versione <span className="font-mono">{updateInfo.latest_version}</span> disponibile
+              <span className="text-white/60"> (attuale: {updateInfo.current_version})</span>
             </p>
             
             {updateInfo.release_notes && (
@@ -106,7 +106,7 @@ export function UpdateNotification() {
                 className="bg-white text-purple-700 hover:bg-white/90 h-7 text-xs px-3"
               >
                 <Download className="w-3 h-3 mr-1" />
-                Download
+                Scarica
               </Button>
               <Button
                 size="sm"
@@ -114,7 +114,7 @@ export function UpdateNotification() {
                 onClick={handleDismiss}
                 className="text-white/80 hover:text-white hover:bg-white/10 h-7 text-xs"
               >
-                Later
+                Dopo
               </Button>
             </div>
           </div>

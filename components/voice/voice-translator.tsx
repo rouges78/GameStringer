@@ -25,6 +25,7 @@ import {
   ArrowRight,
   FileAudio
 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranscriptionSegment {
   start: number;
@@ -85,6 +86,7 @@ const TTS_VOICES = [
 ];
 
 export function VoiceTranslator() {
+  const { t } = useTranslation();
   const [state, setState] = useState<VoiceTranslatorState>({
     isRecording: false,
     recordingDuration: 0,
@@ -374,7 +376,7 @@ export function VoiceTranslator() {
   return (
     <div className="space-y-3">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-500 via-blue-500 to-cyan-500 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -384,8 +386,8 @@ export function VoiceTranslator() {
               <Volume2 className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">Voice Translator</h2>
-              <p className="text-white/90 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">Audio → Transcription → Translation → TTS</p>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">{t('voiceTranslator.title')}</h2>
+              <p className="text-white/90 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">{t('voiceTranslator.subtitle')}</p>
             </div>
           </div>
           
@@ -418,7 +420,7 @@ export function VoiceTranslator() {
             <CardHeader className="py-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Mic className="h-4 w-4" />
-                Record or Upload Audio
+                {t('voiceTranslator.recordOrUpload')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -427,18 +429,18 @@ export function VoiceTranslator() {
                 <Button
                   size="lg"
                   variant={state.isRecording ? 'destructive' : 'default'}
-                  className={state.isRecording ? '' : 'bg-amber-500 hover:bg-amber-600'}
+                  className={state.isRecording ? '' : 'bg-blue-500 hover:bg-blue-600'}
                   onClick={state.isRecording ? stopRecording : startRecording}
                 >
                   {state.isRecording ? (
                     <>
                       <StopCircle className="h-5 w-5 mr-2" />
-                      Stop
+                      {t('voiceTranslator.stop')}
                     </>
                   ) : (
                     <>
                       <Mic className="h-5 w-5 mr-2" />
-                      Record
+                      {t('voiceTranslator.record')}
                     </>
                   )}
                 </Button>
@@ -462,7 +464,7 @@ export function VoiceTranslator() {
                   <Button variant="outline" size="sm" asChild>
                     <span>
                       <Upload className="h-4 w-4 mr-1" />
-                      Upload File
+                      {t('voiceTranslator.uploadFile')}
                     </span>
                   </Button>
                 </label>
@@ -482,7 +484,7 @@ export function VoiceTranslator() {
 
               {/* Source Language */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Audio language:</span>
+                <span className="text-sm text-muted-foreground">{t('voiceTranslator.audioLanguage')}</span>
                 <Select
                   value={state.sourceLanguage}
                   onValueChange={(v) => setState(prev => ({ ...prev, sourceLanguage: v }))}
@@ -502,17 +504,17 @@ export function VoiceTranslator() {
               <Button
                 onClick={transcribeAudio}
                 disabled={!state.audioBlob || state.isTranscribing}
-                className="w-full bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700"
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
               >
                 {state.isTranscribing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Transcribing...
+                    {t('voiceTranslator.transcribing')}
                   </>
                 ) : (
                   <>
                     <Wand2 className="h-4 w-4 mr-2" />
-                    Transcribe with Whisper
+                    {t('voiceTranslator.transcribeWithWhisper')}
                   </>
                 )}
               </Button>
@@ -524,14 +526,14 @@ export function VoiceTranslator() {
             <CardHeader className="py-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <FileAudio className="h-4 w-4" />
-                Transcription
+                {t('voiceTranslator.transcription')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
                 value={state.transcription}
                 onChange={(e) => setState(prev => ({ ...prev, transcription: e.target.value }))}
-                placeholder="Transcription will appear here..."
+                placeholder={t('voiceTranslator.transcriptionPlaceholder')}
                 className="min-h-[60px] text-sm resize-none"
               />
             </CardContent>
@@ -545,13 +547,13 @@ export function VoiceTranslator() {
             <CardHeader className="py-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Languages className="h-4 w-4" />
-                Translation
+                {t('voiceTranslator.translation')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {/* Target Language */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Translate to:</span>
+                <span className="text-sm text-muted-foreground">{t('voiceTranslator.translateTo')}</span>
                 <Select
                   value={state.targetLanguage}
                   onValueChange={(v) => setState(prev => ({ ...prev, targetLanguage: v }))}
@@ -576,7 +578,7 @@ export function VoiceTranslator() {
                   ) : (
                     <>
                       <ArrowRight className="h-4 w-4 mr-1" />
-                      Translate
+                      {t('voiceTranslator.translate')}
                     </>
                   )}
                 </Button>
@@ -585,7 +587,7 @@ export function VoiceTranslator() {
               <Textarea
                 value={state.translation}
                 onChange={(e) => setState(prev => ({ ...prev, translation: e.target.value }))}
-                placeholder="Translation will appear here..."
+                placeholder={t('voiceTranslator.translationPlaceholder')}
                 className="min-h-[60px] text-sm resize-none"
               />
             </CardContent>
@@ -596,7 +598,7 @@ export function VoiceTranslator() {
             <CardHeader className="py-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Volume2 className="h-4 w-4" />
-                Text-to-Speech (TTS)
+                {t('voiceTranslator.textToSpeech')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -618,7 +620,7 @@ export function VoiceTranslator() {
               {/* Speed Slider */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Speed</span>
+                  <span className="text-muted-foreground">{t('voiceTranslator.speed')}</span>
                   <span>{state.speechSpeed.toFixed(1)}x</span>
                 </div>
                 <Slider
@@ -634,17 +636,17 @@ export function VoiceTranslator() {
               <Button
                 onClick={synthesizeSpeech}
                 disabled={!state.translation || state.isSynthesizing}
-                className="w-full bg-gradient-to-r from-amber-500 to-yellow-600"
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-600"
               >
                 {state.isSynthesizing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Generating audio...
+                    {t('voiceTranslator.generatingAudio')}
                   </>
                 ) : (
                   <>
                     <Volume2 className="h-4 w-4 mr-2" />
-                    Generate Audio
+                    {t('voiceTranslator.generateAudio')}
                   </>
                 )}
               </Button>
@@ -670,7 +672,7 @@ export function VoiceTranslator() {
                     }}
                   >
                     <Download className="h-4 w-4 mr-2" />
-                    Download Audio
+                    {t('voiceTranslator.downloadAudio')}
                   </Button>
                 </div>
               )}
@@ -685,10 +687,10 @@ export function VoiceTranslator() {
           onClick={runFullPipeline}
           disabled={state.isTranscribing || state.isTranslating || state.isSynthesizing}
           size="lg"
-          className="w-full bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-500"
+          className="w-full bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500"
         >
           <Wand2 className="h-5 w-5 mr-2" />
-          Run Full Pipeline (Transcribe → Translate → Generate Audio)
+          {t('voiceTranslator.runFullPipeline')}
         </Button>
       )}
     </div>

@@ -195,9 +195,9 @@ export default function OcrTranslatorPage() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       {/* Header semplice */}
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-500/10 to-red-500/10 border border-violet-500/20">
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20">
           <Scan className={`h-5 w-5 text-violet-400 ${isRunning ? 'animate-pulse' : ''}`} />
-          <span className="font-medium bg-gradient-to-r from-violet-400 to-red-400 bg-clip-text text-transparent">OCR Translator</span>
+          <span className="font-medium bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">OCR Translator</span>
           {isRunning && <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Attivo</Badge>}
         </div>
         <p className="text-sm text-muted-foreground">
@@ -211,7 +211,7 @@ export default function OcrTranslatorPage() {
           {/* Step 1: Lingue */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-violet-500/20 to-red-500/20 text-violet-400 text-xs">1</span>
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-400 text-xs">1</span>
               Scegli le lingue
             </div>
             <div className="flex items-center gap-3 pl-8">
@@ -243,7 +243,7 @@ export default function OcrTranslatorPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm font-medium">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-violet-500/20 to-red-500/20 text-violet-400 text-xs">2</span>
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-400 text-xs">2</span>
                 Seleziona finestra del game
               </div>
               <Button variant="ghost" size="sm" onClick={loadWindows} disabled={isRunning}>
@@ -337,7 +337,7 @@ export default function OcrTranslatorPage() {
             <Button 
               onClick={toggleOcr}
               size="lg"
-              className={`w-full h-12 text-base ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-gradient-to-r from-violet-500 to-red-500 hover:from-violet-600 hover:to-red-600'}`}
+              className={`w-full h-12 text-base ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600'}`}
             >
               {isRunning ? (
                 <>

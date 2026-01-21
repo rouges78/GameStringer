@@ -36,11 +36,13 @@ import InlineTranslator from '@/components/inline-translator';
 import { LanguageFlags } from '@/components/ui/language-flags';
 import { activityHistory } from '@/lib/activity-history';
 import { TranslationRecommendation } from '@/components/translation-recommendation';
+import { useTranslation } from '@/lib/i18n';
 
 export default function GameDetailPage() {
   const params = useParams();
   const router = useRouter();
   const gameId = params.id as string;
+  const { t } = useTranslation();
   
   const [game, setGame] = useState<any>(null);
   const [translations, setTranslations] = useState<any[]>([]);
@@ -841,9 +843,9 @@ export default function GameDetailPage() {
                     di {game.developers.join(', ')}
                   </p>
                 )}
-                {/* Descrizione/Trama breve - in italiano */}
+                {/* Descrizione/Trama COMPLETA - in italiano */}
                 {(translatedDescription || game.shortDescription) && (
-                  <p className="text-xs text-white/50 mt-2 line-clamp-2 max-w-2xl">
+                  <p className="text-sm text-white/70 mt-3 leading-relaxed max-w-4xl">
                     {translatedDescription || game.shortDescription}
                   </p>
                 )}
@@ -875,7 +877,7 @@ export default function GameDetailPage() {
               <div className="text-center">
                 <div className={`flex items-center justify-center gap-1 ${game.is_installed ? 'text-emerald-400' : 'text-gray-400'}`}>
                   <HardDrive className="h-4 w-4" />
-                  <span className="text-sm font-semibold">{game.is_installed ? 'Installato' : 'Non installato'}</span>
+                  <span className="text-sm font-semibold">{game.is_installed ? t('gameDetails.installed') : t('gameDetails.notInstalled')}</span>
                 </div>
                 <p className="text-xs text-white/50">Stato</p>
               </div>
@@ -916,380 +918,79 @@ export default function GameDetailPage() {
           </div>
         </motion.div>
 
-      {/* Game Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Cover and Actions */}
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-          className="lg:col-span-1"
-        >
-          <Card className="bg-black/20 backdrop-blur-xl border-white/10">
-            <CardContent className="p-3">
-              {/* Mini Screenshot Gallery */}
-              {game.screenshots && game.screenshots.length > 0 ? (
-                <div className="space-y-2 mb-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-white/50 uppercase tracking-wider">📸 Screenshots</span>
-                    <span className="text-[10px] text-white/30">{game.screenshots.length}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    {game.screenshots.slice(0, 4).map((screenshot: any, idx: number) => (
-                      <div 
-                        key={idx}
-                        className="relative aspect-video rounded overflow-hidden cursor-pointer group"
-                        onClick={() => setSelectedScreenshotIndex(idx)}
-                      >
-                        <img 
-                          src={screenshot.path_thumbnail || screenshot.path_full}
-                          alt={`Screenshot ${idx + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                          <Eye className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </div>
-                        {idx === 3 && game.screenshots.length > 4 && (
-                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">+{game.screenshots.length - 4}</span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="relative aspect-video rounded-lg overflow-hidden mb-3 bg-gradient-to-br from-purple-900/30 to-blue-900/30 flex items-center justify-center">
-                  <div className="text-center">
-                    <span className="text-3xl mb-1 block">{game.is_vr ? '🥽' : '🎮'}</span>
-                    <span className="text-[10px] text-white/40">No screenshots</span>
-                  </div>
-                </div>
-              )}
-              
-              {/* Game Info Section */}
-              <div className="space-y-3">
-                {/* Badges */}
-                <div className="flex items-center gap-1 flex-wrap">
-                  <Badge className={`text-xs ${getPlatformColor(game.platform)}`}>
-                    {game.platform}
-                  </Badge>
-                  <Badge variant={game.is_installed ? "default" : "secondary"} className="text-xs">
-                    {game.is_installed ? '✓ Installato' : '✗ Non installato'}
-                  </Badge>
-                  {game.is_free && (
-                    <Badge className="text-xs bg-green-600">🎁 Free</Badge>
-                  )}
-                </div>
-
-                {/* Quick Info */}
-                <div className="space-y-1.5 text-[11px]">
-                  {game.developers && game.developers.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-white/40 min-w-[70px]">Sviluppatore</span>
-                      <span className="text-white/80">{game.developers.join(', ')}</span>
-                    </div>
-                  )}
-                  {game.publishers && game.publishers.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-white/40 min-w-[70px]">Publisher</span>
-                      <span className="text-white/80">{game.publishers.join(', ')}</span>
-                    </div>
-                  )}
-                  {game.release_date?.date && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-white/40 min-w-[70px]">Uscita</span>
-                      <span className="text-white/80">{game.release_date.date}</span>
-                    </div>
-                  )}
-                  {game.genres && game.genres.length > 0 && (
-                    <div className="flex items-start gap-2">
-                      <span className="text-white/40 min-w-[70px]">Generi</span>
-                      <div className="flex flex-wrap gap-1">
-                        {game.genres.slice(0, 3).map((g: any, i: number) => (
-                          <span key={i} className="px-1.5 py-0.5 bg-white/10 rounded text-[10px] text-white/70">
-                            {g.description || g}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Short Description */}
-                {(translatedDescription || game.shortDescription) && (
-                  <div className="pt-2 border-t border-white/10">
-                    <p className="text-[11px] text-white/60 leading-relaxed line-clamp-4">
-                      {translatedDescription || game.shortDescription}
-                    </p>
-                  </div>
-                )}
-                
-                {/* HowLongToBeat */}
-                {isLoadingHltb && (
-                  <div className="text-xs text-muted-foreground animate-pulse">⏱️ Caricamento tempo...</div>
-                )}
-                {!hltbData && !isLoadingHltb && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full h-7 text-xs"
-                    onClick={async () => {
-                      setIsLoadingHltb(true);
-                      try {
-                        const { invoke } = await import('@tauri-apps/api/core');
-                        console.log('[HLTB Test] Chiamata per:', game?.title);
-                        const result = await invoke<any>('get_howlongtobeat_info', { gameName: game?.title || '' });
-                        console.log('[HLTB Test] Risultato:', result);
-                        setHltbData(result);
-                      } catch (e) {
-                        console.error('[HLTB Test] Errore:', e);
-                      } finally {
-                        setIsLoadingHltb(false);
-                      }
-                    }}
-                  >
-                    ⏱️ Carica tempo di gioco
-                  </Button>
-                )}
-                {hltbData?.found && (
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 space-y-1">
-                    <div className="text-xs font-medium text-amber-400 flex items-center gap-1">
-                      ⏱️ HowLongToBeat
-                    </div>
-                    <div className="grid grid-cols-3 gap-1 text-[10px]">
-                      {hltbData.main && hltbData.main > 0 && (
-                        <div className="text-center">
-                          <div className="font-bold text-white">{hltbData.main}h</div>
-                          <div className="text-muted-foreground">Main</div>
-                        </div>
-                      )}
-                      {hltbData.main_extra && hltbData.main_extra > 0 && (
-                        <div className="text-center">
-                          <div className="font-bold text-white">{hltbData.main_extra}h</div>
-                          <div className="text-muted-foreground">+ Extra</div>
-                        </div>
-                      )}
-                      {hltbData.completionist && hltbData.completionist > 0 && (
-                        <div className="text-center">
-                          <div className="font-bold text-white">{hltbData.completionist}h</div>
-                          <div className="text-muted-foreground">100%</div>
-                        </div>
-                      )}
-                    </div>
-                    {hltbData.url && (
-                      <a href={hltbData.url} target="_blank" rel="noopener" className="text-[10px] text-amber-400 hover:underline">
-                        Vedi su HLTB →
-                      </a>
-                    )}
-                  </div>
-                )}
-                
-                {game.is_installed && (
-                  <div className="space-y-1.5">
-                    <Button className="w-full h-8 text-xs" onClick={() => setShowTranslation(true)}>
-                      <Languages className="h-3 w-3 mr-1" />
-                      Traduci
-                    </Button>
-                    <Button variant="outline" className="w-full h-8 text-xs" onClick={scanGameFiles} disabled={isScanning} title="Cerca file di localizzazione (JSON, TXT, CSV, INI, PO)">
-                      <FileText className="h-3 w-3 mr-1" />
-                      {isScanning ? '...' : 'Scansiona File'}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Raccomandazione Traduzione - mostra anche se installPath non trovato */}
-          {(game.is_installed || game.installPath) && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-            >
-              <TranslationRecommendation 
-                gamePath={game.installPath || ''} 
-                gameName={game.title || game.name || ''} 
-                onActionClick={async (route) => {
-                  console.log('[GameDetail] onActionClick route:', route);
-                  if (route === 'action:launch_game') {
-                    // Avvia gioco
-                    if (game.appid && game.appid > 0) {
-                      // Avvia tramite Steam
-                      const steamUrl = `steam://rungameid/${game.appid}`;
-                      console.log('[GameDetail] Avvio gioco Steam:', steamUrl);
-                      
-                      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-                        try {
-                          const { invoke } = await import('@tauri-apps/api/core');
-                          const result = await invoke('launch_steam_game', { appId: game.appid.toString() });
-                          console.log('[GameDetail] Risultato avvio:', result);
-                        } catch (e) {
-                          console.error('[GameDetail] Errore Tauri, uso fallback:', e);
-                          window.location.href = steamUrl;
-                        }
-                      } else {
-                        window.location.href = steamUrl;
-                      }
-                    } else if (game.installPath) {
-                      // Avvia direttamente l'eseguibile
-                      console.log('[GameDetail] Avvio diretto eseguibile...');
-                      try {
-                        const { invoke } = await import('@tauri-apps/api/core');
-                        const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
-                        if (exeList && exeList.length > 0) {
-                          const exePath = `${game.installPath}\\${exeList[0]}`;
-                          console.log('[GameDetail] Avvio:', exePath);
-                          await invoke('launch_game_direct', { executablePath: exePath });
-                        } else {
-                          console.error('[GameDetail] Nessun eseguibile trovato');
-                        }
-                      } catch (e) {
-                        console.error('[GameDetail] Errore avvio diretto:', e);
-                      }
-                    }
-                  } else if (route === '/unity-patcher') {
-                    // Installa patch direttamente
-                    console.log('[GameDetail] Installazione XUnity patch...');
-                    handleInstallUnityPatch();
-                  } else {
-                    // Naviga alla route
-                    router.push(route);
-                  }
-                }}
-              />
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* Game Details */}
+      {/* Game Overview - Layout 3:1 (Contenuto principale : Sidebar) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Colonna Principale - Screenshot + Tabs */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="lg:col-span-4 space-y-3"
+          transition={{ delay: 0.1 }}
+          className="lg:col-span-3 space-y-4"
         >
-          {/* Screenshots Gallery - compatti */}
-          {game.screenshots && game.screenshots.length > 0 ? (
-            <div className="space-y-1.5">
-              <h3 className="text-xs font-medium text-gray-400">Screenshot ({game.screenshots.length})</h3>
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
-                {game.screenshots.slice(0, 12).map((screenshot: any, index: number) => (
-                  <div 
-                    key={index} 
-                    className="relative aspect-video bg-slate-800 rounded overflow-hidden cursor-pointer hover:ring-1 ring-purple-500 transition-all hover:scale-105"
-                    onClick={() => setSelectedScreenshotIndex(index)}
-                  >
-                    <img 
-                      src={screenshot.path_thumbnail || screenshot.path_full} 
-                      alt={`Screenshot ${index + 1}`} 
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-2 text-gray-500 text-xs">
-              Nessuno screenshot disponibile
-            </div>
-          )}
-          
-          {/* Info compatte */}
-          <Card className="bg-gray-900/60 backdrop-blur border-gray-700/50">
-            <CardContent className="p-4 space-y-3">
-              {/* Info in una riga */}
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="text-gray-400"><Settings className="h-3 w-3 inline mr-1" />{game.engine || 'Engine N/D'}</span>
-                <span className="text-gray-600">•</span>
-                <span className="text-gray-400"><HardDrive className="h-3 w-3 inline mr-1" />{game.detectedFiles.length} file</span>
-                {game.release_date && (<><span className="text-gray-600">•</span><span className="text-gray-400"><Calendar className="h-3 w-3 inline mr-1" />{game.release_date.date}</span></>)}
-                {game.installPath && (<><span className="text-gray-600">•</span><span className="text-gray-400 truncate max-w-[200px]"><Folder className="h-3 w-3 inline mr-1" />{game.installPath}</span></>)}
-                {/* HLTB inline */}
-                {hltbData?.found && (
-                  <>
-                    <span className="text-gray-600">•</span>
-                    <span className="text-amber-400">⏱️ {hltbData.main}h Main</span>
-                    {hltbData.main_extra && hltbData.main_extra > 0 && <span className="text-amber-300">| {hltbData.main_extra}h Extra</span>}
-                  </>
-                )}
-                {!hltbData && !isLoadingHltb && (
-                  <>
-                    <span className="text-gray-600">•</span>
-                    <button 
-                      className="text-amber-400 hover:text-amber-300 underline"
-                      onClick={async () => {
-                        setIsLoadingHltb(true);
-                        try {
-                          const { invoke } = await import('@tauri-apps/api/core');
-                          const result = await invoke<any>('get_howlongtobeat_info', { gameName: game?.title || '' });
-                          console.log('[HLTB] Risultato:', result);
-                          setHltbData(result);
-                        } catch (e) {
-                          console.error('[HLTB] Errore:', e);
-                        } finally {
-                          setIsLoadingHltb(false);
-                        }
-                      }}
+          {/* Screenshot Gallery Grande */}
+          {game.screenshots?.length > 0 ? (
+            <Card className="bg-black/30 backdrop-blur-xl border-white/10">
+              <CardContent className="p-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {game.screenshots.slice(0, 12).map((screenshot: any, index: number) => (
+                    <div 
+                      key={index} 
+                      className="relative aspect-video bg-slate-800 rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-purple-500 transition-all hover:scale-[1.02]"
+                      onClick={() => setSelectedScreenshotIndex(index)}
                     >
-                      ⏱️ Tempo gioco?
-                    </button>
-                  </>
-                )}
-                {isLoadingHltb && <span className="text-amber-400 animate-pulse">⏱️ ...</span>}
-              </div>
-              
-              {/* Lingue */}
-              {game.supported_languages && (
-                <div className="flex items-center gap-2">
-                  <Languages className="h-3 w-3 text-cyan-400" />
-                  <LanguageFlags supportedLanguages={game.supported_languages.replace(/<[^>]*>?/gm, '')} maxFlags={10} />
-                </div>
-              )}
-              
-              {/* Generi compatti */}
-              {game.genres && game.genres.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {game.genres.slice(0, 5).map((genre: any) => (
-                    <Badge key={genre.id} className="text-[10px] px-1.5 py-0 bg-purple-600/30 text-purple-300">
-                      {genre.description}
-                    </Badge>
+                      <img 
+                        src={screenshot.path_thumbnail || screenshot.path_full} 
+                        alt={`Screenshot ${index + 1}`} 
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      {index === 11 && game.screenshots.length > 12 && (
+                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">+{game.screenshots.length - 12}</span>
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
-              )}
-              
-              {isScanning && (
-                <div className="flex items-center gap-2">
-                  <Progress value={scanProgress} className="h-1 flex-1" />
-                  <span className="text-xs text-purple-400">{scanProgress}%</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          {/* DLC compatti */}
-          {dlcGames.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              <span className="text-xs text-gray-500">DLC:</span>
-              {dlcGames.slice(0, 5).map((dlc) => (
-                <Badge key={dlc.steam_appid} variant="outline" className="text-[10px]">{dlc.name}</Badge>
-              ))}
-              {dlcGames.length > 5 && <Badge variant="outline" className="text-[10px]">+{dlcGames.length - 5}</Badge>}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-black/30 border-white/10">
+              <CardContent className="p-12 text-center">
+                <span className="text-6xl block mb-3">{game.is_vr ? '🥽' : '🎮'}</span>
+                <span className="text-gray-500 text-lg">{t('gameDetails.noScreenshotsAvailable')}</span>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Info rapide + DLC */}
+          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 px-1">
+            <span><Settings className="h-4 w-4 inline mr-1" />{game.engine || 'Engine N/D'}</span>
+            <span>•</span>
+            <span><HardDrive className="h-4 w-4 inline mr-1" />{game.detectedFiles.length} file</span>
+            {game.installPath && (<><span>•</span><span className="truncate max-w-[400px]"><Folder className="h-4 w-4 inline mr-1" />{game.installPath}</span></>)}
+            {dlcGames.length > 0 && (
+              <>
+                <span>•</span>
+                <span className="text-cyan-400">{dlcGames.length} DLC</span>
+              </>
+            )}
+          </div>
+
+          {isScanning && (
+            <div className="flex items-center gap-2">
+              <Progress value={scanProgress} className="h-2 flex-1" />
+              <span className="text-sm text-purple-400">{scanProgress}%</span>
             </div>
           )}
-        </motion.div>
-      </div>
 
-      {/* Tabs Content */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-        <Tabs defaultValue="files" className="space-y-2">
-          <TabsList className="h-8 bg-black/20 border-white/10">
-            <TabsTrigger value="files" className="text-xs h-7 data-[state=active]:bg-white/20">File</TabsTrigger>
-            <TabsTrigger value="translations" className="text-xs h-7 data-[state=active]:bg-white/20">Traduzioni</TabsTrigger>
-            <TabsTrigger value="patches" className="text-xs h-7 data-[state=active]:bg-white/20">Patch</TabsTrigger>
-          </TabsList>
+          {/* Tabs File/Traduzioni/Patch */}
+          <Tabs defaultValue="files" className="space-y-3">
+            <TabsList className="h-10 bg-black/30 border-white/10">
+              <TabsTrigger value="files" className="text-sm data-[state=active]:bg-purple-600">📁 File</TabsTrigger>
+              <TabsTrigger value="translations" className="text-sm data-[state=active]:bg-purple-600">🌍 Traduzioni</TabsTrigger>
+              <TabsTrigger value="patches" className="text-sm data-[state=active]:bg-purple-600">⚡ Patch</TabsTrigger>
+            </TabsList>
 
           <TabsContent value="files" className="space-y-2">
             <Card className="bg-black/20 border-white/10">
@@ -1297,7 +998,7 @@ export default function GameDetailPage() {
                 {game.detectedFiles.length > 0 ? (
                   <div className="space-y-1">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-gray-400">{game.detectedFiles.length} file trovati</span>
+                      <span className="text-xs text-gray-400">{game.detectedFiles.length} {t('gameDetails.filesFound')}</span>
                       <Button size="sm" className="h-7 text-xs bg-purple-600" onClick={() => router.push(`/translator?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`)}>
                         <Sparkles className="h-3 w-3 mr-1" />Neural Translator
                       </Button>
@@ -1307,7 +1008,7 @@ export default function GameDetailPage() {
                         <div key={index} className="flex items-center justify-between p-1.5 bg-muted/30 rounded text-xs hover:bg-muted/50">
                           <span className="truncate flex-1"><FileText className="h-3 w-3 inline mr-1" />{file}</span>
                           <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => router.push(`/translator?gameId=${gameId}&file=${encodeURIComponent(file)}`)}>
-                            Traduci
+                            {t('gameDetails.translate')}
                           </Button>
                         </div>
                       ))}
@@ -1315,10 +1016,10 @@ export default function GameDetailPage() {
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-xs text-gray-400 mb-2">Nessun file rilevato</p>
-                    <p className="text-[10px] text-gray-500 mb-3">Cerca file di testo traducibili nella cartella del gioco (JSON, TXT, CSV, INI, PO)</p>
+                    <p className="text-xs text-gray-400 mb-2">{t('gameDetails.noFilesDetected')}</p>
+                    <p className="text-[10px] text-gray-500 mb-3">{t('gameDetails.searchTranslatableFiles')}</p>
                     <Button size="sm" className="h-7 text-xs" onClick={scanGameFiles} disabled={isScanning} title="Cerca file di localizzazione nella cartella del gioco">
-                      <FileText className="h-3 w-3 mr-1" />Scansiona
+                      <FileText className="h-3 w-3 mr-1" />{t('gameDetails.scan')}
                     </Button>
                   </div>
                 )}
@@ -1341,9 +1042,9 @@ export default function GameDetailPage() {
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-xs text-gray-400 mb-2">Nessuna traduzione attiva</p>
+                    <p className="text-xs text-gray-400 mb-2">{t('gameDetails.noActiveTranslations')}</p>
                     <Link href={`/translator?gameId=${game.id}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`}>
-                      <Button size="sm" className="h-7 text-xs"><Languages className="h-3 w-3 mr-1" />Traduci</Button>
+                      <Button size="sm" className="h-7 text-xs"><Languages className="h-3 w-3 mr-1" />{t('gameDetails.translate')}</Button>
                     </Link>
                   </div>
                 )}
@@ -1397,7 +1098,7 @@ export default function GameDetailPage() {
                 {/* UNKNOWN */}
                 {(!game.engine || game.engine === 'Unknown') && (
                   <div className="p-2 bg-gray-500/10 rounded text-xs text-gray-300">
-                    <AlertTriangle className="h-3 w-3 inline mr-1" />Engine non riconosciuto - Scansiona i file
+                    <AlertTriangle className="h-3 w-3 inline mr-1" />{t('gameDetails.engineNotRecognized')}
                   </div>
                 )}
                 {/* Status */}
@@ -1409,8 +1110,156 @@ export default function GameDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
-        </Tabs>
-      </motion.div>
+          </Tabs>
+        </motion.div>
+
+        {/* Sidebar Destra - Info e Azioni */}
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15 }}
+          className="space-y-4"
+        >
+          {/* Info Gioco */}
+          <Card className="bg-black/30 backdrop-blur-xl border-white/10">
+            <CardContent className="p-4 space-y-3">
+              {/* Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={`${getPlatformColor(game.platform)}`}>{game.platform}</Badge>
+                <Badge variant={game.is_installed ? "default" : "secondary"}>
+                  {game.is_installed ? `✓ ${t('gameDetails.installed')}` : `✗ ${t('gameDetails.notInstalled')}`}
+                </Badge>
+                {game.is_free && <Badge className="bg-green-600">🎁 {t('gameDetails.free')}</Badge>}
+              </div>
+
+              {/* Info Base */}
+              <div className="space-y-2 text-sm">
+                {game.developers?.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-white/50">{t('gameDetails.developer')}</span>
+                    <span className="text-white/90 text-right">{game.developers.join(', ')}</span>
+                  </div>
+                )}
+                {game.publishers?.length > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-white/50">{t('gameDetails.publisher')}</span>
+                    <span className="text-white/90 text-right">{game.publishers.join(', ')}</span>
+                  </div>
+                )}
+                {game.release_date?.date && (
+                  <div className="flex justify-between">
+                    <span className="text-white/50">{t('gameDetails.releaseDate')}</span>
+                    <span className="text-white/90">{game.release_date.date}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Generi */}
+              {game.genres?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
+                  {game.genres.map((g: any) => (
+                    <Badge key={g.id || g} variant="outline" className="text-xs bg-purple-500/20 border-purple-500/40">
+                      {g.description || g}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Lingue */}
+              {game.supported_languages && (
+                <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                  <Languages className="h-4 w-4 text-cyan-400 shrink-0" />
+                  <LanguageFlags supportedLanguages={game.supported_languages.replace(/<[^>]*>?/gm, '')} maxFlags={8} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Azioni */}
+          {game.is_installed && (
+            <Card className="bg-black/30 backdrop-blur-xl border-white/10">
+              <CardContent className="p-4 space-y-2">
+                <Button className="w-full h-10" onClick={() => setShowTranslation(true)}>
+                  <Languages className="h-4 w-4 mr-2" />{t('gameDetails.translateGame')}
+                </Button>
+                <Button variant="outline" className="w-full" onClick={scanGameFiles} disabled={isScanning}>
+                  <FileText className="h-4 w-4 mr-2" />{isScanning ? t('gameDetails.scanning') : t('gameDetails.scanFiles')}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* HLTB */}
+          {!hltbData && !isLoadingHltb && (
+            <Button variant="outline" className="w-full" onClick={async () => {
+              setIsLoadingHltb(true);
+              try {
+                const { invoke } = await import('@tauri-apps/api/core');
+                const result = await invoke<any>('get_howlongtobeat_info', { gameName: game?.title || '' });
+                setHltbData(result);
+              } catch (e) {
+                console.error('[HLTB] Errore:', e);
+              } finally {
+                setIsLoadingHltb(false);
+              }
+            }}>
+              ⏱️ {t('gameDetails.loadPlaytime')}
+            </Button>
+          )}
+          {isLoadingHltb && <div className="text-center text-amber-400 animate-pulse">⏱️ {t('gameDetails.loading')}</div>}
+          {hltbData?.found && (
+            <Card className="bg-amber-500/10 border-amber-500/30">
+              <CardContent className="p-4">
+                <div className="text-sm font-medium text-amber-400 mb-3">⏱️ HowLongToBeat</div>
+                <div className="space-y-2">
+                  {hltbData.main > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Main</span><span className="font-bold text-white">{hltbData.main}h</span></div>}
+                  {hltbData.main_extra > 0 && <div className="flex justify-between"><span className="text-muted-foreground">+ Extra</span><span className="font-bold text-white">{hltbData.main_extra}h</span></div>}
+                  {hltbData.completionist > 0 && <div className="flex justify-between"><span className="text-muted-foreground">100%</span><span className="font-bold text-white">{hltbData.completionist}h</span></div>}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Raccomandazione Traduzione - Full Width */}
+      {(game.is_installed || game.installPath) && (
+        <TranslationRecommendation 
+          gamePath={game.installPath || ''} 
+          gameName={game.title || game.name || ''} 
+          onActionClick={async (route) => {
+            if (route === 'action:launch_game') {
+              if (game.appid && game.appid > 0) {
+                const steamUrl = `steam://rungameid/${game.appid}`;
+                if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+                  try {
+                    const { invoke } = await import('@tauri-apps/api/core');
+                    await invoke('launch_steam_game', { appId: game.appid.toString() });
+                  } catch (e) {
+                    window.location.href = steamUrl;
+                  }
+                } else {
+                  window.location.href = steamUrl;
+                }
+              } else if (game.installPath) {
+                try {
+                  const { invoke } = await import('@tauri-apps/api/core');
+                  const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
+                  if (exeList?.length > 0) {
+                    await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
+                  }
+                } catch (e) {
+                  console.error('[GameDetail] Errore avvio:', e);
+                }
+              }
+            } else if (route === '/unity-patcher') {
+              handleInstallUnityPatch();
+            } else {
+              router.push(route);
+            }
+          }}
+        />
+      )}
       
       {/* Inline Translator Modal */}
       {showTranslation && game && (

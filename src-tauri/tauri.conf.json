@@ -1,12 +1,12 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "GameStringer",
-  "version": "0.9.9",
+  "version": "1.0.1",
   "identifier": "com.gamestringer.app",
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd .. && npm run build:tauri-only",
-    "devUrl": "http://127.0.0.1:3175",
+    "devUrl": "http://127.0.0.1:3176",
     "frontendDist": "../out"
   },
   "app": {

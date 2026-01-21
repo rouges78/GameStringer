@@ -802,11 +802,11 @@ export default function LibraryPage() {
       {/* Header minimalista */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg shadow-teal-500/20">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg shadow-slate-500/20">
             <Gamepad2 className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">{lib.title}</h1>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent">{lib.title}</h1>
             <p className="text-[11px] text-slate-400">
               {games.length > 0 ? `${filteredGames.length} ${lib.gamesOf} ${games.length}` : lib.noGames}
             </p>
@@ -872,8 +872,8 @@ export default function LibraryPage() {
             
             {/* Status */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase">Status</span>
-              {[{id: 'Installed', label: '✓ Installed'}, {id: 'NotInstalled', label: '✗ Not inst.'}].map(s => (
+              <span className="text-[10px] font-semibold text-gray-500 uppercase">{lib.status}</span>
+              {[{id: 'Installed', label: `✓ ${lib.installed}`}, {id: 'NotInstalled', label: `✗ ${lib.notInstalled}`}].map(s => (
                 <label key={s.id} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[11px] transition-all ${selectedStatus.includes(s.id) ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-700/50'}`}>
                   <input type="checkbox" checked={selectedStatus.includes(s.id)} onChange={() => toggleFilter(selectedStatus, setSelectedStatus, s.id)} className="hidden" />
                   {selectedStatus.includes(s.id) && <span className="text-purple-400">✓</span>}
@@ -885,7 +885,7 @@ export default function LibraryPage() {
             
             {/* Engine */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase">Engine</span>
+              <span className="text-[10px] font-semibold text-gray-500 uppercase">{lib.engine}</span>
               {['Unity', 'Unreal', 'Godot', 'RPG Maker', 'Unknown'].map(eng => (
                 <label key={eng} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[11px] transition-all ${selectedEngines.includes(eng) ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-700/50'}`}>
                   <input type="checkbox" checked={selectedEngines.includes(eng)} onChange={() => toggleFilter(selectedEngines, setSelectedEngines, eng)} className="hidden" />
@@ -898,8 +898,8 @@ export default function LibraryPage() {
             
             {/* Tags */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase">Tag</span>
-              {[{id: 'VR', label: '🥽 VR'}, {id: 'Shared', label: '🔗 Shared'}, {id: 'Backlog', label: '📦 Backlog'}].map(t => (
+              <span className="text-[10px] font-semibold text-gray-500 uppercase">{lib.tag}</span>
+              {[{id: 'VR', label: `🥽 ${lib.vr}`}, {id: 'Shared', label: `🔗 ${lib.shared}`}, {id: 'Backlog', label: `📦 ${lib.backlog}`}].map(t => (
                 <label key={t.id} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[11px] transition-all ${selectedTags.includes(t.id) ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-700/50'}`}>
                   <input type="checkbox" checked={selectedTags.includes(t.id)} onChange={() => toggleFilter(selectedTags, setSelectedTags, t.id)} className="hidden" />
                   {selectedTags.includes(t.id) && <span className="text-purple-400">✓</span>}
@@ -911,7 +911,7 @@ export default function LibraryPage() {
             
             {/* Provider */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase">Provider</span>
+              <span className="text-[10px] font-semibold text-gray-500 uppercase">{lib.provider}</span>
               {platforms.filter(p => p !== 'All').map(plat => (
                 <label key={plat} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[11px] transition-all ${selectedPlatforms.includes(plat) ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-700/50'}`}>
                   <input type="checkbox" checked={selectedPlatforms.includes(plat)} onChange={() => toggleFilter(selectedPlatforms, setSelectedPlatforms, plat)} className="hidden" />
@@ -927,30 +927,30 @@ export default function LibraryPage() {
 
       {/* Pulsante Force Refresh compatto */}
       <div className="flex items-center justify-between bg-gray-800/30 border border-gray-700 rounded-lg px-3 py-1.5 mb-4">
-        <span className="text-[10px] text-gray-500">🎯 Game not visible?</span>
+        <span className="text-[10px] text-gray-500">🎯 {lib.gameNotVisible}</span>
         <div className="flex gap-1.5">
           <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
           <button 
             onClick={testFamilySharing} 
             className="text-[10px] px-2 py-1 bg-gray-700/50 text-gray-400 hover:bg-gray-600 rounded transition-colors"
           >
-            🔗 Shared
+            🔗 {lib.shared}
           </button>
           <button 
             onClick={async () => {
-              toast.info('Downloading names from Steam API...');
+              toast.info(lib.downloadingNames);
               try {
                 const result = await invoke('update_remote_game_database');
                 const games = Object.values(result as any) as Game[];
                 setGames(games);
-                toast.success(`✅ Database updated! ${games.length} games`);
+                toast.success(`✅ ${lib.databaseUpdated} ${games.length} ${lib.games}`);
               } catch (e) {
-                toast.error('Update error: ' + e);
+                toast.error(lib.updateError + ': ' + e);
               }
             }} 
             className="text-[10px] px-2 py-1 bg-blue-700/50 text-blue-300 hover:bg-blue-600 rounded transition-colors"
           >
-            ⬇️ Update DB
+            ⬇️ {lib.updateDb}
           </button>
         </div>
       </div>

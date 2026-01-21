@@ -4,16 +4,17 @@
 
 1. [Panoramica](#panoramica)
 2. [Primo Avvio e Profili](#primo-avvio-e-profili)
-3. [Neural Translator Pro](#neural-translator-pro)
-4. [Translation Wizard](#translation-wizard)
-5. [Translation Bridge](#translation-bridge)
-6. [Esportazione Patch](#esportazione-patch)
-7. [Applicazione al Gioco](#applicazione-al-gioco)
-8. [Gestione Backup](#gestione-backup)
-9. [Editor Traduzioni](#editor-traduzioni)
-10. [Activity History](#activity-history)
-11. [Dizionari](#dizionari)
-12. [Risoluzione Problemi](#risoluzione-problemi)
+3. [Libreria e Dettaglio Gioco](#libreria-e-dettaglio-gioco)
+4. [Neural Translator Pro](#neural-translator-pro)
+5. [Translation Wizard](#translation-wizard)
+6. [Translation Bridge](#translation-bridge)
+7. [Esportazione Patch](#esportazione-patch)
+8. [Applicazione al Gioco](#applicazione-al-gioco)
+9. [Gestione Backup](#gestione-backup)
+10. [Editor Traduzioni](#editor-traduzioni)
+11. [Activity History](#activity-history)
+12. [Dizionari](#dizionari)
+13. [Risoluzione Problemi](#risoluzione-problemi)
 
 ---
 
@@ -54,6 +55,47 @@ Per accedere a un profilo esistente:
 - **Cambio profilo**: Clicca sull'icona profilo in alto a destra → "Cambia profilo"
 - **Logout**: Clicca sull'icona profilo → "Esci"
 - **Impostazioni profilo**: Vai in Settings → Profilo
+
+---
+
+## Libreria e Dettaglio Gioco
+
+### Libreria
+
+La Libreria mostra tutti i tuoi giochi sincronizzati da Steam, Epic Games, GOG e altri store.
+
+- **Aggiorna**: Ricarica la lista dei giochi
+- **Condivisi**: Mostra/nascondi giochi Family Sharing
+- **Filtri**: Filtra per piattaforma, stato installazione, engine
+
+### Pagina Dettaglio Gioco
+
+Clicca su un gioco per aprire la pagina dettaglio con layout **3:1**:
+
+#### Colonna Principale (75%)
+
+- **Screenshot Gallery**: Griglia fino a 12 screenshot cliccabili (lightbox)
+- **Info rapide**: Engine, numero file, percorso installazione, DLC
+- **Tabs File/Traduzioni/Patch**:
+  - **File**: File traducibili trovati con pulsante "Neural Translator"
+  - **Traduzioni**: Traduzioni attive per questo gioco
+  - **Patch**: Installa/rimuovi patch per Unity, Unreal, RPG Maker
+
+#### Sidebar Destra (25%)
+
+- **Info Gioco**: Sviluppatore, editore, data uscita, generi, lingue supportate
+- **Azioni**: Traduci Gioco, Scansiona File
+- **HowLongToBeat**: Tempo stimato per completare il gioco
+
+#### Raccomandazione Traduzione
+
+In fondo alla pagina, il sistema analizza il gioco e suggerisce il **metodo di traduzione migliore**:
+
+| Metodo | Quando usarlo |
+|--------|---------------|
+| **Live Unity** | Giochi Unity con BepInEx + XUnity |
+| **File Translation** | File di localizzazione trovati (JSON, CSV, ecc.) |
+| **OCR Overlay** | Nessun file trovato, traduzione visiva in tempo reale |
 
 ---
 

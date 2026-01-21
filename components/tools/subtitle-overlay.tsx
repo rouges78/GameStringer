@@ -41,8 +41,10 @@ import {
   exportToSRT,
   exportToVTT,
 } from '@/lib/subtitle-overlay';
+import { useTranslation } from '@/lib/i18n';
 
 export function SubtitleOverlay() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<SubtitleConfig>(DEFAULT_CONFIG);
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -156,7 +158,7 @@ export function SubtitleOverlay() {
   return (
     <div className="space-y-6">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
@@ -166,17 +168,17 @@ export function SubtitleOverlay() {
               <Subtitles className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Subtitle Overlay</h2>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">Live subtitles for streaming and recording</p>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('subtitleOverlay.title')}</h2>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('subtitleOverlay.subtitle')}</p>
             </div>
           </div>
           
           {/* Controls */}
           <div className="flex items-center gap-3">
             {!isActive ? (
-              <Button onClick={handleStart} className="bg-white text-purple-600 hover:bg-white/90 shadow-lg" size="lg">
+              <Button onClick={handleStart} className="bg-white text-emerald-600 hover:bg-white/90 shadow-lg" size="lg">
                 <Play className="h-5 w-5 mr-2" />
-                Start Capture
+                {t('subtitleOverlay.startCapture')}
               </Button>
             ) : (
               <>
@@ -185,7 +187,7 @@ export function SubtitleOverlay() {
                 </Button>
                 <Button onClick={handleStop} className="bg-red-500/80 hover:bg-red-500 text-white" size="lg">
                   <Square className="h-5 w-5 mr-2" />
-                  Stop
+                  {t('subtitleOverlay.stop')}
                 </Button>
               </>
             )}
@@ -197,29 +199,29 @@ export function SubtitleOverlay() {
           <div className="mt-4 flex items-center gap-3">
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isPaused ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
               <div className={`w-2 h-2 rounded-full ${isPaused ? 'bg-yellow-400' : 'bg-green-400 animate-pulse'}`} />
-              {isPaused ? 'Paused' : 'Capture Active'}
+              {isPaused ? t('subtitleOverlay.paused') : t('subtitleOverlay.captureActive')}
             </div>
-            <span className="text-white/60 text-sm">{history.length} subtitles captured</span>
+            <span className="text-white/60 text-sm">{history.length} {t('subtitleOverlay.subtitlesCaptured')}</span>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Preview */}
-        <Card className="border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
+        <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <div className="p-1.5 rounded-lg bg-purple-500/20">
-                  <Monitor className="h-4 w-4 text-purple-400" />
+                <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                  <Monitor className="h-4 w-4 text-emerald-400" />
                 </div>
-                <span className="text-purple-100">Live Preview</span>
+                <span className="text-emerald-100">{t('subtitleOverlay.livePreview')}</span>
               </span>
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => setShowPreview(!showPreview)}
-                className="hover:bg-purple-500/20"
+                className="hover:bg-emerald-500/20"
               >
                 {showPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
@@ -304,30 +306,30 @@ export function SubtitleOverlay() {
         </Card>
 
         {/* Settings */}
-        <Card className="border-indigo-500/20 bg-gradient-to-br from-indigo-500/5 to-transparent">
+        <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-indigo-500/20">
-                <Settings className="h-4 w-4 text-indigo-400" />
+              <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                <Settings className="h-4 w-4 text-emerald-400" />
               </div>
-              <span className="text-indigo-100">Settings</span>
+              <span className="text-emerald-100">{t('subtitleOverlay.settings')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="style" className="w-full">
               <TabsList className="grid w-full grid-cols-3 h-8">
-                <TabsTrigger value="style" className="text-xs">Style</TabsTrigger>
-                <TabsTrigger value="position" className="text-xs">Position</TabsTrigger>
-                <TabsTrigger value="timing" className="text-xs">Timing</TabsTrigger>
+                <TabsTrigger value="style" className="text-xs">{t('subtitleOverlay.style')}</TabsTrigger>
+                <TabsTrigger value="position" className="text-xs">{t('subtitleOverlay.position')}</TabsTrigger>
+                <TabsTrigger value="timing" className="text-xs">{t('subtitleOverlay.timing')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="style" className="space-y-3 mt-3">
                 {/* Preset */}
                 <div>
-                  <Label className="text-xs">Preset</Label>
+                  <Label className="text-xs">{t('subtitleOverlay.preset')}</Label>
                   <Select onValueChange={handlePresetChange}>
                     <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Choose preset..." />
+                      <SelectValue placeholder={t('subtitleOverlay.choosePreset')} />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.keys(STYLE_PRESETS).map(preset => (
@@ -342,7 +344,7 @@ export function SubtitleOverlay() {
                 {/* Colors */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs">Text color</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.textColor')}</Label>
                     <div className="flex gap-1">
                       <Input
                         type="color"
@@ -358,7 +360,7 @@ export function SubtitleOverlay() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs">Background</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.background')}</Label>
                     <div className="flex gap-1">
                       <Input
                         type="color"
@@ -378,7 +380,7 @@ export function SubtitleOverlay() {
                 {/* Font size */}
                 <div>
                   <div className="flex justify-between">
-                    <Label className="text-xs">Font size</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.fontSize')}</Label>
                     <span className="text-xs text-muted-foreground">{config.fontSize}px</span>
                   </div>
                   <Slider
@@ -394,7 +396,7 @@ export function SubtitleOverlay() {
                 {/* Opacity */}
                 <div>
                   <div className="flex justify-between">
-                    <Label className="text-xs">Background opacity</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.backgroundOpacity')}</Label>
                     <span className="text-xs text-muted-foreground">{Math.round(config.backgroundOpacity * 100)}%</span>
                   </div>
                   <Slider
@@ -409,7 +411,7 @@ export function SubtitleOverlay() {
 
                 {/* Shadow */}
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Text shadow</Label>
+                  <Label className="text-xs">{t('subtitleOverlay.textShadow')}</Label>
                   <Switch
                     checked={config.shadow}
                     onCheckedChange={(v) => setConfig(c => ({ ...c, shadow: v }))}
@@ -420,7 +422,7 @@ export function SubtitleOverlay() {
               <TabsContent value="position" className="space-y-3 mt-3">
                 {/* Position */}
                 <div>
-                  <Label className="text-xs">Posizione</Label>
+                  <Label className="text-xs">{t('subtitleOverlay.position')}</Label>
                   <Select 
                     value={config.position}
                     onValueChange={(v: 'top' | 'bottom' | 'center') => setConfig(c => ({ ...c, position: v }))}
@@ -438,7 +440,7 @@ export function SubtitleOverlay() {
 
                 {/* Show original */}
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Show original</Label>
+                  <Label className="text-xs">{t('subtitleOverlay.showOriginal')}</Label>
                   <Switch
                     checked={config.showOriginal}
                     onCheckedChange={(v) => setConfig(c => ({ ...c, showOriginal: v }))}
@@ -447,7 +449,7 @@ export function SubtitleOverlay() {
 
                 {config.showOriginal && (
                   <div>
-                    <Label className="text-xs">Original position</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.originalPosition')}</Label>
                     <Select 
                       value={config.originalPosition}
                       onValueChange={(v: 'above' | 'below' | 'inline') => setConfig(c => ({ ...c, originalPosition: v }))}
@@ -467,7 +469,7 @@ export function SubtitleOverlay() {
                 {/* Margin */}
                 <div>
                   <div className="flex justify-between">
-                    <Label className="text-xs">Margin</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.margin')}</Label>
                     <span className="text-xs text-muted-foreground">{config.margin}px</span>
                   </div>
                   <Slider
@@ -485,7 +487,7 @@ export function SubtitleOverlay() {
                 {/* Duration */}
                 <div>
                   <div className="flex justify-between">
-                    <Label className="text-xs">Display duration</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.displayDuration')}</Label>
                     <span className="text-xs text-muted-foreground">{config.displayDuration / 1000}s</span>
                   </div>
                   <Slider
@@ -501,7 +503,7 @@ export function SubtitleOverlay() {
                 {/* Fade in */}
                 <div>
                   <div className="flex justify-between">
-                    <Label className="text-xs">Fade in</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.fadeIn')}</Label>
                     <span className="text-xs text-muted-foreground">{config.fadeInDuration}ms</span>
                   </div>
                   <Slider
@@ -517,7 +519,7 @@ export function SubtitleOverlay() {
                 {/* Fade out */}
                 <div>
                   <div className="flex justify-between">
-                    <Label className="text-xs">Fade out</Label>
+                    <Label className="text-xs">{t('subtitleOverlay.fadeOut')}</Label>
                     <span className="text-xs text-muted-foreground">{config.fadeOutDuration}ms</span>
                   </div>
                   <Slider
@@ -532,7 +534,7 @@ export function SubtitleOverlay() {
 
                 {/* Animation */}
                 <div>
-                  <Label className="text-xs">Animation</Label>
+                  <Label className="text-xs">{t('subtitleOverlay.animation')}</Label>
                   <Select 
                     value={config.animation}
                     onValueChange={(v: 'fade' | 'slide' | 'typewriter' | 'none') => setConfig(c => ({ ...c, animation: v }))}
@@ -555,15 +557,15 @@ export function SubtitleOverlay() {
       </div>
 
       {/* History & Export */}
-      <Card className="border-pink-500/20 bg-gradient-to-br from-pink-500/5 to-transparent">
+      <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-pink-500/20">
-                <Clock className="h-4 w-4 text-pink-400" />
+              <div className="p-1.5 rounded-lg bg-emerald-500/20">
+                <Clock className="h-4 w-4 text-emerald-400" />
               </div>
-              <span className="text-pink-100">History</span>
-              <Badge variant="secondary" className="bg-pink-500/20 text-pink-300 text-xs">
+              <span className="text-emerald-100">{t('subtitleOverlay.history')}</span>
+              <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-300 text-xs">
                 {history.length}
               </Badge>
             </span>
@@ -573,7 +575,7 @@ export function SubtitleOverlay() {
                 size="sm" 
                 onClick={handleExportSRT} 
                 disabled={history.length === 0}
-                className="border-pink-500/30 hover:bg-pink-500/20 hover:text-pink-300"
+                className="border-emerald-500/30 hover:bg-emerald-500/20 hover:text-emerald-300"
               >
                 <Download className="h-3 w-3 mr-1" />
                 SRT
@@ -583,7 +585,7 @@ export function SubtitleOverlay() {
                 size="sm" 
                 onClick={handleExportVTT} 
                 disabled={history.length === 0}
-                className="border-pink-500/30 hover:bg-pink-500/20 hover:text-pink-300"
+                className="border-emerald-500/30 hover:bg-emerald-500/20 hover:text-emerald-300"
               >
                 <Download className="h-3 w-3 mr-1" />
                 VTT
@@ -595,15 +597,15 @@ export function SubtitleOverlay() {
           <ScrollArea className="h-[150px]">
             {history.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Subtitles className="h-10 w-10 text-pink-500/30 mb-2" />
-                <p className="text-muted-foreground text-sm">No subtitles captured</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">Start capture to begin</p>
+                <Subtitles className="h-10 w-10 text-emerald-500/30 mb-2" />
+                <p className="text-muted-foreground text-sm">{t('subtitleOverlay.noSubtitlesCaptured')}</p>
+                <p className="text-muted-foreground/60 text-xs mt-1">{t('subtitleOverlay.startCaptureToBegin')}</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {history.slice().reverse().map(sub => (
                   <div key={sub.id} className="flex items-center gap-3 p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors">
-                    <span className="text-pink-400/70 text-xs font-mono w-16 flex-shrink-0">
+                    <span className="text-emerald-400/70 text-xs font-mono w-16 flex-shrink-0">
                       {new Date(sub.startTime).toLocaleTimeString()}
                     </span>
                     <div className="flex-1 min-w-0">

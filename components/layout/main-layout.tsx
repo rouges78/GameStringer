@@ -37,7 +37,8 @@ import {
   Users,
   Wrench,
   Subtitles,
-  BookOpen
+  BookOpen,
+  Check
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -65,6 +66,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { CommandPalette } from '@/components/ui/command-palette';
@@ -416,7 +424,7 @@ const CHANGELOG_CONTENT = `
 `;
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { t } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const navGroups = getNavGroups(t);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
@@ -766,15 +774,71 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Search className="h-4 w-4" />
             </Button>
             
-            {/* Breadcrumb al centro */}
+            {/* Language Selector al centro */}
             <div className="flex-1 flex justify-center">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">GameStringer</span>
-                <span className="text-muted-foreground/50">/</span>
-                <span className="font-medium text-foreground capitalize">
-                  {pathname === '/' ? 'Dashboard' : pathname.split('/')[1]?.replace(/-/g, ' ') || 'Dashboard'}
-                </span>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 gap-2 px-3">
+                    <Globe className="h-4 w-4" />
+                    <span className="text-xs font-medium">{language === 'it' ? 'IT' : 'EN'}</span>
+                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-36">
+                  <DropdownMenuItem onClick={() => setLanguage('en')} className="gap-2">
+                    <span className="w-6 h-4 rounded-sm bg-gradient-to-b from-blue-600 to-red-600 flex items-center justify-center text-[8px] text-white font-bold">EN</span>
+                    <span>English</span>
+                    {language === 'en' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('it')} className="gap-2">
+                    <span className="w-6 h-4 rounded-sm overflow-hidden flex">
+                      <span className="w-1/3 bg-green-500" />
+                      <span className="w-1/3 bg-white" />
+                      <span className="w-1/3 bg-red-500" />
+                    </span>
+                    <span>Italiano</span>
+                    {language === 'it' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">Coming Soon</div>
+                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                    <span className="w-6 h-4 rounded-sm overflow-hidden flex">
+                      <span className="w-1/3 bg-red-500" />
+                      <span className="w-1/3 bg-yellow-400" />
+                      <span className="w-1/3 bg-red-500" />
+                    </span>
+                    <span className="text-xs">Español</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                    <span className="w-6 h-4 rounded-sm overflow-hidden flex">
+                      <span className="w-1/3 bg-blue-600" />
+                      <span className="w-1/3 bg-white" />
+                      <span className="w-1/3 bg-red-500" />
+                    </span>
+                    <span className="text-xs">Français</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                    <span className="w-6 h-4 rounded-sm overflow-hidden flex flex-col">
+                      <span className="h-1/3 bg-black" />
+                      <span className="h-1/3 bg-red-500" />
+                      <span className="h-1/3 bg-yellow-400" />
+                    </span>
+                    <span className="text-xs">Deutsch</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                    <span className="w-6 h-4 rounded-sm bg-white flex items-center justify-center">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                    </span>
+                    <span className="text-xs">日本語</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                    <span className="w-6 h-4 rounded-sm bg-red-500 flex items-center justify-center">
+                      <span className="text-[6px] text-yellow-400">★</span>
+                    </span>
+                    <span className="text-xs">中文</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             {/* Supporta, Profilo, Notifica, Tema, Power - a destra */}
@@ -790,7 +854,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               size="icon"
               className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
               onClick={() => setExitDialogOpen(true)}
-              title="Close GameStringer"
+              title={t('common.closeApp')}
             >
               <Power className="h-4 w-4" />
             </Button>
@@ -901,13 +965,13 @@ export function MainLayout({ children }: MainLayoutProps) {
         <AlertDialog open={exitDialogOpen} onOpenChange={setExitDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Close GameStringer?</AlertDialogTitle>
+              <AlertDialogTitle>{t('common.closeApp')}</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to close the application?
+                {t('common.closeAppDescription')}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-red-500 hover:bg-red-600"
                 onClick={async () => {
@@ -918,7 +982,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   }
                 }}
               >
-                Close
+                {t('common.close')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

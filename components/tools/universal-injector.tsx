@@ -22,6 +22,7 @@ import {
   Download,
   Gamepad2
 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface InjectionTool {
   name: string;
@@ -88,6 +89,7 @@ const ENGINE_ICONS: Record<string, string> = {
 };
 
 export function UniversalInjector() {
+  const { t } = useTranslation();
   const [gamePath, setGamePath] = useState('');
   const [isDetecting, setIsDetecting] = useState(false);
   const [isInjecting, setIsInjecting] = useState(false);
@@ -164,8 +166,8 @@ export function UniversalInjector() {
             <Wand2 className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">Universal Mod Injector</h2>
-            <p className="text-white/80 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">Detect engine and inject translation hooks automatically</p>
+            <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">{t('universalInjector.title')}</h2>
+            <p className="text-white/80 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">{t('universalInjector.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -177,12 +179,12 @@ export function UniversalInjector() {
             <Input
               value={gamePath}
               onChange={(e) => setGamePath(e.target.value)}
-              placeholder="Game folder path..."
+              placeholder={t('universalInjector.gameFolderPath')}
               className="flex-1 text-sm"
             />
             <Button variant="outline" size="sm" onClick={handleBrowse}>
               <FolderOpen className="h-4 w-4 mr-1" />
-              Browse
+              {t('universalInjector.browse')}
             </Button>
             <Button 
               onClick={handleDetect}
@@ -195,7 +197,7 @@ export function UniversalInjector() {
               ) : (
                 <>
                   <Search className="h-4 w-4 mr-1" />
-                  Detect
+                  {t('universalInjector.detect')}
                 </>
               )}
             </Button>
@@ -221,7 +223,7 @@ export function UniversalInjector() {
             <CardHeader className="py-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Cpu className="h-4 w-4" />
-                Detected Engine
+                {t('universalInjector.detectedEngine')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -239,15 +241,15 @@ export function UniversalInjector() {
 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Can be patched:</span>
+                  <span className="text-muted-foreground">{t('universalInjector.canBePatched')}</span>
                   {detectionResult.can_inject ? (
-                    <Badge className="bg-green-500">Yes</Badge>
+                    <Badge className="bg-green-500">{t('universalInjector.yes')}</Badge>
                   ) : (
-                    <Badge variant="secondary">Manual</Badge>
+                    <Badge variant="secondary">{t('universalInjector.manual')}</Badge>
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Method:</span>
+                  <span className="text-muted-foreground">{t('universalInjector.method')}</span>
                   <span className="text-xs">{detectionResult.injection_method}</span>
                 </div>
               </div>
@@ -271,7 +273,7 @@ export function UniversalInjector() {
                       onCheckedChange={(c) => setCreateBackup(c as boolean)}
                     />
                     <label htmlFor="backup" className="text-xs text-muted-foreground">
-                      Create backup before injection
+                      {t('universalInjector.createBackup')}
                     </label>
                   </div>
                   <Button
@@ -281,9 +283,9 @@ export function UniversalInjector() {
                     size="sm"
                   >
                     {isInjecting ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Injection...</>
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('universalInjector.injecting')}</>
                     ) : (
-                      <><Shield className="h-4 w-4 mr-2" />Inject Translation Hook</>
+                      <><Shield className="h-4 w-4 mr-2" />{t('universalInjector.injectHook')}</>
                     )}
                   </Button>
                 </div>
@@ -297,7 +299,7 @@ export function UniversalInjector() {
             {detectionResult.tools_required.length > 0 && (
               <Card>
                 <CardHeader className="py-2">
-                  <CardTitle className="text-xs text-muted-foreground">Tool Richiesti</CardTitle>
+                  <CardTitle className="text-xs text-muted-foreground">{t('universalInjector.toolsRequired')}</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-2">
@@ -332,7 +334,7 @@ export function UniversalInjector() {
             {detectionResult.translatable_files.length > 0 && (
               <Card>
                 <CardHeader className="py-2">
-                  <CardTitle className="text-xs text-muted-foreground">File Traducibili</CardTitle>
+                  <CardTitle className="text-xs text-muted-foreground">{t('universalInjector.translatableFiles')}</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <ScrollArea className="h-32">
@@ -392,7 +394,7 @@ export function UniversalInjector() {
         <CardHeader className="py-2">
           <CardTitle className="text-xs text-muted-foreground flex items-center gap-2">
             <Gamepad2 className="h-3 w-3" />
-            Engine Supportati
+            {t('universalInjector.supportedEngines')}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">

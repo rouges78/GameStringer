@@ -21,7 +21,10 @@ import {
   History,
   Globe,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Mic,
+  Database,
+  Layers
 } from 'lucide-react';
 import { getShortcutsList } from '@/lib/keyboard-shortcuts';
 import { useTranslation, translations } from '@/lib/i18n';
@@ -107,9 +110,104 @@ export default function GuidePage() {
         'Credits to original translation teams',
       ],
     },
+    {
+      icon: Mic,
+      name: guideTrans.voiceTranslator || 'Voice Translator',
+      color: 'blue',
+      features: guideTrans.voiceTranslatorFeatures || [
+        'Real-time voice translation while gaming',
+        'Speech-to-text with automatic language detection',
+        'AI translation with multiple providers',
+        'Text-to-speech output in target language',
+        'Customizable hotkeys for hands-free use',
+        'History of voice translations',
+      ],
+    },
+    {
+      icon: Layers,
+      name: guideTrans.multiLlmCompare || 'Multi-LLM Compare',
+      color: 'blue',
+      features: guideTrans.multiLlmCompareFeatures || [
+        'Compare translations from multiple AI providers',
+        'Side-by-side comparison: OpenAI, Gemini, Claude, DeepSeek, Mistral, DeepL',
+        'Quality scoring for each translation',
+        'Automatic best result selection',
+        'Consensus detection when providers agree',
+        'Latency and cost comparison',
+      ],
+    },
+    {
+      icon: Database,
+      name: guideTrans.dictionary || 'Dictionary',
+      color: 'blue',
+      features: guideTrans.dictionaryFeatures || [
+        'Persistent storage of all translations',
+        'Search and filter saved translations',
+        'Edit or delete existing entries',
+        'Filter by game or source',
+        'Export translations for backup',
+        'Automatic deduplication',
+      ],
+    },
   ];
 
   const newFeatures = [
+    {
+      icon: Mic,
+      name: guideTrans.voiceTranslatorNew || 'Voice Translator',
+      color: 'blue',
+      desc: guideTrans.voiceTranslatorNewDesc || 'Real-time voice translation for gaming',
+      details: guideTrans.voiceTranslatorNewDetails || [
+        'Record or upload audio for translation',
+        'Whisper AI for accurate speech-to-text',
+        'Multiple AI providers for translation',
+        'Text-to-speech in 6 voices (Nova, Alloy, Echo...)',
+        'Hands-free gaming with hotkeys',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: Layers,
+      name: guideTrans.multiLlmCompareNew || 'Multi-LLM Compare',
+      color: 'blue',
+      desc: guideTrans.multiLlmCompareNewDesc || 'Compare translations from 7 AI providers',
+      details: guideTrans.multiLlmCompareNewDetails || [
+        'Side-by-side: OpenAI, Gemini, Claude, DeepSeek, Mistral, DeepL, Libre',
+        'Quality scoring (fluency, accuracy, consistency)',
+        'Automatic best result selection',
+        'Consensus detection when providers agree',
+        'Latency and cost comparison',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: Database,
+      name: guideTrans.dictionaryNew || 'Dictionary',
+      color: 'blue',
+      desc: guideTrans.dictionaryNewDesc || 'Persistent translation storage',
+      details: guideTrans.dictionaryNewDetails || [
+        'All translations saved automatically',
+        'Search, filter, edit entries',
+        'Filter by game or source',
+        'Export for backup',
+        'Automatic deduplication',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: Globe,
+      name: guideTrans.uiLanguageSelector || 'UI Language Selector',
+      color: 'blue',
+      desc: guideTrans.uiLanguageSelectorDesc || 'Quick language switch in header',
+      details: guideTrans.uiLanguageSelectorDetails || [
+        'Switch UI language from header',
+        'Currently: English, Italian',
+        'Coming soon: Spanish, French, German, Japanese, Chinese',
+        'Custom flag icons for each language',
+        'Instant switch without restart',
+      ],
+      version: '1.0',
+    },
     {
       icon: Book,
       name: guideTrans.customGlossary || 'Custom Glossary',
@@ -123,6 +221,7 @@ export default function GuidePage() {
         'Import/Export JSON to share glossaries',
         'Automatically applied in all tools',
       ],
+      version: '0.9',
     },
     {
       icon: History,
@@ -137,11 +236,12 @@ export default function GuidePage() {
         'Export to JSON or CSV',
         'Cache hit rate to optimize costs',
       ],
+      version: '0.9',
     },
     {
       icon: Globe,
       name: guideTrans.autoDetectLanguage || 'Auto-Detect Language',
-      color: 'blue',
+      color: 'cyan',
       desc: guideTrans.autoDetectLanguageDesc || 'Automatically detect source language',
       details: guideTrans.autoDetectLanguageDetails || [
         'Pattern matching for 15+ languages',
@@ -150,6 +250,7 @@ export default function GuidePage() {
         'Smart fallback if uncertain',
         'Integrated in OCR and Neural Translator',
       ],
+      version: '0.9',
     },
     {
       icon: Keyboard,
@@ -162,6 +263,7 @@ export default function GuidePage() {
         'Customizable configuration',
         'Toast notification when activated',
       ],
+      version: '0.9',
     },
   ];
 
@@ -177,7 +279,7 @@ export default function GuidePage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-orange-400">{t('guidePage.detailedGuide')}</h1>
-              <p className="text-xs text-muted-foreground">{t('guidePage.everythingAbout')} v0.9.8-beta</p>
+              <p className="text-xs text-muted-foreground">{t('guidePage.everythingAbout')} v1.0.0</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -193,7 +295,7 @@ export default function GuidePage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid grid-cols-3 w-full h-9 shrink-0">
           <TabsTrigger value="tools" className="text-xs">🛠️ {t('guidePage.tools')}</TabsTrigger>
-          <TabsTrigger value="new" className="text-xs">✨ {t('guidePage.newInVersion')}</TabsTrigger>
+          <TabsTrigger value="new" className="text-xs">✨ {t('guidePage.newInVersion')} v1.0</TabsTrigger>
           <TabsTrigger value="shortcuts" className="text-xs">⌨️ {t('guidePage.shortcuts')}</TabsTrigger>
         </TabsList>
 

@@ -43,6 +43,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 import { 
   aiTranslationService, 
   type AIProvider, 
@@ -81,6 +82,7 @@ const textTypes = [
 ];
 
 export function AITranslationAssistant() {
+  const { t } = useTranslation();
   const [providers, setProviders] = useState<AIProvider[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<string>('ollama');
   const [selectedModel, setSelectedModel] = useState<string>('llama3.2');
@@ -256,12 +258,12 @@ export function AITranslationAssistant() {
                   <span className="font-medium">{provider.name}</span>
                 </div>
                 <Badge variant={provider.isAvailable ? 'default' : 'secondary'}>
-                  {provider.isAvailable ? 'Online' : 'Offline'}
+                  {provider.isAvailable ? t('aiTranslation.online') : t('aiTranslation.offline')}
                 </Badge>
               </div>
               {provider.isAvailable && provider.models.length > 0 && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  {provider.models.length} models available
+                  {provider.models.length} {t('aiTranslation.modelsAvailable')}
                 </p>
               )}
             </CardContent>
@@ -274,11 +276,11 @@ export function AITranslationAssistant() {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Ollama not detected.</strong> For free local AI translations, install Ollama from{' '}
+            <strong>{t('aiTranslation.ollamaNotDetected')}</strong> {t('aiTranslation.ollamaInstallHint')}{' '}
             <a href="https://ollama.ai" target="_blank" rel="noopener" className="underline">
               ollama.ai
             </a>{' '}
-            and start a model with <code className="bg-muted px-1 rounded">ollama run llama3.2</code>
+            {t('aiTranslation.ollamaStartHint')} <code className="bg-muted px-1 rounded">ollama run llama3.2</code>
           </AlertDescription>
         </Alert>
       )}
@@ -291,7 +293,7 @@ export function AITranslationAssistant() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <Label className="whitespace-nowrap">Model:</Label>
+                  <Label className="whitespace-nowrap">{t('aiTranslation.model')}</Label>
                   <Select value={selectedModel} onValueChange={setSelectedModel}>
                     <SelectTrigger className="flex-1">
                       <SelectValue />
@@ -312,13 +314,13 @@ export function AITranslationAssistant() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Text to Translate
+                {t('aiTranslation.textToTranslate')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Source language</Label>
+                  <Label>{t('aiTranslation.sourceLanguage')}</Label>
                   <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                     <SelectTrigger>
                       <SelectValue />
@@ -334,7 +336,7 @@ export function AITranslationAssistant() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Target language</Label>
+                  <Label>{t('aiTranslation.targetLanguage')}</Label>
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                     <SelectTrigger>
                       <SelectValue />
@@ -352,7 +354,7 @@ export function AITranslationAssistant() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Text type</Label>
+                  <Label>{t('aiTranslation.textType')}</Label>
                   <Select value={textType} onValueChange={setTextType}>
                     <SelectTrigger>
                       <SelectValue />
@@ -367,11 +369,11 @@ export function AITranslationAssistant() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Character (optional)</Label>
+                  <Label>{t('aiTranslation.character')}</Label>
                   <Input
                     value={speaker}
                     onChange={(e) => setSpeaker(e.target.value)}
-                    placeholder="Character name"
+                    placeholder={t('aiTranslation.characterPlaceholder')}
                   />
                 </div>
               </div>
@@ -379,7 +381,7 @@ export function AITranslationAssistant() {
               <Textarea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Enter text to translate..."
+                placeholder={t('aiTranslation.enterText')}
                 className="min-h-[120px]"
               />
 
@@ -390,7 +392,7 @@ export function AITranslationAssistant() {
                       checked={generateAlternatives}
                       onCheckedChange={setGenerateAlternatives}
                     />
-                    <Label className="text-sm">Alternative</Label>
+                    <Label className="text-sm">{t('aiTranslation.alternative')}</Label>
                   </div>
                 </div>
                 <Button 
@@ -401,12 +403,12 @@ export function AITranslationAssistant() {
                   {isTranslating ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Translating...
+                      {t('aiTranslation.translating')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
-                      Translate with AI
+                      {t('aiTranslation.translateWithAI')}
                     </>
                   )}
                 </Button>
@@ -421,7 +423,7 @@ export function AITranslationAssistant() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Check className="h-5 w-5 text-green-500" />
-                    Translation
+                    {t('aiTranslation.translation')}
                   </CardTitle>
                   {lastResult && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -450,7 +452,7 @@ export function AITranslationAssistant() {
 
                 {alternatives.length > 0 && (
                   <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Alternative:</Label>
+                    <Label className="text-sm text-muted-foreground">{t('aiTranslation.alternative')}:</Label>
                     <div className="space-y-2">
                       {alternatives.map((alt, i) => (
                         <div key={i} className="flex items-center gap-2 p-2 bg-muted/50 rounded">
@@ -482,19 +484,19 @@ export function AITranslationAssistant() {
                   <CardTitle className="text-lg flex items-center justify-between">
                     <span className="flex items-center gap-2">
                       <Gamepad2 className="h-5 w-5" />
-                      Game Context
+                      {t('aiTranslation.gameContext')}
                     </span>
                     {showContext ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </CardTitle>
                   <CardDescription>
-                    Configure context for more accurate translations
+                    {t('aiTranslation.gameContextDesc')}
                   </CardDescription>
                 </CardHeader>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-4 pt-0">
                   <div className="space-y-2">
-                    <Label>Game Title</Label>
+                    <Label>{t('aiTranslation.gameTitle')}</Label>
                     <Input
                       value={gameContext.gameTitle}
                       onChange={(e) => setGameContext(prev => ({ ...prev, gameTitle: e.target.value }))}
@@ -503,7 +505,7 @@ export function AITranslationAssistant() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Genre</Label>
+                    <Label>{t('aiTranslation.genre')}</Label>
                     <Select 
                       value={gameContext.genre} 
                       onValueChange={(value: any) => setGameContext(prev => ({ ...prev, genre: value }))}
@@ -522,7 +524,7 @@ export function AITranslationAssistant() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Tone</Label>
+                    <Label>{t('aiTranslation.tone')}</Label>
                     <Select 
                       value={gameContext.tone} 
                       onValueChange={(value: any) => setGameContext(prev => ({ ...prev, tone: value }))}
@@ -539,7 +541,7 @@ export function AITranslationAssistant() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Setting</Label>
+                    <Label>{t('aiTranslation.setting')}</Label>
                     <Input
                       value={gameContext.setting}
                       onChange={(e) => setGameContext(prev => ({ ...prev, setting: e.target.value }))}
@@ -556,10 +558,10 @@ export function AITranslationAssistant() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
-                Glossary
+                {t('aiTranslation.glossary')}
               </CardTitle>
               <CardDescription>
-                Terms with fixed translation
+                {t('aiTranslation.glossaryDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -567,13 +569,13 @@ export function AITranslationAssistant() {
                 <Input
                   value={glossaryTerm}
                   onChange={(e) => setGlossaryTerm(e.target.value)}
-                  placeholder="EN Term"
+                  placeholder={t('aiTranslation.termPlaceholder')}
                   className="flex-1"
                 />
                 <Input
                   value={glossaryTranslation}
                   onChange={(e) => setGlossaryTranslation(e.target.value)}
-                  placeholder="Translation"
+                  placeholder={t('aiTranslation.translationPlaceholder')}
                   className="flex-1"
                 />
                 <Button size="icon" onClick={addGlossaryTerm}>

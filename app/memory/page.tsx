@@ -31,11 +31,13 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { translationMemory, type TranslationUnit, type TMStats } from '@/lib/translation-memory';
 import { invoke } from '@/lib/tauri-api';
+import { useTranslation } from '@/lib/i18n';
 
 // Cache per i nomi dei games
 const gameNameCache: Record<string, string> = {};
 
 export default function MemoryPage() {
+  const { t } = useTranslation();
   const [units, setUnits] = useState<TranslationUnit[]>([]);
   const [stats, setStats] = useState<TMStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -183,7 +185,7 @@ export default function MemoryPage() {
         confidence: 1.0,
         verified: true
       });
-      toast({ title: '✅ Translation updated' });
+      toast({ title: `✅ ${t('dictionary.translationUpdated')}` });
       loadData();
     } catch (e) {
       toast({ title: 'Error', description: String(e), variant: 'destructive' });
@@ -196,7 +198,7 @@ export default function MemoryPage() {
     if (!unitToDelete) return;
     try {
       await translationMemory.delete(unitToDelete.id);
-      toast({ title: '🗑️ Translation deleted' });
+      toast({ title: `🗑️ ${t('dictionary.translationDeleted')}` });
       loadData();
     } catch (e) {
       toast({ title: 'Error', description: String(e), variant: 'destructive' });
@@ -213,36 +215,42 @@ export default function MemoryPage() {
 
   return (
     <div className="flex flex-col h-full p-6 gap-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30">
-            <Database className="h-6 w-6 text-emerald-400" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-orange-400">
-              Dictionary
-            </h1>
-            <p className="text-sm text-slate-400">Your saved translations • Edit or delete</p>
-          </div>
-        </div>
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
-        {/* Stats - mostra solo traduzioni valide */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-            <Sparkles className="h-4 w-4 text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-400">{filteredUnits.length.toLocaleString()}</span>
-            <span className="text-xs text-slate-500">translations</span>
-          </div>
-          {stats && stats.totalUnits > filteredUnits.length && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-              <AlertCircle className="h-4 w-4 text-amber-400" />
-              <span className="text-xs text-amber-400">{stats.totalUnits - filteredUnits.length} corrupted data hidden</span>
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <Database className="h-5 w-5 text-white" />
             </div>
-          )}
-          <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
-            <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
-          </Button>
+            <div>
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                {t('dictionary.title')}
+              </h1>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('dictionary.subtitle')}
+              </p>
+            </div>
+          </div>
+          
+          {/* Stats inline */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">{filteredUnits.length.toLocaleString()}</span>
+              <span className="text-[10px] text-white/80">{t('dictionary.translations')}</span>
+            </div>
+            {stats && stats.totalUnits > filteredUnits.length && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/30 backdrop-blur-sm border border-amber-500/40">
+                <AlertCircle className="h-3.5 w-3.5 text-white" />
+                <span className="text-[10px] text-white">{stats.totalUnits - filteredUnits.length} {t('dictionary.corrupted')}</span>
+              </div>
+            )}
+            <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="border-white/30 bg-white/10 hover:bg-white/20 text-white h-8">
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -253,7 +261,7 @@ export default function MemoryPage() {
           <Input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search translations..."
+            placeholder={t('dictionary.searchPlaceholder')}
             className="pl-10 bg-slate-800/50 border-slate-700"
           />
         </div>
@@ -262,13 +270,13 @@ export default function MemoryPage() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2">
               <Filter className="h-4 w-4" />
-              {filterGame === 'all' ? 'All games' : getGameName(filterGame)}
+              {filterGame === 'all' ? t('dictionary.allGames') : getGameName(filterGame)}
               <ChevronDown className="h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setFilterGame('all')}>
-              All games
+              {t('dictionary.allGames')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {uniqueGames.map(game => (
@@ -281,7 +289,7 @@ export default function MemoryPage() {
         </DropdownMenu>
 
         <span className="text-sm text-slate-500">
-          {filteredUnits.length} results
+          {filteredUnits.length} {t('dictionary.results')}
         </span>
       </div>
 
@@ -294,8 +302,8 @@ export default function MemoryPage() {
         ) : filteredUnits.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-500">
             <Database className="h-16 w-16 mb-4 opacity-30" />
-            <p className="text-lg font-medium">No translations found</p>
-            <p className="text-sm">Use Neural Translator to create translations</p>
+            <p className="text-lg font-medium">{t('dictionary.noTranslationsFound')}</p>
+            <p className="text-sm">{t('dictionary.useNeuralTranslator')}</p>
           </div>
         ) : (
           <ScrollArea className="h-full">
@@ -303,10 +311,10 @@ export default function MemoryPage() {
               <thead className="sticky top-0 z-10">
                 <tr className="bg-slate-800/95 backdrop-blur-sm">
                   <th className="text-left py-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-600/50 w-1/2">
-                    Original
+                    {t('dictionary.original')}
                   </th>
                   <th className="text-left py-1.5 px-2 text-[10px] font-semibold uppercase tracking-wider text-orange-400/80 border-b border-slate-600/50 w-1/2">
-                    Translation
+                    {t('dictionary.translation')}
                   </th>
                 </tr>
               </thead>
@@ -390,10 +398,10 @@ export default function MemoryPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-red-400">
               <AlertCircle className="h-5 w-5" />
-              Delete translation?
+              {t('dictionary.deleteTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
-              This action cannot be undone. The translation will be removed from memory.
+              {t('dictionary.deleteDescription')}
               {unitToDelete && (
                 <span className="mt-3 p-3 rounded-lg bg-slate-800/50 text-sm block">
                   <span className="text-slate-300 block">"{unitToDelete.sourceText}"</span>
@@ -404,13 +412,13 @@ export default function MemoryPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-slate-800 border-slate-700 hover:bg-slate-700">
-              Cancel
+              {t('dictionary.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete
+              {t('dictionary.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

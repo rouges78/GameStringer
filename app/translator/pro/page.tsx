@@ -1431,7 +1431,7 @@ export default function TranslatorProPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Hero Header con immagine game fusa */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-red-600 via-purple-600 to-fuchsia-600 p-4 mb-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-4 mb-6">
         {/* Immagine game fusa nello sfondo */}
         {selectedGame?.coverUrl && (
           <>
@@ -1442,8 +1442,8 @@ export default function TranslatorProPage() {
                 className="w-full h-full object-cover opacity-25"
               />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-red-600/85 via-purple-600/80 to-fuchsia-600/85" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-purple-600/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-600/85 via-blue-600/80 to-cyan-600/85" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-600/40 to-transparent" />
           </>
         )}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
@@ -1484,7 +1484,7 @@ export default function TranslatorProPage() {
                 <div className="flex flex-col items-center">
                   <div className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
-                    isActive && "bg-gradient-to-br from-red-500 to-fuchsia-500 text-white shadow-lg shadow-purple-500/25",
+                    isActive && "bg-gradient-to-br from-sky-500 to-blue-500 text-white shadow-lg shadow-blue-500/25",
                     isCompleted && "bg-green-500 text-white",
                     !isActive && !isCompleted && "bg-muted text-muted-foreground"
                   )}>
@@ -2224,7 +2224,7 @@ export default function TranslatorProPage() {
               <Button
                 onClick={() => { setCurrentStep('translate'); handleStartTranslation(); }}
                 disabled={!apiKey}
-                className="bg-gradient-to-r from-red-500 to-fuchsia-500 hover:from-red-600 hover:to-fuchsia-600"
+                className="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
                 Avvia Traduzione
@@ -2244,7 +2244,7 @@ export default function TranslatorProPage() {
                       "absolute inset-0 rounded-full animate-pulse transition-colors duration-500",
                       progress?.isRateLimited 
                         ? "bg-amber-500" 
-                        : "bg-gradient-to-r from-red-500 to-fuchsia-500"
+                        : "bg-gradient-to-r from-sky-500 to-blue-500"
                     )} />
                     <div className="absolute inset-2 rounded-full bg-background flex items-center justify-center">
                       {progress?.isRateLimited ? (

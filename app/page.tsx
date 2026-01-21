@@ -12,6 +12,7 @@ import {
   Languages,
   BarChart3,
   Sparkles,
+  Home,
   Zap,
   FolderOpen,
   Layers,
@@ -215,20 +216,17 @@ export default function Dashboard() {
   return (
     <div className="p-6 space-y-4 overflow-auto">
       {/* Hero Header con bordo sfumato */}
-      <div className="relative overflow-hidden rounded-xl bg-card p-3 border-2 border-transparent" style={{ background: 'linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(135deg, #8b5cf6, #6366f1, #ec4899) border-box' }}>
+      <div className="relative overflow-hidden rounded-xl bg-card p-3 border-2 border-transparent" style={{ background: 'linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(135deg, #64748b, #475569, #334155) border-box' }}>
         
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="p-2 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg">
+              <Home className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">
-                GameStringer
+              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent">
+                Dashboard Center
               </h1>
-              <p className="text-muted-foreground text-[10px]">
-                {dash.translationCenter}
-              </p>
             </div>
           </div>
           

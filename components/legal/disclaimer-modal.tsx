@@ -48,8 +48,8 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
               <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Terms of Use and Disclaimer</h2>
-              <p className="text-sm text-slate-400">Read carefully before continuing</p>
+              <h2 className="text-xl font-bold text-white">Termini d'Uso e Disclaimer</h2>
+              <p className="text-sm text-slate-400">Leggi attentamente prima di continuare</p>
             </div>
           </div>
         </div>
@@ -66,9 +66,9 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
               <div>
                 <h3 className="font-semibold text-amber-300 mb-1">Disclaimer</h3>
                 <p className="text-sm text-slate-300">
-                  The developer of GameStringer <strong>is not responsible</strong> for translations, 
-                  patches, modifications or any other content created, generated or applied using 
-                  this software.
+                  Lo sviluppatore di GameStringer <strong>non è responsabile</strong> per traduzioni, 
+                  patch, modifiche o qualsiasi altro contenuto creato, generato o applicato usando 
+                  questo software.
                 </p>
               </div>
             </div>
@@ -76,12 +76,12 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
             <div className="flex items-start gap-3 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl">
               <FileWarning className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-blue-300 mb-1">Use at Your Own Risk</h3>
+                <h3 className="font-semibold text-blue-300 mb-1">Uso a Proprio Rischio</h3>
                 <p className="text-sm text-slate-300">
-                  The user uses this software <strong>at their own risk</strong>. 
-                  Modifications to game files may cause malfunctions, crashes, 
-                  save corruption or other issues. It is always recommended to make 
-                  a <strong>backup</strong> before applying any modification.
+                  L'utente utilizza questo software <strong>a proprio rischio</strong>. 
+                  Le modifiche ai file di gioco possono causare malfunzionamenti, crash, 
+                  corruzione dei salvataggi o altri problemi. Si raccomanda sempre di fare 
+                  un <strong>backup</strong> prima di applicare qualsiasi modifica.
                 </p>
               </div>
             </div>
@@ -89,12 +89,12 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
             <div className="flex items-start gap-3 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl">
               <Shield className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-green-300 mb-1">Intellectual Property</h3>
+                <h3 className="font-semibold text-green-300 mb-1">Proprietà Intellettuale</h3>
                 <p className="text-sm text-slate-300">
-                  Games, their content and trademarks belong to their respective owners. 
-                  GameStringer is a utility tool and <strong>is not affiliated</strong> with 
-                  any game publisher or developer. The user is responsible for respecting 
-                  the terms of service and licenses of the games they modify.
+                  I giochi, i loro contenuti e marchi appartengono ai rispettivi proprietari. 
+                  GameStringer è uno strumento di utilità e <strong>non è affiliato</strong> con 
+                  alcun editore o sviluppatore di giochi. L'utente è responsabile del rispetto 
+                  dei termini di servizio e delle licenze dei giochi che modifica.
                 </p>
               </div>
             </div>
@@ -102,11 +102,11 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
             <div className="flex items-start gap-3 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl">
               <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-red-300 mb-1">Translation Quality</h3>
+                <h3 className="font-semibold text-red-300 mb-1">Qualità delle Traduzioni</h3>
                 <p className="text-sm text-slate-300">
-                  Automatic translations generated via third-party services (such as Google Translate, 
-                  DeepL, etc.) may contain <strong>errors, inaccuracies or inappropriate content</strong>. 
-                  The developer does not guarantee the quality, accuracy or appropriateness of translations.
+                  Le traduzioni automatiche generate tramite servizi di terze parti (come Google Translate, 
+                  DeepL, ecc.) possono contenere <strong>errori, imprecisioni o contenuti inappropriati</strong>. 
+                  Lo sviluppatore non garantisce la qualità, accuratezza o appropriatezza delle traduzioni.
                 </p>
               </div>
             </div>
@@ -114,11 +114,11 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
             <div className="flex items-start gap-3 p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl">
               <Shield className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-purple-300 mb-1">No Warranty</h3>
+                <h3 className="font-semibold text-purple-300 mb-1">Nessuna Garanzia</h3>
                 <p className="text-sm text-slate-300">
-                  This software is provided <strong>"as is"</strong>, without warranties of any kind, 
-                  express or implied. The developer does not guarantee that the software is error-free 
-                  or will operate without interruption.
+                  Questo software è fornito <strong>"così com'è"</strong>, senza garanzie di alcun tipo, 
+                  esplicite o implicite. Lo sviluppatore non garantisce che il software sia privo di errori 
+                  o che funzioni senza interruzioni.
                 </p>
               </div>
             </div>
@@ -127,9 +127,9 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
           {/* Riepilogo */}
           <div className="p-4 bg-slate-800 rounded-xl border border-slate-700">
             <p className="text-sm text-slate-400 text-center">
-              By continuing to use GameStringer, you accept the terms described above and 
-              acknowledge that you are solely responsible for the use of the software and 
-              any modifications made to your games.
+              Continuando ad usare GameStringer, accetti i termini descritti sopra e 
+              riconosci di essere l'unico responsabile dell'uso del software e 
+              di qualsiasi modifica apportata ai tuoi giochi.
             </p>
           </div>
         </div>
@@ -144,10 +144,10 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
             {hasScrolledToBottom ? (
               <>
                 <CheckCircle2 className="w-5 h-5 mr-2" />
-                I have read and accept the terms
+                Ho letto e accetto i termini
               </>
             ) : (
-              'Scroll to read all terms'
+              'Scorri per leggere tutti i termini'
             )}
           </Button>
         </div>

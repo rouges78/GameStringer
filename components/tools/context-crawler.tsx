@@ -48,6 +48,7 @@ import {
   exportGlossaryToCSV,
   getGlossaryStats,
 } from '@/lib/context-crawler';
+import { useTranslation } from '@/lib/i18n';
 
 const CATEGORY_ICONS: Record<TermCategory, React.ReactNode> = {
   character_name: <Users className="h-3 w-3" />,
@@ -84,6 +85,7 @@ const DEFAULT_CONFIG: CrawlerConfig = {
 };
 
 export function ContextCrawler() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<CrawlerConfig>(DEFAULT_CONFIG);
   const [session, setSession] = useState<CrawlerSession | null>(null);
   const [glossary, setGlossary] = useState<GlossaryEntry[]>([]);
@@ -284,7 +286,7 @@ export function ContextCrawler() {
   };
 
   const handleClearGlossary = () => {
-    if (confirm('Are you sure you want to clear the entire glossary?')) {
+    if (confirm(t('contextCrawler.clearConfirm'))) {
       setGlossary([]);
       saveGlossary(gameId, []);
     }
@@ -305,8 +307,8 @@ export function ContextCrawler() {
               <Brain className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">AI Context Crawler</h2>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">Capture texts from gameplay and build glossary</p>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('contextCrawler.title')}</h2>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('contextCrawler.subtitle')}</p>
             </div>
           </div>
           
@@ -315,7 +317,7 @@ export function ContextCrawler() {
             {!isRunning ? (
               <Button onClick={startCrawler} className="bg-white text-pink-600 hover:bg-white/90 shadow-lg">
                 <Play className="h-4 w-4 mr-1" />
-                Start
+                {t('contextCrawler.start')}
               </Button>
             ) : (
               <>
@@ -324,7 +326,7 @@ export function ContextCrawler() {
                 </Button>
                 <Button onClick={stopCrawler} className="bg-red-500/80 hover:bg-red-500 text-white">
                   <Square className="h-4 w-4 mr-1" />
-                  Stop
+                  {t('contextCrawler.stop')}
                 </Button>
               </>
             )}
@@ -336,7 +338,7 @@ export function ContextCrawler() {
           <div className="mt-2 flex items-center gap-3">
             <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${isPaused ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
               <div className={`w-2 h-2 rounded-full ${isPaused ? 'bg-yellow-400' : 'bg-green-400 animate-pulse'}`} />
-              {isPaused ? 'Paused' : 'Running'}
+              {isPaused ? t('contextCrawler.paused') : t('contextCrawler.running')}
             </div>
             <span className="text-white/60 text-sm">{stats.framesProcessed} frames • {glossary.length} terms • {stats.processingSpeed.toFixed(1)} fps</span>
           </div>
@@ -345,9 +347,9 @@ export function ContextCrawler() {
 
       <Tabs defaultValue="glossary" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="glossary">Glossary ({glossary.length})</TabsTrigger>
-          <TabsTrigger value="live">Live Feed</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="glossary">{t('contextCrawler.glossary')} ({glossary.length})</TabsTrigger>
+          <TabsTrigger value="live">{t('contextCrawler.liveFeed')}</TabsTrigger>
+          <TabsTrigger value="settings">{t('contextCrawler.settings')}</TabsTrigger>
         </TabsList>
 
         {/* Glossary Tab */}
@@ -357,25 +359,25 @@ export function ContextCrawler() {
             <Card className="bg-blue-500/10 border-blue-500/30">
               <CardContent className="py-2 text-center">
                 <p className="text-lg font-bold">{glossaryStats.total}</p>
-                <p className="text-[10px] text-muted-foreground">Total</p>
+                <p className="text-[10px] text-muted-foreground">{t('contextCrawler.total')}</p>
               </CardContent>
             </Card>
             <Card className="bg-green-500/10 border-green-500/30">
               <CardContent className="py-2 text-center">
                 <p className="text-lg font-bold">{glossaryStats.byStatus.translated}</p>
-                <p className="text-[10px] text-muted-foreground">Translated</p>
+                <p className="text-[10px] text-muted-foreground">{t('contextCrawler.translated')}</p>
               </CardContent>
             </Card>
             <Card className="bg-yellow-500/10 border-yellow-500/30">
               <CardContent className="py-2 text-center">
                 <p className="text-lg font-bold">{glossaryStats.byStatus.pending}</p>
-                <p className="text-[10px] text-muted-foreground">Pending</p>
+                <p className="text-[10px] text-muted-foreground">{t('contextCrawler.pending')}</p>
               </CardContent>
             </Card>
             <Card className="bg-purple-500/10 border-purple-500/30">
               <CardContent className="py-2 text-center">
                 <p className="text-lg font-bold">{(glossaryStats.avgConfidence * 100).toFixed(0)}%</p>
-                <p className="text-[10px] text-muted-foreground">Confidence</p>
+                <p className="text-[10px] text-muted-foreground">{t('contextCrawler.confidence')}</p>
               </CardContent>
             </Card>
           </div>
@@ -384,11 +386,11 @@ export function ContextCrawler() {
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="h-3 w-3 mr-1" />
-              Export CSV
+              {t('contextCrawler.exportCsv')}
             </Button>
             <Button variant="outline" size="sm" onClick={handleClearGlossary}>
               <Trash2 className="h-3 w-3 mr-1" />
-              Clear
+              {t('contextCrawler.clear')}
             </Button>
           </div>
 
@@ -398,7 +400,7 @@ export function ContextCrawler() {
               <div className="p-2 space-y-1">
                 {glossary.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8 text-sm">
-                    No terms captured. Start the crawler to begin.
+                    {t('contextCrawler.noTermsCaptured')}
                   </p>
                 ) : (
                   glossary
@@ -442,7 +444,7 @@ export function ContextCrawler() {
             <CardHeader className="py-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Eye className="h-4 w-4" />
-                Recent Captures
+                {t('contextCrawler.recentCaptures')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -450,7 +452,7 @@ export function ContextCrawler() {
                 <div className="space-y-1">
                   {recentCaptures.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8 text-sm">
-                      No recent captures
+                      {t('contextCrawler.noRecentCaptures')}
                     </p>
                   ) : (
                     recentCaptures.map((text, i) => (
@@ -468,7 +470,7 @@ export function ContextCrawler() {
           {/* Category Distribution */}
           <Card>
             <CardHeader className="py-2">
-              <CardTitle className="text-sm">Distribuzione Categorie</CardTitle>
+              <CardTitle className="text-sm">{t('contextCrawler.categoryDistribution')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -496,7 +498,7 @@ export function ContextCrawler() {
             <CardContent className="pt-4 space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Capture interval</span>
+                  <span className="text-sm">{t('contextCrawler.captureInterval')}</span>
                   <span className="text-xs text-muted-foreground">{config.captureInterval}ms</span>
                 </div>
                 <Slider
@@ -510,7 +512,7 @@ export function ContextCrawler() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Minimum confidence</span>
+                  <span className="text-sm">{t('contextCrawler.minConfidence')}</span>
                   <span className="text-xs text-muted-foreground">{(config.minConfidence * 100).toFixed(0)}%</span>
                 </div>
                 <Slider
@@ -524,7 +526,7 @@ export function ContextCrawler() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Deduplication threshold</span>
+                  <span className="text-sm">{t('contextCrawler.deduplicationThreshold')}</span>
                   <span className="text-xs text-muted-foreground">{(config.deduplicateThreshold * 100).toFixed(0)}%</span>
                 </div>
                 <Slider
@@ -538,8 +540,8 @@ export function ContextCrawler() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm">Automatic classification</span>
-                  <p className="text-xs text-muted-foreground">Automatically categorize terms</p>
+                  <span className="text-sm">{t('contextCrawler.autoClassification')}</span>
+                  <p className="text-xs text-muted-foreground">{t('contextCrawler.autoClassifyDesc')}</p>
                 </div>
                 <Switch
                   checked={config.autoClassify}
@@ -549,7 +551,7 @@ export function ContextCrawler() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-xs text-muted-foreground">OCR Language</span>
+                  <span className="text-xs text-muted-foreground">{t('contextCrawler.ocrLanguage')}</span>
                   <Input
                     value={config.ocrLanguage}
                     onChange={(e) => setConfig(c => ({ ...c, ocrLanguage: e.target.value }))}
@@ -557,7 +559,7 @@ export function ContextCrawler() {
                   />
                 </div>
                 <div>
-                  <span className="text-xs text-muted-foreground">Target Language</span>
+                  <span className="text-xs text-muted-foreground">{t('contextCrawler.targetLanguage')}</span>
                   <Input
                     value={config.targetLanguage}
                     onChange={(e) => setConfig(c => ({ ...c, targetLanguage: e.target.value }))}

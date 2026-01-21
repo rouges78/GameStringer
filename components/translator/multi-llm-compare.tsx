@@ -22,6 +22,7 @@ import {
   Brain
 } from 'lucide-react';
 import { CHARACTER_PRESETS, type CharacterProfile, getQualityCategory } from '@/lib/translation-quality';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationResult {
   provider: string;
@@ -52,13 +53,13 @@ interface CompareResponse {
 }
 
 const PROVIDERS = [
-  { id: 'openai', name: 'OpenAI GPT-4', color: 'bg-green-500' },
-  { id: 'gemini', name: 'Google Gemini', color: 'bg-blue-500' },
-  { id: 'claude', name: 'Claude', color: 'bg-purple-500' },
-  { id: 'deepseek', name: 'DeepSeek', color: 'bg-cyan-500' },
-  { id: 'mistral', name: 'Mistral', color: 'bg-orange-500' },
-  { id: 'deepl', name: 'DeepL', color: 'bg-indigo-500' },
-  { id: 'libre', name: 'Libre (Free)', color: 'bg-gray-500' }
+  { id: 'openai', name: 'OpenAI', icon: '🤖', color: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400', activeColor: 'bg-emerald-500 text-white' },
+  { id: 'gemini', name: 'Gemini', icon: '✨', color: 'bg-blue-500/20 border-blue-500/50 text-blue-400', activeColor: 'bg-blue-500 text-white' },
+  { id: 'claude', name: 'Claude', icon: '🧠', color: 'bg-purple-500/20 border-purple-500/50 text-purple-400', activeColor: 'bg-purple-500 text-white' },
+  { id: 'deepseek', name: 'DeepSeek', icon: '🔍', color: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400', activeColor: 'bg-cyan-500 text-white' },
+  { id: 'mistral', name: 'Mistral', icon: '🌊', color: 'bg-orange-500/20 border-orange-500/50 text-orange-400', activeColor: 'bg-orange-500 text-white' },
+  { id: 'deepl', name: 'DeepL', icon: '📝', color: 'bg-indigo-500/20 border-indigo-500/50 text-indigo-400', activeColor: 'bg-indigo-500 text-white' },
+  { id: 'libre', name: 'Libre', icon: '🆓', color: 'bg-slate-500/20 border-slate-500/50 text-slate-400', activeColor: 'bg-slate-500 text-white' }
 ];
 
 const LANGUAGES = [
@@ -75,6 +76,7 @@ const LANGUAGES = [
 ];
 
 export function MultiLLMCompare() {
+  const { t } = useTranslation();
   const [sourceText, setSourceText] = useState('');
   const [targetLanguage, setTargetLanguage] = useState('it');
   const [sourceLanguage, setSourceLanguage] = useState('en');
@@ -138,26 +140,41 @@ export function MultiLLMCompare() {
   };
 
   const getProviderInfo = (providerId: string) => {
-    return PROVIDERS.find(p => p.id === providerId) || { id: providerId, name: providerId, color: 'bg-gray-500' };
+    return PROVIDERS.find(p => p.id === providerId) || { id: providerId, name: providerId, icon: '❓', color: 'bg-slate-500/20 border-slate-500/50 text-slate-400', activeColor: 'bg-slate-500 text-white' };
   };
 
   return (
     <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600">
-          <Brain className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold">Multi-LLM Compare</h2>
-          <p className="text-muted-foreground text-xs">Compare translations from multiple AI models in parallel</p>
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+        
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <Brain className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{t('multiLlmCompare.title')}</h2>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('multiLlmCompare.subtitle')}</p>
+            </div>
+          </div>
+          
+          {/* Stats inline */}
+          <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">{PROVIDERS.length}</span>
+              <span className="text-[10px] text-white/80">{t('multiLlmCompare.providers')}</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Input Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Source Text */}
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2 bg-slate-900/50 border-slate-700/50">
           <CardHeader className="py-2">
             <CardTitle className="text-sm font-medium flex items-center justify-between">
               <span className="flex items-center gap-2">
@@ -189,33 +206,33 @@ export function MultiLLMCompare() {
             <Textarea
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
-              placeholder="Enter text to translate..."
-              className="min-h-[80px] resize-none text-sm"
+              placeholder={t('multiLlmCompare.enterText')}
+              className="min-h-[80px] resize-none text-sm bg-slate-800/50 border-slate-700/50"
             />
           </CardContent>
         </Card>
 
         {/* Settings */}
-        <Card>
+        <Card className="bg-slate-900/50 border-slate-700/50">
           <CardHeader className="py-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground">Provider AI</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground">{t('multiLlmCompare.providerAI')}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0 space-y-2">
-            {/* Provider Selection - Compact */}
-            <div className="flex flex-wrap gap-1">
+            {/* Provider Selection */}
+            <div className="flex flex-wrap gap-2">
               {PROVIDERS.map(provider => (
-                <div
+                <button
                   key={provider.id}
                   onClick={() => handleProviderToggle(provider.id)}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-md cursor-pointer transition-all text-[10px]
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer transition-all text-xs font-medium border
                     ${selectedProviders.includes(provider.id)
-                      ? `${provider.color} text-white`
-                      : 'bg-muted hover:bg-muted/80'
+                      ? provider.activeColor
+                      : provider.color + ' hover:opacity-80'
                     }`}
                 >
-                  <Checkbox checked={selectedProviders.includes(provider.id)} className="h-2.5 w-2.5" />
-                  {provider.name.split(' ')[0]}
-                </div>
+                  <span>{provider.icon}</span>
+                  <span>{provider.name}</span>
+                </button>
               ))}
             </div>
 
@@ -227,9 +244,9 @@ export function MultiLLMCompare() {
               className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
             >
               {isLoading ? (
-                <><Loader2 className="h-3 w-3 mr-1 animate-spin" />Comparing...</>
+                <><Loader2 className="h-3 w-3 mr-1 animate-spin" />{t('multiLlmCompare.comparing')}</>
               ) : (
-                <><Sparkles className="h-3 w-3 mr-1" />Compare ({selectedProviders.length})</>
+                <><Sparkles className="h-3 w-3 mr-1" />{t('multiLlmCompare.compare')} ({selectedProviders.length})</>
               )}
             </Button>
           </CardContent>
@@ -240,28 +257,28 @@ export function MultiLLMCompare() {
       {response && (
         <div className="space-y-4">
           {/* Summary */}
-          <Card className="border-2 border-green-500/30 bg-green-500/5">
+          <Card className="border-2 border-green-500/30 bg-green-500/5 bg-slate-900/50">
             <CardContent className="py-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-yellow-500" />
-                    <span className="font-medium">Best result:</span>
+                    <span className="font-medium">{t('multiLlmCompare.bestResult')}</span>
                     {response.bestResult && (
-                      <Badge className={getProviderInfo(response.bestResult.provider).color}>
-                        {getProviderInfo(response.bestResult.provider).name}
+                      <Badge className={getProviderInfo(response.bestResult.provider).activeColor}>
+                        {getProviderInfo(response.bestResult.provider).icon} {getProviderInfo(response.bestResult.provider).name}
                       </Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    {response.processingTimeMs}ms total
+                    {response.processingTimeMs}ms {t('multiLlmCompare.total')}
                   </div>
                 </div>
                 {response.consensusTranslation && (
                   <div className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    <span className="text-green-600 font-medium">Consensus found</span>
+                    <span className="text-green-600 font-medium">{t('multiLlmCompare.consensusFound')}</span>
                   </div>
                 )}
               </div>
@@ -278,7 +295,7 @@ export function MultiLLMCompare() {
               return (
                 <Card 
                   key={result.provider}
-                  className={`relative overflow-hidden transition-all hover:shadow-lg ${
+                  className={`relative overflow-hidden transition-all hover:shadow-lg bg-slate-900/50 border-slate-700/50 ${
                     isBest ? 'ring-2 ring-yellow-500 shadow-yellow-500/20' : ''
                   } ${result.error ? 'opacity-60' : ''}`}
                 >
@@ -290,7 +307,7 @@ export function MultiLLMCompare() {
                   
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <Badge className={providerInfo.color}>{providerInfo.name}</Badge>
+                      <Badge className={providerInfo.activeColor}>{providerInfo.icon} {providerInfo.name}</Badge>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Zap className="h-3 w-3" />
                         {result.latencyMs}ms
@@ -328,7 +345,7 @@ export function MultiLLMCompare() {
                         {/* Quality Score */}
                         <div className="space-y-2">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-medium">Quality Score</span>
+                            <span className="font-medium">{t('multiLlmCompare.qualityScore')}</span>
                             <span className={`font-bold ${qualityCategory.color}`}>
                               {result.qualityScore.overall}/100 - {qualityCategory.label}
                             </span>
@@ -341,19 +358,19 @@ export function MultiLLMCompare() {
                           {/* Detailed Scores */}
                           <div className="grid grid-cols-4 gap-1 text-xs">
                             <div className="text-center">
-                              <div className="text-muted-foreground">Fluency</div>
+                              <div className="text-muted-foreground">{t('multiLlmCompare.fluency')}</div>
                               <div className="font-medium">{result.qualityScore.fluency}</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-muted-foreground">Accuracy</div>
+                              <div className="text-muted-foreground">{t('multiLlmCompare.accuracy')}</div>
                               <div className="font-medium">{result.qualityScore.accuracy}</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-muted-foreground">Consist.</div>
+                              <div className="text-muted-foreground">{t('multiLlmCompare.consistency')}</div>
                               <div className="font-medium">{result.qualityScore.consistency}</div>
                             </div>
                             <div className="text-center">
-                              <div className="text-muted-foreground">Style</div>
+                              <div className="text-muted-foreground">{t('multiLlmCompare.style')}</div>
                               <div className="font-medium">{result.qualityScore.style}</div>
                             </div>
                           </div>
@@ -371,7 +388,7 @@ export function MultiLLMCompare() {
                         {/* Suggestions */}
                         {result.suggestions.length > 0 && (
                           <div className="text-xs">
-                            <p className="text-muted-foreground mb-1">Alternative:</p>
+                            <p className="text-muted-foreground mb-1">{t('multiLlmCompare.alternative')}</p>
                             <div className="space-y-1">
                               {result.suggestions.slice(0, 2).map((sugg, i) => (
                                 <p key={i} className="text-muted-foreground italic truncate">

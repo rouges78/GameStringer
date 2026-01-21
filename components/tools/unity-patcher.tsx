@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import Image from 'next/image';
 import Link from 'next/link';
 import { activityHistory } from '@/lib/activity-history';
+import { useTranslation } from '@/lib/i18n';
 
 interface PatchStatus {
   success: boolean;
@@ -50,6 +51,7 @@ interface Game {
 }
 
 export function UnityPatcher() {
+  const { t } = useTranslation();
   // URL params per preselezionare il game (da Neural Translator Pro)
   const searchParams = useSearchParams();
   const urlGameId = searchParams.get('gameId');
@@ -527,7 +529,7 @@ export function UnityPatcher() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Gamepad2 className="w-4 h-4 text-emerald-400" />
-                Games
+                {t('gamePatcher.games')}
                 <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
                   {unityGames.filter(g => g.engine?.toLowerCase() === 'unity').length} Unity
                 </Badge>
@@ -537,7 +539,7 @@ export function UnityPatcher() {
               </CardTitle>
               <Button variant="ghost" size="sm" onClick={handleSelectFolder} className="h-6 text-[10px] text-muted-foreground hover:text-white px-2">
                 <FolderOpen className="w-3 h-3 mr-1" />
-                Folder
+                {t('gamePatcher.folder')}
               </Button>
             </div>
           </CardHeader>
@@ -545,7 +547,7 @@ export function UnityPatcher() {
             <div className="relative mb-2">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
               <Input 
-                placeholder="Search..." 
+                placeholder={t('gamePatcher.search')} 
                 className="pl-7 h-7 text-xs bg-slate-950/50 border-slate-800/70"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -614,7 +616,7 @@ export function UnityPatcher() {
           <CardHeader className="py-2 px-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <Download className="w-4 h-4 text-emerald-400" />
-              {selectedGame ? getGameName(selectedGame) : gamePath ? 'Folder selected' : 'Patch Configuration'}
+              {selectedGame ? getGameName(selectedGame) : gamePath ? t('gamePatcher.folder') : t('gamePatcher.patchConfiguration')}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-2 pt-0 overflow-hidden">
@@ -755,7 +757,7 @@ export function UnityPatcher() {
             ) : (
               <div className="flex flex-col items-center justify-center h-[100px] text-center">
                 <Download className="w-6 h-6 text-slate-600 mb-1" />
-                <p className="text-[10px] text-slate-400">Select a game</p>
+                <p className="text-[10px] text-slate-400">{t('gamePatcher.selectGame')}</p>
               </div>
             )}
           </CardContent>

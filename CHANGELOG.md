@@ -19,6 +19,33 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.1 — Game Details Layout Overhaul
+
+> **Data**: 2026-01-21
+
+#### 🎨 Layout Redesign
+
+- **Nuovo layout 3:1** per pagina dettaglio gioco
+  - Colonna principale (75%): screenshot gallery grande, tabs File/Traduzioni/Patch
+  - Sidebar destra (25%): info gioco, azioni, HLTB
+- **Screenshot gallery espansa**: griglia 4 colonne con fino a 12 screenshot
+- **Trama completa** nell'header hero (senza limite righe)
+- **Raccomandazione Traduzione** a tutta larghezza sotto la griglia
+- **Componente TranslationRecommendation** ingrandito e più leggibile
+
+#### 🌍 Traduzioni
+
+- **Traduzioni inglesi complete** per pagina dettaglio gioco
+- Nuove chiavi: `scanning`, `filesFound`, `translate`, `noFilesDetected`, `searchTranslatableFiles`, `scan`, `noActiveTranslations`, `engineNotRecognized`, `free`, `loadPlaytime`, `loading`
+- **Dialogo chiusura app** tradotto in IT/EN
+
+#### 🐛 Bug Fix
+
+- Risolti problemi di layout con colonne sbilanciate
+- Rimossi elementi duplicati dalla pagina dettagli
+
+---
+
 ### v1.0.0 — Public Release 🎉
 
 > **Data**: 2026-01-20

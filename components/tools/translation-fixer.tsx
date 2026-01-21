@@ -31,6 +31,7 @@ import {
   detectGameType,
   GAME_SPECIFIC_FIXES,
 } from '@/lib/translation-fixer';
+import { useTranslation } from '@/lib/i18n';
 
 const ISSUE_ICONS: Record<IssueType, React.ReactNode> = {
   markup_tag_visible: <AlertTriangle className="h-4 w-4" />,
@@ -69,6 +70,7 @@ const ISSUE_NAMES: Record<IssueType, string> = {
 };
 
 export function TranslationFixer() {
+  const { t } = useTranslation();
   const [inputText, setInputText] = useState('');
   const [issues, setIssues] = useState<TranslationIssue[]>([]);
   const [analyzed, setAnalyzed] = useState(false);
@@ -156,20 +158,20 @@ export function TranslationFixer() {
               <Wrench className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Translation Fixer</h2>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">Detect and fix visible markup tags</p>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('translationFixer.title')}</h2>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('translationFixer.subtitle')}</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
             <Button onClick={handleAnalyze} className="bg-white text-orange-600 hover:bg-white/90 shadow-lg" size="lg">
               <Search className="h-5 w-5 mr-2" />
-              Analyze
+              {t('translationFixer.analyze')}
             </Button>
             {issues.length > 0 && (
               <Button onClick={handleQuickFix} className="bg-white/20 text-white hover:bg-white/30 border border-white/30" size="lg">
                 <Zap className="h-5 w-5 mr-2" />
-                Quick Fix
+                {t('translationFixer.quickFix')}
               </Button>
             )}
           </div>
@@ -183,7 +185,7 @@ export function TranslationFixer() {
             <div className="p-1.5 rounded-lg bg-orange-500/20">
               <FileText className="h-4 w-4 text-orange-400" />
             </div>
-            <span className="text-orange-100">Text to Analyze</span>
+            <span className="text-orange-100">{t('translationFixer.textToAnalyze')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -193,7 +195,7 @@ export function TranslationFixer() {
               setInputText(e.target.value);
               setAnalyzed(false);
             }}
-            placeholder="Paste text with visible tags here, e.g.: <index sprite=6 tint=1> Back"
+            placeholder={t('translationFixer.placeholder')}
             className="min-h-[120px] font-mono text-sm bg-black/20 border-orange-500/30 focus:border-orange-500/50"
           />
         </CardContent>
@@ -205,9 +207,9 @@ export function TranslationFixer() {
           {issues.length === 0 ? (
             <Alert className="border-green-500/30 bg-green-500/10">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <AlertTitle className="text-green-500">No issues detected!</AlertTitle>
+              <AlertTitle className="text-green-500">{t('translationFixer.noIssues')}</AlertTitle>
               <AlertDescription className="text-green-400/80">
-                The text does not contain problematic markup tags.
+                {t('translationFixer.noIssuesDesc')}
               </AlertDescription>
             </Alert>
           ) : (
@@ -216,11 +218,11 @@ export function TranslationFixer() {
               <Alert className="border-yellow-500/30 bg-yellow-500/10">
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
                 <AlertTitle className="text-yellow-500">
-                  {issues.length} issue{issues.length > 1 ? 's' : ''} detected
+                  {issues.length} {issues.length > 1 ? t('translationFixer.issuesDetectedPlural') : t('translationFixer.issuesDetected')}
                 </AlertTitle>
                 <AlertDescription className="text-yellow-400/80">
                   {detectedGame && GAME_SPECIFIC_FIXES[detectedGame] && (
-                    <span>Detected: <strong>{GAME_SPECIFIC_FIXES[detectedGame].description}</strong></span>
+                    <span>{t('translationFixer.detected')} <strong>{GAME_SPECIFIC_FIXES[detectedGame].description}</strong></span>
                   )}
                 </AlertDescription>
               </Alert>
@@ -245,7 +247,7 @@ export function TranslationFixer() {
                     <div className="p-1.5 rounded-lg bg-green-500/20">
                       <Sparkles className="h-4 w-4 text-green-400" />
                     </div>
-                    <span className="text-green-100">Soluzioni Consigliate</span>
+                    <span className="text-green-100">{t('translationFixer.recommendedSolutions')}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -255,13 +257,13 @@ export function TranslationFixer() {
                     size="sm"
                   >
                     <Settings className="h-4 w-4 mr-2" />
-                    Genera Config XUnity Automatica
+                    {t('translationFixer.generateConfig')}
                   </Button>
                   
                   {detectedGame && GAME_SPECIFIC_FIXES[detectedGame] && (
                     <div className="p-3 bg-muted rounded-md">
                       <p className="text-sm font-medium mb-2">
-                        📋 Istruzioni per {GAME_SPECIFIC_FIXES[detectedGame].description}:
+                        📋 {t('translationFixer.instructionsFor')} {GAME_SPECIFIC_FIXES[detectedGame].description}:
                       </p>
                       <ol className="text-xs text-muted-foreground space-y-1">
                         {GAME_SPECIFIC_FIXES[detectedGame].instructions.map((inst, i) => (
@@ -280,7 +282,7 @@ export function TranslationFixer() {
                     <div className="p-1.5 rounded-lg bg-red-500/20">
                       <AlertTriangle className="h-4 w-4 text-red-400" />
                     </div>
-                    <span className="text-red-100">Dettaglio Problemi</span>
+                    <span className="text-red-100">{t('translationFixer.issueDetails')}</span>
                     <Badge variant="secondary" className="bg-red-500/20 text-red-300 text-xs ml-2">
                       {issues.length}
                     </Badge>
@@ -328,12 +330,12 @@ export function TranslationFixer() {
       <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>⚙️ Configurazione XUnity Generata</DialogTitle>
+            <DialogTitle>⚙️ {t('translationFixer.configGenerated')}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Copia questa configurazione nel file <code className="bg-muted px-1 rounded">BepInEx/config/AutoTranslatorConfig.ini</code>
+              {t('translationFixer.copyConfigDesc')} <code className="bg-muted px-1 rounded">BepInEx/config/AutoTranslatorConfig.ini</code>
             </p>
             
             <Textarea
@@ -345,7 +347,7 @@ export function TranslationFixer() {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription className="text-xs">
-                Dopo aver modificato la configurazione, riavvia il game per applicare le modifiche.
+                {t('translationFixer.restartGame')}
               </AlertDescription>
             </Alert>
           </div>
@@ -353,11 +355,11 @@ export function TranslationFixer() {
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={handleCopyConfig}>
               <Copy className="h-4 w-4 mr-2" />
-              {copied ? 'Copiato!' : 'Copia'}
+              {copied ? t('translationFixer.copied') : t('translationFixer.copy')}
             </Button>
             <Button onClick={handleDownloadConfig}>
               <Download className="h-4 w-4 mr-2" />
-              Scarica .ini
+              {t('translationFixer.download')}
             </Button>
           </DialogFooter>
         </DialogContent>
