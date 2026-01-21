@@ -163,73 +163,67 @@ interface SystemStatus {
 const CHANGELOG_CONTENT = `
 # GameStringer Changelog
 
-## 🚀 Roadmap verso 1.0.0
+## 🎉 Release Pubblica
 
 | Fase | Versione | Stato |
 |------|----------|-------|
 | Alpha | 0.1.x - 0.4.x | ✅ Completato |
-| Beta | 0.5.x - 0.8.x | 🔄 In corso |
-| Release Candidate | 0.9.x | ⏳ Prossimo |
-| **Release Pubblica** | **1.0.0** | 🎯 Obiettivo |
+| Beta | 0.5.x - 0.8.x | ✅ Completato |
+| Release Candidate | 0.9.x | ✅ Completato |
+| **Release Pubblica** | **1.0.x** | ✅ Rilasciato |
 
 ---
 
 ## 📅 Gennaio 2026
 
-### 🚀 v0.9.8-beta — Core Features & OCR
-\`2026-01-18\`
+### 🎨 v1.0.1 — Game Details Layout Overhaul
+\`2026-01-21\`
 
-**Nuove Funzionalità**
-- Esporta/Importa Profilo: backup e restore come JSON
-- OCR Service con Tesseract.js integrato
-- Screen Capture con fallback browser getDisplayMedia
+**Layout Redesign**
+- Nuovo layout 3:1 per pagina dettaglio gioco
+- Colonna principale (75%): screenshot gallery, tabs File/Traduzioni/Patch
+- Sidebar destra (25%): info gioco, azioni, HLTB
+- Screenshot gallery espansa (12 screenshot)
+- Raccomandazione traduzione full-width
 
-**UI Refinements**
-- Hero headers tutti compatti con text shadow uniforme
-- Community Hub ridisegnato stile compatto
-- library header minimalista con icona gradient
-- Rimosso mini logo GS dalla sidebar chiusa
+**Traduzioni**
+- Traduzioni inglesi complete per gameDetails
+- Dialogo chiusura app tradotto IT/EN
 
----
-
-### 🎨 v0.9.7-beta — UI Polish & Glassmorphism
-\`2026-01-18\`
-
-**UI Migliorata**
-- Hero headers compatti per tutti gli strumenti
-- Dashboard con gradiente viola e card animate
-- Menu profilo con effetto glassmorphism
-- Game Patcher header unificato
-- Attività recenti espanse a 9 elementi
-- Text shadows per leggibilità migliorata
-
-**Pulizia**
-- Rimossi indicatori Neural/Steam/Cache dall'header
+**Bug Fix**
+- Risolti problemi layout colonne sbilanciate
+- Rimossi elementi duplicati
 
 ---
 
-### 🛠️ v0.9.6-beta — Tools Suite & Monetization
-\`2026-01-18\`
+### 🎉 v1.0.0 — Public Release
+\`2026-01-20\`
 
 **Nuove Feature**
-- Mod Injector Universale (Unity/Unreal/Godot/RPG Maker)
-- AI Context Crawler per prompt ottimali
-- Translation Fixer: fix tag markup visibili
-- Subtitle Overlay: traduzioni live per streaming
-- Bottone Supporta (Ko-fi + GitHub Sponsors)
-- Landing Page marketing completa
+- Hero Image Fusion per tutte le pagine
+- Screenshot Gallery nella pagina dettaglio
+- Sistema i18n completo (Italiano/English)
+- GitHub Sponsors integrato
 
-**Licenza**
-- Nuova licenza Source-Available
-
-**UI**
-- Logo personalizzato in sidebar e landing
-- Navigazione con Fixer e Overlay
+**Traduzioni**
+- Componente Support tradotto
+- Pulsanti Libreria tradotti
 
 ---
 
-### 🎮 v0.8.2-beta — Telltale Support & Image Fix
-\`2026-01-08\`
+### 🚀 v0.9.9-beta — Pre-Release Final
+\`2026-01-19\`
+
+**Release Preparation**
+- Ultima beta prima del release 1.0.0
+- Sistema i18n completo
+- Integrazione Ko-fi e GitHub Sponsors
+- Ottimizzazioni finali e bug fix
+
+---
+
+### 🚀 v0.9.8-beta — Core Features & OCR
+\`2026-01-18\`
 
 **Nuove Feature**
 - Telltale Patcher per Wolf Among Us, Walking Dead, Batman
