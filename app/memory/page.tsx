@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { translationMemory, type TranslationUnit, type TMStats } from '@/lib/translation-memory';
 import { invoke } from '@/lib/tauri-api';
 import { useTranslation } from '@/lib/i18n';
+import { ExportDialog } from '@/components/tools/export-dialog';
 
 // Cache per i nomi dei games
 const gameNameCache: Record<string, string> = {};
@@ -47,6 +48,7 @@ export default function MemoryPage() {
   const [editValue, setEditValue] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [unitToDelete, setUnitToDelete] = useState<TranslationUnit | null>(null);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const { toast } = useToast();
 
   // Carica dati dalla Translation Memory
@@ -247,6 +249,16 @@ export default function MemoryPage() {
                 <span className="text-[10px] text-white">{stats.totalUnits - filteredUnits.length} {t('dictionary.corrupted')}</span>
               </div>
             )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setExportDialogOpen(true)} 
+              disabled={filteredUnits.length === 0}
+              className="border-white/30 bg-white/10 hover:bg-white/20 text-white h-8 gap-1"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
             <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="border-white/30 bg-white/10 hover:bg-white/20 text-white h-8">
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
@@ -423,6 +435,22 @@ export default function MemoryPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Export Dialog */}
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        entries={filteredUnits.map(u => ({
+          id: u.id,
+          source: u.sourceText,
+          target: u.targetText,
+          context: u.context,
+          notes: u.metadata?.notes,
+        }))}
+        sourceLang="en"
+        targetLang="it"
+        defaultFileName="translation_memory"
+      />
     </div>
   );
 }

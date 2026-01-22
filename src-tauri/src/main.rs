@@ -604,6 +604,14 @@ fn main() {
             commands::qa_check::qa_check_translation,
             commands::qa_check::qa_check_batch,
             commands::qa_check::qa_auto_fix,
+            // Export Multi-Format System
+            commands::export_formats::export_to_csv,
+            commands::export_formats::export_to_xliff,
+            commands::export_formats::export_to_po,
+            commands::export_formats::export_to_json,
+            commands::export_formats::import_from_csv,
+            commands::export_formats::import_from_po,
+            commands::export_formats::get_supported_formats,
             // Global Hotkeys System
             commands::global_hotkeys::init_global_hotkeys,
             commands::global_hotkeys::register_global_hotkey,

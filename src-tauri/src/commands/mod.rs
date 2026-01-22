@@ -32,6 +32,7 @@ pub mod validation;
 pub mod glossary;
 pub mod translation_memory;
 pub mod qa_check;
+pub mod export_formats;
 pub mod file_manager;
 pub mod unity_patcher;
 pub mod unity_injector;
