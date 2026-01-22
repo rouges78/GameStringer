@@ -600,6 +600,10 @@ fn main() {
             commands::backup::should_run_auto_backup,
             commands::backup::restore_from_auto_backup,
             commands::backup::list_auto_backups,
+            // QA Check System
+            commands::qa_check::qa_check_translation,
+            commands::qa_check::qa_check_batch,
+            commands::qa_check::qa_auto_fix,
             // Global Hotkeys System
             commands::global_hotkeys::init_global_hotkeys,
             commands::global_hotkeys::register_global_hotkey,
