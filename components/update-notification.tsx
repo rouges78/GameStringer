@@ -95,7 +95,11 @@ export function UpdateNotification() {
             
             {updateInfo.release_notes && (
               <p className="text-white/70 text-xs mt-2 line-clamp-2">
-                {updateInfo.release_notes.slice(0, 100)}...
+                {updateInfo.release_notes
+                  .replace(/^##\s*/gm, '')
+                  .replace(/\*\*/g, '')
+                  .replace(/\*/g, '')
+                  .slice(0, 100)}...
               </p>
             )}
             
