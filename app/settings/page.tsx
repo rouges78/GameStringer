@@ -27,10 +27,12 @@ import {
   EyeOff,
   Bug,
   TestTube,
-  Cpu
+  Cpu,
+  HardDrive
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProfileNotificationSettings } from '@/components/notifications/profile-notification-settings';
+import { AutoBackupSettings } from '@/components/settings/auto-backup-settings';
 import { useVersion } from '@/lib/version';
 import { useTranslation } from '@/lib/i18n';
 
@@ -266,7 +268,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 h-12">
+        <TabsList className="grid w-full grid-cols-6 h-12">
           <TabsTrigger value="translation" className="flex items-center space-x-2">
             <Brain className="h-4 w-4" />
             <span>{t('settings.translation')}</span>
@@ -274,6 +276,10 @@ export default function SettingsPage() {
           <TabsTrigger value="system" className="flex items-center space-x-2">
             <Cpu className="h-4 w-4" />
             <span>{t('settings.system')}</span>
+          </TabsTrigger>
+          <TabsTrigger value="backup" className="flex items-center space-x-2">
+            <HardDrive className="h-4 w-4" />
+            <span>Auto-Backup</span>
           </TabsTrigger>
           <TabsTrigger value="performance" className="flex items-center space-x-2">
             <Zap className="h-4 w-4" />
@@ -398,6 +404,11 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Backup Tab */}
+        <TabsContent value="backup" className="space-y-6">
+          <AutoBackupSettings />
         </TabsContent>
 
         {/* System Tab */}

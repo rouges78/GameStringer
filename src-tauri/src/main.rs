@@ -593,6 +593,13 @@ fn main() {
             commands::backup::get_backup_stats,
             commands::backup::list_backups,
             commands::backup::delete_backup,
+            // Auto-Backup System
+            commands::backup::load_autobackup_config,
+            commands::backup::save_autobackup_config,
+            commands::backup::run_auto_backup,
+            commands::backup::should_run_auto_backup,
+            commands::backup::restore_from_auto_backup,
+            commands::backup::list_auto_backups,
             // Global Hotkeys System
             commands::global_hotkeys::init_global_hotkeys,
             commands::global_hotkeys::register_global_hotkey,
