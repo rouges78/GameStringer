@@ -19,6 +19,25 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.2 — Multilingual Support 🌍
+
+> **Data**: 2026-01-22
+
+#### 🌍 Nuove Lingue
+
+- **Supporto multilingua completo**: Español, Français, Deutsch, 日本語, 中文
+- **Selettore lingua** ora attivo per tutte le lingue (rimosso "Coming Soon")
+- **Traduzioni Translation Fixer** complete per ES, FR, DE, JA, ZH
+- **Traduzioni AI Context Crawler** complete per ES, FR, DE, JA, ZH
+- **Categorie glossario** tradotte (personaggio, luogo, oggetto, abilità, nemico, etc.)
+
+#### 🔧 Miglioramenti
+
+- Stringhe "frames", "terms", "fps" tradotte in tutte le lingue
+- Nomi categorie nel Context Crawler ora localizzati dinamicamente
+
+---
+
 ### v1.0.1 — Game Details Layout Overhaul
 
 > **Data**: 2026-01-21
@@ -414,7 +433,7 @@
 
 | Metrica | Valore |
 |:--------|:-------|
-| **Versione attuale** | 1.0.0 |
+| **Versione attuale** | 1.0.2 |
 | **Periodo sviluppo** | Giugno 2025 - Presente |
 | **Stack Backend** | Rust (Tauri v2) |
 | **Stack Frontend** | Next.js 15, React, TailwindCSS |

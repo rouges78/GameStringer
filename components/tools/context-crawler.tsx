@@ -340,7 +340,7 @@ export function ContextCrawler() {
               <div className={`w-2 h-2 rounded-full ${isPaused ? 'bg-yellow-400' : 'bg-green-400 animate-pulse'}`} />
               {isPaused ? t('contextCrawler.paused') : t('contextCrawler.running')}
             </div>
-            <span className="text-white/60 text-sm">{stats.framesProcessed} frames • {glossary.length} terms • {stats.processingSpeed.toFixed(1)} fps</span>
+            <span className="text-white/60 text-sm">{stats.framesProcessed} {t('contextCrawler.frames')} • {glossary.length} {t('contextCrawler.terms')} • {stats.processingSpeed.toFixed(1)} {t('contextCrawler.fps')}</span>
           </div>
         )}
       </div>
@@ -482,7 +482,7 @@ export function ContextCrawler() {
                       <Badge className={`${CATEGORY_COLORS[category as TermCategory]} h-5 w-5 p-0 flex items-center justify-center`}>
                         {CATEGORY_ICONS[category as TermCategory]}
                       </Badge>
-                      <span className="text-xs flex-1 capitalize">{category.replace(/_/g, ' ')}</span>
+                      <span className="text-xs flex-1 capitalize">{t(`contextCrawler.categories.${category}` as any) || category.replace(/_/g, ' ')}</span>
                       <Progress value={(count / glossaryStats.total) * 100} className="w-24 h-2" />
                       <span className="text-xs text-muted-foreground w-8">{count}</span>
                     </div>

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.0.2-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -203,6 +203,50 @@ npm run dev
 npm run tauri:build
 ```
 
+### Project Structure
+
+```
+GameStringer/
+├── app/                    # Next.js pages (43 routes)
+│   ├── editor/            # Translation editor
+│   ├── heatmap/           # Confidence heatmap
+│   ├── ai-review/         # AI review agent
+│   └── ...
+├── components/            # React components
+│   ├── ui/               # shadcn/ui components
+│   ├── tools/            # Tool-specific UIs
+│   └── layout/           # Layout components
+├── lib/                   # Core libraries
+│   ├── translation-confidence.ts  # Heatmap metrics
+│   ├── emotion-analyzer.ts        # Emotion detection
+│   ├── translation-memory.ts      # TM system
+│   └── project-manager.ts         # Project files
+├── src-tauri/            # Rust backend
+│   └── src/
+│       ├── commands/     # Tauri commands
+│       └── profiles/     # User profiles
+└── __tests__/            # Vitest tests
+```
+
+### Available Scripts
+
+```bash
+npm run dev              # Start dev server with profiles
+npm run dev:simple       # Start Next.js only
+npm run test             # Run tests (Vitest)
+npm run test:ui          # Run tests with UI
+npm run lint             # ESLint
+npm run tauri:build      # Build desktop app
+```
+
+### Tech Stack
+
+- **Frontend**: Next.js 15, React 18, TypeScript, TailwindCSS, shadcn/ui
+- **Backend**: Tauri 2.0, Rust
+- **Database**: SQLite (via Tauri)
+- **Testing**: Vitest, Testing Library
+- **AI**: OpenAI, Anthropic, Google, local LLMs (Ollama)
+
 ---
 
 ## 💖 Support
@@ -247,6 +291,6 @@ See [LICENSE](LICENSE) for full details.
 </p>
 
 <p align="center">
-  <strong>GameStringer v1.0.0</strong><br>
+  <strong>GameStringer v1.0.2</strong><br>
   © 2025-2026 GameStringer Team
 </p>

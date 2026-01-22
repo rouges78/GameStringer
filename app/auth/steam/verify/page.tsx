@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from '@/lib/auth';
+import { useTranslation } from '@/lib/i18n';
 
 export default function SteamVerifyPage() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const router = useRouter();
   const steamId = searchParams.get('steamId');

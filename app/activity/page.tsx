@@ -23,6 +23,9 @@ import {
   History,
   Gamepad2,
   Languages,
+} from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
+import {
   Wrench,
   RotateCcw,
   Plus,
@@ -58,6 +61,7 @@ const typeIcons: Record<ActivityType, React.ReactNode> = {
 };
 
 export default function ActivityHistoryPage() {
+  const { t } = useTranslation();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -117,7 +121,7 @@ export default function ActivityHistoryPage() {
 
   // Cancella tutto
   const handleClearAll = async () => {
-    if (!confirm('Sei sicuro di voler cancellare tutto lo storico attività?')) return;
+    if (!confirm(t('activity.clearConfirm'))) return;
     
     const success = await activityHistory.clear();
     if (success) {
@@ -158,7 +162,7 @@ export default function ActivityHistoryPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                Storico Attività
+                {t('activity.title')}
               </h1>
               <p className="text-muted-foreground">
                 {totalActivities} attività registrate
@@ -174,7 +178,7 @@ export default function ActivityHistoryPage() {
               disabled={isLoading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Aggiorna
+              {t('common.search')}
             </Button>
             <Button
               variant="destructive"
@@ -183,7 +187,7 @@ export default function ActivityHistoryPage() {
               disabled={totalActivities === 0}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Cancella Tutto
+              {t('activity.clearHistory')}
             </Button>
           </div>
         </div>
@@ -224,7 +228,7 @@ export default function ActivityHistoryPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All activities</SelectItem>
+              <SelectItem value="all">{t('activity.all')}</SelectItem>
               {(Object.keys(activityNames) as ActivityType[]).map((type) => (
                 <SelectItem key={type} value={type}>
                   {activityIcons[type]} {activityNames[type]}
@@ -235,7 +239,7 @@ export default function ActivityHistoryPage() {
           
           {filter !== 'all' && (
             <Button variant="ghost" size="sm" onClick={() => setFilter('all')}>
-              Clear filter
+              {t('common.filter')}
             </Button>
           )}
         </div>

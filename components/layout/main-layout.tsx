@@ -176,23 +176,25 @@ const CHANGELOG_CONTENT = `
 
 ## 📅 Gennaio 2026
 
+### 🌍 v1.0.2 — Multilingual Support
+\`2026-01-22\`
+
+**Nuove Lingue**
+- Supporto multilingua: Español, Français, Deutsch, 日本語, 中文
+- Selettore lingua attivo per tutte le lingue
+- Traduzioni Translation Fixer complete
+- Traduzioni AI Context Crawler complete
+- Categorie glossario tradotte
+
+---
+
 ### 🎨 v1.0.1 — Game Details Layout Overhaul
 \`2026-01-21\`
 
 **Layout Redesign**
 - Nuovo layout 3:1 per pagina dettaglio gioco
-- Colonna principale (75%): screenshot gallery, tabs File/Traduzioni/Patch
-- Sidebar destra (25%): info gioco, azioni, HLTB
 - Screenshot gallery espansa (12 screenshot)
 - Raccomandazione traduzione full-width
-
-**Traduzioni**
-- Traduzioni inglesi complete per gameDetails
-- Dialogo chiusura app tradotto IT/EN
-
-**Bug Fix**
-- Risolti problemi layout colonne sbilanciate
-- Rimossi elementi duplicati
 
 ---
 
@@ -774,7 +776,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 gap-2 px-3">
                     <Globe className="h-4 w-4" />
-                    <span className="text-xs font-medium">{language === 'it' ? 'IT' : 'EN'}</span>
+                    <span className="text-xs font-medium">{language.toUpperCase()}</span>
                     <ChevronDown className="h-3 w-3 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -794,42 +796,46 @@ export function MainLayout({ children }: MainLayoutProps) {
                     {language === 'it' && <Check className="ml-auto h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <div className="px-2 py-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">Coming Soon</div>
-                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                  <DropdownMenuItem onClick={() => setLanguage('es')} className="gap-2">
                     <span className="w-6 h-4 rounded-sm overflow-hidden flex">
                       <span className="w-1/3 bg-red-500" />
                       <span className="w-1/3 bg-yellow-400" />
                       <span className="w-1/3 bg-red-500" />
                     </span>
-                    <span className="text-xs">Español</span>
+                    <span>Español</span>
+                    {language === 'es' && <Check className="ml-auto h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                  <DropdownMenuItem onClick={() => setLanguage('fr')} className="gap-2">
                     <span className="w-6 h-4 rounded-sm overflow-hidden flex">
                       <span className="w-1/3 bg-blue-600" />
                       <span className="w-1/3 bg-white" />
                       <span className="w-1/3 bg-red-500" />
                     </span>
-                    <span className="text-xs">Français</span>
+                    <span>Français</span>
+                    {language === 'fr' && <Check className="ml-auto h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                  <DropdownMenuItem onClick={() => setLanguage('de')} className="gap-2">
                     <span className="w-6 h-4 rounded-sm overflow-hidden flex flex-col">
                       <span className="h-1/3 bg-black" />
                       <span className="h-1/3 bg-red-500" />
                       <span className="h-1/3 bg-yellow-400" />
                     </span>
-                    <span className="text-xs">Deutsch</span>
+                    <span>Deutsch</span>
+                    {language === 'de' && <Check className="ml-auto h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                  <DropdownMenuItem onClick={() => setLanguage('ja')} className="gap-2">
                     <span className="w-6 h-4 rounded-sm bg-white flex items-center justify-center">
                       <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
                     </span>
-                    <span className="text-xs">日本語</span>
+                    <span>日本語</span>
+                    {language === 'ja' && <Check className="ml-auto h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled className="gap-2 opacity-40">
+                  <DropdownMenuItem onClick={() => setLanguage('zh')} className="gap-2">
                     <span className="w-6 h-4 rounded-sm bg-red-500 flex items-center justify-center">
                       <span className="text-[6px] text-yellow-400">★</span>
                     </span>
-                    <span className="text-xs">中文</span>
+                    <span>中文</span>
+                    {language === 'zh' && <Check className="ml-auto h-4 w-4 text-primary" />}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

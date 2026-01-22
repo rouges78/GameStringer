@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/i18n';
 
 // --- Types ---
 interface Game {
@@ -66,6 +67,7 @@ const languageNames: Record<string, string> = {
 };
 
 export default function TranslationWizardPage() {
+  const { t } = useTranslation();
   // --- State ---
   const [step, setStep] = useState<WizardStep>('select-game');
   const [renderError, setRenderError] = useState<string | null>(null);

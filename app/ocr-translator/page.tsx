@@ -9,6 +9,7 @@ import { Play, Square, Scan, Monitor, ArrowRight, Loader2, RefreshCw, Settings2,
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { useOcrHotkey } from '@/hooks/use-global-hotkeys';
+import { useTranslation } from '@/lib/i18n';
 
 interface DetectedText {
   text: string;
@@ -54,6 +55,7 @@ const TARGET_LANGUAGES = [
 ];
 
 export default function OcrTranslatorPage() {
+  const { t } = useTranslation();
   const [isRunning, setIsRunning] = useState(false);
   const [detectedTexts, setDetectedTexts] = useState<DetectedText[]>([]);
   const [config, setConfig] = useState<OcrConfig>({
@@ -176,11 +178,11 @@ export default function OcrTranslatorPage() {
         await invoke('stop_ocr_translator');
         setIsRunning(false);
         setDetectedTexts([]);
-        toast.info('OCR fermato');
+        toast.info(t('ocrTranslator.stopCapture'));
       } else {
         await invoke('start_ocr_translator', { config });
         setIsRunning(true);
-        toast.success('OCR avviato - Traduzioni in tempo reale');
+        toast.success(t('ocrTranslator.startCapture'));
       }
     } catch (e) {
       toast.error(`Error: ${e}`);
@@ -198,10 +200,10 @@ export default function OcrTranslatorPage() {
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20">
           <Scan className={`h-5 w-5 text-violet-400 ${isRunning ? 'animate-pulse' : ''}`} />
           <span className="font-medium bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">OCR Translator</span>
-          {isRunning && <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Attivo</Badge>}
+          {isRunning && <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{t('common.yes')}</Badge>}
         </div>
         <p className="text-sm text-muted-foreground">
-          Cattura e traduce automaticamente il testo dallo schermo
+          {t('ocrTranslator.subtitle')}
         </p>
       </div>
 

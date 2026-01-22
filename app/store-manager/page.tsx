@@ -13,6 +13,7 @@ import { SteamModal } from '@/components/modals/steam-modal';
 import { ItchioModal } from '@/components/modals/itchio-modal';
 import { GenericCredentialsModal } from '@/components/modals/generic-credentials-modal';
 import { EpicModal } from '@/components/modals/epic-modal';
+import { useTranslation } from '@/lib/i18n';
 
 // Icone vere per ogni store
 const getStoreIcon = (storeId: string) => {
@@ -45,6 +46,7 @@ interface StoreStatuses {
 }
 
 export default function StoreManagerPage() {
+  const { t } = useTranslation();
   const [storeStatuses, setStoreStatuses] = useState<StoreStatuses>({});
   const [globalLoading, setGlobalLoading] = useState(true);
   const [totalGames, setTotalGames] = useState(0);

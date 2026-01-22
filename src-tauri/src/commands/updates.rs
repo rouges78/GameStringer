@@ -18,7 +18,7 @@ pub async fn check_for_updates() -> Result<UpdateInfo, String> {
     let current_version = env!("CARGO_PKG_VERSION").to_string();
     
     // URL API GitHub per le release
-    let github_api_url = "https://api.github.com/repos/AlessioMonda662/GameStringer/releases/latest";
+    let github_api_url = "https://api.github.com/repos/rouges78/GameStringer/releases/latest";
     
     let client = reqwest::Client::builder()
         .user_agent("GameStringer-UpdateChecker")

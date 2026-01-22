@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import Providers from '@/components/providers';
 import { Toaster } from 'sonner';
 import { ProfileWrapper } from '@/components/profiles/profile-wrapper';
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { ProgressProvider } from '@/components/progress/progress-provider';
 import { ProgressUIManager } from '@/components/progress/progress-ui-manager';
 import { InteractiveTutorial } from '@/components/onboarding/interactive-tutorial';
@@ -29,21 +29,15 @@ export default function RootLayout({
   return (
     <html lang="it" suppressHydrationWarning>
       <body className={inter.className}>
-        <ErrorBoundary
-          showErrorDetails={process.env.NODE_ENV === 'development'}
-        >
+        <ErrorBoundary>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <I18nProvider>
             <Providers>
               <ProgressProvider>
-                <ErrorBoundary
-                  showErrorDetails={process.env.NODE_ENV === 'development'}
-                >
+                <ErrorBoundary>
                   {/* ProfileWrapper integra ProfileAuthProvider e ProtectedRoute */}
                   <ProfileWrapper>
-                    <ErrorBoundary
-                      showErrorDetails={process.env.NODE_ENV === 'development'}
-                    >
+                    <ErrorBoundary>
                       {children}
                     </ErrorBoundary>
                     {/* Disclaimer legale - primo avvio */}

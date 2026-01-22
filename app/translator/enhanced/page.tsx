@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useProgressOperations } from '@/hooks/use-progress-operations';
 import { useProgressBatch } from '@/hooks/use-progress-batch';
+import { useTranslation } from '@/lib/i18n';
 import { ProgressBar } from '@/components/progress/progress-bar';
 import { useProgressDisplay } from '@/hooks/use-progress-ui';
 
@@ -43,6 +44,7 @@ interface TranslationTask {
 }
 
 export default function EnhancedTranslatorPage() {
+  const { t } = useTranslation();
   // Stati base
   const [files, setFiles] = useState<TranslationFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<TranslationFile | null>(null);

@@ -1,14 +1,25 @@
 {
-  "version": "1.0.1",
+  "version": "1.0.2",
   "major": 1,
   "minor": 0,
-  "patch": 1,
+  "patch": 2,
   "prerelease": null,
-  "buildNumber": 101,
-  "buildDate": "2026-01-21T00:00:00.000Z",
+  "buildNumber": 102,
+  "buildDate": "2026-01-22T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.2": {
+      "date": "2026-01-22",
+      "type": "feature",
+      "changes": [
+        "Supporto multilingua completo: ES, FR, DE, JA, ZH",
+        "Selettore lingua abilitato per tutte le lingue",
+        "Traduzioni Translation Fixer per tutte le lingue",
+        "Traduzioni AI Context Crawler per tutte le lingue",
+        "Categorie glossario tradotte (personaggio, luogo, oggetto, etc.)"
+      ]
+    },
     "1.0.1": {
       "date": "2026-01-21",
       "type": "patch",

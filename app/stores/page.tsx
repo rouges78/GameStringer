@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslation } from '@/lib/i18n';
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -71,6 +73,7 @@ const connectableProviders = ['steam', 'epic', 'ubisoft', 'itchio', 'gog', 'orig
 const connectableUtilities = ['howlongtobeat', 'steamgriddb'];
 
 export default function StoresPage() {
+  const { t } = useTranslation();
   // Gestione auth locale con persistenza
   const { data: session, status, update } = useSession();
   const isLoading = status === 'loading';

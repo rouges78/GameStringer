@@ -1,7 +1,7 @@
 # 📚 GameStringer Guida Completa
 
-> **Versione**: 1.0.0  
-> **Ultimo Aggiornamento**: Gennaio 2026
+> **Versione**: 1.0.2  
+> **Ultimo Aggiornamento**: 22 Gennaio 2026
 
 ---
 
@@ -33,6 +33,7 @@
 - **Supporto Multi-Engine**: Unity, Unreal Engine, Godot, RPG Maker, Ren'Py, GameMaker, Telltale
 - **Integrazione Store**: Steam, Epic Games, GOG, Origin, Ubisoft Connect, Battle.net, itch.io
 - **Strumenti Professionali**: OCR Translator, Voice Pipeline, Overlay Real-time, Translation Memory
+- **7 Lingue UI**: Italiano, English, Español, Français, Deutsch, 日本語, 中文
 
 ---
 
@@ -478,6 +479,6 @@ I giochi con questi engine funzionano meglio:
 ---
 
 <p align="center">
-  <strong>GameStringer v1.0.0</strong><br>
+  <strong>GameStringer v1.0.2</strong><br>
   Fatto con ❤️ per i gamer che vogliono giocare nella propria lingua
 </p>

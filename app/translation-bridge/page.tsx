@@ -38,8 +38,10 @@ import {
 } from 'lucide-react';
 import { translationBridge, BridgeStats, DictionaryStats, TranslationPair } from '@/lib/translation-bridge';
 import { getFlagEmoji } from '@/components/ui/language-flags';
+import { useTranslation } from '@/lib/i18n';
 
 export default function TranslationBridgePage() {
+  const { t } = useTranslation();
   // State
   const [isRunning, setIsRunning] = useState(false);
   const [stats, setStats] = useState<BridgeStats | null>(null);

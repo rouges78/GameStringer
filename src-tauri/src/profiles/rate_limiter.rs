@@ -26,7 +26,7 @@ pub struct RateLimiterConfig {
 impl Default for RateLimiterConfig {
     fn default() -> Self {
         Self {
-            max_attempts: 5,
+            max_attempts: 20, // Blocca dopo 20 tentativi falliti
             block_duration_seconds: 300, // 5 minuti
             reset_after_seconds: 3600,   // 1 ora
             exponential_backoff: true,

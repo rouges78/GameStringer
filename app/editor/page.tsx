@@ -16,6 +16,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
+import { notifications } from '@/lib/notifications';
+import { offlineCache } from '@/lib/offline-cache';
 import { TranslationImportDialog } from '@/components/translation-import-dialog';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -23,6 +25,7 @@ import { ensureArray } from '@/lib/array-utils';
 import { cn } from '@/lib/utils';
 import { invoke } from '@/lib/tauri-api';
 import { activityHistory } from '@/lib/activity-history';
+import { useTranslation } from '@/lib/i18n';
 
 // --- Types ---
 interface Game {
@@ -245,6 +248,7 @@ export default function EditorPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // --- Derived State ---
   const filteredTranslations = useMemo(() => {
@@ -624,20 +628,27 @@ export default function EditorPage() {
 
   const generateSuggestions = async () => {
     if (!selectedTranslation || !selectedLine) {
-      toast({ 
-        title: 'Seleziona una stringa', 
-        description: 'Seleziona prima una stringa da tradurre',
-        variant: 'destructive'
-      });
+      notifications.warning('Seleziona prima una stringa da tradurre');
       return;
     }
     
-    // Per ora mostra un messaggio che la funzionalità AI non è ancora implementata
-    toast({ 
-      title: 'AI non disponibile', 
-      description: 'La traduzione automatica AI sarà disponibile in una futura versione. Per ora usa la traduzione manuale.',
-    });
-    return;
+    // Check offline cache first
+    const cached = offlineCache.get(
+      selectedLine.originalText, 
+      'en', 
+      selectedTranslation.targetLanguage
+    );
+    if (cached) {
+      handleTranslationChange(cached);
+      notifications.success('Traduzione trovata in cache');
+      return;
+    }
+    
+    // Online translation
+    if (!offlineCache.isOnline()) {
+      notifications.error('Offline - traduzione non disponibile');
+      return;
+    }
     
     // TODO: Implementare integrazione con API di traduzione (DeepL, Google Translate, etc.)
     setIsGeneratingSuggestions(true);
@@ -657,10 +668,20 @@ export default function EditorPage() {
         const updated = { ...selectedTranslation, suggestions };
         setSelectedTranslation(updated);
         setTranslations(prev => prev.map(t => t.id === updated.id ? updated : t));
-        toast({ title: 'Suggerimenti generati', description: `${suggestions.length} suggerimenti trovati` });
+        
+        // Cache translations for offline use
+        if (suggestions.length > 0 && selectedLine) {
+          offlineCache.set(
+            selectedLine.originalText,
+            suggestions[0],
+            'en',
+            selectedTranslation.targetLanguage
+          );
+        }
+        notifications.success(`${suggestions.length} suggerimenti trovati`);
       }
     } catch (error) {
-      toast({ title: 'error', description: 'Impossibile generare suggerimenti', variant: 'destructive' });
+      notifications.error('Impossibile generare suggerimenti');
     } finally {
       setIsGeneratingSuggestions(false);
     }

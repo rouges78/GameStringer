@@ -3,8 +3,10 @@
 import { useEffect } from 'react';
 import { signIn } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/i18n';
 
 export default function ItchioCallbackPage() {
+  const { t } = useTranslation();
   const router = useRouter();
 
   useEffect(() => {

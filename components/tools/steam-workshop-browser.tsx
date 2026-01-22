@@ -23,6 +23,7 @@ import {
   Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface WorkshopItem {
   id: string;
@@ -42,6 +43,7 @@ interface WorkshopItem {
 }
 
 export function SteamWorkshopBrowser() {
+  const { t } = useTranslation();
   const [items, setItems] = useState<WorkshopItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -224,10 +226,10 @@ export function SteamWorkshopBrowser() {
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-sky-300 to-blue-300 bg-clip-text text-transparent">
-                Steam Workshop
+                {t('workshop.title')}
               </h1>
               <p className="text-sm text-sky-200/60 mt-1">
-                Download translations from the community
+                {t('workshop.subtitle')}
               </p>
             </div>
           </div>
@@ -238,14 +240,14 @@ export function SteamWorkshopBrowser() {
                 <FileText className="h-4 w-4" />
                 <span className="text-lg font-bold">{items.length}</span>
               </div>
-              <p className="text-xs text-sky-200/50">Results</p>
+              <p className="text-xs text-sky-200/50">{t('workshop.searchResults')}</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 text-emerald-400">
                 <CheckCircle className="h-4 w-4" />
                 <span className="text-lg font-bold">{installedItems.size}</span>
               </div>
-              <p className="text-xs text-sky-200/50">Installed</p>
+              <p className="text-xs text-sky-200/50">{t('workshop.installed')}</p>
             </div>
           </div>
         </div>
@@ -255,7 +257,7 @@ export function SteamWorkshopBrowser() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-sky-400" />
               <Input
-                placeholder="Search translations..."
+                placeholder={t('workshop.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-sky-950/50 border-sky-500/30"
@@ -282,9 +284,9 @@ export function SteamWorkshopBrowser() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="popular">Piu popolari</SelectItem>
-              <SelectItem value="recent">Piu recenti</SelectItem>
-              <SelectItem value="rating">Migliori voti</SelectItem>
+              <SelectItem value="popular">{t('workshop.popular')}</SelectItem>
+              <SelectItem value="recent">{t('workshop.recent')}</SelectItem>
+              <SelectItem value="rating">{t('workshop.subscribed')}</SelectItem>
             </SelectContent>
           </Select>
           

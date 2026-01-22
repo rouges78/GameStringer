@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import { pluginRegistry, PluginDefinition } from '@/lib/plugin-system';
 import { ExtensionManager } from '@/components/extensions';
+import { useTranslation } from '@/lib/i18n';
 
 export default function PluginsPage() {
+  const { t } = useTranslation();
   const [plugins, setPlugins] = useState<PluginDefinition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -51,16 +53,16 @@ export default function PluginsPage() {
               <Puzzle className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-sky-400">Gestione Plug-in</h1>
-              <p className="text-xs text-muted-foreground">Parser di formato e estensioni</p>
+              <h1 className="text-lg font-bold text-sky-400">{t('plugins.title')}</h1>
+              <p className="text-xs text-muted-foreground">{t('plugins.subtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-sky-500/10 text-sky-400 border-sky-500/30">
-              {plugins.length} Plugin
+              {plugins.length} {t('plugins.title')}
             </Badge>
             <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-400 border-green-500/30">
-              {plugins.filter(p => p.enabled).length} Attivi
+              {plugins.filter(p => p.enabled).length} {t('plugins.installed')}
             </Badge>
           </div>
         </div>
@@ -71,11 +73,11 @@ export default function PluginsPage() {
         <TabsList className="grid w-full grid-cols-2 mb-3">
           <TabsTrigger value="parsers" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            Parser Formato
+            {t('plugins.formatPlugins')}
           </TabsTrigger>
           <TabsTrigger value="extensions" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            Estensioni
+            {t('plugins.supportedFormats')}
           </TabsTrigger>
         </TabsList>
 
@@ -87,7 +89,7 @@ export default function PluginsPage() {
               <CardHeader className="py-2 px-3">
             <CardTitle className="text-sm flex items-center gap-2">
               <FileText className="w-4 h-4 text-sky-400" />
-              Formati
+              {t('plugins.formatPlugins')}
               <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0 bg-red-500/10 text-red-400 border-red-500/30">
                 {supportedExtensions.length}
               </Badge>

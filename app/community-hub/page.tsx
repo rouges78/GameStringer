@@ -4,8 +4,10 @@ import Link from 'next/link';
 import { Download, Database, HelpCircle, Globe, Users, Star, Package, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CommunityHub } from '@/components/tools/community-hub';
+import { useTranslation } from '@/lib/i18n';
 
 export default function CommunityHubPage() {
+  const { t } = useTranslation();
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Hero Header - Compact */}

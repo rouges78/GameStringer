@@ -152,20 +152,26 @@ export function ProjectManagerUI() {
       });
 
       if (files && Array.isArray(files)) {
+        let totalEntries = 0;
         for (const filePath of files) {
           const fileName = (filePath as string).split(/[/\\]/).pop() || 'unknown';
           const ext = fileName.split('.').pop()?.toLowerCase() || '';
+          
+          // Parse file content to extract entries
+          const { parseFileContent } = await import('@/lib/project-manager');
+          const entries = await parseFileContent(filePath as string, ext);
+          totalEntries += entries.length;
           
           projectManager.addFile({
             path: filePath as string,
             relativePath: fileName,
             fileType: ext.toUpperCase(),
-            entries: [], // TODO: Parse file content
+            entries,
           });
         }
         
         setProject({ ...projectManager.project! });
-        toast.success(`${files.length} files added to project`);
+        toast.success(`${files.length} files added (${totalEntries} strings found)`);
       }
     } catch (error: any) {
       toast.error(error.message || 'Error adding files');

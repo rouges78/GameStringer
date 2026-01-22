@@ -22,6 +22,7 @@ import {
   Package,
   Zap
 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 interface BundleInfo {
   bundle_path: string;
@@ -70,6 +71,7 @@ function formatBytes(bytes: number): string {
 }
 
 export default function UnityBundlePage() {
+  const { t } = useTranslation();
   const [folderPath, setFolderPath] = useState<string>("");
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalyzeFolderResult | null>(null);

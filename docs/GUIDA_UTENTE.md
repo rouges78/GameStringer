@@ -25,7 +25,8 @@ GameStringer è un sistema avanzato per la traduzione automatica e manuale di vi
 - **Motori di gioco**: Unity, Unreal Engine, RPG Maker, Ren'Py e altri
 - **Formati file**: CSV, JSON, XML, PO/POT, YAML, TXT e altri
 - **Provider AI**: Claude (Anthropic), Gemini (Google), GPT (OpenAI)
-- **Lingue**: 20+ lingue supportate
+- **Lingue**: 20+ lingue supportate per traduzioni
+- **UI Multilingua**: IT, EN, ES, FR, DE, JA, ZH
 - **Store Gaming**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Rockstar
 
 ---
@@ -430,4 +431,4 @@ I dizionari salvano le traduzioni per ogni gioco.
 
 ---
 
-*GameStringer v3.3.0 - Guida aggiornata al 29/12/2025*
+*GameStringer v1.0.2 - Guida aggiornata al 22/01/2026*

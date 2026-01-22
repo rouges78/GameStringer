@@ -31,6 +31,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 // Types for translation queue
 export interface TranslationJob {
@@ -55,6 +56,7 @@ interface BatchTranslationQueueProps {
 }
 
 export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueueProps) {
+  const { t } = useTranslation();
   const [queue, setQueue] = useState<TranslationJob[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -105,11 +107,11 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
         });
 
         setQueue(prev => [...prev, ...newJobs]);
-        toast.success(`${newJobs.length} files added to queue`);
+        toast.success(`${newJobs.length} ${t('batch.filesInQueue')}`);
       }
     } catch (error) {
       console.error('File selection error:', error);
-      toast.error('Error selecting files');
+      toast.error(t('common.error'));
     }
   }, [targetLanguage]);
 
@@ -148,21 +150,21 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
           });
 
           setQueue(prev => [...prev, ...newJobs]);
-          toast.success(`${newJobs.length} files found and added to queue`);
+          toast.success(`${newJobs.length} ${t('batch.filesInQueue')}`);
         } else {
-          toast.info('No translation files found in folder');
+          toast.info(t('batch.noFiles'));
         }
       }
     } catch (error) {
       console.error('Folder scan error:', error);
-      toast.error('Error scanning folder');
+      toast.error(t('common.error'));
     }
   }, [targetLanguage]);
 
   // Start queue processing
   const startProcessing = useCallback(async () => {
     if (queue.filter(j => j.status === 'pending').length === 0) {
-      toast.info('No pending jobs in queue');
+      toast.info(t('batch.noFiles'));
       return;
     }
 
@@ -301,12 +303,12 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
   // Clear queue
   const clearQueue = useCallback(() => {
     if (isProcessing) {
-      toast.error('Stop processing before clearing the queue');
+      toast.error(t('batch.stopAll'));
       return;
     }
     setQueue([]);
     setSelectedJobs(new Set());
-    toast.success('Queue cleared');
+    toast.success(t('batch.clearQueue'));
   }, [isProcessing]);
 
   // Retry failed jobs
@@ -314,7 +316,7 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
     setQueue(prev => prev.map(j => 
       j.status === 'failed' ? { ...j, status: 'pending', progress: 0, errorMessage: undefined } : j
     ));
-    toast.info('Failed jobs reset');
+    toast.info(t('batch.failed'));
   }, []);
 
   // Move job up/down
@@ -398,10 +400,10 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-300 to-orange-300 bg-clip-text text-transparent">
-                Batch Translation
+                {t('batch.title')}
               </h1>
               <p className="text-sm text-amber-200/60 mt-1">
-                Translate multiple files in automatic queue
+                {t('batch.subtitle')}
               </p>
             </div>
           </div>
@@ -413,21 +415,21 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
                 <FileText className="h-4 w-4" />
                 <span className="text-lg font-bold">{queue.length}</span>
               </div>
-              <p className="text-xs text-amber-200/50">In queue</p>
+              <p className="text-xs text-amber-200/50">{t('batch.queue')}</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 text-green-400">
                 <CheckCircle className="h-4 w-4" />
                 <span className="text-lg font-bold">{completedJobs}</span>
               </div>
-              <p className="text-xs text-amber-200/50">Completed</p>
+              <p className="text-xs text-amber-200/50">{t('batch.completed')}</p>
             </div>
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 text-orange-400">
                 <Zap className="h-4 w-4" />
                 <span className="text-lg font-bold">{translatedStrings.toLocaleString()}</span>
               </div>
-              <p className="text-xs text-amber-200/50">Strings</p>
+              <p className="text-xs text-amber-200/50">{t('batch.totalStrings')}</p>
             </div>
           </div>
         </div>
@@ -436,7 +438,7 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
         {queue.length > 0 && (
           <div className="relative mt-4 pt-4 border-t border-amber-500/20">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-amber-200/70">Total progress</span>
+              <span className="text-sm text-amber-200/70">{t('batch.progress')}</span>
               <span className="text-sm font-semibold text-amber-300">{overallProgress.toFixed(1)}%</span>
             </div>
             <Progress value={overallProgress} className="h-2 bg-amber-950/50" />
@@ -456,7 +458,7 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
               className="border-amber-500/30 hover:bg-amber-500/10"
             >
               <Plus className="h-4 w-4 mr-1" />
-              Add Files
+              {t('batch.addFiles')}
             </Button>
             <Button 
               variant="outline" 
@@ -465,7 +467,7 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
               className="border-amber-500/30 hover:bg-amber-500/10"
             >
               <FolderOpen className="h-4 w-4 mr-1" />
-              Add Folder
+              {t('batch.addFiles')}
             </Button>
 
             <div className="h-6 w-px bg-amber-500/20" />
@@ -479,24 +481,24 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
                 className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
               >
                 <Play className="h-4 w-4 mr-1" />
-                Start ({pendingJobs})
+                {t('batch.startAll')} ({pendingJobs})
               </Button>
             ) : (
               <>
                 {!isPaused ? (
                   <Button size="sm" variant="outline" onClick={pauseProcessing}>
                     <Pause className="h-4 w-4 mr-1" />
-                    Pause
+                    {t('batch.pauseAll')}
                   </Button>
                 ) : (
                   <Button size="sm" onClick={resumeProcessing} className="bg-green-600 hover:bg-green-700">
                     <Play className="h-4 w-4 mr-1" />
-                    Resume
+                    {t('batch.startAll')}
                   </Button>
                 )}
                 <Button size="sm" variant="destructive" onClick={stopProcessing}>
                   <Square className="h-4 w-4 mr-1" />
-                  Stop
+                  {t('batch.stopAll')}
                 </Button>
               </>
             )}
@@ -524,7 +526,7 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
                 className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
               >
                 <RotateCcw className="h-4 w-4 mr-1" />
-                Retry failed ({failedJobs})
+                {t('batch.failed')} ({failedJobs})
               </Button>
             )}
 
@@ -568,11 +570,11 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Translation Queue
+              {t('batch.queue')}
             </CardTitle>
             {queue.length > 0 && (
               <Button variant="ghost" size="sm" onClick={selectAll} className="h-7 text-xs">
-                {selectedJobs.size === queue.length ? 'Deselect all' : 'Select all'}
+                {selectedJobs.size === queue.length ? t('common.none') : t('common.all')}
               </Button>
             )}
           </div>
@@ -581,8 +583,8 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
           {queue.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               <Languages className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No files in queue</p>
-              <p className="text-xs mt-1">Add files or folders to start</p>
+              <p className="text-sm">{t('batch.noFiles')}</p>
+              <p className="text-xs mt-1">{t('batch.dropFiles')}</p>
             </div>
           ) : (
             <ScrollArea className="h-[400px]">
@@ -643,11 +645,11 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
 
                     {/* Status badge */}
                     <Badge className={`text-xs ${getStatusBadge(job.status)}`}>
-                      {job.status === 'pending' && 'Pending'}
+                      {job.status === 'pending' && t('batch.pending')}
                       {job.status === 'translating' && `${job.progress.toFixed(0)}%`}
-                      {job.status === 'completed' && 'Completed'}
-                      {job.status === 'failed' && 'Failed'}
-                      {job.status === 'paused' && 'Paused'}
+                      {job.status === 'completed' && t('batch.completed')}
+                      {job.status === 'failed' && t('batch.failed')}
+                      {job.status === 'paused' && t('batch.pauseAll')}
                     </Badge>
 
                     {/* Actions */}

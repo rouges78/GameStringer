@@ -63,6 +63,115 @@ export interface GameStringerProject {
 
 const PROJECT_FORMAT_VERSION = '1.0.0';
 
+/**
+ * Parse file content and extract translation entries
+ */
+export async function parseFileContent(
+  filePath: string,
+  fileType: string
+): Promise<TranslationEntry[]> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const content = await invoke<string>('read_text_file', { path: filePath });
+    
+    const entries: TranslationEntry[] = [];
+    const ext = fileType.toLowerCase();
+    
+    switch (ext) {
+      case 'json': {
+        const data = JSON.parse(content);
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            if (typeof item === 'object' && item.original) {
+              entries.push({
+                original: String(item.original || item.key || item.source || ''),
+                translated: String(item.translated || item.translation || item.target || ''),
+                context: item.context || item.note,
+                status: item.translated ? 'translated' : 'pending'
+              });
+            }
+          }
+        } else if (typeof data === 'object') {
+          for (const [key, value] of Object.entries(data)) {
+            entries.push({
+              original: key,
+              translated: typeof value === 'string' ? value : '',
+              status: value ? 'translated' : 'pending'
+            });
+          }
+        }
+        break;
+      }
+      
+      case 'csv':
+      case 'txt': {
+        const lines = content.split('\n').filter(l => l.trim());
+        for (const line of lines) {
+          const parts = line.includes('|') ? line.split('|') :
+                       line.includes('\t') ? line.split('\t') :
+                       line.split(',');
+          if (parts.length >= 1) {
+            entries.push({
+              original: parts[0]?.trim() || '',
+              translated: parts[1]?.trim() || '',
+              context: parts[2]?.trim(),
+              status: parts[1]?.trim() ? 'translated' : 'pending'
+            });
+          }
+        }
+        break;
+      }
+      
+      case 'po': {
+        const msgidRegex = /msgid\s+"([^"]*)"/g;
+        const msgstrRegex = /msgstr\s+"([^"]*)"/g;
+        const msgids = [...content.matchAll(msgidRegex)].map(m => m[1]);
+        const msgstrs = [...content.matchAll(msgstrRegex)].map(m => m[1]);
+        
+        for (let i = 0; i < msgids.length; i++) {
+          if (msgids[i]) {
+            entries.push({
+              original: msgids[i],
+              translated: msgstrs[i] || '',
+              status: msgstrs[i] ? 'translated' : 'pending'
+            });
+          }
+        }
+        break;
+      }
+      
+      case 'xml':
+      case 'resx': {
+        const dataRegex = /<data[^>]*name="([^"]*)"[^>]*>[\s\S]*?<value>([^<]*)<\/value>/g;
+        let match;
+        while ((match = dataRegex.exec(content)) !== null) {
+          entries.push({
+            original: match[1],
+            translated: match[2] || '',
+            status: match[2] ? 'translated' : 'pending'
+          });
+        }
+        break;
+      }
+      
+      default:
+        const lines2 = content.split('\n').filter(l => l.trim());
+        for (const line of lines2) {
+          entries.push({
+            original: line.trim(),
+            translated: '',
+            status: 'pending'
+          });
+        }
+    }
+    
+    return entries;
+  } catch (error) {
+    console.error('Error parsing file:', error);
+    return [];
+  }
+}
+
 export class ProjectManager {
   private currentProject: GameStringerProject | null = null;
   private projectPath: string | null = null;

@@ -358,8 +358,8 @@ impl ProfileStorage {
                 entry.failed_attempts += 1;
                 entry.last_failed_attempt = Some(Utc::now());
                 
-                // Blocca profilo se troppi tentativi
-                if entry.failed_attempts >= 5 {
+                // Blocca profilo se troppi tentativi (20 tentativi)
+                if entry.failed_attempts >= 20 {
                     entry.is_locked = true;
                     println!("[PROFILE STORAGE] ⚠️ Profilo '{}' bloccato per troppi tentativi", entry.name);
                 }
@@ -379,7 +379,7 @@ impl ProfileStorage {
         
         Ok(failed_attempts)
     }
-    
+
     /// Carica indice profili
     async fn load_index(&self) -> StorageResult<ProfileIndex> {
         if !self.index_path.exists() {

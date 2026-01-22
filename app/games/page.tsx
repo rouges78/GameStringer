@@ -34,6 +34,7 @@ import GameCard from '@/components/game-card';
 import HowLongToBeatDisplay from '../components/HowLongToBeatDisplay';
 import { prefetchHltb, getHltbFromCache } from '@/hooks/useHowLongToBeat';
 import type { SteamGame, LocalGame, HowLongToBeatData } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 // Tipo unificato per la visualizzazione nell'interfaccia
 interface DisplayGame {
@@ -80,6 +81,7 @@ const StatCard = ({ title, value, icon: Icon, color }: { title: string, value: s
 
 export default function GamesPage() {
   const { data: session, status } = useSession();
+  const { t } = useTranslation();
   const [games, setGames] = useState<DisplayGame[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

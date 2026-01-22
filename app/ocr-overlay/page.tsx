@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslatedText {
   original: string;
@@ -14,6 +15,7 @@ interface TranslatedText {
 }
 
 export default function OcrOverlayPage() {
+  const { t } = useTranslation();
   const [texts, setTexts] = useState<TranslatedText[]>([]);
   const [isVisible, setIsVisible] = useState(true);
 

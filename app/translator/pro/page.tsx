@@ -45,10 +45,14 @@ import {
   Gamepad2, Rocket, Package, Share2
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { notifications } from '@/lib/notifications';
+import { api } from '@/lib/api-client';
+import { offlineCache } from '@/lib/offline-cache';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { activityHistory } from '@/lib/activity-history';
+import { useTranslation } from '@/lib/i18n';
 
 // Neural Translator imports
 import {
@@ -105,6 +109,7 @@ type Step = 'select-game' | 'select-files' | 'configure' | 'translate' | 'result
 
 export default function TranslatorProPage() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   
   // === URL PARAMS (from Translation Wizard) ===
   const searchParams = useSearchParams();
