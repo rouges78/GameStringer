@@ -573,6 +573,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
         <aside 
+          data-tutorial="sidebar"
           className={cn(
             "fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-all duration-300 ease-in-out flex flex-col",
             sidebarOpen ? "w-64 translate-x-0" : "w-16 translate-x-0"
@@ -634,6 +635,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       <Button
                         variant="ghost"
                         onClick={toggleGroup}
+                        data-tutorial={`nav-${group.label.toLowerCase().includes('traduz') || group.label.toLowerCase().includes('trans') ? 'translator' : 'tools'}`}
                         className={cn(
                           "w-full transition-all duration-200 ease-out group relative",
                           sidebarOpen ? "justify-start space-x-3 px-3" : "justify-center px-0",
@@ -716,6 +718,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                             <Link key={item.href} href={item.href}>
                               <Button
                                 variant="ghost"
+                                data-tutorial={`nav-${item.href === '/' ? 'dashboard' : item.href.replace('/', '')}`}
                                 className={cn(
                                   "w-full transition-all duration-200 ease-out group relative",
                                   sidebarOpen 

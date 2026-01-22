@@ -1,71 +1,79 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   X, ChevronRight, ChevronLeft, Gamepad2, Languages, 
-  Settings, Wand2, Library, Home, Sparkles, CheckCircle
+  Settings, Wrench, Library, Home, Sparkles, CheckCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from '@/lib/i18n';
+
+const TUTORIAL_KEY = 'gamestringer-tutorial-completed';
+const TUTORIAL_VERSION = '2';
 
 interface TutorialStep {
   id: string;
-  title: string;
-  description: string;
   icon: React.ReactNode;
-  highlight?: string; // CSS selector to highlight
-  position?: 'center' | 'top' | 'bottom' | 'left' | 'right';
+  iconColor: string;
+  selector?: string; // CSS selector per highlight
+  position: 'center' | 'sidebar' | 'top-right';
 }
 
 const tutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',
-    title: 'Benvenuto in GameStringer!',
-    description: 'Il software professionale per la localizzazione di videogames. Traduci games Unity, Unreal, Godot, RPG Maker e altri engine con AI avanzata.',
-    icon: <Sparkles className="h-8 w-8 text-purple-400" />,
+    icon: <Sparkles className="h-6 w-6" />,
+    iconColor: 'text-purple-400',
     position: 'center'
+  },
+  {
+    id: 'sidebar',
+    icon: <Home className="h-6 w-6" />,
+    iconColor: 'text-cyan-400',
+    selector: '[data-tutorial="sidebar"]',
+    position: 'sidebar'
   },
   {
     id: 'dashboard',
-    title: 'Dashboard',
-    description: 'Panoramica completa: games recenti, traduzioni in corso, statistiche e accesso rapido a tutte le funzioni.',
-    icon: <Home className="h-8 w-8 text-cyan-400" />,
-    position: 'center'
+    icon: <Home className="h-6 w-6" />,
+    iconColor: 'text-cyan-400',
+    selector: '[data-tutorial="nav-dashboard"]',
+    position: 'sidebar'
   },
   {
     id: 'library',
-    title: 'library games',
-    description: 'Tutti i tuoi games da Steam, Epic, GOG, Ubisoft, EA e altre piattaforme. Include supporto Family Sharing e filtri avanzati per lingua e backlog.',
-    icon: <Library className="h-8 w-8 text-purple-400" />,
-    position: 'center'
+    icon: <Library className="h-6 w-6" />,
+    iconColor: 'text-purple-400',
+    selector: '[data-tutorial="nav-library"]',
+    position: 'sidebar'
   },
   {
     id: 'translator',
-    title: 'Neural Translator Pro',
-    description: 'Traduzione batch con AI (Claude, OpenAI, Gemini, DeepSeek). Supporta JSON, CSV, PO, RESX e altri formati. Include Translation Memory e Quality Gates.',
-    icon: <Languages className="h-8 w-8 text-blue-400" />,
-    position: 'center'
+    icon: <Languages className="h-6 w-6" />,
+    iconColor: 'text-blue-400',
+    selector: '[data-tutorial="nav-translator"]',
+    position: 'sidebar'
   },
   {
-    id: 'unity-patcher',
-    title: 'Game Patcher',
-    description: 'Installa automaticamente mod di traduzione per games Unity (BepInEx + XUnity), con supporto per Unity 4.x fino a 2023. Rileva engine e suggerisce tool alternativi.',
-    icon: <Gamepad2 className="h-8 w-8 text-emerald-400" />,
-    position: 'center'
+    id: 'tools',
+    icon: <Wrench className="h-6 w-6" />,
+    iconColor: 'text-emerald-400',
+    selector: '[data-tutorial="nav-tools"]',
+    position: 'sidebar'
   },
   {
     id: 'settings',
-    title: 'Impostazioni',
-    description: 'Configura API di traduzione, collega account store (Steam, Epic, GOG), gestisci profili utente e personalizza l\'interfaccia.',
-    icon: <Settings className="h-8 w-8 text-slate-400" />,
-    position: 'center'
+    icon: <Settings className="h-6 w-6" />,
+    iconColor: 'text-slate-400',
+    selector: '[data-tutorial="nav-settings"]',
+    position: 'sidebar'
   },
   {
     id: 'complete',
-    title: 'Pronto per iniziare!',
-    description: 'Esplora la library per i tuoi games, usa il Translator Pro per tradurre file, o il Game Patcher per mod automatiche. Buona localizzazione!',
-    icon: <CheckCircle className="h-8 w-8 text-green-400" />,
+    icon: <CheckCircle className="h-6 w-6" />,
+    iconColor: 'text-green-400',
     position: 'center'
   }
 ];
@@ -76,16 +84,35 @@ interface InteractiveTutorialProps {
 }
 
 export function InteractiveTutorial({ onComplete, forceShow = false }: InteractiveTutorialProps) {
+  const { t } = useTranslation();
   const [isVisible, setIsVisible] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
-    // Mostra tutorial solo se non è stato completato
-    const tutorialCompleted = localStorage.getItem('tutorial-completed');
-    if (!tutorialCompleted || forceShow) {
-      setIsVisible(true);
+    const completed = localStorage.getItem(TUTORIAL_KEY);
+    if (completed !== TUTORIAL_VERSION || forceShow) {
+      setTimeout(() => setIsVisible(true), 500);
     }
   }, [forceShow]);
+
+  const updateHighlight = useCallback(() => {
+    const step = tutorialSteps[currentStep];
+    if (step.selector) {
+      const el = document.querySelector(step.selector);
+      if (el) {
+        setHighlightRect(el.getBoundingClientRect());
+        return;
+      }
+    }
+    setHighlightRect(null);
+  }, [currentStep]);
+
+  useEffect(() => {
+    updateHighlight();
+    window.addEventListener('resize', updateHighlight);
+    return () => window.removeEventListener('resize', updateHighlight);
+  }, [updateHighlight]);
 
   const handleNext = () => {
     if (currentStep < tutorialSteps.length - 1) {
@@ -106,27 +133,27 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
   };
 
   const handleComplete = () => {
+    localStorage.setItem(TUTORIAL_KEY, TUTORIAL_VERSION);
     localStorage.setItem('tutorial-completed', 'true');
-    localStorage.setItem('profile-welcome-shown', 'true');
     setIsVisible(false);
     onComplete?.();
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (!isVisible) return;
-    if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleNext();
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      handlePrev();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      handleSkip();
-    }
-  };
-
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isVisible) return;
+      if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleNext();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrev();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleSkip();
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isVisible, currentStep]);
@@ -137,44 +164,88 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
   const isLastStep = currentStep === tutorialSteps.length - 1;
   const isFirstStep = currentStep === 0;
 
+  const getStepText = (stepId: string, field: 'title' | 'description') => {
+    return t(`tutorial.steps.${stepId}.${field}`);
+  };
+
+  const getCardPosition = () => {
+    if (step.position === 'sidebar' && highlightRect) {
+      return {
+        left: highlightRect.right + 20,
+        top: Math.max(20, highlightRect.top - 50),
+      };
+    }
+    return null;
+  };
+
+  const cardPos = getCardPosition();
+
   return (
     <AnimatePresence>
       {isVisible && (
         <>
-          {/* Overlay scuro */}
+          {/* Overlay con buco per highlight */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 z-[200]"
+            style={{
+              background: highlightRect 
+                ? `radial-gradient(ellipse ${highlightRect.width + 40}px ${highlightRect.height + 40}px at ${highlightRect.left + highlightRect.width/2}px ${highlightRect.top + highlightRect.height/2}px, transparent 0%, rgba(0,0,0,0.85) 100%)`
+                : 'rgba(0,0,0,0.85)'
+            }}
             onClick={handleNext}
           />
 
+          {/* Highlight ring */}
+          {highlightRect && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="fixed z-[201] pointer-events-none"
+              style={{
+                left: highlightRect.left - 6,
+                top: highlightRect.top - 6,
+                width: highlightRect.width + 12,
+                height: highlightRect.height + 12,
+                borderRadius: 12,
+                border: '2px solid rgba(168, 85, 247, 0.8)',
+                boxShadow: '0 0 20px rgba(168, 85, 247, 0.5), inset 0 0 20px rgba(168, 85, 247, 0.1)',
+              }}
+            />
+          )}
+
           {/* Card tutorial */}
           <motion.div
+            key={currentStep}
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-0 flex items-center justify-center z-[101] pointer-events-none"
+            className={cn(
+              "fixed z-[202] pointer-events-auto",
+              step.position === 'center' && "inset-0 flex items-center justify-center"
+            )}
+            style={cardPos ? { left: cardPos.left, top: cardPos.top } : undefined}
           >
             <div 
-              className="bg-slate-900 border border-purple-500/30 rounded-2xl shadow-2xl shadow-purple-500/20 max-w-md w-full mx-4 pointer-events-auto"
+              className="bg-slate-900/95 backdrop-blur-xl border border-purple-500/30 rounded-xl shadow-2xl shadow-purple-500/20 w-80"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-slate-800">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between p-3 border-b border-slate-800/50">
+                <div className="flex items-center gap-1.5">
                   {tutorialSteps.map((_, i) => (
                     <div
                       key={i}
                       className={cn(
-                        "w-2 h-2 rounded-full transition-all",
+                        "h-1.5 rounded-full transition-all duration-300",
                         i === currentStep 
-                          ? "bg-purple-500 w-6" 
+                          ? "bg-purple-500 w-4" 
                           : i < currentStep 
-                            ? "bg-purple-500/50" 
-                            : "bg-slate-700"
+                            ? "bg-purple-500/50 w-1.5" 
+                            : "bg-slate-700 w-1.5"
                       )}
                     />
                   ))}
@@ -183,71 +254,79 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
                   variant="ghost"
                   size="sm"
                   onClick={handleSkip}
-                  className="h-8 px-2 text-slate-500 hover:text-slate-300"
+                  className="h-7 px-2 text-slate-500 hover:text-slate-300 text-xs"
                 >
-                  <X className="h-4 w-4 mr-1" />
-                  Salta
+                  <X className="h-3.5 w-3.5 mr-1" />
+                  {t('tutorial.skip')}
                 </Button>
               </div>
 
               {/* Content */}
-              <div className="p-6 text-center">
+              <div className="p-4 text-center">
                 <motion.div
                   key={step.id}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                  <div className={cn(
+                    "w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center",
+                    step.iconColor
+                  )}>
                     {step.icon}
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{step.description}</p>
+                  <h3 className="text-lg font-bold text-white mb-1.5">
+                    {getStepText(step.id, 'title')}
+                  </h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    {getStepText(step.id, 'description')}
+                  </p>
                 </motion.div>
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between p-4 border-t border-slate-800">
+              <div className="flex items-center justify-between p-3 border-t border-slate-800/50">
                 <Button
                   variant="ghost"
+                  size="sm"
                   onClick={handlePrev}
                   disabled={isFirstStep}
                   className={cn(
-                    "h-9",
+                    "h-8 text-xs",
                     isFirstStep && "opacity-0 pointer-events-none"
                   )}
                 >
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Indietro
+                  <ChevronLeft className="h-3.5 w-3.5 mr-1" />
+                  {t('tutorial.back')}
                 </Button>
 
-                <span className="text-xs text-slate-600">
-                  {currentStep + 1} / {tutorialSteps.length}
+                <span className="text-[10px] text-slate-600">
+                  {t('tutorial.stepOf').replace('{current}', String(currentStep + 1)).replace('{total}', String(tutorialSteps.length))}
                 </span>
 
                 <Button
+                  size="sm"
                   onClick={handleNext}
-                  className="h-9 bg-purple-600 hover:bg-purple-500"
+                  className="h-8 text-xs bg-purple-600 hover:bg-purple-500"
                 >
                   {isLastStep ? (
                     <>
-                      Inizia
-                      <Sparkles className="h-4 w-4 ml-1" />
+                      {t('tutorial.finish')}
+                      <Sparkles className="h-3.5 w-3.5 ml-1" />
                     </>
                   ) : (
                     <>
-                      Avanti
-                      <ChevronRight className="h-4 w-4 ml-1" />
+                      {t('tutorial.next')}
+                      <ChevronRight className="h-3.5 w-3.5 ml-1" />
                     </>
                   )}
                 </Button>
               </div>
 
               {/* Hint */}
-              <div className="px-4 pb-3 text-center">
-                <span className="text-[10px] text-slate-600">
-                  Premi Spazio o clicca per continuare • Esc per saltare
+              <div className="px-3 pb-2 text-center">
+                <span className="text-[9px] text-slate-600">
+                  {t('tutorial.pressSpace')}
                 </span>
               </div>
             </div>

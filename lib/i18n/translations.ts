@@ -1101,6 +1101,49 @@ export const translations = {
       acceptButton: 'Ho letto e accetto',
       scrollToRead: 'Scorri per leggere',
     },
+    tutorial: {
+      skip: 'Salta',
+      back: 'Indietro',
+      next: 'Avanti',
+      finish: 'Inizia!',
+      stepOf: '{current} / {total}',
+      pressSpace: 'Premi Spazio per continuare • Esc per saltare',
+      clickHighlight: 'Clicca l\'elemento evidenziato per continuare',
+      steps: {
+        welcome: {
+          title: 'Benvenuto in GameStringer!',
+          description: 'Il software professionale per tradurre videogiochi. Ti guiderò attraverso le funzioni principali.',
+        },
+        sidebar: {
+          title: 'Navigazione',
+          description: 'La sidebar ti permette di accedere a tutte le sezioni: Dashboard, Libreria, Traduzioni, Strumenti e Impostazioni.',
+        },
+        dashboard: {
+          title: 'Dashboard',
+          description: 'Panoramica completa con statistiche, attività recenti e accesso rapido a tutte le funzioni.',
+        },
+        library: {
+          title: 'Libreria Giochi',
+          description: 'Tutti i tuoi giochi da Steam, Epic, GOG e altri store. Filtra per lingua, engine o stato traduzione.',
+        },
+        translator: {
+          title: 'Traduttore AI',
+          description: 'Traduci file con intelligenza artificiale. Supporta JSON, CSV, PO, RESX e altri formati.',
+        },
+        tools: {
+          title: 'Strumenti',
+          description: 'Game Patcher, OCR Translator, Context Crawler, Translation Fixer e molto altro.',
+        },
+        settings: {
+          title: 'Impostazioni',
+          description: 'Configura API di traduzione, collega gli store, gestisci profili e personalizza l\'app.',
+        },
+        complete: {
+          title: 'Pronto!',
+          description: 'Ora conosci le basi. Esplora la libreria o inizia subito a tradurre!',
+        },
+      },
+    },
   },
   en: {
     // Navigation
@@ -2204,6 +2247,49 @@ export const translations = {
       acceptButton: 'I have read and accept',
       scrollToRead: 'Scroll to read',
     },
+    tutorial: {
+      skip: 'Skip',
+      back: 'Back',
+      next: 'Next',
+      finish: 'Start!',
+      stepOf: '{current} / {total}',
+      pressSpace: 'Press Space to continue • Esc to skip',
+      clickHighlight: 'Click the highlighted element to continue',
+      steps: {
+        welcome: {
+          title: 'Welcome to GameStringer!',
+          description: 'Professional software for translating video games. I\'ll guide you through the main features.',
+        },
+        sidebar: {
+          title: 'Navigation',
+          description: 'The sidebar lets you access all sections: Dashboard, Library, Translations, Tools and Settings.',
+        },
+        dashboard: {
+          title: 'Dashboard',
+          description: 'Complete overview with statistics, recent activity and quick access to all features.',
+        },
+        library: {
+          title: 'Game Library',
+          description: 'All your games from Steam, Epic, GOG and other stores. Filter by language, engine or translation status.',
+        },
+        translator: {
+          title: 'AI Translator',
+          description: 'Translate files with artificial intelligence. Supports JSON, CSV, PO, RESX and other formats.',
+        },
+        tools: {
+          title: 'Tools',
+          description: 'Game Patcher, OCR Translator, Context Crawler, Translation Fixer and much more.',
+        },
+        settings: {
+          title: 'Settings',
+          description: 'Configure translation APIs, connect stores, manage profiles and customize the app.',
+        },
+        complete: {
+          title: 'Ready!',
+          description: 'Now you know the basics. Explore the library or start translating right away!',
+        },
+      },
+    },
   },
   es: {
     nav: {
@@ -2751,6 +2837,49 @@ export const translations = {
       summary: 'Al continuar, aceptas estos términos y eres responsable del uso del software.',
       acceptButton: 'He leído y acepto',
       scrollToRead: 'Desplázate para leer',
+    },
+    tutorial: {
+      skip: 'Saltar',
+      back: 'Atrás',
+      next: 'Siguiente',
+      finish: '¡Empezar!',
+      stepOf: '{current} / {total}',
+      pressSpace: 'Pulsa Espacio para continuar • Esc para saltar',
+      clickHighlight: 'Haz clic en el elemento resaltado para continuar',
+      steps: {
+        welcome: {
+          title: '¡Bienvenido a GameStringer!',
+          description: 'Software profesional para traducir videojuegos. Te guiaré por las funciones principales.',
+        },
+        sidebar: {
+          title: 'Navegación',
+          description: 'La barra lateral te permite acceder a todas las secciones: Panel, Biblioteca, Traducciones, Herramientas y Ajustes.',
+        },
+        dashboard: {
+          title: 'Panel',
+          description: 'Vista completa con estadísticas, actividad reciente y acceso rápido a todas las funciones.',
+        },
+        library: {
+          title: 'Biblioteca de Juegos',
+          description: 'Todos tus juegos de Steam, Epic, GOG y otras tiendas. Filtra por idioma, motor o estado de traducción.',
+        },
+        translator: {
+          title: 'Traductor IA',
+          description: 'Traduce archivos con inteligencia artificial. Soporta JSON, CSV, PO, RESX y otros formatos.',
+        },
+        tools: {
+          title: 'Herramientas',
+          description: 'Game Patcher, Traductor OCR, Context Crawler, Translation Fixer y mucho más.',
+        },
+        settings: {
+          title: 'Ajustes',
+          description: 'Configura APIs de traducción, conecta tiendas, gestiona perfiles y personaliza la app.',
+        },
+        complete: {
+          title: '¡Listo!',
+          description: 'Ahora conoces lo básico. ¡Explora la biblioteca o empieza a traducir!',
+        },
+      },
     },
   },
   fr: {
@@ -3300,6 +3429,49 @@ export const translations = {
       acceptButton: 'J\'ai lu et j\'accepte',
       scrollToRead: 'Faites défiler pour lire',
     },
+    tutorial: {
+      skip: 'Passer',
+      back: 'Retour',
+      next: 'Suivant',
+      finish: 'Commencer!',
+      stepOf: '{current} / {total}',
+      pressSpace: 'Appuyez sur Espace pour continuer • Échap pour passer',
+      clickHighlight: 'Cliquez sur l\'élément en surbrillance pour continuer',
+      steps: {
+        welcome: {
+          title: 'Bienvenue dans GameStringer!',
+          description: 'Logiciel professionnel pour traduire des jeux vidéo. Je vais vous guider à travers les fonctionnalités principales.',
+        },
+        sidebar: {
+          title: 'Navigation',
+          description: 'La barre latérale vous permet d\'accéder à toutes les sections: Tableau de bord, Bibliothèque, Traductions, Outils et Paramètres.',
+        },
+        dashboard: {
+          title: 'Tableau de Bord',
+          description: 'Vue d\'ensemble avec statistiques, activité récente et accès rapide à toutes les fonctionnalités.',
+        },
+        library: {
+          title: 'Bibliothèque de Jeux',
+          description: 'Tous vos jeux de Steam, Epic, GOG et autres boutiques. Filtrez par langue, moteur ou état de traduction.',
+        },
+        translator: {
+          title: 'Traducteur IA',
+          description: 'Traduisez des fichiers avec l\'intelligence artificielle. Supporte JSON, CSV, PO, RESX et autres formats.',
+        },
+        tools: {
+          title: 'Outils',
+          description: 'Game Patcher, Traducteur OCR, Context Crawler, Translation Fixer et bien plus.',
+        },
+        settings: {
+          title: 'Paramètres',
+          description: 'Configurez les APIs de traduction, connectez les boutiques, gérez les profils et personnalisez l\'app.',
+        },
+        complete: {
+          title: 'Prêt!',
+          description: 'Vous connaissez maintenant les bases. Explorez la bibliothèque ou commencez à traduire!',
+        },
+      },
+    },
   },
   de: {
     nav: {
@@ -3847,6 +4019,49 @@ export const translations = {
       summary: 'Mit dem Fortfahren akzeptieren Sie diese Bedingungen und sind für die Nutzung der Software verantwortlich.',
       acceptButton: 'Ich habe gelesen und akzeptiere',
       scrollToRead: 'Zum Lesen scrollen',
+    },
+    tutorial: {
+      skip: 'Überspringen',
+      back: 'Zurück',
+      next: 'Weiter',
+      finish: 'Starten!',
+      stepOf: '{current} / {total}',
+      pressSpace: 'Leertaste zum Fortfahren • Esc zum Überspringen',
+      clickHighlight: 'Klicken Sie auf das hervorgehobene Element um fortzufahren',
+      steps: {
+        welcome: {
+          title: 'Willkommen bei GameStringer!',
+          description: 'Professionelle Software zur Übersetzung von Videospielen. Ich führe Sie durch die Hauptfunktionen.',
+        },
+        sidebar: {
+          title: 'Navigation',
+          description: 'Die Seitenleiste ermöglicht den Zugriff auf alle Bereiche: Dashboard, Bibliothek, Übersetzungen, Werkzeuge und Einstellungen.',
+        },
+        dashboard: {
+          title: 'Dashboard',
+          description: 'Komplettübersicht mit Statistiken, aktueller Aktivität und Schnellzugriff auf alle Funktionen.',
+        },
+        library: {
+          title: 'Spielebibliothek',
+          description: 'Alle Ihre Spiele von Steam, Epic, GOG und anderen Stores. Filtern nach Sprache, Engine oder Übersetzungsstatus.',
+        },
+        translator: {
+          title: 'KI-Übersetzer',
+          description: 'Übersetzen Sie Dateien mit künstlicher Intelligenz. Unterstützt JSON, CSV, PO, RESX und andere Formate.',
+        },
+        tools: {
+          title: 'Werkzeuge',
+          description: 'Game Patcher, OCR-Übersetzer, Context Crawler, Translation Fixer und vieles mehr.',
+        },
+        settings: {
+          title: 'Einstellungen',
+          description: 'Konfigurieren Sie Übersetzungs-APIs, verbinden Sie Stores, verwalten Sie Profile und passen Sie die App an.',
+        },
+        complete: {
+          title: 'Bereit!',
+          description: 'Jetzt kennen Sie die Grundlagen. Erkunden Sie die Bibliothek oder starten Sie mit dem Übersetzen!',
+        },
+      },
     },
   },
   ja: {
