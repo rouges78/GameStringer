@@ -379,3 +379,309 @@ fn unescape_xml(s: &str) -> String {
      .replace("&quot;", "\"")
      .replace("&apos;", "'")
 }
+
+/// 🔍 Risultato di un match nella TM
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TMMatch {
+    pub unit: TranslationUnit,
+    pub similarity: f64,
+    pub match_type: String, // "exact", "fuzzy", "contains"
+}
+
+/// 🔍 Cerca traduzioni nella TM (fuzzy matching)
+#[tauri::command]
+pub fn search_translation_memory(
+    source_text: String,
+    source_lang: String,
+    target_lang: String,
+    min_similarity: Option<f64>,
+    max_results: Option<usize>
+) -> Result<Vec<TMMatch>, String> {
+    info!("🔍 Ricerca TM: '{}' ({} → {})", 
+        source_text.chars().take(50).collect::<String>(), 
+        source_lang, target_lang);
+    
+    let memory = match load_translation_memory(source_lang, target_lang)? {
+        Some(m) => m,
+        None => return Ok(Vec::new()),
+    };
+    
+    let min_sim = min_similarity.unwrap_or(0.6);
+    let max_res = max_results.unwrap_or(10);
+    let source_lower = source_text.to_lowercase();
+    
+    let mut matches: Vec<TMMatch> = memory.units.iter()
+        .filter_map(|unit| {
+            let unit_source_lower = unit.source_text.to_lowercase();
+            
+            // 1. Exact match
+            if unit_source_lower == source_lower {
+                return Some(TMMatch {
+                    unit: unit.clone(),
+                    similarity: 1.0,
+                    match_type: "exact".to_string(),
+                });
+            }
+            
+            // 2. Contains match
+            if unit_source_lower.contains(&source_lower) || source_lower.contains(&unit_source_lower) {
+                let sim = calculate_similarity(&source_lower, &unit_source_lower);
+                if sim >= min_sim {
+                    return Some(TMMatch {
+                        unit: unit.clone(),
+                        similarity: sim,
+                        match_type: "contains".to_string(),
+                    });
+                }
+            }
+            
+            // 3. Fuzzy match (Levenshtein-based)
+            let sim = calculate_similarity(&source_lower, &unit_source_lower);
+            if sim >= min_sim {
+                return Some(TMMatch {
+                    unit: unit.clone(),
+                    similarity: sim,
+                    match_type: "fuzzy".to_string(),
+                });
+            }
+            
+            None
+        })
+        .collect();
+    
+    // Ordina per similarità decrescente
+    matches.sort_by(|a, b| b.similarity.partial_cmp(&a.similarity).unwrap_or(std::cmp::Ordering::Equal));
+    matches.truncate(max_res);
+    
+    info!("✅ Trovati {} match (min similarity: {})", matches.len(), min_sim);
+    Ok(matches)
+}
+
+/// Calcola similarità tra due stringhe (algoritmo Levenshtein normalizzato)
+fn calculate_similarity(s1: &str, s2: &str) -> f64 {
+    if s1 == s2 {
+        return 1.0;
+    }
+    
+    if s1.is_empty() || s2.is_empty() {
+        return 0.0;
+    }
+    
+    let len1 = s1.chars().count();
+    let len2 = s2.chars().count();
+    let max_len = len1.max(len2) as f64;
+    
+    // Usa bigrams per stringhe lunghe (più veloce)
+    if len1 > 100 || len2 > 100 {
+        return bigram_similarity(s1, s2);
+    }
+    
+    let distance = levenshtein_distance(s1, s2);
+    1.0 - (distance as f64 / max_len)
+}
+
+/// Distanza di Levenshtein
+fn levenshtein_distance(s1: &str, s2: &str) -> usize {
+    let chars1: Vec<char> = s1.chars().collect();
+    let chars2: Vec<char> = s2.chars().collect();
+    let len1 = chars1.len();
+    let len2 = chars2.len();
+    
+    if len1 == 0 { return len2; }
+    if len2 == 0 { return len1; }
+    
+    let mut prev_row: Vec<usize> = (0..=len2).collect();
+    let mut curr_row = vec![0; len2 + 1];
+    
+    for i in 1..=len1 {
+        curr_row[0] = i;
+        for j in 1..=len2 {
+            let cost = if chars1[i - 1] == chars2[j - 1] { 0 } else { 1 };
+            curr_row[j] = (prev_row[j] + 1)
+                .min(curr_row[j - 1] + 1)
+                .min(prev_row[j - 1] + cost);
+        }
+        std::mem::swap(&mut prev_row, &mut curr_row);
+    }
+    
+    prev_row[len2]
+}
+
+/// Similarità basata su bigrams (per stringhe lunghe)
+fn bigram_similarity(s1: &str, s2: &str) -> f64 {
+    let bigrams1: std::collections::HashSet<_> = s1.chars()
+        .collect::<Vec<_>>()
+        .windows(2)
+        .map(|w| (w[0], w[1]))
+        .collect();
+    
+    let bigrams2: std::collections::HashSet<_> = s2.chars()
+        .collect::<Vec<_>>()
+        .windows(2)
+        .map(|w| (w[0], w[1]))
+        .collect();
+    
+    if bigrams1.is_empty() || bigrams2.is_empty() {
+        return 0.0;
+    }
+    
+    let intersection = bigrams1.intersection(&bigrams2).count();
+    let union = bigrams1.union(&bigrams2).count();
+    
+    intersection as f64 / union as f64
+}
+
+/// ➕ Aggiungi una singola traduzione alla TM
+#[tauri::command]
+pub fn add_translation_to_memory(
+    source_text: String,
+    target_text: String,
+    source_lang: String,
+    target_lang: String,
+    context: Option<String>,
+    game_id: Option<String>,
+    provider: Option<String>
+) -> Result<(), String> {
+    info!("➕ Aggiunta traduzione alla TM: '{}' → '{}'", 
+        source_text.chars().take(30).collect::<String>(),
+        target_text.chars().take(30).collect::<String>());
+    
+    let now = chrono::Utc::now().to_rfc3339();
+    
+    // Carica o crea TM
+    let mut memory = load_translation_memory(source_lang.clone(), target_lang.clone())?
+        .unwrap_or_else(|| TranslationMemory {
+            id: format!("tm_{}_{}", source_lang, target_lang),
+            name: format!("{} → {}", source_lang.to_uppercase(), target_lang.to_uppercase()),
+            source_language: source_lang.clone(),
+            target_language: target_lang.clone(),
+            units: Vec::new(),
+            stats: TMStats {
+                total_units: 0,
+                verified_units: 0,
+                total_usage_count: 0,
+                average_confidence: 0.0,
+                by_provider: std::collections::HashMap::new(),
+                by_context: std::collections::HashMap::new(),
+            },
+            created_at: now.clone(),
+            updated_at: now.clone(),
+        });
+    
+    // Cerca se esiste già
+    let source_lower = source_text.to_lowercase();
+    if let Some(existing) = memory.units.iter_mut()
+        .find(|u| u.source_text.to_lowercase() == source_lower) 
+    {
+        // Aggiorna esistente
+        existing.target_text = target_text;
+        existing.updated_at = now.clone();
+        existing.usage_count += 1;
+        info!("📝 Aggiornata traduzione esistente");
+    } else {
+        // Aggiungi nuova
+        let unit = TranslationUnit {
+            id: format!("tu_{}", uuid::Uuid::new_v4()),
+            source_text,
+            target_text,
+            source_language: source_lang,
+            target_language: target_lang,
+            context,
+            game_id,
+            provider: provider.unwrap_or_else(|| "manual".to_string()),
+            confidence: 1.0,
+            verified: false,
+            usage_count: 1,
+            created_at: now.clone(),
+            updated_at: now.clone(),
+            metadata: None,
+        };
+        memory.units.push(unit);
+        info!("✨ Aggiunta nuova traduzione");
+    }
+    
+    // Aggiorna stats
+    memory.stats.total_units = memory.units.len() as u32;
+    memory.stats.verified_units = memory.units.iter().filter(|u| u.verified).count() as u32;
+    memory.stats.total_usage_count = memory.units.iter().map(|u| u.usage_count).sum();
+    memory.updated_at = now;
+    
+    save_translation_memory(memory)?;
+    Ok(())
+}
+
+/// 🔄 Batch add - aggiunge multiple traduzioni
+#[tauri::command]
+pub fn add_translations_batch(
+    translations: Vec<(String, String)>, // (source, target)
+    source_lang: String,
+    target_lang: String,
+    game_id: Option<String>,
+    provider: Option<String>
+) -> Result<u32, String> {
+    info!("🔄 Batch add: {} traduzioni", translations.len());
+    
+    let now = chrono::Utc::now().to_rfc3339();
+    let prov = provider.unwrap_or_else(|| "batch".to_string());
+    
+    let mut memory = load_translation_memory(source_lang.clone(), target_lang.clone())?
+        .unwrap_or_else(|| TranslationMemory {
+            id: format!("tm_{}_{}", source_lang, target_lang),
+            name: format!("{} → {}", source_lang.to_uppercase(), target_lang.to_uppercase()),
+            source_language: source_lang.clone(),
+            target_language: target_lang.clone(),
+            units: Vec::new(),
+            stats: TMStats {
+                total_units: 0,
+                verified_units: 0,
+                total_usage_count: 0,
+                average_confidence: 0.0,
+                by_provider: std::collections::HashMap::new(),
+                by_context: std::collections::HashMap::new(),
+            },
+            created_at: now.clone(),
+            updated_at: now.clone(),
+        });
+    
+    let existing_sources: std::collections::HashSet<_> = memory.units.iter()
+        .map(|u| u.source_text.to_lowercase())
+        .collect();
+    
+    let mut added = 0u32;
+    
+    for (source, target) in translations {
+        if source.trim().is_empty() || target.trim().is_empty() {
+            continue;
+        }
+        
+        if !existing_sources.contains(&source.to_lowercase()) {
+            memory.units.push(TranslationUnit {
+                id: format!("tu_{}", uuid::Uuid::new_v4()),
+                source_text: source,
+                target_text: target,
+                source_language: source_lang.clone(),
+                target_language: target_lang.clone(),
+                context: None,
+                game_id: game_id.clone(),
+                provider: prov.clone(),
+                confidence: 1.0,
+                verified: false,
+                usage_count: 1,
+                created_at: now.clone(),
+                updated_at: now.clone(),
+                metadata: None,
+            });
+            added += 1;
+        }
+    }
+    
+    memory.stats.total_units = memory.units.len() as u32;
+    memory.stats.verified_units = memory.units.iter().filter(|u| u.verified).count() as u32;
+    memory.updated_at = now;
+    
+    save_translation_memory(memory)?;
+    
+    info!("✅ Aggiunte {} nuove traduzioni", added);
+    Ok(added)
+}

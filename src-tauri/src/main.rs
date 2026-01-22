@@ -429,6 +429,9 @@ fn main() {
             commands::translation_memory::delete_translation_memory,
             commands::translation_memory::export_translation_memory_tmx,
             commands::translation_memory::import_translation_memory_tmx,
+            commands::translation_memory::search_translation_memory,
+            commands::translation_memory::add_translation_to_memory,
+            commands::translation_memory::add_translations_batch,
 
             // File Manager
             commands::file_manager::save_file_with_backup,
