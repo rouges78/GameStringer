@@ -712,6 +712,7 @@ pub fn list_auto_backups() -> Result<Vec<AutoBackupInfo>, String> {
                 
                 let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
                 let created = entry.metadata()
+                    .ok()
                     .and_then(|m| m.modified().ok())
                     .map(|t| {
                         let dt: DateTime<Utc> = t.into();

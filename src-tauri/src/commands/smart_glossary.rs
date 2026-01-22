@@ -409,11 +409,12 @@ pub fn apply_glossary_to_text(
         }
     }
     
+    let terms_count = applied_terms.len() as u32;
     Ok(GlossaryApplyResult {
         original_text: text,
         translated_text: result_text,
         applied_terms,
-        terms_applied: applied_terms.len() as u32,
+        terms_applied: terms_count,
     })
 }
 
