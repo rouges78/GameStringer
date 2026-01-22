@@ -38,7 +38,8 @@ import {
   Wrench,
   Subtitles,
   BookOpen,
-  Check
+  Check,
+  Layers
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -128,6 +129,8 @@ const getNavGroups = (t: (key: string) => string) => [
       { name: t('nav.crawler'), href: '/crawler', icon: Scan },
       { name: t('nav.fixer'), href: '/fixer', icon: Wrench },
       { name: t('nav.overlay'), href: '/overlay', icon: Subtitles },
+      { name: t('nav.manga') || 'Manga', href: '/manga-translator', icon: BookOpen },
+      { name: t('nav.texture') || 'Texture', href: '/texture-translator', icon: Layers },
     ],
     colorClass: 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20',
     activeClass: 'bg-emerald-500/20 backdrop-blur-md text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/20',
