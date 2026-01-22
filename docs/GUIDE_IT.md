@@ -1,6 +1,6 @@
 # 📚 GameStringer Guida Completa
 
-> **Versione**: 1.0.2  
+> **Versione**: 1.0.3  
 > **Ultimo Aggiornamento**: 22 Gennaio 2026
 
 ---
@@ -9,17 +9,20 @@
 
 1. [Introduzione](#introduzione)
 2. [Installazione](#installazione)
-3. [Primo Avvio e Creazione Profilo](#primo-avvio-e-creazione-profilo)
-4. [Panoramica Dashboard](#panoramica-dashboard)
-5. [Gestione Libreria](#gestione-libreria)
-6. [Strumenti di Traduzione](#strumenti-di-traduzione)
-7. [Configurazione Provider AI](#configurazione-provider-ai)
-8. [Supporto Engine di Gioco](#supporto-engine-di-gioco)
-9. [Patcher e Iniezione Mod](#patcher-e-iniezione-mod)
-10. [Community Hub](#community-hub)
-11. [Funzionalità Avanzate](#funzionalità-avanzate)
-12. [Risoluzione Problemi](#risoluzione-problemi)
-13. [FAQ](#faq)
+3. [Primo Avvio e Tutorial](#primo-avvio-e-tutorial)
+4. [Sistema Profili e Recovery Key](#sistema-profili-e-recovery-key)
+5. [Panoramica Dashboard](#panoramica-dashboard)
+6. [Gestione Libreria](#gestione-libreria)
+7. [Strumenti di Traduzione](#strumenti-di-traduzione)
+8. [Configurazione Provider AI](#configurazione-provider-ai)
+9. [Supporto Engine di Gioco](#supporto-engine-di-gioco)
+10. [Patcher e Iniezione Mod](#patcher-e-iniezione-mod)
+11. [Community Hub](#community-hub)
+12. [Funzionalità Avanzate](#funzionalità-avanzate)
+13. [Confidence Heatmap](#confidence-heatmap)
+14. [Impostazioni e Lingue UI](#impostazioni-e-lingue-ui)
+15. [Risoluzione Problemi](#risoluzione-problemi)
+16. [FAQ](#faq)
 
 ---
 
@@ -59,23 +62,68 @@
 
 ---
 
-## Primo Avvio e Creazione Profilo
+## Primo Avvio e Tutorial
+
+### Disclaimer e Termini d'Uso
+
+Al primo avvio, vedrai il **Disclaimer** con i termini d'uso:
+
+- **Responsabilità**: Lo sviluppatore non è responsabile per traduzioni o modifiche
+- **Uso a Proprio Rischio**: Fai sempre backup prima di modificare file di gioco
+- **Proprietà Intellettuale**: I giochi appartengono ai rispettivi proprietari
+- **Qualità Traduzioni**: Le traduzioni automatiche possono contenere errori
+
+Accetta i termini per continuare.
+
+### Tutorial Interattivo
+
+Dopo l'accettazione dei termini, parte il **Tutorial Interattivo** che ti guida attraverso:
+
+1. **Benvenuto** - Introduzione a GameStringer
+2. **Sidebar** - Navigazione tra le sezioni
+3. **Dashboard** - Panoramica e statistiche
+4. **Libreria** - I tuoi giochi da tutti gli store
+5. **Traduttore** - Strumenti di traduzione AI
+6. **Strumenti** - Patcher, OCR, Fixer e altri tool
+7. **Impostazioni** - Configurazione provider e preferenze
+
+Il tutorial evidenzia gli elementi reali dell'interfaccia con uno spotlight viola. Puoi:
+- **Spazio/Click** per avanzare
+- **Frecce** per navigare
+- **Esc** per saltare
+
+---
+
+## Sistema Profili e Recovery Key
 
 ### Creazione del Profilo
 
-1. Al primo avvio, vedrai la schermata **Selettore Profilo**
-2. Clicca **"Crea Nuovo Profilo"**
-3. Inserisci nome profilo e password
-4. Il tuo profilo memorizza:
-   - Impostazioni provider AI
-   - Preferenze di traduzione
-   - Cache libreria giochi
-   - Translation memory
+1. Clicca **"Crea Nuovo Profilo"**
+2. Inserisci nome profilo e password
+3. **IMPORTANTE**: Salva la tua **Recovery Key** (12 parole)
+
+### Recovery Key 🔐
+
+La Recovery Key è una sequenza di **12 parole** che ti permette di recuperare l'accesso al profilo se dimentichi la password.
+
+**Come funziona:**
+- Generata automaticamente alla creazione del profilo
+- Basata su dizionario BIP39 (standard crypto)
+- Può essere copiata o scaricata come file `.txt`
+- Hash SHA-256 salvato localmente (non la chiave stessa)
+
+**Recupero Password:**
+1. Clicca **"Password dimenticata?"** nel login
+2. Inserisci la tua Recovery Key (12 parole separate da spazio)
+3. Se corretta, puoi impostare una nuova password
+
+⚠️ **ATTENZIONE**: Senza la Recovery Key, non c'è modo di recuperare un profilo con password dimenticata!
 
 ### Sicurezza Profilo
 
 - I profili sono memorizzati localmente sul tuo computer
-- Le password sono hashate (non salvate in chiaro)
+- Le password sono hashate con bcrypt (non salvate in chiaro)
+- La Recovery Key è hashata con SHA-256
 - Puoi esportare/importare profili per backup
 
 ---
@@ -373,6 +421,92 @@ Definisci stili di traduzione specifici per personaggio:
 
 ---
 
+## Confidence Heatmap
+
+La **Confidence Heatmap** analizza la qualità delle tue traduzioni con 8 metriche:
+
+### Metriche di Analisi
+
+| Metrica | Descrizione |
+|---------|-------------|
+| **Length Ratio** | Rapporto lunghezza originale/traduzione |
+| **Placeholder Match** | Verifica placeholder `{0}`, `%s`, ecc. |
+| **Number Match** | Preservazione numeri |
+| **Punctuation Match** | Coerenza punteggiatura |
+| **Capitalization** | Coerenza maiuscole/minuscole |
+| **Consistency** | Coerenza con traduzioni precedenti |
+| **Format Preservation** | Preservazione tag HTML/XML |
+| **Emotion Match** | Coerenza tono emotivo |
+
+### Livelli di Confidenza
+
+| Livello | Punteggio | Colore |
+|---------|-----------|--------|
+| 🔴 **Critico** | <40% | Rosso |
+| 🟠 **Basso** | 40-59% | Arancione |
+| 🟡 **Medio** | 60-74% | Giallo |
+| 🟢 **Alto** | 75-89% | Verde |
+| 💚 **Perfetto** | 90-100% | Verde scuro |
+
+### Problemi Rilevati
+
+- `EMPTY_TRANSLATION` - Traduzione vuota
+- `IDENTICAL_TRANSLATION` - Traduzione identica all'originale
+- `LENGTH_MISMATCH` - Lunghezza troppo diversa
+- `MISSING_PLACEHOLDER` - Placeholder mancante
+- `MISSING_NUMBER` - Numero mancante
+- `MISSING_TAGS` - Tag HTML mancante
+- `PUNCTUATION_MISMATCH` - Punteggiatura diversa
+
+---
+
+## Impostazioni e Lingue UI
+
+### Lingue Interfaccia
+
+GameStringer supporta **6 lingue** per l'interfaccia utente:
+
+| Lingua | Codice | Stato |
+|--------|--------|-------|
+| 🇮🇹 Italiano | `it` | ✅ Completo |
+| 🇬🇧 English | `en` | ✅ Completo |
+| 🇪🇸 Español | `es` | ✅ Completo |
+| 🇫🇷 Français | `fr` | ✅ Completo |
+| 🇩🇪 Deutsch | `de` | ✅ Completo |
+| 🇨🇳 中文 | `zh` | ✅ Completo |
+
+Per cambiare lingua:
+1. Clicca sull'icona bandiera nell'header
+2. Seleziona la lingua desiderata
+3. L'interfaccia si aggiorna istantaneamente
+
+### Configurazione Provider AI
+
+In **Impostazioni** → **Provider AI**:
+
+- Inserisci API key per ogni provider
+- Testa la connessione
+- Imposta provider predefinito
+- Visualizza costi stimati
+
+### Connessioni Store
+
+In **Impostazioni** → **Store**:
+
+- **Steam**: API Key + Steam ID per libreria completa
+- **Epic Games**: Rilevamento automatico
+- **GOG**: Rilevamento automatico
+- **Altri**: Configurazione manuale
+
+### Preferenze Generali
+
+- **Tema**: Dark (predefinito)
+- **Lingua UI**: Selezionabile
+- **Notifiche**: Abilita/disabilita
+- **Auto-aggiornamento libreria**: All'avvio
+
+---
+
 ## Risoluzione Problemi
 
 ### Problemi Comuni
@@ -479,6 +613,6 @@ I giochi con questi engine funzionano meglio:
 ---
 
 <p align="center">
-  <strong>GameStringer v1.0.2</strong><br>
+  <strong>GameStringer v1.0.3</strong><br>
   Fatto con ❤️ per i gamer che vogliono giocare nella propria lingua
 </p>
