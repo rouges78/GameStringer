@@ -19,6 +19,26 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.3 — Recovery Key & i18n Complete 🔐
+
+> **Data**: 2026-01-22
+
+#### 🔐 Recovery Key System
+
+- **Sistema recupero password** con 12 parole mnemoniche
+- **Generazione automatica** recovery key alla creazione profilo
+- **UI copia/download** per salvare la chiave in sicurezza
+- **Verifica chiave** per reset password senza email
+- **Hash SHA-256** della chiave salvato localmente
+
+#### 🌍 Traduzioni Complete
+
+- **+537 righe** aggiunte per ES, FR, DE
+- **9 nuove sezioni** tradotte: gameDetails, notifications, stores, projects, heatmap, activity, ocrTranslator, workshop
+- **Tutte le lingue ora complete**: IT, EN, ES, FR, DE, ZH
+
+---
+
 ### v1.0.2 — Multilingual Support 🌍
 
 > **Data**: 2026-01-22

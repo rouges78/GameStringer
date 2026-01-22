@@ -181,6 +181,22 @@ const CHANGELOG_CONTENT = `
 
 ## 📅 Gennaio 2026
 
+### 🔐 v1.0.3 — Recovery Key & i18n Complete
+\`2026-01-22\`
+
+**Recovery Key System**
+- Sistema recupero password con 12 parole mnemoniche
+- Generazione automatica alla creazione profilo
+- UI copia/download per salvare la chiave
+- Verifica chiave per reset password
+
+**Traduzioni Complete**
+- +537 righe per ES, FR, DE
+- 9 nuove sezioni tradotte
+- Tutte le lingue ora complete
+
+---
+
 ### 🌍 v1.0.2 — Multilingual Support
 \`2026-01-22\`
 

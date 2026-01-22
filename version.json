@@ -1,14 +1,25 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "major": 1,
   "minor": 0,
-  "patch": 2,
+  "patch": 3,
   "prerelease": null,
-  "buildNumber": 102,
+  "buildNumber": 103,
   "buildDate": "2026-01-22T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.3": {
+      "date": "2026-01-22",
+      "type": "feature",
+      "changes": [
+        "Recovery Key: sistema recupero password con 12 parole mnemoniche",
+        "Recovery Key: copia/download chiave alla creazione profilo",
+        "Recovery Key: verifica chiave per reset password",
+        "Traduzioni i18n complete per ES, FR, DE (9 sezioni aggiunte)",
+        "Nuove sezioni: gameDetails, notifications, stores, projects, heatmap, activity, ocrTranslator, workshop"
+      ]
+    },
     "1.0.2": {
       "date": "2026-01-22",
       "type": "feature",
