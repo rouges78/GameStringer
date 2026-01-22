@@ -28,6 +28,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 import { useProfiles } from '@/hooks/use-profiles';
+import { PasswordRecoveryDialog } from '@/components/profiles/password-recovery-dialog';
 import { ProfileInfo } from '@/types/profiles';
 import { formatDistanceToNow } from 'date-fns';
 import { getAvatarGradient, getInitials } from '@/lib/avatar-utils';
@@ -52,6 +53,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [avatarSrc, setAvatarSrc] = useState<string | null>(null);
+  const [showPasswordRecovery, setShowPasswordRecovery] = useState(false);
 
   // Load saved password on mount
   useEffect(() => {
@@ -370,6 +372,17 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                       >
                         Remember password
                       </label>
+                      <div className="flex-1" />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowPasswordRecovery(true);
+                        }}
+                        className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline transition-colors"
+                      >
+                        Forgot password?
+                      </button>
                     </div>
                   </div>
 
@@ -471,6 +484,13 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
             </motion.div>
           )}
         </AnimatePresence>
+        
+        {/* Password Recovery Dialog */}
+        <PasswordRecoveryDialog
+          open={showPasswordRecovery}
+          onOpenChange={setShowPasswordRecovery}
+          profileName={profile.name}
+        />
       </div>
     </motion.div>
   );
