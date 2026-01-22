@@ -7,6 +7,38 @@ pub enum GameEngine {
     Godot,
     RPGMaker,
     RenPy,
+    GameMaker,
+    Source,
+    Source2,
+    CryEngine,
+    Frostbite,
+    REDengine,
+    Creation,
+    IdTech,
+    Telltale,
+    AdobeAIR,
+    Construct,
+    Love2D,
+    Phaser,
+    Kirikiri,
+    NScripter,
+    Wolf,
+    Clausewitz,
+    Anvil,
+    Decima,
+    REEngine,
+    FOXEngine,
+    IWEngine,
+    Snowdrop,
+    Cocos2d,
+    Defold,
+    Haxe,
+    MonoGame,
+    XNA,
+    LibGDX,
+    LWJGL,
+    Electron,
+    NWjs,
     Unknown,
 }
 
@@ -18,6 +50,38 @@ impl GameEngine {
             GameEngine::Godot => "Godot",
             GameEngine::RPGMaker => "RPG Maker",
             GameEngine::RenPy => "Ren'Py",
+            GameEngine::GameMaker => "GameMaker",
+            GameEngine::Source => "Source Engine",
+            GameEngine::Source2 => "Source 2",
+            GameEngine::CryEngine => "CryEngine",
+            GameEngine::Frostbite => "Frostbite",
+            GameEngine::REDengine => "REDengine",
+            GameEngine::Creation => "Creation Engine",
+            GameEngine::IdTech => "id Tech",
+            GameEngine::Telltale => "Telltale Tool",
+            GameEngine::AdobeAIR => "Adobe AIR",
+            GameEngine::Construct => "Construct",
+            GameEngine::Love2D => "LÖVE",
+            GameEngine::Phaser => "Phaser",
+            GameEngine::Kirikiri => "Kirikiri",
+            GameEngine::NScripter => "NScripter",
+            GameEngine::Wolf => "Wolf RPG Editor",
+            GameEngine::Clausewitz => "Clausewitz",
+            GameEngine::Anvil => "Anvil Engine",
+            GameEngine::Decima => "Decima",
+            GameEngine::REEngine => "RE Engine",
+            GameEngine::FOXEngine => "FOX Engine",
+            GameEngine::IWEngine => "IW Engine",
+            GameEngine::Snowdrop => "Snowdrop",
+            GameEngine::Cocos2d => "Cocos2d",
+            GameEngine::Defold => "Defold",
+            GameEngine::Haxe => "Haxe/OpenFL",
+            GameEngine::MonoGame => "MonoGame",
+            GameEngine::XNA => "XNA",
+            GameEngine::LibGDX => "LibGDX",
+            GameEngine::LWJGL => "LWJGL",
+            GameEngine::Electron => "Electron",
+            GameEngine::NWjs => "NW.js",
             GameEngine::Unknown => "Unknown",
         }
     }
@@ -28,24 +92,124 @@ pub fn detect_engine(game_path: &Path) -> GameEngine {
         return GameEngine::Unknown;
     }
 
+    // 1. Unity - molto comune
     if is_unity(game_path) {
         return GameEngine::Unity;
     }
     
+    // 2. Unreal Engine
     if is_unreal(game_path) {
         return GameEngine::Unreal;
     }
     
+    // 3. Godot
     if is_godot(game_path) {
         return GameEngine::Godot;
     }
     
+    // 4. RPG Maker (tutte le versioni)
     if is_rpg_maker(game_path) {
         return GameEngine::RPGMaker;
     }
     
+    // 5. Ren'Py
     if is_renpy(game_path) {
         return GameEngine::RenPy;
+    }
+    
+    // 6. GameMaker
+    if is_gamemaker(game_path) {
+        return GameEngine::GameMaker;
+    }
+    
+    // 7. Source Engine
+    if is_source(game_path) {
+        return GameEngine::Source;
+    }
+    
+    // 8. CryEngine
+    if is_cryengine(game_path) {
+        return GameEngine::CryEngine;
+    }
+    
+    // 9. Telltale Tool
+    if is_telltale(game_path) {
+        return GameEngine::Telltale;
+    }
+    
+    // 10. Adobe AIR
+    if is_adobe_air(game_path) {
+        return GameEngine::AdobeAIR;
+    }
+    
+    // 11. Construct 2/3
+    if is_construct(game_path) {
+        return GameEngine::Construct;
+    }
+    
+    // 12. LÖVE (Lua)
+    if is_love2d(game_path) {
+        return GameEngine::Love2D;
+    }
+    
+    // 13. Kirikiri (Visual Novels)
+    if is_kirikiri(game_path) {
+        return GameEngine::Kirikiri;
+    }
+    
+    // 14. NScripter
+    if is_nscripter(game_path) {
+        return GameEngine::NScripter;
+    }
+    
+    // 15. Wolf RPG Editor
+    if is_wolf(game_path) {
+        return GameEngine::Wolf;
+    }
+    
+    // 16. Clausewitz (Paradox)
+    if is_clausewitz(game_path) {
+        return GameEngine::Clausewitz;
+    }
+    
+    // 17. Electron/NW.js
+    if is_electron(game_path) {
+        return GameEngine::Electron;
+    }
+    
+    // 18. Cocos2d
+    if is_cocos2d(game_path) {
+        return GameEngine::Cocos2d;
+    }
+    
+    // 19. MonoGame/XNA
+    if is_monogame(game_path) {
+        return GameEngine::MonoGame;
+    }
+    
+    // 20. Haxe/OpenFL
+    if is_haxe(game_path) {
+        return GameEngine::Haxe;
+    }
+    
+    // 21. REDengine (CD Projekt)
+    if is_redengine(game_path) {
+        return GameEngine::REDengine;
+    }
+    
+    // 22. id Tech
+    if is_idtech(game_path) {
+        return GameEngine::IdTech;
+    }
+    
+    // 23. Creation Engine (Bethesda)
+    if is_creation(game_path) {
+        return GameEngine::Creation;
+    }
+    
+    // 24. Defold
+    if is_defold(game_path) {
+        return GameEngine::Defold;
     }
 
     GameEngine::Unknown
@@ -177,6 +341,527 @@ fn is_renpy(path: &Path) -> bool {
                     if ext == "rpa" || ext == "rpyc" {
                         return true;
                     }
+                }
+            }
+        }
+    }
+    
+    // Check for lib/pythonXX folder (Ren'Py bundled Python)
+    if let Ok(entries) = std::fs::read_dir(path.join("lib")) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+            if name.starts_with("python") || name.contains("renpy") {
+                return true;
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_gamemaker(path: &Path) -> bool {
+    // GameMaker Studio - data.win (Windows), game.ios (iOS), game.droid (Android)
+    if path.join("data.win").exists() 
+        || path.join("game.ios").exists()
+        || path.join("game.droid").exists()
+        || path.join("game.unx").exists() {
+        return true;
+    }
+    
+    // Check for options.ini with GameMaker signatures
+    let options = path.join("options.ini");
+    if options.exists() {
+        if let Ok(content) = std::fs::read_to_string(&options) {
+            if content.contains("GameMaker") || content.contains("YoYo") {
+                return true;
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_source(path: &Path) -> bool {
+    // Source Engine - hl2.exe, gameinfo.txt, .vpk files
+    if path.join("hl2.exe").exists() || path.join("gameinfo.txt").exists() {
+        return true;
+    }
+    
+    // Check for .vpk files
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "vpk" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    // Check for bin folder with engine DLLs
+    let bin = path.join("bin");
+    if bin.exists() {
+        if bin.join("engine.dll").exists() 
+            || bin.join("vstdlib.dll").exists()
+            || bin.join("tier0.dll").exists() {
+            return true;
+        }
+    }
+    
+    false
+}
+
+fn is_cryengine(path: &Path) -> bool {
+    // CryEngine - CrySystem.dll, Engine folder with cry files
+    if path.join("CrySystem.dll").exists() 
+        || path.join("Bin64/CrySystem.dll").exists()
+        || path.join("CryGame.dll").exists() {
+        return true;
+    }
+    
+    // Check for .pak files with CryEngine structure
+    if path.join("Engine").exists() && path.join("GameData").exists() {
+        return true;
+    }
+    
+    // Check for cry* DLLs
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+            if name.starts_with("cry") && name.ends_with(".dll") {
+                return true;
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_telltale(path: &Path) -> bool {
+    // Telltale Tool - .ttarch/.ttarch2 files, WalkingDead*.exe, etc.
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let ext = entry.path().extension()
+                .and_then(|e| e.to_str())
+                .unwrap_or("")
+                .to_lowercase();
+            
+            if ext == "ttarch" || ext == "ttarch2" {
+                return true;
+            }
+            
+            // Check for .langdb files (Telltale language databases)
+            if ext == "langdb" || ext == "landb" || ext == "dlog" {
+                return true;
+            }
+        }
+    }
+    
+    // Check for Pack folder (common in Telltale games)
+    if path.join("Pack").exists() {
+        if let Ok(entries) = std::fs::read_dir(path.join("Pack")) {
+            for entry in entries.flatten() {
+                if entry.path().extension().map_or(false, |e| e == "ttarch" || e == "ttarch2") {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_adobe_air(path: &Path) -> bool {
+    // Adobe AIR - Adobe AIR folder, META-INF/AIR, .swf files with AIR descriptor
+    if path.join("Adobe AIR").exists() 
+        || path.join("META-INF/AIR").exists()
+        || path.join("AIR").exists() {
+        return true;
+    }
+    
+    // Check for .air files or application.xml
+    if path.join("application.xml").exists() {
+        return true;
+    }
+    
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "air" || ext == "swf" {
+                    // Additional check for AIR runtime
+                    if path.join("Adobe AIR/Versions").exists() {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_construct(path: &Path) -> bool {
+    // Construct 2/3 - NW.js based with c2runtime.js or c3runtime.js
+    let nwjs_indicators = ["nw.exe", "node.dll", "package.json"];
+    let has_nwjs = nwjs_indicators.iter().any(|f| path.join(f).exists());
+    
+    if has_nwjs {
+        // Check for Construct runtime files
+        if let Ok(content) = std::fs::read_to_string(path.join("package.json")) {
+            if content.contains("c2runtime") || content.contains("c3runtime") || content.contains("construct") {
+                return true;
+            }
+        }
+        
+        // Check for data.js or c2runtime.js
+        if path.join("data.js").exists() 
+            || path.join("c2runtime.js").exists()
+            || path.join("c3runtime.js").exists() {
+            return true;
+        }
+    }
+    
+    false
+}
+
+fn is_love2d(path: &Path) -> bool {
+    // LÖVE - love.dll, .love files, or conf.lua
+    if path.join("love.dll").exists() 
+        || path.join("love.exe").exists() {
+        return true;
+    }
+    
+    // Check for .love files (ZIP archives with Lua scripts)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "love" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    // Check for main.lua + conf.lua (LÖVE project structure)
+    if path.join("main.lua").exists() && path.join("conf.lua").exists() {
+        return true;
+    }
+    
+    false
+}
+
+fn is_kirikiri(path: &Path) -> bool {
+    // Kirikiri - .xp3 files, krkr.eXe, tvpwin32.exe
+    if path.join("krkr.eXe").exists() 
+        || path.join("krkrrel.exe").exists()
+        || path.join("tvpwin32.exe").exists() {
+        return true;
+    }
+    
+    // Check for .xp3 archive files
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "xp3" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_nscripter(path: &Path) -> bool {
+    // NScripter - nscript.dat, arc.nsa, arc*.nsa
+    if path.join("nscript.dat").exists() 
+        || path.join("nscr_sec.dat").exists()
+        || path.join("arc.nsa").exists() {
+        return true;
+    }
+    
+    // Check for .nsa files
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "nsa" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_wolf(path: &Path) -> bool {
+    // Wolf RPG Editor - Game.dat, .wolf files, Data folder
+    if path.join("Game.dat").exists() || path.join("Game.exe").exists() {
+        // Additional check for Wolf-specific files
+        let data = path.join("Data");
+        if data.exists() {
+            if let Ok(entries) = std::fs::read_dir(&data) {
+                for entry in entries.flatten() {
+                    if let Some(ext) = entry.path().extension() {
+                        if ext == "wolf" {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Check for Config.ini with Wolf signatures
+    if path.join("Config.ini").exists() {
+        if let Ok(content) = std::fs::read_to_string(path.join("Config.ini")) {
+            if content.contains("WolfRPG") || content.contains("Wolf RPG") {
+                return true;
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_clausewitz(path: &Path) -> bool {
+    // Clausewitz Engine (Paradox) - common, events, localization folders
+    let paradox_folders = ["common", "events", "localisation", "localization", "gfx", "interface"];
+    let matches = paradox_folders.iter().filter(|f| path.join(f).exists()).count();
+    
+    if matches >= 3 {
+        return true;
+    }
+    
+    // Check for .txt files in common folder (Paradox script files)
+    if path.join("common").exists() && path.join("map").exists() {
+        return true;
+    }
+    
+    // Check for descriptor.mod or launcher-settings.json
+    if path.join("launcher-settings.json").exists() {
+        if let Ok(content) = std::fs::read_to_string(path.join("launcher-settings.json")) {
+            if content.contains("paradox") || content.contains("clausewitz") {
+                return true;
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_electron(path: &Path) -> bool {
+    // Electron/NW.js - node.dll, resources/app folder, package.json
+    if path.join("resources/app").exists() 
+        || path.join("resources/app.asar").exists() {
+        return true;
+    }
+    
+    if path.join("nw.exe").exists() || path.join("nw.dll").exists() {
+        return true;
+    }
+    
+    // Check for electron.exe or package.json with electron
+    if path.join("electron.exe").exists() {
+        return true;
+    }
+    
+    if path.join("package.json").exists() {
+        if let Ok(content) = std::fs::read_to_string(path.join("package.json")) {
+            if content.contains("electron") || content.contains("nw.js") {
+                return true;
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_cocos2d(path: &Path) -> bool {
+    // Cocos2d - cocos2d-x folders, libcocos2d.dll, res folder structure
+    if path.join("libcocos2d.dll").exists() 
+        || path.join("cocos2d-x").exists() {
+        return true;
+    }
+    
+    // Check for res folder with cocos structure
+    let res = path.join("res");
+    if res.exists() && path.join("src").exists() {
+        // Common in Cocos2d-JS games
+        return true;
+    }
+    
+    // Check for .csb files (Cocos Studio binary)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "csb" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_monogame(path: &Path) -> bool {
+    // MonoGame/XNA - MonoGame.Framework.dll, XNA assemblies
+    if path.join("MonoGame.Framework.dll").exists()
+        || path.join("Microsoft.Xna.Framework.dll").exists() {
+        return true;
+    }
+    
+    // Check for FNA.dll (alternative XNA implementation)
+    if path.join("FNA.dll").exists() {
+        return true;
+    }
+    
+    // Check for .xnb files (XNA content)
+    if let Ok(entries) = std::fs::read_dir(path.join("Content")) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "xnb" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_haxe(path: &Path) -> bool {
+    // Haxe/OpenFL - lime.ndll, openfl folder
+    if path.join("lime.ndll").exists()
+        || path.join("openfl").exists()
+        || path.join("lime.dll").exists() {
+        return true;
+    }
+    
+    // Check for HashLink VM (Haxe runtime)
+    if path.join("hl.exe").exists() || path.join("libhl.dll").exists() {
+        return true;
+    }
+    
+    // Check for .hlboot file (HashLink boot file)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "hlboot" || ext == "hl" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_redengine(path: &Path) -> bool {
+    // REDengine (CD Projekt) - .archive files, REDprelauncher
+    if path.join("REDprelauncher.exe").exists() 
+        || path.join("bin/x64/witcher3.exe").exists()
+        || path.join("bin/x64/Cyberpunk2077.exe").exists() {
+        return true;
+    }
+    
+    // Check for .archive files (REDengine 4)
+    if let Ok(entries) = std::fs::read_dir(path.join("archive/pc/content")) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "archive" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    // Check for .bundle files (REDengine 3)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "bundle" {
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
+                    if name.contains("content") || name.contains("patch") {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_idtech(path: &Path) -> bool {
+    // id Tech - .pk3/.pk4/.resources files, base folder
+    let base = path.join("base");
+    
+    if base.exists() {
+        if let Ok(entries) = std::fs::read_dir(&base) {
+            for entry in entries.flatten() {
+                if let Some(ext) = entry.path().extension() {
+                    let ext_str = ext.to_str().unwrap_or("");
+                    if ext_str == "pk3" || ext_str == "pk4" || ext_str == "resources" {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Check for .mega files (DOOM 2016+)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "mega" || ext == "resources" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    false
+}
+
+fn is_creation(path: &Path) -> bool {
+    // Creation Engine (Bethesda) - .esm/.esp/.bsa/.ba2 files
+    let data = path.join("Data");
+    
+    if data.exists() {
+        if let Ok(entries) = std::fs::read_dir(&data) {
+            for entry in entries.flatten() {
+                if let Some(ext) = entry.path().extension() {
+                    let ext_str = ext.to_str().unwrap_or("");
+                    if ext_str == "esm" || ext_str == "esp" || ext_str == "bsa" || ext_str == "ba2" {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Check for Creation Kit files
+    if path.join("CreationKit.exe").exists() {
+        return true;
+    }
+    
+    false
+}
+
+fn is_defold(path: &Path) -> bool {
+    // Defold - game.project, .arcd/.arci files
+    if path.join("game.project").exists() {
+        return true;
+    }
+    
+    // Check for .arcd/.arci files (Defold archives)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "arcd" || ext == "arci" {
+                    return true;
                 }
             }
         }
