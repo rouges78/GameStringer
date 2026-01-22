@@ -293,6 +293,34 @@ export async function batchDeleteProcessor(item: TranslationBatchItem): Promise<
   };
 }
 
+// Batch approve operation
+export async function batchApproveProcessor(item: TranslationBatchItem): Promise<any> {
+  const approvedTranslation = await prisma.translation.update({
+    where: { id: item.id },
+    data: { status: 'approved' }
+  });
+
+  return {
+    translationId: item.id,
+    approved: true,
+    originalText: approvedTranslation.originalText
+  };
+}
+
+// Batch reject operation
+export async function batchRejectProcessor(item: TranslationBatchItem): Promise<any> {
+  const rejectedTranslation = await prisma.translation.update({
+    where: { id: item.id },
+    data: { status: 'rejected' }
+  });
+
+  return {
+    translationId: item.id,
+    rejected: true,
+    originalText: rejectedTranslation.originalText
+  };
+}
+
 // Helper functions for formatting exports
 function formatAsJSON(translations: any[], options: ExportOptions): string {
   const data = options.groupByGame 

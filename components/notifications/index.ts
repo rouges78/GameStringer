@@ -1,7 +1,5 @@
 // Esportazioni per il sistema di notifiche toast
 
-export { default as NotificationToast } from './notification-toast';
-export { default as ToastContainer, useToast as useToastContainer } from './toast-container';
 export { 
   default as NotificationToastProvider, 
   useNotificationToast, 

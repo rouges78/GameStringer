@@ -65,15 +65,17 @@ export default function EnhancedTranslatorPage() {
   // Load file
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = Array.from(event.target.files || []);
+    const operationId = `upload-${Date.now()}`;
+    setCurrentOperationId(operationId);
     
     try {
-      const operationId = await executeOperation(
+      await executeOperation(
         async (updateProgress) => {
           const newFiles: TranslationFile[] = [];
           
           for (let i = 0; i < uploadedFiles.length; i++) {
             const file = uploadedFiles[i];
-            updateProgress((i / uploadedFiles.length) * 100, `Loading...file.name}...`);
+            updateProgress((i / uploadedFiles.length) * 100, `Loading ${file.name}...`);
             
             const content = await file.text();
             newFiles.push({
@@ -92,15 +94,14 @@ export default function EnhancedTranslatorPage() {
           return newFiles;
         },
         {
-          title: `Loading... ${uploadedFiles.length} file`,
+          id: operationId,
+          title: `Loading ${uploadedFiles.length} file`,
           description: 'Lettura e analisi file in corso...',
           canCancel: false
         }
       );
-      
-      setCurrentOperationId(operationId);
     } catch (error) {
-      console.error('error nel Loading...le:', error);
+      console.error('Errore nel caricamento file:', error);
     }
   };
 

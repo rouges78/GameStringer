@@ -26,6 +26,7 @@ import {
 import { invoke } from '@/lib/tauri-api';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface QAIssue {
   id: string;
@@ -63,6 +64,7 @@ const DEFAULT_CONFIG: QAConfig = {
 };
 
 export function QAChecker() {
+  const { t } = useTranslation();
   const [source, setSource] = useState('');
   const [target, setTarget] = useState('');
   const [issues, setIssues] = useState<QAIssue[]>([]);
@@ -73,7 +75,7 @@ export function QAChecker() {
 
   const runCheck = useCallback(async () => {
     if (!source.trim() || !target.trim()) {
-      toast({ title: 'Inserisci testo source e target', variant: 'destructive' });
+      toast({ title: t('qaCheck.enterBothTexts'), variant: 'destructive' });
       return;
     }
 
@@ -87,13 +89,13 @@ export function QAChecker() {
       setIssues(result);
       
       if (result.length === 0) {
-        toast({ title: '✅ Nessun problema trovato!' });
+        toast({ title: `✅ ${t('qaCheck.noIssues')}` });
       } else {
         const errors = result.filter(i => i.severity === 'error').length;
         const warnings = result.filter(i => i.severity === 'warning').length;
         toast({ 
-          title: `Trovati ${result.length} problemi`,
-          description: `${errors} errori, ${warnings} warning`
+          title: `${result.length} ${t('qaCheck.issuesFound')}`,
+          description: `${errors} ${t('qaCheck.errors')}, ${warnings} ${t('qaCheck.warnings')}`
         });
       }
     } catch (e) {
@@ -111,7 +113,7 @@ export function QAChecker() {
         issueTypes
       });
       setTarget(fixed);
-      toast({ title: '✨ Correzioni applicate' });
+      toast({ title: `✨ ${t('qaCheck.fixApplied')}` });
       // Re-run check
       setTimeout(runCheck, 100);
     } catch (e) {
@@ -130,9 +132,9 @@ export function QAChecker() {
 
   const getSeverityBadge = (severity: string) => {
     switch (severity) {
-      case 'error': return <Badge variant="destructive">Errore</Badge>;
-      case 'warning': return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/50">Warning</Badge>;
-      case 'info': return <Badge variant="secondary">Info</Badge>;
+      case 'error': return <Badge variant="destructive">{t('qaCheck.error')}</Badge>;
+      case 'warning': return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/50">{t('qaCheck.warning')}</Badge>;
+      case 'info': return <Badge variant="secondary">{t('qaCheck.info')}</Badge>;
       default: return <Badge variant="outline">{severity}</Badge>;
     }
   };
@@ -157,63 +159,67 @@ export function QAChecker() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <Card className="bg-gradient-to-br from-violet-900/30 to-purple-900/30 border-violet-700/50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-violet-500/20">
-                <ShieldCheck className="h-5 w-5 text-violet-400" />
-              </div>
-              <div>
-                <CardTitle className="text-violet-100">QA Check</CardTitle>
-                <p className="text-violet-300/70 text-sm">
-                  Verifica automatica qualità traduzioni
-                </p>
-              </div>
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-3">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <ShieldCheck className="h-5 w-5 text-white" />
             </div>
-            <div className="flex items-center gap-2">
-              {issues.length > 0 && (
-                <>
-                  {errorCount > 0 && (
-                    <Badge variant="destructive" className="gap-1">
-                      <XCircle className="h-3 w-3" /> {errorCount}
-                    </Badge>
-                  )}
-                  {warningCount > 0 && (
-                    <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/50 gap-1">
-                      <AlertTriangle className="h-3 w-3" /> {warningCount}
-                    </Badge>
-                  )}
-                  {infoCount > 0 && (
-                    <Badge variant="secondary" className="gap-1">
-                      <Info className="h-3 w-3" /> {infoCount}
-                    </Badge>
-                  )}
-                </>
-              )}
+            <div>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+                {t('qaCheck.title')}
+              </h2>
+              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('qaCheck.subtitle')}
+              </p>
             </div>
           </div>
-        </CardHeader>
-      </Card>
+          
+          <div className="flex items-center gap-2">
+            {issues.length > 0 && (
+              <>
+                {errorCount > 0 && (
+                  <Badge className="bg-white/20 text-white border-white/30 gap-1">
+                    <XCircle className="h-3 w-3" /> {errorCount}
+                  </Badge>
+                )}
+                {warningCount > 0 && (
+                  <Badge className="bg-white/20 text-white border-white/30 gap-1">
+                    <AlertTriangle className="h-3 w-3" /> {warningCount}
+                  </Badge>
+                )}
+                {infoCount > 0 && (
+                  <Badge className="bg-white/20 text-white border-white/30 gap-1">
+                    <Info className="h-3 w-3" /> {infoCount}
+                  </Badge>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Input Area */}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Testo Originale</Label>
+          <Label className="text-sm font-medium">{t('qaCheck.originalText')}</Label>
           <Textarea
             value={source}
             onChange={(e) => setSource(e.target.value)}
-            placeholder="Inserisci il testo originale..."
+            placeholder={t('qaCheck.enterOriginal')}
             className="h-32 bg-slate-800/50 border-slate-700 resize-none"
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-medium">Traduzione</Label>
+          <Label className="text-sm font-medium">{t('qaCheck.translation')}</Label>
           <Textarea
             value={target}
             onChange={(e) => setTarget(e.target.value)}
-            placeholder="Inserisci la traduzione..."
+            placeholder={t('qaCheck.enterTranslation')}
             className="h-32 bg-slate-800/50 border-slate-700 resize-none"
           />
         </div>
@@ -225,7 +231,7 @@ export function QAChecker() {
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
               <ChevronDown className={cn("h-4 w-4 transition-transform", showConfig && "rotate-180")} />
-              Opzioni QA
+              {t('qaCheck.qaOptions')}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
@@ -238,7 +244,7 @@ export function QAChecker() {
                       onCheckedChange={(v) => setConfig({...config, checkTags: v})}
                       id="check-tags"
                     />
-                    <Label htmlFor="check-tags" className="text-sm">Tag HTML</Label>
+                    <Label htmlFor="check-tags" className="text-sm">{t('qaCheck.htmlTags')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -246,7 +252,7 @@ export function QAChecker() {
                       onCheckedChange={(v) => setConfig({...config, checkPlaceholders: v})}
                       id="check-ph"
                     />
-                    <Label htmlFor="check-ph" className="text-sm">Placeholder</Label>
+                    <Label htmlFor="check-ph" className="text-sm">{t('qaCheck.placeholder')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -254,7 +260,7 @@ export function QAChecker() {
                       onCheckedChange={(v) => setConfig({...config, checkLength: v})}
                       id="check-len"
                     />
-                    <Label htmlFor="check-len" className="text-sm">Lunghezza</Label>
+                    <Label htmlFor="check-len" className="text-sm">{t('qaCheck.length')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -262,7 +268,7 @@ export function QAChecker() {
                       onCheckedChange={(v) => setConfig({...config, checkPunctuation: v})}
                       id="check-punct"
                     />
-                    <Label htmlFor="check-punct" className="text-sm">Punteggiatura</Label>
+                    <Label htmlFor="check-punct" className="text-sm">{t('qaCheck.punctuation')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -270,7 +276,7 @@ export function QAChecker() {
                       onCheckedChange={(v) => setConfig({...config, checkNumbers: v})}
                       id="check-num"
                     />
-                    <Label htmlFor="check-num" className="text-sm">Numeri</Label>
+                    <Label htmlFor="check-num" className="text-sm">{t('qaCheck.numbers')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -278,7 +284,7 @@ export function QAChecker() {
                       onCheckedChange={(v) => setConfig({...config, checkWhitespace: v})}
                       id="check-ws"
                     />
-                    <Label htmlFor="check-ws" className="text-sm">Spazi</Label>
+                    <Label htmlFor="check-ws" className="text-sm">{t('qaCheck.whitespace')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -286,7 +292,7 @@ export function QAChecker() {
                       onCheckedChange={(v) => setConfig({...config, checkEncoding: v})}
                       id="check-enc"
                     />
-                    <Label htmlFor="check-enc" className="text-sm">Encoding</Label>
+                    <Label htmlFor="check-enc" className="text-sm">{t('qaCheck.encoding')}</Label>
                   </div>
                 </div>
               </CardContent>
@@ -303,7 +309,7 @@ export function QAChecker() {
               className="gap-2"
             >
               <Wand2 className="h-4 w-4" />
-              Auto-Fix ({fixableIssues.length})
+              {t('qaCheck.autoFix')} ({fixableIssues.length})
             </Button>
           )}
           <Button
@@ -316,7 +322,7 @@ export function QAChecker() {
             ) : (
               <ShieldCheck className="h-4 w-4" />
             )}
-            Verifica
+            {t('qaCheck.runCheck')}
           </Button>
         </div>
       </div>
@@ -327,7 +333,7 @@ export function QAChecker() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
-              Problemi Trovati ({issues.length})
+              {issues.length} {t('qaCheck.issuesFound')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -369,8 +375,8 @@ export function QAChecker() {
           <CardContent className="py-8">
             <div className="text-center">
               <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-400" />
-              <p className="text-emerald-300 font-medium">Nessun problema trovato!</p>
-              <p className="text-emerald-400/70 text-sm">La traduzione supera tutti i controlli QA</p>
+              <p className="text-emerald-300 font-medium">{t('qaCheck.noIssues')}</p>
+              <p className="text-emerald-400/70 text-sm">{t('qaCheck.subtitle')}</p>
             </div>
           </CardContent>
         </Card>

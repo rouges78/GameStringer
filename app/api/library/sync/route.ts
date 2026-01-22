@@ -185,7 +185,8 @@ async function syncGamesToDatabase(
       gamesRemoved,
       totalGames,
       providers,
-      errors
+      errors,
+      duration: 0
     };
 
   } catch (error) {

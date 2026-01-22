@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@/lib/i18n';
 import {
   Download,
   Search,
@@ -50,6 +51,7 @@ import {
 } from '@/lib/nexus-mods-service';
 
 export function NexusModsBrowser() {
+  const { t } = useTranslation();
   const [isConfigured, setIsConfigured] = useState(false);
   const [userInfo, setUserInfo] = useState<NexusUserValidation | null>(null);
   const [apiKey, setApiKey] = useState('');
@@ -111,7 +113,7 @@ export function NexusModsBrowser() {
 
   const handleValidateApiKey = async () => {
     if (!apiKey.trim()) {
-      toast.error('Enter an API key');
+      toast.error(t('nexusMods.enterApiKey'));
       return;
     }
 
@@ -122,9 +124,9 @@ export function NexusModsBrowser() {
       setUserInfo(info);
       setIsConfigured(true);
       setShowApiKeyDialog(false);
-      toast.success(`Welcome, ${info.name}!`);
+      toast.success(`${t('nexusMods.welcome')}, ${info.name}!`);
     } catch (error: any) {
-      toast.error(error.message || 'Invalid API key');
+      toast.error(error.message || t('nexusMods.invalidApiKey'));
       nexusModsService.clearApiKey();
     } finally {
       setIsValidating(false);
@@ -136,13 +138,13 @@ export function NexusModsBrowser() {
     setIsConfigured(false);
     setUserInfo(null);
     setSearchResults([]);
-    toast.success('Disconnected from Nexus Mods');
+    toast.success(t('nexusMods.disconnected'));
   };
 
   const handleSearch = async (query?: string) => {
     const searchTerm = query || searchQuery;
     if (!searchTerm.trim()) {
-      toast.error('Enter a game name');
+      toast.error(t('nexusMods.enterApiKey'));
       return;
     }
 
@@ -155,12 +157,12 @@ export function NexusModsBrowser() {
       saveRecentSearch(searchTerm);
 
       if (results.length === 0) {
-        toast.info('No Italian translations found for this game');
+        toast.info(t('nexusMods.noTranslationsFound'));
       } else {
-        toast.success(`Found ${results.length} translations`);
+        toast.success(`${results.length} ${t('nexusMods.foundTranslations')}`);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Search error');
+      toast.error(error.message || t('nexusMods.searchError'));
     } finally {
       setIsSearching(false);
     }
@@ -212,16 +214,24 @@ export function NexusModsBrowser() {
 
   if (!isConfigured) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Globe className="h-7 w-7 text-orange-500" />
-              Nexus Mods Integration
-            </h1>
-            <p className="text-muted-foreground">
-              Search and download translation patches from Nexus Mods
-            </p>
+      <div className="space-y-4">
+        {/* Hero Header */}
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 p-3">
+          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          
+          <div className="relative flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <Globe className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+                {t('nexusMods.title')}
+              </h2>
+              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('nexusMods.subtitle')}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -230,16 +240,16 @@ export function NexusModsBrowser() {
             <div className="mx-auto w-16 h-16 bg-orange-500/10 rounded-full flex items-center justify-center mb-4">
               <Key className="h-8 w-8 text-orange-500" />
             </div>
-            <CardTitle>Configure Nexus Mods</CardTitle>
+            <CardTitle>{t('nexusMods.configure')}</CardTitle>
             <CardDescription>
-              To search translations on Nexus Mods, you need a free API key
+              {t('nexusMods.configureDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Get your free API key from{' '}
+                {t('nexusMods.getApiKey')}{' '}
                 <a
                   href="https://www.nexusmods.com/users/myaccount?tab=api+access"
                   target="_blank"
@@ -248,17 +258,17 @@ export function NexusModsBrowser() {
                 >
                   nexusmods.com/users/myaccount
                 </a>
-                {' '}(tab "API Access")
+                {' '}{t('nexusMods.apiKeyTab')}
               </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
-              <Label>API Key</Label>
+              <Label>{t('nexusMods.apiKey')}</Label>
               <Input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Paste your API key..."
+                placeholder={t('nexusMods.pasteApiKey')}
               />
             </div>
           </CardContent>
@@ -271,12 +281,12 @@ export function NexusModsBrowser() {
               {isValidating ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Verifying...
+                  {t('nexusMods.verifying')}
                 </>
               ) : (
                 <>
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Connect to Nexus Mods
+                  {t('nexusMods.connect')}
                 </>
               )}
             </Button>
@@ -287,31 +297,46 @@ export function NexusModsBrowser() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Globe className="h-7 w-7 text-orange-500" />
-            Nexus Mods Integration
-          </h1>
-          <p className="text-muted-foreground">
-            Search and download Italian translation patches
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {userInfo && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium">{userInfo.name}</span>
-              {userInfo.is_premium && (
-                <Badge className="bg-yellow-500 text-xs">Premium</Badge>
-              )}
+    <div className="space-y-4">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 p-3">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <Globe className="h-5 w-5 text-white" />
             </div>
-          )}
-          <Button variant="outline" size="sm" onClick={handleLogout}>
-            Disconnect
-          </Button>
+            <div>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+                {t('nexusMods.title')}
+              </h2>
+              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('nexusMods.subtitleSearch')}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {userInfo && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg">
+                <CheckCircle className="h-4 w-4 text-white" />
+                <span className="text-sm font-medium text-white">{userInfo.name}</span>
+                {userInfo.is_premium && (
+                  <Badge className="bg-yellow-300 text-yellow-900 text-xs">Premium</Badge>
+                )}
+              </div>
+            )}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleLogout}
+              className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+            >
+              {t('nexusMods.disconnect')}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -325,7 +350,7 @@ export function NexusModsBrowser() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="Search translations by game name (e.g. Skyrim, Baldur's Gate 3)..."
+                placeholder={t('nexusMods.searchPlaceholder')}
                 className="pl-10"
               />
             </div>
@@ -335,7 +360,7 @@ export function NexusModsBrowser() {
               ) : (
                 <>
                   <Search className="h-4 w-4 mr-2" />
-                  Search
+                  {t('nexusMods.search')}
                 </>
               )}
             </Button>
@@ -345,9 +370,9 @@ export function NexusModsBrowser() {
 
       <Tabs defaultValue="search">
         <TabsList>
-          <TabsTrigger value="search">Search Results</TabsTrigger>
-          <TabsTrigger value="popular">Popular Games</TabsTrigger>
-          <TabsTrigger value="recent">Recent Searches</TabsTrigger>
+          <TabsTrigger value="search">{t('nexusMods.searchResults')}</TabsTrigger>
+          <TabsTrigger value="popular">{t('nexusMods.popularGames')}</TabsTrigger>
+          <TabsTrigger value="recent">{t('nexusMods.recentSearches')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="search" className="mt-4">
@@ -355,9 +380,9 @@ export function NexusModsBrowser() {
             <Card>
               <CardContent className="py-12 text-center">
                 <Search className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium">Search translations</p>
+                <p className="text-lg font-medium">{t('nexusMods.searchTranslations')}</p>
                 <p className="text-muted-foreground">
-                  Enter a game name to find Italian translation patches
+                  {t('nexusMods.enterGameName')}
                 </p>
               </CardContent>
             </Card>
@@ -405,7 +430,7 @@ export function NexusModsBrowser() {
                       onClick={() => handleViewMod(result)}
                     >
                       <Eye className="h-4 w-4 mr-1" />
-                      Details
+                      {t('nexusMods.details')}
                     </Button>
                     <Button
                       size="sm"
@@ -413,7 +438,7 @@ export function NexusModsBrowser() {
                       onClick={() => openModPage(result)}
                     >
                       <ExternalLink className="h-4 w-4 mr-1" />
-                      Nexus
+                      {t('nexusMods.nexus')}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -447,7 +472,7 @@ export function NexusModsBrowser() {
             <Card>
               <CardContent className="py-8 text-center">
                 <Clock className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-muted-foreground">No recent searches</p>
+                <p className="text-muted-foreground">{t('nexusMods.noRecentSearches')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -500,17 +525,17 @@ export function NexusModsBrowser() {
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <Download className="h-5 w-5 mx-auto mb-1 text-blue-500" />
                     <p className="text-lg font-bold">{selectedMod.mod.downloads?.toLocaleString() || 0}</p>
-                    <p className="text-xs text-muted-foreground">Download</p>
+                    <p className="text-xs text-muted-foreground">{t('nexusMods.downloads')}</p>
                   </div>
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <Heart className="h-5 w-5 mx-auto mb-1 text-red-500" />
                     <p className="text-lg font-bold">{selectedMod.mod.endorsement_count?.toLocaleString() || 0}</p>
-                    <p className="text-xs text-muted-foreground">Endorsement</p>
+                    <p className="text-xs text-muted-foreground">{t('nexusMods.endorsements')}</p>
                   </div>
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <Clock className="h-5 w-5 mx-auto mb-1 text-green-500" />
                     <p className="text-lg font-bold">{formatDate(selectedMod.mod.updated_timestamp)}</p>
-                    <p className="text-xs text-muted-foreground">Updated</p>
+                    <p className="text-xs text-muted-foreground">{t('nexusMods.updated')}</p>
                   </div>
                 </div>
 
@@ -519,7 +544,7 @@ export function NexusModsBrowser() {
                 <div>
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <FileText className="h-4 w-4" />
-                    Available Files
+                    {t('nexusMods.availableFiles')}
                   </h4>
                   {isLoadingFiles ? (
                     <div className="flex items-center justify-center py-8">
@@ -527,7 +552,7 @@ export function NexusModsBrowser() {
                     </div>
                   ) : modFiles.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      No files available
+                      {t('nexusMods.noFilesAvailable')}
                     </p>
                   ) : (
                     <ScrollArea className="h-[200px]">
@@ -557,7 +582,7 @@ export function NexusModsBrowser() {
                               onClick={() => openDownloadPage(file.file_id)}
                             >
                               <Download className="h-4 w-4 mr-1" />
-                              Download
+                              {t('nexusMods.download')}
                             </Button>
                           </div>
                         ))}
@@ -569,11 +594,11 @@ export function NexusModsBrowser() {
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowModDetails(false)}>
-                  Close
+                  {t('nexusMods.close')}
                 </Button>
                 <Button onClick={() => openModPage(selectedMod)}>
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Open on Nexus Mods
+                  {t('nexusMods.openOnNexus')}
                 </Button>
               </DialogFooter>
             </>

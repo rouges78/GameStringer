@@ -273,26 +273,28 @@ export default function HeatmapPage() {
 
   return (
       <div className="space-y-6">
-        {/* Hero Header - Compact */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-4 text-white">
-          <div className="relative z-10 flex items-center justify-between">
+        {/* Hero Header */}
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-600 p-3">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+          <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-lg">
-                <Map className="h-6 w-6" />
+              <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+                <Map className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">{t('heatmap.title')}</h1>
-                <p className="text-white/80 text-sm">{t('heatmap.subtitle')}</p>
+                <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('heatmap.title')}</h1>
+                <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('heatmap.subtitle')}</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-md text-sm">
-                <BarChart3 className="h-4 w-4" />
-                <span>8 {t('heatmap.metrics')}</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+                <BarChart3 className="h-3.5 w-3.5 text-white" />
+                <span className="text-sm font-bold text-white">8</span>
+                <span className="text-[10px] text-white/70">{t('heatmap.metrics')}</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-md text-sm">
-                <AlertTriangle className="h-4 w-4" />
-                <span>{t('heatmap.issueDetection')}</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+                <AlertTriangle className="h-3.5 w-3.5 text-white" />
+                <span className="text-sm font-bold text-white">{t('heatmap.issueDetection')}</span>
               </div>
             </div>
           </div>

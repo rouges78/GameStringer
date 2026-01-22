@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from '@/lib/i18n';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +51,7 @@ interface GlossaryManagerProps {
 }
 
 export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryManagerProps) {
+  const { t } = useTranslation();
   const [glossaries, setGlossaries] = useState<Glossary[]>([]);
   const [selectedGlossary, setSelectedGlossary] = useState<Glossary | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,11 +102,11 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
   };
 
   const handleDeleteGlossary = (glossaryId: string) => {
-    if (confirm('Delete this glossary?')) {
+    if (confirm(t('glossaryManager.deleteConfirm'))) {
       glossaryManager.deleteGlossary(glossaryId);
       loadGlossaries();
       setSelectedGlossary(null);
-      toast.success('Glossary deleted');
+      toast.success(t('glossaryManager.glossaryDeleted'));
     }
   };
 
@@ -127,7 +129,7 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     const updated = glossaryManager.getGlossary(selectedGlossary.id);
     if (updated) setSelectedGlossary(updated);
     
-    toast.success('Term added');
+    toast.success(t('glossaryManager.termAdded'));
   };
 
   const handleUpdateEntry = () => {
@@ -139,7 +141,7 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     const updated = glossaryManager.getGlossary(selectedGlossary.id);
     if (updated) setSelectedGlossary(updated);
     
-    toast.success('Term updated');
+    toast.success(t('glossaryManager.termUpdated'));
   };
 
   const handleDeleteEntry = (entryId: string) => {
@@ -149,7 +151,7 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
     const updated = glossaryManager.getGlossary(selectedGlossary.id);
     if (updated) setSelectedGlossary(updated);
     
-    toast.success('Term removed');
+    toast.success(t('glossaryManager.termRemoved'));
   };
 
   const handleExport = () => {
@@ -164,7 +166,7 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
       a.download = `glossary_${selectedGlossary.name.replace(/\s+/g, '_')}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Glossary exported');
+      toast.success(t('glossaryManager.glossaryExported'));
     }
   };
 
@@ -179,9 +181,9 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
       if (imported) {
         loadGlossaries();
         setSelectedGlossary(imported);
-        toast.success('Glossary imported');
+        toast.success(t('glossaryManager.glossaryImported'));
       } else {
-        toast.error('Import error');
+        toast.error(t('glossaryManager.importError'));
       }
     };
     reader.readAsText(file);
@@ -200,19 +202,19 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Book className="h-4 w-4 text-orange-400" />
-            <span className="text-sm font-medium">Glossary</span>
-            <Badge variant="outline" className="text-[10px]">{stats.totalEntries} terms</Badge>
+            <span className="text-sm font-medium">{t('glossaryManager.glossary')}</span>
+            <Badge variant="outline" className="text-[10px]">{stats.totalEntries} {t('glossaryManager.terms')}</Badge>
           </div>
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="h-7 text-xs">
                 <Edit2 className="h-3 w-3 mr-1" />
-                Manage
+                {t('glossaryManager.manage')}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Glossary Management</DialogTitle>
+                <DialogTitle>{t('glossaryManager.title')}</DialogTitle>
               </DialogHeader>
               <GlossaryManagerFull gameId={gameId} gameName={gameName} />
             </DialogContent>
@@ -241,6 +243,7 @@ export function GlossaryManager({ gameId, gameName, compact = false }: GlossaryM
 }
 
 function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?: string }) {
+  const { t } = useTranslation();
   const [glossaries, setGlossaries] = useState<Glossary[]>([]);
   const [selectedGlossary, setSelectedGlossary] = useState<Glossary | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -301,7 +304,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
     if (updated) setSelectedGlossary(updated);
     loadGlossaries();
     
-    toast.success('Term added');
+    toast.success(t('glossaryManager.termAdded'));
   };
 
   const handleDeleteEntry = (entryId: string) => {
@@ -311,7 +314,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
     const updated = glossaryManager.getGlossary(selectedGlossary.id);
     if (updated) setSelectedGlossary(updated);
     
-    toast.success('Term removed');
+    toast.success(t('glossaryManager.termRemoved'));
   };
 
   const handleExport = () => {
@@ -326,7 +329,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
       a.download = `glossary_${selectedGlossary.name.replace(/\s+/g, '_')}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Glossary exported');
+      toast.success(t('glossaryManager.glossaryExported'));
     }
   };
 
@@ -341,9 +344,9 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
       if (imported) {
         loadGlossaries();
         setSelectedGlossary(imported);
-        toast.success('Glossary imported');
+        toast.success(t('glossaryManager.glossaryImported'));
       } else {
-        toast.error('Import error');
+        toast.error(t('glossaryManager.importError'));
       }
     };
     reader.readAsText(file);
@@ -364,7 +367,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
             onValueChange={(id) => setSelectedGlossary(glossaries.find(g => g.id === id) || null)}
           >
             <SelectTrigger className="w-[200px] h-8">
-              <SelectValue placeholder="Select glossary" />
+              <SelectValue placeholder={t('glossaryManager.selectGlossary')} />
             </SelectTrigger>
             <SelectContent>
               {glossaries.map(g => (
@@ -381,21 +384,21 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
           
           <Button variant="outline" size="sm" onClick={handleCreateGlossary} className="h-8">
             <Plus className="h-3 w-3 mr-1" />
-            New
+            {t('glossaryManager.newGlossary')}
           </Button>
         </div>
         
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleExport} disabled={!selectedGlossary} className="h-8">
             <Download className="h-3 w-3 mr-1" />
-            Export
+            {t('glossaryManager.export')}
           </Button>
           <label>
             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
             <Button variant="outline" size="sm" asChild className="h-8 cursor-pointer">
               <span>
                 <Upload className="h-3 w-3 mr-1" />
-                Import
+                {t('glossaryManager.import')}
               </span>
             </Button>
           </label>
@@ -409,7 +412,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
             <div className="relative flex-1">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input 
-                placeholder="Search terms..." 
+                placeholder={t('glossaryManager.searchTerms')} 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 h-8 text-sm"
@@ -417,7 +420,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
             </div>
             <Button size="sm" onClick={() => setIsAddingEntry(true)} className="h-8">
               <Plus className="h-3 w-3 mr-1" />
-              Add
+              {t('glossaryManager.add')}
             </Button>
           </div>
 
@@ -427,20 +430,20 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
               <CardContent className="p-3 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs">Original term</Label>
+                    <Label className="text-xs">{t('glossaryManager.originalTerm')}</Label>
                     <Input 
                       value={newEntry.source}
                       onChange={(e) => setNewEntry({ ...newEntry, source: e.target.value })}
-                      placeholder="e.g. HP, Mana..."
+                      placeholder={t('glossaryManager.sourcePlaceholder')}
                       className="h-8 text-sm"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs">Translation (empty = do not translate)</Label>
+                    <Label className="text-xs">{t('glossaryManager.translation')}</Label>
                     <Input 
                       value={newEntry.target}
                       onChange={(e) => setNewEntry({ ...newEntry, target: e.target.value })}
-                      placeholder="e.g. PV, Mana..."
+                      placeholder={t('glossaryManager.targetPlaceholder')}
                       className="h-8 text-sm"
                     />
                   </div>
@@ -466,24 +469,24 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
                       checked={newEntry.caseSensitive}
                       onCheckedChange={(c) => setNewEntry({ ...newEntry, caseSensitive: c })}
                     />
-                    <Label className="text-xs">Case sensitive</Label>
+                    <Label className="text-xs">{t('glossaryManager.caseSensitive')}</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch 
                       checked={newEntry.wholeWord}
                       onCheckedChange={(c) => setNewEntry({ ...newEntry, wholeWord: c })}
                     />
-                    <Label className="text-xs">Whole word</Label>
+                    <Label className="text-xs">{t('glossaryManager.wholeWord')}</Label>
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button variant="ghost" size="sm" onClick={() => setIsAddingEntry(false)}>
                     <X className="h-3 w-3 mr-1" />
-                    Cancel
+                    {t('glossaryManager.cancel')}
                   </Button>
                   <Button size="sm" onClick={handleAddEntry} disabled={!newEntry.source.trim()}>
                     <Check className="h-3 w-3 mr-1" />
-                    Save
+                    {t('glossaryManager.save')}
                   </Button>
                 </div>
               </CardContent>
@@ -495,7 +498,7 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
             <div className="space-y-1">
               {filteredEntries.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground text-sm">
-                  {searchQuery ? 'No results' : 'No terms in glossary'}
+                  {searchQuery ? t('glossaryManager.noResults') : t('glossaryManager.noTerms')}
                 </div>
               ) : (
                 filteredEntries.map(entry => {
@@ -512,12 +515,12 @@ function GlossaryManagerFull({ gameId, gameName }: { gameId?: string; gameName?:
                             <span className="font-medium text-sm">{entry.source}</span>
                             <span className="text-muted-foreground">→</span>
                             <span className="text-sm text-green-400">
-                              {entry.target || <span className="italic text-orange-400">do not translate</span>}
+                              {entry.target || <span className="italic text-orange-400">{t('glossaryManager.doNotTranslate')}</span>}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            {entry.caseSensitive && <Badge variant="outline" className="text-[9px] px-1">Aa</Badge>}
-                            {entry.wholeWord && <Badge variant="outline" className="text-[9px] px-1">Word</Badge>}
+                            {entry.caseSensitive && <Badge variant="outline" className="text-[9px] px-1">{t('glossaryManager.badgeCaseSensitive')}</Badge>}
+                            {entry.wholeWord && <Badge variant="outline" className="text-[9px] px-1">{t('glossaryManager.badgeWholeWord')}</Badge>}
                           </div>
                         </div>
                       </div>

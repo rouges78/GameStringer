@@ -10,46 +10,44 @@ export default function UnityPatcherPage() {
   const { t } = useTranslation();
   
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 space-y-4">
       {/* Hero Header */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-black/20 backdrop-blur-sm shadow-lg">
-              <Wand2 className="h-4 w-4 text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)]" />
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <Wand2 className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{t('gamePatcher.title')}</h2>
-              <p className="text-white/90 text-[10px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{t('gamePatcher.subtitle')}</p>
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('gamePatcher.title')}</h1>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('gamePatcher.subtitle')}</p>
             </div>
           </div>
           
           {/* Stats inline */}
-          <div className="hidden md:flex items-center gap-4">
-            <div className="flex items-center gap-1 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-              <Layers className="h-3 w-3" />
-              <span className="text-sm font-bold">5</span>
-              <span className="text-[10px] text-white/80">{t('gamePatcher.engines')}</span>
+          <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <Layers className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">5</span>
+              <span className="text-[10px] text-white/70">{t('gamePatcher.engines')}</span>
             </div>
-            <div className="flex items-center gap-1 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-              <Zap className="h-3 w-3" />
-              <span className="text-sm font-bold">{t('gamePatcher.autoInstall')}</span>
-              <span className="text-[10px] text-white/80">{t('gamePatcher.install')}</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <Zap className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">{t('gamePatcher.autoInstall')}</span>
             </div>
-            <div className="flex items-center gap-1 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-              <Shield className="h-3 w-3" />
-              <span className="text-sm font-bold">{t('gamePatcher.safeBackup')}</span>
-              <span className="text-[10px] text-white/80">{t('gamePatcher.backup')}</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <Shield className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">{t('gamePatcher.safeBackup')}</span>
             </div>
           </div>
         </div>
 
         {/* Quick Links */}
-        <div className="relative flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-white/20">
-          <span className="text-[10px] text-white/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] mr-1">{t('gamePatcher.otherPatchers')}</span>
+        <div className="relative flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/20">
+          <span className="text-[10px] text-white/50 mr-2 self-center">{t('gamePatcher.otherPatchers')}</span>
           <Link href="/unreal-translator">
             <Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Cpu className="h-3 w-3" />

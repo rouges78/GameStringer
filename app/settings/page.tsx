@@ -279,7 +279,7 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="backup" className="flex items-center space-x-2">
             <HardDrive className="h-4 w-4" />
-            <span>Auto-Backup</span>
+            <span>{t('settings.autoBackupTitle')}</span>
           </TabsTrigger>
           <TabsTrigger value="performance" className="flex items-center space-x-2">
             <Zap className="h-4 w-4" />

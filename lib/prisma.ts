@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { createDatabaseHealthMonitor } from './database-health';
 
 // Aggiungiamo 'prisma' al tipo globale di NodeJS per evitare errori di tipo in sviluppo.
@@ -10,23 +10,17 @@ declare global {
 }
 
 // Configurazione ottimizzata per connection pooling
+const logLevel: Prisma.LogLevel[] = process.env.NODE_ENV === 'development' 
+  ? ['query', 'info', 'warn', 'error']
+  : ['error'];
+
 const prismaConfig = {
-  log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'info', 'warn', 'error'] as const
-    : ['error'] as const,
+  log: logLevel,
   
   // Configurazione del datasource con ottimizzazioni per SQLite
   datasources: {
     db: {
       url: process.env.DATABASE_URL
-    }
-  },
-  
-  // Ottimizzazioni per performance
-  __internal: {
-    engine: {
-      // Connection pooling configuration for SQLite
-      binaryTargets: ['native'],
     }
   }
 };

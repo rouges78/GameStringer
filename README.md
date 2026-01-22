@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.2-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.0.3-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -291,6 +291,6 @@ See [LICENSE](LICENSE) for full details.
 </p>
 
 <p align="center">
-  <strong>GameStringer v1.0.2</strong><br>
+  <strong>GameStringer v1.0.3</strong><br>
   © 2025-2026 GameStringer Team
 </p>

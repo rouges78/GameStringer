@@ -74,7 +74,7 @@ export default function TranslationWizardPage() {
   
   // Error boundary effect
   useEffect(() => {
-    const handleError = (event: errorvent) => {
+    const handleError = (event: ErrorEvent) => {
       console.error('[TranslationWizard] Render error:', event.error);
       setRenderError(event.message);
     };

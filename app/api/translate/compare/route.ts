@@ -337,10 +337,10 @@ function calculateAccuracyScore(source: string, translated: string, details: str
   }
   
   // Verifica preservazione numeri
-  const sourceNumbers = source.match(/\d+/g) || [];
-  const translatedNumbers = translated.match(/\d+/g) || [];
+  const sourceNumbers: string[] = source.match(/\d+/g) || [];
+  const translatedNumbers: string[] = translated.match(/\d+/g) || [];
   
-  const numbersPreserved = sourceNumbers.every((n: string) => translatedNumbers.includes(n));
+  const numbersPreserved = sourceNumbers.every((n) => translatedNumbers.includes(n));
   if (sourceNumbers.length > 0) {
     if (numbersPreserved) {
       score += 10;
@@ -352,11 +352,11 @@ function calculateAccuracyScore(source: string, translated: string, details: str
   }
   
   // Verifica preservazione variabili/placeholder
-  const placeholders = source.match(/\{[^}]+\}|%[sdifx]|\$\w+/g) || [];
-  const translatedPlaceholders = translated.match(/\{[^}]+\}|%[sdifx]|\$\w+/g) || [];
+  const placeholders: string[] = source.match(/\{[^}]+\}|%[sdifx]|\$\w+/g) || [];
+  const translatedPlaceholders: string[] = translated.match(/\{[^}]+\}|%[sdifx]|\$\w+/g) || [];
   
   if (placeholders.length > 0) {
-    const preserved = placeholders.filter((p: string) => translatedPlaceholders.includes(p)).length;
+    const preserved = placeholders.filter((p) => translatedPlaceholders.includes(p)).length;
     if (preserved === placeholders.length) {
       score += 10;
       details.push('✓ Placeholder preservati');

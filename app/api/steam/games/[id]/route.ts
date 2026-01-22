@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const gameId = params.id;
+    const { id } = await params;
+    const gameId = id;
     
     // Prova a ottenere il nome del gioco dalla query string (passato dal frontend)
     const url = new URL(request.url);
@@ -33,7 +34,7 @@ export async function GET(
     return NextResponse.json(gameData);
     
   } catch (error) {
-    console.error(`Errore durante il recupero del gioco ${params.id}:`, error);
+    console.error(`Errore durante il recupero del gioco:`, error);
     return NextResponse.json({
       error: 'Errore interno del server durante il recupero del gioco'
     }, { status: 500 });

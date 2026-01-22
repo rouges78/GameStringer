@@ -453,7 +453,7 @@
 
 | Metrica | Valore |
 |:--------|:-------|
-| **Versione attuale** | 1.0.2 |
+| **Versione attuale** | 1.0.3 |
 | **Periodo sviluppo** | Giugno 2025 - Presente |
 | **Stack Backend** | Rust (Tauri v2) |
 | **Stack Frontend** | Next.js 15, React, TailwindCSS |

@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const includeTranslations = searchParams.get('includeTranslations') === 'true';
 
@@ -40,10 +40,10 @@ export async function GET(
     if (includeTranslations && game.translations) {
       const stats = {
         total: game.translations.length,
-        completed: game.translations.filter(t => t.status === 'completed').length,
-        pending: game.translations.filter(t => t.status === 'pending').length,
-        reviewed: game.translations.filter(t => t.status === 'reviewed').length,
-        edited: game.translations.filter(t => t.status === 'edited').length,
+        completed: game.translations.filter((t: any) => t.status === 'completed').length,
+        pending: game.translations.filter((t: any) => t.status === 'pending').length,
+        reviewed: game.translations.filter((t: any) => t.status === 'reviewed').length,
+        edited: game.translations.filter((t: any) => t.status === 'edited').length,
         averageConfidence: game.translations.reduce((sum, t) => sum + t.confidence, 0) / game.translations.length || 0
       };
 
@@ -66,10 +66,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     const game = await prisma.game.update({
@@ -80,7 +80,7 @@ export async function PUT(
       }
     });
 
-    return NextResponse.json(game);
+    return NextResponse.json(game, { status: 200 });
 
   } catch (error) {
     console.error('Error updating game:', error);
@@ -93,16 +93,16 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     await prisma.game.delete({
       where: { id }
     });
 
-    return NextResponse.json({ message: 'Game deleted successfully' });
+    return NextResponse.json({ message: 'Game deleted successfully' }, { status: 200 });
 
   } catch (error) {
     console.error('Error deleting game:', error);

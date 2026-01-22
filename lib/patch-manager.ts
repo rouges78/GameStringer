@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs';
+import { promises as fs, createWriteStream } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import archiver from 'archiver';
@@ -440,7 +440,7 @@ Creato con GameStringer
     options: ExportOptions
   ): Promise<void> {
     return new Promise((resolve, reject) => {
-      const output = fs.createWriteStream(outputPath);
+      const output = createWriteStream(outputPath);
       const archive = archiver('zip', {
         zlib: { 
           level: options.compression === 'ultra' ? 9 : 

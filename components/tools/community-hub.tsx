@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@/lib/i18n';
 import {
   Globe,
   Download,
@@ -71,6 +72,7 @@ const languages = [
 ];
 
 export function CommunityHub() {
+  const { t } = useTranslation();
   const [packs, setPacks] = useState<TranslationPack[]>([]);
   const [stats, setStats] = useState<HubStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -118,7 +120,7 @@ export function CommunityHub() {
       setStats(hubStats);
     } catch (error) {
       console.error('Error loading hub data:', error);
-      toast.error('Error loading data');
+      toast.error(t('communityHub.errorLoading'));
     } finally {
       setIsLoading(false);
     }
@@ -144,10 +146,10 @@ export function CommunityHub() {
     setIsDownloading(packId);
     try {
       await communityHubService.downloadPack(packId, './translations');
-      toast.success('Pack downloaded successfully!');
+      toast.success(t('communityHub.packDownloaded'));
       await loadData();
     } catch (error: any) {
-      toast.error(error.message || 'Download error');
+      toast.error(error.message || t('communityHub.downloadError'));
     } finally {
       setIsDownloading(null);
     }
@@ -155,7 +157,7 @@ export function CommunityHub() {
 
   const handleUploadPack = async () => {
     if (!uploadData.name || !uploadData.gameName || uploadData.files.length === 0) {
-      toast.error('Fill in all required fields');
+      toast.error(t('communityHub.fillRequired'));
       return;
     }
 
@@ -178,7 +180,7 @@ export function CommunityHub() {
         }
       });
 
-      toast.success('Pack created! You can publish it from "My packs" section');
+      toast.success(t('communityHub.packCreated'));
       setShowUploadDialog(false);
       setUploadData({
         name: '',
@@ -192,20 +194,20 @@ export function CommunityHub() {
       });
       await loadData();
     } catch (error: any) {
-      toast.error(error.message || 'Error creating pack');
+      toast.error(error.message || t('communityHub.createError'));
     }
   };
 
   const getStatusBadge = (status: TranslationPack['status']) => {
     switch (status) {
       case 'verified':
-        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />Verified</Badge>;
+        return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />{t('communityHub.verified')}</Badge>;
       case 'featured':
-        return <Badge className="bg-purple-500"><Award className="w-3 h-3 mr-1" />Featured</Badge>;
+        return <Badge className="bg-purple-500"><Award className="w-3 h-3 mr-1" />{t('communityHub.featured')}</Badge>;
       case 'published':
-        return <Badge variant="secondary">Published</Badge>;
+        return <Badge variant="secondary">{t('communityHub.published')}</Badge>;
       default:
-        return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Draft</Badge>;
+        return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />{t('communityHub.draft')}</Badge>;
     }
   };
 
@@ -214,27 +216,46 @@ export function CommunityHub() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Globe className="h-7 w-7 text-blue-500" />
-            Community Translation Hub
-          </h1>
-          <p className="text-muted-foreground">
-            Share and download translations from the community
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={loadData}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Button onClick={() => setShowUploadDialog(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            Upload Pack
-          </Button>
+    <div className="space-y-4">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-3">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <Globe className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+                {t('communityHub.title')}
+              </h2>
+              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('communityHub.subtitle')}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={loadData}
+              className="bg-white/20 text-white hover:bg-white/30 border-white/30"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t('communityHub.refresh')}
+            </Button>
+            <Button 
+              size="sm"
+              onClick={() => setShowUploadDialog(true)}
+              className="bg-white text-indigo-600 hover:bg-white/90 shadow-lg"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {t('communityHub.uploadPack')}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -245,42 +266,42 @@ export function CommunityHub() {
             <CardContent className="p-4 text-center">
               <Package className="h-6 w-6 mx-auto mb-2 text-blue-500" />
               <p className="text-2xl font-bold">{stats.totalPacks}</p>
-              <p className="text-xs text-muted-foreground">Total Packs</p>
+              <p className="text-xs text-muted-foreground">{t('communityHub.totalPacks')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Download className="h-6 w-6 mx-auto mb-2 text-green-500" />
               <p className="text-2xl font-bold">{(stats.totalDownloads / 1000).toFixed(1)}k</p>
-              <p className="text-xs text-muted-foreground">Download</p>
+              <p className="text-xs text-muted-foreground">{t('communityHub.downloads')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Users className="h-6 w-6 mx-auto mb-2 text-purple-500" />
               <p className="text-2xl font-bold">{stats.totalContributors}</p>
-              <p className="text-xs text-muted-foreground">Contributors</p>
+              <p className="text-xs text-muted-foreground">{t('communityHub.contributors')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <FileText className="h-6 w-6 mx-auto mb-2 text-orange-500" />
               <p className="text-2xl font-bold">{(stats.totalStrings / 1000).toFixed(0)}k</p>
-              <p className="text-xs text-muted-foreground">Strings</p>
+              <p className="text-xs text-muted-foreground">{t('communityHub.strings')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Globe className="h-6 w-6 mx-auto mb-2 text-cyan-500" />
               <p className="text-2xl font-bold">{stats.languagesCovered}</p>
-              <p className="text-xs text-muted-foreground">Languages</p>
+              <p className="text-xs text-muted-foreground">{t('communityHub.languages')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <TrendingUp className="h-6 w-6 mx-auto mb-2 text-pink-500" />
               <p className="text-2xl font-bold">{stats.gamesCovered}</p>
-              <p className="text-xs text-muted-foreground">Games</p>
+              <p className="text-xs text-muted-foreground">{t('communityHub.games')}</p>
             </CardContent>
           </Card>
         </div>
@@ -294,7 +315,7 @@ export function CommunityHub() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search packs or games..."
+                  placeholder={t('communityHub.searchPlaceholder')}
                   value={filters.query}
                   onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
                   className="pl-10"
@@ -306,10 +327,10 @@ export function CommunityHub() {
               onValueChange={(v) => setFilters(f => ({ ...f, targetLanguage: v === 'all' ? '' : v }))}
             >
               <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Lingua" />
+                <SelectValue placeholder={t('communityHub.languages')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All languages</SelectItem>
+                <SelectItem value="all">{t('communityHub.allLanguages')}</SelectItem>
                 {languages.map(l => (
                   <SelectItem key={l.code} value={l.code}>{l.flag} {l.name}</SelectItem>
                 ))}
@@ -320,13 +341,13 @@ export function CommunityHub() {
               onValueChange={(v: any) => setFilters(f => ({ ...f, sortBy: v }))}
             >
               <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder={t('communityHub.sortBy')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="downloads">Most downloaded</SelectItem>
-                <SelectItem value="rating">Highest rated</SelectItem>
-                <SelectItem value="updated">Most recent</SelectItem>
-                <SelectItem value="completion">Completeness</SelectItem>
+                <SelectItem value="downloads">{t('communityHub.mostDownloaded')}</SelectItem>
+                <SelectItem value="rating">{t('communityHub.highestRated')}</SelectItem>
+                <SelectItem value="updated">{t('communityHub.mostRecent')}</SelectItem>
+                <SelectItem value="completion">{t('communityHub.completeness')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -336,9 +357,9 @@ export function CommunityHub() {
       {/* Tabs */}
       <Tabs defaultValue="browse">
         <TabsList>
-          <TabsTrigger value="browse">Browse Packs</TabsTrigger>
-          <TabsTrigger value="featured">Featured</TabsTrigger>
-          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+          <TabsTrigger value="browse">{t('communityHub.browsePacks')}</TabsTrigger>
+          <TabsTrigger value="featured">{t('communityHub.featured')}</TabsTrigger>
+          <TabsTrigger value="activity">{t('communityHub.recentActivity')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-4 mt-4">
@@ -350,8 +371,8 @@ export function CommunityHub() {
             <Card>
               <CardContent className="py-12 text-center">
                 <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium">No packs found</p>
-                <p className="text-muted-foreground">Try modifying your search filters</p>
+                <p className="text-lg font-medium">{t('communityHub.noPacksFound')}</p>
+                <p className="text-muted-foreground">{t('communityHub.tryModifyingFilters')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -387,7 +408,7 @@ export function CommunityHub() {
                     </p>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span>Completion</span>
+                        <span>{t('communityHub.completion')}</span>
                         <span className="font-medium">{pack.completionPercentage}%</span>
                       </div>
                       <Progress value={pack.completionPercentage} className="h-2" />
@@ -417,7 +438,7 @@ export function CommunityHub() {
                   <CardFooter className="pt-0 gap-2">
                     <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewPack(pack)}>
                       <Eye className="h-4 w-4 mr-1" />
-                      Details
+                      {t('communityHub.details')}
                     </Button>
                     <Button
                       size="sm"
@@ -432,7 +453,7 @@ export function CommunityHub() {
                       ) : (
                         <Download className="h-4 w-4 mr-1" />
                       )}
-                      {communityHubService.isPackInstalled(pack.id) ? 'Installed' : 'Download'}
+                      {communityHubService.isPackInstalled(pack.id) ? t('communityHub.installed') : t('communityHub.download')}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -461,7 +482,7 @@ export function CommunityHub() {
                     <span className="text-sm text-muted-foreground">{pack.downloads.toLocaleString()} download</span>
                   </div>
                   <Button className="w-full" size="sm" onClick={() => handleViewPack(pack)}>
-                    View
+                    {t('communityHub.view')}
                   </Button>
                 </CardContent>
               </Card>
@@ -472,7 +493,7 @@ export function CommunityHub() {
         <TabsContent value="activity" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle>{t('communityHub.recentActivity')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -539,7 +560,7 @@ export function CommunityHub() {
                       )}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {selectedPack.author.totalContributions.toLocaleString()} contributions
+                      {selectedPack.author.totalContributions.toLocaleString()} {t('communityHub.contributions')}
                     </p>
                   </div>
                 </div>
@@ -550,22 +571,22 @@ export function CommunityHub() {
                 <div className="grid grid-cols-4 gap-4 text-center">
                   <div>
                     <p className="text-2xl font-bold">{selectedPack.completionPercentage}%</p>
-                    <p className="text-xs text-muted-foreground">Completion</p>
+                    <p className="text-xs text-muted-foreground">{t('communityHub.completion')}</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{selectedPack.downloads.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">Download</p>
+                    <p className="text-xs text-muted-foreground">{t('communityHub.downloads')}</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold flex items-center justify-center gap-1">
                       <Star className="h-5 w-5 text-yellow-500 fill-current" />
                       {selectedPack.rating.toFixed(1)}
                     </p>
-                    <p className="text-xs text-muted-foreground">{selectedPack.ratingCount} votes</p>
+                    <p className="text-xs text-muted-foreground">{selectedPack.ratingCount} {t('communityHub.votes')}</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{selectedPack.translatedStrings.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">Strings</p>
+                    <p className="text-xs text-muted-foreground">{t('communityHub.strings')}</p>
                   </div>
                 </div>
 
@@ -573,14 +594,14 @@ export function CommunityHub() {
 
                 {/* Description */}
                 <div>
-                  <h4 className="font-medium mb-2">Description</h4>
+                  <h4 className="font-medium mb-2">{t('communityHub.description')}</h4>
                   <p className="text-sm text-muted-foreground">{selectedPack.description}</p>
                 </div>
 
                 {/* Changelog */}
                 {selectedPack.changelog.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">Changelog</h4>
+                    <h4 className="font-medium mb-2">{t('communityHub.changelog')}</h4>
                     <div className="space-y-2">
                       {selectedPack.changelog.slice(0, 3).map((log, i) => (
                         <div key={i} className="text-sm">
@@ -599,7 +620,7 @@ export function CommunityHub() {
                 {/* Reviews */}
                 {packReviews.length > 0 && (
                   <div>
-                    <h4 className="font-medium mb-2">Reviews</h4>
+                    <h4 className="font-medium mb-2">{t('communityHub.reviews')}</h4>
                     <div className="space-y-3">
                       {packReviews.map(review => (
                         <div key={review.id} className="p-3 bg-muted/50 rounded-lg">
@@ -630,7 +651,7 @@ export function CommunityHub() {
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setShowPackDetails(false)}>
-                  Close
+                  {t('communityHub.close')}
                 </Button>
                 <Button
                   onClick={() => {
@@ -642,12 +663,12 @@ export function CommunityHub() {
                   {communityHubService.isPackInstalled(selectedPack.id) ? (
                     <>
                       <CheckCircle className="h-4 w-4 mr-2" />
-                      Already Installed
+                      {t('communityHub.alreadyInstalled')}
                     </>
                   ) : (
                     <>
                       <Download className="h-4 w-4 mr-2" />
-                      Download Pack
+                      {t('communityHub.downloadPack')}
                     </>
                   )}
                 </Button>
@@ -661,35 +682,35 @@ export function CommunityHub() {
       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Upload Translation Pack</DialogTitle>
+            <DialogTitle>{t('communityHub.uploadTitle')}</DialogTitle>
             <DialogDescription>
-              Share your translation with the community
+              {t('communityHub.uploadSubtitle')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Pack Name *</Label>
+                <Label>{t('communityHub.packName')} *</Label>
                 <Input
                   value={uploadData.name}
                   onChange={(e) => setUploadData(d => ({ ...d, name: e.target.value }))}
-                  placeholder="e.g. Complete Italian Translation"
+                  placeholder={t('communityHub.packNamePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Game Name *</Label>
+                <Label>{t('communityHub.gameName')} *</Label>
                 <Input
                   value={uploadData.gameName}
                   onChange={(e) => setUploadData(d => ({ ...d, gameName: e.target.value }))}
-                  placeholder="e.g. Hollow Knight"
+                  placeholder={t('communityHub.gameNamePlaceholder')}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Source Language</Label>
+                <Label>{t('communityHub.sourceLanguage')}</Label>
                 <Select
                   value={uploadData.sourceLanguage}
                   onValueChange={(v) => setUploadData(d => ({ ...d, sourceLanguage: v }))}
@@ -705,7 +726,7 @@ export function CommunityHub() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Target Language</Label>
+                <Label>{t('communityHub.targetLanguage')}</Label>
                 <Select
                   value={uploadData.targetLanguage}
                   onValueChange={(v) => setUploadData(d => ({ ...d, targetLanguage: v }))}
@@ -723,26 +744,26 @@ export function CommunityHub() {
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t('communityHub.description')}</Label>
               <Textarea
                 value={uploadData.description}
                 onChange={(e) => setUploadData(d => ({ ...d, description: e.target.value }))}
-                placeholder="Describe your translation..."
+                placeholder={t('communityHub.descriptionPlaceholder')}
                 rows={3}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Tags (comma separated)</Label>
+              <Label>{t('communityHub.tags')}</Label>
               <Input
                 value={uploadData.tags}
                 onChange={(e) => setUploadData(d => ({ ...d, tags: e.target.value }))}
-                placeholder="e.g. complete, reviewed, dlc"
+                placeholder={t('communityHub.tagsPlaceholder')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Translation Files *</Label>
+              <Label>{t('communityHub.translationFiles')} *</Label>
               <div className="border-2 border-dashed rounded-lg p-6 text-center">
                 <input
                   type="file"
@@ -757,7 +778,7 @@ export function CommunityHub() {
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm font-medium">Click to select files</p>
+                  <p className="text-sm font-medium">{t('communityHub.clickToSelect')}</p>
                   <p className="text-xs text-muted-foreground">JSON, PO, CSV, RESX, XLIFF</p>
                 </label>
               </div>
@@ -777,11 +798,11 @@ export function CommunityHub() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
-              Cancel
+              {t('communityHub.cancel')}
             </Button>
             <Button onClick={handleUploadPack}>
               <Upload className="h-4 w-4 mr-2" />
-              Create Pack
+              {t('communityHub.createPack')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -147,6 +147,19 @@ export async function upsertTranslation(
   originalText: string,
   translationData: Partial<Translation>
 ) {
+  const createData = {
+    gameId,
+    filePath,
+    originalText,
+    translatedText: translationData.translatedText || '',
+    targetLanguage: translationData.targetLanguage || 'it',
+    sourceLanguage: translationData.sourceLanguage || 'en',
+    status: translationData.status || 'pending',
+    confidence: translationData.confidence || 0,
+    isManualEdit: translationData.isManualEdit || false,
+    context: translationData.context || null,
+  };
+  
   return prisma.translation.upsert({
     where: {
       // Composite unique constraint simulata
@@ -156,12 +169,7 @@ export async function upsertTranslation(
       ...translationData,
       updatedAt: new Date()
     },
-    create: {
-      gameId,
-      filePath,
-      originalText,
-      ...translationData
-    }
+    create: createData
   });
 }
 

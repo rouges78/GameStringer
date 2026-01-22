@@ -76,9 +76,9 @@ export function AutoBackupSettings() {
 
   const getBackupTypeLabel = (type: string) => {
     switch (type) {
-      case 'translation_memory': return 'Translation Memory';
-      case 'dictionaries': return 'Dizionari';
-      case 'settings': return 'Impostazioni';
+      case 'translation_memory': return t('settings.translationMemory');
+      case 'dictionaries': return t('settings.dictionaries');
+      case 'settings': return t('settings.settingsLabel');
       default: return type;
     }
   };
@@ -112,9 +112,9 @@ export function AutoBackupSettings() {
                 <Save className="h-5 w-5 text-emerald-400" />
               </div>
               <div>
-                <CardTitle className="text-emerald-100">Auto-Backup</CardTitle>
+                <CardTitle className="text-emerald-100">{t('settings.autoBackupTitle')}</CardTitle>
                 <CardDescription className="text-emerald-300/70">
-                  Salvataggio automatico del tuo lavoro
+                  {t('settings.autoBackupSubtitle')}
                 </CardDescription>
               </div>
             </div>
@@ -122,7 +122,7 @@ export function AutoBackupSettings() {
               {config.lastBackup && (
                 <Badge variant="outline" className="border-emerald-500/50 text-emerald-300">
                   <Clock className="h-3 w-3 mr-1" />
-                  Ultimo: {formatDate(config.lastBackup)}
+                  {t('settings.lastBackup')}: {formatDate(config.lastBackup)}
                 </Badge>
               )}
               <Button 
@@ -135,7 +135,7 @@ export function AutoBackupSettings() {
                 ) : (
                   <Save className="h-4 w-4 mr-2" />
                 )}
-                Backup Ora
+                {t('settings.backupNow')}
               </Button>
             </div>
           </div>
@@ -147,15 +147,15 @@ export function AutoBackupSettings() {
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Configurazione
+            {t('settings.configuration')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Enable/Disable */}
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-sm font-medium">Auto-Backup Attivo</Label>
-              <p className="text-xs text-slate-500">Salva automaticamente a intervalli regolari</p>
+              <Label className="text-sm font-medium">{t('settings.autoBackupActive')}</Label>
+              <p className="text-xs text-slate-500">{t('settings.autoBackupActiveDesc')}</p>
             </div>
             <Switch
               checked={config.enabled}
@@ -166,8 +166,8 @@ export function AutoBackupSettings() {
           {/* Interval */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Intervallo Backup</Label>
-              <Badge variant="secondary">{config.intervalMinutes} minuti</Badge>
+              <Label className="text-sm font-medium">{t('settings.backupIntervalMinutes')}</Label>
+              <Badge variant="secondary">{config.intervalMinutes} {t('settings.minutes')}</Badge>
             </div>
             <Slider
               value={[config.intervalMinutes]}
@@ -187,7 +187,7 @@ export function AutoBackupSettings() {
 
           {/* What to backup */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Cosa salvare</Label>
+            <Label className="text-sm font-medium">{t('settings.whatToSave')}</Label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div 
                 className={cn(
@@ -200,8 +200,8 @@ export function AutoBackupSettings() {
               >
                 <Database className={cn("h-5 w-5", config.backupTranslationMemory ? "text-blue-400" : "text-slate-500")} />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Translation Memory</p>
-                  <p className="text-xs text-slate-500">Traduzioni salvate</p>
+                  <p className="text-sm font-medium">{t('settings.translationMemory')}</p>
+                  <p className="text-xs text-slate-500">{t('settings.savedTranslations')}</p>
                 </div>
                 {config.backupTranslationMemory && <CheckCircle2 className="h-4 w-4 text-blue-400" />}
               </div>
@@ -217,8 +217,8 @@ export function AutoBackupSettings() {
               >
                 <FileText className={cn("h-5 w-5", config.backupDictionaries ? "text-green-400" : "text-slate-500")} />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Dizionari</p>
-                  <p className="text-xs text-slate-500">Glossari giochi</p>
+                  <p className="text-sm font-medium">{t('settings.dictionaries')}</p>
+                  <p className="text-xs text-slate-500">{t('settings.gameGlossaries')}</p>
                 </div>
                 {config.backupDictionaries && <CheckCircle2 className="h-4 w-4 text-green-400" />}
               </div>
@@ -234,8 +234,8 @@ export function AutoBackupSettings() {
               >
                 <Settings className={cn("h-5 w-5", config.backupSettings ? "text-purple-400" : "text-slate-500")} />
                 <div className="flex-1">
-                  <p className="text-sm font-medium">Impostazioni</p>
-                  <p className="text-xs text-slate-500">Profili utente</p>
+                  <p className="text-sm font-medium">{t('settings.settingsLabel')}</p>
+                  <p className="text-xs text-slate-500">{t('settings.userProfiles')}</p>
                 </div>
                 {config.backupSettings && <CheckCircle2 className="h-4 w-4 text-purple-400" />}
               </div>
@@ -245,8 +245,8 @@ export function AutoBackupSettings() {
           {/* Max backups */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Backup da mantenere</Label>
-              <Badge variant="secondary">{config.maxBackups} backup</Badge>
+              <Label className="text-sm font-medium">{t('settings.backupsToKeep')}</Label>
+              <Badge variant="secondary">{config.maxBackups} {t('settings.backup')}</Badge>
             </div>
             <Slider
               value={[config.maxBackups]}
@@ -257,7 +257,7 @@ export function AutoBackupSettings() {
               className="w-full"
             />
             <p className="text-xs text-slate-500">
-              I backup più vecchi verranno eliminati automaticamente
+              {t('settings.oldBackupsDeleted')}
             </p>
           </div>
         </CardContent>
@@ -269,7 +269,7 @@ export function AutoBackupSettings() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
               <HardDrive className="h-4 w-4" />
-              Cronologia Backup ({backups.length})
+              {t('settings.backupHistory')} ({backups.length})
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={loadBackups}>
               <RefreshCw className="h-4 w-4" />
@@ -280,8 +280,8 @@ export function AutoBackupSettings() {
           {backups.length === 0 ? (
             <div className="text-center py-8 text-slate-500">
               <HardDrive className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p>Nessun backup automatico trovato</p>
-              <p className="text-sm">Esegui il primo backup manualmente</p>
+              <p>{t('settings.noBackupsFound')}</p>
+              <p className="text-sm">{t('settings.runFirstBackup')}</p>
             </div>
           ) : (
             <ScrollArea className="h-[300px]">
@@ -324,10 +324,10 @@ export function AutoBackupSettings() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-amber-400">
               <RotateCcw className="h-5 w-5" />
-              Ripristina Backup
+              {t('settings.restoreBackup')}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
-              Vuoi ripristinare questo backup? I dati attuali verranno sovrascritti.
+              {t('settings.restoreConfirm')}
               {restoreDialog && (
                 <div className="mt-3 p-3 rounded-lg bg-slate-800/50 text-sm">
                   <p className="flex items-center gap-2">
@@ -343,13 +343,13 @@ export function AutoBackupSettings() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-slate-800 border-slate-700 hover:bg-slate-700">
-              Annulla
+              {t('settings.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleRestore}
               className="bg-amber-600 hover:bg-amber-700"
             >
-              Ripristina
+              {t('settings.restore')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

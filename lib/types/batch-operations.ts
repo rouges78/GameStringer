@@ -49,6 +49,29 @@ export interface BatchSelectionState {
   operations: BatchOperation[];
 }
 
+// Base batch item type
+export interface BatchItem {
+  id: string;
+  data: Record<string, any>;
+}
+
+// Translation batch item type
+export interface TranslationBatchItem extends BatchItem {
+  id: string;
+  data: {
+    sourceText?: string;
+    targetText?: string;
+    sourceLanguage?: string;
+    targetLanguage?: string;
+    status?: string;
+    gameId?: string;
+    filePath?: string;
+    format?: string;
+    overwrite?: boolean;
+    [key: string]: any;
+  };
+}
+
 // Translation-specific batch operations
 export interface TranslationBatchOperations {
   batchTranslate: BatchOperation;

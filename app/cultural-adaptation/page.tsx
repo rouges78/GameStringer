@@ -37,7 +37,7 @@ import { useTranslation } from "@/lib/i18n"
 const AVAILABLE_CULTURES: CultureCode[] = ['en', 'it', 'de', 'fr', 'es', 'ja', 'ko', 'zh', 'pt', 'ru']
 
 export default function CulturalAdaptationPage() {
-  const { language } = useTranslation()
+  const { t, language } = useTranslation()
   const [inputText, setInputText] = useState("")
   const [sourceCulture, setSourceCulture] = useState<CultureCode>("en")
   const [targetCulture, setTargetCulture] = useState<CultureCode>("it")
@@ -83,28 +83,33 @@ export default function CulturalAdaptationPage() {
 
   return (
     <div className="space-y-4">
-      {/* Hero Header - Compact */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-4 text-white">
-        <div className="relative z-10 flex items-center justify-between">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-600 p-3">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Globe2 className="h-6 w-6" />
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <Globe2 className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">Cultural Adaptation</h1>
-              <p className="text-white/80 text-sm">
-                {language === 'it' ? 'Adatta le traduzioni al contesto culturale' : 'Adapt translations to cultural context'}
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+                {t('culturalAdaptation.title')}
+              </h1>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('culturalAdaptation.subtitle')}
               </p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-md text-sm">
-              <Globe2 className="h-4 w-4" />
-              <span>10 {language === 'it' ? 'Culture' : 'Cultures'}</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <Globe2 className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">10</span>
+              <span className="text-[10px] text-white/70">{t('culturalAdaptation.cultures')}</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-md text-sm">
-              <Sparkles className="h-4 w-4" />
-              <span>13 {language === 'it' ? 'Categorie' : 'Categories'}</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <Sparkles className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">13</span>
+              <span className="text-[10px] text-white/70">{t('culturalAdaptation.categories')}</span>
             </div>
           </div>
         </div>
@@ -119,7 +124,7 @@ export default function CulturalAdaptationPage() {
               <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    {language === 'it' ? 'Da' : 'From'}
+                    {t('culturalAdaptation.from')}
                   </Label>
                   <Select value={sourceCulture} onValueChange={(v) => setSourceCulture(v as CultureCode)}>
                     <SelectTrigger>
@@ -140,7 +145,7 @@ export default function CulturalAdaptationPage() {
                 <ArrowRight className="h-4 w-4 text-muted-foreground mt-5" />
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    {language === 'it' ? 'A' : 'To'}
+                    {t('culturalAdaptation.to')}
                   </Label>
                   <Select value={targetCulture} onValueChange={(v) => setTargetCulture(v as CultureCode)}>
                     <SelectTrigger>
@@ -162,7 +167,7 @@ export default function CulturalAdaptationPage() {
 
               {/* Input */}
               <div className="space-y-1">
-                <Label className="text-xs">{language === 'it' ? 'Testo da analizzare' : 'Text to analyze'}</Label>
+                <Label className="text-xs">{t('culturalAdaptation.textToAnalyze')}</Label>
                 <Textarea
                   placeholder="Enter text with cultural references, idioms, units..."
                   value={inputText}
@@ -198,7 +203,7 @@ export default function CulturalAdaptationPage() {
                   ) : (
                     <Sparkles className="h-4 w-4" />
                   )}
-                  {language === 'it' ? 'Analizza' : 'Analyze'}
+                  {t('culturalAdaptation.analyze')}
                 </Button>
               </div>
             </CardContent>
@@ -215,7 +220,7 @@ export default function CulturalAdaptationPage() {
                     ) : (
                       <AlertCircle className="h-5 w-5 text-yellow-500" />
                     )}
-                    {language === 'it' ? 'Risultato Analisi' : 'Analysis Result'}
+                    {t('culturalAdaptation.analysisResult')}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-2xl font-bold", getScoreColor(result.culturalScore))}>
@@ -231,13 +236,13 @@ export default function CulturalAdaptationPage() {
                   <div className="text-center py-4 text-green-600">
                     <CheckCircle2 className="h-8 w-8 mx-auto mb-2" />
                     <p className="font-medium">
-                      {language === 'it' ? 'Nessun adattamento culturale necessario!' : 'No cultural adaptation needed!'}
+                      {t('culturalAdaptation.noAdaptationNeeded')}
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      {result.suggestions.length} {language === 'it' ? 'suggerimenti trovati' : 'suggestions found'}
+                      {result.suggestions.length} {t('culturalAdaptation.suggestionsFound')}
                     </p>
                     {result.suggestions.map((suggestion, i) => (
                       <div
@@ -258,7 +263,7 @@ export default function CulturalAdaptationPage() {
                                   : ADAPTATION_CATEGORIES[suggestion.category].label}
                               </Badge>
                               <Badge variant="outline" className="text-xs">
-                                {suggestion.confidence}% {language === 'it' ? 'confidenza' : 'confidence'}
+                                {suggestion.confidence}% {t('culturalAdaptation.confidence')}
                               </Badge>
                             </div>
                             <div className="flex items-center gap-2 text-sm">
@@ -296,33 +301,33 @@ export default function CulturalAdaptationPage() {
             </CardHeader>
             <CardContent className="space-y-1.5 text-sm py-2">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{language === 'it' ? 'Formalità' : 'Formality'}</span>
+                <span className="text-muted-foreground">{t('culturalAdaptation.formality')}</span>
                 <Badge variant="outline" className="text-xs capitalize">
                   {CULTURE_PROFILES[targetCulture].formality}
                 </Badge>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{language === 'it' ? 'Umorismo' : 'Humor'}</span>
+                <span className="text-muted-foreground">{t('culturalAdaptation.humor')}</span>
                 <Badge variant="outline" className="text-xs capitalize">
                   {CULTURE_PROFILES[targetCulture].humor}
                 </Badge>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{language === 'it' ? 'Data' : 'Date'}</span>
+                <span className="text-muted-foreground">{t('culturalAdaptation.date')}</span>
                 <span className="font-mono text-xs">{CULTURE_PROFILES[targetCulture].dateFormat}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{language === 'it' ? 'Numeri' : 'Numbers'}</span>
+                <span className="text-muted-foreground">{t('culturalAdaptation.numbers')}</span>
                 <span className="font-mono text-xs">
                   1{CULTURE_PROFILES[targetCulture].numberFormat.thousand}234{CULTURE_PROFILES[targetCulture].numberFormat.decimal}56
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{language === 'it' ? 'Valuta' : 'Currency'}</span>
+                <span className="text-muted-foreground">{t('culturalAdaptation.currency')}</span>
                 <span>{CULTURE_PROFILES[targetCulture].currency}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{language === 'it' ? 'Sistema' : 'System'}</span>
+                <span className="text-muted-foreground">{t('culturalAdaptation.system')}</span>
                 <Badge variant="outline" className="text-xs capitalize">
                   {CULTURE_PROFILES[targetCulture].measurementSystem}
                 </Badge>
@@ -334,7 +339,7 @@ export default function CulturalAdaptationPage() {
           <Card>
             <CardHeader className="pb-1 pt-3">
               <CardTitle className="text-sm">
-                {language === 'it' ? 'Categorie Analizzate' : 'Analyzed Categories'}
+                {t('culturalAdaptation.analyzedCategories')}
               </CardTitle>
             </CardHeader>
             <CardContent className="py-2">

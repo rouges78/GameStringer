@@ -111,28 +111,32 @@ export default function AIReviewPage() {
 
   return (
     <div className="space-y-4">
-      {/* Hero Header - Compact */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 p-4 text-white">
-        <div className="relative z-10 flex items-center justify-between">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-600 p-3">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Bot className="h-6 w-6" />
+            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+              <Bot className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">AI Review Agent</h1>
-              <p className="text-white/80 text-sm">
-                {language === 'it' ? 'Revisione automatica delle traduzioni' : 'Automatic translation review'}
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+                {t('aiReview.title')}
+              </h1>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('aiReview.subtitle')}
               </p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-md text-sm">
-              <BarChart3 className="h-4 w-4" />
-              <span>8 {language === 'it' ? 'Controlli' : 'Checks'}</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <BarChart3 className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">8</span>
+              <span className="text-[10px] text-white/70">{t('aiReview.checks')}</span>
             </div>
-            <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-md text-sm">
-              <Wand2 className="h-4 w-4" />
-              <span>Auto-Fix</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <Wand2 className="h-3.5 w-3.5 text-white" />
+              <span className="text-sm font-bold text-white">{t('aiReview.autoFix')}</span>
             </div>
           </div>
         </div>
@@ -146,9 +150,9 @@ export default function AIReviewPage() {
               <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'single' | 'batch')}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="single">
-                    {language === 'it' ? 'Singola' : 'Single'}
+                    {t('aiReview.single')}
                   </TabsTrigger>
-                  <TabsTrigger value="batch">Batch</TabsTrigger>
+                  <TabsTrigger value="batch">{t('aiReview.batch')}</TabsTrigger>
                 </TabsList>
               </Tabs>
             </CardHeader>
@@ -157,7 +161,7 @@ export default function AIReviewPage() {
                 <>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <Label className="text-xs">{language === 'it' ? 'Originale' : 'Original'}</Label>
+                      <Label className="text-xs">{t('aiReview.original')}</Label>
                       <Textarea
                         placeholder="Press {button} to continue..."
                         value={original}
@@ -167,7 +171,7 @@ export default function AIReviewPage() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">{language === 'it' ? 'Traduzione' : 'Translation'}</Label>
+                      <Label className="text-xs">{t('aiReview.translation')}</Label>
                       <Textarea
                         placeholder="Premi per continuare..."
                         value={translated}
@@ -188,7 +192,7 @@ export default function AIReviewPage() {
                       ) : (
                         <Sparkles className="h-4 w-4" />
                       )}
-                      {language === 'it' ? 'Analizza' : 'Review'}
+                      {t('aiReview.review')}
                     </Button>
                     {result?.autoFixAvailable && (
                       <Button variant="outline" onClick={handleAutoFix} className="gap-2">
@@ -202,9 +206,7 @@ export default function AIReviewPage() {
                 <>
                   <div className="space-y-1">
                     <Label className="text-xs">
-                      {language === 'it' 
-                        ? 'Formato: originale|traduzione (una per riga)' 
-                        : 'Format: original|translation (one per line)'}
+                      {t('aiReview.batchFormat')}
                     </Label>
                     <Textarea
                       placeholder={`Press Start|Premi Start\nLoading...|Caricamento...\nGame Over|Fine del Gioco`}
@@ -224,7 +226,7 @@ export default function AIReviewPage() {
                     ) : (
                       <FileText className="h-4 w-4" />
                     )}
-                    {language === 'it' ? 'Analizza Batch' : 'Review Batch'}
+                    {t('aiReview.reviewBatch')}
                   </Button>
                 </>
               )}
@@ -242,7 +244,7 @@ export default function AIReviewPage() {
                     ) : (
                       <AlertTriangle className="h-5 w-5 text-yellow-500" />
                     )}
-                    {language === 'it' ? 'Risultato Revisione' : 'Review Result'}
+                    {t('aiReview.reviewResult')}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <span className={cn("text-2xl font-bold", getScoreColor(result.score))}>
@@ -258,7 +260,7 @@ export default function AIReviewPage() {
                   <div className="text-center py-4 text-green-600">
                     <CheckCircle2 className="h-8 w-8 mx-auto mb-2" />
                     <p className="font-medium">
-                      {language === 'it' ? 'Nessun problema rilevato!' : 'No issues found!'}
+                      {t('aiReview.noIssues')}
                     </p>
                   </div>
                 ) : (
@@ -317,10 +319,10 @@ export default function AIReviewPage() {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">
-                    {language === 'it' ? 'Risultati Batch' : 'Batch Results'}
+                    {t('aiReview.batchResults')}
                   </CardTitle>
                   <Badge variant="outline">
-                    {batchResults.stats.total} {language === 'it' ? 'traduzioni' : 'translations'}
+                    {batchResults.stats.total} {t('aiReview.translations')}
                   </Badge>
                 </div>
               </CardHeader>
@@ -330,13 +332,13 @@ export default function AIReviewPage() {
                   <div className="p-2 bg-muted rounded-lg">
                     <p className="text-xl font-bold text-green-500">{batchResults.stats.passed}</p>
                     <p className="text-xs text-muted-foreground">
-                      {language === 'it' ? 'Passate' : 'Passed'}
+                      {t('aiReview.passed')}
                     </p>
                   </div>
                   <div className="p-2 bg-muted rounded-lg">
                     <p className="text-xl font-bold text-red-500">{batchResults.stats.failed}</p>
                     <p className="text-xs text-muted-foreground">
-                      {language === 'it' ? 'Fallite' : 'Failed'}
+                      {t('aiReview.failed')}
                     </p>
                   </div>
                   <div className="p-2 bg-muted rounded-lg">
@@ -344,7 +346,7 @@ export default function AIReviewPage() {
                       {batchResults.stats.avgScore}%
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {language === 'it' ? 'Media' : 'Average'}
+                      {t('aiReview.average')}
                     </p>
                   </div>
                   <div className="p-2 bg-muted rounded-lg">
@@ -352,7 +354,7 @@ export default function AIReviewPage() {
                       {Object.values(batchResults.stats.issuesBySeverity).reduce((a, b) => a + b, 0)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {language === 'it' ? 'Problemi' : 'Issues'}
+                      {t('aiReview.issues')}
                     </p>
                   </div>
                 </div>
@@ -391,7 +393,7 @@ export default function AIReviewPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">
-                {language === 'it' ? 'Controlli Attivi' : 'Active Checks'}
+                {t('aiReview.activeChecks')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
@@ -414,7 +416,7 @@ export default function AIReviewPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">
-                {language === 'it' ? 'Livelli Severità' : 'Severity Levels'}
+                {t('aiReview.severityLevels')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">

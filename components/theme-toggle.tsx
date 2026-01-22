@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTranslation } from '@/lib/i18n';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -17,6 +18,7 @@ interface ThemeToggleProps {
 }
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState<Theme>('system');
   const [mounted, setMounted] = useState(false);
 
@@ -91,15 +93,15 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => handleThemeChange('light')}>
           <Sun className="mr-2 h-4 w-4" />
-          <span>Light</span>
+          <span>{t('settings.themeLight')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleThemeChange('dark')}>
           <Moon className="mr-2 h-4 w-4" />
-          <span>Dark</span>
+          <span>{t('settings.themeDark')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleThemeChange('system')}>
           <Monitor className="mr-2 h-4 w-4" />
-          <span>System</span>
+          <span>{t('settings.themeAuto')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

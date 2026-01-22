@@ -31,7 +31,7 @@ export function useProgressOperations() {
         operationId,
         config,
         operation
-      );
+      ) as Promise<T>;
     },
     [progressState, generateOperationId]
   );
@@ -51,7 +51,7 @@ export function useProgressOperations() {
         config,
         items,
         processor
-      );
+      ) as Promise<Array<{ success: boolean; result?: R; error?: Error; item: T }>>;
     },
     [progressState, generateOperationId]
   );
@@ -101,7 +101,7 @@ export function useProgressOperations() {
           const allResults = await Promise.all(promises);
           return allResults;
         }
-      );
+      ) as Promise<T[]>;
     },
     [progressState, generateOperationId]
   );
@@ -156,7 +156,7 @@ export function useProgressOperations() {
 
           throw lastError || new Error('Operazione fallita dopo tutti i tentativi');
         }
-      );
+      ) as Promise<T>;
     },
     [progressState, generateOperationId]
   );
@@ -188,7 +188,7 @@ export function useProgressOperations() {
 
           return Promise.race([operationPromise, timeoutPromise]);
         }
-      );
+      ) as Promise<T>;
     },
     [progressState, generateOperationId]
   );

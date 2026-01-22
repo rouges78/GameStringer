@@ -105,7 +105,7 @@ export class RequestLogger {
       headers: this.sanitizeHeaders(request.headers),
       query,
       body: this.sanitizeBody(body),
-      ip: request.ip || request.headers.get('x-forwarded-for') || undefined,
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || undefined,
       userAgent: request.headers.get('user-agent') || undefined,
       requestId
     };

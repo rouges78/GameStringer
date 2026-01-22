@@ -1,6 +1,6 @@
 # 📚 GameStringer Complete Guide
 
-> **Version**: 1.0.0  
+> **Version**: 1.0.3  
 > **Last Updated**: January 2026
 
 ---
@@ -473,6 +473,6 @@ Games with these engines work best:
 ---
 
 <p align="center">
-  <strong>GameStringer v1.0.0</strong><br>
+  <strong>GameStringer v1.0.3</strong><br>
   Made with ❤️ for gamers who want to play in their language
 </p>

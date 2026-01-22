@@ -375,7 +375,7 @@ export function TextureTranslator() {
                   ) : (
                     <ScanLine className="h-4 w-4 mr-2" />
                   )}
-                  Rileva Testo
+                  {t('textureTranslator.detectText')}
                 </Button>
                 <Button 
                   onClick={applyTranslation}
@@ -384,7 +384,7 @@ export function TextureTranslator() {
                   size="sm"
                 >
                   <Replace className="h-4 w-4 mr-2" />
-                  Applica
+                  {t('textureTranslator.apply')}
                 </Button>
               </>
             )}
@@ -416,7 +416,7 @@ export function TextureTranslator() {
               <CardTitle className="text-sm flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <FolderOpen className="h-4 w-4 text-teal-400" />
-                  Texture ({textures.length})
+                  {t('textureTranslator.textures')} ({textures.length})
                 </span>
                 <div className="flex gap-1">
                   <Button 
@@ -445,7 +445,7 @@ export function TextureTranslator() {
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cerca texture..."
+                  placeholder={t('common.search') + '...'}
                   className="h-7 text-xs pl-7 bg-black/20 border-teal-500/30"
                 />
               </div>
@@ -459,7 +459,7 @@ export function TextureTranslator() {
                 >
                   <Upload className="h-8 w-8 mx-auto text-teal-400/50 mb-2" />
                   <p className="text-xs text-teal-400/70">
-                    Trascina texture o clicca
+                    {t('textureTranslator.dropTextures')}
                   </p>
                   <p className="text-[10px] text-teal-400/50 mt-1">
                     PNG, DDS, TGA, JPG
@@ -518,7 +518,7 @@ export function TextureTranslator() {
                   disabled={isProcessing}
                 >
                   <Wand2 className="h-3 w-3 mr-1" />
-                  Elabora Tutte ({textures.length})
+                  {t('textureTranslator.processAll')} ({textures.length})
                 </Button>
               )}
             </CardContent>
@@ -533,7 +533,7 @@ export function TextureTranslator() {
                 <div className="flex items-center gap-2">
                   <FileImage className="h-4 w-4 text-teal-400" />
                   <span className="text-sm text-teal-300">
-                    {currentTexture ? currentTexture.name : 'Nessuna texture selezionata'}
+                    {currentTexture ? currentTexture.name : t('textureTranslator.noTexture')}
                   </span>
                 </div>
                 
@@ -545,7 +545,7 @@ export function TextureTranslator() {
                     onClick={() => setShowOriginal(!showOriginal)}
                   >
                     {showOriginal ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-                    {showOriginal ? 'Tradotto' : 'Originale'}
+                    {showOriginal ? t('textureTranslator.translated') : t('textureTranslator.original')}
                   </Button>
                   <div className="flex items-center gap-1 bg-white/5 rounded-md px-2">
                     <ZoomOut className="h-3 w-3 text-teal-400" />
@@ -615,8 +615,8 @@ export function TextureTranslator() {
                   onDrop={handleDrop}
                 >
                   <Layers className="h-16 w-16 text-teal-400/30 mb-4" />
-                  <p className="text-teal-400/70 text-lg mb-2">Carica texture di gioco</p>
-                  <p className="text-teal-400/50 text-sm">Menu, UI, cartelli, HUD</p>
+                  <p className="text-teal-400/70 text-lg mb-2">{t('textureTranslator.dropTextures')}</p>
+                  <p className="text-teal-400/50 text-sm">PNG, DDS, TGA, JPG</p>
                 </div>
               )}
             </CardContent>
@@ -630,13 +630,13 @@ export function TextureTranslator() {
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Languages className="h-4 w-4 text-teal-400" />
-                Lingue
+                {t('textureTranslator.languages')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] text-teal-400 mb-1 block">Da</label>
+                  <label className="text-[10px] text-teal-400 mb-1 block">{t('common.from')}</label>
                   <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -654,7 +654,7 @@ export function TextureTranslator() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-[10px] text-teal-400 mb-1 block">A</label>
+                  <label className="text-[10px] text-teal-400 mb-1 block">{t('common.to')}</label>
                   <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                     <SelectTrigger className="h-7 text-xs">
                       <SelectValue />
@@ -680,26 +680,26 @@ export function TextureTranslator() {
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Settings className="h-4 w-4 text-teal-400" />
-                Impostazioni
+                {t('textureTranslator.settings')}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-teal-300">Mantieni stile</span>
+                <span className="text-xs text-teal-300">{t('textureTranslator.preserveStyle')}</span>
                 <Switch
                   checked={preserveStyle}
                   onCheckedChange={setPreserveStyle}
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-xs text-teal-300">Font matching auto</span>
+                <span className="text-xs text-teal-300">{t('textureTranslator.autoFontMatch')}</span>
                 <Switch
                   checked={autoMatchFont}
                   onCheckedChange={setAutoMatchFont}
                 />
               </div>
               <div>
-                <label className="text-[10px] text-teal-400 mb-1 block">Font fallback</label>
+                <label className="text-[10px] text-teal-400 mb-1 block">{t('textureTranslator.fontFallback')}</label>
                 <Select value={selectedFont} onValueChange={setSelectedFont}>
                   <SelectTrigger className="h-7 text-xs">
                     <SelectValue />
@@ -722,7 +722,7 @@ export function TextureTranslator() {
               <CardHeader className="py-2 px-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Grid3X3 className="h-4 w-4 text-teal-400" />
-                  Testi Rilevati ({currentTexture.regions.length})
+                  {t('textureTranslator.detectedTexts')} ({currentTexture.regions.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2">
@@ -775,7 +775,7 @@ export function TextureTranslator() {
                   disabled={!currentTexture?.modified}
                 >
                   <Save className="h-4 w-4 mr-1" />
-                  Salva
+                  {t('textureTranslator.save')}
                 </Button>
                 <Button 
                   size="sm" 
@@ -785,7 +785,7 @@ export function TextureTranslator() {
                   disabled={textures.length === 0}
                 >
                   <Download className="h-4 w-4 mr-1" />
-                  Esporta Tutto
+                  {t('textureTranslator.exportAll')}
                 </Button>
               </div>
             </CardContent>

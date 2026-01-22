@@ -44,7 +44,8 @@ export class RateLimiter {
   private defaultKeyGenerator(req: NextRequest): string {
     // Use IP address as default identifier
     const forwarded = req.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : req.ip || 'unknown';
+    const realIp = req.headers.get('x-real-ip');
+    const ip = forwarded ? forwarded.split(',')[0] : realIp || 'unknown';
     return ip;
   }
 
@@ -143,7 +144,7 @@ export const rateLimiters = {
     maxRequests: 10,
     message: 'Too many authentication attempts, please try again later.',
     keyGenerator: (req) => {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || 'unknown';
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown';
       return `auth:${ip}`;
     },
   }),
@@ -154,7 +155,7 @@ export const rateLimiters = {
     maxRequests: 60, // ~1 richiesta/secondo per OCR
     message: 'Too many translation requests, please try again later.',
     keyGenerator: (req) => {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || 'unknown';
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown';
       return `translation:${ip}`;
     },
   }),
@@ -165,7 +166,7 @@ export const rateLimiters = {
     maxRequests: 5,
     message: 'Too many upload requests, please try again later.',
     keyGenerator: (req) => {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || 'unknown';
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown';
       return `upload:${ip}`;
     },
   }),
@@ -183,7 +184,7 @@ export const rateLimiters = {
     maxRequests: 10,
     message: 'Too many Steam API requests, please try again later.',
     keyGenerator: (req) => {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || 'unknown';
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown';
       return `steam:${ip}`;
     },
   }),
@@ -201,7 +202,7 @@ export const rateLimiters = {
     maxRequests: 5,
     message: 'Too many AI service requests, please try again later.',
     keyGenerator: (req) => {
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || 'unknown';
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown';
       return `ai:${ip}`;
     },
   }),

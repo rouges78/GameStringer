@@ -103,16 +103,19 @@ export default function StoreManagerPage() {
             toast.success('✅ Epic Games autenticato con successo!');
             
             // Aggiorna stato connection
-            setStoreStatuses(prev => ({
-              ...prev,
-              epic_games: {
-                ...prev.epic_games,
-                connected: true,
-                loading: false,
-                lastChecked: new Date().toISOString(),
-                error: null
-              }
-            }));
+            setStoreStatuses(prev => {
+              const updated: StoreStatuses = {
+                ...prev,
+                epic_games: {
+                  ...prev.epic_games,
+                  connected: true,
+                  loading: false,
+                  lastChecked: new Date(),
+                  error: null
+                }
+              };
+              return updated;
+            });
             
             // Try a caricare i games
             try {

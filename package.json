@@ -41,6 +41,9 @@
     "version:build": "node scripts/version-manager.js build",
     "version:changelog": "node scripts/version-manager.js changelog",
     "version:tag": "node scripts/version-manager.js tag",
+    "version:audit": "node scripts/senior-versioning-agent.js audit",
+    "version:fix": "node scripts/senior-versioning-agent.js fix",
+    "version:release": "node scripts/senior-versioning-agent.js release",
     "release:patch": "npm run version:patch && npm run version:tag && git push --tags",
     "release:minor": "npm run version:minor && npm run version:tag && git push --tags",
     "release:major": "npm run version:major && npm run version:tag && git push --tags"
@@ -139,6 +142,7 @@
     "dayjs": "1.11.13",
     "deepl-node": "^1.19.0",
     "dotenv": "16.5.0",
+    "embla-carousel-react": "^8.6.0",
     "framer-motion": "^10.18.0",
     "ini": "^5.0.0",
     "input-otp": "1.2.4",
