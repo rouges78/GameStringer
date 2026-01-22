@@ -11,79 +11,53 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, KeyRound, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Key, KeyRound, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { 
+  stringToRecoveryKey, 
+  isValidRecoveryKeyFormat, 
+  verifyProfileRecoveryKey 
+} from '@/lib/recovery-key';
 
 interface PasswordRecoveryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   profileName?: string;
-  profileEmail?: string;
+  profileId?: string;
 }
 
-type RecoveryStep = 'email' | 'code' | 'newPassword' | 'success';
+type RecoveryStep = 'key' | 'newPassword' | 'success';
 
 export function PasswordRecoveryDialog({
   open,
   onOpenChange,
   profileName,
-  profileEmail,
+  profileId,
 }: PasswordRecoveryDialogProps) {
-  const [step, setStep] = useState<RecoveryStep>('email');
-  const [email, setEmail] = useState(profileEmail || '');
-  const [code, setCode] = useState('');
+  const [step, setStep] = useState<RecoveryStep>('key');
+  const [recoveryKeyInput, setRecoveryKeyInput] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [maskedEmail, setMaskedEmail] = useState('');
 
-  const maskEmail = (email: string) => {
-    const [local, domain] = email.split('@');
-    if (!domain) return email;
-    const maskedLocal = local.slice(0, 2) + '***' + local.slice(-1);
-    return `${maskedLocal}@${domain}`;
-  };
-
-  const validateEmail = (email: string) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  };
-
-  const handleSendCode = async () => {
+  const handleVerifyKey = async () => {
     setError(null);
     
-    if (!validateEmail(email)) {
-      setError('Inserisci un indirizzo email valido');
+    const words = stringToRecoveryKey(recoveryKeyInput);
+    
+    if (!isValidRecoveryKeyFormat(words)) {
+      setError('Invalid recovery key. Enter all 12 words separated by spaces.');
       return;
     }
 
     setLoading(true);
     
-    // Simula invio email (in produzione userebbe un backend reale)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Verifica recovery key
+    const keyId = profileId || profileName || '';
+    const isValid = await verifyProfileRecoveryKey(keyId, words);
     
-    setMaskedEmail(maskEmail(email));
-    setStep('code');
-    setLoading(false);
-  };
-
-  const handleVerifyCode = async () => {
-    setError(null);
-    
-    if (code.length !== 6) {
-      setError('Il codice deve essere di 6 cifre');
-      return;
-    }
-
-    setLoading(true);
-    
-    // Simula verifica codice (in produzione verificherebbe con backend)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Per demo, accetta qualsiasi codice di 6 cifre
-    if (!/^\d{6}$/.test(code)) {
-      setError('Codice non valido');
+    if (!isValid) {
+      setError('Recovery key does not match. Please check and try again.');
       setLoading(false);
       return;
     }
@@ -95,19 +69,20 @@ export function PasswordRecoveryDialog({
   const handleResetPassword = async () => {
     setError(null);
     
-    if (newPassword.length < 4) {
-      setError('La password deve essere di almeno 4 caratteri');
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
     
     if (newPassword !== confirmPassword) {
-      setError('Le password non coincidono');
+      setError('Passwords do not match');
       return;
     }
 
     setLoading(true);
     
-    // Simula reset password
+    // TODO: Implementare reset password effettivo via backend
+    // Per ora simula il successo
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     setStep('success');
@@ -115,9 +90,8 @@ export function PasswordRecoveryDialog({
   };
 
   const handleClose = () => {
-    setStep('email');
-    setEmail(profileEmail || '');
-    setCode('');
+    setStep('key');
+    setRecoveryKeyInput('');
     setNewPassword('');
     setConfirmPassword('');
     setError(null);
@@ -126,8 +100,7 @@ export function PasswordRecoveryDialog({
 
   const handleBack = () => {
     setError(null);
-    if (step === 'code') setStep('email');
-    else if (step === 'newPassword') setStep('code');
+    if (step === 'newPassword') setStep('key');
   };
 
   return (
@@ -140,73 +113,37 @@ export function PasswordRecoveryDialog({
             ) : (
               <KeyRound className="h-5 w-5 text-purple-400" />
             )}
-            {step === 'email' && 'Recupera Password'}
-            {step === 'code' && 'Verifica Email'}
-            {step === 'newPassword' && 'Nuova Password'}
-            {step === 'success' && 'Password Reimpostata'}
+            {step === 'key' && 'Recover Password'}
+            {step === 'newPassword' && 'New Password'}
+            {step === 'success' && 'Password Reset'}
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            {step === 'email' && `Recupera la password per il profilo ${profileName || 'selezionato'}`}
-            {step === 'code' && `Inserisci il codice inviato a ${maskedEmail}`}
-            {step === 'newPassword' && 'Scegli una nuova password sicura'}
-            {step === 'success' && 'La tua password è stata reimpostata con successo'}
+            {step === 'key' && `Enter your 12-word recovery key for ${profileName || 'this profile'}`}
+            {step === 'newPassword' && 'Choose a new secure password'}
+            {step === 'success' && 'Your password has been reset successfully'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Step: Email */}
-          {step === 'email' && (
+          {/* Step: Recovery Key */}
+          {step === 'key' && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="recovery-email" className="text-gray-300">
-                  Email di recupero
+                <Label htmlFor="recovery-key" className="text-gray-300 flex items-center gap-2">
+                  <Key className="h-4 w-4 text-purple-400" />
+                  Recovery Key (12 words)
                 </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                  <Input
-                    id="recovery-email"
-                    type="email"
-                    placeholder="nome@esempio.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-gray-500"
-                  />
-                </div>
-              </div>
-              
-              <p className="text-xs text-gray-500">
-                Ti invieremo un codice di verifica a 6 cifre per reimpostare la password.
-              </p>
-            </div>
-          )}
-
-          {/* Step: Code */}
-          {step === 'code' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="verification-code" className="text-gray-300">
-                  Codice di verifica
-                </Label>
-                <Input
-                  id="verification-code"
-                  type="text"
-                  placeholder="000000"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="text-center text-2xl tracking-[0.5em] bg-slate-800/50 border-slate-700 text-white font-mono"
-                  maxLength={6}
+                <textarea
+                  id="recovery-key"
+                  placeholder="word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12"
+                  value={recoveryKeyInput}
+                  onChange={(e) => setRecoveryKeyInput(e.target.value.toLowerCase())}
+                  className="w-full h-24 px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-md text-white placeholder:text-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 resize-none font-mono text-sm"
                 />
               </div>
               
               <p className="text-xs text-gray-500">
-                Non hai ricevuto il codice?{' '}
-                <button 
-                  className="text-purple-400 hover:underline"
-                  onClick={handleSendCode}
-                  disabled={loading}
-                >
-                  Invia di nuovo
-                </button>
+                Enter the 12 words you saved when creating this profile, separated by spaces.
               </p>
             </div>
           )}
@@ -216,12 +153,12 @@ export function PasswordRecoveryDialog({
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password" className="text-gray-300">
-                  Nuova password
+                  New password
                 </Label>
                 <Input
                   id="new-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Minimum 6 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white"
@@ -230,12 +167,12 @@ export function PasswordRecoveryDialog({
               
               <div className="space-y-2">
                 <Label htmlFor="confirm-password" className="text-gray-300">
-                  Conferma password
+                  Confirm password
                 </Label>
                 <Input
                   id="confirm-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="Repeat password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white"
@@ -251,7 +188,7 @@ export function PasswordRecoveryDialog({
                 <CheckCircle2 className="h-8 w-8 text-green-400" />
               </div>
               <p className="text-gray-300">
-                Ora puoi accedere al tuo profilo con la nuova password.
+                You can now log in with your new password.
               </p>
             </div>
           )}
@@ -267,7 +204,7 @@ export function PasswordRecoveryDialog({
 
         {/* Actions */}
         <div className="flex gap-2">
-          {step !== 'email' && step !== 'success' && (
+          {step === 'newPassword' && (
             <Button
               variant="ghost"
               onClick={handleBack}
@@ -275,37 +212,24 @@ export function PasswordRecoveryDialog({
               className="text-gray-400 hover:text-white"
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Indietro
+              Back
             </Button>
           )}
           
           <div className="flex-1" />
           
-          {step === 'email' && (
+          {step === 'key' && (
             <Button
-              onClick={handleSendCode}
-              disabled={loading || !email}
+              onClick={handleVerifyKey}
+              disabled={loading || !recoveryKeyInput.trim()}
               className="bg-purple-600 hover:bg-purple-700"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
-                <Mail className="h-4 w-4 mr-2" />
+                <Key className="h-4 w-4 mr-2" />
               )}
-              Invia codice
-            </Button>
-          )}
-          
-          {step === 'code' && (
-            <Button
-              onClick={handleVerifyCode}
-              disabled={loading || code.length !== 6}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : null}
-              Verifica
+              Verify Key
             </Button>
           )}
           
@@ -320,7 +244,7 @@ export function PasswordRecoveryDialog({
               ) : (
                 <KeyRound className="h-4 w-4 mr-2" />
               )}
-              Reimposta password
+              Reset Password
             </Button>
           )}
           
@@ -330,7 +254,7 @@ export function PasswordRecoveryDialog({
               className="bg-green-600 hover:bg-green-700"
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
-              Fatto
+              Done
             </Button>
           )}
         </div>

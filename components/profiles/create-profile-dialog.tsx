@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useProfiles } from '@/hooks/use-profiles';
 import { CreateProfileRequest } from '@/types/profiles';
+import { generateRecoveryKey, saveRecoveryKeyHash } from '@/lib/recovery-key';
+import { RecoveryKeyDisplay } from '@/components/profiles/recovery-key-display';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { DialogTitle } from '@/components/ui/dialog';
 
@@ -46,6 +48,9 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
   const [error, setError] = useState<string | null>(null);
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
   const [customImage, setCustomImage] = useState<string | null>(null);
+  const [recoveryKey, setRecoveryKey] = useState<string[]>([]);
+  const [showRecoveryKey, setShowRecoveryKey] = useState(false);
+  const [pendingProfileId, setPendingProfileId] = useState<string | null>(null);
 
   const { createProfile, authenticateProfile } = useProfiles();
 
@@ -138,23 +143,16 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     if (success) {
       console.log('✅ Profile created successfully:', request.name);
       
-      // createProfile() già imposta currentProfile, non serve authenticateProfile()
+      // Genera Recovery Key
+      const newRecoveryKey = generateRecoveryKey();
+      setRecoveryKey(newRecoveryKey);
       
-      // Reset form
-      setFormData({
-        name: '',
-        password: '',
-        confirmPassword: '',
-        avatarPath: '',
-      });
-      setSelectedAvatar(null);
+      // Salva hash della recovery key (usa il nome come ID temporaneo)
+      await saveRecoveryKeyHash(request.name, newRecoveryKey);
       
-      // Chiudi il dialog
-      onOpenChange(false);
-      console.log('✅ Dialog closed, profile ready');
-      
-      // Notifica il ProtectedRoute che tutto è completato
-      onProfileCreated(request.name);
+      // Mostra dialog recovery key
+      setPendingProfileId(request.name);
+      setShowRecoveryKey(true);
     } else {
       console.error('❌ Error during profile creation');
       setError('Error creating profile');
@@ -163,8 +161,31 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     setIsCreating(false);
   };
 
+  const handleRecoveryKeyConfirmed = () => {
+    // Reset form
+    setFormData({
+      name: '',
+      password: '',
+      confirmPassword: '',
+      avatarPath: '',
+    });
+    setSelectedAvatar(null);
+    setCustomImage(null);
+    setRecoveryKey([]);
+    setShowRecoveryKey(false);
+    
+    // Chiudi il dialog
+    onOpenChange(false);
+    
+    // Notifica il ProtectedRoute
+    if (pendingProfileId) {
+      onProfileCreated(pendingProfileId);
+      setPendingProfileId(null);
+    }
+  };
+
   const handleClose = () => {
-    if (!isCreating) {
+    if (!isCreating && !showRecoveryKey) {
       setFormData({
         name: '',
         password: '',
@@ -393,6 +414,15 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             </Button>
           </div>
         </motion.form>
+
+        {/* Recovery Key Display Dialog */}
+        <RecoveryKeyDisplay
+          open={showRecoveryKey}
+          onOpenChange={setShowRecoveryKey}
+          recoveryKey={recoveryKey}
+          profileName={formData.name || pendingProfileId || ''}
+          onConfirm={handleRecoveryKeyConfirmed}
+        />
       </DialogContent>
     </Dialog>
   );
