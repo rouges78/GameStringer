@@ -274,7 +274,7 @@ export function MangaTranslator() {
   return (
     <div className="space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
