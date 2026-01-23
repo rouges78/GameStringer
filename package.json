@@ -44,6 +44,8 @@
     "version:audit": "node scripts/senior-versioning-agent.js audit",
     "version:fix": "node scripts/senior-versioning-agent.js fix",
     "version:release": "node scripts/senior-versioning-agent.js release",
+    "version:upload": "node scripts/senior-versioning-agent.js upload",
+    "version:publish": "node scripts/senior-versioning-agent.js upload",
     "release:patch": "npm run version:patch && npm run version:tag && git push --tags",
     "release:minor": "npm run version:minor && npm run version:tag && git push --tags",
     "release:major": "npm run version:major && npm run version:tag && git push --tags"
@@ -183,5 +185,5 @@
     "yup": "1.3.0",
     "zod": "3.23.8"
   },
-  "version": "1.0.3"
+  "version": "1.0.4"
 }

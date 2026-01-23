@@ -19,6 +19,48 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.4 — Translation Tools Expansion 🚀
+
+> **Data**: 2026-01-23
+
+#### 🎬 Subtitle Translator
+- **Parser completo** per SRT, VTT, ASS/SSA
+- **Preview in tempo reale** con validazione QA
+- **Export multi-formato** con timing preservato
+
+#### 📁 Batch Folder Translator
+- **Scansione ricorsiva** con walkdir (Rust)
+- **10+ formati** supportati (JSON, PO, CSV, SRT, VTT, ASS, XML, YAML...)
+- **Progress tracking** con pausa/stop
+
+#### 👥 Community Hub
+- **Browser pacchetti** TM con search/filter
+- **Top contributori** e statistiche
+- **Download** Translation Memory dalla community
+
+#### 🎮 Retro ROM Tools
+- **8 console** supportate (NES, SNES, GB, GBC, GBA, Genesis, PSX, N64)
+- **Table file** (.TBL) parser/generator
+- **Font injection** per caratteri accentati italiani
+
+#### 🔌 API Pubblica v1
+- `POST /api/v1/translate` - Traduzione singola
+- `POST /api/v1/batch` - Traduzione batch (max 100)
+- `GET /api/v1/languages` - 20 lingue supportate
+- `GET /api/v1/health` - Health check
+
+#### 🖥️ Screen Adaptation
+- **Adattamento automatico** risoluzione schermo
+- **Breakpoint** per compact (<1400px), normal, 4K (≥3840px)
+- **CSS variables** per spacing/font dinamici
+
+#### 🔧 Fix & Miglioramenti
+- **Tutorial unificato**: risolto conflitto OnboardingWizard/InteractiveTutorial
+- **Hero headers compatti** per Retro e Batch
+- **Landing page** pronta per deploy
+
+---
+
 ### v1.0.3 — Recovery Key & i18n Complete 🔐
 
 > **Data**: 2026-01-22

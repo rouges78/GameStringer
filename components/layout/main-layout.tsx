@@ -40,7 +40,9 @@ import {
   BookOpen,
   Check,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  Film,
+  FolderTree
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -110,6 +112,8 @@ const getNavGroups = (t: (key: string) => string) => [
       { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
       { name: t('nav.multiLlm'), href: '/translator/compare', icon: Brain },
       { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
+      { name: t('nav.subtitles') || 'Sottotitoli', href: '/subtitles', icon: Film },
+      { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
       { name: t('nav.dictionary'), href: '/memory', icon: Database },
     ],
     colorClass: 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/20',
@@ -126,6 +130,7 @@ const getNavGroups = (t: (key: string) => string) => [
     collapsible: true,
     items: [
       { name: t('nav.patcher'), href: '/unity-patcher', icon: Wand2 },
+      { name: t('nav.retro') || 'Retro ROM', href: '/retro', icon: Gamepad2 },
       { name: t('nav.injector'), href: '/injector', icon: Cpu },
       { name: t('nav.crawler'), href: '/crawler', icon: Scan },
       { name: t('nav.fixer'), href: '/fixer', icon: Wrench },

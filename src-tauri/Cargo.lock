@@ -1343,7 +1343,7 @@ dependencies = [
 
 [[package]]
 name = "gamestringer"
-version = "1.0.3"
+version = "1.0.4"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1388,6 +1388,7 @@ dependencies = [
  "tracing",
  "urlencoding",
  "uuid",
+ "walkdir",
  "winapi",
  "windows 0.51.1",
  "winreg 0.52.0",

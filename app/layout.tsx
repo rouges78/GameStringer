@@ -13,6 +13,7 @@ import { InteractiveTutorial } from '@/components/onboarding/interactive-tutoria
 import { DisclaimerModal } from '@/components/legal/disclaimer-modal';
 import { UpdateNotification } from '@/components/update-notification';
 import { I18nProvider } from '@/lib/i18n';
+import { ScreenProvider } from '@/components/providers/screen-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -32,6 +33,7 @@ export default function RootLayout({
         <ErrorBoundary>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <I18nProvider>
+            <ScreenProvider>
             <Providers>
               <ProgressProvider>
                 <ErrorBoundary>
@@ -55,6 +57,7 @@ export default function RootLayout({
                 {/* {process.env.NODE_ENV === 'development' && <LoginDebugMonitor />} */}
               </ProgressProvider>
             </Providers>
+            </ScreenProvider>
             </I18nProvider>
           </ThemeProvider>
         </ErrorBoundary>

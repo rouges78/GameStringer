@@ -52,4 +52,5 @@ pub mod store_detection;
 pub mod unity_bundle;
 pub mod universal_injector;
 pub mod screen_capture;
+pub mod batch_processor;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO

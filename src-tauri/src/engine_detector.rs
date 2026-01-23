@@ -1,6 +1,7 @@
 use std::path::Path;
 
 #[derive(Debug, PartialEq, Clone)]
+#[allow(dead_code)]
 pub enum GameEngine {
     Unity,
     Unreal,

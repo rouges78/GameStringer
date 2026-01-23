@@ -1,8 +1,10 @@
 # 🎮 GameStringer v1.0.3
 
-> Release automatica generata il 2026-01-22
+> Automatic release generated on 2026-01-23
 
 ---
+
+## What's New
 
 ### v1.0.3 — Recovery Key & i18n Complete 🔐
 
@@ -31,13 +33,13 @@
 - **Windows Installer**: `GameStringer-1.0.3-Setup.exe`
 - **Portable**: `GameStringer-1.0.3-Portable.zip`
 
-## 📖 Documentazione
+## 📖 Documentation
 
 - [README](https://github.com/rouges78/GameStringer/blob/main/README.md)
-- [Guida Completa](https://github.com/rouges78/GameStringer/blob/main/docs/GUIDE.md)
+- [Complete Guide](https://github.com/rouges78/GameStringer/blob/main/docs/GUIDE.md)
 - [Changelog](https://github.com/rouges78/GameStringer/blob/main/CHANGELOG.md)
 
-## 💖 Supporta il Progetto
+## 💖 Support the Project
 
 - [Ko-fi](https://ko-fi.com/gamestringer)
 - [GitHub Sponsors](https://github.com/sponsors/rouges78)

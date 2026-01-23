@@ -84,7 +84,7 @@ pub struct ContextInjectionResult {
 /// Genera contesto per traduzione
 #[tauri::command]
 pub fn generate_translation_context(
-    text: String,
+    _text: String,
     context: TranslationContext,
     source_lang: String,
     target_lang: String,
@@ -424,6 +424,7 @@ pub struct ToneAnalysis {
     pub primary_tone: String,
     pub formality: String,
     #[serde(skip)]
+    #[allow(dead_code)]
     pub scores: HashMap<String, i32>,
     pub confidence: f32,
 }
@@ -431,7 +432,7 @@ pub struct ToneAnalysis {
 /// Genera hint culturali per una coppia di lingue
 #[tauri::command]
 pub fn get_cultural_hints(
-    source_lang: String,
+    _source_lang: String,
     target_lang: String,
     category: Option<String>,
 ) -> Result<Vec<CulturalHint>, String> {

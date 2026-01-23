@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
 use chrono::Utc;
 
 /// 📤 Export Multi-Format System
@@ -136,7 +135,7 @@ pub fn export_to_xliff(
     output_path: String,
     options: ExportOptions,
 ) -> Result<ExportResult, String> {
-    let now = Utc::now().to_rfc3339();
+    let _now = Utc::now().to_rfc3339();
     let is_xliff2 = options.format == ExportFormat::Xliff2;
     
     let mut xliff = if is_xliff2 {

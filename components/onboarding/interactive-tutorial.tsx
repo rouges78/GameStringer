@@ -12,6 +12,7 @@ import { useTranslation } from '@/lib/i18n';
 
 const TUTORIAL_KEY = 'gamestringer-tutorial-completed';
 const TUTORIAL_VERSION = '2';
+const ONBOARDING_KEY = 'gamestringer_onboarding_completed'; // Chiave condivisa con OnboardingWizard
 
 interface TutorialStep {
   id: string;
@@ -90,10 +91,19 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
-    const completed = localStorage.getItem(TUTORIAL_KEY);
-    if (completed !== TUTORIAL_VERSION || forceShow) {
+    const tutorialCompleted = localStorage.getItem(TUTORIAL_KEY);
+    const onboardingCompleted = localStorage.getItem(ONBOARDING_KEY);
+    
+    // Non mostrare se l'onboarding wizard è già stato completato (evita doppio tutorial)
+    // O se questo tutorial è già stato completato
+    if (onboardingCompleted || tutorialCompleted === TUTORIAL_VERSION) {
+      return;
+    }
+    
+    if (forceShow) {
       setTimeout(() => setIsVisible(true), 500);
     }
+    // Altrimenti lascia che sia l'OnboardingWizard a partire (è più completo)
   }, [forceShow]);
 
   const updateHighlight = useCallback(() => {

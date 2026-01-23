@@ -391,8 +391,8 @@ class SeniorVersioningAgent {
   // GENERAZIONE RELEASE NOTES
   // ═══════════════════════════════════════════════════════════════════
 
-  generateReleaseNotes() {
-    log.section('Generazione Release Notes per GitHub');
+  generateReleaseNotes(lang = 'en') {
+    log.section(`Generazione Release Notes (${lang.toUpperCase()}) per GitHub`);
     
     const changelog = this.loadFile(this.files.changelog);
     if (!changelog) {
@@ -412,51 +412,95 @@ class SeniorVersioningAgent {
       return null;
     }
 
-    let releaseNotes = match[0].trim();
+    let releaseContent = match[0].trim();
     
-    // Aggiungi header
-    const header = `# 🎮 GameStringer v${this.currentVersion}
+    // Traduzioni per header/footer
+    const translations = {
+      en: {
+        header: `# 🎮 GameStringer v${this.currentVersion}
+
+> Automatic release generated on ${new Date().toISOString().split('T')[0]}
+
+---
+
+## What's New
+
+`,
+        download: '## 📥 Download',
+        installer: 'Windows Installer',
+        portable: 'Portable',
+        docs: '## 📖 Documentation',
+        readme: 'README',
+        guide: 'Complete Guide',
+        changelog: 'Changelog',
+        support: '## 💖 Support the Project',
+        fullChangelog: 'Full Changelog'
+      },
+      it: {
+        header: `# 🎮 GameStringer v${this.currentVersion}
 
 > Release automatica generata il ${new Date().toISOString().split('T')[0]}
 
 ---
 
-`;
+## Novità
 
-    // Aggiungi footer con link
+`,
+        download: '## 📥 Download',
+        installer: 'Windows Installer',
+        portable: 'Portable',
+        docs: '## 📖 Documentazione',
+        readme: 'README',
+        guide: 'Guida Completa',
+        changelog: 'Changelog',
+        support: '## 💖 Supporta il Progetto',
+        fullChangelog: 'Changelog Completo'
+      }
+    };
+
+    const t = translations[lang] || translations.en;
+
     const footer = `
 
 ---
 
-## 📥 Download
+${t.download}
 
-- **Windows Installer**: \`GameStringer-${this.currentVersion}-Setup.exe\`
-- **Portable**: \`GameStringer-${this.currentVersion}-Portable.zip\`
+- **${t.installer}**: \`GameStringer-${this.currentVersion}-Setup.exe\`
+- **${t.portable}**: \`GameStringer-${this.currentVersion}-Portable.zip\`
 
-## 📖 Documentazione
+${t.docs}
 
-- [README](https://github.com/rouges78/GameStringer/blob/main/README.md)
-- [Guida Completa](https://github.com/rouges78/GameStringer/blob/main/docs/GUIDE.md)
-- [Changelog](https://github.com/rouges78/GameStringer/blob/main/CHANGELOG.md)
+- [${t.readme}](https://github.com/rouges78/GameStringer/blob/main/README.md)
+- [${t.guide}](https://github.com/rouges78/GameStringer/blob/main/docs/GUIDE.md)
+- [${t.changelog}](https://github.com/rouges78/GameStringer/blob/main/CHANGELOG.md)
 
-## 💖 Supporta il Progetto
+${t.support}
 
 - [Ko-fi](https://ko-fi.com/gamestringer)
 - [GitHub Sponsors](https://github.com/sponsors/rouges78)
 
 ---
 
-**Full Changelog**: https://github.com/rouges78/GameStringer/compare/v${this.getPreviousVersion()}...v${this.currentVersion}
+**${t.fullChangelog}**: https://github.com/rouges78/GameStringer/compare/v${this.getPreviousVersion()}...v${this.currentVersion}
 `;
 
-    releaseNotes = header + releaseNotes + footer;
+    const releaseNotes = t.header + releaseContent + footer;
 
-    // Salva file
-    const releaseFile = path.join(this.rootDir, `RELEASE_NOTES_v${this.currentVersion}.md`);
+    // Salva file (inglese come default, italiano con suffisso _IT)
+    const suffix = lang === 'it' ? '_IT' : '';
+    const releaseFile = path.join(this.rootDir, `RELEASE_NOTES_v${this.currentVersion}${suffix}.md`);
     fs.writeFileSync(releaseFile, releaseNotes);
     
-    log.success(`Release notes salvate: ${releaseFile}`);
+    log.success(`Release notes (${lang.toUpperCase()}) salvate: ${releaseFile}`);
     return releaseNotes;
+  }
+
+  generateAllReleaseNotes() {
+    log.section('Generazione Release Notes Bilingue');
+    this.generateReleaseNotes('en');
+    this.generateReleaseNotes('it');
+    log.success('Release notes generate in EN e IT');
   }
 
   getPreviousVersion() {
@@ -583,6 +627,202 @@ class SeniorVersioningAgent {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // UPLOAD RELEASE SU GITHUB
+  // ═══════════════════════════════════════════════════════════════════
+
+  getGhPath() {
+    // Prima prova il comando diretto
+    try {
+      execSync('gh --version', { encoding: 'utf8', stdio: 'pipe' });
+      return 'gh';
+    } catch {}
+
+    // Su Windows, cerca nei percorsi comuni di installazione
+    if (process.platform === 'win32') {
+      const commonPaths = [
+        path.join(process.env.LOCALAPPDATA || '', 'Programs', 'GitHub CLI', 'gh.exe'),
+        path.join(process.env.ProgramFiles || '', 'GitHub CLI', 'gh.exe'),
+        path.join(process.env['ProgramFiles(x86)'] || '', 'GitHub CLI', 'gh.exe'),
+        'C:\\Program Files\\GitHub CLI\\gh.exe',
+        'C:\\Program Files (x86)\\GitHub CLI\\gh.exe',
+      ];
+      
+      for (const ghPath of commonPaths) {
+        if (fs.existsSync(ghPath)) {
+          try {
+            execSync(`"${ghPath}" --version`, { encoding: 'utf8', stdio: 'pipe' });
+            return `"${ghPath}"`;
+          } catch {}
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  checkGhCli() {
+    this.ghPath = this.getGhPath();
+    return this.ghPath !== null;
+  }
+
+  checkGhAuth() {
+    try {
+      execSync(`${this.ghPath} auth status`, { encoding: 'utf8', stdio: 'pipe' });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  findReleaseAssets() {
+    const assetsDir = path.join(this.rootDir, 'src-tauri', 'target', 'release', 'bundle');
+    const assets = [];
+
+    // Cerca installer NSIS
+    const nsisDir = path.join(assetsDir, 'nsis');
+    if (fs.existsSync(nsisDir)) {
+      const files = fs.readdirSync(nsisDir).filter(f => f.endsWith('.exe'));
+      files.forEach(f => assets.push(path.join(nsisDir, f)));
+    }
+
+    // Cerca MSI
+    const msiDir = path.join(assetsDir, 'msi');
+    if (fs.existsSync(msiDir)) {
+      const files = fs.readdirSync(msiDir).filter(f => f.endsWith('.msi'));
+      files.forEach(f => assets.push(path.join(msiDir, f)));
+    }
+
+    // Cerca nella root di release per portable
+    const releaseDir = path.join(this.rootDir, 'src-tauri', 'target', 'release');
+    if (fs.existsSync(releaseDir)) {
+      const exeFiles = fs.readdirSync(releaseDir).filter(f => 
+        f.toLowerCase().includes('gamestringer') && f.endsWith('.exe')
+      );
+      exeFiles.forEach(f => {
+        const fullPath = path.join(releaseDir, f);
+        if (!assets.includes(fullPath)) assets.push(fullPath);
+      });
+    }
+
+    return assets;
+  }
+
+  async uploadRelease(options = {}) {
+    log.header('🚀 UPLOAD RELEASE SU GITHUB');
+    
+    this.loadVersion();
+    const tagName = `v${this.currentVersion}`;
+
+    // Verifica gh CLI
+    if (!this.checkGhCli()) {
+      log.error('GitHub CLI (gh) non installato!');
+      log.info('Installa da: https://cli.github.com/');
+      log.info('Oppure: winget install GitHub.cli');
+      return false;
+    }
+    log.success('GitHub CLI trovato');
+
+    // Verifica autenticazione
+    if (!this.checkGhAuth()) {
+      log.error('Non autenticato con GitHub CLI!');
+      log.info('Esegui: gh auth login');
+      return false;
+    }
+    log.success('Autenticazione GitHub OK');
+
+    // Verifica se release esiste già
+    try {
+      execSync(`${this.ghPath} release view ${tagName}`, { encoding: 'utf8', stdio: 'pipe' });
+      if (!options.force) {
+        log.warning(`Release ${tagName} esiste già!`);
+        log.info('Usa --force per sovrascrivere o aggiungere asset');
+        return false;
+      }
+      log.info(`Release ${tagName} esiste, aggiornamento asset...`);
+    } catch {
+      // Release non esiste, procedi con la creazione
+    }
+
+    // Genera release notes se non esistono
+    const notesFile = path.join(this.rootDir, `RELEASE_NOTES_${tagName}.md`);
+    if (!fs.existsSync(notesFile)) {
+      log.info('Generazione release notes...');
+      this.generateReleaseNotes();
+    }
+
+    // Verifica tag git
+    try {
+      execSync(`git rev-parse ${tagName}`, { encoding: 'utf8', stdio: 'pipe' });
+      log.success(`Tag ${tagName} trovato`);
+    } catch {
+      log.warning(`Tag ${tagName} non trovato, creazione...`);
+      try {
+        execSync(`git tag -a ${tagName} -m "Release ${tagName}"`, { encoding: 'utf8' });
+        log.success(`Tag ${tagName} creato`);
+      } catch (err) {
+        log.error(`Impossibile creare tag: ${err.message}`);
+        return false;
+      }
+    }
+
+    // Push tag se necessario
+    try {
+      execSync(`git push origin ${tagName}`, { encoding: 'utf8', stdio: 'pipe' });
+      log.success(`Tag ${tagName} pushato su origin`);
+    } catch {
+      log.info(`Tag ${tagName} già presente su origin o push fallito`);
+    }
+
+    // Cerca asset da uploadare
+    const assets = this.findReleaseAssets();
+    
+    // Crea o aggiorna release
+    try {
+      let releaseExists = false;
+      try {
+        execSync(`${this.ghPath} release view ${tagName}`, { stdio: 'pipe' });
+        releaseExists = true;
+      } catch {}
+
+      if (!releaseExists) {
+        log.info('Creazione release su GitHub...');
+        const createCmd = `${this.ghPath} release create ${tagName} --title "GameStringer ${tagName}" --notes-file "${notesFile}"`;
+        execSync(createCmd, { encoding: 'utf8', cwd: this.rootDir });
+        log.success(`Release ${tagName} creata!`);
+      }
+
+      // Upload asset
+      if (assets.length > 0) {
+        log.section('Upload Asset');
+        for (const asset of assets) {
+          const fileName = path.basename(asset);
+          log.info(`Uploading: ${fileName}...`);
+          try {
+            execSync(`${this.ghPath} release upload ${tagName} "${asset}" --clobber`, { 
+              encoding: 'utf8', 
+              cwd: this.rootDir 
+            });
+            log.success(`${fileName} caricato`);
+          } catch (err) {
+            log.warning(`Errore upload ${fileName}: ${err.message}`);
+          }
+        }
+      } else {
+        log.warning('Nessun asset trovato da uploadare');
+        log.info('Compila prima con: npm run tauri build');
+      }
+
+      log.success(`\n🎉 Release ${tagName} pubblicata su GitHub!`);
+      log.info(`URL: https://github.com/rouges78/GameStringer/releases/tag/${tagName}`);
+      return true;
+
+    } catch (err) {
+      log.error(`Errore durante la creazione release: ${err.message}`);
+      return false;
+    }
+  }
+
   showHelp() {
     console.log(`
 ${colors.bright}${colors.cyan}🤖 Senior Versioning Agent${colors.reset}
@@ -595,6 +835,7 @@ ${colors.bright}Comandi:${colors.reset}
   ${colors.green}fix${colors.reset}       Applica fix automatici per sincronizzare versioni
   ${colors.green}release${colors.reset}   Prepara release GitHub (notes + comandi git)
   ${colors.green}notes${colors.reset}     Genera solo le release notes
+  ${colors.green}upload${colors.reset}    Pubblica release su GitHub (crea tag, release, upload asset)
   ${colors.green}help${colors.reset}      Mostra questo messaggio
 
 ${colors.bright}Esempi:${colors.reset}
@@ -602,6 +843,8 @@ ${colors.bright}Esempi:${colors.reset}
   node scripts/senior-versioning-agent.js audit
   node scripts/senior-versioning-agent.js fix
   node scripts/senior-versioning-agent.js release
+  node scripts/senior-versioning-agent.js upload
+  node scripts/senior-versioning-agent.js upload --force
 
 ${colors.bright}File controllati:${colors.reset}
 
@@ -643,7 +886,11 @@ function main() {
       break;
     case 'notes':
       agent.loadVersion();
-      agent.generateReleaseNotes();
+      agent.generateAllReleaseNotes();
+      break;
+    case 'upload':
+    case 'publish':
+      agent.uploadRelease({ force: args.includes('--force') });
       break;
     case 'help':
     case '--help':

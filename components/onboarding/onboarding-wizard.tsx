@@ -48,6 +48,7 @@ interface OnboardingStep {
 
 const ONBOARDING_KEY = 'gamestringer_onboarding_completed';
 const ONBOARDING_VERSION = '2';
+const TUTORIAL_KEY = 'gamestringer-tutorial-completed'; // Chiave condivisa con InteractiveTutorial
 
 export function OnboardingWizard() {
   const { t } = useTranslation();
@@ -77,6 +78,7 @@ export function OnboardingWizard() {
   const completeOnboarding = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(ONBOARDING_KEY, ONBOARDING_VERSION);
+      localStorage.setItem(TUTORIAL_KEY, '2'); // Marca anche il tutorial interattivo come completato
       localStorage.setItem('gamestringer_preferences', JSON.stringify(preferences));
     }
     setIsOpen(false);
@@ -85,6 +87,7 @@ export function OnboardingWizard() {
   const skipOnboarding = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(ONBOARDING_KEY, ONBOARDING_VERSION);
+      localStorage.setItem(TUTORIAL_KEY, '2'); // Marca anche il tutorial interattivo come completato
     }
     setIsOpen(false);
   };

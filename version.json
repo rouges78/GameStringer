@@ -1,14 +1,29 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "major": 1,
   "minor": 0,
-  "patch": 3,
+  "patch": 4,
   "prerelease": null,
-  "buildNumber": 103,
-  "buildDate": "2026-01-22T00:00:00.000Z",
+  "buildNumber": 104,
+  "buildDate": "2026-01-23T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.4": {
+      "date": "2026-01-23",
+      "type": "feature",
+      "changes": [
+        "Subtitle Translator: parser SRT/VTT/ASS con preview e QA",
+        "Batch Folder Translator: scansione ricorsiva cartelle con walkdir",
+        "Community Hub: pagina completa con browser pacchetti TM",
+        "Retro ROM Tools: supporto NES/SNES/GB/GBA/Genesis/PSX con table files",
+        "API Pubblica v1: endpoint REST per CI/CD (/api/v1/translate, batch, languages, health)",
+        "Landing Page: pagina marketing pronta per deploy",
+        "Screen Adaptation: adattamento automatico risoluzione schermo",
+        "Tutorial unificato: risolto conflitto tra OnboardingWizard e InteractiveTutorial",
+        "Hero headers compatti per Retro e Batch"
+      ]
+    },
     "1.0.3": {
       "date": "2026-01-22",
       "type": "feature",

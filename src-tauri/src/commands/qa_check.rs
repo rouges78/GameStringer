@@ -384,7 +384,7 @@ fn check_punctuation(source: &str, target: &str, id: &str) -> Vec<QAIssue> {
     let target_end = target_trimmed.chars().last().unwrap();
     
     // Gruppi di punteggiatura equivalente
-    let punct_groups = [
+    let _punct_groups = [
         vec!['.', '。', '．'],           // Punti
         vec!['!', '！'],                 // Esclamativi
         vec!['?', '？'],                 // Interrogativi

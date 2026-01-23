@@ -1,7 +1,62 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================================
+   SCREEN ADAPTATION - Variabili per adattamento risoluzione
+   ============================================================================ */
+:root {
+  --screen-scale: 1;
+  --sidebar-width: 240px;
+  --font-size-base: 16px;
+  --spacing-unit: 1rem;
+  --grid-cols: 4;
+  --card-padding: 1rem;
+}
+
+/* Compact screens (< 1400px) */
+.screen-compact {
+  --font-size-base: 14px;
+  --spacing-unit: 0.5rem;
+  --card-padding: 0.75rem;
+}
+
+.screen-compact .text-adaptive {
+  font-size: 0.875rem;
+}
+
+.screen-compact .card-adaptive {
+  padding: 0.75rem;
+}
+
+.screen-compact .gap-adaptive {
+  gap: 0.5rem;
+}
+
+/* 4K screens (>= 3840px) */
+.screen-4k {
+  --font-size-base: 18px;
+  --spacing-unit: 1.5rem;
+  --card-padding: 1.5rem;
+}
+
+.screen-4k .text-adaptive {
+  font-size: 1.125rem;
+}
+
+.screen-4k .card-adaptive {
+  padding: 1.5rem;
+}
+
+.screen-4k .gap-adaptive {
+  gap: 1.5rem;
+}
+
+/* Ultra-wide screens */
+.screen-ultrawide .container-adaptive {
+  max-width: 2400px;
+  margin: 0 auto;
+}
 
 /* Rainbow gradient animation */
 @keyframes rainbow-shift {

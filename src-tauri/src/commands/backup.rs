@@ -525,7 +525,7 @@ pub async fn run_auto_backup() -> Result<AutoBackupResult, String> {
 
 /// Pulisce i backup automatici vecchi
 fn cleanup_auto_backups(dir: &PathBuf, max_backups: usize) -> Result<(), String> {
-    let mut files: Vec<_> = fs::read_dir(dir)
+    let files: Vec<_> = fs::read_dir(dir)
         .map_err(|e| format!("Errore lettura directory: {}", e))?
         .filter_map(|e| e.ok())
         .filter(|e| e.path().extension().map_or(false, |ext| ext == "json"))
@@ -608,7 +608,7 @@ pub async fn restore_from_auto_backup(backup_path: String, restore_type: String)
             }
             
             if let Some(memories) = backup.get("memories").and_then(|m| m.as_array()) {
-                for (i, mem) in memories.iter().enumerate() {
+                for (_i, mem) in memories.iter().enumerate() {
                     if let Some(src_lang) = mem.get("sourceLanguage").and_then(|l| l.as_str()) {
                         if let Some(tgt_lang) = mem.get("targetLanguage").and_then(|l| l.as_str()) {
                             let filename = format!("tm_{}_{}.json", src_lang.to_lowercase(), tgt_lang.to_lowercase());

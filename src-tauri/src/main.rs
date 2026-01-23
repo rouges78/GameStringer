@@ -693,6 +693,11 @@ fn main() {
             commands::screen_capture::capture_screen,
             commands::screen_capture::get_windows,
             commands::screen_capture::capture_window,
+            // Batch Processor System
+            commands::batch_processor::scan_folder_for_translation,
+            commands::batch_processor::read_file_for_translation,
+            commands::batch_processor::write_translated_file,
+            commands::batch_processor::create_output_structure,
         ])
         .setup(|_app| {
             Ok(())
