@@ -105,7 +105,9 @@ export async function POST(request: NextRequest) {
             if (body.glossary) {
               let result = translated;
               for (const [source, target] of Object.entries(body.glossary)) {
-                result = result.replace(new RegExp(source, 'gi'), target);
+                // Escape special regex characters to prevent injection errors
+                const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                result = result.replace(new RegExp(escaped, 'gi'), target);
               }
               return result;
             }

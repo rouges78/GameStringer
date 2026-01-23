@@ -122,10 +122,15 @@ async function translateWithOpenAI(text: string, targetLang: string, apiKey: str
   return data.choices?.[0]?.message?.content?.trim() || text;
 }
 
+// Escape special regex characters to prevent injection errors (e.g., "C++" → "C\\+\\+")
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function applyGlossary(text: string, glossary: Record<string, string>): string {
   let result = text;
   for (const [source, target] of Object.entries(glossary)) {
-    result = result.replace(new RegExp(source, 'gi'), target);
+    result = result.replace(new RegExp(escapeRegExp(source), 'gi'), target);
   }
   return result;
 }
