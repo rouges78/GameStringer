@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   X, ChevronRight, ChevronLeft, Gamepad2, Languages, 
-  Settings, Wrench, Library, Home, Sparkles, CheckCircle
+  Settings, Wrench, Library, Home, Sparkles, CheckCircle, FolderTree
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -62,6 +62,13 @@ const tutorialSteps: TutorialStep[] = [
     icon: <Wrench className="h-6 w-6" />,
     iconColor: 'text-emerald-400',
     selector: '[data-tutorial="nav-tools"]',
+    position: 'sidebar'
+  },
+  {
+    id: 'projectManager',
+    icon: <FolderTree className="h-6 w-6" />,
+    iconColor: 'text-blue-400',
+    selector: '[data-tutorial="nav-project-manager"]',
     position: 'sidebar'
   },
   {

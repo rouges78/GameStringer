@@ -24,7 +24,12 @@ import {
   ChevronRight,
   Mic,
   Database,
-  Layers
+  Layers,
+  FolderTree,
+  AudioLines,
+  Glasses,
+  ShieldCheck,
+  MessageSquare
 } from 'lucide-react';
 import { getShortcutsList } from '@/lib/keyboard-shortcuts';
 import { useTranslation, translations } from '@/lib/i18n';
@@ -147,6 +152,71 @@ export default function GuidePage() {
         'Filter by game or source',
         'Export translations for backup',
         'Automatic deduplication',
+      ],
+    },
+    {
+      icon: FolderTree,
+      name: guideTrans.projectManager || 'Project Manager',
+      color: 'blue',
+      features: guideTrans.projectManagerFeatures || [
+        'Complete translation project management',
+        'Integrated glossary for consistent terminology',
+        'Real-time progress tracking and statistics',
+        'Multi-file organization (JSON, PO, CSV...)',
+        'Export/import projects in .gsproj format',
+        'Located in Resources → Project Manager',
+      ],
+    },
+    {
+      icon: AudioLines,
+      name: guideTrans.voiceCloneGuide || 'Voice Clone Studio',
+      color: 'blue',
+      features: guideTrans.voiceCloneGuideFeatures || [
+        'AI voice cloning with ElevenLabs and OpenAI TTS',
+        'Text-to-speech synthesis with multiple voices',
+        'Upload audio samples to create custom voice clones',
+        'Voice presets: narrator, hero, villain, child, robot, elderly',
+        'Adjustable stability, speed, and similarity settings',
+        'Save and manage voice profiles',
+      ],
+    },
+    {
+      icon: Glasses,
+      name: guideTrans.vrOverlayGuide || 'VR Text Overlay',
+      color: 'emerald',
+      features: guideTrans.vrOverlayGuideFeatures || [
+        'Spatial subtitles for VR games',
+        'Automatic VR headset detection (Oculus, SteamVR, WMR)',
+        'Position presets: bottom center, top center, peripheral, wrist',
+        'Customizable style: font size, opacity, shadow',
+        'Follow head movement option',
+        'Real-time preview in 3D space',
+      ],
+    },
+    {
+      icon: ShieldCheck,
+      name: guideTrans.qualityGatesGuide || 'Quality Gates',
+      color: 'emerald',
+      features: guideTrans.qualityGatesGuideFeatures || [
+        'Automatic quality control system for translations',
+        'Checks: placeholders, numbers, HTML tags, length',
+        'Context-aware validation (UI, dialogue, narrative)',
+        'Quality score with pass/fail threshold',
+        'Detailed error, warning, and info reports',
+        'Export validation reports as JSON',
+      ],
+    },
+    {
+      icon: MessageSquare,
+      name: guideTrans.playerFeedbackGuide || 'Player Feedback',
+      color: 'emerald',
+      features: guideTrans.playerFeedbackGuideFeatures || [
+        'Collect and manage player translation feedback',
+        'Categories: accuracy, fluency, context, terminology, style',
+        'Rating system with 5-star reviews',
+        'Status tracking: pending, reviewed, applied, rejected',
+        'Statistics and trend analysis',
+        'Export feedback as JSON or CSV',
       ],
     },
   ];

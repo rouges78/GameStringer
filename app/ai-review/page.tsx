@@ -110,14 +110,14 @@ export default function AIReviewPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-3">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
-              <Bot className="h-5 w-5 text-white" />
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Bot className="h-6 w-6 text-white" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
@@ -129,12 +129,12 @@ export default function AIReviewPage() {
             </div>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <BarChart3 className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">8</span>
               <span className="text-[10px] text-white/70">{t('aiReview.checks')}</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Wand2 className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">{t('aiReview.autoFix')}</span>
             </div>
@@ -142,11 +142,11 @@ export default function AIReviewPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid lg:grid-cols-3 gap-3">
         {/* Input Panel */}
         <div className="lg:col-span-2">
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 pt-3">
               <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'single' | 'batch')}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="single">
@@ -156,7 +156,7 @@ export default function AIReviewPage() {
                 </TabsList>
               </Tabs>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 pb-3">
               {inputMode === 'single' ? (
                 <>
                   <div className="grid grid-cols-2 gap-3">
@@ -166,7 +166,7 @@ export default function AIReviewPage() {
                         placeholder="Press {button} to continue..."
                         value={original}
                         onChange={(e) => setOriginal(e.target.value)}
-                        rows={3}
+                        rows={2}
                         className="resize-none text-sm"
                       />
                     </div>
@@ -176,7 +176,7 @@ export default function AIReviewPage() {
                         placeholder="Premi per continuare..."
                         value={translated}
                         onChange={(e) => setTranslated(e.target.value)}
-                        rows={3}
+                        rows={2}
                         className="resize-none text-sm"
                       />
                     </div>
@@ -185,7 +185,7 @@ export default function AIReviewPage() {
                     <Button
                       onClick={handleSingleReview}
                       disabled={!original.trim() || !translated.trim() || isReviewing}
-                      className="gap-2 bg-gradient-to-r from-violet-500 to-purple-500"
+                      className="gap-2 bg-gradient-to-r from-blue-500 to-cyan-500"
                     >
                       {isReviewing ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -212,14 +212,14 @@ export default function AIReviewPage() {
                       placeholder={`Press Start|Premi Start\nLoading...|Caricamento...\nGame Over|Fine del Gioco`}
                       value={batchInput}
                       onChange={(e) => setBatchInput(e.target.value)}
-                      rows={6}
+                      rows={4}
                       className="resize-none text-sm font-mono"
                     />
                   </div>
                   <Button
                     onClick={handleBatchReview}
                     disabled={!batchInput.trim() || isReviewing}
-                    className="gap-2 bg-gradient-to-r from-violet-500 to-purple-500"
+                    className="gap-2 bg-gradient-to-r from-blue-500 to-cyan-500"
                   >
                     {isReviewing ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -255,7 +255,7 @@ export default function AIReviewPage() {
                 </div>
                 <Progress value={result.score} className={cn("h-2", getScoreBg(result.score))} />
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 pb-3">
                 {result.issues.length === 0 ? (
                   <div className="text-center py-4 text-green-600">
                     <CheckCircle2 className="h-8 w-8 mx-auto mb-2" />
@@ -326,7 +326,7 @@ export default function AIReviewPage() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 pb-3">
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-2 text-center">
                   <div className="p-2 bg-muted rounded-lg">
@@ -388,51 +388,47 @@ export default function AIReviewPage() {
           )}
         </div>
 
-        {/* Categories Sidebar */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">
-                {t('aiReview.activeChecks')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
+        {/* Categories Sidebar - Compatto */}
+        <div className="space-y-2">
+          <Card className="border-slate-700/50">
+            <div className="px-3 py-2 border-b border-slate-700/30">
+              <span className="text-xs font-medium text-slate-400">{t('aiReview.activeChecks')}</span>
+            </div>
+            <div className="p-2 grid grid-cols-2 gap-1">
               {Object.entries(REVIEW_CATEGORIES).map(([key, cat]) => (
                 <div
                   key={key}
-                  className="flex items-center gap-2 p-1.5 rounded hover:bg-muted/50 text-sm"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded text-xs hover:bg-muted/30"
                 >
-                  <span>{cat.icon}</span>
-                  <span className="flex-1">{language === 'it' ? cat.labelIt : cat.label}</span>
+                  <span className="text-sm">{cat.icon}</span>
+                  <span className="flex-1 truncate">{language === 'it' ? cat.labelIt : cat.label}</span>
                   <div
-                    className="w-2 h-2 rounded-full"
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: cat.color }}
                   />
                 </div>
               ))}
-            </CardContent>
+            </div>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">
-                {t('aiReview.severityLevels')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1">
+          <Card className="border-slate-700/50">
+            <div className="px-3 py-2 border-b border-slate-700/30">
+              <span className="text-xs font-medium text-slate-400">{t('aiReview.severityLevels')}</span>
+            </div>
+            <div className="p-2 flex flex-wrap gap-1">
               {Object.entries(SEVERITY_CONFIG).map(([key, sev]) => (
                 <div
                   key={key}
-                  className="flex items-center gap-2 p-1.5 rounded text-sm"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded text-xs"
                   style={{ backgroundColor: sev.bgColor }}
                 >
-                  <span>{sev.icon}</span>
+                  <span className="text-sm">{sev.icon}</span>
                   <span style={{ color: sev.color }}>
                     {language === 'it' ? sev.labelIt : sev.label}
                   </span>
                 </div>
               ))}
-            </CardContent>
+            </div>
           </Card>
         </div>
       </div>

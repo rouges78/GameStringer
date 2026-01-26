@@ -80,6 +80,9 @@ export default function GameDetailPage() {
   // HowLongToBeat
   const [hltbData, setHltbData] = useState<{found: boolean; main?: number; main_extra?: number; completionist?: number; url?: string} | null>(null);
   const [isLoadingHltb, setIsLoadingHltb] = useState(false);
+  
+  // SteamGridDB fallback image
+  const [fallbackImage, setFallbackImage] = useState<string | null>(null);
 
   // Unreal Engine Patcher
   const [unrealPatchStatus, setUnrealPatchStatus] = useState<{
@@ -408,20 +411,30 @@ export default function GameDetailPage() {
           const urlPlatform = urlParams.get('platform');
           const urlHeaderImage = urlParams.get('headerImage');
           
-          // Estrai appId: può essere numerico, "steam_family_XXXX", o passato via URL
+          // Estrai appId: può essere numerico, "steam_family_XXXX", "steam_shared_XXXX", o passato via URL
           let appId: number | null = null;
           if (!isNonSteamGame) {
-            if (urlAppId) {
+            if (urlAppId && !isNaN(parseInt(urlAppId))) {
               appId = parseInt(urlAppId);
+              console.log('[GameDetail] AppId from URL param:', appId);
+            } else if (gameId.startsWith('steam_shared_')) {
+              appId = parseInt(gameId.replace('steam_shared_', ''));
+              console.log('[GameDetail] AppId from steam_shared_:', appId);
             } else if (gameId.startsWith('steam_family_')) {
               appId = parseInt(gameId.replace('steam_family_', ''));
+              console.log('[GameDetail] AppId from steam_family_:', appId);
             } else if (gameId.startsWith('steam_')) {
               appId = parseInt(gameId.replace('steam_', ''));
+              console.log('[GameDetail] AppId from steam_:', appId);
             } else {
               const parsed = parseInt(gameId);
-              if (!isNaN(parsed)) appId = parsed;
+              if (!isNaN(parsed)) {
+                appId = parsed;
+                console.log('[GameDetail] AppId from direct parse:', appId);
+              }
             }
           }
+          console.log('[GameDetail] Final appId:', appId, 'gameId:', gameId);
           
           // Carica dettagli estesi da Steam API tramite Tauri (bypass CORS)
           // Solo per giochi Steam
@@ -456,16 +469,41 @@ export default function GameDetailPage() {
           console.log('[GameDetail] Local data:', data);
           
           // Cerca il path di installazione reale
-          let realInstallPath = null;
+          let realInstallPath: string | null = null;
+          
+          // Metodo 1: Cerca tramite install_dir passato dalla URL
           if (data.is_installed || urlInstallDir) {
             try {
-              // Usa find_game_install_path per trovare il path reale
               realInstallPath = await invoke('find_game_install_path', { 
                 installDir: data.install_dir || data.name 
               });
-              console.log('[GameDetail] Found install path:', realInstallPath);
+              console.log('[GameDetail] Found install path via installDir:', realInstallPath);
             } catch (e) {
-              console.warn('[GameDetail] Could not find install path:', e);
+              console.warn('[GameDetail] Could not find install path via installDir:', e);
+            }
+          }
+          
+          // Metodo 2: Se non trovato, cerca tramite appId (per giochi Steam)
+          if (!realInstallPath && appId && appId > 0) {
+            try {
+              realInstallPath = await invoke('find_game_path_by_appid', { appId });
+              console.log('[GameDetail] Found install path via appId:', realInstallPath);
+            } catch (e) {
+              console.warn('[GameDetail] Could not find install path via appId:', e);
+            }
+          }
+          
+          // Rileva engine automaticamente se il gioco è installato
+          let detectedEngine: string | null = null;
+          if (realInstallPath) {
+            try {
+              const engineResult = await invoke('detect_game_engine', { gamePath: realInstallPath });
+              if (engineResult && typeof engineResult === 'object') {
+                detectedEngine = (engineResult as any).engine || null;
+                console.log('[GameDetail] Engine rilevato:', detectedEngine);
+              }
+            } catch (e) {
+              console.warn('[GameDetail] Engine detection failed:', e);
             }
           }
           
@@ -479,8 +517,8 @@ export default function GameDetailPage() {
             installPath: realInstallPath,
             platform: platform,
             storeId: data.appid || gameId,
-            // Preserva engine dal backend (non viene da Steam API)
-            engine: null,
+            // Usa engine rilevato automaticamente
+            engine: detectedEngine,
             title: steamApiData?.name || data.name,
             description: steamApiData?.short_description?.replace(/<[^>]*>?/gm, '') || 'Nessuna descrizione disponibile.',
             detailedDescription: steamApiData?.detailed_description?.replace(/<[^>]*>?/gm, '') || null,
@@ -605,7 +643,40 @@ export default function GameDetailPage() {
     if (game?.shortDescription && !translatedDescription) {
       translateDescription(game.shortDescription);
     }
+    // Cerca immagine su SteamGridDB se non c'è header
+    if (game && !game.headerUrl && !fallbackImage) {
+      fetchFallbackImage();
+    }
   }, [game]);
+
+  // Cerca immagine alternativa su SteamGridDB
+  const fetchFallbackImage = async () => {
+    if (!game) return;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      // Leggi API key da localStorage (salvata dalle impostazioni)
+      const savedSettings = localStorage.getItem('gameStringerSettings');
+      let apiKey: string | null = null;
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings);
+          apiKey = settings?.integrations?.steamGridDbApiKey || null;
+        } catch (e) {}
+      }
+      
+      const result = await invoke<string | null>('fetch_steamgriddb_image', {
+        appId: game.appid || 0,
+        gameName: game.title || game.name || '',
+        apiKey: apiKey
+      });
+      if (result) {
+        setFallbackImage(result);
+        console.log('[GameDetail] SteamGridDB fallback:', result);
+      }
+    } catch (e) {
+      console.warn('[GameDetail] SteamGridDB fallback failed:', e);
+    }
+  };
 
   // Traduce la descrizione in italiano
   const translateDescription = async (text: string) => {
@@ -774,215 +845,164 @@ export default function GameDetailPage() {
   return (
     <div className="min-h-screen">
       <div className="relative p-4 space-y-4">
-        {/* Hero Header */}
+        {/* Header con Back + Titolo */}
+        <div className="flex items-center gap-3">
+          <Link href="/library">
+            <Button variant="outline" size="icon" className="h-9 w-9 bg-black/30 border-white/10 hover:bg-white/10">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h1 className="text-xl font-bold text-white">{game.title}</h1>
+          {(engineInfo || game.engine) && (
+            <Badge className={`text-xs px-2 py-0.5 ${
+              (engineInfo?.engine || game.engine) === 'Unity' ? 'bg-blue-600/80 text-white' :
+              (engineInfo?.engine || game.engine) === 'Unreal Engine' ? 'bg-orange-600/80 text-white' :
+              (engineInfo?.engine || game.engine) === 'RPG Maker' ? 'bg-green-600/80 text-white' :
+              (engineInfo?.engine || game.engine) === "Ren'Py" ? 'bg-pink-600/80 text-white' :
+              'bg-gray-600/80 text-white'
+            }`}>
+              <Settings className="h-3 w-3 mr-1" />
+              {engineInfo?.engine || game.engine}
+            </Badge>
+          )}
+          {game.metacritic && (
+            <div className={`ml-auto w-9 h-9 rounded flex items-center justify-center font-bold text-sm ${
+              game.metacritic.score >= 80 ? 'bg-green-600' : 
+              game.metacritic.score >= 60 ? 'bg-yellow-600' : 'bg-red-600'
+            }`}>
+              {game.metacritic.score}
+            </div>
+          )}
+        </div>
+
+        {/* Steam-style Info Card */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`relative overflow-hidden rounded-2xl ${colors.border} ${colors.bg}`}
+          className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#1b2838] via-[#1b2838] to-[#2a475e] border border-white/10"
         >
-          {/* Background Image Overlay - Effetto fusione migliorato */}
-          {(game.heroUrl || game.headerUrl || game.coverUrl) && (
-            <>
-              <img 
-                src={game.heroUrl || game.headerUrl || game.coverUrl}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover opacity-40 blur-[2px]"
-              />
-              <div className={`absolute inset-0 ${colors.bg} opacity-50`} />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
-            </>
-          )}
-          <div className={`absolute top-0 right-0 w-64 h-64 ${colors.blur1} rounded-full blur-3xl`} />
-          <div className={`absolute bottom-0 left-0 w-48 h-48 ${colors.blur2} rounded-full blur-3xl`} />
-          <div className="absolute inset-0 backdrop-blur-[1px]" />
-          
-          <div className="relative p-6">
-            {/* Top Row: Back button + Title */}
-            <div className="flex items-start gap-4">
-              <Link href="/library">
-                <Button variant="outline" size="icon" className="h-10 w-10 bg-black/30 backdrop-blur-sm border-white/20 hover:bg-white/10">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
-              
-              <div className="flex-1">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className={`text-2xl font-bold bg-gradient-to-r ${colors.text} bg-clip-text text-transparent`}>
-                    {game.title}
-                  </h1>
-                  {/* Engine Badge */}
-                  {(engineInfo || game.engine) && (
-                    <Badge 
-                      className={`text-xs px-2 py-0.5 ${
-                        (engineInfo?.engine || game.engine) === 'Unity' ? 'bg-blue-600/80 text-white border-blue-400' :
-                        (engineInfo?.engine || game.engine) === 'Unreal Engine' ? 'bg-orange-600/80 text-white border-orange-400' :
-                        (engineInfo?.engine || game.engine) === 'RPG Maker' ? 'bg-green-600/80 text-white border-green-400' :
-                        (engineInfo?.engine || game.engine) === "Ren'Py" ? 'bg-pink-600/80 text-white border-pink-400' :
-                        (engineInfo?.engine || game.engine) === 'Godot' ? 'bg-cyan-600/80 text-white border-cyan-400' :
-                        (engineInfo?.engine || game.engine) === 'GameMaker' ? 'bg-yellow-600/80 text-white border-yellow-400' :
-                        'bg-gray-600/80 text-white border-gray-400'
-                      }`}
-                    >
-                      <Settings className="h-3 w-3 mr-1" />
-                      {engineInfo?.engine || game.engine}
-                      {engineInfo?.can_patch && (
-                        <Sparkles className="h-3 w-3 ml-1 text-yellow-300" />
-                      )}
-                    </Badge>
-                  )}
-                  {isDetectingEngine && (
-                    <Badge variant="outline" className="animate-pulse text-xs border-indigo-500/30">
-                      <Settings className="h-3 w-3 mr-1 animate-spin" />
-                      Rilevamento...
-                    </Badge>
-                  )}
-                </div>
-                {game.developers && (
-                  <p className="text-sm text-white/60 mt-1">
-                    di {game.developers.join(', ')}
-                  </p>
-                )}
-                {/* Descrizione/Trama COMPLETA - in italiano */}
-                {(translatedDescription || game.shortDescription) && (
-                  <p className="text-sm text-white/70 mt-3 leading-relaxed max-w-4xl">
-                    {translatedDescription || game.shortDescription}
-                  </p>
-                )}
+          <div className="flex flex-col md:flex-row">
+            {/* Header Image */}
+            <div className="relative w-full md:w-[460px] flex-shrink-0" style={{ minHeight: '215px', maxHeight: '215px' }}>
+              {(game.headerUrl || game.heroUrl || game.coverUrl || fallbackImage) ? (
+                <img 
+                  src={fallbackImage || game.headerUrl || game.heroUrl || game.coverUrl}
+                  alt={game.title}
+                  className="w-full h-full object-cover md:rounded-l-xl"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              ) : null}
+              {/* Fallback gradiente con titolo */}
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-indigo-900/80 to-slate-900/80 flex items-center justify-center md:rounded-l-xl -z-10">
+                <span className="text-2xl font-bold text-white/30 text-center px-4">{game.title}</span>
               </div>
-              
-              {/* Metacritic Score */}
-              {game.metacritic && (
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg shadow-lg ${
-                  game.metacritic.score >= 80 ? 'bg-green-600 shadow-green-500/30' : 
-                  game.metacritic.score >= 60 ? 'bg-yellow-600 shadow-yellow-500/30' : 'bg-red-600 shadow-red-500/30'
-                }`}>
-                  {game.metacritic.score}
+              {/* Badge "In Libreria" */}
+              {game.is_installed && (
+                <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[#4c6b22] px-2.5 py-1 rounded text-xs font-medium text-white shadow-lg z-10">
+                  <HardDrive className="h-3 w-3" />
+                  NELLA LIBRERIA
                 </div>
               )}
             </div>
             
-            {/* Stats Row */}
-            <div className={`flex flex-wrap gap-6 mt-4 pt-4 border-t ${colors.borderLine}`}>
-              {/* Platform */}
-              <div className="text-center">
-                <div className={`flex items-center justify-center gap-1 ${colors.accent}`}>
-                  <Monitor className="h-4 w-4" />
-                  <span className="text-sm font-semibold">{game.platform}</span>
-                </div>
-                <p className="text-xs text-white/50">Piattaforma</p>
-              </div>
+            {/* Info Content */}
+            <div className="flex-1 p-4 flex flex-col justify-between">
+              {/* Description */}
+              <p className="text-[13px] text-[#c6d4df] leading-relaxed line-clamp-4">
+                {translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description || 'Nessuna descrizione disponibile.'}
+              </p>
               
-              {/* Install Status */}
-              <div className="text-center">
-                <div className={`flex items-center justify-center gap-1 ${game.is_installed ? 'text-emerald-400' : 'text-gray-400'}`}>
-                  <HardDrive className="h-4 w-4" />
-                  <span className="text-sm font-semibold">{game.is_installed ? t('gameDetails.installed') : t('gameDetails.notInstalled')}</span>
-                </div>
-                <p className="text-xs text-white/50">Stato</p>
-              </div>
-              
-              {/* Release Date */}
-              {game.release_date?.date && (
-                <div className="text-center">
-                  <div className={`flex items-center justify-center gap-1 ${colors.accent2}`}>
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm font-semibold">{game.release_date.date}</span>
-                  </div>
-                  <p className="text-xs text-white/50">Uscita</p>
-                </div>
-              )}
-              
-              {/* Genres */}
+              {/* Tags */}
               {game.genres && game.genres.length > 0 && (
-                <div className="text-center">
-                  <div className={`flex items-center justify-center gap-1 ${colors.accent}`}>
-                    <Zap className="h-4 w-4" />
-                    <span className="text-sm font-semibold">{game.genres.slice(0, 2).map((g: any) => g.description).join(', ')}</span>
-                  </div>
-                  <p className="text-xs text-white/50">Genere</p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {game.genres.slice(0, 5).map((genre: any, index: number) => (
+                    <span 
+                      key={index}
+                      className="px-2.5 py-1 bg-[#3d6c8e]/40 hover:bg-[#67c1f5]/30 rounded text-[11px] text-[#67c1f5] cursor-default transition-colors"
+                    >
+                      {genre.description}
+                    </span>
+                  ))}
+                  {game.categories?.slice(0, 3).map((cat: any, index: number) => (
+                    <span 
+                      key={`cat-${index}`}
+                      className="px-2.5 py-1 bg-[#3d6c8e]/40 hover:bg-[#67c1f5]/30 rounded text-[11px] text-[#67c1f5] cursor-default transition-colors"
+                    >
+                      {cat.description}
+                    </span>
+                  ))}
                 </div>
               )}
               
-              {/* Translations Count */}
-              {translations.length > 0 && (
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 text-amber-400">
-                    <Languages className="h-4 w-4" />
-                    <span className="text-sm font-semibold">{translations.length}</span>
-                  </div>
-                  <p className="text-xs text-white/50">Traduzioni</p>
+              {/* Release Date + Platform */}
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10">
+                {game.release_date?.date && (
+                  <span className="text-xs text-[#8f98a0] uppercase tracking-wide">
+                    {game.release_date.date}
+                  </span>
+                )}
+                {/* Platform Icon */}
+                <div className="flex items-center gap-1.5">
+                  {(game.platform === 'Steam' || !game.platform) && (
+                    <svg className="h-4 w-4 text-[#8f98a0]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2a10 10 0 0 1 10 10c0 4.42-2.87 8.17-6.84 9.5l-4.24-1.77a2.5 2.5 0 0 1-1.42-1.42L7.73 13.5 2 11.73V12a10 10 0 0 1 10-10m0 2a8 8 0 0 0-8 8l4.24 1.73a2.5 2.5 0 0 1 2.5-1.23l2.15-3.5A3.5 3.5 0 0 1 12 6a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5 3.5 3.5 0 0 1-.69-.07l-2.3 3.77a2.5 2.5 0 0 1-.01 2.8l2.84 1.18A8 8 0 0 0 20 12a8 8 0 0 0-8-8m0 4a1.5 1.5 0 0 0-1.5 1.5A1.5 1.5 0 0 0 12 11a1.5 1.5 0 0 0 1.5-1.5A1.5 1.5 0 0 0 12 8Z"/>
+                    </svg>
+                  )}
+                  {game.platform === 'Epic Games' && (
+                    <span className="text-xs text-[#8f98a0]">Epic</span>
+                  )}
+                  {game.platform === 'GOG' && (
+                    <span className="text-xs text-[#8f98a0]">GOG</span>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </motion.div>
 
-      {/* Game Overview - Layout 3:1 (Contenuto principale : Sidebar) */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Colonna Principale - Screenshot + Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="lg:col-span-3 space-y-4"
-        >
-          {/* Screenshot Gallery Grande */}
-          {game.screenshots?.length > 0 ? (
-            <Card className="bg-black/30 backdrop-blur-xl border-white/10">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {game.screenshots.slice(0, 12).map((screenshot: any, index: number) => (
-                    <div 
-                      key={index} 
-                      className="relative aspect-video bg-slate-800 rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-purple-500 transition-all hover:scale-[1.02]"
-                      onClick={() => setSelectedScreenshotIndex(index)}
-                    >
-                      <img 
-                        src={screenshot.path_thumbnail || screenshot.path_full} 
-                        alt={`Screenshot ${index + 1}`} 
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                      {index === 11 && game.screenshots.length > 12 && (
-                        <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">+{game.screenshots.length - 12}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="bg-black/30 border-white/10">
-              <CardContent className="p-12 text-center">
-                <span className="text-6xl block mb-3">{game.is_vr ? '🥽' : '🎮'}</span>
-                <span className="text-gray-500 text-lg">{t('gameDetails.noScreenshotsAvailable')}</span>
-              </CardContent>
-            </Card>
-          )}
+        {/* Screenshot Gallery - Solo se ci sono screenshot */}
+        {game.screenshots?.length > 0 && (
+          <Card className="bg-black/30 backdrop-blur-xl border-white/10">
+            <CardContent className="p-3">
+              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                {game.screenshots.slice(0, 6).map((screenshot: any, index: number) => (
+                  <div 
+                    key={index} 
+                    className="relative aspect-video bg-slate-800 rounded overflow-hidden cursor-pointer hover:ring-2 ring-purple-500 transition-all"
+                    onClick={() => setSelectedScreenshotIndex(index)}
+                  >
+                    <img 
+                      src={screenshot.path_thumbnail || screenshot.path_full} 
+                      alt={`Screenshot ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Info rapide + DLC */}
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 px-1">
-            <span><Settings className="h-4 w-4 inline mr-1" />{game.engine || 'Engine N/D'}</span>
-            <span>•</span>
-            <span><HardDrive className="h-4 w-4 inline mr-1" />{game.detectedFiles.length} file</span>
-            {game.installPath && (<><span>•</span><span className="truncate max-w-[400px]"><Folder className="h-4 w-4 inline mr-1" />{game.installPath}</span></>)}
-            {dlcGames.length > 0 && (
-              <>
-                <span>•</span>
-                <span className="text-cyan-400">{dlcGames.length} DLC</span>
-              </>
-            )}
+        {/* Info rapida */}
+        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+          <span><Folder className="h-3 w-3 inline mr-1" />{game.installPath || 'Path N/D'}</span>
+          {dlcGames.length > 0 && <span className="text-cyan-400">{dlcGames.length} DLC</span>}
+        </div>
+
+        {isScanning && (
+          <div className="flex items-center gap-2">
+            <Progress value={scanProgress} className="h-2 flex-1" />
+            <span className="text-sm text-purple-400">{scanProgress}%</span>
           </div>
+        )}
 
-          {isScanning && (
-            <div className="flex items-center gap-2">
-              <Progress value={scanProgress} className="h-2 flex-1" />
-              <span className="text-sm text-purple-400">{scanProgress}%</span>
-            </div>
-          )}
+      {/* Layout 3:1 - Tabs + Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Colonna Principale - Tabs */}
+        <div className="lg:col-span-3 space-y-3">
 
           {/* Tabs File/Traduzioni/Patch */}
           <Tabs defaultValue="files" className="space-y-3">
@@ -1111,15 +1131,10 @@ export default function GameDetailPage() {
             </Card>
           </TabsContent>
           </Tabs>
-        </motion.div>
+        </div>
 
         {/* Sidebar Destra - Info e Azioni */}
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.15 }}
-          className="space-y-4"
-        >
+        <div className="space-y-4">
           {/* Info Gioco */}
           <Card className="bg-black/30 backdrop-blur-xl border-white/10">
             <CardContent className="p-4 space-y-3">
@@ -1219,7 +1234,7 @@ export default function GameDetailPage() {
               </CardContent>
             </Card>
           )}
-        </motion.div>
+        </div>
       </div>
 
       {/* Raccomandazione Traduzione - Full Width */}

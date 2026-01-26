@@ -605,7 +605,6 @@ Social Media: $200K
 - Twitter developer community
 - LinkedIn thought leadership
 - YouTube technical demos
-- Discord community building
 ```
 
 #### **Event Marketing** (30% budget)

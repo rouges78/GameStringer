@@ -226,16 +226,16 @@ export default function TranslationBridgePage() {
   }, [error, success]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/10 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900/10 to-slate-900 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600">
+            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600">
               <Gamepad2 className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 Translation Bridge
               </h1>
               <p className="text-muted-foreground">
@@ -260,7 +260,7 @@ export default function TranslationBridgePage() {
               onClick={handleToggleBridge}
               disabled={isLoading}
               variant={isRunning ? "destructive" : "default"}
-              className={!isRunning ? "bg-gradient-to-r from-purple-600 to-blue-600" : ""}
+              className={!isRunning ? "bg-gradient-to-r from-blue-600 to-cyan-600" : ""}
             >
               {isRunning ? (
                 <><Square className="h-4 w-4 mr-2" /> Ferma</>
@@ -290,8 +290,8 @@ export default function TranslationBridgePage() {
           <Card className="bg-slate-800/50 border-slate-700">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/20">
-                  <Database className="h-5 w-5 text-purple-400" />
+                <div className="p-2 rounded-lg bg-blue-500/20">
+                  <Database className="h-5 w-5 text-blue-400" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{dictStats?.total_entries ?? 0}</p>

@@ -346,7 +346,6 @@ yay -S gamestringer
 - **@user1**: Testing approfondito migrazione
 - **@user2**: Feedback UX sistema profili
 - **@user3**: Test sicurezza e penetration testing
-- **Community Discord**: Feedback e suggerimenti
 
 #### Contributori Codice
 - **@dev1**: Implementazione crittografia AES
@@ -402,14 +401,10 @@ yay -S gamestringer
 
 #### Canali Supporto
 - **Email**: support@gamestringer.com
-- **Discord**: [Link server Discord]
 - **GitHub**: [Link repository issues]
-- **Forum**: [Link community forum]
 
 #### Orari Supporto
 - **Email**: 24/7 (risposta entro 24h)
-- **Discord**: Community 24/7, staff 9-18 CET
-- **GitHub**: Community driven
 
 ### Risorse Utili
 
@@ -417,7 +412,6 @@ yay -S gamestringer
 - **Sito Ufficiale**: https://gamestringer.com
 - **Documentazione**: https://docs.gamestringer.com
 - **Download**: https://github.com/gamestringer/releases
-- **Community**: https://discord.gg/gamestringer
 
 #### Social Media
 - **Twitter**: @GameStringer

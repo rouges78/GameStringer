@@ -1,7 +1,7 @@
 # 📚 GameStringer Guida Completa
 
-> **Versione**: 1.0.3  
-> **Ultimo Aggiornamento**: 22 Gennaio 2026
+> **Versione**: 1.0.5  
+> **Ultimo Aggiornamento**: 26 Gennaio 2026
 
 ---
 
@@ -18,11 +18,12 @@
 9. [Supporto Engine di Gioco](#supporto-engine-di-gioco)
 10. [Patcher e Iniezione Mod](#patcher-e-iniezione-mod)
 11. [Community Hub](#community-hub)
-12. [Funzionalità Avanzate](#funzionalità-avanzate)
-13. [Confidence Heatmap](#confidence-heatmap)
-14. [Impostazioni e Lingue UI](#impostazioni-e-lingue-ui)
-15. [Risoluzione Problemi](#risoluzione-problemi)
-16. [FAQ](#faq)
+12. [Project Manager](#project-manager)
+13. [Funzionalità Avanzate](#funzionalità-avanzate)
+14. [Confidence Heatmap](#confidence-heatmap)
+15. [Impostazioni e Lingue UI](#impostazioni-e-lingue-ui)
+16. [Risoluzione Problemi](#risoluzione-problemi)
+17. [FAQ](#faq)
 
 ---
 
@@ -381,6 +382,42 @@ Riutilizza traduzioni precedenti:
 - Matching automatico
 - Matching fuzzy per stringhe simili
 - Import/export file TM
+
+---
+
+## Project Manager
+
+Il **Project Manager** ti permette di organizzare progetti di traduzione completi in un unico posto.
+
+### Creazione Progetto
+
+1. Vai su **Risorse → Gestione Progetti** nel menu laterale
+2. Clicca **"Nuovo"** per creare un progetto
+3. Compila i dati: nome, descrizione, gioco, lingue sorgente/target
+4. Il progetto viene salvato in formato `.gsproj`
+
+### Funzionalità Principali
+
+| Funzione | Descrizione |
+|----------|-------------|
+| **File** | Aggiungi e gestisci file di traduzione (JSON, PO, CSV, ecc.) |
+| **Glossario** | Terminologia consistente per tutto il progetto |
+| **Progresso** | Tracciamento traduzioni completate/pending |
+| **Statistiche** | Stringhe totali, tradotte, percentuale completamento |
+
+### Gestione Glossario
+
+Il glossario integrato garantisce coerenza terminologica:
+
+- Aggiungi termini tecnici specifici del gioco
+- I termini vengono applicati automaticamente nelle traduzioni
+- Importa/esporta glossari per riutilizzo
+
+### Export e Backup
+
+- **Salva**: Salva modifiche al progetto corrente
+- **Salva come**: Crea una nuova copia del progetto
+- **Esporta traduzioni**: Export solo stringhe tradotte
 
 ---
 

@@ -29,12 +29,16 @@ import {
   BarChart3,
   Globe,
   Gamepad2,
-  Cpu
+  Cpu,
+  HelpCircle
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTranslation } from '@/lib/i18n';
 import { toast } from 'sonner';
 import { projectManager, GameStringerProject, ProjectFile } from '@/lib/project-manager';
 
 export function ProjectManagerUI() {
+  const { t } = useTranslation();
   const [project, setProject] = useState<GameStringerProject | null>(null);
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
@@ -197,74 +201,64 @@ export function ProjectManagerUI() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="p-3 space-y-2 animate-fade-in">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-r from-emerald-950/80 via-teal-950/60 to-cyan-950/80 p-6">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl" />
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 p-2">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
-        <div className="relative flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30">
-              <FolderOpen className="h-8 w-8 text-white" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <FolderOpen className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-300 to-teal-300 bg-clip-text text-transparent">
-                Project Manager
+              <h1 className="text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+                {t('projectManager.title')}
               </h1>
-              <p className="text-sm text-emerald-200/60 mt-1">
-                {project ? project.metadata.name : 'Manage your translation projects'}
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {project ? project.metadata.name : t('projectManager.subtitle')}
               </p>
             </div>
           </div>
           
-          {/* Stats */}
-          {project && (
-            <div className="hidden md:flex gap-6">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-emerald-400">
-                  <FileText className="h-4 w-4" />
-                  <span className="text-lg font-bold">{project.statistics.totalFiles}</span>
-                </div>
-                <p className="text-xs text-emerald-200/50">File</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-teal-400">
-                  <Globe className="h-4 w-4" />
-                  <span className="text-lg font-bold">{project.statistics.totalStrings.toLocaleString()}</span>
-                </div>
-                <p className="text-xs text-emerald-200/50">Strings</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-cyan-400">
-                  <BarChart3 className="h-4 w-4" />
-                  <span className="text-lg font-bold">{project.statistics.progress}%</span>
-                </div>
-                <p className="text-xs text-emerald-200/50">Completed</p>
-              </div>
-            </div>
-          )}
+          {/* Info Tooltip */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="p-1.5 rounded-lg bg-black/20 hover:bg-black/40 transition-colors border border-white/10">
+                  <HelpCircle className="h-4 w-4 text-white/70" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs p-3 bg-slate-900 border-slate-700">
+                <p className="font-semibold text-sm mb-1">{t('projectManager.helpTitle')}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t('projectManager.helpDescription')}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
         </div>
 
         {/* Toolbar */}
-        <div className="relative flex flex-wrap gap-2 mt-6 pt-4 border-t border-emerald-500/20">
+        <div className="relative flex flex-wrap gap-2 mt-2 pt-2 border-t border-white/20">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setIsNewProjectDialogOpen(true)}
-            className="border-emerald-500/30 hover:bg-emerald-500/10"
+            className="h-8 text-xs border-white/30 hover:bg-white/10 text-white"
           >
-            <Plus className="h-4 w-4 mr-1" />
-            New
+            <Plus className="h-3.5 w-3.5 mr-1" />
+            {t('projectManager.new')}
           </Button>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={handleOpenProject}
-            className="border-emerald-500/30 hover:bg-emerald-500/10"
+            className="h-8 text-xs border-white/30 hover:bg-white/10 text-white"
           >
-            <Upload className="h-4 w-4 mr-1" />
-            Open
+            <Upload className="h-3.5 w-3.5 mr-1" />
+            {t('projectManager.open')}
           </Button>
           
           {project && (
@@ -273,28 +267,28 @@ export function ProjectManagerUI() {
                 variant="outline" 
                 size="sm" 
                 onClick={handleSaveProject}
-                className="border-emerald-500/30 hover:bg-emerald-500/10"
+                className="h-8 text-xs border-white/30 hover:bg-white/10 text-white"
               >
-                <Save className="h-4 w-4 mr-1" />
-                Save
+                <Save className="h-3.5 w-3.5 mr-1" />
+                {t('projectManager.save')}
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={handleSaveAs}
-                className="border-emerald-500/30 hover:bg-emerald-500/10"
+                className="h-8 text-xs border-white/30 hover:bg-white/10 text-white"
               >
-                <Download className="h-4 w-4 mr-1" />
-                Save as...
+                <Download className="h-3.5 w-3.5 mr-1" />
+                {t('projectManager.saveAs')}
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => setIsExportDialogOpen(true)}
-                className="border-cyan-500/30 hover:bg-cyan-500/10 text-cyan-400"
+                className="h-8 text-xs border-white/30 hover:bg-white/10 text-white"
               >
-                <Download className="h-4 w-4 mr-1" />
-                Export translations
+                <Download className="h-3.5 w-3.5 mr-1" />
+                {t('projectManager.export')}
               </Button>
             </>
           )}
@@ -302,12 +296,12 @@ export function ProjectManagerUI() {
 
         {/* Progress bar */}
         {project && (
-          <div className="relative mt-4">
+          <div className="relative mt-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-emerald-200/70">Translation progress</span>
-              <span className="text-xs font-semibold text-emerald-300">{project.statistics.progress}%</span>
+              <span className="text-[10px] text-white/70">{t('projectManager.translationProgress')}</span>
+              <span className="text-[10px] font-semibold text-white">{project.statistics.progress}%</span>
             </div>
-            <Progress value={project.statistics.progress} className="h-2 bg-emerald-950/50" />
+            <Progress value={project.statistics.progress} className="h-1.5 bg-white/10" />
           </div>
         )}
       </div>
@@ -326,9 +320,9 @@ export function ProjectManagerUI() {
           <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Project info */}
-              <Card className="border-emerald-500/20 bg-emerald-500/5">
+              <Card className="border-orange-500/20 bg-orange-500/5">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-emerald-300">
+                  <CardTitle className="text-sm flex items-center gap-2 text-orange-300">
                     <FileText className="h-4 w-4" />
                     Project Information
                   </CardTitle>
@@ -360,9 +354,9 @@ export function ProjectManagerUI() {
               </Card>
 
               {/* Game info */}
-              <Card className="border-teal-500/20 bg-teal-500/5">
+              <Card className="border-amber-500/20 bg-amber-500/5">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-teal-300">
+                  <CardTitle className="text-sm flex items-center gap-2 text-amber-300">
                     <Gamepad2 className="h-4 w-4" />
                     Associated Game
                   </CardTitle>
@@ -396,9 +390,9 @@ export function ProjectManagerUI() {
               </Card>
 
               {/* Statistics */}
-              <Card className="border-cyan-500/20 bg-cyan-500/5 md:col-span-2">
+              <Card className="border-yellow-500/20 bg-yellow-500/5 md:col-span-2">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-cyan-300">
+                  <CardTitle className="text-sm flex items-center gap-2 text-yellow-300">
                     <BarChart3 className="h-4 w-4" />
                     Translation Statistics
                   </CardTitle>
@@ -406,19 +400,19 @@ export function ProjectManagerUI() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="text-center p-3 rounded-lg bg-background/50">
-                      <div className="text-2xl font-bold text-emerald-400">{project.statistics.totalFiles}</div>
+                      <div className="text-2xl font-bold text-orange-400">{project.statistics.totalFiles}</div>
                       <div className="text-xs text-muted-foreground">Total files</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-background/50">
-                      <div className="text-2xl font-bold text-teal-400">{project.statistics.totalStrings.toLocaleString()}</div>
+                      <div className="text-2xl font-bold text-amber-400">{project.statistics.totalStrings.toLocaleString()}</div>
                       <div className="text-xs text-muted-foreground">Total strings</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-background/50">
-                      <div className="text-2xl font-bold text-blue-400">{project.statistics.translatedStrings.toLocaleString()}</div>
+                      <div className="text-2xl font-bold text-orange-400">{project.statistics.translatedStrings.toLocaleString()}</div>
                       <div className="text-xs text-muted-foreground">Translated</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-background/50">
-                      <div className="text-2xl font-bold text-purple-400">{project.statistics.reviewedStrings.toLocaleString()}</div>
+                      <div className="text-2xl font-bold text-yellow-400">{project.statistics.reviewedStrings.toLocaleString()}</div>
                       <div className="text-xs text-muted-foreground">Reviewed</div>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-background/50">
@@ -520,7 +514,7 @@ export function ProjectManagerUI() {
                           <div className="flex items-center gap-4">
                             <span className="font-mono text-sm">{original}</span>
                             <span className="text-muted-foreground">→</span>
-                            <span className="font-mono text-sm text-emerald-400">{translated}</span>
+                            <span className="font-mono text-sm text-orange-400">{translated}</span>
                           </div>
                           <Button 
                             variant="ghost" 
@@ -625,21 +619,28 @@ export function ProjectManagerUI() {
         </Tabs>
       ) : (
         /* No project open */
-        <Card className="border-dashed">
+        <Card className="border-dashed border-orange-500/30">
           <CardContent className="py-12 text-center">
-            <FolderOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground/30" />
-            <h3 className="text-lg font-semibold mb-2">No project open</h3>
+            <FolderOpen className="h-16 w-16 mx-auto mb-4 text-orange-500/30" />
+            <h3 className="text-lg font-semibold mb-2">{t('projectManager.noProjectOpen')}</h3>
             <p className="text-muted-foreground mb-6">
-              Create a new project or open an existing one (.gsproj)
+              {t('projectManager.createOrOpen')}
             </p>
             <div className="flex justify-center gap-3">
-              <Button onClick={() => setIsNewProjectDialogOpen(true)}>
+              <Button 
+                onClick={() => setIsNewProjectDialogOpen(true)}
+                className="bg-orange-600 hover:bg-orange-500"
+              >
                 <Plus className="h-4 w-4 mr-2" />
-                New Project
+                {t('projectManager.newProject')}
               </Button>
-              <Button variant="outline" onClick={handleOpenProject}>
+              <Button 
+                variant="outline" 
+                onClick={handleOpenProject}
+                className="border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
+              >
                 <Upload className="h-4 w-4 mr-2" />
-                Open Project
+                {t('projectManager.openProject')}
               </Button>
             </div>
           </CardContent>
@@ -650,48 +651,48 @@ export function ProjectManagerUI() {
       <Dialog open={isNewProjectDialogOpen} onOpenChange={setIsNewProjectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>New Project</DialogTitle>
+            <DialogTitle>{t('projectManager.dialogTitle')}</DialogTitle>
             <DialogDescription>
-              Create a new translation project
+              {t('projectManager.dialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Project name *</Label>
+              <Label>{t('projectManager.projectName')}</Label>
               <Input 
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder="e.g. Dark Souls Translation"
+                placeholder={t('projectManager.projectNamePlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t('projectManager.description')}</Label>
               <Textarea 
                 value={newProjectDescription}
                 onChange={(e) => setNewProjectDescription(e.target.value)}
-                placeholder="Optional description..."
+                placeholder={t('projectManager.descriptionPlaceholder')}
                 rows={2}
               />
             </div>
             <div className="space-y-2">
-              <Label>Author</Label>
+              <Label>{t('projectManager.author')}</Label>
               <Input 
                 value={newProjectAuthor}
                 onChange={(e) => setNewProjectAuthor(e.target.value)}
-                placeholder="Your name"
+                placeholder={t('projectManager.authorPlaceholder')}
               />
             </div>
             <div className="space-y-2">
-              <Label>Game (optional)</Label>
+              <Label>{t('projectManager.game')}</Label>
               <Input 
                 value={newProjectGame}
                 onChange={(e) => setNewProjectGame(e.target.value)}
-                placeholder="Game name"
+                placeholder={t('projectManager.gamePlaceholder')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Source language</Label>
+                <Label>{t('projectManager.sourceLanguage')}</Label>
                 <Select value={newProjectSourceLang} onValueChange={setNewProjectSourceLang}>
                   <SelectTrigger>
                     <SelectValue />
@@ -705,7 +706,7 @@ export function ProjectManagerUI() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Target language</Label>
+                <Label>{t('projectManager.targetLanguage')}</Label>
                 <Select value={newProjectTargetLang} onValueChange={setNewProjectTargetLang}>
                   <SelectTrigger>
                     <SelectValue />
@@ -723,10 +724,10 @@ export function ProjectManagerUI() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsNewProjectDialogOpen(false)}>
-              Cancel
+              {t('projectManager.cancel')}
             </Button>
-            <Button onClick={handleCreateProject}>
-              Create Project
+            <Button onClick={handleCreateProject} className="bg-orange-600 hover:bg-orange-500">
+              {t('projectManager.create')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -736,9 +737,9 @@ export function ProjectManagerUI() {
       <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Export Translations</DialogTitle>
+            <DialogTitle>{t('projectManager.exportTitle')}</DialogTitle>
             <DialogDescription>
-              Choose export format
+              {t('projectManager.exportDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-3 gap-3 py-4">

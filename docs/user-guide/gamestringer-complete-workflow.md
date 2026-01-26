@@ -473,7 +473,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### 🆘 Se Hai Problemi
 - **Documentazione**: Leggi le guide dettagliate in `docs/`
 - **FAQ**: Controlla `docs/faq/profiles-faq.md`
-- **Community**: Discord, Forum, Reddit
+- **Community**: Forum, Reddit
 - **Supporto**: support@gamestringer.com
 
 ### 📚 Risorse Utili

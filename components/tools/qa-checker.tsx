@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { 
   ShieldCheck, AlertTriangle, AlertCircle, Info, 
   CheckCircle2, XCircle, RefreshCw, Wand2, FileText,
-  Tag, Hash, Type, Space, Binary, ChevronDown
+  Tag, Hash, Type, Space, Binary, ChevronDown, BookOpen, Plus, Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -28,6 +29,12 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from '@/lib/i18n';
 
+// Glossary term interface
+interface GlossaryTerm {
+  source: string;
+  target: string;
+}
+
 interface QAIssue {
   id: string;
   issueType: string;
@@ -47,6 +54,7 @@ interface QAConfig {
   checkNumbers: boolean;
   checkWhitespace: boolean;
   checkEncoding: boolean;
+  checkGlossary: boolean;
   maxLengthRatio: number;
   minLengthRatio: number;
 }
@@ -59,9 +67,12 @@ const DEFAULT_CONFIG: QAConfig = {
   checkNumbers: true,
   checkWhitespace: true,
   checkEncoding: true,
+  checkGlossary: true,
   maxLengthRatio: 1.8,
   minLengthRatio: 0.4,
 };
+
+const GLOSSARY_STORAGE_KEY = 'gamestringer_qa_glossary';
 
 export function QAChecker() {
   const { t } = useTranslation();
@@ -71,7 +82,80 @@ export function QAChecker() {
   const [isChecking, setIsChecking] = useState(false);
   const [config, setConfig] = useState<QAConfig>(DEFAULT_CONFIG);
   const [showConfig, setShowConfig] = useState(false);
+  const [showGlossary, setShowGlossary] = useState(false);
+  const [glossary, setGlossary] = useState<GlossaryTerm[]>([]);
+  const [newTermSource, setNewTermSource] = useState('');
+  const [newTermTarget, setNewTermTarget] = useState('');
   const { toast } = useToast();
+
+  // Load glossary from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(GLOSSARY_STORAGE_KEY);
+      if (saved) {
+        setGlossary(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn('Failed to load glossary:', e);
+    }
+  }, []);
+
+  // Save glossary to localStorage
+  const saveGlossary = useCallback((terms: GlossaryTerm[]) => {
+    setGlossary(terms);
+    localStorage.setItem(GLOSSARY_STORAGE_KEY, JSON.stringify(terms));
+  }, []);
+
+  // Add glossary term
+  const addGlossaryTerm = useCallback(() => {
+    if (!newTermSource.trim() || !newTermTarget.trim()) {
+      toast({ title: t('qaCheck.enterBothTerms'), variant: 'destructive' });
+      return;
+    }
+    const newTerms = [...glossary, { source: newTermSource.trim(), target: newTermTarget.trim() }];
+    saveGlossary(newTerms);
+    setNewTermSource('');
+    setNewTermTarget('');
+    toast({ title: `✅ ${t('qaCheck.termAdded')}` });
+  }, [glossary, newTermSource, newTermTarget, saveGlossary, toast, t]);
+
+  // Remove glossary term
+  const removeGlossaryTerm = useCallback((index: number) => {
+    const newTerms = glossary.filter((_, i) => i !== index);
+    saveGlossary(newTerms);
+  }, [glossary, saveGlossary]);
+
+  // Check glossary terms in translation
+  const checkGlossaryTerms = useCallback((): QAIssue[] => {
+    if (!config.checkGlossary || glossary.length === 0) return [];
+    
+    const glossaryIssues: QAIssue[] = [];
+    const sourceLower = source.toLowerCase();
+    const targetLower = target.toLowerCase();
+
+    for (const term of glossary) {
+      const sourceTermLower = term.source.toLowerCase();
+      const targetTermLower = term.target.toLowerCase();
+      
+      // Check if source contains the term
+      if (sourceLower.includes(sourceTermLower)) {
+        // Check if target contains the expected translation
+        if (!targetLower.includes(targetTermLower)) {
+          glossaryIssues.push({
+            id: `glossary_${Date.now()}_${Math.random()}`,
+            issueType: 'glossary_mismatch',
+            severity: 'warning',
+            message: `"${term.source}" → "${term.target}"`,
+            sourceText: term.source,
+            targetText: term.target,
+            suggestion: t('qaCheck.glossarySuggestion').replace('{term}', term.target)
+          });
+        }
+      }
+    }
+    
+    return glossaryIssues;
+  }, [source, target, glossary, config.checkGlossary, t]);
 
   const runCheck = useCallback(async () => {
     if (!source.trim() || !target.trim()) {
@@ -81,20 +165,26 @@ export function QAChecker() {
 
     setIsChecking(true);
     try {
+      // Backend QA checks
       const result = await invoke<QAIssue[]>('qa_check_translation', {
         source,
         target,
         config
       });
-      setIssues(result);
       
-      if (result.length === 0) {
+      // Add glossary checks (frontend)
+      const glossaryIssues = checkGlossaryTerms();
+      const allIssues = [...result, ...glossaryIssues];
+      
+      setIssues(allIssues);
+      
+      if (allIssues.length === 0) {
         toast({ title: `✅ ${t('qaCheck.noIssues')}` });
       } else {
-        const errors = result.filter(i => i.severity === 'error').length;
-        const warnings = result.filter(i => i.severity === 'warning').length;
+        const errors = allIssues.filter(i => i.severity === 'error').length;
+        const warnings = allIssues.filter(i => i.severity === 'warning').length;
         toast({ 
-          title: `${result.length} ${t('qaCheck.issuesFound')}`,
+          title: `${allIssues.length} ${t('qaCheck.issuesFound')}`,
           description: `${errors} ${t('qaCheck.errors')}, ${warnings} ${t('qaCheck.warnings')}`
         });
       }
@@ -104,7 +194,7 @@ export function QAChecker() {
     } finally {
       setIsChecking(false);
     }
-  }, [source, target, config, toast]);
+  }, [source, target, config, toast, checkGlossaryTerms]);
 
   const autoFix = useCallback(async (issueTypes: string[]) => {
     try {
@@ -294,7 +384,82 @@ export function QAChecker() {
                     />
                     <Label htmlFor="check-enc" className="text-sm">{t('qaCheck.encoding')}</Label>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={config.checkGlossary}
+                      onCheckedChange={(v) => setConfig({...config, checkGlossary: v})}
+                      id="check-glossary"
+                    />
+                    <Label htmlFor="check-glossary" className="text-sm flex items-center gap-1">
+                      <BookOpen className="h-3 w-3" />
+                      {t('qaCheck.glossary')}
+                    </Label>
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Glossary Section */}
+        <Collapsible open={showGlossary} onOpenChange={setShowGlossary}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2">
+              <ChevronDown className={cn("h-4 w-4 transition-transform", showGlossary && "rotate-180")} />
+              <BookOpen className="h-4 w-4" />
+              {t('qaCheck.glossary')} ({glossary.length})
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3">
+            <Card className="bg-teal-900/20 border-teal-700/50">
+              <CardContent className="pt-4 space-y-3">
+                {/* Add new term */}
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder={t('qaCheck.sourceTerm')}
+                    value={newTermSource}
+                    onChange={(e) => setNewTermSource(e.target.value)}
+                    className="h-8 text-sm bg-slate-800/50 border-slate-700"
+                  />
+                  <span className="text-muted-foreground">→</span>
+                  <Input
+                    placeholder={t('qaCheck.targetTerm')}
+                    value={newTermTarget}
+                    onChange={(e) => setNewTermTarget(e.target.value)}
+                    className="h-8 text-sm bg-slate-800/50 border-slate-700"
+                    onKeyDown={(e) => e.key === 'Enter' && addGlossaryTerm()}
+                  />
+                  <Button size="sm" onClick={addGlossaryTerm} className="h-8 px-2">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {/* Terms list */}
+                {glossary.length > 0 ? (
+                  <ScrollArea className="h-32">
+                    <div className="space-y-1">
+                      {glossary.map((term, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 rounded bg-slate-800/30 group">
+                          <span className="text-sm text-teal-300 flex-1">{term.source}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-sm text-teal-200 flex-1">{term.target}</span>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300"
+                            onClick={() => removeGlossaryTerm(index)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-2">
+                    {t('qaCheck.noTerms')}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </CollapsibleContent>
@@ -315,7 +480,8 @@ export function QAChecker() {
           <Button
             onClick={runCheck}
             disabled={isChecking || !source.trim() || !target.trim()}
-            className="bg-violet-600 hover:bg-violet-500 gap-2"
+            variant="outline"
+            className="border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400 gap-2"
           >
             {isChecking ? (
               <RefreshCw className="h-4 w-4 animate-spin" />

@@ -32,6 +32,7 @@ GameStringer is a Windows desktop app (built with Tauri + Next.js) that helps yo
 ✅ **Subtitle support** - SRT, VTT, ASS with timing preservation  
 ✅ **Retro ROM tools** - Table file editor for NES/SNES/GB hacking  
 ✅ **REST API** - Integrate with your CI/CD pipeline  
+✅ **Join developer forums and share** - Showcase your project and get feedback
 
 ## Why I built this
 
@@ -80,36 +81,23 @@ If you find it useful, consider ⭐ starring the repo or buying me a coffee!
 | r/Unity3D | 500K | Any | Unity-specific features |
 | r/unrealengine | 300K | Any | Unreal support |
 | r/godot | 200K | Any | Godot users |
-| r/RPGMaker | 50K | Any | RPG Maker community |
+| r/RPGMaker | 50K | Any | RPGMaker community |
 | r/vndevs | 20K | Any | Visual novel developers |
 | r/emulation | 150K | Any | ROM hacking features |
 | r/romhacking | 30K | Any | Perfect for retro tools |
 | r/opensource | 100K | Any | FOSS community |
 | r/SideProject | 80K | Any | Showcase projects |
 
-### Discord Servers
-| Server | Focus | How to Share |
-|--------|-------|--------------|
-| Godot Discord | Godot devs | #showcase channel |
-| RPG Maker Discord | RPG Maker | #resources channel |
-| Ren'Py Discord | Visual novels | #tools channel |
-| GameDev League | General | #show-off channel |
-| Indie Game Devs | Indies | #self-promo channel |
-| Unity Developer Hub | Unity | #tools channel |
-| ROM Hacking Discord | Retro | #tools channel |
-
-### Forums & Websites
-| Site | Type | Notes |
-|------|------|-------|
-| itch.io | Game platform | Create a free tool page |
-| GameJolt | Game platform | Same as itch |
-| IndieDB | Indie database | Tools section |
-| TIGSource | Forum | Devlog section |
-| Hacker News | Tech news | "Show HN" post |
-| Product Hunt | Launch platform | Good for visibility |
-| AlternativeTo | Software directory | List as alternative to memoQ, SDL |
-| GitHub Trending | Code | Star the repo! |
-| ROMHACKING.net | ROM hacking | Submit as utility |
+### Community Forums
+| Forum | Focus | How to Share |
+|-------|-------|--------------|
+| Godot Forum | Godot devs | Showcase category |
+| RPG Maker Forums | RPG Maker | Resources category |
+| Lemmasoft (Ren'Py) | Visual novels | Tools section |
+| GameDev.net | General | Show off project |
+| IndieDB | Indies | Add tool profile |
+| Unity Forum | Unity | Tools & Libraries |
+| ROMhacking.net | Retro | Utilities submission |
 
 ### Social Media
 | Platform | Strategy |
@@ -138,7 +126,6 @@ If you find it useful, consider ⭐ starring the repo or buying me a coffee!
 
 ### Week 2: Expand
 1. Post on engine-specific subreddits
-2. Join Discord servers and share
 3. Submit to Product Hunt
 4. Post on Hacker News
 

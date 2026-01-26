@@ -1391,6 +1391,96 @@ pub async fn get_steam_game_name(app_id: u32) -> Result<Option<String>, String> 
     Ok(fetch_game_name_from_steam(app_id).await)
 }
 
+/// 🖼️ CERCA IMMAGINI SU STEAMGRIDDB
+/// Fallback per giochi senza immagini Steam - usa API ufficiale con chiave
+#[tauri::command]
+pub async fn fetch_steamgriddb_image(app_id: u32, game_name: String, api_key: Option<String>) -> Result<Option<String>, String> {
+    info!("🖼️ Cercando immagine su SteamGridDB per: {} ({})", game_name, app_id);
+    
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| e.to_string())?;
+    
+    // Se abbiamo API key, usa l'API ufficiale
+    if let Some(key) = api_key {
+        if !key.is_empty() {
+            // Step 1: Cerca il gioco per Steam App ID
+            let search_url = format!(
+                "https://www.steamgriddb.com/api/v2/games/steam/{}",
+                app_id
+            );
+            
+            match client.get(&search_url)
+                .header("Authorization", format!("Bearer {}", key))
+                .send()
+                .await 
+            {
+                Ok(resp) if resp.status().is_success() => {
+                    if let Ok(json) = resp.json::<serde_json::Value>().await {
+                        if let Some(game_id) = json["data"]["id"].as_u64() {
+                            // Step 2: Ottieni hero/grid per questo gioco
+                            let heroes_url = format!(
+                                "https://www.steamgriddb.com/api/v2/heroes/game/{}",
+                                game_id
+                            );
+                            
+                            if let Ok(heroes_resp) = client.get(&heroes_url)
+                                .header("Authorization", format!("Bearer {}", key))
+                                .send()
+                                .await 
+                            {
+                                if let Ok(heroes_json) = heroes_resp.json::<serde_json::Value>().await {
+                                    if let Some(heroes) = heroes_json["data"].as_array() {
+                                        if let Some(first_hero) = heroes.first() {
+                                            if let Some(url) = first_hero["url"].as_str() {
+                                                info!("✅ Trovata hero SteamGridDB: {}", url);
+                                                return Ok(Some(url.to_string()));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Fallback a grids se non ci sono heroes
+                            let grids_url = format!(
+                                "https://www.steamgriddb.com/api/v2/grids/game/{}?dimensions=460x215,920x430",
+                                game_id
+                            );
+                            
+                            if let Ok(grids_resp) = client.get(&grids_url)
+                                .header("Authorization", format!("Bearer {}", key))
+                                .send()
+                                .await 
+                            {
+                                if let Ok(grids_json) = grids_resp.json::<serde_json::Value>().await {
+                                    if let Some(grids) = grids_json["data"].as_array() {
+                                        if let Some(first_grid) = grids.first() {
+                                            if let Some(url) = first_grid["url"].as_str() {
+                                                info!("✅ Trovata grid SteamGridDB: {}", url);
+                                                return Ok(Some(url.to_string()));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Ok(resp) => {
+                    warn!("SteamGridDB API returned status: {}", resp.status());
+                }
+                Err(e) => {
+                    warn!("SteamGridDB API error: {}", e);
+                }
+            }
+        }
+    }
+    
+    info!("❌ Nessuna immagine trovata su SteamGridDB per {}", game_name);
+    Ok(None)
+}
+
 /// 📂 CARICA FAMILY SHARING IDS - Persistenza locale
 #[tauri::command]
 pub async fn load_family_sharing_ids() -> Result<Vec<String>, String> {
@@ -1414,4 +1504,439 @@ pub async fn load_family_sharing_ids() -> Result<Vec<String>, String> {
     } else {
         Ok(vec![])
     }
+}
+
+// ============================================
+// 🔐 STEAM OPENID AUTHENTICATION
+// ============================================
+
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use std::net::TcpListener;
+use std::io::{Read, Write};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SteamOpenIdConfig {
+    pub auth_url: String,
+    pub return_url: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SteamUser {
+    pub steam_id: String,
+    pub persona_name: String,
+    pub avatar: String,
+    pub avatar_full: String,
+    pub profile_url: String,
+}
+
+// Global state for callback result
+static STEAM_CALLBACK_RESULT: once_cell::sync::Lazy<Arc<Mutex<Option<String>>>> = 
+    once_cell::sync::Lazy::new(|| Arc::new(Mutex::new(None)));
+
+/// 🔐 Genera URL per Steam OpenID login
+#[tauri::command]
+pub async fn steam_openid_get_auth_url(return_url: String) -> Result<String, String> {
+    info!("🔐 Generando URL Steam OpenID...");
+    
+    let params = [
+        ("openid.ns", "http://specs.openid.net/auth/2.0"),
+        ("openid.mode", "checkid_setup"),
+        ("openid.return_to", &return_url),
+        ("openid.realm", &return_url),
+        ("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select"),
+        ("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select"),
+    ];
+    
+    let query = params.iter()
+        .map(|(k, v)| format!("{}={}", k, urlencoding::encode(v)))
+        .collect::<Vec<_>>()
+        .join("&");
+    
+    let auth_url = format!("https://steamcommunity.com/openid/login?{}", query);
+    
+    info!("✅ URL generato: {}", auth_url);
+    Ok(auth_url)
+}
+
+/// 🔐 Avvia server locale per callback Steam e restituisce URL + porta
+#[tauri::command]
+pub async fn steam_openid_start_server() -> Result<(String, u16), String> {
+    info!("🔐 Avviando server callback Steam...");
+    
+    // Clear previous result
+    *STEAM_CALLBACK_RESULT.lock().await = None;
+    
+    // Find available port
+    let port = find_available_port().ok_or("No available port")?;
+    let return_url = format!("http://127.0.0.1:{}/callback", port);
+    
+    // Generate auth URL
+    let params = [
+        ("openid.ns", "http://specs.openid.net/auth/2.0"),
+        ("openid.mode", "checkid_setup"),
+        ("openid.return_to", return_url.as_str()),
+        ("openid.realm", return_url.as_str()),
+        ("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select"),
+        ("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select"),
+    ];
+    
+    let query = params.iter()
+        .map(|(k, v)| format!("{}={}", k, urlencoding::encode(v)))
+        .collect::<Vec<_>>()
+        .join("&");
+    
+    let auth_url = format!("https://steamcommunity.com/openid/login?{}", query);
+    
+    // Start callback server in a dedicated OS thread (not tokio)
+    let port_clone = port;
+    std::thread::spawn(move || {
+        run_callback_server_sync(port_clone);
+    });
+    
+    // Give server time to start
+    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+    
+    info!("✅ Server avviato su porta {}", port);
+    Ok((auth_url, port))
+}
+
+/// 🔐 Attende e restituisce il risultato del callback Steam
+#[tauri::command]
+pub async fn steam_openid_wait_callback(timeout_secs: u64) -> Result<String, String> {
+    info!("🔐 In attesa del callback Steam (timeout: {}s)...", timeout_secs);
+    
+    let start = std::time::Instant::now();
+    let timeout = std::time::Duration::from_secs(timeout_secs);
+    
+    loop {
+        // Check if we have a result
+        let result = STEAM_CALLBACK_RESULT.lock().await.clone();
+        if let Some(steam_id) = result {
+            info!("✅ Callback ricevuto! SteamID: {}", steam_id);
+            // Clear for next time
+            *STEAM_CALLBACK_RESULT.lock().await = None;
+            return Ok(steam_id);
+        }
+        
+        // Check timeout
+        if start.elapsed() > timeout {
+            return Err("Timeout waiting for Steam callback".to_string());
+        }
+        
+        // Wait a bit before checking again
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    }
+}
+
+fn find_available_port() -> Option<u16> {
+    for port in 31350..31400 {
+        if TcpListener::bind(format!("127.0.0.1:{}", port)).is_ok() {
+            return Some(port);
+        }
+    }
+    None
+}
+
+fn run_callback_server_sync(port: u16) {
+    let listener = match TcpListener::bind(format!("127.0.0.1:{}", port)) {
+        Ok(l) => l,
+        Err(e) => {
+            log::error!("Failed to bind callback server: {}", e);
+            return;
+        }
+    };
+    
+    // Set timeout so we don't block forever
+    listener.set_nonblocking(false).ok();
+    
+    info!("📡 Callback server listening on port {}", port);
+    
+    // Accept one connection
+    if let Ok((mut stream, _)) = listener.accept() {
+        let mut buffer = [0; 4096];
+        if let Ok(n) = stream.read(&mut buffer) {
+            let request = String::from_utf8_lossy(&buffer[..n]);
+            
+            // Parse the callback URL
+            if let Some(query_start) = request.find("/callback?") {
+                let query_end = request[query_start..].find(" HTTP").unwrap_or(request.len());
+                let query = &request[query_start + 10..query_start + query_end];
+                
+                // Parse query params
+                let params: HashMap<String, String> = query
+                    .split('&')
+                    .filter_map(|p| {
+                        let mut parts = p.splitn(2, '=');
+                        Some((
+                            urlencoding::decode(parts.next()?).ok()?.to_string(),
+                            urlencoding::decode(parts.next()?).ok()?.to_string(),
+                        ))
+                    })
+                    .collect();
+                
+                // Extract SteamID from claimed_id
+                if let Some(claimed_id) = params.get("openid.claimed_id") {
+                    if let Some(steam_id) = claimed_id.split('/').last() {
+                        info!("✅ Estratto SteamID dal callback: {}", steam_id);
+                        *STEAM_CALLBACK_RESULT.blocking_lock() = Some(steam_id.to_string());
+                    }
+                }
+            }
+            
+            // Send success response
+            let html = r#"<!DOCTYPE html>
+<html>
+<head><title>GameStringer - Steam Login</title>
+<style>
+body { font-family: -apple-system, sans-serif; background: #1b2838; color: #fff; 
+       display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+.card { background: #2a475e; padding: 40px; border-radius: 12px; text-align: center; }
+h1 { color: #66c0f4; margin-bottom: 10px; }
+p { color: #c7d5e0; }
+</style>
+</head>
+<body>
+<div class="card">
+<h1>✅ Login Steam completato!</h1>
+<p>Puoi chiudere questa finestra e tornare a GameStringer.</p>
+</div>
+</body>
+</html>"#;
+            
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                html.len(),
+                html
+            );
+            
+            stream.write_all(response.as_bytes()).ok();
+        }
+    }
+    
+    info!("📡 Callback server chiuso");
+}
+
+/// 🔐 Verifica risposta Steam OpenID e ottieni SteamID
+#[tauri::command]
+pub async fn steam_openid_verify(params: HashMap<String, String>) -> Result<String, String> {
+    info!("🔐 Verificando risposta Steam OpenID...");
+    
+    // Estrai claimed_id per ottenere lo SteamID
+    let claimed_id = params.get("openid.claimed_id")
+        .ok_or("Missing openid.claimed_id")?;
+    
+    // Il claimed_id ha formato: https://steamcommunity.com/openid/id/76561198xxxxxxxxx
+    let steam_id = claimed_id
+        .split('/')
+        .last()
+        .ok_or("Invalid claimed_id format")?
+        .to_string();
+    
+    // Verifica con Steam che la risposta sia autentica
+    let client = reqwest::Client::new();
+    
+    let mut verify_params: HashMap<String, String> = params.clone();
+    verify_params.insert("openid.mode".to_string(), "check_authentication".to_string());
+    
+    let response = client
+        .post("https://steamcommunity.com/openid/login")
+        .form(&verify_params)
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+    
+    let body = response.text().await.map_err(|e| format!("Read failed: {}", e))?;
+    
+    if body.contains("is_valid:true") {
+        info!("✅ Steam OpenID verificato! SteamID: {}", steam_id);
+        Ok(steam_id)
+    } else {
+        warn!("❌ Steam OpenID verifica fallita");
+        Err("OpenID verification failed".to_string())
+    }
+}
+
+/// 🔐 Ottieni info profilo Steam da SteamID
+#[tauri::command]
+pub async fn steam_get_user_profile(steam_id: String, api_key: Option<String>) -> Result<SteamUser, String> {
+    info!("🔐 Recuperando profilo Steam per: {}", steam_id);
+    
+    // Se abbiamo API key, usa l'API ufficiale
+    if let Some(key) = api_key {
+        if !key.is_empty() {
+            let url = format!(
+                "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={}&steamids={}",
+                key, steam_id
+            );
+            
+            let client = reqwest::Client::new();
+            let response = client.get(&url).send().await
+                .map_err(|e| format!("Request failed: {}", e))?;
+            
+            if response.status().is_success() {
+                let json: serde_json::Value = response.json().await
+                    .map_err(|e| format!("Parse failed: {}", e))?;
+                
+                if let Some(player) = json["response"]["players"].as_array().and_then(|p| p.first()) {
+                    return Ok(SteamUser {
+                        steam_id: steam_id.clone(),
+                        persona_name: player["personaname"].as_str().unwrap_or("Unknown").to_string(),
+                        avatar: player["avatar"].as_str().unwrap_or("").to_string(),
+                        avatar_full: player["avatarfull"].as_str().unwrap_or("").to_string(),
+                        profile_url: player["profileurl"].as_str().unwrap_or("").to_string(),
+                    });
+                }
+            }
+        }
+    }
+    
+    // Fallback: profilo base senza API key
+    Ok(SteamUser {
+        steam_id: steam_id.clone(),
+        persona_name: format!("Steam User {}", &steam_id[steam_id.len().saturating_sub(4)..]),
+        avatar: "".to_string(),
+        avatar_full: "".to_string(),
+        profile_url: format!("https://steamcommunity.com/profiles/{}", steam_id),
+    })
+}
+
+/// 🔐 Salva credenziali Steam autenticate
+#[tauri::command]
+pub async fn steam_save_auth(steam_id: String, persona_name: String) -> Result<(), String> {
+    use std::fs;
+    
+    info!("💾 Salvando autenticazione Steam per: {} ({})", persona_name, steam_id);
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let gs_dir = data_dir.join("GameStringer");
+        fs::create_dir_all(&gs_dir).map_err(|e| format!("Cannot create dir: {}", e))?;
+        
+        let auth_file = gs_dir.join("steam_auth.json");
+        let auth_data = serde_json::json!({
+            "steam_id": steam_id,
+            "persona_name": persona_name,
+            "authenticated_at": chrono::Utc::now().to_rfc3339()
+        });
+        
+        fs::write(&auth_file, serde_json::to_string_pretty(&auth_data).unwrap())
+            .map_err(|e| format!("Cannot write file: {}", e))?;
+        
+        info!("✅ Autenticazione salvata in {:?}", auth_file);
+        Ok(())
+    } else {
+        Err("Cannot find data directory".to_string())
+    }
+}
+
+/// 🔐 Carica credenziali Steam salvate
+#[tauri::command]
+pub async fn steam_load_auth() -> Result<Option<SteamUser>, String> {
+    use std::fs;
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let auth_file = data_dir.join("GameStringer").join("steam_auth.json");
+        
+        if auth_file.exists() {
+            let json = fs::read_to_string(&auth_file)
+                .map_err(|e| format!("Read failed: {}", e))?;
+            
+            let data: serde_json::Value = serde_json::from_str(&json)
+                .map_err(|e| format!("Parse failed: {}", e))?;
+            
+            let steam_id = data["steam_id"].as_str().unwrap_or("").to_string();
+            let persona_name = data["persona_name"].as_str().unwrap_or("").to_string();
+            
+            if !steam_id.is_empty() {
+                info!("✅ Caricata autenticazione Steam: {} ({})", persona_name, steam_id);
+                return Ok(Some(SteamUser {
+                    steam_id,
+                    persona_name,
+                    avatar: "".to_string(),
+                    avatar_full: "".to_string(),
+                    profile_url: "".to_string(),
+                }));
+            }
+        }
+    }
+    
+    Ok(None)
+}
+
+/// 🎮 Importa wishlist Steam
+#[tauri::command]
+pub async fn steam_get_wishlist(steam_id: String) -> Result<Vec<WishlistGame>, String> {
+    info!("🎮 Importando wishlist Steam per: {}", steam_id);
+    
+    let url = format!(
+        "https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/?p=0",
+        steam_id
+    );
+    
+    let client = reqwest::Client::new();
+    let response = client.get(&url)
+        .header("Accept", "application/json")
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+    
+    if !response.status().is_success() {
+        return Err(format!("Steam API error: {}", response.status()));
+    }
+    
+    let json: serde_json::Value = response.json().await
+        .map_err(|e| format!("Parse failed: {}", e))?;
+    
+    let mut wishlist = Vec::new();
+    
+    if let Some(obj) = json.as_object() {
+        for (app_id, game_data) in obj {
+            if let Ok(id) = app_id.parse::<u32>() {
+                let name = game_data["name"].as_str().unwrap_or("Unknown").to_string();
+                let priority = game_data["priority"].as_u64().unwrap_or(0) as u32;
+                let added = game_data["added"].as_u64().unwrap_or(0);
+                
+                wishlist.push(WishlistGame {
+                    app_id: id,
+                    name,
+                    priority,
+                    added_timestamp: added,
+                });
+            }
+        }
+    }
+    
+    // Sort by priority
+    wishlist.sort_by(|a, b| a.priority.cmp(&b.priority));
+    
+    info!("✅ Importati {} giochi dalla wishlist", wishlist.len());
+    Ok(wishlist)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WishlistGame {
+    pub app_id: u32,
+    pub name: String,
+    pub priority: u32,
+    pub added_timestamp: u64,
+}
+
+/// 🔐 Logout Steam - rimuovi credenziali salvate
+#[tauri::command]
+pub async fn steam_logout() -> Result<(), String> {
+    use std::fs;
+    
+    info!("🔐 Logout Steam...");
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let auth_file = data_dir.join("GameStringer").join("steam_auth.json");
+        
+        if auth_file.exists() {
+            fs::remove_file(&auth_file)
+                .map_err(|e| format!("Cannot delete: {}", e))?;
+            info!("✅ Credenziali Steam rimosse");
+        }
+    }
+    
+    Ok(())
 }

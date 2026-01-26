@@ -147,14 +147,14 @@ export default function EmotionTranslatorPage() {
   }
 
   return (
-      <div className="space-y-6">
+      <div className="space-y-3 animate-fade-in">
         {/* Hero Header */}
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600 via-pink-600 to-rose-600 p-3">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-3">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
-                <Sparkles className="h-5 w-5 text-white" />
+              <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+                <Sparkles className="h-6 w-6 text-white" />
               </div>
               <div>
                 <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('emotionTranslator.title')}</h1>
@@ -162,12 +162,12 @@ export default function EmotionTranslatorPage() {
               </div>
             </div>
             <div className="hidden md:flex items-center gap-3">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
                 <Zap className="h-3.5 w-3.5 text-white" />
                 <span className="text-sm font-bold text-white">10</span>
                 <span className="text-[10px] text-white/70">{t('emotionTranslator.emotions')}</span>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
                 <Languages className="h-3.5 w-3.5 text-white" />
                 <span className="text-sm font-bold text-white">10+</span>
                 <span className="text-[10px] text-white/70">{t('emotionTranslator.languages')}</span>
@@ -176,9 +176,9 @@ export default function EmotionTranslatorPage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-3">
           {/* Main Translation Panel */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-2">
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -197,15 +197,15 @@ export default function EmotionTranslatorPage() {
                     onClick={() => setEmotionAware(!emotionAware)}
                     className={cn(
                       "gap-2",
-                      emotionAware && "bg-gradient-to-r from-violet-500 to-purple-500"
+                      emotionAware && "bg-blue-600 hover:bg-blue-500"
                     )}
                   >
                     <Sparkles className="h-4 w-4" />
-                    {emotionAware ? "Emotion ON" : "Emotion OFF"}
+                    {emotionAware ? t('emotionTranslator.emotionOn') : t('emotionTranslator.emotionOff')}
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 p-3">
                 {/* Input */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -215,7 +215,7 @@ export default function EmotionTranslatorPage() {
                     )}
                   </div>
                   <Textarea
-                    placeholder="Enter text to translate... Try something emotional like 'I hate you!' or 'I miss you so much...'"
+                    placeholder={t('emotionTranslator.placeholder') || "Enter text to translate... Try something emotional like 'I hate you!' or 'I miss you so much...'"}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     rows={4}
@@ -226,7 +226,7 @@ export default function EmotionTranslatorPage() {
                 {/* Language Selection */}
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
-                    <Label className="text-xs text-muted-foreground mb-1 block">From</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">{t('emotionTranslator.from')}</Label>
                     <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                       <SelectTrigger>
                         <SelectValue />
@@ -245,7 +245,7 @@ export default function EmotionTranslatorPage() {
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground mt-5" />
                   <div className="flex-1">
-                    <Label className="text-xs text-muted-foreground mb-1 block">To</Label>
+                    <Label className="text-xs text-muted-foreground mb-1 block">{t('emotionTranslator.to')}</Label>
                     <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                       <SelectTrigger>
                         <SelectValue />
@@ -265,7 +265,7 @@ export default function EmotionTranslatorPage() {
                   <Button 
                     onClick={handleTranslate}
                     disabled={!inputText.trim() || isTranslating}
-                    className="gap-2 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
+                    className="gap-2 bg-blue-600 hover:bg-blue-500"
                   >
                     {isTranslating ? (
                       <>
@@ -369,7 +369,7 @@ export default function EmotionTranslatorPage() {
           </div>
 
           {/* Examples Sidebar */}
-          <div className="space-y-4">
+          <div className="space-y-2">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">{t('emotionTranslator.exampleDialogues')}</CardTitle>

@@ -5,7 +5,7 @@ import {
   FileText, Save, Languages, Search, Edit3, 
   CheckCircle, AlertCircle, Lightbulb, Copy, Download, Upload, 
   Loader2, Trash2, ChevronRight, Sparkles, 
-  ArrowLeftRight, LayoutPanelLeft, X
+  ArrowLeftRight, LayoutPanelLeft, X, HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -886,15 +886,53 @@ export default function EditorPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-purple-900/5 to-slate-900 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-blue-900/5 to-slate-900 overflow-hidden">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl mx-4 mt-4 mb-2 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-4">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-400/20 rounded-full blur-3xl" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <LayoutPanelLeft className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">{t('editor.title') || 'Visual Editor'}</h1>
+              <p className="text-sm text-white/70">{t('editor.subtitle') || 'Modifica le traduzioni in modo visuale'}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge className="bg-black/30 text-white border-white/20 px-3 py-1">
+              {gameProjects.length} {t('editor.projects')}
+            </Badge>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="p-1.5 rounded-lg bg-black/20 hover:bg-black/40 transition-colors border border-white/10">
+                    <HelpCircle className="h-4 w-4 text-white/70" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs p-3 bg-slate-900 border-slate-700">
+                  <p className="font-semibold text-sm mb-1">{t('editor.helpTitle')}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {t('editor.helpDescription')}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-1 min-h-0 overflow-hidden">
       {/* --- SIDEBAR: LIST & FILTERS --- */}
       <div className="w-80 border-r border-border/40 bg-slate-900/50 flex flex-col">
         {/* Sidebar Header */}
         <div className="p-4 border-b border-border/40 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold flex items-center gap-2 text-sm">
-              <FileText className="h-4 w-4 text-purple-400" />
-              <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Explorer</span>
+              <FileText className="h-4 w-4 text-blue-400" />
+              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Explorer</span>
             </h2>
             <div className="flex items-center gap-1">
               <TooltipProvider>
@@ -980,7 +1018,7 @@ export default function EditorPage() {
         <ScrollArea className="flex-1">
           {isLoading ? (
             <div className="flex justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+              <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
             </div>
           ) : explorerView === 'games' ? (
             // Vista games
@@ -1001,11 +1039,11 @@ export default function EditorPage() {
                     onClick={() => { setSelectedProject(project); setExplorerView('files'); }}
                     className="flex items-center gap-3 p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-all cursor-pointer group"
                   >
-                    <div className="w-10 h-10 rounded bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
-                      <Languages className="h-5 w-5 text-purple-400" />
+                    <div className="w-10 h-10 rounded bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
+                      <Languages className="h-5 w-5 text-blue-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate group-hover:text-purple-400 transition-colors">
+                      <p className="font-medium text-sm truncate group-hover:text-blue-400 transition-colors">
                         {project.game.title}
                       </p>
                       <p className="text-xs text-slate-500">
@@ -1016,7 +1054,7 @@ export default function EditorPage() {
                       <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-green-500/10 text-green-400 border-green-500/30">
                         {Math.round((project.completedStrings / Math.max(project.totalStrings, 1)) * 100)}%
                       </Badge>
-                      <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-purple-400 transition-colors" />
+                      <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
                     </div>
                   </motion.div>
                 ))}
@@ -1047,7 +1085,7 @@ export default function EditorPage() {
                     onClick={() => { setSelectedFile(file); setExplorerView('strings'); }}
                     className={cn(
                       "flex items-center gap-3 p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-all cursor-pointer group",
-                      selectedFile?.id === file.id && "bg-purple-500/10 border-l-2 border-l-purple-500"
+                      selectedFile?.id === file.id && "bg-blue-500/10 border-l-2 border-l-blue-500"
                     )}
                   >
                     <div className="p-2 rounded bg-blue-500/10">
@@ -1093,7 +1131,7 @@ export default function EditorPage() {
                     onClick={() => setSelectedTranslation(t)}
                     className={cn(
                       "flex flex-col items-start p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-all text-left group relative cursor-pointer",
-                      selectedTranslation?.id === t.id && "bg-purple-500/10 border-l-2 border-l-purple-500"
+                      selectedTranslation?.id === t.id && "bg-blue-500/10 border-l-2 border-l-blue-500"
                     )}
                   >
                     <p className={cn(
@@ -1125,8 +1163,8 @@ export default function EditorPage() {
             <div className="h-auto min-h-12 border-b border-slate-800 flex flex-col gap-2 px-4 py-2 bg-slate-900/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="p-1.5 rounded-md bg-purple-500/20">
-                    <Languages className="h-4 w-4 text-purple-400" />
+                  <div className="p-1.5 rounded-md bg-blue-500/20">
+                    <Languages className="h-4 w-4 text-blue-400" />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1.5 text-xs text-slate-400">
@@ -1149,13 +1187,13 @@ export default function EditorPage() {
 
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={generateSuggestions} disabled={isGeneratingSuggestions}>
-                    {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-purple-400" />}
+                    {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-blue-400" />}
                     AI
                   </Button>
                   <Separator orientation="vertical" className="h-5 bg-slate-700" />
                   <Button 
                     size="sm" 
-                    className={cn("h-8 text-xs", hasUnsavedChanges ? "bg-purple-600 hover:bg-purple-700" : "bg-slate-700")}
+                    className={cn("h-8 text-xs", hasUnsavedChanges ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-700")}
                     onClick={handleManualSave} 
                     disabled={!hasUnsavedChanges || isSaving}
                   >
@@ -1183,7 +1221,7 @@ export default function EditorPage() {
                   </div>
                   <ArrowLeftRight className="h-3 w-3 text-slate-600" />
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-purple-400 uppercase font-bold">→ Italiano</span>
+                    <span className="text-[10px] text-blue-400 uppercase font-bold">→ Italiano</span>
                   </div>
                 </div>
               )}
@@ -1230,7 +1268,7 @@ export default function EditorPage() {
                             "w-full text-left p-2 rounded-md mb-0.5 transition-all border-l-2",
                             "hover:bg-slate-800/50",
                             selectedLine?.lineNumber === line.lineNumber 
-                              ? "bg-purple-500/20 border-l-purple-500" 
+                              ? "bg-blue-500/20 border-l-blue-500" 
                               : line.translatedText 
                                 ? "border-l-green-500/50 bg-green-500/5" 
                                 : "border-l-transparent"
@@ -1244,7 +1282,7 @@ export default function EditorPage() {
                               {line.translatedText ? "✓" : "○"} #{line.lineNumber}
                             </span>
                             {line.key && (
-                              <span className="text-[9px] text-purple-400 truncate max-w-[100px]">{line.key}</span>
+                              <span className="text-[9px] text-blue-400 truncate max-w-[100px]">{line.key}</span>
                             )}
                           </div>
                           <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
@@ -1307,7 +1345,7 @@ export default function EditorPage() {
                   {/* Translation input */}
                   <div className="flex-1 flex flex-col">
                     <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Traduzione</span>
+                      <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Traduzione</span>
                       {selectedLine.translatedText && (
                         <Badge variant="outline" className="text-[9px] h-4 border-green-500/30 text-green-400">
                           Tradotto
@@ -1329,7 +1367,7 @@ export default function EditorPage() {
                           }
                           setHasUnsavedChanges(true);
                         }}
-                        className="w-full h-full min-h-[150px] resize-none border-slate-700 bg-slate-800/30 text-sm leading-relaxed focus-visible:ring-purple-500/50 placeholder:text-slate-600"
+                        className="w-full h-full min-h-[150px] resize-none border-slate-700 bg-slate-800/30 text-sm leading-relaxed focus-visible:ring-blue-500/50 placeholder:text-slate-600"
                         placeholder="Inserisci la traduzione per questa stringa..."
                         spellCheck={false}
                       />
@@ -1344,7 +1382,7 @@ export default function EditorPage() {
                 /* Original full editor for non-parsed content */
                 <div className="flex-1 flex flex-col min-w-[300px] bg-slate-900/20">
                   <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">Traduzione</span>
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Traduzione</span>
                     {hasUnsavedChanges && (
                       <Badge variant="outline" className="text-[9px] h-4 border-yellow-500/30 text-yellow-400 animate-pulse">
                         Non salvato
@@ -1355,7 +1393,7 @@ export default function EditorPage() {
                     <Textarea
                       value={selectedTranslation.translatedText}
                       onChange={(e) => handleTranslationChange(e.target.value)}
-                      className="w-full h-full min-h-[200px] resize-none border-slate-700 bg-slate-800/30 text-base leading-relaxed focus-visible:ring-purple-500/50 placeholder:text-slate-600"
+                      className="w-full h-full min-h-[200px] resize-none border-slate-700 bg-slate-800/30 text-base leading-relaxed focus-visible:ring-blue-500/50 placeholder:text-slate-600"
                       placeholder="Inserisci la traduzione..."
                       spellCheck={false}
                     />
@@ -1384,6 +1422,7 @@ export default function EditorPage() {
         games={games}
         onImportComplete={fetchTranslations}
       />
+      </div>
     </div>
   );
 }

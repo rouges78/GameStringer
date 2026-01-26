@@ -785,8 +785,12 @@ export default function LibraryPage() {
     }
 
     // Per molti games, usa virtualizzazione
+    // Key basata sui filtri per forzare re-render quando cambiano
+    const gridKey = `${sortBy}-${selectedPlatforms.join(',')}-${selectedEngines.join(',')}-${selectedStatus.join(',')}-${selectedTags.join(',')}-${debouncedSearchTerm}`;
+    
     return (
       <VirtuosoGrid
+        key={gridKey}
         style={{ height: 'calc(100vh - 280px)' }}
         totalCount={filteredGames.length}
         overscan={200}

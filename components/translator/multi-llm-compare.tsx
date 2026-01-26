@@ -146,7 +146,7 @@ export function MultiLLMCompare() {
   return (
     <div className="space-y-3">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-3">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
@@ -241,7 +241,7 @@ export function MultiLLMCompare() {
               onClick={handleCompare}
               disabled={isLoading || !sourceText.trim() || selectedProviders.length === 0}
               size="sm"
-              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+              className="w-full bg-blue-600 hover:bg-blue-500"
             >
               {isLoading ? (
                 <><Loader2 className="h-3 w-3 mr-1 animate-spin" />{t('multiLlmCompare.comparing')}</>

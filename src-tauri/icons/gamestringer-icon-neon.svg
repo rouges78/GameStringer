@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Sfondo scuro -->
+    <radialGradient id="darkBg" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" style="stop-color:#1E1B4B"/>
+      <stop offset="100%" style="stop-color:#0C0A1D"/>
+    </radialGradient>
+    
+    <!-- Neon blu -->
+    <linearGradient id="neonBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#38BDF8"/>
+      <stop offset="100%" style="stop-color:#0EA5E9"/>
+    </linearGradient>
+    
+    <!-- Neon viola -->
+    <linearGradient id="neonPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#C084FC"/>
+      <stop offset="100%" style="stop-color:#A855F7"/>
+    </linearGradient>
+    
+    <!-- Glow effect -->
+    <filter id="neonGlow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <filter id="strongGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Sfondo -->
+  <circle cx="256" cy="256" r="250" fill="url(#darkBg)"/>
+  <circle cx="256" cy="256" r="250" fill="none" stroke="#3730A3" stroke-width="4"/>
+  
+  <!-- Globo wireframe neon -->
+  <g filter="url(#neonGlow)" stroke="url(#neonBlue)" stroke-width="2.5" fill="none">
+    <circle cx="256" cy="256" r="140"/>
+    <ellipse cx="256" cy="256" rx="140" ry="50"/>
+    <ellipse cx="256" cy="256" rx="100" ry="35"/>
+    <ellipse cx="256" cy="256" rx="50" ry="18"/>
+    <path d="M 256 116 Q 340 256 256 396"/>
+    <path d="M 256 116 Q 172 256 256 396"/>
+    <path d="M 256 116 Q 290 256 256 396"/>
+    <path d="M 256 116 Q 222 256 256 396"/>
+  </g>
+  
+  <!-- Anelli orbitali neon -->
+  <g filter="url(#strongGlow)">
+    <ellipse cx="256" cy="256" rx="200" ry="40" fill="none" stroke="url(#neonPurple)" stroke-width="8" transform="rotate(-35, 256, 256)"/>
+    <ellipse cx="256" cy="256" rx="200" ry="40" fill="none" stroke="url(#neonBlue)" stroke-width="6" transform="rotate(35, 256, 256)"/>
+  </g>
+  
+  <!-- G centrale neon -->
+  <g filter="url(#strongGlow)">
+    <path 
+      d="M 295 230 
+         A 55 55 0 1 0 295 282 
+         L 265 282 
+         L 265 262 
+         L 280 262 
+         L 280 252 
+         L 245 252 
+         L 245 298 
+         A 72 72 0 1 1 312 215 
+         L 295 230 Z"
+      fill="none"
+      stroke="white"
+      stroke-width="6"
+      stroke-linejoin="round"
+    />
+  </g>
+  
+  <!-- Particelle luminose -->
+  <g filter="url(#neonGlow)">
+    <circle cx="120" cy="180" r="4" fill="#38BDF8"/>
+    <circle cx="392" cy="332" r="4" fill="#C084FC"/>
+    <circle cx="370" cy="130" r="3" fill="#38BDF8"/>
+    <circle cx="142" cy="382" r="3" fill="#C084FC"/>
+    <circle cx="420" cy="256" r="2" fill="white"/>
+    <circle cx="92" cy="256" r="2" fill="white"/>
+  </g>
+</svg>

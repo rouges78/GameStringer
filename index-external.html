@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GameStringer - Traduci Qualsiasi Game con l'AI</title>
+  <meta name="description" content="La suite completa per tradurre videogiochi con intelligenza artificiale. Open source, gratuito, supporta 10+ engine e 15+ provider AI.">
+  <meta name="keywords" content="game translation, video game localization, AI translation, Unity translator, Unreal translator, RPG Maker translation">
+  <meta property="og:title" content="GameStringer - Traduci Qualsiasi Game con l'AI">
+  <meta property="og:description" content="La suite completa per tradurre videogiochi con intelligenza artificiale.">
+  <meta property="og:image" content="images/og-image.png">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- HEADER & HERO -->
+<header>
+  <div class="header-bg"></div>
+  <div class="header-glow-1"></div>
+  <div class="header-glow-2"></div>
+  
+  <div class="container">
+    <nav>
+      <div class="footer-logo">
+        <img src="logo.svg" alt="GameStringer" style="height: 40px;">
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#engines">Engines</a>
+        <a href="#tools">Tools</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div>
+        <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline" style="padding: 8px 16px; font-size: 14px;">
+          ⭐ GitHub
+        </a>
+      </div>
+    </nav>
+    
+    <div class="hero">
+      <span class="badge hero-badge">✨ v1.0.3 — Recovery Key & i18n Complete</span>
+      <h1>Traduci Qualsiasi Game<br>con l'AI</h1>
+      <p class="hero-subtitle">La suite completa per localizzare videogiochi con intelligenza artificiale</p>
+      <p class="hero-desc">Open source, gratuito, supporta 10+ engine e 15+ provider AI.<br>Traduci indie, retro e AAA in qualsiasi lingua.</p>
+      
+      <div class="hero-buttons">
+        <a href="https://github.com/rouges78/GameStringer/releases" class="btn btn-primary btn-lg">
+          ⬇️ Download per Windows
+        </a>
+        <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-lg">
+          📂 Vedi su GitHub
+        </a>
+      </div>
+      
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value">10+</div>
+          <div class="stat-label">Engine Supportati</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">15+</div>
+          <div class="stat-label">Provider AI</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">7</div>
+          <div class="stat-label">Store Integrati</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">∞</div>
+          <div class="stat-label">Games Traducibili</div>
+        </div>
+      </div>
+      
+      <!-- Screenshot -->
+      <div class="screenshot-container">
+        <img src="images/hero-screenshot.svg" alt="GameStringer Interface">
+        <div class="screenshot-overlay"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container" style="text-align: center;">
+    <span class="badge section-badge">Features</span>
+    <h2 class="section-title">Tutto per Tradurre Games</h2>
+    <p class="section-desc">Un ecosistema completo di strumenti AI per la localizzazione di videogiochi</p>
+    
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="icon-box feature-icon">🌐</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">15+ AI Providers</h3>
+        <p style="color: var(--slate-400);">OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, DeepL, Ollama (locale) e altri</p>
+      </div>
+      <div class="card">
+        <div class="icon-box" style="background: linear-gradient(135deg, var(--green-500), #10b981);">🎮</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">Multi-Engine Support</h3>
+        <p style="color: var(--slate-400);">Unity, Unreal, Godot, RPG Maker, Ren'Py, GameMaker, Telltale e altri</p>
+      </div>
+      <div class="card">
+        <div class="icon-box" style="background: linear-gradient(135deg, var(--purple-500), var(--pink-500));">🧠</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">Context-Aware AI</h3>
+        <p style="color: var(--slate-400);">L'AI comprende genere, personaggi e tono per traduzioni naturali</p>
+      </div>
+      <div class="card">
+        <div class="icon-box" style="background: linear-gradient(135deg, var(--amber-500), #eab308);">🎤</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">Voice Translation</h3>
+        <p style="color: var(--slate-400);">Whisper STT → Traduzione AI → Text-to-Speech in tempo reale</p>
+      </div>
+      <div class="card">
+        <div class="icon-box" style="background: linear-gradient(135deg, var(--red-500), #f43f5e);">👁️</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">OCR Translator</h3>
+        <p style="color: var(--slate-400);">Estrai testo da screenshot di giochi retro, DOS e 16-bit</p>
+      </div>
+      <div class="card">
+        <div class="icon-box" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">📺</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">Real-time Overlay</h3>
+        <p style="color: var(--slate-400);">Sottotitoli tradotti in overlay mentre giochi, con export SRT/VTT</p>
+      </div>
+      <div class="card">
+        <div class="icon-box" style="background: linear-gradient(135deg, var(--cyan-500), #0891b2);">🪄</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">Auto Patcher</h3>
+        <p style="color: var(--slate-400);">BepInEx + XUnity per Unity, UnrealLocres per UE - tutto automatico</p>
+      </div>
+      <div class="card">
+        <div class="icon-box" style="background: linear-gradient(135deg, var(--orange-400), var(--amber-500));">👥</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">Community Hub</h3>
+        <p style="color: var(--slate-400);">Scarica e condividi Translation Memory con la community</p>
+      </div>
+      <div class="card">
+        <div class="icon-box" style="background: linear-gradient(135deg, #84cc16, var(--green-500));">📖</div>
+        <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">Glossary Manager</h3>
+        <p style="color: var(--slate-400);">Gestisci terminologia specifica per ogni gioco e genere</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ENGINES -->
+<section id="engines" class="alt-bg">
+  <div class="container" style="text-align: center;">
+    <span class="badge section-badge" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.2); color: var(--green-400);">Compatibilità</span>
+    <h2 class="section-title">Engine Supportati</h2>
+    <p class="section-desc">Supporto nativo per i principali engine di sviluppo videogiochi</p>
+    
+    <div class="grid grid-5">
+      <div class="card engine-card">
+        <div class="engine-icon">🎮</div>
+        <div class="engine-name">Unity</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">BepInEx + XUnity</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">⚙️</div>
+        <div class="engine-name">Unreal Engine</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">UnrealLocres</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">🤖</div>
+        <div class="engine-name">Godot</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">.translation native</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">⚔️</div>
+        <div class="engine-name">RPG Maker MV/MZ</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">JSON diretto</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">🗡️</div>
+        <div class="engine-name">RPG Maker VX/Ace</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">via Trans</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">💕</div>
+        <div class="engine-name">Ren'Py</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">.rpy parsing</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">🎲</div>
+        <div class="engine-name">GameMaker</div>
+        <span class="engine-badge partial">Partial</span>
+        <div class="engine-method">UndertaleModTool</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">🎬</div>
+        <div class="engine-name">Telltale</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">.langdb/.dlog</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">🐺</div>
+        <div class="engine-name">Wolf RPG</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">via WolfTrans</div>
+      </div>
+      <div class="card engine-card">
+        <div class="engine-icon">🌸</div>
+        <div class="engine-name">Kirikiri</div>
+        <span class="engine-badge full">Full</span>
+        <div class="engine-method">.ks/.scn parsing</div>
+      </div>
+    </div>
+    
+    <h3 style="font-size: 1.25rem; font-weight: 600; margin-top: 64px; margin-bottom: 24px;">Store Integrati</h3>
+    <div class="store-list">
+      <div class="store-item"><span class="store-icon">🎮</span> Steam <span class="store-games">600+</span></div>
+      <div class="store-item"><span class="store-icon">🏪</span> Epic Games <span class="store-games">Full</span></div>
+      <div class="store-item"><span class="store-icon">🌌</span> GOG Galaxy <span class="store-games">Full</span></div>
+      <div class="store-item"><span class="store-icon">⚽</span> Origin/EA <span class="store-games">Full</span></div>
+      <div class="store-item"><span class="store-icon">🎯</span> Ubisoft <span class="store-games">Full</span></div>
+      <div class="store-item"><span class="store-icon">📦</span> Amazon <span class="store-games">Full</span></div>
+      <div class="store-item"><span class="store-icon">🎨</span> itch.io <span class="store-games">Indie</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- AI PROVIDERS -->
+<section>
+  <div class="container" style="text-align: center;">
+    <span class="badge section-badge" style="background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); color: #60a5fa;">AI Providers</span>
+    <h2 class="section-title">Scegli la Tua AI</h2>
+    <p class="section-desc">15+ provider AI tra cui scegliere, incluse opzioni gratuite e locali</p>
+    
+    <div class="grid grid-5">
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">Ollama</span><span class="ai-free">FREE</span></div>
+        <div class="ai-info"><span class="ai-type">Locale</span><span class="ai-stars">⭐⭐⭐⭐</span></div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">LM Studio</span><span class="ai-free">FREE</span></div>
+        <div class="ai-info"><span class="ai-type">Locale</span><span class="ai-stars">⭐⭐⭐⭐</span></div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">Gemini</span><span class="ai-free">FREE</span></div>
+        <div class="ai-info"><span class="ai-type">Cloud</span><span class="ai-stars">⭐⭐⭐⭐⭐</span></div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">DeepSeek</span></div>
+        <div class="ai-info"><span class="ai-type">Cloud</span><span class="ai-stars">⭐⭐⭐⭐⭐</span></div>
+        <div class="ai-cost">Costo: $</div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">Groq</span><span class="ai-free">FREE</span></div>
+        <div class="ai-info"><span class="ai-type">Cloud</span><span class="ai-stars">⭐⭐⭐⭐</span></div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">Mistral</span><span class="ai-free">FREE</span></div>
+        <div class="ai-info"><span class="ai-type">Cloud</span><span class="ai-stars">⭐⭐⭐⭐</span></div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">OpenAI</span></div>
+        <div class="ai-info"><span class="ai-type">Cloud</span><span class="ai-stars">⭐⭐⭐⭐⭐</span></div>
+        <div class="ai-cost">Costo: $$$</div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">Claude</span></div>
+        <div class="ai-info"><span class="ai-type">Cloud</span><span class="ai-stars">⭐⭐⭐⭐⭐</span></div>
+        <div class="ai-cost">Costo: $$$</div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">DeepL</span><span class="ai-free">FREE</span></div>
+        <div class="ai-info"><span class="ai-type">Cloud</span><span class="ai-stars">⭐⭐⭐⭐⭐</span></div>
+      </div>
+      <div class="card ai-card">
+        <div class="ai-header"><span class="ai-name">MyMemory</span><span class="ai-free">FREE</span></div>
+        <div class="ai-info"><span class="ai-type">Cloud</span><span class="ai-stars">⭐⭐⭐</span></div>
+      </div>
+    </div>
+    
+    <p style="color: var(--slate-400); margin-top: 32px;">
+      <span style="color: var(--green-400); font-weight: 500;">Consigliato per iniziare:</span> 
+      Usa <strong style="color: white;">Ollama</strong> (gratuito, locale) o <strong style="color: white;">Gemini</strong> (tier gratuito cloud)
+    </p>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section id="tools" class="alt-bg">
+  <div class="container" style="text-align: center;">
+    <span class="badge section-badge" style="background: rgba(251, 146, 60, 0.1); border-color: rgba(251, 146, 60, 0.2); color: var(--orange-400);">Strumenti</span>
+    <h2 class="section-title">10+ Tools Professionali</h2>
+    <p class="section-desc">Ogni strumento necessario per tradurre qualsiasi tipo di gioco</p>
+    
+    <div class="grid grid-5">
+      <div class="card tool-card"><div class="tool-icon">🧠</div><div class="tool-name">Neural Translator Pro</div><div class="tool-desc">Batch translation con Translation Memory</div></div>
+      <div class="card tool-card"><div class="tool-icon">📊</div><div class="tool-name">Multi-LLM Compare</div><div class="tool-desc">Confronta traduzioni da 7+ provider AI</div></div>
+      <div class="card tool-card"><div class="tool-icon">👁️</div><div class="tool-name">OCR Translator</div><div class="tool-desc">Estrai testo da immagini e screenshot</div></div>
+      <div class="card tool-card"><div class="tool-icon">🔊</div><div class="tool-name">Voice Pipeline</div><div class="tool-desc">STT → Translate → TTS</div></div>
+      <div class="card tool-card"><div class="tool-icon">🔍</div><div class="tool-name">Context Crawler</div><div class="tool-desc">Estrai contesto AI dal gameplay</div></div>
+      <div class="card tool-card"><div class="tool-icon">🔧</div><div class="tool-name">Translation Fixer</div><div class="tool-desc">Ripara tag HTML/markup rotti</div></div>
+      <div class="card tool-card"><div class="tool-icon">📺</div><div class="tool-name">Subtitle Overlay</div><div class="tool-desc">Overlay real-time per streaming</div></div>
+      <div class="card tool-card"><div class="tool-icon">⚙️</div><div class="tool-name">Unity Patcher</div><div class="tool-desc">BepInEx + XUnity automatico</div></div>
+      <div class="card tool-card"><div class="tool-icon">🖼️</div><div class="tool-name">Texture Translator</div><div class="tool-desc">Traduci texture UI e menu</div></div>
+      <div class="card tool-card"><div class="tool-icon">📄</div><div class="tool-name">Manga Translator</div><div class="tool-desc">OCR per fumetti e visual novel</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="container" style="text-align: center;">
+    <span class="badge section-badge" style="background: rgba(236, 72, 153, 0.1); border-color: rgba(236, 72, 153, 0.2); color: var(--pink-400);">Come Funziona</span>
+    <h2 class="section-title">3 Semplici Passi</h2>
+    
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">🎮</div>
+        <div class="step-number">1</div>
+        <h3 class="step-title">Seleziona il Game</h3>
+        <p class="step-desc">Scegli dalla libreria Steam, Epic, GOG o aggiungi manualmente. GameStringer rileva automaticamente engine e file traducibili.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">⚙️</div>
+        <div class="step-number">2</div>
+        <h3 class="step-title">Configura la Traduzione</h3>
+        <p class="step-desc">Scegli provider AI, lingua target, glossario e profilo voce. L'AI adatta il tono al genere del gioco.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">▶️</div>
+        <div class="step-number">3</div>
+        <h3 class="step-title">Traduci e Gioca</h3>
+        <p class="step-desc">Premi un bottone e le traduzioni vengono iniettate automaticamente. Nessun patching manuale richiesto.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="alt-bg">
+  <div class="container" style="max-width: 800px; text-align: center;">
+    <span class="badge section-badge" style="background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.2); color: var(--cyan-500);">FAQ</span>
+    <h2 class="section-title">Domande Frequenti</h2>
+    
+    <div class="card" style="text-align: left; margin-top: 48px; padding: 0 24px;">
+      <div class="faq-item">
+        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+          GameStringer è davvero gratuito?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">Sì! GameStringer è 100% gratuito e open source per uso personale. Puoi tradurre tutti i giochi che vuoi senza limiti. L'unico costo è eventualmente quello delle API AI (ma puoi usare Ollama gratis in locale).</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+          Quali AI posso usare gratuitamente?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">Ollama e LM Studio funzionano completamente in locale sul tuo PC, senza costi. Gemini, Groq, Mistral e DeepL offrono tier gratuiti generosi. MyMemory è gratuito fino a 1000 parole/giorno.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+          Posso essere bannato per usare traduzioni?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">GameStringer modifica solo i file di testo/localizzazione, non altera il gameplay o il codice del gioco. È equivalente a installare una mod di traduzione. Controlla sempre l'EULA del gioco specifico.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+          Come funziona con Unity?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">GameStringer installa automaticamente BepInEx (mod framework) e XUnity.AutoTranslator. Estrae tutti i testi, li traduce con l'AI che preferisci, e crea i file di traduzione. Zero configurazione manuale.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+          Supporta giochi retro/DOS?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">Sì! L'OCR Translator può estrarre testo da screenshot di qualsiasi gioco, inclusi DOS, 8-bit, 16-bit. Puoi tradurre anche giochi senza file di testo accessibili.</div></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">
+          Posso contribuire al progetto?
+          <span class="faq-arrow">▼</span>
+        </button>
+        <div class="faq-answer"><div class="faq-answer-inner">Assolutamente! GameStringer è open source su GitHub. Puoi contribuire con codice, traduzioni, documentazione, o supportare il progetto su Ko-fi o GitHub Sponsors.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section>
+  <div class="container">
+    <div class="cta-section">
+      <div class="cta-glow-1"></div>
+      <div class="cta-glow-2"></div>
+      <div class="cta-content">
+        <h2 class="cta-title">Pronto a Tradurre?</h2>
+        <p class="cta-desc">Scarica GameStringer gratuitamente e inizia a giocare i tuoi giochi preferiti nella tua lingua</p>
+        <div class="cta-buttons">
+          <a href="https://github.com/rouges78/GameStringer/releases" class="btn btn-lg" style="background: white; color: var(--purple-900);">
+            ⬇️ Download per Windows
+          </a>
+          <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-lg" style="border-color: rgba(255,255,255,0.3);">
+            ⭐ Star su GitHub
+          </a>
+        </div>
+        <div class="cta-features">
+          <span class="cta-feature"><span class="cta-check">✓</span> 100% Gratuito</span>
+          <span class="cta-feature"><span class="cta-check">✓</span> Open Source</span>
+          <span class="cta-feature"><span class="cta-check">✓</span> Nessun Account</span>
+          <span class="cta-feature"><span class="cta-check">✓</span> AI Locale</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUPPORT -->
+<section style="padding: 64px 0; text-align: center;">
+  <div class="container">
+    <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;">Supporta il Progetto</h3>
+    <p style="color: var(--slate-400); margin-bottom: 32px;">GameStringer è gratuito e open source. Il tuo supporto aiuta lo sviluppo!</p>
+    <div class="support-buttons">
+      <a href="https://ko-fi.com/gamestringer" class="btn btn-outline" style="border-color: rgba(236, 72, 153, 0.3); color: var(--pink-400);">☕ Ko-fi</a>
+      <a href="https://github.com/sponsors/rouges78" class="btn btn-outline" style="border-color: rgba(168, 85, 247, 0.3); color: var(--purple-400);">💜 GitHub Sponsors</a>
+      <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline">⭐ Star su GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">
+          <img src="logo.svg" alt="GameStringer" style="height: 40px;">
+        </div>
+        <p class="footer-desc">La suite completa per tradurre videogiochi con intelligenza artificiale. Open source, gratuito, supporta qualsiasi engine.</p>
+      </div>
+      <div>
+        <h4 class="footer-title">Risorse</h4>
+        <ul class="footer-links">
+          <li><a href="https://github.com/rouges78/GameStringer/blob/main/docs/GUIDE.md">Documentazione</a></li>
+          <li><a href="https://github.com/rouges78/GameStringer/blob/main/docs/GUIDE.md">Guida Completa</a></li>
+          <li><a href="https://github.com/rouges78/GameStringer/blob/main/CHANGELOG.md">Changelog</a></li>
+          <li><a href="https://github.com/rouges78/GameStringer">GitHub</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer-title">Community</h4>
+        <ul class="footer-links">
+          <li><a href="https://ko-fi.com/gamestringer">Ko-fi</a></li>
+          <li><a href="https://github.com/sponsors/rouges78">GitHub Sponsors</a></li>
+          <li><a href="https://github.com/rouges78/GameStringer/blob/main/CONTRIBUTING.md">Contribuisci</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025-2026 GameStringer. Source-Available License.</p>
+      <p>Made with <span class="footer-heart">♥</span> in Italy</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

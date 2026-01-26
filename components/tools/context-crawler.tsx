@@ -315,7 +315,7 @@ export function ContextCrawler() {
           {/* Controls */}
           <div className="flex items-center gap-2">
             {!isRunning ? (
-              <Button onClick={startCrawler} className="bg-white text-pink-600 hover:bg-white/90 shadow-lg">
+              <Button onClick={startCrawler} variant="outline" className="border-white/50 text-white hover:bg-white/10 hover:border-white">
                 <Play className="h-4 w-4 mr-1" />
                 {t('contextCrawler.start')}
               </Button>
@@ -324,7 +324,7 @@ export function ContextCrawler() {
                 <Button onClick={pauseCrawler} variant="outline" className="border-white/30 text-white hover:bg-white/20">
                   {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
                 </Button>
-                <Button onClick={stopCrawler} className="bg-red-500/80 hover:bg-red-500 text-white">
+                <Button onClick={stopCrawler} variant="outline" className="border-red-400/50 text-red-300 hover:bg-red-500/10 hover:border-red-400">
                   <Square className="h-4 w-4 mr-1" />
                   {t('contextCrawler.stop')}
                 </Button>
@@ -356,25 +356,25 @@ export function ContextCrawler() {
         <TabsContent value="glossary" className="space-y-3">
           {/* Stats */}
           <div className="grid grid-cols-4 gap-2">
-            <Card className="bg-blue-500/10 border-blue-500/30">
+            <Card className="bg-teal-500/10 border-teal-500/30">
               <CardContent className="py-2 text-center">
                 <p className="text-lg font-bold">{glossaryStats.total}</p>
                 <p className="text-[10px] text-muted-foreground">{t('contextCrawler.total')}</p>
               </CardContent>
             </Card>
-            <Card className="bg-green-500/10 border-green-500/30">
+            <Card className="bg-emerald-500/10 border-emerald-500/30">
               <CardContent className="py-2 text-center">
                 <p className="text-lg font-bold">{glossaryStats.byStatus.translated}</p>
                 <p className="text-[10px] text-muted-foreground">{t('contextCrawler.translated')}</p>
               </CardContent>
             </Card>
-            <Card className="bg-yellow-500/10 border-yellow-500/30">
+            <Card className="bg-amber-500/10 border-amber-500/30">
               <CardContent className="py-2 text-center">
                 <p className="text-lg font-bold">{glossaryStats.byStatus.pending}</p>
                 <p className="text-[10px] text-muted-foreground">{t('contextCrawler.pending')}</p>
               </CardContent>
             </Card>
-            <Card className="bg-purple-500/10 border-purple-500/30">
+            <Card className="bg-cyan-500/10 border-cyan-500/30">
               <CardContent className="py-2 text-center">
                 <p className="text-lg font-bold">{(glossaryStats.avgConfidence * 100).toFixed(0)}%</p>
                 <p className="text-[10px] text-muted-foreground">{t('contextCrawler.confidence')}</p>
@@ -384,11 +384,11 @@ export function ContextCrawler() {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExport}>
+            <Button variant="outline" size="sm" className="border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400" onClick={handleExport}>
               <Download className="h-3 w-3 mr-1" />
               {t('contextCrawler.exportCsv')}
             </Button>
-            <Button variant="outline" size="sm" onClick={handleClearGlossary}>
+            <Button variant="outline" size="sm" className="border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400" onClick={handleClearGlossary}>
               <Trash2 className="h-3 w-3 mr-1" />
               {t('contextCrawler.clear')}
             </Button>

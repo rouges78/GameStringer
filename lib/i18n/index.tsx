@@ -11,28 +11,73 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
+// Helper to get current profile ID
+const getCurrentProfileId = (): string | null => {
+  try {
+    const profileData = localStorage.getItem('gamestringer_current_profile');
+    if (profileData) {
+      const profile = JSON.parse(profileData);
+      return profile.id || null;
+    }
+  } catch (e) {}
+  return null;
+};
+
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
 
-  // Load language from localStorage on mount
+  // Load language from localStorage on mount (per profile)
   useEffect(() => {
-    try {
-      const savedSettings = localStorage.getItem('gameStringerSettings');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.system?.language && translations[settings.system.language as Language]) {
-          setLanguageState(settings.system.language as Language);
+    const loadLanguage = () => {
+      try {
+        const profileId = getCurrentProfileId();
+        
+        // Try profile-specific language first
+        if (profileId) {
+          const profileLang = localStorage.getItem(`gs_language_${profileId}`);
+          if (profileLang && translations[profileLang as Language]) {
+            setLanguageState(profileLang as Language);
+            return;
+          }
         }
+        
+        // Fallback to global settings
+        const savedSettings = localStorage.getItem('gameStringerSettings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          if (settings.system?.language && translations[settings.system.language as Language]) {
+            setLanguageState(settings.system.language as Language);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load language setting:', e);
       }
-    } catch (e) {
-      console.warn('Failed to load language setting:', e);
-    }
+    };
+    
+    loadLanguage();
+    
+    // Listen for profile changes
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'gamestringer_current_profile') {
+        loadLanguage();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
-    // Also update localStorage
+    
     try {
+      const profileId = getCurrentProfileId();
+      
+      // Save per profile
+      if (profileId) {
+        localStorage.setItem(`gs_language_${profileId}`, lang);
+      }
+      
+      // Also update global settings as fallback
       const savedSettings = localStorage.getItem('gameStringerSettings');
       const settings = savedSettings ? JSON.parse(savedSettings) : {};
       settings.system = { ...settings.system, language: lang };

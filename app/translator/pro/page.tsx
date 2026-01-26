@@ -1435,8 +1435,8 @@ export default function TranslatorProPage() {
   
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* Hero Header con immagine game fusa */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-4 mb-6">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3 mb-4">
         {/* Immagine game fusa nello sfondo */}
         {selectedGame?.coverUrl && (
           <>
@@ -1453,15 +1453,15 @@ export default function TranslatorProPage() {
         )}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
-        <div className="relative flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-white/20 backdrop-blur-sm shadow-lg">
-            <Brain className="h-6 w-6 text-white" />
+        <div className="relative flex items-center gap-2">
+          <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
+            <Brain className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+            <h1 className="text-lg font-bold text-white">
               {selectedGame ? `Neural Translator Pro • ${selectedGame.name}` : 'Neural Translator Pro'}
             </h1>
-            <p className="text-sm text-white/70 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+            <p className="text-xs text-white/70">
               Sistema professionale di traduzione con AI
             </p>
           </div>
@@ -1476,9 +1476,9 @@ export default function TranslatorProPage() {
         </div>
       </div>
       
-      {/* Step Indicator */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between max-w-3xl mx-auto">
+      {/* Step Indicator - Compact */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isActive = index === currentStepIndex;
@@ -1488,16 +1488,16 @@ export default function TranslatorProPage() {
               <div key={step.id} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300",
-                    isActive && "bg-gradient-to-br from-sky-500 to-blue-500 text-white shadow-lg shadow-blue-500/25",
+                    "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                    isActive && "bg-gradient-to-br from-sky-500 to-blue-500 text-white shadow-md",
                     isCompleted && "bg-green-500 text-white",
                     !isActive && !isCompleted && "bg-muted text-muted-foreground"
                   )}>
-                    {isCompleted ? <CheckCircle className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                    {isCompleted ? <CheckCircle className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                   </div>
                   <span className={cn(
-                    "text-xs mt-1.5 font-medium",
-                    isActive && "text-purple-500",
+                    "text-[10px] mt-1 font-medium",
+                    isActive && "text-blue-500",
                     isCompleted && "text-green-500",
                     !isActive && !isCompleted && "text-muted-foreground"
                   )}>
@@ -1506,7 +1506,7 @@ export default function TranslatorProPage() {
                 </div>
                 {index < steps.length - 1 && (
                   <div className={cn(
-                    "w-12 h-0.5 mx-2 transition-colors duration-300",
+                    "w-8 h-0.5 mx-1 transition-colors",
                     index < currentStepIndex ? "bg-green-500" : "bg-muted"
                   )} />
                 )}
@@ -1528,7 +1528,7 @@ export default function TranslatorProPage() {
                 placeholder="Cerca tra i tuoi games..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-12"
+                className="pl-10 h-10"
               />
             </div>
             
@@ -1536,18 +1536,18 @@ export default function TranslatorProPage() {
               {filteredGames.length} games trovati
             </div>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
               {filteredGames.slice(0, 20).map((game) => (
                 <button
                   key={game.id}
                   onClick={() => handleGameSelect(game)}
                   className={cn(
                     "group flex items-center gap-2 p-2 rounded-lg border transition-all",
-                    "hover:border-purple-500/50 hover:bg-purple-500/5",
+                    "hover:border-blue-500/40 hover:bg-blue-500/10",
                     "text-left w-full"
                   )}
                 >
-                  <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex-shrink-0">
+                  <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 flex-shrink-0">
                     {game.coverUrl ? (
                       <Image 
                         src={game.coverUrl} 
@@ -1564,7 +1564,7 @@ export default function TranslatorProPage() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-xs truncate group-hover:text-purple-400">
+                    <h3 className="font-medium text-xs truncate group-hover:text-blue-400">
                       {game.name}
                     </h3>
                   </div>
@@ -1585,13 +1585,13 @@ export default function TranslatorProPage() {
           <div className="space-y-3">
             {/* Wizard Banner */}
             {wizardGameId && wizardMethod && (
-              <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
-                <Sparkles className="h-5 w-5 text-purple-400" />
+              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center gap-3">
+                <Sparkles className="h-5 w-5 text-blue-400" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-purple-300">
+                  <p className="text-sm font-medium text-blue-300">
                     Arrivi dal Translation Wizard
                   </p>
-                  <p className="text-xs text-purple-400/70">
+                  <p className="text-xs text-blue-400/70">
                     Metodo consigliato: {wizardMethod === 'file' ? '📁 Modifica File' : wizardMethod === 'bridge' ? '🔌 Translation Bridge' : '🔧 Manuale'}
                     {wizardTargetLang && ` • Lingua: ${wizardTargetLang.toUpperCase()}`}
                   </p>
@@ -2263,7 +2263,7 @@ export default function TranslatorProPage() {
                   {/* Nome del game */}
                   {selectedGame && (
                     <div className="flex items-center justify-center gap-2 mb-3">
-                      <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-purple-900/50 to-blue-900/50 flex-shrink-0">
+                      <div className="relative w-8 h-8 rounded overflow-hidden bg-gradient-to-br from-blue-900/50 to-cyan-900/50 flex-shrink-0">
                         {selectedGame.coverUrl && (
                           <img 
                             src={selectedGame.coverUrl} 

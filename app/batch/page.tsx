@@ -16,74 +16,74 @@ export default function BatchPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       {/* Hero Header - Blu Compatto */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-4 text-white">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-4 text-white">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-              <FolderTree className="w-5 h-5" />
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <FolderTree className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-lg font-bold">Batch Translator</h1>
-              <p className="text-white/80 text-xs">Traduci intere cartelle con un click</p>
+              <h1 className="text-lg font-bold">{t('batchTranslator.title')}</h1>
+              <p className="text-white/80 text-xs">{t('batchTranslator.subtitle')}</p>
             </div>
           </div>
           
           <div className="flex gap-3">
-            <div className="flex items-center gap-2 bg-white/10 rounded-md px-2 py-1.5 backdrop-blur-sm">
+            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
               <FileText className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">JSON • PO • CSV • +</span>
+              <span className="text-xs font-medium">{t('batchTranslator.formats')}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-md px-2 py-1.5 backdrop-blur-sm">
+            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
               <FolderOpen className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Preservata</span>
+              <span className="text-xs font-medium">{t('batchTranslator.preserved')}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-md px-2 py-1.5 backdrop-blur-sm">
+            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
               <Zap className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Parallelo</span>
+              <span className="text-xs font-medium">{t('batchTranslator.parallel')}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Features */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
+      <div className="grid grid-cols-4 gap-3 p-3 rounded-xl bg-slate-900/30 border border-slate-700/50">
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 feature-card">
           <div className="p-2 bg-emerald-500/10 rounded-lg">
             <FolderTree className="w-4 h-4 text-emerald-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">Ricorsivo</p>
-            <p className="text-xs text-muted-foreground">Scansiona sottocartelle</p>
+            <p className="text-sm font-medium">{t('batchTranslator.recursive')}</p>
+            <p className="text-xs text-muted-foreground">{t('batchTranslator.scanSubfolders')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 feature-card">
           <div className="p-2 bg-teal-500/10 rounded-lg">
             <FileText className="w-4 h-4 text-teal-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">Multi-formato</p>
-            <p className="text-xs text-muted-foreground">10+ formati supportati</p>
+            <p className="text-sm font-medium">{t('batchTranslator.multiFormat')}</p>
+            <p className="text-xs text-muted-foreground">{t('batchTranslator.formatsSupported')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 feature-card">
           <div className="p-2 bg-cyan-500/10 rounded-lg">
             <Sparkles className="w-4 h-4 text-cyan-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">Selezione smart</p>
-            <p className="text-xs text-muted-foreground">Filtra per tipo</p>
+            <p className="text-sm font-medium">{t('batchTranslator.smartSelection')}</p>
+            <p className="text-xs text-muted-foreground">{t('batchTranslator.filterByType')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
+        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-slate-800/50 border border-slate-700/30 feature-card">
           <div className="p-2 bg-sky-500/10 rounded-lg">
             <Languages className="w-4 h-4 text-sky-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">Output flessibile</p>
-            <p className="text-xs text-muted-foreground">Cartella custom o in-place</p>
+            <p className="text-sm font-medium">{t('batchTranslator.flexibleOutput')}</p>
+            <p className="text-xs text-muted-foreground">{t('batchTranslator.customFolder')}</p>
           </div>
         </div>
       </div>

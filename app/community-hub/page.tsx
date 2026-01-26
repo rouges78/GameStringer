@@ -1,73 +1,83 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Download, Database, Globe, Star, Package, Cloud } from 'lucide-react';
+import { Download, Database, Globe, Star, Package, Cloud, Upload, AlertTriangle, Construction } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CommunityHub } from '@/components/tools/community-hub';
 import { useTranslation } from '@/lib/i18n';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 export default function CommunityHubPage() {
   const { t } = useTranslation();
+  const [showWarning, setShowWarning] = useState(true);
+  
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-600 via-amber-600 to-yellow-600 p-3">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+    <div className="container mx-auto p-4 space-y-3">
+      {/* Compact Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 p-3 text-white">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-black/30 rounded-lg border border-white/10">
               <Globe className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+              <h1 className="text-base font-bold text-white">
                 {t('communityHub.title')}
               </h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <p className="text-white/60 text-[10px]">
                 {t('communityHub.subtitle')}
               </p>
             </div>
           </div>
           
-          {/* Stats inline */}
-          <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
-              <Package className="h-3.5 w-3.5 text-white" />
-              <span className="text-sm font-bold text-white">100+</span>
-              <span className="text-[10px] text-white/70">{t('communityHub.packs')}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
-              <Star className="h-3.5 w-3.5 text-white" />
-              <span className="text-sm font-bold text-white">4.5★</span>
-            </div>
+          {/* Quick Links inline */}
+          <div className="hidden md:flex items-center gap-2">
+            <Link href="/memory">
+              <Button variant="outline" size="sm" className="gap-1 h-7 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+                <Database className="h-3 w-3" />
+                TM
+              </Button>
+            </Link>
+            <Link href="/workshop">
+              <Button variant="outline" size="sm" className="gap-1 h-7 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
+                <Cloud className="h-3 w-3" />
+                Workshop
+              </Button>
+            </Link>
           </div>
-        </div>
-
-        {/* Quick Links */}
-        <div className="relative flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/20">
-          <span className="text-[10px] text-white/50 mr-2 self-center">{t('communityHub.resources')}</span>
-          <Link href="/nexus-mods">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
-              <Download className="h-3 w-3" />
-              Nexus
-            </Button>
-          </Link>
-          <Link href="/memory">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
-              <Database className="h-3 w-3" />
-              {t('nav.dictionary')}
-            </Button>
-          </Link>
-          <Link href="/workshop">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
-              <Cloud className="h-3 w-3" />
-              Workshop
-            </Button>
-          </Link>
         </div>
       </div>
       
       <CommunityHub />
+      
+      {/* Warning Modal - In Development */}
+      <Dialog open={showWarning} onOpenChange={setShowWarning}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-500">
+              <Construction className="h-5 w-5" />
+              {t('communityHub.warningTitle')}
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {t('communityHub.warningDesc')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-muted-foreground">
+              {t('communityHub.warningNote')}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowWarning(false)} className="bg-amber-600 hover:bg-amber-500">
+              {t('communityHub.understood')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

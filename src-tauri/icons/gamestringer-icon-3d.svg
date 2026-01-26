@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Gradient globo 3D -->
+    <radialGradient id="globe3d" cx="35%" cy="25%" r="65%">
+      <stop offset="0%" style="stop-color:#93C5FD"/>
+      <stop offset="30%" style="stop-color:#3B82F6"/>
+      <stop offset="70%" style="stop-color:#1E40AF"/>
+      <stop offset="100%" style="stop-color:#1E3A8A"/>
+    </radialGradient>
+    
+    <!-- Gradient anello viola 3D -->
+    <linearGradient id="ring3dPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#E879F9"/>
+      <stop offset="50%" style="stop-color:#A855F7"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+    
+    <!-- Gradient anello cyan 3D -->
+    <linearGradient id="ring3dCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#67E8F9"/>
+      <stop offset="50%" style="stop-color:#22D3EE"/>
+      <stop offset="100%" style="stop-color:#06B6D4"/>
+    </linearGradient>
+    
+    <!-- Ombra forte -->
+    <filter id="shadow3d">
+      <feDropShadow dx="0" dy="12" stdDeviation="20" flood-color="#1E3A8A" flood-opacity="0.6"/>
+    </filter>
+    
+    <!-- Inner shadow per profondità -->
+    <filter id="innerShadow">
+      <feOffset dx="0" dy="2"/>
+      <feGaussianBlur stdDeviation="2"/>
+      <feComposite operator="out" in="SourceGraphic"/>
+      <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0"/>
+      <feBlend in="SourceGraphic"/>
+    </filter>
+  </defs>
+  
+  <!-- Globo principale 3D -->
+  <circle cx="256" cy="256" r="175" fill="url(#globe3d)" filter="url(#shadow3d)"/>
+  
+  <!-- Riflesso superiore -->
+  <ellipse cx="200" cy="170" rx="70" ry="45" fill="rgba(255,255,255,0.2)"/>
+  <ellipse cx="190" cy="160" rx="40" ry="25" fill="rgba(255,255,255,0.15)"/>
+  
+  <!-- Griglia globo -->
+  <g stroke="rgba(255,255,255,0.15)" stroke-width="2" fill="none">
+    <ellipse cx="256" cy="256" rx="175" ry="60"/>
+    <ellipse cx="256" cy="256" rx="130" ry="45"/>
+    <ellipse cx="256" cy="256" rx="75" ry="26"/>
+    <ellipse cx="256" cy="200" rx="145" ry="50" transform="rotate(90, 256, 256)"/>
+    <path d="M 256 81 Q 350 256 256 431"/>
+    <path d="M 256 81 Q 162 256 256 431"/>
+  </g>
+  
+  <!-- Anello posteriore (dietro il globo) - parte visibile -->
+  <path d="M 80 310 Q 256 400 432 310" fill="none" stroke="url(#ring3dPurple)" stroke-width="18" stroke-linecap="round" opacity="0.5"/>
+  
+  <!-- Anello anteriore viola -->
+  <path d="M 80 200 Q 256 110 432 200" fill="none" stroke="url(#ring3dPurple)" stroke-width="20" stroke-linecap="round"/>
+  
+  <!-- Anello posteriore cyan - parte visibile -->
+  <path d="M 432 310 Q 256 400 80 310" fill="none" stroke="url(#ring3dCyan)" stroke-width="14" stroke-linecap="round" opacity="0.4" transform="rotate(60, 256, 256)"/>
+  
+  <!-- Anello anteriore cyan -->
+  <path d="M 432 200 Q 256 110 80 200" fill="none" stroke="url(#ring3dCyan)" stroke-width="16" stroke-linecap="round" transform="rotate(60, 256, 256)"/>
+  
+  <!-- Centro G con effetto 3D -->
+  <circle cx="256" cy="256" r="90" fill="rgba(30,58,138,0.9)" filter="url(#innerShadow)"/>
+  <circle cx="256" cy="256" r="90" fill="none" stroke="rgba(147,197,253,0.4)" stroke-width="3"/>
+  
+  <!-- G con ombra leggera -->
+  <g>
+    <!-- Ombra G -->
+    <path 
+      d="M 300 228 
+         A 58 58 0 1 0 300 284 
+         L 268 284 
+         L 268 262 
+         L 286 262 
+         L 286 252 
+         L 246 252 
+         L 246 302 
+         A 75 75 0 1 1 318 213 
+         L 300 228 Z"
+      fill="rgba(0,0,0,0.2)"
+      transform="translate(2, 3)"
+    />
+    <!-- G principale -->
+    <path 
+      d="M 300 225 
+         A 58 58 0 1 0 300 281 
+         L 268 281 
+         L 268 259 
+         L 286 259 
+         L 286 249 
+         L 246 249 
+         L 246 299 
+         A 75 75 0 1 1 318 210 
+         L 300 225 Z"
+      fill="white"
+    />
+  </g>
+  
+  <!-- Highlight punti sugli anelli -->
+  <circle cx="120" cy="175" r="6" fill="white" opacity="0.9"/>
+  <circle cx="392" cy="175" r="5" fill="white" opacity="0.8"/>
+  <circle cx="140" cy="340" r="4" fill="#E879F9" opacity="0.8"/>
+  <circle cx="372" cy="340" r="4" fill="#67E8F9" opacity="0.8"/>
+</svg>

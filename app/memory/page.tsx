@@ -216,15 +216,15 @@ export default function MemoryPage() {
   };
 
   return (
-    <div className="flex flex-col h-full p-4 gap-4">
+    <div className="flex flex-col h-full p-4 gap-4 animate-fade-in">
       {/* Hero Header */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
-              <Database className="h-5 w-5 text-white" />
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Database className="h-6 w-6 text-white" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
@@ -238,13 +238,13 @@ export default function MemoryPage() {
           
           {/* Stats inline */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Sparkles className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">{filteredUnits.length.toLocaleString()}</span>
               <span className="text-[10px] text-white/80">{t('dictionary.translations')}</span>
             </div>
             {stats && stats.totalUnits > filteredUnits.length && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/30 backdrop-blur-sm border border-amber-500/40">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-amber-500/40">
                 <AlertCircle className="h-3.5 w-3.5 text-white" />
                 <span className="text-[10px] text-white">{stats.totalUnits - filteredUnits.length} {t('dictionary.corrupted')}</span>
               </div>
@@ -336,8 +336,8 @@ export default function MemoryPage() {
                     key={unit.id} 
                     className={cn(
                       "group transition-all duration-200",
-                      "hover:bg-gradient-to-r hover:from-indigo-500/10 hover:via-purple-500/5 hover:to-transparent",
-                      "hover:shadow-[inset_0_0_30px_rgba(99,102,241,0.1)]",
+                      "hover:bg-gradient-to-r hover:from-teal-500/10 hover:via-cyan-500/5 hover:to-transparent",
+                      "hover:shadow-[inset_0_0_30px_rgba(20,184,166,0.1)]",
                       idx % 2 === 0 ? "bg-slate-900/20" : "bg-slate-900/40"
                     )}
                   >
@@ -358,9 +358,9 @@ export default function MemoryPage() {
                               if (e.key === 'Enter') handleEdit(unit);
                               if (e.key === 'Escape') setEditingId(null);
                             }}
-                            className="h-8 text-sm bg-slate-800 border-purple-500/50 focus:border-purple-400 focus:ring-purple-400/20"
+                            className="h-8 text-sm bg-slate-800 border-teal-500/50 focus:border-teal-400 focus:ring-teal-400/20"
                           />
-                          <Button size="sm" className="h-8 px-3 bg-purple-600 hover:bg-purple-500 text-white" onClick={() => handleEdit(unit)}>
+                          <Button size="sm" className="h-8 px-3 bg-teal-600 hover:bg-teal-500 text-white" onClick={() => handleEdit(unit)}>
                             <Check className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setEditingId(null)}>

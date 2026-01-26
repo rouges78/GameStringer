@@ -1,0 +1,174 @@
+code
+Html
+<!DOCTYPE html>
+<html lang="it" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameStringer | Professional Game Localization Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; }
+        
+        .glass { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        /* Animazione Logo Redesign: G Neurale */
+        .g-logo {
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.5));
+            animation: pulse-glow 4s infinite ease-in-out;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.3)); }
+            50% { filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.6)); }
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #38bdf8 0%, #a855f7 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-mesh {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            background-image: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                              radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%);
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero-mesh"></div>
+
+<!-- NAVIGATION -->
+<nav class="fixed top-0 w-full z-50 glass">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <svg class="w-10 h-10 g-logo" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="45" stroke="url(#g-grad)" stroke-width="2" stroke-dasharray="10 5"/>
+                <path d="M70 40C70 40 65 30 50 30C35 30 25 45 25 60C25 75 40 80 55 75C70 70 70 55 70 55H50" stroke="white" stroke-width="8" stroke-linecap="round"/>
+                <defs>
+                    <linearGradient id="g-grad" x1="0" y1="0" x2="100" y2="100">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="100%" stop-color="#a855f7" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span class="text-2xl font-extrabold tracking-tighter">GAME<span class="gradient-text">STRINGER</span></span>
+        </div>
+        <div class="hidden md:flex items-center gap-8 text-sm font-semibold uppercase tracking-widest text-slate-400">
+            <a href="#features" class="hover:text-sky-400 transition">Features</a>
+            <a href="#changelog" class="hover:text-sky-400 transition">Changelog</a>
+            <a href="#community" class="hover:text-sky-400 transition">Community</a>
+            <a href="https://github.com/rouges78/GameStringer" class="px-5 py-2 rounded-full border border-slate-700 hover:bg-slate-800 transition">GitHub</a>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="pt-40 pb-20 px-6 text-center">
+    <div class="max-w-4xl mx-auto">
+        <span class="inline-block px-4 py-1.5 rounded-full glass text-xs font-bold text-sky-400 mb-6 border border-sky-500/30">V1.0.3 RELEASED • AI POWERED</span>
+        <h1 class="text-6xl md:text-8xl font-extrabold mb-8 tracking-tight">
+            Localizza senza <br><span class="gradient-text">compromessi.</span>
+        </h1>
+        <p class="text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+            Il tool professionale per Unity, Unreal e Godot. Traduzione neurale context-aware, 15+ provider AI e gestione batch.
+        </p>
+        <div class="flex flex-col md:flex-row gap-4 justify-center">
+            <button class="px-10 py-5 bg-sky-500 hover:bg-sky-400 text-slate-900 font-bold rounded-xl shadow-lg shadow-sky-500/20 transition-all transform hover:-translate-y-1">
+                Scarica per Windows
+            </button>
+            <button class="px-10 py-5 glass font-bold rounded-xl hover:bg-white/10 transition-all">
+                Guida Utente (IT)
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- STATS (Dall'architettura.md) -->
+<section class="max-w-7xl mx-auto px-6 py-20 border-y border-slate-800/50">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+        <div><p class="text-4xl font-bold gradient-text">15+</p><p class="text-slate-500 text-sm">AI Providers</p></div>
+        <div><p class="text-4xl font-bold gradient-text">8+</p><p class="text-slate-500 text-sm">Game Engines</p></div>
+        <div><p class="text-4xl font-bold gradient-text">20+</p><p class="text-slate-500 text-sm">Lingue Supportate</p></div>
+        <div><p class="text-4xl font-bold gradient-text">1.0.3</p><p class="text-slate-500 text-sm">Stabile Build</p></div>
+    </div>
+</section>
+
+<!-- CHANGELOG (Dal file changelog.md) -->
+<section id="changelog" class="py-24 px-6 max-w-5xl mx-auto">
+    <div class="flex items-center gap-4 mb-12">
+        <h2 class="text-4xl font-bold">Changelog <span class="text-slate-600">v1.0.x</span></h2>
+        <div class="h-[1px] flex-1 bg-slate-800"></div>
+    </div>
+    
+    <div class="space-y-12">
+        <!-- v1.0.4 - Anticipazione -->
+        <div class="relative pl-8 border-l-2 border-sky-500/30">
+            <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-sky-500"></div>
+            <div class="flex items-center gap-3 mb-4 text-sky-400 font-bold uppercase tracking-tighter">
+                <span>🚀 v1.0.4</span> <span class="text-slate-600">— 23/01/2026</span>
+            </div>
+            <h3 class="text-2xl font-bold mb-4">Expansion & Retro Tools</h3>
+            <ul class="grid md:grid-cols-2 gap-4 text-slate-400">
+                <li class="glass p-4 rounded-lg">Parser completo SRT/VTT/ASS</li>
+                <li class="glass p-4 rounded-lg">Retro ROM Tools (SNES, PSX...)</li>
+                <li class="glass p-4 rounded-lg">Batch Folder Translator (WALKDIR)</li>
+                <li class="glass p-4 rounded-lg">API Pubblica v1 Ready</li>
+            </ul>
+        </div>
+
+        <!-- v1.0.3 -->
+        <div class="relative pl-8 border-l-2 border-slate-800">
+            <div class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-slate-700"></div>
+            <div class="flex items-center gap-3 mb-4 text-slate-400 font-bold uppercase">
+                <span>🔐 v1.0.3</span> <span class="text-slate-600">— 22/01/2026</span>
+            </div>
+            <h3 class="text-2xl font-bold mb-2">Recovery & i18n Finalization</h3>
+            <p class="text-slate-500">Sistema di recupero password con 12 parole mnemoniche (SHA-256) e completamento traduzioni UI (IT, EN, ES, FR, DE, ZH).</p>
+        </div>
+    </div>
+</section>
+
+<!-- FORUM & COMMUNITY -->
+<section id="community" class="py-24 px-6 bg-slate-900/30">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-extrabold mb-4">Community Hub</h2>
+            <p class="text-slate-500">Condividi Translation Memories e pacchetti di localizzazione.</p>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+            <div class="glass p-8 rounded-2xl hover:border-sky-500/50 transition cursor-pointer">
+                <div class="w-12 h-12 bg-sky-500/10 rounded-xl flex items-center justify-center mb-6 text-sky-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                </div>
+                <h4 class="text-xl font-bold mb-2">Top Contributors</h4>
+                <p class="text-slate-500 text-sm">Classifiche mondiali basate sulla qualità dei pack approvati.</p>
+            </div>
+            <div class="glass p-8 rounded-2xl hover:border-purple-500/50 transition cursor-pointer">
+                <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 text-purple-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <h4 class="text-xl font-bold mb-2">Package Browser</h4>
+                <p class="text-slate-500 text-sm">Cerca memorie di traduzione pronte all'uso per Unity e Unreal.</p>
+            </div>
+            <div class="glass p-8 rounded-2xl hover:border-pink-500/50 transition cursor-pointer">
+                <div class="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center mb-6 text-pink-400">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h4 class="text-xl font-bold mb-2">GitHub Sponsors</h4>
+                <p class="text-slate-500 text-sm">Sostieni lo sviluppo e ottieni accesso a Neural Pro anticipato.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="py-12 border-t border-slate-900 text-center text-slate-600 text-sm">
+    <p>© 2026 GameStringer Team. Built with Tauri & Rust. Source-Available License.</p>
+</footer>
+
+</body>
+</html>

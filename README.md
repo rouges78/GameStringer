@@ -1,16 +1,16 @@
 <p align="center">
-  <img src="public/logo.png" alt="GameStringer Logo" width="120" />
+  <img src="public/logo.png" alt="GameStringer Logo" width="200" />
 </p>
 
 <h1 align="center">🎮 GameStringer</h1>
 
 <p align="center">
-  <strong>Free AI-powered game localization tool</strong><br>
-  Translate your favorite games into any language with neural AI
+  <strong>The Ultimate Open Source Suite for Video Game Localization with AI</strong><br>
+  Translate any video game into any language with neural AI
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.3-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.0.4-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -23,7 +23,6 @@
   <a href="#-download">Download</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-supported-engines">Engines</a> •
-  <a href="#-screenshots">Screenshots</a> •
   <a href="#-support">Support</a>
 </p>
 
@@ -34,9 +33,28 @@
 ### 🤖 Neural AI Translation
 
 - **15+ AI Providers**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, Cohere, DeepL, Ollama (local), LM Studio, and more
-- **Context-aware**: Understands game genre, character voice, and tone
+- **Context-Aware**: Understands game genre, character voice, and tone
 - **Translation Memory**: Reuse previous translations for consistency
 - **Glossary Support**: Define custom terms for your project
+
+### 🎬 NEW: Subtitle Translator Pro (v1.0.4)
+
+- **Complete parser** for SRT, VTT, ASS/SSA formats
+- **Real-time preview** with QA validation
+- **Multi-format export** with preserved timing
+
+### 🎮 NEW: Retro ROM Tools (v1.0.4)
+
+- **8 consoles** supported (NES, SNES, GB, GBC, GBA, Genesis, PSX, N64)
+- **Table file** (.TBL) parser/generator
+- **Font injection** for accented characters
+
+### 🔌 NEW: Public API v1 (v1.0.4)
+
+- `POST /api/v1/translate` - Single translation
+- `POST /api/v1/batch` - Batch translation (max 100)
+- `GET /api/v1/languages` - 20 supported languages
+- `GET /api/v1/health` - Health check
 
 ### 🎮 Game Engine Support
 
@@ -49,6 +67,8 @@
 | **Ren'Py** | ✅ Full | Native .rpy parsing |
 | **GameMaker** | ⚡ Partial | UndertaleModTool |
 | **Telltale** | ✅ Full | .langdb/.dlog support |
+| **Wolf RPG** | ✅ Full | WolfTrans integration |
+| **Kirikiri** | ✅ Full | .ks/.scn parsing |
 
 ### 📚 Library Integration
 
@@ -62,15 +82,14 @@
 
 ### 🛠️ Pro Tools
 
-- **Batch Translation**: Translate entire games in one click
+- **Batch Translation**: Translate entire games with one click
 - **OCR Translator**: Extract text from retro games (8-bit, 16-bit, DOS)
-- **Voice Pipeline**: Speech-to-text → Translate → Text-to-speech
+- **Voice Pipeline**: Speech-to-text → Translation → Text-to-speech
 - **Real-time Overlay**: See translations while playing
 - **Multi-LLM Compare**: Compare translations from multiple AI providers
-- **Context Crawler**: AI-powered game context extraction for better translations
-- **Translation Fixer**: Auto-fix broken markup tags in translations
+- **Context Crawler**: AI game context extraction for better translations
+- **Translation Fixer**: Auto-fix markup tags in translations
 - **Community Hub**: Share and download translation memories
-- **Universal Injector**: Inject mods into any game engine
 
 ---
 
@@ -86,7 +105,7 @@ Download the latest release from [GitHub Releases](https://github.com/rouges78/G
 ### Requirements
 
 - Windows 10/11 (64-bit)
-- 4GB RAM minimum
+- 4GB RAM minimum (8GB+ for local AI)
 - 500MB disk space
 
 ---
@@ -97,10 +116,10 @@ Download the latest release from [GitHub Releases](https://github.com/rouges78/G
 2. **Launch the app** and create a profile
 3. **Connect your stores** (Steam auto-detects, others optional)
 4. **Select a game** from your library
-5. **Click Translate** and choose your target language
+5. **Click Translate** and choose target language
 6. **Apply the patch** with one click
 
-That's it! Your game is now translated. 🎉
+Done! Your game is now translated. 🎉
 
 ---
 
@@ -111,16 +130,16 @@ That's it! Your game is now translated. 🎉
 GameStringer supports multiple AI providers. Configure your preferred one in Settings:
 
 | Provider | API Key Required | Free Tier |
-|----------|-----------------|----------|
+|----------|-----------------|------------|
 | Ollama | ❌ No (local) | ✅ Unlimited |
 | LM Studio | ❌ No (local) | ✅ Unlimited |
 | Gemini | ✅ Yes | ✅ Free tier available |
-| DeepSeek | ✅ Yes | ✅ Very affordable |
+| DeepSeek | ✅ Yes | ✅ Very cheap |
+| Groq | ✅ Yes | ✅ 14,400 req/day free |
+| Mistral | ✅ Yes | ✅ Free tier available |
 | OpenAI | ✅ Yes | ❌ Paid only |
 | Claude | ✅ Yes | ❌ Paid only |
-| Mistral | ✅ Yes | ✅ Free tier available |
-| Groq | ✅ Yes | ✅ Free tier available |
-| DeepL | ✅ Yes | ✅ Free tier (500k chars/month) |
+| DeepL | ✅ Yes | ✅ 500k chars/month |
 | MyMemory | ❌ No | ✅ 1000 words/day |
 
 **Recommended for beginners**: Use **Ollama** (free, runs locally) or **Gemini** (free tier).
@@ -158,23 +177,9 @@ Direct JSON translation:
 
 For games without extractable text:
 
-- Screenshot capture
+- Capture screenshots
 - AI-powered OCR (Tesseract.js)
 - Real-time overlay translation
-
----
-
-## 📸 Screenshots
-
-<p align="center">
-  <img src="screenshots/dashboard.png" alt="Dashboard" width="45%" />
-  <img src="screenshots/translator.png" alt="Translator" width="45%" />
-</p>
-
-<p align="center">
-  <img src="screenshots/library.png" alt="Library" width="45%" />
-  <img src="screenshots/patcher.png" alt="Patcher" width="45%" />
-</p>
 
 ---
 
@@ -203,50 +208,6 @@ npm run dev
 npm run tauri:build
 ```
 
-### Project Structure
-
-```
-GameStringer/
-├── app/                    # Next.js pages (43 routes)
-│   ├── editor/            # Translation editor
-│   ├── heatmap/           # Confidence heatmap
-│   ├── ai-review/         # AI review agent
-│   └── ...
-├── components/            # React components
-│   ├── ui/               # shadcn/ui components
-│   ├── tools/            # Tool-specific UIs
-│   └── layout/           # Layout components
-├── lib/                   # Core libraries
-│   ├── translation-confidence.ts  # Heatmap metrics
-│   ├── emotion-analyzer.ts        # Emotion detection
-│   ├── translation-memory.ts      # TM system
-│   └── project-manager.ts         # Project files
-├── src-tauri/            # Rust backend
-│   └── src/
-│       ├── commands/     # Tauri commands
-│       └── profiles/     # User profiles
-└── __tests__/            # Vitest tests
-```
-
-### Available Scripts
-
-```bash
-npm run dev              # Start dev server with profiles
-npm run dev:simple       # Start Next.js only
-npm run test             # Run tests (Vitest)
-npm run test:ui          # Run tests with UI
-npm run lint             # ESLint
-npm run tauri:build      # Build desktop app
-```
-
-### Tech Stack
-
-- **Frontend**: Next.js 15, React 18, TypeScript, TailwindCSS, shadcn/ui
-- **Backend**: Tauri 2.0, Rust
-- **Database**: SQLite (via Tauri)
-- **Testing**: Vitest, Testing Library
-- **AI**: OpenAI, Anthropic, Google, local LLMs (Ollama)
-
 ---
 
 ## 💖 Support
@@ -268,8 +229,8 @@ If GameStringer helped you enjoy games in your language, consider supporting the
 
 GameStringer is released under a **Source-Available License**.
 
-- ✅ Free to use for personal purposes
-- ✅ Free to modify for personal use
+- ✅ Free for personal use
+- ✅ Free for personal modifications
 - ❌ Commercial use requires permission
 - ❌ Redistribution of modified versions requires permission
 
@@ -287,10 +248,10 @@ See [LICENSE](LICENSE) for full details.
 ---
 
 <p align="center">
-  Made with ❤️ for gamers who want to play in their language
+  Made with ❤️ for gamers who want to play in their own language
 </p>
 
 <p align="center">
-  <strong>GameStringer v1.0.3</strong><br>
+  <strong>GameStringer v1.0.4</strong><br>
   © 2025-2026 GameStringer Team
 </p>

@@ -127,7 +127,7 @@ export function BatchFolderTranslator() {
       const selected = await open({
         directory: true,
         multiple: false,
-        title: "Seleziona cartella da tradurre",
+        title: t('batchTranslator.selectFolderTitle'),
       });
       
       if (selected) {
@@ -156,7 +156,7 @@ export function BatchFolderTranslator() {
     const selected = await open({
       directory: true,
       multiple: false,
-      title: "Seleziona cartella output",
+      title: t('batchTranslator.selectOutputTitle'),
     });
     
     if (selected) {
@@ -285,34 +285,34 @@ export function BatchFolderTranslator() {
       {/* Selezione Cartella */}
       {!scanResult && (
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div
-              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-violet-500/30 rounded-lg p-6 text-center hover:border-violet-400/50 transition-colors cursor-pointer bg-slate-900/30"
               onClick={handleSelectFolder}
             >
               {isScanning ? (
                 <>
                   <Loader2 className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
-                  <h3 className="text-lg font-medium mb-2">Scansione in corso...</h3>
+                  <h3 className="text-lg font-medium mb-2">{t('batchTranslator.scanning')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Analisi dei file traducibili
+                    {t('batchTranslator.analyzingFiles')}
                   </p>
                 </>
               ) : (
                 <>
-                  <FolderOpen className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium mb-2">Seleziona Cartella</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Scegli una cartella con file da tradurre
+                  <FolderOpen className="w-10 h-10 mx-auto mb-3 text-slate-400" />
+                  <h3 className="text-base font-medium mb-1">{t('batchTranslator.selectFolder')}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {t('batchTranslator.chooseFolder')}
                   </p>
-                  <div className="flex justify-center gap-2 flex-wrap">
-                    <Badge variant="outline">JSON</Badge>
-                    <Badge variant="outline">PO</Badge>
-                    <Badge variant="outline">RESX</Badge>
-                    <Badge variant="outline">CSV</Badge>
-                    <Badge variant="outline">SRT</Badge>
-                    <Badge variant="outline">VTT</Badge>
-                    <Badge variant="outline">ASS</Badge>
+                  <div className="flex justify-center gap-1.5 flex-wrap">
+                    <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">JSON</Badge>
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">PO</Badge>
+                    <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">RESX</Badge>
+                    <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">CSV</Badge>
+                    <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">SRT</Badge>
+                    <Badge className="bg-rose-500/20 text-rose-400 border-rose-500/30">VTT</Badge>
+                    <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">ASS</Badge>
                   </div>
                 </>
               )}
@@ -331,13 +331,13 @@ export function BatchFolderTranslator() {
               <div>
                 <h3 className="font-medium">{scanResult.rootPath.split(/[/\\]/).pop()}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {scanResult.totalFiles} file • {formatSize(scanResult.totalSizeBytes)} • ~{scanResult.estimatedEntries} stringhe
+                  {scanResult.totalFiles} {t('batchTranslator.files')} • {formatSize(scanResult.totalSizeBytes)} • ~{scanResult.estimatedEntries} {t('batchTranslator.strings')}
                 </p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={handleSelectFolder}>
               <RefreshCw className="w-4 h-4 mr-1" />
-              Cambia
+              {t('batchTranslator.change')}
             </Button>
           </div>
 
@@ -360,7 +360,7 @@ export function BatchFolderTranslator() {
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <div className="flex-1">
-                  <label className="text-xs text-muted-foreground mb-1 block">Lingua destinazione</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('batchTranslator.targetLanguage')}</label>
                   <Select value={targetLang} onValueChange={setTargetLang}>
                     <SelectTrigger>
                       <SelectValue />
@@ -379,14 +379,14 @@ export function BatchFolderTranslator() {
                 </div>
 
                 <div className="flex-1">
-                  <label className="text-xs text-muted-foreground mb-1 block">Output</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('batchTranslator.output')}</label>
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={handleSelectOutputFolder}
                   >
                     <FolderOpen className="w-4 h-4 mr-2" />
-                    {outputFolder ? outputFolder.split(/[/\\]/).pop() : "Stessa cartella"}
+                    {outputFolder ? outputFolder.split(/[/\\]/).pop() : t('batchTranslator.sameFolder')}
                   </Button>
                 </div>
 
@@ -398,7 +398,7 @@ export function BatchFolderTranslator() {
                       className="bg-gradient-to-r from-emerald-600 to-teal-600"
                     >
                       <Play className="w-4 h-4 mr-2" />
-                      Traduci {selectedFiles.size} file
+                      {t('batchTranslator.translateFiles')} {selectedFiles.size} {t('batchTranslator.files')}
                     </Button>
                   ) : (
                     <>
@@ -406,7 +406,7 @@ export function BatchFolderTranslator() {
                         {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                       </Button>
                       <Button variant="destructive" onClick={handleStop}>
-                        Stop
+                        {t('batchTranslator.stop')}
                       </Button>
                     </>
                   )}
@@ -417,9 +417,9 @@ export function BatchFolderTranslator() {
               {isTranslating && (
                 <div className="mt-4">
                   <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                    <span>{completedCount} / {selectedFiles.size} completati</span>
+                    <span>{completedCount} / {selectedFiles.size} {t('batchTranslator.completed')}</span>
                     {errorCount > 0 && (
-                      <span className="text-red-500">{errorCount} errori</span>
+                      <span className="text-red-500">{errorCount} {t('batchTranslator.errors')}</span>
                     )}
                   </div>
                   <Progress value={overallProgress} className="h-2" />
@@ -434,14 +434,14 @@ export function BatchFolderTranslator() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  File ({selectedFiles.size}/{scanResult.files.length} selezionati)
+                  {t('batchTranslator.file')} ({selectedFiles.size}/{scanResult.files.length} {t('batchTranslator.filesSelected')})
                 </CardTitle>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" onClick={selectAll}>
-                    Tutti
+                    {t('batchTranslator.all')}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={deselectAll}>
-                    Nessuno
+                    {t('batchTranslator.none')}
                   </Button>
                 </div>
               </div>
@@ -451,11 +451,11 @@ export function BatchFolderTranslator() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-10"></TableHead>
-                    <TableHead>File</TableHead>
-                    <TableHead className="w-20">Tipo</TableHead>
-                    <TableHead className="w-20">Dim.</TableHead>
-                    <TableHead className="w-20">Stringhe</TableHead>
-                    <TableHead className="w-24">Stato</TableHead>
+                    <TableHead>{t('batchTranslator.file')}</TableHead>
+                    <TableHead className="w-20">{t('batchTranslator.type')}</TableHead>
+                    <TableHead className="w-20">{t('batchTranslator.size')}</TableHead>
+                    <TableHead className="w-20">{t('batchTranslator.stringsCol')}</TableHead>
+                    <TableHead className="w-24">{t('batchTranslator.status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -491,24 +491,24 @@ export function BatchFolderTranslator() {
                         </TableCell>
                         <TableCell>
                           {status?.status === "pending" && (
-                            <span className="text-xs text-muted-foreground">In attesa</span>
+                            <span className="text-xs text-muted-foreground">{t('batchTranslator.pending')}</span>
                           )}
                           {status?.status === "translating" && (
                             <span className="text-xs text-blue-500 flex items-center gap-1">
                               <Loader2 className="w-3 h-3 animate-spin" />
-                              Traduzione...
+                              {t('batchTranslator.translating')}
                             </span>
                           )}
                           {status?.status === "completed" && (
                             <span className="text-xs text-green-500 flex items-center gap-1">
                               <CheckCircle className="w-3 h-3" />
-                              Completato
+                              {t('batchTranslator.done')}
                             </span>
                           )}
                           {status?.status === "error" && (
                             <span className="text-xs text-red-500 flex items-center gap-1">
                               <XCircle className="w-3 h-3" />
-                              Errore
+                              {t('batchTranslator.error')}
                             </span>
                           )}
                         </TableCell>

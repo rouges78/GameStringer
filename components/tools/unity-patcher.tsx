@@ -80,9 +80,9 @@ export function UnityPatcher() {
   
   // Modalità di traduzione XUnity
   const translationModes = [
-    { id: 'capture', name: '📝 Capture only', description: 'Capture text, translate with Neural Translator Pro (best quality)' },
-    { id: 'google', name: '🌐 Google Translate', description: 'Free automatic translation (medium quality)' },
-    { id: 'deepl', name: '🔷 DeepL', description: 'Premium automatic translation (requires API key)' },
+    { id: 'capture', name: t('gamePatcher.captureOnly'), description: t('gamePatcher.captureOnlyDesc') },
+    { id: 'google', name: t('gamePatcher.googleTranslate'), description: t('gamePatcher.googleTranslateDesc') },
+    { id: 'deepl', name: t('gamePatcher.deepl'), description: t('gamePatcher.deeplDesc') },
   ];
   
   // Lingue supportate da XUnity.AutoTranslator
@@ -172,10 +172,10 @@ export function UnityPatcher() {
           .then(check => setEngineCheck(check))
           .catch(err => console.error('Engine verification error:', err));
       }
-      toast.success(`🎮 Game "${getGameName(matchedGame)}" selected automatically`);
+      toast.success(`🎮 "${getGameName(matchedGame)}" ${t('gamePatcher.gameSelectedAuto')}`);
     } else {
       console.log('[UnityPatcher] Game not found in Unity list:', urlGameId, urlGameName);
-      toast.info(`Game "${urlGameName}" not found among Unity games. Select it manually.`);
+      toast.info(`"${urlGameName}" ${t('gamePatcher.gameNotFound')}`);
     }
     
     setUrlGameApplied(true);
@@ -360,11 +360,11 @@ export function UnityPatcher() {
           setEngineCheck(check);
           
           if (check.is_unity) {
-            toast.success(`✓ ${check.engine_name} detected`);
+            toast.success(`✓ ${check.engine_name} ${t('gamePatcher.engineDetected')}`);
           } else if (check.is_unreal) {
-            toast.error(`✗ ${check.engine_name} - Not compatible with BepInEx!`);
+            toast.error(`✗ ${check.engine_name} - ${t('gamePatcher.engineNotCompatible')}`);
           } else {
-            toast.warning(`⚠ Engine not recognized`);
+            toast.warning(`⚠ ${t('gamePatcher.engineNotRecognized')}`);
           }
         } catch (err) {
           console.error('Engine check error:', err);
@@ -378,7 +378,7 @@ export function UnityPatcher() {
             const mainExe = exes.find(e => !e.toLowerCase().includes('launcher')) || exes[0];
             setExeName(mainExe);
           } else {
-            toast.warning('No executable found in folder');
+            toast.warning(t('gamePatcher.noExeFound'));
           }
         } catch (err) {
           console.error('Executable search error:', err);
@@ -386,29 +386,29 @@ export function UnityPatcher() {
       }
     } catch (err) {
       console.error('Folder selection error:', err);
-      toast.error('Cannot open folder selector');
+      toast.error(t('gamePatcher.cannotOpenFolder'));
     }
   };
 
   const handlePatch = async () => {
     // If we have a selected game but no manual path, ask to select folder
     if (selectedGame && !gamePath) {
-      toast.error('Select the game folder with the "Folder" button');
+      toast.error(t('gamePatcher.selectFolderError'));
       return;
     }
     
     if (!gamePath && !selectedGame) {
-      toast.error('Select a game or folder');
+      toast.error(t('gamePatcher.selectGameOrFolder'));
       return;
     }
     if (!exeName) {
-      toast.error('Enter the game executable name (e.g. Game.exe)');
+      toast.error(t('gamePatcher.enterExeName'));
       return;
     }
 
     setIsPatching(true);
     setStatus('patching');
-    setLogs(['Starting patching process...']);
+    setLogs([t('gamePatcher.startingPatch')]);
     setProgress(10);
     setErrorMessage('');
 
@@ -416,8 +416,8 @@ export function UnityPatcher() {
       const cleanExeName = exeName.endsWith('.exe') ? exeName : `${exeName}.exe`;
       const finalPath = gamePath;
 
-      setLogs(prev => [...prev, `Target: ${finalPath}`]);
-      setLogs(prev => [...prev, `Executable: ${cleanExeName}`]);
+      setLogs(prev => [...prev, `${t('gamePatcher.target')}: ${finalPath}`]);
+      setLogs(prev => [...prev, `${t('gamePatcher.executable')}: ${cleanExeName}`]);
       setProgress(30);
 
       const result = await invoke<PatchStatus>('install_unity_autotranslator', {
@@ -452,7 +452,7 @@ export function UnityPatcher() {
           game_id: selectedGame?.app_id || selectedGame?.id,
         });
         
-        toast.success('Patch installed successfully!');
+        toast.success(t('gamePatcher.patchSuccess'));
       } else {
         throw new Error(result.message);
       }
@@ -462,7 +462,7 @@ export function UnityPatcher() {
       setStatus('error');
       setErrorMessage(err.toString());
       setLogs(prev => [...prev, `❌ Error: ${err}`]);
-      toast.error('Error during patch installation');
+      toast.error(t('gamePatcher.patchError'));
     } finally {
       setIsPatching(false);
     }
@@ -476,7 +476,7 @@ export function UnityPatcher() {
       try {
         // console.log('[LAUNCH] Avvio via Steam:', appId);
         await invoke('launch_steam_game', { appId: String(appId) });
-        toast.success('Game launched from Steam!');
+        toast.success(t('gamePatcher.gameLaunchedSteam'));
         return;
       } catch (err) {
         console.error('Steam launch error:', err);
@@ -490,19 +490,19 @@ export function UnityPatcher() {
       // console.log('[LAUNCH] Avvio eseguibile diretto:', fullPath);
       try {
         await invoke('launch_executable', { path: fullPath });
-        toast.success('Game launched!');
+        toast.success(t('gamePatcher.gameLaunched'));
         return;
       } catch (err) {
         console.error('Direct launch error:', err);
       }
     }
     
-    toast.error('Cannot launch game');
+    toast.error(t('gamePatcher.cannotLaunchGame'));
   };
 
   const handleRemovePatch = async () => {
     if (!gamePath) {
-      toast.error('Select game folder first');
+      toast.error(t('gamePatcher.selectFolderFirst'));
       return;
     }
     
@@ -515,7 +515,7 @@ export function UnityPatcher() {
       }
     } catch (err: any) {
       console.error('Patch removal error:', err);
-      toast.error('Error during patch removal');
+      toast.error(t('gamePatcher.patchRemoveError'));
     }
   };
 
@@ -561,8 +561,8 @@ export function UnityPatcher() {
                 </div>
               ) : filteredGames.length === 0 ? (
                 <div className="text-center py-4 text-xs text-muted-foreground">
-                  {searchQuery ? 'No results' : (
-                    hasSteamCredentials ? 'No Unity games' : 'Configure Steam in Store Manager'
+                  {searchQuery ? t('gamePatcher.noResults') : (
+                    hasSteamCredentials ? t('gamePatcher.noUnityGames') : t('gamePatcher.configureStoreManager')
                   )}
                 </div>
               ) : (
@@ -645,13 +645,13 @@ export function UnityPatcher() {
                             {selectedGame.engine || '?'}
                           </Badge>
                           {canPatch ? (
-                            <span className="text-emerald-400">✓ BepInEx Compatible</span>
+                            <span className="text-emerald-400">✓ {t('gamePatcher.bepinexCompatible')}</span>
                           ) : isUnreal ? (
                             <a href="https://github.com/akintos/UnrealLocres/releases" target="_blank" rel="noopener" className="text-amber-400 hover:text-amber-300 underline">⚠ UnrealLocres</a>
                           ) : selectedGame.engine?.toLowerCase() === 'godot' ? (
                             <a href="https://github.com/bruvzg/gdsdecomp/releases" target="_blank" rel="noopener" className="text-amber-400 hover:text-amber-300 underline">⚠ gdsdecomp</a>
                           ) : (
-                            <span className="text-amber-400">⚠ External tools</span>
+                            <span className="text-amber-400">⚠ {t('gamePatcher.externalTools')}</span>
                           )}
                         </div>
                       );
@@ -677,7 +677,7 @@ export function UnityPatcher() {
                     disabled={!selectedGame?.app_id && !gamePath}
                   >
                     <Play className="w-3 h-3 mr-1" />
-                    LAUNCH GAME
+                    {t('gamePatcher.launchGame')}
                   </Button>
                 </div>
 
@@ -685,7 +685,7 @@ export function UnityPatcher() {
                 <details className="group">
                   <summary className="flex items-center gap-1 text-[10px] text-slate-400 cursor-pointer hover:text-slate-300">
                     <span>▶</span>
-                    <span>First time? Install patch</span>
+                    <span>{t('gamePatcher.firstTimeInstall')}</span>
                   </summary>
                   <div className="mt-1 p-1.5 rounded bg-slate-900/50 border border-slate-800/50 space-y-1">
                     <div className="flex items-center gap-1">
@@ -709,7 +709,7 @@ export function UnityPatcher() {
                         onClick={handlePatch} 
                         disabled={isPatching || !exeName || !gamePath || (engineCheck && !engineCheck.can_patch)}
                       >
-                        {isPatching ? '...' : 'Install'}
+                        {isPatching ? t('gamePatcher.installing') : t('gamePatcher.install')}
                       </Button>
                     </div>
                     <div className="flex items-center justify-between">
@@ -720,7 +720,7 @@ export function UnityPatcher() {
                         onClick={handleRemovePatch}
                         disabled={!gamePath}
                       >
-                        Remove
+                        {t('gamePatcher.remove')}
                       </Button>
                     </div>
                   </div>
@@ -733,9 +733,9 @@ export function UnityPatcher() {
                 )}
                 {(status === 'success' || engineCheck?.has_bepinex) && (
                   <div className="p-1.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-[10px] flex items-center gap-2">
-                    <span className="text-emerald-400 shrink-0">✅ Patch OK</span>
+                    <span className="text-emerald-400 shrink-0">✅ {t('gamePatcher.patchOk')}</span>
                     <span className="text-emerald-300/70 truncate flex-1">
-                      {engineCheck?.has_bepinex ? 'already installed' : ''}
+                      {engineCheck?.has_bepinex ? t('gamePatcher.alreadyInstalled') : ''}
                     </span>
                     {/* Badge Traduzione */}
                     {translationMode === 'google' || translationMode === 'deepl' ? (
@@ -767,7 +767,7 @@ export function UnityPatcher() {
       {/* Istruzioni - inline compatte */}
       <div className="flex items-center gap-2 text-[10px] text-slate-500 px-2 py-1">
         <Info className="w-3 h-3 text-blue-400 shrink-0" />
-        <span>After patch: launch game → <kbd className="bg-slate-800 px-1 rounded">ALT+T</kbd> for translation</span>
+        <span>{t('gamePatcher.afterPatchInfo')}</span>
       </div>
     </div>
   );

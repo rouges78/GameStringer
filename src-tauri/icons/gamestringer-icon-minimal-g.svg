@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#047857" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Sfondo -->
+  <rect x="32" y="32" width="448" height="448" rx="88" fill="url(#emeraldGrad)" filter="url(#shadow)"/>
+  
+  <!-- GS monogramma stilizzato -->
+  <g transform="translate(256, 256)">
+    <!-- G esterna -->
+    <path 
+      d="M 80 -80 
+         A 120 120 0 1 0 80 80 
+         L 20 80 
+         L 20 20 
+         L 60 20 
+         L 60 -10 
+         L -20 -10 
+         L -20 110 
+         A 150 150 0 1 1 115 -115 
+         L 80 -80 Z"
+      fill="white"
+      transform="translate(-15, 0)"
+    />
+    
+    <!-- S interna stilizzata come freccia/flusso -->
+    <path 
+      d="M -30 -40 Q 30 -40 30 0 Q 30 40 -30 40"
+      fill="none"
+      stroke="#10B981"
+      stroke-width="16"
+      stroke-linecap="round"
+    />
+    <path d="M -40 30 L -30 45 L -20 30" fill="none" stroke="#10B981" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

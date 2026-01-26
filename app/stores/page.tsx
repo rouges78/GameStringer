@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2, Clock, Trophy, Gamepad2, BarChart3 } from 'lucide-react';
+import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2, Clock, Trophy, Gamepad2, BarChart3, Store, ChevronDown } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
 import Image, { StaticImageData } from 'next/image';
@@ -31,46 +31,26 @@ type Store = {
   icon?: React.ReactNode;
 };
 
-const stores: Store[] = [
-  { id: 'steam', name: 'Steam', logoUrl: '/logos/steam.png', description: 'Collega il tuo account Steam per importare i tuoi games.' },
-  { id: 'epic', name: 'Epic Games', logoUrl: '/logos/epic-games.png', description: 'Collega il tuo account Epic Games per importare i tuoi games.' },
-  { id: 'ubisoft', name: 'Ubisoft Connect', logoUrl: '/logos/ubisoft-connect.png', description: 'Collega il tuo account Ubisoft Connect per importare i tuoi games.' },
-  { id: 'itchio', name: 'itch.io', logoUrl: '/logos/itch-io.png', description: 'Collega il tuo account itch.io per importare i tuoi games.' },
-  { id: 'gog', name: 'GOG', logoUrl: '/logos/gog.png', description: 'Collega il tuo account GOG per importare i tuoi games.' },
-  { id: 'origin', name: 'EA App / Origin', logoUrl: '/logos/ea-app.png', description: 'Collega il tuo account EA per importare i tuoi games.' },
-  { id: 'battlenet', name: 'Battle.net', logoUrl: '/logos/battlenet.png', description: 'Collega il tuo account Battle.net per importare i tuoi games.' },
-  { id: 'rockstar', name: 'Rockstar', logoUrl: '/logos/rockstar.png', description: 'La connection con Rockstar non è ancora supportata.' },
+const storesConfig = [
+  { id: 'steam', name: 'Steam', logoUrl: '/logos/steam.png', descKey: 'steamDesc' },
+  { id: 'epic', name: 'Epic Games', logoUrl: '/logos/epic-games.png', descKey: 'epicDesc' },
+  { id: 'ubisoft', name: 'Ubisoft Connect', logoUrl: '/logos/ubisoft-connect.png', descKey: 'ubisoftDesc' },
+  { id: 'itchio', name: 'itch.io', logoUrl: '/logos/itch-io.png', descKey: 'itchioDesc' },
+  { id: 'gog', name: 'GOG', logoUrl: '/logos/gog.png', descKey: 'gogDesc' },
+  { id: 'origin', name: 'EA App / Origin', logoUrl: '/logos/ea-app.png', descKey: 'originDesc' },
+  { id: 'battlenet', name: 'Battle.net', logoUrl: '/logos/battlenet.png', descKey: 'battlenetDesc' },
+  { id: 'rockstar', name: 'Rockstar', logoUrl: '/logos/rockstar.png', descKey: 'rockstarDesc' },
 ];
 
-const utilityServices: Store[] = [
-  {
-    id: 'howlongtobeat',
-    name: 'HowLongToBeat',
-    icon: <Clock className="h-12 w-12 text-blue-500" />,
-    description: 'Ottieni informazioni sui tempi di completamento dei tuoi games.'
-  },
-  {
-    id: 'steamgriddb',
-    name: 'SteamGridDB',
-    icon: <Gamepad2 className="h-12 w-12 text-purple-500" />,
-    description: 'Scarica artwork e copertine personalizzate per i tuoi games.'
-  },
-  {
-    id: 'achievements',
-    name: 'Achievement Tracker',
-    icon: <Trophy className="h-12 w-12 text-yellow-500" />,
-    description: 'Traccia i tuoi achievement e trofei su tutte le piattaforme.'
-  },
-  {
-    id: 'playtime',
-    name: 'Playtime Stats',
-    icon: <BarChart3 className="h-12 w-12 text-green-500" />,
-    description: 'Analizza le tue statistiche di game aggregate.'
-  },
+const utilityServicesConfig = [
+  { id: 'howlongtobeat', name: 'HowLongToBeat', iconType: 'clock', descKey: 'howlongtobeatDesc' },
+  { id: 'steamgriddb', name: 'SteamGridDB', iconType: 'gamepad', descKey: 'steamgriddbDesc' },
+  { id: 'achievements', name: 'Achievements', iconType: 'trophy', descKey: 'achievementsDesc' },
+  { id: 'playtime', name: 'Playtime Stats', iconType: 'chart', descKey: 'playtimeDesc' },
 ];
 
 const connectableProviders = ['steam', 'epic', 'ubisoft', 'itchio', 'gog', 'origin', 'battlenet'];
-const connectableUtilities = ['howlongtobeat', 'steamgriddb'];
+const connectableUtilities = ['howlongtobeat', 'steamgriddb', 'achievements', 'playtime'];
 
 export default function StoresPage() {
   const { t } = useTranslation();
@@ -126,6 +106,7 @@ export default function StoresPage() {
   
   // Utility services state
   const [utilityPreferences, setUtilityPreferences] = useState<{ [key: string]: any }>({});
+  const [utilityExpanded, setUtilityExpanded] = useState(false);
 
   const providerMap: { [key: string]: string } = {
     steam: 'steam-credentials',
@@ -187,62 +168,49 @@ export default function StoresPage() {
     setLoadingProvider(null);
   };
 
-  // Load utility preferences on mount
+  // Load utility preferences from localStorage on mount
   useEffect(() => {
-    const loadUtilityPreferences = async () => {
-      if (!session?.user?.id) return;
-      
-      try {
-        const response = await fetch('/api/utilities/preferences');
-        if (response.ok) {
-          const prefs = await response.json();
-          setUtilityPreferences(prefs);
-        }
-      } catch (error) {
-        console.error('Error loading utility preferences:', error);
+    try {
+      const stored = localStorage.getItem('gamestringer_utility_prefs');
+      if (stored) {
+        setUtilityPreferences(JSON.parse(stored));
       }
-    };
-    
-    loadUtilityPreferences();
-  }, [session]);
+    } catch (error) {
+      console.error('Error loading utility preferences:', error);
+    }
+  }, []);
 
   const handleConnectUtility = async (utilityId: string) => {
     setLoadingProvider(utilityId);
     
     try {
       if (utilityId === 'howlongtobeat') {
-        // HowLongToBeat doesn't require authentication, just enable it
-        const response = await fetch('/api/utilities/preferences', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ service: utilityId, enabled: true }),
-        });
-        
-        if (response.ok) {
-          toast.success('HowLongToBeat attivato! Le informazioni sui tempi di game verranno mostrate automaticamente.');
-          setUtilityPreferences(prev => ({ ...prev, [utilityId]: { enabled: true } }));
-        } else {
-          throw new Error('Failed to save preference');
-        }
+        // HowLongToBeat doesn't require authentication, just enable it locally
+        const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true } };
+        localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
+        setUtilityPreferences(newPrefs);
+        toast.success('HowLongToBeat attivato! Le informazioni sui tempi di gioco verranno mostrate automaticamente.');
+      } else if (utilityId === 'achievements') {
+        const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true } };
+        localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
+        setUtilityPreferences(newPrefs);
+        toast.success('Achievement Tracker attivato!');
+      } else if (utilityId === 'playtime') {
+        const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true } };
+        localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
+        setUtilityPreferences(newPrefs);
+        toast.success('Playtime Stats attivato!');
       } else if (utilityId === 'steamgriddb') {
         const apiKey = prompt('Inserisci la tua API key di SteamGridDB (ottienila da https://www.steamgriddb.com/profile/preferences/api):');
         if (apiKey) {
-          const response = await fetch('/api/utilities/preferences', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ service: utilityId, enabled: true, apiKey }),
-          });
-          
-          if (response.ok) {
-            toast.success('SteamGridDB collegato con successo!');
-            setUtilityPreferences(prev => ({ ...prev, [utilityId]: { enabled: true, apiKey } }));
-          } else {
-            throw new Error('Failed to save API key');
-          }
+          const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true, apiKey } };
+          localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
+          setUtilityPreferences(newPrefs);
+          toast.success('SteamGridDB collegato con successo!');
         }
       }
     } catch (error) {
-      toast.error(`error durante l'attivazione di ${utilityId}`);
+      toast.error(`Errore durante l'attivazione di ${utilityId}`);
     }
     
     setLoadingProvider(null);
@@ -252,22 +220,13 @@ export default function StoresPage() {
     setLoadingProvider(utilityId);
     
     try {
-      const response = await fetch(`/api/utilities/preferences?service=${utilityId}`, {
-        method: 'DELETE',
-      });
-      
-      if (response.ok) {
-        toast.success(`${utilityId} disattivato con successo.`);
-        setUtilityPreferences(prev => {
-          const newPrefs = { ...prev };
-          delete newPrefs[utilityId];
-          return newPrefs;
-        });
-      } else {
-        throw new Error('Failed to delete preference');
-      }
+      const newPrefs = { ...utilityPreferences };
+      delete newPrefs[utilityId];
+      localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
+      setUtilityPreferences(newPrefs);
+      toast.success(`${utilityId} disattivato con successo.`);
     } catch (error) {
-      toast.error(`error durante la disattivazione di ${utilityId}`);
+      toast.error(`Errore durante la disattivazione di ${utilityId}`);
     }
     
     setLoadingProvider(null);
@@ -549,7 +508,23 @@ export default function StoresPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-3 space-y-2 animate-fade-in">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 p-2">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Store className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('stores.title')}</h1>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('stores.subtitle')}</p>
+            </div>
+          </div>
+                  </div>
+      </div>
+
       {isSteamIdInvalid && (
         <Card className="mb-8 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10">
           <CardHeader>
@@ -576,112 +551,86 @@ export default function StoresPage() {
           </CardContent>
         </Card>
       )}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Connessioni Store</h1>
-        <p className="text-muted-foreground mb-4">
-          Collega i tuoi account per sincronizzare la tua library di games e accedere a funzionalità avanzate.
-        </p>
-        <div className="flex justify-center">
-          <Button asChild variant="outline" className="mb-4">
-            <a href="/store-manager">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              🔧 Gestione Store Interattiva
-            </a>
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {stores.map((store) => {
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+        {storesConfig.map((store) => {
           const connected = isConnected(store.id);
           const isConnectable = connectableProviders.includes(store.id);
           const currentLoading = loadingProvider === store.id;
 
           return (
-            <Card key={store.id}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-4">
-                  <div className="relative h-12 w-12 flex items-center justify-center">
-                    {store.icon ? store.icon : store.logoUrl ? (
-                      <Image
-                        src={store.logoUrl}
-                        alt={`${store.name} logo`}
-                        width={48}
-                        height={48}
-                        style={{ objectFit: 'contain' }}
-                      />
-                    ) : null}
+            <Card key={store.id} className="p-2 card-hover">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="relative h-8 w-8 flex items-center justify-center flex-shrink-0">
+                  {store.logoUrl ? (
+                    <Image
+                      src={store.logoUrl}
+                      alt={`${store.name} logo`}
+                      width={32}
+                      height={32}
+                      style={{ objectFit: 'contain' }}
+                    />
+                  ) : null}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm truncate">{store.name}</span>
+                    {connected ? (
+                      <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    )}
                   </div>
-                  <CardTitle className="text-xl font-bold">{store.name}</CardTitle>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2">{t(`stores.${store.descKey}`)}</p>
                 </div>
-                {connected ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-muted-foreground" />
-                )}
-              </CardHeader>
-              <CardContent>
-                <CardDescription>
-                  {store.description}
-                </CardDescription>
-                <div className="mt-4 flex flex-col space-y-2">
-                  {connected ? (
-                    <>
-                      <div className="flex gap-2">
-                        <Button
-                          className="flex-1"
-                          variant="destructive"
-                          disabled={isLoading || currentLoading}
-                          onClick={() => handleDisconnect(store.id)}
-                        >
-                          {currentLoading ? <Loader2 className="animate-spin mr-2" /> : <Unplug className="mr-2 h-4 w-4" />}
-                          Disconnetti
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          disabled={testingProvider === store.id}
-                          onClick={() => testConnection(store.id)}
-                          title="Test connection"
-                        >
-                          {testingProvider === store.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : testResults[store.id]?.connected ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          ) : testResults[store.id]?.error ? (
-                            <AlertCircle className="h-4 w-4 text-red-500" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                      {testResults[store.id] && (
-                        <div className="text-xs text-muted-foreground">
-                          {testResults[store.id].connected ? (
-                            <span className="text-green-600">✓ connection verificata</span>
-                          ) : (
-                            <span className="text-red-600">✗ {testResults[store.id].error}</span>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  ) : isConnectable ? (
+              </div>
+              <div className="flex gap-2">
+              {connected ? (
+                  <>
                     <Button
-                      className="w-full"
+                      size="sm"
+                      variant="destructive"
+                      className="flex-1 h-8 text-xs"
                       disabled={isLoading || currentLoading}
-                      onClick={() => handleConnect(store.id)}
+                      onClick={() => handleDisconnect(store.id)}
                     >
-                      {currentLoading ? <Loader2 className="animate-spin mr-2" /> : <Plug className="mr-2 h-4 w-4" />}
-                      Collega Account
+                      {currentLoading ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <Unplug className="h-3 w-3 mr-1" />}
+                      {t('stores.disconnect')}
                     </Button>
-                  ) : (
-                    <Button className="w-full" disabled={true}>
-                      <Plug className="mr-2 h-4 w-4" />
-                      Non disponibile
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      disabled={testingProvider === store.id}
+                      onClick={() => testConnection(store.id)}
+                      title="Test"
+                    >
+                      {testingProvider === store.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : testResults[store.id]?.connected ? (
+                        <CheckCircle2 className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <AlertCircle className="h-3 w-3" />
+                      )}
                     </Button>
-                  )}
-                </div>
-              </CardContent>
+                  </>
+                ) : isConnectable ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 h-8 text-xs border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
+                    disabled={isLoading || currentLoading}
+                    onClick={() => handleConnect(store.id)}
+                  >
+                    {currentLoading ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <Plug className="h-3 w-3 mr-1" />}
+                    {t('stores.connect')}
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs border-orange-500/30 text-orange-300/50" disabled={true}>
+                    {t('stores.notAvailable')}
+                  </Button>
+                )}
+              </div>
             </Card>
           );
         })}
@@ -694,100 +643,109 @@ export default function StoresPage() {
 
       {/* Generic modal removed - now using GenericCredentialsModal */}
 
-      {/* Utility Services Section */}
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold tracking-tight mb-4">Servizi Utility</h2>
-        <p className="text-muted-foreground mb-6">
-          Collega servizi aggiuntivi per arricchire la tua esperienza di game con informazioni e funzionalità extra.
+      {/* Utility Services Section - Collapsible */}
+      <div className="mt-2">
+        <button 
+          onClick={() => {
+            setUtilityExpanded(!utilityExpanded);
+            if (!utilityExpanded) {
+              setTimeout(() => {
+                document.getElementById('utility-section')?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              }, 100);
+            }
+          }}
+          className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition-colors"
+        >
+          <span className="text-sm font-medium text-slate-300">{t('stores.utilityServices')}</span>
+          <span className={utilityExpanded ? '' : 'inline-block animate-bounce'}><ChevronDown className={`h-5 w-5 text-orange-400 transition-transform ${utilityExpanded ? 'rotate-180' : ''}`} /></span>
+        </button>
+        
+        {utilityExpanded && (
+        <div id="utility-section" className="mt-2">
+        <p className="text-muted-foreground text-[10px] mb-1">
+          {t('stores.utilityServicesDesc')}
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {utilityServices.map((service) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {utilityServicesConfig.map((service) => {
             const connected = isConnected(service.id);
             const isConnectable = connectableUtilities.includes(service.id);
             const currentLoading = loadingProvider === service.id;
 
             return (
-              <Card key={service.id}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-12 w-12 flex items-center justify-center">
-                      {service.icon}
-                    </div>
-                  </div>
-                  {connected ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <CardTitle className="text-lg font-bold mb-2">{service.name}</CardTitle>
-                  <CardDescription className="mb-4">
-                    {service.description}
-                  </CardDescription>
-                  <div className="mt-4 flex flex-col space-y-2">
+              <Card key={service.id} className="p-2 card-hover">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="relative h-6 w-6 flex items-center justify-center flex-shrink-0">
+                  {service.iconType === 'clock' && <Clock className="h-5 w-5 text-blue-500" />}
+                  {service.iconType === 'gamepad' && <Gamepad2 className="h-5 w-5 text-orange-500" />}
+                  {service.iconType === 'trophy' && <Trophy className="h-5 w-5 text-yellow-500" />}
+                  {service.iconType === 'chart' && <BarChart3 className="h-5 w-5 text-green-500" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-sm truncate">{service.name}</span>
                     {connected ? (
-                      <>
-                        <div className="flex gap-2">
-                          <Button
-                            className="flex-1"
-                            variant="destructive"
-                            disabled={isLoading || currentLoading}
-                            onClick={() => handleDisconnectUtility(service.id)}
-                          >
-                            {currentLoading ? <Loader2 className="animate-spin mr-2" /> : <Unplug className="mr-2 h-4 w-4" />}
-                            Disattiva
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            disabled={testingProvider === service.id}
-                            onClick={() => testConnectionUtility(service.id)}
-                            title="Test servizio"
-                          >
-                            {testingProvider === service.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : testResults[service.id]?.connected ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            ) : testResults[service.id]?.error ? (
-                              <AlertCircle className="h-4 w-4 text-red-500" />
-                            ) : (
-                              <AlertCircle className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                        {testResults[service.id] && (
-                          <div className="text-xs text-muted-foreground">
-                            {testResults[service.id].connected ? (
-                              <span className="text-green-600">✓ Servizio attivo</span>
-                            ) : (
-                              <span className="text-red-600">✗ {testResults[service.id].error}</span>
-                            )}
-                          </div>
-                        )}
-                      </>
-                    ) : isConnectable ? (
-                      <Button
-                        className="w-full"
-                        disabled={isLoading || currentLoading}
-                        onClick={() => handleConnectUtility(service.id)}
-                      >
-                        {currentLoading ? <Loader2 className="animate-spin mr-2" /> : <Plug className="mr-2 h-4 w-4" />}
-                        Attiva Servizio
-                      </Button>
+                      <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                     ) : (
-                      <Button className="w-full" disabled={true}>
-                        <Plug className="mr-2 h-4 w-4" />
-                        Prossimamente
-                      </Button>
+                      <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2">{t(`stores.${service.descKey}`)}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                    {connected ? (
+                      <>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="flex-1 h-8 text-xs"
+                    disabled={isLoading || currentLoading}
+                    onClick={() => handleDisconnectUtility(service.id)}
+                  >
+                    {currentLoading ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <Unplug className="h-3 w-3 mr-1" />}
+                    {t('stores.deactivate')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    disabled={testingProvider === service.id}
+                    onClick={() => testConnectionUtility(service.id)}
+                    title="Test"
+                  >
+                    {testingProvider === service.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : testResults[service.id]?.connected ? (
+                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-3 w-3" />
+                    )}
+                  </Button>
+                </>
+                    ) : isConnectable ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-8 text-xs border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
+                  disabled={isLoading || currentLoading}
+                  onClick={() => handleConnectUtility(service.id)}
+                >
+                  {currentLoading ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <Plug className="h-3 w-3 mr-1" />}
+                  {t('stores.activate')}
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" className="flex-1 h-8 text-xs border-orange-500/30 text-orange-300/50" disabled={true}>
+                  {t('stores.comingSoon')}
+                </Button>
+              )}
+              </div>
+            </Card>
             );
           })}
         </div>
+        </div>
+        )}
       </div>
 
       {/* Modern Modals */}

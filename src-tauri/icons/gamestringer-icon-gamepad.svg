@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#5B21B6"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#4C1D95" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Sfondo -->
+  <rect x="32" y="32" width="448" height="448" rx="88" fill="url(#purpleGrad)" filter="url(#shadow)"/>
+  
+  <!-- Controller grande -->
+  <g transform="translate(256, 240)">
+    <!-- Corpo controller -->
+    <rect x="-140" y="-50" width="280" height="100" rx="50" fill="white"/>
+    
+    <!-- Grip sinistro -->
+    <ellipse cx="-110" cy="60" rx="35" ry="45" fill="white"/>
+    <!-- Grip destro -->
+    <ellipse cx="110" cy="60" rx="35" ry="45" fill="white"/>
+    
+    <!-- D-Pad -->
+    <rect x="-95" y="-15" width="30" height="10" rx="2" fill="#7C3AED"/>
+    <rect x="-85" y="-25" width="10" height="30" rx="2" fill="#7C3AED"/>
+    
+    <!-- Bottoni ABXY -->
+    <circle cx="70" cy="-15" r="10" fill="#EC4899"/>
+    <circle cx="90" cy="5" r="10" fill="#3B82F6"/>
+    <circle cx="70" cy="25" r="10" fill="#22C55E"/>
+    <circle cx="50" cy="5" r="10" fill="#EAB308"/>
+    
+    <!-- Stick analogici -->
+    <circle cx="-50" cy="15" r="18" fill="#E5E7EB"/>
+    <circle cx="-50" cy="15" r="12" fill="#9CA3AF"/>
+    <circle cx="30" cy="35" r="18" fill="#E5E7EB"/>
+    <circle cx="30" cy="35" r="12" fill="#9CA3AF"/>
+  </g>
+  
+  <!-- Testo traduzione sotto -->
+  <g transform="translate(256, 380)">
+    <text x="-60" y="8" fill="rgba(255,255,255,0.9)" font-family="Arial" font-size="36" font-weight="bold">A</text>
+    <line x1="-20" y1="0" x2="20" y2="0" stroke="rgba(255,255,255,0.6)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 12 -8 L 22 0 L 12 8" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="4" stroke-linecap="round"/>
+    <text x="35" y="10" fill="rgba(255,255,255,0.9)" font-family="Arial" font-size="32" font-weight="bold">文</text>
+  </g>
+</svg>

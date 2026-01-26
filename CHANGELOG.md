@@ -19,6 +19,44 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.5 — AI Voice & VR Tools 🎤🥽
+
+> **Data**: 2026-01-26
+
+#### 🎤 Voice Clone Studio
+- **AI voice cloning** with ElevenLabs and OpenAI TTS
+- **Text-to-speech synthesis** with multiple voices
+- **Custom voice profiles** from audio samples
+- **Voice presets**: narrator, hero, villain, child, robot, elderly
+
+#### 🥽 VR Text Overlay
+- **Spatial subtitles** for VR games
+- **Headset detection**: Oculus, SteamVR, WMR
+- **Position presets**: bottom center, top center, peripheral, wrist
+- **Customizable style**: font size, opacity, shadow
+
+#### 🛡️ Quality Gates
+- **Automatic QA system** for translation validation
+- **Checks**: placeholders, numbers, HTML tags, length
+- **Context-aware validation**: UI, dialogue, narrative
+- **Quality score** with pass/fail threshold
+
+#### 💬 Player Feedback
+- **Feedback collection** from players
+- **Categories**: accuracy, fluency, context, terminology, style
+- **5-star rating system** with status tracking
+- **Export** as JSON or CSV
+
+#### 🌐 i18n
+- All 4 new tools translated in **7 languages** (IT, EN, ES, DE, JA, ZH)
+- Guide page updated with documentation
+
+#### 🎨 UI
+- **Green hero headers** for Tools section pages
+- **Compact VR Overlay layout** optimized for screen
+
+---
+
 ### v1.0.4 — Translation Tools Expansion 🚀
 
 > **Data**: 2026-01-23
@@ -495,7 +533,7 @@
 
 | Metrica | Valore |
 |:--------|:-------|
-| **Versione attuale** | 1.0.3 |
+| **Versione attuale** | 1.0.4 |
 | **Periodo sviluppo** | Giugno 2025 - Presente |
 | **Stack Backend** | Rust (Tauri v2) |
 | **Stack Frontend** | Next.js 15, React, TailwindCSS |

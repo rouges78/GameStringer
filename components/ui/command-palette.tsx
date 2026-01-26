@@ -22,10 +22,14 @@ import {
   Keyboard,
   Moon,
   Sun,
-  RefreshCw
+  RefreshCw,
+  Database,
+  Brain,
+  Mic
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
+import { useTranslation } from '@/lib/i18n';
 
 interface CommandItem {
   id: string;
@@ -43,28 +47,31 @@ export function CommandPalette() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
   const { setTheme, theme } = useTheme();
+  const { t } = useTranslation();
 
   const commands: CommandItem[] = useMemo(() => [
     // Navigation
-    { id: 'dashboard', title: 'Dashboard', description: 'Go to dashboard', icon: <Home className="h-4 w-4" />, action: () => router.push('/'), keywords: ['home', 'main'], category: 'navigation' },
-    { id: 'library', title: 'Library', description: 'Browse your games', icon: <Gamepad2 className="h-4 w-4" />, action: () => router.push('/library'), keywords: ['games', 'games'], category: 'navigation' },
-    { id: 'translator', title: 'Translate', description: 'AI Translation Assistant', icon: <Sparkles className="h-4 w-4" />, action: () => router.push('/ai-translator'), keywords: ['translate', 'ai'], category: 'navigation' },
-    { id: 'patcher', title: 'Patcher', description: 'Unity/Unreal Patcher', icon: <Wand2 className="h-4 w-4" />, action: () => router.push('/unity-patcher'), keywords: ['unity', 'patch', 'bepinex'], category: 'navigation' },
-    { id: 'community', title: 'Community', description: 'Community hub', icon: <Globe className="h-4 w-4" />, action: () => router.push('/community-hub'), keywords: ['hub', 'share'], category: 'navigation' },
-    { id: 'settings', title: 'Settings', description: 'Configure GameStringer', icon: <Settings className="h-4 w-4" />, action: () => router.push('/settings'), keywords: ['config', 'options'], category: 'navigation' },
-    { id: 'batch', title: 'Batch Translation', description: 'Translate multiple files in queue', icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch-translation'), keywords: ['queue', 'multiple'], category: 'navigation' },
-    { id: 'projects', title: 'Projects', description: 'Manage .gsproj projects', icon: <FolderOpen className="h-4 w-4" />, action: () => router.push('/projects'), keywords: ['project', 'save'], category: 'navigation' },
-    { id: 'stats', title: 'Statistics', description: 'Statistics dashboard', icon: <BarChart3 className="h-4 w-4" />, action: () => router.push('/stats'), keywords: ['analytics', 'progress'], category: 'navigation' },
-    { id: 'workshop', title: 'Steam Workshop', description: 'Download translations', icon: <Cloud className="h-4 w-4" />, action: () => router.push('/workshop'), keywords: ['steam', 'download'], category: 'navigation' },
+    { id: 'dashboard', title: t('nav.dashboard'), description: t('commandPalette.dashboardDesc'), icon: <Home className="h-4 w-4" />, action: () => router.push('/'), keywords: ['home', 'main', 'dashboard'], category: 'navigation' },
+    { id: 'library', title: t('nav.library'), description: t('commandPalette.libraryDesc'), icon: <Gamepad2 className="h-4 w-4" />, action: () => router.push('/library'), keywords: ['games', 'giochi', 'libreria'], category: 'navigation' },
+    { id: 'translator', title: t('nav.translate'), description: t('commandPalette.translateDesc'), icon: <Sparkles className="h-4 w-4" />, action: () => router.push('/ai-translator'), keywords: ['translate', 'traduci', 'ai'], category: 'navigation' },
+    { id: 'dictionary', title: t('nav.dictionary'), description: t('commandPalette.dictionaryDesc'), icon: <Database className="h-4 w-4" />, action: () => router.push('/memory'), keywords: ['dizionario', 'glossario', 'termini'], category: 'navigation' },
+    { id: 'multiLlm', title: t('nav.multiLlm'), description: t('commandPalette.multiLlmDesc'), icon: <Brain className="h-4 w-4" />, action: () => router.push('/translator/compare'), keywords: ['compare', 'llm', 'ai'], category: 'navigation' },
+    { id: 'voice', title: t('nav.voice'), description: t('commandPalette.voiceDesc'), icon: <Mic className="h-4 w-4" />, action: () => router.push('/voice-translator'), keywords: ['voice', 'voce', 'audio'], category: 'navigation' },
+    { id: 'patcher', title: t('nav.patcher'), description: t('commandPalette.patcherDesc'), icon: <Wand2 className="h-4 w-4" />, action: () => router.push('/unity-patcher'), keywords: ['unity', 'patch', 'bepinex'], category: 'navigation' },
+    { id: 'community', title: t('nav.community'), description: t('commandPalette.communityDesc'), icon: <Globe className="h-4 w-4" />, action: () => router.push('/community-hub'), keywords: ['hub', 'share', 'comunità'], category: 'navigation' },
+    { id: 'settings', title: t('nav.settings'), description: t('commandPalette.settingsDesc'), icon: <Settings className="h-4 w-4" />, action: () => router.push('/settings'), keywords: ['config', 'options', 'impostazioni'], category: 'navigation' },
+    { id: 'batch', title: t('nav.batch'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch'), keywords: ['queue', 'multiple', 'batch'], category: 'navigation' },
+    { id: 'projects', title: t('commandPalette.projects'), description: t('commandPalette.projectsDesc'), icon: <FolderOpen className="h-4 w-4" />, action: () => router.push('/projects'), keywords: ['project', 'save', 'progetti'], category: 'navigation' },
+    { id: 'stats', title: t('commandPalette.stats'), description: t('commandPalette.statsDesc'), icon: <BarChart3 className="h-4 w-4" />, action: () => router.push('/stats'), keywords: ['analytics', 'progress', 'statistiche'], category: 'navigation' },
     
     // Actions
-    { id: 'scan', title: 'Scan Games', description: 'Search for new installed games', icon: <RefreshCw className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('scan-games')); }, keywords: ['refresh', 'find'], category: 'action' },
-    { id: 'shortcuts', title: 'Keyboard Shortcuts', description: 'Show all shortcuts', icon: <Keyboard className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('show-shortcuts')); }, keywords: ['keyboard', 'hotkeys'], category: 'action' },
+    { id: 'scan', title: t('commandPalette.scanGames'), description: t('commandPalette.scanGamesDesc'), icon: <RefreshCw className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('scan-games')); }, keywords: ['refresh', 'find', 'scansiona'], category: 'action' },
+    { id: 'shortcuts', title: t('commandPalette.shortcuts'), description: t('commandPalette.shortcutsDesc'), icon: <Keyboard className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('show-shortcuts')); }, keywords: ['keyboard', 'hotkeys', 'scorciatoie'], category: 'action' },
     
     // Settings
-    { id: 'theme-dark', title: 'Dark Theme', description: 'Enable dark theme', icon: <Moon className="h-4 w-4" />, action: () => setTheme('dark'), keywords: ['dark', 'night'], category: 'settings' },
-    { id: 'theme-light', title: 'Light Theme', description: 'Enable light theme', icon: <Sun className="h-4 w-4" />, action: () => setTheme('light'), keywords: ['light', 'day'], category: 'settings' },
-  ], [router, setTheme]);
+    { id: 'theme-dark', title: t('commandPalette.darkTheme'), description: t('commandPalette.darkThemeDesc'), icon: <Moon className="h-4 w-4" />, action: () => setTheme('dark'), keywords: ['dark', 'night', 'scuro'], category: 'settings' },
+    { id: 'theme-light', title: t('commandPalette.lightTheme'), description: t('commandPalette.lightThemeDesc'), icon: <Sun className="h-4 w-4" />, action: () => setTheme('light'), keywords: ['light', 'day', 'chiaro'], category: 'settings' },
+  ], [router, setTheme, t]);
 
   const filteredCommands = useMemo(() => {
     if (!search) return commands;
@@ -129,9 +136,9 @@ export function CommandPalette() {
   };
 
   const categoryLabels: Record<string, string> = {
-    navigation: 'Navigation',
-    action: 'Actions',
-    settings: 'Settings'
+    navigation: t('commandPalette.navigation'),
+    action: t('commandPalette.actions'),
+    settings: t('commandPalette.settings')
   };
 
   let flatIndex = 0;
@@ -145,7 +152,7 @@ export function CommandPalette() {
         <div className="flex items-center border-b px-3">
           <Search className="h-4 w-4 text-muted-foreground mr-2" />
           <Input
-            placeholder="Cerca comandi, pagine, azioni..."
+            placeholder={t('commandPalette.placeholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="border-0 focus-visible:ring-0 h-12 text-base"
@@ -159,7 +166,7 @@ export function CommandPalette() {
         <ScrollArea className="max-h-[300px]">
           {filteredCommands.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">
-              No results for "{search}"
+              {t('commandPalette.noResults')} "{search}"
             </div>
           ) : (
             <div className="p-2">

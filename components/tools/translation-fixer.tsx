@@ -164,12 +164,12 @@ export function TranslationFixer() {
           </div>
           
           <div className="flex items-center gap-3">
-            <Button onClick={handleAnalyze} className="bg-white text-orange-600 hover:bg-white/90 shadow-lg" size="lg">
+            <Button onClick={handleAnalyze} variant="outline" className="border-white/50 text-white hover:bg-white/10 hover:border-white" size="lg">
               <Search className="h-5 w-5 mr-2" />
               {t('translationFixer.analyze')}
             </Button>
             {issues.length > 0 && (
-              <Button onClick={handleQuickFix} className="bg-white/20 text-white hover:bg-white/30 border border-white/30" size="lg">
+              <Button onClick={handleQuickFix} variant="outline" className="border-white/50 text-white hover:bg-white/10 hover:border-white" size="lg">
                 <Zap className="h-5 w-5 mr-2" />
                 {t('translationFixer.quickFix')}
               </Button>
@@ -179,13 +179,13 @@ export function TranslationFixer() {
       </div>
 
       {/* Input Area */}
-      <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-transparent">
+      <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-orange-500/20">
-              <FileText className="h-4 w-4 text-orange-400" />
+            <div className="p-1.5 rounded-lg bg-teal-500/20">
+              <FileText className="h-4 w-4 text-teal-400" />
             </div>
-            <span className="text-orange-100">{t('translationFixer.textToAnalyze')}</span>
+            <span className="text-teal-100">{t('translationFixer.textToAnalyze')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -196,7 +196,7 @@ export function TranslationFixer() {
               setAnalyzed(false);
             }}
             placeholder={t('translationFixer.placeholder')}
-            className="min-h-[120px] font-mono text-sm bg-black/20 border-orange-500/30 focus:border-orange-500/50"
+            className="min-h-[120px] font-mono text-sm bg-black/20 border-teal-500/30 focus:border-teal-500/50"
           />
         </CardContent>
       </Card>
@@ -253,7 +253,8 @@ export function TranslationFixer() {
                 <CardContent className="space-y-2">
                   <Button 
                     onClick={handleGenerateConfig}
-                    className="w-full bg-gradient-to-r from-orange-500 to-red-600"
+                    variant="outline"
+                    className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
                     size="sm"
                   >
                     <Settings className="h-4 w-4 mr-2" />

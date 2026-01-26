@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06B6D4"/>
+      <stop offset="100%" style="stop-color:#0891B2"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#155E75" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Sfondo -->
+  <rect x="32" y="32" width="448" height="448" rx="88" fill="url(#cyanGrad)" filter="url(#shadow)"/>
+  
+  <!-- Fumetto sinistro (A) -->
+  <g transform="translate(160, 200)">
+    <path d="M -60 -60 L 60 -60 Q 80 -60 80 -40 L 80 40 Q 80 60 60 60 L 0 60 L -20 90 L -20 60 L -60 60 Q -80 60 -80 40 L -80 -40 Q -80 -60 -60 -60 Z" fill="white"/>
+    <text x="0" y="15" fill="#06B6D4" font-family="Arial" font-size="70" font-weight="bold" text-anchor="middle">A</text>
+  </g>
+  
+  <!-- Fumetto destro (文) -->
+  <g transform="translate(352, 280)">
+    <path d="M -50 -50 L 50 -50 Q 65 -50 65 -35 L 65 35 Q 65 50 50 50 L 20 50 L 35 75 L 10 50 L -50 50 Q -65 50 -65 35 L -65 -35 Q -65 -50 -50 -50 Z" fill="white"/>
+    <text x="0" y="12" fill="#06B6D4" font-family="Arial" font-size="55" font-weight="bold" text-anchor="middle">文</text>
+  </g>
+  
+  <!-- Freccia tra i fumetti -->
+  <g transform="translate(256, 240)">
+    <line x1="-15" y1="0" x2="25" y2="20" stroke="rgba(255,255,255,0.8)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M 15 8 L 28 22 L 12 25" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

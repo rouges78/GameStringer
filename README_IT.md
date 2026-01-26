@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versione-1.0.3-blue" alt="Versione" />
+  <img src="https://img.shields.io/badge/versione-1.0.4-blue" alt="Versione" />
   <img src="https://img.shields.io/badge/piattaforma-Windows-lightgrey" alt="Piattaforma" />
   <img src="https://img.shields.io/badge/licenza-Source--Available-green" alt="Licenza" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -38,6 +38,25 @@
 - **Memoria di Traduzione**: Riutilizza traduzioni precedenti per coerenza
 - **Supporto Glossario**: Definisci termini personalizzati per il tuo progetto
 
+### 🎬 NUOVO: Subtitle Translator Pro (v1.0.4)
+
+- **Parser completo** per formati SRT, VTT, ASS/SSA
+- **Preview in tempo reale** con validazione QA
+- **Export multi-formato** con timing preservato
+
+### 🎮 NUOVO: Retro ROM Tools (v1.0.4)
+
+- **8 console** supportate (NES, SNES, GB, GBC, GBA, Genesis, PSX, N64)
+- **Table file** (.TBL) parser/generator
+- **Font injection** per caratteri accentati
+
+### 🔌 NUOVO: API Pubblica v1 (v1.0.4)
+
+- `POST /api/v1/translate` - Traduzione singola
+- `POST /api/v1/batch` - Traduzione batch (max 100)
+- `GET /api/v1/languages` - 20 lingue supportate
+- `GET /api/v1/health` - Health check
+
 ### 🎮 Supporto Engine di Gioco
 
 | Engine | Supporto | Metodo |
@@ -49,6 +68,8 @@
 | **Ren'Py** | ✅ Completo | Parsing .rpy nativo |
 | **GameMaker** | ⚡ Parziale | UndertaleModTool |
 | **Telltale** | ✅ Completo | Supporto .langdb/.dlog |
+| **Wolf RPG** | ✅ Completo | Integrazione WolfTrans |
+| **Kirikiri** | ✅ Completo | Parsing .ks/.scn |
 
 ### 📚 Integrazione Librerie
 
@@ -247,6 +268,6 @@ Vedi [LICENSE](LICENSE) per i dettagli completi.
 </p>
 
 <p align="center">
-  <strong>GameStringer v1.0.3</strong><br>
+  <strong>GameStringer v1.0.4</strong><br>
   © 2025-2026 GameStringer Team
 </p>

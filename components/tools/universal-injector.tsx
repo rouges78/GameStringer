@@ -157,17 +157,17 @@ export function UniversalInjector() {
   return (
     <div className="space-y-4">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center gap-3">
-          <div className="p-1.5 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
-            <Wand2 className="h-4 w-4 text-white" />
+          <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+            <Wand2 className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">{t('universalInjector.title')}</h2>
-            <p className="text-white/80 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)]">{t('universalInjector.subtitle')}</p>
+            <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('universalInjector.title')}</h2>
+            <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('universalInjector.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -190,7 +190,7 @@ export function UniversalInjector() {
               onClick={handleDetect}
               disabled={!gamePath || isDetecting}
               size="sm"
-              className="bg-gradient-to-r from-emerald-500 to-teal-600"
+              className="bg-emerald-600 hover:bg-emerald-500"
             >
               {isDetecting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -279,7 +279,7 @@ export function UniversalInjector() {
                   <Button
                     onClick={handleInject}
                     disabled={isInjecting}
-                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600"
+                    className="w-full bg-blue-600 hover:bg-blue-500"
                     size="sm"
                   >
                     {isInjecting ? (
@@ -389,20 +389,36 @@ export function UniversalInjector() {
         </Card>
       )}
 
-      {/* Supported Engines */}
-      <Card className="bg-muted/30">
-        <CardHeader className="py-2">
+      {/* Supported Engines - Organized Grid */}
+      <Card className="bg-muted/20 border-muted">
+        <CardHeader className="py-3 pb-2">
           <CardTitle className="text-xs text-muted-foreground flex items-center gap-2">
-            <Gamepad2 className="h-3 w-3" />
+            <Gamepad2 className="h-3.5 w-3.5" />
             {t('universalInjector.supportedEngines')}
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="flex flex-wrap gap-1">
-            {Object.entries(ENGINE_ICONS).filter(([k]) => k !== 'Unknown').map(([engine, icon]) => (
-              <Badge key={engine} variant="outline" className="text-[10px]">
-                {icon} {engine.replace(/([A-Z])/g, ' $1').trim()}
-              </Badge>
+        <CardContent className="pt-0 pb-3">
+          <div className="flex flex-wrap gap-2">
+            {[
+              { icon: '🎮', name: 'Unity' },
+              { icon: '🎯', name: 'Unreal' },
+              { icon: '🤖', name: 'Godot' },
+              { icon: '🕹️', name: 'GameMaker' },
+              { icon: '⚔️', name: 'RPG Maker MV' },
+              { icon: '⚔️', name: 'RPG Maker MZ' },
+              { icon: '🗡️', name: 'RPG Maker VX' },
+              { icon: '🗡️', name: 'RPG Maker XP' },
+              { icon: '💕', name: "Ren'Py" },
+              { icon: '📖', name: 'Kirikiri' },
+              { icon: '📜', name: 'NScripter' },
+              { icon: '🐺', name: 'Wolf RPG' },
+            ].map((engine) => (
+              <div 
+                key={engine.name}
+                className="px-2.5 py-1.5 rounded-md border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 hover:border-emerald-400/50 transition-colors cursor-default"
+              >
+                <span className="text-xs text-emerald-300">{engine.icon} {engine.name}</span>
+              </div>
             ))}
           </div>
         </CardContent>

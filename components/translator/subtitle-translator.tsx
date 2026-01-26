@@ -119,7 +119,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
         setOutputFormat(parsed.format);
         setSelectedEntry(null);
       } else {
-        alert("Formato file non riconosciuto");
+        alert(t('subtitleTranslator.formatNotRecognized'));
       }
     };
     
@@ -252,9 +252,9 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                   className="hidden"
                 />
                 <Film className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium mb-2">Carica Sottotitoli</h3>
+                <h3 className="text-lg font-medium mb-2">{t('subtitleTranslator.uploadSubtitles')}</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Trascina un file o clicca per selezionare
+                  {t('subtitleTranslator.dragOrClick')}
                 </p>
                 <div className="flex justify-center gap-2">
                   <Badge variant="outline">SRT</Badge>
@@ -276,14 +276,14 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                 <div>
                   <h3 className="font-medium">{fileName}</h3>
                   <p className="text-xs text-muted-foreground">
-                    {stats?.totalEntries} sottotitoli • {stats?.format} • {formatDuration(subtitleFile.entries[subtitleFile.entries.length - 1]?.endMs || 0)}
+                    {stats?.totalEntries} {t('subtitleTranslator.subtitlesCount')} • {stats?.format} • {formatDuration(subtitleFile.entries[subtitleFile.entries.length - 1]?.endMs || 0)}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={handleClear}>
                   <Trash2 className="w-4 h-4 mr-1" />
-                  Nuovo
+                  {t('subtitleTranslator.new')}
                 </Button>
               </div>
             </div>
@@ -294,7 +294,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                 <div className="flex items-center gap-2">
                   <Type className="w-4 h-4 text-blue-500" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Righe</p>
+                    <p className="text-xs text-muted-foreground">{t('subtitleTranslator.lines')}</p>
                     <p className="font-semibold">{stats?.totalEntries}</p>
                   </div>
                 </div>
@@ -303,7 +303,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-green-500" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Durata</p>
+                    <p className="text-xs text-muted-foreground">{t('subtitleTranslator.duration')}</p>
                     <p className="font-semibold">{formatDuration(subtitleFile.entries[subtitleFile.entries.length - 1]?.endMs || 0)}</p>
                   </div>
                 </div>
@@ -312,7 +312,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-purple-500" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Caratteri</p>
+                    <p className="text-xs text-muted-foreground">{t('subtitleTranslator.characters')}</p>
                     <p className="font-semibold">{stats?.totalCharacters.toLocaleString()}</p>
                   </div>
                 </div>
@@ -325,9 +325,9 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                     <AlertTriangle className="w-4 h-4 text-yellow-500" />
                   )}
                   <div>
-                    <p className="text-xs text-muted-foreground">Stato</p>
+                    <p className="text-xs text-muted-foreground">{t('subtitleTranslator.status')}</p>
                     <p className="font-semibold">
-                      {validation?.errors.length || 0} errori, {validation?.warnings.length || 0} avvisi
+                      {validation?.errors.length || 0} {t('subtitleTranslator.errors')}, {validation?.warnings.length || 0} {t('subtitleTranslator.warnings')}
                     </p>
                   </div>
                 </div>
@@ -339,7 +339,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Lingua destinazione</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('subtitleTranslator.targetLanguage')}</label>
                     <Select value={targetLang} onValueChange={setTargetLang}>
                       <SelectTrigger>
                         <SelectValue />
@@ -358,7 +358,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                   </div>
                   
                   <div className="flex-1">
-                    <label className="text-xs text-muted-foreground mb-1 block">Formato output</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('subtitleTranslator.outputFormat')}</label>
                     <Select value={outputFormat} onValueChange={setOutputFormat}>
                       <SelectTrigger>
                         <SelectValue />
@@ -382,12 +382,12 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                       {isTranslating ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Traduzione...
+                          {t('subtitleTranslator.translating')}
                         </>
                       ) : (
                         <>
                           <Languages className="w-4 h-4 mr-2" />
-                          Traduci Tutto
+                          {t('subtitleTranslator.translateAll')}
                         </>
                       )}
                     </Button>
@@ -400,7 +400,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                       disabled={!subtitleFile.entries.some(e => e.translatedText)}
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Esporta
+                      {t('subtitleTranslator.export')}
                     </Button>
                   </div>
                 </div>
@@ -409,7 +409,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                   <div className="mt-4">
                     <Progress value={progress} className="h-2" />
                     <p className="text-xs text-muted-foreground mt-1 text-center">
-                      {Math.round(progress)}% completato
+                      {Math.round(progress)}% {t('subtitleTranslator.completed')}
                     </p>
                   </div>
                 )}
@@ -423,7 +423,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                 <CardHeader className="py-3 px-4 border-b">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <FileText className="w-4 h-4" />
-                    Sottotitoli ({subtitleFile.entries.length})
+                    {t('subtitleTranslator.subtitles')} ({subtitleFile.entries.length})
                   </CardTitle>
                 </CardHeader>
                 <ScrollArea className="flex-1">
@@ -431,8 +431,8 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">#</TableHead>
-                        <TableHead className="w-24">Tempo</TableHead>
-                        <TableHead>Testo</TableHead>
+                        <TableHead className="w-24">{t('subtitleTranslator.time')}</TableHead>
+                        <TableHead>{t('subtitleTranslator.text')}</TableHead>
                         <TableHead className="w-8"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -476,7 +476,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                 <CardHeader className="py-3 px-4 border-b">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Type className="w-4 h-4" />
-                    Editor
+                    {t('subtitleTranslator.editor')}
                     {selectedEntry !== null && (
                       <Badge variant="outline" className="ml-2">
                         #{selectedEntry}
@@ -489,7 +489,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                     <>
                       {/* Originale */}
                       <div className="mb-4">
-                        <label className="text-xs text-muted-foreground mb-1 block">Originale</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t('subtitleTranslator.original')}</label>
                         <div className="p-3 bg-muted/30 rounded-md text-sm">
                           {subtitleFile.entries.find(e => e.id === selectedEntry)?.text}
                         </div>
@@ -497,12 +497,12 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
 
                       {/* Traduzione editabile */}
                       <div className="flex-1 flex flex-col">
-                        <label className="text-xs text-muted-foreground mb-1 block">Traduzione</label>
+                        <label className="text-xs text-muted-foreground mb-1 block">{t('subtitleTranslator.translation')}</label>
                         <Textarea
                           value={editedText}
                           onChange={(e) => setEditedText(e.target.value)}
                           className="flex-1 resize-none"
-                          placeholder="Inserisci la traduzione..."
+                          placeholder={t('subtitleTranslator.translationPlaceholder')}
                         />
                       </div>
 
@@ -517,10 +517,10 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                           }}
                         >
                           <RotateCcw className="w-3 h-3 mr-1" />
-                          Reset
+                          {t('subtitleTranslator.reset')}
                         </Button>
                         <Button size="sm" onClick={handleEditSave}>
-                          Salva
+                          {t('subtitleTranslator.save')}
                         </Button>
                       </div>
                     </>
@@ -528,7 +528,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                     <div className="flex-1 flex items-center justify-center text-muted-foreground">
                       <div className="text-center">
                         <Eye className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Seleziona un sottotitolo per modificarlo</p>
+                        <p className="text-sm">{t('subtitleTranslator.selectToEdit')}</p>
                       </div>
                     </div>
                   )}
@@ -542,7 +542,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                    Problemi rilevati
+                    {t('subtitleTranslator.issuesDetected')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">

@@ -41,8 +41,8 @@ export default function AITranslatorPage() {
         
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
-              <Sparkles className="h-5 w-5 text-white" />
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Sparkles className="h-6 w-6 text-white" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
@@ -56,11 +56,11 @@ export default function AITranslatorPage() {
           
           {/* Stats inline */}
           <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Bot className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">Ollama</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Zap className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">{ai.free}</span>
             </div>
@@ -82,7 +82,7 @@ export default function AITranslatorPage() {
               OCR
             </Button>
           </Link>
-          <Link href="/visual-editor">
+          <Link href="/editor">
             <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <ImageIcon className="h-3 w-3" />
               Visual

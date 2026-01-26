@@ -1,75 +1,210 @@
 'use client';
 
-import { useState } from 'react';
-import { X, Loader2, ExternalLink } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Loader2, ExternalLink, CheckCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { invoke } from '@/lib/tauri-api';
+import Image from 'next/image';
+
+interface SteamUser {
+  steam_id: string;
+  persona_name: string;
+  avatar: string;
+  avatar_full: string;
+  profile_url: string;
+}
 
 interface SteamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (apiKey: string, steamId: string) => Promise<void>;
+  onSubmit: (steamId: string) => Promise<void>;
   isLoading?: boolean;
 }
 
 export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalProps) {
-  const [apiKey, setApiKey] = useState('');
-  const [steamId, setSteamId] = useState('');
   const [error, setError] = useState('');
+  const [authStep, setAuthStep] = useState<'idle' | 'waiting' | 'success'>('idle');
+  const [verifying, setVerifying] = useState(false);
+  const [steamUser, setSteamUser] = useState<SteamUser | null>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
+
+  // Check if already authenticated on mount
+  useEffect(() => {
+    if (isOpen) {
+      checkExistingAuth();
+    }
+  }, [isOpen]);
+
+  const checkExistingAuth = async () => {
+    setCheckingAuth(true);
+    try {
+      const existing = await invoke<SteamUser | null>('steam_load_auth');
+      if (existing) {
+        // Try to get full profile with avatar using API key from settings
+        let fullProfile = existing;
+        try {
+          const settingsStr = localStorage.getItem('gameStringerSettings');
+          if (settingsStr) {
+            const settings = JSON.parse(settingsStr);
+            const steamApiKey = settings?.integrations?.steamApiKey;
+            if (steamApiKey) {
+              fullProfile = await invoke<SteamUser>('steam_get_user_profile', {
+                steamId: existing.steam_id,
+                apiKey: steamApiKey
+              });
+            }
+          }
+        } catch (e) {
+          console.log('Could not load full profile with avatar');
+        }
+        setSteamUser(fullProfile);
+        setAuthStep('success');
+      }
+    } catch (e) {
+      console.log('No existing Steam auth');
+    }
+    setCheckingAuth(false);
+  };
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSteamLogin = async () => {
     setError('');
-
-    // Validazione API Key
-    if (!apiKey || apiKey.length !== 32) {
-      setError('API Key must be 32 characters');
-      return;
-    }
-
-    if (!/^[A-Fa-f0-9]{32}$/.test(apiKey)) {
-      setError('Invalid API Key. Must contain only hexadecimal characters');
-      return;
-    }
-
-    // SECURITY FIX: Enhanced Steam ID64 validation
-    if (!steamId || steamId.length !== 17) {
-      setError('SteamID must be a 17-digit number');
-      return;
-    }
-
-    // Validate Steam ID64 format (must start with 76561198)
-    if (!/^76561198\d{9}$/.test(steamId)) {
-      setError('Invalid SteamID. Must start with 76561198 followed by 9 digits');
-      return;
-    }
-
-    // Additional validation: check if it's in valid Steam ID64 range
-    const numericSteamId = BigInt(steamId);
-    const minSteamId = BigInt('76561198000000000');
-    const maxSteamId = BigInt('76561198999999999');
-    
-    if (numericSteamId < minSteamId || numericSteamId > maxSteamId) {
-      setError('SteamID out of valid range');
-      return;
-    }
+    setAuthStep('waiting');
 
     try {
-      await onSubmit(apiKey, steamId);
-      setApiKey('');
-      setSteamId('');
-      onClose();
-    } catch (err) {
-      setError('Error connecting to Steam');
+      // Start local callback server and get auth URL
+      const [authUrl, port] = await invoke<[string, number]>('steam_openid_start_server');
+      
+      // Open in system browser
+      const { open } = await import('@tauri-apps/plugin-shell');
+      await open(authUrl);
+      
+      // Wait for callback (120s timeout)
+      const steamId = await invoke<string>('steam_openid_wait_callback', { timeoutSecs: 120 });
+      
+      // Get API key from settings for full profile
+      let apiKey: string | null = null;
+      try {
+        const settingsStr = localStorage.getItem('gameStringerSettings');
+        if (settingsStr) {
+          const settings = JSON.parse(settingsStr);
+          apiKey = settings?.integrations?.steamApiKey || null;
+        }
+      } catch (e) {}
+      
+      // Get user profile
+      const profile = await invoke<SteamUser>('steam_get_user_profile', { steamId, apiKey });
+      
+      // Save auth
+      await invoke('steam_save_auth', { 
+        steamId: profile.steam_id,
+        personaName: profile.persona_name 
+      });
+      
+      setSteamUser(profile);
+      setAuthStep('success');
+      
+      // Notify parent
+      await onSubmit(steamId);
+      
+    } catch (err: any) {
+      setError(err?.message || 'Errore durante il login Steam');
+      setAuthStep('idle');
     }
+  };
+
+  const handleManualCallback = async () => {
+    const callbackUrl = prompt('Incolla qui l\'URL completo dopo il login Steam:');
+    if (!callbackUrl) return;
+
+    setVerifying(true);
+    setError('');
+
+    try {
+      // Parse URL params
+      const url = new URL(callbackUrl);
+      const params: Record<string, string> = {};
+      url.searchParams.forEach((value, key) => {
+        params[key] = value;
+      });
+
+      // Verify with backend
+      const steamId = await invoke<string>('steam_openid_verify', { params });
+      
+      // Try to get API key from settings for full profile with avatar
+      let apiKey: string | null = null;
+      try {
+        const settingsStr = localStorage.getItem('gameStringerSettings');
+        if (settingsStr) {
+          const settings = JSON.parse(settingsStr);
+          apiKey = settings?.integrations?.steamApiKey || null;
+        }
+      } catch (e) {}
+      
+      // Get user profile
+      const profile = await invoke<SteamUser>('steam_get_user_profile', { 
+        steamId,
+        apiKey 
+      });
+      
+      // Save auth
+      await invoke('steam_save_auth', { 
+        steamId: profile.steam_id,
+        personaName: profile.persona_name 
+      });
+      
+      setSteamUser(profile);
+      setAuthStep('success');
+      
+      // Call parent callback
+      await onSubmit(steamId);
+      
+    } catch (err: any) {
+      setError(err?.message || 'Verifica fallita');
+      setVerifying(false);
+    }
+  };
+
+  const handleConfirmConnection = async () => {
+    if (steamUser) {
+      try {
+        await onSubmit(steamUser.steam_id);
+        onClose();
+      } catch (err: any) {
+        setError(err?.message || 'Errore durante la connessione');
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await invoke('steam_logout');
+      setSteamUser(null);
+      setWishlist([]);
+      setAuthStep('idle');
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  };
+
+  const handleImportWishlist = async () => {
+    if (!steamUser) return;
+    setLoadingWishlist(true);
+    try {
+      const list = await invoke<any[]>('steam_get_wishlist', { steamId: steamUser.steam_id });
+      setWishlist(list);
+    } catch (e: any) {
+      setError(e?.message || 'Errore importazione wishlist');
+    }
+    setLoadingWishlist(false);
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background border rounded-lg shadow-xl w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-background border rounded-lg shadow-xl w-full max-w-md p-6 relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
@@ -78,105 +213,158 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           <X className="h-5 w-5" />
         </button>
 
-        <h2 className="text-2xl font-bold mb-2">Connect Steam Account</h2>
-        <p className="text-muted-foreground mb-6">
-          Enter your API Key and SteamID64 to connect your Steam account and access your game library.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="apikey">Steam API Key</Label>
-            <Input
-              id="apikey"
-              type="text"
-              placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              disabled={isLoading}
-              className="font-mono"
-            />
-            <p className="text-xs text-muted-foreground">
-              La tua chiave API Steam di 32 caratteri esadecimali.
-            </p>
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-[#1b2838] rounded-lg flex items-center justify-center">
+            <img src="/logos/steam.png" alt="Steam" className="w-8 h-8" />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="steamid">SteamID64</Label>
-            <Input
-              id="steamid"
-              type="text"
-              placeholder="76561198000000000"
-              value={steamId}
-              onChange={(e) => setSteamId(e.target.value)}
-              disabled={isLoading}
-              className="font-mono"
-            />
-            <p className="text-xs text-muted-foreground">
-              Il tuo SteamID64 è un numero univoco di 17 cifre che identifica il tuo account Steam.
-            </p>
+          <div>
+            <h2 className="text-xl font-bold">Connetti Steam</h2>
+            <p className="text-sm text-muted-foreground">Accedi con il tuo account Steam</p>
           </div>
+        </div>
 
-          {error && (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
-
-          <div className="bg-muted/50 rounded-md p-4 space-y-3">
-            <div>
-              <p className="text-sm font-medium">How to get your Steam API Key:</p>
-              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>Visit <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">steamcommunity.com/dev/apikey</a></li>
-                <li>Log in with your Steam account</li>
-                <li>Enter a domain name (e.g. localhost)</li>
-                <li>Copy the generated API key</li>
-              </ol>
-            </div>
-            
-            <div>
-              <p className="text-sm font-medium">How to find your SteamID64:</p>
-              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>Open Steam and go to your profile</li>
-                <li>Copy your profile URL</li>
-                <li>Visit one of these sites to convert it:</li>
-              </ol>
-              <div className="flex gap-2 mt-2">
-                <a
-                  href="https://steamid.io/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline text-sm flex items-center gap-1"
-                >
-                  SteamID.io <ExternalLink className="h-3 w-3" />
-                </a>
-                <span className="text-muted-foreground">•</span>
-                <a
-                  href="https://steamidfinder.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline text-sm flex items-center gap-1"
-                >
-                  SteamID Finder <ExternalLink className="h-3 w-3" />
-                </a>
+        {checkingAuth ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : authStep === 'success' && steamUser ? (
+          /* Success State */
+          <div className="space-y-4">
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span className="font-medium text-green-600">Account Steam collegato!</span>
               </div>
             </div>
-          </div>
+            
+            <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+              {steamUser.avatar_full ? (
+                <img 
+                  src={steamUser.avatar_full} 
+                  alt={steamUser.persona_name}
+                  className="w-16 h-16 rounded-lg"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
+                  <User className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+              <div>
+                <p className="font-bold text-lg">{steamUser.persona_name}</p>
+                <p className="text-sm text-muted-foreground font-mono">{steamUser.steam_id}</p>
+                {steamUser.profile_url && (
+                  <a 
+                    href={steamUser.profile_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-1"
+                  >
+                    Profilo Steam <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
+            </div>
 
-          <div className="flex gap-3 justify-end pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
+            <div className="border-t pt-4">
+              <Button 
+                variant="outline" 
+                className="w-full mb-2"
+                onClick={handleImportWishlist}
+                disabled={loadingWishlist}
+              >
+                {loadingWishlist ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Importando...</>
+                ) : (
+                  <>📋 Importa Wishlist ({wishlist.length > 0 ? `${wishlist.length} giochi` : 'clicca per caricare'})</>
+                )}
+              </Button>
+              
+              {wishlist.length > 0 && (
+                <div className="max-h-32 overflow-y-auto bg-muted/30 rounded p-2 mb-2 text-xs">
+                  {wishlist.slice(0, 10).map((g: any) => (
+                    <div key={g.app_id} className="truncate py-0.5">{g.name}</div>
+                  ))}
+                  {wishlist.length > 10 && (
+                    <div className="text-muted-foreground">...e altri {wishlist.length - 10}</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={handleLogout}>
+                Disconnetti
+              </Button>
+              <Button className="flex-1" onClick={handleConfirmConnection} disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Conferma
+              </Button>
+            </div>
+          </div>
+        ) : authStep === 'waiting' ? (
+          /* Waiting for callback */
+          <div className="space-y-4">
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                <span className="font-medium">In attesa del login Steam...</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Completa il login nel browser. La connessione avverrà automaticamente.
+              </p>
+            </div>
+
+            <Button variant="outline" className="w-full" onClick={() => setAuthStep('idle')}>
+              Annulla
+            </Button>
+
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Initial State */
+          <div className="space-y-4">
+            <p className="text-muted-foreground text-sm">
+              Clicca il pulsante qui sotto per accedere con il tuo account Steam. 
+              Verrai reindirizzato al sito ufficiale di Steam per l'autenticazione sicura.
+            </p>
+
+            <Button 
+              className="w-full bg-[#1b2838] hover:bg-[#2a475e] text-white"
+              size="lg"
+              onClick={handleSteamLogin}
               disabled={isLoading}
             >
-              Cancel
+              {isLoading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <img src="/logos/steam.png" alt="" className="mr-2 h-5 w-5" />
+              )}
+              Accedi con Steam
             </Button>
-            <Button type="submit" disabled={isLoading || !apiKey || !steamId}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Connect Steam
-            </Button>
+
+            <div className="text-xs text-muted-foreground text-center">
+              <p>Utilizziamo Steam OpenID per un'autenticazione sicura.</p>
+              <p>Non memorizziamo mai la tua password Steam.</p>
+            </div>
+
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
+
+            <div className="border-t pt-4 mt-4">
+              <Button variant="outline" className="w-full" onClick={onClose}>
+                Annulla
+              </Button>
+            </div>
           </div>
-        </form>
+        )}
       </div>
     </div>
   );

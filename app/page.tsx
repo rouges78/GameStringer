@@ -17,18 +17,24 @@ import {
   FolderOpen,
   Layers,
   Globe,
-  Wand2
+  Wand2,
+  Newspaper,
+  ExternalLink,
+  MessageCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { ScanButton } from '@/components/scan-button';
-import { activityHistory, Activity, activityColors } from '@/lib/activity-history';
+import { activityHistory, Activity, activityColors, activityIcons, ActivityType } from '@/lib/activity-history';
 import { useTranslation, translations } from '@/lib/i18n';
+import { blogService, BlogPost } from '@/lib/blog';
 
 interface RecentActivityProps {
   color: string;
   text: string;
   time: string;
+  type?: ActivityType;
+  icon?: string;
 }
 
 interface StoreStats {
@@ -80,9 +86,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<RecentActivityProps[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
 
   useEffect(() => {
     fetchDashboardData();
+    setBlogPosts(blogService.getRecentPosts(5));
     const interval = setInterval(fetchDashboardData, 120000);
     return () => clearInterval(interval);
   }, []);
@@ -195,11 +203,13 @@ export default function Dashboard() {
       });
 
       try {
-        const recentFromBackend = await activityHistory.getRecent(5);
+        const recentFromBackend = await activityHistory.getRecent(10);
         const recentActivities = recentFromBackend.map((a: Activity) => ({
           color: `bg-${activityColors[a.activity_type]}-500`,
           text: a.title,
-          time: activityHistory.formatRelativeTime(a.timestamp)
+          time: activityHistory.formatRelativeTime(a.timestamp),
+          type: a.activity_type,
+          icon: activityIcons[a.activity_type]
         }));
         setActivities(recentActivities);
       } catch (e) {
@@ -281,17 +291,20 @@ export default function Dashboard() {
               <RefreshCw className="h-5 w-5 text-cyan-500 animate-spin" />
             </div>
           ) : activities.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               {activities
                 .filter((activity, index, arr) => 
                   index === 0 || activity.text !== arr[index - 1].text
                 )
-                .slice(0, 15)
+                .slice(0, 9)
                 .map((activity, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-500/10">
+                  <div key={index} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-500/10 hover:border-cyan-500/30 transition-colors">
+                    <span className="text-base flex-shrink-0">{activity.icon || '📝'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-cyan-100 truncate font-medium">{activity.text}</p>
+                      <p className="text-[9px] text-cyan-300/50">{activity.time}</p>
+                    </div>
                     <div className={`h-2 w-2 rounded-full ${activity.color} flex-shrink-0`} />
-                    <span className="text-[11px] text-cyan-100 flex-1 truncate">{activity.text}</span>
-                    <span className="text-[9px] text-cyan-300/50 whitespace-nowrap">{activity.time}</span>
                   </div>
                 ))}
             </div>
@@ -307,75 +320,39 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <Card className="border-purple-500/20 bg-purple-500/5">
-          <CardContent className="p-4">
-            <h3 className="text-sm font-semibold text-purple-300 mb-4 flex items-center gap-2">
-              <Zap className="h-4 w-4" />
-              {dash.getStarted}
+      {/* Mini Blog / News */}
+      <Card className="border-rose-500/20 bg-rose-500/5">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-rose-300 flex items-center gap-2">
+              <Newspaper className="h-4 w-4" />
+              {dash.newsUpdates}
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Link href="/library" className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 hover:from-purple-500/40 hover:to-violet-600/40 transition-all duration-300 border border-purple-500/30 hover:border-purple-400/50 hover:shadow-lg hover:shadow-purple-500/20 hover:scale-[1.02]">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 shadow-lg shadow-purple-500/30 group-hover:shadow-purple-500/50 transition-all">
-                  <Gamepad2 className="h-5 w-5 text-white" />
+            <Link href="/blog" className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
+              {dash.manage} <ExternalLink className="h-3 w-3" />
+            </Link>
+          </div>
+          
+          <div className="space-y-2">
+            {blogPosts.length > 0 ? blogPosts.map((post) => (
+              <div key={post.id} className="flex items-start gap-3 p-2 rounded-lg bg-rose-950/30 border border-rose-500/10 hover:border-rose-500/30 transition-colors">
+                <span className="text-[10px] text-rose-400/60 w-12 flex-shrink-0">{post.date}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-rose-100 truncate">{post.title}</p>
+                  <p className="text-[10px] text-rose-300/50 truncate">{post.description}</p>
                 </div>
-                <span className="text-xs font-semibold text-purple-200">{dash.library}</span>
-                <span className="text-[10px] text-purple-300/60">{stats.totalGames} {dash.games}</span>
-              </Link>
-              
-              <Link href="/ai-translator" className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-600/20 hover:from-blue-500/40 hover:to-cyan-600/40 transition-all duration-300 border border-blue-500/30 hover:border-blue-400/50 hover:shadow-lg hover:shadow-blue-500/20 hover:scale-[1.02]">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-lg shadow-blue-500/30 group-hover:shadow-blue-500/50 transition-all">
-                  <Languages className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xs font-semibold text-blue-200">{dash.translate}</span>
-                <span className="text-[10px] text-blue-300/60">{dash.aiAssistant}</span>
-              </Link>
-              
-              <Link href="/unity-patcher" className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 hover:from-emerald-500/40 hover:to-teal-600/40 transition-all duration-300 border border-emerald-500/30 hover:border-emerald-400/50 hover:shadow-lg hover:shadow-emerald-500/20 hover:scale-[1.02]">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all">
-                  <Wand2 className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xs font-semibold text-emerald-200">{dash.patcher}</span>
-                <span className="text-[10px] text-emerald-300/60">{stats.patches} {dash.active}</span>
-              </Link>
-              
-              <Link href="/community-hub" className="group flex flex-col items-center gap-2 p-4 rounded-xl bg-gradient-to-br from-orange-500/20 to-amber-600/20 hover:from-orange-500/40 hover:to-amber-600/40 transition-all duration-300 border border-orange-500/30 hover:border-orange-400/50 hover:shadow-lg hover:shadow-orange-500/20 hover:scale-[1.02]">
-                <div className="p-2.5 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-lg shadow-orange-500/30 group-hover:shadow-orange-500/50 transition-all">
-                  <Globe className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xs font-semibold text-orange-200">{dash.community}</span>
-                <span className="text-[10px] text-orange-300/60">{dash.packMod}</span>
-              </Link>
-            </div>
-
-            {/* Strumenti secondari */}
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-purple-500/20">
-              <Link href="/batch-translation">
-                <Button variant="outline" size="sm" className="h-8 text-xs border-amber-500/30 hover:bg-amber-500/10 text-amber-400">
-                  <Layers className="h-3.5 w-3.5 mr-1" />
-                  {dash.batch}
-                </Button>
-              </Link>
-              <Link href="/projects">
-                <Button variant="outline" size="sm" className="h-8 text-xs border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-400">
-                  <FolderOpen className="h-3.5 w-3.5 mr-1" />
-                  {dash.projects}
-                </Button>
-              </Link>
-              <Link href="/stats">
-                <Button variant="outline" size="sm" className="h-8 text-xs border-indigo-500/30 hover:bg-indigo-500/10 text-indigo-400">
-                  <BarChart3 className="h-3.5 w-3.5 mr-1" />
-                  {dash.statistics}
-                </Button>
-              </Link>
-              <Link href="/settings">
-                <Button variant="outline" size="sm" className="h-8 text-xs border-gray-500/30 hover:bg-gray-500/10 text-gray-400">
-                  <Settings className="h-3.5 w-3.5 mr-1" />
-                  {dash.settings}
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">{post.tag}</span>
+              </div>
+            )) : (
+              <p className="text-xs text-rose-300/50 text-center py-4">Nessun post.</p>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-rose-500/20">
+            <MessageCircle className="h-3 w-3 text-rose-400/50" />
+            <span className="text-[10px] text-rose-300/50">{dash.suggestions}</span>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Progress Card */}

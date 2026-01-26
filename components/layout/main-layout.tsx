@@ -7,7 +7,8 @@ import { useVersion } from '@/lib/version';
 import { Button } from '@/components/ui/button';
 import { 
   Home, 
-  Gamepad2, 
+  Gamepad2,
+  Bot, 
   FileText, 
   Store, 
   Settings,
@@ -42,7 +43,14 @@ import {
   Layers,
   ShieldCheck,
   Film,
-  FolderTree
+  FileArchive,
+  FolderTree,
+  Info,
+  ShoppingBag,
+  FolderOpen,
+  AudioLines,
+  Glasses,
+  MessageSquare
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -110,8 +118,12 @@ const getNavGroups = (t: (key: string) => string) => [
     collapsible: true,
     items: [
       { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
+      { name: 'AI Review', href: '/ai-review', icon: Bot },
+      { name: 'OCR Translator', href: '/ocr-translator', icon: Scan },
+      { name: 'Emotion', href: '/emotion-translator', icon: Sparkles },
       { name: t('nav.multiLlm'), href: '/translator/compare', icon: Brain },
       { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
+      { name: t('nav.voiceClone'), href: '/voice-clone', icon: AudioLines },
       { name: t('nav.subtitles') || 'Sottotitoli', href: '/subtitles', icon: Film },
       { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
       { name: t('nav.dictionary'), href: '/memory', icon: Database },
@@ -129,7 +141,17 @@ const getNavGroups = (t: (key: string) => string) => [
     icon: Wrench,
     collapsible: true,
     items: [
-      { name: t('nav.patcher'), href: '/unity-patcher', icon: Wand2 },
+      { 
+        name: t('nav.patcher'), 
+        href: '/unity-patcher', 
+        icon: Wand2,
+        subItems: [
+          { name: t('nav.ueTranslator') || 'UE Translator', href: '/unreal-translator', icon: Cpu },
+          { name: t('nav.telltalePatcher') || 'Telltale Patcher', href: '/telltale-patcher', icon: Gamepad2 },
+          { name: 'Unity Bundle', href: '/unity-bundle', icon: FileArchive },
+          { name: 'Nexus Mode', href: '/nexus-mods', icon: Globe },
+        ]
+      },
       { name: t('nav.retro') || 'Retro ROM', href: '/retro', icon: Gamepad2 },
       { name: t('nav.injector'), href: '/injector', icon: Cpu },
       { name: t('nav.crawler'), href: '/crawler', icon: Scan },
@@ -138,6 +160,9 @@ const getNavGroups = (t: (key: string) => string) => [
       { name: t('nav.manga') || 'Manga', href: '/manga-translator', icon: BookOpen },
       { name: t('nav.texture') || 'Texture', href: '/texture-translator', icon: Layers },
       { name: 'QA Check', href: '/qa-check', icon: ShieldCheck },
+      { name: t('nav.qualityGates'), href: '/quality-gates', icon: ShieldCheck },
+      { name: t('nav.vrOverlay'), href: '/vr-overlay', icon: Glasses },
+      { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
     ],
     colorClass: 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20',
     activeClass: 'bg-emerald-500/20 backdrop-blur-md text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/20',
@@ -146,13 +171,18 @@ const getNavGroups = (t: (key: string) => string) => [
     underlineClass: 'bg-emerald-400',
     labelColor: 'text-emerald-400/60',
   },
-  // COMMUNITY & SETTINGS
+  // COMMUNITY & SETTINGS - Collapsabile
   {
-    label: '',
+    label: t('nav.resources'),
+    icon: FolderOpen,
+    collapsible: true,
     items: [
-      { name: t('nav.community'), href: '/community', icon: Users },
+      { name: t('nav.community'), href: '/community-hub', icon: Users },
+      { name: 'Stores', href: '/stores', icon: ShoppingBag },
       { name: t('nav.guide'), href: '/guide', icon: BookOpen },
+      { name: t('nav.projectManager'), href: '/project-manager', icon: FolderTree, dataTutorial: 'nav-project-manager' },
       { name: t('nav.settings'), href: '/settings', icon: Settings },
+      { name: 'Info', href: '/info', icon: Info },
     ],
     colorClass: 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/20',
     activeClass: 'bg-orange-500/20 backdrop-blur-md text-orange-400 border border-orange-500/30 shadow-lg shadow-orange-500/20',
@@ -468,7 +498,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [systemStatus, setSystemStatus] = useState<SystemStatus>({
     neuralEngine: { status: 'online', color: 'bg-green-500', text: 'ON' },
     steamApi: { status: 'connected', color: 'bg-blue-500', text: 'OK' },
-    cache: { percentage: 0, color: 'bg-purple-500', text: '0%' }
+    cache: { percentage: 0, color: 'bg-cyan-500', text: '0%' }
   });
   const [isOnline, setIsOnline] = useState(true);
   const pathname = usePathname();
@@ -553,7 +583,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       
       const cache = {
         percentage: cachePercentage,
-        color: cachePercentage > 80 ? 'bg-red-500' : cachePercentage > 60 ? 'bg-yellow-500' : 'bg-purple-500',
+        color: cachePercentage > 80 ? 'bg-red-500' : cachePercentage > 60 ? 'bg-yellow-500' : 'bg-cyan-500',
         text: `${cachePercentage}%`
       };
 
@@ -588,10 +618,23 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="relative flex items-center h-16 px-3 border-b">
             {sidebarOpen && (
               <div className="flex items-center gap-2 flex-1">
-                <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500 shadow-lg">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-lg font-bold bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <img 
+                  src="/logohires.png" 
+                  alt="GameStringer" 
+                  className="h-[55px] w-auto animate-logo-glow"
+                  style={{
+                    filter: 'drop-shadow(0 0 4px rgba(139, 92, 246, 0.3))',
+                    animation: 'logoGlow 4s ease-in-out infinite'
+                  }}
+                />
+                <span 
+                  className="text-lg font-bold bg-clip-text text-transparent"
+                  style={{
+                    backgroundImage: 'linear-gradient(90deg, #8B5CF6, #6366F1, #38BDF8, #8B5CF6)',
+                    backgroundSize: '200% 100%',
+                    animation: 'gradientMove 3s ease-in-out infinite'
+                  }}
+                >
                   GameStringer
                 </span>
               </div>
@@ -621,17 +664,17 @@ export function MainLayout({ children }: MainLayoutProps) {
               const toggleGroup = () => {
                 setExpandedGroups(prev => 
                   prev.includes(group.label) 
-                    ? prev.filter(g => g !== group.label)
-                    : [...prev, group.label]
+                    ? [] // Chiudi se già aperto
+                    : [group.label] // Apri solo questo, chiudi gli altri
                 );
               };
               const GroupIcon = group.icon;
               
               return (
                 <div key={groupIndex}>
-                  {/* Separatore tra gruppi (solo se non c'è label) */}
-                  {groupIndex > 0 && !group.label && (
-                    <div className="my-1.5 mx-2 border-t border-border/50" />
+                  {/* Separatore lucido dopo Core (Dashboard/Library) */}
+                  {groupIndex === 1 && (
+                    <div className="my-2 mx-2 h-px bg-gradient-to-r from-transparent via-slate-500/50 to-transparent" />
                   )}
                   
                   {/* Gruppo collapsabile */}
@@ -669,35 +712,71 @@ export function MainLayout({ children }: MainLayoutProps) {
                       {/* Sottomenu espandibile */}
                       <div className={cn(
                         "overflow-hidden transition-all duration-200",
-                        isExpanded && sidebarOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                        isExpanded && sidebarOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
                       )}>
                         <div className="pl-4 space-y-0.5 py-1">
-                          {group.items.map((item) => {
+                          {group.items.map((item: any) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
+                            const hasSubItems = item.subItems && item.subItems.length > 0;
+                            const isSubActive = hasSubItems && item.subItems.some((sub: any) => pathname === sub.href);
                             
                             return (
-                              <Link key={item.href} href={item.href}>
-                                <Button
-                                  variant="ghost"
-                                  className={cn(
-                                    "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8",
-                                    isActive ? group.activeClass : group.colorClass
-                                  )}
-                                >
-                                  <Icon className={cn(
-                                    "h-3.5 w-3.5 transition-colors duration-200",
-                                    isActive ? "" : cn(group.iconClass, group.hoverIconClass)
-                                  )} />
-                                  <span className="text-xs relative">
-                                    {item.name}
-                                    <span className={cn(
-                                      "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
-                                      group.underlineClass
+                              <div key={item.href}>
+                                <Link href={item.href}>
+                                  <Button
+                                    variant="ghost"
+                                    className={cn(
+                                      "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8",
+                                      (isActive || isSubActive) ? group.activeClass : group.colorClass
+                                    )}
+                                  >
+                                    <Icon className={cn(
+                                      "h-3.5 w-3.5 transition-colors duration-200",
+                                      (isActive || isSubActive) ? "" : cn(group.iconClass, group.hoverIconClass)
                                     )} />
-                                  </span>
-                                </Button>
-                              </Link>
+                                    <span className="text-xs relative">
+                                      {item.name}
+                                      <span className={cn(
+                                        "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
+                                        group.underlineClass
+                                      )} />
+                                    </span>
+                                  </Button>
+                                </Link>
+                                {/* Sub-items */}
+                                {hasSubItems && (
+                                  <div className="pl-4 space-y-0.5 py-0.5">
+                                    {item.subItems.map((subItem: any) => {
+                                      const SubIcon = subItem.icon;
+                                      const isSubItemActive = pathname === subItem.href;
+                                      return (
+                                        <Link key={subItem.href} href={subItem.href}>
+                                          <Button
+                                            variant="ghost"
+                                            className={cn(
+                                              "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-7",
+                                              isSubItemActive ? group.activeClass : "text-emerald-700 hover:text-emerald-400 hover:bg-emerald-500/20"
+                                            )}
+                                          >
+                                            <SubIcon className={cn(
+                                              "h-3 w-3 transition-colors duration-200",
+                                              isSubItemActive ? "" : "text-emerald-700 group-hover:text-emerald-400"
+                                            )} />
+                                            <span className="text-[10px] relative">
+                                              {subItem.name}
+                                              <span className={cn(
+                                                "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
+                                                group.underlineClass
+                                              )} />
+                                            </span>
+                                          </Button>
+                                        </Link>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
                             );
                           })}
                         </div>
@@ -761,24 +840,6 @@ export function MainLayout({ children }: MainLayoutProps) {
             })}
           </nav>
           
-          {/* Footer minimo - solo versione cliccabile */}
-          <div className="p-2 shrink-0">
-            <button 
-              onClick={() => setChangelogOpen(true)}
-              className={cn(
-                "flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-purple-400 transition-colors cursor-pointer",
-                sidebarOpen ? "justify-center w-full" : "justify-center"
-              )}
-              title="Changelog"
-            >
-{isOnline ? (
-                <Wifi className="w-3.5 h-3.5 text-green-500 animate-pulse" />
-              ) : (
-                <WifiOff className="w-3.5 h-3.5 text-red-500" />
-              )}
-              <span className="font-mono">v{version}</span>
-            </button>
-          </div>
         </aside>
 
         {/* Main Content */}
@@ -809,69 +870,95 @@ export function MainLayout({ children }: MainLayoutProps) {
                     <ChevronDown className="h-3 w-3 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="center" className="w-36">
-                  <DropdownMenuItem onClick={() => setLanguage('en')} className="gap-2">
-                    <span className="w-6 h-4 rounded-sm bg-gradient-to-b from-blue-600 to-red-600 flex items-center justify-center text-[8px] text-white font-bold">EN</span>
-                    <span>English</span>
-                    {language === 'en' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                <DropdownMenuContent align="center" className="w-40">
+                  <DropdownMenuItem onClick={() => setLanguage('en')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm">
+                      <span className="w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2060%2030%22%3E%3CclipPath%20id%3D%22a%22%3E%3Cpath%20d%3D%22M0%200v30h60V0z%22%2F%3E%3C%2FclipPath%3E%3CclipPath%20id%3D%22b%22%3E%3Cpath%20d%3D%22M30%2015h30v15zv15H0zH0V0zV0h30z%22%2F%3E%3C%2FclipPath%3E%3Cg%20clip-path%3D%22url(%23a)%22%3E%3Cpath%20d%3D%22M0%200v30h60V0z%22%20fill%3D%22%23012169%22%2F%3E%3Cpath%20d%3D%22M0%200l60%2030m0-30L0%2030%22%20stroke%3D%22%23fff%22%20stroke-width%3D%226%22%2F%3E%3Cpath%20d%3D%22M0%200l60%2030m0-30L0%2030%22%20clip-path%3D%22url(%23b)%22%20stroke%3D%22%23C8102E%22%20stroke-width%3D%224%22%2F%3E%3Cpath%20d%3D%22M30%200v30M0%2015h60%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2210%22%2F%3E%3Cpath%20d%3D%22M30%200v30M0%2015h60%22%20stroke%3D%22%23C8102E%22%20stroke-width%3D%226%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] bg-cover bg-center block w-full h-full" />
+                    </span>
+                    <span className="flex-1">English</span>
+                    {language === 'en' && <Check className="h-4 w-4 text-blue-400" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('it')} className="gap-2">
-                    <span className="w-6 h-4 rounded-sm overflow-hidden flex">
+                  <DropdownMenuItem onClick={() => setLanguage('it')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
                       <span className="w-1/3 bg-green-500" />
                       <span className="w-1/3 bg-white" />
                       <span className="w-1/3 bg-red-500" />
                     </span>
-                    <span>Italiano</span>
-                    {language === 'it' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                    <span className="flex-1">Italiano</span>
+                    {language === 'it' && <Check className="h-4 w-4 text-blue-400" />}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setLanguage('es')} className="gap-2">
-                    <span className="w-6 h-4 rounded-sm overflow-hidden flex">
-                      <span className="w-1/3 bg-red-500" />
-                      <span className="w-1/3 bg-yellow-400" />
-                      <span className="w-1/3 bg-red-500" />
+                  <DropdownMenuItem onClick={() => setLanguage('es')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                      <span className="h-1/4 bg-red-600" />
+                      <span className="h-2/4 bg-yellow-400" />
+                      <span className="h-1/4 bg-red-600" />
                     </span>
-                    <span>Español</span>
-                    {language === 'es' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                    <span className="flex-1">Español</span>
+                    {language === 'es' && <Check className="h-4 w-4 text-blue-400" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('fr')} className="gap-2">
-                    <span className="w-6 h-4 rounded-sm overflow-hidden flex">
+                  <DropdownMenuItem onClick={() => setLanguage('fr')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
                       <span className="w-1/3 bg-blue-600" />
                       <span className="w-1/3 bg-white" />
                       <span className="w-1/3 bg-red-500" />
                     </span>
-                    <span>Français</span>
-                    {language === 'fr' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                    <span className="flex-1">Français</span>
+                    {language === 'fr' && <Check className="h-4 w-4 text-blue-400" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('de')} className="gap-2">
-                    <span className="w-6 h-4 rounded-sm overflow-hidden flex flex-col">
+                  <DropdownMenuItem onClick={() => setLanguage('de')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
                       <span className="h-1/3 bg-black" />
                       <span className="h-1/3 bg-red-500" />
                       <span className="h-1/3 bg-yellow-400" />
                     </span>
-                    <span>Deutsch</span>
-                    {language === 'de' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                    <span className="flex-1">Deutsch</span>
+                    {language === 'de' && <Check className="h-4 w-4 text-blue-400" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('ja')} className="gap-2">
-                    <span className="w-6 h-4 rounded-sm bg-white flex items-center justify-center">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                  <DropdownMenuItem onClick={() => setLanguage('ja')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
+                      <span className="w-3 h-3 rounded-full bg-red-500" />
                     </span>
-                    <span>日本語</span>
-                    {language === 'ja' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                    <span className="flex-1">日本語</span>
+                    {language === 'ja' && <Check className="h-4 w-4 text-blue-400" />}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('zh')} className="gap-2">
-                    <span className="w-6 h-4 rounded-sm bg-red-500 flex items-center justify-center">
-                      <span className="text-[6px] text-yellow-400">★</span>
+                  <DropdownMenuItem onClick={() => setLanguage('zh')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-red-500 flex items-center justify-center">
+                      <span className="text-[8px] text-yellow-400">★</span>
                     </span>
-                    <span>中文</span>
-                    {language === 'zh' && <Check className="ml-auto h-4 w-4 text-primary" />}
+                    <span className="flex-1">中文</span>
+                    {language === 'zh' && <Check className="h-4 w-4 text-blue-400" />}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
             
-            {/* Supporta, Profilo, Notifica, Tema, Power - a destra */}
+            {/* Wifi/Versione/Sito + Supporta, Profilo, Notifica, Tema, Power - a destra */}
             <div className="flex items-center gap-3">
+              {/* Link sito + versione */}
+              <a 
+                href="http://www.gamestringer.ai/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-blue-400 transition-colors"
+                title="Visita gamestringer.ai"
+              >
+                <Globe className="w-3 h-3" />
+                <span className="hidden sm:inline">gamestringer.ai</span>
+              </a>
+              <button 
+                onClick={() => setChangelogOpen(true)}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-blue-400 transition-colors"
+                title="Changelog"
+              >
+                {isOnline ? (
+                  <Wifi className="w-3 h-3 text-green-500" />
+                ) : (
+                  <WifiOff className="w-3 h-3 text-red-500" />
+                )}
+                <span className="font-mono hidden sm:inline">v{version}</span>
+              </button>
+              <div className="w-px h-4 bg-border" />
               <SupportButton />
               <ProfileHeader />
               <NotificationIndicator 
@@ -927,7 +1014,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     const title = line.replace('### ', '').replace(/`[^`]+`/g, '');
                     return (
                       <div key={i} className="flex items-center gap-2 mt-6 mb-3">
-                        <div className="h-8 w-1 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full" />
+                        <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full" />
                         <h3 className="text-lg font-bold text-white">{title}</h3>
                       </div>
                     );
@@ -936,7 +1023,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   if (line.startsWith('**') && line.endsWith('**')) {
                     const text = line.replace(/\*\*/g, '');
                     return (
-                      <p key={i} className="text-sm font-semibold text-purple-300 mt-4 mb-1">{text}</p>
+                      <p key={i} className="text-sm font-semibold text-blue-300 mt-4 mb-1">{text}</p>
                     );
                   }
                   // Lista items
@@ -944,7 +1031,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                     const content = line.replace('- ', '');
                     return (
                       <div key={i} className="flex items-start gap-2 ml-2">
-                        <span className="text-purple-400 mt-1">•</span>
+                        <span className="text-blue-400 mt-1">•</span>
                         <span className="text-sm text-gray-300">{content}</span>
                       </div>
                     );

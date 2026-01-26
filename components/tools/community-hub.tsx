@@ -203,7 +203,7 @@ export function CommunityHub() {
       case 'verified':
         return <Badge className="bg-green-500"><CheckCircle className="w-3 h-3 mr-1" />{t('communityHub.verified')}</Badge>;
       case 'featured':
-        return <Badge className="bg-purple-500"><Award className="w-3 h-3 mr-1" />{t('communityHub.featured')}</Badge>;
+        return <Badge className="bg-orange-500"><Award className="w-3 h-3 mr-1" />{t('communityHub.featured')}</Badge>;
       case 'published':
         return <Badge variant="secondary">{t('communityHub.published')}</Badge>;
       default:
@@ -217,152 +217,124 @@ export function CommunityHub() {
 
   return (
     <div className="space-y-4">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 p-3">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
-              <Globe className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
-                {t('communityHub.title')}
-              </h2>
-              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
-                {t('communityHub.subtitle')}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={loadData}
-              className="bg-white/20 text-white hover:bg-white/30 border-white/30"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              {t('communityHub.refresh')}
-            </Button>
-            <Button 
-              size="sm"
-              onClick={() => setShowUploadDialog(true)}
-              className="bg-white text-indigo-600 hover:bg-white/90 shadow-lg"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {t('communityHub.uploadPack')}
-            </Button>
-          </div>
-        </div>
+      {/* Action buttons */}
+      <div className="flex items-center justify-end gap-2">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={loadData}
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          {t('communityHub.refresh')}
+        </Button>
+        <Button 
+          size="sm"
+          onClick={() => setShowUploadDialog(true)}
+          className="bg-orange-500 hover:bg-orange-600"
+        >
+          <Upload className="h-4 w-4 mr-2" />
+          {t('communityHub.uploadPack')}
+        </Button>
       </div>
 
-      {/* Stats */}
+      {/* Compact Stats */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <Package className="h-6 w-6 mx-auto mb-2 text-blue-500" />
-              <p className="text-2xl font-bold">{stats.totalPacks}</p>
-              <p className="text-xs text-muted-foreground">{t('communityHub.totalPacks')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <Download className="h-6 w-6 mx-auto mb-2 text-green-500" />
-              <p className="text-2xl font-bold">{(stats.totalDownloads / 1000).toFixed(1)}k</p>
-              <p className="text-xs text-muted-foreground">{t('communityHub.downloads')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <Users className="h-6 w-6 mx-auto mb-2 text-purple-500" />
-              <p className="text-2xl font-bold">{stats.totalContributors}</p>
-              <p className="text-xs text-muted-foreground">{t('communityHub.contributors')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <FileText className="h-6 w-6 mx-auto mb-2 text-orange-500" />
-              <p className="text-2xl font-bold">{(stats.totalStrings / 1000).toFixed(0)}k</p>
-              <p className="text-xs text-muted-foreground">{t('communityHub.strings')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <Globe className="h-6 w-6 mx-auto mb-2 text-cyan-500" />
-              <p className="text-2xl font-bold">{stats.languagesCovered}</p>
-              <p className="text-xs text-muted-foreground">{t('communityHub.languages')}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="h-6 w-6 mx-auto mb-2 text-pink-500" />
-              <p className="text-2xl font-bold">{stats.gamesCovered}</p>
-              <p className="text-xs text-muted-foreground">{t('communityHub.games')}</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+            <Package className="h-4 w-4 text-orange-500" />
+            <div>
+              <p className="text-sm font-bold">{stats.totalPacks}</p>
+              <p className="text-[10px] text-muted-foreground">{t('communityHub.packs')}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+            <Download className="h-4 w-4 text-green-500" />
+            <div>
+              <p className="text-sm font-bold">{(stats.totalDownloads / 1000).toFixed(1)}k</p>
+              <p className="text-[10px] text-muted-foreground">download</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+            <Users className="h-4 w-4 text-orange-400" />
+            <div>
+              <p className="text-sm font-bold">{stats.totalContributors}</p>
+              <p className="text-[10px] text-muted-foreground">{t('communityHub.contributors')}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+            <FileText className="h-4 w-4 text-orange-500" />
+            <div>
+              <p className="text-sm font-bold">{(stats.totalStrings / 1000).toFixed(0)}k</p>
+              <p className="text-[10px] text-muted-foreground">stringhe</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+            <Globe className="h-4 w-4 text-cyan-500" />
+            <div>
+              <p className="text-sm font-bold">{stats.languagesCovered}</p>
+              <p className="text-[10px] text-muted-foreground">lingue</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+            <TrendingUp className="h-4 w-4 text-pink-500" />
+            <div>
+              <p className="text-sm font-bold">{stats.gamesCovered}</p>
+              <p className="text-[10px] text-muted-foreground">giochi</p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Search & Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[250px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={t('communityHub.searchPlaceholder')}
-                  value={filters.query}
-                  onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select
-              value={filters.targetLanguage || 'all'}
-              onValueChange={(v) => setFilters(f => ({ ...f, targetLanguage: v === 'all' ? '' : v }))}
-            >
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder={t('communityHub.languages')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('communityHub.allLanguages')}</SelectItem>
-                {languages.map(l => (
-                  <SelectItem key={l.code} value={l.code}>{l.flag} {l.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={filters.sortBy}
-              onValueChange={(v: any) => setFilters(f => ({ ...f, sortBy: v }))}
-            >
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder={t('communityHub.sortBy')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="downloads">{t('communityHub.mostDownloaded')}</SelectItem>
-                <SelectItem value="rating">{t('communityHub.highestRated')}</SelectItem>
-                <SelectItem value="updated">{t('communityHub.mostRecent')}</SelectItem>
-                <SelectItem value="completion">{t('communityHub.completeness')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Search & Filters - Compact */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('communityHub.searchPlaceholder')}
+            value={filters.query}
+            onChange={(e) => setFilters(f => ({ ...f, query: e.target.value }))}
+            className="pl-10 h-9"
+          />
+        </div>
+        <Select
+          value={filters.targetLanguage || 'all'}
+          onValueChange={(v) => setFilters(f => ({ ...f, targetLanguage: v === 'all' ? '' : v }))}
+        >
+          <SelectTrigger className="w-[140px] h-9">
+            <SelectValue placeholder={t('communityHub.languages')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('communityHub.allLanguages')}</SelectItem>
+            {languages.map(l => (
+              <SelectItem key={l.code} value={l.code}>{l.flag} {l.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={filters.sortBy}
+          onValueChange={(v: any) => setFilters(f => ({ ...f, sortBy: v }))}
+        >
+          <SelectTrigger className="w-[130px] h-9">
+            <SelectValue placeholder={t('communityHub.sortBy')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="downloads">{t('communityHub.mostDownloaded')}</SelectItem>
+            <SelectItem value="rating">{t('communityHub.highestRated')}</SelectItem>
+            <SelectItem value="updated">{t('communityHub.mostRecent')}</SelectItem>
+            <SelectItem value="completion">{t('communityHub.completeness')}</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Tabs */}
       <Tabs defaultValue="browse">
-        <TabsList>
-          <TabsTrigger value="browse">{t('communityHub.browsePacks')}</TabsTrigger>
-          <TabsTrigger value="featured">{t('communityHub.featured')}</TabsTrigger>
-          <TabsTrigger value="activity">{t('communityHub.recentActivity')}</TabsTrigger>
+        <TabsList className="h-8">
+          <TabsTrigger value="browse" className="text-xs h-7">{t('communityHub.browsePacks')}</TabsTrigger>
+          <TabsTrigger value="featured" className="text-xs h-7">⭐ {t('communityHub.featured')}</TabsTrigger>
+          <TabsTrigger value="activity" className="text-xs h-7">{t('communityHub.recentActivity')}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="browse" className="space-y-4 mt-4">
+        <TabsContent value="browse" className="space-y-3 mt-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -376,86 +348,70 @@ export function CommunityHub() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {packs.map(pack => (
                 <Card key={pack.id} className="hover:border-primary/50 transition-colors">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getStatusBadge(pack.status)}
-                          <span className="text-lg">
-                            {getLanguageFlag(pack.sourceLanguage)} → {getLanguageFlag(pack.targetLanguage)}
+                  <CardContent className="p-3">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-sm">
+                            {getLanguageFlag(pack.sourceLanguage)}→{getLanguageFlag(pack.targetLanguage)}
                           </span>
+                          {getStatusBadge(pack.status)}
                         </div>
-                        <CardTitle className="text-lg">{pack.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-2 mt-1">
-                          <span className="font-medium">{pack.gameName}</span>
-                          <span>•</span>
-                          <span>v{pack.version}</span>
-                        </CardDescription>
+                        <h3 className="font-semibold text-sm truncate">{pack.name}</h3>
+                        <p className="text-xs text-muted-foreground truncate">{pack.gameName}</p>
                       </div>
-                      <div className="flex items-center gap-1 text-yellow-500">
-                        <Star className="h-4 w-4 fill-current" />
-                        <span className="font-medium">{pack.rating.toFixed(1)}</span>
-                        <span className="text-xs text-muted-foreground">({pack.ratingCount})</span>
+                      <div className="flex items-center gap-0.5 text-yellow-500 ml-2">
+                        <Star className="h-3 w-3 fill-current" />
+                        <span className="text-xs font-medium">{pack.rating.toFixed(1)}</span>
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent className="pb-3">
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                      {pack.description}
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>{t('communityHub.completion')}</span>
-                        <span className="font-medium">{pack.completionPercentage}%</span>
-                      </div>
-                      <Progress value={pack.completionPercentage} className="h-2" />
+
+                    {/* Progress */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <Progress value={pack.completionPercentage} className="h-1.5 flex-1" />
+                      <span className="text-[10px] text-muted-foreground w-8">{pack.completionPercentage}%</span>
                     </div>
-                    <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
+
+                    {/* Stats */}
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mb-2">
+                      <span className="flex items-center gap-0.5">
                         <Download className="h-3 w-3" />
                         {pack.downloads.toLocaleString()}
                       </span>
-                      <span className="flex items-center gap-1">
+                      <span className="flex items-center gap-0.5">
                         <FileText className="h-3 w-3" />
-                        {pack.translatedStrings.toLocaleString()} strings
+                        {(pack.translatedStrings / 1000).toFixed(1)}k
                       </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {pack.contributors.length + 1}
-                      </span>
-                    </div>
-                    {pack.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-3">
-                        {pack.tags.slice(0, 3).map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter className="pt-0 gap-2">
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewPack(pack)}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      {t('communityHub.details')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleDownloadPack(pack.id)}
-                      disabled={isDownloading === pack.id || communityHubService.isPackInstalled(pack.id)}
-                    >
-                      {isDownloading === pack.id ? (
-                        <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
-                      ) : communityHubService.isPackInstalled(pack.id) ? (
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                      ) : (
-                        <Download className="h-4 w-4 mr-1" />
+                      {pack.tags.length > 0 && (
+                        <Badge variant="outline" className="text-[10px] h-4 px-1">{pack.tags[0]}</Badge>
                       )}
-                      {communityHubService.isPackInstalled(pack.id) ? t('communityHub.installed') : t('communityHub.download')}
-                    </Button>
-                  </CardFooter>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleViewPack(pack)}>
+                        {t('communityHub.details')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 h-7 text-xs bg-orange-500 hover:bg-orange-600"
+                        onClick={() => handleDownloadPack(pack.id)}
+                        disabled={isDownloading === pack.id || communityHubService.isPackInstalled(pack.id)}
+                      >
+                        {isDownloading === pack.id ? (
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                        ) : communityHubService.isPackInstalled(pack.id) ? (
+                          <><CheckCircle className="h-3 w-3 mr-1" />✓</>
+                        ) : (
+                          <><Download className="h-3 w-3 mr-1" />{t('communityHub.download')}</>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
@@ -465,10 +421,10 @@ export function CommunityHub() {
         <TabsContent value="featured" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {packs.filter(p => p.status === 'featured' || p.status === 'verified').slice(0, 6).map(pack => (
-              <Card key={pack.id} className="border-2 border-purple-500/30">
+              <Card key={pack.id} className="border-2 border-orange-500/30">
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Award className="h-5 w-5 text-purple-500" />
+                    <Award className="h-5 w-5 text-orange-500" />
                     <CardTitle className="text-base">{pack.name}</CardTitle>
                   </div>
                   <CardDescription>{pack.gameName}</CardDescription>
@@ -481,7 +437,7 @@ export function CommunityHub() {
                     </div>
                     <span className="text-sm text-muted-foreground">{pack.downloads.toLocaleString()} download</span>
                   </div>
-                  <Button className="w-full" size="sm" onClick={() => handleViewPack(pack)}>
+                  <Button className="w-full bg-orange-500 hover:bg-orange-600" size="sm" onClick={() => handleViewPack(pack)}>
                     {t('communityHub.view')}
                   </Button>
                 </CardContent>
@@ -503,7 +459,7 @@ export function CommunityHub() {
                       activity.type === 'new_pack' ? 'bg-green-500/10 text-green-500' :
                       activity.type === 'update' ? 'bg-blue-500/10 text-blue-500' :
                       activity.type === 'milestone' ? 'bg-yellow-500/10 text-yellow-500' :
-                      'bg-purple-500/10 text-purple-500'
+                      'bg-orange-500/10 text-orange-500'
                     }`}>
                       {activity.type === 'new_pack' && <Plus className="h-4 w-4" />}
                       {activity.type === 'update' && <RefreshCw className="h-4 w-4" />}

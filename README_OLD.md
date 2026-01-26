@@ -713,7 +713,6 @@ Ringraziamo tutti i maintainer e contributor delle librerie open source utilizza
 - [Troubleshooting](https://github.com/tuousername/gamestringer-app/wiki/Troubleshooting)
 
 ### **Community**
-- [Discord Server](https://discord.gg/gamestringer)
 - [Forum Discussioni](https://github.com/tuousername/gamestringer-app/discussions)
 - [Reddit Community](https://reddit.com/r/GameTranslator)
 

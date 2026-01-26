@@ -49,87 +49,73 @@ export default function SubtitlesPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-pink-600 via-rose-600 to-red-600 p-6 text-white">
-        <div className="absolute inset-0 bg-black/10" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+    <div className="container mx-auto p-6 space-y-6 animate-fade-in">
+      {/* Hero Header - Compatto e Blu */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-4 text-white">
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
               <Film className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Subtitle Translator</h1>
-              <p className="text-white/80 text-sm">Traduci sottotitoli video in qualsiasi lingua</p>
+              <h1 className="text-xl font-bold">{t('subtitleTranslator.title')}</h1>
+              <p className="text-white/80 text-xs">{t('subtitleTranslator.subtitle')}</p>
             </div>
           </div>
           
-          <div className="flex gap-4 mt-4">
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm">
-              <FileText className="w-4 h-4" />
-              <div>
-                <p className="text-xs text-white/70">Formati</p>
-                <p className="text-sm font-medium">SRT • VTT • ASS</p>
-              </div>
+          <div className="flex gap-3">
+            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
+              <FileText className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">{t('subtitleTranslator.formats')}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm">
-              <Languages className="w-4 h-4" />
-              <div>
-                <p className="text-xs text-white/70">Lingue</p>
-                <p className="text-sm font-medium">12+ supportate</p>
-              </div>
+            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
+              <Languages className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">12+ {t('subtitleTranslator.languages')}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm">
-              <Zap className="w-4 h-4" />
-              <div>
-                <p className="text-xs text-white/70">Traduzione</p>
-                <p className="text-sm font-medium">AI + Gratuita</p>
-              </div>
+            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
+              <Zap className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">{t('subtitleTranslator.aiFree')}</span>
             </div>
           </div>
         </div>
-        
-        {/* Decorative elements */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
       </div>
 
-      {/* Features */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
-          <div className="p-2 bg-pink-500/10 rounded-lg">
-            <Film className="w-4 h-4 text-pink-500" />
+      {/* Features - Compatto */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
+          <div className="p-1.5 bg-blue-500/10 rounded">
+            <Film className="w-3.5 h-3.5 text-blue-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">Multi-formato</p>
-            <p className="text-xs text-muted-foreground">Import/export qualsiasi formato</p>
+            <p className="text-xs font-medium">{t('subtitleTranslator.multiFormat')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('subtitleTranslator.importExport')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
-          <div className="p-2 bg-rose-500/10 rounded-lg">
-            <Clock className="w-4 h-4 text-rose-500" />
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
+          <div className="p-1.5 bg-indigo-500/10 rounded">
+            <Clock className="w-3.5 h-3.5 text-indigo-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">Timing preservato</p>
-            <p className="text-xs text-muted-foreground">Sincronizzazione intatta</p>
+            <p className="text-xs font-medium">{t('subtitleTranslator.timingPreserved')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('subtitleTranslator.sync')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
-          <div className="p-2 bg-red-500/10 rounded-lg">
-            <Sparkles className="w-4 h-4 text-red-500" />
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
+          <div className="p-1.5 bg-teal-500/10 rounded">
+            <Sparkles className="w-3.5 h-3.5 text-teal-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">Editor integrato</p>
-            <p className="text-xs text-muted-foreground">Modifica ogni riga</p>
+            <p className="text-xs font-medium">{t('subtitleTranslator.integratedEditor')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('subtitleTranslator.editLines')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border">
-          <div className="p-2 bg-orange-500/10 rounded-lg">
-            <Languages className="w-4 h-4 text-orange-500" />
+        <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border">
+          <div className="p-1.5 bg-cyan-500/10 rounded">
+            <Languages className="w-3.5 h-3.5 text-cyan-500" />
           </div>
           <div>
-            <p className="text-sm font-medium">Validazione QA</p>
-            <p className="text-xs text-muted-foreground">Rileva problemi automaticamente</p>
+            <p className="text-xs font-medium">{t('subtitleTranslator.qaValidation')}</p>
+            <p className="text-[10px] text-muted-foreground">{t('subtitleTranslator.autoCheck')}</p>
           </div>
         </div>
       </div>

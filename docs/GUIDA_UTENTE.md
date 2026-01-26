@@ -8,13 +8,16 @@
 4. [Neural Translator Pro](#neural-translator-pro)
 5. [Translation Wizard](#translation-wizard)
 6. [Translation Bridge](#translation-bridge)
-7. [Esportazione Patch](#esportazione-patch)
-8. [Applicazione al Gioco](#applicazione-al-gioco)
-9. [Gestione Backup](#gestione-backup)
-10. [Editor Traduzioni](#editor-traduzioni)
-11. [Activity History](#activity-history)
-12. [Dizionari](#dizionari)
-13. [Risoluzione Problemi](#risoluzione-problemi)
+7. [Subtitle Translator Pro](#subtitle-translator-pro) *(NUOVO v1.0.4)*
+8. [Retro ROM Tools](#retro-rom-tools) *(NUOVO v1.0.4)*
+9. [API Pubblica v1](#api-pubblica-v1) *(NUOVO v1.0.4)*
+10. [Esportazione Patch](#esportazione-patch)
+11. [Applicazione al Gioco](#applicazione-al-gioco)
+12. [Gestione Backup](#gestione-backup)
+13. [Editor Traduzioni](#editor-traduzioni)
+14. [Activity History](#activity-history)
+15. [Dizionari](#dizionari)
+16. [Risoluzione Problemi](#risoluzione-problemi)
 
 ---
 
@@ -22,12 +25,13 @@
 
 GameStringer è un sistema avanzato per la traduzione automatica e manuale di videogiochi. Supporta:
 
-- **Motori di gioco**: Unity, Unreal Engine, RPG Maker, Ren'Py e altri
-- **Formati file**: CSV, JSON, XML, PO/POT, YAML, TXT e altri
-- **Provider AI**: Claude (Anthropic), Gemini (Google), GPT (OpenAI)
+- **Motori di gioco**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri e altri
+- **Formati file**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA e altri
+- **Provider AI**: Claude (Anthropic), Gemini (Google), GPT (OpenAI), DeepSeek, Mistral, Groq, Ollama (locale)
 - **Lingue**: 20+ lingue supportate per traduzioni
 - **UI Multilingua**: IT, EN, ES, FR, DE, JA, ZH
-- **Store Gaming**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Rockstar
+- **Store Gaming**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
+- **NUOVO v1.0.4**: Subtitle Translator Pro, Retro ROM Tools (8 console), API Pubblica REST
 
 ---
 
@@ -186,6 +190,117 @@ Il Translation Bridge permette di tradurre i giochi Unity **in tempo reale** dur
 - **Cache locale**: Traduzioni salvate per riutilizzo
 - **Traduzione live**: Nuove stringhe tradotte al volo
 - **Fallback**: Se offline, usa solo la cache
+
+---
+
+## Subtitle Translator Pro
+
+*(NUOVO in v1.0.4)*
+
+Il Subtitle Translator Pro permette di tradurre sottotitoli in vari formati.
+
+### Formati Supportati
+
+| Formato | Estensione | Descrizione |
+|---------|------------|-------------|
+| **SubRip** | .srt | Formato più comune |
+| **WebVTT** | .vtt | Standard web |
+| **ASS/SSA** | .ass/.ssa | Sottotitoli avanzati con stili |
+
+### Come Usare
+
+1. **Vai su Subtitle Translator** nel menu
+2. **Carica il file** sottotitoli (drag & drop o sfoglia)
+3. **Seleziona lingua** sorgente e destinazione
+4. **Preview in tempo reale** delle traduzioni
+5. **Esporta** nel formato desiderato
+
+### Funzionalità
+
+- **Validazione QA**: Controllo automatico timing e formattazione
+- **Preview sincronizzata**: Vedi le traduzioni con timing originale
+- **Export multi-formato**: Converti tra SRT, VTT, ASS
+
+---
+
+## Retro ROM Tools
+
+*(NUOVO in v1.0.4)*
+
+Strumenti per tradurre giochi retro su ROM.
+
+### Console Supportate
+
+| Console | Abbreviazione |
+|---------|---------------|
+| Nintendo Entertainment System | NES |
+| Super Nintendo | SNES |
+| Game Boy | GB |
+| Game Boy Color | GBC |
+| Game Boy Advance | GBA |
+| Sega Genesis/Mega Drive | Genesis |
+| PlayStation 1 | PSX |
+| Nintendo 64 | N64 |
+
+### Funzionalità
+
+- **Table File Parser**: Legge e genera file .TBL per mappatura caratteri
+- **Font Injection**: Inietta font con caratteri accentati italiani
+- **Hex Editor integrato**: Modifica diretta delle ROM
+
+### Come Usare
+
+1. **Vai su Retro ROM Tools** nel menu
+2. **Carica la ROM** del gioco
+3. **Carica o genera** il Table File (.TBL)
+4. **Estrai il testo** dalla ROM
+5. **Traduci** con AI o manualmente
+6. **Inietta** le traduzioni nella ROM
+
+---
+
+## API Pubblica v1
+
+*(NUOVO in v1.0.4)*
+
+GameStringer espone una API REST per integrazioni esterne.
+
+### Endpoint Disponibili
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| `POST` | `/api/v1/translate` | Traduzione singola stringa |
+| `POST` | `/api/v1/batch` | Traduzione batch (max 100 stringhe) |
+| `GET` | `/api/v1/languages` | Lista 20 lingue supportate |
+| `GET` | `/api/v1/health` | Health check del servizio |
+
+### Esempio Richiesta
+
+```json
+POST /api/v1/translate
+{
+  "text": "Hello, world!",
+  "source": "en",
+  "target": "it",
+  "provider": "gemini"
+}
+```
+
+### Esempio Risposta
+
+```json
+{
+  "translation": "Ciao, mondo!",
+  "source": "en",
+  "target": "it",
+  "provider": "gemini",
+  "tokens": 12
+}
+```
+
+### Uso CI/CD
+
+L'API è ideale per integrare GameStringer in pipeline di build automatizzate.
 
 ---
 
@@ -431,4 +546,4 @@ I dizionari salvano le traduzioni per ogni gioco.
 
 ---
 
-*GameStringer v1.0.2 - Guida aggiornata al 22/01/2026*
+*GameStringer v1.0.4 - Guida aggiornata al 23/01/2026*

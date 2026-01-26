@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1"/>
+      <stop offset="100%" style="stop-color:#8B5CF6"/>
+    </linearGradient>
+    
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#4338CA" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Sfondo -->
+  <rect x="32" y="32" width="448" height="448" rx="88" fill="url(#bgGrad)" filter="url(#shadow)"/>
+  
+  <!-- G centrale grande -->
+  <path 
+    d="M 310 195 
+       A 80 80 0 1 0 310 317 
+       L 265 317 
+       L 265 275 
+       L 295 275 
+       L 295 256 
+       L 235 256 
+       L 235 345 
+       A 110 110 0 1 1 345 165 
+       L 310 195 Z"
+    fill="white"
+  />
+  
+  <!-- Icona traduzione (A → あ) stilizzata -->
+  <g transform="translate(256, 390)">
+    <!-- Linea con freccia -->
+    <line x1="-60" y1="0" x2="60" y2="0" stroke="rgba(255,255,255,0.5)" stroke-width="3"/>
+    <path d="M 50 -8 L 60 0 L 50 8" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- A sinistra -->
+    <text x="-80" y="6" fill="rgba(255,255,255,0.7)" font-family="Arial" font-size="24" font-weight="bold">A</text>
+    
+    <!-- Carattere destro -->
+    <text x="70" y="6" fill="rgba(255,255,255,0.7)" font-family="Arial" font-size="20" font-weight="bold">文</text>
+  </g>
+  
+  <!-- Sparkle -->
+  <circle cx="400" cy="112" r="5" fill="white" opacity="0.7"/>
+</svg>

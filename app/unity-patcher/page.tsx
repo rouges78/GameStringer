@@ -18,8 +18,8 @@ export default function UnityPatcherPage() {
         
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm shadow-lg">
-              <Wand2 className="h-5 w-5 text-white" />
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Wand2 className="h-6 w-6 text-white" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('gamePatcher.title')}</h1>
@@ -29,16 +29,16 @@ export default function UnityPatcherPage() {
           
           {/* Stats inline */}
           <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Layers className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">5</span>
               <span className="text-[10px] text-white/70">{t('gamePatcher.engines')}</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Zap className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">{t('gamePatcher.autoInstall')}</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Shield className="h-3.5 w-3.5 text-white" />
               <span className="text-sm font-bold text-white">{t('gamePatcher.safeBackup')}</span>
             </div>

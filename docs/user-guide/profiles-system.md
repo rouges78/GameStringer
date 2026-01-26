@@ -418,7 +418,6 @@ Se la migrazione automatica non funziona:
 ### Contatti Supporto
 
 - **Email**: support@gamestringer.com
-- **Discord**: [Link server Discord]
 - **GitHub Issues**: [Link repository]
 
 ### Informazioni per il Supporto

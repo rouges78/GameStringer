@@ -21,7 +21,18 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
     if (accepted !== DISCLAIMER_VERSION) {
       setIsOpen(true);
     }
-  }, []);
+    
+    // Keyboard shortcut: press Enter to accept
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && isOpen) {
+        localStorage.setItem(DISCLAIMER_ACCEPTED_KEY, DISCLAIMER_VERSION);
+        setIsOpen(false);
+        onAccept?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onAccept]);
 
   const handleAccept = () => {
     localStorage.setItem(DISCLAIMER_ACCEPTED_KEY, DISCLAIMER_VERSION);
@@ -32,8 +43,8 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-xl max-w-md w-full shadow-2xl">
+    <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>
+      <div className="bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-xl max-w-md w-full shadow-2xl" style={{ pointerEvents: 'auto' }}>
         {/* Header compatto */}
         <div className="p-4 border-b border-slate-700/50 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
           <div className="flex items-center gap-3">
@@ -96,14 +107,31 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
         </div>
 
         {/* Footer compatto */}
-        <div className="p-4 border-t border-slate-700/50">
-          <Button
-            onClick={handleAccept}
-            className="w-full h-10 text-sm bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500"
+        <div className="p-4 border-t border-slate-700/50" style={{ position: 'relative', zIndex: 99999 }}>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleAccept();
+            }}
+            style={{ 
+              width: '100%', 
+              height: '44px', 
+              backgroundColor: '#16a34a', 
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              position: 'relative',
+              zIndex: 99999,
+              pointerEvents: 'auto'
+            }}
           >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            {t('disclaimer.acceptButton')}
-          </Button>
+            ✓ {t('disclaimer.acceptButton')}
+          </button>
         </div>
       </div>
     </div>

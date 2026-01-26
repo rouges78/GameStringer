@@ -23,6 +23,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { activityHistory } from '@/lib/activity-history';
+import { useTranslation } from '@/lib/i18n';
 
 interface TelltaleGame {
   id: string;
@@ -30,6 +31,7 @@ interface TelltaleGame {
   translationUrl?: string;
   platform: 'steam' | 'gog' | 'epic';
   requiresGogScript?: boolean;
+  coverImage: string;
 }
 
 const SUPPORTED_GAMES: TelltaleGame[] = [
@@ -39,30 +41,36 @@ const SUPPORTED_GAMES: TelltaleGame[] = [
     translationUrl: 'https://1drv.ms/u/s!ApMUGr0cuN39gcU1t4iqnsfx5KTodQ?e=y9QOEr',
     platform: 'steam',
     requiresGogScript: true,
+    coverImage: 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/250320/header.jpg',
   },
   {
     id: 'walking-dead-s1',
     name: 'The Walking Dead: Season One',
     platform: 'steam',
+    coverImage: 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/207610/header.jpg',
   },
   {
     id: 'walking-dead-s2',
     name: 'The Walking Dead: Season Two',
     platform: 'steam',
+    coverImage: 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/261030/header.jpg',
   },
   {
     id: 'tales-borderlands',
     name: 'Tales from the Borderlands',
     platform: 'steam',
+    coverImage: 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/330830/header.jpg',
   },
   {
     id: 'batman-telltale',
     name: 'Batman: The Telltale Series',
     platform: 'steam',
+    coverImage: 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/498240/header.jpg',
   },
 ];
 
 export function TelltalePatcher() {
+  const { t } = useTranslation();
   const [gamePath, setGamePath] = useState<string>('');
   const [selectedGame, setSelectedGame] = useState<TelltaleGame | null>(null);
   const [detectedPlatform, setDetectedPlatform] = useState<'steam' | 'gog' | 'epic' | null>(null);
@@ -348,225 +356,204 @@ export function TelltalePatcher() {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 p-3">
+    <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-3 overflow-y-auto overflow-x-hidden">
+      {/* Hero Header Compatto */}
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 p-2 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        
-        <div className="relative flex items-center gap-3">
-          <div className="p-1.5 rounded-lg bg-black/20 backdrop-blur-sm shadow-lg">
-            <Gamepad2 className="h-4 w-4 text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.8)]" />
+        <div className="relative flex items-center gap-2">
+          <div className="p-1.5 rounded-md bg-black/20 backdrop-blur-sm">
+            <Gamepad2 className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">Telltale Patcher</h2>
-            <p className="text-white/90 text-[10px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">Italian translations for Wolf Among Us, Walking Dead, etc.</p>
+            <h2 className="text-sm font-bold text-white">{t('telltale.title')}</h2>
+            <p className="text-white/80 text-[10px]">{t('telltale.subtitle')}</p>
           </div>
         </div>
       </div>
 
-      {/* Game Selection */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <FolderOpen className="h-4 w-4" />
-            Select Game
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Button onClick={selectGameFolder} variant="outline" className="w-full">
-            <FolderOpen className="h-4 w-4 mr-2" />
-            Browse game folder...
-          </Button>
-
-          {gamePath && (
-            <div className="p-2 bg-slate-800/50 rounded text-xs font-mono break-all">
-              {gamePath}
-            </div>
-          )}
-
-          {selectedGame && (
-            <div className="flex items-center gap-2 p-2 bg-green-950/30 border border-green-500/30 rounded">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-green-400">{selectedGame.name}</span>
-              {detectedPlatform && (
-                <Badge variant="outline" className="ml-auto text-xs">
-                  {detectedPlatform.toUpperCase()}
+      {/* Layout a 2 colonne */}
+      <div className="flex gap-3 flex-1 min-h-0">
+        {/* Left Column - Games List */}
+        <Card className="w-[320px] shrink-0 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col">
+          <CardHeader className="py-2 px-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Gamepad2 className="w-4 h-4 text-emerald-400" />
+                {t('telltale.supportedGames')}
+                <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                  {SUPPORTED_GAMES.length}
                 </Badge>
-              )}
+              </CardTitle>
             </div>
-          )}
+          </CardHeader>
+          <CardContent className="p-2 pt-0 flex-1 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto space-y-1">
+              {SUPPORTED_GAMES.map(game => (
+                <button
+                  key={game.id}
+                  onClick={() => setSelectedGame(game)}
+                  className={`w-full flex items-center gap-2 p-1.5 rounded text-left text-xs transition-all border ${
+                    selectedGame?.id === game.id
+                      ? 'bg-gradient-to-r from-emerald-500/20 to-emerald-400/10 border-emerald-500/40 text-white shadow-sm'
+                      : 'border-transparent hover:bg-emerald-500/10 hover:border-emerald-500/20 text-slate-300'
+                  }`}
+                >
+                  <div className="w-7 h-5 bg-slate-800/80 rounded flex items-center justify-center shrink-0">
+                    <Gamepad2 className="w-3 h-3 text-emerald-500" />
+                  </div>
+                  <span className="truncate flex-1 font-medium text-[11px]">{game.name}</span>
+                  {game.translationUrl && (
+                    <Badge variant="outline" className="text-[8px] px-1 py-0 bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shrink-0">
+                      ITA
+                    </Badge>
+                  )}
+                  {selectedGame?.id === game.id && (
+                    <CheckCircle2 className="w-3 h-3 shrink-0 text-emerald-400" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-          {hasExistingPatch && (
-            <Alert className="border-yellow-500/50 bg-yellow-950/20">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <AlertTitle className="text-yellow-400">Existing translation</AlertTitle>
-              <AlertDescription className="text-xs">
-                A Pack folder already exists. Translation may already be installed.
-              </AlertDescription>
-            </Alert>
+        {/* Right Column - Configuration */}
+        <Card className="flex-1 border-slate-800/50 flex flex-col overflow-hidden relative bg-slate-950/80">
+          {/* Cover Image Background */}
+          {selectedGame && (
+            <>
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+                style={{ backgroundImage: `url(${selectedGame.coverImage})` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
+            </>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Supported Games */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Globe className="h-4 w-4" />
-            Supported Games
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-2">
-            {SUPPORTED_GAMES.map(game => (
-              <div
-                key={game.id}
-                className={`p-2 rounded border text-xs cursor-pointer transition-all ${
-                  selectedGame?.id === game.id
-                    ? 'border-orange-500 bg-orange-950/30 text-orange-300'
-                    : 'border-slate-700 bg-slate-800/30 hover:border-slate-600'
-                }`}
-                onClick={() => setSelectedGame(game)}
-              >
-                <div className="font-medium truncate">{game.name}</div>
-                {game.translationUrl && (
-                  <Badge variant="outline" className="text-[9px] mt-1 text-green-400 border-green-500/50">
-                    ITA available
+          <CardHeader className="py-2 px-3 relative z-10">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Download className="w-4 h-4 text-emerald-400" />
+                {selectedGame ? selectedGame.name : t('telltale.selectGame')}
+                {detectedPlatform && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
+                    {detectedPlatform.toUpperCase()}
                   </Badge>
                 )}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      {selectedGame && gamePath && (
-        <Card>
-          <CardContent className="pt-4 space-y-3">
-            <Button 
-              onClick={applyTranslation} 
-              disabled={isPatching}
-              className="w-full bg-orange-600 hover:bg-orange-500"
-            >
-              {isPatching ? (
-                <>Processing...</>
-              ) : (
-                <>
-                  <Download className="h-4 w-4 mr-2" />
-                  Generate Translation Instructions
-                </>
-              )}
-            </Button>
-
-            {selectedGame.translationUrl && (
-              <Button 
-                onClick={openDownloadLink}
-                variant="outline"
-                className="w-full"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Open Download Link (OneDrive)
+              </CardTitle>
+              <Button variant="ghost" size="sm" onClick={selectGameFolder} className="h-6 text-[10px] text-muted-foreground hover:text-white px-2">
+                <FolderOpen className="w-3 h-3 mr-1" />
+                {t('telltale.browseFolder').replace('...', '')}
               </Button>
-            )}
-
-            {selectedGame.id === 'wolf-among-us' && (
-              <Button 
-                onClick={openTranslationSource}
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs"
-              >
-                <Globe className="h-3 w-3 mr-1" />
-                Crediti: Team Crybiolab / SuperGame
-              </Button>
-            )}
-
-            {/* Backup & Verify Section */}
-            <div className="border-t border-slate-700 pt-3 mt-3">
-              <p className="text-xs text-muted-foreground mb-2">Advanced tools</p>
-              <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  onClick={createBackup}
-                  variant="outline"
-                  size="sm"
-                  disabled={!hasExistingPatch || hasBackup}
-                  className="text-xs"
-                >
-                  💾 Backup
-                </Button>
-                <Button 
-                  onClick={restoreBackup}
-                  variant="outline"
-                  size="sm"
-                  disabled={!hasBackup}
-                  className="text-xs"
-                >
-                  🔄 Restore
-                </Button>
-                <Button 
-                  onClick={verifyInstallation}
-                  variant="outline"
-                  size="sm"
-                  className="text-xs"
-                >
-                  ✅ Verify
-                </Button>
-              </div>
-              {hasBackup && (
-                <p className="text-[10px] text-green-400 mt-1">💾 Backup available</p>
-              )}
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Progress */}
-      {isPatching && (
-        <Card>
-          <CardContent className="pt-4">
-            <Progress value={progress} className="mb-2" />
-            <p className="text-xs text-muted-foreground text-center">{progress}%</p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Logs */}
-      {logs.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Log</CardTitle>
           </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-48 w-full rounded border border-slate-700 bg-slate-950 p-2">
-              <div className="font-mono text-xs space-y-1">
-                {logs.map((log, i) => (
-                  <div key={i} className="text-slate-300">{log}</div>
-                ))}
+          <CardContent className="p-3 pt-0 flex-1 flex flex-col gap-3 overflow-y-auto relative z-10">
+            {/* Path Display */}
+            {gamePath && (
+              <div className="p-2 bg-slate-950/50 border border-slate-800/50 rounded text-[10px] font-mono text-slate-400 break-all">
+                📁 {gamePath}
               </div>
-            </ScrollArea>
+            )}
+
+            {/* Status Alerts */}
+            {hasExistingPatch && (
+              <div className="flex items-center gap-2 p-2 bg-yellow-950/20 border border-yellow-500/30 rounded text-xs">
+                <AlertTriangle className="w-3 h-3 text-yellow-500 shrink-0" />
+                <span className="text-yellow-400">{t('telltale.existingTranslation')}</span>
+              </div>
+            )}
+
+            {hasBackup && (
+              <div className="flex items-center gap-2 p-2 bg-green-950/20 border border-green-500/30 rounded text-xs">
+                <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />
+                <span className="text-green-400">💾 {t('telltale.backupAvailable')}</span>
+              </div>
+            )}
+
+            {/* Actions */}
+            {selectedGame && (
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    onClick={applyTranslation} 
+                    disabled={isPatching || !gamePath}
+                    className="h-8 text-xs bg-emerald-600 hover:bg-emerald-500"
+                  >
+                    {isPatching ? t('telltale.processing') : (
+                      <><Download className="w-3 h-3 mr-1" /> {t('telltale.generateInstructions')}</>
+                    )}
+                  </Button>
+                  
+                  {selectedGame.translationUrl && (
+                    <Button onClick={openDownloadLink} variant="outline" className="h-8 text-xs">
+                      <ExternalLink className="w-3 h-3 mr-1" /> Download
+                    </Button>
+                  )}
+                </div>
+
+                {/* Tools Row */}
+                <div className="flex gap-2">
+                  <Button onClick={createBackup} variant="outline" size="sm" disabled={!hasExistingPatch || hasBackup} className="h-7 text-[10px] flex-1">
+                    💾 {t('telltale.backup')}
+                  </Button>
+                  <Button onClick={restoreBackup} variant="outline" size="sm" disabled={!hasBackup} className="h-7 text-[10px] flex-1">
+                    🔄 {t('telltale.restore')}
+                  </Button>
+                  <Button onClick={verifyInstallation} variant="outline" size="sm" disabled={!gamePath} className="h-7 text-[10px] flex-1">
+                    ✅ {t('telltale.verify')}
+                  </Button>
+                </div>
+
+                {selectedGame.id === 'wolf-among-us' && (
+                  <Button onClick={openTranslationSource} variant="ghost" size="sm" className="w-full h-6 text-[10px] text-muted-foreground">
+                    <Globe className="w-3 h-3 mr-1" /> {t('telltale.credits')}
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Logs */}
+            {logs.length > 0 && (
+              <div className="flex-1 min-h-[120px]">
+                <div className="text-[10px] text-muted-foreground mb-1">{t('telltale.log')}</div>
+                <ScrollArea className="h-full max-h-[200px] rounded border border-slate-800/50 bg-slate-950/50 p-2">
+                  <div className="font-mono text-[10px] space-y-0.5">
+                    {logs.map((log, i) => (
+                      <div key={i} className="text-slate-400">{log}</div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Progress Bar */}
+      {isPatching && (
+        <div className="px-2">
+          <Progress value={progress} className="h-1" />
+          <p className="text-[10px] text-muted-foreground text-center mt-1">{progress}%</p>
+        </div>
       )}
 
-      {/* Status */}
+      {/* Status Alerts */}
       {status === 'success' && (
-        <Alert className="border-green-500/50 bg-green-950/20">
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
-          <AlertTitle className="text-green-400">Completed!</AlertTitle>
-          <AlertDescription className="text-xs">
-            Follow the instructions in the log to complete the translation installation.
-          </AlertDescription>
-        </Alert>
+        <div className="flex items-center gap-2 p-2 bg-green-950/20 border border-green-500/30 rounded text-xs mx-2">
+          <CheckCircle2 className="w-4 h-4 text-green-500" />
+          <div>
+            <span className="text-green-400 font-medium">{t('telltale.completed')}</span>
+            <span className="text-green-400/70 ml-2">{t('telltale.completedDesc')}</span>
+          </div>
+        </div>
       )}
 
       {status === 'error' && (
-        <Alert className="border-red-500/50 bg-red-950/20">
-          <AlertTriangle className="h-4 w-4 text-red-500" />
-          <AlertTitle className="text-red-400">Error</AlertTitle>
-          <AlertDescription className="text-xs">{errorMessage}</AlertDescription>
-        </Alert>
+        <div className="flex items-center gap-2 p-2 bg-red-950/20 border border-red-500/30 rounded text-xs mx-2">
+          <AlertTriangle className="w-4 h-4 text-red-500" />
+          <div>
+            <span className="text-red-400 font-medium">{t('telltale.error')}</span>
+            <span className="text-red-400/70 ml-2">{errorMessage}</span>
+          </div>
+        </div>
       )}
     </div>
   );

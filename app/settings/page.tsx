@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,9 +29,14 @@ import {
   Bug,
   TestTube,
   Cpu,
-  HardDrive
+  HardDrive,
+  Globe,
+  Link2,
+  BookOpen,
+  Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Play, Compass } from 'lucide-react';
 import { ProfileNotificationSettings } from '@/components/notifications/profile-notification-settings';
 import { AutoBackupSettings } from '@/components/settings/auto-backup-settings';
 import { useVersion } from '@/lib/version';
@@ -79,6 +85,11 @@ interface Settings {
     errors: boolean;
     updates: boolean;
   };
+  
+  // Integrations
+  integrations: {
+    steamGridDbApiKey: string;
+  };
 }
 
 export default function SettingsPage() {
@@ -113,6 +124,9 @@ export default function SettingsPage() {
       translationComplete: true,
       errors: true,
       updates: false
+    },
+    integrations: {
+      steamGridDbApiKey: ''
     }
   });
 
@@ -155,6 +169,24 @@ export default function SettingsPage() {
       localStorage.removeItem('gameStringerSettings');
       window.location.reload();
     }
+  };
+
+  const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
+
+  const startNormalTutorial = () => {
+    // Riavvia solo l'onboarding wizard (slides informative)
+    localStorage.removeItem('gamestringer_onboarding_completed');
+    setTutorialDialogOpen(false);
+    toast.success(t('settings.tutorial.restarting'));
+    setTimeout(() => window.location.reload(), 1000);
+  };
+
+  const startGuidedTutorial = () => {
+    // Riavvia solo il tutorial interattivo (guida passo-passo nella sidebar)
+    localStorage.removeItem('gamestringer-tutorial-completed');
+    setTutorialDialogOpen(false);
+    toast.success(t('settings.tutorial.startingGuided'));
+    setTimeout(() => window.location.reload(), 1000);
   };
 
   const updateSetting = (category: keyof Settings, key: string, value: any) => {
@@ -236,62 +268,110 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('settings.subtitle')}
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={resetSettings}>
-            <RotateCcw className="h-4 w-4 mr-2" />
-            {t('settings.reset')}
-          </Button>
-          <Button onClick={saveSettings} disabled={isSaving}>
-            {isSaving ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                {t('settings.saving')}
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                {t('settings.save')}
-              </>
-            )}
-          </Button>
+    <div className="p-4 space-y-4 max-w-7xl mx-auto">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-700 via-slate-600 to-slate-800 p-3">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Settings className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('settings.title')}</h1>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('settings.subtitle')}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setTutorialDialogOpen(true)} className="border-white/30 text-white hover:bg-white/10 h-8 text-xs">
+              <BookOpen className="h-3.5 w-3.5 mr-1.5" />
+              Tutorial
+            </Button>
+            <Dialog open={tutorialDialogOpen} onOpenChange={setTutorialDialogOpen}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-blue-500" />
+                    {t('settings.tutorial.chooseTitle')}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {t('settings.tutorial.chooseDesc')}
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-3 py-4">
+                  <Button
+                    variant="outline"
+                    className="h-auto p-4 justify-start gap-4 hover:bg-blue-500/10 hover:border-blue-500/50"
+                    onClick={startNormalTutorial}
+                  >
+                    <div className="p-2 rounded-lg bg-blue-500/20">
+                      <Play className="h-5 w-5 text-blue-500" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium">{t('settings.tutorial.normalTitle')}</div>
+                      <div className="text-xs text-muted-foreground">{t('settings.tutorial.normalDesc')}</div>
+                    </div>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto p-4 justify-start gap-4 hover:bg-purple-500/10 hover:border-purple-500/50"
+                    onClick={startGuidedTutorial}
+                  >
+                    <div className="p-2 rounded-lg bg-purple-500/20">
+                      <Compass className="h-5 w-5 text-purple-500" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium">{t('settings.tutorial.guidedTitle')}</div>
+                      <div className="text-xs text-muted-foreground">{t('settings.tutorial.guidedDesc')}</div>
+                    </div>
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" size="sm" onClick={resetSettings} className="border-white/30 text-white hover:bg-white/10 h-8 text-xs">
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              Reset
+            </Button>
+            <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 h-8 text-xs">
+              {isSaving ? (
+                <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
+              ) : (
+                <><Save className="h-3.5 w-3.5 mr-1.5" />{t('settings.save')}</>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 h-12">
-          <TabsTrigger value="translation" className="flex items-center space-x-2">
-            <Brain className="h-4 w-4" />
-            <span>{t('settings.translation')}</span>
+        <TabsList className="flex flex-wrap gap-1 h-auto p-1">
+          <TabsTrigger value="translation" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Brain className="h-3.5 w-3.5" />
+            <span>{t('settings.tabs.ai')}</span>
           </TabsTrigger>
-          <TabsTrigger value="system" className="flex items-center space-x-2">
-            <Cpu className="h-4 w-4" />
-            <span>{t('settings.system')}</span>
+          <TabsTrigger value="system" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Cpu className="h-3.5 w-3.5" />
+            <span>{t('settings.tabs.system')}</span>
           </TabsTrigger>
-          <TabsTrigger value="backup" className="flex items-center space-x-2">
-            <HardDrive className="h-4 w-4" />
-            <span>{t('settings.autoBackupTitle')}</span>
+          <TabsTrigger value="performance" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Zap className="h-3.5 w-3.5" />
+            <span>{t('settings.tabs.performance')}</span>
           </TabsTrigger>
-          <TabsTrigger value="performance" className="flex items-center space-x-2">
-            <Zap className="h-4 w-4" />
-            <span>{t('settings.performance')}</span>
+          <TabsTrigger value="backup" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <HardDrive className="h-3.5 w-3.5" />
+            <span>{t('settings.tabs.backup')}</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center space-x-2">
-            <Bell className="h-4 w-4" />
-            <span>{t('settings.notifications')}</span>
+          <TabsTrigger value="notifications" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Bell className="h-3.5 w-3.5" />
+            <span>{t('settings.tabs.notifications')}</span>
           </TabsTrigger>
-          <TabsTrigger value="debug" className="flex items-center space-x-2">
-            <Bug className="h-4 w-4" />
-            <span>{t('settings.debug')}</span>
+          <TabsTrigger value="integrations" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Globe className="h-3.5 w-3.5" />
+            <span>{t('settings.tabs.integrations')}</span>
+          </TabsTrigger>
+          <TabsTrigger value="debug" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Bug className="h-3.5 w-3.5" />
+            <span>{t('settings.tabs.debug')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -300,7 +380,7 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Brain className="h-5 w-5 text-purple-500" />
+                <Brain className="h-5 w-5 text-blue-500" />
                 <span>{t('settings.aiConfig')}</span>
               </CardTitle>
             </CardHeader>
@@ -374,7 +454,7 @@ export default function SettingsPage() {
                     max={2}
                     min={0}
                     step={0.1}
-                    className="w-full"
+                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
                 </div>
 
@@ -386,7 +466,7 @@ export default function SettingsPage() {
                     max={4000}
                     min={100}
                     step={100}
-                    className="w-full"
+                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
                 </div>
 
@@ -398,7 +478,7 @@ export default function SettingsPage() {
                     max={200}
                     min={10}
                     step={10}
-                    className="w-full"
+                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
                 </div>
               </div>
@@ -462,7 +542,7 @@ export default function SettingsPage() {
                     max={168}
                     min={1}
                     step={1}
-                    className="w-full"
+                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
                 </div>
 
@@ -474,7 +554,7 @@ export default function SettingsPage() {
                     max={2000}
                     min={100}
                     step={100}
-                    className="w-full"
+                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
                 </div>
               </div>
@@ -501,7 +581,7 @@ export default function SettingsPage() {
                     max={20}
                     min={1}
                     step={1}
-                    className="w-full"
+                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
                   <p className="text-sm text-muted-foreground">
                     {t('settings.concurrentTasksDesc')}
@@ -516,7 +596,7 @@ export default function SettingsPage() {
                     max={120000}
                     min={5000}
                     step={5000}
-                    className="w-full"
+                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
                 </div>
 
@@ -528,7 +608,7 @@ export default function SettingsPage() {
                     max={10}
                     min={1}
                     step={1}
-                    className="w-full"
+                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
                   />
                 </div>
               </div>
@@ -556,102 +636,83 @@ export default function SettingsPage() {
           <ProfileNotificationSettings />
         </TabsContent>
 
+        {/* Integrations Tab */}
+        <TabsContent value="integrations" className="space-y-3">
+          <Card className="p-3">
+            <p className="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-1.5">
+              <Link2 className="h-3.5 w-3.5" />
+              API Esterne
+            </p>
+            <div className="space-y-2 p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+              <div className="flex items-center gap-2">
+                <Database className="h-4 w-4 text-cyan-400" />
+                <Label className="text-sm font-semibold">SteamGridDB</Label>
+                <Badge variant="outline" className="text-[10px]">Gratuito</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Copertine per giochi senza artwork.
+                <a href="https://www.steamgriddb.com/profile/preferences/api" target="_blank" className="text-cyan-400 hover:underline ml-1">API Key →</a>
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  type={showApiKeys.steamgriddb ? "text" : "password"}
+                  value={settings.integrations.steamGridDbApiKey}
+                  onChange={(e) => updateSetting('integrations', 'steamGridDbApiKey', e.target.value)}
+                  placeholder="API Key..."
+                  className="font-mono h-8 text-xs"
+                />
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, steamgriddb: !prev.steamgriddb }))}>
+                  {showApiKeys.steamgriddb ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
         {/* Debug & Test Tab */}
-        <TabsContent value="debug" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <TestTube className="h-5 w-5 text-red-500" />
-                <span>{t('settings.debugTools')}</span>
-                <Badge variant="outline">{t('settings.developers')}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Test Buttons */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button
-                  onClick={testGameLibrary}
-                  disabled={isDebugging}
-                  variant="outline"
-                  className="h-16 flex flex-col items-center justify-center space-y-2"
-                >
-                  <Database className="h-5 w-5" />
-                  <span>{t('settings.testLibrary')}</span>
-                </Button>
-
-                <Button
-                  onClick={testTranslationAPI}
-                  disabled={isDebugging}
-                  variant="outline"
-                  className="h-16 flex flex-col items-center justify-center space-y-2"
-                >
-                  <Brain className="h-5 w-5" />
-                  <span>{t('settings.testTranslation')}</span>
-                </Button>
+        <TabsContent value="debug" className="space-y-3">
+          <Card className="p-3">
+            <p className="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-1.5">
+              <TestTube className="h-3.5 w-3.5" />
+              {t('settings.debugTools')}
+              <Badge variant="outline" className="text-[10px] ml-1">{t('settings.developers')}</Badge>
+            </p>
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <Button onClick={testGameLibrary} disabled={isDebugging} variant="outline" size="sm" className="h-10 gap-1.5">
+                <Database className="h-3.5 w-3.5" />
+                <span className="text-xs">{t('settings.testLibrary')}</span>
+              </Button>
+              <Button onClick={testTranslationAPI} disabled={isDebugging} variant="outline" size="sm" className="h-10 gap-1.5">
+                <Brain className="h-3.5 w-3.5" />
+                <span className="text-xs">{t('settings.testTranslation')}</span>
+              </Button>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-xs font-semibold text-slate-400">{t('settings.debugConsole')}</p>
+              <Button onClick={clearDebugResults} variant="ghost" size="sm" className="h-6 text-xs gap-1">
+                <Trash2 className="h-3 w-3" />
+                {t('settings.clear')}
+              </Button>
+            </div>
+            <div className="bg-black/30 rounded-lg p-2 h-[120px] overflow-y-auto">
+              <div className="font-mono text-xs space-y-0.5">
+                {debugResults.length > 0 ? debugResults.map((result, index) => (
+                  <div key={index} className="text-gray-300">{result}</div>
+                )) : (
+                  <div className="text-gray-500 italic">{t('settings.consoleEmpty')}</div>
+                )}
+                {isDebugging && <div className="text-orange-400 animate-pulse">{t('settings.testInProgress')}</div>}
               </div>
-
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">{t('settings.debugConsole')}</h3>
-                <Button
-                  onClick={clearDebugResults}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {t('settings.clear')}
-                </Button>
-              </div>
-
-              {/* Debug Console */}
-              <div className="bg-black/10 dark:bg-black/30 rounded-lg p-4 min-h-[300px] max-h-[400px] overflow-y-auto">
-                <div className="font-mono text-sm space-y-1">
-                  {debugResults.length > 0 ? (
-                    debugResults.map((result, index) => (
-                      <div key={index} className="text-gray-300">
-                        {result}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-gray-500 italic">
-                      {t('settings.consoleEmpty')}
-                    </div>
-                  )}
-                  
-                  {isDebugging && (
-                    <div className="text-orange-400 animate-pulse">
-                      {t('settings.testInProgress')}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* System Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">{t('settings.systemInfo')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <Label className="text-muted-foreground">Versione</Label>
-                      <p className="font-mono">{version}.{buildInfo.build}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Build Date</Label>
-                      <p className="font-mono text-xs">{formatDate}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Git Hash</Label>
-                      <p className="font-mono text-xs">{buildInfo.git.slice(0, 7)}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Branch</Label>
-                      <p className="font-mono text-xs">{buildInfo.branch}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </CardContent>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <p className="text-xs font-semibold text-slate-400 mb-2">{t('settings.systemInfo')}</p>
+            <div className="grid grid-cols-4 gap-2 text-xs">
+              <div><span className="text-muted-foreground">Ver:</span> <span className="font-mono">{version}</span></div>
+              <div><span className="text-muted-foreground">Build:</span> <span className="font-mono">{buildInfo.build}</span></div>
+              <div><span className="text-muted-foreground">Git:</span> <span className="font-mono">{buildInfo.git.slice(0, 7)}</span></div>
+              <div><span className="text-muted-foreground">Branch:</span> <span className="font-mono">{buildInfo.branch}</span></div>
+            </div>
           </Card>
         </TabsContent>
       </Tabs>

@@ -194,31 +194,47 @@ export default function OcrTranslatorPage() {
   const selectedWindow = windows.find(w => w.hwnd === config.target_window);
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
-      {/* Header semplice */}
-      <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-sky-500/10 to-blue-500/10 border border-sky-500/20">
-          <Scan className={`h-5 w-5 text-violet-400 ${isRunning ? 'animate-pulse' : ''}`} />
-          <span className="font-medium bg-gradient-to-r from-sky-400 to-blue-400 bg-clip-text text-transparent">OCR Translator</span>
-          {isRunning && <Badge className="bg-green-500/20 text-green-400 border-green-500/30">{t('common.yes')}</Badge>}
+    <div className="p-4 max-w-4xl mx-auto space-y-3 animate-fade-in">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-3">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Scan className={`h-6 w-6 text-white ${isRunning ? 'animate-pulse' : ''}`} />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                OCR Translator
+              </h1>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('ocrTranslator.subtitle')}
+              </p>
+            </div>
+          </div>
+          <div className="hidden md:flex items-center gap-2">
+            {isRunning && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-500/30 border border-green-400/30">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-sm font-medium text-white">{t('ocrTranslator.active')}</span>
+              </div>
+            )}
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          {t('ocrTranslator.subtitle')}
-        </p>
       </div>
 
       {/* Setup Card - Semplificato */}
-      <Card className="border-2 border-dashed border-muted-foreground/20">
-        <CardContent className="p-6 space-y-6">
+      <Card className="border border-dashed border-muted-foreground/20">
+        <CardContent className="p-4 space-y-4">
           {/* Step 1: Lingue */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-400 text-xs">1</span>
-              Scegli le lingue
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-md">1</span>
+              {t('ocrTranslator.chooseLanguages')}
             </div>
-            <div className="flex items-center gap-3 pl-8">
+            <div className="flex items-center gap-2 pl-8">
               <select 
-                className="flex-1 h-10 px-3 rounded-lg border bg-background text-sm"
+                className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm hover:border-blue-500/50 transition-colors"
                 value={config.language}
                 onChange={(e) => setConfig({...config, language: e.target.value})}
                 disabled={isRunning}
@@ -227,9 +243,9 @@ export default function OcrTranslatorPage() {
                   <option key={l.code} value={l.code}>{l.flag} {l.name}</option>
                 ))}
               </select>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
+              <div className="p-1.5 rounded-full bg-blue-500/10"><ArrowRight className="h-4 w-4 text-blue-400" /></div>
               <select 
-                className="flex-1 h-10 px-3 rounded-lg border bg-background text-sm"
+                className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm hover:border-blue-500/50 transition-colors"
                 value={config.target_language}
                 onChange={(e) => setConfig({...config, target_language: e.target.value})}
                 disabled={isRunning}
@@ -242,11 +258,11 @@ export default function OcrTranslatorPage() {
           </div>
 
           {/* Step 2: Finestra */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-400 text-xs">2</span>
-                Seleziona finestra del game
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-md">2</span>
+                {t('ocrTranslator.selectGameWindow')}
               </div>
               <Button variant="ghost" size="sm" onClick={loadWindows} disabled={isRunning}>
                 <RefreshCw className="h-4 w-4" />
@@ -254,23 +270,22 @@ export default function OcrTranslatorPage() {
             </div>
             <div className="pl-8 space-y-2">
               <select 
-                className="w-full h-10 px-3 rounded-lg border bg-background text-sm"
+                className="w-full h-9 px-3 rounded-lg border bg-background text-sm hover:border-blue-500/50 transition-colors"
                 value={config.target_window ?? ''}
                 onChange={(e) => setConfig({...config, target_window: e.target.value ? Number(e.target.value) : null})}
                 disabled={isRunning}
               >
-                <option value="">📺 Schermo intero</option>
+                <option value="">🖥️ {t('ocrTranslator.fullScreen')}</option>
                 {windows.map((w, i) => (
                   <option key={`${w.hwnd}-${i}`} value={w.hwnd}>
                     🎮 {w.title.length > 50 ? w.title.slice(0, 50) + '...' : w.title}
                   </option>
                 ))}
               </select>
-              <div className="flex items-start gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
-                <span className="text-base">⚠️</span>
+              <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
+                <span className="text-sm mt-0.5">⚠️</span>
                 <div>
-                  <span className="font-medium">Fullscreen non supportato:</span> Se il game è in fullscreen esclusivo, 
-                  passa a <span className="font-semibold">Borderless</span> o <span className="font-semibold">Windowed</span> nelle opzioni video del game.
+                  <span className="font-medium">{t('ocrTranslator.fullscreenWarning')}:</span> {t('ocrTranslator.fullscreenWarningDesc')}
                 </div>
               </div>
             </div>
@@ -280,10 +295,10 @@ export default function OcrTranslatorPage() {
           <div className="pl-8">
             <button 
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-blue-400 transition-colors"
             >
-              <Settings2 className="h-3 w-3" />
-              Opzioni avanzate
+              <Settings2 className="h-3.5 w-3.5" />
+              {t('ocrTranslator.advancedOptions')}
               {showAdvanced ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             </button>
             
@@ -292,8 +307,8 @@ export default function OcrTranslatorPage() {
                 {/* Gemini API Key */}
                 <div>
                   <label className="text-xs text-muted-foreground mb-2 block">
-                    Gemini API Key 
-                    <a href="https://aistudio.google.com/apikey" target="_blank" className="text-violet-400 hover:underline ml-1">(Ottieni gratis)</a>
+                    {t('ocrTranslator.geminiApiKey')} 
+                    <a href="https://aistudio.google.com/apikey" target="_blank" className="text-blue-400 hover:underline ml-1">{t('ocrTranslator.getForFree')}</a>
                   </label>
                   <input 
                     type="password"
@@ -306,7 +321,7 @@ export default function OcrTranslatorPage() {
                 </div>
                 <div>
                   <div className="flex justify-between text-xs mb-2">
-                    <span>Intervallo scansione</span>
+                    <span>{t('ocrTranslator.scanInterval')}</span>
                     <span className="font-mono">{config.capture_interval_ms}ms</span>
                   </div>
                   <input 
@@ -314,12 +329,12 @@ export default function OcrTranslatorPage() {
                     value={config.capture_interval_ms}
                     onChange={(e) => setConfig({...config, capture_interval_ms: Number(e.target.value)})}
                     disabled={isRunning}
-                    className="w-full accent-violet-500"
+                    className="w-full accent-blue-500"
                   />
                 </div>
                 <div>
                   <div className="flex justify-between text-xs mb-2">
-                    <span>Confidenza minima</span>
+                    <span>{t('ocrTranslator.minConfidenceLabel')}</span>
                     <span className="font-mono">{Math.round(config.min_confidence * 100)}%</span>
                   </div>
                   <input 
@@ -327,7 +342,7 @@ export default function OcrTranslatorPage() {
                     value={config.min_confidence * 100}
                     onChange={(e) => setConfig({...config, min_confidence: Number(e.target.value) / 100})}
                     disabled={isRunning}
-                    className="w-full accent-violet-500"
+                    className="w-full accent-blue-500"
                   />
                 </div>
               </div>
@@ -335,46 +350,47 @@ export default function OcrTranslatorPage() {
           </div>
 
           {/* Step 3: Avvia */}
-          <div className="pt-2">
+          <div>
             <Button 
               onClick={toggleOcr}
-              size="lg"
-              className={`w-full h-12 text-base ${isRunning ? 'bg-red-500 hover:bg-red-600' : 'bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600'}`}
+              size="default"
+              className={`w-full h-11 text-sm font-medium shadow-lg transition-all ${isRunning ? 'bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 shadow-red-500/25' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-blue-500/25'}`}
             >
               {isRunning ? (
                 <>
-                  <Square className="h-5 w-5 mr-2" />
-                  Ferma OCR
+                  <Square className="h-4 w-4 mr-2" />
+                  {t('ocrTranslator.stopCapture')}
                 </>
               ) : (
                 <>
-                  <Play className="h-5 w-5 mr-2" />
-                  Avvia Traduzione
+                  <Play className="h-4 w-4 mr-2" />
+                  {t('ocrTranslator.startTranslation')}
                 </>
               )}
             </Button>
-            <p className="text-center text-xs text-muted-foreground mt-2">
-              Scorciatoia: <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs">Ctrl+Shift+T</kbd>
-            </p>
-            
-            {/* Pulsante Overlay */}
-            <Button 
-              onClick={async () => {
-                try {
-                  await invoke('toggle_ocr_overlay', { show: !overlayOpen });
-                  setOverlayOpen(!overlayOpen);
-                  toast.success(overlayOpen ? 'Overlay chiuso' : 'Overlay aperto - Traduzioni visibili sul game');
-                } catch (e) {
-                  toast.error(`error overlay: ${e}`);
-                }
-              }}
-              variant="outline"
-              className="w-full mt-3 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
-              disabled={!isRunning}
-            >
-              <Layers className="h-4 w-4 mr-2" />
-              {overlayOpen ? 'Overlay Attivo' : 'Mostra Overlay In-Game'}
-            </Button>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-[10px] text-muted-foreground">
+                {t('ocrTranslator.shortcut')}: <kbd className="px-1 py-0.5 rounded bg-muted text-[10px]">Ctrl+Shift+T</kbd>
+              </span>
+              <Button 
+                onClick={async () => {
+                  try {
+                    await invoke('toggle_ocr_overlay', { show: !overlayOpen });
+                    setOverlayOpen(!overlayOpen);
+                    toast.success(overlayOpen ? t('ocrTranslator.overlayClosed') : t('ocrTranslator.overlayOpened'));
+                  } catch (e) {
+                    toast.error(`error overlay: ${e}`);
+                  }
+                }}
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-blue-400 hover:bg-blue-500/10"
+                disabled={!isRunning}
+              >
+                <Layers className="h-3 w-3 mr-1" />
+                {t('ocrTranslator.overlay')}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -385,13 +401,13 @@ export default function OcrTranslatorPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Monitor className="h-4 w-4 text-violet-400" />
-                <span className="font-medium">Testi Rilevati</span>
-                {isTranslating && <Loader2 className="h-4 w-4 animate-spin text-violet-400" />}
+                <Monitor className="h-4 w-4 text-blue-400" />
+                <span className="font-medium">{t('ocrTranslator.detectedTexts')}</span>
+                {isTranslating && <Loader2 className="h-4 w-4 animate-spin text-blue-400" />}
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <span className="text-muted-foreground">{detectedTexts.length} rilevati</span>
-                <span className="text-green-500">{detectedTexts.filter(t => t.translated).length} tradotti</span>
+                <span className="text-muted-foreground">{detectedTexts.length} {t('ocrTranslator.detected')}</span>
+                <span className="text-green-500">{detectedTexts.filter(tx => tx.translated).length} {t('ocrTranslator.translated')}</span>
               </div>
             </div>
             
@@ -405,7 +421,7 @@ export default function OcrTranslatorPage() {
               {detectedTexts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground">
                   <Scan className="h-10 w-10 mb-3 animate-pulse opacity-30" />
-                  <p className="text-sm">In attesa di testo...</p>
+                  <p className="text-sm">{t('ocrTranslator.waitingForText')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -428,10 +444,9 @@ export default function OcrTranslatorPage() {
       )}
 
       {/* Info */}
-      <div className="text-center text-xs text-muted-foreground space-y-1">
-        <p>💡 L'OCR funziona con qualsiasi game, anche quelli non supportati da XUnity</p>
-        <p>Le traduzioni usano Google Gemini AI per results accurati</p>
-      </div>
+      <p className="text-center text-[10px] text-muted-foreground">
+        💡 {t('ocrTranslator.footerInfo')}
+      </p>
     </div>
   );
 }

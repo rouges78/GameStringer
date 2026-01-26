@@ -45,25 +45,25 @@ export default function PluginsPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-3 overflow-y-auto">
       {/* Header con sfondo sfumato */}
-      <div className="relative overflow-hidden rounded-xl border border-slate-800/50 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-sky-950/30 p-3 shrink-0">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl" />
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 p-4 text-white shrink-0">
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/20">
-              <Puzzle className="h-5 w-5 text-white" />
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Puzzle className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-sky-400">{t('plugins.title')}</h1>
-              <p className="text-xs text-muted-foreground">{t('plugins.subtitle')}</p>
+              <h1 className="text-xl font-bold">{t('plugins.title')}</h1>
+              <p className="text-white/80 text-xs">{t('plugins.subtitle')}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-sky-500/10 text-sky-400 border-sky-500/30">
-              {plugins.length} {t('plugins.title')}
-            </Badge>
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-400 border-green-500/30">
-              {plugins.filter(p => p.enabled).length} {t('plugins.installed')}
-            </Badge>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
+              <span className="text-xs font-medium">{plugins.length} {t('plugins.title')}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
+              <Check className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">{plugins.filter(p => p.enabled).length} {t('plugins.installed')}</span>
+            </div>
           </div>
         </div>
       </div>

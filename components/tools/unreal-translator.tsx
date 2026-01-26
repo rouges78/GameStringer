@@ -27,6 +27,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { useTranslation } from '@/lib/i18n';
 
 interface Game {
   id: string;
@@ -65,6 +66,7 @@ interface CacheStats {
 }
 
 export function UnrealTranslator() {
+  const { t } = useTranslation();
   const [gamePath, setGamePath] = useState<string>('');
   const [exeName, setExeName] = useState<string>('');
   const [unrealGames, setUnrealGames] = useState<Game[]>([]);
@@ -288,119 +290,137 @@ export function UnrealTranslator() {
   );
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-orange-500/10">
-            <Cpu className="h-6 w-6 text-orange-500" />
+    <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-3 overflow-y-auto overflow-x-hidden">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-700 p-3">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Cpu className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">
+                {t('ueTranslator.title')}
+              </h2>
+              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {t('ueTranslator.subtitle')}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-red-400">UE Translator</h2>
-            <p className="text-sm text-muted-foreground">
-              Runtime translation for Unreal Engine 4/5
-            </p>
+          
+          <div className="hidden md:flex items-center gap-2">
+            {translatorState.is_injected && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-300" />
+                <span className="text-sm font-bold text-white">
+                  {translatorState.is_translating ? t('ueTranslator.active') : t('ueTranslator.paused')}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
+              <Gamepad2 className="h-3.5 w-3.5 text-emerald-300" />
+              <span className="text-sm font-bold text-white">{filteredGames.length}</span>
+              <span className="text-[10px] text-white/70">{t('ueTranslator.games')}</span>
+            </div>
           </div>
         </div>
-        
-        {translatorState.is_injected && (
-          <Badge variant={translatorState.is_translating ? "default" : "secondary"}>
-            {translatorState.is_translating ? "Translation Active" : "Paused"}
-          </Badge>
-        )}
       </div>
 
-      {/* Warning Banner */}
-      <Alert variant="destructive" className="bg-yellow-500/10 border-yellow-500/50">
-        <AlertTriangle className="h-4 w-4 text-yellow-500" />
-        <AlertTitle className="text-yellow-500">Experimental Feature</AlertTitle>
-        <AlertDescription className="text-yellow-500/80">
-          This feature requires the injection DLL which must be compiled separately.
-          Do not use on games with active anti-cheat.
-        </AlertDescription>
-      </Alert>
+      {/* Warning Banner - Lampeggiante */}
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/30 animate-pulse">
+        <Shield className="h-5 w-5 text-red-500 shrink-0" />
+        <div>
+          <p className="text-sm font-bold text-red-400">⚠ {t('ueTranslator.experimentalWarning')}</p>
+          <p className="text-xs text-red-500/80">{t('ueTranslator.experimentalDesc')}</p>
+        </div>
+      </div>
 
-      <div className="flex gap-4">
+      {/* Layout a 2 colonne */}
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Games List */}
-        <Card className="w-[400px] flex-shrink-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Gamepad2 className="h-4 w-4" />
-              Unreal Games ({filteredGames.length})
-            </CardTitle>
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search game..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 h-9"
-              />
+        <Card className="w-[400px] shrink-0 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col">
+          <CardHeader className="py-2 px-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Gamepad2 className="w-4 h-4 text-emerald-400" />
+                {t('ueTranslator.unrealGames')}
+                <Badge variant="outline" className="ml-1 text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-400 border-blue-500/30">
+                  {filteredGames.length}
+                </Badge>
+              </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="p-2">
-            <ScrollArea className="h-[400px]">
+          <CardContent className="p-2 pt-0 flex-1 flex flex-col min-h-0">
+            <div className="relative mb-2">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+              <Input
+                placeholder={t('gamePatcher.search')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-7 h-7 text-xs bg-slate-950/50 border-slate-800/70"
+              />
+            </div>
+            
+            <div className="flex-1 overflow-y-auto space-y-1">
               {isLoadingGames ? (
-                <div className="flex items-center justify-center h-32">
-                  <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                <div className="flex items-center justify-center h-16 text-muted-foreground">
+                  <div className="animate-spin w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full" />
                 </div>
               ) : filteredGames.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  <Cpu className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                  <p>No Unreal games found</p>
+                <div className="text-center py-4 text-xs text-muted-foreground">
+                  <Cpu className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p>{t('gamePatcher.noResults')}</p>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {filteredGames.map((game) => (
-                    <div
-                      key={game.id}
-                      onClick={() => handleSelectGame(game)}
-                      className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors ${
-                        selectedGame?.id === game.id 
-                          ? 'bg-orange-500/20 border border-orange-500/50' 
-                          : 'hover:bg-muted/50'
-                      }`}
-                    >
-                      {game.header_image ? (
-                        <Image
-                          src={game.header_image}
-                          alt={getGameName(game)}
-                          width={60}
-                          height={28}
-                          className="rounded object-cover"
-                        />
-                      ) : (
-                        <div className="w-[60px] h-[28px] bg-muted rounded flex items-center justify-center">
-                          <Gamepad2 className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{getGameName(game)}</p>
-                        <p className="text-xs text-muted-foreground">{game.engine}</p>
+                filteredGames.map((game) => (
+                  <button
+                    key={game.id}
+                    onClick={() => handleSelectGame(game)}
+                    className={`w-full flex items-center gap-2 p-2 rounded-lg text-left text-xs transition-all border ${
+                      selectedGame?.id === game.id 
+                        ? 'bg-gradient-to-r from-blue-500/20 to-cyan-400/10 border-blue-500/40 text-white shadow-sm' 
+                        : 'border-transparent hover:bg-blue-500/10 hover:border-blue-500/20 text-slate-300'
+                    }`}
+                  >
+                    {game.header_image ? (
+                      <Image src={game.header_image} alt="" width={44} height={20} className="rounded object-cover shrink-0" />
+                    ) : (
+                      <div className="w-11 h-[20px] bg-slate-800/80 rounded flex items-center justify-center shrink-0">
+                        <Gamepad2 className="w-3 h-3 text-slate-500" />
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    )}
+                    <span className="truncate flex-1 font-medium text-[11px]">{getGameName(game)}</span>
+                    <Badge variant="outline" className="text-[8px] px-1 py-0 shrink-0 bg-blue-500/20 text-blue-400 border-blue-500/40">
+                      UE
+                    </Badge>
+                    {selectedGame?.id === game.id && (
+                      <CheckCircle2 className="w-3 h-3 shrink-0 text-blue-400" />
+                    )}
+                  </button>
+                ))
               )}
-            </ScrollArea>
+            </div>
           </CardContent>
         </Card>
 
         {/* Configuration Panel */}
-        <Card className="flex-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Configuration
+        <Card className="flex-1 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30 flex flex-col overflow-hidden">
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Settings className="w-4 h-4 text-emerald-400" />
+              {selectedGame ? getGameName(selectedGame) : t('ueTranslator.configuration')}
             </CardTitle>
-            <CardDescription>
-              {selectedGame ? getGameName(selectedGame) : 'Select a game from the list'}
-            </CardDescription>
+            {!selectedGame && (
+              <CardDescription className="text-xs">{t('ueTranslator.selectGame')}</CardDescription>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Game Path */}
             <div className="space-y-2">
-              <Label>Game Folder</Label>
+              <Label>{t('ueTranslator.gameFolder')}</Label>
               <div className="flex gap-2">
                 <Input
                   value={gamePath}
@@ -416,7 +436,7 @@ export function UnrealTranslator() {
 
             {/* Executable */}
             <div className="space-y-2">
-              <Label>Executable</Label>
+              <Label>{t('ueTranslator.executable')}</Label>
               <Input
                 value={exeName}
                 onChange={(e) => setExeName(e.target.value)}
@@ -445,7 +465,7 @@ export function UnrealTranslator() {
 
             {/* Language Selection */}
             <div className="space-y-2">
-              <Label>Translation Language</Label>
+              <Label>{t('ueTranslator.translationLanguage')}</Label>
               <select
                 value={targetLanguage}
                 onChange={(e) => setTargetLanguage(e.target.value)}
@@ -461,7 +481,7 @@ export function UnrealTranslator() {
 
             {/* Auto Translate Toggle */}
             <div className="flex items-center justify-between">
-              <Label>Automatic Translation</Label>
+              <Label>{t('ueTranslator.automaticTranslation')}</Label>
               <Switch
                 checked={autoTranslate}
                 onCheckedChange={setAutoTranslate}
@@ -471,10 +491,10 @@ export function UnrealTranslator() {
             {/* Cache Stats */}
             {cacheStats && (
               <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                <p className="text-sm font-medium">Cache Statistics</p>
+                <p className="text-sm font-medium">{t('ueTranslator.cacheStats')}</p>
                 <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <span>Translations: {cacheStats.total_entries}</span>
-                  <span>Hit Rate: {(cacheStats.hit_rate * 100).toFixed(1)}%</span>
+                  <span>{t('ueTranslator.translations')}: {cacheStats.total_entries}</span>
+                  <span>{t('ueTranslator.hitRate')}: {(cacheStats.hit_rate * 100).toFixed(1)}%</span>
                 </div>
               </div>
             )}
@@ -483,12 +503,12 @@ export function UnrealTranslator() {
             <div className="flex gap-2 pt-4">
               {!translatorState.is_injected ? (
                 <Button 
-                  className="flex-1 bg-orange-500 hover:bg-orange-600"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-500"
                   onClick={handleStartTranslator}
                   disabled={!gamePath || !exeName || (compatibility && !compatibility.is_compatible)}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  Start Translator
+                  {t('ueTranslator.startTranslator')}
                 </Button>
               ) : (
                 <>
@@ -497,14 +517,14 @@ export function UnrealTranslator() {
                     className="flex-1"
                     onClick={handleToggleTranslation}
                   >
-                    {translatorState.is_translating ? 'Pause' : 'Resume'}
+                    {translatorState.is_translating ? t('ueTranslator.pauseTranslator') : t('ueTranslator.resumeTranslator')}
                   </Button>
                   <Button 
                     variant="destructive"
                     onClick={handleStopTranslator}
                   >
                     <Square className="h-4 w-4 mr-2" />
-                    Stop
+                    {t('ueTranslator.stopTranslator')}
                   </Button>
                 </>
               )}
@@ -518,7 +538,7 @@ export function UnrealTranslator() {
               onClick={handleClearCache}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Clear Cache
+              {t('ueTranslator.clearCache')}
             </Button>
           </CardContent>
         </Card>

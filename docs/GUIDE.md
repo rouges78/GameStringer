@@ -1,6 +1,6 @@
 # 📚 GameStringer Complete Guide
 
-> **Version**: 1.0.3  
+> **Version**: 1.0.4  
 > **Last Updated**: January 2026
 
 ---
@@ -30,9 +30,10 @@
 ### Key Features
 
 - **15+ AI Providers**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, Cohere, DeepL, Ollama (local), LM Studio, and more
-- **Multi-Engine Support**: Unity, Unreal Engine, Godot, RPG Maker, Ren'Py, GameMaker, Telltale
+- **Multi-Engine Support**: Unity, Unreal Engine, Godot, RPG Maker, Ren'Py, GameMaker, Telltale, Wolf RPG, Kirikiri
 - **Store Integration**: Steam, Epic Games, GOG, Origin, Ubisoft Connect, Battle.net, itch.io
 - **Professional Tools**: OCR Translator, Voice Pipeline, Real-time Overlay, Translation Memory
+- **NEW v1.0.4**: Subtitle Translator Pro (SRT/VTT/ASS), Retro ROM Tools (8 consoles), Public API v1
 
 ---
 

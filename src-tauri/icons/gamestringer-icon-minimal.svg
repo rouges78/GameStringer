@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Gradient principale -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED"/>
+      <stop offset="100%" style="stop-color:#DB2777"/>
+    </linearGradient>
+    
+    <!-- Ombra esterna -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#581C87" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Sfondo quadrato arrotondato -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bg)" filter="url(#shadow)"/>
+  
+  <!-- Bordo luminoso -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
+  
+  <!-- G stilizzata come controller -->
+  <g transform="translate(256, 256)">
+    <!-- Corpo della G -->
+    <path 
+      d="M 80 -60 
+         A 120 120 0 1 0 80 60 
+         L 20 60 
+         L 20 10 
+         L 50 10 
+         L 50 -10 
+         L -10 -10 
+         L -10 90 
+         A 150 150 0 1 1 110 -90 
+         L 80 -60 Z"
+      fill="white"
+      transform="translate(-10, 0)"
+    />
+    
+    <!-- Dettaglio gamepad nella G -->
+    <circle cx="-50" cy="30" r="12" fill="rgba(124,58,237,0.8)"/>
+    <circle cx="-20" cy="30" r="8" fill="rgba(219,39,119,0.8)"/>
+  </g>
+  
+  <!-- Sparkle -->
+  <circle cx="400" cy="112" r="8" fill="white" opacity="0.9"/>
+  <circle cx="420" cy="140" r="4" fill="white" opacity="0.6"/>
+</svg>

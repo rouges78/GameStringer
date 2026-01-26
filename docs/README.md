@@ -76,7 +76,6 @@ Benvenuto nella documentazione completa di GameStringer! Qui troverai tutte le i
 - **Email Generale**: support@gamestringer.com
 - **Supporto Migrazione**: migration-support@gamestringer.com
 - **Supporto Critico**: critical-support@gamestringer.com
-- **Discord Community**: [Link server Discord]
 - **GitHub Issues**: [Link repository]
 
 ### 📦 Informazioni Supporto

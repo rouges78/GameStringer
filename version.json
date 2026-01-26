@@ -1,14 +1,27 @@
 {
-  "version": "1.0.4",
+  "version": "1.0.5",
   "major": 1,
   "minor": 0,
-  "patch": 4,
+  "patch": 5,
   "prerelease": null,
-  "buildNumber": 104,
-  "buildDate": "2026-01-23T00:00:00.000Z",
+  "buildNumber": 105,
+  "buildDate": "2026-01-26T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.5": {
+      "date": "2026-01-26",
+      "type": "feature",
+      "changes": [
+        "Voice Clone Studio: AI voice cloning with ElevenLabs and OpenAI TTS",
+        "VR Text Overlay: Spatial subtitles for VR games with headset detection",
+        "Quality Gates: Automatic translation quality control system",
+        "Player Feedback: Collect and manage player translation feedback",
+        "Guide Page: Documentation for all 4 new tools",
+        "i18n: Translations for all new features in 7 languages (IT, EN, ES, DE, JA, ZH)",
+        "UI: Green hero headers for Tools section pages"
+      ]
+    },
     "1.0.4": {
       "date": "2026-01-23",
       "type": "feature",

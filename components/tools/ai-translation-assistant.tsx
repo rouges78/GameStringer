@@ -2,34 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Brain, 
   Cpu, 
   Cloud, 
-  Zap, 
-  Settings2, 
   RefreshCw,
   Copy,
   Check,
   AlertCircle,
   Sparkles,
   BookOpen,
-  MessageSquare,
   Gamepad2,
-  Download,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ArrowRight,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -52,23 +45,11 @@ import {
 } from '@/lib/ai-translation-service';
 
 const genres = [
-  { value: 'rpg', label: 'RPG', icon: '⚔️' },
-  { value: 'action', label: 'Action', icon: '💥' },
-  { value: 'horror', label: 'Horror', icon: '👻' },
-  { value: 'adventure', label: 'Adventure', icon: '🗺️' },
-  { value: 'strategy', label: 'Strategy', icon: '♟️' },
-  { value: 'simulation', label: 'Simulation', icon: '🏗️' },
-  { value: 'puzzle', label: 'Puzzle', icon: '🧩' },
-  { value: 'visual_novel', label: 'Visual Novel', icon: '📖' },
-];
-
-const tones = [
-  { value: 'serious', label: 'Serious' },
-  { value: 'comedic', label: 'Comedic' },
-  { value: 'dark', label: 'Dark' },
-  { value: 'epic', label: 'Epic' },
-  { value: 'casual', label: 'Casual' },
-  { value: 'mysterious', label: 'Mysterious' },
+  { value: 'rpg', label: 'RPG' },
+  { value: 'action', label: 'Action' },
+  { value: 'horror', label: 'Horror' },
+  { value: 'adventure', label: 'Adventure' },
+  { value: 'visual_novel', label: 'Visual Novel' },
 ];
 
 const textTypes = [
@@ -77,8 +58,13 @@ const textTypes = [
   { value: 'item', label: 'Item', icon: '🎒' },
   { value: 'quest', label: 'Quest', icon: '📜' },
   { value: 'lore', label: 'Lore', icon: '📚' },
-  { value: 'system', label: 'System', icon: '⚙️' },
-  { value: 'tutorial', label: 'Tutorial', icon: '📋' },
+];
+
+const tones = [
+  { value: 'serious', label: 'Serious' },
+  { value: 'comedic', label: 'Comedic' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'epic', label: 'Epic' },
 ];
 
 export function AITranslationAssistant() {
@@ -101,7 +87,7 @@ export function AITranslationAssistant() {
   const [maxLength, setMaxLength] = useState<number | undefined>(undefined);
   const [generateAlternatives, setGenerateAlternatives] = useState(false);
   
-  const [showContext, setShowContext] = useState(false);
+  const [showContext, setShowContext] = useState(false); // Collapsed di default
   const [gameContext, setGameContext] = useState<GameTranslationContext>({
     gameTitle: '',
     genre: 'rpg',
@@ -226,195 +212,151 @@ export function AITranslationAssistant() {
   const localProviderAvailable = providers.some(p => p.type === 'local' && p.isAvailable);
 
   return (
-    <div className="space-y-6">
-
-      {/* Provider Status */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="space-y-3">
+      {/* Top Bar: Provider + Model */}
+      <div className="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-slate-800/30 border border-slate-700/50">
         {providers.map(provider => (
-          <Card 
+          <button
             key={provider.id}
-            className={`cursor-pointer transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
               selectedProvider === provider.id 
-                ? 'ring-2 ring-primary' 
-                : 'hover:border-primary/50'
-            } ${!provider.isAvailable && provider.type === 'local' ? 'opacity-50' : ''}`}
+                ? 'bg-blue-600 text-white' 
+                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+            } ${!provider.isAvailable && provider.type === 'local' ? 'opacity-40' : ''}`}
             onClick={() => {
               if (provider.isAvailable || provider.type === 'cloud') {
                 setSelectedProvider(provider.id);
-                if (provider.models.length > 0) {
-                  setSelectedModel(provider.models[0]);
-                }
+                if (provider.models.length > 0) setSelectedModel(provider.models[0]);
               }
             }}
           >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {provider.type === 'local' ? (
-                    <Cpu className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Cloud className="h-5 w-5 text-blue-500" />
-                  )}
-                  <span className="font-medium">{provider.name}</span>
-                </div>
-                <Badge variant={provider.isAvailable ? 'default' : 'secondary'}>
-                  {provider.isAvailable ? t('aiTranslation.online') : t('aiTranslation.offline')}
-                </Badge>
-              </div>
-              {provider.isAvailable && provider.models.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {provider.models.length} {t('aiTranslation.modelsAvailable')}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+            {provider.type === 'local' ? <Cpu className="h-3 w-3" /> : <Cloud className="h-3 w-3" />}
+            {provider.name}
+            <span className={`w-1.5 h-1.5 rounded-full ${provider.isAvailable ? 'bg-green-400' : 'bg-slate-500'}`} />
+          </button>
         ))}
+        
+        {providers.find(p => p.id === selectedProvider)?.models.length! > 0 && (
+          <>
+            <div className="h-4 w-px bg-slate-600 mx-1" />
+            <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <SelectTrigger className="h-7 w-32 text-xs bg-slate-700/50 border-slate-600">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.find(p => p.id === selectedProvider)?.models.map(model => (
+                  <SelectItem key={model} value={model} className="text-xs">{model}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        )}
       </div>
 
-      {/* Ollama Not Available Warning */}
+      {/* Ollama Warning */}
       {!localProviderAvailable && !isCheckingProviders && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <strong>{t('aiTranslation.ollamaNotDetected')}</strong> {t('aiTranslation.ollamaInstallHint')}{' '}
-            <a href="https://ollama.ai" target="_blank" rel="noopener" className="underline">
-              ollama.ai
-            </a>{' '}
-            {t('aiTranslation.ollamaStartHint')} <code className="bg-muted px-1 rounded">ollama run llama3.2</code>
-          </AlertDescription>
-        </Alert>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-yellow-500/10 border border-yellow-500/20 text-xs">
+          <AlertCircle className="h-3 w-3 text-yellow-500" />
+          <span className="text-yellow-300">
+            Ollama non rilevato. <a href="https://ollama.ai" target="_blank" className="underline">ollama.ai</a> → <code className="bg-slate-800 px-1 rounded text-[10px]">ollama run llama3.2</code>
+          </span>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Translation Panel */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Model Selection */}
-          {providers.find(p => p.id === selectedProvider)?.models.length! > 0 && (
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <Label className="whitespace-nowrap">{t('aiTranslation.model')}</Label>
-                  <Select value={selectedModel} onValueChange={setSelectedModel}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {providers.find(p => p.id === selectedProvider)?.models.map(model => (
-                        <SelectItem key={model} value={model}>{model}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+        {/* Main Panel */}
+        <div className="lg:col-span-8 space-y-3">
+          {/* Languages + Type Row */}
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-[280px]">
+              <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
+                <SelectTrigger className="h-9 flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">🇺🇸 English</SelectItem>
+                  <SelectItem value="ja">🇯🇵 Japanese</SelectItem>
+                  <SelectItem value="zh">🇨🇳 Chinese</SelectItem>
+                  <SelectItem value="ko">🇰🇷 Korean</SelectItem>
+                  <SelectItem value="de">🇩🇪 German</SelectItem>
+                  <SelectItem value="fr">🇫🇷 French</SelectItem>
+                  <SelectItem value="es">🇪🇸 Spanish</SelectItem>
+                </SelectContent>
+              </Select>
+              <ArrowRight className="h-4 w-4 text-slate-500 flex-shrink-0" />
+              <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                <SelectTrigger className="h-9 flex-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="it">🇮🇹 Italian</SelectItem>
+                  <SelectItem value="en">🇺🇸 English</SelectItem>
+                  <SelectItem value="es">🇪🇸 Spanish</SelectItem>
+                  <SelectItem value="fr">🇫🇷 French</SelectItem>
+                  <SelectItem value="de">🇩🇪 German</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Type + Character */}
+            <Select value={textType} onValueChange={setTextType}>
+              <SelectTrigger className="h-9 w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {textTypes.map(type => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.icon} {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Input
+              value={speaker}
+              onChange={(e) => setSpeaker(e.target.value)}
+              placeholder={t('aiTranslation.characterPlaceholder') || 'Personaggio'}
+              className="h-9 w-40"
+            />
+          </div>
 
-          {/* Translation Input */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                {t('aiTranslation.textToTranslate')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('aiTranslation.sourceLanguage')}</Label>
-                  <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">🇺🇸 English</SelectItem>
-                      <SelectItem value="it">🇮🇹 Italian</SelectItem>
-                      <SelectItem value="es">🇪🇸 Spanish</SelectItem>
-                      <SelectItem value="fr">🇫🇷 French</SelectItem>
-                      <SelectItem value="de">🇩🇪 German</SelectItem>
-                      <SelectItem value="ja">🇯🇵 Japanese</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('aiTranslation.targetLanguage')}</Label>
-                  <Select value={targetLanguage} onValueChange={setTargetLanguage}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="it">🇮🇹 Italian</SelectItem>
-                      <SelectItem value="en">🇺🇸 English</SelectItem>
-                      <SelectItem value="es">🇪🇸 Spanish</SelectItem>
-                      <SelectItem value="fr">🇫🇷 French</SelectItem>
-                      <SelectItem value="de">🇩🇪 German</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+          {/* Text Input */}
+          <Textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            placeholder={t('aiTranslation.enterText') || 'Inserisci il testo da tradurre...'}
+            className="min-h-[100px] resize-none"
+          />
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('aiTranslation.textType')}</Label>
-                  <Select value={textType} onValueChange={setTextType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {textTypes.map(type => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.icon} {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('aiTranslation.character')}</Label>
-                  <Input
-                    value={speaker}
-                    onChange={(e) => setSpeaker(e.target.value)}
-                    placeholder={t('aiTranslation.characterPlaceholder')}
-                  />
-                </div>
-              </div>
-
-              <Textarea
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                placeholder={t('aiTranslation.enterText')}
-                className="min-h-[120px]"
+          {/* Actions Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={generateAlternatives}
+                onCheckedChange={setGenerateAlternatives}
+                className="scale-90"
               />
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={generateAlternatives}
-                      onCheckedChange={setGenerateAlternatives}
-                    />
-                    <Label className="text-sm">{t('aiTranslation.alternative')}</Label>
-                  </div>
-                </div>
-                <Button 
-                  onClick={handleTranslate} 
-                  disabled={isTranslating || !inputText.trim()}
-                  className="min-w-[140px]"
-                >
-                  {isTranslating ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      {t('aiTranslation.translating')}
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      {t('aiTranslation.translateWithAI')}
-                    </>
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <Label className="text-xs text-slate-400">{t('aiTranslation.alternative') || 'Alternative'}</Label>
+            </div>
+            <Button 
+              onClick={handleTranslate} 
+              disabled={isTranslating || !inputText.trim()}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-500"
+            >
+              {isTranslating ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                  Traduzione...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                  Traduci
+                </>
+              )}
+            </Button>
+          </div>
 
           {/* Translation Result */}
           {translatedText && (
@@ -433,7 +375,7 @@ export function AITranslationAssistant() {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 px-3 pb-3">
                 <div className="relative">
                   <Textarea
                     value={translatedText}
@@ -475,23 +417,18 @@ export function AITranslationAssistant() {
           )}
         </div>
 
-        {/* Context Panel */}
-        <div className="space-y-4">
+        {/* Context Panel - Sidebar */}
+        <div className="lg:col-span-4 space-y-2">
           <Collapsible open={showContext} onOpenChange={setShowContext}>
-            <Card>
+            <Card className="border-slate-700/50">
               <CollapsibleTrigger asChild>
-                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <Gamepad2 className="h-5 w-5" />
-                      {t('aiTranslation.gameContext')}
-                    </span>
-                    {showContext ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </CardTitle>
-                  <CardDescription>
-                    {t('aiTranslation.gameContextDesc')}
-                  </CardDescription>
-                </CardHeader>
+                <div className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Gamepad2 className="h-4 w-4 text-blue-400" />
+                    <span className="text-sm font-medium">{t('aiTranslation.gameContext')}</span>
+                  </div>
+                  {showContext ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <CardContent className="space-y-4 pt-0">
@@ -516,7 +453,7 @@ export function AITranslationAssistant() {
                       <SelectContent>
                         {genres.map(g => (
                           <SelectItem key={g.value} value={g.value}>
-                            {g.icon} {g.label}
+                            {g.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -553,18 +490,13 @@ export function AITranslationAssistant() {
             </Card>
           </Collapsible>
 
-          {/* Glossary */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                {t('aiTranslation.glossary')}
-              </CardTitle>
-              <CardDescription>
-                {t('aiTranslation.glossaryDesc')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Glossary - Compatto */}
+          <Card className="border-slate-700/50">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-700/30">
+              <BookOpen className="h-4 w-4 text-blue-400" />
+              <span className="text-sm font-medium">{t('aiTranslation.glossary')}</span>
+            </div>
+            <CardContent className="space-y-2 p-3">
               <div className="flex gap-2">
                 <Input
                   value={glossaryTerm}
@@ -578,7 +510,7 @@ export function AITranslationAssistant() {
                   placeholder={t('aiTranslation.translationPlaceholder')}
                   className="flex-1"
                 />
-                <Button size="icon" onClick={addGlossaryTerm}>
+                <Button size="icon" onClick={addGlossaryTerm} className="bg-blue-600 hover:bg-blue-500">
                   <Check className="h-4 w-4" />
                 </Button>
               </div>

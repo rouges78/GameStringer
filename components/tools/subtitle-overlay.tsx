@@ -176,7 +176,7 @@ export function SubtitleOverlay() {
           {/* Controls */}
           <div className="flex items-center gap-3">
             {!isActive ? (
-              <Button onClick={handleStart} className="bg-white text-emerald-600 hover:bg-white/90 shadow-lg" size="lg">
+              <Button onClick={handleStart} variant="outline" className="border-white/50 text-white hover:bg-white/10 hover:border-white" size="lg">
                 <Play className="h-5 w-5 mr-2" />
                 {t('subtitleOverlay.startCapture')}
               </Button>
@@ -185,7 +185,7 @@ export function SubtitleOverlay() {
                 <Button onClick={handlePause} variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/20">
                   {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
                 </Button>
-                <Button onClick={handleStop} className="bg-red-500/80 hover:bg-red-500 text-white" size="lg">
+                <Button onClick={handleStop} variant="outline" className="border-red-400/50 text-red-300 hover:bg-red-500/10 hover:border-red-400" size="lg">
                   <Square className="h-5 w-5 mr-2" />
                   {t('subtitleOverlay.stop')}
                 </Button>
@@ -389,7 +389,7 @@ export function SubtitleOverlay() {
                     min={12}
                     max={48}
                     step={1}
-                    className="mt-1"
+                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
                   />
                 </div>
 
@@ -405,7 +405,7 @@ export function SubtitleOverlay() {
                     min={0}
                     max={100}
                     step={5}
-                    className="mt-1"
+                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
                   />
                 </div>
 
@@ -415,6 +415,7 @@ export function SubtitleOverlay() {
                   <Switch
                     checked={config.shadow}
                     onCheckedChange={(v) => setConfig(c => ({ ...c, shadow: v }))}
+                    className="data-[state=checked]:bg-teal-500"
                   />
                 </div>
               </TabsContent>
@@ -444,6 +445,7 @@ export function SubtitleOverlay() {
                   <Switch
                     checked={config.showOriginal}
                     onCheckedChange={(v) => setConfig(c => ({ ...c, showOriginal: v }))}
+                    className="data-[state=checked]:bg-teal-500"
                   />
                 </div>
 
@@ -478,7 +480,7 @@ export function SubtitleOverlay() {
                     min={0}
                     max={100}
                     step={4}
-                    className="mt-1"
+                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
                   />
                 </div>
               </TabsContent>
@@ -496,7 +498,7 @@ export function SubtitleOverlay() {
                     min={1000}
                     max={15000}
                     step={500}
-                    className="mt-1"
+                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
                   />
                 </div>
 
@@ -512,7 +514,7 @@ export function SubtitleOverlay() {
                     min={0}
                     max={1000}
                     step={50}
-                    className="mt-1"
+                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
                   />
                 </div>
 
@@ -528,7 +530,7 @@ export function SubtitleOverlay() {
                     min={0}
                     max={1000}
                     step={50}
-                    className="mt-1"
+                    className="mt-1 [&_[data-slot=range]]:bg-teal-500 [&_[data-slot=thumb]]:bg-teal-500 [&_[data-slot=thumb]]:border-teal-500"
                   />
                 </div>
 

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- Gradient arancione-rosso -->
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F97316"/>
+      <stop offset="100%" style="stop-color:#EA580C"/>
+    </linearGradient>
+    
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#C2410C" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Sfondo -->
+  <rect x="32" y="32" width="448" height="448" rx="88" fill="url(#orangeGrad)" filter="url(#shadow)"/>
+  
+  <!-- Icona traduzione grande -->
+  <g transform="translate(256, 256)">
+    <text x="-110" y="25" fill="white" font-family="Arial, sans-serif" font-size="120" font-weight="bold">A</text>
+    <line x1="-20" y1="0" x2="40" y2="0" stroke="rgba(255,255,255,0.8)" stroke-width="8" stroke-linecap="round"/>
+    <path d="M 28 -15 L 45 0 L 28 15" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="60" y="30" fill="white" font-family="Arial, sans-serif" font-size="110" font-weight="bold">文</text>
+  </g>
+  
+  <circle cx="420" cy="100" r="6" fill="white" opacity="0.6"/>
+</svg>

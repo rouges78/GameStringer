@@ -376,18 +376,18 @@ export function VoiceTranslator() {
   return (
     <div className="space-y-3">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-500 via-blue-500 to-cyan-500 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 rounded-lg bg-black/20 backdrop-blur-sm shadow-lg">
-              <Volume2 className="h-4 w-4 text-white" />
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Volume2 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">{t('voiceTranslator.title')}</h2>
-              <p className="text-white/90 text-[10px] drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">{t('voiceTranslator.subtitle')}</p>
+              <h1 className="text-xl font-bold text-white">{t('voiceTranslator.title')}</h1>
+              <p className="text-sm text-white/70">{t('voiceTranslator.subtitle')}</p>
             </div>
           </div>
           
@@ -417,9 +417,9 @@ export function VoiceTranslator() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Recording Section */}
           <Card>
-            <CardHeader className="py-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Mic className="h-4 w-4" />
+            <CardHeader className="py-3 border-b border-border/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Mic className="h-4 w-4 text-blue-400" />
                 {t('voiceTranslator.recordOrUpload')}
               </CardTitle>
             </CardHeader>
@@ -494,7 +494,9 @@ export function VoiceTranslator() {
                   </SelectTrigger>
                   <SelectContent>
                     {LANGUAGES.map(lang => (
-                      <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
+                      <SelectItem key={lang.code} value={lang.code}>
+                        {lang.code === 'auto' ? t('voiceTranslator.autoDetect') : lang.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -504,7 +506,7 @@ export function VoiceTranslator() {
               <Button
                 onClick={transcribeAudio}
                 disabled={!state.audioBlob || state.isTranscribing}
-                className="w-full bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
+                className="w-full bg-blue-600 hover:bg-blue-500"
               >
                 {state.isTranscribing ? (
                   <>
@@ -523,9 +525,9 @@ export function VoiceTranslator() {
 
           {/* Transcription Result */}
           <Card>
-            <CardHeader className="py-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <FileAudio className="h-4 w-4" />
+            <CardHeader className="py-3 border-b border-border/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <FileAudio className="h-4 w-4 text-cyan-400" />
                 {t('voiceTranslator.transcription')}
               </CardTitle>
             </CardHeader>
@@ -544,9 +546,9 @@ export function VoiceTranslator() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Translation Section */}
           <Card>
-            <CardHeader className="py-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Languages className="h-4 w-4" />
+            <CardHeader className="py-3 border-b border-border/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Languages className="h-4 w-4 text-blue-400" />
                 {t('voiceTranslator.translation')}
               </CardTitle>
             </CardHeader>
@@ -572,6 +574,7 @@ export function VoiceTranslator() {
                   onClick={translateText}
                   disabled={!state.transcription || state.isTranslating}
                   size="sm"
+                  className="bg-blue-500 hover:bg-blue-600"
                 >
                   {state.isTranslating ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -595,9 +598,9 @@ export function VoiceTranslator() {
 
           {/* TTS Section */}
           <Card>
-            <CardHeader className="py-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Volume2 className="h-4 w-4" />
+            <CardHeader className="py-3 border-b border-border/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-cyan-400" />
                 {t('voiceTranslator.textToSpeech')}
               </CardTitle>
             </CardHeader>
@@ -607,10 +610,10 @@ export function VoiceTranslator() {
                 {TTS_VOICES.map(voice => (
                   <Button
                     key={voice.id}
-                    variant={state.selectedVoice === voice.id ? 'default' : 'outline'}
+                    variant="outline"
                     size="sm"
                     onClick={() => setState(prev => ({ ...prev, selectedVoice: voice.id }))}
-                    className="text-xs"
+                    className={`text-xs ${state.selectedVoice === voice.id ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : ''}`}
                   >
                     {voice.name}
                   </Button>
@@ -636,7 +639,7 @@ export function VoiceTranslator() {
               <Button
                 onClick={synthesizeSpeech}
                 disabled={!state.translation || state.isSynthesizing}
-                className="w-full bg-gradient-to-r from-blue-500 to-cyan-600"
+                className="w-full bg-blue-600 hover:bg-blue-500"
               >
                 {state.isSynthesizing ? (
                   <>
@@ -687,7 +690,7 @@ export function VoiceTranslator() {
           onClick={runFullPipeline}
           disabled={state.isTranscribing || state.isTranslating || state.isSynthesizing}
           size="lg"
-          className="w-full bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500"
+          className="w-full bg-blue-600 hover:bg-blue-500"
         >
           <Wand2 className="h-5 w-5 mr-2" />
           {t('voiceTranslator.runFullPipeline')}

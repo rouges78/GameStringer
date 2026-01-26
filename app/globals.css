@@ -65,6 +65,25 @@
   100% { background-position: 0% 50%; }
 }
 
+/* Logo glow animation - colori proiettati */
+@keyframes logoGlow {
+  0%, 100% { 
+    filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.4)) drop-shadow(0 0 10px rgba(99, 102, 241, 0.3));
+  }
+  33% { 
+    filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.5)) drop-shadow(0 0 12px rgba(139, 92, 246, 0.35));
+  }
+  66% { 
+    filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.5)) drop-shadow(0 0 12px rgba(139, 92, 246, 0.35));
+  }
+}
+
+/* Gradient text animation */
+@keyframes gradientMove {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
 /* Toast animations */
 @keyframes toast-slide-in {
   from {
@@ -508,4 +527,77 @@
 
 .progress-minimized-enter {
   animation: bounce-in 0.6s ease-out;
+}
+
+/* ============================================================================
+   UI ENHANCEMENTS - Micro-animazioni, transizioni e hover effects
+   ============================================================================ */
+
+/* 1. Fade-in animation per contenuti */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* 2. Card hover effects con scale e glow */
+.card-hover {
+  transition: all 0.2s ease-out;
+}
+
+.card-hover:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+/* Feature card glow */
+.feature-card {
+  transition: all 0.2s ease-out;
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 0 0 15px rgba(59, 130, 246, 0.15);
+}
+
+/* 3. Button hover enhanced */
+.btn-glow {
+  transition: all 0.2s ease-out;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Icon hover spin */
+.icon-hover-spin {
+  transition: transform 0.3s ease-out;
+}
+
+.icon-hover-spin:hover {
+  transform: rotate(15deg);
+}
+
+/* Pulse effect for interactive elements */
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.hover-pulse:hover {
+  animation: subtle-pulse 1.5s ease-in-out infinite;
+}
+
+/* Glow border on focus/hover */
+.glow-border {
+  transition: box-shadow 0.2s ease-out, border-color 0.2s ease-out;
+}
+
+.glow-border:hover, .glow-border:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }

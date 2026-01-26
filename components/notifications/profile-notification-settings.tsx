@@ -120,50 +120,27 @@ export const ProfileNotificationSettings: React.FC<ProfileNotificationSettingsPr
   return (
     <div className={className}>
       <Card className="border-slate-800 bg-slate-900/50">
-        <CardHeader className="py-3 px-4 border-b border-slate-800">
-          <CardTitle className="text-sm font-medium flex items-center space-x-2">
-            <User className="h-4 w-4 text-blue-500" />
-            <span>{t('notifications.profileSettings')}</span>
-          </CardTitle>
-          <CardDescription className="text-xs mt-1">
-            {t('notifications.configFor')} <strong>{currentProfile.name}</strong>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-4 space-y-6">
-          {/* Info Profilo Compatte */}
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground bg-slate-950/30 p-2 rounded border border-slate-800">
-            <div className="flex items-center space-x-3">
-              <span>ID: {currentProfile.id.substring(0, 8)}...</span>
-              <span>•</span>
-              <span>{t('notifications.created')}: {new Date(currentProfile.created_at).toLocaleDateString()}</span>
-            </div>
-            {lastSaved && (
-              <div className="flex items-center space-x-1 text-green-500/70">
-                <Bell className="h-3 w-3" />
-                <span>{t('notifications.saved')}: {lastSaved.toLocaleTimeString()}</span>
-              </div>
-            )}
+        {/* Header pulito */}
+        <div className="flex items-center justify-between px-3 py-2 border-b border-slate-800/50">
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-blue-400" />
+            <span className="text-sm font-medium text-white">{currentProfile.name}</span>
           </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
+            <div className={`w-1.5 h-1.5 rounded-full ${autoSaveEnabled ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+            {t('notifications.autoSave')}
+          </div>
+        </div>
 
-          {/* Componente impostazioni notifiche */}
+        {/* Contenuto principale */}
+        <div className="p-3">
           <NotificationSettings
             preferences={preferences}
             onPreferencesChange={handleUpdatePreferences}
             isLoading={preferencesLoading}
-            className="space-y-4"
+            className="space-y-2"
           />
-
-          {/* Footer salvataggio */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800/50">
-            <div className="flex items-center space-x-2">
-              <div className={`w-1.5 h-1.5 rounded-full ${autoSaveEnabled ? 'bg-green-500' : 'bg-yellow-500'}`} />
-              <span className="text-xs text-muted-foreground">{t('notifications.autoSave')}</span>
-            </div>
-            <p className="text-[10px] text-slate-600">
-              {t('notifications.profileSpecific')}
-            </p>
-          </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   );

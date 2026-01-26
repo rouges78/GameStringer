@@ -261,7 +261,6 @@ Oppure usare la variabile ambiente `GAMESTRINGER_PROFILES_DIR`.
 #### Q: Dove posso ottenere aiuto aggiuntivo?
 **A**: Puoi contattare il supporto tramite:
 - Email: support@gamestringer.com
-- Discord: [Link server Discord]
 - GitHub Issues: [Link repository]
 - Documentazione: `docs/` nella cartella di installazione
 
@@ -277,7 +276,6 @@ Oppure usare la variabile ambiente `GAMESTRINGER_PROFILES_DIR`.
 #### Q: C'è un modo per segnalare bug o suggerire miglioramenti?
 **A**: Sì! Puoi:
 - Aprire un issue su GitHub
-- Scrivere sul Discord della community
 - Inviare feedback tramite email
 - Usare la funzione feedback nell'app (se disponibile)
 
@@ -288,7 +286,7 @@ Oppure usare la variabile ambiente `GAMESTRINGER_PROFILES_DIR`.
 - **Guida Utente Completa**: `docs/user-guide/profiles-system.md`
 - **Documentazione Tecnica**: `docs/technical/`
 - **Video Tutorial**: [Link ai tutorial]
-- **Community**: [Link forum/Discord]
+- **Community**: [Link forum]
 
 ---
 

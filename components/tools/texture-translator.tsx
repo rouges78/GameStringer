@@ -367,7 +367,8 @@ export function TextureTranslator() {
                 <Button 
                   onClick={detectTextInTexture}
                   disabled={isProcessing}
-                  className="bg-white text-teal-600 hover:bg-white/90 shadow-lg"
+                  variant="outline"
+                  className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
                 >
                   {isProcessing ? (
@@ -380,7 +381,8 @@ export function TextureTranslator() {
                 <Button 
                   onClick={applyTranslation}
                   disabled={isProcessing || !currentTexture?.processed}
-                  className="bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                  variant="outline"
+                  className="border-white/50 text-white hover:bg-white/10 hover:border-white"
                   size="sm"
                 >
                   <Replace className="h-4 w-4 mr-2" />
@@ -513,7 +515,7 @@ export function TextureTranslator() {
               {textures.length > 0 && (
                 <Button 
                   size="sm" 
-                  className="w-full bg-teal-600/50 hover:bg-teal-600"
+                  variant="outline" className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
                   onClick={processAllTextures}
                   disabled={isProcessing}
                 >
@@ -766,28 +768,27 @@ export function TextureTranslator() {
 
           {/* Export */}
           <Card className="border-teal-500/20 bg-gradient-to-br from-teal-500/5 to-transparent">
-            <CardContent className="p-3">
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  className="flex-1 bg-teal-600 hover:bg-teal-500"
-                  onClick={exportTexture}
-                  disabled={!currentTexture?.modified}
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  {t('textureTranslator.save')}
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="flex-1"
-                  onClick={exportAll}
-                  disabled={textures.length === 0}
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  {t('textureTranslator.exportAll')}
-                </Button>
-              </div>
+            <CardContent className="p-3 space-y-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
+                onClick={exportTexture}
+                disabled={!currentTexture?.modified}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {t('textureTranslator.save')}
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="w-full border-teal-500/50 text-teal-400 hover:bg-teal-500/10 hover:border-teal-400"
+                onClick={exportAll}
+                disabled={textures.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {t('textureTranslator.exportAll')}
+              </Button>
             </CardContent>
           </Card>
         </div>

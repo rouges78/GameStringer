@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="indigoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1"/>
+      <stop offset="100%" style="stop-color:#4F46E5"/>
+    </linearGradient>
+    <radialGradient id="globeGrad" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" style="stop-color:#93C5FD"/>
+      <stop offset="40%" style="stop-color:#3B82F6"/>
+      <stop offset="100%" style="stop-color:#1E3A8A"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Sfondo quadrato arrotondato -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="url(#indigoGrad)"/>
+  
+  <!-- Globo grande -->
+  <circle cx="256" cy="256" r="180" fill="url(#globeGrad)"/>
+  
+  <!-- Riflesso sul globo -->
+  <ellipse cx="190" cy="180" rx="60" ry="40" fill="rgba(255,255,255,0.15)"/>
+  
+  <!-- Meridiani semplificati -->
+  <ellipse cx="256" cy="256" rx="180" ry="60" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="4"/>
+  <path d="M 256 76 Q 350 256 256 436" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="4"/>
+  <path d="M 256 76 Q 162 256 256 436" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="4"/>
+  
+  <!-- Bordo globo -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="4"/>
+  
+  <!-- GS GRANDE al centro -->
+  <text x="256" y="295" fill="white" font-family="Arial Black, Arial, sans-serif" font-size="160" font-weight="900" text-anchor="middle">GS</text>
+  
+</svg>

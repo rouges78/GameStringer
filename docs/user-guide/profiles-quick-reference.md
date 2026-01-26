@@ -83,7 +83,6 @@
 
 ### Contatti
 - **Email**: support@gamestringer.com
-- **Discord**: [Link server Discord]
 - **GitHub**: [Link repository issues]
 
 ---

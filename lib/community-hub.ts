@@ -1,7 +1,10 @@
 /**
  * Community Translation Hub
  * Sistema per condividere e scaricare Translation Memory dalla community
+ * 🆕 Ora usa backend Rust per persistenza robusta
  */
+
+import { invoke } from '@/lib/tauri-api';
 
 export interface CommunityPackage {
   id: string;
@@ -23,6 +26,54 @@ export interface CommunityPackage {
   updatedAt: string;
   verified: boolean;
   size: number; // bytes
+}
+
+// Backend response types (snake_case)
+interface BackendPackage {
+  id: string;
+  name: string;
+  game_id: string;
+  game_name: string;
+  source_language: string;
+  target_language: string;
+  entry_count: number;
+  author: string;
+  author_id: string;
+  description: string;
+  version: string;
+  downloads: number;
+  rating: number;
+  rating_count: number;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+  verified: boolean;
+  size: number;
+}
+
+// Convert backend to frontend format
+function toFrontendPackage(pkg: BackendPackage): CommunityPackage {
+  return {
+    id: pkg.id,
+    name: pkg.name,
+    gameId: pkg.game_id,
+    gameName: pkg.game_name,
+    sourceLanguage: pkg.source_language,
+    targetLanguage: pkg.target_language,
+    entryCount: pkg.entry_count,
+    author: pkg.author,
+    authorId: pkg.author_id,
+    description: pkg.description,
+    version: pkg.version,
+    downloads: pkg.downloads,
+    rating: pkg.rating,
+    ratingCount: pkg.rating_count,
+    tags: pkg.tags,
+    createdAt: pkg.created_at,
+    updatedAt: pkg.updated_at,
+    verified: pkg.verified,
+    size: pkg.size,
+  };
 }
 
 export interface CommunityUser {
@@ -65,12 +116,11 @@ export interface PackageUpload {
   entries: TranslationEntry[];
 }
 
-// Simulated local storage for community packages (in production this would be a server)
-const LOCAL_STORAGE_KEY = 'gamestringer_community_packages';
+// Local storage for reviews (packages now use Rust backend)
 const LOCAL_REVIEWS_KEY = 'gamestringer_community_reviews';
 
 /**
- * Get all community packages (simulated)
+ * Get all community packages - 🆕 Uses Rust backend
  */
 export async function getCommunityPackages(filters?: {
   gameId?: string;
@@ -78,43 +128,19 @@ export async function getCommunityPackages(filters?: {
   search?: string;
   sortBy?: 'downloads' | 'rating' | 'recent';
 }): Promise<CommunityPackage[]> {
-  // In production, this would be an API call
-  const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-  let packages: CommunityPackage[] = stored ? JSON.parse(stored) : getSamplePackages();
-  
-  // Apply filters
-  if (filters?.gameId) {
-    packages = packages.filter(p => p.gameId === filters.gameId);
+  try {
+    const backendPackages = await invoke<BackendPackage[]>('community_get_packages', {
+      gameId: filters?.gameId || null,
+      targetLanguage: filters?.targetLanguage || null,
+      search: filters?.search || null,
+      sortBy: filters?.sortBy || null,
+    });
+    return backendPackages.map(toFrontendPackage);
+  } catch (error) {
+    console.error('Failed to load packages from backend:', error);
+    // Fallback to sample data
+    return getSamplePackages();
   }
-  
-  if (filters?.targetLanguage) {
-    packages = packages.filter(p => p.targetLanguage === filters.targetLanguage);
-  }
-  
-  if (filters?.search) {
-    const searchLower = filters.search.toLowerCase();
-    packages = packages.filter(p => 
-      p.name.toLowerCase().includes(searchLower) ||
-      p.gameName.toLowerCase().includes(searchLower) ||
-      p.description.toLowerCase().includes(searchLower) ||
-      p.tags.some(t => t.toLowerCase().includes(searchLower))
-    );
-  }
-  
-  // Sort
-  switch (filters?.sortBy) {
-    case 'downloads':
-      packages.sort((a, b) => b.downloads - a.downloads);
-      break;
-    case 'rating':
-      packages.sort((a, b) => b.rating - a.rating);
-      break;
-    case 'recent':
-    default:
-      packages.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  }
-  
-  return packages;
 }
 
 /**
@@ -126,83 +152,57 @@ export async function getPackageById(id: string): Promise<CommunityPackage | nul
 }
 
 /**
- * Upload a new package
+ * Upload a new package - 🆕 Uses Rust backend
  */
 export async function uploadPackage(
   upload: PackageUpload,
   authorId: string,
   authorName: string
 ): Promise<CommunityPackage> {
-  const newPackage: CommunityPackage = {
-    id: `pkg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    name: upload.name,
-    gameId: upload.gameId,
-    gameName: upload.gameName,
-    sourceLanguage: upload.sourceLanguage,
-    targetLanguage: upload.targetLanguage,
-    entryCount: upload.entries.length,
-    author: authorName,
-    authorId: authorId,
-    description: upload.description,
-    version: '1.0.0',
-    downloads: 0,
-    rating: 0,
-    ratingCount: 0,
-    tags: upload.tags,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    verified: false,
-    size: JSON.stringify(upload.entries).length
-  };
-  
-  // Save to local storage
-  const packages = await getCommunityPackages();
-  packages.push(newPackage);
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(packages));
-  
-  // Also save the entries separately
-  localStorage.setItem(`package_entries_${newPackage.id}`, JSON.stringify(upload.entries));
-  
-  return newPackage;
+  try {
+    const backendPkg = await invoke<BackendPackage>('community_upload_package', {
+      name: upload.name,
+      gameId: upload.gameId,
+      gameName: upload.gameName,
+      sourceLanguage: upload.sourceLanguage,
+      targetLanguage: upload.targetLanguage,
+      description: upload.description,
+      tags: upload.tags,
+      entries: upload.entries,
+      authorId,
+      authorName,
+    });
+    return toFrontendPackage(backendPkg);
+  } catch (error) {
+    console.error('Failed to upload package:', error);
+    throw error;
+  }
 }
 
 /**
- * Download package entries
+ * Download package entries - 🆕 Uses Rust backend
  */
 export async function downloadPackageEntries(packageId: string): Promise<TranslationEntry[]> {
-  // First check local storage
-  const stored = localStorage.getItem(`package_entries_${packageId}`);
-  if (stored) {
-    // Increment download count
-    const packages = await getCommunityPackages();
-    const pkg = packages.find(p => p.id === packageId);
-    if (pkg) {
-      pkg.downloads++;
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(packages));
-    }
-    
-    return JSON.parse(stored);
+  try {
+    const entries = await invoke<TranslationEntry[]>('community_download_entries', {
+      packageId,
+    });
+    return entries;
+  } catch (error) {
+    console.error('Failed to download entries:', error);
+    // Fallback to sample entries
+    return getSampleEntries(packageId);
   }
-  
-  // Return sample entries for demo packages
-  return getSampleEntries(packageId);
 }
 
 /**
- * Rate a package
+ * Rate a package - 🆕 Uses Rust backend
  */
 export async function ratePackage(packageId: string, rating: number): Promise<void> {
-  const packages = await getCommunityPackages();
-  const pkg = packages.find(p => p.id === packageId);
-  
-  if (pkg) {
-    // Simple average (in production would track individual ratings)
-    const newTotal = pkg.rating * pkg.ratingCount + rating;
-    pkg.ratingCount++;
-    pkg.rating = newTotal / pkg.ratingCount;
-    pkg.rating = Math.round(pkg.rating * 10) / 10;
-    
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(packages));
+  try {
+    await invoke('community_rate_package', { packageId, rating });
+  } catch (error) {
+    console.error('Failed to rate package:', error);
   }
 }
 
@@ -432,7 +432,7 @@ export async function searchByGame(gameName: string): Promise<CommunityPackage[]
 }
 
 /**
- * Get statistics
+ * Get statistics - 🆕 Uses Rust backend
  */
 export async function getCommunityStats(): Promise<{
   totalPackages: number;
@@ -440,22 +440,29 @@ export async function getCommunityStats(): Promise<{
   totalEntries: number;
   topLanguages: { lang: string; count: number }[];
 }> {
-  const packages = await getCommunityPackages();
-  
-  const totalPackages = packages.length;
-  const totalDownloads = packages.reduce((sum, p) => sum + p.downloads, 0);
-  const totalEntries = packages.reduce((sum, p) => sum + p.entryCount, 0);
-  
-  // Count by target language
-  const langCounts: Record<string, number> = {};
-  packages.forEach(p => {
-    langCounts[p.targetLanguage] = (langCounts[p.targetLanguage] || 0) + 1;
-  });
-  
-  const topLanguages = Object.entries(langCounts)
-    .map(([lang, count]) => ({ lang, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-  
-  return { totalPackages, totalDownloads, totalEntries, topLanguages };
+  try {
+    const stats = await invoke<{
+      total_packages: number;
+      total_downloads: number;
+      total_entries: number;
+      top_languages: { lang: string; count: number }[];
+    }>('community_get_stats');
+    
+    return {
+      totalPackages: stats.total_packages,
+      totalDownloads: stats.total_downloads,
+      totalEntries: stats.total_entries,
+      topLanguages: stats.top_languages,
+    };
+  } catch (error) {
+    console.error('Failed to get stats:', error);
+    // Fallback
+    const packages = await getCommunityPackages();
+    return {
+      totalPackages: packages.length,
+      totalDownloads: packages.reduce((sum, p) => sum + p.downloads, 0),
+      totalEntries: packages.reduce((sum, p) => sum + p.entryCount, 0),
+      topLanguages: [],
+    };
+  }
 }

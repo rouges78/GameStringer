@@ -108,6 +108,16 @@ fn main() {
             commands::steam_enhanced::save_family_sharing_ids,
             commands::steam_enhanced::load_family_sharing_ids,
             commands::steam_enhanced::get_steam_game_name,
+            commands::steam_enhanced::fetch_steamgriddb_image,
+            commands::steam_enhanced::steam_openid_get_auth_url,
+            commands::steam_enhanced::steam_openid_start_server,
+            commands::steam_enhanced::steam_openid_wait_callback,
+            commands::steam_enhanced::steam_openid_verify,
+            commands::steam_enhanced::steam_get_user_profile,
+            commands::steam_enhanced::steam_save_auth,
+            commands::steam_enhanced::steam_load_auth,
+            commands::steam_enhanced::steam_get_wishlist,
+            commands::steam_enhanced::steam_logout,
             commands::steam_enhanced::fetch_steam_game_details,
             commands::steam_enhanced::get_steam_install_path,
             commands::steam_enhanced::find_game_install_path,
@@ -698,6 +708,14 @@ fn main() {
             commands::batch_processor::read_file_for_translation,
             commands::batch_processor::write_translated_file,
             commands::batch_processor::create_output_structure,
+            // Community Hub
+            commands::community_hub::community_get_packages,
+            commands::community_hub::community_get_package,
+            commands::community_hub::community_download_entries,
+            commands::community_hub::community_upload_package,
+            commands::community_hub::community_rate_package,
+            commands::community_hub::community_get_stats,
+            commands::community_hub::community_delete_package,
         ])
         .setup(|_app| {
             Ok(())

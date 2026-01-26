@@ -270,7 +270,6 @@ La specifica del **Sistema Profili per GameStringer** è stata **completata con 
 
 ### 🆘 Canali Supporto
 - **Email**: support@gamestringer.com
-- **Discord**: Community Discord server
 - **GitHub**: Issues e bug reports
 - **Documentation**: Documentazione completa
 

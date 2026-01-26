@@ -46,8 +46,10 @@ import {
   PLATFORM_NAMES,
   PLATFORM_TOOLS
 } from "@/lib/retro-rom-tools";
+import { useTranslation } from "@/lib/i18n";
 
 export default function RetroPage() {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableInputRef = useRef<HTMLInputElement>(null);
   
@@ -138,27 +140,28 @@ export default function RetroPage() {
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
-              <Gamepad2 className="w-5 h-5" />
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Gamepad2 className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-lg font-bold">Retro ROM Tools</h1>
-              <p className="text-white/80 text-xs">Traduci ROM di console retro (NES, SNES, GB, Genesis, PSX)</p>
+              <h1 className="text-lg font-bold">{t('retroRom.title')}</h1>
+              <p className="text-white/80 text-xs">{t('retroRom.subtitle')}</p>
             </div>
           </div>
           
-          <div className="flex gap-3">
-            <div className="flex items-center gap-2 bg-white/10 rounded-md px-2 py-1.5 backdrop-blur-sm">
-              <Gamepad2 className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">8 console</span>
+          <div className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
+              <Gamepad2 className="w-3.5 h-3.5 text-emerald-300" />
+              <span className="text-sm font-bold">8</span>
+              <span className="text-[10px] text-white/70">{t('retroRom.consoles')}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-md px-2 py-1.5 backdrop-blur-sm">
-              <Table className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">.TBL support</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
+              <Table className="w-3.5 h-3.5 text-emerald-300" />
+              <span className="text-[10px] text-white/70">{t('retroRom.tblSupport')}</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 rounded-md px-2 py-1.5 backdrop-blur-sm">
-              <Type className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Font injection</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
+              <Type className="w-3.5 h-3.5 text-emerald-300" />
+              <span className="text-[10px] text-white/70">{t('retroRom.fontInjection')}</span>
             </div>
           </div>
         </div>
@@ -169,7 +172,7 @@ export default function RetroPage() {
         <Card>
           <CardContent className="p-6">
             <div
-              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+              className="border-2 border-dashed border-teal-500/30 rounded-lg p-8 text-center hover:border-teal-400/50 transition-colors cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
               <input
@@ -180,17 +183,73 @@ export default function RetroPage() {
                 className="hidden"
               />
               <Gamepad2 className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">Carica ROM</h3>
+              <h3 className="text-lg font-medium mb-2">{t('retroRom.loadRom')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Trascina un file ROM o clicca per selezionare
+                {t('retroRom.dragOrClick')}
               </p>
-              <div className="flex justify-center gap-2 flex-wrap">
-                <Badge variant="outline">NES</Badge>
-                <Badge variant="outline">SNES</Badge>
-                <Badge variant="outline">GB/GBC</Badge>
-                <Badge variant="outline">GBA</Badge>
-                <Badge variant="outline">Genesis</Badge>
-                <Badge variant="outline">PSX</Badge>
+              <div className="flex justify-center gap-3 flex-wrap">
+                {/* NES */}
+                <div className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="NES">
+                  <svg viewBox="0 0 32 24" className="w-10 h-7">
+                    <rect x="1" y="4" width="30" height="16" rx="2" fill="#8B0000" stroke="#333" strokeWidth="1"/>
+                    <rect x="4" y="8" width="8" height="8" rx="1" fill="#222"/>
+                    <circle cx="22" cy="12" r="3" fill="#222"/>
+                    <circle cx="27" cy="10" r="2" fill="#222"/>
+                  </svg>
+                </div>
+                {/* SNES */}
+                <div className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="SNES">
+                  <svg viewBox="0 0 32 20" className="w-10 h-6">
+                    <rect x="1" y="2" width="30" height="16" rx="3" fill="#9090A0" stroke="#666" strokeWidth="1"/>
+                    <rect x="4" y="6" width="6" height="6" rx="1" fill="#333"/>
+                    <circle cx="22" cy="9" r="2" fill="#22AA22"/>
+                    <circle cx="26" cy="7" r="2" fill="#DDDD22"/>
+                    <circle cx="24" cy="11" r="2" fill="#2222DD"/>
+                    <circle cx="28" cy="9" r="2" fill="#DD2222"/>
+                  </svg>
+                </div>
+                {/* Game Boy */}
+                <div className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="GB/GBC">
+                  <svg viewBox="0 0 20 32" className="w-5 h-8">
+                    <rect x="1" y="1" width="18" height="30" rx="2" fill="#C0C0C0" stroke="#666" strokeWidth="1"/>
+                    <rect x="3" y="3" width="14" height="10" rx="1" fill="#8BAC0F"/>
+                    <rect x="6" y="18" width="4" height="4" rx="2" fill="#333"/>
+                    <rect x="11" y="19" width="3" height="2" rx="1" fill="#333"/>
+                    <rect x="4" y="24" width="5" height="1.5" rx="0.5" fill="#333"/>
+                    <rect x="11" y="24" width="5" height="1.5" rx="0.5" fill="#333"/>
+                  </svg>
+                </div>
+                {/* GBA */}
+                <div className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="GBA">
+                  <svg viewBox="0 0 36 20" className="w-10 h-5">
+                    <rect x="1" y="2" width="34" height="16" rx="3" fill="#5555AA" stroke="#333" strokeWidth="1"/>
+                    <rect x="10" y="5" width="16" height="10" rx="1" fill="#8BAC0F"/>
+                    <rect x="3" y="8" width="4" height="4" rx="2" fill="#222"/>
+                    <circle cx="31" cy="10" r="2" fill="#222"/>
+                  </svg>
+                </div>
+                {/* Genesis/Mega Drive */}
+                <div className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="Genesis">
+                  <svg viewBox="0 0 36 20" className="w-10 h-5">
+                    <rect x="1" y="2" width="34" height="16" rx="2" fill="#111" stroke="#333" strokeWidth="1"/>
+                    <rect x="4" y="6" width="6" height="6" rx="1" fill="#333"/>
+                    <circle cx="24" cy="9" r="3" fill="#333"/>
+                    <circle cx="30" cy="9" r="2" fill="#333"/>
+                    <rect x="12" y="4" width="8" height="3" rx="1" fill="#333"/>
+                  </svg>
+                </div>
+                {/* PlayStation Console */}
+                <div className="flex flex-col items-center gap-1 opacity-60 hover:opacity-100 transition-opacity" title="PSX">
+                  <svg viewBox="0 0 40 16" className="w-12 h-5">
+                    <rect x="1" y="1" width="38" height="14" rx="1" fill="#BEBEBE" stroke="#888" strokeWidth="0.5"/>
+                    <circle cx="20" cy="8" r="5" fill="#333" stroke="#222" strokeWidth="0.5"/>
+                    <circle cx="20" cy="8" r="3" fill="#444"/>
+                    <rect x="3" y="4" width="2" height="1" rx="0.3" fill="#666"/>
+                    <rect x="3" y="6" width="2" height="1" rx="0.3" fill="#666"/>
+                    <rect x="35" y="5" width="2" height="2" rx="0.5" fill="#666"/>
+                    <rect x="32" y="5" width="2" height="2" rx="0.5" fill="#666"/>
+                  </svg>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -205,13 +264,13 @@ export default function RetroPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-purple-500/10 rounded-lg">
-                    <Gamepad2 className="w-6 h-6 text-purple-500" />
+                  <div className="p-3 bg-teal-500/10 rounded-lg">
+                    <Gamepad2 className="w-6 h-6 text-teal-500" />
                   </div>
                   <div>
                     <h3 className="font-semibold">{fileName}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                      <Badge className="bg-teal-500/20 text-teal-400 border-teal-500/30">
                         {PLATFORM_NAMES[romInfo.platform]}
                       </Badge>
                       <Badge variant="outline">{romInfo.region}</Badge>
@@ -220,9 +279,9 @@ export default function RetroPage() {
                   </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
-                  <p>Titolo: <span className="font-medium text-foreground">{romInfo.title || 'N/A'}</span></p>
-                  <p>Dimensione: {(romInfo.size / 1024).toFixed(1)} KB</p>
-                  {romInfo.mapper && <p>Mapper: {romInfo.mapper}</p>}
+                  <p>{t('retroRom.title_')}: <span className="font-medium text-foreground">{romInfo.title || 'N/A'}</span></p>
+                  <p>{t('retroRom.size')}: {(romInfo.size / 1024).toFixed(1)} KB</p>
+                  {romInfo.mapper && <p>{t('retroRom.mapper')}: {romInfo.mapper}</p>}
                 </div>
               </div>
             </CardContent>
@@ -235,7 +294,7 @@ export default function RetroPage() {
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Table className="w-4 h-4" />
-                    Table File
+                    {t('retroRom.tableFile')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 space-y-3">
@@ -253,7 +312,7 @@ export default function RetroPage() {
                     onClick={() => tableInputRef.current?.click()}
                   >
                     <Upload className="w-4 h-4 mr-2" />
-                    Carica .TBL
+                    {t('retroRom.loadTbl')}
                   </Button>
                   
                   <div className="flex gap-2">
@@ -288,7 +347,7 @@ export default function RetroPage() {
                         onClick={handleExportTable}
                       >
                         <Download className="w-3 h-3 mr-1" />
-                        Esporta
+                        {t('retroRom.export')}
                       </Button>
                     </div>
                   )}
@@ -300,19 +359,19 @@ export default function RetroPage() {
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Wand2 className="w-4 h-4" />
-                    Tool Esterni
+                    {t('retroRom.externalTools')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <div className="space-y-2 text-xs">
                     {PLATFORM_TOOLS[romInfo.platform]?.map(tool => (
                       <div key={tool} className="flex items-center gap-2 text-muted-foreground">
-                        <span className="w-1 h-1 rounded-full bg-purple-500" />
+                        <span className="w-1 h-1 rounded-full bg-teal-500" />
                         {tool}
                       </div>
                     ))}
                     {(!PLATFORM_TOOLS[romInfo.platform] || PLATFORM_TOOLS[romInfo.platform].length === 0) && (
-                      <p className="text-muted-foreground">Nessun tool specifico</p>
+                      <p className="text-muted-foreground">{t('retroRom.noSpecificTool')}</p>
                     )}
                   </div>
                 </CardContent>
@@ -325,13 +384,13 @@ export default function RetroPage() {
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Search className="w-4 h-4" />
-                    Estrai Testo
+                    {t('retroRom.extractText')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 space-y-3">
                   <div className="flex gap-2">
                     <div className="flex-1">
-                      <label className="text-xs text-muted-foreground mb-1 block">Offset (hex)</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">{t('retroRom.offsetHex')}</label>
                       <Input
                         placeholder="0x0000"
                         value={searchOffset}
@@ -340,7 +399,7 @@ export default function RetroPage() {
                       />
                     </div>
                     <div className="w-32">
-                      <label className="text-xs text-muted-foreground mb-1 block">Lunghezza</label>
+                      <label className="text-xs text-muted-foreground mb-1 block">{t('retroRom.length')}</label>
                       <Input
                         type="number"
                         value={searchLength}
@@ -350,7 +409,7 @@ export default function RetroPage() {
                     <div className="pt-5">
                       <Button onClick={handleExtractText} disabled={!tableFile}>
                         <Search className="w-4 h-4 mr-2" />
-                        Estrai
+                        {t('retroRom.extract')}
                       </Button>
                     </div>
                   </div>
@@ -359,8 +418,8 @@ export default function RetroPage() {
 
               <Tabs defaultValue="extracted">
                 <TabsList>
-                  <TabsTrigger value="extracted">Testo Estratto ({textBlocks.length})</TabsTrigger>
-                  <TabsTrigger value="regions">Regioni Auto ({textRegions.length})</TabsTrigger>
+                  <TabsTrigger value="extracted">{t('retroRom.extractedText')} ({textBlocks.length})</TabsTrigger>
+                  <TabsTrigger value="regions">{t('retroRom.autoRegions')} ({textRegions.length})</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="extracted">
@@ -369,7 +428,7 @@ export default function RetroPage() {
                       <div className="p-4 space-y-2">
                         {textBlocks.length === 0 ? (
                           <p className="text-center text-muted-foreground py-8">
-                            {tableFile ? "Nessun testo trovato. Prova un altro offset." : "Carica prima un file .TBL"}
+                            {tableFile ? t('retroRom.noTextFound') : t('retroRom.loadTblFirst')}
                           </p>
                         ) : (
                           textBlocks.map((block, idx) => (
@@ -377,7 +436,7 @@ export default function RetroPage() {
                               key={idx}
                               className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                                 selectedBlock === idx 
-                                  ? 'border-purple-500 bg-purple-500/10' 
+                                  ? 'border-teal-500 bg-teal-500/10' 
                                   : 'hover:border-muted-foreground/50'
                               }`}
                               onClick={() => {
@@ -395,7 +454,7 @@ export default function RetroPage() {
                               </div>
                               <p className="text-sm">{block.originalText}</p>
                               {block.translatedText && (
-                                <p className="text-sm text-purple-400 mt-1">{block.translatedText}</p>
+                                <p className="text-sm text-teal-400 mt-1">{block.translatedText}</p>
                               )}
                             </div>
                           ))
@@ -440,17 +499,17 @@ export default function RetroPage() {
           </div>
 
           {/* Info Box */}
-          <Card className="bg-purple-500/5 border-purple-500/20">
+          <Card className="bg-teal-500/5 border-teal-500/20">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
-                <Info className="w-5 h-5 text-purple-500 mt-0.5" />
+                <Info className="w-5 h-5 text-teal-500 mt-0.5" />
                 <div className="text-sm">
-                  <p className="font-medium text-purple-400 mb-1">Come usare:</p>
+                  <p className="font-medium text-teal-400 mb-1">{t('retroRom.howToUse')}</p>
                   <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                    <li>Carica un file .TBL (table) che mappa i byte ai caratteri</li>
-                    <li>Trova le regioni di testo automaticamente o specifica un offset</li>
-                    <li>Estrai il testo e traducilo</li>
-                    <li>Usa tool esterni (YY-CHR, Tile Molester) per iniettare font con caratteri accentati</li>
+                    <li>{t('retroRom.step1')}</li>
+                    <li>{t('retroRom.step2')}</li>
+                    <li>{t('retroRom.step3')}</li>
+                    <li>{t('retroRom.step4')}</li>
                   </ol>
                 </div>
               </div>

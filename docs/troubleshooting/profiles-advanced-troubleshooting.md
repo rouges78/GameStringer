@@ -366,7 +366,7 @@ Il comando `--generate-support-bundle` crea un file zip con:
 ### Contatti Supporto Specializzato
 
 #### Livelli Supporto
-1. **Community**: Discord, Forum, GitHub Issues
+1. **Community**: Forum, GitHub Issues
 2. **Standard**: Email support con risposta 24-48h
 3. **Priority**: Supporto tecnico avanzato per problemi critici
 4. **Enterprise**: Supporto dedicato per installazioni aziendali
