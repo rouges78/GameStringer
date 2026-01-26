@@ -343,39 +343,54 @@
     <span class="badge section-badge" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.3); color: #7dd3fc;">❓ FAQ</span>
     <h2 class="section-title">Domande Frequenti</h2>
     
-    <div class="faq-container card" style="text-align: left; margin-top: 48px; padding: 0 32px;">
-      <div class="faq-item">
-        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">GameStringer è davvero gratuito? Qual è il trucco?<span class="faq-arrow">▼</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Sì, GameStringer è 100% gratuito e open source (Source-Available License). Non ci sono pubblicità, abbonamenti nascosti o limiti artificiali. Il codice sorgente è disponibile su <a href="https://github.com/rouges78/GameStringer">GitHub</a>. L'unico costo potenziale è quello delle API AI se scegli provider cloud a pagamento, ma puoi usare Ollama completamente gratis in locale.</div></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Quali AI posso usare senza pagare nulla?<span class="faq-arrow">▼</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner"><strong>Completamente gratis:</strong><ul><li><strong>Ollama</strong> - Esegue sul tuo PC, privacy totale, richiede 8GB+ RAM</li><li><strong>LM Studio</strong> - Come Ollama ma con GUI</li><li><strong>Gemini</strong> - 15 richieste/minuto nel free tier</li><li><strong>Groq</strong> - 14,400 richieste/giorno gratis</li><li><strong>Mistral</strong> - Free tier generoso</li><li><strong>DeepL</strong> - 500K caratteri/mese gratis</li><li><strong>MyMemory</strong> - 1000 parole/giorno gratis</li></ul></div></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Posso essere bannato per usare traduzioni fan?<span class="faq-arrow">▼</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">GameStringer modifica solo i file di testo/localizzazione offline, non altera il gameplay, non bypassa DRM e non comunica con server di gioco. È equivalente a installare una mod di traduzione. Per giochi single-player offline non c'è rischio. Per giochi online, controlla sempre l'EULA specifico - alcune aziende vietano qualsiasi modifica.</div></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Come funziona con giochi Unity?<span class="faq-arrow">▼</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">GameStringer installa automaticamente <strong>BepInEx</strong> (framework di modding) e <strong>XUnity.AutoTranslator</strong> (plugin di traduzione). Estrae tutti i testi dal gioco, li traduce con l'AI che preferisci, e crea i file di traduzione. Il gioco caricherà automaticamente le traduzioni. Tutto con un click, zero configurazione manuale.</div></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Quanto tempo ci vuole a tradurre un gioco?<span class="faq-arrow">▼</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Dipende dalla dimensione del gioco e dalla velocità dell'AI:<ul><li><strong>Visual Novel breve (5K stringhe):</strong> 10-30 minuti</li><li><strong>RPG medio (50K stringhe):</strong> 2-6 ore</li><li><strong>JRPG grande (200K+ stringhe):</strong> 12-24 ore</li></ul>Con Groq LPU puoi tradurre ~500 token/secondo. Con Ollama locale dipende dalla tua GPU.</div></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">La qualità è paragonabile a traduzioni professionali?<span class="faq-arrow">▼</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Con AI moderne (GPT-4, Claude, Gemini) e contesto appropriato, la qualità è <strong>80-90%</strong> di una traduzione professionale per testi standard. Per dialoghi complessi, giochi di parole e riferimenti culturali, è consigliata una revisione umana. GameStringer è ideale per: draft iniziali, giochi mai tradotti, progetti fan, test di mercato.</div></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Supporta giochi retro/DOS/console?<span class="faq-arrow">▼</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Sì! L'<strong>OCR Translator</strong> può estrarre testo da screenshot di qualsiasi gioco, inclusi DOS, 8-bit, 16-bit, console emulate. Puoi tradurre anche giochi senza file di testo accessibili catturando schermate durante il gameplay.</div></div>
-      </div>
-      <div class="faq-item">
-        <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Posso contribuire al progetto?<span class="faq-arrow">▼</span></button>
-        <div class="faq-answer"><div class="faq-answer-inner">Assolutamente! GameStringer è open source su <a href="https://github.com/rouges78/GameStringer">GitHub</a>. Puoi contribuire con: codice, traduzioni dell'interfaccia, documentazione, bug report, feature request. Puoi anche supportare economicamente su <a href="https://ko-fi.com/gamestringer">Ko-fi</a> o <a href="https://github.com/sponsors/rouges78">GitHub Sponsors</a>.</div></div>
-      </div>
+    <div class="faq-container" style="text-align: left; margin-top: 48px; max-width: 800px; margin-left: auto; margin-right: auto;">
+      <details class="faq-details">
+        <summary>GameStringer è davvero gratuito? Qual è il trucco?</summary>
+        <p>Sì, GameStringer è 100% gratuito e open source (Source-Available License). Non ci sono pubblicità, abbonamenti nascosti o limiti artificiali. Il codice sorgente è disponibile su <a href="https://github.com/rouges78/GameStringer">GitHub</a>. L'unico costo potenziale è quello delle API AI se scegli provider cloud a pagamento, ma puoi usare Ollama completamente gratis in locale.</p>
+      </details>
+      <details class="faq-details">
+        <summary>Quali AI posso usare senza pagare nulla?</summary>
+        <p><strong>Completamente gratis:</strong></p>
+        <ul>
+          <li><strong>Ollama</strong> - Esegue sul tuo PC, privacy totale, richiede 8GB+ RAM</li>
+          <li><strong>LM Studio</strong> - Come Ollama ma con GUI</li>
+          <li><strong>Gemini</strong> - 15 richieste/minuto nel free tier</li>
+          <li><strong>Groq</strong> - 14,400 richieste/giorno gratis</li>
+          <li><strong>Mistral</strong> - Free tier generoso</li>
+          <li><strong>DeepL</strong> - 500K caratteri/mese gratis</li>
+          <li><strong>MyMemory</strong> - 1000 parole/giorno gratis</li>
+        </ul>
+      </details>
+      <details class="faq-details">
+        <summary>Posso essere bannato per usare traduzioni fan?</summary>
+        <p>GameStringer modifica solo i file di testo/localizzazione offline, non altera il gameplay, non bypassa DRM e non comunica con server di gioco. È equivalente a installare una mod di traduzione. Per giochi single-player offline non c'è rischio. Per giochi online, controlla sempre l'EULA specifico.</p>
+      </details>
+      <details class="faq-details">
+        <summary>Come funziona con giochi Unity?</summary>
+        <p>GameStringer installa automaticamente <strong>BepInEx</strong> (framework di modding) e <strong>XUnity.AutoTranslator</strong> (plugin di traduzione). Estrae tutti i testi dal gioco, li traduce con l'AI che preferisci, e crea i file di traduzione. Il gioco caricherà automaticamente le traduzioni. Tutto con un click, zero configurazione manuale.</p>
+      </details>
+      <details class="faq-details">
+        <summary>Quanto tempo ci vuole a tradurre un gioco?</summary>
+        <p>Dipende dalla dimensione del gioco e dalla velocità dell'AI:</p>
+        <ul>
+          <li><strong>Visual Novel breve (5K stringhe):</strong> 10-30 minuti</li>
+          <li><strong>RPG medio (50K stringhe):</strong> 2-6 ore</li>
+          <li><strong>JRPG grande (200K+ stringhe):</strong> 12-24 ore</li>
+        </ul>
+        <p>Con Groq LPU puoi tradurre ~500 token/secondo. Con Ollama locale dipende dalla tua GPU.</p>
+      </details>
+      <details class="faq-details">
+        <summary>La qualità è paragonabile a traduzioni professionali?</summary>
+        <p>Con AI moderne (GPT-4, Claude, Gemini) e contesto appropriato, la qualità è <strong>80-90%</strong> di una traduzione professionale per testi standard. Per dialoghi complessi, giochi di parole e riferimenti culturali, è consigliata una revisione umana. GameStringer è ideale per: draft iniziali, giochi mai tradotti, progetti fan, test di mercato.</p>
+      </details>
+      <details class="faq-details">
+        <summary>Supporta giochi retro/DOS/console?</summary>
+        <p>Sì! L'<strong>OCR Translator</strong> può estrarre testo da screenshot di qualsiasi gioco, inclusi DOS, 8-bit, 16-bit, console emulate. Puoi tradurre anche giochi senza file di testo accessibili catturando schermate durante il gameplay.</p>
+      </details>
+      <details class="faq-details">
+        <summary>Posso contribuire al progetto?</summary>
+        <p>Assolutamente! GameStringer è open source su <a href="https://github.com/rouges78/GameStringer">GitHub</a>. Puoi contribuire con: codice, traduzioni dell'interfaccia, documentazione, bug report, feature request. Puoi anche supportare economicamente su <a href="https://ko-fi.com/gamestringer">Ko-fi</a> o <a href="https://github.com/sponsors/rouges78">GitHub Sponsors</a>.</p>
+      </details>
     </div>
   </div>
 </section>
