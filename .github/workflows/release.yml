@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.5)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          toolchain: stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event.inputs.version || github.ref_name }}
+          releaseName: 'GameStringer ${{ github.event.inputs.version || github.ref_name }}'
+          releaseBody: |
+            ## Download
+            
+            ### Windows
+            - **GameStringer_x.x.x_x64-setup.exe** - Installer (consigliato)
+            - **GameStringer_x.x.x_x64_en-US.msi** - MSI Installer
+            - **GameStringer_x.x.x_x64-portable.zip** - Versione Portable (no installazione)
+            
+            ---
+            
+            📖 [Changelog completo](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
+          releaseDraft: true
+          prerelease: false
+          includeDebug: false
+          args: --target x86_64-pc-windows-msvc
+
+      - name: Create Portable Version
+        shell: pwsh
+        run: |
+          $version = "${{ github.event.inputs.version || github.ref_name }}".TrimStart('v')
+          $exePath = "src-tauri/target/x86_64-pc-windows-msvc/release/GameStringer.exe"
+          
+          if (Test-Path $exePath) {
+            # Create portable folder
+            $portableDir = "GameStringer-$version-portable"
+            New-Item -ItemType Directory -Force -Path $portableDir
+            
+            # Copy executable
+            Copy-Item $exePath -Destination "$portableDir/GameStringer.exe"
+            
+            # Copy WebView2 loader if exists
+            $webview2 = "src-tauri/target/x86_64-pc-windows-msvc/release/WebView2Loader.dll"
+            if (Test-Path $webview2) {
+              Copy-Item $webview2 -Destination "$portableDir/"
+            }
+            
+            # Create portable marker file
+            "GameStringer Portable Version $version" | Out-File -FilePath "$portableDir/PORTABLE"
+            
+            # Create README for portable
+            @"
+            # GameStringer Portable
+            
+            Versione: $version
+            
+            ## Istruzioni
+            1. Estrai questa cartella dove preferisci
+            2. Esegui GameStringer.exe
+            3. I dati verranno salvati nella sottocartella 'data'
+            
+            ## Requisiti
+            - Windows 10/11 (64-bit)
+            - WebView2 Runtime (installato automaticamente su Windows 11)
+            
+            ## Note
+            Questa è la versione portable, non richiede installazione.
+            Per la versione con installer, scarica il file .exe o .msi.
+            "@ | Out-File -FilePath "$portableDir/README.txt" -Encoding UTF8
+            
+            # Create ZIP
+            Compress-Archive -Path "$portableDir/*" -DestinationPath "GameStringer_${version}_x64-portable.zip" -Force
+            
+            Write-Host "Created portable: GameStringer_${version}_x64-portable.zip"
+          } else {
+            Write-Host "Executable not found at $exePath"
+            exit 1
+          }
+
+      - name: Upload Portable to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          files: GameStringer_*_x64-portable.zip
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
