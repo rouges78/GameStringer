@@ -42,7 +42,7 @@
     
     <!-- HERO -->
     <div class="hero">
-      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> v1.0.4 — Subtitle Translator, Retro ROM & API v1</span>
+      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> v1.0.5 — Voice Clone, VR Overlay, Quality Gates & Player Feedback</span>
       <h1>Traduci <span class="hero-highlight">Qualsiasi</span> Videogioco<br>con l'Intelligenza Artificiale</h1>
       <p class="hero-subtitle">La suite open source definitiva per la localizzazione di videogiochi</p>
       <p class="hero-desc">Supporta <strong>10+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py...) e <strong>15+ provider AI</strong> (Ollama gratuito, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente.</p>
@@ -121,9 +121,27 @@
       </div>
       <div class="card feature-card">
         <div class="icon-box" style="background: linear-gradient(135deg, #14b8a6, #2dd4bf);">🎤</div>
-        <h3 class="feature-title">Voice Translation Pipeline</h3>
-        <p class="feature-desc">Pipeline completa: Whisper STT (speech-to-text) → Traduzione AI contestuale → Text-to-Speech con 20+ voci naturali.</p>
-        <div class="feature-tags"><span class="feature-tag">Whisper V3</span><span class="feature-tag">20+ voci TTS</span><span class="feature-tag">Real-time</span></div>
+        <h3 class="feature-title">Voice Clone Studio</h3>
+        <p class="feature-desc">Clona voci con AI (ElevenLabs, OpenAI TTS). Text-to-speech con preset: narratore, eroe, cattivo, bambino, robot.</p>
+        <div class="feature-tags"><span class="feature-tag">ElevenLabs</span><span class="feature-tag">OpenAI TTS</span><span class="feature-tag">Voice Presets</span></div>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-box" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">🥽</div>
+        <h3 class="feature-title">VR Text Overlay</h3>
+        <p class="feature-desc">Sottotitoli spaziali per giochi VR. Rilevamento automatico headset (Oculus, SteamVR, WMR) con preset posizione.</p>
+        <div class="feature-tags"><span class="feature-tag">Oculus/SteamVR</span><span class="feature-tag">Spatial Subs</span><span class="feature-tag">Follow Head</span></div>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-box" style="background: linear-gradient(135deg, #10b981, #059669);">🛡️</div>
+        <h3 class="feature-title">Quality Gates</h3>
+        <p class="feature-desc">Sistema automatico di controllo qualità traduzioni. Verifica placeholder, numeri, tag HTML, lunghezza e contesto.</p>
+        <div class="feature-tags"><span class="feature-tag">Auto QA</span><span class="feature-tag">Pass/Fail</span><span class="feature-tag">Export Report</span></div>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-box" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">💬</div>
+        <h3 class="feature-title">Player Feedback</h3>
+        <p class="feature-desc">Raccogli e gestisci feedback dei giocatori sulle traduzioni. Rating 5 stelle, categorie e tracking stato.</p>
+        <div class="feature-tags"><span class="feature-tag">5-Star Rating</span><span class="feature-tag">Categories</span><span class="feature-tag">Export CSV</span></div>
       </div>
       <div class="card feature-card">
         <div class="icon-box" style="background: linear-gradient(135deg, #10b981, #34d399);">👁️</div>
@@ -229,15 +247,15 @@
     
     <div class="grid grid-5">
       <div class="card tool-card"><div class="tool-icon">🧠</div><div class="tool-name">Neural Translator Pro</div><div class="tool-desc">Batch translation con Translation Memory, fuzzy matching, e cache intelligente.</div><div class="tool-features">• Batch up to 10K strings • Auto-save progress • Resume support</div></div>
-      <div class="card tool-card new"><div class="tool-icon">📊</div><div class="tool-name">Multi-LLM Compare</div><div class="tool-desc">Confronta traduzioni da 7+ provider AI side-by-side per scegliere la migliore.</div><div class="tool-features">• A/B testing • Quality scoring • Cost comparison</div></div>
-      <div class="card tool-card"><div class="tool-icon">👁️</div><div class="tool-name">OCR Translator</div><div class="tool-desc">Estrai testo da immagini, screenshot di giochi retro, e texture UI.</div><div class="tool-features">• Tesseract + AI enhance • Pixel font support • Batch mode</div></div>
-      <div class="card tool-card new"><div class="tool-icon">🔊</div><div class="tool-name">Voice Pipeline</div><div class="tool-desc">STT (Whisper) → AI Translation → TTS per doppiaggio e sottotitoli.</div><div class="tool-features">• 20+ voci naturali • Real-time • Export audio</div></div>
-      <div class="card tool-card"><div class="tool-icon">🔍</div><div class="tool-name">Context Crawler</div><div class="tool-desc">Estrai contesto dal gameplay per traduzioni più accurate e coerenti.</div><div class="tool-features">• Auto-tagging • Character detection • Scene analysis</div></div>
+      <div class="card tool-card new"><div class="tool-icon">🎤</div><div class="tool-name">Voice Clone Studio</div><div class="tool-desc">Clona voci con ElevenLabs e OpenAI TTS. Preset: narratore, eroe, cattivo, robot.</div><div class="tool-features">• AI Voice Cloning • 6+ Voice Presets • Audio Export</div></div>
+      <div class="card tool-card new"><div class="tool-icon">🥽</div><div class="tool-name">VR Text Overlay</div><div class="tool-desc">Sottotitoli spaziali 3D per giochi VR con rilevamento automatico headset.</div><div class="tool-features">• Oculus/SteamVR/WMR • Position Presets • Follow Head</div></div>
+      <div class="card tool-card new"><div class="tool-icon">�️</div><div class="tool-name">Quality Gates</div><div class="tool-desc">QA automatico: verifica placeholder, numeri, tag HTML, lunghezza testo.</div><div class="tool-features">• Auto QA Check • Pass/Fail Score • JSON Report</div></div>
+      <div class="card tool-card new"><div class="tool-icon">�</div><div class="tool-name">Player Feedback</div><div class="tool-desc">Raccogli feedback giocatori con rating 5 stelle e categorie dedicate.</div><div class="tool-features">• 5-Star Rating • Status Tracking • CSV Export</div></div>
+      <div class="card tool-card"><div class="tool-icon">�️</div><div class="tool-name">OCR Translator</div><div class="tool-desc">Estrai testo da immagini, screenshot di giochi retro, e texture UI.</div><div class="tool-features">• Tesseract + AI enhance • Pixel font support • Batch mode</div></div>
+      <div class="card tool-card"><div class="tool-icon">�</div><div class="tool-name">Context Crawler</div><div class="tool-desc">Estrai contesto dal gameplay per traduzioni più accurate e coerenti.</div><div class="tool-features">• Auto-tagging • Character detection • Scene analysis</div></div>
       <div class="card tool-card"><div class="tool-icon">🔧</div><div class="tool-name">Translation Fixer</div><div class="tool-desc">Ripara tag HTML/markup rotti, variabili corrotte, e encoding issues.</div><div class="tool-features">• Auto-fix {0} vars • HTML repair • Encoding convert</div></div>
-      <div class="card tool-card"><div class="tool-icon">📺</div><div class="tool-name">Subtitle Overlay</div><div class="tool-desc">Overlay real-time per streaming con supporto OBS e export SRT/VTT.</div><div class="tool-features">• OBS WebSocket • Custom styling • Multi-language</div></div>
+      <div class="card tool-card"><div class="tool-icon">�</div><div class="tool-name">Subtitle Overlay</div><div class="tool-desc">Overlay real-time per streaming con supporto OBS e export SRT/VTT.</div><div class="tool-features">• OBS WebSocket • Custom styling • Multi-language</div></div>
       <div class="card tool-card"><div class="tool-icon">⚙️</div><div class="tool-name">Unity Patcher</div><div class="tool-desc">Setup automatico BepInEx + XUnity.AutoTranslator per qualsiasi gioco Unity.</div><div class="tool-features">• One-click install • Auto-config • Backup/restore</div></div>
-      <div class="card tool-card"><div class="tool-icon">🖼️</div><div class="tool-name">Texture Translator</div><div class="tool-desc">Traduci texture UI, menu e assets grafici con OCR + inpainting AI.</div><div class="tool-features">• PNG/DDS support • Font matching • Batch export</div></div>
-      <div class="card tool-card"><div class="tool-icon">📄</div><div class="tool-name">Manga/VN Translator</div><div class="tool-desc">OCR specializzato per fumetti, manga e visual novel con bubble detection.</div><div class="tool-features">• Bubble detect • Japanese vertical • Furigana support</div></div>
     </div>
   </div>
 </section>
