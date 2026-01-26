@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "cd .. && npm run build:tauri-only",
-    "devUrl": "http://127.0.0.1:3183",
+    "devUrl": "http://127.0.0.1:3184",
     "frontendDist": "../out"
   },
   "app": {
