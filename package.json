@@ -16,7 +16,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "build": "next build",
-    "build:tauri-only": "next build",
+    "build:tauri-only": "cross-env TAURI=true next build",
     "export": "npm run version:build && next build && next export",
     "build:tauri": "npm run version:build && cross-env TAURI=true next build",
     "build:native": "node-gyp rebuild --directory=native",
