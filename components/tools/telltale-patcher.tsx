@@ -11,7 +11,8 @@ import {
   FolderOpen, 
   Download, 
   CheckCircle2, 
-  AlertTriangle, 
+  AlertTriangle
+  , 
   Gamepad2,
   ExternalLink,
   Play,

@@ -126,6 +126,25 @@ export default function InfoPage() {
         </Card>
       </div>
 
+      {/* Special Thanks */}
+      <Card className="p-3 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border-violet-500/20">
+        <p className="text-xs font-semibold text-violet-400 mb-2 flex items-center gap-1.5">
+          <Heart className="h-3.5 w-3.5" />
+          {t('infoPage.specialThanks')}
+        </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
+            <Sparkles className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">CLODO</p>
+            <p className="text-xs text-muted-foreground">
+              {t('infoPage.clodoThanks')}
+            </p>
+          </div>
+        </div>
+      </Card>
+
       {/* Credits */}
       <Card className="p-3 bg-gradient-to-r from-orange-500/10 to-amber-500/10 border-orange-500/20">
         <div className="flex items-center justify-between">

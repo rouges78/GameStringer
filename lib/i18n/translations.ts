@@ -1699,6 +1699,8 @@ export const translations = {
       thanks: 'Grazie per usare GameStringer!',
       kofi: 'Ko-fi',
       github: 'GitHub',
+      specialThanks: 'Ringraziamenti Speciali',
+      clodoThanks: 'Senza il suo contributo non avrei fatto nemmeno metà di tutto questo. Grazie per aver reso possibile GameStringer.',
     },
     // AI Translator
     aiTranslator: {
@@ -3788,6 +3790,8 @@ export const translations = {
       thanks: 'Thanks for using GameStringer!',
       kofi: 'Ko-fi',
       github: 'GitHub',
+      specialThanks: 'Special Thanks',
+      clodoThanks: 'Without his contribution I wouldn\'t have done even half of this. Thanks for making GameStringer possible.',
     },
     // AI Translator
     aiTranslator: {
@@ -5921,6 +5925,8 @@ export const translations = {
       thanks: '¡Gracias por usar GameStringer!',
       kofi: 'Ko-fi',
       github: 'GitHub',
+      specialThanks: 'Agradecimientos Especiales',
+      clodoThanks: 'Sin su contribución no habría hecho ni la mitad de todo esto. Gracias por hacer posible GameStringer.',
     },
   },
   fr: {
@@ -7515,6 +7521,8 @@ export const translations = {
       thanks: 'Merci d\'utiliser GameStringer !',
       kofi: 'Ko-fi',
       github: 'GitHub',
+      specialThanks: 'Remerciements Spéciaux',
+      clodoThanks: 'Sans sa contribution, je n\'aurais pas fait la moitié de tout cela. Merci d\'avoir rendu GameStringer possible.',
     },
   },
   de: {
@@ -9184,6 +9192,8 @@ export const translations = {
       thanks: 'Danke für die Nutzung von GameStringer!',
       kofi: 'Ko-fi',
       github: 'GitHub',
+      specialThanks: 'Besonderer Dank',
+      clodoThanks: 'Ohne seinen Beitrag hätte ich nicht einmal die Hälfte davon geschafft. Danke, dass GameStringer möglich wurde.',
     },
   },
   ja: {
@@ -10647,6 +10657,8 @@ export const translations = {
       thanks: 'GameStringerをご利用いただきありがとうございます！',
       kofi: 'Ko-fi',
       github: 'GitHub',
+      specialThanks: '特別な感謝',
+      clodoThanks: '彼の貢献なしには、これの半分もできなかったでしょう。GameStringerを可能にしてくれてありがとう。',
     },
   },
   zh: {
@@ -12112,6 +12124,8 @@ export const translations = {
       thanks: '感谢使用GameStringer！',
       kofi: 'Ko-fi',
       github: 'GitHub',
+      specialThanks: '特别感谢',
+      clodoThanks: '没有他的贡献，我连一半都做不到。感谢让GameStringer成为可能。',
     },
   },
 } as const;
