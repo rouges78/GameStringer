@@ -1,11 +1,12 @@
 /** @type {import('next').NextConfig} */
-const isTauri = process.env.TAURI === 'true';
+const isTauri = process.env.TAURI_BUILD === 'true';
 
 const nextConfig = {
   // Disabilita Next.js Dev Tools indicator
   devIndicators: false,
   // Permetti richieste cross-origin da Tauri in dev
   allowedDevOrigins: ['127.0.0.1', 'localhost', 'tauri.localhost'],
+  // Static export for Tauri production build
   ...(isTauri && {
     output: 'export',
     trailingSlash: true,
