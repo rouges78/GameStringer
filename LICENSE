@@ -1,6 +1,6 @@
 # GameStringer Source Available License
 
-Version 1.0, January 2026
+Version 1.1, January 2026
 
 Copyright (c) 2026 GameStringer
 
@@ -10,8 +10,9 @@ Copyright (c) 2026 GameStringer
 
 - "Software" refers to GameStringer and all its source code, documentation, and associated files.
 - "You" refers to any individual or entity accessing or using the Software.
-- "Commercial Use" means any use of the Software intended for or directed toward commercial advantage or monetary compensation.
+- "Commercial Use" means any use of the Software intended for or directed toward commercial advantage or monetary compensation. This includes use by any company or commercial entity.
 - "Derivative Work" means any modification, adaptation, or work based on the Software.
+- "Non-Commercial Use" includes personal projects, educational use, and content creation (e.g., YouTube, Twitch) where ad revenue may be received, as long as the Software itself is not sold or offered as a paid service.
 
 ### 2. Grant of Rights
 
@@ -24,6 +25,8 @@ Subject to the terms of this License, You are granted a limited, non-exclusive, 
 - Share unmodified copies of the Software with attribution
 - Use the Software for educational purposes
 - Use the Software for non-commercial game translation projects
+- Create non-commercial forks with proper attribution
+- Use the Software for content creation (streaming, videos) with attribution
 
 ❌ **NOT PERMITTED:**
 - Use the Software for any Commercial Use without written permission
@@ -39,7 +42,7 @@ Subject to the terms of this License, You are granted a limited, non-exclusive, 
 For Commercial Use, including but not limited to:
 - Integration into commercial products
 - Offering as a paid service
-- Use by companies with revenue exceeding €100,000/year
+- Use by any company or commercial entity
 
 You must obtain a separate commercial license. Contact: rouges78@gmail.com
 
@@ -47,7 +50,7 @@ You must obtain a separate commercial license. Contact: rouges78@gmail.com
 
 Any permitted use of the Software must include:
 - Clear attribution to "GameStringer" and the original author
-- A link to the original repository
+- A link to the original repository: https://github.com/rouges78/GameStringer
 - This License file in its entirety
 
 ### 5. Contributions
@@ -55,6 +58,7 @@ Any permitted use of the Software must include:
 By submitting contributions (pull requests, issues, etc.), you agree that:
 - Your contributions become part of the Software under this License
 - You grant the copyright holder a perpetual, worldwide, royalty-free license to use your contributions
+- You have the right to submit the contribution and it does not infringe any third-party rights
 
 ### 6. No Warranty
 
@@ -70,6 +74,10 @@ This License automatically terminates if You violate any of its terms. Upon term
 
 This License shall be governed by and construed in accordance with the laws of Italy, without regard to its conflict of law provisions.
 
+### 9. License Updates
+
+The copyright holder may publish new versions of this License. You may choose to follow the terms of the version under which You received the Software, or any later version published by the copyright holder.
+
 ---
 
 ## Summary (Not Legal Advice)
@@ -81,6 +89,8 @@ This License shall be governed by and construed in accordance with the laws of I
 | Fan translation projects | ✅ Yes |
 | View/study source code | ✅ Yes |
 | Modify for personal use | ✅ Yes |
+| Non-commercial forks | ✅ Yes (with attribution) |
+| Content creation (YouTube, Twitch) | ✅ Yes (with attribution) |
 | Commercial use | ❌ Requires license |
 | Sell or redistribute | ❌ No |
 | Create competing product | ❌ No |
