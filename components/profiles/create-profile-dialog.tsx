@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useProfiles } from '@/hooks/use-profiles';
 import { CreateProfileRequest } from '@/types/profiles';
+import { useTranslation, Language } from '@/lib/i18n';
+import { Globe } from 'lucide-react';
 import { generateRecoveryKey, saveRecoveryKeyHash } from '@/lib/recovery-key';
 import { RecoveryKeyDisplay } from '@/components/profiles/recovery-key-display';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -34,6 +36,17 @@ interface CreateProfileDialogProps {
 }
 
 import { AVATAR_GRADIENTS, getAvatarGradient, getInitials } from '@/lib/avatar-utils';
+import { IT, GB, ES, FR, DE, JP, CN } from 'country-flag-icons/react/3x2';
+
+const LANGUAGES: { code: Language; name: string; Flag: React.ComponentType<{ className?: string }> }[] = [
+  { code: 'it', name: 'Italiano', Flag: IT },
+  { code: 'en', name: 'English', Flag: GB },
+  { code: 'es', name: 'Español', Flag: ES },
+  { code: 'fr', name: 'Français', Flag: FR },
+  { code: 'de', name: 'Deutsch', Flag: DE },
+  { code: 'ja', name: '日本語', Flag: JP },
+  { code: 'zh', name: '中文', Flag: CN },
+];
 
 export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: CreateProfileDialogProps) {
   const [formData, setFormData] = useState({
@@ -41,7 +54,9 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     password: '',
     confirmPassword: '',
     avatarPath: '',
+    language: 'en' as Language,
   });
+  const { t, setLanguage } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -163,11 +178,22 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
 
   const handleRecoveryKeyConfirmed = () => {
     // Reset form
+    // Applica la lingua selezionata
+    setLanguage(formData.language);
+    
+    // Salva lingua per il nuovo profilo
+    try {
+      localStorage.setItem(`gs_language_${pendingProfileId}`, formData.language);
+    } catch (e) {
+      console.warn('Failed to save language for profile:', e);
+    }
+    
     setFormData({
       name: '',
       password: '',
       confirmPassword: '',
       avatarPath: '',
+      language: 'en' as Language,
     });
     setSelectedAvatar(null);
     setCustomImage(null);
@@ -191,6 +217,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
         password: '',
         confirmPassword: '',
         avatarPath: '',
+        language: 'en' as Language,
       });
       setSelectedAvatar(null);
       setCustomImage(null);
@@ -204,7 +231,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden bg-slate-950/95 backdrop-blur-xl border-slate-800/50 shadow-2xl">
-        <VisuallyHidden><DialogTitle>Create New Profile</DialogTitle></VisuallyHidden>
+        <VisuallyHidden><DialogTitle>{t('profile.newProfile')}</DialogTitle></VisuallyHidden>
         
         {/* Hero Header */}
         <motion.div 
@@ -227,8 +254,8 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white drop-shadow-lg">New Profile</h2>
-              <p className="text-white/70 text-xs">Customize your experience</p>
+              <h2 className="text-lg font-bold text-white drop-shadow-lg">{t('profile.newProfile')}</h2>
+              <p className="text-white/70 text-xs">{t('profile.customizeExperience')}</p>
             </div>
           </div>
         </motion.div>
@@ -267,7 +294,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             </label>
             
             <div className="flex-1">
-              <p className="text-xs font-medium text-blue-300 mb-1.5">Choose a color</p>
+              <p className="text-xs font-medium text-blue-300 mb-1.5">{t('profile.chooseColor')}</p>
               <div className="flex flex-wrap gap-1.5">
                 {AVATAR_GRADIENTS.map((avatar) => (
                   <button
@@ -286,19 +313,52 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             </div>
           </motion.div>
 
+          {/* Language Selector */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.18 }}
+            className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50 border border-slate-700/50">
+            <div className="flex items-center gap-2">
+              <Globe className="h-4 w-4 text-slate-400" />
+              <span className="text-xs font-medium text-slate-300">{LANGUAGES.find(l => l.code === formData.language)?.name}</span>
+            </div>
+            <div className="flex gap-1">
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({ ...prev, language: lang.code }));
+                    setLanguage(lang.code);
+                  }}
+                  disabled={isCreating}
+                  className={`p-1 rounded transition-all ${
+                    formData.language === lang.code
+                      ? 'ring-1 ring-slate-400 bg-slate-800'
+                      : 'opacity-50 hover:opacity-100'
+                  }`}
+                  title={lang.name}
+                >
+                  <lang.Flag className="w-5 h-3.5 rounded-sm" />
+                </button>
+              ))}
+            </div>
+          </motion.div>
+
           {/* Form Fields */}
           <div className="space-y-4">
             {/* Nome */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <User className="h-3 w-3" />
-                Profile Name
+                {t('profile.profileName')}
               </label>
               <Input
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="What do you want to be called?"
+                placeholder={t('profile.namePlaceholder')}
                 disabled={isCreating}
                 maxLength={50}
                 className="h-10 bg-slate-900/50 border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-white placeholder:text-slate-500"
@@ -309,14 +369,14 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Lock className="h-3 w-3" />
-                Password
+                {t('profile.password')}
               </label>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Minimum 6 characters"
+                  placeholder={t('profile.passwordMinChars')}
                   disabled={isCreating}
                   className="h-10 pr-10 bg-slate-900/50 border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-white placeholder:text-slate-500"
                 />
@@ -334,14 +394,14 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle className="h-3 w-3" />
-                Confirm Password
+                {t('profile.confirmPassword')}
               </label>
               <div className="relative">
                 <Input
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  placeholder="Repeat password"
+                  placeholder={t('profile.repeatPassword')}
                   disabled={isCreating}
                   className="h-10 pr-10 bg-slate-900/50 border-slate-700 focus:border-blue-500 focus:ring-blue-500/20 text-white placeholder:text-slate-500"
                 />
@@ -379,8 +439,8 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
             <Shield className="h-5 w-5 text-emerald-400" />
             <div className="text-xs">
-              <p className="font-medium text-emerald-300">AES-256 Protection</p>
-              <p className="text-emerald-400/70">Your data is encrypted</p>
+              <p className="font-medium text-emerald-300">{t('profile.aesProtection')}</p>
+              <p className="text-emerald-400/70">{t('profile.dataEncrypted')}</p>
             </div>
           </motion.div>
 
@@ -391,24 +451,24 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
               variant="ghost"
               onClick={handleClose}
               disabled={isCreating}
-              className="flex-1 h-10 text-slate-400 hover:text-white hover:bg-slate-800"
+              className="flex-1 h-10 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-700"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isCreating}
-              className="flex-1 h-10 bg-gradient-to-r from-blue-600 to-rose-600 hover:from-blue-500 hover:to-rose-500 text-white border-0 shadow-lg shadow-blue-900/30"
+              className="flex-1 h-10 bg-blue-600 hover:bg-blue-500 text-white border-0"
             >
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
+                  {t('profile.creating')}
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Create Profile
+                  {t('profile.createProfile')}
                 </>
               )}
             </Button>

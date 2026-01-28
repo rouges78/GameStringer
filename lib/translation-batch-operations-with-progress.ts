@@ -62,9 +62,14 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
           data: { format: 'json' }
         }));
 
+        // Wrapper per adattare la firma della funzione
+        const exportWrapper = async (item: TranslationBatchItem) => {
+          return batchExportProcessor([item], { format: 'json' });
+        };
+        
         return processor.processBatch(
           batchItems,
-          batchExportProcessor,
+          exportWrapper,
           'export',
           {
             title: `Esportazione di ${items.length} traduzioni`,
@@ -89,9 +94,14 @@ export function createProgressBatchOperations(progressState: ProgressState): Bat
           data: { overwrite: false }
         }));
 
+        // Wrapper per adattare la firma della funzione
+        const importWrapper = async (item: TranslationBatchItem) => {
+          return batchImportProcessor(item.data, { format: 'json', overwriteExisting: item.data.overwrite });
+        };
+        
         return processor.processBatch(
           batchItems,
-          batchImportProcessor,
+          importWrapper,
           'import',
           {
             title: `Importazione di ${items.length} traduzioni`,
@@ -254,9 +264,14 @@ export function useProgressBatchOperations(progressState: ProgressState) {
       data: { format }
     }));
 
+    // Wrapper per adattare la firma
+    const exportWrapper = async (item: TranslationBatchItem) => {
+      return batchExportProcessor([item], { format: format as 'json' | 'csv' | 'xlsx' | 'po' });
+    };
+    
     return processor.processBatch(
       batchItems,
-      batchExportProcessor,
+      exportWrapper,
       'export',
       {
         title: `Esportazione ${format.toUpperCase()} di ${translationIds.length} traduzioni`,
@@ -268,10 +283,23 @@ export function useProgressBatchOperations(progressState: ProgressState) {
   };
 
   const executeStatusUpdate = async (translationIds: string[], newStatus: string) => {
-    const statusOp = operations.find(op => op.id === 'batch-status-update');
-    if (!statusOp) throw new Error('Status update operation not found');
+    const processor = createProgressBatchProcessor(progressState, 'status_update');
+    const batchItems: TranslationBatchItem[] = translationIds.map(id => ({
+      id,
+      data: { status: newStatus }
+    }));
 
-    return statusOp.action(translationIds, newStatus);
+    return processor.processBatch(
+      batchItems,
+      batchStatusUpdateProcessor,
+      'status_update',
+      {
+        title: `Aggiornamento stato di ${translationIds.length} traduzioni`,
+        description: `Impostazione stato a "${newStatus}"...`,
+        canCancel: true,
+        isBackground: translationIds.length > 15
+      }
+    );
   };
 
   const executeApproval = async (translationIds: string[]) => {

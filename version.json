@@ -1,14 +1,28 @@
 {
-  "version": "1.0.5",
+  "version": "1.0.6",
   "major": 1,
   "minor": 0,
-  "patch": 5,
+  "patch": 6,
   "prerelease": null,
-  "buildNumber": 105,
-  "buildDate": "2026-01-26T00:00:00.000Z",
+  "buildNumber": 106,
+  "buildDate": "2026-01-28T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.6": {
+      "date": "2026-01-28",
+      "type": "patch",
+      "changes": [
+        "Qwen 3: Provider dedicato per lingue asiatiche (CN/JP/KR) via Ollama",
+        "NLLB-200: Supporto 200 lingue via HuggingFace Inference API",
+        "Ollama Generico: Usa qualsiasi modello installato",
+        "Bug fix: Catch vuoti sostituiti con logging appropriato",
+        "Bug fix: Import non utilizzati rimossi dai file principali",
+        "Bug fix: Vitest config provider v8 mancante",
+        "Bug fix: Firme funzioni batch operations incompatibili",
+        "i18n: Traduzioni mancanti aggiunte per ES, FR, DE, JA, ZH"
+      ]
+    },
     "1.0.5": {
       "date": "2026-01-26",
       "type": "feature",

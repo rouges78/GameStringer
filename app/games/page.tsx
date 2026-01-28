@@ -21,17 +21,13 @@ import {
   RefreshCw, 
   ServerCrash, 
   Gamepad2,
-  Filter,
   ArrowDownUp,
   DownloadCloud,
   Camera,
-  CloudOff,
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import GameImage from '@/components/game-image';
 import GameCard from '@/components/game-card';
-import HowLongToBeatDisplay from '../components/HowLongToBeatDisplay';
 import { prefetchHltb, getHltbFromCache } from '@/hooks/useHowLongToBeat';
 import type { SteamGame, LocalGame, HowLongToBeatData } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';

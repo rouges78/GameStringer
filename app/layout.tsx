@@ -9,7 +9,6 @@ import { ProfileWrapper } from '@/components/profiles/profile-wrapper';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ProgressProvider } from '@/components/progress/progress-provider';
 import { ProgressUIManager } from '@/components/progress/progress-ui-manager';
-import { InteractiveTutorial } from '@/components/onboarding/interactive-tutorial';
 import { DisclaimerModal } from '@/components/legal/disclaimer-modal';
 import { UpdateNotification } from '@/components/update-notification';
 import { I18nProvider } from '@/lib/i18n';
@@ -44,8 +43,6 @@ export default function RootLayout({
                     </ErrorBoundary>
                     {/* Disclaimer legale - primo avvio */}
                     <DisclaimerModal />
-                    {/* Tutorial interattivo per nuovi utenti */}
-                    <InteractiveTutorial />
                   </ProfileWrapper>
                 </ErrorBoundary>
                 <Toaster richColors position="top-right" />

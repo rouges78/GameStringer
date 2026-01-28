@@ -13,15 +13,23 @@ interface DisclaimerModalProps {
 }
 
 export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const accepted = localStorage.getItem(DISCLAIMER_ACCEPTED_KEY);
-    if (accepted !== DISCLAIMER_VERSION) {
-      setIsOpen(true);
-    }
-    
+    // Aspetta che la lingua sia caricata dal localStorage
+    const timer = setTimeout(() => {
+      setIsReady(true);
+      const accepted = localStorage.getItem(DISCLAIMER_ACCEPTED_KEY);
+      if (accepted !== DISCLAIMER_VERSION) {
+        setIsOpen(true);
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     // Keyboard shortcut: press Enter to accept
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && isOpen) {
@@ -40,7 +48,7 @@ export function DisclaimerModal({ onAccept }: DisclaimerModalProps) {
     onAccept?.();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !isReady) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" style={{ pointerEvents: 'auto' }}>

@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2, Clock, Trophy, Gamepad2, BarChart3, Store, ChevronDown } from 'lucide-react';
+import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2, Clock, Trophy, Gamepad2, BarChart3, Store as StoreIcon, ChevronDown } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
 import Image, { StaticImageData } from 'next/image';
@@ -515,7 +515,7 @@ export default function StoresPage() {
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
-              <Store className="h-5 w-5 text-white" />
+              <StoreIcon className="h-5 w-5 text-white" />
             </div>
             <div>
               <h1 className="text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('stores.title')}</h1>

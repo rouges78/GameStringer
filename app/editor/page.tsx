@@ -732,7 +732,7 @@ export default function EditorPage() {
         const toAdd = newTranslations.filter(t => !existingIds.has(t.id));
         const toUpdate = newTranslations.filter(t => existingIds.has(t.id));
         
-        let updated = prev.map(t => {
+        const updated = prev.map(t => {
           const match = toUpdate.find(u => u.id === t.id);
           return match || t;
         });

@@ -1,7 +1,7 @@
 # 📚 GameStringer Guida Completa
 
-> **Versione**: 1.0.5  
-> **Ultimo Aggiornamento**: 26 Gennaio 2026
+> **Versione**: 1.0.6  
+> **Ultimo Aggiornamento**: 28 Gennaio 2026
 
 ---
 
@@ -33,11 +33,13 @@
 
 ### Funzionalità Principali
 
-- **15+ Provider AI**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, Cohere, DeepL, Ollama (locale), LM Studio e altri
+- **18+ Provider AI**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, Cohere, DeepL, Ollama, LM Studio, **Qwen 3**, **NLLB-200** e altri
 - **Supporto Multi-Engine**: Unity, Unreal Engine, Godot, RPG Maker, Ren'Py, GameMaker, Telltale
 - **Integrazione Store**: Steam, Epic Games, GOG, Origin, Ubisoft Connect, Battle.net, itch.io
 - **Strumenti Professionali**: OCR Translator, Voice Pipeline, Overlay Real-time, Translation Memory
 - **7 Lingue UI**: Italiano, English, Español, Français, Deutsch, 日本語, 中文
+- **NUOVO v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
+- **NUOVO v1.0.6**: Qwen 3 (lingue asiatiche), NLLB-200 (200 lingue), bug fixes
 
 ---
 
@@ -650,6 +652,6 @@ I giochi con questi engine funzionano meglio:
 ---
 
 <p align="center">
-  <strong>GameStringer v1.0.3</strong><br>
+  <strong>GameStringer v1.0.6</strong><br>
   Fatto con ❤️ per i gamer che vogliono giocare nella propria lingua
 </p>

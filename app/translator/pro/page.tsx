@@ -188,7 +188,9 @@ export default function TranslatorProPage() {
           setApiKey(parsed.translation.apiKey);
           return;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[TranslatorPro] Errore parsing impostazioni globali:', e);
+      }
     }
     setApiKey('');
   }, [provider]);
@@ -1273,7 +1275,7 @@ export default function TranslatorProPage() {
       else if (engineInfo?.is_unity || engineInfo?.can_patch) {
         console.log('[ApplyToGame] Usando METODO 2 - XUnity AutoTranslator');
         setApplyStatus('checking');
-        let hasPatcher = engineInfo?.has_bepinex && engineInfo?.has_xunity;
+        const hasPatcher = engineInfo?.has_bepinex && engineInfo?.has_xunity;
         
         // Installa patcher se manca
         if (!hasPatcher) {

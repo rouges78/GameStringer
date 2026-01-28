@@ -93,7 +93,9 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           const settings = JSON.parse(settingsStr);
           apiKey = settings?.integrations?.steamApiKey || null;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[STEAM] Errore parsing impostazioni Steam:', e);
+      }
       
       // Get user profile
       const profile = await invoke<SteamUser>('steam_get_user_profile', { steamId, apiKey });
@@ -142,7 +144,9 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
           const settings = JSON.parse(settingsStr);
           apiKey = settings?.integrations?.steamApiKey || null;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[STEAM] Errore parsing impostazioni Steam:', e);
+      }
       
       // Get user profile
       const profile = await invoke<SteamUser>('steam_get_user_profile', { 

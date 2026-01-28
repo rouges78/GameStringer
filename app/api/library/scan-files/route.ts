@@ -178,7 +178,7 @@ async function scanDirectory(
               category: getFileCategory(entry.name),
               priority
             });
-          } catch (err) {
+          } catch {
             // Skip files we can't stat
           }
         }

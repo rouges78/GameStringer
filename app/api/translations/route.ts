@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // In-memory storage for translations (in production, use a database)
-let translations: any[] = [];
+const translations: any[] = [];
 
 // GET /api/translations - Get all translations with optional filters
 export async function GET(request: NextRequest) {

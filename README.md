@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.4-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.0.6-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -32,18 +32,30 @@
 
 ### 🤖 Neural AI Translation
 
-- **15+ AI Providers**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, Cohere, DeepL, Ollama (local), LM Studio, and more
+- **18+ AI Providers**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, Cohere, DeepL, Ollama (local), LM Studio, **Qwen 3**, **NLLB-200**, and more
 - **Context-Aware**: Understands game genre, character voice, and tone
 - **Translation Memory**: Reuse previous translations for consistency
 - **Glossary Support**: Define custom terms for your project
 
-### 🎬 NEW: Subtitle Translator Pro (v1.0.4)
+### � NEW: Asian Language Support (v1.0.6)
+
+- **Qwen 3**: Dedicated provider for Chinese/Japanese/Korean via Ollama
+- **NLLB-200**: 200 languages support including Thai, Vietnamese, Hindi, Arabic
+- **Generic Ollama**: Use any installed model for translation
+
+### 🎤 NEW: Voice Clone Studio (v1.0.5)
+
+- **AI voice cloning** with ElevenLabs and OpenAI TTS
+- **Text-to-speech** with multiple voices and presets
+- **VR Text Overlay** for spatial subtitles in VR games
+
+### 🎬 Subtitle Translator Pro
 
 - **Complete parser** for SRT, VTT, ASS/SSA formats
 - **Real-time preview** with QA validation
 - **Multi-format export** with preserved timing
 
-### 🎮 NEW: Retro ROM Tools (v1.0.4)
+### 🎮 Retro ROM Tools
 
 - **8 consoles** supported (NES, SNES, GB, GBC, GBA, Genesis, PSX, N64)
 - **Table file** (.TBL) parser/generator
@@ -252,6 +264,6 @@ See [LICENSE](LICENSE) for full details.
 </p>
 
 <p align="center">
-  <strong>GameStringer v1.0.4</strong><br>
+  <strong>GameStringer v1.0.6</strong><br>
   © 2025-2026 GameStringer Team
 </p>

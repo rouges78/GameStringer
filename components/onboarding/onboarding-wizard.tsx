@@ -375,8 +375,15 @@ export function OnboardingWizard() {
     }
   };
 
+  const handleClose = (open: boolean) => {
+    if (!open) {
+      // Quando il dialog viene chiuso (anche con X), salva lo stato
+      skipOnboarding();
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
         <VisuallyHidden>
           <DialogTitle>{t('onboarding.dialogTitle')}</DialogTitle>

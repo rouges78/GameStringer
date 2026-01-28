@@ -71,7 +71,7 @@ export function AITranslationAssistant() {
   const { t } = useTranslation();
   const [providers, setProviders] = useState<AIProvider[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<string>('ollama');
-  const [selectedModel, setSelectedModel] = useState<string>('llama3.2');
+  const [selectedModel, setSelectedModel] = useState<string>('translategemma');
   const [isCheckingProviders, setIsCheckingProviders] = useState(true);
   
   const [inputText, setInputText] = useState('');
@@ -258,7 +258,7 @@ export function AITranslationAssistant() {
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-yellow-500/10 border border-yellow-500/20 text-xs">
           <AlertCircle className="h-3 w-3 text-yellow-500" />
           <span className="text-yellow-300">
-            Ollama non rilevato. <a href="https://ollama.ai" target="_blank" className="underline">ollama.ai</a> → <code className="bg-slate-800 px-1 rounded text-[10px]">ollama run llama3.2</code>
+            Ollama non rilevato. <a href="https://ollama.ai" target="_blank" className="underline">ollama.ai</a> → <code className="bg-slate-800 px-1 rounded text-[10px]">ollama run translategemma</code>
           </span>
         </div>
       )}

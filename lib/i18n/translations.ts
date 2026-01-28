@@ -210,6 +210,17 @@ export const translations = {
       importProfile: 'Importa Profilo',
       security: 'Sicurezza',
       profileManagement: 'Gestione Profili',
+      customizeExperience: 'Personalizza la tua esperienza',
+      chooseColor: 'Scegli un colore',
+      preferredLanguage: 'Lingua',
+      profileName: 'Nome Profilo',
+      namePlaceholder: 'Come vuoi essere chiamato?',
+      passwordMinChars: 'Minimo 6 caratteri',
+      confirmPassword: 'Conferma Password',
+      repeatPassword: 'Ripeti password',
+      aesProtection: 'Protezione AES-256',
+      dataEncrypted: 'I tuoi dati sono criptati',
+      creating: 'Creazione...',
     },
     // Onboarding
     onboarding: {
@@ -297,6 +308,7 @@ export const translations = {
       translations: 'traduzioni',
       patches: 'patch',
       latestActions: 'Ultime azioni',
+      oldestFirst: 'Meno recenti',
       noRecentActivity: 'Nessuna attività recente',
       actionsWillAppear: 'Le tue azioni appariranno qui',
       getStarted: 'Inizia',
@@ -2048,6 +2060,11 @@ export const translations = {
       acceptButton: 'Ho letto e accetto',
       scrollToRead: 'Scorri per leggere',
     },
+    widget: {
+      recommendedToTranslate: 'Da Tradurre',
+      needsTranslation: 'Manca italiano',
+      inLibrary: 'In libreria',
+    },
     tutorial: {
       skip: 'Salta',
       back: 'Indietro',
@@ -2059,39 +2076,39 @@ export const translations = {
       steps: {
         welcome: {
           title: 'Benvenuto in GameStringer!',
-          description: 'Il software professionale per tradurre videogiochi. Ti guiderò attraverso le funzioni principali.',
+          description: 'Il software professionale per tradurre videogiochi in qualsiasi lingua.',
         },
-        sidebar: {
-          title: 'Navigazione',
-          description: 'La sidebar ti permette di accedere a tutte le sezioni: Dashboard, Libreria, Traduzioni, Strumenti e Impostazioni.',
+        aiFeatures: {
+          title: 'Traduzione AI Avanzata',
+          description: 'Usa Ollama gratuitamente in locale, oppure OpenAI, Claude, Gemini e altri provider cloud.',
         },
         dashboard: {
           title: 'Dashboard',
-          description: 'Panoramica completa con statistiche, attività recenti e accesso rapido a tutte le funzioni.',
+          description: 'Panoramica completa con statistiche, attività recenti e accesso rapido.',
         },
         library: {
           title: 'Libreria Giochi',
-          description: 'Tutti i tuoi giochi da Steam, Epic, GOG e altri store. Filtra per lingua, engine o stato traduzione.',
+          description: 'Tutti i tuoi giochi da Steam, Epic, GOG e altri store. Filtra per lingua o engine.',
         },
         translator: {
           title: 'Traduttore AI',
-          description: 'Traduci file con intelligenza artificiale. Supporta JSON, CSV, PO, RESX e altri formati.',
+          description: 'Traduci file con AI. Supporta JSON, CSV, PO, RESX e molti altri formati.',
         },
         tools: {
           title: 'Strumenti',
-          description: 'Game Patcher, OCR Translator, Context Crawler, Translation Fixer e molto altro.',
+          description: 'Game Patcher, OCR Translator, Voice Clone, Subtitle Editor e molto altro.',
         },
-        projectManager: {
-          title: 'Gestione Progetti',
-          description: 'Organizza progetti di traduzione completi con glossario, file multipli e tracciamento progresso.',
+        community: {
+          title: 'Community',
+          description: 'Scarica pacchetti traduzioni dalla community o condividi le tue.',
         },
         settings: {
           title: 'Impostazioni',
-          description: 'Configura API di traduzione, collega gli store, gestisci profili e personalizza l\'app.',
+          description: 'Configura API, collega store, gestisci profili e personalizza l\'app.',
         },
         complete: {
-          title: 'Pronto!',
-          description: 'Ora conosci le basi. Esplora la libreria o inizia subito a tradurre!',
+          title: 'Tutto Pronto!',
+          description: 'Esplora la libreria o inizia subito a tradurre il tuo primo gioco!',
         },
       },
     },
@@ -2307,6 +2324,17 @@ export const translations = {
       importProfile: 'Import Profile',
       security: 'Security',
       profileManagement: 'Profile Management',
+      customizeExperience: 'Customize your experience',
+      chooseColor: 'Choose a color',
+      preferredLanguage: 'Language',
+      profileName: 'Profile Name',
+      namePlaceholder: 'What do you want to be called?',
+      passwordMinChars: 'Minimum 6 characters',
+      confirmPassword: 'Confirm Password',
+      repeatPassword: 'Repeat password',
+      aesProtection: 'AES-256 Protection',
+      dataEncrypted: 'Your data is encrypted',
+      creating: 'Creating...',
     },
     // Onboarding
     onboarding: {
@@ -2394,6 +2422,7 @@ export const translations = {
       translations: 'translations',
       patches: 'patches',
       latestActions: 'Latest actions',
+      oldestFirst: 'Oldest first',
       noRecentActivity: 'No recent activity',
       actionsWillAppear: 'Your actions will appear here',
       getStarted: 'Get Started',
@@ -4137,6 +4166,11 @@ export const translations = {
       acceptButton: 'I have read and accept',
       scrollToRead: 'Scroll to read',
     },
+    widget: {
+      recommendedToTranslate: 'To Translate',
+      needsTranslation: 'Missing translation',
+      inLibrary: 'In library',
+    },
     tutorial: {
       skip: 'Skip',
       back: 'Back',
@@ -4148,39 +4182,39 @@ export const translations = {
       steps: {
         welcome: {
           title: 'Welcome to GameStringer!',
-          description: 'Professional software for translating video games. I\'ll guide you through the main features.',
+          description: 'Professional software for translating video games into any language.',
         },
-        sidebar: {
-          title: 'Navigation',
-          description: 'The sidebar lets you access all sections: Dashboard, Library, Translations, Tools and Settings.',
+        aiFeatures: {
+          title: 'Advanced AI Translation',
+          description: 'Use Ollama for free locally, or OpenAI, Claude, Gemini and other cloud providers.',
         },
         dashboard: {
           title: 'Dashboard',
-          description: 'Complete overview with statistics, recent activity and quick access to all features.',
+          description: 'Complete overview with statistics, recent activity and quick access.',
         },
         library: {
           title: 'Game Library',
-          description: 'All your games from Steam, Epic, GOG and other stores. Filter by language, engine or translation status.',
+          description: 'All your games from Steam, Epic, GOG and other stores. Filter by language or engine.',
         },
         translator: {
           title: 'AI Translator',
-          description: 'Translate files with artificial intelligence. Supports JSON, CSV, PO, RESX and other formats.',
+          description: 'Translate files with AI. Supports JSON, CSV, PO, RESX and many other formats.',
         },
         tools: {
           title: 'Tools',
-          description: 'Game Patcher, OCR Translator, Context Crawler, Translation Fixer and much more.',
+          description: 'Game Patcher, OCR Translator, Voice Clone, Subtitle Editor and much more.',
         },
-        projectManager: {
-          title: 'Project Manager',
-          description: 'Organize complete translation projects with glossary, multiple files and progress tracking.',
+        community: {
+          title: 'Community',
+          description: 'Download translation packs from the community or share your own.',
         },
         settings: {
           title: 'Settings',
-          description: 'Configure translation APIs, connect stores, manage profiles and customize the app.',
+          description: 'Configure APIs, connect stores, manage profiles and customize the app.',
         },
         complete: {
-          title: 'Ready!',
-          description: 'Now you know the basics. Explore the library or start translating right away!',
+          title: 'All Set!',
+          description: 'Explore the library or start translating your first game right away!',
         },
       },
     },
@@ -4379,6 +4413,17 @@ export const translations = {
       importProfile: 'Importar Perfil',
       security: 'Seguridad',
       profileManagement: 'Gestión de Perfiles',
+      customizeExperience: 'Personaliza tu experiencia',
+      chooseColor: 'Elige un color',
+      preferredLanguage: 'Idioma',
+      profileName: 'Nombre del Perfil',
+      namePlaceholder: '¿Cómo quieres que te llamen?',
+      passwordMinChars: 'Mínimo 6 caracteres',
+      confirmPassword: 'Confirmar Contraseña',
+      repeatPassword: 'Repetir contraseña',
+      aesProtection: 'Protección AES-256',
+      dataEncrypted: 'Tus datos están encriptados',
+      creating: 'Creando...',
     },
     // Onboarding
     onboarding: {
@@ -4465,6 +4510,7 @@ export const translations = {
       translations: 'traducciones',
       patches: 'parches',
       latestActions: 'Últimas acciones',
+      oldestFirst: 'Más antiguos',
       noRecentActivity: 'Sin actividad reciente',
       actionsWillAppear: 'Tus acciones aparecerán aquí',
       getStarted: 'Comenzar',
@@ -5271,6 +5317,11 @@ export const translations = {
       acceptButton: 'He leído y acepto',
       scrollToRead: 'Desplázate para leer',
     },
+    widget: {
+      recommendedToTranslate: 'Para Traducir',
+      needsTranslation: 'Falta traducción',
+      inLibrary: 'En biblioteca',
+    },
     tutorial: {
       skip: 'Saltar',
       back: 'Atrás',
@@ -5282,39 +5333,39 @@ export const translations = {
       steps: {
         welcome: {
           title: '¡Bienvenido a GameStringer!',
-          description: 'Software profesional para traducir videojuegos. Te guiaré por las funciones principales.',
+          description: 'Software profesional para traducir videojuegos a cualquier idioma.',
         },
-        sidebar: {
-          title: 'Navegación',
-          description: 'La barra lateral te permite acceder a todas las secciones: Panel, Biblioteca, Traducciones, Herramientas y Ajustes.',
+        aiFeatures: {
+          title: 'Traducción IA Avanzada',
+          description: 'Usa Ollama gratis en local, u OpenAI, Claude, Gemini y otros proveedores cloud.',
         },
         dashboard: {
           title: 'Panel',
-          description: 'Vista completa con estadísticas, actividad reciente y acceso rápido a todas las funciones.',
+          description: 'Vista completa con estadísticas, actividad reciente y acceso rápido.',
         },
         library: {
           title: 'Biblioteca de Juegos',
-          description: 'Todos tus juegos de Steam, Epic, GOG y otras tiendas. Filtra por idioma, motor o estado de traducción.',
+          description: 'Todos tus juegos de Steam, Epic, GOG y otras tiendas. Filtra por idioma o motor.',
         },
         translator: {
           title: 'Traductor IA',
-          description: 'Traduce archivos con inteligencia artificial. Soporta JSON, CSV, PO, RESX y otros formatos.',
+          description: 'Traduce archivos con IA. Soporta JSON, CSV, PO, RESX y muchos más formatos.',
         },
         tools: {
           title: 'Herramientas',
-          description: 'Game Patcher, Traductor OCR, Context Crawler, Translation Fixer y mucho más.',
+          description: 'Game Patcher, Traductor OCR, Voice Clone, Editor de Subtítulos y mucho más.',
         },
-        projectManager: {
-          title: 'Gestor de Proyectos',
-          description: 'Organiza proyectos de traducción completos con glosario, archivos múltiples y seguimiento de progreso.',
+        community: {
+          title: 'Comunidad',
+          description: 'Descarga packs de traducción de la comunidad o comparte los tuyos.',
         },
         settings: {
           title: 'Ajustes',
-          description: 'Configura APIs de traducción, conecta tiendas, gestiona perfiles y personaliza la app.',
+          description: 'Configura APIs, conecta tiendas, gestiona perfiles y personaliza la app.',
         },
         complete: {
-          title: '¡Listo!',
-          description: 'Ahora conoces lo básico. ¡Explora la biblioteca o empieza a traducir!',
+          title: '¡Todo Listo!',
+          description: '¡Explora la biblioteca o empieza a traducir tu primer juego!',
         },
       },
     },
@@ -5595,6 +5646,43 @@ export const translations = {
       startOcrTranslator: 'Iniciar Traductor OCR',
       quickTranslate: 'Traducción Rápida',
       toggleOverlay: 'Activar/Desactivar Overlay',
+      // Guías para nuevas funcionalidades v1.0.4
+      voiceCloneGuide: 'Voice Clone Studio',
+      voiceCloneGuideFeatures: [
+        'Clonación de voz AI con ElevenLabs y OpenAI TTS',
+        'Síntesis text-to-speech con múltiples voces',
+        'Sube muestras de audio para crear clones de voz personalizados',
+        'Presets de voz: narrador, héroe, villano, niño, robot, anciano',
+        'Ajustes configurables: estabilidad, velocidad, similitud',
+        'Guarda y gestiona perfiles de voz',
+      ],
+      vrOverlayGuide: 'VR Text Overlay',
+      vrOverlayGuideFeatures: [
+        'Subtítulos espaciales para juegos VR',
+        'Detección automática de headset VR (Oculus, SteamVR, WMR)',
+        'Presets de posición: centro inferior, centro superior, periférico, muñeca',
+        'Estilo personalizable: tamaño de fuente, opacidad, sombra',
+        'Opción de seguir movimiento de cabeza',
+        'Vista previa en tiempo real en espacio 3D',
+      ],
+      qualityGatesGuide: 'Quality Gates',
+      qualityGatesGuideFeatures: [
+        'Sistema automático de control de calidad de traducciones',
+        'Verificaciones: placeholders, números, etiquetas HTML, longitud',
+        'Validación context-aware (UI, diálogos, narrativa)',
+        'Puntuación de calidad con umbral pass/fail',
+        'Reportes detallados: errores, advertencias, info',
+        'Exporta reportes de validación en JSON',
+      ],
+      playerFeedbackGuide: 'Player Feedback',
+      playerFeedbackGuideFeatures: [
+        'Recopila y gestiona feedback de jugadores sobre traducciones',
+        'Categorías: precisión, fluidez, contexto, terminología, estilo',
+        'Sistema de valoración con 5 estrellas',
+        'Seguimiento de estado: pendiente, revisado, aplicado, rechazado',
+        'Estadísticas y análisis de tendencias',
+        'Exporta feedback en JSON o CSV',
+      ],
     },
     // Game Patcher
     gamePatcher: {
@@ -6123,6 +6211,17 @@ export const translations = {
       importProfile: 'Importer Profil',
       security: 'Sécurité',
       profileManagement: 'Gestion des Profils',
+      customizeExperience: 'Personnalisez votre expérience',
+      chooseColor: 'Choisissez une couleur',
+      preferredLanguage: 'Langue',
+      profileName: 'Nom du Profil',
+      namePlaceholder: 'Comment voulez-vous être appelé?',
+      passwordMinChars: 'Minimum 6 caractères',
+      confirmPassword: 'Confirmer le Mot de passe',
+      repeatPassword: 'Répéter le mot de passe',
+      aesProtection: 'Protection AES-256',
+      dataEncrypted: 'Vos données sont chiffrées',
+      creating: 'Création...',
     },
     // Onboarding
     onboarding: {
@@ -6209,6 +6308,7 @@ export const translations = {
       translations: 'traductions',
       patches: 'patches',
       latestActions: 'Dernières actions',
+      oldestFirst: 'Plus anciens',
       noRecentActivity: 'Pas d\'activité récente',
       actionsWillAppear: 'Vos actions apparaîtront ici',
       getStarted: 'Commencer',
@@ -7015,6 +7115,11 @@ export const translations = {
       acceptButton: 'J\'ai lu et j\'accepte',
       scrollToRead: 'Faites défiler pour lire',
     },
+    widget: {
+      recommendedToTranslate: 'À Traduire',
+      needsTranslation: 'Traduction manquante',
+      inLibrary: 'En bibliothèque',
+    },
     tutorial: {
       skip: 'Passer',
       back: 'Retour',
@@ -7026,39 +7131,39 @@ export const translations = {
       steps: {
         welcome: {
           title: 'Bienvenue dans GameStringer!',
-          description: 'Logiciel professionnel pour traduire des jeux vidéo. Je vais vous guider à travers les fonctionnalités principales.',
+          description: 'Logiciel professionnel pour traduire des jeux vidéo dans n\'importe quelle langue.',
         },
-        sidebar: {
-          title: 'Navigation',
-          description: 'La barre latérale vous permet d\'accéder à toutes les sections: Tableau de bord, Bibliothèque, Traductions, Outils et Paramètres.',
+        aiFeatures: {
+          title: 'Traduction IA Avancée',
+          description: 'Utilisez Ollama gratuitement en local, ou OpenAI, Claude, Gemini et autres fournisseurs cloud.',
         },
         dashboard: {
           title: 'Tableau de Bord',
-          description: 'Vue d\'ensemble avec statistiques, activité récente et accès rapide à toutes les fonctionnalités.',
+          description: 'Vue d\'ensemble avec statistiques, activité récente et accès rapide.',
         },
         library: {
           title: 'Bibliothèque de Jeux',
-          description: 'Tous vos jeux de Steam, Epic, GOG et autres boutiques. Filtrez par langue, moteur ou état de traduction.',
+          description: 'Tous vos jeux de Steam, Epic, GOG et autres boutiques. Filtrez par langue ou moteur.',
         },
         translator: {
           title: 'Traducteur IA',
-          description: 'Traduisez des fichiers avec l\'intelligence artificielle. Supporte JSON, CSV, PO, RESX et autres formats.',
+          description: 'Traduisez des fichiers avec l\'IA. Supporte JSON, CSV, PO, RESX et bien d\'autres formats.',
         },
         tools: {
           title: 'Outils',
-          description: 'Game Patcher, Traducteur OCR, Context Crawler, Translation Fixer et bien plus.',
+          description: 'Game Patcher, Traducteur OCR, Voice Clone, Éditeur de Sous-titres et bien plus.',
         },
-        projectManager: {
-          title: 'Gestionnaire de Projets',
-          description: 'Organisez des projets de traduction complets avec glossaire, fichiers multiples et suivi de progression.',
+        community: {
+          title: 'Communauté',
+          description: 'Téléchargez des packs de traduction de la communauté ou partagez les vôtres.',
         },
         settings: {
           title: 'Paramètres',
-          description: 'Configurez les APIs de traduction, connectez les boutiques, gérez les profils et personnalisez l\'app.',
+          description: 'Configurez les APIs, connectez les boutiques, gérez les profils et personnalisez l\'app.',
         },
         complete: {
-          title: 'Prêt!',
-          description: 'Vous connaissez maintenant les bases. Explorez la bibliothèque ou commencez à traduire!',
+          title: 'Tout est Prêt!',
+          description: 'Explorez la bibliothèque ou commencez à traduire votre premier jeu!',
         },
       },
     },
@@ -7191,6 +7296,43 @@ export const translations = {
       startOcrTranslator: 'Démarrer Traducteur OCR',
       quickTranslate: 'Traduction Rapide',
       toggleOverlay: 'Activer/Désactiver Overlay',
+      // Guides pour nouvelles fonctionnalités v1.0.4
+      voiceCloneGuide: 'Voice Clone Studio',
+      voiceCloneGuideFeatures: [
+        'Clonage vocal AI avec ElevenLabs et OpenAI TTS',
+        'Synthèse text-to-speech avec voix multiples',
+        'Téléchargez des échantillons audio pour créer des clones vocaux personnalisés',
+        'Préréglages de voix : narrateur, héros, méchant, enfant, robot, personne âgée',
+        'Paramètres ajustables : stabilité, vitesse, similarité',
+        'Enregistrez et gérez les profils vocaux',
+      ],
+      vrOverlayGuide: 'VR Text Overlay',
+      vrOverlayGuideFeatures: [
+        'Sous-titres spatiaux pour jeux VR',
+        'Détection automatique du casque VR (Oculus, SteamVR, WMR)',
+        'Préréglages de position : centre bas, centre haut, périphérique, poignet',
+        'Style personnalisable : taille de police, opacité, ombre',
+        'Option de suivi du mouvement de la tête',
+        'Aperçu en temps réel dans l\'espace 3D',
+      ],
+      qualityGatesGuide: 'Quality Gates',
+      qualityGatesGuideFeatures: [
+        'Système automatique de contrôle qualité des traductions',
+        'Vérifications : placeholders, nombres, balises HTML, longueur',
+        'Validation contextuelle (UI, dialogues, narration)',
+        'Score de qualité avec seuil pass/fail',
+        'Rapports détaillés : erreurs, avertissements, infos',
+        'Exportez les rapports de validation en JSON',
+      ],
+      playerFeedbackGuide: 'Player Feedback',
+      playerFeedbackGuideFeatures: [
+        'Collectez et gérez les retours des joueurs sur les traductions',
+        'Catégories : précision, fluidité, contexte, terminologie, style',
+        'Système de notation avec 5 étoiles',
+        'Suivi d\'état : en attente, révisé, appliqué, rejeté',
+        'Statistiques et analyse des tendances',
+        'Exportez les retours en JSON ou CSV',
+      ],
     },
     // Game Patcher
     gamePatcher: {
@@ -7719,6 +7861,17 @@ export const translations = {
       importProfile: 'Profil importieren',
       security: 'Sicherheit',
       profileManagement: 'Profilverwaltung',
+      customizeExperience: 'Passen Sie Ihre Erfahrung an',
+      chooseColor: 'Wählen Sie eine Farbe',
+      preferredLanguage: 'Sprache',
+      profileName: 'Profilname',
+      namePlaceholder: 'Wie möchten Sie genannt werden?',
+      passwordMinChars: 'Mindestens 6 Zeichen',
+      confirmPassword: 'Passwort bestätigen',
+      repeatPassword: 'Passwort wiederholen',
+      aesProtection: 'AES-256 Schutz',
+      dataEncrypted: 'Ihre Daten sind verschlüsselt',
+      creating: 'Erstellen...',
     },
     // Onboarding
     onboarding: {
@@ -7805,6 +7958,7 @@ export const translations = {
       translations: 'Übersetzungen',
       patches: 'Patches',
       latestActions: 'Letzte Aktionen',
+      oldestFirst: 'Älteste zuerst',
       noRecentActivity: 'Keine aktuelle Aktivität',
       actionsWillAppear: 'Ihre Aktionen erscheinen hier',
       getStarted: 'Loslegen',
@@ -8611,6 +8765,11 @@ export const translations = {
       acceptButton: 'Ich habe gelesen und akzeptiere',
       scrollToRead: 'Zum Lesen scrollen',
     },
+    widget: {
+      recommendedToTranslate: 'Zu Übersetzen',
+      needsTranslation: 'Übersetzung fehlt',
+      inLibrary: 'In Bibliothek',
+    },
     tutorial: {
       skip: 'Überspringen',
       back: 'Zurück',
@@ -8622,39 +8781,39 @@ export const translations = {
       steps: {
         welcome: {
           title: 'Willkommen bei GameStringer!',
-          description: 'Professionelle Software zur Übersetzung von Videospielen. Ich führe Sie durch die Hauptfunktionen.',
+          description: 'Professionelle Software zur Übersetzung von Videospielen in jede Sprache.',
         },
-        sidebar: {
-          title: 'Navigation',
-          description: 'Die Seitenleiste ermöglicht den Zugriff auf alle Bereiche: Dashboard, Bibliothek, Übersetzungen, Werkzeuge und Einstellungen.',
+        aiFeatures: {
+          title: 'Erweiterte KI-Übersetzung',
+          description: 'Nutzen Sie Ollama kostenlos lokal, oder OpenAI, Claude, Gemini und andere Cloud-Anbieter.',
         },
         dashboard: {
           title: 'Dashboard',
-          description: 'Komplettübersicht mit Statistiken, aktueller Aktivität und Schnellzugriff auf alle Funktionen.',
+          description: 'Komplettübersicht mit Statistiken, aktueller Aktivität und Schnellzugriff.',
         },
         library: {
           title: 'Spielebibliothek',
-          description: 'Alle Ihre Spiele von Steam, Epic, GOG und anderen Stores. Filtern nach Sprache, Engine oder Übersetzungsstatus.',
+          description: 'Alle Ihre Spiele von Steam, Epic, GOG und anderen Stores. Filtern nach Sprache oder Engine.',
         },
         translator: {
           title: 'KI-Übersetzer',
-          description: 'Übersetzen Sie Dateien mit künstlicher Intelligenz. Unterstützt JSON, CSV, PO, RESX und andere Formate.',
+          description: 'Übersetzen Sie Dateien mit KI. Unterstützt JSON, CSV, PO, RESX und viele weitere Formate.',
         },
         tools: {
           title: 'Werkzeuge',
-          description: 'Game Patcher, OCR-Übersetzer, Context Crawler, Translation Fixer und vieles mehr.',
+          description: 'Game Patcher, OCR-Übersetzer, Voice Clone, Untertitel-Editor und vieles mehr.',
         },
-        projectManager: {
-          title: 'Projektmanager',
-          description: 'Organisieren Sie komplette Übersetzungsprojekte mit Glossar, mehreren Dateien und Fortschrittsverfolgung.',
+        community: {
+          title: 'Community',
+          description: 'Laden Sie Übersetzungspakete von der Community herunter oder teilen Sie Ihre eigenen.',
         },
         settings: {
           title: 'Einstellungen',
-          description: 'Konfigurieren Sie Übersetzungs-APIs, verbinden Sie Stores, verwalten Sie Profile und passen Sie die App an.',
+          description: 'Konfigurieren Sie APIs, verbinden Sie Stores, verwalten Sie Profile und passen Sie die App an.',
         },
         complete: {
-          title: 'Bereit!',
-          description: 'Jetzt kennen Sie die Grundlagen. Erkunden Sie die Bibliothek oder starten Sie mit dem Übersetzen!',
+          title: 'Alles Bereit!',
+          description: 'Erkunden Sie die Bibliothek oder übersetzen Sie gleich Ihr erstes Spiel!',
         },
       },
     },
@@ -8862,6 +9021,43 @@ export const translations = {
       startOcrTranslator: 'OCR-Übersetzer starten',
       quickTranslate: 'Schnellübersetzung',
       toggleOverlay: 'Overlay ein/ausschalten',
+      // Anleitungen für neue Funktionen v1.0.4
+      voiceCloneGuide: 'Voice Clone Studio',
+      voiceCloneGuideFeatures: [
+        'AI-Stimmklonen mit ElevenLabs und OpenAI TTS',
+        'Text-to-Speech-Synthese mit mehreren Stimmen',
+        'Laden Sie Audiobeispiele hoch, um benutzerdefinierte Stimmklone zu erstellen',
+        'Stimm-Presets: Erzähler, Held, Bösewicht, Kind, Roboter, Älterer',
+        'Einstellbare Parameter: Stabilität, Geschwindigkeit, Ähnlichkeit',
+        'Stimmprofile speichern und verwalten',
+      ],
+      vrOverlayGuide: 'VR Text Overlay',
+      vrOverlayGuideFeatures: [
+        'Räumliche Untertitel für VR-Spiele',
+        'Automatische VR-Headset-Erkennung (Oculus, SteamVR, WMR)',
+        'Positions-Presets: Mitte unten, Mitte oben, peripher, Handgelenk',
+        'Anpassbarer Stil: Schriftgröße, Deckkraft, Schatten',
+        'Option zur Kopfbewegungsverfolgung',
+        'Echtzeit-Vorschau im 3D-Raum',
+      ],
+      qualityGatesGuide: 'Quality Gates',
+      qualityGatesGuideFeatures: [
+        'Automatisches Qualitätskontrollsystem für Übersetzungen',
+        'Prüfungen: Platzhalter, Zahlen, HTML-Tags, Länge',
+        'Kontextbezogene Validierung (UI, Dialoge, Erzählung)',
+        'Qualitätsbewertung mit Pass/Fail-Schwelle',
+        'Detaillierte Berichte: Fehler, Warnungen, Infos',
+        'Validierungsberichte als JSON exportieren',
+      ],
+      playerFeedbackGuide: 'Player Feedback',
+      playerFeedbackGuideFeatures: [
+        'Spieler-Feedback zu Übersetzungen sammeln und verwalten',
+        'Kategorien: Genauigkeit, Flüssigkeit, Kontext, Terminologie, Stil',
+        'Bewertungssystem mit 5 Sternen',
+        'Status-Tracking: ausstehend, überprüft, angewendet, abgelehnt',
+        'Statistiken und Trendanalyse',
+        'Feedback als JSON oder CSV exportieren',
+      ],
     },
     // Game Patcher
     gamePatcher: {
@@ -9390,6 +9586,17 @@ export const translations = {
       importProfile: 'プロファイルインポート',
       security: 'セキュリティ',
       profileManagement: 'プロファイル管理',
+      customizeExperience: '体験をカスタマイズ',
+      chooseColor: '色を選択',
+      preferredLanguage: '言語',
+      profileName: 'プロファイル名',
+      namePlaceholder: '何と呼ばれたいですか？',
+      passwordMinChars: '最低6文字',
+      confirmPassword: 'パスワード確認',
+      repeatPassword: 'パスワードを再入力',
+      aesProtection: 'AES-256保護',
+      dataEncrypted: 'データは暗号化されています',
+      creating: '作成中...',
     },
     // Onboarding
     onboarding: {
@@ -9476,6 +9683,7 @@ export const translations = {
       translations: '翻訳',
       patches: 'パッチ',
       latestActions: '最新のアクション',
+      oldestFirst: '古い順',
       noRecentActivity: '最近のアクティビティなし',
       actionsWillAppear: 'アクションがここに表示されます',
       getStarted: '始める',
@@ -10327,6 +10535,43 @@ export const translations = {
       startOcrTranslator: 'OCR翻訳を開始',
       quickTranslate: 'クイック翻訳',
       toggleOverlay: 'オーバーレイ切替',
+      // v1.0.4 新機能ガイド
+      voiceCloneGuide: 'Voice Clone Studio',
+      voiceCloneGuideFeatures: [
+        'ElevenLabsとOpenAI TTSによるAI音声クローン',
+        '複数の音声によるテキスト読み上げ合成',
+        'カスタム音声クローンを作成するためのオーディオサンプルをアップロード',
+        '音声プリセット：ナレーター、ヒーロー、悪役、子供、ロボット、高齢者',
+        '調整可能なパラメータ：安定性、速度、類似性',
+        '音声プロファイルの保存と管理',
+      ],
+      vrOverlayGuide: 'VR Text Overlay',
+      vrOverlayGuideFeatures: [
+        'VRゲーム用空間字幕',
+        'VRヘッドセットの自動検出（Oculus、SteamVR、WMR）',
+        '位置プリセット：下中央、上中央、周辺、手首',
+        'カスタマイズ可能なスタイル：フォントサイズ、透明度、影',
+        '頭の動きを追従するオプション',
+        '3D空間でのリアルタイムプレビュー',
+      ],
+      qualityGatesGuide: 'Quality Gates',
+      qualityGatesGuideFeatures: [
+        '翻訳の自動品質管理システム',
+        'チェック項目：プレースホルダー、数字、HTMLタグ、長さ',
+        'コンテキスト対応バリデーション（UI、ダイアログ、ナラティブ）',
+        '合格/不合格しきい値付き品質スコア',
+        '詳細レポート：エラー、警告、情報',
+        '検証レポートをJSONでエクスポート',
+      ],
+      playerFeedbackGuide: 'Player Feedback',
+      playerFeedbackGuideFeatures: [
+        '翻訳に関するプレイヤーフィードバックを収集・管理',
+        'カテゴリ：正確性、流暢さ、文脈、用語、スタイル',
+        '5つ星評価システム',
+        'ステータス追跡：保留中、レビュー済み、適用済み、却下',
+        '統計とトレンド分析',
+        'フィードバックをJSONまたはCSVでエクスポート',
+      ],
     },
     // Game Patcher
     gamePatcher: {
@@ -10855,6 +11100,17 @@ export const translations = {
       importProfile: '导入配置文件',
       security: '安全',
       profileManagement: '配置文件管理',
+      customizeExperience: '自定义您的体验',
+      chooseColor: '选择颜色',
+      preferredLanguage: '语言',
+      profileName: '配置文件名称',
+      namePlaceholder: '您希望被叫什么？',
+      passwordMinChars: '最少6个字符',
+      confirmPassword: '确认密码',
+      repeatPassword: '重复密码',
+      aesProtection: 'AES-256保护',
+      dataEncrypted: '您的数据已加密',
+      creating: '创建中...',
     },
     // Onboarding
     onboarding: {
@@ -10941,6 +11197,7 @@ export const translations = {
       translations: '翻译',
       patches: '补丁',
       latestActions: '最新操作',
+      oldestFirst: '最旧优先',
       noRecentActivity: '没有最近活动',
       actionsWillAppear: '您的操作将显示在这里',
       getStarted: '开始',
@@ -11794,6 +12051,43 @@ export const translations = {
       startOcrTranslator: '启动OCR翻译',
       quickTranslate: '快速翻译',
       toggleOverlay: '切换覆盖层',
+      // v1.0.4 新功能指南
+      voiceCloneGuide: 'Voice Clone Studio',
+      voiceCloneGuideFeatures: [
+        '使用ElevenLabs和OpenAI TTS的AI语音克隆',
+        '多种声音的文字转语音合成',
+        '上传音频样本以创建自定义语音克隆',
+        '语音预设：旁白、英雄、反派、儿童、机器人、老人',
+        '可调参数：稳定性、速度、相似度',
+        '保存和管理语音配置文件',
+      ],
+      vrOverlayGuide: 'VR Text Overlay',
+      vrOverlayGuideFeatures: [
+        'VR游戏空间字幕',
+        '自动检测VR头显（Oculus、SteamVR、WMR）',
+        '位置预设：底部中央、顶部中央、外围、手腕',
+        '可自定义样式：字体大小、透明度、阴影',
+        '头部移动跟踪选项',
+        '3D空间实时预览',
+      ],
+      qualityGatesGuide: 'Quality Gates',
+      qualityGatesGuideFeatures: [
+        '翻译自动质量控制系统',
+        '检查项目：占位符、数字、HTML标签、长度',
+        '上下文感知验证（UI、对话、叙事）',
+        '带通过/失败阈值的质量评分',
+        '详细报告：错误、警告、信息',
+        '将验证报告导出为JSON',
+      ],
+      playerFeedbackGuide: 'Player Feedback',
+      playerFeedbackGuideFeatures: [
+        '收集和管理玩家对翻译的反馈',
+        '类别：准确性、流畅性、上下文、术语、风格',
+        '5星评分系统',
+        '状态跟踪：待处理、已审核、已应用、已拒绝',
+        '统计和趋势分析',
+        '将反馈导出为JSON或CSV',
+      ],
     },
     // Game Patcher
     gamePatcher: {

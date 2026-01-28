@@ -8,16 +8,21 @@
 4. [Neural Translator Pro](#neural-translator-pro)
 5. [Translation Wizard](#translation-wizard)
 6. [Translation Bridge](#translation-bridge)
-7. [Subtitle Translator Pro](#subtitle-translator-pro) *(NUOVO v1.0.4)*
-8. [Retro ROM Tools](#retro-rom-tools) *(NUOVO v1.0.4)*
-9. [API Pubblica v1](#api-pubblica-v1) *(NUOVO v1.0.4)*
-10. [Esportazione Patch](#esportazione-patch)
-11. [Applicazione al Gioco](#applicazione-al-gioco)
-12. [Gestione Backup](#gestione-backup)
-13. [Editor Traduzioni](#editor-traduzioni)
-14. [Activity History](#activity-history)
-15. [Dizionari](#dizionari)
-16. [Risoluzione Problemi](#risoluzione-problemi)
+7. [Subtitle Translator Pro](#subtitle-translator-pro)
+8. [Retro ROM Tools](#retro-rom-tools)
+9. [API Pubblica v1](#api-pubblica-v1)
+10. [Voice Clone Studio](#voice-clone-studio) *(NUOVO v1.0.5)*
+11. [VR Text Overlay](#vr-text-overlay) *(NUOVO v1.0.5)*
+12. [Quality Gates](#quality-gates) *(NUOVO v1.0.5)*
+13. [Player Feedback](#player-feedback) *(NUOVO v1.0.5)*
+14. [Nuovi Provider AI v1.0.6](#nuovi-provider-ai-v106) *(NUOVO v1.0.6)*
+15. [Esportazione Patch](#esportazione-patch)
+16. [Applicazione al Gioco](#applicazione-al-gioco)
+17. [Gestione Backup](#gestione-backup)
+18. [Editor Traduzioni](#editor-traduzioni)
+19. [Activity History](#activity-history)
+20. [Dizionari](#dizionari)
+21. [Risoluzione Problemi](#risoluzione-problemi)
 
 ---
 
@@ -27,11 +32,12 @@ GameStringer è un sistema avanzato per la traduzione automatica e manuale di vi
 
 - **Motori di gioco**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri e altri
 - **Formati file**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA e altri
-- **Provider AI**: Claude (Anthropic), Gemini (Google), GPT (OpenAI), DeepSeek, Mistral, Groq, Ollama (locale)
-- **Lingue**: 20+ lingue supportate per traduzioni
+- **Provider AI**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ provider)
+- **Lingue**: 200+ lingue supportate (con NLLB-200)
 - **UI Multilingua**: IT, EN, ES, FR, DE, JA, ZH
 - **Store Gaming**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
-- **NUOVO v1.0.4**: Subtitle Translator Pro, Retro ROM Tools (8 console), API Pubblica REST
+- **NUOVO v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
+- **NUOVO v1.0.6**: Qwen 3 (lingue asiatiche), NLLB-200 (200 lingue), bug fixes
 
 ---
 
@@ -304,7 +310,190 @@ L'API è ideale per integrare GameStringer in pipeline di build automatizzate.
 
 ---
 
-## Unity Patcher
+## Voice Clone Studio
+
+*(NUOVO in v1.0.5)*
+
+Clona voci con AI per doppiaggio automatico dei giochi.
+
+### Provider Supportati
+
+| Provider | Tipo | Qualità |
+|----------|------|---------|
+| **ElevenLabs** | Cloud | ⭐⭐⭐⭐⭐ Eccellente |
+| **OpenAI TTS** | Cloud | ⭐⭐⭐⭐ Molto buona |
+
+### Voice Presets
+
+- 🎭 **Narratore**: Voce calma e autorevole
+- ⚔️ **Eroe**: Voce coraggiosa e determinata
+- 😈 **Cattivo**: Voce minacciosa e profonda
+- 👶 **Bambino**: Voce giovane e allegra
+- 🤖 **Robot**: Voce sintetica e metallica
+- 👻 **Sussurro**: Voce bassa e misteriosa
+
+### Come Usare
+
+1. **Vai su Voice Clone** nel menu
+2. **Inserisci il testo** da convertire in audio
+3. **Seleziona il provider** (ElevenLabs o OpenAI)
+4. **Scegli il preset** vocale
+5. **Genera audio** e scarica il file MP3/WAV
+
+---
+
+## VR Text Overlay
+
+*(NUOVO in v1.0.5)*
+
+Sottotitoli spaziali 3D per giochi VR.
+
+### Headset Supportati
+
+| Headset | Supporto |
+|---------|----------|
+| **Oculus Quest/Rift** | ✅ Completo |
+| **SteamVR** (Valve Index, HTC Vive) | ✅ Completo |
+| **Windows Mixed Reality** | ✅ Completo |
+
+### Position Presets
+
+- **Center** - Davanti al giocatore
+- **Bottom** - In basso (classico sottotitolo)
+- **Top** - In alto (notifiche)
+- **Follow Head** - Segue lo sguardo
+
+### Come Usare
+
+1. **Vai su VR Overlay** nel menu
+2. **Rileva headset** automaticamente
+3. **Configura posizione** e dimensione testo
+4. **Avvia overlay** prima di lanciare il gioco VR
+5. I sottotitoli appariranno nello spazio 3D
+
+---
+
+## Quality Gates
+
+*(NUOVO in v1.0.5)*
+
+Sistema automatico di controllo qualità traduzioni.
+
+### Controlli Automatici
+
+| Check | Descrizione |
+|-------|-------------|
+| **Placeholder** | Verifica {0}, {1}, %s, etc. |
+| **Numeri** | Numeri preservati correttamente |
+| **Tag HTML** | `<color>`, `<b>`, etc. intatti |
+| **Lunghezza** | Traduzione non troppo lunga/corta |
+| **Punteggiatura** | Coerenza con originale |
+
+### Livelli di Confidenza
+
+| Livello | Punteggio | Colore |
+|---------|-----------|--------|
+| 🔴 Critico | < 40% | Rosso |
+| 🟠 Basso | 40-59% | Arancione |
+| 🟡 Medio | 60-74% | Giallo |
+| 🟢 Alto | 75-89% | Verde |
+| 💚 Perfetto | 90-100% | Verde scuro |
+
+### Come Usare
+
+1. **Vai su Quality Gates** nel menu
+2. **Carica traduzioni** (JSON, CSV, o incolla)
+3. **Analizza** automaticamente ogni stringa
+4. **Filtra** per livello di confidenza
+5. **Esporta report** in JSON
+
+---
+
+## Player Feedback
+
+*(NUOVO in v1.0.5)*
+
+Raccogli e gestisci feedback dei giocatori sulle traduzioni.
+
+### Categorie Feedback
+
+- 📝 **Traduzione errata** - Significato sbagliato
+- 🔤 **Errore grammaticale** - Grammatica/ortografia
+- 🎭 **Tono inappropriato** - Registro linguistico errato
+- ❓ **Non chiaro** - Traduzione confusa
+- ✨ **Suggerimento** - Proposta miglioramento
+
+### Sistema Rating
+
+⭐⭐⭐⭐⭐ Rating 1-5 stelle per ogni traduzione
+
+### Stati Feedback
+
+| Stato | Descrizione |
+|-------|-------------|
+| 🆕 Nuovo | Appena ricevuto |
+| 👀 In revisione | In fase di analisi |
+| ✅ Risolto | Corretto |
+| ❌ Rifiutato | Non applicabile |
+
+### Come Usare
+
+1. **Vai su Player Feedback** nel menu
+2. **Visualizza feedback** ricevuti
+3. **Filtra** per categoria, stato, rating
+4. **Aggiorna stato** dei feedback
+5. **Esporta** in CSV per analisi
+
+---
+
+## Nuovi Provider AI v1.0.6
+
+*(NUOVO in v1.0.6)*
+
+### Qwen 3 - Lingue Asiatiche
+
+Provider ottimizzato per cinese, giapponese e coreano.
+
+| Modello | Parametri | RAM Richiesta |
+|---------|-----------|---------------|
+| `qwen3:4b` | 4B | 4GB |
+| `qwen3:8b` | 8B | 8GB |
+| `qwen3:14b` | 14B | 16GB |
+| `qwen3:32b` | 32B | 32GB |
+
+**Installazione**:
+```bash
+ollama pull qwen3:14b
+```
+
+**Lingue ottimizzate**: 中文 (Cinese), 日本語 (Giapponese), 한국어 (Coreano)
+
+### NLLB-200 - 200 Lingue
+
+Provider Meta AI con supporto per 200 lingue, incluse quelle rare.
+
+**Lingue speciali supportate**:
+- Thai, Vietnamese, Hindi, Arabic
+- Swahili, Indonesian, Turkish
+- Ukrainian, Bengali, Tamil
+
+**Configurazione**:
+1. Vai su **Settings → API Keys**
+2. Inserisci **HuggingFace API Key** (gratuito)
+3. Seleziona **NLLB-200** come provider
+
+### Generic Ollama
+
+Usa qualsiasi modello installato in Ollama per traduzioni.
+
+**Modelli consigliati**:
+- `llama3.2` - Buon bilanciamento qualità/velocità
+- `mistral` - Ottimo per lingue europee
+- `gemma2` - Veloce e leggero
+
+---
+
+## Esportazione Patch
 
 Il Unity Patcher installa automaticamente BepInEx e XUnity.AutoTranslator sui giochi Unity.
 
@@ -546,4 +735,4 @@ I dizionari salvano le traduzioni per ogni gioco.
 
 ---
 
-*GameStringer v1.0.4 - Guida aggiornata al 23/01/2026*
+*GameStringer v1.0.6 - Guida aggiornata al 28/01/2026*

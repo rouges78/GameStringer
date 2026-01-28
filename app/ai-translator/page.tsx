@@ -3,9 +3,8 @@
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Brain, Scan, Image as ImageIcon, Database, Sparkles, Zap, Globe, Bot, Layers, FolderOpen } from 'lucide-react';
+import { Brain, Scan, Image as ImageIcon, Database, Sparkles, Zap, Bot, Layers, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { AITranslationAssistant } from '@/components/tools/ai-translation-assistant';
 import { useTranslation, translations } from '@/lib/i18n';
 

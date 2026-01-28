@@ -251,17 +251,43 @@ fn is_unreal(path: &Path) -> bool {
         return true;
     }
     
-    // Check for GameName/Binaries/Win64
-    // Usually Unreal games have a folder with the Project Name, and inside Binaries
+    // Check for .pak files directly in root (common in packaged UE games)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "pak" {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    // Check for GameName/Binaries/Win64 or Content/Paks
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
             if let Ok(file_type) = entry.file_type() {
                 if file_type.is_dir() {
                     let entry_path = entry.path();
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
+                    
                     // Avoid Engine folder here, we are looking for Project folder
-                    if entry.file_name() != "Engine" {
-                        if entry_path.join("Binaries/Win64").exists() || entry_path.join("Content/Paks").exists() {
-                             return true;
+                    if name != "engine" {
+                        // Standard UE structure
+                        if entry_path.join("Binaries/Win64").exists() 
+                            || entry_path.join("Content/Paks").exists()
+                            || entry_path.join("Content").exists() {
+                            return true;
+                        }
+                        
+                        // Check for .pak files in subdirectories
+                        if let Ok(sub_entries) = std::fs::read_dir(&entry_path) {
+                            for sub in sub_entries.flatten() {
+                                if let Some(ext) = sub.path().extension() {
+                                    if ext == "pak" {
+                                        return true;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -269,13 +295,43 @@ fn is_unreal(path: &Path) -> bool {
         }
     }
     
-    // Check for common Unreal descriptor files
-    // .uproject file?
+    // Check for common Unreal descriptor files (.uproject)
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
             if let Some(ext) = entry.path().extension() {
                 if ext == "uproject" {
                     return true;
+                }
+            }
+        }
+    }
+    
+    // Check for UE4/UE5 specific DLLs
+    let ue_dlls = [
+        "UE4Game.dll", "UE4Game-Win64-Shipping.dll",
+        "UE5Game.dll", "UnrealEditor.dll",
+        "PhysX3_x64.dll", "PhysX3Common_x64.dll",  // PhysX (common in UE4)
+        "nvToolsExt64_1.dll",  // NVIDIA tools (UE4)
+    ];
+    for dll in ue_dlls {
+        if path.join(dll).exists() {
+            return true;
+        }
+    }
+    
+    // Deep scan: check for -WindowsNoEditor or similar UE packaging patterns
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.contains("WindowsNoEditor") 
+                || name.contains("Windows")
+                || name.ends_with("Game") {
+                let sub_path = entry.path();
+                if sub_path.is_dir() {
+                    // Check for Content folder inside
+                    if sub_path.join("Content").exists() {
+                        return true;
+                    }
                 }
             }
         }
@@ -960,7 +1016,10 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
         "nier automata", "nier replicant", "scarlet nexus", "tales of arise",
         "code vein", "god eater", "dragon quest", "octopath traveler",
         // Racing/Sports
-        "forza", "dirt 5", "grid legends", "hot wheels unleashed"
+        "forza", "dirt 5", "grid legends", "hot wheels unleashed",
+        // Indie Horror UE
+        "emotionless", "the last ticket", "visage", "madison", "infliction",
+        "devotion", "detention", "home sweet home", "pamali", "dreadout"
     ];
     
     // 🟠 SOURCE ENGINE (Valve + licensees)

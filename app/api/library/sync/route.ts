@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withErrorHandler, ValidationError } from '@/lib/error-handler';
+import { withErrorHandler } from '@/lib/error-handler';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
 

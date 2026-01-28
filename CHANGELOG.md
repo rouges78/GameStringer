@@ -19,6 +19,33 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.6 — Bug Fixing & New Translation Providers 🔧🌐
+
+> **Data**: 2026-01-28
+
+#### 🌐 Nuovi Provider Traduzione
+- **Qwen 3**: Provider dedicato per lingue asiatiche (CN/JP/KR) via Ollama
+- **NLLB-200**: Supporto 200 lingue (incluse rare: Thai, Vietnamese, Hindi, Arabic) via HuggingFace
+- **Ollama Generico**: Usa qualsiasi modello installato in Ollama
+
+#### 🐛 Bug Fixing
+- **Catch vuoti**: Sostituiti 8 catch vuoti con logging appropriato
+- **Import non utilizzati**: Rimossi ~15 import inutilizzati dai file principali
+- **Vitest config**: Aggiunto provider 'v8' mancante per coverage
+- **Batch operations**: Fix firme funzioni incompatibili con wrapper
+
+#### 🌍 Traduzioni
+- Aggiunte traduzioni mancanti per **5 lingue** (ES, FR, DE, JA, ZH):
+  - `voiceCloneGuide` + features
+  - `vrOverlayGuide` + features
+  - `qualityGatesGuide` + features
+  - `playerFeedbackGuide` + features
+
+#### 📄 Documentazione
+- **Bug Report**: Creato report dettagliato dei bug (`BUG_REPORT_2026-01-28.md`)
+
+---
+
 ### v1.0.5 — AI Voice & VR Tools 🎤🥽
 
 > **Data**: 2026-01-26

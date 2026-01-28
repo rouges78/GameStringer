@@ -86,7 +86,9 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
       if (saved) {
         hotkeys = JSON.parse(saved);
       }
-    } catch {}
+    } catch (e) {
+      console.warn('[HOTKEY] Errore caricamento hotkeys salvate, uso default:', e);
+    }
 
     for (const config of hotkeys) {
       await registerHotkey(config);
@@ -97,7 +99,9 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
   const saveHotkeyConfig = useCallback((hotkeys: HotkeyConfig[]) => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(hotkeys));
-    } catch {}
+    } catch (e) {
+      console.warn('[HOTKEY] Errore salvataggio configurazione hotkeys:', e);
+    }
   }, []);
 
   // Ascolta eventi hotkey

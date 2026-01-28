@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { listInstalledDictionaries, getDictionariesStats } from '@/lib/game-dictionaries';
+import { NextResponse } from 'next/server';
+import { listInstalledDictionaries } from '@/lib/game-dictionaries';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const dictionaries = await listInstalledDictionaries();
     

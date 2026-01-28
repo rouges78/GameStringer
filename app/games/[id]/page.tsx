@@ -661,7 +661,9 @@ export default function GameDetailPage() {
         try {
           const settings = JSON.parse(savedSettings);
           apiKey = settings?.integrations?.steamGridDbApiKey || null;
-        } catch (e) {}
+        } catch (e) {
+          console.warn('[GameDetail] Errore parsing impostazioni:', e);
+        }
       }
       
       const result = await invoke<string | null>('fetch_steamgriddb_image', {
@@ -672,6 +674,10 @@ export default function GameDetailPage() {
       if (result) {
         setFallbackImage(result);
         console.log('[GameDetail] SteamGridDB fallback:', result);
+        // Salva in cache per la libreria
+        const cacheId = game.appid ? String(game.appid) : (game.id || game.title);
+        await invoke('save_cover_cache', { gameId: cacheId, imageUrl: result });
+        console.log('[GameDetail] Cover salvata in cache:', cacheId);
       }
     } catch (e) {
       console.warn('[GameDetail] SteamGridDB fallback failed:', e);

@@ -71,6 +71,7 @@ export default function OcrTranslatorPage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [ocrProvider, setOcrProvider] = useState<'libre' | 'ollama' | 'gemini'>('libre');
   const [lastTranslationTime, setLastTranslationTime] = useState(0);
   const [overlayOpen, setOverlayOpen] = useState(false);
 
@@ -106,8 +107,34 @@ export default function OcrTranslatorPage() {
     setLastTranslationTime(now);
     
     pendingTranslations.add(text);
-    console.log('[OCR] Traduzione con provider:', geminiApiKey ? 'gemini' : 'libre (gratuito)');
+    console.log('[OCR] Traduzione con provider:', ocrProvider);
     try {
+      // Per Ollama con deepseek-ocr, usa l'endpoint locale
+      if (ocrProvider === 'ollama') {
+        const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'deepseek-ocr',
+            messages: [
+              { role: 'system', content: 'You are a translator. Translate the following text accurately. Reply ONLY with the translation.' },
+              { role: 'user', content: `Translate from ${config.language} to ${config.target_language}: "${text}"` }
+            ],
+            stream: false
+          })
+        });
+        if (ollamaResponse.ok) {
+          const data = await ollamaResponse.json();
+          const translated = data.message?.content?.trim();
+          if (translated) {
+            translationCache.set(text, translated);
+            setTranslationError(null);
+            return translated;
+          }
+        }
+        return null;
+      }
+      
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,7 +142,7 @@ export default function OcrTranslatorPage() {
           text,
           sourceLanguage: config.language,
           targetLanguage: config.target_language,
-          provider: geminiApiKey ? 'gemini' : 'libre',
+          provider: ocrProvider === 'gemini' ? 'gemini' : 'libre',
           context: 'game_ui',
           apiKey: geminiApiKey || undefined
         })
@@ -304,6 +331,23 @@ export default function OcrTranslatorPage() {
             
             {showAdvanced && (
               <div className="mt-3 p-4 rounded-lg bg-muted/30 space-y-4">
+                {/* Provider Traduzione */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-2 block">
+                    Provider Traduzione
+                  </label>
+                  <select 
+                    className="w-full h-9 px-3 rounded-lg border bg-background text-sm"
+                    value={ocrProvider}
+                    onChange={(e) => setOcrProvider(e.target.value as 'libre' | 'ollama' | 'gemini')}
+                    disabled={isRunning}
+                  >
+                    <option value="libre">🆓 MyMemory (Gratuito, nessuna API)</option>
+                    <option value="ollama">🦙 Ollama - deepseek-ocr (Locale)</option>
+                    <option value="gemini">✨ Gemini (API Key richiesta)</option>
+                  </select>
+                </div>
+                
                 {/* Gemini API Key */}
                 <div>
                   <label className="text-xs text-muted-foreground mb-2 block">

@@ -19,7 +19,9 @@ const getCurrentProfileId = (): string | null => {
       const profile = JSON.parse(profileData);
       return profile.id || null;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('[I18N] Errore parsing profilo corrente:', e);
+  }
   return null;
 };
 

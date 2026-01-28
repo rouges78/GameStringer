@@ -83,6 +83,12 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
           return await translateWithMock(text, targetLanguage, sourceLanguage);
         case 'libre':
           return await translateWithLibre(text, targetLanguage, sourceLanguage);
+        case 'qwen3':
+          return await translateWithQwen3(text, targetLanguage, sourceLanguage, context);
+        case 'nllb':
+          return await translateWithNLLB(text, targetLanguage, sourceLanguage);
+        case 'ollama':
+          return await translateWithOllama(text, targetLanguage, sourceLanguage, context, userApiKey);
         default:
           throw new ValidationError(`Unsupported translation provider: ${provider}`);
       }
@@ -869,70 +875,215 @@ async function translateWithLibre(
   }
 }
 
+// Qwen 3 via Ollama - Eccellente per lingue asiatiche (CN/JP/KR)
+async function translateWithQwen3(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string
+): Promise<TranslationResponse> {
+  const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
+  
+  // Modelli Qwen3 in ordine di preferenza (dal più grande al più piccolo)
+  const qwenModels = ['qwen3:32b', 'qwen3:14b', 'qwen3:8b', 'qwen3:4b', 'qwen3:1.7b', 'qwen3', 'qwen2.5:14b', 'qwen2.5:7b', 'qwen2.5'];
+  
+  try {
+    const tagsResponse = await fetch(`${ollamaUrl}/api/tags`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(5000)
+    });
+    
+    if (!tagsResponse.ok) throw new Error('Ollama non raggiungibile');
+    
+    const tagsData = await tagsResponse.json();
+    const availableModels = tagsData.models?.map((m: any) => m.name) || [];
+    
+    let selectedModel = qwenModels.find(m => 
+      availableModels.some((am: string) => am.startsWith(m.split(':')[0]))
+    );
+    
+    if (!selectedModel) throw new Error('Nessun modello Qwen. Installa con: ollama pull qwen3:14b');
+    
+    selectedModel = availableModels.find((am: string) => am.startsWith(selectedModel!.split(':')[0])) || selectedModel;
+
+    const systemPrompt = `Translate from ${sourceLanguage} to ${targetLanguage}. ${context ? `Context: ${context}` : ''} Preserve variables and tags. Respond ONLY with the translation.`;
+
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: text }
+        ],
+        stream: false,
+        options: { temperature: 0.3, num_predict: 500 }
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+
+    if (!response.ok) throw new Error(`Qwen3 error: ${response.status}`);
+
+    const data = await response.json();
+    const translatedText = data.message?.content?.trim() || '';
+    if (!translatedText) throw new Error('Nessuna traduzione da Qwen3');
+
+    return {
+      translatedText,
+      confidence: 0.9,
+      suggestions: [],
+      provider: 'qwen3',
+      sourceLanguage,
+      targetLanguage,
+      cached: false
+    };
+
+  } catch (error) {
+    logger.error('Qwen3 translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`Qwen3 failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// NLLB-200 (Meta) - 200 lingue via HuggingFace
+async function translateWithNLLB(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string
+): Promise<TranslationResponse> {
+  const nllbLangMap: Record<string, string> = {
+    'en': 'eng_Latn', 'it': 'ita_Latn', 'de': 'deu_Latn', 'fr': 'fra_Latn', 
+    'es': 'spa_Latn', 'pt': 'por_Latn', 'ru': 'rus_Cyrl', 'pl': 'pol_Latn',
+    'zh': 'zho_Hans', 'ja': 'jpn_Jpan', 'ko': 'kor_Hang', 'th': 'tha_Thai',
+    'vi': 'vie_Latn', 'id': 'ind_Latn', 'ar': 'arb_Arab', 'hi': 'hin_Deva',
+    'tr': 'tur_Latn', 'uk': 'ukr_Cyrl', 'auto': 'eng_Latn'
+  };
+  
+  const srcLang = nllbLangMap[sourceLanguage] || 'eng_Latn';
+  const tgtLang = nllbLangMap[targetLanguage] || 'ita_Latn';
+  const hfApiKey = secretsManager.get('HUGGINGFACE_API_KEY');
+  
+  try {
+    const response = await fetch(
+      'https://api-inference.huggingface.co/models/facebook/nllb-200-distilled-600M',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(hfApiKey ? { 'Authorization': `Bearer ${hfApiKey}` } : {})
+        },
+        body: JSON.stringify({ inputs: text, parameters: { src_lang: srcLang, tgt_lang: tgtLang } }),
+        signal: AbortSignal.timeout(30000)
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (response.status === 503 && errorData.estimated_time) {
+        await new Promise(resolve => setTimeout(resolve, Math.min(errorData.estimated_time * 1000, 20000)));
+        const retryResponse = await fetch(
+          'https://api-inference.huggingface.co/models/facebook/nllb-200-distilled-600M',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(hfApiKey ? { 'Authorization': `Bearer ${hfApiKey}` } : {}) },
+            body: JSON.stringify({ inputs: text, parameters: { src_lang: srcLang, tgt_lang: tgtLang } }),
+            signal: AbortSignal.timeout(30000)
+          }
+        );
+        if (retryResponse.ok) {
+          const retryData = await retryResponse.json();
+          return { translatedText: retryData[0]?.translation_text || text, confidence: 0.85, suggestions: [], provider: 'nllb', sourceLanguage, targetLanguage, cached: false };
+        }
+      }
+      throw new Error(`NLLB API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return { translatedText: data[0]?.translation_text || text, confidence: 0.85, suggestions: [], provider: 'nllb', sourceLanguage, targetLanguage, cached: false };
+
+  } catch (error) {
+    logger.error('NLLB translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`NLLB failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Ollama generico
+async function translateWithOllama(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string,
+  modelName?: string
+): Promise<TranslationResponse> {
+  const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434';
+  
+  try {
+    const tagsResponse = await fetch(`${ollamaUrl}/api/tags`, { method: 'GET', signal: AbortSignal.timeout(5000) });
+    if (!tagsResponse.ok) throw new Error('Ollama non raggiungibile');
+    
+    const tagsData = await tagsResponse.json();
+    const availableModels = tagsData.models?.map((m: any) => m.name) || [];
+    if (availableModels.length === 0) throw new Error('Nessun modello Ollama installato');
+    
+    const selectedModel = modelName && availableModels.includes(modelName) ? modelName : availableModels[0];
+    const systemPrompt = `Translate from ${sourceLanguage} to ${targetLanguage}. ${context || ''} Preserve variables. Respond ONLY with the translation.`;
+
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: text }],
+        stream: false,
+        options: { temperature: 0.3, num_predict: 500 }
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+
+    if (!response.ok) throw new Error(`Ollama error: ${response.status}`);
+    const data = await response.json();
+    const translatedText = data.message?.content?.trim() || '';
+    if (!translatedText) throw new Error('Nessuna traduzione');
+
+    return { translatedText, confidence: 0.85, suggestions: [], provider: 'ollama', sourceLanguage, targetLanguage, cached: false };
+
+  } catch (error) {
+    logger.error('Ollama translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`Ollama failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
 export const GET = withRateLimit(withErrorHandler(async function(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
 
     if (action === 'providers') {
-      const providers = ['openai', 'gemini', 'deepl', 'google', 'mock', 'libre'];
-      const availableProviders = [];
-
-      for (const provider of providers) {
-        let available = false;
-        let reason = '';
-
+      const providers = ['openai', 'gemini', 'deepl', 'libre', 'qwen3', 'nllb', 'ollama', 'mock'];
+      const availableProviders = providers.map(provider => {
+        let available = false, reason = '';
         switch (provider) {
-          case 'openai':
-            available = secretsManager.isAvailable('OPENAI_API_KEY');
-            reason = available ? 'Available' : 'API key not configured';
-            break;
-          case 'gemini':
-            available = secretsManager.isAvailable('GEMINI_API_KEY');
-            reason = available ? 'Available' : 'API key not configured';
-            break;
-          case 'deepl':
-            available = false;
-            reason = 'Not implemented';
-            break;
-          case 'google':
-            available = false;
-            reason = 'Not implemented';
-            break;
-          case 'mock':
-            available = true;
-            reason = 'Mock provider for testing';
-            break;
+          case 'openai': available = secretsManager.isAvailable('OPENAI_API_KEY'); reason = available ? 'Available' : 'API key not configured'; break;
+          case 'gemini': available = secretsManager.isAvailable('GEMINI_API_KEY'); reason = available ? 'Available' : 'API key not configured'; break;
+          case 'qwen3': case 'ollama': available = true; reason = 'Local via Ollama'; break;
+          case 'nllb': available = true; reason = '200 languages via HuggingFace'; break;
+          case 'libre': available = true; reason = 'Free via MyMemory'; break;
+          case 'mock': available = true; reason = 'Testing'; break;
+          default: reason = 'Not implemented';
         }
-
-        availableProviders.push({
-          provider,
-          available,
-          reason
-        });
-      }
-
-      return NextResponse.json({
-        providers: availableProviders,
-        cacheSize: translationCache.size
+        return { provider, available, reason };
       });
+      return NextResponse.json({ providers: availableProviders, cacheSize: translationCache.size });
     }
 
     if (action === 'cache') {
-      return NextResponse.json({
-        cacheSize: translationCache.size,
-        cacheKeys: Array.from(translationCache.keys()).slice(0, 10) // First 10 keys
-      });
+      return NextResponse.json({ cacheSize: translationCache.size, cacheKeys: Array.from(translationCache.keys()).slice(0, 10) });
     }
 
-    return NextResponse.json({
-      message: 'Translation API endpoint',
-      availableActions: ['providers', 'cache'],
-      usage: 'POST /api/translate with { text, targetLanguage, sourceLanguage?, provider?, context? }'
-    });
+    return NextResponse.json({ message: 'Translation API', availableActions: ['providers', 'cache'] });
 
   } catch (error) {
-    logger.error('Translation API GET request failed', 'TRANSLATE_API', { error });
+    logger.error('Translation API GET failed', 'TRANSLATE_API', { error });
     throw error;
   }
 }), rateLimiters.translation);

@@ -1,9 +1,22 @@
 # Stato del Progetto GameStringer
 
-## 🎉 Ultimo Aggiornamento: 12/07/2025 - SISTEMA COMPLETATO
+## 🎉 Ultimo Aggiornamento: 28/01/2026 - v1.0.6 RILASCIATA
 
-### ✅ PROGETTO COMPLETATO CON SUCCESSO
-**GameStringer Store Manager Multi-Piattaforma**: Sistema completo per gestione unificata di 8 store gaming principali con credenziali criptate, libreria unificata e interfaccia moderna.
+### ✅ PROGETTO v1.0.6 RILASCIATO
+**GameStringer**: Suite completa di localizzazione videogiochi con AI. 18+ provider AI, 10+ engine supportati, 200+ lingue.
+
+### 🌐 Nuove Feature v1.0.6
+- ✅ **Qwen 3**: Provider ottimizzato per cinese/giapponese/coreano via Ollama
+- ✅ **NLLB-200**: 200 lingue supportate via HuggingFace
+- ✅ **Generic Ollama**: Usa qualsiasi modello installato
+- ✅ **Bug Fixes**: Catch vuoti, import inutilizzati, signature mismatch
+- ✅ **Traduzioni**: Complete per 5 lingue (ES, FR, DE, JA, ZH)
+
+### 🎤 Feature v1.0.5
+- ✅ **Voice Clone Studio**: ElevenLabs, OpenAI TTS, 6 preset vocali
+- ✅ **VR Text Overlay**: Oculus, SteamVR, WMR supportati
+- ✅ **Quality Gates**: QA automatico traduzioni
+- ✅ **Player Feedback**: Rating 5 stelle, categorie, export CSV
 
 ### 🏪 Store Manager - 8 Piattaforme Integrate
 - ✅ **Steam**: Auto-connessione, API completa, Family Sharing (350+ giochi)

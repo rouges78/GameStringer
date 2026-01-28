@@ -20,11 +20,17 @@ import {
   Wand2,
   Newspaper,
   ExternalLink,
-  MessageCircle
+  MessageCircle,
+  Database,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import Link from 'next/link';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { ScanButton } from '@/components/scan-button';
+import { AINetworkBackground } from '@/components/ui/ai-network-background';
+import { RssTicker } from '@/components/ui/rss-ticker';
 import { activityHistory, Activity, activityColors, activityIcons, ActivityType } from '@/lib/activity-history';
 import { useTranslation, translations } from '@/lib/i18n';
 import { blogService, BlogPost } from '@/lib/blog';
@@ -87,6 +93,7 @@ export default function Dashboard() {
   const [activities, setActivities] = useState<RecentActivityProps[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [activityOrder, setActivityOrder] = useState<'newest' | 'oldest'>('newest');
 
   useEffect(() => {
     fetchDashboardData();
@@ -224,136 +231,134 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-6 space-y-4 overflow-auto">
+    <div className="relative p-4 pt-2 space-y-3 overflow-auto overflow-x-hidden">
+      {/* Sfondo AI Network */}
+      <AINetworkBackground />
+      
       {/* Hero Header con bordo sfumato */}
       <div className="relative overflow-hidden rounded-xl bg-card p-3 border-2 border-transparent" style={{ background: 'linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(135deg, #64748b, #475569, #334155) border-box' }}>
         
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg">
-              <Home className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent">
-                Dashboard Center
-              </h1>
-            </div>
+        {/* Titolo centrato */}
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <div className="p-2.5 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg">
+            <Home className="h-6 w-6 text-white" />
           </div>
-          
-          {/* Stats inline */}
-          <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/50 border border-border">
-              <Gamepad2 className="h-3.5 w-3.5 text-violet-500" />
-              <span className="text-sm font-bold text-foreground">{stats.totalGames}</span>
-              <span className="text-[10px] text-muted-foreground">{dash.games}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/50 border border-border">
-              <Languages className="h-3.5 w-3.5 text-blue-500" />
-              <span className="text-sm font-bold text-foreground">{stats.translations}</span>
-              <span className="text-[10px] text-muted-foreground">{dash.translations}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/50 border border-border">
-              <Wand2 className="h-3.5 w-3.5 text-emerald-500" />
-              <span className="text-sm font-bold text-foreground">{stats.patches}</span>
-              <span className="text-[10px] text-muted-foreground">{dash.patches}</span>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent">
+            Dashboard Center
+          </h1>
+          <Button
+            onClick={() => fetchDashboardData()}
+            disabled={loading}
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground ml-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => fetchDashboardData()}
-              disabled={loading}
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
+        {/* RSS Ticker */}
+        <div className="pt-1.5 border-t border-border/30">
+          <RssTicker />
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <Card className="border-cyan-500/20 bg-cyan-500/5">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-cyan-300 flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              {dash.recentActivity}
-              <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            </h3>
-            <span className="text-xs text-cyan-300/50">{dash.latestActions}</span>
-          </div>
-          
-          {loading ? (
-            <div className="flex items-center justify-center h-20">
-              <RefreshCw className="h-5 w-5 text-cyan-500 animate-spin" />
+      {/* Grid: News (sinistra) + Attività Recenti (destra) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Mini Blog / News - SINISTRA */}
+        <Card className="border-rose-500/30 bg-rose-950/40 backdrop-blur-sm h-fit">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-rose-300 flex items-center gap-2">
+                <Newspaper className="h-4 w-4" />
+                {dash.newsUpdates}
+              </h3>
+              <Link href="/blog" className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
+                {dash.manage} <ExternalLink className="h-3 w-3" />
+              </Link>
             </div>
-          ) : activities.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-              {activities
-                .filter((activity, index, arr) => 
-                  index === 0 || activity.text !== arr[index - 1].text
-                )
-                .slice(0, 9)
-                .map((activity, index) => (
-                  <div key={index} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-500/10 hover:border-cyan-500/30 transition-colors">
-                    <span className="text-base flex-shrink-0">{activity.icon || '📝'}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-cyan-100 truncate font-medium">{activity.text}</p>
-                      <p className="text-[9px] text-cyan-300/50">{activity.time}</p>
-                    </div>
-                    <div className={`h-2 w-2 rounded-full ${activity.color} flex-shrink-0`} />
+            
+            <div className="space-y-2">
+              {blogPosts.length > 0 ? blogPosts.map((post) => (
+                <div key={post.id} className="flex items-start gap-3 p-2 rounded-lg bg-rose-950/30 border border-rose-500/10 hover:border-rose-500/30 transition-colors">
+                  <span className="text-[10px] text-rose-400/60 w-12 flex-shrink-0">{post.date}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-rose-100 truncate">{post.title}</p>
+                    <p className="text-[10px] text-rose-300/50 truncate">{post.description}</p>
                   </div>
-                ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-4 py-6 text-cyan-300/50">
-              <Clock className="h-8 w-8 opacity-30" />
-              <div>
-                <span className="text-sm block">{dash.noRecentActivity}</span>
-                <span className="text-xs opacity-70">{dash.actionsWillAppear}</span>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Mini Blog / News */}
-      <Card className="border-rose-500/20 bg-rose-500/5">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-rose-300 flex items-center gap-2">
-              <Newspaper className="h-4 w-4" />
-              {dash.newsUpdates}
-            </h3>
-            <Link href="/blog" className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
-              {dash.manage} <ExternalLink className="h-3 w-3" />
-            </Link>
-          </div>
-          
-          <div className="space-y-2">
-            {blogPosts.length > 0 ? blogPosts.map((post) => (
-              <div key={post.id} className="flex items-start gap-3 p-2 rounded-lg bg-rose-950/30 border border-rose-500/10 hover:border-rose-500/30 transition-colors">
-                <span className="text-[10px] text-rose-400/60 w-12 flex-shrink-0">{post.date}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-rose-100 truncate">{post.title}</p>
-                  <p className="text-[10px] text-rose-300/50 truncate">{post.description}</p>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">{post.tag}</span>
                 </div>
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">{post.tag}</span>
+              )) : (
+                <p className="text-xs text-rose-300/50 text-center py-4">Nessun post.</p>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-rose-500/20">
+              <MessageCircle className="h-3 w-3 text-rose-400/50" />
+              <span className="text-[10px] text-rose-300/50">{dash.suggestions}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Activity - DESTRA */}
+        <Card className="border-cyan-500/30 bg-cyan-950/40 backdrop-blur-sm h-fit">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-cyan-300 flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                {dash.recentActivity}
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setActivityOrder(activityOrder === 'newest' ? 'oldest' : 'newest')}
+                  className="flex items-center gap-1 text-xs text-cyan-300/50 hover:text-cyan-300 transition-colors"
+                  title={activityOrder === 'newest' ? 'Ordina: più recenti prima' : 'Ordina: più vecchi prima'}
+                >
+                  {activityOrder === 'newest' ? (
+                    <ArrowDown className="h-3 w-3" />
+                  ) : (
+                    <ArrowUp className="h-3 w-3" />
+                  )}
+                  <span>{activityOrder === 'newest' ? dash.latestActions : (dash.oldestFirst || 'Meno recenti')}</span>
+                </button>
               </div>
-            )) : (
-              <p className="text-xs text-rose-300/50 text-center py-4">Nessun post.</p>
+            </div>
+            
+            {loading ? (
+              <div className="flex items-center justify-center h-20">
+                <RefreshCw className="h-5 w-5 text-cyan-500 animate-spin" />
+              </div>
+            ) : activities.length > 0 ? (
+              <div className="space-y-2">
+                {(activityOrder === 'oldest' ? [...activities].reverse() : activities)
+                  .filter((activity, index, arr) => 
+                    index === 0 || activity.text !== arr[index - 1].text
+                  )
+                  .slice(0, 5)
+                  .map((activity, index) => (
+                    <div key={index} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-500/10 hover:border-cyan-500/30 transition-colors">
+                      <span className="text-base flex-shrink-0">{activity.icon || '📝'}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-cyan-100 truncate font-medium">{activity.text}</p>
+                        <p className="text-[9px] text-cyan-300/50">{activity.time}</p>
+                      </div>
+                      <div className={`h-2 w-2 rounded-full ${activity.color} flex-shrink-0`} />
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-4 py-6 text-cyan-300/50">
+                <Clock className="h-8 w-8 opacity-30" />
+                <div>
+                  <span className="text-sm block">{dash.noRecentActivity}</span>
+                  <span className="text-xs opacity-70">{dash.actionsWillAppear}</span>
+                </div>
+              </div>
             )}
-          </div>
-          
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-rose-500/20">
-            <MessageCircle className="h-3 w-3 text-rose-400/50" />
-            <span className="text-[10px] text-rose-300/50">{dash.suggestions}</span>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Progress Card */}
       {stats.translationStats.total > 0 && (
@@ -401,6 +406,61 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Stats Footer */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-violet-500/20">
+              <Languages className="h-5 w-5 text-violet-400" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-violet-300">{stats.translationStats.completed.toLocaleString()}</div>
+              <div className="text-[10px] text-violet-400/70 uppercase tracking-wider">Traduzioni Totali</div>
+            </div>
+          </div>
+          <div className="absolute -bottom-2 -right-2 text-violet-500/10 text-6xl font-bold">📊</div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-500/20">
+              <Gamepad2 className="h-5 w-5 text-emerald-400" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-emerald-300">{stats.patches}</div>
+              <div className="text-[10px] text-emerald-400/70 uppercase tracking-wider">Giochi Patchati</div>
+            </div>
+          </div>
+          <div className="absolute -bottom-2 -right-2 text-emerald-500/10 text-6xl font-bold">🎮</div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/20">
+              <Clock className="h-5 w-5 text-amber-400" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-amber-300">{Math.round(stats.translationStats.completed * 0.5)}h</div>
+              <div className="text-[10px] text-amber-400/70 uppercase tracking-wider">Tempo Risparmiato</div>
+            </div>
+          </div>
+          <div className="absolute -bottom-2 -right-2 text-amber-500/10 text-6xl font-bold">⏱️</div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 p-4 backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-cyan-500/20">
+              <Database className="h-5 w-5 text-cyan-400" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-cyan-300">{stats.translations.toLocaleString()}</div>
+              <div className="text-[10px] text-cyan-400/70 uppercase tracking-wider">Entry TM</div>
+            </div>
+          </div>
+          <div className="absolute -bottom-2 -right-2 text-cyan-500/10 text-6xl font-bold">💾</div>
+        </div>
+      </div>
     </div>
   );
 }

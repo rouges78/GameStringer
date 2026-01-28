@@ -50,8 +50,8 @@ const getGameDetailUrl = (game: Game): string => {
   return `/games/${game.id || game.app_id}?${params.toString()}`;
 }
 
-// Componente per immagine game con fallback
-const GameImageWithFallback = ({ game, sizes }: { game: Game; sizes: string }) => {
+// Componente per immagine game con fallback e cache SteamGridDB
+const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes: string; coverCache?: Record<string, string> }) => {
   const [hasError, setHasError] = React.useState(false);
   
   // Placeholder colorato basato sul nome
@@ -68,7 +68,17 @@ const GameImageWithFallback = ({ game, sizes }: { game: Game; sizes: string }) =
     return gradients[hash % gradients.length];
   };
 
-  if (hasError || !game.header_image || game.title.startsWith('Game ')) {
+  // Cerca immagine in cache SteamGridDB
+  const getCachedImage = () => {
+    if (!coverCache) return null;
+    // Prova con app_id, poi con id, poi con titolo
+    return coverCache[game.app_id] || coverCache[game.id] || coverCache[game.title] || null;
+  };
+
+  const cachedImage = getCachedImage();
+  const imageUrl = game.header_image || cachedImage;
+
+  if (hasError || !imageUrl || game.title.startsWith('Game ')) {
     return (
       <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${getGradient(game.title)}`}>
         <span className="text-4xl font-bold text-white/60">
@@ -80,7 +90,7 @@ const GameImageWithFallback = ({ game, sizes }: { game: Game; sizes: string }) =
 
   return (
     <Image
-      src={game.header_image}
+      src={imageUrl}
       alt={game.title}
       fill
       sizes={sizes}
@@ -203,6 +213,7 @@ export default function LibraryPage() {
   const lib = translations[language]?.library || translations.it.library;
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [coverCache, setCoverCache] = useState<Record<string, string>>({});
   
   // Safe setter per games con validazione
   const setGamesWithValidation = (value: unknown) => {
@@ -252,6 +263,21 @@ export default function LibraryPage() {
     setArr(arr.includes(value) ? arr.filter(v => v !== value) : [...arr, value]);
   };
 
+  // 📷 Carica cache cover SteamGridDB all'avvio
+  useEffect(() => {
+    const loadCoverCache = async () => {
+      try {
+        const cache = await invoke<Record<string, string>>('get_all_cover_cache');
+        if (cache && Object.keys(cache).length > 0) {
+          setCoverCache(cache);
+          console.log('[Library] 📷 Cover cache caricata:', Object.keys(cache).length, 'immagini');
+        }
+      } catch (e) {
+        console.warn('[Library] Cover cache non disponibile');
+      }
+    };
+    loadCoverCache();
+  }, []);
 
   // 🚀 SCAN COMPLETO - Combina API Steam + File Locali
   const testFamilySharing = async () => {
@@ -261,7 +287,7 @@ export default function LibraryPage() {
     try {
       // 1️⃣ Prima ottieni i games dall'API (hanno i nomi corretti)
       const credentials = await invoke('load_steam_credentials') as { steam_id: string; api_key_encrypted: string } | null;
-      let apiGames: Map<string, Game> = new Map();
+      const apiGames: Map<string, Game> = new Map();
       
       if (credentials) {
         try {
@@ -367,7 +393,7 @@ export default function LibraryPage() {
         console.log('🚀 FULL LIBRARY LOADING (Owned + Family Sharing)...');
 
         // 1️⃣ SCAN LOCALE - Trova games INSTALLATI e SHARED (per arricchire dati API)
-        let localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null }> = new Map();
+        const localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null }> = new Map();
         try {
           const scanResult = await invoke('scan_all_steam_games_fast') as Array<{
             id: string;
@@ -400,7 +426,7 @@ export default function LibraryPage() {
         }
         
         // Mappa finale dei games
-        let finalGamesMap: Map<string, Game> = new Map();
+        const finalGamesMap: Map<string, Game> = new Map();
 
         // 2️⃣ API STEAM - Arricchisce con nomi corretti e dettagli
         let credentials;
@@ -680,7 +706,7 @@ export default function LibraryPage() {
               <div className="group flex items-center bg-gray-900/60 hover:bg-gray-800/80 rounded-lg px-3 py-2 border border-gray-800/50 hover:border-purple-500/50 transition-all duration-200 cursor-pointer">
                 {/* Thumbnail compatta */}
                 <div className="w-16 h-9 flex-shrink-0 rounded overflow-hidden bg-gray-800 mr-3 relative">
-                  <GameImageWithFallback game={game} sizes="64px" />
+                  <GameImageWithFallback game={game} sizes="64px" coverCache={coverCache} />
                 </div>
                 
                 {/* Titolo e piattaforma */}
@@ -740,6 +766,7 @@ export default function LibraryPage() {
               <GameImageWithFallback 
                 game={game} 
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                coverCache={coverCache}
               />
               
               {/* Badge Engine/VR/Installed */}

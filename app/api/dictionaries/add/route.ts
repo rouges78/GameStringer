@@ -4,7 +4,7 @@ import { addTranslationToDictionary } from '@/lib/game-dictionaries';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { gameId, gameName, sourceLanguage, targetLanguage, original, translated } = body;
+    const { gameId, targetLanguage, original, translated } = body;
 
     if (!original || !translated) {
       return NextResponse.json(

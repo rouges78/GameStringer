@@ -66,6 +66,7 @@ import { NotificationCenter } from '@/components/notifications/notification-cent
 import { useNotificationShortcuts } from '@/hooks/use-global-shortcuts';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { FeaturedGameWidget } from '@/components/ui/featured-game-widget';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -85,7 +86,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { OnboardingWizard } from '@/components/onboarding/onboarding-wizard';
+import { InteractiveTutorial } from '@/components/onboarding/interactive-tutorial';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { GlobalSearch } from '@/components/layout/global-search';
@@ -215,6 +216,54 @@ const CHANGELOG_CONTENT = `
 ---
 
 ## 📅 Gennaio 2026
+
+### 🎤 v1.0.5 — AI Voice & VR Tools
+\`2026-01-26\`
+
+**Voice Clone Studio**
+- AI voice cloning con ElevenLabs e OpenAI TTS
+- Text-to-speech con voci multiple
+- Profili voce personalizzati da campioni audio
+
+**VR Text Overlay**
+- Sottotitoli spaziali per giochi VR
+- Rilevamento headset: Oculus, SteamVR, WMR
+- Preset posizione e stile personalizzabile
+
+**Quality Gates**
+- Sistema QA automatico per validazione traduzioni
+- Controlli: placeholder, numeri, tag HTML, lunghezza
+
+**Player Feedback**
+- Raccolta feedback dai giocatori
+- Sistema rating 5 stelle con tracking
+
+---
+
+### 🚀 v1.0.4 — Translation Tools Expansion
+\`2026-01-23\`
+
+**Subtitle Translator**
+- Parser completo per SRT, VTT, ASS/SSA
+- Preview in tempo reale con validazione QA
+
+**Batch Folder Translator**
+- Scansione ricorsiva con 10+ formati supportati
+- Progress tracking con pausa/stop
+
+**Community Hub**
+- Browser pacchetti TM con search/filter
+- Top contributori e statistiche
+
+**Retro ROM Tools**
+- 8 console supportate (NES, SNES, GB, GBA, Genesis, PSX, N64)
+- Table file (.TBL) parser/generator
+
+**API Pubblica v1**
+- Endpoint traduzioni singole e batch
+- 20 lingue supportate
+
+---
 
 ### 🔐 v1.0.3 — Recovery Key & i18n Complete
 \`2026-01-22\`
@@ -484,6 +533,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [expandedSubMenus, setExpandedSubMenus] = useState<string[]>([]);
   const [exitDialogOpen, setExitDialogOpen] = useState(false);
   
   // Global keyboard shortcuts for notifications
@@ -723,58 +773,93 @@ export function MainLayout({ children }: MainLayoutProps) {
                             
                             return (
                               <div key={item.href}>
-                                <Link href={item.href}>
-                                  <Button
-                                    variant="ghost"
-                                    className={cn(
-                                      "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8",
-                                      (isActive || isSubActive) ? group.activeClass : group.colorClass
-                                    )}
-                                  >
-                                    <Icon className={cn(
-                                      "h-3.5 w-3.5 transition-colors duration-200",
-                                      (isActive || isSubActive) ? "" : cn(group.iconClass, group.hoverIconClass)
-                                    )} />
-                                    <span className="text-xs relative">
-                                      {item.name}
-                                      <span className={cn(
-                                        "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
-                                        group.underlineClass
+                                {hasSubItems ? (
+                                  <>
+                                    {/* Item con subItems - Accordion */}
+                                    <Button
+                                      variant="ghost"
+                                      onClick={() => {
+                                        setExpandedSubMenus(prev => 
+                                          prev.includes(item.href) 
+                                            ? prev.filter(h => h !== item.href)
+                                            : [...prev, item.href]
+                                        );
+                                      }}
+                                      className={cn(
+                                        "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8",
+                                        (isActive || isSubActive) ? group.activeClass : group.colorClass
+                                      )}
+                                    >
+                                      <Icon className={cn(
+                                        "h-3.5 w-3.5 transition-colors duration-200",
+                                        (isActive || isSubActive) ? "" : cn(group.iconClass, group.hoverIconClass)
                                       )} />
-                                    </span>
-                                  </Button>
-                                </Link>
-                                {/* Sub-items */}
-                                {hasSubItems && (
-                                  <div className="pl-4 space-y-0.5 py-0.5">
-                                    {item.subItems.map((subItem: any) => {
-                                      const SubIcon = subItem.icon;
-                                      const isSubItemActive = pathname === subItem.href;
-                                      return (
-                                        <Link key={subItem.href} href={subItem.href}>
-                                          <Button
-                                            variant="ghost"
-                                            className={cn(
-                                              "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-7",
-                                              isSubItemActive ? group.activeClass : "text-emerald-700 hover:text-emerald-400 hover:bg-emerald-500/20"
-                                            )}
-                                          >
-                                            <SubIcon className={cn(
-                                              "h-3 w-3 transition-colors duration-200",
-                                              isSubItemActive ? "" : "text-emerald-700 group-hover:text-emerald-400"
-                                            )} />
-                                            <span className="text-[10px] relative">
-                                              {subItem.name}
-                                              <span className={cn(
-                                                "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
-                                                group.underlineClass
-                                              )} />
-                                            </span>
-                                          </Button>
-                                        </Link>
-                                      );
-                                    })}
-                                  </div>
+                                      <span className="text-xs relative flex-1 text-left">
+                                        {item.name}
+                                      </span>
+                                      <ChevronRight className={cn(
+                                        "h-3.5 w-3.5 transition-transform duration-200",
+                                        expandedSubMenus.includes(item.href) ? "rotate-90" : ""
+                                      )} />
+                                    </Button>
+                                    {/* Sub-items accordion */}
+                                    <div className={cn(
+                                      "overflow-hidden transition-all duration-200",
+                                      expandedSubMenus.includes(item.href) ? "max-h-[200px] opacity-100" : "max-h-0 opacity-0"
+                                    )}>
+                                      <div className="pl-4 space-y-0.5 py-0.5">
+                                        {item.subItems.map((subItem: any) => {
+                                          const SubIcon = subItem.icon;
+                                          const isSubItemActive = pathname === subItem.href;
+                                          return (
+                                            <Link key={subItem.href} href={subItem.href}>
+                                              <Button
+                                                variant="ghost"
+                                                className={cn(
+                                                  "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-7",
+                                                  isSubItemActive ? group.activeClass : "text-emerald-700 hover:text-emerald-400 hover:bg-emerald-500/20"
+                                                )}
+                                              >
+                                                <SubIcon className={cn(
+                                                  "h-3 w-3 transition-colors duration-200",
+                                                  isSubItemActive ? "" : "text-emerald-700 group-hover:text-emerald-400"
+                                                )} />
+                                                <span className="text-[10px] relative">
+                                                  {subItem.name}
+                                                  <span className={cn(
+                                                    "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
+                                                    group.underlineClass
+                                                  )} />
+                                                </span>
+                                              </Button>
+                                            </Link>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <Link href={item.href}>
+                                    <Button
+                                      variant="ghost"
+                                      className={cn(
+                                        "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8",
+                                        isActive ? group.activeClass : group.colorClass
+                                      )}
+                                    >
+                                      <Icon className={cn(
+                                        "h-3.5 w-3.5 transition-colors duration-200",
+                                        isActive ? "" : cn(group.iconClass, group.hoverIconClass)
+                                      )} />
+                                      <span className="text-xs relative">
+                                        {item.name}
+                                        <span className={cn(
+                                          "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
+                                          group.underlineClass
+                                        )} />
+                                      </span>
+                                    </Button>
+                                  </Link>
                                 )}
                               </div>
                             );
@@ -839,6 +924,11 @@ export function MainLayout({ children }: MainLayoutProps) {
               );
             })}
           </nav>
+
+          {/* Widget Gioco in Evidenza */}
+          <div className="mt-auto border-t border-border/50">
+            <FeaturedGameWidget collapsed={!sidebarOpen} />
+          </div>
           
         </aside>
 
@@ -866,6 +956,50 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 gap-2 px-3">
                     <Globe className="h-4 w-4" />
+                    {/* Mini bandiera lingua corrente */}
+                    {language === 'it' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
+                        <span className="w-1/3 bg-green-500" />
+                        <span className="w-1/3 bg-white" />
+                        <span className="w-1/3 bg-red-500" />
+                      </span>
+                    )}
+                    {language === 'en' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm">
+                        <span className="w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2060%2030%22%3E%3CclipPath%20id%3D%22a%22%3E%3Cpath%20d%3D%22M0%200v30h60V0z%22%2F%3E%3C%2FclipPath%3E%3CclipPath%20id%3D%22b%22%3E%3Cpath%20d%3D%22M30%2015h30v15zv15H0zH0V0zV0h30z%22%2F%3E%3C%2FclipPath%3E%3Cg%20clip-path%3D%22url(%23a)%22%3E%3Cpath%20d%3D%22M0%200v30h60V0z%22%20fill%3D%22%23012169%22%2F%3E%3Cpath%20d%3D%22M0%200l60%2030m0-30L0%2030%22%20stroke%3D%22%23fff%22%20stroke-width%3D%226%22%2F%3E%3Cpath%20d%3D%22M0%200l60%2030m0-30L0%2030%22%20clip-path%3D%22url(%23b)%22%20stroke%3D%22%23C8102E%22%20stroke-width%3D%224%22%2F%3E%3Cpath%20d%3D%22M30%200v30M0%2015h60%22%20stroke%3D%22%23fff%22%20stroke-width%3D%2210%22%2F%3E%3Cpath%20d%3D%22M30%200v30M0%2015h60%22%20stroke%3D%22%23C8102E%22%20stroke-width%3D%226%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E')] bg-cover bg-center block w-full h-full" />
+                      </span>
+                    )}
+                    {language === 'es' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                        <span className="h-1/4 bg-red-600" />
+                        <span className="h-2/4 bg-yellow-400" />
+                        <span className="h-1/4 bg-red-600" />
+                      </span>
+                    )}
+                    {language === 'fr' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
+                        <span className="w-1/3 bg-blue-600" />
+                        <span className="w-1/3 bg-white" />
+                        <span className="w-1/3 bg-red-500" />
+                      </span>
+                    )}
+                    {language === 'de' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                        <span className="h-1/3 bg-black" />
+                        <span className="h-1/3 bg-red-500" />
+                        <span className="h-1/3 bg-yellow-400" />
+                      </span>
+                    )}
+                    {language === 'ja' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
+                        <span className="w-2 h-2 rounded-full bg-red-500" />
+                      </span>
+                    )}
+                    {language === 'zh' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-red-500 flex items-center justify-center">
+                        <span className="text-[6px] text-yellow-400">★</span>
+                      </span>
+                    )}
                     <span className="text-xs font-medium">{language.toUpperCase()}</span>
                     <ChevronDown className="h-3 w-3 text-muted-foreground" />
                   </Button>
@@ -1068,8 +1202,8 @@ export function MainLayout({ children }: MainLayoutProps) {
           </DialogContent>
         </Dialog>
 
-        {/* Onboarding Wizard */}
-        <OnboardingWizard />
+        {/* Tutorial Interattivo */}
+        <InteractiveTutorial />
         
         {/* Command Palette (Ctrl+K) */}
         <CommandPalette />

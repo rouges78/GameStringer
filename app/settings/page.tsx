@@ -33,8 +33,12 @@ import {
   Globe,
   Link2,
   BookOpen,
-  Settings
+  Settings,
+  Rss,
+  Plus,
+  X
 } from 'lucide-react';
+import { getRssFeeds, saveRssFeeds, defaultRssFeeds, type RssFeed } from '@/components/ui/rss-ticker';
 import { toast } from 'sonner';
 import { Play, Compass } from 'lucide-react';
 import { ProfileNotificationSettings } from '@/components/notifications/profile-notification-settings';
@@ -172,6 +176,50 @@ export default function SettingsPage() {
   };
 
   const [tutorialDialogOpen, setTutorialDialogOpen] = useState(false);
+
+  // RSS Feeds
+  const [rssFeeds, setRssFeeds] = useState<RssFeed[]>([]);
+  const [newFeedUrl, setNewFeedUrl] = useState('');
+  const [newFeedName, setNewFeedName] = useState('');
+
+  useEffect(() => {
+    setRssFeeds(getRssFeeds());
+  }, []);
+
+  const handleAddRssFeed = () => {
+    if (!newFeedUrl.trim() || !newFeedName.trim()) {
+      toast.error('Inserisci URL e nome del feed');
+      return;
+    }
+    const newFeed: RssFeed = { url: newFeedUrl.trim(), name: newFeedName.trim(), enabled: true };
+    const updated = [...rssFeeds, newFeed];
+    setRssFeeds(updated);
+    saveRssFeeds(updated);
+    setNewFeedUrl('');
+    setNewFeedName('');
+    toast.success('Feed RSS aggiunto');
+  };
+
+  const handleRemoveRssFeed = (index: number) => {
+    const updated = rssFeeds.filter((_, i) => i !== index);
+    setRssFeeds(updated);
+    saveRssFeeds(updated);
+    toast.success('Feed rimosso');
+  };
+
+  const handleToggleRssFeed = (index: number) => {
+    const updated = rssFeeds.map((feed, i) => 
+      i === index ? { ...feed, enabled: !feed.enabled } : feed
+    );
+    setRssFeeds(updated);
+    saveRssFeeds(updated);
+  };
+
+  const handleResetRssFeeds = () => {
+    setRssFeeds(defaultRssFeeds);
+    saveRssFeeds(defaultRssFeeds);
+    toast.success('Feed RSS ripristinati');
+  };
 
   const startNormalTutorial = () => {
     // Riavvia solo l'onboarding wizard (slides informative)
@@ -368,6 +416,10 @@ export default function SettingsPage() {
           <TabsTrigger value="integrations" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Globe className="h-3.5 w-3.5" />
             <span>{t('settings.tabs.integrations')}</span>
+          </TabsTrigger>
+          <TabsTrigger value="rss" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Rss className="h-3.5 w-3.5" />
+            <span>RSS</span>
           </TabsTrigger>
           <TabsTrigger value="debug" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Bug className="h-3.5 w-3.5" />
@@ -666,6 +718,79 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
+          </Card>
+        </TabsContent>
+
+        {/* RSS Tab */}
+        <TabsContent value="rss" className="space-y-3">
+          <Card className="p-4">
+            <CardHeader className="p-0 pb-4">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Rss className="h-5 w-5 text-orange-500" />
+                Feed RSS Dashboard
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Configura i feed RSS da mostrare nel ticker della dashboard
+              </p>
+            </CardHeader>
+            <CardContent className="p-0 space-y-4">
+              {/* Add new feed */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Nome feed (es. Steam News)"
+                  value={newFeedName}
+                  onChange={(e) => setNewFeedName(e.target.value)}
+                  className="flex-1 h-9 text-sm"
+                />
+                <Input
+                  placeholder="URL feed RSS"
+                  value={newFeedUrl}
+                  onChange={(e) => setNewFeedUrl(e.target.value)}
+                  className="flex-[2] h-9 text-sm"
+                />
+                <Button onClick={handleAddRssFeed} size="sm" className="h-9 gap-1">
+                  <Plus className="h-4 w-4" />
+                  Aggiungi
+                </Button>
+              </div>
+
+              {/* Feed list */}
+              <div className="space-y-2">
+                {rssFeeds.map((feed, index) => (
+                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border">
+                    <Switch
+                      checked={feed.enabled}
+                      onCheckedChange={() => handleToggleRssFeed(index)}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{feed.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{feed.url}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveRssFeed(index)}
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {rssFeeds.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Nessun feed configurato. Aggiungi un feed RSS per iniziare.
+                  </p>
+                )}
+              </div>
+
+              {/* Reset button */}
+              <div className="flex justify-end pt-2">
+                <Button variant="outline" size="sm" onClick={handleResetRssFeeds} className="gap-1.5">
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Ripristina default
+                </Button>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
 

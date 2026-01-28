@@ -67,8 +67,35 @@ const DEFAULT_PROVIDERS: AIProvider[] = [
     name: 'Ollama (Locale)',
     type: 'local',
     baseUrl: 'http://localhost:11434',
-    models: ['llama3.2', 'mistral', 'gemma2', 'qwen2.5', 'phi3'],
+    models: [
+      // 🆕 Specializzati Traduzioni
+      'translategemma',      // Modello ottimizzato per traduzioni
+      // 🆕 Nuovi modelli 2026
+      'glm-4.7-flash',       // Veloce, basso consumo memoria
+      'glm-4.7',             // GLM completo
+      'deepseek-v3.2',       // Ultimo DeepSeek
+      'kimi-k2.5',           // Kimi avanzato
+      'deepseek-ocr',        // OCR specializzato
+      // Modelli consolidati
+      'llama3.2', 'qwen2.5', 'gemma2', 'mistral', 'phi3'
+    ],
     isAvailable: false
+  },
+  {
+    id: 'qwen3',
+    name: 'Qwen 3 (Lingue Asiatiche)',
+    type: 'local',
+    baseUrl: 'http://localhost:11434',
+    models: ['qwen3:32b', 'qwen3:14b', 'qwen3:8b', 'qwen3:4b', 'qwen3', 'qwen2.5:14b', 'qwen2.5:7b', 'qwen2.5'],
+    isAvailable: false
+  },
+  {
+    id: 'nllb',
+    name: 'NLLB-200 (200 Lingue)',
+    type: 'cloud',
+    baseUrl: 'https://api-inference.huggingface.co',
+    models: ['nllb-200-distilled-600M'],
+    isAvailable: true
   },
   {
     id: 'lmstudio',

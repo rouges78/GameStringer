@@ -1481,7 +1481,80 @@ pub async fn fetch_steamgriddb_image(app_id: u32, game_name: String, api_key: Op
     Ok(None)
 }
 
-/// 📂 CARICA FAMILY SHARING IDS - Persistenza locale
+/// � SALVA COVER IN CACHE LOCALE
+#[tauri::command]
+pub async fn save_cover_cache(game_id: String, image_url: String) -> Result<(), String> {
+    use std::fs;
+    use std::collections::HashMap;
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_dir = data_dir.join("GameStringer").join("covers");
+        fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+        
+        let cache_file = cache_dir.join("cover_cache.json");
+        
+        // Leggi cache esistente o crea nuova
+        let mut cache: HashMap<String, String> = if cache_file.exists() {
+            let json = fs::read_to_string(&cache_file).unwrap_or_default();
+            serde_json::from_str(&json).unwrap_or_default()
+        } else {
+            HashMap::new()
+        };
+        
+        cache.insert(game_id.clone(), image_url.clone());
+        
+        let json = serde_json::to_string_pretty(&cache).map_err(|e| e.to_string())?;
+        fs::write(&cache_file, json).map_err(|e| e.to_string())?;
+        
+        info!("💾 Cover salvata in cache per: {}", game_id);
+        Ok(())
+    } else {
+        Err("Directory dati non trovata".to_string())
+    }
+}
+
+/// 📖 LEGGI COVER DA CACHE LOCALE
+#[tauri::command]
+pub async fn get_cover_cache(game_id: String) -> Result<Option<String>, String> {
+    use std::fs;
+    use std::collections::HashMap;
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_file = data_dir.join("GameStringer").join("covers").join("cover_cache.json");
+        
+        if cache_file.exists() {
+            let json = fs::read_to_string(&cache_file).map_err(|e| e.to_string())?;
+            let cache: HashMap<String, String> = serde_json::from_str(&json).unwrap_or_default();
+            
+            if let Some(url) = cache.get(&game_id) {
+                return Ok(Some(url.clone()));
+            }
+        }
+    }
+    
+    Ok(None)
+}
+
+/// 📖 LEGGI TUTTE LE COVER DALLA CACHE
+#[tauri::command]
+pub async fn get_all_cover_cache() -> Result<std::collections::HashMap<String, String>, String> {
+    use std::fs;
+    use std::collections::HashMap;
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_file = data_dir.join("GameStringer").join("covers").join("cover_cache.json");
+        
+        if cache_file.exists() {
+            let json = fs::read_to_string(&cache_file).map_err(|e| e.to_string())?;
+            let cache: HashMap<String, String> = serde_json::from_str(&json).unwrap_or_default();
+            return Ok(cache);
+        }
+    }
+    
+    Ok(std::collections::HashMap::new())
+}
+
+/// �📂 CARICA FAMILY SHARING IDS - Persistenza locale
 #[tauri::command]
 pub async fn load_family_sharing_ids() -> Result<Vec<String>, String> {
     use std::fs;
@@ -1868,49 +1941,75 @@ pub async fn steam_load_auth() -> Result<Option<SteamUser>, String> {
 pub async fn steam_get_wishlist(steam_id: String) -> Result<Vec<WishlistGame>, String> {
     info!("🎮 Importando wishlist Steam per: {}", steam_id);
     
-    let url = format!(
-        "https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/?p=0",
-        steam_id
-    );
+    // Prova prima con profiles/ poi con id/
+    let urls = vec![
+        format!("https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/?p=0", steam_id),
+        format!("https://store.steampowered.com/wishlist/id/{}/wishlistdata/?p=0", steam_id),
+    ];
     
-    let client = reqwest::Client::new();
-    let response = client.get(&url)
-        .header("Accept", "application/json")
-        .send()
-        .await
-        .map_err(|e| format!("Request failed: {}", e))?;
+    let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .build()
+        .map_err(|e| format!("Client build failed: {}", e))?;
     
-    if !response.status().is_success() {
-        return Err(format!("Steam API error: {}", response.status()));
-    }
+    let mut last_error = String::new();
     
-    let json: serde_json::Value = response.json().await
-        .map_err(|e| format!("Parse failed: {}", e))?;
-    
-    let mut wishlist = Vec::new();
-    
-    if let Some(obj) = json.as_object() {
-        for (app_id, game_data) in obj {
-            if let Ok(id) = app_id.parse::<u32>() {
-                let name = game_data["name"].as_str().unwrap_or("Unknown").to_string();
-                let priority = game_data["priority"].as_u64().unwrap_or(0) as u32;
-                let added = game_data["added"].as_u64().unwrap_or(0);
-                
-                wishlist.push(WishlistGame {
-                    app_id: id,
-                    name,
-                    priority,
-                    added_timestamp: added,
-                });
+    for url in &urls {
+        info!("🔍 Tentativo URL: {}", url);
+        
+        let response = match client.get(url)
+            .header("Accept", "application/json")
+            .header("Accept-Language", "en-US,en;q=0.9")
+            .send()
+            .await {
+                Ok(r) => r,
+                Err(e) => {
+                    last_error = format!("Request failed: {}", e);
+                    continue;
+                }
+            };
+        
+        if response.status().is_success() {
+            // Prova a parsare la risposta
+            let json: serde_json::Value = match response.json().await {
+                Ok(j) => j,
+                Err(e) => {
+                    last_error = format!("Parse failed: {}", e);
+                    continue;
+                }
+            };
+            
+            // Processa la wishlist
+            let mut wishlist = Vec::new();
+            
+            if let Some(obj) = json.as_object() {
+                for (app_id, game_data) in obj {
+                    if let Ok(id) = app_id.parse::<u32>() {
+                        let name = game_data["name"].as_str().unwrap_or("Unknown").to_string();
+                        let priority = game_data["priority"].as_u64().unwrap_or(0) as u32;
+                        let added = game_data["added"].as_u64().unwrap_or(0);
+                        
+                        wishlist.push(WishlistGame {
+                            app_id: id,
+                            name,
+                            priority,
+                            added_timestamp: added,
+                        });
+                    }
+                }
             }
+            
+            wishlist.sort_by(|a, b| a.priority.cmp(&b.priority));
+            info!("✅ Importati {} giochi dalla wishlist", wishlist.len());
+            return Ok(wishlist);
+        } else if response.status() == 403 {
+            last_error = "La wishlist Steam è privata o non accessibile. Verifica che sia impostata su 'Pubblico' nelle impostazioni privacy di Steam.".to_string();
+        } else {
+            last_error = format!("Steam API error: {}", response.status());
         }
     }
     
-    // Sort by priority
-    wishlist.sort_by(|a, b| a.priority.cmp(&b.priority));
-    
-    info!("✅ Importati {} giochi dalla wishlist", wishlist.len());
-    Ok(wishlist)
+    Err(last_error)
 }
 
 #[derive(Debug, Serialize, Deserialize)]

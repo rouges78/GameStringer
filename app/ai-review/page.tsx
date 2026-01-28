@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import {
   reviewTranslation,
@@ -15,9 +15,7 @@ import {
   ReviewResult,
   ReviewStats,
   REVIEW_CATEGORIES,
-  SEVERITY_CONFIG,
-  ReviewCategory,
-  ReviewSeverity
+  SEVERITY_CONFIG
 } from "@/lib/ai-review-agent"
 import {
   Bot,
@@ -28,9 +26,7 @@ import {
   Wand2,
   FileText,
   BarChart3,
-  ChevronRight,
-  Copy,
-  Check
+  ChevronRight
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n"

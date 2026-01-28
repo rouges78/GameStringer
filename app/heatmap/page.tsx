@@ -243,6 +243,7 @@ export default function HeatmapPage() {
           }
         }
       } catch (error) {
+        console.warn('[Heatmap] Errore parsing file:', error);
       }
       setIsAnalyzing(false)
     }
