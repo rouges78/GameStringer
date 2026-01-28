@@ -416,7 +416,7 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-2xl font-bold text-violet-300">{stats.translationStats.completed.toLocaleString()}</div>
-              <div className="text-[10px] text-violet-400/70 uppercase tracking-wider">Traduzioni Totali</div>
+              <div className="text-[10px] text-violet-400/70 uppercase tracking-wider">{dash.totalTranslations}</div>
             </div>
           </div>
           <div className="absolute -bottom-2 -right-2 text-violet-500/10 text-6xl font-bold">📊</div>
@@ -429,7 +429,7 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-300">{stats.patches}</div>
-              <div className="text-[10px] text-emerald-400/70 uppercase tracking-wider">Giochi Patchati</div>
+              <div className="text-[10px] text-emerald-400/70 uppercase tracking-wider">{dash.gamesPatched}</div>
             </div>
           </div>
           <div className="absolute -bottom-2 -right-2 text-emerald-500/10 text-6xl font-bold">🎮</div>
@@ -442,7 +442,7 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-2xl font-bold text-amber-300">{Math.round(stats.translationStats.completed * 0.5)}h</div>
-              <div className="text-[10px] text-amber-400/70 uppercase tracking-wider">Tempo Risparmiato</div>
+              <div className="text-[10px] text-amber-400/70 uppercase tracking-wider">{dash.timeSaved}</div>
             </div>
           </div>
           <div className="absolute -bottom-2 -right-2 text-amber-500/10 text-6xl font-bold">⏱️</div>
@@ -455,7 +455,7 @@ export default function Dashboard() {
             </div>
             <div>
               <div className="text-2xl font-bold text-cyan-300">{stats.translations.toLocaleString()}</div>
-              <div className="text-[10px] text-cyan-400/70 uppercase tracking-wider">Entry TM</div>
+              <div className="text-[10px] text-cyan-400/70 uppercase tracking-wider">{dash.tmEntries}</div>
             </div>
           </div>
           <div className="absolute -bottom-2 -right-2 text-cyan-500/10 text-6xl font-bold">💾</div>

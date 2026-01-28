@@ -217,6 +217,25 @@ const CHANGELOG_CONTENT = `
 
 ## 📅 Gennaio 2026
 
+### 💬 v1.0.7 — Community Forum & License
+\`2026-01-29\`
+
+**GitHub Discussions**
+- Forum integrato nel Community Hub
+- Grafica personalizzata GameStringer
+- Fetch automatico da GitHub
+
+**Community Hub**
+- Rimossi dati mock, ora solo dati reali
+- Modal warning rimosso
+
+**Licenza v1.1**
+- Source Available License aggiornata
+- YouTuber/streamer OK con attribuzione
+- Fork non-commerciali permessi
+
+---
+
 ### 🎤 v1.0.5 — AI Voice & VR Tools
 \`2026-01-26\`
 
@@ -708,7 +727,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </Button>
           </div>
           
-          <nav className="flex-1 px-2 py-2 overflow-y-auto">
+          <nav className="flex-1 px-2 py-2 overflow-y-auto min-h-0">
             {navGroups.map((group, groupIndex) => {
               const isExpanded = expandedGroups.includes(group.label);
               const toggleGroup = () => {
@@ -926,7 +945,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </nav>
 
           {/* Widget Gioco in Evidenza */}
-          <div className="mt-auto border-t border-border/50">
+          <div className="shrink-0 border-t border-border/50 mb-4">
             <FeaturedGameWidget collapsed={!sidebarOpen} />
           </div>
           

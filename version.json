@@ -1,14 +1,30 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.7",
   "major": 1,
   "minor": 0,
-  "patch": 6,
+  "patch": 7,
   "prerelease": null,
-  "buildNumber": 106,
-  "buildDate": "2026-01-28T00:00:00.000Z",
+  "buildNumber": 107,
+  "buildDate": "2026-01-29T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.7": {
+      "date": "2026-01-29",
+      "type": "feature",
+      "changes": [
+        "GitHub Discussions: Forum integrato nel Community Hub",
+        "Tab Discussions con grafica GameStringer personalizzata",
+        "Fetch automatico discussioni da GitHub con API route",
+        "Link esterni aperti con Tauri shell API",
+        "Community Hub: rimossi dati mock, ora solo dati reali",
+        "Rimosso modal warning 'In Sviluppo' dal Community Hub",
+        "Licenza aggiornata a v1.1 Source Available",
+        "Licenza: chiarito uso non-commercial (YouTuber/streamer OK)",
+        "Licenza: fork non-commerciali permessi esplicitamente",
+        "i18n: traduzioni Discussions in 7 lingue"
+      ]
+    },
     "1.0.6": {
       "date": "2026-01-28",
       "type": "patch",

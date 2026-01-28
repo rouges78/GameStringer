@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { invoke } from '@/lib/tauri-api';
+import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { 
   UserProfile, 
   ProfileInfo, 

@@ -331,6 +331,10 @@ export const translations = {
       newsUpdates: 'News & Aggiornamenti',
       manage: 'Gestisci',
       suggestions: 'Suggerimenti? Apri una issue su GitHub!',
+      totalTranslations: 'Traduzioni Totali',
+      gamesPatched: 'Giochi Patchati',
+      timeSaved: 'Tempo Risparmiato',
+      tmEntries: 'Entry TM',
     },
     // Command Palette
     commandPalette: {
@@ -485,6 +489,13 @@ export const translations = {
       warningDesc: 'Il Community Hub è attualmente in fase di sviluppo. Alcune funzionalità potrebbero non essere disponibili o funzionare correttamente.',
       warningNote: 'I dati mostrati sono esempi dimostrativi. La versione completa sarà disponibile in un prossimo aggiornamento.',
       understood: 'Ho capito',
+      discussions: 'Discussioni',
+      newDiscussion: 'Nuova Discussione',
+      noDiscussions: 'Nessuna discussione',
+      beFirstToPost: 'Sii il primo a iniziare una discussione!',
+      startDiscussion: 'Inizia Discussione',
+      viewAllOnGitHub: 'Vedi tutte le discussioni su GitHub',
+      answered: 'Risposta',
     },
     // Voice Clone
     voiceClone: {
@@ -2063,6 +2074,7 @@ export const translations = {
     widget: {
       recommendedToTranslate: 'Da Tradurre',
       needsTranslation: 'Manca italiano',
+      missing: 'Manca',
       inLibrary: 'In libreria',
     },
     tutorial: {
@@ -2445,6 +2457,10 @@ export const translations = {
       newsUpdates: 'News & Updates',
       manage: 'Manage',
       suggestions: 'Suggestions? Open an issue on GitHub!',
+      totalTranslations: 'Total Translations',
+      gamesPatched: 'Games Patched',
+      timeSaved: 'Time Saved',
+      tmEntries: 'TM Entries',
     },
     // Command Palette
     commandPalette: {
@@ -2598,6 +2614,13 @@ export const translations = {
       warningDesc: 'The Community Hub is currently under development. Some features may not be available or work correctly.',
       warningNote: 'The data shown are demo examples. The complete version will be available in a future update.',
       understood: 'I Understand',
+      discussions: 'Discussions',
+      newDiscussion: 'New Discussion',
+      noDiscussions: 'No discussions yet',
+      beFirstToPost: 'Be the first to start a discussion!',
+      startDiscussion: 'Start Discussion',
+      viewAllOnGitHub: 'View all discussions on GitHub',
+      answered: 'Answered',
     },
     voiceClone: {
       title: 'Voice Clone Studio',
@@ -4168,7 +4191,8 @@ export const translations = {
     },
     widget: {
       recommendedToTranslate: 'To Translate',
-      needsTranslation: 'Missing translation',
+      needsTranslation: 'Missing Italian',
+      missing: 'Missing',
       inLibrary: 'In library',
     },
     tutorial: {
@@ -4533,6 +4557,10 @@ export const translations = {
       newsUpdates: 'Noticias y Actualizaciones',
       manage: 'Gestionar',
       suggestions: '¿Sugerencias? ¡Abre un issue en GitHub!',
+      totalTranslations: 'Traducciones Totales',
+      gamesPatched: 'Juegos Parcheados',
+      timeSaved: 'Tiempo Ahorrado',
+      tmEntries: 'Entradas TM',
     },
     batch: {
       title: 'Traducción por Lotes',
@@ -5319,7 +5347,8 @@ export const translations = {
     },
     widget: {
       recommendedToTranslate: 'Para Traducir',
-      needsTranslation: 'Falta traducción',
+      needsTranslation: 'Falta italiano',
+      missing: 'Falta',
       inLibrary: 'En biblioteca',
     },
     tutorial: {
@@ -5444,6 +5473,13 @@ export const translations = {
       warningDesc: 'El Community Hub está actualmente en desarrollo. Algunas funcionalidades pueden no estar disponibles o funcionar correctamente.',
       warningNote: 'Los datos mostrados son ejemplos demostrativos. La versión completa estará disponible en una próxima actualización.',
       understood: 'Entendido',
+      discussions: 'Discusiones',
+      newDiscussion: 'Nueva Discusión',
+      noDiscussions: 'Sin discusiones',
+      beFirstToPost: '¡Sé el primero en iniciar una discusión!',
+      startDiscussion: 'Iniciar Discusión',
+      viewAllOnGitHub: 'Ver todas las discusiones en GitHub',
+      answered: 'Respondida',
     },
     voiceClone: {
       title: 'Voice Clone Studio',
@@ -6331,6 +6367,10 @@ export const translations = {
       newsUpdates: 'Actualités & Mises à jour',
       manage: 'Gérer',
       suggestions: 'Suggestions ? Ouvrez une issue sur GitHub !',
+      totalTranslations: 'Traductions Totales',
+      gamesPatched: 'Jeux Patchés',
+      timeSaved: 'Temps Économisé',
+      tmEntries: 'Entrées TM',
     },
     batch: {
       title: 'Traduction par Lots',
@@ -7117,7 +7157,8 @@ export const translations = {
     },
     widget: {
       recommendedToTranslate: 'À Traduire',
-      needsTranslation: 'Traduction manquante',
+      needsTranslation: 'Italien manquant',
+      missing: 'Manque',
       inLibrary: 'En bibliothèque',
     },
     tutorial: {
@@ -7229,6 +7270,13 @@ export const translations = {
       warningDesc: 'Le Community Hub est actuellement en développement. Certaines fonctionnalités peuvent ne pas être disponibles ou fonctionner correctement.',
       warningNote: 'Les données affichées sont des exemples de démonstration. La version complète sera disponible dans une prochaine mise à jour.',
       understood: 'J\'ai compris',
+      discussions: 'Discussions',
+      newDiscussion: 'Nouvelle Discussion',
+      noDiscussions: 'Aucune discussion',
+      beFirstToPost: 'Soyez le premier à lancer une discussion !',
+      startDiscussion: 'Démarrer Discussion',
+      viewAllOnGitHub: 'Voir toutes les discussions sur GitHub',
+      answered: 'Répondu',
     },
     guidePage: {
       title: 'Guide',
@@ -7981,6 +8029,10 @@ export const translations = {
       newsUpdates: 'News & Updates',
       manage: 'Verwalten',
       suggestions: 'Vorschläge? Öffne ein Issue auf GitHub!',
+      totalTranslations: 'Übersetzungen Gesamt',
+      gamesPatched: 'Gepatchte Spiele',
+      timeSaved: 'Zeit Gespart',
+      tmEntries: 'TM-Einträge',
     },
     batch: {
       title: 'Stapelübersetzung',
@@ -8767,7 +8819,8 @@ export const translations = {
     },
     widget: {
       recommendedToTranslate: 'Zu Übersetzen',
-      needsTranslation: 'Übersetzung fehlt',
+      needsTranslation: 'Italienisch fehlt',
+      missing: 'Fehlt',
       inLibrary: 'In Bibliothek',
     },
     tutorial: {
@@ -8892,6 +8945,13 @@ export const translations = {
       warningDesc: 'Der Community Hub befindet sich derzeit in Entwicklung. Einige Funktionen sind möglicherweise nicht verfügbar oder funktionieren nicht korrekt.',
       warningNote: 'Die angezeigten Daten sind Demonstrationsbeispiele. Die vollständige Version wird in einem zukünftigen Update verfügbar sein.',
       understood: 'Verstanden',
+      discussions: 'Diskussionen',
+      newDiscussion: 'Neue Diskussion',
+      noDiscussions: 'Keine Diskussionen',
+      beFirstToPost: 'Sei der Erste, der eine Diskussion startet!',
+      startDiscussion: 'Diskussion Starten',
+      viewAllOnGitHub: 'Alle Diskussionen auf GitHub ansehen',
+      answered: 'Beantwortet',
     },
     voiceClone: {
       title: 'Voice Clone Studio', subtitle: 'KI-Stimmklonen und automatische Synchronisation',
@@ -9706,6 +9766,10 @@ export const translations = {
       newsUpdates: 'ニュース＆アップデート',
       manage: '管理',
       suggestions: '提案がありますか？GitHubでissueを開いてください！',
+      totalTranslations: '総翻訳数',
+      gamesPatched: 'パッチ済みゲーム',
+      timeSaved: '節約時間',
+      tmEntries: 'TMエントリ',
     },
     batch: {
       title: 'バッチ翻訳',
@@ -10408,6 +10472,13 @@ export const translations = {
       warningDesc: 'Community Hubは現在開発中です。一部の機能が利用できないか、正しく動作しない場合があります。',
       warningNote: '表示されているデータはデモ例です。完全版は今後のアップデートで利用可能になります。',
       understood: '理解しました',
+      discussions: 'ディスカッション',
+      newDiscussion: '新しいディスカッション',
+      noDiscussions: 'ディスカッションなし',
+      beFirstToPost: '最初のディスカッションを始めましょう！',
+      startDiscussion: 'ディスカッション開始',
+      viewAllOnGitHub: 'GitHubで全て表示',
+      answered: '回答済み',
     },
     voiceClone: {
       title: 'Voice Clone Studio', subtitle: 'AI音声クローンと自動吹き替え',
@@ -11220,6 +11291,10 @@ export const translations = {
       newsUpdates: '新闻与更新',
       manage: '管理',
       suggestions: '有建议？在GitHub上提交issue！',
+      totalTranslations: '总翻译数',
+      gamesPatched: '已修补游戏',
+      timeSaved: '节省时间',
+      tmEntries: 'TM条目',
     },
     batch: {
       title: '批量翻译',
@@ -11922,6 +11997,13 @@ export const translations = {
       warningDesc: 'Community Hub 目前正在开发中。某些功能可能不可用或无法正常工作。',
       warningNote: '显示的数据是演示示例。完整版本将在未来更新中提供。',
       understood: '我明白了',
+      discussions: '讨论',
+      newDiscussion: '新讨论',
+      noDiscussions: '暂无讨论',
+      beFirstToPost: '成为第一个发起讨论的人！',
+      startDiscussion: '发起讨论',
+      viewAllOnGitHub: '在GitHub上查看全部讨论',
+      answered: '已回答',
     },
     voiceClone: {
       title: 'Voice Clone Studio', subtitle: 'AI语音克隆和自动配音',

@@ -35,10 +35,13 @@ function getMockResponse<T>(command: string, args?: any): Promise<T> {
     'get_steam_games_with_family_sharing': generateMockGames(),
     'force_refresh_all_games': generateMockGames(),
     'load_steam_games_cache': generateMockGames(),
-    'list_profiles': [],
-    'create_profile': { id: 'mock-profile-id', name: 'Mock Profile' },
-    'authenticate_profile': { success: true, profile: { id: 'mock-profile-id', name: 'Mock Profile' } },
-    'get_current_profile': null,
+    'list_profiles': { success: true, data: [] },
+    'create_profile': { success: true, data: { id: 'mock-profile-id', name: 'Mock Profile' } },
+    'authenticate_profile': { success: true, data: { id: 'mock-profile-id', name: 'Mock Profile' } },
+    'get_current_profile': { success: true, data: null },
+    'logout_profile': { success: true },
+    'delete_profile': { success: true },
+    'can_authenticate': { success: true, data: true },
     'test_steam_connection': { connected: false, error: 'Non disponibile in ambiente web' },
     'test_epic_connection': { connected: false, error: 'Non disponibile in ambiente web' },
     'test_gog_connection': { connected: false, error: 'Non disponibile in ambiente web' },
@@ -48,7 +51,11 @@ function getMockResponse<T>(command: string, args?: any): Promise<T> {
     'test_itchio_connection': { connected: false, error: 'Non disponibile in ambiente web' },
     'get_system_info': { os: 'web', version: '1.0.0' },
     'get_settings': {},
-    'save_settings': { success: true }
+    'save_settings': { success: true },
+    'get_current_profile_settings': { success: true, data: null },
+    'load_global_settings': { success: true, data: null },
+    'save_current_profile_settings': { success: true },
+    'save_global_settings': { success: true }
   };
 
   const response = mockResponses[command] || null;

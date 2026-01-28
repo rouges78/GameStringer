@@ -1,16 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { Download, Database, Globe, Star, Package, Cloud, Upload, AlertTriangle, Construction } from 'lucide-react';
+import { Database, Globe, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CommunityHub } from '@/components/tools/community-hub';
 import { useTranslation } from '@/lib/i18n';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 export default function CommunityHubPage() {
   const { t } = useTranslation();
-  const [showWarning, setShowWarning] = useState(true);
   
   return (
     <div className="container mx-auto p-4 space-y-3">
@@ -52,32 +49,6 @@ export default function CommunityHubPage() {
       </div>
       
       <CommunityHub />
-      
-      {/* Warning Modal - In Development */}
-      <Dialog open={showWarning} onOpenChange={setShowWarning}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-amber-500">
-              <Construction className="h-5 w-5" />
-              {t('communityHub.warningTitle')}
-            </DialogTitle>
-            <DialogDescription className="pt-2">
-              {t('communityHub.warningDesc')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-muted-foreground">
-              {t('communityHub.warningNote')}
-            </p>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowWarning(false)} className="bg-amber-600 hover:bg-amber-500">
-              {t('communityHub.understood')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

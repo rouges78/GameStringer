@@ -57,6 +57,7 @@ import {
   type HubStats,
   type PackSearchFilters
 } from '@/lib/community-hub-service';
+import { GitHubDiscussions } from './github-discussions';
 
 const languages = [
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
@@ -332,6 +333,7 @@ export function CommunityHub() {
           <TabsTrigger value="browse" className="text-xs h-7">{t('communityHub.browsePacks')}</TabsTrigger>
           <TabsTrigger value="featured" className="text-xs h-7">⭐ {t('communityHub.featured')}</TabsTrigger>
           <TabsTrigger value="activity" className="text-xs h-7">{t('communityHub.recentActivity')}</TabsTrigger>
+          <TabsTrigger value="discussions" className="text-xs h-7">💬 {t('communityHub.discussions') || 'Discussions'}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="browse" className="space-y-3 mt-3">
@@ -480,6 +482,10 @@ export function CommunityHub() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="discussions" className="mt-4">
+          <GitHubDiscussions />
         </TabsContent>
       </Tabs>
 

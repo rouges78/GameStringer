@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { invoke } from '@/lib/tauri-api';
+import { safeInvoke } from '@/lib/tauri-wrapper';
 import { 
   ProfileSettings, 
   GlobalSettings, 
@@ -21,7 +21,7 @@ export function useProfileSettings(): UseProfileSettingsReturn {
   const loadCurrentSettings = useCallback(async () => {
     try {
       setError(null);
-      const response = await invoke<ProfileResponse<ProfileSettings | null>>('get_current_profile_settings');
+      const response = await safeInvoke<ProfileResponse<ProfileSettings | null>>('get_current_profile_settings');
       
       if (response.success) {
         setSettings(response.data || DEFAULT_PROFILE_SETTINGS);
@@ -39,7 +39,7 @@ export function useProfileSettings(): UseProfileSettingsReturn {
   // Carica settings globali
   const loadGlobalSettings = useCallback(async () => {
     try {
-      const response = await invoke<ProfileResponse<GlobalSettings>>('load_global_settings');
+      const response = await safeInvoke<ProfileResponse<GlobalSettings>>('load_global_settings');
       
       if (response.success && response.data) {
         setGlobalSettings({ ...DEFAULT_GLOBAL_SETTINGS, ...response.data });
@@ -74,7 +74,7 @@ export function useProfileSettings(): UseProfileSettingsReturn {
       setError(null);
       const updatedSettings = { ...settings, ...newSettings };
       
-      const response = await invoke<ProfileResponse<boolean>>('save_current_profile_settings', { 
+      const response = await safeInvoke<ProfileResponse<boolean>>('save_current_profile_settings', { 
         settings: updatedSettings 
       });
       
@@ -98,7 +98,7 @@ export function useProfileSettings(): UseProfileSettingsReturn {
       setError(null);
       const updatedSettings = { ...globalSettings, ...newSettings };
       
-      const response = await invoke<ProfileResponse<boolean>>('save_global_settings', { 
+      const response = await safeInvoke<ProfileResponse<boolean>>('save_global_settings', { 
         settings: updatedSettings 
       });
       

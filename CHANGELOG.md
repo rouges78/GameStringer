@@ -19,6 +19,32 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.7 — Community Forum & License Update 💬📜
+
+> **Data**: 2026-01-29
+
+#### 💬 GitHub Discussions Integration
+- **Forum integrato**: Tab Discussions nel Community Hub
+- **Grafica personalizzata**: UI GameStringer per le discussioni
+- **API Route**: Fetch automatico da GitHub con scraping fallback
+- **Link esterni**: Apertura con Tauri shell API
+
+#### 🧹 Community Hub Cleanup
+- **Dati mock rimossi**: Ora solo dati reali
+- **Modal warning rimosso**: Accesso diretto senza popup
+- **Bottoni aggiornati**: Stile bordo arancione
+
+#### 📜 Licenza v1.1
+- **Source Available License** aggiornata
+- **Non-commercial chiarito**: YouTuber/streamer OK con attribuzione
+- **Fork permessi**: Fork non-commerciali esplicitamente consentiti
+- **Sezione 9**: Aggiornamenti licenza futuri
+
+#### 🌍 Traduzioni
+- Chiavi `communityHub.discussions` in **7 lingue** (IT, EN, ES, FR, DE, JA, ZH)
+
+---
+
 ### v1.0.6 — Bug Fixing & New Translation Providers 🔧🌐
 
 > **Data**: 2026-01-28

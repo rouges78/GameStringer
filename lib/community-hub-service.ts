@@ -427,7 +427,7 @@ class CommunityHubService {
     return {
       totalPacks: allPacks.length,
       totalDownloads,
-      totalContributors: 156,
+      totalContributors: 0,
       totalStrings,
       languagesCovered: languageMap.size,
       gamesCovered: gameMap.size,
@@ -524,160 +524,18 @@ class CommunityHubService {
   }
 
   private getMockPacks(): TranslationPack[] {
-    return [
-      {
-        id: 'mock_1',
-        name: 'Traduzione Italiana Completa',
-        gameId: 'hollow_knight',
-        gameName: 'Hollow Knight',
-        gameAppId: 367520,
-        sourceLanguage: 'en',
-        targetLanguage: 'it',
-        version: '2.1.0',
-        author: {
-          id: 'user_1',
-          username: 'ItalianGamer',
-          reputation: 4520,
-          totalContributions: 15420,
-          verifiedTranslator: true
-        },
-        contributors: [
-          { id: 'user_2', username: 'TranslatorPro', reputation: 2100, totalContributions: 8900, verifiedTranslator: true }
-        ],
-        description: 'Traduzione italiana completa e revisionata per Hollow Knight. Include tutti i DLC e contenuti aggiuntivi.',
-        totalStrings: 12450,
-        translatedStrings: 12450,
-        completionPercentage: 100,
-        rating: 4.8,
-        ratingCount: 234,
-        downloads: 15420,
-        size: 2450000,
-        tags: ['completa', 'revisionata', 'dlc'],
-        createdAt: '2024-06-15T10:00:00Z',
-        updatedAt: '2025-12-01T14:30:00Z',
-        changelog: [
-          { version: '2.1.0', date: '2025-12-01', changes: ['Correzioni typo', 'Migliorata traduzione boss'] },
-          { version: '2.0.0', date: '2025-08-15', changes: ['Aggiunto DLC Godmaster', 'Revisione completa'] }
-        ],
-        files: [
-          { name: 'strings_it.json', path: 'strings_it.json', type: 'json', size: 2450000, stringCount: 12450 }
-        ],
-        status: 'verified',
-        compatibility: ['1.5.78', '1.5.75']
-      },
-      {
-        id: 'mock_2',
-        name: 'Patch Italiana',
-        gameId: 'celeste',
-        gameName: 'Celeste',
-        gameAppId: 504230,
-        sourceLanguage: 'en',
-        targetLanguage: 'it',
-        version: '1.5.0',
-        author: {
-          id: 'user_3',
-          username: 'PixelTranslator',
-          reputation: 3200,
-          totalContributions: 9800,
-          verifiedTranslator: true
-        },
-        contributors: [],
-        description: 'Traduzione italiana per Celeste con adattamento culturale dei dialoghi.',
-        totalStrings: 8900,
-        translatedStrings: 8900,
-        completionPercentage: 100,
-        rating: 4.9,
-        ratingCount: 189,
-        downloads: 12300,
-        size: 1800000,
-        tags: ['completa', 'dialoghi'],
-        createdAt: '2024-03-20T08:00:00Z',
-        updatedAt: '2025-11-10T16:45:00Z',
-        changelog: [
-          { version: '1.5.0', date: '2025-11-10', changes: ['Aggiornamento per Chapter 9'] }
-        ],
-        files: [
-          { name: 'dialog_it.txt', path: 'dialog_it.txt', type: 'csv', size: 1800000, stringCount: 8900 }
-        ],
-        status: 'featured',
-        compatibility: ['1.4.0.0']
-      },
-      {
-        id: 'mock_3',
-        name: 'Traduzione Parziale',
-        gameId: 'hades',
-        gameName: 'Hades',
-        gameAppId: 1145360,
-        sourceLanguage: 'en',
-        targetLanguage: 'it',
-        version: '0.8.0',
-        author: {
-          id: 'user_4',
-          username: 'MythTranslator',
-          reputation: 1500,
-          totalContributions: 4200,
-          verifiedTranslator: false
-        },
-        contributors: [],
-        description: 'Traduzione in corso per Hades. Cerca contributori!',
-        totalStrings: 25000,
-        translatedStrings: 18750,
-        completionPercentage: 75,
-        rating: 4.2,
-        ratingCount: 45,
-        downloads: 3200,
-        size: 3500000,
-        tags: ['in-corso', 'cerca-aiuto'],
-        createdAt: '2025-01-10T12:00:00Z',
-        updatedAt: '2025-12-28T09:15:00Z',
-        changelog: [
-          { version: '0.8.0', date: '2025-12-28', changes: ['Tradotti dialoghi Megera', '+500 stringhe'] }
-        ],
-        files: [
-          { name: 'hades_it.json', path: 'hades_it.json', type: 'json', size: 3500000, stringCount: 18750 }
-        ],
-        status: 'published',
-        compatibility: ['1.38290']
-      }
-    ];
+    // Dati mock rimossi - ora il Community Hub usa solo dati reali
+    return [];
   }
 
   private getMockReviews(packId: string): PackReview[] {
-    return [
-      {
-        id: 'review_1',
-        packId,
-        author: { id: 'user_5', username: 'GamerIT', reputation: 850, totalContributions: 120, verifiedTranslator: false },
-        rating: 5,
-        title: 'Traduzione eccellente!',
-        content: 'Finalmente una traduzione di qualità. Nessun errore trovato dopo 20 ore di gioco.',
-        helpful: 45,
-        notHelpful: 2,
-        createdAt: '2025-11-15T14:30:00Z',
-        verified: true
-      },
-      {
-        id: 'review_2',
-        packId,
-        author: { id: 'user_6', username: 'RetroPlayer', reputation: 420, totalContributions: 50, verifiedTranslator: false },
-        rating: 4,
-        title: 'Molto buona, piccoli dettagli',
-        content: 'Ottima traduzione nel complesso. Alcuni termini tecnici potrebbero essere migliorati.',
-        helpful: 23,
-        notHelpful: 5,
-        createdAt: '2025-10-28T09:00:00Z',
-        verified: true
-      }
-    ];
+    // Dati mock rimossi
+    return [];
   }
 
   private getMockActivity(): ActivityItem[] {
-    return [
-      { type: 'new_pack', packName: 'Traduzione Italiana', gameName: 'Stardew Valley', author: 'FarmTranslator', message: 'Nuovo pack pubblicato', timestamp: new Date(Date.now() - 3600000).toISOString() },
-      { type: 'update', packName: 'Patch Italiana', gameName: 'Celeste', message: 'Aggiornamento v1.5.0', timestamp: new Date(Date.now() - 7200000).toISOString() },
-      { type: 'milestone', message: '10.000 download raggiunti per Hollow Knight IT!', timestamp: new Date(Date.now() - 86400000).toISOString() },
-      { type: 'review', packName: 'Traduzione Completa', gameName: 'Hades', author: 'GamerIT', message: 'Nuova recensione 5★', timestamp: new Date(Date.now() - 172800000).toISOString() }
-    ];
+    // Dati mock rimossi
+    return [];
   }
 }
 
