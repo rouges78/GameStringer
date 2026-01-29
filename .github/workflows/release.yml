@@ -1,15 +1,17 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       version:
         description: 'Version tag (e.g., v1.0.5)'
         required: true
         type: string
+      create_release:
+        description: 'Create GitHub Release'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -23,6 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.inputs.version || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,8 +49,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.event.inputs.version || github.ref_name }}
-          releaseName: 'GameStringer ${{ github.event.inputs.version || github.ref_name }}'
+          tagName: ${{ github.event.inputs.version }}
+          releaseName: 'GameStringer ${{ github.event.inputs.version }}'
           releaseBody: |
             ## Download
             
@@ -59,7 +62,7 @@ jobs:
             ---
             
             📖 [Changelog completo](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
-          releaseDraft: true
+          releaseDraft: ${{ github.event.inputs.create_release }}
           prerelease: false
           includeDebug: false
           args: --target x86_64-pc-windows-msvc
@@ -67,7 +70,7 @@ jobs:
       - name: Create Portable Version
         shell: pwsh
         run: |
-          $version = "${{ github.event.inputs.version || github.ref_name }}".TrimStart('v')
+          $version = "${{ github.event.inputs.version }}".TrimStart('v')
           $exePath = "src-tauri/target/x86_64-pc-windows-msvc/release/GameStringer.exe"
           
           if (Test-Path $exePath) {
@@ -119,7 +122,7 @@ jobs:
       - name: Upload Portable to Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          tag_name: ${{ github.event.inputs.version }}
           files: GameStringer_*_x64-portable.zip
           draft: true
         env:
