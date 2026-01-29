@@ -71,6 +71,9 @@ import {
 } from '@/lib/neural-translator';
 import { translationMemory } from '@/lib/translation-memory';
 import { getFlagEmoji, LanguageFlags } from '@/components/ui/language-flags';
+import { BatchInsightsSummary, QualityScoreBadge, ContentTypeBadge } from '@/components/translator/translation-insights';
+import { classifyContent } from '@/lib/content-classifier';
+import { calculateQualityScore } from '@/lib/translation-quality';
 
 // Mappa codici lingua a codici paese per bandierine
 const langToCountry: Record<string, string> = {
@@ -2223,6 +2226,16 @@ export default function TranslatorProPage() {
                       </div>
                     </div>
                   </div>
+                )}
+                
+                {/* Content Analysis - Auto-routing preview */}
+                {checkedFiles.length > 0 && (
+                  <BatchInsightsSummary 
+                    items={checkedFiles.flatMap(f => 
+                      f.parseResult.strings.map(s => ({ source: s.value }))
+                    ).slice(0, 100)}
+                    targetLanguage={targetLanguage}
+                  />
                 )}
               </div>
             </div>
