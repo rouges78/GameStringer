@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { invoke } from '@/lib/tauri-api';
 import { X, Download, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { open } from '@tauri-apps/plugin-shell';
+import { toast } from 'sonner';
 
 interface UpdateInfo {
   current_version: string;
@@ -34,6 +36,7 @@ export function UpdateNotification() {
     
     try {
       const info = await invoke<UpdateInfo>('check_for_updates');
+      console.log('Update info received:', info);
       if (info && info.update_available) {
         setUpdateInfo(info);
         // Salva in localStorage per non mostrare troppo spesso
@@ -56,9 +59,20 @@ export function UpdateNotification() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (updateInfo?.download_url) {
-      window.open(updateInfo.download_url, '_blank');
+      toast.info(`Apertura: ${updateInfo.download_url}`);
+      try {
+        await open(updateInfo.download_url);
+        toast.success('Browser aperto!');
+      } catch (e: unknown) {
+        const errorMsg = e instanceof Error ? e.message : String(e);
+        toast.error(`Errore Tauri: ${errorMsg}`);
+        // Fallback per browser
+        window.open(updateInfo.download_url, '_blank', 'noopener,noreferrer');
+      }
+    } else {
+      toast.error('URL download non disponibile');
     }
   };
 
@@ -104,14 +118,17 @@ export function UpdateNotification() {
             )}
             
             <div className="flex gap-2 mt-3">
-              <Button
-                size="sm"
-                onClick={handleDownload}
-                className="bg-white text-purple-700 hover:bg-white/90 h-7 text-xs px-3"
+              <button
+                type="button"
+                onClick={() => {
+                  toast.info('Click rilevato!');
+                  handleDownload();
+                }}
+                className="inline-flex items-center bg-white text-purple-700 hover:bg-white/90 h-7 text-xs px-3 rounded-md font-medium"
               >
                 <Download className="w-3 h-3 mr-1" />
                 Scarica
-              </Button>
+              </button>
               <Button
                 size="sm"
                 variant="ghost"

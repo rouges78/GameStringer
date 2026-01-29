@@ -1,14 +1,23 @@
 {
-  "version": "1.0.7",
+  "version": "1.0.8",
   "major": 1,
   "minor": 0,
-  "patch": 7,
+  "patch": 8,
   "prerelease": null,
-  "buildNumber": 107,
+  "buildNumber": 108,
   "buildDate": "2026-01-29T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.8": {
+      "date": "2026-01-29",
+      "type": "patch",
+      "changes": [
+        "Fix: Pulsante 'Scarica' aggiornamento ora apre il browser correttamente",
+        "Fix: Usato Tauri shell API invece di window.open per link esterni",
+        "Aggiunto feedback toast per debug download"
+      ]
+    },
     "1.0.7": {
       "date": "2026-01-29",
       "type": "feature",
