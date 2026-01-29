@@ -19,6 +19,17 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.8 — Fix Update Download 🔧
+
+> **Data**: 2026-01-29
+
+#### 🔧 Bug Fix
+- **Pulsante Scarica**: Ora apre il browser correttamente
+- **Tauri Shell API**: Usato invece di window.open per link esterni
+- **Feedback Toast**: Conferma visiva apertura download
+
+---
+
 ### v1.0.7 — Community Forum & License Update 💬📜
 
 > **Data**: 2026-01-29

@@ -217,7 +217,17 @@ const CHANGELOG_CONTENT = `
 
 ## 📅 Gennaio 2026
 
-### 💬 v1.0.7 — Community Forum & License
+### � v1.0.8 — Fix Update Download
+\`2026-01-29\`
+
+**Bug Fix**
+- Pulsante "Scarica" ora apre il browser
+- Usato Tauri Shell API per link esterni
+- Feedback toast per conferma
+
+---
+
+### �💬 v1.0.7 — Community Forum & License
 \`2026-01-29\`
 
 **GitHub Discussions**
