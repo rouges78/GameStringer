@@ -362,6 +362,19 @@ export default function LibraryPage() {
         });
       }
       
+      // 3️⃣ Aggiungi anche i giochi dall'API che NON sono installati localmente
+      // (giochi posseduti ma non scaricati)
+      for (const [appId, apiGame] of apiGames.entries()) {
+        if (!seenIds.has(appId)) {
+          seenIds.add(appId);
+          finalGames.push({
+            ...apiGame,
+            is_installed: false,
+            isShared: false,
+          });
+        }
+      }
+      
       // Sort per titolo
       finalGames.sort((a, b) => a.title.localeCompare(b.title));
       
@@ -681,16 +694,30 @@ export default function LibraryPage() {
 
     if (filteredGames.length === 0) {
       // Messaggio per quando non ci sono results
+      const hasActiveFilters = selectedPlatforms.length > 0 || selectedEngines.length > 0 || 
+        selectedLanguages.length > 0 || selectedGenres.length > 0 || 
+        selectedStatus.length > 0 || selectedTags.length > 0;
+      
       return (
         <div className="text-center py-10">
           <p className="text-gray-400 mb-2">
             {searchTerm
-              ? `No games found for "${searchTerm}".`
-              : "Your library is empty."}
+              ? `Nessun gioco trovato per "${searchTerm}".`
+              : "La tua libreria è vuota."}
           </p>
+          {searchTerm && hasActiveFilters && (
+            <p className="text-sm text-yellow-500 mb-2">
+              ⚠️ Hai filtri attivi che potrebbero nascondere alcuni giochi.
+            </p>
+          )}
+          {searchTerm && safeGames.length > 0 && (
+            <p className="text-sm text-gray-500">
+              {safeGames.length} giochi in libreria. Prova a rimuovere i filtri o verificare la ricerca.
+            </p>
+          )}
           {!searchTerm && (
             <p className="text-sm text-gray-500">
-              Use the 'Scan Games' button to add games to your library.
+              Usa il pulsante 'Refresh' per aggiungere giochi alla libreria.
             </p>
           )}
         </div>

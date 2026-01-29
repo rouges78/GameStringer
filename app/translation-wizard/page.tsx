@@ -622,9 +622,21 @@ export default function TranslationWizardPage() {
                             onClick={() => analyzeGame(game)}
                             className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-slate-900/30 hover:bg-slate-900/60 border border-slate-700 hover:border-purple-500/50 transition-all text-left group"
                           >
-                            {/* Fallback icon */}
-                            <div className="w-8 h-8 rounded bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shrink-0">
-                              <FileText className="h-4 w-4 text-purple-400" />
+                            {/* Game cover or fallback icon */}
+                            <div className="w-10 h-10 rounded bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shrink-0 overflow-hidden">
+                              {game.header_image ? (
+                                <img 
+                                  src={game.header_image} 
+                                  alt={game.title}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    (e.target as HTMLImageElement).parentElement!.innerHTML = '<svg class="h-4 w-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14,2 14,8 20,8"/></svg>';
+                                  }}
+                                />
+                              ) : (
+                                <FileText className="h-4 w-4 text-purple-400" />
+                              )}
                             </div>
                             {/* Info game */}
                             <div className="flex-1 min-w-0">
@@ -718,8 +730,23 @@ export default function TranslationWizardPage() {
               {/* Game Info Card */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader className="pb-2 pt-5 px-5">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0">
+                  <div className="flex justify-between items-start gap-4">
+                    {/* Game Cover */}
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center shrink-0 overflow-hidden">
+                      {selectedGame?.header_image ? (
+                        <img 
+                          src={selectedGame.header_image} 
+                          alt={analysisResult.game.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <FileText className="h-5 w-5 text-purple-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
                       <CardTitle className="text-xl mb-1 truncate">{analysisResult.game.title}</CardTitle>
                       <CardDescription className="font-mono text-[10px] truncate opacity-70" title={analysisResult.game.install_path}>
                         {analysisResult.game.install_path}

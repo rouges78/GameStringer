@@ -433,6 +433,21 @@ export default function GameDetailPage() {
                 console.log('[GameDetail] AppId from direct parse:', appId);
               }
             }
+            
+            // Fallback: cerca appId dal path del gioco usando il manifest Steam
+            if (!appId && urlInstallDir) {
+              try {
+                const foundAppId = await invoke<number | null>('get_appid_from_install_path', { 
+                  installPath: urlInstallDir 
+                });
+                if (foundAppId && foundAppId > 0) {
+                  appId = foundAppId;
+                  console.log('[GameDetail] AppId from install path manifest:', appId);
+                }
+              } catch (e) {
+                console.warn('[GameDetail] Could not get appId from manifest:', e);
+              }
+            }
           }
           console.log('[GameDetail] Final appId:', appId, 'gameId:', gameId);
           

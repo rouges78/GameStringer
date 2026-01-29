@@ -76,6 +76,7 @@ fn main() {
             commands::steam::get_game_details,
             commands::steam::get_steam_cover,
             commands::steam::get_steam_covers_batch,
+            commands::steam::get_appid_from_install_path,
             commands::steam::save_steam_credentials,
             commands::steam::load_steam_credentials,
             commands::steam::clear_steam_credentials,

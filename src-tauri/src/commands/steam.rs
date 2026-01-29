@@ -3097,6 +3097,84 @@ pub async fn get_steam_covers_batch(appids: Vec<String>) -> Result<HashMap<Strin
     Ok(covers)
 }
 
+/// Cerca l'appId di un gioco Steam dal suo path di installazione
+/// Scansiona i file appmanifest_*.acf nella cartella steamapps per trovare il match
+#[tauri::command]
+pub async fn get_appid_from_install_path(install_path: String) -> Result<Option<u32>, String> {
+    log::info!("🔍 Cercando appId per path: {}", install_path);
+    
+    // Normalizza il path
+    let install_path = install_path.replace('\\', "/").to_lowercase();
+    
+    // Estrai il nome della cartella del gioco
+    let game_folder = install_path
+        .split('/')
+        .filter(|s| !s.is_empty())
+        .last()
+        .unwrap_or("")
+        .to_lowercase();
+    
+    if game_folder.is_empty() {
+        return Ok(None);
+    }
+    
+    log::info!("🎮 Cercando gioco con cartella: {}", game_folder);
+    
+    // Trova tutte le librerie Steam
+    let steam_path = match crate::commands::library::find_steam_path_from_registry() {
+        Some(path) => path,
+        None => return Ok(None),
+    };
+    
+    let library_folders = match read_library_folders(&steam_path).await {
+        Ok(folders) => folders,
+        Err(_) => vec![steam_path.clone()],
+    };
+    
+    // Scansiona tutti i manifest
+    for folder in library_folders {
+        let steamapps_path = std::path::Path::new(&folder).join("steamapps");
+        if !steamapps_path.exists() {
+            continue;
+        }
+        
+        if let Ok(entries) = std::fs::read_dir(&steamapps_path) {
+            for entry in entries.flatten() {
+                if let Some(file_name) = entry.file_name().to_str() {
+                    if file_name.starts_with("appmanifest_") && file_name.ends_with(".acf") {
+                        // Leggi il manifest
+                        if let Ok(content) = std::fs::read_to_string(entry.path()) {
+                            // Cerca installdir nel manifest
+                            for line in content.lines() {
+                                if line.contains("\"installdir\"") {
+                                    // Estrai il valore
+                                    let parts: Vec<&str> = line.split('"').collect();
+                                    if parts.len() >= 4 {
+                                        let manifest_folder = parts[3].to_lowercase();
+                                        if manifest_folder == game_folder {
+                                            // Trovato! Estrai l'appId dal nome del file
+                                            let appid_str = file_name
+                                                .replace("appmanifest_", "")
+                                                .replace(".acf", "");
+                                            if let Ok(appid) = appid_str.parse::<u32>() {
+                                                log::info!("✅ Trovato appId {} per {}", appid, game_folder);
+                                                return Ok(Some(appid));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    log::info!("❌ AppId non trovato per {}", game_folder);
+    Ok(None)
+}
+
 // ============================================================================
 // SEZIONE 9: LOCAL GAMES & ACF PARSING
 // ============================================================================
