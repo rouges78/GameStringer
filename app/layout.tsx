@@ -10,7 +10,6 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { ProgressProvider } from '@/components/progress/progress-provider';
 import { ProgressUIManager } from '@/components/progress/progress-ui-manager';
 import { DisclaimerModal } from '@/components/legal/disclaimer-modal';
-import { UpdateNotification } from '@/components/update-notification';
 import { I18nProvider } from '@/lib/i18n';
 import { ScreenProvider } from '@/components/providers/screen-provider';
 import { AnimatedBackground } from '@/components/ui/animated-background';
@@ -50,8 +49,6 @@ export default function RootLayout({
                 <Toaster richColors position="top-right" />
                 {/* Progress UI Manager */}
                 <ProgressUIManager />
-                {/* Notifica aggiornamenti disponibili */}
-                <UpdateNotification />
                 {/* Debug Monitor disabilitato - problema risolto */}
                 {/* {process.env.NODE_ENV === 'development' && <LoginDebugMonitor />} */}
               </ProgressProvider>

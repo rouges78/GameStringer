@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versione-1.0.4-blue" alt="Versione" />
+  <img src="https://img.shields.io/badge/versione-1.0.9-blue" alt="Versione" />
   <img src="https://img.shields.io/badge/piattaforma-Windows-lightgrey" alt="Piattaforma" />
   <img src="https://img.shields.io/badge/licenza-Source--Available-green" alt="Licenza" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -33,24 +33,48 @@
 
 ### 🤖 Traduzione AI Neurale
 
-- **15+ Provider AI**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, Cohere, DeepL, Ollama (locale), LM Studio, e altri
+- **18+ Provider AI**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, Cohere, DeepL, Ollama (locale), LM Studio, **Qwen 3**, **NLLB-200** e altri
 - **Consapevole del contesto**: Comprende genere del gioco, voce del personaggio e tono
 - **Memoria di Traduzione**: Riutilizza traduzioni precedenti per coerenza
 - **Supporto Glossario**: Definisci termini personalizzati per il tuo progetto
 
-### 🎬 NUOVO: Subtitle Translator Pro (v1.0.4)
+### � NUOVO: Community Hub (v1.0.7)
+
+- **GitHub Discussions** integrato per supporto community
+- **Condividi traduzioni** con altri utenti
+- **Sfoglia patch community** per giochi popolari
+
+### 🔔 NUOVO: Notifiche Aggiornamenti (v1.0.9)
+
+- **Header animati** con effetto respiro gradiente
+- **Notifiche smart** con avvisi sonori per aggiornamenti
+- **Aggiornamento one-click** dalla campanella notifiche
+
+### 🌏 NUOVO: Supporto Lingue Asiatiche (v1.0.6)
+
+- **Qwen 3**: Provider dedicato per cinese/giapponese/coreano via Ollama
+- **NLLB-200**: Supporto 200 lingue incluse thai, vietnamita, hindi, arabo
+- **Ollama Generico**: Usa qualsiasi modello installato per traduzione
+
+### 🎤 NUOVO: Voice Clone Studio (v1.0.5)
+
+- **Clonazione voce AI** con ElevenLabs e OpenAI TTS
+- **Text-to-speech** con voci multiple e preset
+- **VR Text Overlay** per sottotitoli spaziali in giochi VR
+
+### 🎬 Subtitle Translator Pro
 
 - **Parser completo** per formati SRT, VTT, ASS/SSA
 - **Preview in tempo reale** con validazione QA
 - **Export multi-formato** con timing preservato
 
-### 🎮 NUOVO: Retro ROM Tools (v1.0.4)
+### 🎮 Retro ROM Tools
 
 - **8 console** supportate (NES, SNES, GB, GBC, GBA, Genesis, PSX, N64)
 - **Table file** (.TBL) parser/generator
 - **Font injection** per caratteri accentati
 
-### 🔌 NUOVO: API Pubblica v1 (v1.0.4)
+### 🔌 API Pubblica v1
 
 - `POST /api/v1/translate` - Traduzione singola
 - `POST /api/v1/batch` - Traduzione batch (max 100)
@@ -95,7 +119,23 @@
 
 ---
 
-## 📥 Download
+## � Documentazione
+
+Guide utente disponibili in 7 lingue:
+
+| Lingua | Guida |
+|--------|-------|
+| 🇮🇹 Italiano | [GUIDA_UTENTE.md](docs/GUIDA_UTENTE.md) |
+| 🇬🇧 Inglese | [USER_GUIDE_EN.md](docs/USER_GUIDE_EN.md) |
+| 🇪🇸 Spagnolo | [USER_GUIDE_ES.md](docs/USER_GUIDE_ES.md) |
+| 🇫🇷 Francese | [USER_GUIDE_FR.md](docs/USER_GUIDE_FR.md) |
+| 🇩🇪 Tedesco | [USER_GUIDE_DE.md](docs/USER_GUIDE_DE.md) |
+| 🇯🇵 Giapponese | [USER_GUIDE_JA.md](docs/USER_GUIDE_JA.md) |
+| 🇨🇳 Cinese | [USER_GUIDE_ZH.md](docs/USER_GUIDE_ZH.md) |
+
+---
+
+## �📥 Download
 
 ### Windows
 
@@ -268,6 +308,6 @@ Vedi [LICENSE](LICENSE) per i dettagli completi.
 </p>
 
 <p align="center">
-  <strong>GameStringer v1.0.4</strong><br>
+  <strong>GameStringer v1.0.9</strong><br>
   © 2025-2026 GameStringer Team
 </p>

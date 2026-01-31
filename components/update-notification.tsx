@@ -81,11 +81,22 @@ export function UpdateNotification() {
     return null;
   }
 
+  // Parse release notes in lista
+  const parseReleaseNotes = (notes: string) => {
+    return notes
+      .split('\n')
+      .filter(line => line.trim())
+      .map(line => line.replace(/^[-*]\s*/, '').replace(/\*\*/g, '').trim())
+      .filter(line => line && !line.startsWith('#'));
+  };
+
+  const releaseItems = updateInfo.release_notes ? parseReleaseNotes(updateInfo.release_notes) : [];
+
   return (
     <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-2xl p-4 max-w-sm border border-purple-400/30">
+      <div className="bg-slate-900 rounded-xl shadow-2xl shadow-black/50 p-4 w-80 border border-slate-700/50">
         <div className="flex items-start gap-3">
-          <div className="p-2 bg-white/20 rounded-lg">
+          <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           
@@ -96,44 +107,47 @@ export function UpdateNotification() {
               </h3>
               <button
                 onClick={handleDismiss}
-                className="text-white/70 hover:text-white transition-colors p-1"
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-800"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             
-            <p className="text-white/80 text-xs mt-1">
-              Versione <span className="font-mono">{updateInfo.latest_version}</span> disponibile
-              <span className="text-white/60"> (attuale: {updateInfo.current_version})</span>
+            <p className="text-slate-300 text-xs mt-1">
+              Versione <span className="font-mono text-emerald-400">{updateInfo.latest_version}</span>
+              <span className="text-slate-500"> (attuale: {updateInfo.current_version})</span>
             </p>
             
-            {updateInfo.release_notes && (
-              <p className="text-white/70 text-xs mt-2 line-clamp-2">
-                {updateInfo.release_notes
-                  .replace(/^##\s*/gm, '')
-                  .replace(/\*\*/g, '')
-                  .replace(/\*/g, '')
-                  .slice(0, 100)}...
-              </p>
+            {releaseItems.length > 0 && (
+              <div className="mt-3 max-h-32 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
+                <p className="text-slate-400 text-[10px] uppercase tracking-wider mb-1.5">Novità:</p>
+                <ul className="space-y-1">
+                  {releaseItems.slice(0, 8).map((item, i) => (
+                    <li key={i} className="text-slate-300 text-xs flex items-start gap-1.5">
+                      <span className="text-emerald-500 mt-0.5">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
             
-            <div className="flex gap-2 mt-3">
+            <div className="flex gap-2 mt-4">
               <button
                 type="button"
                 onClick={() => {
-                  toast.info('Click rilevato!');
                   handleDownload();
                 }}
-                className="inline-flex items-center bg-white text-purple-700 hover:bg-white/90 h-7 text-xs px-3 rounded-md font-medium"
+                className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 h-8 text-xs px-4 rounded-lg font-medium shadow-lg shadow-emerald-500/25 transition-all"
               >
-                <Download className="w-3 h-3 mr-1" />
+                <Download className="w-3.5 h-3.5 mr-1.5" />
                 Scarica
               </button>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={handleDismiss}
-                className="text-white/80 hover:text-white hover:bg-white/10 h-7 text-xs"
+                className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 text-xs"
               >
                 Dopo
               </Button>

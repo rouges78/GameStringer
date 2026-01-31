@@ -28,6 +28,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import Image from 'next/image';
 import { useProfiles } from '@/hooks/use-profiles';
+import { useVersion } from '@/lib/version';
+import { useTranslation } from '@/lib/i18n';
 import { PasswordRecoveryDialog } from '@/components/profiles/password-recovery-dialog';
 import { ProfileInfo } from '@/types/profiles';
 import { formatDistanceToNow } from 'date-fns';
@@ -498,6 +500,8 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
 
 export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
   const { profiles, currentProfile, isLoading, error, authenticateProfile } = useProfiles();
+  const { version } = useVersion();
+  const { t } = useTranslation();
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isAutoLoggingIn, setIsAutoLoggingIn] = useState(false);
   
@@ -584,6 +588,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
                 className="drop-shadow-2xl mx-auto"
                 priority
               />
+              <p className="text-xs text-slate-500 mt-2 font-mono">v{version}</p>
             </motion.div>
             <p className="text-base text-slate-400">Select your profile to continue</p>
             
@@ -673,9 +678,9 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="fixed bottom-6 text-center text-slate-600 text-xs"
+            className="fixed bottom-10 text-center text-slate-500 text-xs italic"
           >
-            <p>© 2024 GameStringer</p>
+            <p>"{t('profile.loginTagline')}"</p>
           </motion.div>
         </div>
       </div>

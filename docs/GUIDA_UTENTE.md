@@ -16,7 +16,9 @@
 12. [Quality Gates](#quality-gates) *(NUOVO v1.0.5)*
 13. [Player Feedback](#player-feedback) *(NUOVO v1.0.5)*
 14. [Nuovi Provider AI v1.0.6](#nuovi-provider-ai-v106) *(NUOVO v1.0.6)*
-15. [Esportazione Patch](#esportazione-patch)
+15. [Community Hub v1.0.7](#community-hub-v107) *(NUOVO v1.0.7)*
+16. [UI Miglioramenti v1.0.9](#ui-miglioramenti-v109) *(NUOVO v1.0.9)*
+17. [Esportazione Patch](#esportazione-patch)
 16. [Applicazione al Gioco](#applicazione-al-gioco)
 17. [Gestione Backup](#gestione-backup)
 18. [Editor Traduzioni](#editor-traduzioni)
@@ -38,6 +40,9 @@ GameStringer è un sistema avanzato per la traduzione automatica e manuale di vi
 - **Store Gaming**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
 - **NUOVO v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
 - **NUOVO v1.0.6**: Qwen 3 (lingue asiatiche), NLLB-200 (200 lingue), bug fixes
+- **NUOVO v1.0.7**: Community Hub, GitHub Discussions, Licenza v1.1
+- **NUOVO v1.0.8**: Fix download aggiornamenti
+- **NUOVO v1.0.9**: Header animati, notifiche aggiornamenti, UI polish
 
 ---
 
@@ -493,6 +498,77 @@ Usa qualsiasi modello installato in Ollama per traduzioni.
 
 ---
 
+## Community Hub v1.0.7
+
+*(NUOVO in v1.0.7)*
+
+Hub centralizzato per la community di GameStringer.
+
+### GitHub Discussions
+
+Accesso diretto alle discussioni della community:
+
+- **Annunci**: Novità e aggiornamenti ufficiali
+- **Q&A**: Domande e risposte dalla community
+- **Idee**: Proposte per nuove funzionalità
+- **Showcase**: Progetti e traduzioni della community
+
+### Come Accedere
+
+1. **Vai su Community Hub** nel menu laterale
+2. **Naviga** tra le categorie di discussione
+3. **Partecipa** direttamente su GitHub
+
+### Licenza v1.1
+
+- **YouTuber/Streamer**: OK con attribuzione
+- **Fork non-commerciali**: Permessi
+- **Uso commerciale**: Richiede autorizzazione
+
+---
+
+## UI Miglioramenti v1.0.9
+
+*(NUOVO in v1.0.9)*
+
+Aggiornamenti estetici e funzionali all'interfaccia.
+
+### Header Animati
+
+Tutte le pagine di traduzione ora hanno header con:
+
+- **Effetto "Respiro"**: Gradiente che si espande/contrae dolcemente (12s)
+- **Ombreggiature profonde**: shadow-xl con tinta blu
+- **Gradiente uniforme**: Sky → Blue → Cyan
+
+### Notifiche Aggiornamenti
+
+La **campanella** nella navbar ora gestisce gli aggiornamenti:
+
+| Stato | Comportamento |
+|-------|---------------|
+| 🔔 Grigia | Nessuna notifica |
+| 🔔 Gialla | Notifiche non lette |
+| 🔔 Verde + pulse | Aggiornamento disponibile! |
+
+**Funzionalità**:
+- **Suono**: Due toni melodici quando rileva update
+- **Badge verde**: Icona download animata
+- **Click**: Apre popup con lista novità
+- **Pulsante Scarica**: Apre pagina download
+
+### Menu Sidebar
+
+- **Sub-item hover**: Colore verde scuro (emerald-600)
+- **Coerenza visiva**: Stile unificato
+
+### Schermata Login
+
+- **Versione sotto logo**: Mostra v1.0.9 sotto il logo
+- **Footer**: Battuta/massima invece del copyright
+
+---
+
 ## Esportazione Patch
 
 Il Unity Patcher installa automaticamente BepInEx e XUnity.AutoTranslator sui giochi Unity.
@@ -735,4 +811,4 @@ I dizionari salvano le traduzioni per ogni gioco.
 
 ---
 
-*GameStringer v1.0.6 - Guida aggiornata al 28/01/2026*
+*GameStringer v1.0.9 - Guida aggiornata al 31/01/2026*

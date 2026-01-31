@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.6-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.0.9-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -37,7 +37,19 @@
 - **Translation Memory**: Reuse previous translations for consistency
 - **Glossary Support**: Define custom terms for your project
 
-### � NEW: Asian Language Support (v1.0.6)
+### 🌐 NEW: Community Hub (v1.0.7)
+
+- **GitHub Discussions** integration for community support
+- **Share translations** with other users
+- **Browse community patches** for popular games
+
+### 🔔 NEW: Update Notifications (v1.0.9)
+
+- **Animated headers** with breathing gradient effect
+- **Smart notifications** with sound alerts for updates
+- **One-click update** from notification bell
+
+### 🌏 NEW: Asian Language Support (v1.0.6)
 
 - **Qwen 3**: Dedicated provider for Chinese/Japanese/Korean via Ollama
 - **NLLB-200**: 200 languages support including Thai, Vietnamese, Hindi, Arabic
@@ -102,6 +114,22 @@
 - **Context Crawler**: AI game context extraction for better translations
 - **Translation Fixer**: Auto-fix markup tags in translations
 - **Community Hub**: Share and download translation memories
+
+---
+
+## 📖 Documentation
+
+User guides available in 7 languages:
+
+| Language | Guide |
+|----------|-------|
+| 🇮🇹 Italian | [GUIDA_UTENTE.md](docs/GUIDA_UTENTE.md) |
+| 🇬🇧 English | [USER_GUIDE_EN.md](docs/USER_GUIDE_EN.md) |
+| 🇪🇸 Spanish | [USER_GUIDE_ES.md](docs/USER_GUIDE_ES.md) |
+| 🇫🇷 French | [USER_GUIDE_FR.md](docs/USER_GUIDE_FR.md) |
+| 🇩🇪 German | [USER_GUIDE_DE.md](docs/USER_GUIDE_DE.md) |
+| 🇯🇵 Japanese | [USER_GUIDE_JA.md](docs/USER_GUIDE_JA.md) |
+| 🇨🇳 Chinese | [USER_GUIDE_ZH.md](docs/USER_GUIDE_ZH.md) |
 
 ---
 
@@ -264,6 +292,6 @@ See [LICENSE](LICENSE) for full details.
 </p>
 
 <p align="center">
-  <strong>GameStringer v1.0.6</strong><br>
+  <strong>GameStringer v1.0.9</strong><br>
   © 2025-2026 GameStringer Team
 </p>

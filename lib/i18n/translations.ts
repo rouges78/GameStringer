@@ -221,6 +221,7 @@ export const translations = {
       aesProtection: 'Protezione AES-256',
       dataEncrypted: 'I tuoi dati sono criptati',
       creating: 'Creazione...',
+      loginTagline: 'Il tuo gioco parla italiano? Ora sì.',
     },
     // Onboarding
     onboarding: {
@@ -2364,6 +2365,7 @@ export const translations = {
       aesProtection: 'AES-256 Protection',
       dataEncrypted: 'Your data is encrypted',
       creating: 'Creating...',
+      loginTagline: 'Does your game speak your language? Now it does.',
     },
     // Onboarding
     onboarding: {
@@ -4484,6 +4486,7 @@ export const translations = {
       aesProtection: 'Protección AES-256',
       dataEncrypted: 'Tus datos están encriptados',
       creating: 'Creando...',
+      loginTagline: '¿Tu juego habla español? Ahora sí.',
     },
     // Onboarding
     onboarding: {
@@ -6313,6 +6316,7 @@ export const translations = {
       aesProtection: 'Protection AES-256',
       dataEncrypted: 'Vos données sont chiffrées',
       creating: 'Création...',
+      loginTagline: 'Votre jeu parle français ? Maintenant oui.',
     },
     // Onboarding
     onboarding: {
@@ -7984,6 +7988,7 @@ export const translations = {
       aesProtection: 'AES-256 Schutz',
       dataEncrypted: 'Ihre Daten sind verschlüsselt',
       creating: 'Erstellen...',
+      loginTagline: 'Spricht dein Spiel Deutsch? Jetzt schon.',
     },
     // Onboarding
     onboarding: {
@@ -9730,6 +9735,7 @@ export const translations = {
       aesProtection: 'AES-256保護',
       dataEncrypted: 'データは暗号化されています',
       creating: '作成中...',
+      loginTagline: 'あなたのゲームは日本語を話しますか？今なら話します。',
     },
     // Onboarding
     onboarding: {
@@ -11261,6 +11267,7 @@ export const translations = {
       aesProtection: 'AES-256保护',
       dataEncrypted: '您的数据已加密',
       creating: '创建中...',
+      loginTagline: '你的游戏会说中文吗？现在会了。',
     },
     // Onboarding
     onboarding: {
