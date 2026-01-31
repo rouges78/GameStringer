@@ -87,7 +87,23 @@ export default function GamesPage() {
   const [showVrOnly, setShowVrOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState('title-asc');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [coverCache, setCoverCache] = useState<Record<string, string>>({});
 
+  // 📷 Carica cache cover SteamGridDB all'avvio
+  useEffect(() => {
+    const loadCoverCache = async () => {
+      try {
+        const cache = await invoke<Record<string, string>>('get_all_cover_cache');
+        if (cache && Object.keys(cache).length > 0) {
+          setCoverCache(cache);
+          console.log('[Games] 📷 Cover cache caricata:', Object.keys(cache).length, 'immagini');
+        }
+      } catch (e) {
+        console.warn('[Games] Cover cache non disponibile');
+      }
+    };
+    loadCoverCache();
+  }, []);
 
   const loadGames = async (forceRefresh = false) => {
     console.log(`[FRONTEND DEBUG] loadGames called. forceRefresh = ${forceRefresh}`);
@@ -186,15 +202,29 @@ export default function GamesPage() {
           .map(g => [g.steamAppId!, g])
       );
 
+      // Carica cache cover per usarla come fallback
+      let currentCoverCache: Record<string, string> = {};
+      try {
+        currentCoverCache = await invoke<Record<string, string>>('get_all_cover_cache') || {};
+      } catch (e) {}
+
       // Define un tipo per i games che verranno visualizzati, combinando le fonti
       const displayGames: DisplayGame[] = steamGames.map(steamGame => {
         const localGame = localGameMap.get(steamGame.appid);
+        const appIdStr = steamGame.appid.toString();
+        // Usa cover dalla cache SteamGridDB come fallback
+        const cachedCover = currentCoverCache[appIdStr] || currentCoverCache[steamGame.name] || null;
+        
+        // Se non c'è header_image da Steam, usa la cover dalla cache o lascia vuoto per triggerare SteamGridDB
+        const hasValidSteamImage = steamGame.header_image && steamGame.header_image.length > 0;
+        const steamCdnUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamGame.appid}/header.jpg`;
         
         return {
-          id: steamGame.appid.toString(),
+          id: appIdStr,
           title: steamGame.name,
-          imageUrl: steamGame.header_image || `https://cdn.akamai.steamstatic.com/steam/apps/${steamGame.appid}/header.jpg`,
-          fallbackImageUrl: localGame?.imageUrl || null,
+          // Usa header_image se disponibile, altrimenti cover dalla cache, altrimenti CDN fallback
+          imageUrl: hasValidSteamImage ? steamGame.header_image : (cachedCover || steamCdnUrl),
+          fallbackImageUrl: cachedCover || localGame?.imageUrl || null,
           platform: 'Steam',
           isInstalled: steamGame.is_installed,
           playtime: steamGame.playtime_forever,

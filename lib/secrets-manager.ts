@@ -65,6 +65,12 @@ export class SecretsManager {
         isRequired: false,
         description: 'DeepSeek API key for translation services'
       },
+      GOOGLE_TRANSLATE_API_KEY: {
+        key: 'GOOGLE_TRANSLATE_API_KEY',
+        value: process.env.GOOGLE_TRANSLATE_API_KEY || '',
+        isRequired: false,
+        description: 'Google Cloud Translation API key'
+      },
       MISTRAL_API_KEY: {
         key: 'MISTRAL_API_KEY',
         value: process.env.MISTRAL_API_KEY || '',

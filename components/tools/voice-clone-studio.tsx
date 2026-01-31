@@ -180,7 +180,7 @@ export function VoiceCloneStudio() {
   return (
     <div className="space-y-4">
       {/* Hero Header - Stile blu come pagina Traduci */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
         
@@ -218,7 +218,7 @@ export function VoiceCloneStudio() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 bg-muted/50">
           <TabsTrigger value="synthesize">
             <Volume2 className="h-4 w-4 mr-1" />
             {t('voiceClone.synthesize')}
@@ -237,7 +237,7 @@ export function VoiceCloneStudio() {
         <TabsContent value="synthesize" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Input */}
-            <Card className="md:col-span-2">
+            <Card className="md:col-span-2 bg-card/50 border-border/50">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">{t('voiceClone.textInput')}</CardTitle>
               </CardHeader>

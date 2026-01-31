@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,7 +25,12 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
   useEffect(() => {
     setMounted(true);
     const savedTheme = localStorage.getItem('gamestringer-theme') as Theme;
-    if (savedTheme) {
+    // TEMPORANEO: Blocca tema light, forza dark
+    if (savedTheme === 'light') {
+      setTheme('dark');
+      localStorage.setItem('gamestringer-theme', 'dark');
+      applyTheme('dark');
+    } else if (savedTheme) {
       setTheme(savedTheme);
       applyTheme(savedTheme);
     } else {
@@ -91,9 +96,10 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => handleThemeChange('light')}>
+        <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
           <Sun className="mr-2 h-4 w-4" />
           <span>{t('settings.themeLight')}</span>
+          <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleThemeChange('dark')}>
           <Moon className="mr-2 h-4 w-4" />

@@ -144,3 +144,14 @@ Configurabili per profilo, con API key personali.
 - Backend: Tauri (Rust)
 - Database: SQLite locale per TM
 - AI: API REST per vari provider
+
+
+Buongiorno.
+Ora che mi sono calmata, mi sembrava giusto scriverti ciò che penso, alla luce di quello che c’è stato tra di noi.
+Mi hai fatto perdere completamente il controllo: la tua insistenza mi ha mandato in escandescenza. Considera che ero già piuttosto satura per quanto era accaduto in precedenza, quindi questa è stata la goccia che ha fatto traboccare il vaso.
+
+Io ho commesso i miei errori, ma tu hai perseverato e non sei riuscito a passarci sopra, se non temporaneamente, perché poi ogni scusa era buona per tirare fuori tutto.
+
+Non c’è fiducia e un rapporto a distanza, in queste condizioni, non si può vivere. Conserverò di te solo i ricordi belli, cancellando questo ultimo periodo deleterio.
+
+Buona vita.

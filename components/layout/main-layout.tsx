@@ -50,7 +50,9 @@ import {
   FolderOpen,
   AudioLines,
   Glasses,
-  MessageSquare
+  MessageSquare,
+  Monitor,
+  User
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -112,22 +114,56 @@ const getNavGroups = (t: (key: string) => string) => [
     underlineClass: 'bg-slate-400',
     labelColor: 'text-slate-400/60',
   },
-  // TRADUZIONE - Collapsabile
+  // TRADUZIONE - Collapsabile con sottocategorie
   {
     label: t('nav.translation'),
     icon: Sparkles,
     collapsible: true,
     items: [
-      { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
-      { name: 'AI Review', href: '/ai-review', icon: Bot },
-      { name: 'OCR Translator', href: '/ocr-translator', icon: Scan },
-      { name: 'Emotion', href: '/emotion-translator', icon: Sparkles },
-      { name: t('nav.multiLlm'), href: '/translator/compare', icon: Brain },
-      { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
-      { name: t('nav.voiceClone'), href: '/voice-clone', icon: AudioLines },
-      { name: t('nav.subtitles') || 'Sottotitoli', href: '/subtitles', icon: Film },
-      { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
-      { name: t('nav.dictionary'), href: '/memory', icon: Database },
+      { 
+        name: '📝 Testo',
+        href: '/ai-translator',
+        icon: Sparkles,
+        subItems: [
+          { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
+          { name: 'Neural Translator Pro', href: '/translator/pro', icon: Brain },
+          { name: t('nav.multiLlm'), href: '/translator/compare', icon: Brain },
+          { name: 'Emotion', href: '/emotion-translator', icon: Sparkles },
+          { name: 'AI Review', href: '/ai-review', icon: Bot },
+        ]
+      },
+      { 
+        name: '👁 Visuale',
+        href: '/ocr-translator',
+        icon: Scan,
+        subItems: [
+          { name: 'OCR Translator', href: '/ocr-translator', icon: Scan },
+          { name: 'Live OCR', href: '/live-ocr', icon: Monitor },
+          { name: t('nav.texture') || 'Texture', href: '/texture-translator', icon: Layers },
+          { name: t('nav.manga') || 'Manga', href: '/manga-translator', icon: BookOpen },
+        ]
+      },
+      { 
+        name: '🎤 Audio',
+        href: '/voice-translator',
+        icon: Mic,
+        subItems: [
+          { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
+          { name: t('nav.voiceClone'), href: '/voice-clone', icon: AudioLines },
+          { name: 'Character Voice AI', href: '/character-voice', icon: User },
+          { name: t('nav.subtitles') || 'Sottotitoli', href: '/subtitles', icon: Film },
+        ]
+      },
+      { 
+        name: '⚙️ Utility',
+        href: '/batch',
+        icon: FolderTree,
+        subItems: [
+          { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
+          { name: t('nav.dictionary'), href: '/memory', icon: Database },
+          { name: 'Translator Tools', href: '/translator/tools', icon: Sparkles },
+        ]
+      },
     ],
     colorClass: 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/20',
     activeClass: 'bg-blue-500/20 backdrop-blur-md text-blue-400 border border-blue-500/30 shadow-lg shadow-blue-500/20',
@@ -136,34 +172,54 @@ const getNavGroups = (t: (key: string) => string) => [
     underlineClass: 'bg-blue-400',
     labelColor: 'text-blue-400/60',
   },
-  // STRUMENTI - Collapsabile
+  // STRUMENTI - Collapsabile con sottocategorie
   {
     label: t('nav.tools'),
     icon: Wrench,
     collapsible: true,
     items: [
       { 
-        name: t('nav.patcher'), 
-        href: '/unity-patcher', 
+        name: '🔧 Patcher',
+        href: '/unity-patcher',
         icon: Wand2,
         subItems: [
+          { name: 'Unity Patcher', href: '/unity-patcher', icon: Wand2 },
           { name: t('nav.ueTranslator') || 'UE Translator', href: '/unreal-translator', icon: Cpu },
           { name: t('nav.telltalePatcher') || 'Telltale Patcher', href: '/telltale-patcher', icon: Gamepad2 },
           { name: 'Unity Bundle', href: '/unity-bundle', icon: FileArchive },
-          { name: 'Nexus Mode', href: '/nexus-mods', icon: Globe },
+          { name: 'Nexus Mods', href: '/nexus-mods', icon: Globe },
         ]
       },
-      { name: t('nav.retro') || 'Retro ROM', href: '/retro', icon: Gamepad2 },
-      { name: t('nav.injector'), href: '/injector', icon: Cpu },
-      { name: t('nav.crawler'), href: '/crawler', icon: Scan },
-      { name: t('nav.fixer'), href: '/fixer', icon: Wrench },
-      { name: t('nav.overlay'), href: '/overlay', icon: Subtitles },
-      { name: t('nav.manga') || 'Manga', href: '/manga-translator', icon: BookOpen },
-      { name: t('nav.texture') || 'Texture', href: '/texture-translator', icon: Layers },
-      { name: 'QA Check', href: '/qa-check', icon: ShieldCheck },
-      { name: t('nav.qualityGates'), href: '/quality-gates', icon: ShieldCheck },
-      { name: t('nav.vrOverlay'), href: '/vr-overlay', icon: Glasses },
-      { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
+      { 
+        name: '🎮 Giochi',
+        href: '/retro',
+        icon: Gamepad2,
+        subItems: [
+          { name: t('nav.retro') || 'Retro ROM', href: '/retro', icon: Gamepad2 },
+          { name: t('nav.injector'), href: '/injector', icon: Cpu },
+          { name: t('nav.crawler'), href: '/crawler', icon: Scan },
+          { name: t('nav.fixer'), href: '/fixer', icon: Wrench },
+        ]
+      },
+      { 
+        name: '📺 Overlay',
+        href: '/overlay',
+        icon: Subtitles,
+        subItems: [
+          { name: t('nav.overlay'), href: '/overlay', icon: Subtitles },
+          { name: t('nav.vrOverlay'), href: '/vr-overlay', icon: Glasses },
+        ]
+      },
+      { 
+        name: '✅ Qualità',
+        href: '/qa-check',
+        icon: ShieldCheck,
+        subItems: [
+          { name: 'QA Check', href: '/qa-check', icon: ShieldCheck },
+          { name: t('nav.qualityGates'), href: '/quality-gates', icon: ShieldCheck },
+          { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
+        ]
+      },
     ],
     colorClass: 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20',
     activeClass: 'bg-emerald-500/20 backdrop-blur-md text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/20',
@@ -172,18 +228,39 @@ const getNavGroups = (t: (key: string) => string) => [
     underlineClass: 'bg-emerald-400',
     labelColor: 'text-emerald-400/60',
   },
-  // COMMUNITY & SETTINGS - Collapsabile
+  // RISORSE - Collapsabile con sottocategorie
   {
     label: t('nav.resources'),
     icon: FolderOpen,
     collapsible: true,
     items: [
-      { name: t('nav.community'), href: '/community-hub', icon: Users },
-      { name: 'Stores', href: '/stores', icon: ShoppingBag },
-      { name: t('nav.guide'), href: '/guide', icon: BookOpen },
-      { name: t('nav.projectManager'), href: '/project-manager', icon: FolderTree, dataTutorial: 'nav-project-manager' },
-      { name: t('nav.settings'), href: '/settings', icon: Settings },
-      { name: 'Info', href: '/info', icon: Info },
+      { 
+        name: '👥 Community',
+        href: '/community-hub',
+        icon: Users,
+        subItems: [
+          { name: t('nav.community'), href: '/community-hub', icon: Users },
+          { name: 'Stores', href: '/stores', icon: ShoppingBag },
+        ]
+      },
+      { 
+        name: '📁 Gestione',
+        href: '/project-manager',
+        icon: FolderTree,
+        subItems: [
+          { name: t('nav.projectManager'), href: '/project-manager', icon: FolderTree },
+          { name: t('nav.guide'), href: '/guide', icon: BookOpen },
+        ]
+      },
+      { 
+        name: '⚙️ Sistema',
+        href: '/settings',
+        icon: Settings,
+        subItems: [
+          { name: t('nav.settings'), href: '/settings', icon: Settings },
+          { name: 'Info', href: '/info', icon: Info },
+        ]
+      },
     ],
     colorClass: 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/20',
     activeClass: 'bg-orange-500/20 backdrop-blur-md text-orange-400 border border-orange-500/30 shadow-lg shadow-orange-500/20',
@@ -217,7 +294,23 @@ const CHANGELOG_CONTENT = `
 
 ## 📅 Gennaio 2026
 
-### � v1.0.8 — Fix Update Download
+### ✨ v1.0.9 — Animated Headers & UI Polish
+\`2026-01-31\`
+
+**Header Animati**
+- Effetto "Respiro" con gradiente che si espande/contrae
+- Animazione shimmer CSS personalizzata (12s)
+- Ombreggiature profonde shadow-xl blu
+- 16 pagine aggiornate con nuovo stile
+
+**UI Miglioramenti**
+- Gradiente uniforme Sky → Blue → Cyan
+- Menu Sidebar sub-item verde scuro
+- Coerenza visiva su tutte le pagine Traduzione
+
+---
+
+### 🔧 v1.0.8 — Fix Update Download
 \`2026-01-29\`
 
 **Bug Fix**
@@ -846,12 +939,12 @@ export function MainLayout({ children }: MainLayoutProps) {
                                                 variant="ghost"
                                                 className={cn(
                                                   "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-7",
-                                                  isSubItemActive ? group.activeClass : "text-emerald-700 hover:text-emerald-400 hover:bg-emerald-500/20"
+                                                  isSubItemActive ? group.activeClass : "text-slate-400 hover:text-emerald-600 hover:bg-emerald-600/10"
                                                 )}
                                               >
                                                 <SubIcon className={cn(
                                                   "h-3 w-3 transition-colors duration-200",
-                                                  isSubItemActive ? "" : "text-emerald-700 group-hover:text-emerald-400"
+                                                  isSubItemActive ? "" : "text-slate-400 group-hover:text-emerald-600"
                                                 )} />
                                                 <span className="text-[10px] relative">
                                                   {subItem.name}

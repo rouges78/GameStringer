@@ -61,8 +61,8 @@ export function AnimatedBackground({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         size: Math.random() * 2 + 0.5,
-        speedX: (Math.random() - 0.5) * 0.3,
-        speedY: (Math.random() - 0.5) * 0.3,
+        speedX: (Math.random() - 0.5) * 0.10,
+        speedY: (Math.random() - 0.5) * 0.10,
         opacity: Math.random() * 0.5 + 0.1,
         color: colors[Math.floor(Math.random() * colors.length)]
       });
@@ -115,7 +115,7 @@ export function AnimatedBackground({
         <div className="absolute inset-0">
           {/* Blob 1 - Purple */}
           <motion.div
-            className="absolute w-[1000px] h-[1000px] rounded-full opacity-70 blur-[60px]"
+            className="absolute w-[1000px] h-[1000px] rounded-full opacity-[0.08] blur-[100px]"
             style={{
               background: 'radial-gradient(circle, rgba(168, 85, 247, 1) 0%, rgba(168, 85, 247, 0.5) 40%, transparent 70%)',
               top: '-25%',
@@ -127,7 +127,7 @@ export function AnimatedBackground({
               scale: [1, 1.1, 0.95, 1],
             }}
             transition={{
-              duration: 20,
+              duration: 35,
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -135,7 +135,7 @@ export function AnimatedBackground({
 
           {/* Blob 2 - Blue */}
           <motion.div
-            className="absolute w-[900px] h-[900px] rounded-full opacity-60 blur-[50px]"
+            className="absolute w-[900px] h-[900px] rounded-full opacity-[0.06] blur-[90px]"
             style={{
               background: 'radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0.5) 40%, transparent 70%)',
               top: '10%',
@@ -147,7 +147,7 @@ export function AnimatedBackground({
               scale: [1, 0.9, 1.05, 1],
             }}
             transition={{
-              duration: 25,
+              duration: 40,
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -155,7 +155,7 @@ export function AnimatedBackground({
 
           {/* Blob 3 - Pink/Magenta */}
           <motion.div
-            className="absolute w-[800px] h-[800px] rounded-full opacity-55 blur-[50px]"
+            className="absolute w-[800px] h-[800px] rounded-full opacity-[0.06] blur-[80px]"
             style={{
               background: 'radial-gradient(circle, rgba(236, 72, 153, 1) 0%, rgba(236, 72, 153, 0.5) 40%, transparent 70%)',
               bottom: '-15%',
@@ -167,7 +167,7 @@ export function AnimatedBackground({
               scale: [1, 1.15, 0.9, 1],
             }}
             transition={{
-              duration: 18,
+              duration: 32,
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -175,7 +175,7 @@ export function AnimatedBackground({
 
           {/* Blob 4 - Cyan */}
           <motion.div
-            className="absolute w-[700px] h-[700px] rounded-full opacity-50 blur-[40px]"
+            className="absolute w-[700px] h-[700px] rounded-full opacity-[0.05] blur-[70px]"
             style={{
               background: 'radial-gradient(circle, rgba(34, 211, 238, 1) 0%, rgba(34, 211, 238, 0.5) 40%, transparent 70%)',
               top: '40%',
@@ -187,7 +187,7 @@ export function AnimatedBackground({
               scale: [1, 0.95, 1.1, 1],
             }}
             transition={{
-              duration: 22,
+              duration: 38,
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -200,7 +200,7 @@ export function AnimatedBackground({
         <canvas
           ref={canvasRef}
           className="absolute inset-0 z-10"
-          style={{ opacity: 0.8 }}
+          style={{ opacity: 0.2 }}
         />
       )}
 

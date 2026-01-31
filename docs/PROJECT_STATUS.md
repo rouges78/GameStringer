@@ -3,9 +3,11 @@
 ## 🎉 Ultimo Aggiornamento: 28/01/2026 - v1.0.6 RILASCIATA
 
 ### ✅ PROGETTO v1.0.6 RILASCIATO
+
 **GameStringer**: Suite completa di localizzazione videogiochi con AI. 18+ provider AI, 10+ engine supportati, 200+ lingue.
 
 ### 🌐 Nuove Feature v1.0.6
+
 - ✅ **Qwen 3**: Provider ottimizzato per cinese/giapponese/coreano via Ollama
 - ✅ **NLLB-200**: 200 lingue supportate via HuggingFace
 - ✅ **Generic Ollama**: Usa qualsiasi modello installato
@@ -13,12 +15,14 @@
 - ✅ **Traduzioni**: Complete per 5 lingue (ES, FR, DE, JA, ZH)
 
 ### 🎤 Feature v1.0.5
+
 - ✅ **Voice Clone Studio**: ElevenLabs, OpenAI TTS, 6 preset vocali
 - ✅ **VR Text Overlay**: Oculus, SteamVR, WMR supportati
 - ✅ **Quality Gates**: QA automatico traduzioni
 - ✅ **Player Feedback**: Rating 5 stelle, categorie, export CSV
 
 ### 🏪 Store Manager - 8 Piattaforme Integrate
+
 - ✅ **Steam**: Auto-connessione, API completa, Family Sharing (350+ giochi)
 - ✅ **Epic Games**: Legendary CLI, credenziali AES-256, auto-detection
 - ✅ **GOG Galaxy**: API pubblica, scansione locale, credenziali criptate
@@ -29,18 +33,21 @@
 - ✅ **Rockstar Games**: Social Club, credenziali AES-256, GTA/RDR support
 
 ### 🔐 Sistema Sicurezza Implementato
+
 - **AES-256-GCM Encryption**: Tutte le credenziali criptate con chiavi specifiche per macchina
 - **Salvataggio Automatico**: Credenziali salvate automaticamente all'autenticazione
 - **Auto-Caricamento**: Credenziali ricaricate automaticamente all'avvio
 - **Disconnessione Sicura**: Pulizia completa credenziali dal disco
 
 ### 📚 Libreria Unificata Completata
+
 - **Multi-Store Scanning**: `scan_games()` ora include tutti gli 8 store
 - **Integrazione Totale**: Steam, Epic, GOG, Origin, Battle.net, Ubisoft, itch.io, Rockstar
 - **Filtri Avanzati**: Per piattaforma, VR, installazione, lingue, generi
 - **UI Moderna**: Interfaccia responsive con gestione real-time
 
 ### 🛠️ Tecnologie Utilizzate
+
 - **Tauri v2**: Framework desktop per applicazione nativa (127+ comandi)
 - **Rust**: Backend sicuro con encryption AES-256 e scanning multi-store
 - **Next.js 15.3.5**: Frontend React moderno con UI components
@@ -48,6 +55,7 @@
 - **Windows Registry**: Integrazione nativa per detection giochi installati
 
 ### 🎯 Stato Finale
+
 - ✅ **Sistema Completo**: Tutti gli obiettivi raggiunti
 - ✅ **Produzione Ready**: Applicazione stabile e funzionale
 - ✅ **Documentazione Aggiornata**: Tutte le funzionalità documentate
@@ -55,6 +63,7 @@
 - ✅ **Architettura stabile** e pronta per test completo
 
 ### Prossimi Passi Critici
+
 1. **Riavvio pulito applicazione** GameStringer
 2. **Test sincronizzazione Steam** con limite rimosso
 3. **Verifica visualizzazione** di tutti i ~1345 giochi
@@ -76,24 +85,28 @@
 ### 🔄 **NOVITÀ: Migrazione API Routes → Comandi Tauri**
 
 #### Stato Migrazione
+
 - ✅ **Primo Comando Completato**: `auto_detect_steam_config` migrato con successo
 - ✅ **Architettura Rust**: Struttura modulare implementata (models, commands)
 - ✅ **Frontend Aggiornato**: React preparato per comunicazione Tauri
 - ✅ **Problema Runtime**: Applicazione si compila e appare correttamente (ambiente/sistema)
 
 #### Dettagli Tecnici
+
 - **Backend**: Rust con winreg (registro Windows) e steamy-vdf (parsing VDF)
 - **Frontend**: React con @tauri-apps/api per `invoke` comandi
 - **Dipendenze**: winreg 0.52.0, steamy-vdf 0.2.0, @tauri-apps/api
 - **Configurazione**: tauri.conf.json, build.rs, Cargo.toml ottimizzati
 
 #### ✅ Completato con Successo
+
 1. ✅ **Problema visualizzazione risolto**: Permessi Windows corretti, app desktop funzionante
 2. ✅ **Tutte le API Routes migrate**: 33 comandi Tauri implementati e testati
 3. ✅ **Integrazione completa**: Frontend UI semplice + Backend Rust operativi
 4. ✅ **Performance ottimizzate**: Hot-reload, gestione errori, UI moderna
 
 #### 🚀 Nuove Opportunità di Sviluppo
+
 1. **Miglioramenti UI/UX**: Copertine giochi, animazioni avanzate
 2. **Funzionalità Avanzate**: HowLongToBeat, engine detection, VR support
 3. **Store Integrations**: Epic Games, GOG Galaxy, Xbox Game Pass
@@ -101,6 +114,7 @@
 ### ✅ Funzionalità Completate
 
 #### 1. **Sistema di Autenticazione Multi-Provider**
+
 - ✅ Steam OAuth + Credentials
 - ✅ Epic Games OAuth
 - ✅ Ubisoft Connect Credentials
@@ -111,6 +125,7 @@
 - ✅ Sistema di linking account multipli
 
 #### 2. **Gestione Libreria Giochi**
+
 - ✅ Import automatico da tutti gli store collegati
 - ✅ Rilevamento giochi installati
 - ✅ Gestione metadata (titolo, percorso, stato installazione)
@@ -118,6 +133,7 @@
 - ✅ Vista griglia/lista con animazioni
 
 #### 3. **Sistema Patch di Traduzione**
+
 - ✅ Creazione patch per giochi
 - ✅ Editor patch con anteprima modifiche
 - ✅ Export patch in formato ZIP
@@ -125,6 +141,7 @@
 - ✅ **RISOLTO**: File `page.tsx` corrotto ripristinato con successo
 
 #### 4. **Editor Traduzioni Avanzato**
+
 - ✅ Workspace collaborativo stile DeepL
 - ✅ Gestione traduzioni con stati (pending, completed, reviewed, edited)
 - ✅ Suggerimenti AI (mock, pronto per integrazione reale)
@@ -134,18 +151,21 @@
 - ✅ Ricerca avanzata
 
 #### 5. **Integrazioni Utility**
+
 - ✅ HowLongToBeat (tempi di completamento)
 - ✅ SteamGridDB (artwork personalizzati)
 - ✅ Sistema di preferenze utente
 - ✅ Test connessione per ogni servizio
 
 #### 6. **Steam Family Sharing**
+
 - ✅ Rilevamento automatico configurazione
 - ✅ Parsing file sharedconfig.vdf
 - ✅ UI migliorata con auto-detect
 - ✅ Gestione account condivisi
 
 #### 7. **Supporto 2FA per GOG** (2 Luglio 2025)
+
 - ✅ UI moderna con flusso a due step
 - ✅ Step 1: Inserimento email e password
 - ✅ Step 2: Campo dedicato per codice 2FA a 6 cifre

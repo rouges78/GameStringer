@@ -603,3 +603,120 @@ fn simple_translate(text: &str, target_lang: &str) -> Option<String> {
     
     None
 }
+
+/// Cattura una regione dello schermo (per Live OCR)
+#[command]
+pub async fn capture_screen_region(region: Option<CaptureRegion>) -> Result<CaptureResult, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let image = if let Some(r) = region {
+            screen_capture::capture_region(r.x, r.y, r.width, r.height)?
+        } else {
+            screen_capture::capture_fullscreen()?
+        };
+        
+        Ok(CaptureResult {
+            width: image.width,
+            height: image.height,
+            data: image.data,
+        })
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    Err("Screen capture non supportato su questa piattaforma".to_string())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CaptureResult {
+    pub width: u32,
+    pub height: u32,
+    pub data: Vec<u8>,
+}
+
+/// Esegue OCR su dati immagine
+#[command]
+pub async fn ocr_recognize(
+    image_data: Vec<u8>,
+    width: u32,
+    height: u32,
+    language: String,
+) -> Result<Vec<OcrTextResult>, String> {
+    #[cfg(target_os = "windows")]
+    {
+        let image = screen_capture::ImageData {
+            width,
+            height,
+            data: image_data,
+        };
+        
+        let detected = ocr_engine::recognize_text(&image, &language)?;
+        
+        Ok(detected.iter().map(|t| OcrTextResult {
+            text: t.text.clone(),
+            x: t.x,
+            y: t.y,
+            width: t.width,
+            height: t.height,
+            confidence: t.confidence,
+        }).collect())
+    }
+    
+    #[cfg(not(target_os = "windows"))]
+    Err("OCR non supportato su questa piattaforma".to_string())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OcrTextResult {
+    pub text: String,
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+    pub confidence: f32,
+}
+
+/// Apre la finestra overlay OCR
+#[command]
+pub async fn open_ocr_overlay(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    
+    // Prova a trovare la finestra esistente
+    if let Some(window) = app.get_webview_window("ocr-overlay") {
+        window.show().map_err(|e| e.to_string())?;
+        log::info!("🪟 Overlay OCR mostrato");
+        return Ok(());
+    }
+    
+    // Crea nuova finestra overlay
+    let _window = tauri::WebviewWindowBuilder::new(
+        &app,
+        "ocr-overlay",
+        tauri::WebviewUrl::App("/ocr-overlay".into())
+    )
+    .title("OCR Overlay")
+    .transparent(true)
+    .decorations(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .visible(true)
+    .inner_size(1920.0, 1080.0)
+    .position(0.0, 0.0)
+    .build()
+    .map_err(|e| e.to_string())?;
+    
+    log::info!("🪟 Overlay OCR creato");
+    Ok(())
+}
+
+/// Seleziona una regione dello schermo (interattivo)
+#[command]
+pub async fn select_screen_region() -> Result<CaptureRegion, String> {
+    // TODO: Implementare selezione interattiva con finestra trasparente
+    // Per ora restituisce una regione di default
+    Ok(CaptureRegion {
+        x: 100,
+        y: 100,
+        width: 800,
+        height: 600,
+    })
+}

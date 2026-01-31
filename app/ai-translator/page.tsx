@@ -19,7 +19,7 @@ export default function AITranslatorPage() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Hero Header - Con immagine game fusa */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
         {/* Immagine game fusa nello sfondo */}
         {gameImage && (
           <>

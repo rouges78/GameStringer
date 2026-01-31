@@ -73,6 +73,8 @@ export const invoke = async <T = any>(cmd: string, args?: any): Promise<T> => {
       // Errori di rete per check aggiornamenti sono normali, non loggare
     } else if (errorMessage.includes('Rate limit')) {
       // Rate limit Steam è normale, non loggare
+    } else if (cmd === 'fetch_game_languages' && (errorMessage.includes('403') || errorMessage.includes('429'))) {
+      // Errori Steam API per lingue sono normali (rate limiting), non loggare
     } else if (errorMessage.includes('Credenziali corrotte') || errorMessage.includes('Riconnettiti a Steam')) {
       // Credenziali corrotte - messaggio già gestito, non loggare come errore
       console.info('ℹ️ Credenziali Steam rimosse. Riconnettiti nelle Impostazioni.');

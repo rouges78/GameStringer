@@ -2076,7 +2076,7 @@ pub async fn get_steam_games(
                             if let Some(error) = json["response"]["error"].as_str() {
                                 debug!("[RUST] ❌ Steam API returned error: {}", error);
                             } else if let Some(games_array) = json["response"]["games"].as_array() {
-                                debug!("[RUST] ✅ Retrieved {} games from Steam API", games_array.len());
+                                info!("[RUST] ✅ API Steam RAW: {} giochi dalla risposta", games_array.len());
                             
                             let steam_games: Vec<SteamGame> = games_array.iter()
                                 .filter_map(|game| {
@@ -2679,7 +2679,7 @@ async fn get_steam_games_internal(api_key: String, steam_id: String, force_refre
                             if let Some(error) = json["response"]["error"].as_str() {
                                 debug!("[RUST] ❌ Steam API returned error: {}", error);
                             } else if let Some(games_array) = json["response"]["games"].as_array() {
-                                debug!("[RUST] ✅ Retrieved {} games from Steam API", games_array.len());
+                                info!("[RUST] ✅ API Steam RAW: {} giochi dalla risposta", games_array.len());
                             
                             let steam_games: Vec<SteamGame> = games_array.iter()
                                 .filter_map(|game| {
@@ -4353,15 +4353,20 @@ pub async fn get_steam_games_with_family_sharing(
     force_refresh: Option<bool>,
     profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
 ) -> Result<Vec<SteamGame>, String> {
-    debug!("[RUST] get_steam_games_with_family_sharing called");
+    info!("[RUST] 🎮 get_steam_games_with_family_sharing called");
     
     // Prima ottieni i giochi posseduti
     let mut owned_games = get_steam_games(api_key, steam_id, force_refresh, profile_state).await?;
     
+    // Debug: conta giochi owned con nomi validi
+    let owned_valid = owned_games.iter().filter(|g| !g.name.starts_with("Game ") && !g.name.is_empty()).count();
+    info!("[RUST] 📊 Giochi OWNED dall'API: {} totali, {} con nome valido", owned_games.len(), owned_valid);
+    
     // Poi ottieni i giochi condivisi
     match get_family_sharing_games().await {
         Ok(family_config) => {
-            info!("[RUST] ✅ Aggiungendo {} giochi Family Sharing", family_config.total_shared_games);
+            let shared_valid = family_config.shared_games.iter().filter(|g| !g.name.starts_with("Game ")).count();
+            info!("[RUST] ✅ Family Sharing: {} totali, {} con nome valido", family_config.total_shared_games, shared_valid);
             
             // Converti SharedGame in SteamGame
             for shared_game in family_config.shared_games {

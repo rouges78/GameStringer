@@ -1,14 +1,25 @@
 {
-  "version": "1.0.8",
+  "version": "1.0.9",
   "major": 1,
   "minor": 0,
-  "patch": 8,
+  "patch": 9,
   "prerelease": null,
-  "buildNumber": 108,
-  "buildDate": "2026-01-29T00:00:00.000Z",
+  "buildNumber": 109,
+  "buildDate": "2026-01-31T00:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.0.9": {
+      "date": "2026-01-31",
+      "type": "feature",
+      "changes": [
+        "UI Header Animati: Effetto 'respiro' con gradiente che si espande/contrae",
+        "Ombreggiature Header: shadow-xl con tinta blu per profondità",
+        "Menu Sidebar: Sub-item con hover verde scuro (emerald-600)",
+        "Gradiente uniforme: Sky → Blue → Cyan su tutti gli header Traduzione",
+        "16 pagine aggiornate con nuovo stile header animato"
+      ]
+    },
     "1.0.8": {
       "date": "2026-01-29",
       "type": "patch",

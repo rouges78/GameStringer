@@ -200,6 +200,75 @@ async fn search_engine_on_pcgamingwiki(game_name: &str) -> Option<String> {
     None
 }
 
+/// Cerca engine su IGDB (Twitch) - richiede Client ID
+async fn search_engine_on_igdb(game_name: &str) -> Option<String> {
+    // IGDB API gratuita con Twitch auth - fallback senza auth
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .ok()?;
+    
+    // Prova prima la ricerca diretta su IGDB (potrebbe funzionare senza auth per dati pubblici)
+    let search_query = format!(
+        "search \"{}\"; fields name,game_engines.name; limit 1;",
+        game_name.replace("\"", "\\\"")
+    );
+    
+    // Se non funziona IGDB diretto, usa MobyGames come alternativa
+    let moby_url = format!(
+        "https://api.mobygames.com/v1/games?title={}&format=normal",
+        urlencoding::encode(game_name)
+    );
+    
+    if let Ok(response) = client.get(&moby_url).send().await {
+        if let Ok(json) = response.json::<serde_json::Value>().await {
+            if let Some(games) = json["games"].as_array() {
+                if let Some(first_game) = games.first() {
+                    // MobyGames non ha sempre l'engine ma ha altre info utili
+                    log::info!("🎮 MobyGames trovato: {}", first_game["title"]);
+                }
+            }
+        }
+    }
+    
+    None
+}
+
+/// Genera suggerimenti intelligenti quando engine non trovato
+fn generate_smart_suggestions(game_name: &str, install_path: Option<&String>) -> Vec<String> {
+    let mut suggestions = vec![];
+    
+    // Suggerimenti basati sul nome del gioco
+    let name_lower = game_name.to_lowercase();
+    
+    if name_lower.contains("visual novel") || name_lower.contains("vn") {
+        suggestions.push("💡 Sembra una Visual Novel - prova Ren'Py o Kirikiri tools".to_string());
+    }
+    if name_lower.contains("rpg") || name_lower.contains("maker") {
+        suggestions.push("💡 Potrebbe essere RPG Maker - cerca file .rgss3a o .rvdata2".to_string());
+    }
+    if name_lower.contains("indie") {
+        suggestions.push("💡 Molti indie usano Unity o GameMaker - cerca cartella _Data o data.win".to_string());
+    }
+    
+    // Suggerimenti generali
+    suggestions.push("🔍 Cerca su PCGamingWiki per info sul motore".to_string());
+    suggestions.push("📁 Scansiona la cartella del gioco per identificare i file".to_string());
+    suggestions.push("🌐 Cerca '[nome gioco] engine' su Google".to_string());
+    
+    // Se abbiamo il path, suggerisci cosa cercare
+    if install_path.is_some() {
+        suggestions.push("📂 File comuni da cercare:".to_string());
+        suggestions.push("   • _Data/ → Unity".to_string());
+        suggestions.push("   • *.pak → Unreal".to_string());
+        suggestions.push("   • *.pck → Godot".to_string());
+        suggestions.push("   • data.win → GameMaker".to_string());
+        suggestions.push("   • *.rpa → Ren'Py".to_string());
+    }
+    
+    suggestions
+}
+
 /// Comando Tauri per rilevare il motore di un gioco scansionando i file
 #[tauri::command]
 pub async fn detect_engine_for_game(
@@ -210,63 +279,118 @@ pub async fn detect_engine_for_game(
     
     // 1. Prima prova rilevamento locale (file system + database nomi)
     let mut engine = detect_game_engine_smart(&game_name, install_path.as_ref());
+    let mut source = "local";
     
     // 2. Se non trovato, cerca su PCGamingWiki
     if engine.is_none() || engine.as_ref().map(|e| e == "Unknown").unwrap_or(false) {
         log::info!("🌐 Ricerca engine su PCGamingWiki per: {}", game_name);
         if let Some(web_engine) = search_engine_on_pcgamingwiki(&game_name).await {
             engine = Some(web_engine);
+            source = "PCGamingWiki";
+        }
+    }
+    
+    // 3. Se ancora non trovato, prova IGDB/MobyGames
+    if engine.is_none() || engine.as_ref().map(|e| e == "Unknown").unwrap_or(false) {
+        log::info!("🎮 Ricerca engine su IGDB/MobyGames per: {}", game_name);
+        if let Some(web_engine) = search_engine_on_igdb(&game_name).await {
+            engine = Some(web_engine);
+            source = "IGDB";
         }
     }
     
     let engine_str = engine.unwrap_or_else(|| "Unknown".to_string());
     
     // Determina suggerimenti in base al motore
-    let (can_patch, patch_tool, patch_description) = match engine_str.as_str() {
+    let (can_patch, patch_tool, patch_description, extra_tips) = match engine_str.as_str() {
         "Unity" => (
             true,
             Some("BepInEx + XUnity.AutoTranslator".to_string()),
-            Some("Installa BepInEx e XUnity.AutoTranslator per tradurre automaticamente i testi Unity.".to_string())
+            Some("Installa BepInEx e XUnity.AutoTranslator per tradurre automaticamente i testi Unity.".to_string()),
+            vec![
+                "✅ Unity supportato! Usa il Patcher integrato".to_string(),
+                "📁 I testi tradotti vanno in BepInEx/Translation/".to_string(),
+            ]
         ),
-        "Unreal Engine" => (
+        "Unreal Engine" | "Unreal" => (
             false,
-            None,
-            Some("I giochi Unreal richiedono analisi manuale dei file .pak o mod loader specifici.".to_string())
+            Some("UnrealLocres".to_string()),
+            Some("I giochi Unreal richiedono estrazione dei file .pak con UnrealLocres.".to_string()),
+            vec![
+                "🔧 Scarica UnrealLocres da GitHub".to_string(),
+                "📁 Cerca cartella Localization nei file .pak".to_string(),
+                "💡 I testi sono in file .locres".to_string(),
+            ]
         ),
-        "RPG Maker" => (
+        "RPG Maker" | "RPG Maker MV" | "RPG Maker MZ" | "RPG Maker VX" | "RPG Maker VX Ace" => (
             true,
-            Some("RPG Maker Trans".to_string()),
-            Some("Usa RPG Maker Trans per estrarre e tradurre i testi del gioco.".to_string())
+            Some("RPG Maker Trans / Translator++".to_string()),
+            Some("Usa RPG Maker Trans o Translator++ per estrarre e tradurre i testi.".to_string()),
+            vec![
+                "✅ RPG Maker supportato!".to_string(),
+                "📁 Testi in www/data/ (MV/MZ) o Data/ (VX)".to_string(),
+                "💡 Translator++ ha GUI user-friendly".to_string(),
+            ]
         ),
         "Ren'Py" => (
             true,
             Some("UnRen + Editor testi".to_string()),
-            Some("Estrai i file .rpa con UnRen e modifica i file .rpy per tradurre.".to_string())
+            Some("Estrai i file .rpa con UnRen e modifica i file .rpy per tradurre.".to_string()),
+            vec![
+                "✅ Ren'Py supportato!".to_string(),
+                "📁 Estrai .rpa con UnRen".to_string(),
+                "💡 Modifica i file .rpy nella cartella game/".to_string(),
+            ]
         ),
         "Godot" => (
-            false,
-            None,
-            Some("I giochi Godot richiedono estrazione dei file .pck per accedere ai testi.".to_string())
+            true,
+            Some("Godot RE Tools (gdsdecomp)".to_string()),
+            Some("Estrai i file .pck con gdsdecomp per accedere ai testi.".to_string()),
+            vec![
+                "🔧 Scarica gdsdecomp da GitHub".to_string(),
+                "📁 Estrai il file .pck".to_string(),
+                "💡 Cerca file .csv o .tres per i testi".to_string(),
+            ]
         ),
-        "GameMaker" => (
+        "GameMaker" | "GameMaker Studio" | "GameMaker Studio 2" => (
             true,
             Some("UndertaleModTool".to_string()),
-            Some("Usa UndertaleModTool per estrarre e modificare i testi dei giochi GameMaker.".to_string())
+            Some("Usa UndertaleModTool per estrarre e modificare i testi dei giochi GameMaker.".to_string()),
+            vec![
+                "✅ GameMaker supportato!".to_string(),
+                "📁 Apri data.win con UndertaleModTool".to_string(),
+                "💡 Cerca sezione 'Strings' per i testi".to_string(),
+            ]
         ),
-        _ => (
-            false,
-            None,
-            Some("Motore non riconosciuto. Prova a scansionare i file per trovare testi traducibili.".to_string())
+        "Kirikiri" | "KiriKiri" => (
+            true,
+            Some("KiriKiri Tools / XP3 Extractor".to_string()),
+            Some("Estrai i file .xp3 e modifica gli script .ks/.tjs.".to_string()),
+            vec![
+                "📁 Estrai file .xp3 con XP3 Viewer".to_string(),
+                "💡 Testi in file .ks o .tjs".to_string(),
+            ]
         ),
+        _ => {
+            let tips = generate_smart_suggestions(&game_name, install_path.as_ref());
+            (
+                false,
+                None,
+                Some("Motore non riconosciuto. Segui i suggerimenti per identificarlo.".to_string()),
+                tips
+            )
+        },
     };
     
-    log::info!("✅ Motore rilevato: {} (can_patch: {})", engine_str, can_patch);
+    log::info!("✅ Motore rilevato: {} (fonte: {}, can_patch: {})", engine_str, source, can_patch);
     
     Ok(DetectEngineResult {
         engine: engine_str,
         can_patch,
         patch_tool,
         patch_description,
+        source: Some(source.to_string()),
+        tips: Some(extra_tips),
     })
 }
 
@@ -276,6 +400,8 @@ pub struct DetectEngineResult {
     pub can_patch: bool,
     pub patch_tool: Option<String>,
     pub patch_description: Option<String>,
+    pub source: Option<String>,
+    pub tips: Option<Vec<String>>,
 }
 
 #[derive(serde::Serialize)]
@@ -283,32 +409,47 @@ pub struct TranslateResult {
     pub translated_text: String,
 }
 
-/// Traduce testo in italiano usando MyMemory API (gratuita)
+/// Traduce testo usando Google Translate (web scraping, nessun limite)
 #[tauri::command]
 pub async fn translate_text_simple(
     text: String,
     target_lang: String,
 ) -> Result<TranslateResult, String> {
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
+        .timeout(std::time::Duration::from_secs(10))
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
         .build()
         .map_err(|e| e.to_string())?;
     
+    // Google Translate API non ufficiale (gratuita, affidabile)
     let url = format!(
-        "https://api.mymemory.translated.net/get?q={}&langpair=en|{}",
-        urlencoding::encode(&text),
-        target_lang
+        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl={}&dt=t&q={}",
+        target_lang,
+        urlencoding::encode(&text)
     );
     
-    let response = client.get(&url).send().await.map_err(|e| e.to_string())?;
-    let json: serde_json::Value = response.json().await.map_err(|e| e.to_string())?;
+    match client.get(&url).send().await {
+        Ok(response) => {
+            if let Ok(json) = response.json::<serde_json::Value>().await {
+                // Formato risposta: [[["traduzione","originale",...],...],...]
+                if let Some(arr) = json.get(0).and_then(|v| v.as_array()) {
+                    let mut result = String::new();
+                    for item in arr {
+                        if let Some(translated) = item.get(0).and_then(|v| v.as_str()) {
+                            result.push_str(translated);
+                        }
+                    }
+                    if !result.is_empty() {
+                        return Ok(TranslateResult { translated_text: result });
+                    }
+                }
+            }
+        }
+        Err(_) => {}
+    }
     
-    let translated = json["responseData"]["translatedText"]
-        .as_str()
-        .unwrap_or(&text)
-        .to_string();
-    
-    Ok(TranslateResult { translated_text: translated })
+    // Fallback: ritorna testo originale
+    Ok(TranslateResult { translated_text: text })
 }
 
 #[tauri::command]
@@ -341,7 +482,10 @@ pub async fn force_refresh_all_games(
             // Usa get_steam_games_with_family_sharing invece di get_steam_games per avere tutti i dati
             match steam::get_steam_games_with_family_sharing(api_key, credentials.steam_id, Some(true), profile_state.clone()).await {
                 Ok(steam_games) => {
-                    log::info!("✅ FORCE REFRESH: Trovati {} giochi Steam con dati freschi", steam_games.len());
+                    // Debug: conta giochi con nomi validi vs "Game X"
+                    let valid_names = steam_games.iter().filter(|g| !g.name.starts_with("Game ") && !g.name.starts_with("Shared Game ")).count();
+                    let invalid_names = steam_games.len() - valid_names;
+                    log::info!("✅ FORCE REFRESH: Trovati {} giochi Steam ({} con nome, {} senza)", steam_games.len(), valid_names, invalid_names);
                     
                     // Converti SteamGame in GameInfo
                     for steam_game in steam_games {

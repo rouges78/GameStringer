@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Rss, ExternalLink } from 'lucide-react';
+import { Rss, ExternalLink, Maximize2 } from 'lucide-react';
+import { WebviewWindow, getAllWebviewWindows } from '@tauri-apps/api/webviewWindow';
 
 interface RssItem {
   title: string;
@@ -135,10 +136,36 @@ export function RssTicker({ className = '' }: RssTickerProps) {
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-orange-500/10 border border-orange-500/20">
+      <button
+        onClick={async () => {
+          try {
+            // Prova a ottenere la finestra esistente
+            let webview = await WebviewWindow.getByLabel('rss-feed');
+            if (webview) {
+              await webview.show();
+              await webview.setFocus();
+            } else {
+              // Crea nuova finestra se non esiste
+              webview = new WebviewWindow('rss-feed', {
+                url: '/rss-viewer',
+                title: 'GameStringer - RSS Feed',
+                width: 600,
+                height: 500,
+                center: true,
+                resizable: true,
+              });
+              webview.once('tauri://created', () => console.log('Finestra RSS creata'));
+              webview.once('tauri://error', (e) => console.error('Errore finestra RSS:', e));
+            }
+          } catch (e) {
+            console.error('Errore apertura finestra RSS:', e);
+          }
+        }}
+        className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-colors cursor-pointer"
+      >
         <Rss className="h-3 w-3 text-orange-400" />
         <span className="text-[9px] text-orange-400 font-medium uppercase">Live</span>
-      </div>
+      </button>
       
       <div className="flex-1 overflow-hidden">
         <a 

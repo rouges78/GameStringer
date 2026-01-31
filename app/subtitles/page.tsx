@@ -51,7 +51,7 @@ export default function SubtitlesPage() {
   return (
     <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       {/* Hero Header - Compatto e Blu */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-4 text-white">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-4 shadow-xl shadow-blue-900/50 text-white">
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">

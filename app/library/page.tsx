@@ -14,8 +14,9 @@ import { toast } from 'sonner';
 import * as CountryFlags from 'country-flag-icons/react/3x2';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { loadLibraryFilters, saveLibraryFilters, fuzzyMatch, useDebouncedValue } from '@/lib/library-filters';
-import { Gamepad2 } from 'lucide-react';
+import { Gamepad2, ImageIcon } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
+import { CoverPicker } from '@/components/cover-picker';
 
 // Define l'interfaccia per un singolo game, assicurandoci che corrisponda al backend
 interface Game {
@@ -53,6 +54,17 @@ const getGameDetailUrl = (game: Game): string => {
 // Componente per immagine game con fallback e cache SteamGridDB
 const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes: string; coverCache?: Record<string, string> }) => {
   const [hasError, setHasError] = React.useState(false);
+  const [steamGridDbImage, setSteamGridDbImage] = React.useState<string | null>(null);
+  const [triedSteamGridDb, setTriedSteamGridDb] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  
+  // Reset stato quando cambia il gioco
+  React.useEffect(() => {
+    setHasError(false);
+    setSteamGridDbImage(null);
+    setTriedSteamGridDb(false);
+    setIsLoading(false);
+  }, [game.id, game.app_id]);
   
   // Placeholder colorato basato sul nome
   const getGradient = (name: string) => {
@@ -68,15 +80,70 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
     return gradients[hash % gradients.length];
   };
 
-  // Cerca immagine in cache SteamGridDB
-  const getCachedImage = () => {
+  // Cerca immagine in cache SteamGridDB (memoizzato per reagire ai cambiamenti)
+  const cachedImage = React.useMemo(() => {
     if (!coverCache) return null;
     // Prova con app_id, poi con id, poi con titolo
     return coverCache[game.app_id] || coverCache[game.id] || coverCache[game.title] || null;
-  };
+  }, [coverCache, game.app_id, game.id, game.title]);
 
-  const cachedImage = getCachedImage();
-  const imageUrl = game.header_image || cachedImage;
+  // Cerca su SteamGridDB quando non c'è immagine
+  const fetchSteamGridDbImage = React.useCallback(async () => {
+    if (triedSteamGridDb || !game.app_id || !game.title) return;
+    setTriedSteamGridDb(true);
+    setIsLoading(true);
+    
+    console.log(`[Library] 🔍 Fetching SteamGridDB for: ${game.title} (id: ${game.id}, app_id: ${game.app_id})`);
+    
+    try {
+      // Cerca API key in gamestringer_utility_prefs (dove viene salvata dalla pagina stores)
+      let apiKey = null;
+      const utilityPrefs = localStorage.getItem('gamestringer_utility_prefs');
+      if (utilityPrefs) {
+        try {
+          const prefs = JSON.parse(utilityPrefs);
+          apiKey = prefs?.steamgriddb?.apiKey || null;
+        } catch (e) {}
+      }
+      
+      const appIdNum = parseInt(game.app_id.replace('steam_', '').replace('epic_', '').replace('rockstar_', '')) || 0;
+      const result = await invoke<string | null>('fetch_steamgriddb_image', {
+        appId: appIdNum,
+        gameName: game.title,
+        apiKey: apiKey
+      });
+      
+      if (result) {
+        setSteamGridDbImage(result);
+        // Salva in cache
+        await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: result });
+        console.log(`[Library] ✅ SteamGridDB cover found for ${game.title}`);
+      }
+    } catch (e) {
+      console.warn(`[Library] SteamGridDB failed for ${game.title}:`, e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [game.app_id, game.title, triedSteamGridDb]);
+
+  // La cache ha priorità perché contiene la cover scelta dall'utente
+  const imageUrl = cachedImage || game.header_image || steamGridDbImage;
+
+  // Auto-fetch da SteamGridDB se non c'è immagine
+  React.useEffect(() => {
+    if (!imageUrl && !triedSteamGridDb && game.app_id && game.title) {
+      fetchSteamGridDbImage();
+    }
+  }, [imageUrl, triedSteamGridDb, game.app_id, game.title, fetchSteamGridDbImage]);
+
+  // Loading spinner mentre cerca su SteamGridDB
+  if (isLoading) {
+    return (
+      <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br ${getGradient(game.title)}`}>
+        <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (hasError || !imageUrl || game.title.startsWith('Game ')) {
     return (
@@ -91,12 +158,19 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
   return (
     <Image
       src={imageUrl}
-      alt={game.title}
+      alt=""
       fill
       sizes={sizes}
       className="object-cover transition-transform duration-300 group-hover:scale-105"
       loading="lazy"
-      onError={() => setHasError(true)}
+      onError={() => {
+        // Se l'immagine fallisce, prova SteamGridDB
+        if (!triedSteamGridDb) {
+          fetchSteamGridDbImage();
+        } else {
+          setHasError(true);
+        }
+      }}
     />
   );
 }
@@ -239,6 +313,7 @@ export default function LibraryPage() {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(savedFilters.selectedLanguages);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(savedFilters.viewMode);
   const [showFilters, setShowFilters] = useState(false);
+  const [coverPickerGame, setCoverPickerGame] = useState<Game | null>(null);
   
   // Debounce della ricerca per performance
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
@@ -264,19 +339,37 @@ export default function LibraryPage() {
   };
 
   // 📷 Carica cache cover SteamGridDB all'avvio
+  const [addedDatesCache, setAddedDatesCache] = useState<Record<string, number>>({});
+  const [languagesCache, setLanguagesCache] = useState<Record<string, string[]>>({});
+  
   useEffect(() => {
-    const loadCoverCache = async () => {
+    const loadCaches = async () => {
       try {
-        const cache = await invoke<Record<string, string>>('get_all_cover_cache');
-        if (cache && Object.keys(cache).length > 0) {
-          setCoverCache(cache);
-          console.log('[Library] 📷 Cover cache caricata:', Object.keys(cache).length, 'immagini');
+        // Cover cache
+        const coverCacheData = await invoke<Record<string, string>>('get_all_cover_cache');
+        if (coverCacheData && Object.keys(coverCacheData).length > 0) {
+          setCoverCache(coverCacheData);
+          console.log('[Library] 📷 Cover cache caricata:', Object.keys(coverCacheData).length, 'immagini');
+        }
+        
+        // Added dates cache
+        const addedDates = await invoke<Record<string, number>>('get_all_added_dates');
+        if (addedDates && Object.keys(addedDates).length > 0) {
+          setAddedDatesCache(addedDates);
+          console.log('[Library] 📅 Date aggiunta caricate:', Object.keys(addedDates).length, 'giochi');
+        }
+        
+        // Languages cache
+        const langCache = await invoke<Record<string, string[]>>('get_languages_cache');
+        if (langCache && Object.keys(langCache).length > 0) {
+          setLanguagesCache(langCache);
+          console.log('[Library] 🌍 Cache lingue caricata:', Object.keys(langCache).length, 'giochi');
         }
       } catch (e) {
-        console.warn('[Library] Cover cache non disponibile');
+        console.warn('[Library] Cache non disponibile');
       }
     };
-    loadCoverCache();
+    loadCaches();
   }, []);
 
   // 🚀 SCAN COMPLETO - Combina API Steam + File Locali
@@ -288,6 +381,14 @@ export default function LibraryPage() {
       // 1️⃣ Prima ottieni i games dall'API (hanno i nomi corretti)
       const credentials = await invoke('load_steam_credentials') as { steam_id: string; api_key_encrypted: string } | null;
       const apiGames: Map<string, Game> = new Map();
+      
+      if (!credentials) {
+        console.warn('[LIBRARY] ⚠️ Credenziali Steam non configurate - mostro solo giochi installati');
+        toast.warning('Credenziali Steam non configurate', {
+          description: 'Vai in Impostazioni → Stores per vedere tutti i tuoi giochi',
+          duration: 8000,
+        });
+      }
       
       if (credentials) {
         try {
@@ -406,7 +507,7 @@ export default function LibraryPage() {
         console.log('🚀 FULL LIBRARY LOADING (Owned + Family Sharing)...');
 
         // 1️⃣ SCAN LOCALE - Trova games INSTALLATI e SHARED (per arricchire dati API)
-        const localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null }> = new Map();
+        const localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null; last_played?: number | null; added_date?: number | null }> = new Map();
         try {
           const scanResult = await invoke('scan_all_steam_games_fast') as Array<{
             id: string;
@@ -432,6 +533,8 @@ export default function LibraryPage() {
               is_shared: g.is_shared,
               title: g.title,
               engine: g.engine || null,
+              last_played: (g as any).last_played || null,
+              added_date: (g as any).added_date || null,
             });
           }
         } catch (scanError) {
@@ -454,8 +557,19 @@ export default function LibraryPage() {
         
         // 2️⃣ API STEAM - Fonte principale per i games OWNED
         const creds = credentials as { api_key_encrypted?: string; steam_id?: string };
+        console.log('🔍 DEBUG creds object:', JSON.stringify(creds, null, 2));
+        console.log('🔍 api_key_encrypted:', creds?.api_key_encrypted ? `${creds.api_key_encrypted.length} chars` : 'VUOTO');
+        console.log('🔍 steam_id:', creds?.steam_id || 'VUOTO');
+        
+        if (!creds || !creds.api_key_encrypted || !creds.steam_id) {
+          console.warn('⚠️ Credenziali Steam non configurate - mostro solo giochi installati');
+        }
         if (creds && creds.api_key_encrypted && creds.steam_id) {
           try {
+            console.log('🔑 Calling Steam API with credentials...');
+            console.log('🔑 Steam ID:', creds.steam_id);
+            console.log('🔑 API Key length:', creds.api_key_encrypted?.length || 0);
+            
             // Passa le Credentials loaded dal profilo
             const apiResult = await invoke('get_steam_games', {
               apiKey: creds.api_key_encrypted,  // API key dal profilo
@@ -464,11 +578,23 @@ export default function LibraryPage() {
             }) as any[];
             
             console.log(`📊 Steam API: ${apiResult.length} owned games`);
+            console.log('📊 First 5 games:', apiResult.slice(0, 5).map((g: any) => g.name));
+            console.log('📊 Sample game with last_played:', apiResult.find((g: any) => g.last_played > 0));
+            
+            // Blacklist software Steam (non sono giochi)
+            const steamSoftwareBlacklist = [
+              'twinmotion', 'steamvr', 'unreal editor', 'unity',
+              'blender', 'godot', 'sdk', 'dedicated server', 'tool'
+            ];
             
             // Aggiungi tutti i games dall'API (questi sono i games OWNED confermati)
             for (const g of apiResult) {
               const appId = String(g.appid);
               const localData = localScanData.get(appId);
+              
+              // Salta software/tool
+              const nameLower = (g.name || '').toLowerCase();
+              if (steamSoftwareBlacklist.some(sw => nameLower.includes(sw))) continue;
               
               finalGamesMap.set(appId, {
                 id: `steam_${appId}`,
@@ -483,6 +609,8 @@ export default function LibraryPage() {
                 supported_languages: typeof g.supported_languages === 'string' 
                   ? g.supported_languages.split(',').map((l: string) => l.trim()) 
                   : (g.supported_languages || []),
+                last_played: g.rtime_last_played || g.last_played || localData?.last_played || undefined,
+                added_date: localData?.added_date || undefined,
               });
             }
           } catch (apiError) {
@@ -492,8 +620,17 @@ export default function LibraryPage() {
         
         // 3️⃣ Aggiungi games SHARED dallo scan locale (non presenti nell'API owned)
         // Un game è SHARED se: (a) marcato is_shared, oppure (b) installato ma non nell'API owned
+        const sharedSoftwareBlacklist = [
+          'twinmotion', 'steamvr', 'unreal editor', 'unity',
+          'blender', 'godot', 'sdk', 'dedicated server', 'tool'
+        ];
+        
         for (const [appId, localData] of localScanData) {
           if (!finalGamesMap.has(appId)) {
+            // Salta software/tool
+            const titleLower = (localData.title || '').toLowerCase();
+            if (sharedSoftwareBlacklist.some(sw => titleLower.includes(sw))) continue;
+            
             // Se non è nell'API owned, è probabilmente shared (specialmente se installato)
             const isLikelyShared = localData.is_shared || localData.is_installed;
             if (isLikelyShared) {
@@ -531,10 +668,21 @@ export default function LibraryPage() {
             last_played?: number;
           }>;
           
-          // Filtra solo games NON-Steam (Steam già caricato sopra)
-          const nonSteamGames = otherStoreGames.filter(g => 
-            g.platform !== 'Steam' && !g.id.startsWith('steam_')
-          );
+          // Blacklist software/launcher (non sono giochi)
+          const softwareBlacklist = [
+            'ea desktop', 'ea app', 'origin', 'launcher', 'social club',
+            'rockstar games launcher', 'ubisoft connect', 'uplay',
+            'epic games launcher', 'gog galaxy', 'battle.net',
+            'steam', 'steamvr', 'twinmotion', 'unreal editor',
+            'unity hub', 'unity editor', 'blender', 'godot'
+          ];
+          
+          // Filtra solo games NON-Steam e NON-software
+          const nonSteamGames = otherStoreGames.filter(g => {
+            if (g.platform === 'Steam' || g.id.startsWith('steam_')) return false;
+            const titleLower = (g.title || '').toLowerCase();
+            return !softwareBlacklist.some(sw => titleLower.includes(sw));
+          });
           
           console.log(`🎮 Other stores: ${nonSteamGames.length} games found`);
           
@@ -571,8 +719,73 @@ export default function LibraryPage() {
         
         console.log(`✅ TOTAL: ${finalGames.length} games (Steam: ${steamCount}, Epic: ${epicCount}, Other: ${otherCount}, Installed: ${installedCount})`);
         
+        // 📅 Salva date di aggiunta per i nuovi giochi
+        try {
+          const gameIds = finalGames.map(g => g.app_id || g.id);
+          const updatedDates = await invoke<Record<string, number>>('save_batch_added_dates', { gameIds });
+          if (updatedDates) {
+            setAddedDatesCache(updatedDates);
+            console.log('[Library] 📅 Date aggiunta aggiornate:', Object.keys(updatedDates).length, 'giochi');
+          }
+        } catch (e) {
+          console.warn('[Library] Errore salvataggio date aggiunta:', e);
+        }
+        
         await activityHistory.trackSteamSync(finalGames.length);
         setGamesWithValidation(finalGames);
+        
+        // 🌍 Carica lingue in background per i giochi Steam senza lingue in cache
+        const loadLanguagesInBackground = async () => {
+          try {
+            const existingCache = await invoke<Record<string, string[]>>('get_languages_cache');
+            const steamGames = finalGames.filter(g => g.platform === 'Steam' && g.app_id);
+            const gamesToFetch = steamGames.filter(g => !existingCache[g.app_id!]);
+            
+            if (gamesToFetch.length === 0) {
+              console.log('[Library] 🌍 Tutte le lingue già in cache');
+              return;
+            }
+            
+            console.log(`[Library] 🌍 Caricamento lingue per ${gamesToFetch.length} giochi in background...`);
+            const newCache = { ...existingCache };
+            let fetched = 0;
+            
+            // Fetch con delay lungo per evitare rate limiting Steam
+            let consecutiveErrors = 0;
+            for (let i = 0; i < Math.min(gamesToFetch.length, 30); i++) {
+              const game = gamesToFetch[i];
+              try {
+                const languages = await invoke<string[]>('fetch_game_languages', { appId: game.app_id });
+                if (languages && languages.length > 0) {
+                  newCache[game.app_id!] = languages;
+                  fetched++;
+                  consecutiveErrors = 0;
+                }
+                // Delay 800ms tra richieste per evitare 429
+                await new Promise(r => setTimeout(r, 800));
+              } catch (e: any) {
+                consecutiveErrors++;
+                // Se errore 429/403, pausa lunga o ferma
+                const isRateLimit = e?.message?.includes('429') || e?.message?.includes('403');
+                if (isRateLimit || consecutiveErrors >= 3) {
+                  if (consecutiveErrors >= 3) break; // Steam sta bloccando, ferma silenziosamente
+                  await new Promise(r => setTimeout(r, 3000));
+                }
+              }
+            }
+            
+            if (fetched > 0) {
+              await invoke('save_languages_cache', { languages: newCache });
+              setLanguagesCache(newCache);
+              console.log(`[Library] 🌍 Salvate ${fetched} nuove lingue in cache`);
+            }
+          } catch (e) {
+            console.warn('[Library] Errore caricamento lingue:', e);
+          }
+        };
+        
+        // Avvia in background senza bloccare
+        loadLanguagesInBackground();
         
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
@@ -596,6 +809,11 @@ export default function LibraryPage() {
       ...game,
       platform: game.platform || 'Steam'
     }));
+    
+    // Debug: conta giochi con nomi validi vs invalidi
+    const validNames = gamesWithPlatform.filter(g => g.title && !g.title.match(/^(Game|Shared Game) \d+$/));
+    const invalidNames = gamesWithPlatform.filter(g => !g.title || g.title.match(/^(Game|Shared Game) \d+$/));
+    console.log(`📊 Giochi con nome valido: ${validNames.length}, senza nome: ${invalidNames.length}`);
     
     setGamesWithValidation(gamesWithPlatform);
   };
@@ -643,23 +861,35 @@ export default function LibraryPage() {
     .sort((a, b) => {
       switch (sortBy) {
         case 'recentlyAdded':
-          // Sort per data di aggiunta (dal più recente)
-          // I games senza added_date vanno in fondo
-          const aAdded = a.added_date || 0;
-          const bAdded = b.added_date || 0;
-          if (aAdded === 0 && bAdded === 0) {
-            // Se entrambi non hanno data, ordina alfabeticamente
-            return (a.title || '').localeCompare(b.title || '');
+          // Sort per data di aggiunta alla libreria (dal più recente)
+          // Usa la cache delle date di aggiunta tracciata da GameStringer
+          const aKey = a.app_id || a.id;
+          const bKey = b.app_id || b.id;
+          const aAdded = addedDatesCache[aKey] || a.added_date || 0;
+          const bAdded = addedDatesCache[bKey] || b.added_date || 0;
+          if (aAdded !== bAdded) {
+            return bAdded - aAdded;
           }
-          return bAdded - aAdded;
+          // Se uguali, ordina alfabeticamente
+          return (a.title || '').localeCompare(b.title || '');
         case 'lastPlayed':
           // Sort per ultimo accesso (se disponibile)
-          return (b.last_played || 0) - (a.last_played || 0);
+          const aPlayed = a.last_played || 0;
+          const bPlayed = b.last_played || 0;
+          if (aPlayed !== bPlayed) {
+            return bPlayed - aPlayed;
+          }
+          return (a.title || '').localeCompare(b.title || '');
         case 'playtime':
-          // Sort per tempo di game (se disponibile)
-          return ((b as any).playtime_forever || 0) - ((a as any).playtime_forever || 0);
+          // Sort per tempo di gioco (se disponibile)
+          const aTime = (a as any).playtime_forever || 0;
+          const bTime = (b as any).playtime_forever || 0;
+          if (aTime !== bTime) {
+            return bTime - aTime;
+          }
+          return (a.title || '').localeCompare(b.title || '');
         default:
-          // Sortmento alfabetico
+          // Ordinamento alfabetico
           return (a.title || '').localeCompare(b.title || '');
       }
     });
@@ -671,9 +901,9 @@ export default function LibraryPage() {
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">🎮 Loading Game Library</h3>
-            <p className="text-muted-foreground">Connecting to Tauri and retrieving metadata...</p>
-            <p className="text-xs text-muted-foreground mt-1">If loading is slow, press F5 to force refresh</p>
+            <h3 className="text-lg font-semibold mb-2">{lib.loadingTitle}</h3>
+            <p className="text-muted-foreground">{lib.loadingSubtitle}</p>
+            <p className="text-xs text-muted-foreground mt-1">{lib.loadingSlow}</p>
           </div>
           
           {/* Scheletro griglia sotto il loader */}
@@ -733,7 +963,7 @@ export default function LibraryPage() {
               <div className="group flex items-center bg-gray-900/60 hover:bg-gray-800/80 rounded-lg px-3 py-2 border border-gray-800/50 hover:border-purple-500/50 transition-all duration-200 cursor-pointer">
                 {/* Thumbnail compatta */}
                 <div className="w-16 h-9 flex-shrink-0 rounded overflow-hidden bg-gray-800 mr-3 relative">
-                  <GameImageWithFallback game={game} sizes="64px" coverCache={coverCache} />
+                  <GameImageWithFallback key={`img-${game.id}-${game.app_id}`} game={game} sizes="64px" coverCache={coverCache} />
                 </div>
                 
                 {/* Titolo e piattaforma */}
@@ -769,9 +999,14 @@ export default function LibraryPage() {
                 
                 {/* Lingue - mostra solo se ci sono più di 1 lingua */}
                 <div className="flex-shrink-0">
-                  {game.supported_languages && game.supported_languages.length > 1 && (
-                    <LanguageFlags supportedLanguages={game.supported_languages} maxFlags={5} />
-                  )}
+                  {(() => {
+                    const gameKey = game.app_id || game.id;
+                    const cachedLangs = languagesCache[gameKey];
+                    const languages = cachedLangs && cachedLangs.length > 0 ? cachedLangs : game.supported_languages;
+                    return languages && languages.length > 1 ? (
+                      <LanguageFlags supportedLanguages={languages} maxFlags={5} />
+                    ) : null;
+                  })()}
                 </div>
               </div>
             </Link>
@@ -791,6 +1026,7 @@ export default function LibraryPage() {
             {/* Immagine */}
             <div className="relative aspect-[16/9]">
               <GameImageWithFallback 
+                key={`img-${game.id}-${game.app_id}`}
                 game={game} 
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                 coverCache={coverCache}
@@ -811,6 +1047,14 @@ export default function LibraryPage() {
                   <span className="bg-orange-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">🔗</span>
                 )}
               </div>
+              {/* Bottone Cambia Cover */}
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverPickerGame(game); }}
+                className="absolute bottom-1 right-1 flex items-center gap-0.5 bg-black/70 hover:bg-blue-600 px-1.5 py-0.5 rounded text-[9px] font-medium text-white/80 hover:text-white transition-all z-10 opacity-0 group-hover:opacity-100"
+                title="Cambia cover"
+              >
+                <ImageIcon className="h-3 w-3" />
+              </button>
             </div>
             
             {/* Info sotto l'immagine */}
@@ -818,11 +1062,17 @@ export default function LibraryPage() {
               <p className="text-xs font-medium truncate text-white" title={game.title ?? 'Unnamed game'}>
                 {game.title ?? 'Unnamed game'}
               </p>
-              {game.supported_languages && game.supported_languages.length > 0 && (
-                <div className="mt-1">
-                  <LanguageFlags supportedLanguages={game.supported_languages} maxFlags={12} />
-                </div>
-              )}
+              {(() => {
+                // Usa lingue dalla cache se disponibili, altrimenti fallback ai dati del gioco
+                const gameKey = game.app_id || game.id;
+                const cachedLangs = languagesCache[gameKey];
+                const languages = cachedLangs && cachedLangs.length > 0 ? cachedLangs : game.supported_languages;
+                return languages && languages.length > 1 ? (
+                  <div className="mt-1">
+                    <LanguageFlags supportedLanguages={languages} maxFlags={12} />
+                  </div>
+                ) : null;
+              })()}
             </div>
           </div>
         </Link>
@@ -839,8 +1089,9 @@ export default function LibraryPage() {
     }
 
     // Per molti games, usa virtualizzazione
-    // Key basata sui filtri per forzare re-render quando cambiano
-    const gridKey = `${sortBy}-${selectedPlatforms.join(',')}-${selectedEngines.join(',')}-${selectedStatus.join(',')}-${selectedTags.join(',')}-${debouncedSearchTerm}`;
+    // Key basata sui filtri + coverCache per forzare re-render quando cambiano
+    const coverCacheKey = Object.keys(coverCache).length;
+    const gridKey = `${sortBy}-${selectedPlatforms.join(',')}-${selectedEngines.join(',')}-${selectedStatus.join(',')}-${selectedTags.join(',')}-${debouncedSearchTerm}-covers${coverCacheKey}`;
     
     return (
       <VirtuosoGrid
@@ -1016,6 +1267,28 @@ export default function LibraryPage() {
 
       {/* Contenuto principale (griglia, Loading...rrori) */}
       {renderContent()}
+
+      {/* Cover Picker Modal */}
+      {coverPickerGame && (
+        <CoverPicker
+          isOpen={!!coverPickerGame}
+          onClose={() => setCoverPickerGame(null)}
+          appId={parseInt(coverPickerGame.app_id?.replace('steam_', '').replace('epic_', '') || '0')}
+          gameName={coverPickerGame.title || ''}
+          onCoverSelected={(url) => {
+            // Aggiorna cover cache locale
+            setCoverCache(prev => ({
+              ...prev,
+              [coverPickerGame.app_id]: url,
+              [coverPickerGame.id]: url
+            }));
+            // Aggiorna anche il gioco nella lista
+            setGames(prev => prev.map(g => 
+              g.id === coverPickerGame.id ? { ...g, header_image: url } : g
+            ));
+          }}
+        />
+      )}
     </div>
   );
 }

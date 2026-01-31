@@ -1405,75 +1405,102 @@ pub async fn fetch_steamgriddb_image(app_id: u32, game_name: String, api_key: Op
     // Se abbiamo API key, usa l'API ufficiale
     if let Some(key) = api_key {
         if !key.is_empty() {
-            // Step 1: Cerca il gioco per Steam App ID
-            let search_url = format!(
-                "https://www.steamgriddb.com/api/v2/games/steam/{}",
-                app_id
-            );
+            let mut game_id: Option<u64> = None;
             
-            match client.get(&search_url)
-                .header("Authorization", format!("Bearer {}", key))
-                .send()
-                .await 
-            {
-                Ok(resp) if resp.status().is_success() => {
-                    if let Ok(json) = resp.json::<serde_json::Value>().await {
-                        if let Some(game_id) = json["data"]["id"].as_u64() {
-                            // Step 2: Ottieni hero/grid per questo gioco
-                            let heroes_url = format!(
-                                "https://www.steamgriddb.com/api/v2/heroes/game/{}",
-                                game_id
-                            );
-                            
-                            if let Ok(heroes_resp) = client.get(&heroes_url)
-                                .header("Authorization", format!("Bearer {}", key))
-                                .send()
-                                .await 
-                            {
-                                if let Ok(heroes_json) = heroes_resp.json::<serde_json::Value>().await {
-                                    if let Some(heroes) = heroes_json["data"].as_array() {
-                                        if let Some(first_hero) = heroes.first() {
-                                            if let Some(url) = first_hero["url"].as_str() {
-                                                info!("✅ Trovata hero SteamGridDB: {}", url);
-                                                return Ok(Some(url.to_string()));
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Fallback a grids se non ci sono heroes
-                            let grids_url = format!(
-                                "https://www.steamgriddb.com/api/v2/grids/game/{}?dimensions=460x215,920x430",
-                                game_id
-                            );
-                            
-                            if let Ok(grids_resp) = client.get(&grids_url)
-                                .header("Authorization", format!("Bearer {}", key))
-                                .send()
-                                .await 
-                            {
-                                if let Ok(grids_json) = grids_resp.json::<serde_json::Value>().await {
-                                    if let Some(grids) = grids_json["data"].as_array() {
-                                        if let Some(first_grid) = grids.first() {
-                                            if let Some(url) = first_grid["url"].as_str() {
-                                                info!("✅ Trovata grid SteamGridDB: {}", url);
-                                                return Ok(Some(url.to_string()));
-                                            }
-                                        }
-                                    }
+            // Step 1a: Se app_id > 0, cerca per Steam App ID
+            if app_id > 0 {
+                let search_url = format!(
+                    "https://www.steamgriddb.com/api/v2/games/steam/{}",
+                    app_id
+                );
+                
+                if let Ok(resp) = client.get(&search_url)
+                    .header("Authorization", format!("Bearer {}", key))
+                    .send()
+                    .await 
+                {
+                    if resp.status().is_success() {
+                        if let Ok(json) = resp.json::<serde_json::Value>().await {
+                            game_id = json["data"]["id"].as_u64();
+                        }
+                    }
+                }
+            }
+            
+            // Step 1b: Se non trovato, cerca per nome
+            if game_id.is_none() && !game_name.is_empty() {
+                let search_url = format!(
+                    "https://www.steamgriddb.com/api/v2/search/autocomplete/{}",
+                    urlencoding::encode(&game_name)
+                );
+                
+                if let Ok(resp) = client.get(&search_url)
+                    .header("Authorization", format!("Bearer {}", key))
+                    .send()
+                    .await 
+                {
+                    if resp.status().is_success() {
+                        if let Ok(json) = resp.json::<serde_json::Value>().await {
+                            if let Some(games) = json["data"].as_array() {
+                                if let Some(first) = games.first() {
+                                    game_id = first["id"].as_u64();
+                                    info!("🔍 Trovato gioco per nome '{}': id={:?}", game_name, game_id);
                                 }
                             }
                         }
                     }
                 }
-                Ok(resp) => {
-                    warn!("SteamGridDB API returned status: {}", resp.status());
+            }
+            
+            // Step 2: Se abbiamo un game_id, cerca le immagini
+            if let Some(gid) = game_id {
+                // Cerca heroes
+                let heroes_url = format!(
+                    "https://www.steamgriddb.com/api/v2/heroes/game/{}",
+                    gid
+                );
+                
+                if let Ok(heroes_resp) = client.get(&heroes_url)
+                    .header("Authorization", format!("Bearer {}", key))
+                    .send()
+                    .await 
+                {
+                    if let Ok(heroes_json) = heroes_resp.json::<serde_json::Value>().await {
+                        if let Some(heroes) = heroes_json["data"].as_array() {
+                            if let Some(first_hero) = heroes.first() {
+                                if let Some(url) = first_hero["url"].as_str() {
+                                    info!("✅ Trovata hero SteamGridDB: {}", url);
+                                    return Ok(Some(url.to_string()));
+                                }
+                            }
+                        }
+                    }
                 }
-                Err(e) => {
-                    warn!("SteamGridDB API error: {}", e);
+                
+                // Fallback a grids
+                let grids_url = format!(
+                    "https://www.steamgriddb.com/api/v2/grids/game/{}?dimensions=460x215,920x430",
+                    gid
+                );
+                
+                if let Ok(grids_resp) = client.get(&grids_url)
+                    .header("Authorization", format!("Bearer {}", key))
+                    .send()
+                    .await 
+                {
+                    if let Ok(grids_json) = grids_resp.json::<serde_json::Value>().await {
+                        if let Some(grids) = grids_json["data"].as_array() {
+                            if let Some(first_grid) = grids.first() {
+                                if let Some(url) = first_grid["url"].as_str() {
+                                    info!("✅ Trovata grid SteamGridDB: {}", url);
+                                    return Ok(Some(url.to_string()));
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            
         }
     }
     
@@ -1481,7 +1508,147 @@ pub async fn fetch_steamgriddb_image(app_id: u32, game_name: String, api_key: Op
     Ok(None)
 }
 
-/// � SALVA COVER IN CACHE LOCALE
+/// 🖼️ CERCA TUTTE LE COVER SU STEAMGRIDDB (per selezione utente)
+/// Ritorna array di cover con thumbnail per permettere all'utente di scegliere
+#[tauri::command]
+pub async fn fetch_steamgriddb_covers(app_id: u32, game_name: String, api_key: String, cover_type: Option<String>) -> Result<serde_json::Value, String> {
+    info!("🖼️ Cercando tutte le cover SteamGridDB per: {} ({})", game_name, app_id);
+    
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| e.to_string())?;
+    
+    if api_key.is_empty() {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": "API Key SteamGridDB non configurata",
+            "covers": []
+        }));
+    }
+    
+    let mut game_id: Option<u64> = None;
+    let mut game_name_found = String::new();
+    
+    // Step 1a: Cerca per Steam App ID
+    if app_id > 0 {
+        let search_url = format!("https://www.steamgriddb.com/api/v2/games/steam/{}", app_id);
+        
+        if let Ok(resp) = client.get(&search_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .send()
+            .await 
+        {
+            if resp.status().is_success() {
+                if let Ok(json) = resp.json::<serde_json::Value>().await {
+                    game_id = json["data"]["id"].as_u64();
+                    game_name_found = json["data"]["name"].as_str().unwrap_or("").to_string();
+                }
+            }
+        }
+    }
+    
+    // Step 1b: Fallback cerca per nome
+    if game_id.is_none() && !game_name.is_empty() {
+        let search_url = format!(
+            "https://www.steamgriddb.com/api/v2/search/autocomplete/{}",
+            urlencoding::encode(&game_name)
+        );
+        
+        if let Ok(resp) = client.get(&search_url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .send()
+            .await 
+        {
+            if resp.status().is_success() {
+                if let Ok(json) = resp.json::<serde_json::Value>().await {
+                    if let Some(games) = json["data"].as_array() {
+                        if let Some(first) = games.first() {
+                            game_id = first["id"].as_u64();
+                            game_name_found = first["name"].as_str().unwrap_or("").to_string();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    let Some(gid) = game_id else {
+        return Ok(serde_json::json!({
+            "success": false,
+            "error": "Gioco non trovato su SteamGridDB",
+            "covers": []
+        }));
+    };
+    
+    info!("🔍 Trovato gioco SteamGridDB: {} (id: {})", game_name_found, gid);
+    
+    // Step 2: Recupera cover in base al tipo richiesto
+    let cover_type = cover_type.unwrap_or_else(|| "grid".to_string());
+    let mut all_covers: Vec<serde_json::Value> = Vec::new();
+    
+    // Tipi di cover da cercare
+    let endpoints = match cover_type.as_str() {
+        "hero" => vec![("heroes", "hero")],
+        "logo" => vec![("logos", "logo")],
+        "icon" => vec![("icons", "icon")],
+        "grid" => vec![("grids", "grid")],
+        "all" => vec![
+            ("grids", "grid"),
+            ("heroes", "hero"),
+            ("logos", "logo"),
+        ],
+        _ => vec![("grids", "grid")],
+    };
+    
+    for (endpoint, type_name) in endpoints {
+        let url = format!(
+            "https://www.steamgriddb.com/api/v2/{}/game/{}?limit=20",
+            endpoint, gid
+        );
+        
+        if let Ok(resp) = client.get(&url)
+            .header("Authorization", format!("Bearer {}", api_key))
+            .send()
+            .await 
+        {
+            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                if let Some(items) = json["data"].as_array() {
+                    for item in items {
+                        let cover = serde_json::json!({
+                            "id": item["id"],
+                            "url": item["url"],
+                            "thumb": item["thumb"],
+                            "width": item["width"],
+                            "height": item["height"],
+                            "style": item["style"],
+                            "author": item["author"]["name"],
+                            "type": type_name,
+                            "score": item["score"],
+                            "upvotes": item["upvotes"],
+                            "downvotes": item["downvotes"],
+                            "nsfw": item["nsfw"],
+                            "humor": item["humor"],
+                        });
+                        all_covers.push(cover);
+                    }
+                }
+            }
+        }
+    }
+    
+    info!("✅ Trovate {} cover SteamGridDB per {}", all_covers.len(), game_name_found);
+    
+    Ok(serde_json::json!({
+        "success": true,
+        "game_id": gid,
+        "game_name": game_name_found,
+        "covers": all_covers,
+        "total": all_covers.len()
+    }))
+}
+
+/// 💾 SALVA COVER IN CACHE LOCALE
 #[tauri::command]
 pub async fn save_cover_cache(game_id: String, image_url: String) -> Result<(), String> {
     use std::fs;
@@ -1554,7 +1721,216 @@ pub async fn get_all_cover_cache() -> Result<std::collections::HashMap<String, S
     Ok(std::collections::HashMap::new())
 }
 
-/// �📂 CARICA FAMILY SHARING IDS - Persistenza locale
+/// 📅 SALVA DATA DI AGGIUNTA ALLA LIBRERIA
+/// Traccia quando un gioco appare per la prima volta in GameStringer
+#[tauri::command]
+pub async fn save_game_added_date(game_id: String) -> Result<u64, String> {
+    use std::fs;
+    use std::collections::HashMap;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_dir = data_dir.join("GameStringer").join("library");
+        fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+        
+        let cache_file = cache_dir.join("added_dates.json");
+        
+        // Leggi cache esistente
+        let mut cache: HashMap<String, u64> = if cache_file.exists() {
+            let json = fs::read_to_string(&cache_file).unwrap_or_default();
+            serde_json::from_str(&json).unwrap_or_default()
+        } else {
+            HashMap::new()
+        };
+        
+        // Se il gioco non esiste, aggiungi con timestamp corrente
+        let timestamp = if let Some(&existing) = cache.get(&game_id) {
+            existing
+        } else {
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map_err(|e| e.to_string())?
+                .as_secs();
+            cache.insert(game_id.clone(), now);
+            
+            let json = serde_json::to_string_pretty(&cache).map_err(|e| e.to_string())?;
+            fs::write(&cache_file, json).map_err(|e| e.to_string())?;
+            
+            info!("📅 Data aggiunta salvata per: {} -> {}", game_id, now);
+            now
+        };
+        
+        Ok(timestamp)
+    } else {
+        Err("Directory dati non trovata".to_string())
+    }
+}
+
+/// 📅 LEGGI TUTTE LE DATE DI AGGIUNTA
+#[tauri::command]
+pub async fn get_all_added_dates() -> Result<std::collections::HashMap<String, u64>, String> {
+    use std::fs;
+    use std::collections::HashMap;
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_file = data_dir.join("GameStringer").join("library").join("added_dates.json");
+        
+        if cache_file.exists() {
+            let json = fs::read_to_string(&cache_file).map_err(|e| e.to_string())?;
+            let cache: HashMap<String, u64> = serde_json::from_str(&json).unwrap_or_default();
+            return Ok(cache);
+        }
+    }
+    
+    Ok(std::collections::HashMap::new())
+}
+
+/// 📅 SALVA MULTIPLE DATE DI AGGIUNTA (batch)
+#[tauri::command]
+pub async fn save_batch_added_dates(game_ids: Vec<String>) -> Result<std::collections::HashMap<String, u64>, String> {
+    use std::fs;
+    use std::collections::HashMap;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_dir = data_dir.join("GameStringer").join("library");
+        fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+        
+        let cache_file = cache_dir.join("added_dates.json");
+        
+        // Leggi cache esistente
+        let mut cache: HashMap<String, u64> = if cache_file.exists() {
+            let json = fs::read_to_string(&cache_file).unwrap_or_default();
+            serde_json::from_str(&json).unwrap_or_default()
+        } else {
+            HashMap::new()
+        };
+        
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map_err(|e| e.to_string())?
+            .as_secs();
+        
+        let mut new_games = 0;
+        for game_id in game_ids {
+            if !cache.contains_key(&game_id) {
+                cache.insert(game_id, now);
+                new_games += 1;
+            }
+        }
+        
+        if new_games > 0 {
+            let json = serde_json::to_string_pretty(&cache).map_err(|e| e.to_string())?;
+            fs::write(&cache_file, json).map_err(|e| e.to_string())?;
+            info!("📅 Salvate {} nuove date di aggiunta", new_games);
+        }
+        
+        Ok(cache)
+    } else {
+        Err("Directory dati non trovata".to_string())
+    }
+}
+
+/// 🌍 CARICA LINGUE DA CACHE LOCALE
+#[tauri::command]
+pub async fn get_languages_cache() -> Result<std::collections::HashMap<String, Vec<String>>, String> {
+    use std::fs;
+    use std::collections::HashMap;
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_file = data_dir.join("GameStringer").join("library").join("languages_cache.json");
+        
+        if cache_file.exists() {
+            let json = fs::read_to_string(&cache_file).map_err(|e| e.to_string())?;
+            let cache: HashMap<String, Vec<String>> = serde_json::from_str(&json).unwrap_or_default();
+            info!("🌍 Cache lingue caricata: {} giochi", cache.len());
+            return Ok(cache);
+        }
+    }
+    
+    Ok(std::collections::HashMap::new())
+}
+
+/// 🌍 SALVA LINGUE IN CACHE LOCALE
+#[tauri::command]
+pub async fn save_languages_cache(languages: std::collections::HashMap<String, Vec<String>>) -> Result<(), String> {
+    use std::fs;
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_dir = data_dir.join("GameStringer").join("library");
+        fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+        
+        let cache_file = cache_dir.join("languages_cache.json");
+        let json = serde_json::to_string_pretty(&languages).map_err(|e| e.to_string())?;
+        fs::write(&cache_file, json).map_err(|e| e.to_string())?;
+        
+        info!("🌍 Cache lingue salvata: {} giochi", languages.len());
+        Ok(())
+    } else {
+        Err("Directory dati non trovata".to_string())
+    }
+}
+
+/// 🌍 FETCH LINGUE DA STEAM API (singolo gioco)
+#[tauri::command]
+pub async fn fetch_game_languages(app_id: String) -> Result<Vec<String>, String> {
+    use reqwest;
+    
+    let url = format!("https://store.steampowered.com/api/appdetails?appids={}&l=it", app_id);
+    
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| e.to_string())?;
+    
+    let response = client.get(&url).send().await.map_err(|e| e.to_string())?;
+    
+    if !response.status().is_success() {
+        return Err(format!("HTTP error: {}", response.status()));
+    }
+    
+    let data: serde_json::Value = response.json().await.map_err(|e| e.to_string())?;
+    
+    if let Some(game_data) = data.get(&app_id) {
+        if let Some(success) = game_data.get("success").and_then(|v| v.as_bool()) {
+            if success {
+                if let Some(game_info) = game_data.get("data") {
+                    if let Some(lang_str) = game_info.get("supported_languages").and_then(|v| v.as_str()) {
+                        let languages = parse_steam_languages(lang_str);
+                        info!("🌍 Lingue per {}: {:?}", app_id, languages);
+                        return Ok(languages);
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(vec!["English".to_string()])
+}
+
+/// Helper per parsare le lingue da Steam API
+fn parse_steam_languages(languages_string: &str) -> Vec<String> {
+    if languages_string.is_empty() {
+        return vec!["English".to_string()];
+    }
+    
+    // Rimuovi tutto dopo <br> (separa audio da testo)
+    let relevant_string = languages_string.split("<br>").next().unwrap_or("");
+    
+    // Pulisci HTML
+    let re_html = regex::Regex::new(r"<[^>]*>").unwrap();
+    let cleaned = re_html.replace_all(relevant_string, "");
+    let cleaned = cleaned.replace("*", "").replace("&nbsp;", " ");
+    
+    // Split per virgola e pulisci
+    cleaned
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect()
+}
+
+/// 📂 CARICA FAMILY SHARING IDS - Persistenza locale
 #[tauri::command]
 pub async fn load_family_sharing_ids() -> Result<Vec<String>, String> {
     use std::fs;

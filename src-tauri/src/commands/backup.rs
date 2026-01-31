@@ -747,3 +747,258 @@ pub struct AutoBackupInfo {
     pub size_bytes: u64,
     pub created_at: String,
 }
+
+// ============================================================================
+// ENCRYPTED BACKUP SYSTEM
+// ============================================================================
+
+use aes_gcm::{
+    aead::{Aead, KeyInit},
+    Aes256Gcm, Nonce,
+};
+use sha2::{Sha256, Digest};
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+use rand::Rng;
+
+/// Backup criptato con password
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EncryptedBackup {
+    pub version: String,
+    pub created_at: String,
+    pub profile_name: String,
+    pub encrypted_data: String,  // Base64 encoded encrypted JSON
+    pub nonce: String,           // Base64 encoded nonce
+    pub checksum: String,        // SHA256 del contenuto originale
+}
+
+/// Deriva una chiave AES-256 dalla password usando SHA256
+fn derive_key_from_password(password: &str) -> [u8; 32] {
+    let mut hasher = Sha256::new();
+    hasher.update(password.as_bytes());
+    hasher.update(b"GameStringer_Backup_Salt_v1");
+    let result = hasher.finalize();
+    let mut key = [0u8; 32];
+    key.copy_from_slice(&result);
+    key
+}
+
+/// Esporta profilo con crittografia AES-256-GCM
+#[tauri::command]
+pub async fn export_encrypted_backup(
+    profile_id: String,
+    password: String,
+) -> Result<String, String> {
+    use log::info;
+    
+    info!("🔐 Creazione backup criptato per profilo: {}", profile_id);
+    
+    // Raccogli tutti i dati del profilo
+    let profile_data = collect_profile_data(&profile_id).await?;
+    let json_data = serde_json::to_string_pretty(&profile_data)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    
+    // Calcola checksum
+    let mut hasher = Sha256::new();
+    hasher.update(json_data.as_bytes());
+    let checksum = format!("{:x}", hasher.finalize());
+    
+    // Deriva chiave da password
+    let key = derive_key_from_password(&password);
+    let cipher = Aes256Gcm::new_from_slice(&key)
+        .map_err(|e| format!("Errore creazione cipher: {}", e))?;
+    
+    // Genera nonce casuale
+    let mut nonce_bytes = [0u8; 12];
+    rand::thread_rng().fill(&mut nonce_bytes);
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    // Cripta
+    let encrypted = cipher.encrypt(nonce, json_data.as_bytes())
+        .map_err(|e| format!("Errore crittografia: {}", e))?;
+    
+    // Crea backup struct
+    let backup = EncryptedBackup {
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        created_at: Utc::now().to_rfc3339(),
+        profile_name: profile_id.clone(),
+        encrypted_data: BASE64.encode(&encrypted),
+        nonce: BASE64.encode(&nonce_bytes),
+        checksum,
+    };
+    
+    // Salva file
+    let backup_dir = get_backup_dir()?;
+    let encrypted_dir = backup_dir.join("encrypted");
+    fs::create_dir_all(&encrypted_dir)
+        .map_err(|e| format!("Errore creazione directory: {}", e))?;
+    
+    let timestamp = Utc::now().format("%Y%m%d_%H%M%S");
+    let filename = format!("{}_encrypted_{}.gsbackup", profile_id, timestamp);
+    let filepath = encrypted_dir.join(&filename);
+    
+    let json = serde_json::to_string_pretty(&backup)
+        .map_err(|e| format!("Errore serializzazione backup: {}", e))?;
+    
+    fs::write(&filepath, &json)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    
+    info!("✅ Backup criptato salvato: {}", filepath.display());
+    
+    Ok(filepath.to_string_lossy().to_string())
+}
+
+/// Importa backup criptato con password
+#[tauri::command]
+pub async fn import_encrypted_backup(
+    filepath: String,
+    password: String,
+) -> Result<serde_json::Value, String> {
+    use log::info;
+    
+    info!("🔐 Importazione backup criptato: {}", filepath);
+    
+    // Leggi file
+    let content = fs::read_to_string(&filepath)
+        .map_err(|e| format!("Errore lettura file: {}", e))?;
+    
+    let backup: EncryptedBackup = serde_json::from_str(&content)
+        .map_err(|e| format!("Errore parsing backup: {}", e))?;
+    
+    // Deriva chiave da password
+    let key = derive_key_from_password(&password);
+    let cipher = Aes256Gcm::new_from_slice(&key)
+        .map_err(|e| format!("Errore creazione cipher: {}", e))?;
+    
+    // Decodifica nonce
+    let nonce_bytes = BASE64.decode(&backup.nonce)
+        .map_err(|e| format!("Errore decodifica nonce: {}", e))?;
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    
+    // Decodifica dati criptati
+    let encrypted = BASE64.decode(&backup.encrypted_data)
+        .map_err(|e| format!("Errore decodifica dati: {}", e))?;
+    
+    // Decripta
+    let decrypted = cipher.decrypt(nonce, encrypted.as_slice())
+        .map_err(|_| "Password errata o backup corrotto".to_string())?;
+    
+    let json_str = String::from_utf8(decrypted)
+        .map_err(|e| format!("Errore decodifica UTF-8: {}", e))?;
+    
+    // Verifica checksum
+    let mut hasher = Sha256::new();
+    hasher.update(json_str.as_bytes());
+    let calculated_checksum = format!("{:x}", hasher.finalize());
+    
+    if calculated_checksum != backup.checksum {
+        return Err("Checksum non valido - backup corrotto".to_string());
+    }
+    
+    // Parse JSON
+    let data: serde_json::Value = serde_json::from_str(&json_str)
+        .map_err(|e| format!("Errore parsing dati: {}", e))?;
+    
+    info!("✅ Backup decriptato con successo");
+    
+    Ok(data)
+}
+
+/// Raccoglie tutti i dati del profilo per il backup
+async fn collect_profile_data(profile_id: &str) -> Result<serde_json::Value, String> {
+    use log::info;
+    
+    info!("📦 Raccolta dati profilo: {}", profile_id);
+    
+    // Raccogli dati da varie fonti
+    let data_dir = dirs::data_local_dir()
+        .ok_or("Directory dati non trovata")?
+        .join("GameStringer");
+    
+    let mut profile_data = serde_json::json!({
+        "profile_id": profile_id,
+        "backup_type": "full",
+        "settings": {},
+        "translation_memory": [],
+        "dictionaries": [],
+        "preferences": {},
+    });
+    
+    // Carica impostazioni profilo se esistono
+    let settings_file = data_dir.join("profiles").join(format!("{}.json", profile_id));
+    if settings_file.exists() {
+        if let Ok(content) = fs::read_to_string(&settings_file) {
+            if let Ok(settings) = serde_json::from_str::<serde_json::Value>(&content) {
+                profile_data["settings"] = settings;
+            }
+        }
+    }
+    
+    // Carica preferenze se esistono
+    let prefs_file = data_dir.join("preferences").join(format!("{}.json", profile_id));
+    if prefs_file.exists() {
+        if let Ok(content) = fs::read_to_string(&prefs_file) {
+            if let Ok(prefs) = serde_json::from_str::<serde_json::Value>(&content) {
+                profile_data["preferences"] = prefs;
+            }
+        }
+    }
+    
+    Ok(profile_data)
+}
+
+/// Verifica se un backup è criptato (senza decrittare)
+#[tauri::command]
+pub fn verify_encrypted_backup(filepath: String) -> Result<EncryptedBackup, String> {
+    let content = fs::read_to_string(&filepath)
+        .map_err(|e| format!("Errore lettura file: {}", e))?;
+    
+    let backup: EncryptedBackup = serde_json::from_str(&content)
+        .map_err(|e| format!("File non è un backup criptato valido: {}", e))?;
+    
+    Ok(backup)
+}
+
+/// Lista backup criptati disponibili
+#[tauri::command]
+pub fn list_encrypted_backups() -> Result<Vec<AutoBackupInfo>, String> {
+    let backup_dir = get_backup_dir()?;
+    let encrypted_dir = backup_dir.join("encrypted");
+    
+    if !encrypted_dir.exists() {
+        return Ok(vec![]);
+    }
+    
+    let mut backups = Vec::new();
+    
+    if let Ok(entries) = fs::read_dir(&encrypted_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |e| e == "gsbackup") {
+                let filename = path.file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default();
+                
+                let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+                let created = entry.metadata()
+                    .ok()
+                    .and_then(|m| m.modified().ok())
+                    .map(|t| {
+                        let dt: DateTime<Utc> = t.into();
+                        dt.to_rfc3339()
+                    })
+                    .unwrap_or_default();
+                
+                backups.push(AutoBackupInfo {
+                    path: path.to_string_lossy().to_string(),
+                    filename,
+                    backup_type: "encrypted".to_string(),
+                    size_bytes: size,
+                    created_at: created,
+                });
+            }
+        }
+    }
+    
+    backups.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+    Ok(backups)
+}

@@ -18,7 +18,7 @@ export default function BatchPage() {
   return (
     <div className="container mx-auto p-6 space-y-6 animate-fade-in">
       {/* Hero Header - Blu Compatto */}
-      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 p-4 text-white">
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-4 shadow-xl shadow-blue-900/50 text-white">
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-3">

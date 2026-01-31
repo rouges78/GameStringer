@@ -19,6 +19,29 @@
 
 ## 📅 Gennaio 2026
 
+### v1.0.9 — Animated Headers & UI Polish ✨
+
+> **Data**: 2026-01-31
+
+#### ✨ Header Animati
+- **Effetto "Respiro"**: Gradiente che si espande/contrae dolcemente (12s)
+- **Animazione shimmer**: Keyframes CSS personalizzati per movimento fluido
+- **Ombreggiature profonde**: shadow-xl con tinta blu per maggiore profondità
+- **16 pagine aggiornate** con nuovo stile header
+
+#### 🎨 UI Miglioramenti
+- **Gradiente uniforme**: Sky → Blue → Cyan su tutti gli header Traduzione
+- **Menu Sidebar**: Sub-item con hover verde scuro (emerald-600)
+- **Coerenza visiva**: Stile unificato su tutte le pagine di traduzione
+
+#### 📄 Pagine Aggiornate
+- AI Translator, AI Review, Emotion Translator, OCR Translator
+- Memory, Batch, Subtitles, Neural Pro, Translator Tools
+- Live OCR, Manga, Texture, Voice Clone
+- Character Voice, Multi-LLM, Voice Translator
+
+---
+
 ### v1.0.8 — Fix Update Download 🔧
 
 > **Data**: 2026-01-29
@@ -597,7 +620,7 @@
 
 | Metrica | Valore |
 |:--------|:-------|
-| **Versione attuale** | 1.0.4 |
+| **Versione attuale** | 1.0.9 |
 | **Periodo sviluppo** | Giugno 2025 - Presente |
 | **Stack Backend** | Rust (Tauri v2) |
 | **Stack Frontend** | Next.js 15, React, TailwindCSS |

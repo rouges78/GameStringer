@@ -146,7 +146,7 @@ export function MultiLLMCompare() {
   return (
     <div className="space-y-3">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
@@ -174,7 +174,7 @@ export function MultiLLMCompare() {
       {/* Input Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {/* Source Text */}
-        <Card className="md:col-span-2 bg-slate-900/50 border-slate-700/50">
+        <Card className="md:col-span-2 bg-card/50 border-border/50">
           <CardHeader className="py-2">
             <CardTitle className="text-sm font-medium flex items-center justify-between">
               <span className="flex items-center gap-2">
@@ -207,13 +207,13 @@ export function MultiLLMCompare() {
               value={sourceText}
               onChange={(e) => setSourceText(e.target.value)}
               placeholder={t('multiLlmCompare.enterText')}
-              className="min-h-[80px] resize-none text-sm bg-slate-800/50 border-slate-700/50"
+              className="min-h-[80px] resize-none text-sm bg-muted/50 border-border"
             />
           </CardContent>
         </Card>
 
         {/* Settings */}
-        <Card className="bg-slate-900/50 border-slate-700/50">
+        <Card className="bg-card/50 border-border/50">
           <CardHeader className="py-2">
             <CardTitle className="text-xs font-medium text-muted-foreground">{t('multiLlmCompare.providerAI')}</CardTitle>
           </CardHeader>
@@ -257,7 +257,7 @@ export function MultiLLMCompare() {
       {response && (
         <div className="space-y-4">
           {/* Summary */}
-          <Card className="border-2 border-green-500/30 bg-green-500/5 bg-slate-900/50">
+          <Card className="border-2 border-green-500/30 bg-green-500/5 bg-card/50">
             <CardContent className="py-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-4">

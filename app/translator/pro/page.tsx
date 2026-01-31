@@ -1441,7 +1441,7 @@ export default function TranslatorProPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 p-3 mb-4">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sky-600 via-blue-600 to-cyan-600 animate-shimmer p-3 shadow-xl shadow-blue-900/50 mb-4">
         {/* Immagine game fusa nello sfondo */}
         {selectedGame?.coverUrl && (
           <>
@@ -1471,13 +1471,21 @@ export default function TranslatorProPage() {
             </p>
           </div>
           
-          {/* TM Stats Badge */}
-          {tmStats && (
-            <Badge variant="secondary" className="ml-auto gap-1.5 bg-white/20 text-white border-white/30">
-              <Database className="h-3 w-3" />
-              {tmStats.totalUnits} traduzioni in memoria
-            </Badge>
-          )}
+          {/* Actions */}
+          <div className="ml-auto flex items-center gap-2">
+            <a href="/translator/mtpe">
+              <Badge variant="secondary" className="gap-1.5 bg-purple-500/30 text-white border-purple-400/50 hover:bg-purple-500/50 cursor-pointer transition-colors">
+                <Sparkles className="h-3 w-3" />
+                MTPE
+              </Badge>
+            </a>
+            {tmStats && (
+              <Badge variant="secondary" className="gap-1.5 bg-white/20 text-white border-white/30">
+                <Database className="h-3 w-3" />
+                {tmStats.totalUnits} TM
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
       
@@ -2685,7 +2693,7 @@ export default function TranslatorProPage() {
       
       {/* Export Success Dialog */}
       <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <AlertDialogContent className="bg-slate-800 border-slate-700">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="text-green-400 flex items-center gap-2">
               <CheckCircle className="h-6 w-6" />
@@ -2694,7 +2702,7 @@ export default function TranslatorProPage() {
             <AlertDialogDescription asChild>
               <div className="text-slate-300 space-y-3">
                 <p>Il pacchetto di traduzione è stato salvato sul tuo Desktop:</p>
-                <code className="block bg-slate-900 p-3 rounded text-blue-300 text-sm break-all">
+                <code className="block bg-muted p-3 rounded text-primary text-sm break-all">
                   {exportedFilePath}
                 </code>
                 <div className="mt-4 text-sm text-slate-400">

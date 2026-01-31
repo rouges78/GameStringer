@@ -37,12 +37,15 @@ import { LanguageFlags } from '@/components/ui/language-flags';
 import { activityHistory } from '@/lib/activity-history';
 import { TranslationRecommendation } from '@/components/translation-recommendation';
 import { useTranslation } from '@/lib/i18n';
+import { CoverPicker } from '@/components/cover-picker';
+import { HltbStats } from '@/components/hltb-stats';
+import { ImageIcon } from 'lucide-react';
 
 export default function GameDetailPage() {
   const params = useParams();
   const router = useRouter();
   const gameId = params.id as string;
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   
   const [game, setGame] = useState<any>(null);
   const [translations, setTranslations] = useState<any[]>([]);
@@ -61,6 +64,8 @@ export default function GameDetailPage() {
     can_patch: boolean;
     patch_tool: string | null;
     patch_description: string | null;
+    source?: string | null;
+    tips?: string[] | null;
   } | null>(null);
   const [isDetectingEngine, setIsDetectingEngine] = useState(false);
   
@@ -83,6 +88,7 @@ export default function GameDetailPage() {
   
   // SteamGridDB fallback image
   const [fallbackImage, setFallbackImage] = useState<string | null>(null);
+  const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
 
   // Unreal Engine Patcher
   const [unrealPatchStatus, setUnrealPatchStatus] = useState<{
@@ -512,7 +518,7 @@ export default function GameDetailPage() {
           let detectedEngine: string | null = null;
           if (realInstallPath) {
             try {
-              const engineResult = await invoke('detect_game_engine', { gamePath: realInstallPath });
+              const engineResult = await invoke('detect_engine_for_game', { gamePath: realInstallPath });
               if (engineResult && typeof engineResult === 'object') {
                 detectedEngine = (engineResult as any).engine || null;
                 console.log('[GameDetail] Engine rilevato:', detectedEngine);
@@ -654,15 +660,36 @@ export default function GameDetailPage() {
     if (game?.engine === 'Unreal Engine' && game?.installPath) {
       loadUnrealPatchStatus();
     }
-    // Traduci descrizione in italiano
-    if (game?.shortDescription && !translatedDescription) {
+    // Traduci descrizione nella lingua utente (ritraduce quando cambia lingua)
+    if (game?.shortDescription) {
+      setTranslatedDescription(null);
       translateDescription(game.shortDescription);
+    }
+    // Cerca descrizione da Steam API se mancante
+    if (game && !game.shortDescription && !game.description && game.appid) {
+      fetchDescriptionFromSteam();
     }
     // Cerca immagine su SteamGridDB se non c'è header
     if (game && !game.headerUrl && !fallbackImage) {
       fetchFallbackImage();
     }
-  }, [game]);
+  }, [game, language]);
+
+  // Cerca descrizione da Steam Store API
+  const fetchDescriptionFromSteam = async () => {
+    if (!game?.appid) return;
+    try {
+      const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${game.appid}&l=italian`);
+      const data = await response.json();
+      if (data[game.appid]?.success && data[game.appid]?.data?.short_description) {
+        const desc = data[game.appid].data.short_description.replace(/<[^>]*>?/gm, '');
+        setGame((prev: any) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
+        setTranslatedDescription(desc);
+      }
+    } catch (e) {
+      console.warn('[GameDetail] Steam description fetch failed:', e);
+    }
+  };
 
   // Cerca immagine alternativa su SteamGridDB
   const fetchFallbackImage = async () => {
@@ -699,15 +726,16 @@ export default function GameDetailPage() {
     }
   };
 
-  // Traduce la descrizione in italiano
+  // Traduce la descrizione nella lingua dell'utente
   const translateDescription = async (text: string) => {
     try {
       const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ translated_text: string }>('translate_text_simple', {
         text,
-        targetLang: 'it'
+        targetLang: language
       });
-      if (result?.translated_text) {
+      // Ignora risposte di errore da MyMemory (limite raggiunto)
+      if (result?.translated_text && !result.translated_text.includes('MYMEMORY WARNING')) {
         setTranslatedDescription(result.translated_text);
       }
     } catch (error) {
@@ -904,12 +932,13 @@ export default function GameDetailPage() {
         >
           <div className="flex flex-col md:flex-row">
             {/* Header Image */}
-            <div className="relative w-full md:w-[460px] flex-shrink-0" style={{ minHeight: '215px', maxHeight: '215px' }}>
+            <div className="relative w-full md:w-[350px] flex-shrink-0 overflow-hidden group" style={{ minHeight: '165px', maxHeight: '165px' }}>
               {(game.headerUrl || game.heroUrl || game.coverUrl || fallbackImage) ? (
                 <img 
-                  src={fallbackImage || game.headerUrl || game.heroUrl || game.coverUrl}
+                  src={game.headerUrl || game.heroUrl || fallbackImage || game.coverUrl}
                   alt={game.title}
-                  className="w-full h-full object-cover md:rounded-l-xl"
+                  className="w-full h-full object-cover object-center md:rounded-l-xl"
+                  style={{ aspectRatio: '460/215' }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
@@ -926,12 +955,21 @@ export default function GameDetailPage() {
                   NELLA LIBRERIA
                 </div>
               )}
+              {/* Bottone Cambia Cover */}
+              <button
+                onClick={() => setIsCoverPickerOpen(true)}
+                className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/70 hover:bg-black/90 px-2 py-1 rounded text-[10px] font-medium text-white/80 hover:text-white transition-all z-10 opacity-0 group-hover:opacity-100"
+                title="Cambia cover da SteamGridDB"
+              >
+                <ImageIcon className="h-3 w-3" />
+                Cambia
+              </button>
             </div>
             
             {/* Info Content */}
             <div className="flex-1 p-4 flex flex-col justify-between">
               {/* Description */}
-              <p className="text-[13px] text-[#c6d4df] leading-relaxed line-clamp-4">
+              <p className="text-[12px] text-[#c6d4df] leading-relaxed">
                 {translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description || 'Nessuna descrizione disponibile.'}
               </p>
               
@@ -983,6 +1021,9 @@ export default function GameDetailPage() {
           </div>
         </motion.div>
 
+        {/* HowLongToBeat Stats - Stile Steam Deck */}
+        <HltbStats gameName={game.title || game.name || ''} className="mt-4" />
+
         {/* Screenshot Gallery - Solo se ci sono screenshot */}
         {game.screenshots?.length > 0 && (
           <Card className="bg-black/30 backdrop-blur-xl border-white/10">
@@ -1007,11 +1048,13 @@ export default function GameDetailPage() {
           </Card>
         )}
 
-        {/* Info rapida */}
-        <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
-          <span><Folder className="h-3 w-3 inline mr-1" />{game.installPath || 'Path N/D'}</span>
-          {dlcGames.length > 0 && <span className="text-cyan-400">{dlcGames.length} DLC</span>}
-        </div>
+        {/* Info rapida - nascosta se non c'è path */}
+        {game.installPath && (
+          <div className="flex flex-wrap items-center gap-3 text-[10px] text-gray-500">
+            <span><Folder className="h-3 w-3 inline mr-1" />{game.installPath}</span>
+            {dlcGames.length > 0 && <span className="text-cyan-400">{dlcGames.length} DLC</span>}
+          </div>
+        )}
 
         {isScanning && (
           <div className="flex items-center gap-2">
@@ -1021,16 +1064,55 @@ export default function GameDetailPage() {
         )}
 
       {/* Layout 3:1 - Tabs + Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
         {/* Colonna Principale - Tabs */}
-        <div className="lg:col-span-3 space-y-3">
+        <div className="lg:col-span-3 space-y-2">
+
+          {/* Raccomandazione Traduzione - Sopra tabs */}
+          {(game.is_installed || game.installPath) && (
+            <TranslationRecommendation 
+              gamePath={game.installPath || ''} 
+              gameName={game.title || game.name || ''} 
+              onActionClick={async (route) => {
+                if (route === 'action:launch_game') {
+                  if (game.appid && game.appid > 0) {
+                    const steamUrl = `steam://rungameid/${game.appid}`;
+                    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+                      try {
+                        const { invoke } = await import('@tauri-apps/api/core');
+                        await invoke('launch_steam_game', { appId: game.appid.toString() });
+                      } catch (e) {
+                        window.location.href = steamUrl;
+                      }
+                    } else {
+                      window.location.href = steamUrl;
+                    }
+                  } else if (game.installPath) {
+                    try {
+                      const { invoke } = await import('@tauri-apps/api/core');
+                      const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
+                      if (exeList?.length > 0) {
+                        await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
+                      }
+                    } catch (e) {
+                      console.error('[GameDetail] Errore avvio:', e);
+                    }
+                  }
+                } else if (route === '/unity-patcher') {
+                  handleInstallUnityPatch();
+                } else {
+                  router.push(route);
+                }
+              }}
+            />
+          )}
 
           {/* Tabs File/Traduzioni/Patch */}
           <Tabs defaultValue="files" className="space-y-3">
-            <TabsList className="h-10 bg-black/30 border-white/10">
-              <TabsTrigger value="files" className="text-sm data-[state=active]:bg-purple-600">📁 File</TabsTrigger>
-              <TabsTrigger value="translations" className="text-sm data-[state=active]:bg-purple-600">🌍 Traduzioni</TabsTrigger>
-              <TabsTrigger value="patches" className="text-sm data-[state=active]:bg-purple-600">⚡ Patch</TabsTrigger>
+            <TabsList className="h-8 bg-black/30 border-white/10">
+              <TabsTrigger value="files" className="text-xs data-[state=active]:bg-purple-600">📁 {t('gameDetails.tabFiles')}</TabsTrigger>
+              <TabsTrigger value="translations" className="text-xs data-[state=active]:bg-purple-600">🌍 {t('gameDetails.tabTranslations')}</TabsTrigger>
+              <TabsTrigger value="patches" className="text-xs data-[state=active]:bg-purple-600">⚡ {t('gameDetails.tabPatch')}</TabsTrigger>
             </TabsList>
 
           <TabsContent value="files" className="space-y-2">
@@ -1136,10 +1218,31 @@ export default function GameDetailPage() {
                     <Zap className="h-3 w-3 inline mr-1" />Ren'Py - Traduzioni in game/tl
                   </div>
                 )}
-                {/* UNKNOWN */}
+                {/* UNKNOWN - con suggerimenti intelligenti */}
                 {(!game.engine || game.engine === 'Unknown') && (
-                  <div className="p-2 bg-gray-500/10 rounded text-xs text-gray-300">
-                    <AlertTriangle className="h-3 w-3 inline mr-1" />{t('gameDetails.engineNotRecognized')}
+                  <div className="p-2 bg-gray-500/10 rounded space-y-2">
+                    <div className="text-xs text-gray-300">
+                      <AlertTriangle className="h-3 w-3 inline mr-1" />{t('gameDetails.engineNotRecognized')}
+                    </div>
+                    {engineInfo?.tips && engineInfo.tips.length > 0 && (
+                      <div className="space-y-1 border-t border-white/10 pt-2">
+                        <div className="text-[10px] text-amber-400 font-medium">💡 Suggerimenti:</div>
+                        {engineInfo.tips.slice(0, 5).map((tip, i) => (
+                          <div key={i} className="text-[10px] text-gray-400">{tip}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* Tips per engine riconosciuto */}
+                {engineInfo?.tips && engineInfo.tips.length > 0 && game.engine && game.engine !== 'Unknown' && (
+                  <div className="space-y-1 mt-2 p-2 bg-white/5 rounded">
+                    {engineInfo.tips.map((tip, i) => (
+                      <div key={i} className="text-[10px] text-gray-400">{tip}</div>
+                    ))}
+                    {engineInfo.source && engineInfo.source !== 'local' && (
+                      <div className="text-[9px] text-gray-500 mt-1">📡 Fonte: {engineInfo.source}</div>
+                    )}
                   </div>
                 )}
                 {/* Status */}
@@ -1158,18 +1261,18 @@ export default function GameDetailPage() {
         <div className="space-y-4">
           {/* Info Gioco */}
           <Card className="bg-black/30 backdrop-blur-xl border-white/10">
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-3 space-y-2">
               {/* Badges */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge className={`${getPlatformColor(game.platform)}`}>{game.platform}</Badge>
-                <Badge variant={game.is_installed ? "default" : "secondary"}>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge className={`text-[10px] ${getPlatformColor(game.platform)}`}>{game.platform}</Badge>
+                <Badge variant={game.is_installed ? "default" : "secondary"} className="text-[10px]">
                   {game.is_installed ? `✓ ${t('gameDetails.installed')}` : `✗ ${t('gameDetails.notInstalled')}`}
                 </Badge>
-                {game.is_free && <Badge className="bg-green-600">🎁 {t('gameDetails.free')}</Badge>}
+                {game.is_free && <Badge className="bg-green-600 text-[10px]">🎁 Free</Badge>}
               </div>
 
               {/* Info Base */}
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1 text-xs">
                 {game.developers?.length > 0 && (
                   <div className="flex justify-between">
                     <span className="text-white/50">{t('gameDetails.developer')}</span>
@@ -1192,9 +1295,9 @@ export default function GameDetailPage() {
 
               {/* Generi */}
               {game.genres?.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
-                  {game.genres.map((g: any) => (
-                    <Badge key={g.id || g} variant="outline" className="text-xs bg-purple-500/20 border-purple-500/40">
+                <div className="flex flex-wrap gap-1 pt-2 border-t border-white/10">
+                  {game.genres.slice(0, 4).map((g: any) => (
+                    <Badge key={g.id || g} variant="outline" className="text-[10px] bg-purple-500/20 border-purple-500/40">
                       {g.description || g}
                     </Badge>
                   ))}
@@ -1203,100 +1306,16 @@ export default function GameDetailPage() {
 
               {/* Lingue */}
               {game.supported_languages && (
-                <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                  <Languages className="h-4 w-4 text-cyan-400 shrink-0" />
-                  <LanguageFlags supportedLanguages={game.supported_languages.replace(/<[^>]*>?/gm, '')} maxFlags={8} />
+                <div className="flex items-center gap-1.5 pt-2 border-t border-white/10">
+                  <Languages className="h-3 w-3 text-cyan-400 shrink-0" />
+                  <LanguageFlags supportedLanguages={game.supported_languages.replace(/<[^>]*>?/gm, '')} maxFlags={6} />
                 </div>
               )}
             </CardContent>
           </Card>
-
-          {/* Azioni */}
-          {game.is_installed && (
-            <Card className="bg-black/30 backdrop-blur-xl border-white/10">
-              <CardContent className="p-4 space-y-2">
-                <Button className="w-full h-10" onClick={() => setShowTranslation(true)}>
-                  <Languages className="h-4 w-4 mr-2" />{t('gameDetails.translateGame')}
-                </Button>
-                <Button variant="outline" className="w-full" onClick={scanGameFiles} disabled={isScanning}>
-                  <FileText className="h-4 w-4 mr-2" />{isScanning ? t('gameDetails.scanning') : t('gameDetails.scanFiles')}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* HLTB */}
-          {!hltbData && !isLoadingHltb && (
-            <Button variant="outline" className="w-full" onClick={async () => {
-              setIsLoadingHltb(true);
-              try {
-                const { invoke } = await import('@tauri-apps/api/core');
-                const result = await invoke<any>('get_howlongtobeat_info', { gameName: game?.title || '' });
-                setHltbData(result);
-              } catch (e) {
-                console.error('[HLTB] Errore:', e);
-              } finally {
-                setIsLoadingHltb(false);
-              }
-            }}>
-              ⏱️ {t('gameDetails.loadPlaytime')}
-            </Button>
-          )}
-          {isLoadingHltb && <div className="text-center text-amber-400 animate-pulse">⏱️ {t('gameDetails.loading')}</div>}
-          {hltbData?.found && (
-            <Card className="bg-amber-500/10 border-amber-500/30">
-              <CardContent className="p-4">
-                <div className="text-sm font-medium text-amber-400 mb-3">⏱️ HowLongToBeat</div>
-                <div className="space-y-2">
-                  {hltbData.main > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Main</span><span className="font-bold text-white">{hltbData.main}h</span></div>}
-                  {hltbData.main_extra > 0 && <div className="flex justify-between"><span className="text-muted-foreground">+ Extra</span><span className="font-bold text-white">{hltbData.main_extra}h</span></div>}
-                  {hltbData.completionist > 0 && <div className="flex justify-between"><span className="text-muted-foreground">100%</span><span className="font-bold text-white">{hltbData.completionist}h</span></div>}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
 
-      {/* Raccomandazione Traduzione - Full Width */}
-      {(game.is_installed || game.installPath) && (
-        <TranslationRecommendation 
-          gamePath={game.installPath || ''} 
-          gameName={game.title || game.name || ''} 
-          onActionClick={async (route) => {
-            if (route === 'action:launch_game') {
-              if (game.appid && game.appid > 0) {
-                const steamUrl = `steam://rungameid/${game.appid}`;
-                if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-                  try {
-                    const { invoke } = await import('@tauri-apps/api/core');
-                    await invoke('launch_steam_game', { appId: game.appid.toString() });
-                  } catch (e) {
-                    window.location.href = steamUrl;
-                  }
-                } else {
-                  window.location.href = steamUrl;
-                }
-              } else if (game.installPath) {
-                try {
-                  const { invoke } = await import('@tauri-apps/api/core');
-                  const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
-                  if (exeList?.length > 0) {
-                    await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
-                  }
-                } catch (e) {
-                  console.error('[GameDetail] Errore avvio:', e);
-                }
-              }
-            } else if (route === '/unity-patcher') {
-              handleInstallUnityPatch();
-            } else {
-              router.push(route);
-            }
-          }}
-        />
-      )}
-      
       {/* Inline Translator Modal */}
       {showTranslation && game && (
         <InlineTranslator
@@ -1401,6 +1420,22 @@ export default function GameDetailPage() {
           </motion.div>
         </motion.div>,
         document.body
+      )}
+
+      {/* Cover Picker Modal */}
+      {game && (
+        <CoverPicker
+          isOpen={isCoverPickerOpen}
+          onClose={() => setIsCoverPickerOpen(false)}
+          appId={game.appid || parseInt(game.app_id?.replace('steam_', '') || '0')}
+          gameName={game.title || game.name || ''}
+          currentCover={game.headerUrl || fallbackImage || undefined}
+          onCoverSelected={(url) => {
+            setFallbackImage(url);
+            // Aggiorna anche il game object per riflettere la nuova cover
+            setGame((prev: any) => prev ? { ...prev, headerUrl: url } : null);
+          }}
+        />
       )}
       </div>
     </div>

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
 import { Gamepad2 } from 'lucide-react';
 import IntelligentPlaceholder from './intelligent-placeholder';
 
@@ -15,13 +14,23 @@ interface GameImageProps {
   genre?: string;
   engine?: string;
   priority?: boolean; // Per immagini above-the-fold
+  appId?: string; // Per cercare su SteamGridDB
 }
 
-const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className, gameName, store, genre, engine, priority = false }) => {
+const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className, gameName, store, genre, engine, priority = false, appId }) => {
   const [currentSrc, setCurrentSrc] = useState(src);
   const [hasError, setHasError] = useState(false);
   const [isVisible, setIsVisible] = useState(priority); // Se priority, carica subito
+  const [triedSteamGridDb, setTriedSteamGridDb] = useState(false);
+  const [isLoadingSteamGridDb, setIsLoadingSteamGridDb] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Debug: log quando src è vuoto o mancante
+  useEffect(() => {
+    if (!src || src === '') {
+      console.log(`[GameImage] ⚠️ Empty src for ${gameName} (appId: ${appId}), fallback: ${fallbackSrc?.substring(0, 40) || 'none'}`);
+    }
+  }, [src, gameName, appId, fallbackSrc]);
 
   // Lazy loading con IntersectionObserver
   useEffect(() => {
@@ -48,13 +57,96 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
   useEffect(() => {
     setCurrentSrc(src);
     setHasError(false);
+    setTriedSteamGridDb(false);
   }, [src]);
 
-  const handleError = () => {
-    if (currentSrc === fallbackSrc || !fallbackSrc) {
+  // Pre-check: verifica se l'immagine Steam esiste, altrimenti cerca su SteamGridDB
+  useEffect(() => {
+    if (!isVisible || triedSteamGridDb || !appId || !gameName) return;
+    if (!currentSrc || currentSrc === '') {
+      console.log(`[GameImage] 🔍 No src, fetching SteamGridDB for ${gameName}`);
+      fetchSteamGridDbImage();
+      return;
+    }
+    
+    // Pre-check immagine Steam con un Image object
+    const img = new Image();
+    img.onload = () => {
+      // Immagine caricata correttamente, niente da fare
+    };
+    img.onerror = () => {
+      console.log(`[GameImage] 🔍 Image failed to load for ${gameName}, trying SteamGridDB`);
+      if (!triedSteamGridDb) {
+        fetchSteamGridDbImage();
+      }
+    };
+    img.src = currentSrc;
+  }, [currentSrc, triedSteamGridDb, appId, gameName, isVisible]);
+
+  const fetchSteamGridDbImage = async () => {
+    if (triedSteamGridDb) return;
+    setTriedSteamGridDb(true);
+    setIsLoadingSteamGridDb(true);
+    
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      
+      // Prova prima dalla cache
+      const cached = await invoke<string | null>('get_cover_cache', { gameId: appId });
+      if (cached) {
+        setCurrentSrc(cached);
+        setIsLoadingSteamGridDb(false);
+        return;
+      }
+      
+      // Cerca API key in gamestringer_utility_prefs (dove viene salvata dalla pagina stores)
+      let apiKey = null;
+      const utilityPrefs = localStorage.getItem('gamestringer_utility_prefs');
+      if (utilityPrefs) {
+        try {
+          const prefs = JSON.parse(utilityPrefs);
+          apiKey = prefs?.steamgriddb?.apiKey || null;
+        } catch (e) {}
+      }
+      
+      const result = await invoke<string | null>('fetch_steamgriddb_image', {
+        appId: parseInt(appId!) || 0,
+        gameName: gameName,
+        apiKey: apiKey
+      });
+      
+      if (result) {
+        setCurrentSrc(result);
+        // Salva in cache
+        await invoke('save_cover_cache', { gameId: appId, imageUrl: result });
+      } else {
+        setHasError(true);
+      }
+    } catch (e) {
+      console.warn('[GameImage] SteamGridDB fallback failed:', e);
       setHasError(true);
-    } else {
+    } finally {
+      setIsLoadingSteamGridDb(false);
+    }
+  };
+
+  const handleError = async () => {
+    console.log(`[GameImage] onError triggered for ${gameName} (appId: ${appId}), currentSrc: ${currentSrc?.substring(0, 50)}...`);
+    
+    // Prima prova il fallback locale
+    if (currentSrc !== fallbackSrc && fallbackSrc) {
+      console.log(`[GameImage] Trying fallback for ${gameName}: ${fallbackSrc?.substring(0, 50)}...`);
       setCurrentSrc(fallbackSrc);
+      return;
+    }
+    
+    // Poi prova SteamGridDB
+    if (!triedSteamGridDb && appId && gameName) {
+      console.log(`[GameImage] Trying SteamGridDB for ${gameName} (appId: ${appId})`);
+      await fetchSteamGridDbImage();
+    } else {
+      console.log(`[GameImage] No more fallbacks for ${gameName}, showing placeholder`);
+      setHasError(true);
     }
   };
 
@@ -62,6 +154,15 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
   if (!isVisible) {
     return (
       <div ref={containerRef} className="w-full h-full bg-muted/50 animate-pulse" />
+    );
+  }
+
+  // Mostra loading mentre cerca su SteamGridDB
+  if (isLoadingSteamGridDb || (!currentSrc && !triedSteamGridDb && appId && gameName)) {
+    return (
+      <div className="w-full h-full bg-muted/50 animate-pulse flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+      </div>
     );
   }
 
@@ -88,15 +189,12 @@ const GameImage: React.FC<GameImageProps> = ({ src, alt, fallbackSrc, className,
   }
 
   return (
-    <Image
+    <img
       src={currentSrc}
       alt={alt}
-      fill
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-      className={className || "object-cover group-hover:scale-105 transition-transform duration-300"}
+      className={`absolute inset-0 w-full h-full ${className || "object-cover group-hover:scale-105 transition-transform duration-300"}`}
       onError={handleError}
       loading={priority ? "eager" : "lazy"}
-      priority={priority}
     />
   );
 };

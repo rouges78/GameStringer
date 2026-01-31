@@ -369,3 +369,13 @@ pub fn capture_screen(region: &Option<CaptureRegion>) -> Result<ImageData, Strin
 pub fn capture_screen(_region: &Option<CaptureRegion>) -> Result<ImageData, String> {
     Err("Screen capture supportato solo su Windows".to_string())
 }
+
+/// Cattura l'intero schermo
+pub fn capture_fullscreen() -> Result<ImageData, String> {
+    capture_screen(&None)
+}
+
+/// Cattura una regione specifica dello schermo
+pub fn capture_region(x: i32, y: i32, width: i32, height: i32) -> Result<ImageData, String> {
+    capture_screen(&Some(CaptureRegion { x, y, width, height }))
+}

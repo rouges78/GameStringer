@@ -979,7 +979,18 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
         "cities skylines 2", "planet zoo", "planet coaster", "two point hospital",
         "two point campus", "parkitect", "megaquarium", "softwareincdev",
         // Mobile/Multiplat
-        "pokémon go", "mario kart tour", "call of duty mobile", "pubg mobile", "genshin impact"
+        "pokémon go", "mario kart tour", "call of duty mobile", "pubg mobile", "genshin impact",
+        // Indie narrativi/esplorativi Unity
+        "in other waters", "return of the obra dinn", "outer wilds", "the pathless", "abzu",
+        "journey", "flower", "sky children of the light", "gris", "spiritfarer",
+        "coffee talk", "a short hike", "unpacking", "toem", "alba wildlife",
+        "eastshade", "the gardens between", "when the past was around", "before your eyes",
+        "twelve minutes", "the artful escape", "genesis noir", "last stop", "road 96",
+        "lake", "sable", "stray", "tunic", "cult of the lamb", "sifu",
+        // Puzzle/Strategy Unity
+        "baba is you", "return to monkey island", "the case of the golden idol",
+        "inscryption", "buckshot roulette", "balatro", "luck be a landlord",
+        "stacklands", "dome keeper", "20 minutes till dawn", "halls of torment"
     ];
     
     // 🔷 UNREAL ENGINE (500+ giochi)

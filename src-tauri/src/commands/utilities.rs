@@ -49,32 +49,244 @@ struct HltbGameplay {
 
 #[tauri::command]
 pub async fn get_howlongtobeat_info(game_name: String) -> Result<serde_json::Value, String> {
-    log::info!("🕐 HowLongToBeat temporaneamente disabilitato per: {}", game_name);
+    log::info!("🕐 HowLongToBeat ricerca per: {}", game_name);
     
-    // HLTB API ha cambiato formato, la libreria non è aggiornata
-    // Disabilitato temporaneamente fino a quando non sarà disponibile una soluzione
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .map_err(|e| e.to_string())?;
+    
+    // Metodo 1: Scraping HTML della pagina di ricerca (come HLTB for Deck)
+    let search_url = format!(
+        "https://howlongtobeat.com/?q={}",
+        urlencoding::encode(&game_name)
+    );
+    
+    let response = client
+        .get(&search_url)
+        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+        .header("Accept-Language", "en-US,en;q=0.5")
+        .send()
+        .await
+        .map_err(|e| format!("Errore richiesta HLTB: {}", e))?;
+    
+    let status = response.status();
+    log::info!("🕐 HLTB HTML response status: {}", status);
+    
+    if !status.is_success() {
+        log::warn!("⚠️ HLTB risposta non OK: {}", status);
+        return Ok(serde_json::json!({
+            "found": false,
+            "message": format!("HowLongToBeat non disponibile ({})", status),
+            "url": search_url
+        }));
+    }
+    
+    let html = response.text().await
+        .map_err(|e| format!("Errore lettura HLTB: {}", e))?;
+    
+    // Parse HTML per estrarre i dati (cerca pattern nei data attributes o nel JSON embedded)
+    // Pattern: cerca "comp_main":XXX, "comp_plus":XXX, "comp_100":XXX nel HTML/JS
+    
+    // Cerca il primo game_id nel HTML
+    let game_id_regex = regex::Regex::new(r#"game_id["\s:]+(\d+)"#).ok();
+    let game_id = game_id_regex.and_then(|re| {
+        re.captures(&html).and_then(|cap| cap.get(1).map(|m| m.as_str().parse::<i64>().unwrap_or(0)))
+    }).unwrap_or(0);
+    
+    if game_id == 0 {
+        // Prova pattern alternativo per link al gioco
+        let link_regex = regex::Regex::new(r#"/game/(\d+)"#).ok();
+        let alt_game_id = link_regex.and_then(|re| {
+            re.captures(&html).and_then(|cap| cap.get(1).map(|m| m.as_str().parse::<i64>().unwrap_or(0)))
+        }).unwrap_or(0);
+        
+        if alt_game_id > 0 {
+            // Fetch pagina specifica del gioco per dati completi
+            return fetch_hltb_game_page(&client, alt_game_id, &game_name).await;
+        }
+        
+        log::info!("ℹ️ HLTB nessun risultato per: {}", game_name);
+        return Ok(serde_json::json!({
+            "found": false,
+            "url": search_url
+        }));
+    }
+    
+    // Fetch pagina specifica del gioco
+    fetch_hltb_game_page(&client, game_id, &game_name).await
+}
+
+async fn fetch_hltb_game_page(client: &reqwest::Client, game_id: i64, game_name: &str) -> Result<serde_json::Value, String> {
+    let game_url = format!("https://howlongtobeat.com/game/{}", game_id);
+    
+    let response = client
+        .get(&game_url)
+        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .send()
+        .await
+        .map_err(|e| format!("Errore fetch game page: {}", e))?;
+    
+    if !response.status().is_success() {
+        return Ok(serde_json::json!({
+            "found": false,
+            "url": game_url
+        }));
+    }
+    
+    let html = response.text().await.unwrap_or_default();
+    
+    // Estrai i tempi dal HTML - cerca pattern come "Main Story" seguito da ore
+    // Pattern tipico: <div>Main Story</div>...<div>X Hours</div>
+    
+    let extract_hours = |label: &str, html: &str| -> i64 {
+        // Cerca pattern: label seguito da numero + "Hours" o "½"
+        let pattern = format!(r#"{}[^0-9]*?(\d+)\s*(?:½\s*)?Hours?"#, regex::escape(label));
+        if let Ok(re) = regex::Regex::new(&pattern) {
+            if let Some(cap) = re.captures(html) {
+                return cap.get(1).map(|m| m.as_str().parse::<i64>().unwrap_or(0)).unwrap_or(0);
+            }
+        }
+        0
+    };
+    
+    let main = extract_hours("Main Story", &html);
+    let main_extra = extract_hours("Main \\+ Extras", &html).max(extract_hours("Main Story \\+ Extras", &html));
+    let completionist = extract_hours("Completionist", &html).max(extract_hours("100%", &html));
+    let all_styles = extract_hours("All Styles", &html).max(extract_hours("All PlayStyles", &html));
+    
+    // Se non trova con regex, cerca pattern JSON embedded
+    let (main, main_extra, completionist, all_styles) = if main == 0 && main_extra == 0 {
+        // Cerca comp_main, comp_plus, comp_100, comp_all nel HTML (potrebbero essere in JSON)
+        let comp_main = regex::Regex::new(r#"comp_main["\s:]+(\d+)"#).ok()
+            .and_then(|re| re.captures(&html).and_then(|c| c.get(1).map(|m| m.as_str().parse::<i64>().unwrap_or(0) / 3600)))
+            .unwrap_or(0);
+        let comp_plus = regex::Regex::new(r#"comp_plus["\s:]+(\d+)"#).ok()
+            .and_then(|re| re.captures(&html).and_then(|c| c.get(1).map(|m| m.as_str().parse::<i64>().unwrap_or(0) / 3600)))
+            .unwrap_or(0);
+        let comp_100 = regex::Regex::new(r#"comp_100["\s:]+(\d+)"#).ok()
+            .and_then(|re| re.captures(&html).and_then(|c| c.get(1).map(|m| m.as_str().parse::<i64>().unwrap_or(0) / 3600)))
+            .unwrap_or(0);
+        let comp_all = regex::Regex::new(r#"comp_all["\s:]+(\d+)"#).ok()
+            .and_then(|re| re.captures(&html).and_then(|c| c.get(1).map(|m| m.as_str().parse::<i64>().unwrap_or(0) / 3600)))
+            .unwrap_or(0);
+        (comp_main, comp_plus, comp_100, comp_all)
+    } else {
+        (main, main_extra, completionist, all_styles)
+    };
+    
+    if main > 0 || main_extra > 0 || completionist > 0 || all_styles > 0 {
+        log::info!("✅ HLTB trovato: {} - Main: {}h, Extra: {}h, 100%: {}h, All: {}h", 
+            game_name, main, main_extra, completionist, all_styles);
+        
+        return Ok(serde_json::json!({
+            "found": true,
+            "game_name": game_name,
+            "main": main,
+            "main_extra": main_extra,
+            "completionist": completionist,
+            "all_styles": all_styles,
+            "url": game_url
+        }));
+    }
+    
+    log::info!("ℹ️ HLTB pagina trovata ma senza tempi per: {}", game_name);
     Ok(serde_json::json!({
         "found": false,
-        "message": "HowLongToBeat temporaneamente non disponibile",
-        "url": format!("https://howlongtobeat.com/?q={}", urlencoding::encode(&game_name))
+        "url": game_url
     }))
 }
 
 #[tauri::command]
-pub async fn get_steamgriddb_artwork(app_id: String, artwork_type: String) -> Result<serde_json::Value, String> {
+pub async fn get_steamgriddb_artwork(app_id: String, artwork_type: String, api_key: Option<String>) -> Result<serde_json::Value, String> {
     log::info!("🎨 Ricerca artwork SteamGridDB per AppID: {} (tipo: {})", app_id, artwork_type);
     
-    // TODO: Implementare integrazione con SteamGridDB API
-    // Per ora restituiamo un placeholder
-    let response = serde_json::json!({
-        "found": false,
-        "message": "Servizio SteamGridDB non ancora implementato",
-        "artwork_type": artwork_type,
-        "app_id": app_id
-    });
+    let api_key = match api_key {
+        Some(key) if !key.is_empty() => key,
+        _ => {
+            return Ok(serde_json::json!({
+                "found": false,
+                "message": "API Key SteamGridDB non configurata"
+            }));
+        }
+    };
     
-    log::warn!("⚠️ SteamGridDB non ancora implementato");
-    Ok(response)
+    let client = reqwest::Client::new();
+    
+    // Prima cerca il game_id tramite Steam AppID
+    let search_url = format!("https://www.steamgriddb.com/api/v2/games/steam/{}", app_id);
+    let search_response = client
+        .get(&search_url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await
+        .map_err(|e| format!("Errore ricerca SteamGridDB: {}", e))?;
+    
+    if !search_response.status().is_success() {
+        log::warn!("⚠️ SteamGridDB game non trovato per AppID: {}", app_id);
+        return Ok(serde_json::json!({
+            "found": false,
+            "message": "Gioco non trovato su SteamGridDB"
+        }));
+    }
+    
+    let game_data: serde_json::Value = search_response.json().await
+        .map_err(|e| format!("Errore parsing SteamGridDB: {}", e))?;
+    
+    let game_id = game_data.get("data")
+        .and_then(|d| d.get("id"))
+        .and_then(|id| id.as_i64())
+        .ok_or("Game ID non trovato")?;
+    
+    // Ora cerca l'artwork del tipo richiesto
+    let artwork_endpoint = match artwork_type.as_str() {
+        "grid" => "grids",
+        "hero" => "heroes",
+        "logo" => "logos",
+        "icon" => "icons",
+        _ => "grids"
+    };
+    
+    let artwork_url = format!("https://www.steamgriddb.com/api/v2/{}/game/{}", artwork_endpoint, game_id);
+    let artwork_response = client
+        .get(&artwork_url)
+        .header("Authorization", format!("Bearer {}", api_key))
+        .send()
+        .await
+        .map_err(|e| format!("Errore artwork SteamGridDB: {}", e))?;
+    
+    if !artwork_response.status().is_success() {
+        return Ok(serde_json::json!({
+            "found": false,
+            "message": "Artwork non trovato"
+        }));
+    }
+    
+    let artwork_data: serde_json::Value = artwork_response.json().await
+        .map_err(|e| format!("Errore parsing artwork: {}", e))?;
+    
+    if let Some(artworks) = artwork_data.get("data").and_then(|d| d.as_array()) {
+        if let Some(first) = artworks.first() {
+            let url = first.get("url").and_then(|u| u.as_str()).unwrap_or("");
+            let thumb = first.get("thumb").and_then(|t| t.as_str()).unwrap_or(url);
+            
+            log::info!("✅ SteamGridDB artwork trovato: {}", url);
+            return Ok(serde_json::json!({
+                "found": true,
+                "url": url,
+                "thumb": thumb,
+                "artwork_type": artwork_type,
+                "game_id": game_id,
+                "total_results": artworks.len()
+            }));
+        }
+    }
+    
+    Ok(serde_json::json!({
+        "found": false,
+        "message": "Nessun artwork disponibile"
+    }))
 }
 
 #[tauri::command]
@@ -369,4 +581,152 @@ fn copy_dir_recursive(src: &std::path::Path, dst: &std::path::Path) -> std::io::
     }
     
     Ok(())
+}
+
+/// Ottiene gli achievement di un gioco Steam per un utente
+#[tauri::command]
+pub async fn get_steam_achievements(steam_id: String, app_id: String, api_key: String) -> Result<serde_json::Value, String> {
+    log::info!("🏆 Recupero achievements Steam per AppID: {} (User: {})", app_id, steam_id);
+    
+    if api_key.is_empty() || steam_id.is_empty() {
+        return Ok(serde_json::json!({
+            "found": false,
+            "message": "Steam API Key o Steam ID non configurati"
+        }));
+    }
+    
+    let client = reqwest::Client::new();
+    
+    // Ottieni achievements dell'utente per questo gioco
+    let url = format!(
+        "https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key={}&steamid={}&appid={}",
+        api_key, steam_id, app_id
+    );
+    
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Errore richiesta Steam: {}", e))?;
+    
+    if !response.status().is_success() {
+        log::warn!("⚠️ Steam Achievements non disponibili per AppID: {}", app_id);
+        return Ok(serde_json::json!({
+            "found": false,
+            "message": "Achievements non disponibili per questo gioco"
+        }));
+    }
+    
+    let data: serde_json::Value = response.json().await
+        .map_err(|e| format!("Errore parsing Steam: {}", e))?;
+    
+    if let Some(playerstats) = data.get("playerstats") {
+        if let Some(achievements) = playerstats.get("achievements").and_then(|a| a.as_array()) {
+            let total = achievements.len();
+            let unlocked = achievements.iter()
+                .filter(|a| a.get("achieved").and_then(|v| v.as_i64()).unwrap_or(0) == 1)
+                .count();
+            
+            let game_name = playerstats.get("gameName").and_then(|n| n.as_str()).unwrap_or("Unknown");
+            
+            log::info!("✅ Achievements trovati: {}/{} per {}", unlocked, total, game_name);
+            
+            return Ok(serde_json::json!({
+                "found": true,
+                "game_name": game_name,
+                "total": total,
+                "unlocked": unlocked,
+                "percentage": if total > 0 { (unlocked as f64 / total as f64 * 100.0).round() } else { 0.0 },
+                "achievements": achievements
+            }));
+        }
+    }
+    
+    Ok(serde_json::json!({
+        "found": false,
+        "message": "Nessun achievement trovato"
+    }))
+}
+
+/// Ottiene le statistiche di tempo di gioco Steam
+#[tauri::command]
+pub async fn get_steam_playtime(steam_id: String, api_key: String) -> Result<serde_json::Value, String> {
+    log::info!("⏱️ Recupero playtime Steam per User: {}", steam_id);
+    
+    if api_key.is_empty() || steam_id.is_empty() {
+        return Ok(serde_json::json!({
+            "found": false,
+            "message": "Steam API Key o Steam ID non configurati"
+        }));
+    }
+    
+    let client = reqwest::Client::new();
+    
+    // Ottieni tutti i giochi con tempo di gioco
+    let url = format!(
+        "https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key={}&steamid={}&include_appinfo=1&include_played_free_games=1",
+        api_key, steam_id
+    );
+    
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Errore richiesta Steam: {}", e))?;
+    
+    if !response.status().is_success() {
+        log::warn!("⚠️ Steam Playtime non disponibile");
+        return Ok(serde_json::json!({
+            "found": false,
+            "message": "Playtime non disponibile"
+        }));
+    }
+    
+    let data: serde_json::Value = response.json().await
+        .map_err(|e| format!("Errore parsing Steam: {}", e))?;
+    
+    if let Some(response_data) = data.get("response") {
+        let game_count = response_data.get("game_count").and_then(|c| c.as_i64()).unwrap_or(0);
+        
+        if let Some(games) = response_data.get("games").and_then(|g| g.as_array()) {
+            let total_playtime: i64 = games.iter()
+                .map(|g| g.get("playtime_forever").and_then(|p| p.as_i64()).unwrap_or(0))
+                .sum();
+            
+            // Ordina per tempo di gioco e prendi i top 10
+            let mut games_sorted: Vec<_> = games.iter().collect();
+            games_sorted.sort_by(|a, b| {
+                let pa = a.get("playtime_forever").and_then(|p| p.as_i64()).unwrap_or(0);
+                let pb = b.get("playtime_forever").and_then(|p| p.as_i64()).unwrap_or(0);
+                pb.cmp(&pa)
+            });
+            
+            let top_games: Vec<serde_json::Value> = games_sorted.iter().take(10).map(|g| {
+                let name = g.get("name").and_then(|n| n.as_str()).unwrap_or("Unknown");
+                let playtime = g.get("playtime_forever").and_then(|p| p.as_i64()).unwrap_or(0);
+                let appid = g.get("appid").and_then(|a| a.as_i64()).unwrap_or(0);
+                serde_json::json!({
+                    "name": name,
+                    "appid": appid,
+                    "playtime_hours": playtime / 60,
+                    "playtime_minutes": playtime % 60
+                })
+            }).collect();
+            
+            log::info!("✅ Playtime trovato: {} giochi, {} ore totali", game_count, total_playtime / 60);
+            
+            return Ok(serde_json::json!({
+                "found": true,
+                "total_games": game_count,
+                "total_playtime_hours": total_playtime / 60,
+                "total_playtime_minutes": total_playtime % 60,
+                "top_games": top_games
+            }));
+        }
+    }
+    
+    Ok(serde_json::json!({
+        "found": false,
+        "message": "Nessun dato playtime trovato"
+    }))
 }

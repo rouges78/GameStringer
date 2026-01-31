@@ -2422,6 +2422,26 @@ pub enum TranslationMethod {
     Manual,
 }
 
+/// Singolo strumento di traduzione disponibile
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct TranslationTool {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub reliability: u8,
+    pub route: String,
+    pub available: bool,
+    pub reason: String,
+}
+
+/// Strategia combinata di traduzione
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct TranslationStrategy {
+    pub tools: Vec<TranslationTool>,
+    pub combined_reliability: u8,
+    pub description: String,
+}
+
 /// Raccomandazione completa per la traduzione di un gioco
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct TranslationRecommendation {
@@ -2449,6 +2469,41 @@ pub struct TranslationRecommendation {
     pub action_label: String,
     /// Route da aprire per l'azione
     pub action_route: String,
+    // === NUOVI CAMPI POTENZIATI ===
+    /// Motore di gioco rilevato
+    #[serde(default)]
+    pub engine_name: String,
+    /// Anti-cheat rilevato (può interferire con patch)
+    #[serde(default)]
+    pub anti_cheat_detected: Option<String>,
+    /// Avviso anti-cheat
+    #[serde(default)]
+    pub anti_cheat_warning: Option<String>,
+    /// Numero traduzioni in Translation Memory
+    #[serde(default)]
+    pub translation_memory_count: u32,
+    /// Pacchetti community disponibili per questo gioco
+    #[serde(default)]
+    pub community_packages_count: u32,
+    /// Nome del miglior pacchetto community
+    #[serde(default)]
+    pub best_community_package: Option<String>,
+    /// Qualità media pacchetti community (0-5)
+    #[serde(default)]
+    pub community_rating: Option<f32>,
+    /// Numero file traducibili trovati
+    #[serde(default)]
+    pub translatable_files_count: u32,
+    /// Suggerimenti extra
+    #[serde(default)]
+    pub tips: Vec<String>,
+    // === ANALISI COMPLETA STRUMENTI ===
+    /// Tutti gli strumenti analizzati con disponibilità
+    #[serde(default)]
+    pub all_tools: Vec<TranslationTool>,
+    /// Strategia combinata ottimale
+    #[serde(default)]
+    pub optimal_strategy: Option<TranslationStrategy>,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -2459,9 +2514,9 @@ pub struct AlternativeMethod {
     pub route: String,
 }
 
-/// Analizza un gioco e restituisce la raccomandazione di traduzione migliore
+/// Analizza un gioco e restituisce la raccomandazione di traduzione migliore (POTENZIATO)
 #[command]
-pub async fn get_translation_recommendation(game_path: String, _game_name: String) -> Result<TranslationRecommendation, String> {
+pub async fn get_translation_recommendation(game_path: String, game_name: String) -> Result<TranslationRecommendation, String> {
     let game_dir = Path::new(&game_path);
     
     if !game_dir.exists() {
@@ -2479,12 +2534,163 @@ pub async fn get_translation_recommendation(game_path: String, _game_name: Strin
         if l.format != "unknown" { Some(l.format.clone()) } else { None }
     });
     let missing_italian = loc_info.as_ref().map(|l| l.missing_italian).unwrap_or(true);
+    let files_count = loc_info.as_ref().map(|l| l.available_languages.len() as u32).unwrap_or(0);
     
-    // 3. Determina la raccomandazione basata sull'analisi
+    // 3. Rileva anti-cheat (cerca file comuni)
+    let (anti_cheat_name, anti_cheat_warn) = detect_anti_cheat_files(&game_path);
+    
+    // 4. Conta traduzioni in Translation Memory (mock - idealmente chiamerebbe il modulo TM)
+    let tm_count = 0u32; // TODO: integrare con translation_memory module
+    
+    // 5. Cerca pacchetti community (mock - idealmente chiamerebbe community_hub)  
+    let (community_count, best_pkg, community_avg) = (0u32, None::<String>, None::<f32>);
+    
+    // 6. Genera tips contestuali
+    let mut tips: Vec<String> = Vec::new();
+    
+    if anti_cheat_name.is_some() {
+        tips.push("⚠️ Anti-cheat rilevato: usa OCR invece di patch invasive".to_string());
+    }
+    if engine_check.is_unity && !engine_check.has_xunity {
+        tips.push("💡 XUnity supporta oltre 20 servizi di traduzione AI".to_string());
+    }
+    if has_loc_files && files_count > 5 {
+        tips.push(format!("📁 {} file traducibili trovati", files_count));
+    }
+    if missing_italian {
+        tips.push("🇮🇹 Traduzione italiana non presente nel gioco".to_string());
+    }
+    
+    // 7. NUOVO: Analizza TUTTI gli strumenti disponibili in GameStringer
+    let mut all_tools: Vec<TranslationTool> = Vec::new();
+    
+    // XUnity AutoTranslator (Unity games)
+    let xunity_available = engine_check.is_unity;
+    let xunity_reliability = if engine_check.has_xunity { 95 } else if xunity_available && anti_cheat_name.is_none() { 90 } else if xunity_available { 75 } else { 0 };
+    all_tools.push(TranslationTool {
+        id: "xunity".to_string(),
+        name: "XUnity AutoTranslator".to_string(),
+        description: "Traduzione live per giochi Unity con BepInEx".to_string(),
+        reliability: xunity_reliability,
+        route: "/unity-patcher".to_string(),
+        available: xunity_available,
+        reason: if engine_check.has_xunity { "Già installato".to_string() } 
+                else if xunity_available { format!("Compatibile con {}", engine_check.engine_name) }
+                else { "Solo per giochi Unity".to_string() },
+    });
+    
+    // Neural Translator Pro (file traduzione)
+    let neural_reliability = if has_loc_files { 85 + (files_count.min(10) as u8) } else { 40 };
+    all_tools.push(TranslationTool {
+        id: "neural_pro".to_string(),
+        name: "Neural Translator Pro".to_string(),
+        description: "Traduzione batch con AI multipli e Quality Gates".to_string(),
+        reliability: neural_reliability,
+        route: "/translator/pro".to_string(),
+        available: has_loc_files,
+        reason: if has_loc_files { format!("{} file traducibili", files_count) } else { "Nessun file di localizzazione trovato".to_string() },
+    });
+    
+    // OCR Translator (sempre disponibile)
+    let ocr_reliability = if anti_cheat_name.is_some() { 80 } else { 70 };
+    all_tools.push(TranslationTool {
+        id: "ocr".to_string(),
+        name: "OCR Translator".to_string(),
+        description: "Cattura e traduce testo dallo schermo in tempo reale".to_string(),
+        reliability: ocr_reliability,
+        route: "/ocr-translator".to_string(),
+        available: true,
+        reason: "Funziona con qualsiasi gioco".to_string(),
+    });
+    
+    // Live OCR Overlay
+    all_tools.push(TranslationTool {
+        id: "live_ocr".to_string(),
+        name: "Live OCR Overlay".to_string(),
+        description: "Overlay trasparente con traduzione continua".to_string(),
+        reliability: 65,
+        route: "/live-ocr".to_string(),
+        available: true,
+        reason: "Overlay sempre visibile durante il gioco".to_string(),
+    });
+    
+    // Multi-LLM Compare
+    all_tools.push(TranslationTool {
+        id: "multi_llm".to_string(),
+        name: "Multi-LLM Compare".to_string(),
+        description: "Confronta traduzioni da 5+ AI e trova il consenso".to_string(),
+        reliability: if has_loc_files { 92 } else { 75 },
+        route: "/translator/compare".to_string(),
+        available: true,
+        reason: "Migliora qualità combinando più AI".to_string(),
+    });
+    
+    // Voice Translator
+    all_tools.push(TranslationTool {
+        id: "voice".to_string(),
+        name: "Voice Translator".to_string(),
+        description: "Trascrivi e traduci audio/dialoghi con Whisper".to_string(),
+        reliability: 75,
+        route: "/voice-translator".to_string(),
+        available: true,
+        reason: "Per giochi con dialoghi parlati".to_string(),
+    });
+    
+    // Subtitle Translator
+    all_tools.push(TranslationTool {
+        id: "subtitles".to_string(),
+        name: "Subtitle Translator".to_string(),
+        description: "Traduce sottotitoli SRT, VTT, ASS".to_string(),
+        reliability: 88,
+        route: "/subtitles".to_string(),
+        available: true,
+        reason: "Per giochi con file sottotitoli esterni".to_string(),
+    });
+    
+    // Texture Translator
+    all_tools.push(TranslationTool {
+        id: "texture".to_string(),
+        name: "Texture Translator".to_string(),
+        description: "OCR su texture e immagini di gioco".to_string(),
+        reliability: 60,
+        route: "/texture-translator".to_string(),
+        available: true,
+        reason: "Per testo renderizzato come immagini".to_string(),
+    });
+    
+    // 8. Calcola strategia combinata ottimale
+    let mut strategy_tools: Vec<TranslationTool> = all_tools.iter()
+        .filter(|t| t.available && t.reliability > 50)
+        .cloned()
+        .collect();
+    strategy_tools.sort_by(|a, b| b.reliability.cmp(&a.reliability));
+    
+    // Prendi i top 3 strumenti e calcola reliability combinata
+    let top_tools: Vec<TranslationTool> = strategy_tools.into_iter().take(3).collect();
+    let combined_reliability = if top_tools.is_empty() { 50 } else {
+        // Formula: base del migliore + bonus per ogni strumento aggiuntivo
+        let base = top_tools[0].reliability as u16;
+        let bonus: u16 = top_tools.iter().skip(1).map(|t| (t.reliability as u16) / 5).sum();
+        (base + bonus).min(99) as u8
+    };
+    
+    let strategy_desc = if top_tools.len() > 1 {
+        format!("{} + {}", top_tools[0].name, top_tools.iter().skip(1).map(|t| t.name.clone()).collect::<Vec<_>>().join(" + "))
+    } else if !top_tools.is_empty() {
+        top_tools[0].name.clone()
+    } else {
+        "OCR Fallback".to_string()
+    };
+    
+    let optimal_strategy = Some(TranslationStrategy {
+        tools: top_tools,
+        combined_reliability,
+        description: strategy_desc,
+    });
+    
+    // 9. Determina la raccomandazione basata sull'analisi
     let recommendation = if engine_check.is_unity {
-        // Unity: BepInEx + XUnity è il metodo migliore
         if engine_check.has_xunity {
-            // Già patchato - suggerisci di usare il gioco o modificare traduzioni
             TranslationRecommendation {
                 primary_method: "live_unity".to_string(),
                 method_description: "XUnity AutoTranslator già installato".to_string(),
@@ -2504,14 +2710,24 @@ pub async fn get_translation_recommendation(game_path: String, _game_name: Strin
                 localization_format: loc_format,
                 missing_italian,
                 action_label: "▶ Avvia Gioco".to_string(),
-                action_route: "action:launch_game".to_string(), // Frontend gestirà l'avvio con l'appId corretto
+                action_route: "action:launch_game".to_string(),
+                engine_name: engine_check.engine_name.clone(),
+                anti_cheat_detected: anti_cheat_name.clone(),
+                anti_cheat_warning: anti_cheat_warn.clone(),
+                translation_memory_count: tm_count,
+                community_packages_count: community_count,
+                best_community_package: best_pkg.clone(),
+                community_rating: community_avg,
+                translatable_files_count: files_count,
+                tips: tips.clone(),
+                all_tools: all_tools.clone(),
+                optimal_strategy: optimal_strategy.clone(),
             }
         } else {
-            // Unity senza patch - consiglia installazione XUnity
             TranslationRecommendation {
                 primary_method: "live_unity".to_string(),
                 method_description: "Traduzione al volo con XUnity AutoTranslator".to_string(),
-                reliability: 90,
+                reliability: if anti_cheat_name.is_some() { 75 } else { 90 },
                 recommended_ai: "gemini".to_string(),
                 reason: format!("Gioco {} - XUnity intercetta i testi e li traduce in tempo reale.", engine_check.engine_name),
                 alternatives: vec![
@@ -2528,17 +2744,27 @@ pub async fn get_translation_recommendation(game_path: String, _game_name: Strin
                 missing_italian,
                 action_label: "🔧 Installa XUnity".to_string(),
                 action_route: "/unity-patcher".to_string(),
+                engine_name: engine_check.engine_name.clone(),
+                anti_cheat_detected: anti_cheat_name.clone(),
+                anti_cheat_warning: anti_cheat_warn.clone(),
+                translation_memory_count: tm_count,
+                community_packages_count: community_count,
+                best_community_package: best_pkg.clone(),
+                community_rating: community_avg,
+                translatable_files_count: files_count,
+                tips: tips.clone(),
+                all_tools: all_tools.clone(),
+                optimal_strategy: optimal_strategy.clone(),
             }
         }
     } else if has_loc_files {
-        // Ha file di localizzazione - traduzione diretta dei file
         let format_info = loc_format.clone().unwrap_or_else(|| "file".to_string());
         TranslationRecommendation {
             primary_method: "file_translation".to_string(),
-            method_description: format!("Traduzione diretta file {} ", format_info.to_uppercase()),
+            method_description: format!("Traduzione diretta file {}", format_info.to_uppercase()),
             reliability: 85,
             recommended_ai: if format_info == "json" { "gemini".to_string() } else { "claude".to_string() },
-            reason: format!("Trovati file di localizzazione in formato {}. Puoi tradurli direttamente.", format_info.to_uppercase()),
+            reason: format!("Trovati {} file di localizzazione in formato {}.", files_count, format_info.to_uppercase()),
             alternatives: vec![
                 AlternativeMethod {
                     method: "ocr".to_string(),
@@ -2553,9 +2779,19 @@ pub async fn get_translation_recommendation(game_path: String, _game_name: Strin
             missing_italian,
             action_label: "📝 Traduci File".to_string(),
             action_route: "/translator/pro".to_string(),
+            engine_name: engine_check.engine_name.clone(),
+            anti_cheat_detected: anti_cheat_name.clone(),
+            anti_cheat_warning: anti_cheat_warn.clone(),
+            translation_memory_count: tm_count,
+            community_packages_count: community_count,
+            best_community_package: best_pkg.clone(),
+            community_rating: community_avg,
+            translatable_files_count: files_count,
+            tips: tips.clone(),
+            all_tools: all_tools.clone(),
+            optimal_strategy: optimal_strategy.clone(),
         }
     } else {
-        // Nessun file di localizzazione e non Unity - OCR è l'unica opzione
         let engine_info = if engine_check.engine_name != "Sconosciuto" {
             format!(" ({})", engine_check.engine_name)
         } else {
@@ -2575,8 +2811,58 @@ pub async fn get_translation_recommendation(game_path: String, _game_name: Strin
             missing_italian: true,
             action_label: "👁 OCR Translator".to_string(),
             action_route: "/ocr-translator".to_string(),
+            engine_name: engine_check.engine_name.clone(),
+            anti_cheat_detected: anti_cheat_name,
+            anti_cheat_warning: anti_cheat_warn,
+            translation_memory_count: tm_count,
+            community_packages_count: community_count,
+            best_community_package: best_pkg,
+            community_rating: community_avg,
+            translatable_files_count: files_count,
+            tips,
+            all_tools,
+            optimal_strategy,
         }
     };
     
+    log::info!("📊 Raccomandazione per '{}': {} ({}%)", game_name, recommendation.primary_method, recommendation.reliability);
+    
     Ok(recommendation)
+}
+
+/// Rileva file anti-cheat comuni nella cartella del gioco
+fn detect_anti_cheat_files(game_path: &str) -> (Option<String>, Option<String>) {
+    let game_dir = Path::new(game_path);
+    
+    // Lista di file/cartelle anti-cheat comuni
+    let anti_cheat_signatures = [
+        ("EasyAntiCheat", "EasyAntiCheat.exe", "EAC può bloccare iniezioni DLL"),
+        ("BattlEye", "BEService.exe", "BattlEye può bloccare modifiche al gioco"),
+        ("Vanguard", "vgk.sys", "Riot Vanguard blocca modifiche a livello kernel"),
+        ("PunkBuster", "pbsvc.exe", "PunkBuster può rilevare modifiche"),
+        ("nProtect", "GameGuard.des", "nProtect GameGuard blocca iniezioni"),
+    ];
+    
+    for (name, file, warning) in anti_cheat_signatures.iter() {
+        // Cerca ricorsivamente (max 2 livelli)
+        if let Ok(entries) = std::fs::read_dir(game_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.file_name().map(|n| n.to_string_lossy().contains(file)).unwrap_or(false) {
+                    return (Some(name.to_string()), Some(warning.to_string()));
+                }
+                if path.is_dir() {
+                    if let Ok(sub_entries) = std::fs::read_dir(&path) {
+                        for sub_entry in sub_entries.flatten() {
+                            if sub_entry.file_name().to_string_lossy().contains(file) {
+                                return (Some(name.to_string()), Some(warning.to_string()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    (None, None)
 }

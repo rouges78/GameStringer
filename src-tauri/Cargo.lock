@@ -1343,7 +1343,7 @@ dependencies = [
 
 [[package]]
 name = "gamestringer"
-version = "1.0.8"
+version = "1.0.9"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1356,6 +1356,7 @@ dependencies = [
  "dirs",
  "flate2",
  "futures",
+ "hmac",
  "interprocess",
  "keyvalues-serde",
  "log",
@@ -1372,6 +1373,7 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "sha1",
  "sha2",
  "shared_memory",
  "sqlx",

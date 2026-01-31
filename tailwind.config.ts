@@ -104,12 +104,28 @@ const config: Config = {
             'background-position': '100% 50%',
           },
         },
+        'shimmer': {
+          '0%, 100%': { 
+            'background-size': '200% 200%',
+            'background-position': '50% 50%'
+          },
+          '50%': { 
+            'background-size': '300% 300%',
+            'background-position': '50% 50%'
+          },
+        },
+        'marquee': {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'spin-slow': 'spin 3s linear infinite',
         'gradient-shift': 'gradient-shift 4s ease infinite',
+        'shimmer': 'shimmer 12s ease-in-out infinite',
+        'marquee': 'marquee 8s linear infinite',
       },
     },
   },

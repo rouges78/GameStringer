@@ -29,6 +29,8 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [wishlist, setWishlist] = useState<any[]>([]);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [savingCredentials, setSavingCredentials] = useState(false);
 
   // Check if already authenticated on mount
   useEffect(() => {
@@ -174,11 +176,27 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
 
   const handleConfirmConnection = async () => {
     if (steamUser) {
+      // Verifica che l'API key sia stata inserita
+      if (!apiKey.trim()) {
+        setError('Inserisci la tua Steam API Key per sincronizzare la libreria');
+        return;
+      }
+      
+      setSavingCredentials(true);
       try {
+        // Salva le credenziali complete nel profilo Tauri
+        await invoke('save_steam_credentials', {
+          apiKey: apiKey.trim(),
+          steamId: steamUser.steam_id
+        });
+        console.log('✅ Credenziali Steam salvate nel profilo');
+        
         await onSubmit(steamUser.steam_id);
         onClose();
       } catch (err: any) {
-        setError(err?.message || 'Errore durante la connessione');
+        setError(err?.message || 'Errore durante il salvataggio delle credenziali');
+      } finally {
+        setSavingCredentials(false);
       }
     }
   };
@@ -270,7 +288,29 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
               </div>
             </div>
 
+            {/* API Key Input */}
             <div className="border-t pt-4">
+              <label className="block text-sm font-medium mb-2">
+                Steam API Key <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="Inserisci la tua Steam API Key"
+                className="w-full px-3 py-2 bg-muted border rounded-md text-sm mb-2"
+              />
+              <a 
+                href="https://steamcommunity.com/dev/apikey" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-xs text-blue-500 hover:underline flex items-center gap-1"
+              >
+                Ottieni la tua API Key da Steam <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+
+            <div className="border-t pt-4 mt-2">
               <Button 
                 variant="outline" 
                 className="w-full mb-2"
@@ -300,8 +340,8 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
               <Button variant="outline" className="flex-1" onClick={handleLogout}>
                 Disconnetti
               </Button>
-              <Button className="flex-1" onClick={handleConfirmConnection} disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button className="flex-1" onClick={handleConfirmConnection} disabled={isLoading || savingCredentials || !apiKey.trim()}>
+                {(isLoading || savingCredentials) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Conferma
               </Button>
             </div>

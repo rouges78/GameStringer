@@ -1,6 +1,6 @@
 [package]
 name = "gamestringer"
-version = "1.0.8"
+version = "1.0.9"
 description = "GameStringer - AI Game Translation System"
 authors = ["GameStringer Team"]
 license = ""
@@ -60,6 +60,8 @@ argon2 = "0.5"
 aes-gcm = "0.10"
 pbkdf2 = { version = "0.12", features = ["simple"] }
 sha2 = "0.10"
+sha1 = "0.10"
+hmac = "0.12"
 log = "0.4"
 urlencoding = "2.1"
 base64 = "0.21"

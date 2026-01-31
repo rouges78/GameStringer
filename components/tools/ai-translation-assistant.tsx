@@ -502,15 +502,15 @@ export function AITranslationAssistant() {
                   value={glossaryTerm}
                   onChange={(e) => setGlossaryTerm(e.target.value)}
                   placeholder={t('aiTranslation.termPlaceholder')}
-                  className="flex-1"
+                  className="w-28 min-w-0"
                 />
                 <Input
                   value={glossaryTranslation}
                   onChange={(e) => setGlossaryTranslation(e.target.value)}
                   placeholder={t('aiTranslation.translationPlaceholder')}
-                  className="flex-1"
+                  className="w-28 min-w-0"
                 />
-                <Button size="icon" onClick={addGlossaryTerm} className="bg-blue-600 hover:bg-blue-500">
+                <Button size="icon" onClick={addGlossaryTerm} className="bg-blue-600 hover:bg-blue-500 shrink-0">
                   <Check className="h-4 w-4" />
                 </Button>
               </div>

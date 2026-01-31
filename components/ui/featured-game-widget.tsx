@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Gamepad2, Languages, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { Gamepad2, Languages, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { invoke } from '@tauri-apps/api/core';
 
 interface FeaturedGameWidgetProps {
   collapsed?: boolean;
@@ -15,33 +17,20 @@ interface GameInfo {
   reason?: string;
 }
 
-interface NotableGame {
-  name: string;
+interface UserGame {
   appid: number;
+  name: string;
   cover: string;
-  missingLangs: string[]; // Lingue mancanti: 'it', 'fr', 'de', 'es', 'ja', 'zh'
 }
 
-// Giochi notevoli con le lingue che mancano
-const NOTABLE_GAMES: NotableGame[] = [
-  // Giochi che mancano di italiano
-  { name: "Outer Wilds", appid: 753640, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/753640/header.jpg", missingLangs: ['it', 'es'] },
-  { name: "Disco Elysium", appid: 632470, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/632470/header.jpg", missingLangs: ['it'] },
-  { name: "Hollow Knight", appid: 367520, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/367520/header.jpg", missingLangs: ['it'] },
-  { name: "Celeste", appid: 504230, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/504230/header.jpg", missingLangs: ['it', 'de'] },
-  { name: "Slay the Spire", appid: 646570, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/646570/header.jpg", missingLangs: ['it'] },
-  { name: "Return of the Obra Dinn", appid: 653530, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/653530/header.jpg", missingLangs: ['it', 'es', 'de'] },
-  { name: "Inscryption", appid: 1092790, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1092790/header.jpg", missingLangs: ['it', 'es'] },
-  { name: "Vampire Survivors", appid: 1794680, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1794680/header.jpg", missingLangs: ['fr', 'de'] },
-  { name: "Hades", appid: 1145360, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1145360/header.jpg", missingLangs: ['it'] },
-  { name: "Undertale", appid: 391540, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/391540/header.jpg", missingLangs: ['it'] },
-  { name: "Cuphead", appid: 268910, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/268910/header.jpg", missingLangs: ['it'] },
-  // Giochi giapponesi che mancano di inglese
-  { name: "Touhou Luna Nights", appid: 851100, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/851100/header.jpg", missingLangs: ['en', 'it', 'fr', 'de', 'es'] },
-  { name: "Gnosia", appid: 1192410, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/1192410/header.jpg", missingLangs: ['it', 'fr', 'de', 'es'] },
-  { name: "13 Sentinels: Aegis Rim", appid: 2147730, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/2147730/header.jpg", missingLangs: ['it', 'de'] },
-  { name: "AI: The Somnium Files", appid: 948740, cover: "https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/948740/header.jpg", missingLangs: ['it', 'de', 'es'] },
-];
+// Mapping lingua UI -> nome Steam
+const STEAM_LANG_MAP: Record<string, string[]> = {
+  it: ['italian', 'italiano'],
+  en: ['english', 'inglese'],
+  fr: ['french', 'francese', 'français'],
+  de: ['german', 'tedesco', 'deutsch'],
+  es: ['spanish', 'spagnolo', 'español'],
+};
 
 // Nomi lingue per il messaggio "Manca X"
 const LANG_NAMES: Record<string, Record<string, string>> = {
@@ -50,59 +39,155 @@ const LANG_NAMES: Record<string, Record<string, string>> = {
   fr: { it: 'francese', en: 'French', es: 'francés', fr: 'français', de: 'Französisch' },
   de: { it: 'tedesco', en: 'German', es: 'alemán', fr: 'allemand', de: 'Deutsch' },
   es: { it: 'spagnolo', en: 'Spanish', es: 'español', fr: 'espagnol', de: 'Spanisch' },
-  ja: { it: 'giapponese', en: 'Japanese', es: 'japonés', fr: 'japonais', de: 'Japanisch' },
-  zh: { it: 'cinese', en: 'Chinese', es: 'chino', fr: 'chinois', de: 'Chinesisch' },
 };
+
+// Controlla se il gioco ha la lingua target
+function gameHasLanguage(supportedLangs: string, targetLang: string): boolean {
+  if (!supportedLangs) return true; // Se non abbiamo info, assumiamo che ce l'abbia
+  const langsLower = supportedLangs.toLowerCase();
+  const steamNames = STEAM_LANG_MAP[targetLang] || [targetLang];
+  return steamNames.some(name => langsLower.includes(name));
+}
 
 export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProps) {
   const { t, language } = useTranslation();
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [filteredGames, setFilteredGames] = useState<NotableGame[]>([]);
+  const [gamesWithoutLang, setGamesWithoutLang] = useState<UserGame[]>([]);
   const [game, setGame] = useState<GameInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+  const [needsMarquee, setNeedsMarquee] = useState(false);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Filtra giochi in base alla lingua dell'utente
-  useEffect(() => {
-    let targetLang = language;
-    let filtered = NOTABLE_GAMES.filter(g => g.missingLangs.includes(targetLang));
-    
-    // Fallback a italiano se non ci sono giochi per la lingua selezionata
-    if (filtered.length === 0 && targetLang !== 'it') {
-      targetLang = 'it';
-      filtered = NOTABLE_GAMES.filter(g => g.missingLangs.includes('it'));
+  const handleGameClick = () => {
+    if (game?.appid) {
+      router.push(`/games/steam_${game.appid}`);
     }
-    
-    setFilteredGames(filtered);
-    setCurrentIndex(0);
+  };
+
+  // Carica giochi dalla libreria utente - prioritizza giochi recenti
+  useEffect(() => {
+    const loadUserGames = async () => {
+      setIsLoading(true);
+      try {
+        // Usa scan locale (non richiede API key)
+        const result = await invoke<any>('scan_steam_with_steamlocate');
+        const games = result?.games || result?.installed_games || result || [];
+        
+        if (!games || games.length === 0) {
+          setGamesWithoutLang([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const targetLang = language || 'it';
+        const filtered: UserGame[] = [];
+        
+        // Ordina per: 1) giocati di recente, 2) più ore di gioco, 3) random
+        const sorted = [...games].sort((a, b) => {
+          const aLastPlayed = a.last_played || a.rtime_last_played || 0;
+          const bLastPlayed = b.last_played || b.rtime_last_played || 0;
+          const aPlaytime = a.playtime_forever || a.playtime || 0;
+          const bPlaytime = b.playtime_forever || b.playtime || 0;
+          
+          // Prima ordina per data ultimo gioco (più recente = prima)
+          if (bLastPlayed !== aLastPlayed) return bLastPlayed - aLastPlayed;
+          // Poi per ore di gioco (più ore = prima)
+          if (bPlaytime !== aPlaytime) return bPlaytime - aPlaytime;
+          // Infine random
+          return Math.random() - 0.5;
+        }).slice(0, 50); // Controlla top 50 giochi più rilevanti
+        
+        for (const g of sorted) {
+          // Supporta sia formato {id, title} che {appid, name}
+          const gameAppId = parseInt(g.id) || g.appid || g.app_id || g.steam_appid;
+          const gameName = g.title || g.name;
+          if (!gameAppId || gameAppId <= 0) continue;
+          
+          try {
+            const details = await invoke<any>('fetch_steam_game_details', { appId: gameAppId });
+            if (details && details.supported_languages) {
+              const hasLang = gameHasLanguage(details.supported_languages, targetLang);
+              if (!hasLang) {
+                filtered.push({
+                  appid: gameAppId,
+                  name: details.name || gameName,
+                  cover: `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${gameAppId}/header.jpg`,
+                });
+                if (filtered.length >= 10) break;
+              }
+            }
+          } catch {
+            // Ignora errori singoli giochi
+          }
+        }
+        setGamesWithoutLang(filtered);
+      } catch (e) {
+        console.error('[FeaturedGameWidget] Errore:', e);
+        setGamesWithoutLang([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserGames();
   }, [language]);
 
-  // Cambia gioco ogni 10 secondi
+  // Cambia gioco ogni 8 secondi
   useEffect(() => {
-    if (filteredGames.length === 0) return;
+    if (gamesWithoutLang.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % filteredGames.length);
-    }, 10000);
+      setCurrentIndex((prev) => (prev + 1) % gamesWithoutLang.length);
+    }, 8000);
     return () => clearInterval(interval);
-  }, [filteredGames]);
+  }, [gamesWithoutLang]);
 
-  // Aggiorna il gioco visualizzato quando cambia l'indice o la lingua
+  // Aggiorna il gioco visualizzato
   useEffect(() => {
-    if (filteredGames.length === 0) {
+    if (gamesWithoutLang.length === 0) {
       setGame(null);
       return;
     }
-    const targetLang = language;
-    const notable = filteredGames[currentIndex];
+    const targetLang = language || 'it';
+    const userGame = gamesWithoutLang[currentIndex];
     const langName = LANG_NAMES[targetLang]?.[language] || targetLang;
     
+    setImageError(false); // Reset errore immagine quando cambia gioco
+    setNeedsMarquee(false); // Reset marquee quando cambia gioco
     setGame({
-      name: notable.name,
-      appid: notable.appid,
-      cover: notable.cover,
+      name: userGame.name,
+      appid: userGame.appid,
+      cover: userGame.cover,
       reason: `${t('widget.missing') || 'Manca'} ${langName}`
     });
-  }, [currentIndex, filteredGames, language, t]);
+  }, [currentIndex, gamesWithoutLang, language, t]);
 
-  if (!game) {
+  // Controlla se il titolo è troppo lungo e richiede marquee
+  useEffect(() => {
+    if (titleRef.current && containerRef.current) {
+      const titleWidth = titleRef.current.scrollWidth;
+      const containerWidth = containerRef.current.clientWidth;
+      setNeedsMarquee(titleWidth > containerWidth);
+    }
+  }, [game?.name]);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="px-2 py-2">
+        <div className="rounded-lg bg-sky-500/15 border border-sky-500/25 p-2 backdrop-blur-md">
+          <div className="flex items-center gap-1.5">
+            <Loader2 className="h-3 w-3 text-sky-400 animate-spin" />
+            <span className="text-[9px] text-sky-300/60">Analisi libreria...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!game || gamesWithoutLang.length === 0) {
     return null;
   }
 
@@ -110,17 +195,21 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
     return (
       <div className="px-2 py-3">
         <div 
-          className="w-12 h-12 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 flex items-center justify-center cursor-pointer hover:border-violet-400/50 transition-colors"
+          className="w-12 h-12 rounded-lg bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/30 flex items-center justify-center cursor-pointer hover:border-sky-400/50 transition-colors"
           title={game.name}
+          onClick={handleGameClick}
         >
-          {game.cover ? (
+          {game.cover && !imageError ? (
             <img 
               src={game.cover} 
               alt={game.name}
               className="w-full h-full object-cover rounded-lg"
+              onError={() => setImageError(true)}
             />
           ) : (
-            <Gamepad2 className="h-5 w-5 text-violet-400" />
+            <span className="text-lg font-bold text-cyan-400">
+              {game.name?.charAt(0).toUpperCase() || '?'}
+            </span>
           )}
         </div>
       </div>
@@ -129,72 +218,111 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
 
   return (
     <div className="px-2 py-3">
-      <div className="rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20 p-3 backdrop-blur-sm">
-        <div className="flex items-center gap-2 mb-2">
-          <Languages className="h-3.5 w-3.5 text-emerald-400" />
-          <span className="text-[10px] text-emerald-300/70 uppercase tracking-wider font-medium">
-            {t('widget.recommendedToTranslate') || 'Da Tradurre'}
-          </span>
+      <div className="rounded-2xl bg-slate-900/60 border border-cyan-500/30 p-3 backdrop-blur-xl shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-cyan-600/80 rounded-lg">
+              <Languages className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-[10px] text-white uppercase tracking-wide font-semibold">
+              {t('widget.recommendedToTranslate') || 'Da Tradurre'}
+            </span>
+          </div>
+          {gamesWithoutLang.length > 1 && (
+            <span className="text-[9px] text-cyan-300 bg-cyan-500/20 px-1.5 py-0.5 rounded-full font-medium border border-cyan-500/30">
+              {currentIndex + 1}/{gamesWithoutLang.length}
+            </span>
+          )}
         </div>
         
-        <div className="flex gap-3">
-          {/* Cover */}
-          <div className="w-14 h-14 rounded-lg bg-gradient-to-br from-violet-600/30 to-purple-600/20 border border-violet-500/30 flex items-center justify-center overflow-hidden shrink-0">
-            {game.cover ? (
-              <img 
-                src={game.cover} 
-                alt={game.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Gamepad2 className="h-6 w-6 text-violet-400" />
-            )}
-          </div>
+        {/* Game card con frecce navigazione */}
+        <div className="flex items-center gap-1">
+          {/* Freccia sinistra */}
+          {gamesWithoutLang.length > 1 && (
+            <button
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setCurrentIndex(prev => prev > 0 ? prev - 1 : gamesWithoutLang.length - 1);
+              }}
+              className="p-0.5 hover:bg-white/10 rounded transition-colors shrink-0"
+            >
+              <ChevronLeft className="h-3.5 w-3.5 text-white/60" />
+            </button>
+          )}
           
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-violet-200 truncate">
-              {game.name}
-            </h4>
-            {game.reason && (
-              <div className="flex items-center gap-1 mt-1">
-                <Languages className="h-3 w-3 text-violet-400/50" />
-                <span className="text-[10px] text-violet-400/70">
+          {/* Card gioco */}
+          <div 
+            className="flex-1 flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded-lg p-1 transition-all min-w-0"
+            onClick={handleGameClick}
+          >
+            {/* Cover */}
+            <div className="w-10 h-10 rounded-md bg-slate-800 border border-slate-700/50 flex items-center justify-center overflow-hidden shrink-0 shadow-md">
+              {game.cover && !imageError ? (
+                <img 
+                  src={game.cover} 
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <span className="text-lg font-bold text-cyan-400">
+                  {game.name?.charAt(0).toUpperCase() || '?'}
+                </span>
+              )}
+            </div>
+            
+            {/* Info */}
+            <div className="flex-1 min-w-0 overflow-hidden" ref={containerRef}>
+              <div className="overflow-hidden">
+                <h4 
+                  ref={titleRef}
+                  className={`text-[12px] font-semibold text-white leading-tight whitespace-nowrap ${needsMarquee ? 'animate-marquee hover:animate-none' : ''}`}
+                >
+                  {game.name}
+                </h4>
+              </div>
+              {game.reason && (
+                <span className="text-[10px] text-cyan-400 font-medium whitespace-nowrap">
                   {game.reason}
                 </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
+          
+          {/* Freccia destra */}
+          {gamesWithoutLang.length > 1 && (
+            <button
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setCurrentIndex(prev => prev < gamesWithoutLang.length - 1 ? prev + 1 : 0);
+              }}
+              className="p-0.5 hover:bg-white/10 rounded transition-colors shrink-0"
+            >
+              <ChevronRight className="h-3.5 w-3.5 text-white/60" />
+            </button>
+          )}
         </div>
         
-        {/* Indicatori pallini + navigazione */}
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-violet-500/10">
-          <button 
-            onClick={() => setCurrentIndex((prev) => (prev - 1 + filteredGames.length) % filteredGames.length)}
-            className="p-0.5 hover:bg-violet-500/20 rounded transition-colors"
-          >
-            <ChevronLeft className="h-3 w-3 text-violet-400/50" />
-          </button>
-          <div className="flex gap-1">
-            {filteredGames.map((_, idx) => (
+        {/* Navigazione pallini */}
+        {gamesWithoutLang.length > 1 && (
+          <div className="flex items-center justify-center gap-1 mt-1.5">
+            {gamesWithoutLang.slice(0, 6).map((_, idx) => (
               <button
                 key={idx}
-                onClick={() => setCurrentIndex(idx)}
-                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx); }}
+                className={`w-1 h-1 rounded-full transition-colors ${
                   idx === currentIndex 
-                    ? 'bg-emerald-400' 
-                    : 'bg-violet-500/30 hover:bg-violet-400/50'
+                    ? 'bg-cyan-400' 
+                    : 'bg-white/20 hover:bg-cyan-400/50'
                 }`}
               />
             ))}
+            {gamesWithoutLang.length > 6 && (
+              <span className="text-[8px] text-white/40 ml-0.5">+{gamesWithoutLang.length - 6}</span>
+            )}
           </div>
-          <button 
-            onClick={() => setCurrentIndex((prev) => (prev + 1) % filteredGames.length)}
-            className="p-0.5 hover:bg-violet-500/20 rounded transition-colors"
-          >
-            <ChevronRight className="h-3 w-3 text-violet-400/50" />
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

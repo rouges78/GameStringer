@@ -202,6 +202,9 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
           alt={game.title} 
           fallbackSrc={game.fallbackImageUrl}
           className="object-cover transition-transform duration-300 group-hover:scale-105"
+          appId={game.id}
+          gameName={game.title}
+          engine={game.engine}
         />
         
         {/* Gradiente e titolo sopra la cover */}

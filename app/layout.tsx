@@ -13,6 +13,7 @@ import { DisclaimerModal } from '@/components/legal/disclaimer-modal';
 import { UpdateNotification } from '@/components/update-notification';
 import { I18nProvider } from '@/lib/i18n';
 import { ScreenProvider } from '@/components/providers/screen-provider';
+import { AnimatedBackground } from '@/components/ui/animated-background';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="it" suppressHydrationWarning>
       <body className={inter.className}>
+        <AnimatedBackground />
         <ErrorBoundary>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
             <I18nProvider>

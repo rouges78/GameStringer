@@ -94,16 +94,60 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
       }
     };
 
-    // Prova provider richiesto, fallback a libre se fallisce
-    try {
-      translationResult = await translateWithProvider();
-    } catch (providerError: any) {
-      if (provider !== 'libre' && provider !== 'mock') {
-        logger.warn(`Provider ${provider} failed, falling back to libre`, 'TRANSLATE_API', { error: providerError.message });
-        translationResult = await translateWithLibre(text, targetLanguage, sourceLanguage);
-      } else {
-        throw providerError;
+    // Sistema di fallback a cascata - IMPOSSIBILE fallire
+    // Ordine: provider richiesto → libre → google → mock → traduzione letterale
+    const fallbackChain = [
+      { name: provider, fn: translateWithProvider },
+      { name: 'libre', fn: () => translateWithLibre(text, targetLanguage, sourceLanguage) },
+      { name: 'mock', fn: () => translateWithMock(text, targetLanguage, sourceLanguage) },
+    ];
+
+    let lastError: Error | null = null;
+    let usedFallback = false;
+    let fallbackSuggestions: string[] = [];
+
+    for (const fallback of fallbackChain) {
+      // Salta se è lo stesso provider già provato
+      if (usedFallback && fallback.name === provider) continue;
+      
+      try {
+        translationResult = await fallback.fn();
+        
+        // Se abbiamo usato un fallback, aggiungi suggerimenti utili
+        if (usedFallback) {
+          fallbackSuggestions = [
+            `⚠️ Traduzione via ${fallback.name} (fallback)`,
+            `💡 In other words: Verifica manualmente la traduzione`,
+            `🔧 Suggerimento: Configura ${provider} per traduzioni migliori`,
+          ];
+          translationResult.suggestions = [...fallbackSuggestions, ...translationResult.suggestions];
+          translationResult.confidence = Math.min(translationResult.confidence, 0.6);
+        }
+        break; // Successo, esci dal loop
+      } catch (err: any) {
+        lastError = err;
+        usedFallback = true;
+        logger.warn(`Provider ${fallback.name} failed, trying next fallback`, 'TRANSLATE_API', { error: err.message });
       }
+    }
+
+    // ULTIMO FALLBACK ASSOLUTO: restituisci il testo originale con avviso
+    if (!translationResult) {
+      logger.error('All translation providers failed, returning original text', 'TRANSLATE_API', { lastError });
+      translationResult = {
+        translatedText: text,
+        confidence: 0.1,
+        suggestions: [
+          `⚠️ Traduzione non riuscita - testo originale`,
+          `💡 In other words: Tutti i servizi sono offline`,
+          `🔧 Suggerimento: Controlla connessione internet o configura API keys`,
+          `📝 Prova a tradurre manualmente: "${text}"`,
+        ],
+        provider: 'fallback-original',
+        sourceLanguage,
+        targetLanguage,
+        cached: false
+      };
     }
 
     // Cache the result
@@ -735,10 +779,56 @@ async function translateWithGoogle(
   targetLanguage: string,
   sourceLanguage: string
 ): Promise<TranslationResponse> {
-  // Google Translate integration would go here
-  // For now, return mock response
-  logger.warn('Google Translate integration not implemented, using fallback', 'TRANSLATE_API');
-  return translateWithMock(text, targetLanguage, sourceLanguage);
+  const apiKey = secretsManager.get('GOOGLE_TRANSLATE_API_KEY');
+  
+  if (!apiKey) {
+    // Fallback a LibreTranslate se non c'è API key
+    logger.warn('Google Translate API key not configured, using LibreTranslate fallback', 'TRANSLATE_API');
+    return translateWithLibre(text, targetLanguage, sourceLanguage);
+  }
+
+  try {
+    // Google Cloud Translation API v2
+    const response = await fetch(
+      `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          q: text,
+          target: targetLanguage,
+          source: sourceLanguage !== 'auto' ? sourceLanguage : undefined,
+          format: 'text'
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Google Translate API error: ${response.status} - ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const translation = data.data?.translations?.[0];
+    
+    if (!translation?.translatedText) {
+      throw new Error('No translation received from Google');
+    }
+
+    return {
+      translatedText: translation.translatedText,
+      confidence: 0.92,
+      suggestions: [],
+      provider: 'google',
+      sourceLanguage: translation.detectedSourceLanguage || sourceLanguage,
+      targetLanguage,
+      cached: false
+    };
+
+  } catch (error) {
+    logger.error('Google Translate failed', 'TRANSLATE_API', { error });
+    throw new Error(`Google Translate failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 async function translateWithMock(
@@ -809,21 +899,33 @@ async function translateWithMock(
   const words = text.split(' ');
   const translatedWords = words.map(word => {
     const cleanWord = word.replace(/[^\w]/g, '');
-    return translations[cleanWord] || word;
+    const punct = word.replace(/[\w]/g, '');
+    const translated = translations[cleanWord] || translations[cleanWord.toLowerCase()] || cleanWord;
+    return translated + punct;
   });
 
   const translatedText = translatedWords.join(' ');
+  const hasUntranslated = translatedWords.some((w, i) => {
+    const orig = words[i].replace(/[^\w]/g, '');
+    return w.replace(/[^\w]/g, '') === orig && !translations[orig] && !translations[orig.toLowerCase()];
+  });
 
-  // Generate mock suggestions
+  // Generate helpful suggestions with "In other words" advice
   const suggestions = [
     translatedText,
-    translatedText.replace(/\b\w/g, l => l.toUpperCase()),
-    translatedText.toLowerCase()
+    ` In other words: ${translatedText.replace(/\b\w/g, l => l.toUpperCase())}`,
+    ` Alternativa: ${translatedText.toLowerCase()}`,
   ];
+
+  // Add warning if some words weren't translated
+  if (hasUntranslated) {
+    suggestions.push(` Alcune parole non tradotte - verifica manualmente`);
+    suggestions.push(` Suggerimento: Usa un provider AI per traduzioni complete`);
+  }
 
   return {
     translatedText,
-    confidence: 0.7,
+    confidence: hasUntranslated ? 0.4 : 0.7,
     suggestions,
     provider: 'mock',
     sourceLanguage,

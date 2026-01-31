@@ -74,6 +74,14 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
   // Determina se la route corrente richiede authentication
   const requireAuth = isProtectedRoute(pathname);
 
+  // Route che non devono avere MainLayout (finestre secondarie)
+  const noLayoutRoutes = ['/rss-viewer', '/ocr-overlay'];
+  const skipLayout = noLayoutRoutes.some(route => pathname?.startsWith(route));
+
+  if (skipLayout) {
+    return <>{children}</>;
+  }
+
   return (
     <ProfileAuthProvider>
       <ProtectedRoute requireAuth={requireAuth}>

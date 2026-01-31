@@ -21,6 +21,8 @@ import { invoke } from '@/lib/tauri-api';
 import { ItchioModal } from '@/components/modals/itchio-modal';
 import { GenericCredentialsModal } from '@/components/modals/generic-credentials-modal';
 import { SteamModal } from '@/components/modals/steam-modal';
+import { SteamFamilySharing } from '@/components/steam-family-sharing';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Define a type for the store object for better type safety
 type Store = {
@@ -107,6 +109,13 @@ export default function StoresPage() {
   // Utility services state
   const [utilityPreferences, setUtilityPreferences] = useState<{ [key: string]: any }>({});
   const [utilityExpanded, setUtilityExpanded] = useState(false);
+  
+  // SteamGridDB modal state
+  const [isSteamGridDBModalOpen, setIsSteamGridDBModalOpen] = useState(false);
+  const [steamGridDBApiKey, setSteamGridDBApiKey] = useState('');
+  
+  // Family Sharing modal state
+  const [isFamilySharingOpen, setIsFamilySharingOpen] = useState(false);
 
   const providerMap: { [key: string]: string } = {
     steam: 'steam-credentials',
@@ -201,13 +210,9 @@ export default function StoresPage() {
         setUtilityPreferences(newPrefs);
         toast.success('Playtime Stats attivato!');
       } else if (utilityId === 'steamgriddb') {
-        const apiKey = prompt('Inserisci la tua API key di SteamGridDB (ottienila da https://www.steamgriddb.com/profile/preferences/api):');
-        if (apiKey) {
-          const newPrefs = { ...utilityPreferences, [utilityId]: { enabled: true, apiKey } };
-          localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
-          setUtilityPreferences(newPrefs);
-          toast.success('SteamGridDB collegato con successo!');
-        }
+        setIsSteamGridDBModalOpen(true);
+        setLoadingProvider(null);
+        return;
       }
     } catch (error) {
       toast.error(`Errore durante l'attivazione di ${utilityId}`);
@@ -508,21 +513,18 @@ export default function StoresPage() {
   };
 
   return (
-    <div className="p-3 space-y-2 animate-fade-in">
+    <div className="p-2 space-y-1.5 animate-fade-in">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 p-2">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
-              <StoreIcon className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('stores.title')}</h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('stores.subtitle')}</p>
-            </div>
+      <div className="relative overflow-hidden rounded-lg bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 p-1.5">
+        <div className="relative flex items-center gap-2">
+          <div className="p-1.5 bg-black/30 rounded-lg border border-white/10">
+            <StoreIcon className="h-4 w-4 text-white" />
           </div>
-                  </div>
+          <div>
+            <h1 className="text-sm font-bold text-white">{t('stores.title')}</h1>
+            <p className="text-white/70 text-[9px]">{t('stores.subtitle')}</p>
+          </div>
+        </div>
       </div>
 
       {isSteamIdInvalid && (
@@ -552,55 +554,66 @@ export default function StoresPage() {
         </Card>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
         {storesConfig.map((store) => {
           const connected = isConnected(store.id);
           const isConnectable = connectableProviders.includes(store.id);
           const currentLoading = loadingProvider === store.id;
 
           return (
-            <Card key={store.id} className="p-2 card-hover">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="relative h-8 w-8 flex items-center justify-center flex-shrink-0">
+            <Card key={store.id} className="p-1.5 card-hover">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="relative h-6 w-6 flex items-center justify-center flex-shrink-0">
                   {store.logoUrl ? (
                     <Image
                       src={store.logoUrl}
                       alt={`${store.name} logo`}
-                      width={32}
-                      height={32}
+                      width={24}
+                      height={24}
                       style={{ objectFit: 'contain' }}
                     />
                   ) : null}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm truncate">{store.name}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-xs truncate">{store.name}</span>
                     {connected ? (
                       <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                     ) : (
                       <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-[10px] text-muted-foreground line-clamp-2">{t(`stores.${store.descKey}`)}</p>
+                  <p className="text-[9px] text-muted-foreground line-clamp-1">{t(`stores.${store.descKey}`)}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
               {connected ? (
                   <>
                     <Button
                       size="sm"
                       variant="destructive"
-                      className="flex-1 h-8 text-xs"
+                      className="flex-1 h-7 text-[10px]"
                       disabled={isLoading || currentLoading}
                       onClick={() => handleDisconnect(store.id)}
                     >
                       {currentLoading ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <Unplug className="h-3 w-3 mr-1" />}
                       {t('stores.disconnect')}
                     </Button>
+                    {store.id === 'steam' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-[10px] border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+                        onClick={() => setIsFamilySharingOpen(true)}
+                        title="Family Sharing"
+                      >
+                        👨‍👩‍👧‍👦
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-7 w-7"
                       disabled={testingProvider === store.id}
                       onClick={() => testConnection(store.id)}
                       title="Test"
@@ -618,7 +631,7 @@ export default function StoresPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 h-8 text-xs border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
+                    className="flex-1 h-7 text-[10px] border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
                     disabled={isLoading || currentLoading}
                     onClick={() => handleConnect(store.id)}
                   >
@@ -626,7 +639,7 @@ export default function StoresPage() {
                     {t('stores.connect')}
                   </Button>
                 ) : (
-                  <Button size="sm" variant="outline" className="flex-1 h-8 text-xs border-orange-500/30 text-orange-300/50" disabled={true}>
+                  <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px] border-orange-500/30 text-orange-300/50" disabled={true}>
                     {t('stores.notAvailable')}
                   </Button>
                 )}
@@ -636,12 +649,15 @@ export default function StoresPage() {
         })}
       </div>
 
-      {/* Ubisoft modal removed - now using GenericCredentialsModal */}
-
-
-      {/* Steam modal removed - now using a dedicated Steam modal component */}
-
-      {/* Generic modal removed - now using GenericCredentialsModal */}
+      {/* Steam Family Sharing Dialog */}
+      <Dialog open={isFamilySharingOpen} onOpenChange={setIsFamilySharingOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Family Sharing</DialogTitle>
+          </DialogHeader>
+          <SteamFamilySharing />
+        </DialogContent>
+      </Dialog>
 
       {/* Utility Services Section - Collapsible */}
       <div className="mt-2">
@@ -654,52 +670,52 @@ export default function StoresPage() {
               }, 100);
             }
           }}
-          className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-1 px-3 rounded bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition-colors"
         >
           <span className="text-sm font-medium text-slate-300">{t('stores.utilityServices')}</span>
           <span className={utilityExpanded ? '' : 'inline-block animate-bounce'}><ChevronDown className={`h-5 w-5 text-orange-400 transition-transform ${utilityExpanded ? 'rotate-180' : ''}`} /></span>
         </button>
         
         {utilityExpanded && (
-        <div id="utility-section" className="mt-2">
-        <p className="text-muted-foreground text-[10px] mb-1">
+        <div id="utility-section" className="mt-1">
+        <p className="text-muted-foreground text-[10px] mb-0.5">
           {t('stores.utilityServicesDesc')}
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5">
           {utilityServicesConfig.map((service) => {
             const connected = isConnected(service.id);
             const isConnectable = connectableUtilities.includes(service.id);
             const currentLoading = loadingProvider === service.id;
 
             return (
-              <Card key={service.id} className="p-2 card-hover">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="relative h-6 w-6 flex items-center justify-center flex-shrink-0">
-                  {service.iconType === 'clock' && <Clock className="h-5 w-5 text-blue-500" />}
-                  {service.iconType === 'gamepad' && <Gamepad2 className="h-5 w-5 text-orange-500" />}
-                  {service.iconType === 'trophy' && <Trophy className="h-5 w-5 text-yellow-500" />}
-                  {service.iconType === 'chart' && <BarChart3 className="h-5 w-5 text-green-500" />}
+              <Card key={service.id} className="p-1.5 card-hover">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="relative h-5 w-5 flex items-center justify-center flex-shrink-0">
+                  {service.iconType === 'clock' && <Clock className="h-4 w-4 text-blue-500" />}
+                  {service.iconType === 'gamepad' && <Gamepad2 className="h-4 w-4 text-orange-500" />}
+                  {service.iconType === 'trophy' && <Trophy className="h-4 w-4 text-yellow-500" />}
+                  {service.iconType === 'chart' && <BarChart3 className="h-4 w-4 text-green-500" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm truncate">{service.name}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="font-semibold text-xs truncate">{service.name}</span>
                     {connected ? (
                       <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                     ) : (
                       <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-[10px] text-muted-foreground line-clamp-2">{t(`stores.${service.descKey}`)}</p>
+                  <p className="text-[9px] text-muted-foreground line-clamp-1">{t(`stores.${service.descKey}`)}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                     {connected ? (
                       <>
                   <Button
                     size="sm"
                     variant="destructive"
-                    className="flex-1 h-8 text-xs"
+                    className="flex-1 h-7 text-[10px]"
                     disabled={isLoading || currentLoading}
                     onClick={() => handleDisconnectUtility(service.id)}
                   >
@@ -709,7 +725,7 @@ export default function StoresPage() {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     disabled={testingProvider === service.id}
                     onClick={() => testConnectionUtility(service.id)}
                     title="Test"
@@ -727,7 +743,7 @@ export default function StoresPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 h-8 text-xs border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
+                  className="flex-1 h-7 text-[10px] border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
                   disabled={isLoading || currentLoading}
                   onClick={() => handleConnectUtility(service.id)}
                 >
@@ -735,7 +751,7 @@ export default function StoresPage() {
                   {t('stores.activate')}
                 </Button>
               ) : (
-                <Button size="sm" variant="outline" className="flex-1 h-8 text-xs border-orange-500/30 text-orange-300/50" disabled={true}>
+                <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px] border-orange-500/30 text-orange-300/50" disabled={true}>
                   {t('stores.comingSoon')}
                 </Button>
               )}
@@ -785,6 +801,61 @@ export default function StoresPage() {
           provider={genericModalProvider}
           isLoading={loadingProvider === genericModalProvider}
         />
+      )}
+
+      {/* SteamGridDB API Key Modal */}
+      {isSteamGridDBModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-900 border border-orange-500/50 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-white mb-2">SteamGridDB API Key</h3>
+            <p className="text-sm text-slate-400 mb-4">
+              Inserisci la tua API key di SteamGridDB per scaricare automaticamente le copertine dei giochi.
+            </p>
+            <a 
+              href="https://www.steamgriddb.com/profile/preferences/api" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm mb-4 underline"
+            >
+              Ottieni la tua API Key qui →
+            </a>
+            <Input
+              placeholder="API Key"
+              value={steamGridDBApiKey}
+              onChange={(e) => setSteamGridDBApiKey(e.target.value)}
+              className="bg-slate-800 border-slate-700 text-white mb-4"
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsSteamGridDBModalOpen(false);
+                  setSteamGridDBApiKey('');
+                }}
+                className="border-slate-600 text-slate-300"
+              >
+                Annulla
+              </Button>
+              <Button
+                onClick={() => {
+                  if (steamGridDBApiKey.trim()) {
+                    const newPrefs = { ...utilityPreferences, steamgriddb: { enabled: true, apiKey: steamGridDBApiKey.trim() } };
+                    localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
+                    setUtilityPreferences(newPrefs);
+                    toast.success('SteamGridDB collegato con successo!');
+                    setIsSteamGridDBModalOpen(false);
+                    setSteamGridDBApiKey('');
+                  } else {
+                    toast.error('Inserisci una API Key valida');
+                  }
+                }}
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                Conferma
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

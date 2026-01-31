@@ -290,7 +290,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-4 gap-3">
-              <Card className="p-3">
+              <Card className="p-3 bg-card/50 border-border/50">
                 <div className="flex items-center gap-2">
                   <Type className="w-4 h-4 text-blue-500" />
                   <div>
@@ -299,7 +299,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                   </div>
                 </div>
               </Card>
-              <Card className="p-3">
+              <Card className="p-3 bg-card/50 border-border/50">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-green-500" />
                   <div>
@@ -308,7 +308,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                   </div>
                 </div>
               </Card>
-              <Card className="p-3">
+              <Card className="p-3 bg-card/50 border-border/50">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-purple-500" />
                   <div>
@@ -317,7 +317,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
                   </div>
                 </div>
               </Card>
-              <Card className="p-3">
+              <Card className="p-3 bg-card/50 border-border/50">
                 <div className="flex items-center gap-2">
                   {validation?.valid ? (
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -419,7 +419,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
             {/* Subtitle Editor */}
             <div className="grid grid-cols-2 gap-4">
               {/* Lista sottotitoli */}
-              <Card className="h-[500px] flex flex-col">
+              <Card className="h-[500px] flex flex-col bg-card/50 border-border/50">
                 <CardHeader className="py-3 px-4 border-b">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <FileText className="w-4 h-4" />
@@ -472,7 +472,7 @@ export function SubtitleTranslator({ onTranslate }: SubtitleTranslatorProps) {
               </Card>
 
               {/* Editor singolo */}
-              <Card className="h-[500px] flex flex-col">
+              <Card className="h-[500px] flex flex-col bg-card/50 border-border/50">
                 <CardHeader className="py-3 px-4 border-b">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Type className="w-4 h-4" />
