@@ -107,7 +107,7 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
     setPreviewUrl(null);
   };
 
-  const displayAvatar = previewUrl || currentAvatar;
+  const displayAvatar = previewUrl || currentAvatar || null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,7 +123,7 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
           {/* Preview */}
           <div className="relative">
             <Avatar className="h-32 w-32 ring-4 ring-primary/20">
-              <AvatarImage src={displayAvatar} alt={userName} />
+              <AvatarImage src={displayAvatar || undefined} alt={userName} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-3xl font-bold">
                 {getInitials(userName)}
               </AvatarFallback>
