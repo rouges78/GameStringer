@@ -461,28 +461,20 @@ export default function StoresPage() {
         setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
         toast.success('HowLongToBeat raggiungibile!');
       } else if (utilityId === 'steamgriddb') {
-        // Test SteamGridDB API - fetch diretto
+        // Test SteamGridDB API via Tauri command (no CORS)
         const apiKey = utilityPreferences[utilityId]?.apiKey;
         if (!apiKey) {
           throw new Error('API key mancante');
         }
         
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
-        const response = await fetch('https://www.steamgriddb.com/api/v2/search/autocomplete/witcher', {
-          headers: { 'Authorization': `Bearer ${apiKey}` },
-          signal: controller.signal,
+        const result = await invoke<string | null>('fetch_steamgriddb_image', {
+          appId: 292030,
+          gameName: 'The Witcher 3',
+          apiKey: apiKey,
         });
-        clearTimeout(timeout);
-        
-        if (response.ok) {
-          setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
-          toast.success('SteamGridDB funziona correttamente!');
-        } else if (response.status === 401) {
-          throw new Error('API key non valida');
-        } else {
-          throw new Error(`Errore ${response.status}`);
-        }
+        // If no error thrown, the API key works
+        setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
+        toast.success('SteamGridDB funziona correttamente!');
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Test fallito';
