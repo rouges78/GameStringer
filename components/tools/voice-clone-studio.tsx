@@ -547,7 +547,7 @@ export function VoiceCloneStudio() {
               {t('voiceClone.apiKeysDesc')}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleSaveApiKeys(); }} className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>OpenAI API Key</Label>
               <Input
@@ -555,6 +555,7 @@ export function VoiceCloneStudio() {
                 value={openaiKey}
                 onChange={(e) => setOpenaiKey(e.target.value)}
                 placeholder="sk-..."
+                autoComplete="off"
               />
             </div>
             <div className="space-y-2">
@@ -564,9 +565,10 @@ export function VoiceCloneStudio() {
                 value={elevenLabsKey}
                 onChange={(e) => setElevenLabsKey(e.target.value)}
                 placeholder="..."
+                autoComplete="off"
               />
             </div>
-          </div>
+          </form>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowApiDialog(false)}>
               {t('voiceClone.cancel')}

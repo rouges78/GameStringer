@@ -272,15 +272,16 @@ export function NexusModsBrowser() {
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-2">
+            <form onSubmit={(e) => { e.preventDefault(); handleValidateApiKey(); }} className="space-y-2">
               <Label>{t('nexusMods.apiKey')}</Label>
               <Input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder={t('nexusMods.pasteApiKey')}
+                autoComplete="off"
               />
-            </div>
+            </form>
           </CardContent>
           <CardFooter>
             <Button

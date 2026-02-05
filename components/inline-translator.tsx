@@ -431,15 +431,16 @@ MAIN_QUEST_01=Find the ancient artifact`;
                         </Select>
                       </div>
                       
-                      <div className="space-y-2">
+                      <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
                         <Label>API Key</Label>
                         <Input
                           type="password"
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
                           placeholder="Enter your API key"
+                          autoComplete="off"
                         />
-                      </div>
+                      </form>
                       
                       <div className="space-y-2">
                         <Label>Target Language</Label>

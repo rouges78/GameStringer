@@ -293,13 +293,16 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
               <label className="block text-sm font-medium mb-2">
                 Steam API Key <span className="text-destructive">*</span>
               </label>
-              <input
-                type="password"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="Inserisci la tua Steam API Key"
-                className="w-full px-3 py-2 bg-muted border rounded-md text-sm mb-2"
-              />
+              <form onSubmit={(e) => e.preventDefault()}>
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="Inserisci la tua Steam API Key"
+                  className="w-full px-3 py-2 bg-muted border rounded-md text-sm mb-2"
+                  autoComplete="off"
+                />
+              </form>
               <a 
                 href="https://steamcommunity.com/dev/apikey" 
                 target="_blank" 

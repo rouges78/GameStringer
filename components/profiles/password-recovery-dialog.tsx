@@ -150,7 +150,7 @@ export function PasswordRecoveryDialog({
 
           {/* Step: New Password */}
           {step === 'newPassword' && (
-            <div className="space-y-4">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password" className="text-gray-300">
                   New password
@@ -162,6 +162,7 @@ export function PasswordRecoveryDialog({
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white"
+                  autoComplete="new-password"
                 />
               </div>
               
@@ -176,9 +177,10 @@ export function PasswordRecoveryDialog({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white"
+                  autoComplete="new-password"
                 />
               </div>
-            </div>
+            </form>
           )}
 
           {/* Step: Success */}

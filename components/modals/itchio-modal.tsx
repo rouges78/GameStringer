@@ -75,7 +75,7 @@ export function ItchioModal({ isOpen, onClose, onSubmit, isLoading = false }: It
             </AlertDescription>
           </Alert>
 
-          <div className="space-y-2">
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-2">
             <Label htmlFor="api-key">API Key</Label>
             <Input
               id="api-key"
@@ -83,13 +83,13 @@ export function ItchioModal({ isOpen, onClose, onSubmit, isLoading = false }: It
               placeholder="Enter your itch.io API key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               disabled={isLoading}
+              autoComplete="off"
             />
             {error && (
               <p className="text-sm text-destructive">{error}</p>
             )}
-          </div>
+          </form>
         </div>
 
         <DialogFooter>

@@ -285,81 +285,86 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password" className="text-xs">Current Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="current-password"
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="••••••"
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="current-password" className="text-xs">Current Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="current-password"
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="••••••"
+                        className="pr-10"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="new-password" className="text-xs">New Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="new-password"
-                      type={showNewPassword ? 'text' : 'password'}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="••••••"
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password" className="text-xs">New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="new-password"
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="••••••"
+                        className="pr-10"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="text-xs">Confirm Password</Label>
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••"
-                  />
-                  {confirmPassword && newPassword !== confirmPassword && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
-                      <X className="h-3 w-3" /> Le password non coincidono
-                    </p>
-                  )}
-                  {confirmPassword && newPassword === confirmPassword && (
-                    <p className="text-xs text-green-500 flex items-center gap-1">
-                      <Check className="h-3 w-3" /> Le password coincidono
-                    </p>
-                  )}
-                </div>
-                
-                <Button 
-                  onClick={handleChangePassword} 
-                  disabled={isChangingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
-                  className="w-full"
-                >
-                  {isChangingPassword ? (
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Key className="h-4 w-4 mr-2" />
-                  )}
-                  Cambia Password
-                </Button>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password" className="text-xs">Confirm Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••"
+                      autoComplete="new-password"
+                    />
+                    {confirmPassword && newPassword !== confirmPassword && (
+                      <p className="text-xs text-red-500 flex items-center gap-1">
+                        <X className="h-3 w-3" /> Le password non coincidono
+                      </p>
+                    )}
+                    {confirmPassword && newPassword === confirmPassword && (
+                      <p className="text-xs text-green-500 flex items-center gap-1">
+                        <Check className="h-3 w-3" /> Le password coincidono
+                      </p>
+                    )}
+                  </div>
+                  
+                  <Button 
+                    type="submit"
+                    disabled={isChangingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
+                    className="w-full"
+                  >
+                    {isChangingPassword ? (
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Key className="h-4 w-4 mr-2" />
+                    )}
+                    Cambia Password
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>

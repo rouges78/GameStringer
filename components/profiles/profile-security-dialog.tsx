@@ -172,79 +172,86 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <Label className="text-sm">Password attuale</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type={showCurrentPassword ? 'text' : 'password'}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  >
-                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm">Nuova password</Label>
-                <div className="flex gap-2">
-                  <Input
-                    type={showNewPassword ? 'text' : 'password'}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm">Confirm new password</Label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                />
-                {newPassword && confirmPassword && (
-                  <div className="flex items-center gap-1 text-xs">
-                    {newPassword === confirmPassword ? (
-                      <>
-                        <CheckCircle className="h-3 w-3 text-green-500" />
-                        <span className="text-green-500">Le password coincidono</span>
-                      </>
-                    ) : (
-                      <>
-                        <AlertTriangle className="h-3 w-3 text-red-500" />
-                        <span className="text-red-500">Le password non coincidono</span>
-                      </>
-                    )}
+              <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-sm">Password attuale</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="flex-1"
+                      autoComplete="current-password"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
                   </div>
-                )}
-              </div>
-              
-              <Button 
-                onClick={handleChangePassword} 
-                disabled={isChangingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
-                className="w-full"
-              >
-                <Key className="h-4 w-4 mr-2" />
-                {isChangingPassword ? 'Changing...' : 'Change Password'}
-              </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm">Nuova password</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="flex-1"
+                      autoComplete="new-password"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-sm">Confirm new password</Label>
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="new-password"
+                  />
+                  {newPassword && confirmPassword && (
+                    <div className="flex items-center gap-1 text-xs">
+                      {newPassword === confirmPassword ? (
+                        <>
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <span className="text-green-500">Le password coincidono</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="h-3 w-3 text-red-500" />
+                          <span className="text-red-500">Le password non coincidono</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <Button 
+                  type="submit"
+                  disabled={isChangingPassword || !currentPassword || !newPassword || newPassword !== confirmPassword}
+                  className="w-full"
+                >
+                  <Key className="h-4 w-4 mr-2" />
+                  {isChangingPassword ? 'Changing...' : 'Change Password'}
+                </Button>
+              </form>
             </CardContent>
           </Card>
 
