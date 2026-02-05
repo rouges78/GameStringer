@@ -36,12 +36,14 @@ import {
   Download,
   Upload,
   Info,
-  Camera
+  Camera,
+  Palette
 } from 'lucide-react';
 import { ProfileManager } from './profile-manager';
 import { CreateProfileDialog } from './create-profile-dialog';
 import { AvatarUpload } from './avatar-upload';
 import { SecurityDialog } from './security-dialog';
+import { ThemeCustomizer } from '@/components/theme/theme-customizer';
 import { cn } from '@/lib/utils';
 import { exportProfile, importProfile } from '@/lib/profile-export';
 import { formatDistanceToNow } from 'date-fns';
@@ -65,6 +67,7 @@ export function ProfileHeader() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const [showSecurity, setShowSecurity] = useState(false);
+  const [showThemeCustomizer, setShowThemeCustomizer] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [isRenewing, setIsRenewing] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -316,8 +319,17 @@ export function ProfileHeader() {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <div className="flex flex-col items-center p-2 bg-muted/50 rounded-lg">
-                  <span className="font-medium">
+                <div 
+                  className="flex flex-col items-center p-2 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/80 transition-colors group"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDropdownOpen(false);
+                    setTimeout(() => setShowThemeCustomizer(true), 100);
+                  }}
+                >
+                  <span className="font-medium flex items-center gap-1">
+                    <Palette className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     {settings?.theme || 'Auto'}
                   </span>
                   <span className="text-muted-foreground">{t('profile.theme')}</span>
@@ -412,6 +424,12 @@ export function ProfileHeader() {
         onOpenChange={setShowSecurity}
         profileId={currentProfile.id}
         profileName={currentProfile.name}
+      />
+
+      {/* Theme Customizer Dialog */}
+      <ThemeCustomizer
+        open={showThemeCustomizer}
+        onOpenChange={setShowThemeCustomizer}
       />
     </>
   );

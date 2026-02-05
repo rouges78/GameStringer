@@ -5,6 +5,7 @@ mod screen_capture;
 mod ocr_engine;
 mod overlay;
 pub mod retro_preprocessor;
+pub mod tesseract_engine;
 
 // Usati internamente dal modulo
 #[allow(unused_imports)]
@@ -719,4 +720,288 @@ pub async fn select_screen_region() -> Result<CaptureRegion, String> {
         width: 800,
         height: 600,
     })
+}
+
+// ============================================================================
+// SALVATAGGIO PERMANENTE TRADUZIONI OCR
+// ============================================================================
+
+/// Percorso file traduzioni OCR salvate
+fn get_ocr_translations_path() -> std::path::PathBuf {
+    let local_app_data = std::env::var("LOCALAPPDATA")
+        .unwrap_or_else(|_| ".".to_string());
+    
+    std::path::PathBuf::from(local_app_data)
+        .join("GameStringer")
+        .join("ocr_translations.json")
+}
+
+/// Salva le traduzioni OCR su file (versione sync interna)
+fn save_ocr_translations_sync() -> Result<u32, String> {
+    use std::fs;
+    
+    let cache = TRANSLATION_CACHE.lock().map_err(|e| e.to_string())?;
+    
+    if cache.is_empty() {
+        return Ok(0);
+    }
+    
+    let path = get_ocr_translations_path();
+    
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    
+    let mut all_translations: HashMap<String, String> = if path.exists() {
+        let content = fs::read_to_string(&path).unwrap_or_default();
+        serde_json::from_str(&content).unwrap_or_default()
+    } else {
+        HashMap::new()
+    };
+    
+    let new_count = cache.iter()
+        .filter(|(k, _)| !all_translations.contains_key(*k))
+        .count() as u32;
+    
+    for (key, value) in cache.iter() {
+        all_translations.insert(key.clone(), value.clone());
+    }
+    
+    let json = serde_json::to_string_pretty(&all_translations)
+        .map_err(|e| e.to_string())?;
+    
+    fs::write(&path, json).map_err(|e| e.to_string())?;
+    
+    log::info!("💾 Salvate {} traduzioni OCR ({} nuove)", all_translations.len(), new_count);
+    
+    Ok(new_count)
+}
+
+/// Salva le traduzioni OCR su file (persistenza)
+#[command]
+pub fn save_ocr_translations() -> Result<u32, String> {
+    save_ocr_translations_sync()
+}
+
+/// Carica le traduzioni OCR salvate
+#[command]
+pub fn load_ocr_translations() -> Result<u32, String> {
+    use std::fs;
+    
+    let path = get_ocr_translations_path();
+    
+    if !path.exists() {
+        return Ok(0);
+    }
+    
+    let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let loaded: HashMap<String, String> = serde_json::from_str(&content)
+        .map_err(|e| e.to_string())?;
+    
+    let count = loaded.len() as u32;
+    
+    // Carica in cache
+    let mut cache = TRANSLATION_CACHE.lock().map_err(|e| e.to_string())?;
+    for (key, value) in loaded {
+        cache.insert(key, value);
+    }
+    
+    log::info!("📂 Caricate {} traduzioni OCR salvate", count);
+    
+    Ok(count)
+}
+
+/// Ottieni tutte le traduzioni OCR salvate
+#[command]
+pub fn get_ocr_translations() -> Result<Vec<OcrTranslationEntry>, String> {
+    use std::fs;
+    
+    let path = get_ocr_translations_path();
+    
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    
+    let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let loaded: HashMap<String, String> = serde_json::from_str(&content)
+        .map_err(|e| e.to_string())?;
+    
+    Ok(loaded.into_iter()
+        .map(|(original, translated)| OcrTranslationEntry { original, translated })
+        .collect())
+}
+
+/// Aggiungi/modifica una traduzione OCR manualmente
+#[command]
+pub fn add_ocr_translation(original: String, translated: String) -> Result<(), String> {
+    // Aggiungi in cache
+    let mut cache = TRANSLATION_CACHE.lock().map_err(|e| e.to_string())?;
+    cache.insert(original.clone(), translated.clone());
+    drop(cache);
+    
+    // Salva immediatamente
+    save_ocr_translations_sync()?;
+    
+    log::info!("➕ Aggiunta traduzione OCR: '{}' → '{}'", original, translated);
+    
+    Ok(())
+}
+
+/// Elimina una traduzione OCR
+#[command]
+pub fn delete_ocr_translation(original: String) -> Result<(), String> {
+    use std::fs;
+    
+    // Rimuovi da cache
+    let mut cache = TRANSLATION_CACHE.lock().map_err(|e| e.to_string())?;
+    cache.remove(&original);
+    drop(cache);
+    
+    // Aggiorna file
+    let path = get_ocr_translations_path();
+    if path.exists() {
+        let content = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+        let mut loaded: HashMap<String, String> = serde_json::from_str(&content)
+            .map_err(|e| e.to_string())?;
+        
+        loaded.remove(&original);
+        
+        let json = serde_json::to_string_pretty(&loaded).map_err(|e| e.to_string())?;
+        fs::write(&path, json).map_err(|e| e.to_string())?;
+    }
+    
+    log::info!("🗑️ Eliminata traduzione OCR: '{}'", original);
+    
+    Ok(())
+}
+
+/// Esporta traduzioni OCR in formato JSON
+#[command]
+pub fn export_ocr_translations(file_path: String) -> Result<u32, String> {
+    use std::fs;
+    
+    let cache = TRANSLATION_CACHE.lock().map_err(|e| e.to_string())?;
+    
+    let export_data = serde_json::json!({
+        "version": "1.0",
+        "type": "gamestringer_ocr_translations",
+        "count": cache.len(),
+        "translations": cache.iter()
+            .map(|(k, v)| serde_json::json!({ "original": k, "translated": v }))
+            .collect::<Vec<_>>()
+    });
+    
+    let json = serde_json::to_string_pretty(&export_data).map_err(|e| e.to_string())?;
+    fs::write(&file_path, json).map_err(|e| e.to_string())?;
+    
+    let count = cache.len() as u32;
+    log::info!("📤 Esportate {} traduzioni OCR in: {}", count, file_path);
+    
+    Ok(count)
+}
+
+/// Importa traduzioni OCR da file JSON
+#[command]
+pub fn import_ocr_translations(file_path: String) -> Result<u32, String> {
+    use std::fs;
+    
+    let content = fs::read_to_string(&file_path).map_err(|e| e.to_string())?;
+    let data: serde_json::Value = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+    
+    let mut imported = 0u32;
+    let mut cache = TRANSLATION_CACHE.lock().map_err(|e| e.to_string())?;
+    
+    if let Some(translations) = data.get("translations").and_then(|t| t.as_array()) {
+        for t in translations {
+            if let (Some(original), Some(translated)) = (
+                t.get("original").and_then(|o| o.as_str()),
+                t.get("translated").and_then(|t| t.as_str()),
+            ) {
+                cache.insert(original.to_string(), translated.to_string());
+                imported += 1;
+            }
+        }
+    }
+    drop(cache);
+    
+    // Salva le traduzioni importate
+    save_ocr_translations_sync()?;
+    
+    log::info!("📥 Importate {} traduzioni OCR da: {}", imported, file_path);
+    
+    Ok(imported)
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OcrTranslationEntry {
+    pub original: String,
+    pub translated: String,
+}
+
+// ============================================================================
+// TESSERACT OCR COMMANDS
+// ============================================================================
+
+/// Verifica se Tesseract OCR è disponibile
+#[command]
+pub fn is_tesseract_available() -> bool {
+    let engine = tesseract_engine::TesseractEngine::new("eng");
+    engine.is_available()
+}
+
+/// Ottieni lingue Tesseract disponibili
+#[command]
+pub fn get_tesseract_languages() -> Vec<String> {
+    let engine = tesseract_engine::TesseractEngine::new("eng");
+    engine.get_available_languages()
+}
+
+/// Esegui OCR con Tesseract su immagine base64
+#[command]
+pub fn tesseract_recognize(image_base64: String, language: String) -> Result<String, String> {
+    use base64::Engine;
+    
+    let lang_code = tesseract_engine::map_language_code(&language);
+    let engine = tesseract_engine::TesseractEngine::new(lang_code);
+    
+    if !engine.is_available() {
+        return Err("Tesseract non installato. Scarica da: https://github.com/UB-Mannheim/tesseract/wiki".to_string());
+    }
+    
+    // Decodifica base64
+    let image_data = base64::engine::general_purpose::STANDARD
+        .decode(&image_base64)
+        .map_err(|e| format!("Errore decodifica base64: {}", e))?;
+    
+    let result = engine.recognize_from_memory(&image_data)?;
+    
+    log::info!("🔤 Tesseract OCR: '{}' (conf: {:.1}%)", result.text, result.confidence);
+    
+    Ok(result.text)
+}
+
+/// Informazioni installazione Tesseract
+#[command]
+pub fn get_tesseract_info() -> TesseractInfo {
+    let engine = tesseract_engine::TesseractEngine::new("eng");
+    
+    TesseractInfo {
+        available: engine.is_available(),
+        languages: engine.get_available_languages(),
+        download_url: "https://github.com/UB-Mannheim/tesseract/wiki".to_string(),
+        install_instructions: vec![
+            "1. Scarica Tesseract da GitHub".to_string(),
+            "2. Installa in C:\\Program Files\\Tesseract-OCR".to_string(),
+            "3. Durante l'installazione, seleziona le lingue necessarie".to_string(),
+            "4. Riavvia GameStringer".to_string(),
+        ],
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TesseractInfo {
+    pub available: bool,
+    pub languages: Vec<String>,
+    pub download_url: String,
+    pub install_instructions: Vec<String>,
 }

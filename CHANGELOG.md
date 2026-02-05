@@ -17,6 +17,40 @@
 
 ---
 
+## 📅 Febbraio 2026
+
+### v1.1.0 — Website Multilingua & Danganronpa Support 🌐
+
+> **Data**: 2026-02-05
+
+#### 🌐 Sito Web Multilingua
+
+- **9 lingue supportate**: EN, IT, ES, DE, FR, JA, ZH, KO, PT
+- **Selettore lingua** con bandiere nel nav
+- **Auto-detect** lingua browser
+- **Persistenza** in localStorage
+- **URL params**: `?lang=en`, `?lang=ja`, etc.
+- **Cambio dinamico** senza reload pagina
+
+#### 🎮 Danganronpa Auto-Translator
+
+- Supporto nativo per file **PAK/LIN/STX**
+- Integrazione con **DRAT** (Danganronpa Another Tool)
+- Estrazione e traduzione automatica dialoghi
+
+#### 🧪 Test E2E con Playwright
+
+- **9 test** per navigation, translation e danganronpa
+- Configurazione multi-browser (Chromium, Firefox, WebKit)
+- Fix errori 500 da conflitto i18n
+
+#### 📝 Documentazione
+
+- Aggiornato `docs/sito/README.md` con info i18n
+- Aggiornate guide utente in 6 lingue
+
+---
+
 ## 📅 Gennaio 2026
 
 ### v1.0.9 — Animated Headers & UI Polish ✨
@@ -24,17 +58,20 @@
 > **Data**: 2026-01-31
 
 #### ✨ Header Animati
+
 - **Effetto "Respiro"**: Gradiente che si espande/contrae dolcemente (12s)
 - **Animazione shimmer**: Keyframes CSS personalizzati per movimento fluido
 - **Ombreggiature profonde**: shadow-xl con tinta blu per maggiore profondità
 - **16 pagine aggiornate** con nuovo stile header
 
 #### 🎨 UI Miglioramenti
+
 - **Gradiente uniforme**: Sky → Blue → Cyan su tutti gli header Traduzione
 - **Menu Sidebar**: Sub-item con hover verde scuro (emerald-600)
 - **Coerenza visiva**: Stile unificato su tutte le pagine di traduzione
 
 #### 📄 Pagine Aggiornate
+
 - AI Translator, AI Review, Emotion Translator, OCR Translator
 - Memory, Batch, Subtitles, Neural Pro, Translator Tools
 - Live OCR, Manga, Texture, Voice Clone
@@ -47,6 +84,7 @@
 > **Data**: 2026-01-29
 
 #### 🔧 Bug Fix
+
 - **Pulsante Scarica**: Ora apre il browser correttamente
 - **Tauri Shell API**: Usato invece di window.open per link esterni
 - **Feedback Toast**: Conferma visiva apertura download
@@ -58,23 +96,27 @@
 > **Data**: 2026-01-29
 
 #### 💬 GitHub Discussions Integration
+
 - **Forum integrato**: Tab Discussions nel Community Hub
 - **Grafica personalizzata**: UI GameStringer per le discussioni
 - **API Route**: Fetch automatico da GitHub con scraping fallback
 - **Link esterni**: Apertura con Tauri shell API
 
 #### 🧹 Community Hub Cleanup
+
 - **Dati mock rimossi**: Ora solo dati reali
 - **Modal warning rimosso**: Accesso diretto senza popup
 - **Bottoni aggiornati**: Stile bordo arancione
 
 #### 📜 Licenza v1.1
+
 - **Source Available License** aggiornata
 - **Non-commercial chiarito**: YouTuber/streamer OK con attribuzione
 - **Fork permessi**: Fork non-commerciali esplicitamente consentiti
 - **Sezione 9**: Aggiornamenti licenza futuri
 
 #### 🌍 Traduzioni
+
 - Chiavi `communityHub.discussions` in **7 lingue** (IT, EN, ES, FR, DE, JA, ZH)
 
 ---
@@ -84,17 +126,20 @@
 > **Data**: 2026-01-28
 
 #### 🌐 Nuovi Provider Traduzione
+
 - **Qwen 3**: Provider dedicato per lingue asiatiche (CN/JP/KR) via Ollama
 - **NLLB-200**: Supporto 200 lingue (incluse rare: Thai, Vietnamese, Hindi, Arabic) via HuggingFace
 - **Ollama Generico**: Usa qualsiasi modello installato in Ollama
 
 #### 🐛 Bug Fixing
+
 - **Catch vuoti**: Sostituiti 8 catch vuoti con logging appropriato
 - **Import non utilizzati**: Rimossi ~15 import inutilizzati dai file principali
 - **Vitest config**: Aggiunto provider 'v8' mancante per coverage
 - **Batch operations**: Fix firme funzioni incompatibili con wrapper
 
 #### 🌍 Traduzioni
+
 - Aggiunte traduzioni mancanti per **5 lingue** (ES, FR, DE, JA, ZH):
   - `voiceCloneGuide` + features
   - `vrOverlayGuide` + features
@@ -102,6 +147,7 @@
   - `playerFeedbackGuide` + features
 
 #### 📄 Documentazione
+
 - **Bug Report**: Creato report dettagliato dei bug (`BUG_REPORT_2026-01-28.md`)
 
 ---
@@ -111,34 +157,40 @@
 > **Data**: 2026-01-26
 
 #### 🎤 Voice Clone Studio
+
 - **AI voice cloning** with ElevenLabs and OpenAI TTS
 - **Text-to-speech synthesis** with multiple voices
 - **Custom voice profiles** from audio samples
 - **Voice presets**: narrator, hero, villain, child, robot, elderly
 
 #### 🥽 VR Text Overlay
+
 - **Spatial subtitles** for VR games
 - **Headset detection**: Oculus, SteamVR, WMR
 - **Position presets**: bottom center, top center, peripheral, wrist
 - **Customizable style**: font size, opacity, shadow
 
 #### 🛡️ Quality Gates
+
 - **Automatic QA system** for translation validation
 - **Checks**: placeholders, numbers, HTML tags, length
 - **Context-aware validation**: UI, dialogue, narrative
 - **Quality score** with pass/fail threshold
 
 #### 💬 Player Feedback
+
 - **Feedback collection** from players
 - **Categories**: accuracy, fluency, context, terminology, style
 - **5-star rating system** with status tracking
 - **Export** as JSON or CSV
 
 #### 🌐 i18n
+
 - All 4 new tools translated in **7 languages** (IT, EN, ES, DE, JA, ZH)
 - Guide page updated with documentation
 
 #### 🎨 UI
+
 - **Green hero headers** for Tools section pages
 - **Compact VR Overlay layout** optimized for screen
 
@@ -149,37 +201,44 @@
 > **Data**: 2026-01-23
 
 #### 🎬 Subtitle Translator
+
 - **Parser completo** per SRT, VTT, ASS/SSA
 - **Preview in tempo reale** con validazione QA
 - **Export multi-formato** con timing preservato
 
 #### 📁 Batch Folder Translator
+
 - **Scansione ricorsiva** con walkdir (Rust)
 - **10+ formati** supportati (JSON, PO, CSV, SRT, VTT, ASS, XML, YAML...)
 - **Progress tracking** con pausa/stop
 
 #### 👥 Community Hub
+
 - **Browser pacchetti** TM con search/filter
 - **Top contributori** e statistiche
 - **Download** Translation Memory dalla community
 
 #### 🎮 Retro ROM Tools
+
 - **8 console** supportate (NES, SNES, GB, GBC, GBA, Genesis, PSX, N64)
 - **Table file** (.TBL) parser/generator
 - **Font injection** per caratteri accentati italiani
 
 #### 🔌 API Pubblica v1
+
 - `POST /api/v1/translate` - Traduzione singola
 - `POST /api/v1/batch` - Traduzione batch (max 100)
 - `GET /api/v1/languages` - 20 lingue supportate
 - `GET /api/v1/health` - Health check
 
 #### 🖥️ Screen Adaptation
+
 - **Adattamento automatico** risoluzione schermo
 - **Breakpoint** per compact (<1400px), normal, 4K (≥3840px)
 - **CSS variables** per spacing/font dinamici
 
 #### 🔧 Fix & Miglioramenti
+
 - **Tutorial unificato**: risolto conflitto OnboardingWizard/InteractiveTutorial
 - **Hero headers compatti** per Retro e Batch
 - **Landing page** pronta per deploy

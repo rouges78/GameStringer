@@ -102,6 +102,129 @@ export class RateLimitError extends GameStringerError {
   }
 }
 
+export class TranslationError extends GameStringerError {
+  public readonly provider?: string;
+  public readonly stringId?: string;
+
+  constructor(message: string, provider?: string, stringId?: string) {
+    super(message, 'TRANSLATION_ERROR', 500);
+    this.name = 'TranslationError';
+    this.provider = provider;
+    this.stringId = stringId;
+  }
+}
+
+export class AIProviderError extends GameStringerError {
+  public readonly provider: string;
+  public readonly retryable: boolean;
+
+  constructor(provider: string, message: string, retryable: boolean = true) {
+    super(`${provider}: ${message}`, 'AI_PROVIDER_ERROR', 503);
+    this.name = 'AIProviderError';
+    this.provider = provider;
+    this.retryable = retryable;
+  }
+}
+
+export class FileParseError extends GameStringerError {
+  public readonly fileName: string;
+  public readonly line?: number;
+
+  constructor(fileName: string, message: string, line?: number) {
+    super(line ? `${fileName}:${line} - ${message}` : `${fileName}: ${message}`, 'FILE_PARSE_ERROR', 400);
+    this.name = 'FileParseError';
+    this.fileName = fileName;
+    this.line = line;
+  }
+}
+
+export class BackendError extends GameStringerError {
+  public readonly command: string;
+
+  constructor(command: string, message: string) {
+    super(`Tauri command "${command}" failed: ${message}`, 'BACKEND_ERROR', 500);
+    this.name = 'BackendError';
+    this.command = command;
+  }
+}
+
+// Retry configuration
+export interface RetryConfig {
+  maxAttempts: number;
+  baseDelay: number;
+  maxDelay: number;
+  backoffMultiplier: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxAttempts: 3,
+  baseDelay: 1000,
+  maxDelay: 10000,
+  backoffMultiplier: 2,
+};
+
+// Retry wrapper with exponential backoff
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  config: Partial<RetryConfig> = {},
+  shouldRetry?: (error: Error) => boolean
+): Promise<T> {
+  const { maxAttempts, baseDelay, maxDelay, backoffMultiplier } = {
+    ...DEFAULT_RETRY_CONFIG,
+    ...config,
+  };
+
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      // Check if we should retry
+      if (shouldRetry && !shouldRetry(lastError)) {
+        throw lastError;
+      }
+      
+      // Don't retry non-retryable errors
+      if (lastError instanceof AIProviderError && !lastError.retryable) {
+        throw lastError;
+      }
+      
+      // Last attempt, throw
+      if (attempt === maxAttempts) {
+        throw lastError;
+      }
+      
+      // Calculate delay with exponential backoff
+      const delay = Math.min(
+        baseDelay * Math.pow(backoffMultiplier, attempt - 1),
+        maxDelay
+      );
+      
+      console.log(`[Retry] Attempt ${attempt}/${maxAttempts} failed, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError!;
+}
+
+// Timeout wrapper
+export async function withTimeout<T>(
+  fn: () => Promise<T>,
+  timeoutMs: number,
+  timeoutMessage: string = 'Operation timed out'
+): Promise<T> {
+  return Promise.race([
+    fn(),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new GameStringerError(timeoutMessage, 'TIMEOUT_ERROR', 408)), timeoutMs)
+    ),
+  ]);
+}
+
 // Error handler class
 export class ErrorHandler {
   private static instance: ErrorHandler;

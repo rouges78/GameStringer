@@ -250,7 +250,7 @@ section.alt-bg { background: linear-gradient(180deg, rgba(30, 41, 59, 0.3) 0%, r
 
 /* TOOL CARDS */
 .tool-card { padding: 24px; position: relative; }
-.tool-card.new::after { content: 'NEW'; position: absolute; top: 16px; right: 16px; background: var(--accent-500); color: white; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+.new-badge { position: absolute; top: 16px; right: 16px; background: var(--accent-500); color: white; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 4px; z-index: 20; }
 .tool-icon { font-size: 2rem; margin-bottom: 16px; display: block; }
 .tool-name { font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
 .tool-desc { font-size: 13px; color: var(--slate-400); line-height: 1.6; margin-bottom: 12px; }

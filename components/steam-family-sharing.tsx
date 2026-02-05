@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 
 // Type definitions for Rust command returns
@@ -63,6 +63,22 @@ export function SteamFamilySharing() {
   const [detectionProgress, setDetectionProgress] = useState(0);
   const [manualSteamId, setManualSteamId] = useState('');
   const [manualAccounts, setManualAccounts] = useState<string[]>([]);
+
+  // Carica Steam ID salvati all'avvio
+  useEffect(() => {
+    const loadSavedIds = async () => {
+      try {
+        const savedIds = await invoke<string[]>('load_family_sharing_ids');
+        if (savedIds && savedIds.length > 0) {
+          setManualAccounts(savedIds);
+          setSharedAccounts(savedIds.map(steamId => ({ steamId })));
+        }
+      } catch (err) {
+        console.log('Nessun ID salvato o errore nel caricamento');
+      }
+    };
+    loadSavedIds();
+  }, []);
 
   const handleAutoDetect = async () => {
     setIsDetecting(true);
@@ -176,7 +192,7 @@ export function SteamFamilySharing() {
     toast.success('Percorso copiato negli appunti!');
   };
 
-  const handleAddManualAccount = () => {
+  const handleAddManualAccount = async () => {
     if (!manualSteamId.trim()) {
       toast.error('Inserisci uno Steam ID valido');
       return;
@@ -190,15 +206,31 @@ export function SteamFamilySharing() {
       toast.warning('Questo Steam ID è già stato aggiunto');
       return;
     }
-    setManualAccounts([...manualAccounts, manualSteamId.trim()]);
+    const newAccounts = [...manualAccounts, manualSteamId.trim()];
+    setManualAccounts(newAccounts);
     setSharedAccounts([...sharedAccounts, { steamId: manualSteamId.trim() }]);
     setManualSteamId('');
-    toast.success('Steam ID aggiunto!');
+    
+    // Salva in modo persistente
+    try {
+      await invoke('save_family_sharing_ids', { ids: newAccounts });
+      toast.success('Steam ID aggiunto e salvato!');
+    } catch {
+      toast.success('Steam ID aggiunto!');
+    }
   };
 
-  const handleRemoveManualAccount = (steamId: string) => {
-    setManualAccounts(manualAccounts.filter(id => id !== steamId));
+  const handleRemoveManualAccount = async (steamId: string) => {
+    const newAccounts = manualAccounts.filter(id => id !== steamId);
+    setManualAccounts(newAccounts);
     setSharedAccounts(sharedAccounts.filter(acc => acc.steamId !== steamId));
+    
+    // Salva in modo persistente
+    try {
+      await invoke('save_family_sharing_ids', { ids: newAccounts });
+    } catch {
+      // Ignora errori di salvataggio
+    }
     toast.info('Steam ID rimosso');
   };
 

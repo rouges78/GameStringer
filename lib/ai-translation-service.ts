@@ -90,6 +90,30 @@ const DEFAULT_PROVIDERS: AIProvider[] = [
     isAvailable: false
   },
   {
+    id: 'aya-expanse',
+    name: 'Aya Expanse (Visual Novel/RPG)',
+    type: 'local',
+    baseUrl: 'http://localhost:11434',
+    models: ['aya-expanse:32b', 'aya-expanse:8b', 'aya-expanse'],
+    isAvailable: false
+  },
+  {
+    id: 'gemma3',
+    name: 'Gemma 3 (Veloce)',
+    type: 'local',
+    baseUrl: 'http://localhost:11434',
+    models: ['gemma3:27b', 'gemma3:12b', 'gemma3:4b', 'gemma3'],
+    isAvailable: false
+  },
+  {
+    id: 'command-r',
+    name: 'Command R+ (Contesto Lungo)',
+    type: 'local',
+    baseUrl: 'http://localhost:11434',
+    models: ['command-r-plus', 'command-r'],
+    isAvailable: false
+  },
+  {
     id: 'nllb',
     name: 'NLLB-200 (200 Lingue)',
     type: 'cloud',
@@ -112,14 +136,47 @@ const DEFAULT_PROVIDERS: AIProvider[] = [
     baseUrl: 'https://api.openai.com/v1',
     models: ['gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo'],
     isAvailable: true
+  },
+  {
+    id: 'openai-batch',
+    name: 'OpenAI Batch (Economico)',
+    type: 'cloud',
+    baseUrl: 'https://api.openai.com/v1',
+    models: ['gpt-4o-mini-batch', 'gpt-4o-batch'],
+    isAvailable: true
   }
 ];
+
+interface ContextCache {
+  gameId: string;
+  context: GameTranslationContext;
+  recentTranslations: Array<{ source: string; target: string; speaker?: string }>;
+  glossaryLearned: Record<string, string>;
+  lastUsed: number;
+}
+
+interface BatchJob {
+  id: string;
+  requests: AITranslationRequest[];
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  results: AITranslationResult[];
+  createdAt: number;
+  completedAt?: number;
+}
 
 class AITranslationService {
   private providers: AIProvider[] = [...DEFAULT_PROVIDERS];
   private currentProvider: string = 'ollama';
   private currentModel: string = 'llama3.2';
   private ollamaModels: OllamaModel[] = [];
+  
+  // 🆕 Context caching per coerenza traduzioni
+  private contextCache: Map<string, ContextCache> = new Map();
+  private maxCacheSize = 10;
+  private maxRecentTranslations = 50;
+  
+  // 🆕 Batch jobs per traduzioni massive
+  private batchJobs: Map<string, BatchJob> = new Map();
 
   /**
    * Verifica disponibilità Ollama
@@ -525,6 +582,266 @@ Includi solo termini gaming-specific o importanti per la consistenza.`;
     }
     
     return {};
+  }
+
+  // ============================================================================
+  // 🆕 CONTEXT CACHING - Traduzioni più coerenti
+  // ============================================================================
+
+  /**
+   * Inizializza o aggiorna la cache del contesto per un gioco
+   */
+  initContextCache(gameId: string, context: GameTranslationContext): void {
+    // Rimuovi cache più vecchie se superiamo il limite
+    if (this.contextCache.size >= this.maxCacheSize) {
+      const oldest = Array.from(this.contextCache.entries())
+        .sort((a, b) => a[1].lastUsed - b[1].lastUsed)[0];
+      if (oldest) {
+        this.contextCache.delete(oldest[0]);
+      }
+    }
+
+    this.contextCache.set(gameId, {
+      gameId,
+      context,
+      recentTranslations: [],
+      glossaryLearned: {},
+      lastUsed: Date.now()
+    });
+  }
+
+  /**
+   * Aggiungi una traduzione alla cache per contesto futuro
+   */
+  addToContextCache(gameId: string, source: string, target: string, speaker?: string): void {
+    const cache = this.contextCache.get(gameId);
+    if (!cache) return;
+
+    cache.recentTranslations.push({ source, target, speaker });
+    
+    // Mantieni solo le ultime N traduzioni
+    if (cache.recentTranslations.length > this.maxRecentTranslations) {
+      cache.recentTranslations = cache.recentTranslations.slice(-this.maxRecentTranslations);
+    }
+    
+    cache.lastUsed = Date.now();
+  }
+
+  /**
+   * Ottieni contesto arricchito con traduzioni recenti
+   */
+  getEnrichedContext(gameId: string): GameTranslationContext | null {
+    const cache = this.contextCache.get(gameId);
+    if (!cache) return null;
+
+    cache.lastUsed = Date.now();
+    
+    // Merge glossario appreso con quello originale
+    const enrichedContext = { ...cache.context };
+    if (enrichedContext.glossary) {
+      enrichedContext.glossary = {
+        ...enrichedContext.glossary,
+        ...cache.glossaryLearned
+      };
+    }
+
+    return enrichedContext;
+  }
+
+  /**
+   * Ottieni traduzioni recenti per contesto (few-shot learning)
+   */
+  getRecentTranslationsForContext(gameId: string, limit = 5): Array<{ source: string; target: string }> {
+    const cache = this.contextCache.get(gameId);
+    if (!cache) return [];
+    return cache.recentTranslations.slice(-limit);
+  }
+
+  /**
+   * Impara un termine per il glossario automatico
+   */
+  learnGlossaryTerm(gameId: string, term: string, translation: string): void {
+    const cache = this.contextCache.get(gameId);
+    if (!cache) return;
+    cache.glossaryLearned[term] = translation;
+  }
+
+  // ============================================================================
+  // 🆕 BATCH API - Traduzioni massive economiche
+  // ============================================================================
+
+  /**
+   * Crea un batch job per traduzioni massive (OpenAI Batch API)
+   */
+  async createBatchJob(requests: AITranslationRequest[]): Promise<string> {
+    const jobId = `batch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    
+    this.batchJobs.set(jobId, {
+      id: jobId,
+      requests,
+      status: 'pending',
+      results: [],
+      createdAt: Date.now()
+    });
+
+    // Avvia il processing in background
+    this.processBatchJob(jobId);
+    
+    return jobId;
+  }
+
+  /**
+   * Processa un batch job in background
+   */
+  private async processBatchJob(jobId: string): Promise<void> {
+    const job = this.batchJobs.get(jobId);
+    if (!job) return;
+
+    job.status = 'processing';
+
+    try {
+      for (const request of job.requests) {
+        const result = await this.translate(request);
+        job.results.push(result);
+        
+        // Delay per non sovraccaricare il provider
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      job.status = 'completed';
+      job.completedAt = Date.now();
+    } catch (error) {
+      job.status = 'failed';
+      console.error('Batch job failed:', error);
+    }
+  }
+
+  /**
+   * Ottieni stato di un batch job
+   */
+  getBatchJobStatus(jobId: string): BatchJob | null {
+    return this.batchJobs.get(jobId) || null;
+  }
+
+  /**
+   * Ottieni risultati di un batch job completato
+   */
+  getBatchJobResults(jobId: string): AITranslationResult[] {
+    const job = this.batchJobs.get(jobId);
+    return job?.results || [];
+  }
+
+  // ============================================================================
+  // 🆕 GAMING FINE-TUNING PROMPTS - Prompt specializzati per generi
+  // ============================================================================
+
+  /**
+   * Ottieni prompt ottimizzato per genere specifico
+   */
+  getGamingPromptForGenre(genre: GameTranslationContext['genre']): string {
+    const genrePrompts: Record<string, string> = {
+      rpg: `Sei un traduttore esperto di JRPG e RPG occidentali.
+Conosci la terminologia: HP, MP, XP, buff, debuff, status effect, party member, quest log.
+Mantieni i nomi propri in originale. Usa "tu" informale per dialoghi tra avventurieri.
+Per item fantasy usa termini evocativi italiani (es: "Pozione" non "Potion").`,
+
+      visual_novel: `Sei un traduttore di visual novel giapponesi.
+Conosci le convenzioni: onii-chan, senpai, honorifics giapponesi.
+Mantieni le sfumature emotive e il ritmo del dialogo.
+Adatta i riferimenti culturali quando necessario per il pubblico italiano.
+Preserva i "..." e le pause drammatiche.`,
+
+      horror: `Sei un traduttore di giochi horror.
+Crea tensione attraverso le parole. Usa frasi corte e incisive.
+Evita termini troppo formali - preferisci linguaggio diretto e inquietante.
+Mantieni l'ambiguità dove presente nell'originale.`,
+
+      action: `Sei un traduttore di giochi action.
+Usa linguaggio diretto, energico, con impatto.
+Frasi brevi per i combattimenti. Battute memorabili per i boss.
+Termini tecnici: combo, finisher, dodge, parry mantienili o italianizza creativamente.`,
+
+      strategy: `Sei un traduttore di giochi strategici.
+Terminologia militare/tattica accurata.
+Chiarezza assoluta per le istruzioni di gioco.
+Nomi delle unità consistenti. Statistiche e numeri invariati.`,
+
+      adventure: `Sei un traduttore di avventure grafiche.
+Dialoghi naturali e scorrevoli.
+Enigmi: mantieni gli indizi traducibili, adatta giochi di parole.
+Descrizioni evocative per l'esplorazione.`,
+
+      simulation: `Sei un traduttore di simulatori.
+Terminologia tecnica accurata per il settore simulato.
+Chiarezza nelle istruzioni e nei menu.
+Mantieni abbreviazioni standard del settore.`,
+
+      puzzle: `Sei un traduttore di puzzle game.
+Istruzioni cristalline.
+Se ci sono giochi di parole, adattali creativamente in italiano.
+Feedback brevi e chiari per le azioni del giocatore.`,
+
+      sports: `Sei un traduttore di giochi sportivi.
+Terminologia sportiva italiana ufficiale.
+Commenti dinamici ed entusiastici.
+Statistiche e nomi dei giocatori invariati.`,
+
+      racing: `Sei un traduttore di giochi di corsa.
+Terminologia automobilistica tecnica.
+Nomi delle auto e circuiti invariati.
+Feedback di guida immediato e chiaro.`
+    };
+
+    return genrePrompts[genre] || genrePrompts.rpg;
+  }
+
+  /**
+   * Suggerisci il modello migliore per il tipo di contenuto
+   */
+  suggestModelForContent(context: GameTranslationContext): { provider: string; model: string; reason: string } {
+    // Visual novel/RPG giapponesi → Aya Expanse
+    if ((context.genre === 'visual_novel' || context.genre === 'rpg') && 
+        (context.era === 'fantasy' || context.setting.toLowerCase().includes('japan'))) {
+      return {
+        provider: 'aya-expanse',
+        model: 'aya-expanse:32b',
+        reason: 'Ottimo per contenuti giapponesi e visual novel'
+      };
+    }
+
+    // Contenuto con molto contesto → Command R+
+    if (context.characterVoices && Object.keys(context.characterVoices).length > 3) {
+      return {
+        provider: 'command-r',
+        model: 'command-r-plus',
+        reason: 'Gestisce bene contesti lunghi con molti personaggi'
+      };
+    }
+
+    // Traduzioni veloci/UI → Gemma 3
+    if (context.tone === 'casual') {
+      return {
+        provider: 'gemma3',
+        model: 'gemma3:12b',
+        reason: 'Veloce e efficiente per contenuti semplici'
+      };
+    }
+
+    // Lingue asiatiche → Qwen 3
+    if (context.era === 'historical' || context.setting.toLowerCase().includes('asia')) {
+      return {
+        provider: 'qwen3',
+        model: 'qwen3:14b',
+        reason: 'Eccellente per lingue e culture asiatiche'
+      };
+    }
+
+    // Default → Llama 3.2
+    return {
+      provider: 'ollama',
+      model: 'llama3.2',
+      reason: 'Modello bilanciato per uso generale'
+    };
   }
 }
 

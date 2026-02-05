@@ -86,6 +86,13 @@ export default function OcrTranslatorPage() {
   useEffect(() => {
     invoke<boolean>('is_ocr_running').then(setIsRunning).catch(() => {});
     loadWindows();
+    // Carica traduzioni salvate all'avvio
+    invoke<number>('load_ocr_translations').then(count => {
+      if (count > 0) {
+        console.log(`[OCR] Caricate ${count} traduzioni salvate`);
+        toast.success(`Caricate ${count} traduzioni salvate`);
+      }
+    }).catch(() => {});
   }, []);
 
   const loadWindows = async () => {
@@ -203,9 +210,15 @@ export default function OcrTranslatorPage() {
     try {
       if (isRunning) {
         await invoke('stop_ocr_translator');
+        // Salva traduzioni quando si ferma l'OCR
+        const saved = await invoke<number>('save_ocr_translations');
         setIsRunning(false);
         setDetectedTexts([]);
-        toast.info(t('ocrTranslator.stopCapture'));
+        if (saved > 0) {
+          toast.success(`Salvate ${saved} nuove traduzioni`);
+        } else {
+          toast.info(t('ocrTranslator.stopCapture'));
+        }
       } else {
         await invoke('start_ocr_translator', { config });
         setIsRunning(true);

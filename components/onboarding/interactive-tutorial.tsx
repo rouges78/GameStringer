@@ -316,7 +316,7 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
                         alt="GameStringer" 
                         width={80} 
                         height={80} 
-                        className="drop-shadow-2xl"
+                        className="drop-shadow-2xl w-20 h-20"
                         priority
                       />
                     </div>

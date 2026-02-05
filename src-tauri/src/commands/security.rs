@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use chrono::Utc;
@@ -345,10 +344,12 @@ pub struct SecureString {
 }
 
 impl SecureString {
+    #[allow(dead_code)]
     pub fn new(s: &str) -> Self {
         Self { data: s.as_bytes().to_vec() }
     }
     
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         std::str::from_utf8(&self.data).unwrap_or("")
     }

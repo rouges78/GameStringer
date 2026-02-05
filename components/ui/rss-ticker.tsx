@@ -114,7 +114,13 @@ export function RssTicker({ className = '' }: RssTickerProps) {
       }
     };
 
+    // Carica subito
     loadRss();
+    
+    // Auto-refresh ogni 5 minuti
+    const refreshInterval = setInterval(loadRss, 5 * 60 * 1000);
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   // Rotazione automatica

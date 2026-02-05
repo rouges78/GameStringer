@@ -3,8 +3,6 @@ use std::fs;
 use std::path::PathBuf;
 use chrono::Utc;
 use log::info;
-use sha2::{Sha256, Digest};
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use rand::Rng;
 use hmac::{Hmac, Mac};
 use sha1::Sha1;

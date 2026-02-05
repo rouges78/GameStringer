@@ -1,0 +1,116 @@
+{
+  "app": {
+    "name": "GameStringer",
+    "tagline": "Tradução de Jogos Simplificada",
+    "version": "Versão"
+  },
+  "nav": {
+    "home": "Início",
+    "projects": "Projetos",
+    "translation": "Tradução",
+    "settings": "Configurações",
+    "help": "Ajuda",
+    "about": "Sobre"
+  },
+  "actions": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "import": "Importar",
+    "export": "Exportar",
+    "translate": "Traduzir",
+    "apply": "Aplicar",
+    "reset": "Redefinir",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "finish": "Concluir"
+  },
+  "translation": {
+    "title": "Tradução",
+    "sourceLanguage": "Idioma Origem",
+    "targetLanguage": "Idioma Destino",
+    "provider": "Provedor IA",
+    "apiKey": "Chave API",
+    "startTranslation": "Iniciar Tradução",
+    "stopTranslation": "Parar Tradução",
+    "progress": "Progresso",
+    "estimated": "Estimado",
+    "completed": "Concluído",
+    "failed": "Falhou",
+    "remaining": "Restante",
+    "costEstimate": "Estimativa de Custo",
+    "batchSize": "Tamanho do Lote",
+    "rateLimit": "Limite de Taxa",
+    "retrying": "Tentando novamente..."
+  },
+  "files": {
+    "title": "Arquivos",
+    "open": "Abrir Arquivo",
+    "openFolder": "Abrir Pasta",
+    "saveAs": "Salvar Como",
+    "recentFiles": "Arquivos Recentes",
+    "noFiles": "Nenhum arquivo selecionado",
+    "dragDrop": "Arraste arquivos aqui",
+    "supported": "Formatos Suportados"
+  },
+  "engines": {
+    "unity": "Unity",
+    "unreal": "Unreal Engine",
+    "rpgmaker": "RPG Maker",
+    "renpy": "Ren'Py",
+    "godot": "Godot",
+    "gamemaker": "GameMaker",
+    "danganronpa": "Danganronpa"
+  },
+  "settings": {
+    "title": "Configurações",
+    "general": "Geral",
+    "appearance": "Aparência",
+    "language": "Idioma",
+    "theme": "Tema",
+    "darkMode": "Modo Escuro",
+    "lightMode": "Modo Claro",
+    "system": "Sistema",
+    "apiKeys": "Chaves API",
+    "advanced": "Avançado",
+    "backup": "Backup",
+    "restore": "Restaurar"
+  },
+  "messages": {
+    "success": "Sucesso",
+    "error": "Erro",
+    "warning": "Aviso",
+    "info": "Info",
+    "loading": "Carregando...",
+    "saving": "Salvando...",
+    "translating": "Traduzindo...",
+    "completed": "Concluído!",
+    "failed": "Operação falhou",
+    "noResults": "Sem resultados",
+    "confirmDelete": "Tem certeza que deseja excluir?"
+  },
+  "danganronpa": {
+    "title": "Danganronpa Auto-Tradutor",
+    "detectGames": "Detectar Jogos",
+    "extractPak": "Extrair PAK",
+    "selectGame": "Selecionar Jogo",
+    "games": {
+      "dr1": "Danganronpa: Trigger Happy Havoc",
+      "dr2": "Danganronpa 2: Goodbye Despair",
+      "drae": "Danganronpa Another Episode",
+      "drv3": "Danganronpa V3: Killing Harmony"
+    },
+    "pakTypes": {
+      "text": "PAK Texto",
+      "script": "Script LIN",
+      "texture": "PAK Textura",
+      "font": "PAK Fonte"
+    }
+  }
+}

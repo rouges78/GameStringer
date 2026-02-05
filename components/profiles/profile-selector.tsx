@@ -585,7 +585,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
                 alt="GameStringer" 
                 width={180} 
                 height={180} 
-                className="drop-shadow-2xl mx-auto"
+                className="drop-shadow-2xl mx-auto w-[180px] h-[180px]"
                 priority
               />
               <p className="text-xs text-slate-500 mt-2 font-mono">v{version}</p>

@@ -39,11 +39,13 @@ pub struct SessionState;
 
 // Struct per deserializzare loginusers.vdf
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct LoginUsersVdf {
     users: HashMap<String, UserData>,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct UserData {
     #[serde(rename = "AccountName")]
     account_name: Option<String>,
@@ -1711,32 +1713,89 @@ static GAME_CACHE: Lazy<Cache<u32, SteamGame>> = Lazy::new(|| {
 
 #[tauri::command]
 pub async fn auto_detect_steam_config() -> Result<SteamConfig, String> {
-    debug!("[RUST] auto_detect_steam_config called");
+    log::info!("[RUST] auto_detect_steam_config called");
 
     let steam_path = find_steam_path_from_registry().await;
     let mut logged_in_users = Vec::new();
 
     if let Some(ref path) = steam_path {
-        let login_users_path = Path::new(path).join("config/loginusers.vdf");
+        log::info!("[STEAM] Steam path found: {}", path);
+        
+        // Metodo 1: Prova a leggere loginusers.vdf
+        let login_users_path = Path::new(path).join("config").join("loginusers.vdf");
+        log::info!("[STEAM] Checking loginusers.vdf at: {:?}", login_users_path);
+        
         if login_users_path.exists() {
-            match fs::read_to_string(login_users_path) {
+            match fs::read_to_string(&login_users_path) {
                 Ok(content) => {
-                    match kv::from_str::<LoginUsersVdf>(&content) {
-                        Ok(vdf) => {
-                            for (steam_id, user_data) in vdf.users.iter() {
-                                if let Some(account_name) = &user_data.account_name {
-                                    if !account_name.is_empty() {
-                                        logged_in_users.push(steam_id.clone());
+                    log::debug!("[STEAM] loginusers.vdf content (first 500 chars): {}", &content.chars().take(500).collect::<String>());
+                    
+                    // Parse manuale per estrarre gli Steam ID
+                    // Il formato è: "steamid64" { "AccountName" "username" ... }
+                    let mut current_steam_id: Option<String> = None;
+                    for line in content.lines() {
+                        let trimmed = line.trim();
+                        
+                        // Cerca linee che contengono solo un numero tra virgolette (Steam ID)
+                        if trimmed.starts_with('"') && trimmed.ends_with('"') {
+                            let potential_id = trimmed.trim_matches('"');
+                            if potential_id.len() == 17 && potential_id.chars().all(|c| c.is_ascii_digit()) {
+                                current_steam_id = Some(potential_id.to_string());
+                                log::info!("[STEAM] Found Steam ID: {}", potential_id);
+                            }
+                        }
+                        
+                        // Se abbiamo un ID e troviamo AccountName, aggiungiamo l'utente
+                        if current_steam_id.is_some() && trimmed.to_lowercase().contains("accountname") {
+                            if let Some(steam_id) = current_steam_id.take() {
+                                logged_in_users.push(steam_id.clone());
+                                log::info!("[STEAM] Added user with Steam ID: {}", steam_id);
+                            }
+                        }
+                    }
+                },
+                Err(e) => log::warn!("[STEAM] Failed to read loginusers.vdf: {}", e),
+            }
+        } else {
+            log::warn!("[STEAM] loginusers.vdf not found at {:?}", login_users_path);
+        }
+        
+        // Metodo 2: Fallback - scansiona cartella userdata
+        if logged_in_users.is_empty() {
+            log::info!("[STEAM] No users from loginusers.vdf, trying userdata folder...");
+            let userdata_path = Path::new(path).join("userdata");
+            
+            if userdata_path.exists() {
+                if let Ok(entries) = fs::read_dir(&userdata_path) {
+                    for entry in entries.flatten() {
+                        if let Ok(file_type) = entry.file_type() {
+                            if file_type.is_dir() {
+                                let user_id = entry.file_name().to_string_lossy().to_string();
+                                
+                                // Verifica che sia un ID numerico valido (Steam32 ID)
+                                if user_id.parse::<u64>().is_ok() && user_id != "0" && user_id != "anonymous" {
+                                    let localconfig = entry.path().join("config").join("localconfig.vdf");
+                                    
+                                    if localconfig.exists() {
+                                        // Converti Steam32 ID a Steam64 ID
+                                        if let Ok(steam32) = user_id.parse::<u64>() {
+                                            let steam64 = steam32 + 76561197960265728u64;
+                                            let steam64_str = steam64.to_string();
+                                            log::info!("[STEAM] Found user in userdata: {} (Steam64: {})", user_id, steam64_str);
+                                            logged_in_users.push(steam64_str);
+                                        }
                                     }
                                 }
                             }
-                        },
-                        Err(e) => debug!("Failed to parse VDF: {}", e),
+                        }
                     }
-                },
-                Err(e) => debug!("Failed to read loginusers.vdf: {}", e),
+                }
             }
         }
+        
+        log::info!("[STEAM] Total users found: {}", logged_in_users.len());
+    } else {
+        log::warn!("[STEAM] Steam path not found in registry");
     }
 
     Ok(SteamConfig {

@@ -52,7 +52,8 @@ import {
   Glasses,
   MessageSquare,
   Monitor,
-  User
+  User,
+  Heart
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -68,6 +69,7 @@ import { NotificationCenter } from '@/components/notifications/notification-cent
 import { useNotificationShortcuts } from '@/hooks/use-global-shortcuts';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { UpdateBell } from '@/components/notifications/update-bell';
 import { FeaturedGameWidget } from '@/components/ui/featured-game-widget';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
@@ -187,6 +189,10 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: t('nav.ueTranslator') || 'UE Translator', href: '/unreal-translator', icon: Cpu },
           { name: t('nav.telltalePatcher') || 'Telltale Patcher', href: '/telltale-patcher', icon: Gamepad2 },
           { name: 'Unity Bundle', href: '/unity-bundle', icon: FileArchive },
+          { name: 'Visual Novel', href: '/danganronpa-patcher', icon: Package },
+          { name: 'RPG Maker', href: '/rpgmaker-patcher', icon: Gamepad2 },
+          { name: "Ren'Py", href: '/renpy-patcher', icon: Heart },
+          { name: 'Wolf RPG', href: '/wolfrpg-patcher', icon: Database },
           { name: 'Nexus Mods', href: '/nexus-mods', icon: Globe },
         ]
       },
@@ -939,12 +945,12 @@ export function MainLayout({ children }: MainLayoutProps) {
                                                 variant="ghost"
                                                 className={cn(
                                                   "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-7",
-                                                  isSubItemActive ? group.activeClass : "text-slate-400 hover:text-emerald-600 hover:bg-emerald-600/10"
+                                                  isSubItemActive ? group.activeClass : "text-slate-400 hover:text-amber-600 hover:bg-amber-600/10"
                                                 )}
                                               >
                                                 <SubIcon className={cn(
                                                   "h-3 w-3 transition-colors duration-200",
-                                                  isSubItemActive ? "" : "text-slate-400 group-hover:text-emerald-600"
+                                                  isSubItemActive ? "" : "text-slate-400 group-hover:text-amber-600"
                                                 )} />
                                                 <span className="text-[10px] relative">
                                                   {subItem.name}

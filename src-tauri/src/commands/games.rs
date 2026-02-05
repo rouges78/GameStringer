@@ -209,7 +209,7 @@ async fn search_engine_on_igdb(game_name: &str) -> Option<String> {
         .ok()?;
     
     // Prova prima la ricerca diretta su IGDB (potrebbe funzionare senza auth per dati pubblici)
-    let search_query = format!(
+    let _search_query = format!(
         "search \"{}\"; fields name,game_engines.name; limit 1;",
         game_name.replace("\"", "\\\"")
     );
@@ -369,6 +369,19 @@ pub async fn detect_engine_for_game(
             vec![
                 "📁 Estrai file .xp3 con XP3 Viewer".to_string(),
                 "💡 Testi in file .ks o .tjs".to_string(),
+            ]
+        ),
+        "Spike Chunsoft Engine" => (
+            true,
+            Some("DRAT (Danganronpa Another Tool)".to_string()),
+            Some("Estrai i file .pak con DRAT, traduci i .PO con Poedit, poi repack.".to_string()),
+            vec![
+                "🎮 Danganronpa rilevato!".to_string(),
+                "� Tool: DRAT → github.com/Liquid-S/Danganronpa-Another-Tool".to_string(),
+                "📁 I file .pak contengono testi in formato .PO".to_string(),
+                "✏️ Traduci i .PO con Poedit (poedit.net)".to_string(),
+                "🔄 Repack con DRAT e copia nella cartella gioco".to_string(),
+                "🇮🇹 Patch ITA esistente: alliceteam.altervista.org".to_string(),
             ]
         ),
         _ => {

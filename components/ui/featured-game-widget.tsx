@@ -72,9 +72,25 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
     const loadUserGames = async () => {
       setIsLoading(true);
       try {
-        // Usa scan locale (non richiede API key)
-        const result = await invoke<any>('scan_steam_with_steamlocate');
-        const games = result?.games || result?.installed_games || result || [];
+        // Prova più metodi per ottenere i giochi
+        let games: any[] = [];
+        
+        try {
+          const result = await invoke<any>('scan_steam_with_steamlocate');
+          games = result?.games || result?.installed_games || result || [];
+        } catch {
+          // Fallback: prova get_steam_games
+          try {
+            games = await invoke<any[]>('get_steam_games', { apiKey: '', steamId: '', forceRefresh: false }) || [];
+          } catch {
+            // Fallback: prova get_games
+            try {
+              games = await invoke<any[]>('get_games') || [];
+            } catch {
+              games = [];
+            }
+          }
+        }
         
         if (!games || games.length === 0) {
           setGamesWithoutLang([]);
@@ -188,7 +204,25 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
   }
 
   if (!game || gamesWithoutLang.length === 0) {
-    return null;
+    // Mostra widget placeholder se non ci sono giochi da tradurre
+    if (collapsed) return null;
+    return (
+      <div className="px-2 py-3">
+        <div className="rounded-2xl bg-slate-900/60 border border-cyan-500/30 p-3 backdrop-blur-xl shadow-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-1.5 bg-cyan-600/80 rounded-lg">
+              <Languages className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-[10px] text-white uppercase tracking-wide font-semibold">
+              {t('widget.recommendedToTranslate') || 'Da Tradurre'}
+            </span>
+          </div>
+          <p className="text-[10px] text-cyan-300/60 text-center py-2">
+            {t('widget.allGamesTranslated') || 'Tutti i giochi hanno la lingua!'}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (collapsed) {

@@ -45,6 +45,108 @@ import { ProfileNotificationSettings } from '@/components/notifications/profile-
 import { AutoBackupSettings } from '@/components/settings/auto-backup-settings';
 import { useVersion } from '@/lib/version';
 import { useTranslation } from '@/lib/i18n';
+import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { invoke } from '@tauri-apps/api/core';
+
+// Cache Stats Component
+function CacheStatsCard() {
+  const [stats, setStats] = useState<{
+    cache_size_mb: number;
+    cover_count: number;
+    disk_free_gb: number;
+    disk_total_gb: number;
+    app_data_size_mb: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const result = await invoke<any>('get_cache_stats');
+        setStats(result);
+      } catch (e) {
+        console.error('Error loading cache stats:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Monitor className="h-5 w-5 text-green-500" />
+            <span>{t('settings.systemConfig')}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const diskUsedPercent = stats ? ((stats.disk_total_gb - stats.disk_free_gb) / stats.disk_total_gb * 100) : 0;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center space-x-2">
+          <Monitor className="h-5 w-5 text-green-500" />
+          <span>{t('settings.systemConfig')}</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* App Data Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+            <HardDrive className="h-6 w-6 mx-auto mb-2 text-blue-400" />
+            <p className="text-2xl font-bold">{stats?.app_data_size_mb.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground">MB Dati App</p>
+          </div>
+          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+            <Database className="h-6 w-6 mx-auto mb-2 text-purple-400" />
+            <p className="text-2xl font-bold">{stats?.cache_size_mb.toFixed(1)}</p>
+            <p className="text-xs text-muted-foreground">MB Cache Cover</p>
+          </div>
+          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+            <Globe className="h-6 w-6 mx-auto mb-2 text-green-400" />
+            <p className="text-2xl font-bold">{stats?.cover_count || 0}</p>
+            <p className="text-xs text-muted-foreground">Cover Salvate</p>
+          </div>
+          <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+            <Cpu className="h-6 w-6 mx-auto mb-2 text-yellow-400" />
+            <p className="text-2xl font-bold">{stats?.disk_free_gb.toFixed(0)}</p>
+            <p className="text-xs text-muted-foreground">GB Liberi Disco</p>
+          </div>
+        </div>
+
+        {/* Disk Usage Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Spazio Disco</span>
+            <span>{(stats?.disk_total_gb || 0).toFixed(0)} GB totali</span>
+          </div>
+          <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-green-500 to-blue-500 transition-all duration-500"
+              style={{ width: `${Math.min(diskUsedPercent, 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            {diskUsedPercent.toFixed(1)}% utilizzato • {(stats?.disk_free_gb || 0).toFixed(1)} GB disponibili
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 // Type declaration for Tauri
 declare global {
@@ -499,7 +601,21 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <Label>Temperature: {settings.translation.temperature}</Label>
+                  <div className="flex items-center gap-2">
+                    <Label>Temperature: {settings.translation.temperature}</Label>
+                    <InfoTooltip 
+                      variant="info"
+                      content={
+                        <div className="space-y-1">
+                          <p className="font-semibold">{t('settings.temperatureTooltipTitle')}</p>
+                          <p className="text-xs">• <strong>{t('settings.temperatureTooltipLow')}</strong></p>
+                          <p className="text-xs">• <strong>{t('settings.temperatureTooltipMid')}</strong></p>
+                          <p className="text-xs">• <strong>{t('settings.temperatureTooltipHigh')}</strong></p>
+                          <p className="text-xs text-muted-foreground mt-1">{t('settings.temperatureTooltipRecommended')}</p>
+                        </div>
+                      }
+                    />
+                  </div>
                   <Slider
                     value={[settings.translation.temperature]}
                     onValueChange={(value) => updateSetting('translation', 'temperature', value[0])}
@@ -511,7 +627,22 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Max Tokens: {settings.translation.maxTokens}</Label>
+                  <div className="flex items-center gap-2">
+                    <Label>Max Tokens: {settings.translation.maxTokens}</Label>
+                    <InfoTooltip 
+                      variant="info"
+                      content={
+                        <div className="space-y-1">
+                          <p className="font-semibold">{t('settings.maxTokensTooltipTitle')}</p>
+                          <p className="text-xs">{t('settings.maxTokensTooltipDesc')}</p>
+                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipLow')}</strong></p>
+                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipMid')}</strong></p>
+                          <p className="text-xs">• <strong>{t('settings.maxTokensTooltipHigh')}</strong></p>
+                          <p className="text-xs text-muted-foreground mt-1">{t('settings.maxTokensTooltipCost')}</p>
+                        </div>
+                      }
+                    />
+                  </div>
                   <Slider
                     value={[settings.translation.maxTokens]}
                     onValueChange={(value) => updateSetting('translation', 'maxTokens', value[0])}
@@ -523,7 +654,22 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Batch Size: {settings.translation.batchSize}</Label>
+                  <div className="flex items-center gap-2">
+                    <Label>Batch Size: {settings.translation.batchSize}</Label>
+                    <InfoTooltip 
+                      variant="info"
+                      content={
+                        <div className="space-y-1">
+                          <p className="font-semibold">{t('settings.batchSizeTooltipTitle')}</p>
+                          <p className="text-xs">{t('settings.batchSizeTooltipDesc')}</p>
+                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipLow')}</strong></p>
+                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipMid')}</strong></p>
+                          <p className="text-xs">• <strong>{t('settings.batchSizeTooltipHigh')}</strong></p>
+                          <p className="text-xs text-muted-foreground mt-1">{t('settings.batchSizeTooltipCost')}</p>
+                        </div>
+                      }
+                    />
+                  </div>
                   <Slider
                     value={[settings.translation.batchSize]}
                     onValueChange={(value) => updateSetting('translation', 'batchSize', value[0])}
@@ -545,73 +691,7 @@ export default function SettingsPage() {
 
         {/* System Tab */}
         <TabsContent value="system" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Monitor className="h-5 w-5 text-green-500" />
-                <span>{t('settings.systemConfig')}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>{t('settings.theme')}</Label>
-                  <Select 
-                    value={settings.system.theme} 
-                    onValueChange={(value) => updateSetting('system', 'theme', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dark">🌙 {t('settings.themeDark')}</SelectItem>
-                      <SelectItem value="light">☀️ {t('settings.themeLight')}</SelectItem>
-                      <SelectItem value="auto">🔄 {t('settings.themeAuto')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>{t('settings.autoBackup')}</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {t('settings.autoBackupDesc')}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.system.autoBackup}
-                    onCheckedChange={(checked) => updateSetting('system', 'autoBackup', checked)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('settings.backupInterval')}: {settings.system.backupInterval}</Label>
-                  <Slider
-                    value={[settings.system.backupInterval]}
-                    onValueChange={(value) => updateSetting('system', 'backupInterval', value[0])}
-                    max={168}
-                    min={1}
-                    step={1}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t('settings.cacheSize')}: {settings.system.cacheSize}</Label>
-                  <Slider
-                    value={[settings.system.cacheSize]}
-                    onValueChange={(value) => updateSetting('system', 'cacheSize', value[0])}
-                    max={2000}
-                    min={100}
-                    step={100}
-                    className="w-full [&_[data-slot=range]]:bg-blue-500 [&_[data-slot=thumb]]:bg-blue-500 [&_[data-slot=thumb]]:border-blue-500"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <CacheStatsCard />
         </TabsContent>
 
         {/* Performance Tab */}

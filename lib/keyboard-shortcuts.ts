@@ -49,22 +49,37 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
  * Shortcut predefiniti dell'applicazione
  */
 export const defaultShortcuts = {
-  // Navigazione
-  search: { key: 'f', ctrl: true, description: 'Open search' },
-  escape: { key: 'Escape', description: 'Close modal/panel' },
+  // Navigazione globale
+  search: { key: 'f', ctrl: true, description: 'Cerca' },
+  escape: { key: 'Escape', description: 'Chiudi modale' },
+  goHome: { key: 'h', ctrl: true, description: 'Vai a Dashboard' },
+  goLibrary: { key: '1', ctrl: true, description: 'Vai a Libreria' },
+  goTranslator: { key: '2', ctrl: true, description: 'Vai a Traduttore AI' },
+  goTools: { key: '3', ctrl: true, description: 'Vai a Strumenti' },
+  goCommunity: { key: '4', ctrl: true, description: 'Vai a Community' },
   
   // Library
-  refresh: { key: 'r', ctrl: true, description: 'Refresh library' },
-  gridView: { key: 'g', ctrl: true, description: 'Grid view' },
-  listView: { key: 'l', ctrl: true, description: 'List view' },
+  refresh: { key: 'r', ctrl: true, description: 'Aggiorna libreria' },
+  gridView: { key: 'g', ctrl: true, alt: true, description: 'Vista griglia' },
+  listView: { key: 'l', ctrl: true, alt: true, description: 'Vista lista' },
+  selectAll: { key: 'a', ctrl: true, description: 'Seleziona tutto' },
   
   // Traduzione
-  translate: { key: 't', ctrl: true, description: 'Start translation' },
-  pause: { key: 'p', ctrl: true, description: 'Pause translation' },
+  translate: { key: 't', ctrl: true, description: 'Avvia traduzione' },
+  pause: { key: 'p', ctrl: true, description: 'Pausa traduzione' },
+  save: { key: 's', ctrl: true, description: 'Salva progetto' },
+  undo: { key: 'z', ctrl: true, description: 'Annulla' },
+  redo: { key: 'z', ctrl: true, shift: true, description: 'Ripeti' },
+  nextString: { key: 'ArrowDown', ctrl: true, description: 'Stringa successiva' },
+  prevString: { key: 'ArrowUp', ctrl: true, description: 'Stringa precedente' },
+  copySource: { key: 'd', ctrl: true, description: 'Copia sorgente' },
   
   // Generali
-  settings: { key: ',', ctrl: true, description: 'Open settings' },
-  help: { key: '?', shift: true, description: 'Show shortcut help' },
+  settings: { key: ',', ctrl: true, description: 'Impostazioni' },
+  help: { key: '?', shift: true, description: 'Mostra shortcuts' },
+  toggleTheme: { key: 'j', ctrl: true, description: 'Cambia tema' },
+  toggleSidebar: { key: 'b', ctrl: true, description: 'Toggle sidebar' },
+  notifications: { key: 'n', ctrl: true, description: 'Notifiche' },
 };
 
 /**

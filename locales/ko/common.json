@@ -1,0 +1,116 @@
+{
+  "app": {
+    "name": "GameStringer",
+    "tagline": "게임 번역을 쉽게",
+    "version": "버전"
+  },
+  "nav": {
+    "home": "홈",
+    "projects": "프로젝트",
+    "translation": "번역",
+    "settings": "설정",
+    "help": "도움말",
+    "about": "정보"
+  },
+  "actions": {
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "편집",
+    "create": "생성",
+    "import": "가져오기",
+    "export": "내보내기",
+    "translate": "번역",
+    "apply": "적용",
+    "reset": "초기화",
+    "search": "검색",
+    "filter": "필터",
+    "close": "닫기",
+    "confirm": "확인",
+    "back": "뒤로",
+    "next": "다음",
+    "finish": "완료"
+  },
+  "translation": {
+    "title": "번역",
+    "sourceLanguage": "원본 언어",
+    "targetLanguage": "대상 언어",
+    "provider": "AI 제공자",
+    "apiKey": "API 키",
+    "startTranslation": "번역 시작",
+    "stopTranslation": "번역 중지",
+    "progress": "진행률",
+    "estimated": "예상",
+    "completed": "완료",
+    "failed": "실패",
+    "remaining": "남음",
+    "costEstimate": "비용 추정",
+    "batchSize": "배치 크기",
+    "rateLimit": "속도 제한",
+    "retrying": "재시도 중..."
+  },
+  "files": {
+    "title": "파일",
+    "open": "파일 열기",
+    "openFolder": "폴더 열기",
+    "saveAs": "다른 이름으로 저장",
+    "recentFiles": "최근 파일",
+    "noFiles": "파일 없음",
+    "dragDrop": "여기에 파일을 놓으세요",
+    "supported": "지원 형식"
+  },
+  "engines": {
+    "unity": "Unity",
+    "unreal": "언리얼 엔진",
+    "rpgmaker": "RPG 만들기",
+    "renpy": "Ren'Py",
+    "godot": "Godot",
+    "gamemaker": "GameMaker",
+    "danganronpa": "단간론파"
+  },
+  "settings": {
+    "title": "설정",
+    "general": "일반",
+    "appearance": "외관",
+    "language": "언어",
+    "theme": "테마",
+    "darkMode": "다크 모드",
+    "lightMode": "라이트 모드",
+    "system": "시스템",
+    "apiKeys": "API 키",
+    "advanced": "고급",
+    "backup": "백업",
+    "restore": "복원"
+  },
+  "messages": {
+    "success": "성공",
+    "error": "오류",
+    "warning": "경고",
+    "info": "정보",
+    "loading": "로딩 중...",
+    "saving": "저장 중...",
+    "translating": "번역 중...",
+    "completed": "완료!",
+    "failed": "작업 실패",
+    "noResults": "결과 없음",
+    "confirmDelete": "삭제하시겠습니까?"
+  },
+  "danganronpa": {
+    "title": "단간론파 자동 번역기",
+    "detectGames": "게임 감지",
+    "extractPak": "PAK 추출",
+    "selectGame": "게임 선택",
+    "games": {
+      "dr1": "단간론파: 희망의 학원과 절망의 고교생",
+      "dr2": "슈퍼 단간론파 2",
+      "drae": "절대절망소녀",
+      "drv3": "뉴 단간론파 V3"
+    },
+    "pakTypes": {
+      "text": "텍스트 PAK",
+      "script": "LIN 스크립트",
+      "texture": "텍스처 PAK",
+      "font": "폰트 PAK"
+    }
+  }
+}

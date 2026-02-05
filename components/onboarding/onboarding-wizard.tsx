@@ -107,7 +107,7 @@ export function OnboardingWizard() {
               alt="GameStringer" 
               width={112} 
               height={112} 
-              className="drop-shadow-2xl"
+              className="drop-shadow-2xl w-28 h-28"
               priority
             />
           </div>
@@ -252,7 +252,7 @@ export function OnboardingWizard() {
           <div className="space-y-3">
             <p className="text-sm font-medium">{t('onboarding.ai.supportedProviders')}</p>
             <div className="grid grid-cols-2 gap-2">
-              {['Ollama (Local)', 'LM Studio', 'OpenAI', 'Claude', 'Gemini', 'DeepL'].map(provider => (
+              {['Ollama (Locale)', 'LM Studio', 'OpenAI', 'Claude', 'Gemini', 'DeepL'].map(provider => (
                 <Badge key={provider} variant="outline" className="justify-center py-2">
                   {provider}
                 </Badge>
@@ -309,7 +309,7 @@ export function OnboardingWizard() {
           </div>
 
           <div className="p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-medium mb-2">Nexus Mods Integration</h4>
+            <h4 className="font-medium mb-2">Integrazione Nexus Mods</h4>
             <p className="text-sm text-muted-foreground">
               {t('onboarding.community.nexusInfo')}
             </p>

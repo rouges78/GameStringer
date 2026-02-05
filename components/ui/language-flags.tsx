@@ -130,11 +130,7 @@ export const LanguageFlags: React.FC<LanguageFlagsProps> = ({ supportedLanguages
         ? supportedLanguages 
         : (typeof supportedLanguages === 'string' ? supportedLanguages.split(',') : []);
     
-    // Debug: mostra le lingue ricevute
-    if (process.env.NODE_ENV === 'development') {
-        console.log('[LanguageFlags] Input:', supportedLanguages);
-        console.log('[LanguageFlags] Parsed:', languagesArray.map(l => l.trim()));
-    }
+    // Debug log rimosso per ridurre spam console
     
     const flagCodes = languagesArray
         .map(lang => {

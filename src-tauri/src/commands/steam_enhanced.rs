@@ -1648,6 +1648,23 @@ pub async fn fetch_steamgriddb_covers(app_id: u32, game_name: String, api_key: S
     }))
 }
 
+/// 🎮 CERCA COVER SU IGDB (placeholder - richiede autenticazione Twitch)
+#[tauri::command]
+pub async fn fetch_igdb_covers(game_name: String, app_id: u32) -> Result<serde_json::Value, String> {
+    info!("🎮 Cercando cover IGDB per: {} (appId: {})", game_name, app_id);
+    
+    // IGDB richiede autenticazione Twitch con Client ID e Client Secret
+    // Per ora restituiamo un messaggio che indica che non è configurato
+    // In futuro: implementare autenticazione Twitch OAuth2
+    
+    Ok(serde_json::json!({
+        "success": false,
+        "error": "IGDB richiede configurazione API Twitch. Usa URL Manuale per ora.",
+        "covers": [],
+        "note": "Per abilitare IGDB, configura le credenziali Twitch in Impostazioni > Integrazioni"
+    }))
+}
+
 /// 💾 SALVA COVER IN CACHE LOCALE
 #[tauri::command]
 pub async fn save_cover_cache(game_id: String, image_url: String) -> Result<(), String> {

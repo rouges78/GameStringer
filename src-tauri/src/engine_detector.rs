@@ -40,6 +40,7 @@ pub enum GameEngine {
     LWJGL,
     Electron,
     NWjs,
+    SpikeChunsoft,
     Unknown,
 }
 
@@ -83,6 +84,7 @@ impl GameEngine {
             GameEngine::LWJGL => "LWJGL",
             GameEngine::Electron => "Electron",
             GameEngine::NWjs => "NW.js",
+            GameEngine::SpikeChunsoft => "Spike Chunsoft Engine",
             GameEngine::Unknown => "Unknown",
         }
     }
@@ -96,6 +98,11 @@ pub fn detect_engine(game_path: &Path) -> GameEngine {
     // 1. Unity - molto comune
     if is_unity(game_path) {
         return GameEngine::Unity;
+    }
+    
+    // 1.5. Spike Chunsoft (Danganronpa) - PRIMA di Unreal per evitare falsi positivi con .pak
+    if is_spike_chunsoft(game_path) {
+        return GameEngine::SpikeChunsoft;
     }
     
     // 2. Unreal Engine
@@ -1198,4 +1205,41 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
     }
     
     None
+}
+
+/// Rileva giochi Spike Chunsoft (Danganronpa, etc.) - hanno file .pak ma NON sono Unreal
+fn is_spike_chunsoft(path: &Path) -> bool {
+    // File specifici di Danganronpa
+    if path.join("dr1_data.pak").exists() 
+        || path.join("dr2_data.pak").exists()
+        || path.join("drv3_data.pak").exists()
+        || path.join("Dr1").exists()
+        || path.join("Dr2").exists() {
+        return true;
+    }
+    
+    // Cartella flash usata da Danganronpa
+    if path.join("flash").exists() && path.join("flash/minigame").exists() {
+        return true;
+    }
+    
+    // Check nome cartella per Danganronpa
+    if let Some(folder_name) = path.file_name() {
+        let name = folder_name.to_string_lossy().to_lowercase();
+        if name.contains("danganronpa") {
+            return true;
+        }
+    }
+    
+    // Zero Escape series (altro gioco Spike Chunsoft)
+    if path.join("data.cpk").exists() || path.join("movie").exists() {
+        if let Some(folder_name) = path.file_name() {
+            let name = folder_name.to_string_lossy().to_lowercase();
+            if name.contains("zero escape") || name.contains("virtue") || name.contains("nonary") {
+                return true;
+            }
+        }
+    }
+    
+    false
 }

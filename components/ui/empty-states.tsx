@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -79,17 +80,18 @@ export function EmptyState({
 }
 
 export function EmptyGames({ onScan }: { onScan?: () => void }) {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={<Gamepad2 className="h-12 w-12" />}
-      title="No games found"
-      description="We couldn't find games in your library. Scan to find installed games or manually add a folder."
+      title={t('emptyStates.noGames')}
+      description={t('emptyStates.noGamesDesc')}
       action={{
-        label: "Scan Games",
+        label: t('emptyStates.scanGames'),
         onClick: onScan
       }}
       secondaryAction={{
-        label: "Settings",
+        label: t('settings.title'),
         href: "/settings"
       }}
     />
@@ -97,17 +99,18 @@ export function EmptyGames({ onScan }: { onScan?: () => void }) {
 }
 
 export function EmptyTranslations() {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={<Languages className="h-12 w-12" />}
-      title="No translations"
-      description="You haven't created any translations yet. Start by selecting a game from the library or uploading a text file."
+      title={t('emptyStates.noTranslations')}
+      description={t('emptyStates.noTranslationsDesc')}
       action={{
-        label: "Start Translating",
+        label: t('emptyStates.startTranslating'),
         href: "/ai-translator"
       }}
       secondaryAction={{
-        label: "Browse Library",
+        label: t('emptyStates.browseLibrary'),
         href: "/library"
       }}
     />
@@ -115,13 +118,14 @@ export function EmptyTranslations() {
 }
 
 export function EmptyProjects() {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={<FolderOpen className="h-12 w-12" />}
-      title="No projects"
-      description="Projects allow you to save and organize your translations. Create your first project to get started."
+      title={t('emptyStates.noProjects')}
+      description={t('emptyStates.noProjectsDesc')}
       action={{
-        label: "New Project",
+        label: t('emptyStates.newProject'),
         href: "/projects"
       }}
     />
@@ -129,23 +133,25 @@ export function EmptyProjects() {
 }
 
 export function EmptySearch({ query }: { query: string }) {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={<Search className="h-12 w-12" />}
-      title="No results"
-      description={`No results found for "${query}". Try different terms or check your filters.`}
+      title={t('emptyStates.noResults')}
+      description={t('emptyStates.noResultsDesc').replace('{query}', query)}
     />
   );
 }
 
 export function EmptyQueue() {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={<FileText className="h-12 w-12" />}
-      title="Queue empty"
-      description="The translation queue is empty. Add files or games to start batch translation."
+      title={t('emptyStates.queueEmpty')}
+      description={t('emptyStates.queueEmptyDesc')}
       action={{
-        label: "Add to Queue",
+        label: t('emptyStates.addToQueue'),
         href: "/batch-translation"
       }}
     />
@@ -153,23 +159,25 @@ export function EmptyQueue() {
 }
 
 export function EmptyWorkshop() {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={<Download className="h-12 w-12" />}
-      title="No translations found"
-      description="No translations available for the selected filters. Try modifying your search or filters."
+      title={t('emptyStates.noWorkshop')}
+      description={t('emptyStates.noWorkshopDesc')}
     />
   );
 }
 
 export function EmptyActivity() {
+  const { t } = useTranslation();
   return (
     <EmptyState
       icon={<Sparkles className="h-12 w-12" />}
-      title="No recent activity"
-      description="Your recent actions will appear here. Start by exploring the library or creating a translation."
+      title={t('emptyStates.noActivity')}
+      description={t('emptyStates.noActivityDesc')}
       action={{
-        label: "Explore Library",
+        label: t('emptyStates.exploreLibrary'),
         href: "/library"
       }}
       className="py-8"

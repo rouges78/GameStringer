@@ -73,17 +73,7 @@ export function ProtectedRoute({
   
   const BYPASS_AUTH_FOR_DEBUG = false;
   
-  // TEMPORARY DEBUG - Verifica perché dashboard non appare
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🛡️ ProtectedRoute Status:', {
-      isAuthenticated,
-      currentProfile: currentProfile?.name || 'null',
-      isLoading,
-      requireAuth,
-      SKIP_AUTH_FOR_TESTING,
-      BYPASS_AUTH_FOR_DEBUG
-    });
-  }
+  // Debug log rimosso per ridurre spam console
   
   // Not authenticated - show debug component or profile selector
   if (!isAuthenticated && !SKIP_AUTH_FOR_TESTING && !BYPASS_AUTH_FOR_DEBUG) {

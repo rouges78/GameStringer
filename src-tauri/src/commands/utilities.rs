@@ -489,19 +489,86 @@ pub async fn clear_cache() -> Result<(), String> {
 
 #[tauri::command]
 pub async fn get_cache_stats() -> Result<serde_json::Value, String> {
-    log::info!("📊 Recupero statistiche cache (sistema cache intelligente rimosso)");
+    use std::fs;
     
-    // Sistema cache intelligente rimosso per cleanup warning (Task 4.2)
-    // Manteniamo solo statistiche base per compatibilità
-    let stats = serde_json::json!({
-        "cache_system_status": "removed",
-        "translation_cache_active": true,
-        "intelligent_cache_active": false,
-        "note": "Sistema cache intelligente rimosso per cleanup warning"
+    log::info!("📊 Recupero statistiche cache e spazio disco");
+    
+    let mut stats = serde_json::json!({
+        "cache_size_mb": 0.0,
+        "cover_count": 0,
+        "disk_free_gb": 0.0,
+        "disk_total_gb": 0.0,
+        "app_data_size_mb": 0.0
     });
     
-    log::info!("✅ Statistiche cache base recuperate");
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let gs_dir = data_dir.join("GameStringer");
+        
+        // Calcola dimensione totale cartella GameStringer
+        if gs_dir.exists() {
+            let total_size = calculate_dir_size(&gs_dir);
+            stats["app_data_size_mb"] = serde_json::json!((total_size as f64) / (1024.0 * 1024.0));
+        }
+        
+        // Conta cover in cache
+        let cover_cache = gs_dir.join("covers").join("cover_cache.json");
+        if cover_cache.exists() {
+            if let Ok(json) = fs::read_to_string(&cover_cache) {
+                if let Ok(cache) = serde_json::from_str::<std::collections::HashMap<String, String>>(&json) {
+                    stats["cover_count"] = serde_json::json!(cache.len());
+                }
+            }
+        }
+        
+        // Dimensione cartella covers
+        let covers_dir = gs_dir.join("covers");
+        if covers_dir.exists() {
+            let size = calculate_dir_size(&covers_dir);
+            stats["cache_size_mb"] = serde_json::json!((size as f64) / (1024.0 * 1024.0));
+        }
+        
+        // Spazio disco Windows
+        #[cfg(windows)]
+        {
+            let path = data_dir.to_string_lossy();
+            let drive = if path.len() >= 2 { &path[0..2] } else { "C:" };
+            
+            if let Ok(output) = std::process::Command::new("wmic")
+                .args(["logicaldisk", "where", &format!("DeviceID='{}'", drive), "get", "FreeSpace,Size", "/format:csv"])
+                .output()
+            {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                for line in stdout.lines().skip(1) {
+                    let parts: Vec<&str> = line.split(',').collect();
+                    if parts.len() >= 3 {
+                        if let (Ok(free), Ok(total)) = (parts[1].trim().parse::<u64>(), parts[2].trim().parse::<u64>()) {
+                            stats["disk_free_gb"] = serde_json::json!((free as f64) / (1024.0 * 1024.0 * 1024.0));
+                            stats["disk_total_gb"] = serde_json::json!((total as f64) / (1024.0 * 1024.0 * 1024.0));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    log::info!("✅ Statistiche cache recuperate: {:?}", stats);
     Ok(stats)
+}
+
+fn calculate_dir_size(path: &std::path::Path) -> u64 {
+    let mut size = 0;
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Ok(metadata) = entry.metadata() {
+                if metadata.is_file() {
+                    size += metadata.len();
+                } else if metadata.is_dir() {
+                    size += calculate_dir_size(&entry.path());
+                }
+            }
+        }
+    }
+    size
 }
 
 #[tauri::command]
@@ -510,6 +577,39 @@ pub async fn check_path_exists(path: String) -> Result<bool, String> {
     let exists = Path::new(&path).exists();
     log::debug!("🔍 Check path exists: {} = {}", path, exists);
     Ok(exists)
+}
+
+/// 🔍 Trova file per estensione in una cartella (ricorsivo)
+#[tauri::command]
+pub async fn find_files_by_extension(folder_path: String, extension: String) -> Result<Vec<String>, String> {
+    use std::path::Path;
+    use walkdir::WalkDir;
+    
+    let folder = Path::new(&folder_path);
+    if !folder.exists() {
+        return Err(format!("Cartella non trovata: {}", folder_path));
+    }
+    
+    let ext = extension.trim_start_matches('.');
+    let mut files: Vec<String> = Vec::new();
+    
+    for entry in WalkDir::new(folder)
+        .max_depth(5) // Limita profondità per performance
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        let path = entry.path();
+        if path.is_file() {
+            if let Some(file_ext) = path.extension() {
+                if file_ext.to_string_lossy().eq_ignore_ascii_case(ext) {
+                    files.push(path.to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+    
+    log::info!("🔍 Trovati {} file .{} in {}", files.len(), ext, folder_path);
+    Ok(files)
 }
 
 #[tauri::command]
@@ -729,4 +829,129 @@ pub async fn get_steam_playtime(steam_id: String, api_key: String) -> Result<ser
         "found": false,
         "message": "Nessun dato playtime trovato"
     }))
+}
+
+/// Scansiona i file traducibili in una cartella di gioco
+#[tauri::command]
+pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, String> {
+    use std::path::Path;
+    use walkdir::WalkDir;
+    
+    log::info!("🔍 Scansione file traducibili in: {}", game_path);
+    
+    let path = Path::new(&game_path);
+    if !path.exists() {
+        return Err(format!("Path non esistente: {}", game_path));
+    }
+    
+    let translatable_extensions = [
+        "json", "xml", "txt", "csv", "po", "pot", "resx", "xliff", "xlf",
+        "yaml", "yml", "ini", "cfg", "lang", "loc", "strings", "properties",
+        "srt", "vtt", "ass", "ssa", "sub",
+        "lua", "rpy", "ks", "scn",
+        "langdb", "landb", "dlog",
+        "tres", "tscn", "translation"
+    ];
+    
+    let mut found_files: Vec<String> = Vec::new();
+    
+    for entry in WalkDir::new(path)
+        .max_depth(5)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        if entry.file_type().is_file() {
+            if let Some(ext) = entry.path().extension() {
+                let ext_lower = ext.to_string_lossy().to_lowercase();
+                if translatable_extensions.contains(&ext_lower.as_str()) {
+                    if let Some(path_str) = entry.path().to_str() {
+                        found_files.push(path_str.to_string());
+                    }
+                }
+            }
+        }
+    }
+    
+    log::info!("✅ Trovati {} file traducibili", found_files.len());
+    Ok(found_files)
+}
+
+/// Applica una patch di traduzione al gioco
+#[tauri::command]
+pub async fn apply_translation_patch(
+    game_path: String,
+    game_name: String,
+    game_id: String,
+) -> Result<bool, String> {
+    use std::path::Path;
+    use std::fs;
+    
+    log::info!("🎮 Applicando patch traduzione per: {} ({})", game_name, game_id);
+    
+    let path = Path::new(&game_path);
+    if !path.exists() {
+        return Err(format!("Path gioco non trovato: {}", game_path));
+    }
+    
+    // Cerca cartella traduzioni salvate
+    let app_data = dirs::data_local_dir()
+        .ok_or("Impossibile trovare cartella dati locali")?;
+    
+    let translations_dir = app_data
+        .join("GameStringer")
+        .join("translations")
+        .join(&game_id);
+    
+    if !translations_dir.exists() {
+        log::warn!("⚠️ Nessuna traduzione salvata per {}", game_id);
+        return Ok(false);
+    }
+    
+    // Crea backup prima di applicare
+    let backup_dir = app_data
+        .join("GameStringer")
+        .join("backups")
+        .join(&game_id);
+    
+    if !backup_dir.exists() {
+        fs::create_dir_all(&backup_dir)
+            .map_err(|e| format!("Errore creazione backup: {}", e))?;
+    }
+    
+    // Copia file tradotti nella cartella del gioco
+    let mut applied_count = 0;
+    for entry in walkdir::WalkDir::new(&translations_dir)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        if entry.file_type().is_file() {
+            let relative_path = entry.path()
+                .strip_prefix(&translations_dir)
+                .map_err(|e| e.to_string())?;
+            
+            let target_path = path.join(relative_path);
+            
+            // Backup file originale se esiste
+            if target_path.exists() {
+                let backup_path = backup_dir.join(relative_path);
+                if let Some(parent) = backup_path.parent() {
+                    fs::create_dir_all(parent).ok();
+                }
+                fs::copy(&target_path, &backup_path).ok();
+            }
+            
+            // Copia file tradotto
+            if let Some(parent) = target_path.parent() {
+                fs::create_dir_all(parent).ok();
+            }
+            
+            fs::copy(entry.path(), &target_path)
+                .map_err(|e| format!("Errore copia file: {}", e))?;
+            
+            applied_count += 1;
+        }
+    }
+    
+    log::info!("✅ Patch applicata: {} file copiati", applied_count);
+    Ok(applied_count > 0)
 }

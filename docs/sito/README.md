@@ -2,19 +2,49 @@
 
 Questa cartella contiene tutti i file necessari per la landing page del sito web GameStringer.
 
+## 🌐 Supporto Multilingua
+
+Il sito supporta **9 lingue** con cambio dinamico senza reload:
+
+| Codice | Lingua | Bandiera |
+|--------|--------|----------|
+| `en` | English | 🇬🇧 |
+| `it` | Italiano | 🇮🇹 |
+| `es` | Español | 🇪🇸 |
+| `de` | Deutsch | 🇩🇪 |
+| `fr` | Français | 🇫🇷 |
+| `ja` | 日本語 | 🇯🇵 |
+| `zh` | 中文 | 🇨🇳 |
+| `ko` | 한국어 | 🇰🇷 |
+| `pt` | Português | 🇧🇷 |
+
+### Come funziona
+
+- **Selettore lingua** nel nav (dropdown con bandiere)
+- **Auto-detect** lingua del browser
+- **Persistenza** in localStorage
+- **URL params**: `?lang=en`, `?lang=ja`, etc.
+
+### File i18n
+
+- `site-i18n.js` - Contiene tutte le traduzioni e la logica di switching
+
 ## Struttura File
 
 ```text
-website/
-├── index.html          # Versione con CSS inline (singolo file)
-├── index-external.html # Versione con CSS esterno
-├── styles.css          # Foglio di stile separato
+sito/
+├── index.html          # Pagina principale con i18n
+├── index-en.html       # Redirect a index.html?lang=en
+├── index-external.html # Versione senza i18n
+├── site-i18n.js        # Sistema traduzioni (9 lingue)
+├── styles-v2.css       # Stili v2 (dark theme)
+├── styles.css          # Stili legacy
 ├── favicon.svg         # Icona del sito (SVG)
-├── logo.svg            # Logo GameStringer (SVG)
+├── logo.png            # Logo GameStringer
+├── logo.svg            # Logo (SVG)
 ├── images/
-│   ├── screenshot-placeholder.svg  # Screenshot libreria
-│   ├── hero-screenshot.svg         # Screenshot hero section
-│   └── og-image.svg                # Immagine per social media
+│   ├── screenshot-*.png    # Screenshot app
+│   └── og-image.svg        # Immagine per social media
 └── README.md           # Questo file
 ```
 

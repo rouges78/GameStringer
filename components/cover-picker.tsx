@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Loader2, Check, Image as ImageIcon, Grid3X3, Sparkles, Type, AlertCircle, ThumbsUp, User, RefreshCw, Key, ExternalLink } from 'lucide-react';
+import { Loader2, Check, Image as ImageIcon, Grid3X3, Sparkles, Type, AlertCircle, ThumbsUp, User, RefreshCw, Key, ExternalLink, Link2, Search, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -45,6 +45,19 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
   const [saving, setSaving] = useState(false);
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [tempApiKey, setTempApiKey] = useState('');
+  
+  // URL Manuale
+  const [customUrl, setCustomUrl] = useState('');
+  const [customUrlPreview, setCustomUrlPreview] = useState<string | null>(null);
+  const [customUrlError, setCustomUrlError] = useState(false);
+  
+  // Source selection: 'steamgriddb' | 'igdb' | 'custom'
+  const [source, setSource] = useState<'steamgriddb' | 'igdb' | 'custom'>('steamgriddb');
+  
+  // IGDB covers
+  const [igdbCovers, setIgdbCovers] = useState<Cover[]>([]);
+  const [igdbLoading, setIgdbLoading] = useState(false);
+  const [igdbError, setIgdbError] = useState<string | null>(null);
 
   const getApiKey = useCallback(() => {
     // Cerca API key nelle impostazioni
@@ -169,6 +182,96 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
     }
   };
 
+  // Gestione URL manuale
+  const validateAndPreviewUrl = useCallback((url: string) => {
+    setCustomUrl(url);
+    setCustomUrlError(false);
+    setCustomUrlPreview(null);
+    
+    if (!url.trim()) return;
+    
+    // Valida che sia un URL immagine valido
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+    const isImageUrl = imageExtensions.some(ext => url.toLowerCase().includes(ext)) || 
+                       url.includes('steamcdn') || 
+                       url.includes('cdn.akamai') ||
+                       url.includes('images.igdb') ||
+                       url.includes('steamgriddb');
+    
+    if (url.startsWith('http') && (isImageUrl || url.includes('steam'))) {
+      setCustomUrlPreview(url);
+    }
+  }, []);
+
+  const handleUseCustomUrl = async () => {
+    if (!customUrlPreview) return;
+    
+    setSaving(true);
+    try {
+      const cacheId = appId > 0 ? String(appId) : gameName;
+      await invoke('save_cover_cache', { 
+        gameId: cacheId, 
+        imageUrl: customUrlPreview 
+      });
+      
+      onCoverSelected(customUrlPreview);
+      toast.success('Cover personalizzata salvata!');
+      onClose();
+    } catch (e) {
+      console.error('Error saving custom cover:', e);
+      toast.error('Errore nel salvare la cover');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Cerca su IGDB
+  const fetchIgdbCovers = useCallback(async () => {
+    setIgdbLoading(true);
+    setIgdbError(null);
+    
+    try {
+      const result = await invoke<{
+        success: boolean;
+        error?: string;
+        covers: Cover[];
+      }>('fetch_igdb_covers', {
+        gameName: gameName,
+        appId: appId
+      });
+      
+      if (result.success) {
+        setIgdbCovers(result.covers);
+        if (result.covers.length === 0) {
+          setIgdbError('Nessuna cover trovata su IGDB per questo gioco.');
+        }
+      } else {
+        setIgdbError(result.error || 'Errore durante la ricerca su IGDB');
+      }
+    } catch (e: any) {
+      console.error('IGDB fetch error:', e);
+      // Se il comando non esiste, mostra messaggio appropriato
+      if (e.toString().includes('not found') || e.toString().includes('command')) {
+        setIgdbError('Ricerca IGDB non ancora configurata. Usa URL manuale.');
+      } else {
+        setIgdbError('Errore di connessione a IGDB');
+      }
+    } finally {
+      setIgdbLoading(false);
+    }
+  }, [gameName, appId]);
+
+  // Carica covers quando cambia sorgente
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    if (source === 'steamgriddb') {
+      fetchCovers(activeTab);
+    } else if (source === 'igdb') {
+      fetchIgdbCovers();
+    }
+  }, [source, isOpen]);
+
   const filteredCovers = activeTab === 'all' 
     ? covers 
     : covers.filter(c => c.type === activeTab);
@@ -207,6 +310,141 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
           </DialogDescription>
         </DialogHeader>
 
+        {/* Source Selection */}
+        <div className="flex gap-2 mb-3">
+          <Button
+            variant={source === 'steamgriddb' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSource('steamgriddb')}
+            className="gap-1.5"
+          >
+            <Database className="h-3.5 w-3.5" />
+            SteamGridDB
+          </Button>
+          <Button
+            variant={source === 'igdb' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSource('igdb')}
+            className="gap-1.5"
+          >
+            <Search className="h-3.5 w-3.5" />
+            IGDB
+          </Button>
+          <Button
+            variant={source === 'custom' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setSource('custom')}
+            className="gap-1.5"
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            URL Manuale
+          </Button>
+        </div>
+
+        {/* Custom URL Input */}
+        {source === 'custom' ? (
+          <div className="flex-1 flex flex-col">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Incolla URL immagine</label>
+                <div className="flex gap-2">
+                  <Input
+                    type="url"
+                    placeholder="https://esempio.com/immagine.jpg"
+                    value={customUrl}
+                    onChange={(e) => validateAndPreviewUrl(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleUseCustomUrl} 
+                    disabled={!customUrlPreview || saving}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Supporta: JPG, PNG, GIF, WebP, Steam CDN, IGDB
+                </p>
+              </div>
+              
+              {/* Preview */}
+              {customUrlPreview && (
+                <div className="border rounded-lg p-4 bg-slate-900/50">
+                  <p className="text-sm font-medium mb-2">Anteprima</p>
+                  <div className="aspect-[460/215] bg-slate-800 rounded overflow-hidden max-w-md">
+                    <img 
+                      src={customUrlPreview} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={() => {
+                        setCustomUrlError(true);
+                        setCustomUrlPreview(null);
+                        toast.error('Impossibile caricare l\'immagine');
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {customUrlError && (
+                <div className="flex items-center gap-2 text-red-400 text-sm">
+                  <AlertCircle className="h-4 w-4" />
+                  URL non valido o immagine non accessibile
+                </div>
+              )}
+            </div>
+          </div>
+        ) : source === 'igdb' ? (
+          <div className="flex-1 overflow-y-auto">
+            {igdbLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+                <span className="ml-2 text-muted-foreground">Cercando su IGDB...</span>
+              </div>
+            ) : igdbError ? (
+              <div className="flex flex-col items-center justify-center h-64 text-center">
+                <AlertCircle className="h-12 w-12 text-yellow-400 mb-3" />
+                <p className="text-muted-foreground mb-2">{igdbError}</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Prova con URL Manuale o cerca su Google Images
+                </p>
+                <Button variant="outline" size="sm" onClick={fetchIgdbCovers}>
+                  Riprova
+                </Button>
+              </div>
+            ) : igdbCovers.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {igdbCovers.map((cover) => (
+                  <div
+                    key={`igdb-${cover.id}`}
+                    onClick={() => setSelectedCover(cover)}
+                    className={cn(
+                      "relative group cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-200",
+                      selectedCover?.id === cover.id
+                        ? "border-purple-500 ring-2 ring-purple-500/30 scale-[1.02]"
+                        : "border-transparent hover:border-purple-500/50"
+                    )}
+                  >
+                    <div className="aspect-[460/215] bg-slate-800 relative">
+                      <img
+                        src={cover.thumb || cover.url}
+                        alt="IGDB Cover"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-64 text-center">
+                <Search className="h-12 w-12 text-gray-500 mb-3" />
+                <p className="text-muted-foreground">Nessuna cover trovata su IGDB</p>
+              </div>
+            )}
+          </div>
+        ) : (
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center justify-between">
             <TabsList className="grid grid-cols-4 w-fit">
@@ -360,6 +598,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
             )}
           </div>
         </Tabs>
+        )}
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-4 border-t mt-4">

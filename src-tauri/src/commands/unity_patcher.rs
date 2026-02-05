@@ -1228,14 +1228,52 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         });
     }
     
+    // ========== SPIKE CHUNSOFT / DANGANRONPA (prima di Unreal per evitare falsi positivi) ==========
+    let is_danganronpa = game_dir.join("dr1_data.pak").exists() 
+        || game_dir.join("dr2_data.pak").exists()
+        || game_dir.join("drv3_data.pak").exists()
+        || game_dir.join("flash").exists() // Cartella flash usata da Danganronpa
+        || game_path.to_lowercase().contains("danganronpa");
+    
+    if is_danganronpa {
+        alternative_tools.push(AlternativeTool {
+            name: "Danganronpa Tools".to_string(),
+            url: "https://github.com/jpmac26/DRV3-Sharp".to_string(),
+            description: "Estrae e modifica file Danganronpa".to_string(),
+            compatible: true,
+        });
+        
+        return Ok(GameEngineCheck {
+            is_unity: false,
+            is_unreal: false,
+            engine_name: "Spike Chunsoft Engine".to_string(),
+            engine_version: None,
+            can_patch: false,
+            message: "⚠ Spike Chunsoft Engine - usa tool specifici per Danganronpa".to_string(),
+            alternative_tools,
+            has_bepinex: false,
+            has_xunity: false,
+        });
+    }
+    
     // ========== UNREAL ENGINE ==========
+    // Check più specifici per evitare falsi positivi con altri .pak
     let has_ue_binaries = game_dir.join("Engine/Binaries").exists();
-    let has_pak = fs::read_dir(game_dir).ok()
+    let has_ue_config = game_dir.join("Engine/Config").exists();
+    let has_ue_content = game_dir.join("Content").exists() && game_dir.join("Content/Paks").exists();
+    let has_ue_splash = fs::read_dir(game_dir).ok()
         .map(|entries| entries.filter_map(|e| e.ok())
-            .any(|e| e.file_name().to_string_lossy().ends_with(".pak")))
+            .any(|e| e.file_name().to_string_lossy().contains("UE4") || e.file_name().to_string_lossy().contains("UE5")))
         .unwrap_or(false);
     
-    if has_ue_binaries || has_pak {
+    // .pak da solo NON basta - serve almeno un altro indicatore Unreal
+    let has_pak_in_paks_folder = game_dir.join("Content/Paks").exists() 
+        || game_dir.join("Paks").exists()
+        || game_dir.join("Game/Content/Paks").exists();
+    
+    let is_unreal = has_ue_binaries || has_ue_config || has_ue_content || has_ue_splash || has_pak_in_paks_folder;
+    
+    if is_unreal {
         let ue_info = detect_unreal_version(game_dir);
         let (ver_str, is_ue5) = ue_info.map(|i| (i.version.unwrap_or("?.?".to_string()), i.is_ue5))
             .unwrap_or(("?.?".to_string(), false));
@@ -2656,6 +2694,159 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
         route: "/texture-translator".to_string(),
         available: true,
         reason: "Per testo renderizzato come immagini".to_string(),
+    });
+    
+    // === TOOL SPECIFICI PER ENGINE ===
+    
+    // Godot Patcher (.pck extraction)
+    let is_godot = engine_check.engine_name.to_lowercase().contains("godot");
+    all_tools.push(TranslationTool {
+        id: "godot_patcher".to_string(),
+        name: "Godot PCK Extractor".to_string(),
+        description: "Estrae e modifica file .pck di Godot per traduzione".to_string(),
+        reliability: if is_godot { 85 } else { 0 },
+        route: "/godot-patcher".to_string(),
+        available: is_godot,
+        reason: if is_godot { "Gioco Godot rilevato - estrazione PCK disponibile".to_string() } 
+                else { "Solo per giochi Godot".to_string() },
+    });
+    
+    // Unreal Pak Unpacker
+    let is_unreal = engine_check.is_unreal;
+    all_tools.push(TranslationTool {
+        id: "unreal_patcher".to_string(),
+        name: "Unreal PAK Translator".to_string(),
+        description: "Estrae .pak, traduce file localization, ricompila".to_string(),
+        reliability: if is_unreal { 80 } else { 0 },
+        route: "/unreal-translator".to_string(),
+        available: is_unreal,
+        reason: if is_unreal { "Gioco Unreal Engine rilevato".to_string() }
+                else { "Solo per giochi Unreal Engine".to_string() },
+    });
+    
+    // RPG Maker MV/MZ (JSON-based)
+    let is_rpgmaker_mv = engine_check.engine_name.to_lowercase().contains("rpg maker mv") 
+                      || engine_check.engine_name.to_lowercase().contains("rpg maker mz");
+    all_tools.push(TranslationTool {
+        id: "rpgmaker_mv".to_string(),
+        name: "RPG Maker MV/MZ Patcher".to_string(),
+        description: "Traduzione automatica file JSON di RPG Maker MV/MZ".to_string(),
+        reliability: if is_rpgmaker_mv { 90 } else { 0 },
+        route: "/rpgmaker-patcher".to_string(),
+        available: is_rpgmaker_mv,
+        reason: if is_rpgmaker_mv { "RPG Maker MV/MZ rilevato - traduzione JSON automatica".to_string() }
+                else { "Solo per RPG Maker MV/MZ".to_string() },
+    });
+    
+    // RPG Maker VX/Ace (Ruby RGSS)
+    let is_rpgmaker_vx = engine_check.engine_name.to_lowercase().contains("rpg maker vx")
+                      || engine_check.engine_name.to_lowercase().contains("rpg maker ace");
+    all_tools.push(TranslationTool {
+        id: "rpgmaker_vx".to_string(),
+        name: "RPG Maker VX/Ace Patcher".to_string(),
+        description: "Estrae e traduce script RGSS di RPG Maker VX/Ace".to_string(),
+        reliability: if is_rpgmaker_vx { 85 } else { 0 },
+        route: "/rpgmaker-patcher".to_string(),
+        available: is_rpgmaker_vx,
+        reason: if is_rpgmaker_vx { "RPG Maker VX/Ace rilevato".to_string() }
+                else { "Solo per RPG Maker VX/Ace".to_string() },
+    });
+    
+    // Ren'Py Script Patcher
+    let is_renpy = engine_check.engine_name.to_lowercase().contains("ren'py")
+                || engine_check.engine_name.to_lowercase().contains("renpy");
+    all_tools.push(TranslationTool {
+        id: "renpy_patcher".to_string(),
+        name: "Ren'Py Translator".to_string(),
+        description: "Estrae dialoghi .rpy e genera file traduzione .rpa".to_string(),
+        reliability: if is_renpy { 92 } else { 0 },
+        route: "/renpy-patcher".to_string(),
+        available: is_renpy,
+        reason: if is_renpy { "Ren'Py rilevato - estrazione script automatica".to_string() }
+                else { "Solo per giochi Ren'Py".to_string() },
+    });
+    
+    // Wolf RPG Editor
+    let is_wolfrpg = engine_check.engine_name.to_lowercase().contains("wolf rpg")
+                  || engine_check.engine_name.to_lowercase().contains("wolfrpg");
+    all_tools.push(TranslationTool {
+        id: "wolfrpg_patcher".to_string(),
+        name: "Wolf RPG Translator".to_string(),
+        description: "Estrae e traduce file .wolf e database Wolf RPG".to_string(),
+        reliability: if is_wolfrpg { 85 } else { 0 },
+        route: "/wolfrpg-patcher".to_string(),
+        available: is_wolfrpg,
+        reason: if is_wolfrpg { "Wolf RPG rilevato".to_string() }
+                else { "Solo per Wolf RPG Editor".to_string() },
+    });
+    
+    // Kirikiri/KAG (Visual Novels)
+    let is_kirikiri = engine_check.engine_name.to_lowercase().contains("kirikiri")
+                   || engine_check.engine_name.to_lowercase().contains("kag");
+    all_tools.push(TranslationTool {
+        id: "kirikiri_patcher".to_string(),
+        name: "Kirikiri/KAG Translator".to_string(),
+        description: "Estrae script .ks e file .xp3 per visual novel Kirikiri".to_string(),
+        reliability: if is_kirikiri { 80 } else { 0 },
+        route: "/kirikiri-patcher".to_string(),
+        available: is_kirikiri,
+        reason: if is_kirikiri { "Kirikiri/KAG rilevato - estrazione XP3 disponibile".to_string() }
+                else { "Solo per Kirikiri/KAG".to_string() },
+    });
+    
+    // NScripter / ONScripter
+    let is_nscripter = engine_check.engine_name.to_lowercase().contains("nscripter")
+                    || engine_check.engine_name.to_lowercase().contains("onscripter");
+    all_tools.push(TranslationTool {
+        id: "nscripter_patcher".to_string(),
+        name: "NScripter Translator".to_string(),
+        description: "Decompila e traduce script NScripter/ONScripter".to_string(),
+        reliability: if is_nscripter { 78 } else { 0 },
+        route: "/nscripter-patcher".to_string(),
+        available: is_nscripter,
+        reason: if is_nscripter { "NScripter rilevato".to_string() }
+                else { "Solo per NScripter/ONScripter".to_string() },
+    });
+    
+    // GameMaker Studio
+    let is_gamemaker = engine_check.engine_name.to_lowercase().contains("gamemaker")
+                    || engine_check.engine_name.to_lowercase().contains("game maker");
+    all_tools.push(TranslationTool {
+        id: "gamemaker_patcher".to_string(),
+        name: "GameMaker Translator".to_string(),
+        description: "Estrae stringhe da data.win di GameMaker Studio".to_string(),
+        reliability: if is_gamemaker { 75 } else { 0 },
+        route: "/gamemaker-patcher".to_string(),
+        available: is_gamemaker,
+        reason: if is_gamemaker { "GameMaker Studio rilevato".to_string() }
+                else { "Solo per GameMaker Studio".to_string() },
+    });
+    
+    // Construct 2/3
+    let is_construct = engine_check.engine_name.to_lowercase().contains("construct");
+    all_tools.push(TranslationTool {
+        id: "construct_patcher".to_string(),
+        name: "Construct Translator".to_string(),
+        description: "Estrae stringhe da progetti Construct 2/3".to_string(),
+        reliability: if is_construct { 70 } else { 0 },
+        route: "/construct-patcher".to_string(),
+        available: is_construct,
+        reason: if is_construct { "Construct rilevato".to_string() }
+                else { "Solo per Construct 2/3".to_string() },
+    });
+    
+    // Spike Chunsoft / Danganronpa
+    let is_spike_chunsoft = engine_check.engine_name.to_lowercase().contains("spike chunsoft")
+                         || engine_check.engine_name.to_lowercase().contains("danganronpa");
+    all_tools.push(TranslationTool {
+        id: "spike_chunsoft_patcher".to_string(),
+        name: "Danganronpa Tools".to_string(),
+        description: "Estrai file .pak con DRV3-Sharp, poi traduci i testi estratti".to_string(),
+        reliability: if is_spike_chunsoft { 75 } else { 0 },
+        route: "/danganronpa-tools".to_string(),
+        available: is_spike_chunsoft,
+        reason: if is_spike_chunsoft { "🎮 Danganronpa/Spike Chunsoft rilevato - serve DRV3-Sharp".to_string() }
+                else { "Solo per giochi Spike Chunsoft".to_string() },
     });
     
     // 8. Calcola strategia combinata ottimale

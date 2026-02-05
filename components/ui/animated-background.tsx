@@ -109,7 +109,7 @@ export function AnimatedBackground({
   }, [showParticles, particleCount]);
 
   return (
-    <div className={`fixed inset-0 overflow-hidden pointer-events-none ${className}`}>
+    <div className={`fixed top-16 inset-x-0 bottom-0 overflow-hidden pointer-events-none ${className}`}>
       {/* Gradient Mesh Animato */}
       {showGradient && (
         <div className="absolute inset-0">

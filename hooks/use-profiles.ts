@@ -71,14 +71,6 @@ export function useProfiles(): UseProfilesReturn {
       
       const response = await Promise.race([invokePromise, timeoutPromise]) as ProfileResponse<UserProfile | null>;
       
-      console.log('🔍 useProfiles: get_current_profile response:', {
-        success: response.success,
-        hasData: !!response.data,
-        profileName: response.data?.name || 'null',
-        profileId: response.data?.id || 'null',
-        error: response.error || 'none'
-      });
-      
       if (response.success) {
         setCurrentProfile(response.data || null);
       } else {
@@ -96,12 +88,12 @@ export function useProfiles(): UseProfilesReturn {
     const initialize = async () => {
       setIsLoading(true);
       try {
-        console.log('🔄 useProfiles: Inizializzazione...');
+        // Log rimosso per ridurre spam console
         await Promise.all([
           loadProfiles(),
           loadCurrentProfile()
         ]);
-        console.log('✅ useProfiles: Inizializzazione completata');
+        // Log rimosso per ridurre spam console
       } catch (error) {
         console.error('❌ useProfiles: Errore durante inizializzazione sistema profili:', error);
         setError('Errore inizializzazione sistema profili');
@@ -116,7 +108,7 @@ export function useProfiles(): UseProfilesReturn {
   // Listen for auth changes from other instances and refresh current profile
   useEffect(() => {
     const handler = () => {
-      console.log('🔔 useProfiles: received profile-auth-changed -> reloading current profile');
+      // Log rimosso per ridurre spam console
       loadCurrentProfile().catch(err => console.warn('useProfiles loadCurrentProfile error:', err));
     };
     if (typeof window !== 'undefined') {

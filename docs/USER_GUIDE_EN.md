@@ -18,13 +18,14 @@
 14. [New AI Providers v1.0.6](#new-ai-providers-v106) *(NEW v1.0.6)*
 15. [Community Hub v1.0.7](#community-hub-v107) *(NEW v1.0.7)*
 16. [UI Improvements v1.0.9](#ui-improvements-v109) *(NEW v1.0.9)*
-17. [Patch Export](#patch-export)
-18. [Apply to Game](#apply-to-game)
-19. [Backup Management](#backup-management)
-20. [Translation Editor](#translation-editor)
-21. [Activity History](#activity-history)
-22. [Dictionaries](#dictionaries)
-23. [Troubleshooting](#troubleshooting)
+17. [Danganronpa Auto-Translator](#danganronpa-auto-translator) *(NEW v1.1.0)*
+18. [Patch Export](#patch-export)
+19. [Apply to Game](#apply-to-game)
+20. [Backup Management](#backup-management)
+21. [Translation Editor](#translation-editor)
+22. [Activity History](#activity-history)
+23. [Dictionaries](#dictionaries)
+24. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -569,6 +570,90 @@ The **bell** in the navbar now handles updates:
 
 ---
 
+## Danganronpa Auto-Translator
+
+*(NEW in v1.1.0)*
+
+Automatic translation system for Danganronpa series games.
+
+### Supported Games
+
+| Game | Detection | PAK Types |
+|------|-----------|-----------|
+| **Danganronpa: Trigger Happy Havoc** | DR1_us.exe | Text, Script, Font |
+| **Danganronpa 2: Goodbye Despair** | DR2_us.exe | Text, Script, Font |
+| **Danganronpa Another Episode** | game.exe | Text, Script |
+
+### PAK File Types
+
+| Type | Files | Content |
+|------|-------|---------|
+| **Type 1 - Text** | 00_System.pak, 26_Menu.pak, 49_Novel.pak | Direct text strings |
+| **Type 2 - Script** | script_pak_*.pak, novel_*.pak | .LIN dialogue scripts |
+| **Type 3 - Font** | bin_special_font_l.pak | Nested PAK (fonts) |
+| **Texture** | Various | PNG images |
+
+### How to Use
+
+1. **Select Danganronpa** from your library
+2. **Click "Auto-Translate"** in the Translation Recommendation section
+3. **API Key Check**: System verifies your configured API key
+4. **Cost Estimate**: See estimated cost before proceeding
+5. **Automatic Extraction**: PAK files are extracted natively (Rust)
+6. **AI Translation**: Strings translated in batches
+7. **Output**: Translated .PO and .TSV files ready for DRAT
+
+### Cost Estimation
+
+Before translation starts, you'll see:
+
+| Provider | Cost per 1M tokens | Example (10K strings) |
+|----------|-------------------|----------------------|
+| **Gemini** | $0.075 | ~$0.15 |
+| **Claude** | $3.00 | ~$6.00 |
+| **GPT-4** | $10.00 | ~$20.00 |
+| **DeepSeek** | $0.14 | ~$0.28 |
+
+### Rate Limit Handling
+
+The system automatically handles API rate limits:
+
+- **429 Error**: Waits 20 seconds, then retries
+- **Batch Delay**: 2 second pause between batches
+- **Progress Updates**: Shows "⏳ Rate limit, waiting 20s..."
+
+### Output Files
+
+After translation, files are saved to:
+
+```
+[GamePath]/GameStringer_Translation/
+├── originals.json      # Extracted original strings
+├── translations.json   # Translated strings
+├── dialogues.po        # Gettext format for DRAT
+└── translations.tsv    # Tab-separated for spreadsheets
+```
+
+### Applying Translations
+
+Use **DRAT (Danganronpa Another Tool)** to repack:
+
+1. Download DRAT from [GitHub](https://github.com/Liquid-S/Danganronpa-Another-Tool)
+2. Open the translated .PO file in DRAT
+3. Repack into PAK format
+4. Copy PAK files to game folder
+
+### Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "API Key Missing" | Go to Settings → configure Gemini/OpenAI key |
+| "Rate Limit" | Wait or use different API key |
+| "No strings found" | Game may use unsupported PAK type |
+| "Extraction failed" | Check file permissions, run as admin |
+
+---
+
 ## Patch Export
 
 The Unity Patcher automatically installs BepInEx and XUnity.AutoTranslator on Unity games.
@@ -811,4 +896,4 @@ Dictionaries save translations for each game.
 
 ---
 
-*GameStringer v1.0.9 - Guide updated 31/01/2026*
+*GameStringer v1.1.0 - Guide updated 05/02/2026*

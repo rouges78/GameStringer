@@ -58,4 +58,8 @@ pub mod universal_injector;
 pub mod screen_capture;
 pub mod batch_processor;
 pub mod community_hub;
+pub mod danganronpa_patcher;
+pub mod rpgmaker_patcher;
+pub mod renpy_patcher;
+pub mod wolfrpg_patcher;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO

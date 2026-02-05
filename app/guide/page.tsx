@@ -29,7 +29,8 @@ import {
   AudioLines,
   Glasses,
   ShieldCheck,
-  MessageSquare
+  MessageSquare,
+  BarChart2
 } from 'lucide-react';
 import { getShortcutsList } from '@/lib/keyboard-shortcuts';
 import { useTranslation, translations } from '@/lib/i18n';
@@ -334,6 +335,116 @@ export default function GuidePage() {
         'Toast notification when activated',
       ],
       version: '0.9',
+    },
+    {
+      icon: History,
+      name: 'Undo/Redo System',
+      color: 'purple',
+      desc: 'Full edit history for translations',
+      details: [
+        'Unlimited undo/redo with Ctrl+Z / Ctrl+Y',
+        'Command pattern for all edit operations',
+        'Persistent history across sessions',
+        'Visual history browser',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: Database,
+      name: 'Auto-Backup',
+      color: 'green',
+      desc: 'Automatic backup every 5 minutes',
+      details: [
+        'Automatic save every 5 minutes',
+        'Manual backup button',
+        'Restore from any backup point',
+        'Keep last 10 backups',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: MessageSquare,
+      name: 'String Notes & Comments',
+      color: 'cyan',
+      desc: 'Add notes and discussions to strings',
+      details: [
+        'Add notes, comments, questions to any string',
+        'Reply threads for collaboration',
+        'Mark issues as resolved',
+        'Priority levels (low, medium, high)',
+        'Version history for each string',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: Puzzle,
+      name: 'String Tags & Labels',
+      color: 'orange',
+      desc: 'Organize strings with custom tags',
+      details: [
+        '12 predefined gaming tags (UI, Dialogue, Quest...)',
+        'Create custom tags with colors',
+        'Bulk tagging operations',
+        'Filter strings by tags',
+        'Tag presets for quick application',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: Zap,
+      name: 'Batch Operations',
+      color: 'yellow',
+      desc: 'Mass operations on translations',
+      details: [
+        'Translate, review, approve multiple strings',
+        'Find & replace across project',
+        'Progress tracking with pause/resume',
+        'Estimated time remaining',
+        'Error reporting per string',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: Scan,
+      name: 'Advanced Search',
+      color: 'blue',
+      desc: 'Powerful search with filters',
+      details: [
+        'Regex and fuzzy matching',
+        'Search in source, target, notes',
+        'Filter by status, tags, author, date',
+        'Save searches for quick access',
+        'Search suggestions and history',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: ShieldCheck,
+      name: 'Real-time Validation',
+      color: 'red',
+      desc: 'Quality checks while you type',
+      details: [
+        '12+ built-in validation rules',
+        'Check placeholders, length, punctuation',
+        'Auto-fix common issues',
+        'Quality score per string',
+        'Glossary term enforcement',
+      ],
+      version: '1.0',
+    },
+    {
+      icon: BarChart2,
+      name: 'Translation Analytics',
+      color: 'violet',
+      desc: 'Detailed statistics and insights',
+      details: [
+        'Daily activity tracking',
+        'Words/characters per session',
+        'Quality score trends',
+        'Productivity insights',
+        'Estimated completion date',
+      ],
+      version: '1.0',
     },
   ];
 

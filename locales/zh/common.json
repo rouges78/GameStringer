@@ -1,0 +1,116 @@
+{
+  "app": {
+    "name": "GameStringer",
+    "tagline": "游戏翻译变简单",
+    "version": "版本"
+  },
+  "nav": {
+    "home": "首页",
+    "projects": "项目",
+    "translation": "翻译",
+    "settings": "设置",
+    "help": "帮助",
+    "about": "关于"
+  },
+  "actions": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "import": "导入",
+    "export": "导出",
+    "translate": "翻译",
+    "apply": "应用",
+    "reset": "重置",
+    "search": "搜索",
+    "filter": "筛选",
+    "close": "关闭",
+    "confirm": "确认",
+    "back": "返回",
+    "next": "下一步",
+    "finish": "完成"
+  },
+  "translation": {
+    "title": "翻译",
+    "sourceLanguage": "源语言",
+    "targetLanguage": "目标语言",
+    "provider": "AI服务商",
+    "apiKey": "API密钥",
+    "startTranslation": "开始翻译",
+    "stopTranslation": "停止翻译",
+    "progress": "进度",
+    "estimated": "预计",
+    "completed": "已完成",
+    "failed": "失败",
+    "remaining": "剩余",
+    "costEstimate": "费用估算",
+    "batchSize": "批次大小",
+    "rateLimit": "速率限制",
+    "retrying": "重试中..."
+  },
+  "files": {
+    "title": "文件",
+    "open": "打开文件",
+    "openFolder": "打开文件夹",
+    "saveAs": "另存为",
+    "recentFiles": "最近文件",
+    "noFiles": "未选择文件",
+    "dragDrop": "拖放文件到此处",
+    "supported": "支持的格式"
+  },
+  "engines": {
+    "unity": "Unity",
+    "unreal": "虚幻引擎",
+    "rpgmaker": "RPG Maker",
+    "renpy": "Ren'Py",
+    "godot": "Godot",
+    "gamemaker": "GameMaker",
+    "danganronpa": "弹丸论破"
+  },
+  "settings": {
+    "title": "设置",
+    "general": "通用",
+    "appearance": "外观",
+    "language": "语言",
+    "theme": "主题",
+    "darkMode": "深色模式",
+    "lightMode": "浅色模式",
+    "system": "跟随系统",
+    "apiKeys": "API密钥",
+    "advanced": "高级",
+    "backup": "备份",
+    "restore": "恢复"
+  },
+  "messages": {
+    "success": "成功",
+    "error": "错误",
+    "warning": "警告",
+    "info": "信息",
+    "loading": "加载中...",
+    "saving": "保存中...",
+    "translating": "翻译中...",
+    "completed": "完成！",
+    "failed": "操作失败",
+    "noResults": "无结果",
+    "confirmDelete": "确定要删除吗？"
+  },
+  "danganronpa": {
+    "title": "弹丸论破自动翻译器",
+    "detectGames": "检测游戏",
+    "extractPak": "提取PAK",
+    "selectGame": "选择游戏",
+    "games": {
+      "dr1": "弹丸论破：希望的学园与绝望的高校生",
+      "dr2": "超级弹丸论破2",
+      "drae": "绝对绝望少女",
+      "drv3": "新弹丸论破V3"
+    },
+    "pakTypes": {
+      "text": "文本PAK",
+      "script": "LIN脚本",
+      "texture": "纹理PAK",
+      "font": "字体PAK"
+    }
+  }
+}

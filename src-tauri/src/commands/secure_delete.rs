@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::fs::{self, File, OpenOptions};
+use std::fs::{self, OpenOptions};
 use std::io::{Write, Seek, SeekFrom};
 use std::path::PathBuf;
 use log::info;

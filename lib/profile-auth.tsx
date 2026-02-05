@@ -143,12 +143,7 @@ export function ProfileAuthProvider({ children }: ProfileAuthProviderProps) {
   // SEMPLIFICATO: Se c'è un currentProfile, l'utente è autenticato
   const isAuthenticated = !!currentProfile;
   
-  // TEMPORARY DEBUG - Verifica stato authentication
-  console.log('🔐 ProfileAuth Status:', {
-    currentProfile: currentProfile?.name || 'null',
-    isAuthenticated,
-    isLoading
-  });
+  // Debug log rimosso per ridurre spam console
 
   // Alert for authentication problems (keep for debugging critical issues)
   if (currentProfile && !isAuthenticated) {

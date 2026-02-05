@@ -500,7 +500,7 @@ export default function GameDetailPage() {
               });
               console.log('[GameDetail] Found install path via installDir:', realInstallPath);
             } catch (e) {
-              console.warn('[GameDetail] Could not find install path via installDir:', e);
+              // Silenzioso - fallback a appId
             }
           }
           
@@ -518,7 +518,10 @@ export default function GameDetailPage() {
           let detectedEngine: string | null = null;
           if (realInstallPath) {
             try {
-              const engineResult = await invoke('detect_engine_for_game', { gamePath: realInstallPath });
+              const engineResult = await invoke('detect_engine_for_game', { 
+                gameName: data.name || 'Unknown',
+                installPath: realInstallPath 
+              });
               if (engineResult && typeof engineResult === 'object') {
                 detectedEngine = (engineResult as any).engine || null;
                 console.log('[GameDetail] Engine rilevato:', detectedEngine);
@@ -908,6 +911,9 @@ export default function GameDetailPage() {
               (engineInfo?.engine || game.engine) === 'Unreal Engine' ? 'bg-orange-600/80 text-white' :
               (engineInfo?.engine || game.engine) === 'RPG Maker' ? 'bg-green-600/80 text-white' :
               (engineInfo?.engine || game.engine) === "Ren'Py" ? 'bg-pink-600/80 text-white' :
+              (engineInfo?.engine || game.engine) === 'Spike Chunsoft Engine' ? 'bg-purple-600/80 text-white' :
+              (engineInfo?.engine || game.engine) === 'Godot' ? 'bg-cyan-600/80 text-white' :
+              (engineInfo?.engine || game.engine) === 'GameMaker' ? 'bg-yellow-600/80 text-white' :
               'bg-gray-600/80 text-white'
             }`}>
               <Settings className="h-3 w-3 mr-1" />

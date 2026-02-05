@@ -14,6 +14,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles-v2.css">
   <script src="https://unpkg.com/scrollreveal"></script>
+  <script src="site-i18n.js" defer></script>
+  <style>
+    .lang-selector { position: relative; margin-left: 16px; }
+    .lang-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+    .lang-btn:hover { background: rgba(255,255,255,0.2); }
+    .lang-menu { position: absolute; top: 100%; right: 0; margin-top: 8px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 8px; min-width: 160px; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s; backdrop-filter: blur(10px); z-index: 1000; }
+    .lang-menu.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .lang-option { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; background: transparent; border: none; color: #94a3b8; cursor: pointer; border-radius: 8px; font-size: 14px; text-align: left; transition: all 0.2s; }
+    .lang-option:hover { background: rgba(255,255,255,0.1); color: white; }
+    .lang-option.active { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; }
+  </style>
 </head>
 <body>
 
@@ -37,18 +48,32 @@
         <a href="#faq">FAQ</a>
       </div>
       <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-sm"> GitHub</a>
+      <div class="lang-selector">
+        <button id="lang-current" class="lang-btn" onclick="toggleLangMenu()">🇬🇧 EN</button>
+        <div id="lang-menu" class="lang-menu">
+          <button class="lang-option" onclick="setLanguage('en')">🇬🇧 English</button>
+          <button class="lang-option" onclick="setLanguage('it')">🇮🇹 Italiano</button>
+          <button class="lang-option" onclick="setLanguage('es')">🇪🇸 Español</button>
+          <button class="lang-option" onclick="setLanguage('de')">🇩🇪 Deutsch</button>
+          <button class="lang-option" onclick="setLanguage('fr')">🇫🇷 Français</button>
+          <button class="lang-option" onclick="setLanguage('ja')">🇯🇵 日本語</button>
+          <button class="lang-option" onclick="setLanguage('zh')">🇨🇳 中文</button>
+          <button class="lang-option" onclick="setLanguage('ko')">🇰🇷 한국어</button>
+          <button class="lang-option" onclick="setLanguage('pt')">🇧🇷 Português</button>
+        </div>
+      </div>
     </nav>
     
     <!-- HERO -->
     <div class="hero">
-      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> v1.0.4 — Subtitle Translator, Retro ROM & API v1</span>
-      <h1>Traduci <span class="hero-highlight">Qualsiasi</span> Videogioco<br>con l'Intelligenza Artificiale</h1>
-      <p class="hero-subtitle">La suite open source definitiva per la localizzazione di videogiochi</p>
-      <p class="hero-desc">Supporta <strong>10+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py...) e <strong>15+ provider AI</strong> (Ollama gratuito, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente.</p>
+      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.1.0 — Danganronpa Auto-Translator, Test E2E & 9 Lingue</span></span>
+      <h1 data-i18n="hero.title">Traduci <span class="hero-highlight">Qualsiasi</span> Videogioco<br>con l'Intelligenza Artificiale</h1>
+      <p class="hero-subtitle" data-i18n="hero.subtitle">La suite open source definitiva per la localizzazione di videogiochi</p>
+      <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>10+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py...) e <strong>15+ provider AI</strong> (Ollama gratuito, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente.</p>
       
       <div class="hero-buttons">
-        <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-primary btn-lg">⬇️ Download Gratuito per Windows</a>
-        <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-lg">📂 Vedi Codice Sorgente</a>
+        <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-primary btn-lg" data-i18n="hero.download">⬇️ Download Gratuito per Windows</a>
+        <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-lg" data-i18n="hero.source">📂 Vedi Codice Sorgente</a>
       </div>
       
       <div class="hero-meta">
@@ -78,8 +103,8 @@
 <section id="features">
   <div class="container" style="text-align: center;">
     <span class="badge section-badge" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.3); color: #7dd3fc;">✨ Features Complete</span>
-    <h2 class="section-title">Tutto il Necessario per Tradurre Videogiochi</h2>
-    <p class="section-desc">Un ecosistema completo di strumenti AI progettati specificamente per la localizzazione di videogiochi.</p>
+    <h2 class="section-title" data-i18n="features.title">Tutto il Necessario per Tradurre Videogiochi</h2>
+    <p class="section-desc" data-i18n="features.desc">Un ecosistema completo di strumenti AI progettati specificamente per la localizzazione di videogiochi.</p>
     
     <div class="grid grid-3">
       <div class="card feature-card">
@@ -368,10 +393,10 @@
       <div class="cta-glow-1"></div>
       <div class="cta-glow-2"></div>
       <div class="cta-content">
-        <h2 class="cta-title">Pronto a Tradurre?</h2>
-        <p class="cta-desc">Scarica GameStringer gratuitamente e inizia a giocare i tuoi giochi preferiti nella tua lingua. Nessun account, nessun abbonamento, nessun limite.</p>
+        <h2 class="cta-title" data-i18n="cta.title">Pronto a Tradurre?</h2>
+        <p class="cta-desc" data-i18n="cta.desc">Scarica GameStringer gratuitamente e inizia a giocare i tuoi giochi preferiti nella tua lingua. Nessun account, nessun abbonamento, nessun limite.</p>
         <div class="cta-buttons">
-          <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-lg btn-primary">⬇️ Download per Windows (Gratuito)</a>
+          <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-lg btn-primary" data-i18n="cta.download">⬇️ Download per Windows (Gratuito)</a>
           <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-lg" style="border-color: rgba(255,255,255,0.4);">⭐ Star su GitHub</a>
         </div>
         <div class="cta-features">
@@ -389,10 +414,10 @@
 <!-- SUPPORT -->
 <section style="padding: 80px 0; text-align: center;">
   <div class="container">
-    <h3 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 12px;">❤️ Supporta il Progetto</h3>
-    <p style="color: #94a3b8; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">GameStringer è sviluppato nel tempo libero. Il tuo supporto aiuta a mantenere il progetto attivo e ad aggiungere nuove features!</p>
+    <h3 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 12px;" data-i18n="support.title">❤️ Supporta il Progetto</h3>
+    <p style="color: #94a3b8; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;" data-i18n="support.desc">GameStringer è sviluppato nel tempo libero. Il tuo supporto aiuta a mantenere il progetto attivo e ad aggiungere nuove features!</p>
     <div class="support-buttons">
-      <a href="https://ko-fi.com/gamestringer" class="btn btn-outline" style="border-color: rgba(34, 197, 94, 0.4); color: #4ade80;">☕ Offrimi un Caffè su Ko-fi</a>
+      <a href="https://ko-fi.com/gamestringer" class="btn btn-outline" style="border-color: rgba(34, 197, 94, 0.4); color: #4ade80;" data-i18n="support.kofi">☕ Offrimi un Caffè su Ko-fi</a>
       <a href="https://github.com/sponsors/rouges78" class="btn btn-outline" style="border-color: rgba(14, 165, 233, 0.4); color: #7dd3fc;">💜 GitHub Sponsors</a>
       <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline">⭐ Star su GitHub</a>
     </div>
