@@ -321,7 +321,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                   </AlertDescription>
                 </Alert>
               ) : (
-                <div className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); handleAuthenticate(); }} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor={`password-${profile.id}`} className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                       Password
@@ -332,12 +332,12 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        onKeyPress={handleKeyPress}
                         onClick={(e) => e.stopPropagation()}
                         placeholder="Enter password"
                         className="pr-10 bg-slate-950/50 border-slate-700/50 focus:border-indigo-500/50 focus:ring-indigo-500/20 text-slate-100 placeholder:text-slate-600 transition-all h-10"
                         disabled={isAuthenticating}
                         autoFocus
+                        autoComplete="current-password"
                       />
                       <Button
                         type="button"
@@ -401,10 +401,8 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
 
                   <div className="flex gap-2 pt-1">
                     <Button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAuthenticate();
-                      }}
+                      type="submit"
+                      onClick={(e) => e.stopPropagation()}
                       disabled={isAuthenticating || !password.trim()}
                       className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white border-0 shadow-lg shadow-indigo-900/20 h-10"
                     >
@@ -481,7 +479,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                       </div>
                     </motion.div>
                   )}
-                </div>
+                </form>
               )}
             </motion.div>
           )}
