@@ -118,13 +118,6 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
         // Salva in cache
         await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: result });
         console.log(`[Library] ✅ SteamGridDB cover found for ${game.title}`);
-      } else if (game.app_id.startsWith('steam_') || !isNaN(Number(game.app_id))) {
-        // Fallback: usa header direttamente da Steam CDN
-        const steamAppId = game.app_id.replace('steam_', '');
-        const headerUrl = `https://cdn.akamai.steamstatic.com/steam/apps/${steamAppId}/header.jpg`;
-        setSteamGridDbImage(headerUrl);
-        await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: headerUrl });
-        console.log(`[Library] ✅ Steam CDN header fallback for ${game.title}`);
       }
     } catch (e) {
       console.warn(`[Library] SteamGridDB failed for ${game.title}:`, e);
