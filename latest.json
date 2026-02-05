@@ -1,6 +1,6 @@
 {
   "version": "1.1.0",
-  "notes": "v1.1.0 - Sito Multilingua & Supporto Danganronpa\n\n- 9 lingue: EN, IT, ES, DE, FR, JA, ZH, KO, PT\n- Selettore lingua con bandiere nella navigazione\n- Rilevamento automatico lingua browser con persistenza localStorage\n- Danganronpa Auto-Translator per file PAK/LIN/STX\n- Test E2E con Playwright",
+  "notes": "v1.1.0 - Supporto Danganronpa & Auto-Update\n\n- Danganronpa Auto-Translator per file PAK/LIN/STX\n- Aggiornamento automatico in-app\n- Test E2E con Playwright\n- Miglioramenti UI notifiche",
   "pub_date": "2026-02-05T17:30:00.000Z",
   "platforms": {
     "windows-x86_64": {
