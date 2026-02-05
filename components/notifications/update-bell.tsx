@@ -76,8 +76,9 @@ export function UpdateBell() {
       
       <PopoverContent 
         align="end" 
-        className="w-80 p-0 bg-slate-900/95 backdrop-blur-xl border-slate-700/50 shadow-2xl shadow-black/50 z-[100]"
+        className="w-80 p-0 bg-slate-900 border-slate-700/50 shadow-2xl shadow-black/50 z-[100]"
         sideOffset={8}
+        onPointerDownOutside={(e) => e.preventDefault()}
       >
         {hasUpdate && updateInfo ? (
           <div className="p-4">
