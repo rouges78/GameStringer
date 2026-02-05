@@ -448,40 +448,51 @@ export default function StoresPage() {
     
     try {
       if (utilityId === 'howlongtobeat') {
-        // Test HowLongToBeat API
-        const response = await fetch('/api/utilities/howlongtobeat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ search: 'The Witcher 3' }),
+        // Test HowLongToBeat - fetch diretto (no API route)
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const response = await fetch('https://howlongtobeat.com', {
+          method: 'HEAD',
+          mode: 'no-cors',
+          signal: controller.signal,
         });
-        
-        if (response.ok) {
-          setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
-          toast.success('HowLongToBeat funziona correttamente!');
-        } else {
-          throw new Error('API test failed');
-        }
+        clearTimeout(timeout);
+        // mode: no-cors returns opaque response (status 0) but means site is reachable
+        setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
+        toast.success('HowLongToBeat raggiungibile!');
       } else if (utilityId === 'steamgriddb') {
-        // Test SteamGridDB API
+        // Test SteamGridDB API - fetch diretto
         const apiKey = utilityPreferences[utilityId]?.apiKey;
         if (!apiKey) {
           throw new Error('API key mancante');
         }
         
-        const response = await fetch('/api/utilities/steamgriddb?search=The Witcher 3', {
-          headers: { 'X-API-Key': apiKey },
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const response = await fetch('https://www.steamgriddb.com/api/v2/search/autocomplete/witcher', {
+          headers: { 'Authorization': `Bearer ${apiKey}` },
+          signal: controller.signal,
         });
+        clearTimeout(timeout);
         
         if (response.ok) {
           setTestResults(prev => ({ ...prev, [utilityId]: { connected: true } }));
           toast.success('SteamGridDB funziona correttamente!');
+        } else if (response.status === 401) {
+          throw new Error('API key non valida');
         } else {
-          throw new Error('API test failed');
+          throw new Error(`Errore ${response.status}`);
         }
       }
     } catch (error) {
-      setTestResults(prev => ({ ...prev, [utilityId]: { error: error instanceof Error ? error.message : 'Test fallito' } }));
-      toast.error(`Problema con ${utilityId}: ${error instanceof Error ? error.message : 'Test fallito'}`);
+      const msg = error instanceof Error ? error.message : 'Test fallito';
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setTestResults(prev => ({ ...prev, [utilityId]: { error: 'Timeout - servizio non raggiungibile' } }));
+        toast.error(`${utilityId}: Timeout connessione`);
+      } else {
+        setTestResults(prev => ({ ...prev, [utilityId]: { error: msg } }));
+        toast.error(`Problema con ${utilityId}: ${msg}`);
+      }
     }
     
     setTestingProvider(null);
