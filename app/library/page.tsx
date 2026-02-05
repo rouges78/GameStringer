@@ -118,6 +118,29 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
         // Salva in cache
         await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: result });
         console.log(`[Library] ✅ SteamGridDB cover found for ${game.title}`);
+      } else {
+        // Fallback: prova cover direttamente da Steam CDN
+        const steamAppId = game.app_id.replace('steam_', '');
+        const steamUrls = [
+          `https://cdn.akamai.steamstatic.com/steam/apps/${steamAppId}/library_600x900_2x.jpg`,
+          `https://cdn.akamai.steamstatic.com/steam/apps/${steamAppId}/header.jpg`,
+        ];
+        for (const url of steamUrls) {
+          try {
+            const img = new window.Image();
+            const loaded = await new Promise<boolean>((resolve) => {
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(false);
+              img.src = url;
+            });
+            if (loaded && img.naturalWidth > 0) {
+              setSteamGridDbImage(url);
+              await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: url });
+              console.log(`[Library] ✅ Steam CDN cover found for ${game.title}: ${url}`);
+              break;
+            }
+          } catch { continue; }
+        }
       }
     } catch (e) {
       console.warn(`[Library] SteamGridDB failed for ${game.title}:`, e);
