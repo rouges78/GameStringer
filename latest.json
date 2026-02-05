@@ -1,0 +1,11 @@
+{
+  "version": "1.1.0",
+  "notes": "v1.1.0 - Website Multilingual & Danganronpa Support\n\n- 9 languages: EN, IT, ES, DE, FR, JA, ZH, KO, PT\n- Language selector with flags\n- Danganronpa Auto-Translator\n- E2E tests with Playwright",
+  "pub_date": "2026-02-05T17:30:00.000Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "",
+      "url": "https://github.com/rouges78/GameStringer/releases/download/v1.1.0/GameStringer_1.1.0_x64-setup.exe"
+    }
+  }
+}

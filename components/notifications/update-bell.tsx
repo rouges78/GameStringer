@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUpdateCheck } from '@/hooks/use-update-check';
+import { useTauriUpdater } from '@/hooks/use-tauri-updater';
 import {
   Popover,
   PopoverContent,
@@ -15,15 +16,30 @@ import { toast } from 'sonner';
 
 export function UpdateBell() {
   const { updateInfo, hasUpdate, isChecking, checkForUpdates, dismissUpdate } = useUpdateCheck();
+  const { 
+    isDownloading, 
+    isInstalling, 
+    downloadProgress, 
+    downloadAndInstall,
+    checkForUpdate: checkTauriUpdate 
+  } = useTauriUpdater();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleDownload = async () => {
-    if (updateInfo?.download_url) {
-      try {
+    try {
+      // Prova prima l'aggiornamento diretto in-app
+      const update = await checkTauriUpdate();
+      if (update?.available) {
+        await downloadAndInstall();
+      } else if (updateInfo?.download_url) {
+        // Fallback al browser se l'updater non è disponibile
         await open(updateInfo.download_url);
         toast.success('Browser aperto per il download!');
         setIsOpen(false);
-      } catch (e) {
+      }
+    } catch (e) {
+      // Fallback al browser
+      if (updateInfo?.download_url) {
         window.open(updateInfo.download_url, '_blank', 'noopener,noreferrer');
       }
     }
@@ -96,14 +112,46 @@ export function UpdateBell() {
                   </div>
                 )}
                 
+                {isDownloading && (
+                  <div className="mt-3 mb-2">
+                    <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                      <span>Scaricamento...</span>
+                      <span>{Math.round(downloadProgress)}%</span>
+                    </div>
+                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-yellow-500 to-amber-500 transition-all duration-300"
+                        style={{ width: `${downloadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {isInstalling && (
+                  <div className="mt-3 mb-2 flex items-center gap-2 text-xs text-yellow-400">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Installazione in corso...</span>
+                  </div>
+                )}
+
                 <div className="flex gap-2 mt-4">
                   <button
                     type="button"
                     onClick={handleDownload}
-                    className="inline-flex items-center bg-gradient-to-r from-yellow-500 to-amber-600 text-white hover:from-yellow-600 hover:to-amber-700 h-8 text-xs px-4 rounded-lg font-medium shadow-lg shadow-yellow-500/25 transition-all"
+                    disabled={isDownloading || isInstalling}
+                    className="inline-flex items-center bg-gradient-to-r from-yellow-500 to-amber-600 text-white hover:from-yellow-600 hover:to-amber-700 h-8 text-xs px-4 rounded-lg font-medium shadow-lg shadow-yellow-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Download className="w-3.5 h-3.5 mr-1.5" />
-                    Scarica
+                    {isDownloading || isInstalling ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        {isInstalling ? 'Installazione...' : 'Scaricamento...'}
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3.5 h-3.5 mr-1.5" />
+                        Aggiorna Ora
+                      </>
+                    )}
                   </button>
                   <Button
                     size="sm"
@@ -112,9 +160,10 @@ export function UpdateBell() {
                       dismissUpdate();
                       setIsOpen(false);
                     }}
+                    disabled={isDownloading || isInstalling}
                     className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 text-xs"
                   >
-                    Ignora
+                    Dopo
                   </Button>
                 </div>
               </div>
