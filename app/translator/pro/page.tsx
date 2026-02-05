@@ -2105,15 +2105,16 @@ export default function TranslatorProPage() {
                   </Select>
                 </div>
                 
-                <div className="space-y-2">
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
                   <Label>API Key</Label>
                   <Input
                     type="password"
                     value={apiKey}
                     onChange={(e) => handleApiKeyChange(e.target.value)}
                     placeholder="Inserisci la tua API key (salvata automaticamente)"
+                    autoComplete="off"
                   />
-                </div>
+                </form>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">

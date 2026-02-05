@@ -362,7 +362,7 @@ export default function OcrTranslatorPage() {
                 </div>
                 
                 {/* Gemini API Key */}
-                <div>
+                <form onSubmit={(e) => e.preventDefault()}>
                   <label className="text-xs text-muted-foreground mb-2 block">
                     {t('ocrTranslator.geminiApiKey')} 
                     <a href="https://aistudio.google.com/apikey" target="_blank" className="text-blue-400 hover:underline ml-1">{t('ocrTranslator.getForFree')}</a>
@@ -374,8 +374,9 @@ export default function OcrTranslatorPage() {
                     onChange={(e) => setGeminiApiKey(e.target.value)}
                     className="w-full h-9 px-3 rounded-lg border bg-background text-sm"
                     disabled={isRunning}
+                    autoComplete="off"
                   />
-                </div>
+                </form>
                 <div>
                   <div className="flex justify-between text-xs mb-2">
                     <span>{t('ocrTranslator.scanInterval')}</span>

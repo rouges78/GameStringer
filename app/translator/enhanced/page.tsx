@@ -308,15 +308,16 @@ export default function EnhancedTranslatorPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
+            <form onSubmit={(e) => e.preventDefault()}>
               <label className="text-sm font-medium mb-2 block">API Key</label>
               <Input
                 type="password"
                 placeholder="Inserisci la tua API key"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
+                autoComplete="off"
               />
-            </div>
+            </form>
             
             <div>
               <label className="text-sm font-medium mb-2 block">Provider</label>
