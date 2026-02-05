@@ -322,6 +322,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                 </Alert>
               ) : (
                 <form onSubmit={(e) => { e.preventDefault(); handleAuthenticate(); }} className="space-y-4">
+                  <input type="text" name="username" value={profile.name} autoComplete="username" className="sr-only" tabIndex={-1} readOnly aria-hidden="true" />
                   <div className="space-y-2">
                     <Label htmlFor={`password-${profile.id}`} className="text-xs font-medium text-slate-400 uppercase tracking-wider">
                       Password

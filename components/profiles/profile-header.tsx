@@ -411,7 +411,7 @@ export function ProfileHeader() {
 
       {/* Avatar Upload Dialog */}
       <AvatarUpload
-        currentAvatar={avatarUrl}
+        currentAvatar={avatarUrl || undefined}
         userName={currentProfile.name}
         onAvatarChange={setAvatarUrl}
         open={showAvatarUpload}
