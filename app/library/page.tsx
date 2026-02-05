@@ -118,6 +118,21 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
         // Salva in cache
         await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: result });
         console.log(`[Library] ✅ SteamGridDB cover found for ${game.title}`);
+      } else {
+        // Fallback: usa Steam API appdetails per ottenere header_image
+        try {
+          const steamAppId = parseInt(game.app_id.replace('steam_', '')) || 0;
+          if (steamAppId > 0) {
+            const details = await invoke<any>('fetch_steam_game_details', { appId: steamAppId });
+            if (details?.header_image) {
+              setSteamGridDbImage(details.header_image);
+              await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: details.header_image });
+              console.log(`[Library] ✅ Steam API header fallback for ${game.title}: ${details.header_image}`);
+            }
+          }
+        } catch (e2) {
+          console.warn(`[Library] Steam API fallback failed for ${game.title}:`, e2);
+        }
       }
     } catch (e) {
       console.warn(`[Library] SteamGridDB failed for ${game.title}:`, e);
