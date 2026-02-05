@@ -298,6 +298,27 @@ const CHANGELOG_CONTENT = `
 
 ---
 
+## 📅 Febbraio 2026
+
+### ✨ v1.1.0 — Danganronpa & Auto-Update
+\`2026-02-05\`
+
+**Danganronpa Auto-Translator**
+- Supporto nativo file PAK/LIN/STX
+- Integrazione con DRAT
+- Estrazione e traduzione automatica dialoghi
+
+**Auto-Update In-App**
+- Aggiornamento diretto senza browser
+- Progress bar download
+- Installazione e riavvio automatico
+
+**Test E2E**
+- 9 test Playwright per navigation, translation, danganronpa
+- Config multi-browser
+
+---
+
 ## 📅 Gennaio 2026
 
 ### ✨ v1.0.9 — Animated Headers & UI Polish
