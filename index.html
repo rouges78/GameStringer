@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GameStringer - Traduci Qualsiasi Videogioco con l'AI | Suite Completa di Localizzazione</title>
-  <meta name="description" content="GameStringer è la suite open source definitiva per tradurre videogiochi con AI. Supporta Unity, Unreal, Godot, RPG Maker e 10+ engine. 18+ provider AI inclusi Ollama gratuito, GPT-4, Claude, Gemini.">
+  <meta name="description" content="GameStringer è la suite open source definitiva per tradurre videogiochi con AI. Supporta Unity, Unreal, Godot, RPG Maker e 10+ engine. 20+ provider AI inclusi TranslateGemma, Ollama gratuito, GPT-4, Claude, Gemini.">
   <meta name="keywords" content="game translation, video game localization, AI translator, Unity translation, Unreal localization, RPG Maker translator, visual novel translation, indie game localization, fan translation, Ollama, GPT-4">
   <meta property="og:title" content="GameStringer - Traduci Qualsiasi Videogioco con l'AI">
-  <meta property="og:description" content="Suite open source per tradurre videogiochi. 10+ engine, 18+ AI, gratuito.">
+  <meta property="og:description" content="Suite open source per tradurre videogiochi. 10+ engine, 20+ AI, gratuito.">
   <meta property="og:image" content="images/og-image.svg">
   <meta property="og:type" content="website">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -16,6 +16,13 @@
   <script src="https://unpkg.com/scrollreveal"></script>
   <script src="site-i18n.js" defer></script>
   <style>
+    .link-disabled { pointer-events: none; opacity: 0.5; cursor: not-allowed !important; position: relative; }
+    .link-disabled::after { content: ''; }
+    .coming-soon-badge { display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; margin-left: 8px; vertical-align: middle; animation: pulse-badge 2s infinite; }
+    .coming-soon-overlay { position: relative; }
+    .coming-soon-overlay::after { content: 'COMING SOON'; position: absolute; top: 12px; right: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; z-index: 2; }
+    .coming-soon-overlay > * { opacity: 0.6; }
+    @keyframes pulse-badge { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
     .lang-selector { position: relative; margin-left: 16px; }
     .lang-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
     .lang-btn:hover { background: rgba(255,255,255,0.2); }
@@ -48,7 +55,7 @@
         <a href="#usecases">Use Cases</a>
         <a href="#faq">FAQ</a>
       </div>
-      <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-sm">⭐ GitHub</a>
+      <a href="#" class="btn btn-outline btn-sm link-disabled" onclick="return false">⭐ GitHub <span class="coming-soon-badge">Soon</span></a>
       <div class="lang-selector">
         <button id="lang-current" class="lang-btn" onclick="toggleLangMenu()">🇮🇹 IT</button>
         <div id="lang-menu" class="lang-menu">
@@ -70,11 +77,11 @@
       <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.1.0 — Danganronpa Auto-Translator, 9 Lingue & Test E2E</span></span>
       <h1 data-i18n="hero.title">GameStringer</h1>
       <p class="hero-subtitle" data-i18n="hero.subtitle">Localizza videogiochi con l'AI. Open source. Gratuito.</p>
-      <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>10+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py...) e <strong>15+ provider AI</strong> (Ollama gratuito, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente.</p>
+      <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>10+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py...) e <strong>20+ provider AI</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente.</p>
       
       <div class="hero-buttons">
-        <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-primary btn-lg" data-i18n="hero.download">⬇️ Download Gratuito per Windows</a>
-        <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-lg" data-i18n="hero.source">📂 Vedi Codice Sorgente</a>
+        <a href="#" class="btn btn-primary btn-lg link-disabled" onclick="return false" data-i18n="hero.download">⬇️ Download Gratuito per Windows <span class="coming-soon-badge">Soon</span></a>
+        <a href="#" class="btn btn-outline btn-lg link-disabled" onclick="return false" data-i18n="hero.source">📂 Vedi Codice Sorgente <span class="coming-soon-badge">Soon</span></a>
       </div>
       
       <div class="hero-meta">
@@ -86,7 +93,7 @@
       
       <div class="stats">
         <div class="stat"><div class="stat-value">10+</div><div class="stat-label">Game Engine</div><div class="stat-detail">Unity, Unreal, Godot, RPG Maker...</div></div>
-        <div class="stat"><div class="stat-value">18+</div><div class="stat-label">Provider AI</div><div class="stat-detail">8 gratuiti, 6 locali</div></div>
+        <div class="stat"><div class="stat-value">20+</div><div class="stat-label">Provider AI</div><div class="stat-detail">10 gratuiti, 8 locali</div></div>
         <div class="stat"><div class="stat-value">7</div><div class="stat-label">Store Integrati</div><div class="stat-detail">Steam, Epic, GOG, Origin...</div></div>
         <div class="stat"><div class="stat-value">∞</div><div class="stat-label">Games Traducibili</div><div class="stat-detail">Indie, retro, AAA</div></div>
       </div>
@@ -119,23 +126,23 @@
     <div class="grid grid-3">
       <div class="card feature-card">
         <div class="icon-box feature-icon">🌐</div>
-        <h3 class="feature-title">18+ Provider AI Integrati</h3>
+        <h3 class="feature-title">20+ Provider AI Integrati</h3>
         <p class="feature-desc">OpenAI GPT-4/4o, Anthropic Claude 3.5, Google Gemini Pro, DeepSeek V3, Mistral Large, Groq LPU, DeepL, <strong>Qwen 3</strong>, <strong>NLLB-200</strong>, e AI locali come Ollama e LM Studio.</p>
         <div class="feature-tags"><span class="feature-tag">GPT-4 Turbo</span><span class="feature-tag">Claude 3.5</span><span class="feature-tag">Gemini Pro</span><span class="feature-tag">Ollama Local</span></div>
       </div>
-      <div class="card feature-card">
+      <div class="card feature-card coming-soon-overlay">
         <div class="icon-box" style="background: linear-gradient(135deg, #0ea5e9, #2dd4bf);">🎬</div>
         <h3 class="feature-title">Subtitle Translator Pro</h3>
         <p class="feature-desc">Estrai, traduci e inietta sottotitoli in formato SRT, VTT, ASS/SSA. Preview in tempo reale con validazione QA automatica.</p>
         <div class="feature-tags"><span class="feature-tag">SRT/VTT/ASS</span><span class="feature-tag">Real-time Preview</span><span class="feature-tag">QA Validation</span></div>
       </div>
-      <div class="card feature-card">
+      <div class="card feature-card coming-soon-overlay">
         <div class="icon-box" style="background: linear-gradient(135deg, #06b6d4, #22d3ee);">🎮</div>
         <h3 class="feature-title">Retro ROM Tools</h3>
         <p class="feature-desc">Supporto per 8+ console retro (NES, SNES, GBA, Genesis, PSX...). Gestione Table Files (.TBL) e iniezione font per caratteri speciali.</p>
         <div class="feature-tags"><span class="feature-tag">NES/SNES/GBA</span><span class="feature-tag">Table Files</span><span class="feature-tag">Font Injection</span></div>
       </div>
-      <div class="card feature-card">
+      <div class="card feature-card coming-soon-overlay">
         <div class="icon-box" style="background: linear-gradient(135deg, #0284c7, #06b6d4);">🔌</div>
         <h3 class="feature-title">Public API v1 (REST)</h3>
         <p class="feature-desc">Integra GameStringer nei tuoi workflow CI/CD. Endpoint per traduzione singola, batch, e gestione lingue via REST API.</p>
@@ -153,13 +160,13 @@
         <p class="feature-desc">L'AI analizza genere, personaggi, tono e contesto narrativo. Gestisce variabili {0}, tag &lt;color&gt;, e formattazione speciale.</p>
         <div class="feature-tags"><span class="feature-tag">Genre detection</span><span class="feature-tag">Character voice</span><span class="feature-tag">Tone matching</span></div>
       </div>
-      <div class="card feature-card">
+      <div class="card feature-card coming-soon-overlay">
         <div class="icon-box" style="background: linear-gradient(135deg, #14b8a6, #2dd4bf);">🎤</div>
         <h3 class="feature-title">Voice Clone Studio</h3>
         <p class="feature-desc">Clona voci con AI (ElevenLabs, OpenAI TTS). Text-to-speech con preset: narratore, eroe, cattivo, bambino, robot.</p>
         <div class="feature-tags"><span class="feature-tag">ElevenLabs</span><span class="feature-tag">OpenAI TTS</span><span class="feature-tag">Voice Presets</span></div>
       </div>
-      <div class="card feature-card">
+      <div class="card feature-card coming-soon-overlay">
         <div class="icon-box" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">🥽</div>
         <h3 class="feature-title">VR Text Overlay</h3>
         <p class="feature-desc">Sottotitoli spaziali per giochi VR. Rilevamento automatico headset (Oculus, SteamVR, WMR) con preset posizione.</p>
@@ -171,7 +178,7 @@
         <p class="feature-desc">Sistema automatico di controllo qualità traduzioni. Verifica placeholder, numeri, tag HTML, lunghezza e contesto.</p>
         <div class="feature-tags"><span class="feature-tag">Auto QA</span><span class="feature-tag">Pass/Fail</span><span class="feature-tag">Export Report</span></div>
       </div>
-      <div class="card feature-card">
+      <div class="card feature-card coming-soon-overlay">
         <div class="icon-box" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">💬</div>
         <h3 class="feature-title">Player Feedback</h3>
         <p class="feature-desc">Raccogli e gestisci feedback dei giocatori sulle traduzioni. Rating 5 stelle, categorie e tracking stato.</p>
@@ -248,10 +255,12 @@
 <section id="ai">
   <div class="container" style="text-align: center;">
     <span class="badge section-badge" style="background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.3); color: #60a5fa;">🤖 AI Providers</span>
-    <h2 class="section-title">18+ Provider AI per Ogni Esigenza</h2>
+    <h2 class="section-title">20+ Provider AI per Ogni Esigenza</h2>
     <p class="section-desc">Opzioni gratuite, locali per privacy totale, o cloud per massima qualità. Ogni provider è ottimizzato per traduzioni gaming.</p>
     
     <div class="grid grid-5">
+      <div class="card ai-card recommended"><div class="ai-header"><span class="ai-name">⭐ TranslateGemma</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Google • Specializzato traduzione • 55 lingue</div><div class="ai-features"><span class="ai-feature">4B / 12B / 27B</span><span class="ai-feature">Multimodale</span><span class="ai-feature">Ollama</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span></div><div class="ai-cost">💚 Gratuito • 3.3GB (4B) • Consigliato!</div></div>
+      <div class="card ai-card"><div class="ai-header"><span class="ai-name">HY-MT1.5</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Tencent • Ultraleggero • 33 lingue</div><div class="ai-features"><span class="ai-feature">1.8B / 7B</span><span class="ai-feature">~1GB RAM</span><span class="ai-feature">Ollama</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Gratuito • PC con poca RAM</div></div>
       <div class="card ai-card recommended"><div class="ai-header"><span class="ai-name">Ollama</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Esegue sul tuo PC • Privacy 100%</div><div class="ai-features"><span class="ai-feature">Llama 3.2</span><span class="ai-feature">Mistral</span><span class="ai-feature">Qwen2.5</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Gratuito • 8GB+ RAM</div></div>
       <div class="card ai-card"><div class="ai-header"><span class="ai-name">LM Studio</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ GUI per modelli locali</div><div class="ai-features"><span class="ai-feature">GGUF models</span><span class="ai-feature">GUI friendly</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Gratuito • 8GB+ RAM</div></div>
       <div class="card ai-card recommended"><div class="ai-header"><span class="ai-name">Google Gemini</span><span class="ai-badge free">Free Tier</span></div><div class="ai-type">☁️ Cloud • 1M context window</div><div class="ai-features"><span class="ai-feature">Gemini 2.0</span><span class="ai-feature">Multimodal</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span></div><div class="ai-cost">💚 15 RPM free tier</div></div>
@@ -268,7 +277,7 @@
     
     <div class="ai-recommendation">
       <p style="color: #94a3b8; margin-top: 40px; padding: 24px; background: rgba(30,41,59,0.5); border-radius: 16px; border-left: 4px solid #22c55e;">
-        <strong style="color: #4ade80;">💡 Consigliato per iniziare:</strong> Usa <strong style="color: white;">Ollama</strong> (gratuito, locale, privacy 100%) o <strong style="color: white;">Gemini</strong> (tier gratuito cloud, qualità top). Per progetti professionali: <strong style="color: white;">DeepSeek V3</strong> (miglior rapporto qualità/prezzo).
+        <strong style="color: #4ade80;">💡 Consigliato per iniziare:</strong> Usa <strong style="color: white;">TranslateGemma</strong> via Ollama (gratuito, locale, specializzato traduzione, 55 lingue) o <strong style="color: white;">Gemini</strong> (tier gratuito cloud). Per PC con poca RAM: <strong style="color: white;">HY-MT1.5 1.8B</strong> (~1GB). Per qualità pro: <strong style="color: white;">DeepSeek V3</strong> (miglior rapporto qualità/prezzo).
       </p>
     </div>
   </div>
@@ -382,12 +391,14 @@
     <div class="faq-container" style="text-align: left; margin-top: 48px; max-width: 800px; margin-left: auto; margin-right: auto;">
       <details class="faq-details">
         <summary>GameStringer è davvero gratuito? Qual è il trucco?</summary>
-        <p>Sì, GameStringer è 100% gratuito e open source (Source-Available License). Non ci sono pubblicità, abbonamenti nascosti o limiti artificiali. Il codice sorgente è disponibile su <a href="https://github.com/rouges78/GameStringer">GitHub</a>. L'unico costo potenziale è quello delle API AI se scegli provider cloud a pagamento, ma puoi usare Ollama completamente gratis in locale.</p>
+        <p>Sì, GameStringer è 100% gratuito e open source (Source-Available License). Non ci sono pubblicità, abbonamenti nascosti o limiti artificiali. Il codice sorgente sarà disponibile su GitHub. L'unico costo potenziale è quello delle API AI se scegli provider cloud a pagamento, ma puoi usare Ollama completamente gratis in locale.</p>
       </details>
       <details class="faq-details">
         <summary>Quali AI posso usare senza pagare nulla?</summary>
         <p><strong>Completamente gratis:</strong></p>
         <ul>
+          <li><strong>TranslateGemma</strong> - Google, specializzato traduzione, 55 lingue, 3.3GB (consigliato!)</li>
+          <li><strong>HY-MT1.5</strong> - Tencent, ultraleggero 1.8B, ~1GB RAM, per PC scarsi</li>
           <li><strong>Ollama</strong> - Esegue sul tuo PC, privacy totale, richiede 8GB+ RAM</li>
           <li><strong>LM Studio</strong> - Come Ollama ma con GUI</li>
           <li><strong>Gemini</strong> - 15 richieste/minuto nel free tier</li>
@@ -425,7 +436,7 @@
       </details>
       <details class="faq-details">
         <summary>Posso contribuire al progetto?</summary>
-        <p>Assolutamente! GameStringer è open source su <a href="https://github.com/rouges78/GameStringer">GitHub</a>. Puoi contribuire con: codice, traduzioni dell'interfaccia, documentazione, bug report, feature request. Puoi anche supportare economicamente su <a href="https://ko-fi.com/gamestringer">Ko-fi</a> o <a href="https://github.com/sponsors/rouges78">GitHub Sponsors</a>.</p>
+        <p>Assolutamente! GameStringer è open source. Puoi contribuire con: codice, traduzioni dell'interfaccia, documentazione, bug report, feature request. Puoi anche supportare economicamente (link disponibili a breve).</p>
       </details>
     </div>
   </div>
@@ -441,8 +452,8 @@
         <h2 class="cta-title" data-i18n="cta.title">Pronto a Tradurre?</h2>
         <p class="cta-desc" data-i18n="cta.desc">Scarica GameStringer gratuitamente e inizia a giocare i tuoi giochi preferiti nella tua lingua. Nessun account, nessun abbonamento, nessun limite.</p>
         <div class="cta-buttons">
-          <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-lg btn-primary" data-i18n="cta.download">⬇️ Download per Windows (Gratuito)</a>
-          <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline btn-lg" style="border-color: rgba(255,255,255,0.4);">⭐ Star su GitHub</a>
+          <a href="#" class="btn btn-lg btn-primary link-disabled" onclick="return false" data-i18n="cta.download">⬇️ Download per Windows <span class="coming-soon-badge">Soon</span></a>
+          <a href="#" class="btn btn-outline btn-lg link-disabled" onclick="return false" style="border-color: rgba(255,255,255,0.4);">⭐ Star su GitHub <span class="coming-soon-badge">Soon</span></a>
         </div>
         <div class="cta-features">
           <span class="cta-feature"><span class="cta-check">✓</span> 100% Gratuito Forever</span>
@@ -462,9 +473,9 @@
     <h3 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 12px;" data-i18n="support.title">❤️ Supporta il Progetto</h3>
     <p style="color: #94a3b8; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;" data-i18n="support.desc">GameStringer è sviluppato nel tempo libero. Il tuo supporto aiuta a mantenere il progetto attivo e ad aggiungere nuove features!</p>
     <div class="support-buttons">
-      <a href="https://ko-fi.com/gamestringer" class="btn btn-outline" style="border-color: rgba(34, 197, 94, 0.4); color: #4ade80;" data-i18n="support.kofi">☕ Offrimi un Caffè su Ko-fi</a>
-      <a href="https://github.com/sponsors/rouges78" class="btn btn-outline" style="border-color: rgba(14, 165, 233, 0.4); color: #7dd3fc;">💜 GitHub Sponsors</a>
-      <a href="https://github.com/rouges78/GameStringer" class="btn btn-outline">⭐ Star su GitHub</a>
+      <a href="#" class="btn btn-outline link-disabled" onclick="return false" style="border-color: rgba(34, 197, 94, 0.4); color: #4ade80;" data-i18n="support.kofi">☕ Ko-fi <span class="coming-soon-badge">Soon</span></a>
+      <a href="#" class="btn btn-outline link-disabled" onclick="return false" style="border-color: rgba(14, 165, 233, 0.4); color: #7dd3fc;">💜 GitHub Sponsors <span class="coming-soon-badge">Soon</span></a>
+      <a href="#" class="btn btn-outline link-disabled" onclick="return false">⭐ Star su GitHub <span class="coming-soon-badge">Soon</span></a>
     </div>
   </div>
 </section>
@@ -479,38 +490,38 @@
         </div>
         <p class="footer-desc">La suite open source definitiva per tradurre videogiochi con intelligenza artificiale. Supporta qualsiasi engine, qualsiasi AI, qualsiasi lingua.</p>
         <div class="footer-social">
-          <a href="https://github.com/rouges78/GameStringer" title="GitHub">📂</a>
-          <a href="https://ko-fi.com/gamestringer" title="Ko-fi">☕</a>
+          <a href="#" onclick="return false" class="link-disabled" title="GitHub">📂</a>
+          <a href="#" onclick="return false" class="link-disabled" title="Ko-fi">☕</a>
         </div>
       </div>
       <div>
         <h4 class="footer-title">Risorse</h4>
         <ul class="footer-links">
-          <li><a href="https://github.com/rouges78/GameStringer/releases">Download</a></li>
-          <li><a href="https://github.com/rouges78/GameStringer/blob/main/docs/GUIDE.md">Documentazione</a></li>
-          <li><a href="https://github.com/rouges78/GameStringer/blob/main/docs/GUIDA_UTENTE.md">Guida Utente (IT)</a></li>
-          <li><a href="https://github.com/rouges78/GameStringer/blob/main/CHANGELOG.md">Changelog</a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Download <span class="coming-soon-badge">Soon</span></a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Documentazione <span class="coming-soon-badge">Soon</span></a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Guida Utente (IT) <span class="coming-soon-badge">Soon</span></a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Changelog <span class="coming-soon-badge">Soon</span></a></li>
         </ul>
       </div>
       <div>
         <h4 class="footer-title">Community</h4>
         <ul class="footer-links">
-          <li><a href="https://github.com/rouges78/GameStringer/discussions">Discussions</a></li>
-          <li><a href="https://github.com/rouges78/GameStringer/issues">Bug Report</a></li>
-          <li><a href="https://github.com/rouges78/GameStringer/blob/main/CONTRIBUTING.md">Contribuisci</a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Discussions <span class="coming-soon-badge">Soon</span></a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Bug Report <span class="coming-soon-badge">Soon</span></a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Contribuisci <span class="coming-soon-badge">Soon</span></a></li>
         </ul>
       </div>
       <div>
         <h4 class="footer-title">Supporta</h4>
         <ul class="footer-links">
-          <li><a href="https://ko-fi.com/gamestringer">Ko-fi</a></li>
-          <li><a href="https://github.com/sponsors/rouges78">GitHub Sponsors</a></li>
-          <li><a href="https://github.com/rouges78/GameStringer">Star su GitHub</a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Ko-fi <span class="coming-soon-badge">Soon</span></a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">GitHub Sponsors <span class="coming-soon-badge">Soon</span></a></li>
+          <li><a href="#" onclick="return false" class="link-disabled">Star su GitHub <span class="coming-soon-badge">Soon</span></a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2025-2026 GameStringer by <a href="https://github.com/rouges78" style="color: #7dd3fc;">rouges78</a>. Source-Available License.</p>
+      <p>© 2025-2026 GameStringer by <span style="color: #7dd3fc;">rouges78</span>. Source-Available License.</p>
       <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹</p>
     </div>
   </div>
