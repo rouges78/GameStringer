@@ -26,6 +26,7 @@ import {
   FileAudio
 } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
+import { translateSingleWithFallback, getApiKeys } from '@/lib/ai-translate-direct';
 
 interface TranscriptionSegment {
   start: number;
@@ -214,49 +215,50 @@ export function VoiceTranslator() {
     setState(prev => ({ ...prev, isTranscribing: true, step: 'transcribing', error: null }));
 
     try {
-      // Convert blob to base64
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(',')[1];
-          resolve(base64);
-        };
-      });
-      reader.readAsDataURL(state.audioBlob);
-      const audioData = await base64Promise;
+      const { openai: openaiKey } = getApiKeys();
+      if (!openaiKey) {
+        throw new Error('OpenAI API key non configurata. Vai nelle Impostazioni.');
+      }
 
-      const response = await fetch('/api/voice/transcribe', {
+      // Crea FormData per Whisper API (richiede file, non base64)
+      const formData = new FormData();
+      formData.append('file', state.audioBlob, 'audio.webm');
+      formData.append('model', 'whisper-1');
+      formData.append('response_format', 'verbose_json');
+      if (state.sourceLanguage !== 'auto') {
+        formData.append('language', state.sourceLanguage);
+      }
+
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          audioData,
-          audioFormat: 'webm',
-          language: state.sourceLanguage,
-          provider: 'openai'
-        })
+        headers: { 'Authorization': `Bearer ${openaiKey}` },
+        body: formData
       });
 
       if (!response.ok) {
-        throw new Error('Transcription failed');
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `Whisper errore ${response.status}`);
       }
 
       const data = await response.json();
       
       setState(prev => ({
         ...prev,
-        transcription: data.text,
-        transcriptionSegments: data.segments || [],
+        transcription: data.text || '',
+        transcriptionSegments: (data.segments || []).map((s: any) => ({
+          start: s.start, end: s.end, text: s.text
+        })),
         sourceLanguage: data.language || prev.sourceLanguage,
         isTranscribing: false,
         step: 'idle'
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       setState(prev => ({
         ...prev,
         isTranscribing: false,
         step: 'idle',
-        error: 'Transcription error. Check your OpenAI API key.'
+        error: error?.message || 'Transcription error. Check your OpenAI API key.'
       }));
     }
   };
@@ -267,36 +269,26 @@ export function VoiceTranslator() {
     setState(prev => ({ ...prev, isTranslating: true, step: 'translating', error: null }));
 
     try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: state.transcription,
-          targetLanguage: state.targetLanguage,
-          sourceLanguage: state.sourceLanguage === 'auto' ? 'en' : state.sourceLanguage,
-          provider: 'openai'
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Translation failed');
-      }
-
-      const data = await response.json();
+      const { translated } = await translateSingleWithFallback(
+        state.transcription,
+        state.targetLanguage,
+        state.sourceLanguage === 'auto' ? undefined : state.sourceLanguage,
+        'voice translation'
+      );
       
       setState(prev => ({
         ...prev,
-        translation: data.translatedText,
+        translation: translated,
         isTranslating: false,
         step: 'idle'
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       setState(prev => ({
         ...prev,
         isTranslating: false,
         step: 'idle',
-        error: 'Translation error.'
+        error: error?.message || 'Translation error.'
       }));
     }
   };
@@ -307,31 +299,32 @@ export function VoiceTranslator() {
     setState(prev => ({ ...prev, isSynthesizing: true, step: 'synthesizing', error: null }));
 
     try {
-      const response = await fetch('/api/voice/tts', {
+      const { openai: openaiKey } = getApiKeys();
+      if (!openaiKey) {
+        throw new Error('OpenAI API key non configurata. Vai nelle Impostazioni.');
+      }
+
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${openaiKey}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          text: state.translation,
+          model: 'tts-1',
+          input: state.translation,
           voice: state.selectedVoice,
           speed: state.speechSpeed,
-          language: state.targetLanguage,
-          provider: 'openai'
+          response_format: 'mp3',
         })
       });
 
       if (!response.ok) {
-        throw new Error('TTS failed');
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `TTS errore ${response.status}`);
       }
 
-      const data = await response.json();
-      
-      // Convert base64 to audio URL
-      const audioData = atob(data.audioData);
-      const audioArray = new Uint8Array(audioData.length);
-      for (let i = 0; i < audioData.length; i++) {
-        audioArray[i] = audioData.charCodeAt(i);
-      }
-      const audioBlob = new Blob([audioArray], { type: 'audio/mp3' });
+      const audioBlob = await response.blob();
       const synthesizedAudioUrl = URL.createObjectURL(audioBlob);
 
       setState(prev => ({
@@ -341,12 +334,12 @@ export function VoiceTranslator() {
         step: 'done'
       }));
 
-    } catch (error) {
+    } catch (error: any) {
       setState(prev => ({
         ...prev,
         isSynthesizing: false,
         step: 'idle',
-        error: 'Speech synthesis error.'
+        error: error?.message || 'Speech synthesis error.'
       }));
     }
   };

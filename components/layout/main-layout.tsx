@@ -95,6 +95,7 @@ import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { GlobalSearch } from '@/components/layout/global-search';
 import { useTranslation } from '@/lib/i18n';
+import { useScreen } from '@/components/providers/screen-provider';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -299,6 +300,58 @@ const CHANGELOG_CONTENT = `
 ---
 
 ## 📅 Febbraio 2026
+
+### 🎮 v1.3.0 — Danganronpa WAD Patcher & Export System
+\`2026-02-09\`
+
+**Danganronpa WAD Patcher v15**
+- All-Ice base + GameStringer override (35.865 stringhe)
+- WAD Text Extractor CLI per estrazione testi
+- WAD Patcher v15 con override selettivo
+
+**WAD Extractor UI**
+- Nuovo tab nel Danganronpa Patcher
+- Editor con ricerca, filtri e traduzione batch AI
+- Export JSON traduzioni
+
+**Export Patch Distribuibile**
+- Backend Rust: zip streaming ~626 MB
+- UI con dialog salvataggio nativo
+- ZIP: WAD + install.bat + LEGGIMI.txt + translations.json
+
+**Dashboard Stats Reali**
+- Translation Memory da backend Rust
+- Activity history: traduzioni e patch
+- Tempo risparmiato e Entry TM reali
+
+**UI Compattata**
+- Tutti i tab Danganronpa Patcher ottimizzati
+- Header, spacing e scroll areas ridotti
+
+---
+
+### 🛡️ v1.2.0 — Fallback Provider & Full Tauri Compatibility
+\`2026-02-06\`
+
+**Fallback Provider Automatico**
+- Traduzione: Gemini → DeepSeek → OpenAI → testo originale
+- 10+ componenti aggiornati con fallback automatico
+- Zero crash se un provider fallisce
+
+**Audit /api/* Completato al 100%**
+- 0 fetch('/api/') attive — tutto compatibile Tauri
+- Injection, secrets, logging, import → tutto locale
+
+**Danganronpa Filtro Smart**
+- Nuovo modulo danganronpa-filter.ts
+- Riduce 18K → ~3K stringhe rilevanti
+- Filtro locale + classificazione AI opzionale
+
+**Test E2E Playwright**
+- 38 test reali tutti passanti
+- Navigation, translation, danganronpa
+
+---
 
 ### ✨ v1.1.0 — Danganronpa & Auto-Update
 \`2026-02-05\`
@@ -676,6 +729,7 @@ const CHANGELOG_CONTENT = `
 export function MainLayout({ children }: MainLayoutProps) {
   const { t, language, setLanguage } = useTranslation();
   const navGroups = getNavGroups(t);
+  const { display } = useScreen();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
@@ -808,10 +862,8 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Sidebar */}
         <aside 
           data-tutorial="sidebar"
-          className={cn(
-            "fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-all duration-300 ease-in-out flex flex-col",
-            sidebarOpen ? "w-64 translate-x-0" : "w-16 translate-x-0"
-          )}
+          className="fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-all duration-300 ease-in-out flex flex-col"
+          style={{ width: sidebarOpen ? `${display.sidebarWidth}px` : '64px' }}
         >
           {/* Header con logo e toggle */}
           <div className="relative flex items-center h-16 px-3 border-b">
@@ -966,12 +1018,12 @@ export function MainLayout({ children }: MainLayoutProps) {
                                                 variant="ghost"
                                                 className={cn(
                                                   "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-7",
-                                                  isSubItemActive ? group.activeClass : "text-slate-400 hover:text-amber-600 hover:bg-amber-600/10"
+                                                  isSubItemActive ? group.activeClass : group.colorClass
                                                 )}
                                               >
                                                 <SubIcon className={cn(
                                                   "h-3 w-3 transition-colors duration-200",
-                                                  isSubItemActive ? "" : "text-slate-400 group-hover:text-amber-600"
+                                                  isSubItemActive ? "" : cn(group.iconClass, group.hoverIconClass)
                                                 )} />
                                                 <span className="text-[10px] relative">
                                                   {subItem.name}
@@ -1082,10 +1134,10 @@ export function MainLayout({ children }: MainLayoutProps) {
         </aside>
 
         {/* Main Content */}
-        <div className={cn(
-          "flex-1 flex flex-col min-w-0 transition-all duration-300",
-          sidebarOpen ? "ml-64" : "ml-16"
-        )}>
+        <div 
+          className="flex-1 flex flex-col min-w-0 transition-all duration-300"
+          style={{ marginLeft: sidebarOpen ? `${display.sidebarWidth}px` : '64px' }}
+        >
           {/* Header */}
           <header className="h-16 bg-card border-b flex items-center px-6">
             {/* Ricerca a sinistra */}

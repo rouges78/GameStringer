@@ -99,15 +99,28 @@ export function GitHubDiscussions() {
     setError(null);
     
     try {
-      // Usa API route locale che gestisce GraphQL/scraping
-      const response = await fetch('/api/github-discussions');
+      // Chiamata diretta GitHub API (no API routes in Tauri)
+      const response = await fetch('https://api.github.com/repos/rouges78/GameStringer/discussions', {
+        headers: { 'Accept': 'application/vnd.github+json' }
+      });
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch discussions');
+      if (response.ok) {
+        const data = await response.json();
+        setDiscussions(data.map((d: any) => ({
+          id: d.number,
+          title: d.title,
+          author: d.user?.login || 'unknown',
+          body: d.body?.slice(0, 200) || '',
+          createdAt: d.created_at,
+          comments: d.comments || 0,
+          reactions: d.reactions?.total_count || 0,
+          labels: d.labels?.map((l: any) => l.name) || [],
+          url: d.html_url
+        })));
+      } else {
+        // Fallback: mostra link diretto a GitHub
+        setDiscussions([]);
       }
-      
-      const data = await response.json();
-      setDiscussions(data);
     } catch (err) {
       console.error('Error fetching discussions:', err);
       setDiscussions([]);

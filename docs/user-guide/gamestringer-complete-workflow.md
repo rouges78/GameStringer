@@ -348,55 +348,136 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 
 ---
 
+## 🎮 FASE 6: DANGANRONPA — TRADUZIONE COMPLETA
+
+### Passo 6.1: Apertura Danganronpa Patcher
+
+1. **Naviga al Patcher**
+   - Menu laterale → **"Patcher"** → **"Danganronpa Patcher"**
+   - Oppure: Dashboard → Strumenti → Danganronpa
+
+2. **Selezione Gioco Steam**
+   - Nel tab **"Applica Patch"**, seleziona il gioco dalla lista Steam rilevati
+   - Vedrai i file WAD del gioco con stato (Patchato/Non patchato)
+
+### Passo 6.2: Estrazione e Traduzione Testi
+
+1. **Tab WAD Extractor**
+   - Clicca sul tab **"WAD Extractor"**
+   - Carica il JSON delle stringhe estratte (35.865 stringhe disponibili)
+   - Cerca, filtra e modifica le stringhe
+
+2. **Traduzione Batch AI**
+   - Seleziona le stringhe da tradurre
+   - Clicca "Traduci con AI"
+   - Progresso in tempo reale
+   - Esporta traduzioni in JSON
+
+### Passo 6.3: Applicazione Patch WAD
+
+1. **Applica Patch**
+   - Tab **"Applica Patch"** → seleziona file WAD patchato
+   - Backup automatico del file originale
+   - Conferma applicazione
+
+2. **Attivazione In-Gioco**
+   - Avvia Danganronpa
+   - Impostazioni → Control Hints → "Keyboard and Mouse"
+   - Il testo sarà in italiano!
+
+### Passo 6.4: Esportare Patch Distribuibile
+
+1. **Export .zip**
+   - Tab **"Applica Patch"** → sezione **"Esporta Patch Distribuibile"**
+   - Clicca **"Esporta .zip"**
+   - Scegli dove salvare il file (~630 MB)
+
+2. **Contenuto ZIP**
+   - `dr1_data_keyboard_us.wad` — WAD patchato italiano
+   - `install.bat` — Installer automatico Steam
+   - `LEGGIMI.txt` — Istruzioni installazione
+   - `translations.json` — Traduzioni sorgente
+
+3. **Distribuzione**
+   - Condividi lo .zip con altri giocatori
+   - L'installer automatico gestisce backup e installazione
+
+---
+
+## 🧠 FASE 7: TRANSLATION MEMORY E STATISTICHE
+
+### Passo 7.1: Translation Memory
+
+1. **Cos'è la TM**
+   - Memoria di traduzione che salva ogni coppia originale/traduzione
+   - Riutilizza traduzioni precedenti per velocizzare il lavoro
+   - Backend Rust per performance ottimali
+
+2. **Uso Automatico**
+   - Dashboard → "Entry TM" mostra il totale delle entry
+   - Le traduzioni vengono automaticamente salvate nella TM
+   - Stringhe già tradotte vengono suggerite automaticamente
+
+### Passo 7.2: Dashboard Statistiche Reali
+
+La dashboard mostra dati reali dal backend:
+- **Traduzioni Totali**: conteggio da activity history
+- **Giochi Patchati**: patch applicate registrate
+- **Tempo Risparmiato**: calcolato da TM entries + traduzioni
+- **Entry TM**: conteggio reale unità nelle Translation Memory
+
+---
+
+## 🔐 FASE 8: SICUREZZA — RECOVERY KEY
+
+### Passo 8.1: Recovery Key alla Creazione Profilo
+
+1. **Generazione Automatica**
+   - Alla creazione del profilo, viene generata una Recovery Key
+   - 12 parole mnemoniche (es. "albero corvo stella...")
+
+2. **Salva la Recovery Key**
+   - Copia negli appunti o scarica come file .txt
+   - **IMPORTANTE**: Salva in un posto sicuro!
+
+### Passo 8.2: Recupero Password
+
+1. **Se Dimentichi la Password**
+   - Schermata login → **"Password dimenticata?"**
+   - Inserisci le 12 parole della Recovery Key
+   - Imposta una nuova password
+
+---
+
 ## 🚨 RISOLUZIONE PROBLEMI COMUNI
 
 ### Problema: "Gioco Non Trovato"
 
-```
-❌ Sintomo: GameStringer non trova il gioco installato
-🔧 Soluzioni:
-   1. Verifica che il gioco sia installato
-   2. Controlla che Steam/Epic sia aperto
-   3. Aggiorna la libreria giochi
-   4. Riavvia GameStringer
-   5. Controlla che il gioco sia nel percorso standard
-```
+- Verifica che il gioco sia installato
+- Controlla che Steam/Epic sia aperto
+- Aggiorna la libreria giochi
+- Riavvia GameStringer
 
 ### Problema: "Traduzione Non Applicata"
 
-```
-❌ Sintomo: Il gioco è ancora in inglese dopo la traduzione
-🔧 Soluzioni:
-   1. Riavvia il gioco completamente
-   2. Verifica che i file non siano protetti da scrittura
-   3. Esegui GameStringer come amministratore
-   4. Controlla che l'antivirus non blocchi le modifiche
-   5. Verifica che il gioco non abbia verificazione integrità attiva
-```
+- Riavvia il gioco completamente
+- Verifica che i file non siano protetti da scrittura
+- Esegui GameStringer come amministratore
+- Controlla che l'antivirus non blocchi le modifiche
 
 ### Problema: "AI Non Risponde"
 
-```
-❌ Sintomo: La traduzione automatica non funziona
-🔧 Soluzioni:
-   1. Verifica connessione internet
-   2. Controlla crediti API (se applicabile)
-   3. Prova un motore AI diverso
-   4. Riduci il numero di stringhe per batch
-   5. Riprova più tardi (limiti rate API)
-```
+- Verifica connessione internet
+- Controlla crediti API (se applicabile)
+- Prova un motore AI diverso
+- Riprova più tardi (limiti rate API)
 
 ### Problema: "Gioco Crashato"
 
-```
-❌ Sintomo: Il gioco si blocca dopo la traduzione
-🔧 Soluzioni:
-   1. Ripristina backup originale
-   2. Verifica integrità file del gioco
-   3. Riapplica traduzione con impostazioni conservative
-   4. Escludi file problematici dalla traduzione
-   5. Contatta supporto con dettagli specifici
-```
+- Ripristina backup originale
+- Verifica integrità file del gioco su Steam
+- Riapplica traduzione con impostazioni conservative
+- Contatta supporto con dettagli specifici
 
 ---
 

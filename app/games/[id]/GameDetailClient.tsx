@@ -723,6 +723,19 @@ export default function GameDetailPage() {
         const cacheId = game.appid ? String(game.appid) : (game.id || game.title);
         await invoke('save_cover_cache', { gameId: cacheId, imageUrl: result });
         console.log('[GameDetail] Cover salvata in cache:', cacheId);
+      } else if (game.appid && game.appid > 0) {
+        // Fallback: scraping pagina Steam Store per og:image
+        try {
+          const storeImage = await invoke<string | null>('fetch_steam_store_image', { appId: game.appid });
+          if (storeImage) {
+            setFallbackImage(storeImage);
+            console.log('[GameDetail] Steam Store scraping fallback:', storeImage);
+            const cacheId = String(game.appid);
+            await invoke('save_cover_cache', { gameId: cacheId, imageUrl: storeImage });
+          }
+        } catch (e2) {
+          console.warn('[GameDetail] Steam Store scraping failed:', e2);
+        }
       }
     } catch (e) {
       console.warn('[GameDetail] SteamGridDB fallback failed:', e);

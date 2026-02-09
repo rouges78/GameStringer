@@ -34,7 +34,7 @@ export const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
 
   // Animazione e annunci screen reader quando arrivano nuove notifiche o update
   useEffect(() => {
-    if (animate && (unreadCount > prevCount && unreadCount > 0) || hasUpdate) {
+    if ((animate && unreadCount > prevCount && unreadCount > 0) || hasUpdate) {
       setIsAnimating(true);
       
       // Annuncia le nuove notifiche agli screen reader

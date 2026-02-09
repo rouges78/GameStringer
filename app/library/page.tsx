@@ -119,7 +119,8 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
         await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: result });
         console.log(`[Library] ✅ SteamGridDB cover found for ${game.title}`);
       } else {
-        // Fallback: usa Steam API appdetails per ottenere header_image
+        // Fallback 1: usa Steam API appdetails per ottenere header_image
+        let found = false;
         try {
           const steamAppId = parseInt(game.app_id.replace('steam_', '')) || 0;
           if (steamAppId > 0) {
@@ -128,10 +129,27 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
               setSteamGridDbImage(details.header_image);
               await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: details.header_image });
               console.log(`[Library] ✅ Steam API header fallback for ${game.title}: ${details.header_image}`);
+              found = true;
             }
           }
         } catch (e2) {
           console.warn(`[Library] Steam API fallback failed for ${game.title}:`, e2);
+        }
+        // Fallback 2: scraping pagina Steam Store per og:image
+        if (!found) {
+          try {
+            const steamAppId = parseInt(game.app_id.replace('steam_', '')) || 0;
+            if (steamAppId > 0) {
+              const storeImage = await invoke<string | null>('fetch_steam_store_image', { appId: steamAppId });
+              if (storeImage) {
+                setSteamGridDbImage(storeImage);
+                await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: storeImage });
+                console.log(`[Library] ✅ Steam Store scraping fallback for ${game.title}: ${storeImage}`);
+              }
+            }
+          } catch (e3) {
+            console.warn(`[Library] Steam Store scraping failed for ${game.title}:`, e3);
+          }
         }
       }
     } catch (e) {
@@ -142,7 +160,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
   }, [game.app_id, game.title, triedSteamGridDb]);
 
   // La cache ha priorità perché contiene la cover scelta dall'utente
-  const imageUrl = cachedImage || game.header_image || steamGridDbImage;
+  const imageUrl = cachedImage || steamGridDbImage || game.header_image;
 
   // Auto-fetch da SteamGridDB se non c'è immagine
   React.useEffect(() => {

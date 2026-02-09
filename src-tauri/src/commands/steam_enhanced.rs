@@ -1066,6 +1066,69 @@ pub async fn fetch_steam_game_details(app_id: u32) -> Result<Option<SteamGameDet
     Ok(None)
 }
 
+/// 🖼️ Scraping pagina Steam Store per ottenere immagine header
+/// Fallback per giochi dove l'API appdetails non restituisce dati
+#[tauri::command(rename_all = "camelCase")]
+pub async fn fetch_steam_store_image(app_id: u32) -> Result<Option<String>, String> {
+    info!("🖼️ Scraping Steam Store per immagine app_id: {}", app_id);
+    
+    let url = format!("https://store.steampowered.com/app/{}/", app_id);
+    
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+        .map_err(|e| format!("Errore client: {}", e))?;
+    
+    let response = client
+        .get(&url)
+        .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+        .header("Accept-Language", "en-US,en;q=0.9")
+        .send()
+        .await
+        .map_err(|e| format!("Errore HTTP: {}", e))?;
+    
+    if !response.status().is_success() {
+        info!("⚠️ Steam Store pagina non disponibile per app_id: {} ({})", app_id, response.status());
+        return Ok(None);
+    }
+    
+    let html = response.text().await.map_err(|e| format!("Errore lettura: {}", e))?;
+    
+    // Cerca og:image meta tag
+    if let Some(og_start) = html.find("property=\"og:image\"") {
+        // Cerca content="..." nel tag
+        let search_area = &html[og_start.saturating_sub(200)..std::cmp::min(og_start + 200, html.len())];
+        if let Some(content_pos) = search_area.find("content=\"") {
+            let url_start = content_pos + 9; // lunghezza di content="
+            if let Some(url_end) = search_area[url_start..].find('"') {
+                let image_url = &search_area[url_start..url_start + url_end];
+                if image_url.starts_with("http") {
+                    info!("✅ Steam Store og:image trovata per {}: {}", app_id, image_url);
+                    return Ok(Some(image_url.to_string()));
+                }
+            }
+        }
+    }
+    
+    // Fallback: cerca game_header_image_full nella pagina
+    if let Some(pos) = html.find("game_header_image_full") {
+        let search_area = &html[pos..std::cmp::min(pos + 500, html.len())];
+        if let Some(src_pos) = search_area.find("src=\"") {
+            let url_start = src_pos + 5;
+            if let Some(url_end) = search_area[url_start..].find('"') {
+                let image_url = &search_area[url_start..url_start + url_end];
+                if image_url.starts_with("http") {
+                    info!("✅ Steam Store header_image trovata per {}: {}", app_id, image_url);
+                    return Ok(Some(image_url.to_string()));
+                }
+            }
+        }
+    }
+    
+    info!("⚠️ Nessuna immagine trovata nella pagina Steam Store per app_id: {}", app_id);
+    Ok(None)
+}
+
 /// 📁 Ottieni il percorso di installazione di Steam
 #[tauri::command]
 pub fn get_steam_install_path() -> Result<String, String> {

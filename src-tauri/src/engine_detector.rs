@@ -41,6 +41,14 @@ pub enum GameEngine {
     Electron,
     NWjs,
     SpikeChunsoft,
+    RAGE,
+    MTFramework,
+    Glacier,
+    FromSoft,
+    Techland,
+    Luminous,
+    Void,
+    Platinum,
     Unknown,
 }
 
@@ -85,6 +93,14 @@ impl GameEngine {
             GameEngine::Electron => "Electron",
             GameEngine::NWjs => "NW.js",
             GameEngine::SpikeChunsoft => "Spike Chunsoft Engine",
+            GameEngine::RAGE => "RAGE Engine",
+            GameEngine::MTFramework => "MT Framework",
+            GameEngine::Glacier => "Glacier Engine",
+            GameEngine::FromSoft => "FromSoftware Engine",
+            GameEngine::Techland => "C-Engine (Techland)",
+            GameEngine::Luminous => "Luminous Engine",
+            GameEngine::Void => "Void Engine",
+            GameEngine::Platinum => "Platinum Engine",
             GameEngine::Unknown => "Unknown",
         }
     }
@@ -219,6 +235,57 @@ pub fn detect_engine(game_path: &Path) -> GameEngine {
     if is_defold(game_path) {
         return GameEngine::Defold;
     }
+    
+    // 25. Frostbite (EA)
+    if is_frostbite(game_path) {
+        return GameEngine::Frostbite;
+    }
+    
+    // 26. Source 2 (Valve)
+    if is_source2(game_path) {
+        return GameEngine::Source2;
+    }
+    
+    // 27. RE Engine (Capcom nuovo)
+    if is_reengine(game_path) {
+        return GameEngine::REEngine;
+    }
+    
+    // 28. MT Framework (Capcom vecchio)
+    if is_mt_framework(game_path) {
+        return GameEngine::MTFramework;
+    }
+    
+    // 29. RAGE (Rockstar)
+    if is_rage(game_path) {
+        return GameEngine::RAGE;
+    }
+    
+    // 30. IW Engine (Call of Duty)
+    if is_iwengine(game_path) {
+        return GameEngine::IWEngine;
+    }
+    
+    // 31. Glacier (IO Interactive)
+    if is_glacier(game_path) {
+        return GameEngine::Glacier;
+    }
+    
+    // 32. Void Engine (Arkane)
+    if is_void_engine(game_path) {
+        return GameEngine::Void;
+    }
+    
+    // 33. C-Engine (Techland)
+    if is_techland(game_path) {
+        return GameEngine::Techland;
+    }
+    
+    // 34. FALLBACK: scansiona binari .exe per stringhe engine
+    let exe_scan = scan_exe_for_engine(game_path);
+    if exe_scan != GameEngine::Unknown {
+        return exe_scan;
+    }
 
     GameEngine::Unknown
 }
@@ -253,93 +320,97 @@ fn is_unity(path: &Path) -> bool {
 }
 
 fn is_unreal(path: &Path) -> bool {
-    // Check for Engine folder
+    // 1. Engine folder (dev builds / some packaged games)
     if path.join("Engine").exists() && path.join("Engine/Binaries").exists() {
         return true;
     }
-    
-    // Check for .pak files directly in root (common in packaged UE games)
-    if let Ok(entries) = std::fs::read_dir(path) {
-        for entry in entries.flatten() {
-            if let Some(ext) = entry.path().extension() {
-                if ext == "pak" {
-                    return true;
-                }
-            }
-        }
-    }
-    
-    // Check for GameName/Binaries/Win64 or Content/Paks
-    if let Ok(entries) = std::fs::read_dir(path) {
-        for entry in entries.flatten() {
-            if let Ok(file_type) = entry.file_type() {
-                if file_type.is_dir() {
-                    let entry_path = entry.path();
-                    let name = entry.file_name().to_string_lossy().to_lowercase();
-                    
-                    // Avoid Engine folder here, we are looking for Project folder
-                    if name != "engine" {
-                        // Standard UE structure
-                        if entry_path.join("Binaries/Win64").exists() 
-                            || entry_path.join("Content/Paks").exists()
-                            || entry_path.join("Content").exists() {
-                            return true;
-                        }
-                        
-                        // Check for .pak files in subdirectories
-                        if let Ok(sub_entries) = std::fs::read_dir(&entry_path) {
-                            for sub in sub_entries.flatten() {
-                                if let Some(ext) = sub.path().extension() {
-                                    if ext == "pak" {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    // Check for common Unreal descriptor files (.uproject)
-    if let Ok(entries) = std::fs::read_dir(path) {
-        for entry in entries.flatten() {
-            if let Some(ext) = entry.path().extension() {
-                if ext == "uproject" {
-                    return true;
-                }
-            }
-        }
-    }
-    
-    // Check for UE4/UE5 specific DLLs
+
+    // 2. UE-specific DLLs (very reliable)
     let ue_dlls = [
         "UE4Game.dll", "UE4Game-Win64-Shipping.dll",
         "UE5Game.dll", "UnrealEditor.dll",
-        "PhysX3_x64.dll", "PhysX3Common_x64.dll",  // PhysX (common in UE4)
-        "nvToolsExt64_1.dll",  // NVIDIA tools (UE4)
+        "UE4PrereqSetup_x64.exe",
+        "tbb.dll",  // Intel TBB often shipped with UE
     ];
-    for dll in ue_dlls {
+    for dll in &ue_dlls {
         if path.join(dll).exists() {
             return true;
         }
     }
-    
-    // Deep scan: check for -WindowsNoEditor or similar UE packaging patterns
+
+    // 3. .uproject file
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
-            let name = entry.file_name().to_string_lossy().to_string();
-            if name.contains("WindowsNoEditor") 
-                || name.contains("Windows")
-                || name.ends_with("Game") {
-                let sub_path = entry.path();
-                if sub_path.is_dir() {
-                    // Check for Content folder inside
-                    if sub_path.join("Content").exists() {
+            if entry.path().extension().map_or(false, |e| e == "uproject") {
+                return true;
+            }
+        }
+    }
+
+    // 4. Standard UE packaging: SubDir/Binaries/Win64 or SubDir/Content/Paks
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if entry.file_type().map_or(false, |ft| ft.is_dir()) {
+                let p = entry.path();
+                let name = entry.file_name().to_string_lossy().to_lowercase();
+                if name != "engine" {
+                    if p.join("Binaries/Win64").exists() || p.join("Content/Paks").exists() {
                         return true;
                     }
                 }
+            }
+        }
+    }
+
+    // 5. WindowsNoEditor pattern (common UE4 packaging)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.contains("WindowsNoEditor") || name.contains("WindowsServer") {
+                return true;
+            }
+        }
+    }
+
+    // 6. .pak files with UE naming convention (pakchunkN-*, *-Windows*.pak)
+    //    Plain .pak alone is NOT enough — many engines use .pak (id Tech, Quake, etc.)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        let mut has_ue_named_pak = false;
+        let mut has_any_pak = false;
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "pak" {
+                    has_any_pak = true;
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
+                    if name.starts_with("pakchunk") 
+                        || name.contains("-windows")
+                        || name.contains("_windows")
+                        || name.contains("global.pak")
+                        || name.contains("startup") {
+                        has_ue_named_pak = true;
+                    }
+                }
+            }
+        }
+        if has_ue_named_pak {
+            return true;
+        }
+        // .pak + UE companion evidence (PhysX, NVIDIA tools)
+        if has_any_pak {
+            let ue_evidence = [
+                "PhysX3_x64.dll", "PhysX3Common_x64.dll",
+                "nvToolsExt64_1.dll", "steam_api64.dll",
+            ];
+            let companion_count = ue_evidence.iter()
+                .filter(|f| path.join(f).exists())
+                .count();
+            // Need PhysX specifically (steam_api alone is too generic)
+            if path.join("PhysX3_x64.dll").exists() || path.join("PhysX3Common_x64.dll").exists() {
+                return true;
+            }
+            // .pak + Binaries folder at root level
+            if path.join("Binaries").exists() || companion_count >= 2 {
+                return true;
             }
         }
     }
@@ -952,152 +1023,209 @@ pub fn detect_engine_smart(name: &str, path: Option<&Path>) -> String {
 pub fn detect_engine_by_name(name: &str) -> Option<String> {
     let name_lower = name.to_lowercase();
     
-    // 🔶 UNITY ENGINE (1000+ giochi)
+    // 🔶 UNITY ENGINE — Confermati Unity
     let unity_games = [
         // Indie famosi
         "hollow knight", "cuphead", "ori and", "cities skylines", "kerbal space program",
         "subnautica", "the forest", "green hell", "rust", "7 days to die",
-        "valheim", "raft", "slime rancher", "a hat in time", "shovel knight",
-        "katana zero", "hotline miami", "nuclear throne", "risk of rain",
-        "dead cells", "enter the gungeon", "spelunky", "celeste", "super meat boy",
-        "the binding of isaac", "fez", "braid", "limbo", "inside", "little nightmares",
-        "ori and the blind forest", "ori and the will", "steamworld", "papers please",
-        "firewatch", "the witness", "what remains of edith finch", "stanley parable",
-        "untitled goose game", "among us", "fall guys", "phasmophobia", "devour",
+        "valheim", "raft", "slime rancher", "a hat in time", "risk of rain",
+        "dead cells", "enter the gungeon", "the binding of isaac", "fez", "limbo",
+        "inside", "little nightmares", "ori and the blind forest", "ori and the will",
+        "firewatch", "what remains of edith finch", "untitled goose game",
+        "among us", "fall guys", "phasmophobia", "devour",
         // Horror Unity
         "lethal company", "content warning", "forewarned", "ghost watchers", "demonologist",
         "the backrooms", "poppy playtime", "bendy and the ink", "hello neighbor", "fnaf",
-        "five nights at freddy", "amnesia", "soma", "penumbra", "frictional",
+        "five nights at freddy", "amnesia", "soma", "penumbra",
         // Survival/Crafting Unity
-        "don't starve", "oxygen not included", "rimworld", "prison architect", "factorio",
-        "satisfactory", "astroneer", "grounded", "stranded deep", "the long dark",
-        "project zomboid", "cataclysm", "unturned", "scrap mechanic", "trailmakers",
+        "don't starve", "oxygen not included", "rimworld", "prison architect",
+        "astroneer", "grounded", "stranded deep", "the long dark",
+        "project zomboid", "unturned", "scrap mechanic", "trailmakers",
         // Roguelike/Action Unity
-        "hades", "slay the spire", "monster train", "cult of the lamb", "vampire survivors",
-        "brotato", "20 minutes till dawn", "gunfire reborn", "roboquest", "synthetik",
+        "slay the spire", "monster train", "cult of the lamb", "vampire survivors",
+        "20 minutes till dawn", "gunfire reborn", "roboquest", "synthetik",
         // AAA con Unity
-        "hearthstone", "legends of runeterra", "gwent", "monument valley", "alto's",
-        "tarkov", "escape from tarkov", "battlestate", "marauders", "the cycle",
+        "hearthstone", "legends of runeterra", "gwent", "monument valley",
+        "tarkov", "escape from tarkov", "marauders", "the cycle",
         // VR Unity
         "beat saber", "job simulator", "vacation simulator", "superhot vr", "pistol whip",
         "moss", "arizona sunshine", "pavlov vr", "onward", "gorilla tag",
         "vrchat", "rec room", "bigscreen", "demeo", "walkabout mini golf",
         // Simulatori Unity
         "cities skylines 2", "planet zoo", "planet coaster", "two point hospital",
-        "two point campus", "parkitect", "megaquarium", "softwareincdev",
+        "two point campus", "parkitect", "megaquarium",
         // Mobile/Multiplat
-        "pokémon go", "mario kart tour", "call of duty mobile", "pubg mobile", "genshin impact",
-        // Indie narrativi/esplorativi Unity
-        "in other waters", "return of the obra dinn", "outer wilds", "the pathless", "abzu",
-        "journey", "flower", "sky children of the light", "gris", "spiritfarer",
-        "coffee talk", "a short hike", "unpacking", "toem", "alba wildlife",
-        "eastshade", "the gardens between", "when the past was around", "before your eyes",
-        "twelve minutes", "the artful escape", "genesis noir", "last stop", "road 96",
-        "lake", "sable", "stray", "tunic", "cult of the lamb", "sifu",
+        "pokémon go", "genshin impact", "call of duty mobile",
+        // Indie narrativi Unity
+        "return of the obra dinn", "outer wilds", "the pathless", "abzu",
+        "gris", "spiritfarer", "coffee talk", "a short hike", "unpacking", "toem",
+        "the gardens between", "before your eyes", "twelve minutes", "the artful escape",
+        "genesis noir", "last stop", "road 96", "lake", "tunic",
         // Puzzle/Strategy Unity
-        "baba is you", "return to monkey island", "the case of the golden idol",
+        "return to monkey island", "the case of the golden idol",
         "inscryption", "buckshot roulette", "balatro", "luck be a landlord",
-        "stacklands", "dome keeper", "20 minutes till dawn", "halls of torment"
+        "stacklands", "halls of torment", "against the storm",
+        "dredge", "terra nil", "dave the diver", "plate up", "turbo overkill",
+        "ultrakill", "prodeus", "trepang2", "ghostrunner"
     ];
     
-    // 🔷 UNREAL ENGINE (500+ giochi)
+    // 🔷 UNREAL ENGINE — Confermati UE4/UE5
     let unreal_games = [
         // Epic/AAA
-        "fortnite", "borderlands", "bioshock", "mass effect", "gears of war",
+        "fortnite", "borderlands", "bioshock", "gears of war",
         "rocket league", "dead by daylight", "ark survival", "pubg", "squad",
         "hell let loose", "post scriptum", "rising storm", "red orchestra",
-        "killing floor", "tripwire", "deep rock galactic", "sea of thieves",
+        "killing floor", "deep rock galactic", "sea of thieves",
         "state of decay", "scorn", "the ascent", "outriders", "remnant",
         "atomic heart", "hogwarts legacy", "jedi survivor", "jedi fallen order",
         "black myth wukong", "lies of p", "lords of the fallen", "mortal shell",
+        "satisfactory", "stray", "sifu", "little nightmares 2",
         // VR Games Unreal
-        "a wake inn", "half-life: alyx", "boneworks", "bonelab", "blade & sorcery",
-        "into the radius", "vertigo", "asgard's wrath", "stormland", "lone echo",
+        "boneworks", "bonelab", "blade & sorcery",
+        "into the radius", "asgard's wrath", "lone echo",
         "medal of honor: above and beyond", "sniper elite vr", "walking dead saints",
-        "after the fall", "green hell vr", "kayak vr", "red matter", "hubris",
-        "ghostbusters vr", "jurassic world aftermath", "wraith the oblivion",
+        "after the fall", "green hell vr", "red matter", "hubris",
         // Horror Unreal
-        "outlast", "outlast 2", "outlast trials", "alien isolation", "the callisto protocol",
-        "dead space", "dead space remake", "silent hill", "evil dead the game",
-        "dying light 2", "dead island 2", "sons of the forest", "the forest 2",
-        // Fighting games
-        "mortal kombat", "injustice", "street fighter", "tekken", "dragon ball",
-        "guilty gear", "blazblue", "granblue fantasy", "under night",
-        // Battle Royale/Shooter
-        "valorant", "overwatch", "paladins", "rogue company", "the finals",
-        "spellbreak", "darwin project", "realm royale", "hyperscape", "xdefiant",
-        // Soulslike/Action Unreal
-        "elden ring", "armored core", "sekiro", "dark souls", "bloodborne",
-        "nioh", "wo long", "steelrising", "thymesia", "dolmen",
-        // RPG/Adventure UE4
-        "kingdom hearts", "final fantasy vii remake", "final fantasy xvi", "ff7",
-        "nier automata", "nier replicant", "scarlet nexus", "tales of arise",
-        "code vein", "god eater", "dragon quest", "octopath traveler",
+        "outlast", "outlast 2", "outlast trials", "the callisto protocol",
+        "sons of the forest", "dead island 2",
+        // Fighting games (UE)
+        "mortal kombat", "injustice", "tekken", "dragon ball fighterz",
+        "guilty gear strive", "granblue fantasy versus",
+        // Shooter UE
+        "valorant", "paladins", "rogue company", "the finals",
+        "xdefiant", "ready or not", "ground branch", "zero hour",
+        // Soulslike/Action UE
+        "steelrising", "thymesia", "dolmen",
+        // RPG/Adventure UE
+        "kingdom hearts 3", "final fantasy vii remake", "final fantasy vii rebirth",
+        "scarlet nexus", "tales of arise", "code vein", "god eater 3",
+        "dragon quest xi", "octopath traveler", "palworld",
         // Racing/Sports
-        "forza", "dirt 5", "grid legends", "hot wheels unleashed",
+        "hot wheels unleashed",
         // Indie Horror UE
-        "emotionless", "the last ticket", "visage", "madison", "infliction",
-        "devotion", "detention", "home sweet home", "pamali", "dreadout"
+        "visage", "madison", "infliction", "devotion", "detention",
+        "home sweet home", "pamali", "dreadout"
+    ];
+    
+    // ⚔️ FROMSOFT ENGINE (FromSoftware proprietario)
+    let fromsoft_games = [
+        "elden ring", "dark souls", "dark souls ii", "dark souls iii",
+        "sekiro", "bloodborne", "armored core vi", "armored core 6",
+        "demon's souls"
+    ];
+    
+    // 🗡️ PLATINUM ENGINE (PlatinumGames)
+    let platinum_games = [
+        "nier automata", "nier replicant", "bayonetta", "bayonetta 2", "bayonetta 3",
+        "metal gear rising", "astral chain", "the wonderful 101",
+        "vanquish", "mad world"
+    ];
+    
+    // 🏎️ RAGE ENGINE (Rockstar)
+    let rage_games = [
+        "grand theft auto", "gta v", "gta iv", "red dead redemption",
+        "max payne 3", "midnight club", "bully"
+    ];
+    
+    // 🎯 IW ENGINE (Call of Duty)
+    let iw_games = [
+        "call of duty", "warzone", "modern warfare", "black ops", "vanguard"
+    ];
+    
+    // 🏔️ GLACIER ENGINE (IO Interactive)
+    let glacier_games = [
+        "hitman", "hitman 2", "hitman 3", "world of assassination",
+        "kane & lynch", "freedom fighters"
+    ];
+    
+    // 🧟 TECHLAND / C-ENGINE
+    let techland_games = [
+        "dying light", "dying light 2", "dead island", "call of juarez"
+    ];
+    
+    // 💎 LUMINOUS ENGINE (Square Enix)
+    let luminous_games = [
+        "final fantasy xv", "final fantasy 15", "forspoken"
+    ];
+    
+    // 🌀 VOID ENGINE (Arkane)
+    let void_games = [
+        "dishonored 2", "dishonored death of the outsider", "deathloop"
     ];
     
     // 🟠 SOURCE ENGINE (Valve + licensees)
     let source_games = [
-        "half-life", "counter-strike", "portal", "team fortress", "left 4 dead",
-        "dota 2", "black mesa", "garry's mod", "titanfall", "apex legends",
+        "half-life 2", "counter-strike source", "counter-strike global",
+        "portal", "portal 2", "team fortress 2", "left 4 dead",
+        "black mesa", "garry's mod", "titanfall", "apex legends",
         "the stanley parable", "dear esther", "insurgency", "day of defeat",
-        "vampire the masquerade bloodlines", "zeno clash", "postal"
+        "vampire the masquerade bloodlines"
+    ];
+    
+    // 🟠 SOURCE 2
+    let source2_games = [
+        "half-life: alyx", "dota 2", "counter-strike 2", "deadlock"
     ];
     
     // 🟫 CREATION ENGINE (Bethesda)
     let creation_games = [
-        "fallout", "elder scrolls", "skyrim", "oblivion", "morrowind", "starfield"
+        "fallout 4", "fallout 76", "skyrim", "starfield"
     ];
+    
+    // 🟫 GAMEBRYO (old Bethesda)
+    let gamebryo_games = ["fallout 3", "fallout new vegas", "oblivion", "morrowind"];
     
     // 🔴 CRYENGINE
     let cryengine_games = [
-        "far cry", "crysis", "hunt showdown", "kingdom come deliverance",
-        "star citizen", "squadron 42", "robinson the journey", "the climb",
-        "ryse son of rome", "warface", "archeage", "aion"
+        "crysis", "hunt showdown", "kingdom come deliverance",
+        "star citizen", "squadron 42", "ryse son of rome", "warface", "archeage"
     ];
     
     // 🟢 FROSTBITE (EA)
     let frostbite_games = [
-        "battlefield", "mirror's edge", "need for speed", "fifa", "madden nfl",
-        "star wars battlefront", "anthem", "mass effect andromeda", "dragon age inquisition"
+        "battlefield", "mirror's edge", "need for speed", "fifa", "ea sports fc",
+        "madden nfl", "star wars battlefront", "anthem",
+        "mass effect andromeda", "mass effect legendary",
+        "dragon age inquisition", "dragon age veilguard",
+        "dead space remake", "dead space 2023"
     ];
     
     // 🔵 PROPRIETARY ENGINES
-    let rage_games = ["grand theft auto", "red dead redemption", "max payne", "midnight club"];
-    let anvil_games = ["assassin's creed", "watch dogs", "for honor", "skull and bones"];
-    let dunia_games = ["far cry 2", "far cry 3", "far cry 4", "far cry primal"];
-    let chrome_games = ["metro", "4a games"];
+    let anvil_games = ["assassin's creed", "watch dogs", "for honor", "prince of persia"];
+    let dunia_games = ["far cry 3", "far cry 4", "far cry 5", "far cry 6", "far cry primal"];
+    let chrome_games = ["metro exodus", "metro last light", "metro 2033"];
     let aurora_games = ["neverwinter nights", "dragon age origins", "mass effect 1"];
-    let gamebryo_games = ["fallout 3", "fallout new vegas", "oblivion", "morrowind"];
-    let id_tech_games = ["doom", "quake", "wolfenstein", "rage", "evil within"];
-    let decima_games = ["horizon zero dawn", "death stranding"];
-    let fox_games = ["metal gear solid v", "pro evolution soccer"];
-    let snowdrop_games = ["the division", "mario + rabbids", "skull and bones"];
-    let rei_games = ["resident evil", "devil may cry", "monster hunter", "street fighter"];
-    let mt_framework_games = ["resident evil 4", "resident evil 5", "resident evil 6", "lost planet"];
+    let id_tech_games = ["doom", "quake", "wolfenstein", "rage 2", "evil within"];
+    let decima_games = ["horizon zero dawn", "horizon forbidden west", "death stranding"];
+    let fox_games = ["metal gear solid v", "pro evolution soccer", "pes 20"];
+    let snowdrop_games = ["the division", "mario + rabbids", "star wars outlaws"];
+    let re_engine_games = [
+        "resident evil village", "resident evil 4 remake", "resident evil 2 remake",
+        "resident evil 3 remake", "devil may cry 5", "monster hunter rise",
+        "monster hunter wilds", "street fighter 6"
+    ];
+    let mt_framework_games = [
+        "resident evil 5", "resident evil 6", "dragon's dogma",
+        "lost planet", "devil may cry 4", "monster hunter world"
+    ];
     
     // 🎲 INDIE ENGINES
     let godot_games = [
-        "sonic colors ultimate", "the interactive adventures of dog mendonça",
-        "cassette beasts", "cruelty squad", "dome keeper", "brotato", "david lynch"
+        "cassette beasts", "cruelty squad", "dome keeper", "brotato",
+        "sonic colors ultimate", "halls of torment"
     ];
     let gamemaker_games = [
-        "undertale", "deltarune", "hyper light drifter", "hotline miami", "spelunky",
-        "nuclear throne", "decarnation", "katana zero", "shovel knight", "downwell",
-        "minit", "forager", "moonlighter", "eastward", "chicory", "heartbound",
-        "everhood", "omori", "oneshot", "lisa the painful", "yume nikki",
-        "ib", "ao oni", "corpse party", "mad father", "witch's house"
+        "undertale", "deltarune", "hyper light drifter", "hotline miami",
+        "nuclear throne", "decarnation", "katana zero", "downwell",
+        "minit", "forager", "moonlighter", "chicory", "heartbound",
+        "everhood", "spelunky", "risk of rain classic"
     ];
     
     // 🎮 RPG MAKER
     let rpgmaker_games = [
         "to the moon", "finding paradise", "rakuen", "oneshot", "ib",
         "corpse party", "mad father", "witch's house", "misao", "yume nikki",
-        "lisa", "off", "space funeral", "jimmy and the pulsating mass",
+        "lisa the painful", "off", "space funeral", "jimmy and the pulsating mass",
         "omori", "hello charlotte", "mogeko castle", "the gray garden"
     ];
     
@@ -1105,15 +1233,52 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
     let renpy_games = [
         "doki doki literature club", "ddlc", "katawa shoujo", "long live the queen",
         "butterfly soup", "a summer's end", "highway blossoms", "ladykiller in a bind",
-        "analogue a hate story", "hate plus", "va-11 hall-a", "coffee talk"
+        "analogue a hate story", "hate plus", "va-11 hall-a"
     ];
     
-    // Controllo specifico per nome (ordinato per priorità)
+    // 🎮 MONOGAME / XNA / FNA
+    let monogame_games = [
+        "celeste", "stardew valley", "terraria", "fez", "bastion",
+        "transistor", "hades", "pyre", "super meat boy"
+    ];
+    
+    // Controllo specifico per nome (ordinato: proprietari prima, generici dopo)
+    // — Proprietari specifici (match esatto su serie)
+    if fromsoft_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("FromSoftware Engine".to_string());
+    }
+    if platinum_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("Platinum Engine".to_string());
+    }
     if rage_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("RAGE Engine".to_string());
     }
+    if iw_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("IW Engine".to_string());
+    }
+    if glacier_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("Glacier Engine".to_string());
+    }
+    if techland_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("C-Engine (Techland)".to_string());
+    }
+    if luminous_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("Luminous Engine".to_string());
+    }
+    if void_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("Void Engine".to_string());
+    }
+    if re_engine_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("RE Engine".to_string());
+    }
+    if mt_framework_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("MT Framework".to_string());
+    }
     if anvil_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("Anvil Engine".to_string());
+    }
+    if dunia_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("Dunia Engine".to_string());
     }
     if frostbite_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("Frostbite".to_string());
@@ -1122,19 +1287,13 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
         return Some("CryEngine".to_string());
     }
     if decima_games.iter().any(|&game| name_lower.contains(game)) {
-        return Some("Decima Engine".to_string());
+        return Some("Decima".to_string());
     }
     if fox_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("FOX Engine".to_string());
     }
     if snowdrop_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("Snowdrop".to_string());
-    }
-    if rei_games.iter().any(|&game| name_lower.contains(game)) {
-        return Some("RE Engine".to_string());
-    }
-    if mt_framework_games.iter().any(|&game| name_lower.contains(game)) {
-        return Some("MT Framework".to_string());
     }
     if chrome_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("4A Engine".to_string());
@@ -1148,8 +1307,12 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
     if aurora_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("Aurora Engine".to_string());
     }
-    if dunia_games.iter().any(|&game| name_lower.contains(game)) {
-        return Some("Dunia Engine".to_string());
+    if source2_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("Source 2".to_string());
+    }
+    // — Engine generici (ordine: Unity, Unreal, Source, Creation, indie)
+    if monogame_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("MonoGame/FNA".to_string());
     }
     if unity_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("Unity".to_string());
@@ -1176,32 +1339,21 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
         return Some("Ren'Py".to_string());
     }
     
-    // Rilevamento generico basato su pattern nel nome
-    if name_lower.contains("unity") {
-        return Some("Unity".to_string());
-    }
-    if name_lower.contains("unreal") {
-        return Some("Unreal Engine".to_string());
-    }
-    if name_lower.contains("source") {
-        return Some("Source Engine".to_string());
-    }
-    if name_lower.contains("cryengine") || name_lower.contains("cry engine") {
-        return Some("CryEngine".to_string());
-    }
-    if name_lower.contains("frostbite") {
-        return Some("Frostbite".to_string());
-    }
-    
-    // Pattern addizionali per giochi comuni
-    if name_lower.contains("fifa") || name_lower.contains("madden") || name_lower.contains("battlefield") {
-        return Some("Frostbite".to_string());
-    }
+    // Rilevamento generico basato su keyword nel nome
     if name_lower.contains("call of duty") || name_lower.contains("warzone") {
         return Some("IW Engine".to_string());
     }
+    if name_lower.contains("fifa") || name_lower.contains("madden") || name_lower.contains("battlefield") {
+        return Some("Frostbite".to_string());
+    }
     if name_lower.contains("minecraft") {
-        return Some("Java/C++".to_string());
+        return Some("Java/Bedrock".to_string());
+    }
+    if name_lower.contains("overwatch") {
+        return Some("Proprietary (Blizzard)".to_string());
+    }
+    if name_lower.contains("league of legends") || name_lower.contains("valorant") {
+        return Some("Unreal Engine".to_string());
     }
     
     None
@@ -1242,4 +1394,328 @@ fn is_spike_chunsoft(path: &Path) -> bool {
     }
     
     false
+}
+
+fn is_frostbite(path: &Path) -> bool {
+    // Frostbite (EA): .cas/.cat/.sb/.toc files, Data/Win32 structure
+    let fb_exts = ["cas", "cat", "sb", "toc"];
+    // Check Data/Win32 or Data folder
+    for data_dir in &["Data", "Data/Win32", "Data/Win64"] {
+        let dp = path.join(data_dir);
+        if dp.exists() {
+            if let Ok(entries) = std::fs::read_dir(&dp) {
+                for entry in entries.flatten() {
+                    if let Some(ext) = entry.path().extension() {
+                        let e = ext.to_str().unwrap_or("");
+                        if fb_exts.contains(&e) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // FrostyModManager support file
+    if path.join("ModData").exists() || path.join("FrostyModManager").exists() {
+        return true;
+    }
+    false
+}
+
+fn is_source2(path: &Path) -> bool {
+    // Source 2: game/ folder with vpk + bin/win64
+    let game_dir = path.join("game");
+    if game_dir.exists() {
+        if game_dir.join("bin/win64").exists() || game_dir.join("core").exists() {
+            return true;
+        }
+        // Check for pak01_dir.vpk inside game subdirs
+        if let Ok(entries) = std::fs::read_dir(&game_dir) {
+            for entry in entries.flatten() {
+                if entry.file_type().map_or(false, |ft| ft.is_dir()) {
+                    if entry.path().join("pak01_dir.vpk").exists() {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    // Check for .vpk + gameinfo.gi (Source 2 uses .gi instead of .txt)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if entry.path().extension().map_or(false, |e| e == "gi") {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn is_reengine(path: &Path) -> bool {
+    // RE Engine (Capcom): re_chunk_000.pak, natives/ folder, .pak.patch_* files
+    if path.join("natives").exists() {
+        // natives/stm or natives/x64 is RE Engine signature
+        let n = path.join("natives");
+        if n.join("stm").exists() || n.join("x64").exists() || n.join("STM").exists() {
+            return true;
+        }
+    }
+    // re_chunk_*.pak files
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+            if name.starts_with("re_chunk") && name.ends_with(".pak") {
+                return true;
+            }
+            if name.starts_with("re_dlc") && name.ends_with(".pak") {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn is_rage(path: &Path) -> bool {
+    // RAGE Engine (Rockstar): .rpf files, update/update.rpf, x64/ folder
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if entry.path().extension().map_or(false, |e| e == "rpf") {
+                return true;
+            }
+        }
+    }
+    // x64/ folder with rpf inside
+    if path.join("x64").exists() || path.join("update").exists() {
+        if let Ok(entries) = std::fs::read_dir(path.join("x64")) {
+            for entry in entries.flatten() {
+                if entry.path().extension().map_or(false, |e| e == "rpf") {
+                    return true;
+                }
+            }
+        }
+        if path.join("update/update.rpf").exists() {
+            return true;
+        }
+    }
+    false
+}
+
+#[allow(dead_code)]
+fn is_foxengine(path: &Path) -> bool {
+    // FOX Engine (Konami): .fpk/.fpkd files, master/ folder, chunk*.dat
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                let e = ext.to_str().unwrap_or("");
+                if e == "fpk" || e == "fpkd" {
+                    return true;
+                }
+            }
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+            if name.starts_with("chunk") && name.ends_with(".dat") {
+                return true;
+            }
+        }
+    }
+    if path.join("master").exists() || path.join("0").exists() {
+        // MGSV uses numbered folders + .fpk
+        return true;
+    }
+    false
+}
+
+fn is_iwengine(path: &Path) -> bool {
+    // IW Engine (Call of Duty): .ff files, zone/ folder, .iwd files
+    let zone = path.join("zone");
+    if zone.exists() {
+        if let Ok(entries) = std::fs::read_dir(&zone) {
+            for entry in entries.flatten() {
+                if entry.path().extension().map_or(false, |e| e == "ff") {
+                    return true;
+                }
+            }
+        }
+    }
+    // .ff or .iwd in root
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                let e = ext.to_str().unwrap_or("");
+                if e == "ff" || e == "iwd" {
+                    return true;
+                }
+            }
+        }
+    }
+    // main/ folder with iwd files (older CoD)
+    if path.join("main").exists() {
+        if let Ok(entries) = std::fs::read_dir(path.join("main")) {
+            for entry in entries.flatten() {
+                if entry.path().extension().map_or(false, |e| e == "iwd") {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+fn is_glacier(path: &Path) -> bool {
+    // Glacier Engine (IO Interactive / Hitman): .rpkg files, Runtime/ folder
+    if path.join("Runtime").exists() {
+        if let Ok(entries) = std::fs::read_dir(path.join("Runtime")) {
+            for entry in entries.flatten() {
+                if entry.path().extension().map_or(false, |e| e == "rpkg") {
+                    return true;
+                }
+            }
+        }
+    }
+    // .rpkg in root
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if entry.path().extension().map_or(false, |e| e == "rpkg") {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn is_mt_framework(path: &Path) -> bool {
+    // MT Framework (Capcom old): .arc files, nativePC/ or nativeWin64/ folder
+    if path.join("nativePC").exists() || path.join("nativeWin64").exists() || path.join("nativePCx64").exists() {
+        return true;
+    }
+    // .arc files (MT Framework archive format)
+    if let Ok(entries) = std::fs::read_dir(path) {
+        let mut arc_count = 0;
+        for entry in entries.flatten() {
+            if entry.path().extension().map_or(false, |e| e == "arc") {
+                arc_count += 1;
+                if arc_count >= 2 {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+fn is_void_engine(path: &Path) -> bool {
+    // Void Engine (Arkane): .index files, generatedresources/ folder, .resourceinterleaved
+    if path.join("generatedresources").exists() || path.join("base").join("generatedresources").exists() {
+        return true;
+    }
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                let e = ext.to_str().unwrap_or("");
+                if e == "index" || e == "resourceinterleaved" || e == "sharedassets" {
+                    let name = entry.file_name().to_string_lossy().to_lowercase();
+                    if name.contains("gameresources") || name.contains("generated") {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn is_techland(path: &Path) -> bool {
+    // C-Engine (Techland): .rpack files, Data0.pak - Data3.pak pattern, DW/ folder
+    if path.join("DW").exists() && path.join("engine").exists() {
+        return true;
+    }
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            if let Some(ext) = entry.path().extension() {
+                if ext == "rpack" {
+                    return true;
+                }
+            }
+            let name = entry.file_name().to_string_lossy().to_lowercase();
+            if name.starts_with("data") && name.ends_with(".pak") {
+                // Data0.pak, Data1.pak pattern — but verify it's Techland by checking DW/
+                if path.join("DW").exists() {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+/// Scansiona gli .exe nella root per stringhe engine embedded (fallback potente)
+fn scan_exe_for_engine(path: &Path) -> GameEngine {
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.extension().map_or(false, |e| e == "exe") {
+                if let Ok(data) = std::fs::read(&p) {
+                    // Scan solo primi 2MB per performance
+                    let scan_len = data.len().min(2 * 1024 * 1024);
+                    let slice = &data[..scan_len];
+                    
+                    // Cerca stringhe ASCII nel binario
+                    let haystack = String::from_utf8_lossy(slice);
+                    
+                    // Ordine di priorità (più specifico prima)
+                    if haystack.contains("UnityPlayer") || haystack.contains("unity_builtin_extra") {
+                        return GameEngine::Unity;
+                    }
+                    if haystack.contains("UnrealEngine") || haystack.contains("UE4Editor") || haystack.contains("Epic Games") {
+                        return GameEngine::Unreal;
+                    }
+                    if haystack.contains("Godot Engine") || haystack.contains("godot_") {
+                        return GameEngine::Godot;
+                    }
+                    if haystack.contains("CRYENGINE") || haystack.contains("CrySystem") {
+                        return GameEngine::CryEngine;
+                    }
+                    if haystack.contains("Frostbite") || haystack.contains("fb://") {
+                        return GameEngine::Frostbite;
+                    }
+                    if haystack.contains("REDengine") || haystack.contains("CDProjektRed") {
+                        return GameEngine::REDengine;
+                    }
+                    if haystack.contains("RE ENGINE") || haystack.contains("re_engine") {
+                        return GameEngine::REEngine;
+                    }
+                    if haystack.contains("FOX ENGINE") || haystack.contains("fox_engine") {
+                        return GameEngine::FOXEngine;
+                    }
+                    if haystack.contains("Glacier") && haystack.contains("IOInteractive") {
+                        return GameEngine::Glacier;
+                    }
+                    if haystack.contains("GameMaker") || haystack.contains("YoYoGames") {
+                        return GameEngine::GameMaker;
+                    }
+                    if haystack.contains("MonoGame") || haystack.contains("Microsoft.Xna") {
+                        return GameEngine::MonoGame;
+                    }
+                    if haystack.contains("libgdx") || haystack.contains("com.badlogic") {
+                        return GameEngine::LibGDX;
+                    }
+                    if haystack.contains("HashLink") || haystack.contains("hlboot") {
+                        return GameEngine::Haxe;
+                    }
+                    if haystack.contains("love.dll") || haystack.contains("love2d") {
+                        return GameEngine::Love2D;
+                    }
+                    if haystack.contains("Defold") || haystack.contains("defold_engine") {
+                        return GameEngine::Defold;
+                    }
+                    if haystack.contains("rpg_core") || haystack.contains("RGSS") || haystack.contains("RPGMaker") {
+                        return GameEngine::RPGMaker;
+                    }
+                    if haystack.contains("renpy") || haystack.contains("Ren'Py") {
+                        return GameEngine::RenPy;
+                    }
+                }
+            }
+        }
+    }
+    GameEngine::Unknown
 }

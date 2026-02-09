@@ -1,14 +1,42 @@
 {
-  "version": "1.1.0",
+  "version": "1.3.0",
   "major": 1,
-  "minor": 1,
+  "minor": 3,
   "patch": 0,
   "prerelease": null,
-  "buildNumber": 113,
-  "buildDate": "2026-02-05T02:30:00.000Z",
-  "gitHash": "aeede25",
+  "buildNumber": 115,
+  "buildDate": "2026-02-09T08:00:00.000Z",
+  "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.3.0": {
+      "date": "2026-02-09",
+      "type": "feature",
+      "changes": [
+        "Danganronpa WAD Patcher v15: All-Ice base + GameStringer override (35.865 stringhe)",
+        "WAD Text Extractor CLI: estrazione completa testi da WAD per traduzione",
+        "WAD Extractor UI: nuovo tab nel Danganronpa Patcher con editor e traduzione batch AI",
+        "Export Patch Distribuibile: crea .zip con WAD, install.bat, LEGGIMI.txt, translations.json",
+        "Export Patch UI: bottone export nel tab Applica Patch con dialog salvataggio nativo",
+        "Export Patch Backend Rust: comando export_danganronpa_patch con zip streaming",
+        "Dashboard Stats Reali: collegati a Translation Memory Rust e activity history",
+        "UI Danganronpa Patcher compattata: tutti i tab ottimizzati per densità informativa"
+      ]
+    },
+    "1.2.0": {
+      "date": "2026-02-06",
+      "type": "feature",
+      "changes": [
+        "Fallback Provider: traduzione automatica Gemini \u2192 DeepSeek \u2192 OpenAI in tutti i componenti",
+        "Audit /api/* completato: 0 fetch('/api/') attive, tutto compatibile Tauri",
+        "Danganronpa Filtro Smart: riduce 18K\u21923K stringhe con filtro locale + AI opzionale",
+        "Test E2E Playwright: 38 test reali (navigation, translation, danganronpa)",
+        "Fix: injection UI usa Tauri invoke invece di API routes",
+        "Fix: secrets dashboard, logging, import traduzioni ora locali",
+        "Fix: bug precedenza operatori in notification-indicator",
+        "Translation Memory e Offline Cache usano fallback provider"
+      ]
+    },
     "1.1.0": {
       "date": "2026-02-05",
       "type": "feature",

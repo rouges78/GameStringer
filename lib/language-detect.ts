@@ -192,27 +192,8 @@ export async function detectLanguageWithAPI(text: string): Promise<DetectionResu
     return localResult;
   }
 
-  // Per lingue latine, tenta API se disponibile
-  try {
-    const response = await fetch('/api/detect-language', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text.slice(0, 500) }), // Max 500 chars
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.language) {
-        return {
-          language: data.language,
-          confidence: data.confidence || 90,
-          alternatives: data.alternatives || [],
-        };
-      }
-    }
-  } catch (e) {
-    // API non disponibile, usa fallback locale
-  }
+  // In Tauri non abbiamo API routes - usa solo detection locale
+  // Il rilevamento locale è sufficiente per la maggior parte dei casi
 
   return localResult;
 }

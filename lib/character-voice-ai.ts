@@ -3,6 +3,8 @@
  * Ogni personaggio ha un profilo che influenza come vengono tradotti i suoi dialoghi
  */
 
+import { translateSingleWithFallback } from './ai-translate-direct';
+
 export interface CharacterProfile {
   id: string;
   name: string;
@@ -630,23 +632,16 @@ class CharacterVoiceService {
     const prompt = this.generateTranslationPrompt(profile, text, targetLang);
     
     try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: prompt,
-          targetLanguage: targetLang,
-          provider: 'openai', // Usa LLM per contesto
-          systemPrompt: 'Sei un traduttore di videogiochi specializzato nel mantenere lo stile dei personaggi.'
-        })
-      });
-      
-      if (!response.ok) throw new Error('Translation failed');
-      
-      const data = await response.json();
+      // Traduzione con fallback automatico (Gemini → DeepSeek → OpenAI)
+      const result = await translateSingleWithFallback(
+        prompt,
+        targetLang,
+        undefined,
+        `character voice: ${profile.name}`
+      );
       
       // Post-process con patterns del personaggio
-      let translated = data.translatedText;
+      let translated = result.translated;
       
       // Applica sostituzioni preferite
       for (const [from, to] of Object.entries(profile.patterns.preferredWords)) {
@@ -664,7 +659,7 @@ class CharacterVoiceService {
       
       return {
         translated,
-        suggestions: data.suggestions || []
+        suggestions: []
       };
     } catch (error) {
       console.error('Character translation failed:', error);

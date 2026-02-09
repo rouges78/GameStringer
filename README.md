@@ -19,6 +19,12 @@
 </p>
 
 <p align="center">
+  <a href="https://buymeacoffee.com/gamestringer">
+    <img src="https://img.shields.io/badge/☕_Buy_Me_a_Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" />
+  </a>
+</p>
+
+<p align="center">
   <a href="#-features">Features</a> •
   <a href="#-download">Download</a> •
   <a href="#-quick-start">Quick Start</a> •
@@ -255,6 +261,9 @@ npm run tauri:build
 If GameStringer helped you enjoy games in your language, consider supporting the project:
 
 <p align="center">
+  <a href="https://buymeacoffee.com/gamestringer">
+    <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Support-FFDD00?logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" />
+  </a>
   <a href="https://ko-fi.com/gamestringer">
     <img src="https://img.shields.io/badge/Ko--fi-Support%20Me-FF5E5B?logo=ko-fi&logoColor=white" alt="Ko-fi" />
   </a>

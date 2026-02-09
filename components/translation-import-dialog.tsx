@@ -105,25 +105,30 @@ export function TranslationImportDialog({
         throw new Error('No translations found in file');
       }
 
-      // Send translations to API
-      const response = await fetch('/api/translations/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gameId: selectedGame,
-          translations
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Error during import');
+      // Import diretto in Translation Memory (no API routes in Tauri)
+      let imported = 0;
+      const total = translations.length;
+      
+      for (const t of translations) {
+        try {
+          const tmData = JSON.parse(localStorage.getItem('gs_translation_memory') || '[]');
+          tmData.push({
+            id: `import-${Date.now()}-${imported}`,
+            sourceText: t.source || t.original,
+            targetText: t.target || t.translated,
+            gameId: selectedGame,
+            provider: 'import',
+            confidence: 0.9,
+            createdAt: new Date().toISOString()
+          });
+          localStorage.setItem('gs_translation_memory', JSON.stringify(tmData));
+          imported++;
+        } catch {}
       }
-
-      const result = await response.json();
       
       toast({
         title: 'Import completed',
-        description: `Imported ${result.imported} of ${result.total} translations`
+        description: `Imported ${imported} of ${total} translations`
       });
       
       onImportComplete();

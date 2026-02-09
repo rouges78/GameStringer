@@ -65,6 +65,8 @@ interface DashboardStats {
   engineStats: Record<string, number>;
   platformStats: Record<string, number>;
   translationStats: TranslationStats;
+  tmEntries: number;
+  timeSavedMinutes: number;
 }
 
 export default function Dashboard() {
@@ -87,7 +89,9 @@ export default function Dashboard() {
     },
     engineStats: {},
     platformStats: {},
-    translationStats: { total: 0, completed: 0, pending: 0, edited: 0 }
+    translationStats: { total: 0, completed: 0, pending: 0, edited: 0 },
+    tmEntries: 0,
+    timeSavedMinutes: 0
   });
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<RecentActivityProps[]>([]);
@@ -129,44 +133,37 @@ export default function Dashboard() {
         }
       }
       
-      let savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
-      let savedPatches = JSON.parse(localStorage.getItem('gamePatches') || '[]');
+      // --- Dati reali: Activity History ---
+      let savedTranslations: any[] = [];
+      let savedPatches: any[] = [];
       
-      if (savedTranslations.length === 0 || savedPatches.length === 0) {
-        try {
-          const allActivities = await activityHistory.getRecent(100);
-          const translationActivities = allActivities.filter((a: Activity) => 
-            a.activity_type === 'translation' && a.title?.includes('completata')
-          );
-          const patchActivities = allActivities.filter((a: Activity) => 
-            a.activity_type === 'patch' || a.title?.includes('Applicat')
-          );
-          
-          if (savedTranslations.length === 0 && translationActivities.length > 0) {
-            savedTranslations = translationActivities.map((a: Activity) => ({
-              id: a.id,
-              gameId: a.game_id,
-              gameName: a.game_name,
-              status: 'completed',
-              timestamp: a.timestamp
-            }));
-            localStorage.setItem('gameTranslations', JSON.stringify(savedTranslations));
-          }
-          
-          if (savedPatches.length === 0 && patchActivities.length > 0) {
-            savedPatches = patchActivities.map((a: Activity) => ({
-              id: a.id,
-              gameId: a.game_id,
-              gameName: a.game_name,
-              status: 'applied',
-              timestamp: a.timestamp
-            }));
-            localStorage.setItem('gamePatches', JSON.stringify(savedPatches));
-          }
-        } catch (e) {
-          console.log('Dashboard: Activity sync error', e);
-        }
+      try {
+        const allActivities = await activityHistory.getRecent(500);
+        savedTranslations = allActivities.filter((a: Activity) => 
+          a.activity_type === 'translation'
+        );
+        savedPatches = allActivities.filter((a: Activity) => 
+          a.activity_type === 'patch' || a.title?.includes('Patch') || a.title?.includes('Applicat')
+        );
+      } catch (e) {
+        // Fallback: localStorage
+        savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
+        savedPatches = JSON.parse(localStorage.getItem('gamePatches') || '[]');
       }
+      
+      // --- Dati reali: Translation Memory (backend Rust) ---
+      let tmEntries = 0;
+      try {
+        const tmList = await invoke('list_translation_memories') as any[];
+        if (tmList && Array.isArray(tmList)) {
+          tmEntries = tmList.reduce((sum: number, tm: any) => sum + (tm.unit_count || tm.unitCount || 0), 0);
+        }
+      } catch (e) {
+        console.log('Dashboard: TM not available', e);
+      }
+      
+      // Tempo risparmiato: ~2 min per entry TM (traduzione manuale) salvati con AI
+      const timeSavedMinutes = tmEntries * 2 + savedTranslations.length * 15;
       
       const storeStats: Record<string, StoreStats> = {
         steam: { connected: games.length > 0, games: games.length },
@@ -190,10 +187,14 @@ export default function Dashboard() {
         platformStats[platform] = (platformStats[platform] || 0) + 1;
       });
       
+      const completedTranslations = savedTranslations.filter((t: any) => 
+        t.status === 'completed' || t.title?.includes('completata')
+      ).length || savedTranslations.length;
+      
       const translationStats: TranslationStats = {
         total: savedTranslations.length,
-        completed: savedTranslations.filter((t: any) => t.status === 'completed').length,
-        pending: savedTranslations.filter((t: any) => t.status === 'pending' || !t.status).length,
+        completed: completedTranslations,
+        pending: savedTranslations.length - completedTranslations,
         edited: savedTranslations.filter((t: any) => t.status === 'edited').length
       };
       
@@ -202,6 +203,8 @@ export default function Dashboard() {
         installedGames: games.filter((g: any) => g.is_installed).length,
         translations: savedTranslations.length,
         patches: savedPatches.length,
+        tmEntries,
+        timeSavedMinutes,
         lastScan: new Date(localStorage.getItem('lastSteamScan') || Date.now()),
         storeStats,
         engineStats,
@@ -415,7 +418,7 @@ export default function Dashboard() {
               <Languages className="h-5 w-5 text-violet-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-violet-300">{stats.translationStats.completed.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-violet-300">{(stats.translationStats.completed + stats.tmEntries).toLocaleString()}</div>
               <div className="text-[10px] text-violet-400/70 uppercase tracking-wider">{dash.totalTranslations}</div>
             </div>
           </div>
@@ -441,7 +444,7 @@ export default function Dashboard() {
               <Clock className="h-5 w-5 text-amber-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-amber-300">{Math.round(stats.translationStats.completed * 0.5)}h</div>
+              <div className="text-2xl font-bold text-amber-300">{stats.timeSavedMinutes >= 60 ? `${Math.round(stats.timeSavedMinutes / 60)}h` : `${stats.timeSavedMinutes}m`}</div>
               <div className="text-[10px] text-amber-400/70 uppercase tracking-wider">{dash.timeSaved}</div>
             </div>
           </div>
@@ -454,7 +457,7 @@ export default function Dashboard() {
               <Database className="h-5 w-5 text-cyan-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-cyan-300">{stats.translations.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-cyan-300">{stats.tmEntries.toLocaleString()}</div>
               <div className="text-[10px] text-cyan-400/70 uppercase tracking-wider">{dash.tmEntries}</div>
             </div>
           </div>

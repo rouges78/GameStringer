@@ -14,6 +14,30 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { invoke } from '@/lib/tauri-api';
+import { translateWithFallback, CHAIN_PRESETS, setChainPreset, getApiKeys, getChainPreset, hasAvailableProviders, checkChainRequirements, type ChainPreset, type ProviderRequirement } from '@/lib/ai-translate-direct';
+import { filterDanganronpaDialogues, type FilterStats } from '@/lib/danganronpa-filter';
+import { canTranslate, addTranslationCount } from '@/lib/donation-gate';
+import { DonationDialog } from '@/components/donation-dialog';
+import {
+  type TranslationStats,
+  type TranslationCheckpoint,
+  type ValidationResult,
+  saveCheckpoint,
+  loadCheckpoint,
+  clearCheckpoint,
+  createStats,
+  updateStats,
+  finalizeStats,
+  formatDuration,
+  formatCost,
+  validateTranslations,
+  exportToPO,
+  exportToCSV,
+  exportToXLIFF,
+  exportToRESX,
+  loadGlossary,
+  applyGlossaryToPrompt,
+} from '@/lib/translation-session';
 import { 
   Sparkles, 
   Zap, 
@@ -32,8 +56,22 @@ import {
   Pause,
   X,
   Rocket,
-  Wand2
+  Wand2,
+  FolderOpen,
+  ClipboardCheck,
+  Library,
+  ArrowRight,
+  FileCheck,
+  BarChart3,
+  Download,
+  ShieldCheck,
+  RotateCcw,
+  Clock,
+  Coins,
+  Activity,
+  BookOpen
 } from 'lucide-react';
+import { open } from '@tauri-apps/plugin-shell';
 
 interface AlternativeMethod {
   method: string;
@@ -131,12 +169,37 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
   // One-Click Translation states
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [showDonationDialog, setShowDonationDialog] = useState(false);
+  const [selectedChain, setSelectedChain] = useState<ChainPreset>('balanced');
+  const [chainWarnings, setChainWarnings] = useState<ProviderRequirement[]>([]);
+  const [checkingChain, setCheckingChain] = useState(false);
   const [autoState, setAutoState] = useState<AutoTranslationState>({
     isRunning: false,
     isPaused: false,
     currentStep: 0,
     steps: [],
   });
+  // Stats, validazione, resume
+  const [translationStats, setTranslationStats] = useState<TranslationStats | null>(null);
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [pendingCheckpoint, setPendingCheckpoint] = useState<TranslationCheckpoint | null>(null);
+  const [showResumeDialog, setShowResumeDialog] = useState(false);
+
+  // Check requisiti chain quando si cambia preset o si apre il dialog
+  useEffect(() => {
+    if (!showConfirmDialog) return;
+    let cancelled = false;
+    setCheckingChain(true);
+    checkChainRequirements(selectedChain).then(warnings => {
+      if (!cancelled) {
+        setChainWarnings(warnings);
+        setCheckingChain(false);
+      }
+    }).catch(() => {
+      if (!cancelled) setCheckingChain(false);
+    });
+    return () => { cancelled = true; };
+  }, [selectedChain, showConfirmDialog]);
 
   useEffect(() => {
     const fetchRecommendation = async () => {
@@ -196,6 +259,16 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
     if (!recommendation?.optimal_strategy?.tools) {
       toast.error('Nessuna strategia disponibile');
       return;
+    }
+
+    // Controlla limite gratuito traduzioni
+    const gate = canTranslate();
+    if (!gate.allowed) {
+      setShowDonationDialog(true);
+      return;
+    }
+    if (gate.remaining !== Infinity && gate.remaining < 100) {
+      toast.info(`☕ ${gate.remaining} traduzioni gratuite rimanenti su ${gate.limit}`);
     }
 
     // Controlla anticheat
@@ -614,224 +687,304 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
         await new Promise(r => setTimeout(r, 300));
         
         try {
-          // Step 0: Verifica chiavi API PRIMA di iniziare
-          updateProgress(8, '🔑 Verifica chiavi API...');
-          let hasApiKey = false;
-          let apiProvider = 'gemini';
+          // Step 0: Verifica provider disponibili nella catena attiva
+          updateProgress(8, '🔑 Verifica provider disponibili...');
+          const { available, providers: availableProviders } = hasAvailableProviders();
+          console.log(`[DANGANRONPA] Chain: ${getChainPreset()}, provider disponibili: [${availableProviders.join(', ')}]`);
           
-          // Leggi chiave API dalle impostazioni salvate in localStorage
-          let savedApiKey = '';
-          try {
-            const savedSettings = localStorage.getItem('gameStringerSettings');
-            console.log('[DANGANRONPA] localStorage gameStringerSettings:', savedSettings ? 'FOUND' : 'NOT FOUND');
-            if (savedSettings) {
-              const parsed = JSON.parse(savedSettings);
-              savedApiKey = parsed?.translation?.apiKey || '';
-              let rawProvider = parsed?.translation?.provider || 'gemini';
-              // Mappa "google" -> "gemini" (il backend usa "gemini")
-              apiProvider = rawProvider === 'google' ? 'gemini' : rawProvider;
-              console.log('[DANGANRONPA] API Key found:', savedApiKey ? `${savedApiKey.substring(0, 10)}...` : 'EMPTY');
-              console.log('[DANGANRONPA] Provider:', rawProvider, '->', apiProvider);
-            }
-          } catch (e) {
-            console.log('[DANGANRONPA] Errore lettura settings:', e);
-          }
-          
-          if (savedApiKey && apiProvider === 'gemini') {
-            // Test diretto con Gemini API
-            try {
-              const testRes = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${savedApiKey}`,
-                {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    contents: [{ parts: [{ text: 'Translate to Italian: Hello' }] }],
-                    generationConfig: { temperature: 0.3, maxOutputTokens: 100 }
-                  })
-                }
-              );
-              if (testRes.ok) {
-                hasApiKey = true;
-                console.log(`✅ Gemini API funzionante (test diretto)`);
-              } else if (testRes.status === 429) {
-                // Rate limit = chiave valida, solo quota esaurita
-                hasApiKey = true;
-                console.log(`⚠️ Gemini API: quota esaurita, ma chiave valida. Retry con delay...`);
-              } else {
-                const err = await testRes.text();
-                console.log(`❌ Gemini API errore:`, testRes.status, err);
-              }
-            } catch (e) {
-              console.log(`❌ Gemini API errore:`, e);
-            }
-          } else if (savedApiKey) {
-            // Altri provider - usa API batch
-            hasApiKey = true; // Assume funzionante
-            console.log(`✅ API ${apiProvider} configurata`);
-          }
-          
-          if (!hasApiKey) {
-            updateProgress(100, '⚠️ Nessuna API key configurata');
+          if (!available) {
+            updateProgress(100, '⚠️ Nessun provider disponibile');
             toast.error(
-              '🔑 CHIAVI API NON CONFIGURATE!\n\n' +
-              'Configura almeno una chiave API nelle Impostazioni.\n' +
-              'Reindirizzamento in corso...',
+              '🔑 NESSUN PROVIDER DISPONIBILE!\n\n' +
+              'Configura almeno una chiave API nelle Impostazioni,\n' +
+              'oppure seleziona una chain che include provider gratuiti.',
               { duration: 3000 }
             );
-            // Redirect automatico alle impostazioni dopo 2 secondi
             await new Promise(r => setTimeout(r, 2000));
             router.push('/settings');
-            // Lancia errore per interrompere il workflow e non mostrare "Completato"
             throw new Error('API_KEY_MISSING');
           }
           
-          updateProgress(10, `✅ API ${apiProvider.toUpperCase()} disponibile`);
+          updateProgress(10, `✅ ${availableProviders.length} provider disponibili (${availableProviders[0]}...)`);
           await new Promise(r => setTimeout(r, 500));
           
-          // Step 1: Analisi struttura e estrazione
-          updateProgress(15, '🔍 Analisi struttura gioco...');
+          // Step 1: Estrazione dialoghi (solo backend, niente traduzione)
+          updateProgress(15, '🔍 Estrazione dialoghi dal gioco...');
           
           const extractResult = await invoke<{
             success: boolean;
-            message: string;
             total_strings: number;
-            translated_strings: number;
-            failed_strings: number;
             output_path: string;
-          }>('auto_translate_danganronpa', {
+            dialogues: Array<{id: string; speaker: string; original: string; translated: string; file: string; line_index: number}>;
+          }>('extract_danganronpa_dialogues', {
             gamePath: gamePath,
-            targetLang: 'it',
-            aiProvider: 'placeholder'
           });
           
-          if (!extractResult.success && extractResult.total_strings === 0) {
+          if (!extractResult.success || extractResult.total_strings === 0) {
             throw new Error('Nessuna stringa trovata');
           }
           
-          const totalStrings = extractResult.total_strings;
+          const rawDialogues = extractResult.dialogues;
+          const totalRawStrings = extractResult.total_strings;
           
-          // Step 2: Stima costo PRIMA di tradurre
-          updateProgress(30, '💰 Calcolo stima costo...');
+          updateProgress(18, `📦 Estratte ${totalRawStrings} stringhe, filtro in corso...`);
           await new Promise(r => setTimeout(r, 300));
           
-          // Stima caratteri totali (media 50 char per stringa)
+          // Step 1b: Filtro smart — riduce 18K→~3K stringhe rilevanti
+          const filterResult = await filterDanganronpaDialogues(
+            rawDialogues,
+            {
+              minLength: 3,
+              maxLength: 500,
+              removeDuplicates: true,
+              useAIClassification: false, // Solo filtro locale (veloce)
+              requireSpeaker: false,
+            },
+            (phase, current, total) => {
+              const pct = 18 + Math.floor((current / Math.max(total, 1)) * 4);
+              updateProgress(pct, `🔍 Filtro ${phase}: ${current}/${total}...`);
+            }
+          );
+          
+          const dialogues = filterResult.filtered;
+          const totalStrings = dialogues.length;
+          const fs = filterResult.stats;
+          
+          console.log(`[Danganronpa] Filtro: ${fs.totalInput} → ${fs.afterLocalFilter} (rimossi: ${fs.removedEmpty} vuoti, ${fs.removedDuplicate} duplicati, ${fs.removedSystemText} sistema, ${fs.removedShort} corti, ${fs.removedNonDialogue} non-dialogo)`);
+          
+          updateProgress(22, `✅ Filtrate ${totalStrings} stringhe rilevanti (da ${totalRawStrings})`);
+          toast.info(
+            `🔍 FILTRO SMART\n` +
+            `📦 Estratte: ${totalRawStrings} | ✅ Rilevanti: ${totalStrings}\n` +
+            `🗑️ Scartate: ${totalRawStrings - totalStrings} (${fs.removedDuplicate} duplicati, ${fs.removedSystemText} sistema)\n` +
+            `💰 Risparmiato: ${fs.estimatedCostSaved}`,
+            { duration: 6000 }
+          );
+          await new Promise(r => setTimeout(r, 500));
+          
+          // Step 2: Stima costo
           const avgCharsPerString = 50;
           const totalChars = totalStrings * avgCharsPerString;
-          const totalTokens = Math.ceil(totalChars / 4); // ~4 char per token
+          const totalTokens = Math.ceil(totalChars / 4);
           
-          // Costi per 1M token (input+output)
           const costs: Record<string, { input: number; output: number; name: string }> = {
-            'gemini': { input: 0.075, output: 0.30, name: 'Gemini 1.5 Flash' },
+            'gemini': { input: 0.075, output: 0.30, name: 'Gemini 2.0 Flash' },
             'openai': { input: 0.50, output: 1.50, name: 'GPT-4o-mini' },
             'claude': { input: 0.25, output: 1.25, name: 'Claude 3 Haiku' },
             'deepseek': { input: 0.14, output: 0.28, name: 'DeepSeek' },
           };
           
-          const providerCost = costs[apiProvider] || costs['gemini'];
+          const providerCost = costs[availableProviders[0]] || costs['gemini'];
           const inputCost = (totalTokens / 1_000_000) * providerCost.input;
           const outputCost = (totalTokens / 1_000_000) * providerCost.output;
           const estimatedCost = inputCost + outputCost;
-          
-          updateProgress(35, `📊 ${totalStrings} stringhe, ~${totalTokens.toLocaleString()} token`);
-          await new Promise(r => setTimeout(r, 500));
-          
-          // Mostra stima e chiedi conferma
           const costDisplay = estimatedCost < 0.01 ? '< $0.01' : `~$${estimatedCost.toFixed(2)}`;
           
           toast.info(
-            `📊 STIMA TRADUZIONE DANGANRONPA\n\n` +
-            `📝 Stringhe: ${totalStrings.toLocaleString()}\n` +
-            `🔤 Token stimati: ~${totalTokens.toLocaleString()}\n` +
-            `🤖 Provider: ${providerCost.name}\n` +
-            `💰 Costo stimato: ${costDisplay}\n\n` +
-            `⏳ Traduzione in corso...`,
-            { duration: 8000 }
+            `📊 STIMA TRADUZIONE\n` +
+            `📝 ${totalStrings} stringhe | 🤖 ${providerCost.name}\n` +
+            `💰 Costo: ${costDisplay}`,
+            { duration: 5000 }
           );
           
-          // Step 3: Traduci con API
-          updateProgress(40, `🌐 Traduzione con ${providerCost.name}...`);
+          // Step 2b: Verifica checkpoint esistente (resume)
+          updateProgress(23, '🔍 Verifica sessione precedente...');
+          const existingCheckpoint = await loadCheckpoint(gamePath);
+          let resumeIndex = 0;
+          let translatedDialogues = [...dialogues];
           
-          const originalsPath = `${gamePath}/GameStringer_Translation/originals.json`;
+          if (existingCheckpoint && existingCheckpoint.totalFiltered === totalStrings) {
+            // Checkpoint valido — resume!
+            resumeIndex = existingCheckpoint.nextBatchIndex;
+            translatedDialogues = existingCheckpoint.dialogues;
+            const alreadyDone = existingCheckpoint.stats.translatedStrings;
+            console.log(`[Resume] Ripresa da batch index ${resumeIndex}, ${alreadyDone} già tradotte`);
+            toast.info(`🔄 Ripresa traduzione da stringa ${alreadyDone}/${totalStrings}`, { duration: 4000 });
+          }
           
-          try {
-            const originalsContent = await invoke<string>('read_text_file', { path: originalsPath });
-            const dialogues = JSON.parse(originalsContent) as Array<{id: string; original: string; translated: string}>;
+          // Carica glossario per il gioco (se esiste)
+          const glossary = loadGlossary(gameId || gameName);
+          if (glossary && glossary.entries.length > 0) {
+            console.log(`[Glossario] ${glossary.entries.length} voci caricate per ${gameName}`);
+          }
+          
+          // Step 3: Traduci direttamente con Gemini API (no API routes Next.js)
+          updateProgress(25, `🌐 Traduzione con ${providerCost.name}...`);
+          
+          const batchSize = 10;
+          let translated = existingCheckpoint?.stats.translatedStrings || 0;
+          let retryCount = 0;
+          const maxRetries = 5;
+          const startTime = existingCheckpoint?.stats.startTime || Date.now();
+          let sessionStats = existingCheckpoint?.stats || createStats({
+            totalStrings,
+            chainPreset: getChainPreset(),
+            sourceLang: 'en',
+            targetLang: 'it',
+            gameName,
+          });
+          sessionStats.startTime = existingCheckpoint?.stats.startTime || Date.now();
+          const BACKUP_INTERVAL = 50; // Salva checkpoint ogni 50 stringhe
+          let stringsSinceBackup = 0;
+          
+          for (let i = resumeIndex; i < dialogues.length; i += batchSize) {
+            const batch = dialogues.slice(i, i + batchSize);
+            const texts = batch.map(d => d.original).filter(t => t && t.length > 2);
             
-            const batchSize = 20;
-            let translated = 0;
-            const translatedDialogues = [...dialogues];
+            if (texts.length === 0) continue;
             
-            for (let i = 0; i < dialogues.length; i += batchSize) {
-              const batch = dialogues.slice(i, i + batchSize);
-              const texts = batch.map(d => d.original).filter(t => t.length > 2);
+            // Applica glossario al context
+            const { glossaryHint } = applyGlossaryToPrompt(texts, glossary);
+            const contextStr = glossaryHint 
+              ? `Danganronpa visual novel game dialogue.\n${glossaryHint}` 
+              : 'Danganronpa visual novel game dialogue';
+            
+            // Traduzione con fallback automatico (Gemini → DeepSeek → OpenAI)
+            try {
+              const result = await translateWithFallback({
+                texts,
+                targetLanguage: 'it',
+                sourceLanguage: 'en',
+                context: contextStr
+              });
               
-              if (texts.length === 0) continue;
-              
-              try {
-                const response = await fetch('/api/translate/batch', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    texts,
-                    targetLanguage: 'it',
-                    sourceLanguage: 'en',
-                    provider: apiProvider,
-                    apiKey: savedApiKey,
-                    context: 'Danganronpa visual novel game dialogue'
-                  })
-                });
+              if (result.success) {
+                const translations = result.translations;
+                const batchChars = texts.reduce((sum, t) => sum + t.length, 0);
                 
-                if (response.ok) {
-                  const result = await response.json();
-                  for (let j = 0; j < result.translations.length && (i + j) < translatedDialogues.length; j++) {
-                    translatedDialogues[i + j].translated = result.translations[j].translated;
-                    translated++;
+                // Applica traduzioni
+                let textIdx = 0;
+                for (let j = 0; j < batch.length && textIdx < translations.length; j++) {
+                  if (batch[j].original && batch[j].original.length > 2) {
+                    const globalIdx = i + j;
+                    if (globalIdx < translatedDialogues.length) {
+                      translatedDialogues[globalIdx].translated = translations[textIdx] || batch[j].original;
+                      translated++;
+                      stringsSinceBackup++;
+                    }
+                    textIdx++;
                   }
-                } else if (response.status === 429) {
-                  // Rate limit - aspetta e riprova
-                  console.log('⏳ Rate limit, aspetto 20s...');
-                  updateProgress(50, `⏳ Rate limit, aspetto 20s...`);
-                  await new Promise(r => setTimeout(r, 20000));
-                  i -= batchSize; // Riprova questo batch
                 }
-              } catch (batchErr) {
-                console.warn('Batch translation error:', batchErr);
+                retryCount = 0; // Reset retry counter on success
+                addTranslationCount(translations.length);
+                
+                // Aggiorna statistiche
+                sessionStats = updateStats(sessionStats, result.provider || 'unknown', translations.length, batchChars);
+                
+                // Backup incrementale ogni BACKUP_INTERVAL stringhe
+                if (stringsSinceBackup >= BACKUP_INTERVAL) {
+                  const checkpoint: TranslationCheckpoint = {
+                    version: 1,
+                    gamePath,
+                    gameName,
+                    createdAt: existingCheckpoint?.createdAt || Date.now(),
+                    updatedAt: Date.now(),
+                    nextBatchIndex: i + batchSize,
+                    batchSize,
+                    dialogues: translatedDialogues,
+                    totalFiltered: totalStrings,
+                    stats: { ...sessionStats, translatedStrings: translated },
+                  };
+                  await saveCheckpoint(checkpoint);
+                  stringsSinceBackup = 0;
+                  console.log(`💾 Checkpoint salvato: ${translated}/${totalStrings}`);
+                }
+                
+                // Check limite gratuito durante traduzione
+                const midGate = canTranslate();
+                if (!midGate.allowed) {
+                  // Salva checkpoint prima di fermarsi
+                  await saveCheckpoint({
+                    version: 1, gamePath, gameName,
+                    createdAt: existingCheckpoint?.createdAt || Date.now(),
+                    updatedAt: Date.now(),
+                    nextBatchIndex: i + batchSize, batchSize,
+                    dialogues: translatedDialogues, totalFiltered: totalStrings,
+                    stats: { ...sessionStats, translatedStrings: translated },
+                  });
+                  
+                  console.log(`☕ Limite ${midGate.limit} raggiunto — mostra donazione`);
+                  setShowDonationDialog(true);
+                  updateProgress(
+                    25 + Math.floor((i / dialogues.length) * 65),
+                    `☕ Limite gratuito raggiunto — dona per continuare...`
+                  );
+                  // Attendi che l'utente sblocchi (polling ogni 1s)
+                  while (!canTranslate().allowed) {
+                    await new Promise(r => setTimeout(r, 1000));
+                  }
+                  console.log(`🎉 Supporter sbloccato — riprendo traduzione`);
+                  setShowDonationDialog(false);
+                }
+                console.log(`✅ Batch tradotto via ${result.provider}`);
+              } else {
+                retryCount++;
+                if (retryCount > maxRetries) {
+                  console.warn('⚠️ Troppi errori, continuo con le prossime');
+                  sessionStats.failedStrings += texts.length;
+                  retryCount = 0;
+                  continue;
+                }
+                const waitTime = Math.min(30000 * retryCount, 120000);
+                console.log(`⏳ Tutti i provider falliti, aspetto ${waitTime/1000}s... (retry ${retryCount}/${maxRetries})`);
+                updateProgress(
+                  25 + Math.floor((i / dialogues.length) * 65),
+                  `⏳ Provider falliti, aspetto ${waitTime/1000}s...`
+                );
+                await new Promise(r => setTimeout(r, waitTime));
+                i -= batchSize; // Riprova questo batch
+                continue;
               }
-              
-              // Delay tra batch per evitare rate limit
-              await new Promise(r => setTimeout(r, 2000));
-              
-              const progress = 40 + Math.floor((i / dialogues.length) * 50);
-              updateProgress(progress, `🌐 Tradotto ${translated}/${dialogues.length}...`);
+            } catch (batchErr) {
+              console.warn('Batch translation error:', batchErr);
+              sessionStats.failedStrings += texts.length;
             }
             
-            // Salva risultati
-            updateProgress(95, '💾 Salvataggio traduzioni...');
-            await invoke('write_text_file', { 
-              path: `${gamePath}/GameStringer_Translation/translations.json`,
-              content: JSON.stringify(translatedDialogues, null, 2)
-            });
+            // Delay tra batch (2s per rispettare rate limit Groq/Gemini)
+            await new Promise(r => setTimeout(r, 2000));
             
-            updateProgress(100, `✅ ${translated} stringhe tradotte!`);
-            toast.success(
-              `🎮 TRADUZIONE DANGANRONPA COMPLETATA!\n\n` +
-              `📝 ${dialogues.length} stringhe trovate\n` +
-              `✅ ${translated} tradotte con ${providerCost.name}\n` +
-              `💰 Costo effettivo: ${costDisplay}\n\n` +
-              `📁 Output: ${gamePath}/GameStringer_Translation\n\n` +
-              `Usa DRAT per applicare i file .PO al gioco.`,
-              { duration: 12000 }
-            );
-          } catch (apiErr) {
-            updateProgress(100, `📝 ${extractResult.total_strings} stringhe estratte`);
-            toast.info(
-              `📝 Estratte ${extractResult.total_strings} stringhe!\n\n` +
-              `⚠️ Errore traduzione API\n\n` +
-              `📁 File in: ${extractResult.output_path}`,
-              { duration: 10000 }
-            );
+            const progress = 25 + Math.floor((i / dialogues.length) * 65);
+            const elapsed = Date.now() - startTime;
+            const elapsedMin = Math.floor(elapsed / 60000);
+            const elapsedSec = Math.floor((elapsed % 60000) / 1000);
+            const speed = translated > 0 ? (translated / (elapsed / 1000)).toFixed(1) : '0';
+            const remaining = translated > 0 ? Math.ceil(((totalStrings - translated) / (translated / elapsed)) / 1000) : 0;
+            const etaMin = Math.floor(remaining / 60);
+            const etaSec = remaining % 60;
+            const timeStr = `⏱️ ${elapsedMin}:${String(elapsedSec).padStart(2, '0')} | ${speed}/s | ETA ~${etaMin}:${String(etaSec).padStart(2, '0')}`;
+            updateProgress(progress, `🌐 Tradotto ${translated}/${totalStrings}...\n${timeStr}`);
           }
+          
+          // Step 4: Finalizza statistiche
+          sessionStats.translatedStrings = translated;
+          const finalStats = finalizeStats(sessionStats);
+          setTranslationStats(finalStats);
+          
+          // Step 4b: Validazione automatica
+          updateProgress(91, '🔍 Validazione traduzioni...');
+          const validation = validateTranslations(
+            translatedDialogues.map(d => ({ original: d.original, translated: d.translated }))
+          );
+          setValidationResult(validation);
+          
+          // Step 4c: Salva risultati
+          updateProgress(94, '💾 Salvataggio traduzioni...');
+          await invoke('write_text_file', { 
+            path: `${gamePath}/GameStringer_Translation/translations.json`,
+            content: JSON.stringify(translatedDialogues, null, 2)
+          });
+          
+          // Step 4d: Pulisci checkpoint (traduzione completata)
+          await clearCheckpoint(gamePath);
+          
+          updateProgress(100, `✅ ${translated} stringhe tradotte!`);
+          toast.success(
+            `🎮 TRADUZIONE COMPLETATA!\n` +
+            `📝 ${totalStrings} stringhe | ✅ ${translated} tradotte\n` +
+            `⏱️ ${formatDuration(finalStats.endTime! - finalStats.startTime)} | 💰 ${formatCost(finalStats.estimatedCost)}\n` +
+            `📊 Qualità: ${validation.score}/100`,
+            { duration: 12000 }
+          );
         } catch (e: any) {
           // Se è errore API key, non mostrare altri messaggi (già gestito)
           if (e?.message === 'API_KEY_MISSING') {
@@ -1050,7 +1203,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
 
       {/* DIALOG CONFERMA ONE-CLICK */}
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <DialogContent className="bg-slate-900 border-emerald-500/30 max-w-md">
+        <DialogContent className="bg-slate-900 border-emerald-500/30 max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-emerald-400">
               <Rocket className="h-5 w-5" />
@@ -1083,9 +1236,101 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               </div>
             </div>
 
-            <p className="text-xs text-amber-400/80 bg-amber-500/10 p-2 rounded">
-              ⚠️ Il processo si fermerà solo in caso di errori o scelte manuali necessarie.
-            </p>
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-slate-300">🔗 Chain Traduzione:</p>
+              <div className="grid gap-1">
+                {CHAIN_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    onClick={() => setSelectedChain(preset.id)}
+                    className={`text-left px-2.5 py-1.5 rounded-md border transition-all ${
+                      selectedChain === preset.id
+                        ? 'border-emerald-500 bg-emerald-500/10'
+                        : 'border-slate-700/50 bg-slate-800/20 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-3 h-3 rounded-full border-2 flex items-center justify-center ${
+                          selectedChain === preset.id ? 'border-emerald-500' : 'border-slate-600'
+                        }`}>
+                          {selectedChain === preset.id && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-200">{preset.name}</span>
+                        <span className="text-[10px] text-slate-500">{preset.quality}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400">{preset.cost}</span>
+                    </div>
+                    {selectedChain === preset.id && (
+                      <p className="text-[10px] text-cyan-400/60 mt-1 ml-5">
+                        {preset.providers.join(' → ')}
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Warning requisiti mancanti */}
+            {checkingChain ? (
+              <div className="flex items-center gap-2 text-[10px] text-slate-500 py-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Verifica requisiti...
+              </div>
+            ) : chainWarnings.length > 0 && (
+              <div className="space-y-1.5 max-h-[180px] overflow-y-auto">
+                {chainWarnings.filter(w => w.severity === 'critical').length > 0 && (
+                  <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-2 space-y-1.5">
+                    <p className="text-[11px] font-semibold text-amber-400 flex items-center gap-1.5">
+                      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                      Requisiti mancanti (la chain funzionerà con i provider disponibili)
+                    </p>
+                    {chainWarnings.filter(w => w.severity === 'critical').map((w, i) => (
+                      <div key={i} className="ml-5 space-y-0.5">
+                        <p className="text-[10px] text-amber-300/90 font-medium">{w.label}: {w.message}</p>
+                        <div className="text-[9px] text-slate-400 space-y-0">
+                          {w.fixSteps.map((step, j) => (
+                            <p key={j}>{step}</p>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 mt-0.5">
+                          {w.links.map((link, j) => (
+                            <a 
+                              key={j}
+                              href={link.url}
+                              target={link.url.startsWith('/') ? '_self' : '_blank'}
+                              rel="noopener"
+                              className="text-[9px] text-cyan-400 underline hover:text-cyan-300"
+                            >
+                              {link.label} ↗
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {chainWarnings.filter(w => w.severity === 'warning').length > 0 && (
+                  <details className="group">
+                    <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-400">
+                      + {chainWarnings.filter(w => w.severity === 'warning').length} provider opzionali non configurati
+                    </summary>
+                    <div className="mt-1 space-y-1 pl-2 border-l border-slate-700">
+                      {chainWarnings.filter(w => w.severity === 'warning').map((w, i) => (
+                        <div key={i} className="text-[9px] text-slate-500">
+                          <span className="text-slate-400">{w.label}</span> — {w.issue === 'no_api_key' ? 'API key mancante' : w.issue === 'ollama_offline' ? 'Ollama offline' : 'modello mancante'}
+                          {w.links.filter(l => !l.url.startsWith('/')).map((link, j) => (
+                            <a key={j} href={link.url} target="_blank" rel="noopener" className="ml-1 text-cyan-500/70 underline hover:text-cyan-400">
+                              {link.label} ↗
+                            </a>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2">
@@ -1093,7 +1338,10 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               Annulla
             </Button>
             <Button 
-              onClick={startAutoTranslation}
+              onClick={() => {
+                setChainPreset(selectedChain);
+                startAutoTranslation();
+              }}
               className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white"
             >
               <Rocket className="h-4 w-4 mr-1" />
@@ -1178,6 +1426,215 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             )}
           </div>
 
+          {/* Pannello post-completamento */}
+          {!autoState.isRunning && !autoState.error && autoState.steps.length > 0 && autoState.steps.every(s => s.status === 'completed') && (
+            <div className="space-y-3 max-h-[420px] overflow-y-auto">
+              {/* File creato */}
+              <div className="flex items-center gap-2 p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                <FileCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium text-emerald-300">File di traduzione creato con successo</p>
+                  <p className="text-[10px] text-slate-400 truncate" title={`${gamePath}/GameStringer_Translation/translations.json`}>
+                    📁 {gamePath}/GameStringer_Translation/translations.json
+                  </p>
+                </div>
+              </div>
+
+              {/* Statistiche */}
+              {translationStats && (
+                <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                  <p className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                    <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
+                    Statistiche traduzione
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="text-center p-1.5 bg-slate-900/50 rounded">
+                      <p className="text-sm font-bold text-emerald-400">{translationStats.translatedStrings}</p>
+                      <p className="text-[9px] text-slate-500">Tradotte</p>
+                    </div>
+                    <div className="text-center p-1.5 bg-slate-900/50 rounded">
+                      <p className="text-sm font-bold text-cyan-400">
+                        {translationStats.endTime ? formatDuration(translationStats.endTime - translationStats.startTime) : '—'}
+                      </p>
+                      <p className="text-[9px] text-slate-500">Durata</p>
+                    </div>
+                    <div className="text-center p-1.5 bg-slate-900/50 rounded">
+                      <p className="text-sm font-bold text-amber-400">{formatCost(translationStats.estimatedCost)}</p>
+                      <p className="text-[9px] text-slate-500">Costo</p>
+                    </div>
+                    <div className="text-center p-1.5 bg-slate-900/50 rounded">
+                      <p className="text-sm font-bold text-purple-400">{translationStats.avgSpeed.toFixed(1)}/s</p>
+                      <p className="text-[9px] text-slate-500">Velocità</p>
+                    </div>
+                  </div>
+                  {/* Provider breakdown */}
+                  {Object.keys(translationStats.providerUsage).length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {Object.entries(translationStats.providerUsage)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([prov, count]) => (
+                          <span key={prov} className="text-[9px] bg-slate-700/50 text-slate-400 px-1.5 py-0.5 rounded">
+                            {prov}: {count}
+                          </span>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Validazione */}
+              {validationResult && (
+                <div className={`rounded-lg p-3 space-y-1.5 ${
+                  validationResult.score >= 90 ? 'bg-emerald-500/10 border border-emerald-500/20' :
+                  validationResult.score >= 70 ? 'bg-amber-500/10 border border-amber-500/20' :
+                  'bg-red-500/10 border border-red-500/20'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      Validazione qualità
+                    </p>
+                    <span className={`text-sm font-bold ${
+                      validationResult.score >= 90 ? 'text-emerald-400' :
+                      validationResult.score >= 70 ? 'text-amber-400' : 'text-red-400'
+                    }`}>
+                      {validationResult.score}/100
+                    </span>
+                  </div>
+                  {validationResult.issues.length > 0 ? (
+                    <details className="group">
+                      <summary className="text-[10px] text-slate-500 cursor-pointer hover:text-slate-400">
+                        {validationResult.issues.filter(i => i.severity === 'error').length} errori, {validationResult.issues.filter(i => i.severity === 'warning').length} warning su {validationResult.totalChecked} stringhe
+                      </summary>
+                      <div className="mt-1.5 space-y-1 max-h-24 overflow-y-auto">
+                        {validationResult.issues.slice(0, 10).map((issue, i) => (
+                          <p key={i} className={`text-[9px] ${issue.severity === 'error' ? 'text-red-400' : 'text-amber-400/70'}`}>
+                            #{issue.index}: {issue.message}
+                          </p>
+                        ))}
+                        {validationResult.issues.length > 10 && (
+                          <p className="text-[9px] text-slate-500">...e altri {validationResult.issues.length - 10}</p>
+                        )}
+                      </div>
+                    </details>
+                  ) : (
+                    <p className="text-[10px] text-emerald-400/70">Nessun problema rilevato</p>
+                  )}
+                </div>
+              )}
+
+              {/* Export */}
+              <div className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                <p className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Download className="h-3.5 w-3.5 text-blue-400" />
+                  Esporta traduzioni
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { label: '.PO', fmt: 'po', desc: 'GNU gettext' },
+                    { label: '.CSV', fmt: 'csv', desc: 'Foglio di calcolo' },
+                    { label: '.XLIFF', fmt: 'xliff', desc: 'Standard i18n' },
+                    { label: '.RESX', fmt: 'resx', desc: '.NET Resources' },
+                  ].map(({ label, fmt, desc }) => (
+                    <button
+                      key={fmt}
+                      onClick={async () => {
+                        try {
+                          const raw = await invoke<string>('read_text_file', {
+                            path: `${gamePath}/GameStringer_Translation/translations.json`,
+                          });
+                          const data = JSON.parse(raw);
+                          let content = '';
+                          let ext = fmt;
+                          switch (fmt) {
+                            case 'po': content = exportToPO(data, 'it', gameName); break;
+                            case 'csv': content = exportToCSV(data); break;
+                            case 'xliff': content = exportToXLIFF(data, 'en', 'it', gameName); ext = 'xlf'; break;
+                            case 'resx': content = exportToRESX(data); break;
+                          }
+                          await invoke('write_text_file', {
+                            path: `${gamePath}/GameStringer_Translation/translations.${ext}`,
+                            content,
+                          });
+                          toast.success(`Esportato translations.${ext}`);
+                        } catch (err) {
+                          toast.error(`Errore export ${fmt}`);
+                        }
+                      }}
+                      className="text-[10px] px-2 py-1 rounded border border-slate-600 bg-slate-900/50 text-slate-300 hover:border-blue-500/40 hover:text-blue-300 transition-colors"
+                      title={desc}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Azioni */}
+              <p className="text-[11px] text-slate-400 font-medium">Cosa vuoi fare ora?</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      await open(`${gamePath}/GameStringer_Translation`);
+                    } catch {
+                      toast.error('Impossibile aprire la cartella');
+                    }
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-600 bg-slate-800/50 hover:bg-slate-700/50 hover:border-cyan-500/40 transition-all text-left group"
+                >
+                  <FolderOpen className="h-4 w-4 text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-200">Apri cartella</p>
+                    <p className="text-[9px] text-slate-500">Vedi i file tradotti</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowProgressDialog(false);
+                    router.push('/ai-review');
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-600 bg-slate-800/50 hover:bg-slate-700/50 hover:border-purple-500/40 transition-all text-left group"
+                >
+                  <ClipboardCheck className="h-4 w-4 text-purple-400 shrink-0 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-200">Revisiona</p>
+                    <p className="text-[9px] text-slate-500">Controlla qualità (MTPE)</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowProgressDialog(false);
+                    router.push('/library');
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-600 bg-slate-800/50 hover:bg-slate-700/50 hover:border-amber-500/40 transition-all text-left group"
+                >
+                  <Library className="h-4 w-4 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-200">Altro gioco</p>
+                    <p className="text-[9px] text-slate-500">Traduci un altro titolo</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowProgressDialog(false);
+                    router.push(`/ai-translator?game=${encodeURIComponent(gameId || '')}`);
+                  }}
+                  className="flex items-center gap-2 p-2.5 rounded-lg border border-slate-600 bg-slate-800/50 hover:bg-slate-700/50 hover:border-emerald-500/40 transition-all text-left group"
+                >
+                  <ArrowRight className="h-4 w-4 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
+                  <div>
+                    <p className="text-[11px] font-medium text-slate-200">Vai al Traduttore</p>
+                    <p className="text-[9px] text-slate-500">Modifica singole stringhe</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
           <DialogFooter className="gap-2">
             {autoState.isRunning ? (
               <>
@@ -1198,13 +1655,23 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 </Button>
               </>
             ) : (
-              <Button onClick={() => setShowProgressDialog(false)}>
+              <Button onClick={() => setShowProgressDialog(false)} variant="outline" className="border-slate-600">
                 Chiudi
               </Button>
             )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* DIALOG DONAZIONE */}
+      <DonationDialog 
+        open={showDonationDialog} 
+        onOpenChange={setShowDonationDialog}
+        onUnlocked={() => {
+          setShowDonationDialog(false);
+          toast.success('🎉 Traduzioni illimitate sbloccate!');
+        }}
+      />
     </div>
   );
 }

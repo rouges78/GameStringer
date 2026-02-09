@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { translateSingleWithFallback, getApiKeys } from '@/lib/ai-translate-direct';
 import { 
   Mic, 
   MicOff, 
@@ -164,57 +165,71 @@ const AudioTranslation: React.FC<AudioTranslationProps> = ({
     getAudioDevices();
   }, []);
 
-  // Simula trascrizione audio
+  // Trascrizione audio con OpenAI Whisper API
   const simulateTranscription = async (audioBlob: Blob): Promise<AudioTranscription> => {
-    // Simula progresso
-    for (let i = 0; i <= 100; i += 10) {
-      setProgress(i);
-      await new Promise(resolve => setTimeout(resolve, 150));
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const { openai: openaiKey } = getApiKeys();
+
+    if (!openaiKey) {
+      toast.error('OpenAI API key non configurata. Vai nelle Impostazioni.');
+      return { id: `transcription-${Date.now()}`, text: '', confidence: 0, language: 'en', timestamp: new Date(), duration: 0, audioUrl, segments: [] };
     }
 
-    const audioUrl = URL.createObjectURL(audioBlob);
-    
-    const mockTranscription: AudioTranscription = {
-      id: `transcription-${Date.now()}`,
-      text: `Questo è un esempio di trascrizione audio. Il personaggio dice: "Benvenuto nel mondo di GameStringer! Qui puoi trovare tesori nascosti e completare missioni epiche. Premi il tasto E per interagire con gli oggetti."`,
-      confidence: 87.5,
-      language: 'it',
-      timestamp: new Date(),
-      duration: 15.3,
-      audioUrl,
-      segments: [
-        { start: 0, end: 3.2, text: 'Questo è un esempio di trascrizione audio.', confidence: 90 },
-        { start: 3.2, end: 8.5, text: 'Il personaggio dice: "Benvenuto nel mondo di GameStringer!"', confidence: 85 },
-        { start: 8.5, end: 12.8, text: 'Qui puoi trovare tesori nascosti e completare missioni epiche.', confidence: 88 },
-        { start: 12.8, end: 15.3, text: 'Premi il tasto E per interagire con gli oggetti.', confidence: 82 }
-      ]
-    };
+    setProgress(20);
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'audio.webm');
+    formData.append('model', 'whisper-1');
+    formData.append('response_format', 'verbose_json');
 
-    return mockTranscription;
+    setProgress(40);
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${openaiKey}` },
+      body: formData
+    });
+
+    setProgress(80);
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `Whisper errore ${response.status}`);
+    }
+
+    const data = await response.json();
+    setProgress(100);
+
+    return {
+      id: `transcription-${Date.now()}`,
+      text: data.text || '',
+      confidence: 95,
+      language: data.language || 'en',
+      timestamp: new Date(),
+      duration: data.duration || 0,
+      audioUrl,
+      segments: (data.segments || []).map((s: any) => ({
+        start: s.start, end: s.end, text: s.text, confidence: Math.round((s.avg_logprob ? (1 + s.avg_logprob) * 100 : 85))
+      }))
+    };
   };
 
-  // Simulate translation
+  // Traduzione con fallback automatico (Gemini → DeepSeek → OpenAI)
   const simulateTranslation = async (text: string, targetLang: string): Promise<AudioTranslation> => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const { translated } = await translateSingleWithFallback(text, targetLang, undefined, 'audio translation');
 
-    const translations: Record<string, string> = {
-      'en': 'This is an example of audio transcription. The character says: "Welcome to the world of GameStringer! Here you can find hidden treasures and complete epic missions. Press the E key to interact with objects."',
-      'es': 'Este es un ejemplo de transcripción de audio. El personaje dice: "¡Bienvenido al mundo de GameStringer! Aquí puedes encontrar tesoros ocultos y completar misiones épicas. Presiona la tecla E para interactuar con objetos."',
-      'fr': 'Ceci est un exemple de transcription audio. Le personnage dit : "Bienvenue dans le monde de GameStringer ! Ici, vous pouvez trouver des trésors cachés et accomplir des missions épiques. Appuyez sur la touche E pour interagir avec les objets."'
-    };
-
-    const mockTranslation: AudioTranslation = {
-      id: `translation-${Date.now()}`,
-      originalText: text,
-      translatedText: translations[targetLang] || translations['en'],
-      sourceLanguage: 'it',
-      targetLanguage: targetLang,
-      confidence: 92.3,
-      timestamp: new Date(),
-      audioUrl: settings.enableTTS ? 'mock-tts-url' : undefined
-    };
-
-    return mockTranslation;
+      return {
+        id: `translation-${Date.now()}`,
+        originalText: text,
+        translatedText: translated,
+        sourceLanguage: 'auto',
+        targetLanguage: targetLang,
+        confidence: 92,
+        timestamp: new Date(),
+        audioUrl: settings.enableTTS ? undefined : undefined
+      };
+    } catch {
+      toast.error('Nessuna API key configurata. Vai nelle Impostazioni.');
+      return { id: `translation-${Date.now()}`, originalText: text, translatedText: text, sourceLanguage: 'en', targetLanguage: targetLang, confidence: 0, timestamp: new Date() };
+    }
   };
 
   // Start recording

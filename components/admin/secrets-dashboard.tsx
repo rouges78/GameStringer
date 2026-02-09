@@ -63,12 +63,22 @@ export function SecretsDashboard() {
   const fetchSecretsStatus = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/secrets/status');
-      if (!response.ok) {
-        throw new Error('Failed to fetch secrets status');
-      }
-      const result = await response.json();
-      setData(result.data);
+      // Leggi stato secrets da localStorage (no API routes in Tauri)
+      const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+      const secrets: SecretInfo[] = [
+        { key: 'GEMINI_API_KEY', description: 'Gemini AI', isRequired: true, isConfigured: !!settings?.translation?.apiKey },
+        { key: 'OPENAI_API_KEY', description: 'OpenAI', isRequired: false, isConfigured: !!(settings?.openaiApiKey || settings?.voice?.openaiKey) },
+        { key: 'DEEPSEEK_API_KEY', description: 'DeepSeek', isRequired: false, isConfigured: !!settings?.deepseekApiKey },
+      ];
+      const configured = secrets.filter(k => k.isConfigured).length;
+      const required = secrets.filter(k => k.isRequired).length;
+      const secretsData: SecretsData = {
+        summary: { total: secrets.length, configured, required, requiredConfigured: secrets.filter(k => k.isRequired && k.isConfigured).length, missing: secrets.filter(k => !k.isConfigured).map(k => k.key), invalid: [] },
+        secrets,
+        isProduction: false,
+        timestamp: new Date().toISOString()
+      };
+      setData(secretsData);
     } catch (error) {
       console.error('Error fetching secrets status:', error);
       toast.error('Failed to load secrets status');
@@ -82,24 +92,9 @@ export function SecretsDashboard() {
     setValidationResult(null);
     
     try {
-      const response = await fetch('/api/secrets/status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'validate',
-          key,
-          value
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to validate secret');
-      }
-
-      const result = await response.json();
-      setValidationResult(result.data);
+      // Validazione locale (no API routes in Tauri)
+      const isValid = value.length > 10;
+      setValidationResult({ isValid, message: isValid ? 'Key appears valid' : 'Key too short' });
       logUserAction('validate_secret', { key });
     } catch (error) {
       console.error('Error validating secret:', error);
@@ -111,23 +106,12 @@ export function SecretsDashboard() {
 
   const generateSecretKey = async (length: number = 32) => {
     try {
-      const response = await fetch('/api/secrets/status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'generate',
-          length
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate secret key');
-      }
-
-      const result = await response.json();
-      setGeneratedKey(result.data.generatedKey);
+      // Generazione locale (no API routes in Tauri)
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      const array = new Uint8Array(length);
+      crypto.getRandomValues(array);
+      const generated = Array.from(array, b => chars[b % chars.length]).join('');
+      setGeneratedKey(generated);
       logUserAction('generate_secret_key', { length });
       toast.success('Secret key generated successfully');
     } catch (error) {

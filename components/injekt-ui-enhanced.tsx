@@ -129,11 +129,12 @@ export function InjektUIEnhanced() {
 
   const fetchProcesses = async () => {
     try {
-      const response = await fetch('/api/processes');
-      const data = await response.json();
-      setProcesses(data.processes || []);
+      const { invoke } = await import('@/lib/tauri-api');
+      const result = await invoke('list_running_processes') as any;
+      setProcesses(result?.processes || result || []);
     } catch (error) {
       console.error('Error loading processes:', error);
+      setProcesses([]);
     }
   };
 
@@ -165,23 +166,14 @@ export function InjektUIEnhanced() {
     setInjectionCount(0);
 
     try {
-      const response = await fetch('/api/injekt/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          processId: selectedProcess.pid,
-          processName: selectedProcess.name,
-          config: {
-            enabled: true,
-            sourceLang: 'en',
-            targetLang: 'it'
-          }
-        })
-      });
-
-      const data = await response.json();
+      const { invoke } = await import('@/lib/tauri-api');
+      const data = await invoke('start_injection', {
+        processId: selectedProcess.pid,
+        processName: selectedProcess.name,
+        config: { enabled: true, sourceLang: 'en', targetLang: 'it' }
+      }) as any;
       
-      if (data.success) {
+      if (data?.success !== false) {
         // Start stats monitoring
         const interval = setInterval(() => {
           updateStats();
@@ -202,11 +194,8 @@ export function InjektUIEnhanced() {
     if (!selectedProcess) return;
 
     try {
-      await fetch('/api/injekt/stop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ processId: selectedProcess.pid })
-      });
+      const { invoke } = await import('@/lib/tauri-api');
+      await invoke('stop_injection', { processId: selectedProcess.pid });
 
       setIsInjecting(false);
       if (monitoringInterval) {

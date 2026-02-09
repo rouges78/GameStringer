@@ -26,40 +26,10 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
           onRefreshComplete(freshGames as any[]);
         }
       } catch (tauriError) {
-        console.error('❌ Force refresh Tauri failed, trying API fallback:', tauriError);
-        
-        // Fallback: usa l'API Next.js
-        const response = await fetch('/api/library/games');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('Response non è JSON');
-        }
-        
-        const data = await response.json();
-        console.log('✅ Force refresh completed con API fallback:', data);
-        
-        // Transform i dati dell'API nel formato atteso
-        const transformedGames = data.games.map((game: any) => ({
-          id: game.id,
-          app_id: game.id.replace('steam_', ''),
-          title: game.name,
-          platform: game.provider,
-          header_image: game.imageUrl,
-          supported_languages: ['English', 'Italian'],
-          is_vr: false,
-          engine: null,
-          is_installed: false,
-          genres: ['Refresh']
-        }));
-        
-        if (onRefreshComplete) {
-          onRefreshComplete(transformedGames);
-        }
+        console.error('❌ Force refresh Tauri failed:', tauriError);
+        // In Tauri non abbiamo API routes come fallback
+        // Mostra errore e suggerisci riavvio
+        throw new Error('Refresh fallito. Riavvia l\'app e riprova.');
       }
       
       // Small delay per UI feedback

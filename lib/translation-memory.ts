@@ -8,6 +8,8 @@
  * - Velocizzare traduzioni ripetitive
  */
 
+import { translateSingleWithFallback } from './ai-translate-direct';
+
 import { invoke } from '@/lib/tauri-api';
 
 // ============================================================================
@@ -670,40 +672,27 @@ export async function translateWithMemory(
     }
   }
 
-  // Chiama API per traduzione
-  console.log(`[TM] Nessun match, chiamo API ${provider}`);
+  // Traduzione con fallback automatico (Gemini → DeepSeek → OpenAI)
+  console.log(`[TM] Nessun match, chiamo API con fallback`);
   
-  const response = await fetch('/api/translate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      text,
-      targetLanguage: targetLang,
-      sourceLanguage: sourceLang,
-      provider,
-      context,
-      apiKey: options.apiKey // Passa l'API key dall'interfaccia
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`Errore traduzione: ${response.statusText}`);
+  const result = await translateSingleWithFallback(text, targetLang, sourceLang, context);
+  
+  if (!result.translated || result.translated === text) {
+    throw new Error('Traduzione fallita: nessun provider disponibile');
   }
 
-  const data = await response.json();
-  
   // Salva in TM per uso futuro
-  const unit = await translationMemory.add(text, data.translatedText, {
+  const unit = await translationMemory.add(text, result.translated, {
     context,
     gameId,
-    provider,
-    confidence: data.confidence || 0.85
+    provider: result.provider,
+    confidence: 0.85
   });
 
   return {
-    translation: data.translatedText,
+    translation: result.translated,
     source: 'api',
-    confidence: data.confidence || 0.85,
+    confidence: 0.85,
     unit
   };
 }

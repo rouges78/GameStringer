@@ -63,13 +63,27 @@ export interface OllamaModel {
 
 const DEFAULT_PROVIDERS: AIProvider[] = [
   {
+    id: 'translategemma',
+    name: '⭐ TranslateGemma (Consigliato)',
+    type: 'local',
+    baseUrl: 'http://localhost:11434',
+    models: ['translategemma', 'translategemma:4b', 'translategemma:12b', 'translategemma:27b'],
+    isAvailable: false
+  },
+  {
+    id: 'hymt',
+    name: 'HY-MT1.5 (Ultraleggero)',
+    type: 'local',
+    baseUrl: 'http://localhost:11434',
+    models: ['hy-mt1.5:1.8b', 'hy-mt1.5:7b'],
+    isAvailable: false
+  },
+  {
     id: 'ollama',
     name: 'Ollama (Locale)',
     type: 'local',
     baseUrl: 'http://localhost:11434',
     models: [
-      // 🆕 Specializzati Traduzioni
-      'translategemma',      // Modello ottimizzato per traduzioni
       // 🆕 Nuovi modelli 2026
       'glm-4.7-flash',       // Veloce, basso consumo memoria
       'glm-4.7',             // GLM completo
@@ -191,20 +205,33 @@ class AITranslationService {
       if (response.ok) {
         const data = await response.json();
         this.ollamaModels = data.models || [];
+        const modelNames = this.ollamaModels.map(m => m.name);
         
         const ollamaProvider = this.providers.find(p => p.id === 'ollama');
         if (ollamaProvider) {
           ollamaProvider.isAvailable = true;
-          ollamaProvider.models = this.ollamaModels.map(m => m.name);
+          ollamaProvider.models = modelNames;
+        }
+        
+        // TranslateGemma — attiva se installato
+        const tgProvider = this.providers.find(p => p.id === 'translategemma');
+        if (tgProvider) {
+          tgProvider.isAvailable = modelNames.some(n => n.startsWith('translategemma'));
+        }
+        
+        // HY-MT1.5 — attiva se installato
+        const hymtProvider = this.providers.find(p => p.id === 'hymt');
+        if (hymtProvider) {
+          hymtProvider.isAvailable = modelNames.some(n => n.startsWith('hy-mt') || n.startsWith('hunyuan'));
         }
         
         return true;
       }
       return false;
     } catch {
-      const ollamaProvider = this.providers.find(p => p.id === 'ollama');
-      if (ollamaProvider) {
-        ollamaProvider.isAvailable = false;
+      for (const id of ['ollama', 'translategemma', 'hymt']) {
+        const p = this.providers.find(pr => pr.id === id);
+        if (p) p.isAvailable = false;
       }
       return false;
     }

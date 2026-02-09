@@ -4,9 +4,11 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Read, Seek, SeekFrom, Write, BufReader, BufRead};
 use std::path::{Path, PathBuf};
 use tauri::command;
+use zip::write::FileOptions;
+use zip::ZipWriter;
 
 // ============================================================================
 // STRUTTURE DATI
@@ -105,7 +107,7 @@ pub fn detect_danganronpa_game(game_path: String) -> Result<DanganronpaGame, Str
     })
 }
 
-/// Trova tutti i file PAK e WAD nel gioco
+/// Trova tutti i file PAK, WAD e LIN nel gioco
 fn find_pak_files(game_path: &str) -> Result<Vec<String>, String> {
     let mut pak_files = Vec::new();
     
@@ -113,21 +115,23 @@ fn find_pak_files(game_path: &str) -> Result<Vec<String>, String> {
         Path::new(game_path).join("data"),
         Path::new(game_path).join("Dr1").join("data"),
         Path::new(game_path).join("Dr2").join("data"),
+        Path::new(game_path).join("Dr1"),
+        Path::new(game_path).join("Dr2"),
         PathBuf::from(game_path),
     ];
     
     for data_path in &data_paths {
         if data_path.exists() {
             for entry in walkdir::WalkDir::new(data_path)
-                .max_depth(3)
+                .max_depth(8)
                 .into_iter()
                 .filter_map(|e| e.ok())
             {
                 if entry.file_type().is_file() {
                     if let Some(ext) = entry.path().extension() {
                         let ext_lower = ext.to_string_lossy().to_lowercase();
-                        // Danganronpa usa .pak, .wad e .cpk (V3)
-                        if ext_lower == "pak" || ext_lower == "wad" || ext_lower == "cpk" {
+                        // Danganronpa usa .pak, .wad, .cpk (V3) e .lin (script)
+                        if ext_lower == "pak" || ext_lower == "wad" || ext_lower == "cpk" || ext_lower == "lin" {
                             if let Some(path_str) = entry.path().to_str() {
                                 pak_files.push(path_str.to_string());
                             }
@@ -138,7 +142,10 @@ fn find_pak_files(game_path: &str) -> Result<Vec<String>, String> {
         }
     }
     
+    // Deduplica (percorsi multipli possono trovare gli stessi file)
     pak_files.sort();
+    pak_files.dedup();
+    log::info!("📁 Trovati {} file (pak/wad/cpk/lin)", pak_files.len());
     Ok(pak_files)
 }
 
@@ -1509,6 +1516,85 @@ fn decode_utf16le(data: &[u8]) -> String {
     result
 }
 
+/// Decode UTF-16BE bytes to String
+fn decode_utf16be(data: &[u8]) -> String {
+    let mut result = String::new();
+    let mut i = 0;
+    
+    // Skip BOM if present (BE BOM = FE FF)
+    if data.len() >= 2 && data[0] == 0xFE && data[1] == 0xFF {
+        i = 2;
+    }
+    
+    while i + 1 < data.len() {
+        let code = u16::from_be_bytes([data[i], data[i + 1]]);
+        i += 2;
+        
+        if code == 0 {
+            continue;
+        }
+        
+        if let Some(c) = char::from_u32(code as u32) {
+            result.push(c);
+        }
+    }
+    
+    result
+}
+
+/// Auto-detect UTF-16 endianness and decode
+/// Returns (decoded_text, encoding_name)
+fn decode_utf16_auto(data: &[u8]) -> (String, &'static str) {
+    if data.len() < 2 {
+        return (String::new(), "empty");
+    }
+    
+    // Check BOM first
+    if data[0] == 0xFF && data[1] == 0xFE {
+        return (decode_utf16le(data), "UTF-16LE (BOM)");
+    }
+    if data[0] == 0xFE && data[1] == 0xFF {
+        return (decode_utf16be(data), "UTF-16BE (BOM)");
+    }
+    
+    // Handle files starting with 00 FF FE (null + LE BOM)
+    if data.len() >= 3 && data[0] == 0x00 && data[1] == 0xFF && data[2] == 0xFE {
+        return (decode_utf16le(&data[1..]), "UTF-16LE (0+BOM)");
+    }
+    
+    // Auto-detect by checking byte patterns
+    // UTF-16BE: high byte first, so ASCII chars have 0x00 as first byte
+    // UTF-16LE: low byte first, so ASCII chars have 0x00 as second byte
+    let mut be_score = 0i32;
+    let mut le_score = 0i32;
+    let check_len = data.len().min(40);
+    
+    for i in (0..check_len).step_by(2) {
+        if i + 1 >= data.len() { break; }
+        let b0 = data[i];
+        let b1 = data[i + 1];
+        // BE pattern: 0x00 followed by printable ASCII
+        if b0 == 0x00 && b1 >= 0x20 && b1 <= 0x7E { be_score += 1; }
+        // LE pattern: printable ASCII followed by 0x00
+        if b1 == 0x00 && b0 >= 0x20 && b0 <= 0x7E { le_score += 1; }
+    }
+    
+    if be_score > le_score && be_score >= 3 {
+        (decode_utf16be(data), "UTF-16BE")
+    } else if le_score >= 3 {
+        (decode_utf16le(data), "UTF-16LE")
+    } else {
+        // Can't determine — try BE first (majority of DR1 files)
+        let be_text = decode_utf16be(data);
+        let ascii_ratio = be_text.chars().filter(|c| c.is_ascii()).count() as f64 / be_text.len().max(1) as f64;
+        if ascii_ratio > 0.5 {
+            (be_text, "UTF-16BE (guess)")
+        } else {
+            (decode_utf16le(data), "UTF-16LE (guess)")
+        }
+    }
+}
+
 /// Decompress SPC/CMP compressed data (Danganronpa compression)
 fn decompress_spc(data: &[u8]) -> Result<Vec<u8>, String> {
     if data.len() < 16 {
@@ -2179,7 +2265,105 @@ pub struct TranslationProgress {
     pub percentage: u8,
 }
 
-/// Traduzione automatica COMPLETA di un gioco Danganronpa
+/// Estrazione SOLO dialoghi da un gioco Danganronpa (senza traduzione)
+/// Il frontend si occupa della traduzione con API AI
+#[command]
+pub fn extract_danganronpa_dialogues(
+    game_path: String,
+) -> Result<ExtractResult, String> {
+    log::info!("🔍 Estrazione dialoghi Danganronpa: {}", game_path);
+    
+    let game_dir = Path::new(&game_path);
+    if !game_dir.exists() {
+        return Err("Cartella gioco non trovata".to_string());
+    }
+    
+    // Crea cartella output
+    let output_dir = game_dir.join("GameStringer_Translation");
+    fs::create_dir_all(&output_dir)
+        .map_err(|e| format!("Errore creazione cartella output: {}", e))?;
+    
+    // Trova file PAK
+    let pak_files = find_pak_files(&game_path)?;
+    log::info!("📦 Trovati {} file PAK/WAD", pak_files.len());
+    
+    let mut all_dialogues: Vec<LinDialogue> = Vec::new();
+    
+    let mut files_processed = 0u32;
+    let mut files_with_dialogues = 0u32;
+    
+    for pak_path in &pak_files {
+        let pak_name = Path::new(pak_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown");
+        let pak_ext = Path::new(pak_path).extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("")
+            .to_lowercase();
+        
+        // Salta file non testuali (solo per .pak, i .lin sono sempre dialogo)
+        if pak_ext != "lin" && (pak_name.contains("bg_") || pak_name.contains("tex_") || 
+           pak_name.contains("sprite") || pak_name.contains("model") ||
+           pak_name.contains("font")) {
+            continue;
+        }
+        
+        files_processed += 1;
+        match extract_dialogues_from_pak(pak_path) {
+            Ok(dialogues) => {
+                if !dialogues.is_empty() {
+                    files_with_dialogues += 1;
+                }
+                all_dialogues.extend(dialogues);
+            }
+            Err(e) => {
+                log::warn!("⚠️ Errore estrazione {}: {}", pak_name, e);
+            }
+        }
+    }
+    
+    log::info!("📊 Processati {}/{} file, {} con dialoghi, {} stringhe totali",
+        files_processed, pak_files.len(), files_with_dialogues, all_dialogues.len());
+    
+    // Filtra SOLO stringhe da fallback (non da LIN parser) — rimuovi garbage binario
+    // Le stringhe da LIN/UTF-16LE sono già validate, applica solo filtro minimo
+    all_dialogues.retain(|d| {
+        let t = d.original.trim();
+        // Rimuovi stringhe vuote o troppo corte
+        if t.len() < 2 { return false; }
+        // Rimuovi stringhe con solo caratteri speciali/numeri
+        if !t.chars().any(|c| c.is_alphabetic()) { return false; }
+        true
+    });
+    
+    let total = all_dialogues.len() as u32;
+    log::info!("📝 Totale dialoghi filtrati: {} (dopo filtro qualità)", total);
+    
+    // Salva originali
+    let originals_path = output_dir.join("originals.json");
+    let json = serde_json::to_string_pretty(&all_dialogues)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    fs::write(&originals_path, &json)
+        .map_err(|e| format!("Errore salvataggio: {}", e))?;
+    
+    Ok(ExtractResult {
+        success: total > 0,
+        total_strings: total,
+        output_path: output_dir.to_string_lossy().to_string(),
+        dialogues: all_dialogues,
+    })
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExtractResult {
+    pub success: bool,
+    pub total_strings: u32,
+    pub output_path: String,
+    pub dialogues: Vec<LinDialogue>,
+}
+
+/// Traduzione automatica COMPLETA di un gioco Danganronpa (LEGACY - usa extract_danganronpa_dialogues)
 /// Estrae → Traduce con AI → Prepara per repack
 #[command]
 pub async fn auto_translate_danganronpa(
@@ -2319,7 +2503,54 @@ pub async fn auto_translate_danganronpa(
     Ok(result)
 }
 
-/// Estrai dialoghi da un file PAK (ottimizzato con limiti)
+/// Prova a parsare dati binari come script LIN e restituisce i dialoghi
+fn try_parse_lin_data(data: &[u8], pak_name: &str, entry_name: &str) -> Vec<LinDialogue> {
+    let mut dialogues = Vec::new();
+    
+    if data.len() < 8 {
+        return dialogues;
+    }
+    
+    // Check header: LIN type 1/2 hanno header_type = 1 o 2
+    let header_type = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+    if header_type != 1 && header_type != 2 {
+        return dialogues;
+    }
+    
+    let text_block_offset = u32::from_le_bytes([data[4], data[5], data[6], data[7]]) as usize;
+    if text_block_offset == 0 || text_block_offset >= data.len() {
+        return dialogues;
+    }
+    
+    // Prova parsing LIN
+    match parse_lin_type1(data) {
+        Ok((entries, strings)) => {
+            for s in &strings {
+                if s.text.is_empty() || s.text.len() > 500 {
+                    continue;
+                }
+                let speaker = s.speaker_name.clone().unwrap_or_default();
+                dialogues.push(LinDialogue {
+                    id: format!("{}_{}_s{}", pak_name, entry_name.replace('.', "_"), s.index),
+                    speaker,
+                    original: s.text.clone(),
+                    translated: String::new(),
+                    file: format!("{}/{}", pak_name, entry_name),
+                    line_index: s.index,
+                });
+            }
+            if !dialogues.is_empty() {
+                log::info!("📜 LIN parsed {}/{}: {} entries, {} dialogues", 
+                    pak_name, entry_name, entries.len(), dialogues.len());
+            }
+        }
+        Err(_) => {}
+    }
+    
+    dialogues
+}
+
+/// Estrai dialoghi da un file PAK (usa parser LIN per dialoghi reali)
 fn extract_dialogues_from_pak(pak_path: &str) -> Result<Vec<LinDialogue>, String> {
     // Limite dimensione file: max 50MB
     let metadata = fs::metadata(pak_path)
@@ -2339,83 +2570,269 @@ fn extract_dialogues_from_pak(pak_path: &str) -> Result<Vec<LinDialogue>, String
         .unwrap_or("unknown");
     
     let mut dialogues = Vec::new();
-    const MAX_DIALOGUES_PER_FILE: usize = 500;
+    let pak_ext = Path::new(pak_path).extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
     
-    // Prova parsing come WAD AGAR
-    if data.len() >= 4 && &data[0..4] == b"AGAR" {
-        // È un WAD - estrai i sotto-file e cerca testi
-        if let Ok(archive) = read_wad_archive(pak_path) {
-            for (idx, entry) in archive.entries.iter().take(100).enumerate() {
-                if dialogues.len() >= MAX_DIALOGUES_PER_FILE {
-                    break;
+    // 0. File .lin: dialoghi Danganronpa — auto-detect UTF-16 endianness
+    if pak_ext == "lin" {
+        if data.len() < 4 {
+            return Ok(dialogues);
+        }
+        
+        // DR1 .lin files sono testo UTF-16 (BE o LE) con dialoghi
+        let (text, encoding) = decode_utf16_auto(&data);
+        
+        // Filtra: il testo decodificato deve contenere caratteri ASCII leggibili
+        let ascii_count = text.chars().filter(|c| c.is_ascii_alphanumeric() || c.is_ascii_whitespace()).count();
+        let ascii_ratio = ascii_count as f64 / text.len().max(1) as f64;
+        
+        if ascii_ratio < 0.3 || text.len() < 5 {
+            // Non è testo leggibile — skip (file binario/compresso)
+            return Ok(dialogues);
+        }
+        
+        // DR1 usa ÿ (U+00FF) come delimitatore tra entry di testo.
+        // Dopo ÿ c'è un byte FE+XX in UTF-16BE dove XX è la prima lettera del testo.
+        // Splitta per ÿ, recupera la prima lettera, tronca garbage binario.
+        let entries: Vec<String> = text.split('\u{00FF}')
+            .map(|entry| {
+                let trimmed = entry.trim_start_matches(|c: char| c == '\n' || c == '\r');
+                if trimmed.is_empty() { return String::new(); }
+                
+                // Recupera prima lettera mangiata dal control char FE+XX / FF+XX
+                // In UTF-16BE, byte FE+XX diventa U+FEXX, il low byte XX è la lettera
+                let mut chars = trimmed.chars();
+                let mut result = String::new();
+                if let Some(first) = chars.next() {
+                    let code = first as u32;
+                    if code >= 0xFE00 && code <= 0xFEFF {
+                        // Recupera: low byte = prima lettera ASCII
+                        let recovered = (code & 0xFF) as u8;
+                        if recovered >= 0x20 && recovered <= 0x7E {
+                            result.push(recovered as char);
+                        }
+                    } else if code >= 0xFF00 && code <= 0xFFFF {
+                        let recovered = (code & 0xFF) as u8;
+                        if recovered >= 0x20 && recovered <= 0x7E {
+                            result.push(recovered as char);
+                        }
+                    } else if first.is_ascii() || (first >= '\u{00C0}' && first <= '\u{024F}') {
+                        result.push(first);
+                    }
+                    // else: skip non-Latin first char
                 }
-                // Estrai entry e cerca testi (max 1MB per entry)
-                if entry.size > 0 && entry.size < 1_000_000 {
-                    let start = entry.offset as usize;
-                    let end = start + entry.size as usize;
-                    
-                    if end <= data.len() {
-                        let entry_data = &data[start..end];
-                        
-                        // Cerca testi UTF-16LE
-                        if is_utf16le_text(entry_data) {
-                            let text = decode_utf16le(entry_data);
-                            for (line_idx, line) in text.lines().take(100).enumerate() {
-                                let trimmed = line.trim();
-                                if trimmed.len() > 2 && trimmed.len() < 500 && !trimmed.starts_with('\u{FFFE}') {
-                                    dialogues.push(LinDialogue {
-                                        id: format!("{}_{}_{}", pak_name, idx, line_idx),
-                                        speaker: "".to_string(),
-                                        original: trimmed.to_string(),
-                                        translated: String::new(),
-                                        file: pak_name.to_string(),
-                                        line_index: line_idx as u32,
-                                    });
-                                }
-                            }
+                result.push_str(&chars.collect::<String>());
+                
+                // Tronca garbage binario: 3+ chars consecutivi non-Latin = bytecode
+                let result_chars: Vec<char> = result.chars().collect();
+                let mut non_latin_streak = 0usize;
+                let mut truncate_idx = result_chars.len();
+                for (i, &c) in result_chars.iter().enumerate() {
+                    if c.is_ascii() || (c >= '\u{00C0}' && c <= '\u{024F}') {
+                        non_latin_streak = 0;
+                    } else {
+                        non_latin_streak += 1;
+                        if non_latin_streak >= 3 {
+                            truncate_idx = if i >= 2 { i - 2 } else { 0 };
+                            break;
                         }
                     }
                 }
-            }
-        }
-    } else if data.len() < 5_000_000 && is_utf16le_text(&data) {
-        // File testo UTF-16LE diretto (max 5MB)
-        let text = decode_utf16le(&data);
-        for (line_idx, line) in text.lines().take(MAX_DIALOGUES_PER_FILE).enumerate() {
-            let trimmed = line.trim();
-            if trimmed.len() > 2 && trimmed.len() < 500 {
+                let clean: String = result_chars[..truncate_idx].iter().collect();
+                
+                // Unisci righe interne: \n → spazio (sono wrap visivi)
+                let joined = clean.lines()
+                    .map(|l| l.trim())
+                    .filter(|l| !l.is_empty())
+                    .collect::<Vec<&str>>()
+                    .join(" ");
+                
+                // Rimuovi tag CLT: <CLT>, <CLT N>, </CLT>
+                let mut no_clt = joined.clone();
+                while let Some(start) = no_clt.find("<CLT") {
+                    if let Some(end) = no_clt[start..].find('>') {
+                        no_clt = format!("{}{}", &no_clt[..start], &no_clt[start + end + 1..]);
+                    } else {
+                        break;
+                    }
+                }
+                no_clt.trim().to_string()
+            })
+            .filter(|entry| {
+                let len = entry.len();
+                if len < 3 || len > 2000 { return false; }
+                // Deve contenere almeno una lettera ASCII
+                entry.chars().any(|c| c.is_ascii_alphabetic())
+            })
+            .collect();
+        
+        if !entries.is_empty() {
+            for (idx, entry) in entries.iter().enumerate() {
                 dialogues.push(LinDialogue {
-                    id: format!("{}_{}", pak_name, line_idx),
-                    speaker: "".to_string(),
-                    original: trimmed.to_string(),
-                    translated: String::new(),
-                    file: pak_name.to_string(),
-                    line_index: line_idx as u32,
-                });
-            }
-        }
-    } else if data.len() < 2_000_000 {
-        // Cerca stringhe ASCII/UTF-8 nel binario (max 2MB)
-        let mut strings = extract_strings_from_binary(&data);
-        for (idx, s) in strings.drain(..).take(MAX_DIALOGUES_PER_FILE).enumerate() {
-            if s.len() > 3 && s.len() < 500 {
-                dialogues.push(LinDialogue {
-                    id: format!("{}_{}", pak_name, idx),
-                    speaker: "".to_string(),
-                    original: s,
+                    id: format!("{}_s{}", pak_name.replace('.', "_"), idx),
+                    speaker: String::new(),
+                    original: entry.clone(),
                     translated: String::new(),
                     file: pak_name.to_string(),
                     line_index: idx as u32,
                 });
             }
+            log::info!("📜 LIN {} {}: {} entry dialogo", encoding, pak_name, dialogues.len());
+            return Ok(dialogues);
+        }
+        
+        return Ok(dialogues);
+    }
+    
+    // 1. Prova parsing come WAD AGAR
+    if data.len() >= 4 && &data[0..4] == b"AGAR" {
+        if let Ok(archive) = read_wad_archive(pak_path) {
+            for entry in archive.entries.iter().take(500) {
+                if entry.size == 0 || entry.size > 5_000_000 {
+                    continue;
+                }
+                let start = entry.offset as usize;
+                let end = start + entry.size as usize;
+                if end > data.len() {
+                    continue;
+                }
+                let entry_data = &data[start..end];
+                let entry_name = if entry.name.is_empty() { 
+                    format!("entry_{}", entry.offset) 
+                } else { 
+                    entry.name.clone() 
+                };
+                
+                // a) Prova come script LIN (dialoghi con speaker)
+                let lin_dialogues = try_parse_lin_data(entry_data, pak_name, &entry_name);
+                if !lin_dialogues.is_empty() {
+                    dialogues.extend(lin_dialogues);
+                    continue;
+                }
+                
+                // b) Prova SPC decompression + LIN
+                if entry_data.len() >= 4 && (&entry_data[0..4] == b"SPC " || &entry_data[0..4] == b"$CMP") {
+                    if let Ok(decompressed) = decompress_spc(entry_data) {
+                        let lin_dialogues = try_parse_lin_data(&decompressed, pak_name, &entry_name);
+                        if !lin_dialogues.is_empty() {
+                            dialogues.extend(lin_dialogues);
+                            continue;
+                        }
+                    }
+                }
+                
+                // c) Fallback: UTF-16LE text (per script_pak e simili)
+                if entry_name.contains("script") || is_utf16le_text(entry_data) {
+                    let text = decode_utf16le(entry_data);
+                    for (line_idx, line) in text.lines().take(200).enumerate() {
+                        let trimmed = line.trim();
+                        if trimmed.len() > 5 && trimmed.len() < 500 
+                            && !trimmed.starts_with('\u{FFFE}')
+                            && is_likely_dialogue(trimmed) {
+                            dialogues.push(LinDialogue {
+                                id: format!("{}_{}_t{}", pak_name, entry_name.replace('.', "_"), line_idx),
+                                speaker: "".to_string(),
+                                original: trimmed.to_string(),
+                                translated: String::new(),
+                                file: format!("{}/{}", pak_name, entry_name),
+                                line_index: line_idx as u32,
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
+    // 2. File LIN diretto (non dentro WAD)
+    else if data.len() >= 8 {
+        let lin_dialogues = try_parse_lin_data(&data, pak_name, pak_name);
+        if !lin_dialogues.is_empty() {
+            dialogues.extend(lin_dialogues);
+        }
+        // Prova SPC + LIN
+        else if data.len() >= 4 && (&data[0..4] == b"SPC " || &data[0..4] == b"$CMP") {
+            if let Ok(decompressed) = decompress_spc(&data) {
+                let lin_dialogues = try_parse_lin_data(&decompressed, pak_name, pak_name);
+                dialogues.extend(lin_dialogues);
+            }
+        }
+        // UTF-16LE text diretto
+        else if is_utf16le_text(&data) && data.len() < 5_000_000 {
+            let text = decode_utf16le(&data);
+            for (line_idx, line) in text.lines().take(500).enumerate() {
+                let trimmed = line.trim();
+                if trimmed.len() > 5 && trimmed.len() < 500 && is_likely_dialogue(trimmed) {
+                    dialogues.push(LinDialogue {
+                        id: format!("{}_{}", pak_name, line_idx),
+                        speaker: "".to_string(),
+                        original: trimmed.to_string(),
+                        translated: String::new(),
+                        file: pak_name.to_string(),
+                        line_index: line_idx as u32,
+                    });
+                }
+            }
+        }
+    }
+    // NOTA: rimosso extract_strings_from_binary — produceva solo garbage
     
     log::info!("📄 {}: {} dialoghi estratti", pak_name, dialogues.len());
     Ok(dialogues)
 }
 
+/// Verifica se una stringa sembra un vero dialogo/testo di gioco
+fn is_likely_dialogue(text: &str) -> bool {
+    let trimmed = text.trim();
+    // Troppo corta o troppo lunga
+    if trimmed.len() < 8 || trimmed.len() > 400 {
+        return false;
+    }
+    // DEVE contenere almeno uno spazio (dialoghi veri sono frasi con parole)
+    if !trimmed.contains(' ') {
+        return false;
+    }
+    // Deve contenere lettere
+    let letter_count = trimmed.chars().filter(|c| c.is_alphabetic()).count();
+    let letter_ratio = letter_count as f64 / trimmed.len() as f64;
+    // Deve avere almeno 60% lettere (era 50%, troppo lasco)
+    if letter_ratio < 0.6 { return false; }
+    // Filtra path/URL
+    if trimmed.contains('/') && trimmed.contains('.') { return false; }
+    if trimmed.contains('\\') { return false; }
+    if trimmed.starts_with("http") { return false; }
+    // Filtra codice/variabili (troppe underscore, camelCase patterns)
+    let underscore_count = trimmed.chars().filter(|&c| c == '_').count();
+    if underscore_count > 1 { return false; }
+    // Filtra stringhe tecniche (solo maiuscole + underscore)
+    if trimmed.chars().all(|c| c.is_uppercase() || c == '_' || c == ' ' || c.is_ascii_digit()) && trimmed.len() > 3 {
+        return false;
+    }
+    // Filtra stringhe con troppi caratteri speciali
+    let special_count = trimmed.chars().filter(|c| !c.is_alphanumeric() && !c.is_whitespace() && *c != '.' && *c != ',' && *c != '!' && *c != '?' && *c != '\'' && *c != '"' && *c != '-').count();
+    if special_count as f64 / trimmed.len() as f64 > 0.15 { return false; }
+    // Deve contenere vocali (testo inglese reale ha vocali; garbage binario raramente)
+    let vowel_count = trimmed.chars().filter(|c| "aeiouAEIOU".contains(*c)).count();
+    if vowel_count == 0 { return false; }
+    let vowel_ratio = vowel_count as f64 / letter_count.max(1) as f64;
+    // Testo inglese ha ~35-45% vocali; sotto il 10% è garbage
+    if vowel_ratio < 0.10 { return false; }
+    // Deve avere almeno 30% lettere minuscole (testo reale è prevalentemente lowercase)
+    let lowercase_count = trimmed.chars().filter(|c| c.is_lowercase()).count();
+    let lowercase_ratio = lowercase_count as f64 / letter_count.max(1) as f64;
+    if lowercase_ratio < 0.3 { return false; }
+    // Conta "parole leggibili": sequenze di 2+ lettere separate da spazi
+    let words: Vec<&str> = trimmed.split_whitespace()
+        .filter(|w| w.chars().filter(|c| c.is_alphabetic()).count() >= 2)
+        .collect();
+    // Deve avere almeno 2 parole leggibili
+    if words.len() < 2 { return false; }
+    true
+}
+
 /// Estrai stringhe leggibili da dati binari
+#[allow(dead_code)]
 fn extract_strings_from_binary(data: &[u8]) -> Vec<String> {
     let mut strings = Vec::new();
     let mut current = String::new();
@@ -2540,6 +2957,7 @@ pub struct StxString {
 }
 
 /// Parse file STX (String Table usato in DR2 e V3)
+#[allow(dead_code)]
 #[command]
 pub fn parse_stx_file(stx_path: String) -> Result<StxFile, String> {
     let path = Path::new(&stx_path);
@@ -2642,6 +3060,7 @@ pub fn parse_stx_file(stx_path: String) -> Result<StxFile, String> {
 }
 
 /// Estrai stringhe STX per traduzione
+#[allow(dead_code)]
 #[command]
 pub fn extract_stx_for_translation(stx_path: String) -> Result<Vec<LinDialogue>, String> {
     let stx = parse_stx_file(stx_path.clone())?;
@@ -2698,4 +3117,232 @@ pub fn export_for_drat(
     log::info!("📤 Export DRAT: {} dialoghi salvati in {}", dialogues.len(), output_path);
     
     Ok(format!("Esportati {} dialoghi in formato DRAT", dialogues.len()))
+}
+
+// ============================================================================
+// EXPORT PATCH DISTRIBUIBILE (.zip)
+// ============================================================================
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ExportPatchResult {
+    pub success: bool,
+    pub zip_path: String,
+    pub zip_size_mb: f64,
+    pub files_included: Vec<String>,
+}
+
+/// Esporta una patch distribuibile come .zip
+#[command]
+pub fn export_danganronpa_patch(
+    game_path: String,
+    output_path: String,
+) -> Result<ExportPatchResult, String> {
+    log::info!("📦 Export patch Danganronpa: {} → {}", game_path, output_path);
+
+    let game_dir = Path::new(&game_path);
+    let wad_path = game_dir.join("dr1_data_keyboard_us.wad");
+    let translations_path = game_dir.join("GameStringer_Translation").join("translations.json");
+
+    if !wad_path.exists() {
+        return Err("WAD patchato non trovato (dr1_data_keyboard_us.wad). Applica prima la patch.".to_string());
+    }
+
+    let wad_size = fs::metadata(&wad_path)
+        .map_err(|e| format!("Errore lettura WAD: {}", e))?
+        .len();
+
+    if wad_size < 100_000_000 {
+        return Err(format!(
+            "Il WAD sembra troppo piccolo ({:.1} MB). Assicurati che sia stato patchato con v15.",
+            wad_size as f64 / 1_048_576.0
+        ));
+    }
+
+    log::info!("   WAD: {:.1} MB", wad_size as f64 / 1_048_576.0);
+
+    // README
+    let readme = r#"========================================================
+  DANGANRONPA: TRIGGER HAPPY HAVOC - PATCH ITALIANO
+  Creato con GameStringer
+========================================================
+
+CONTENUTO PATCH
+- dr1_data_keyboard_us.wad  : File di gioco patchato (italiano)
+- translations.json         : Traduzioni sorgente (per modding)
+- install.bat               : Installer automatico (Steam)
+
+INSTALLAZIONE AUTOMATICA (consigliata)
+1. Estrai lo .zip in una cartella qualsiasi
+2. Doppio click su "install.bat"
+3. Lo script trovera' il gioco su Steam e installera' la patch
+4. Verra' creato un backup del file originale (.backup)
+
+INSTALLAZIONE MANUALE
+1. Steam -> Danganronpa -> Tasto destro -> Gestisci -> Sfoglia file locali
+2. Fai un BACKUP di "dr1_data_keyboard_us.wad" (rinominalo .backup)
+3. Copia il "dr1_data_keyboard_us.wad" di questa patch nella cartella
+
+ATTIVAZIONE IN GIOCO
+Impostazioni -> Control Hints -> seleziona "Keyboard and Mouse"
+Il testo cambiera' in italiano!
+
+DISINSTALLAZIONE
+Rinomina "dr1_data_keyboard_us.wad.backup" in "dr1_data_keyboard_us.wad"
+oppure verifica l'integrita' dei file su Steam.
+
+CREDITI
+- All-Ice Team: Traduzione base italiana completa
+- GameStringer: Tool di traduzione e patch personalizzate
+- Spike Chunsoft: Sviluppatore originale
+"#;
+
+    // install.bat
+    let install_bat = r#"@echo off
+chcp 65001 >nul 2>&1
+title Danganronpa ITA Patch - GameStringer Installer
+color 0A
+echo.
+echo  ========================================================
+echo   DANGANRONPA: TRIGGER HAPPY HAVOC
+echo   PATCH ITALIANO - GameStringer Installer
+echo  ========================================================
+echo.
+
+set "STEAM_COMMON=C:\Program Files (x86)\Steam\steamapps\common"
+set "GAME_FOLDER=Danganronpa Trigger Happy Havoc"
+set "GAME_PATH=%STEAM_COMMON%\%GAME_FOLDER%"
+set "WAD_NAME=dr1_data_keyboard_us.wad"
+
+if not exist "%GAME_PATH%" (
+    echo  [!] Gioco non trovato nel percorso Steam predefinito.
+    echo      Cercando in altre posizioni...
+    for /f "tokens=*" %%a in ('dir /b /s /ad "D:\SteamLibrary\steamapps\common\%GAME_FOLDER%" 2^>nul') do set "GAME_PATH=%%a"
+    for /f "tokens=*" %%a in ('dir /b /s /ad "E:\SteamLibrary\steamapps\common\%GAME_FOLDER%" 2^>nul') do set "GAME_PATH=%%a"
+)
+
+if not exist "%GAME_PATH%" (
+    echo  [ERRORE] Danganronpa non trovato! Installa il gioco da Steam.
+    pause
+    exit /b 1
+)
+
+echo  [OK] Gioco trovato: %GAME_PATH%
+echo.
+
+if exist "%GAME_PATH%\%WAD_NAME%" (
+    if not exist "%GAME_PATH%\%WAD_NAME%.backup" (
+        echo  [1/3] Creazione backup...
+        copy "%GAME_PATH%\%WAD_NAME%" "%GAME_PATH%\%WAD_NAME%.backup" >nul
+        echo        Backup creato: %WAD_NAME%.backup
+    ) else (
+        echo  [1/3] Backup gia' esistente, skip.
+    )
+)
+
+echo  [2/3] Installazione patch...
+copy /Y "%~dp0%WAD_NAME%" "%GAME_PATH%\%WAD_NAME%" >nul
+if errorlevel 1 (
+    echo  [ERRORE] Impossibile copiare il file. Chiudi il gioco e riprova.
+    pause
+    exit /b 1
+)
+echo        WAD patchato installato!
+
+if exist "%~dp0translations.json" (
+    echo  [3/3] Copia traduzioni sorgente...
+    if not exist "%GAME_PATH%\GameStringer_Translation" mkdir "%GAME_PATH%\GameStringer_Translation"
+    copy /Y "%~dp0translations.json" "%GAME_PATH%\GameStringer_Translation\translations.json" >nul
+    echo        Traduzioni copiate.
+) else (
+    echo  [3/3] Traduzioni non incluse, skip.
+)
+
+echo.
+echo  ========================================================
+echo   PATCH INSTALLATA CON SUCCESSO!
+echo.
+echo   Avvia Danganronpa e vai su:
+echo   Impostazioni - Control Hints - Keyboard and Mouse
+echo   Il testo sara' in italiano!
+echo  ========================================================
+echo.
+pause
+"#;
+
+    // Crea ZIP
+    let zip_file = File::create(&output_path)
+        .map_err(|e| format!("Errore creazione ZIP: {}", e))?;
+    let mut zip = ZipWriter::new(zip_file);
+    let options = FileOptions::default()
+        .compression_method(zip::CompressionMethod::Stored);
+
+    let mut files_included = Vec::new();
+
+    // 1. WAD patchato (streaming per file grandi)
+    log::info!("   Aggiunta WAD al ZIP...");
+    zip.start_file("dr1_data_keyboard_us.wad", options)
+        .map_err(|e| format!("Errore ZIP WAD: {}", e))?;
+
+    let wad_file = File::open(&wad_path)
+        .map_err(|e| format!("Errore apertura WAD: {}", e))?;
+    let mut reader = BufReader::with_capacity(8 * 1024 * 1024, wad_file);
+    let mut total_written: u64 = 0;
+
+    loop {
+        let buf = reader.fill_buf()
+            .map_err(|e| format!("Errore lettura WAD: {}", e))?;
+        if buf.is_empty() { break; }
+        let len = buf.len();
+        zip.write_all(buf)
+            .map_err(|e| format!("Errore scrittura ZIP: {}", e))?;
+        reader.consume(len);
+        total_written += len as u64;
+        if total_written % (100 * 1024 * 1024) == 0 {
+            log::info!("   ... {:.0} MB scritti", total_written as f64 / 1_048_576.0);
+        }
+    }
+    files_included.push(format!("dr1_data_keyboard_us.wad ({:.1} MB)", wad_size as f64 / 1_048_576.0));
+
+    // 2. README
+    zip.start_file("LEGGIMI.txt", options)
+        .map_err(|e| format!("Errore ZIP README: {}", e))?;
+    zip.write_all(readme.as_bytes())
+        .map_err(|e| format!("Errore scrittura README: {}", e))?;
+    files_included.push("LEGGIMI.txt".to_string());
+
+    // 3. install.bat
+    zip.start_file("install.bat", options)
+        .map_err(|e| format!("Errore ZIP install.bat: {}", e))?;
+    zip.write_all(install_bat.as_bytes())
+        .map_err(|e| format!("Errore scrittura install.bat: {}", e))?;
+    files_included.push("install.bat".to_string());
+
+    // 4. translations.json (se presente)
+    if translations_path.exists() {
+        let tr_data = fs::read(&translations_path)
+            .map_err(|e| format!("Errore lettura traduzioni: {}", e))?;
+        let tr_size = tr_data.len();
+        zip.start_file("translations.json", options)
+            .map_err(|e| format!("Errore ZIP translations: {}", e))?;
+        zip.write_all(&tr_data)
+            .map_err(|e| format!("Errore scrittura translations: {}", e))?;
+        files_included.push(format!("translations.json ({:.1} KB)", tr_size as f64 / 1024.0));
+    }
+
+    zip.finish()
+        .map_err(|e| format!("Errore finalizzazione ZIP: {}", e))?;
+
+    let zip_size = fs::metadata(&output_path)
+        .map_err(|e| format!("Errore lettura dimensione ZIP: {}", e))?
+        .len();
+    let zip_size_mb = zip_size as f64 / 1_048_576.0;
+
+    log::info!("✅ ZIP creato: {} ({:.1} MB)", output_path, zip_size_mb);
+
+    Ok(ExportPatchResult {
+        success: true,
+        zip_path: output_path,
+        zip_size_mb,
+        files_included,
+    })
 }

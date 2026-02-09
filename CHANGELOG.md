@@ -19,6 +19,92 @@
 
 ## 📅 Febbraio 2026
 
+### v1.3.0 — Danganronpa WAD Patcher & Export System 🎮📦
+
+> **Data**: 2026-02-09
+
+#### 🎮 Danganronpa WAD Patcher v15
+
+- **All-Ice base + GameStringer override**: sistema di patching completo
+- **35.865 stringhe** estratte dal WAD per traduzione
+- **WAD Text Extractor CLI**: `scripts/extract-wad-text.mjs` per estrazione testi
+- **WAD Patcher CLI**: `scripts/patch-wad-v15.mjs` con override selettivo
+
+#### 🔍 WAD Extractor UI
+
+- **Nuovo tab** "WAD Extractor" nel Danganronpa Patcher
+- **Editor integrato** con ricerca, filtri e modifica stringhe
+- **Traduzione batch AI** delle stringhe estratte
+- **Export JSON** delle traduzioni
+
+#### 📦 Export Patch Distribuibile
+
+- **Backend Rust**: comando `export_danganronpa_patch` con `zip` crate (streaming ~626 MB)
+- **UI Export**: bottone "Esporta .zip" con dialog salvataggio nativo (`@tauri-apps/plugin-dialog`)
+- **Contenuto ZIP**: WAD patchato, `install.bat` (installer automatico Steam), `LEGGIMI.txt`, `translations.json`
+- **Script CLI**: `scripts/export-danganronpa-patch.mjs` alternativo senza dipendenze
+
+#### 📊 Dashboard Stats Reali
+
+- **Translation Memory**: dati reali dal backend Rust (`list_translation_memories`)
+- **Activity History**: traduzioni completate, patch applicate
+- **Tempo Risparmiato**: calcolato da TM entries + traduzioni
+- **Entry TM**: conteggio reale unità nelle Translation Memory
+
+#### 🎨 UI Compattata
+
+- **Danganronpa Patcher**: tutti i tab (PAK, PO, Patch, LIN, WAD Extractor) ottimizzati
+- **Header ridotti**: `py-1.5 px-3`, titoli `text-xs`, icone `w-3 h-3`
+- **ScrollArea ridotte**: 300-320px per massimizzare spazio
+- **Empty states** minimali e gap uniformi `gap-2`
+
+---
+
+### v1.2.0 — Fallback Provider & Full Tauri Compatibility 🛡️
+
+> **Data**: 2026-02-06
+
+#### 🛡️ Fallback Provider Automatico
+
+- **Traduzione con fallback**: Gemini → DeepSeek → OpenAI → testo originale
+- **Helper centralizzato**: `lib/ai-translate-direct.ts` con `translateWithFallback()` e `translateSingleWithFallback()`
+- **10+ componenti aggiornati** per usare il fallback automatico
+- **Zero crash** se un provider fallisce o la quota è esaurita
+
+#### 🔧 Audit /api/* Completato al 100%
+
+- **0 fetch('/api/') attive** — tutto funziona senza API routes Next.js
+- **Injection UI** → Tauri `invoke()` (list_running_processes, start_injection, stop_injection)
+- **Secrets dashboard** → localStorage
+- **Logging dashboard** → localStorage
+- **Translation import** → localStorage TM diretta
+- **GitHub discussions** → GitHub API diretta
+- **Language detect** → solo rilevamento locale
+- **Force refresh** → solo Tauri (rimosso fallback API)
+
+#### 🔍 Danganronpa Filtro Smart
+
+- **Nuovo modulo**: `lib/danganronpa-filter.ts`
+- **Filtro locale**: elimina vuoti, duplicati, stringhe sistema, codici, UI buttons
+- **Classificazione AI** (opzionale): priorità 1-5 per dialoghi
+- **Risultato atteso**: 18K → ~3K stringhe rilevanti
+- **Stima risparmio**: mostra costo evitato nel toast
+
+#### 🧪 Test E2E Playwright
+
+- **38 test reali** tutti passanti (da 5 scheletrici)
+- **navigation.spec.ts**: 14 test (core pages, tool pages, sidebar, 404, console errors)
+- **translation.spec.ts**: 19 test (settings, AI translator, batch, TM, quality, specialized tools)
+- **danganronpa.spec.ts**: 5 test (page load, filtro dialoghi, stima costi)
+
+#### 🐛 Bug Fix
+
+- **notification-indicator.tsx**: fix precedenza operatori (`||` vs `&&`)
+- **Translation Memory**: usa `translateSingleWithFallback` invece di `/api/translate`
+- **Offline Cache**: usa `translateSingleWithFallback` invece di `/api/translate`
+
+---
+
 ### v1.1.0 — Website Multilingua & Danganronpa Support 🌐
 
 > **Data**: 2026-02-05
@@ -679,10 +765,10 @@
 
 | Metrica | Valore |
 |:--------|:-------|
-| **Versione attuale** | 1.0.9 |
+| **Versione attuale** | 1.3.0 |
 | **Periodo sviluppo** | Giugno 2025 - Presente |
 | **Stack Backend** | Rust (Tauri v2) |
 | **Stack Frontend** | Next.js 15, React, TailwindCSS |
 | **Piattaforme** | Windows, macOS, Linux |
-| **Parser supportati** | JSON, PO, RESX, CSV, XLIFF, Telltale, Godot, Ren'Py |
+| **Parser supportati** | JSON, PO, RESX, CSV, XLIFF, Telltale, Godot, Ren'Py, WAD (Danganronpa), PAK, LIN, STX |
 | **Store supportati** | Steam, Epic, GOG, Origin, Ubisoft, Battle.net, itch.io |

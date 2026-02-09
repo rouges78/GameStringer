@@ -8,6 +8,7 @@
 import { translationMemory, translateWithMemory, TranslationUnit } from './translation-memory';
 import { runQualityGates, quickQualityCheck, QualityReport, validateBatch } from './quality-gates';
 import { classifyBatch, classifyContent, ContentClassification, BatchClassificationResult } from './content-classifier';
+import { translateWithFallback } from './ai-translate-direct';
 
 // ============================================================================
 // TYPES
@@ -462,35 +463,30 @@ export class BatchTranslator {
     if (!this.job) return;
     
     try {
-      console.log(`[BatchTranslator] Calling API for batch ${batchNum}/${totalBatches}, ${batchTexts.length} items`);
-      const response = await fetch('/api/translate/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          texts: batchTexts,
-          targetLanguage: this.job.targetLanguage,
-          sourceLanguage: this.job.sourceLanguage,
-          provider: this.job.provider,
-          context: this.job.options.gameContext,
-          apiKey: this.job.options.apiKey
-        })
+      console.log(`[BatchTranslator] Calling AI API with fallback for batch ${batchNum}/${totalBatches}, ${batchTexts.length} items`);
+      
+      const result = await translateWithFallback({
+        texts: batchTexts,
+        targetLanguage: this.job.targetLanguage,
+        sourceLanguage: this.job.sourceLanguage || 'en',
+        context: this.job.options.gameContext
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[BatchTranslator] API error ${response.status}:`, errorText);
-        throw new Error(`API error: ${response.status} - ${errorText}`);
+      if (!result.success) {
+        throw new Error('All translation providers failed');
       }
       
-      const data = await response.json();
+      const translations = result.translations;
+      console.log(`[BatchTranslator] Translated via ${result.provider}`);
+      
       
       // Applica traduzioni
       for (let i = 0; i < batchItems.length; i++) {
         const item = batchItems[i];
-        const translation = data.translations?.[i];
+        const translated = i < translations.length ? translations[i] : null;
         
-        if (translation && translation.translated) {
-          item.translatedText = translation.translated;
+        if (translated) {
+          item.translatedText = translated;
           item.status = 'completed';
           item.fromMemory = false;
           this.job.progress.completed++;
@@ -498,16 +494,16 @@ export class BatchTranslator {
           
           // Salva in TM per uso futuro (async, non blocca)
           if (this.job.options.saveToMemory) {
-            translationMemory.add(item.sourceText, translation.translated, {
+            translationMemory.add(item.sourceText, translated, {
               context: item.classification?.type,
               gameId: this.job.gameId,
               provider: this.job.provider,
-              confidence: translation.confidence || 0.85
+              confidence: 0.85
             }).catch(() => {});
           }
           
           // Stima costi
-          const tokens = Math.ceil(item.sourceText.length / 4) + Math.ceil(translation.translated.length / 4);
+          const tokens = Math.ceil(item.sourceText.length / 4) + Math.ceil(translated.length / 4);
           this.job.results.totalTokensUsed += tokens;
           this.job.results.estimatedCost += tokens * 0.00002;
           

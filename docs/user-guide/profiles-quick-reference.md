@@ -43,15 +43,14 @@
 - ❌ Non condividere password profili
 - ❌ Non usare password troppo semplici
 - ❌ Non eliminare profili senza backup
-- ❌ Non ignorare messaggi di sicurezza
 
 ---
 
-## 🆘 Problemi Comuni
+## Problemi Comuni
 
 ### "Password Errata"
 - **Verifica**: Caps Lock, tastiera corretta
-- **Soluzione**: Se dimenticata, elimina e ricrea profilo
+- **Soluzione**: Usa la Recovery Key (12 parole) per reimpostare la password
 
 ### "Profilo Non Si Carica"
 - **Riavvia** l'applicazione
@@ -67,7 +66,7 @@
 
 ---
 
-## 📞 Supporto Veloce
+## Supporto Veloce
 
 ### Prima di Contattare Supporto
 1. **Riavvia** l'applicazione
@@ -87,9 +86,9 @@
 
 ---
 
-## 📋 Checklist Settaggi
+## Checklist Settaggi
 
-### ✅ Setup Iniziale
+### Setup Iniziale
 - [ ] Profilo creato con nome descrittivo
 - [ ] Password sicura impostata e annotata
 - [ ] Credenziali Steam configurate
@@ -97,13 +96,13 @@
 - [ ] Impostazioni personalizzate (tema, lingua)
 - [ ] Primo backup profilo esportato
 
-### ✅ Manutenzione Settimanale
+### Manutenzione Settimanale
 - [ ] Backup profilo aggiornato
 - [ ] Cache pulita se necessario
 - [ ] Credenziali verificate e funzionanti
 - [ ] Aggiornamenti app installati
 
-### ✅ Manutenzione Mensile
+### Manutenzione Mensile
 - [ ] Backup completo tutti i profili
 - [ ] Pulizia profili non utilizzati
 - [ ] Verifica sicurezza password
@@ -111,10 +110,10 @@
 
 ---
 
-## 🔄 Migrazione Veloce
+## Migrazione Veloce
 
 ### Da Versione Precedente
-1. **Aggiorna** GameStringer alla 3.2.2+
+1. **Aggiorna** GameStringer alla 1.3.0+
 2. **Avvia** → Vedrai wizard migrazione
 3. **Segui** le istruzioni automatiche
 4. **Verifica** che tutto sia migrato
@@ -127,6 +126,6 @@
 
 ---
 
-*Riferimento rapido aggiornato alla versione 3.2.2+ - Sistema Profili*
+*Riferimento rapido aggiornato alla versione 1.3.0 - Sistema Profili*
 
 **Serve aiuto?** Consulta la [Guida Completa](profiles-system.md) o contatta il supporto!

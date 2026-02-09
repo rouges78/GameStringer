@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { translateWithFallback } from '@/lib/ai-translate-direct';
 import { Progress } from '@/components/ui/progress';
 import { 
   Play, Pause, Square, Settings, Eye, EyeOff, 
@@ -104,46 +105,47 @@ export function LiveOcrOverlay() {
       let translatedTexts: DetectedText[] = [];
       
       if (autoTranslate) {
-        const textsToTranslate = ocrResult.map(t => t.text);
+        const textsToTranslate = ocrResult.map(t => t.text).filter(t => t.trim().length > 0);
         
         try {
-          const response = await fetch('/api/translate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          if (textsToTranslate.length > 0) {
+            const result = await translateWithFallback({
               texts: textsToTranslate,
               targetLanguage,
               sourceLanguage: sourceLanguage === 'auto' ? undefined : sourceLanguage,
-              provider: 'libre' // Fast for real-time
-            })
-          });
+              context: 'game screen OCR'
+            });
+            
+            if (result.success) {
+              let tIdx = 0;
+              translatedTexts = ocrResult.map((t, i) => {
+                const isTranslatable = t.text.trim().length > 0;
+                const translated = isTranslatable && tIdx < result.translations.length ? result.translations[tIdx++] : t.text;
+                return {
+                  id: `${Date.now()}-${i}`,
+                  original: t.text,
+                  translated,
+                  x: t.x, y: t.y, width: t.width, height: t.height,
+                  confidence: t.confidence,
+                  timestamp: Date.now()
+                };
+              });
+            }
+          }
           
-          if (response.ok) {
-            const data = await response.json();
+          // Se nessuna traduzione ottenuta, usa originale
+          if (translatedTexts.length === 0) {
             translatedTexts = ocrResult.map((t, i) => ({
-              id: `${Date.now()}-${i}`,
-              original: t.text,
-              translated: data.translations?.[i]?.translatedText || t.text,
-              x: t.x,
-              y: t.y,
-              width: t.width,
-              height: t.height,
-              confidence: t.confidence,
-              timestamp: Date.now()
+              id: `${Date.now()}-${i}`, original: t.text, translated: t.text,
+              x: t.x, y: t.y, width: t.width, height: t.height,
+              confidence: t.confidence, timestamp: Date.now()
             }));
           }
         } catch {
-          // Fallback senza traduzione
           translatedTexts = ocrResult.map((t, i) => ({
-            id: `${Date.now()}-${i}`,
-            original: t.text,
-            translated: t.text,
-            x: t.x,
-            y: t.y,
-            width: t.width,
-            height: t.height,
-            confidence: t.confidence,
-            timestamp: Date.now()
+            id: `${Date.now()}-${i}`, original: t.text, translated: t.text,
+            x: t.x, y: t.y, width: t.width, height: t.height,
+            confidence: t.confidence, timestamp: Date.now()
           }));
         }
       } else {

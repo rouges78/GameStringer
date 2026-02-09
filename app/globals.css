@@ -58,6 +58,41 @@
   margin: 0 auto;
 }
 
+/* ============================================================================
+   DISPLAY PREFERENCES - Impostazioni utente (Scala UI, Font, Compatto)
+   ============================================================================ */
+:root {
+  --gs-ui-scale: 1;
+  --gs-font-base: 16px;
+  --gs-sidebar-width: 256px;
+  --gs-sidebar-collapsed: 64px;
+}
+
+/* Compact mode — riduce padding/gap globalmente */
+.gs-compact .p-4 { padding: 0.5rem !important; }
+.gs-compact .p-6 { padding: 0.75rem !important; }
+.gs-compact .gap-4 { gap: 0.5rem !important; }
+.gs-compact .gap-6 { gap: 0.75rem !important; }
+.gs-compact .space-y-4 > * + * { margin-top: 0.5rem !important; }
+.gs-compact .space-y-6 > * + * { margin-top: 0.75rem !important; }
+.gs-compact .py-4 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+.gs-compact .py-6 { padding-top: 0.75rem !important; padding-bottom: 0.75rem !important; }
+.gs-compact .mb-4 { margin-bottom: 0.5rem !important; }
+.gs-compact .mb-6 { margin-bottom: 0.75rem !important; }
+.gs-compact .mt-4 { margin-top: 0.5rem !important; }
+.gs-compact .mt-6 { margin-top: 0.75rem !important; }
+
+/* No animations mode — rimuove tutte le transizioni e animazioni */
+.gs-no-animations,
+.gs-no-animations *,
+.gs-no-animations *::before,
+.gs-no-animations *::after {
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+}
+
 /* Rainbow gradient animation */
 @keyframes rainbow-shift {
   0% { background-position: 0% 50%; }

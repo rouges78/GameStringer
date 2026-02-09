@@ -134,7 +134,8 @@ export function LoggingDashboard() {
 
   const clearLogs = async () => {
     try {
-      await fetch('/api/logs', { method: 'DELETE' });
+      // Clear locale (no API routes in Tauri)
+      localStorage.removeItem('gs_app_logs');
       setLogs([]);
       setStats({ total: 0, byLevel: {}, byComponent: {}, recentErrors: 0 });
       logUserAction('clear_logs');

@@ -167,8 +167,8 @@ Ogni profilo mantiene separatamente:
 - **Spazio totale**: Calcola ~100 MB per profilo attivo
 
 #### Compatibilità
-- **Versioni**: Sistema profili disponibile dalla 3.2.2+
-- **Migrazione**: Automatica da versioni 3.0.x - 3.2.1
+- **Versioni**: Sistema profili disponibile dalla 1.0.0+
+- **Migrazione**: Automatica da versioni precedenti
 - **Rollback**: Non possibile tornare a versioni senza profili
 
 ### Best Practices
@@ -195,8 +195,8 @@ Ogni profilo mantiene separatamente:
 ### Protezione Password
 
 - **Crittografia**: Tutte le password sono crittografate con AES-256
-- **Nessun Recupero**: Le password non possono essere recuperate, solo reimpostate
-- **Timeout Sessione**: Le sessioni scadono automaticamente per sicurezza
+- **Recovery Key**: 12 parole mnemoniche generate alla creazione profilo per recupero password
+- **Autenticazione**: Basata su presenza profilo attivo (nessun timeout sessione automatico)
 
 ### Isolamento Dati
 
@@ -458,20 +458,21 @@ Quando contatti il supporto, includi:
 
 ## 🔄 Aggiornamenti Recenti
 
-### Versione 3.2.2+ - Novità Sistema Profili
+### Versione 1.3.0 — Novità
 - ✅ **Sistema profili completamente implementato** e testato
-- ✅ **Migrazione automatica** da versioni precedenti
+- ✅ **Recovery Key**: 12 parole mnemoniche per recupero password (dalla v1.0.3)
 - ✅ **Crittografia AES-256** per massima sicurezza
 - ✅ **Isolamento completo** tra profili
 - ✅ **Backup/ripristino** profili con export/import
-- ✅ **Integrazione completa** con tutti i sistemi esistenti
+- ✅ **Autenticazione semplificata**: nessun timeout sessione conflittuale
+- ✅ **Dashboard reale**: stats collegate a Translation Memory e activity history
 
 ### Compatibilità
-- **Versione minima**: 3.2.2
+- **Versione minima**: 1.0.0
+- **Versione corrente**: 1.3.0
 - **Sistemi supportati**: Windows, macOS, Linux
-- **Migrazione**: Automatica da versioni 3.0.x - 3.2.1
 - **Backup**: Compatibile con versioni future
 
 ---
 
-*Questa guida è aggiornata alla versione 3.2.2+ di GameStringer con sistema profili completo.*
+*Questa guida è aggiornata alla versione 1.3.0 di GameStringer.*

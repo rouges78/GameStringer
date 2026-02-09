@@ -3,6 +3,8 @@
  * Salva traduzioni in localStorage per uso offline
  */
 
+import { translateSingleWithFallback } from './ai-translate-direct';
+
 const CACHE_KEY = 'gs_translation_cache';
 const CACHE_VERSION = 1;
 const MAX_ENTRIES = 10000;
@@ -235,24 +237,14 @@ export function useOfflineTranslation() {
       throw new Error('Offline e traduzione non in cache');
     }
 
-    // Fetch from API
-    const response = await fetch('/api/translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        targetLanguage: targetLang,
-        sourceLanguage: sourceLang,
-        provider: 'libre',
-      }),
-    });
-
-    if (!response.ok) {
+    // Traduzione con fallback automatico (Gemini → DeepSeek → OpenAI)
+    const result = await translateSingleWithFallback(text, targetLang, sourceLang, 'offline cache');
+    
+    if (!result.translated || result.translated === text) {
       throw new Error('Translation failed');
     }
 
-    const result = await response.json();
-    const translation = result.translatedText;
+    const translation = result.translated;
 
     // Cache the result
     offlineCache.set(text, translation, sourceLang, targetLang, 'libre');

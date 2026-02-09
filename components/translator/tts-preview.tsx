@@ -179,18 +179,32 @@ export function TTSPreview({
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/voice/tts', {
+      // Chiamata diretta OpenAI TTS (no API routes Next.js)
+      let openaiKey = '';
+      try {
+        const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+        openaiKey = settings?.openaiApiKey || settings?.voice?.openaiKey || '';
+      } catch {}
+      if (!openaiKey) throw new Error('OpenAI API key non configurata');
+
+      const response = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Authorization': `Bearer ${openaiKey}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          text,
+          model: 'tts-1',
+          input: text,
           voice: openAIVoice,
           speed: rate,
+          response_format: 'mp3',
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Errore API TTS');
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || 'Errore API TTS');
       }
 
       const audioBlob = await response.blob();

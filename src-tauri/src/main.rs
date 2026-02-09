@@ -132,6 +132,7 @@ fn main() {
             commands::steam_enhanced::steam_get_wishlist,
             commands::steam_enhanced::steam_logout,
             commands::steam_enhanced::fetch_steam_game_details,
+            commands::steam_enhanced::fetch_steam_store_image,
             commands::steam_enhanced::get_steam_install_path,
             commands::steam_enhanced::find_game_install_path,
             commands::steam_enhanced::find_game_path_by_appid,
@@ -811,6 +812,8 @@ fn main() {
             commands::danganronpa_patcher::get_lin_dialogue_stats,
             commands::danganronpa_patcher::import_drat_translations,
             commands::danganronpa_patcher::export_for_drat,
+            commands::danganronpa_patcher::export_danganronpa_patch,
+            commands::danganronpa_patcher::extract_danganronpa_dialogues,
             commands::danganronpa_patcher::auto_translate_danganronpa,
             
             // RPG Maker Patcher
