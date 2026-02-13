@@ -102,10 +102,12 @@ export const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
         size="icon"
         onClick={handleClick}
         className={cn(
-          "relative h-10 w-10 rounded-full transition-all duration-200",
-          "hover:bg-accent/50 focus:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+          "relative h-10 w-10 rounded-full transition-all duration-300 ease-out",
+          "hover:scale-110 hover:bg-white/10 hover:shadow-lg",
+          "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1",
+          "active:scale-95",
           isAnimating && "animate-pulse",
-          hasUpdate && "ring-2 ring-emerald-500/50",
+          hasUpdate && "ring-2 ring-emerald-500/40 hover:ring-emerald-400/60 hover:shadow-emerald-500/20",
           className
         )}
         aria-label={getAriaLabel()}
