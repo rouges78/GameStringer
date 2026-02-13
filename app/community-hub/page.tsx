@@ -1,8 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { Database, Globe, Cloud } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Globe } from 'lucide-react';
 import { CommunityHub } from '@/components/tools/community-hub';
 import { useTranslation } from '@/lib/i18n';
 
@@ -30,21 +28,6 @@ export default function CommunityHubPage() {
             </div>
           </div>
           
-          {/* Quick Links inline */}
-          <div className="hidden md:flex items-center gap-2">
-            <Link href="/memory">
-              <Button variant="outline" size="sm" className="gap-1 h-7 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
-                <Database className="h-3 w-3" />
-                TM
-              </Button>
-            </Link>
-            <Link href="/workshop">
-              <Button variant="outline" size="sm" className="gap-1 h-7 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
-                <Cloud className="h-3 w-3" />
-                Workshop
-              </Button>
-            </Link>
-          </div>
         </div>
       </div>
       

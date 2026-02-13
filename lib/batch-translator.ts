@@ -8,7 +8,8 @@
 import { translationMemory, translateWithMemory, TranslationUnit } from './translation-memory';
 import { runQualityGates, quickQualityCheck, QualityReport, validateBatch } from './quality-gates';
 import { classifyBatch, classifyContent, ContentClassification, BatchClassificationResult } from './content-classifier';
-import { translateWithFallback } from './ai-translate-direct';
+import { translateSmart } from './ai-translate-direct';
+import { buildRelevantGlossaryHint } from './auto-glossary';
 
 // ============================================================================
 // TYPES
@@ -465,11 +466,17 @@ export class BatchTranslator {
     try {
       console.log(`[BatchTranslator] Calling AI API with fallback for batch ${batchNum}/${totalBatches}, ${batchTexts.length} items`);
       
-      const result = await translateWithFallback({
+      // Costruisci glossaryHint se c'è un gameId
+      const glossaryHint = this.job.gameId
+        ? buildRelevantGlossaryHint(this.job.gameId, batchTexts)
+        : '';
+
+      const result = await translateSmart({
         texts: batchTexts,
         targetLanguage: this.job.targetLanguage,
         sourceLanguage: this.job.sourceLanguage || 'en',
-        context: this.job.options.gameContext
+        context: this.job.options.gameContext,
+        glossaryHint: glossaryHint || undefined,
       });
       
       if (!result.success) {

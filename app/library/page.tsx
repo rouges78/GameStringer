@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { invoke } from '@/lib/tauri-api';
 import { activityHistory } from '@/lib/activity-history';
@@ -14,7 +13,7 @@ import { toast } from 'sonner';
 import * as CountryFlags from 'country-flag-icons/react/3x2';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { loadLibraryFilters, saveLibraryFilters, fuzzyMatch, useDebouncedValue } from '@/lib/library-filters';
-import { Gamepad2, ImageIcon } from 'lucide-react';
+import { Gamepad2, ImageIcon, Search, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, ChevronDown, ChevronUp, RefreshCw, Download } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
 
@@ -189,12 +188,10 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
   }
 
   return (
-    <Image
+    <img
       src={imageUrl}
       alt=""
-      fill
-      sizes={sizes}
-      className="object-cover transition-transform duration-300 group-hover:scale-105"
+      className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
       loading="lazy"
       onError={() => {
         // Se l'immagine fallisce, prova SteamGridDB
@@ -1141,142 +1138,38 @@ export default function LibraryPage() {
 
   return (
     <div className="w-full px-4 py-4">
-      {/* Header minimalista */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg shadow-slate-500/20">
+          <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 shadow-lg shadow-purple-600/25">
             <Gamepad2 className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent">{lib.title}</h1>
-            <p className="text-[11px] text-slate-400">
-              {games.length > 0 ? `${filteredGames.length} ${lib.gamesOf} ${games.length}` : lib.noGames}
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-xl font-bold text-white">{lib.title}</h1>
+              {games.length > 0 && (
+                <span className="text-[10px] font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full">
+                  {filteredGames.length}/{games.length}
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              {games.length > 0 
+                ? `${filteredGames.length} ${lib.gamesOf} ${games.length}`
+                : lib.noGames}
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Barra compatta con ricerca e toggle filtri */}
-      <div className="flex items-center gap-3 mb-4">
-        {/* Ricerca */}
-        <input
-          type="text"
-          placeholder={lib.searchPlaceholder}
-          className="flex-1 px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        
-        {/* Ordinamento */}
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as any)}
-          className="bg-gray-800 border border-gray-600 rounded-lg px-2 py-2 text-white text-xs focus:outline-none"
-        >
-          <option value="alphabetical">{lib.alphabetical}</option>
-          <option value="recentlyAdded">🕐 {lib.recent}</option>
-          <option value="lastPlayed">🎮 {lib.lastPlayed}</option>
-        </select>
-        
-        {/* Toggle Filtri */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`px-3 py-2 text-xs font-medium rounded-lg transition-all ${
-            showFilters 
-              ? 'bg-purple-600 text-white' 
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          🎛️ {lib.filters} {showFilters ? '▲' : '▼'}
-        </button>
-        
-        {/* Vista Toggle */}
-        <div className="flex rounded-lg overflow-hidden border border-gray-600">
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`px-2 py-2 text-xs ${viewMode === 'grid' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400'}`}
-          >
-            ▦
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`px-2 py-2 text-xs ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400'}`}
-          >
-            ☰
-          </button>
-        </div>
-      </div>
-
-      {/* Pannello Filtri Compatto - Stile Raipal con Multiselezione */}
-      {showFilters && (
-        <div className="mb-4 p-3 bg-gray-900/50 border border-gray-700 rounded-lg animate-in slide-in-from-top-2 duration-200">
-          <div className="flex flex-wrap gap-6">
-            
-            {/* Status */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase">{lib.status}</span>
-              {[{id: 'Installed', label: `✓ ${lib.installed}`}, {id: 'NotInstalled', label: `✗ ${lib.notInstalled}`}].map(s => (
-                <label key={s.id} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[11px] transition-all ${selectedStatus.includes(s.id) ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-700/50'}`}>
-                  <input type="checkbox" checked={selectedStatus.includes(s.id)} onChange={() => toggleFilter(selectedStatus, setSelectedStatus, s.id)} className="hidden" />
-                  {selectedStatus.includes(s.id) && <span className="text-purple-400">✓</span>}
-                  {s.label}
-                </label>
-              ))}
-              {selectedStatus.length > 0 && <button onClick={() => setSelectedStatus([])} className="text-[9px] text-gray-500 hover:text-gray-300">↺</button>}
-            </div>
-            
-            {/* Engine */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase">{lib.engine}</span>
-              {['Unity', 'Unreal', 'Godot', 'RPG Maker', 'Unknown'].map(eng => (
-                <label key={eng} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[11px] transition-all ${selectedEngines.includes(eng) ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-700/50'}`}>
-                  <input type="checkbox" checked={selectedEngines.includes(eng)} onChange={() => toggleFilter(selectedEngines, setSelectedEngines, eng)} className="hidden" />
-                  {selectedEngines.includes(eng) && <span className="text-purple-400">✓</span>}
-                  {eng}
-                </label>
-              ))}
-              {selectedEngines.length > 0 && <button onClick={() => setSelectedEngines([])} className="text-[9px] text-gray-500 hover:text-gray-300">↺</button>}
-            </div>
-            
-            {/* Tags */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase">{lib.tag}</span>
-              {[{id: 'VR', label: `🥽 ${lib.vr}`}, {id: 'Shared', label: `🔗 ${lib.shared}`}, {id: 'Backlog', label: `📦 ${lib.backlog}`}].map(t => (
-                <label key={t.id} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[11px] transition-all ${selectedTags.includes(t.id) ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-700/50'}`}>
-                  <input type="checkbox" checked={selectedTags.includes(t.id)} onChange={() => toggleFilter(selectedTags, setSelectedTags, t.id)} className="hidden" />
-                  {selectedTags.includes(t.id) && <span className="text-purple-400">✓</span>}
-                  {t.label}
-                </label>
-              ))}
-              {selectedTags.length > 0 && <button onClick={() => setSelectedTags([])} className="text-[9px] text-gray-500 hover:text-gray-300">↺</button>}
-            </div>
-            
-            {/* Provider */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase">{lib.provider}</span>
-              {platforms.filter(p => p !== 'All').map(plat => (
-                <label key={plat} className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer text-[11px] transition-all ${selectedPlatforms.includes(plat) ? 'bg-purple-600/30 text-purple-300 border border-purple-500/50' : 'bg-gray-800/50 text-gray-400 border border-transparent hover:bg-gray-700/50'}`}>
-                  <input type="checkbox" checked={selectedPlatforms.includes(plat)} onChange={() => toggleFilter(selectedPlatforms, setSelectedPlatforms, plat)} className="hidden" />
-                  {selectedPlatforms.includes(plat) && <span className="text-purple-400">✓</span>}
-                  {plat}
-                </label>
-              ))}
-              {selectedPlatforms.length > 0 && <button onClick={() => setSelectedPlatforms([])} className="text-[9px] text-gray-500 hover:text-gray-300">↺</button>}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Pulsante Force Refresh compatto */}
-      <div className="flex items-center justify-between bg-gray-800/30 border border-gray-700 rounded-lg px-3 py-1.5 mb-4">
-        <span className="text-[10px] text-gray-500">🎯 {lib.gameNotVisible}</span>
-        <div className="flex gap-1.5">
+        {/* Azioni rapide header */}
+        <div className="flex items-center gap-1.5">
           <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
           <button 
             onClick={testFamilySharing} 
-            className="text-[10px] px-2 py-1 bg-gray-700/50 text-gray-400 hover:bg-gray-600 rounded transition-colors"
+            className="text-[10px] px-2.5 py-1.5 bg-gray-800/60 text-gray-400 hover:bg-gray-700 hover:text-gray-200 rounded-lg transition-all border border-gray-700/50"
+            title="Scan Family Sharing"
           >
-            🔗 {lib.shared}
+            <RefreshCw className="h-3 w-3 inline mr-1" />
+            {lib.shared}
           </button>
           <button 
             onClick={async () => {
@@ -1285,17 +1178,159 @@ export default function LibraryPage() {
                 const result = await invoke('update_remote_game_database');
                 const games = Object.values(result as any) as Game[];
                 setGames(games);
-                toast.success(`✅ ${lib.databaseUpdated} ${games.length} ${lib.games}`);
+                toast.success(`${lib.databaseUpdated} ${games.length} ${lib.games}`);
               } catch (e) {
                 toast.error(lib.updateError + ': ' + e);
               }
             }} 
-            className="text-[10px] px-2 py-1 bg-blue-700/50 text-blue-300 hover:bg-blue-600 rounded transition-colors"
+            className="text-[10px] px-2.5 py-1.5 bg-gray-800/60 text-gray-400 hover:bg-gray-700 hover:text-gray-200 rounded-lg transition-all border border-gray-700/50"
+            title="Aggiorna DB nomi"
           >
-            ⬇️ {lib.updateDb}
+            <Download className="h-3 w-3 inline mr-1" />
+            {lib.updateDb}
           </button>
         </div>
       </div>
+
+      {/* Barra ricerca + controlli */}
+      <div className="flex items-center gap-2 mb-3">
+        {/* Ricerca con icona */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+          <input
+            type="text"
+            placeholder={lib.searchPlaceholder}
+            className="w-full pl-9 pr-3 py-2 bg-gray-800/60 border border-gray-700/60 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/50 transition-all"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">
+              ✕
+            </button>
+          )}
+        </div>
+        
+        {/* Ordinamento */}
+        <div className="relative">
+          <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-500 pointer-events-none" />
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="appearance-none bg-gray-800/60 border border-gray-700/60 rounded-xl pl-7 pr-7 py-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-purple-500/40 cursor-pointer"
+          >
+            <option value="alphabetical">{lib.alphabetical}</option>
+            <option value="recentlyAdded">{lib.recent}</option>
+            <option value="lastPlayed">{lib.lastPlayed}</option>
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-500 pointer-events-none" />
+        </div>
+        
+        {/* Toggle Filtri con badge contatore */}
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl transition-all border ${
+            showFilters 
+              ? 'bg-purple-600/90 text-white border-purple-500 shadow-lg shadow-purple-600/20' 
+              : 'bg-gray-800/60 text-gray-300 border-gray-700/60 hover:bg-gray-700/80 hover:text-white'
+          }`}
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          {lib.filters}
+          {(() => {
+            const activeCount = selectedStatus.length + selectedEngines.length + selectedTags.length + selectedPlatforms.length;
+            return activeCount > 0 ? (
+              <span className="ml-0.5 bg-purple-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                {activeCount}
+              </span>
+            ) : (
+              showFilters ? <ChevronUp className="h-3 w-3 ml-0.5" /> : <ChevronDown className="h-3 w-3 ml-0.5" />
+            );
+          })()}
+        </button>
+        
+        {/* Vista Toggle */}
+        <div className="flex rounded-xl overflow-hidden border border-gray-700/60">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 transition-all ${viewMode === 'grid' ? 'bg-purple-600 text-white' : 'bg-gray-800/60 text-gray-400 hover:text-gray-200'}`}
+            title="Vista griglia"
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 transition-all ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'bg-gray-800/60 text-gray-400 hover:text-gray-200'}`}
+            title="Vista lista"
+          >
+            <List className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Pannello Filtri */}
+      {showFilters && (
+        <div className="mb-3 p-3 bg-gray-900/60 border border-gray-700/50 rounded-xl backdrop-blur-sm animate-in slide-in-from-top-2 duration-200">
+          <div className="flex flex-wrap gap-x-8 gap-y-2.5">
+            
+            {/* Status */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mr-1">{lib.status}</span>
+              {[{id: 'Installed', label: `✓ ${lib.installed}`}, {id: 'NotInstalled', label: `✗ ${lib.notInstalled}`}].map(s => (
+                <button key={s.id} onClick={() => toggleFilter(selectedStatus, setSelectedStatus, s.id)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${selectedStatus.includes(s.id) ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/60 hover:text-gray-300'}`}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Engine */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mr-1">{lib.engine}</span>
+              {['Unity', 'Unreal', 'Godot', 'RPG Maker', 'Unknown'].map(eng => (
+                <button key={eng} onClick={() => toggleFilter(selectedEngines, setSelectedEngines, eng)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${selectedEngines.includes(eng) ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/60 hover:text-gray-300'}`}>
+                  {eng}
+                </button>
+              ))}
+            </div>
+            
+            {/* Tags */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mr-1">{lib.tag}</span>
+              {[{id: 'VR', label: `🥽 ${lib.vr}`}, {id: 'Shared', label: `🔗 ${lib.shared}`}, {id: 'Backlog', label: `📦 ${lib.backlog}`}].map(t => (
+                <button key={t.id} onClick={() => toggleFilter(selectedTags, setSelectedTags, t.id)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${selectedTags.includes(t.id) ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/60 hover:text-gray-300'}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* Provider */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mr-1">{lib.provider}</span>
+              {platforms.filter(p => p !== 'All').map(plat => (
+                <button key={plat} onClick={() => toggleFilter(selectedPlatforms, setSelectedPlatforms, plat)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${selectedPlatforms.includes(plat) ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/60 hover:text-gray-300'}`}>
+                  {plat}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Clear all filters */}
+          {(selectedStatus.length + selectedEngines.length + selectedTags.length + selectedPlatforms.length) > 0 && (
+            <div className="mt-2.5 pt-2 border-t border-gray-700/40">
+              <button 
+                onClick={() => { setSelectedStatus([]); setSelectedEngines([]); setSelectedTags([]); setSelectedPlatforms([]); }}
+                className="text-[10px] text-gray-500 hover:text-purple-300 transition-colors"
+              >
+                ✕ Rimuovi tutti i filtri
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
 
       {/* Contenuto principale (griglia, Loading...rrori) */}

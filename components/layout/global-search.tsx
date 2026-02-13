@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { VisuallyHidden } from 'radix-ui';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
@@ -107,9 +107,9 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
         <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-[60]" />
       )}
       <DialogContent className="p-0 gap-0 max-w-lg overflow-hidden z-[70]">
-        <VisuallyHidden>
+        <VisuallyHidden.Root>
           <DialogTitle>Global search</DialogTitle>
-        </VisuallyHidden>
+        </VisuallyHidden.Root>
         <div className="flex items-center border-b px-3">
           <Search className="h-4 w-4 text-muted-foreground shrink-0" />
           <Input

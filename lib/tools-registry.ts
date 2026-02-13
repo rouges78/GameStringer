@@ -1,0 +1,737 @@
+import {
+  Sparkles,
+  Brain,
+  Scan,
+  Monitor,
+  Layers,
+  BookOpen,
+  Mic,
+  AudioLines,
+  User,
+  Film,
+  FolderTree,
+  Database,
+  Wand2,
+  Cpu,
+  Gamepad2,
+  FileArchive,
+  Package,
+  Heart,
+  Globe,
+  Wrench,
+  Subtitles,
+  Glasses,
+  ShieldCheck,
+  MessageSquare,
+  Users,
+  ShoppingBag,
+  Settings,
+  Info,
+  Home,
+  type LucideIcon,
+} from 'lucide-react';
+
+export interface ToolDefinition {
+  id: string;
+  href: string;
+  name: string;
+  nameKey?: string;
+  icon: LucideIcon;
+  color: string;
+  category: 'core' | 'translation' | 'tools' | 'resources';
+  subcategory?: string;
+  features: string[];
+  featuresKey?: string;
+  addedInVersion?: string;
+  isNew?: boolean;
+}
+
+// Registry centralizzato di tutti i tool dell'app.
+// La Guida, la sidebar e altri componenti leggono da qui.
+export function getToolsRegistry(): ToolDefinition[] {
+  return [
+    // ── CORE ──────────────────────────────────────────────
+    {
+      id: 'dashboard',
+      href: '/',
+      name: 'Dashboard',
+      icon: Home,
+      color: 'slate',
+      category: 'core',
+      features: [
+        'Panoramica attività di traduzione recenti',
+        'Statistiche giochi, traduzioni, provider',
+        'Accesso rapido a tutti gli strumenti',
+        'Notifiche aggiornamenti e novità',
+      ],
+    },
+    {
+      id: 'library',
+      href: '/library',
+      name: 'Game Library',
+      nameKey: 'nav.library',
+      icon: Gamepad2,
+      color: 'slate',
+      category: 'core',
+      features: [
+        'Scansione automatica Steam, Epic, GOG, Origin, Ubisoft, Battle.net',
+        'Filtri per nome, engine, lingua supportata, genere',
+        'Dettagli gioco: engine detection, file localizzazione, DLC',
+        'Raccomandazioni traduzione basate su engine e file disponibili',
+      ],
+    },
+
+    // ── TRADUZIONE › Testo ────────────────────────────────
+    {
+      id: 'ai-translator',
+      href: '/ai-translator',
+      name: 'AI Translator',
+      nameKey: 'nav.translate',
+      icon: Sparkles,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'text',
+      features: [
+        'Traduzione AI con Claude, OpenAI, Gemini, DeepL',
+        'Supporta JSON, PO, RESX, CSV, XLIFF, Unity YAML, Unreal Locres',
+        'Elaborazione batch con tracking progresso',
+        'Stima costi e tempi prima di iniziare',
+        'Salvataggio automatico in Translation Memory',
+      ],
+    },
+    {
+      id: 'neural-pro',
+      href: '/translator/pro',
+      name: 'Neural Translator Pro',
+      icon: Brain,
+      color: 'violet',
+      category: 'translation',
+      subcategory: 'text',
+      features: [
+        'Traduzione avanzata con contesto e glossario',
+        'Supporto multi-file con gestione progetto',
+        'Cache intelligente per ottimizzare costi',
+        'Preview differenze prima/dopo traduzione',
+      ],
+    },
+    {
+      id: 'multi-llm',
+      href: '/translator/compare',
+      name: 'Multi-LLM Compare',
+      nameKey: 'nav.multiLlm',
+      icon: Brain,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'text',
+      features: [
+        'Confronto traduzioni da 7 provider AI',
+        'Side-by-side: OpenAI, Gemini, Claude, DeepSeek, Mistral, DeepL, Libre',
+        'Punteggio qualità per fluenza, accuratezza, coerenza',
+        'Selezione automatica del miglior risultato',
+        'Confronto latenza e costi',
+      ],
+    },
+    {
+      id: 'emotion',
+      href: '/emotion-translator',
+      name: 'Emotion Translator',
+      icon: Sparkles,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'text',
+      features: [
+        'Traduzione con analisi del tono emotivo',
+        'Adattamento del registro linguistico al contesto',
+        'Supporto per dialoghi narrativi e UI',
+      ],
+    },
+    {
+      id: 'ai-review',
+      href: '/ai-review',
+      name: 'AI Review',
+      icon: ShieldCheck,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'text',
+      features: [
+        'Revisione automatica delle traduzioni con AI',
+        'Suggerimenti per migliorare qualità e coerenza',
+        'Controllo terminologia e glossario',
+      ],
+    },
+
+    // ── TRADUZIONE › Visuale ──────────────────────────────
+    {
+      id: 'ocr-translator',
+      href: '/ocr-translator',
+      name: 'OCR Translator',
+      icon: Scan,
+      color: 'violet',
+      category: 'translation',
+      subcategory: 'visual',
+      features: [
+        'Cattura testo direttamente dallo schermo di gioco',
+        'Traduzione AI in tempo reale',
+        'Overlay trasparente sopra il gioco',
+        'Hotkey globale: Ctrl+Shift+T per cattura rapida',
+        'Cache smart per evitare traduzioni duplicate',
+      ],
+    },
+    {
+      id: 'live-ocr',
+      href: '/live-ocr',
+      name: 'Live OCR',
+      icon: Monitor,
+      color: 'violet',
+      category: 'translation',
+      subcategory: 'visual',
+      features: [
+        'OCR in tempo reale con cattura continua',
+        'Rilevamento automatico aree di testo',
+        'Traduzione istantanea senza interazione',
+      ],
+    },
+    {
+      id: 'texture-translator',
+      href: '/texture-translator',
+      name: 'Texture Translator',
+      nameKey: 'nav.texture',
+      icon: Layers,
+      color: 'violet',
+      category: 'translation',
+      subcategory: 'visual',
+      features: [
+        'Traduzione testo nelle texture di gioco',
+        'Supporto per immagini PNG, JPG, DDS',
+        'Preview prima/dopo della texture modificata',
+      ],
+    },
+    {
+      id: 'manga-translator',
+      href: '/manga-translator',
+      name: 'Manga Translator',
+      nameKey: 'nav.manga',
+      icon: BookOpen,
+      color: 'violet',
+      category: 'translation',
+      subcategory: 'visual',
+      features: [
+        'Traduzione automatica di fumetti e manga',
+        'Rilevamento balloon e aree di testo',
+        'Sostituzione testo con font adattato',
+      ],
+    },
+
+    // ── TRADUZIONE › Audio ────────────────────────────────
+    {
+      id: 'voice-translator',
+      href: '/voice-translator',
+      name: 'Voice Translator',
+      nameKey: 'nav.voice',
+      icon: Mic,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'audio',
+      features: [
+        'Traduzione vocale in tempo reale durante il gioco',
+        'Speech-to-text con rilevamento automatico lingua',
+        'Traduzione AI con provider multipli',
+        'Text-to-speech in 6 voci (Nova, Alloy, Echo...)',
+        'Hotkey personalizzabili per uso hands-free',
+      ],
+    },
+    {
+      id: 'voice-clone',
+      href: '/voice-clone',
+      name: 'Voice Clone Studio',
+      nameKey: 'nav.voiceClone',
+      icon: AudioLines,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'audio',
+      features: [
+        'Clonazione vocale AI con ElevenLabs e OpenAI TTS',
+        'Sintesi text-to-speech con voci multiple',
+        'Upload campioni audio per creare cloni personalizzati',
+        'Preset voce: narratore, eroe, villain, bambino, robot',
+        'Gestione e salvataggio profili vocali',
+      ],
+    },
+    {
+      id: 'character-voice',
+      href: '/character-voice',
+      name: 'Character Voice AI',
+      icon: User,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'audio',
+      features: [
+        'Voci AI per personaggi specifici',
+        'Personalizzazione tono e stile vocale',
+        'Integrazione con dialoghi di gioco',
+      ],
+    },
+    {
+      id: 'subtitles',
+      href: '/subtitles',
+      name: 'Sottotitoli',
+      nameKey: 'nav.subtitles',
+      icon: Film,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'audio',
+      features: [
+        'Generazione e traduzione sottotitoli',
+        'Supporto formati SRT, VTT, ASS',
+        'Sincronizzazione automatica con audio',
+      ],
+    },
+
+    // ── TRADUZIONE › Utility ──────────────────────────────
+    {
+      id: 'batch',
+      href: '/batch',
+      name: 'Batch Translator',
+      nameKey: 'nav.batch',
+      icon: FolderTree,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'utility',
+      features: [
+        'Traduzione multipla di file in batch',
+        'Tracking progresso con pausa/ripresa',
+        'Tempo stimato rimanente',
+        'Report errori per file',
+      ],
+    },
+    {
+      id: 'dictionary',
+      href: '/memory',
+      name: 'Dictionary / Translation Memory',
+      nameKey: 'nav.dictionary',
+      icon: Database,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'utility',
+      features: [
+        'Archivio persistente di tutte le traduzioni',
+        'Ricerca e filtro traduzioni salvate',
+        'Modifica o eliminazione voci esistenti',
+        'Filtro per gioco o sorgente',
+        'Export traduzioni per backup',
+        'Deduplicazione automatica',
+      ],
+    },
+    {
+      id: 'translator-tools',
+      href: '/translator/tools',
+      name: 'Translator Tools',
+      icon: Sparkles,
+      color: 'blue',
+      category: 'translation',
+      subcategory: 'utility',
+      features: [
+        'Strumenti complementari per traduttori',
+        'Glossario personalizzato integrato',
+        'Utilità di formattazione e pulizia testo',
+      ],
+    },
+
+    // ── STRUMENTI › Patcher ───────────────────────────────
+    {
+      id: 'unity-patcher',
+      href: '/unity-patcher',
+      name: 'Unity Patcher',
+      icon: Wand2,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Installazione automatica BepInEx + XUnity.AutoTranslator',
+        'Supporta Unity 5.x fino alle versioni recenti',
+        'Modi: solo cattura, Google Translate, DeepL',
+        'Badge stato: Silver (auto-translate) / Bronze (capture)',
+        'Hotkey in-game: ALT+T per menu XUnity',
+      ],
+    },
+    {
+      id: 'ue-translator',
+      href: '/unreal-translator',
+      name: 'UE Translator',
+      nameKey: 'nav.ueTranslator',
+      icon: Cpu,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Estrazione file .locres da giochi Unreal Engine 4/5',
+        'Traduzione in memoria senza modificare file originali',
+        'Verifica compatibilità anti-cheat',
+        'Cache traduzioni per performance',
+      ],
+    },
+    {
+      id: 'telltale-patcher',
+      href: '/telltale-patcher',
+      name: 'Telltale Patcher',
+      nameKey: 'nav.telltalePatcher',
+      icon: Gamepad2,
+      color: 'orange',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Traduzioni per giochi Telltale (Wolf Among Us, Walking Dead, Batman)',
+        'Supporta file .langdb, .landb, .dlog',
+        'Rilevamento automatico piattaforma (Steam/GOG/Epic)',
+        'Link diretto a download traduzioni italiane',
+      ],
+    },
+    {
+      id: 'unity-bundle',
+      href: '/unity-bundle',
+      name: 'Unity Bundle',
+      icon: FileArchive,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Estrazione e modifica asset bundle Unity',
+        'Supporto file .assets e .bundle',
+        'Preview risorse prima della modifica',
+      ],
+    },
+    {
+      id: 'visual-novel',
+      href: '/danganronpa-patcher',
+      name: 'Visual Novel Patcher',
+      icon: Package,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Patching per visual novel (Danganronpa, ecc.)',
+        'Estrazione e reinserimento testo',
+        'Supporto formati specifici visual novel',
+      ],
+    },
+    {
+      id: 'rpgmaker',
+      href: '/rpgmaker-patcher',
+      name: 'RPG Maker Patcher',
+      icon: Gamepad2,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Traduzione giochi RPG Maker (MV, MZ, VX Ace)',
+        'Estrazione automatica stringhe da database e mappe',
+        'Reinserimento con preservazione formatting',
+      ],
+    },
+    {
+      id: 'renpy',
+      href: '/renpy-patcher',
+      name: "Ren'Py Patcher",
+      icon: Heart,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        "Traduzione giochi Ren'Py",
+        'Estrazione script .rpy con gestione variabili',
+        'Generazione file traduzione .rpy compatibili',
+      ],
+    },
+    {
+      id: 'wolfrpg',
+      href: '/wolfrpg-patcher',
+      name: 'Wolf RPG Patcher',
+      icon: Database,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Traduzione giochi Wolf RPG Editor',
+        'Estrazione e modifica dati di gioco',
+        'Supporto formati proprietari Wolf RPG',
+      ],
+    },
+    {
+      id: 'nexus-mods',
+      href: '/nexus-mods',
+      name: 'Nexus Mods',
+      icon: Globe,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'patcher',
+      features: [
+        'Integrazione con Nexus Mods per download mod',
+        'Ricerca mod di traduzione per gioco',
+        'Installazione assistita',
+      ],
+    },
+
+    // ── STRUMENTI › Giochi ────────────────────────────────
+    {
+      id: 'retro',
+      href: '/retro',
+      name: 'Retro ROM Translator',
+      nameKey: 'nav.retro',
+      icon: Gamepad2,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'games',
+      features: [
+        'Traduzione ROM retro (NES, SNES, GBA, DS...)',
+        'Estrazione e reinserimento testo da ROM',
+        'Supporto tabelle caratteri personalizzate',
+      ],
+    },
+    {
+      id: 'injector',
+      href: '/injector',
+      name: 'Injector',
+      nameKey: 'nav.injector',
+      icon: Cpu,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'games',
+      features: [
+        'Iniezione traduzioni in processi di gioco attivi',
+        'Supporto DLL injection per hook di testo',
+        'Monitoraggio real-time del testo catturato',
+      ],
+    },
+    {
+      id: 'crawler',
+      href: '/crawler',
+      name: 'Crawler',
+      nameKey: 'nav.crawler',
+      icon: Scan,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'games',
+      features: [
+        'Scansione automatica file di gioco per stringhe traducibili',
+        'Rilevamento formato e encoding automatico',
+        'Esportazione stringhe trovate per traduzione',
+      ],
+    },
+    {
+      id: 'fixer',
+      href: '/fixer',
+      name: 'Fixer',
+      nameKey: 'nav.fixer',
+      icon: Wrench,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'games',
+      features: [
+        'Correzione problemi comuni nei file tradotti',
+        'Fix encoding, line endings, BOM',
+        'Validazione integrità file dopo modifica',
+      ],
+    },
+
+    // ── STRUMENTI › Overlay ───────────────────────────────
+    {
+      id: 'overlay',
+      href: '/overlay',
+      name: 'Overlay',
+      nameKey: 'nav.overlay',
+      icon: Subtitles,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'overlay',
+      features: [
+        'Overlay di traduzione sopra il gioco',
+        'Personalizzazione font, dimensione, posizione',
+        'Trasparenza e stile configurabili',
+      ],
+    },
+    {
+      id: 'vr-overlay',
+      href: '/vr-overlay',
+      name: 'VR Text Overlay',
+      nameKey: 'nav.vrOverlay',
+      icon: Glasses,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'overlay',
+      features: [
+        'Sottotitoli spaziali per giochi VR',
+        'Rilevamento automatico visore (Oculus, SteamVR, WMR)',
+        'Preset posizione: centro basso, centro alto, periferico, polso',
+        'Stile personalizzabile: font, opacità, ombra',
+        'Opzione follow-head per movimento testa',
+      ],
+    },
+
+    // ── STRUMENTI › Qualità ───────────────────────────────
+    {
+      id: 'qa-check',
+      href: '/qa-check',
+      name: 'QA Check',
+      icon: ShieldCheck,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'quality',
+      features: [
+        'Controllo qualità automatico delle traduzioni',
+        'Verifica: placeholder, numeri, tag HTML, lunghezza',
+        'Validazione context-aware (UI, dialogo, narrativa)',
+        'Punteggio qualità con soglia pass/fail',
+        'Report dettagliato errori, warning, info',
+      ],
+    },
+    {
+      id: 'quality-gates',
+      href: '/quality-gates',
+      name: 'Quality Gates',
+      nameKey: 'nav.qualityGates',
+      icon: ShieldCheck,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'quality',
+      features: [
+        'Sistema di gate qualità per pipeline traduzione',
+        'Regole personalizzabili per progetto',
+        'Blocco pubblicazione sotto soglia qualità',
+        'Export report di validazione',
+      ],
+    },
+    {
+      id: 'player-feedback',
+      href: '/player-feedback',
+      name: 'Player Feedback',
+      nameKey: 'nav.playerFeedback',
+      icon: MessageSquare,
+      color: 'emerald',
+      category: 'tools',
+      subcategory: 'quality',
+      features: [
+        'Raccolta e gestione feedback giocatori sulle traduzioni',
+        'Categorie: accuratezza, fluenza, contesto, terminologia, stile',
+        'Sistema rating a 5 stelle',
+        'Tracking stato: in attesa, revisionato, applicato, rifiutato',
+        'Statistiche e analisi trend',
+      ],
+    },
+
+    // ── RISORSE › Community ───────────────────────────────
+    {
+      id: 'community-hub',
+      href: '/community-hub',
+      name: 'Community Hub',
+      nameKey: 'nav.community',
+      icon: Users,
+      color: 'orange',
+      category: 'resources',
+      subcategory: 'community',
+      features: [
+        'Hub centrale della community GameStringer',
+        'Discussioni GitHub integrate',
+        'Feed RSS per notizie gaming e traduzione',
+      ],
+    },
+    {
+      id: 'stores',
+      href: '/stores',
+      name: 'Stores',
+      icon: ShoppingBag,
+      color: 'orange',
+      category: 'resources',
+      subcategory: 'community',
+      features: [
+        'Configurazione store digitali (Steam, Epic, GOG, ecc.)',
+        'Gestione credenziali e API key',
+        'Test connessione per ogni provider',
+        'Servizi utility: HowLongToBeat, SteamGridDB',
+      ],
+    },
+    {
+      id: 'workshop',
+      href: '/workshop',
+      name: 'Steam Workshop',
+      icon: Globe,
+      color: 'orange',
+      category: 'resources',
+      subcategory: 'community',
+      features: [
+        'Navigazione Steam Workshop in-app',
+        'Ricerca mod per nome e App ID',
+        'Filtri per popolarità, data, valutazione',
+        'Usa credenziali Steam già configurate in Stores',
+      ],
+    },
+
+    // ── RISORSE › Gestione ────────────────────────────────
+    {
+      id: 'project-manager',
+      href: '/project-manager',
+      name: 'Project Manager',
+      nameKey: 'nav.projectManager',
+      icon: FolderTree,
+      color: 'orange',
+      category: 'resources',
+      subcategory: 'management',
+      features: [
+        'Gestione completa progetti di traduzione',
+        'Glossario integrato per terminologia consistente',
+        'Tracking progresso in tempo reale',
+        'Organizzazione multi-file (JSON, PO, CSV...)',
+        'Export/import progetti in formato .gsproj',
+      ],
+    },
+
+    // ── RISORSE › Sistema ─────────────────────────────────
+    {
+      id: 'settings',
+      href: '/settings',
+      name: 'Impostazioni',
+      nameKey: 'nav.settings',
+      icon: Settings,
+      color: 'orange',
+      category: 'resources',
+      subcategory: 'system',
+      features: [
+        'Configurazione provider AI e API key',
+        'Preferenze lingua interfaccia',
+        'Gestione profili utente',
+        'Configurazione hotkey globali',
+      ],
+    },
+  ];
+}
+
+// Helpers per filtrare
+export function getToolsByCategory(category: ToolDefinition['category']): ToolDefinition[] {
+  return getToolsRegistry().filter((t) => t.category === category);
+}
+
+export function getToolsBySubcategory(subcategory: string): ToolDefinition[] {
+  return getToolsRegistry().filter((t) => t.subcategory === subcategory);
+}
+
+// Mappa subcategory → label leggibile
+export const subcategoryLabels: Record<string, string> = {
+  text: 'Testo',
+  visual: 'Visuale',
+  audio: 'Audio',
+  utility: 'Utility',
+  patcher: 'Patcher',
+  games: 'Giochi',
+  overlay: 'Overlay',
+  quality: 'Qualità',
+  community: 'Community',
+  management: 'Gestione',
+  system: 'Sistema',
+};
+
+// Mappa category → colore e label
+export const categoryMeta: Record<string, { label: string; color: string }> = {
+  core: { label: 'Core', color: 'slate' },
+  translation: { label: 'Traduzione', color: 'blue' },
+  tools: { label: 'Strumenti', color: 'emerald' },
+  resources: { label: 'Risorse', color: 'orange' },
+};

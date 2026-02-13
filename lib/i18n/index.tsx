@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { translations, Language, TranslationKeys } from './translations';
+import { applyDocumentDirection } from '@/lib/rtl';
 
 interface I18nContextType {
   language: Language;
@@ -68,8 +69,14 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
+  // Apply document direction on initial load
+  useEffect(() => {
+    applyDocumentDirection(language);
+  }, [language]);
+
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
+    applyDocumentDirection(lang);
     
     try {
       const profileId = getCurrentProfileId();

@@ -368,6 +368,14 @@ fn main() {
             // commands::translation_pipeline::get_pipeline_recommendations,
             // commands::translation_pipeline::benchmark_pipeline_vs_components,
             // commands::translation_pipeline::reset_pipeline_statistics,
+            // Unreal Localization Pipeline
+            commands::unreal_localization::extract_unreal_localization,
+            commands::unreal_localization::apply_unreal_translation,
+            commands::unreal_localization::remove_unreal_translation,
+            commands::unreal_localization::parse_locres_file,
+            commands::unreal_localization::create_translation_pak,
+            commands::unreal_iostore::extract_iostore_localization,
+            commands::unreal_iostore::apply_datatable_translation,
             // Cache Management
 
             // Error Management
@@ -621,6 +629,9 @@ fn main() {
             // commands::notifications::expire_old_system_notifications,
             // commands::notifications::get_profiles_for_notification_admin,
 
+            // Steam Workshop API
+            commands::steam_workshop::search_steam_workshop,
+            commands::steam_workshop::get_workshop_item_details,
             // Update System
             commands::updates::check_for_updates,
             commands::updates::get_app_version,

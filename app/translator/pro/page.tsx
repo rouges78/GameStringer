@@ -2353,6 +2353,29 @@ export default function TranslatorProPage() {
                         </p>
                       )}
                       
+                      {/* Live Quality Preview */}
+                      {translatedItems.length > 0 && (
+                        <div className="mt-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase">Ultime traduzioni</span>
+                            <span className="text-[10px] text-muted-foreground">{translatedItems.length} completate</span>
+                          </div>
+                          <div className="divide-y divide-border/30">
+                            {translatedItems.slice(-3).reverse().map((item, idx) => {
+                              const qs = calculateQualityScore(item.sourceText, item.translatedText, targetLanguage);
+                              return (
+                                <div key={idx} className="flex items-center gap-2 py-1.5 text-[11px]">
+                                  <span className="truncate flex-1 text-muted-foreground">{item.sourceText}</span>
+                                  <span className="text-xs">→</span>
+                                  <span className={cn("truncate flex-1", item.fromMemory ? "text-blue-400" : "")}>{item.translatedText}</span>
+                                  <QualityScoreBadge score={qs.overall} size="sm" />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Action buttons */}
                       <div className="flex flex-col gap-2 mt-4">
                         {/* Save partial results button - show when rate limited or has progress */}
@@ -2617,6 +2640,57 @@ export default function TranslatorProPage() {
                 </div>
               ))}
             </div>
+            
+            {/* Per-Row Translation Detail with Quality Badges */}
+            {translatedItems.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-400" />
+                    Dettaglio traduzioni ({translatedItems.length})
+                  </h3>
+                  <Badge variant="outline" className="text-[10px]">
+                    {translatedItems.filter(i => i.fromMemory).length} da memoria
+                  </Badge>
+                </div>
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_80px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase">
+                    <span>Originale</span>
+                    <span>Traduzione</span>
+                    <span>Tipo</span>
+                    <span className="text-right">Qualità</span>
+                  </div>
+                  <ScrollArea className="max-h-[400px]">
+                    <div className="divide-y divide-border/50">
+                      {translatedItems.slice(0, 200).map((item, idx) => {
+                        const classification = classifyContent(item.sourceText);
+                        const qualityScore = calculateQualityScore(item.sourceText, item.translatedText, targetLanguage);
+                        return (
+                          <div key={item.id || idx} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_80px] gap-2 px-3 py-2 items-center hover:bg-muted/20 text-xs">
+                            <span className="truncate text-muted-foreground" title={item.sourceText}>
+                              {item.sourceText}
+                            </span>
+                            <span className={cn("truncate", item.fromMemory ? "text-blue-400" : "")} title={item.translatedText}>
+                              {item.fromMemory && <Database className="inline h-3 w-3 mr-1 opacity-60" />}
+                              {item.translatedText}
+                            </span>
+                            <ContentTypeBadge type={classification.type} size="sm" />
+                            <div className="flex justify-end">
+                              <QualityScoreBadge score={qualityScore.overall} size="sm" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </ScrollArea>
+                  {translatedItems.length > 200 && (
+                    <div className="px-3 py-2 text-center text-[10px] text-muted-foreground bg-muted/20 border-t">
+                      Mostrate 200 di {translatedItems.length} righe
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             {/* Quality Issues */}
             {currentJob.results.qualityIssues.length > 0 && (

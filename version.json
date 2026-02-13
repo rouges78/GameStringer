@@ -1,14 +1,32 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "major": 1,
-  "minor": 3,
+  "minor": 4,
   "patch": 0,
   "prerelease": null,
-  "buildNumber": 115,
-  "buildDate": "2026-02-09T08:00:00.000Z",
+  "buildNumber": 117,
+  "buildDate": "2026-02-13T22:30:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.4.0": {
+      "date": "2026-02-13",
+      "type": "feature",
+      "changes": [
+        "Radix UI Unificato: migrati 37 file da @radix-ui/react-* a radix-ui, rimossi 27 pacchetti",
+        "Quality Badge nel Traduttore Pro: punteggio qualità per-riga con ContentTypeBadge e QualityScoreBadge",
+        "Live Quality Preview: anteprima qualità in tempo reale durante la traduzione batch",
+        "Dettaglio Traduzioni: tabella risultati con tipo contenuto (UI/Dialogo/Narrativa) e score 0-100",
+        "Supporto RTL: rilevamento automatico direzione testo e applicazione dir attribute",
+        "Ollama Generico: translateWithOllamaGeneric con PROVIDER_MAP e chain presets fallback",
+        "Ottimizzazione Bundle: optimizePackageImports aggiornato con radix-ui, framer-motion, recharts, cmdk",
+        "Pulizia TypeScript: 0 errori TS nei sorgenti, fix in 8 file (translation-quality, validator, notifications, tutorial)",
+        "Fix: regex match type casting in translation-quality.ts e translation-validator.ts",
+        "Fix: NotificationToastProps con props opzionali mancanti",
+        "Fix: TutorialProviderProps con userId opzionale",
+        "Fix: CreateNotificationRequest con profileId opzionale"
+      ]
+    },
     "1.3.0": {
       "date": "2026-02-09",
       "type": "feature",
@@ -27,9 +45,9 @@
       "date": "2026-02-06",
       "type": "feature",
       "changes": [
-        "Fallback Provider: traduzione automatica Gemini \u2192 DeepSeek \u2192 OpenAI in tutti i componenti",
+        "Fallback Provider: traduzione automatica Gemini → DeepSeek → OpenAI in tutti i componenti",
         "Audit /api/* completato: 0 fetch('/api/') attive, tutto compatibile Tauri",
-        "Danganronpa Filtro Smart: riduce 18K\u21923K stringhe con filtro locale + AI opzionale",
+        "Danganronpa Filtro Smart: riduce 18K→3K stringhe con filtro locale + AI opzionale",
         "Test E2E Playwright: 38 test reali (navigation, translation, danganronpa)",
         "Fix: injection UI usa Tauri invoke invece di API routes",
         "Fix: secrets dashboard, logging, import traduzioni ora locali",

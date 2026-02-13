@@ -39,6 +39,7 @@ Quando avvii GameStringer per la prima volta con il sistema profili:
    - Verrai automaticamente autenticato e portato alla dashboard
 
 > 💡 **Suggerimenti**:
+>
 > - Scegli una password che ricorderai facilmente ma che sia sicura
 > - Annota la password in un luogo sicuro se necessario
 > - Fai subito un backup del profilo dopo la creazione
@@ -50,12 +51,14 @@ Quando avvii GameStringer per la prima volta con il sistema profili:
 ### Accesso ai Profili
 
 #### Selezione Profilo all'Avvio
+
 - All'avvio dell'app, vedrai la **schermata di selezione profili**
 - Clicca sul profilo desiderato
 - Inserisci la password quando richiesta
 - Clicca **"Accedi"**
 
 #### Menu Profilo (Durante l'Uso)
+
 - Nell'header dell'app, clicca sul **nome del profilo attivo**
 - Si aprirà un menu con le opzioni:
   - **Cambia Profilo**: Torna alla selezione profili
@@ -98,6 +101,7 @@ Quando avvii GameStringer per la prima volta con il sistema profili:
 Ogni profilo mantiene separatamente:
 
 #### 🔑 Credenziali Store
+
 - **Steam**: API Key, Steam ID, credenziali login
 - **Epic Games**: Client ID, Client Secret, token di accesso
 - **GOG**: Credenziali account (se configurate)
@@ -108,6 +112,7 @@ Ogni profilo mantiene separatamente:
 - **Rockstar Games**: Credenziali account
 
 #### 🎮 Libreria Giochi
+
 - Lista giochi personalizzata per ogni store
 - Traduzioni salvate e applicate
 - Patch e modifiche applicate
@@ -116,6 +121,7 @@ Ogni profilo mantiene separatamente:
 - Cronologia traduzioni
 
 #### 🎨 Impostazioni Interfaccia
+
 - **Tema**: Scuro, Chiaro, Automatico
 - **Lingua**: Italiano, Inglese, Francese, Tedesco, Spagnolo
 - **Notifiche**: Configurazioni personalizzate per tipo
@@ -123,6 +129,7 @@ Ogni profilo mantiene separatamente:
 - **Accessibilità**: Impostazioni per screen reader e navigazione
 
 #### 📊 Dati Applicazione
+
 - Cache traduzioni e metadati
 - Cronologia attività e operazioni
 - Backup automatici personalizzati
@@ -131,6 +138,7 @@ Ogni profilo mantiene separatamente:
 - Preferenze di sincronizzazione
 
 #### 🔐 Sicurezza
+
 - Sessioni di autenticazione separate
 - Timeout personalizzati
 - Impostazioni di sicurezza avanzate
@@ -157,16 +165,19 @@ Ogni profilo mantiene separatamente:
 ### Limiti Tecnici
 
 #### Numero Profili
+
 - **Massimo consigliato**: 15 profili attivi
 - **Limite tecnico**: Nessun limite rigido
 - **Performance**: Più profili = caricamento iniziale più lento
 
 #### Dimensioni Dati
+
 - **Profilo singolo**: ~10-50 MB (dipende da traduzioni e cache)
 - **Backup profilo**: File .gsp di dimensioni variabili
 - **Spazio totale**: Calcola ~100 MB per profilo attivo
 
 #### Compatibilità
+
 - **Versioni**: Sistema profili disponibile dalla 1.0.0+
 - **Migrazione**: Automatica da versioni precedenti
 - **Rollback**: Non possibile tornare a versioni senza profili
@@ -174,16 +185,19 @@ Ogni profilo mantiene separatamente:
 ### Best Practices
 
 #### Organizzazione Profili
+
 - **Nomi Descrittivi**: Usa nomi chiari ("Mario Gaming", "Famiglia", "Lavoro")
 - **Profili Specifici**: Crea profili per scopi diversi invece di uno generico
 - **Pulizia Regolare**: Elimina profili non utilizzati
 
 #### Gestione Password
+
 - **Password Uniche**: Usa password diverse per ogni profilo
 - **Sicurezza**: Bilancia sicurezza e facilità di ricordo
 - **Backup**: Annota le password in un gestore password sicuro
 
 #### Manutenzione
+
 - **Backup Regolari**: Esporta profili almeno una volta al mese
 - **Pulizia Cache**: Periodicamente pulisci cache e dati temporanei
 - **Aggiornamenti**: Mantieni GameStringer sempre aggiornato
@@ -263,29 +277,37 @@ Ogni profilo mantiene separatamente:
 ### Problemi Comuni
 
 #### ❌ "Password Errata"
+
 **Problema**: Non riesco ad accedere al mio profilo
 **Soluzioni**:
+
 - Verifica di aver digitato la password correttamente
 - Controlla che Caps Lock non sia attivo
 - Se hai dimenticato la password, dovrai reimpostare il profilo
 
 #### ❌ "Profilo Corrotto"
+
 **Problema**: Il profilo non si carica correttamente
 **Soluzioni**:
+
 - Riavvia l'applicazione
 - Se hai un backup, importa il profilo
 - Contatta il supporto per assistenza
 
 #### ❌ "Credenziali Non Salvate"
+
 **Problema**: Le credenziali Steam/Epic non vengono salvate
 **Soluzioni**:
+
 - Verifica di essere autenticato con il profilo corretto
 - Controlla che le credenziali siano valide
 - Riprova il salvataggio dopo aver fatto logout/login
 
 #### ❌ "Impostazioni Non Persistenti"
+
 **Problema**: Le impostazioni si resettano al riavvio
 **Soluzioni**:
+
 - Verifica che l'app abbia permessi di scrittura
 - Controlla lo spazio disco disponibile
 - Riavvia l'app e riprova
@@ -293,12 +315,14 @@ Ogni profilo mantiene separatamente:
 ### Ripristino Sistema
 
 #### Reset Profilo Singolo
+
 1. Menu profilo → **"Gestisci Profili"**
 2. Seleziona il profilo problematico
 3. Clicca **"Reset Profilo"**
 4. Conferma l'operazione
 
 #### Reset Completo Sistema
+
 1. Chiudi completamente GameStringer
 2. Elimina la cartella `~/.gamestringer/profiles/`
 3. Riavvia l'app
@@ -313,12 +337,14 @@ Ogni profilo mantiene separatamente:
 ### Comandi Rapidi
 
 #### Scorciatoie Tastiera
+
 - **Ctrl+Shift+P**: Apri menu profilo
 - **Ctrl+Shift+L**: Logout rapido
 - **Ctrl+Shift+S**: Cambia profilo
 - **F12**: Apri pannello debug (solo sviluppo)
 
 #### Operazioni Batch
+
 - **Export Multipli**: Esporta più profili contemporaneamente
 - **Pulizia Cache**: Pulisci cache di tutti i profili
 - **Backup Automatico**: Configura backup automatici programmati
@@ -326,7 +352,8 @@ Ogni profilo mantiene separatamente:
 ### Integrazione Sistema
 
 #### File di Configurazione
-```
+
+```text
 ~/.gamestringer/
 ├── profiles/
 │   ├── profile_[id].json.enc    # Profili crittografati
@@ -337,6 +364,7 @@ Ogni profilo mantiene separatamente:
 ```
 
 #### Variabili Ambiente
+
 - `GAMESTRINGER_PROFILES_DIR`: Directory personalizzata profili
 - `GAMESTRINGER_SKIP_AUTH`: Salta autenticazione (solo sviluppo)
 - `GAMESTRINGER_DEBUG_PROFILES`: Debug sistema profili
@@ -346,6 +374,7 @@ Ogni profilo mantiene separatamente:
 Il sistema profili espone questi comandi per l'interfaccia:
 
 #### Gestione Profili
+
 - `list_profiles()`: Lista tutti i profili disponibili
 - `create_profile(data)`: Crea nuovo profilo
 - `authenticate_profile(id, password)`: Autentica profilo
@@ -353,11 +382,13 @@ Il sistema profili espone questi comandi per l'interfaccia:
 - `delete_profile(id, password)`: Elimina profilo
 
 #### Import/Export
+
 - `export_profile(id, password)`: Esporta profilo
 - `import_profile(data, password)`: Importa profilo
 - `validate_profile_backup(data)`: Valida backup profilo
 
 #### Impostazioni
+
 - `get_current_profile()`: Ottieni profilo attivo
 - `get_profile_settings(id)`: Ottieni impostazioni profilo
 - `update_profile_settings(id, settings)`: Aggiorna impostazioni
@@ -417,12 +448,13 @@ Se la migrazione automatica non funziona:
 
 ### Contatti Supporto
 
-- **Email**: support@gamestringer.com
+- **Email**: <support@gamestringer.com>
 - **GitHub Issues**: [Link repository]
 
 ### Informazioni per il Supporto
 
 Quando contatti il supporto, includi:
+
 - Versione GameStringer
 - Sistema operativo
 - Descrizione dettagliata del problema
@@ -434,6 +466,7 @@ Quando contatti il supporto, includi:
 ## 📋 Checklist Utilizzo
 
 ### ✅ Setup Iniziale
+
 - [ ] Primo profilo creato
 - [ ] Password sicura impostata
 - [ ] Credenziali store configurate
@@ -441,12 +474,14 @@ Quando contatti il supporto, includi:
 - [ ] Backup profilo esportato
 
 ### ✅ Uso Quotidiano
+
 - [ ] Login con profilo corretto
 - [ ] Verifica credenziali attive
 - [ ] Controllo impostazioni
 - [ ] Logout al termine sessione
 
 ### ✅ Manutenzione
+
 - [ ] Backup profili regolari
 - [ ] Aggiornamento credenziali
 - [ ] Pulizia dati obsoleti
@@ -459,6 +494,7 @@ Quando contatti il supporto, includi:
 ## 🔄 Aggiornamenti Recenti
 
 ### Versione 1.3.0 — Novità
+
 - ✅ **Sistema profili completamente implementato** e testato
 - ✅ **Recovery Key**: 12 parole mnemoniche per recupero password (dalla v1.0.3)
 - ✅ **Crittografia AES-256** per massima sicurezza
@@ -467,7 +503,8 @@ Quando contatti il supporto, includi:
 - ✅ **Autenticazione semplificata**: nessun timeout sessione conflittuale
 - ✅ **Dashboard reale**: stats collegate a Translation Memory e activity history
 
-### Compatibilità
+### Compatibilità Versioni
+
 - **Versione minima**: 1.0.0
 - **Versione corrente**: 1.3.0
 - **Sistemi supportati**: Windows, macOS, Linux

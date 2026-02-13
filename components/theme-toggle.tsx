@@ -19,98 +19,19 @@ interface ThemeToggleProps {
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
   const { t } = useTranslation();
-  const [theme, setTheme] = useState<Theme>('system');
-  const [mounted, setMounted] = useState(false);
 
+  // Forza dark mode all'avvio — corregge qualsiasi stato salvato errato
   useEffect(() => {
-    setMounted(true);
-    const savedTheme = localStorage.getItem('gamestringer-theme') as Theme;
-    // TEMPORANEO: Blocca tema light, forza dark
-    if (savedTheme === 'light') {
-      setTheme('dark');
-      localStorage.setItem('gamestringer-theme', 'dark');
-      applyTheme('dark');
-    } else if (savedTheme) {
-      setTheme(savedTheme);
-      applyTheme(savedTheme);
-    } else {
-      applyTheme('system');
-    }
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('gamestringer-theme', 'dark');
   }, []);
 
-  const applyTheme = (newTheme: Theme) => {
-    const root = document.documentElement;
-    
-    if (newTheme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      root.classList.toggle('dark', systemTheme === 'dark');
-    } else {
-      root.classList.toggle('dark', newTheme === 'dark');
-    }
-  };
-
-  const handleThemeChange = (newTheme: Theme) => {
-    setTheme(newTheme);
-    localStorage.setItem('gamestringer-theme', newTheme);
-    applyTheme(newTheme);
-  };
-
-  // Ascolta i cambiamenti del tema di sistema
-  useEffect(() => {
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => applyTheme('system');
-      
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme]);
-
-  if (!mounted) {
-    return (
-      <Button variant="ghost" size="sm" className={className}>
-        <Sun className="h-4 w-4" />
-      </Button>
-    );
-  }
-
-  const getIcon = () => {
-    switch (theme) {
-      case 'light':
-        return <Sun className="h-4 w-4" />;
-      case 'dark':
-        return <Moon className="h-4 w-4" />;
-      case 'system':
-        return <Monitor className="h-4 w-4" />;
-      default:
-        return <Sun className="h-4 w-4" />;
-    }
-  };
-
+  // Dark mode forzato — l'app non supporta tema chiaro
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={className}>
-          {getIcon()}
-          <span className="sr-only">Toggle theme</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed">
-          <Sun className="mr-2 h-4 w-4" />
-          <span>{t('settings.themeLight')}</span>
-          <Lock className="ml-auto h-3 w-3 text-muted-foreground" />
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleThemeChange('dark')}>
-          <Moon className="mr-2 h-4 w-4" />
-          <span>{t('settings.themeDark')}</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleThemeChange('system')}>
-          <Monitor className="mr-2 h-4 w-4" />
-          <span>{t('settings.themeAuto')}</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button variant="ghost" size="sm" className={className} disabled title="Dark mode">
+      <Moon className="h-4 w-4" />
+      <span className="sr-only">Dark mode</span>
+    </Button>
   );
 };
 

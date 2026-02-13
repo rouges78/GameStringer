@@ -27,11 +27,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it" suppressHydrationWarning>
+    <html lang="it" className="dark" suppressHydrationWarning>
       <body className={inter.className}>
         <AnimatedBackground />
         <ErrorBoundary>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <ThemeProvider>
             <I18nProvider>
             <ScreenProvider>
             <Providers>

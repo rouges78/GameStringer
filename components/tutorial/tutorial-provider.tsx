@@ -17,6 +17,7 @@ const TutorialContext = createContext<TutorialContextType | undefined>(undefined
 
 interface TutorialProviderProps {
   children: React.ReactNode;
+  userId?: string;
 }
 
 export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) => {

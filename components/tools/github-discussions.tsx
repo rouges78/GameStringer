@@ -17,7 +17,8 @@ import {
   HelpCircle,
   Lightbulb,
   Megaphone,
-  AlertCircle
+  AlertCircle,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -66,6 +67,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
   'Ideas': <Lightbulb className="h-3 w-3" />,
   'Q&A': <HelpCircle className="h-3 w-3" />,
   'Show and tell': <CheckCircle2 className="h-3 w-3" />,
+  'Polls': <BarChart3 className="h-3 w-3" />,
 };
 
 const categoryColors: Record<string, string> = {
@@ -74,6 +76,7 @@ const categoryColors: Record<string, string> = {
   'Ideas': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
   'Q&A': 'bg-green-500/20 text-green-400 border-green-500/30',
   'Show and tell': 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+  'Polls': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
 };
 
 function timeAgo(dateString: string): string {
@@ -210,9 +213,9 @@ export function GitHubDiscussions() {
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
                   <Avatar className="h-8 w-8 shrink-0">
-                    <AvatarImage src={discussion.author.avatarUrl} />
+                    <AvatarImage src={discussion.author?.avatarUrl} />
                     <AvatarFallback className="bg-violet-500/20 text-violet-400 text-xs">
-                      {discussion.author.login.slice(0, 2).toUpperCase()}
+                      {(discussion.author?.login ?? '??').slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
 
@@ -221,10 +224,10 @@ export function GitHubDiscussions() {
                     <div className="flex items-center gap-2 mb-1">
                       <Badge 
                         variant="outline" 
-                        className={`text-[10px] h-5 px-1.5 gap-1 ${categoryColors[discussion.category.name] || 'bg-gray-500/20 text-gray-400'}`}
+                        className={`text-[10px] h-5 px-1.5 gap-1 ${categoryColors[discussion.category?.name ?? ''] || 'bg-gray-500/20 text-gray-400'}`}
                       >
-                        {categoryIcons[discussion.category.name] || <Tag className="h-3 w-3" />}
-                        {discussion.category.name}
+                        {categoryIcons[discussion.category?.name ?? ''] || <Tag className="h-3 w-3" />}
+                        {discussion.category?.name ?? 'General'}
                       </Badge>
                       {discussion.answerChosenAt && (
                         <Badge className="text-[10px] h-5 px-1.5 bg-green-500/20 text-green-400 border-green-500/30">

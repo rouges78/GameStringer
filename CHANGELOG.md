@@ -19,6 +19,37 @@
 
 ## 📅 Febbraio 2026
 
+### v1.4.0 — Radix Unificato, Quality Badges & Pulizia Codebase 🧹✨
+
+> **Data**: 2026-02-13
+
+#### 📦 Migrazione Radix UI
+
+- **Pacchetto unificato**: migrati 37 file da `@radix-ui/react-*` a `radix-ui`
+- **27 pacchetti rimossi**: accordion, alert-dialog, avatar, checkbox, dialog, dropdown-menu, etc.
+- **Pattern aggiornato**: `VisuallyHidden.Root`, `Slot.Root` per namespace exports
+
+#### 🏆 Quality Badge nel Traduttore Pro
+
+- **Per-riga**: ogni traduzione mostra `QualityScoreBadge` (0-100) e `ContentTypeBadge` (UI/Dialogo/Narrativa/Sistema)
+- **Live Preview**: ultime 3 traduzioni con score qualità in tempo reale durante il batch
+- **Tabella risultati**: fino a 200 righe con originale, traduzione, tipo e qualità
+
+#### 🌍 Nuove Feature
+
+- **Supporto RTL**: `lib/rtl.ts` con rilevamento automatico direzione testo
+- **Ollama Generico**: `translateWithOllamaGeneric` con PROVIDER_MAP e chain presets fallback
+
+#### ⚡ Ottimizzazione & Pulizia
+
+- **Bundle**: `optimizePackageImports` aggiornato con `radix-ui`, `framer-motion`, `recharts`, `cmdk`, `react-hook-form`
+- **0 errori TypeScript** nei sorgenti (da ~15)
+- **Fix**: regex type casting in `translation-quality.ts` e `translation-validator.ts`
+- **Fix**: props opzionali mancanti in `NotificationToastProps`, `TutorialProviderProps`, `CreateNotificationRequest`
+- **Fix**: `TranslationMemoryEntry.usageCount` reso opzionale
+
+---
+
 ### v1.3.0 — Danganronpa WAD Patcher & Export System 🎮📦
 
 > **Data**: 2026-02-09

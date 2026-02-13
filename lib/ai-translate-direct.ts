@@ -8,6 +8,7 @@ export interface TranslateOptions {
   targetLanguage: string;
   sourceLanguage?: string;
   context?: string;
+  glossaryHint?: string;
 }
 
 export interface TranslateResult {
@@ -31,6 +32,8 @@ export function resetProviderBlocks() {
   blockedProviders.clear();
 }
 
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
 /** Legge API keys da localStorage */
 export function getApiKeys() {
   try {
@@ -48,10 +51,29 @@ export function getApiKeys() {
       openrouter: settings?.translation?.openrouterApiKey || '',
       cerebras: settings?.translation?.cerebrasApiKey || '',
       deepl: settings?.translation?.deeplApiKey || '',
+      ollamaModel: settings?.translation?.ollamaModel || '',
     };
   } catch {
-    return { gemini: '', groq: '', openai: '', deepseek: '', anthropic: '', mistral: '', cohere: '', together: '', fireworks: '', openrouter: '', cerebras: '', deepl: '' };
+    return { gemini: '', groq: '', openai: '', deepseek: '', anthropic: '', mistral: '', cohere: '', together: '', fireworks: '', openrouter: '', cerebras: '', deepl: '', ollamaModel: '' };
   }
+}
+
+/** Costruisce il prompt di traduzione con glossario opzionale */
+function buildTranslationPrompt(opts: TranslateOptions): string {
+  const srcLang = opts.sourceLanguage || 'en';
+  let prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.`;
+  
+  if (opts.glossaryHint) {
+    prompt += `\n\n${opts.glossaryHint}`;
+  }
+  
+  if (opts.context) {
+    prompt += ` Context: ${opts.context}`;
+  }
+  
+  prompt += `\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  
+  return prompt;
 }
 
 /** Traduzione con Gemini API */
@@ -59,8 +81,7 @@ async function translateWithGemini(
   apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
-  const srcLang = opts.sourceLanguage || 'en';
-  const prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.${opts.context ? ` Context: ${opts.context}` : ''}\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  const prompt = buildTranslationPrompt(opts);
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
@@ -75,8 +96,7 @@ async function translateWithGemini(
   );
 
   if (res.status === 429) {
-    blockProvider('gemini');
-    throw new Error(`Gemini 429`);
+    throw new Error(`RateLimit`);
   }
   if (!res.ok) {
     throw new Error(`Gemini ${res.status}`);
@@ -101,8 +121,7 @@ async function translateWithDeepSeek(
   apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
-  const srcLang = opts.sourceLanguage || 'en';
-  const prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.${opts.context ? ` Context: ${opts.context}` : ''}\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  const prompt = buildTranslationPrompt(opts);
 
   const res = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
@@ -143,8 +162,7 @@ async function translateWithGroq(
   apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
-  const srcLang = opts.sourceLanguage || 'en';
-  const prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.${opts.context ? ` Context: ${opts.context}` : ''}\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  const prompt = buildTranslationPrompt(opts);
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -161,8 +179,10 @@ async function translateWithGroq(
   });
 
   if (res.status === 429) {
-    blockProvider('groq');
-    throw new Error(`Groq 429`);
+    throw new Error(`RateLimit`);
+  }
+  if (res.status === 413) {
+    throw new Error(`ContentTooLarge`);
   }
   if (!res.ok) throw new Error(`Groq ${res.status}`);
 
@@ -185,8 +205,7 @@ async function translateWithOpenAI(
   apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
-  const srcLang = opts.sourceLanguage || 'en';
-  const prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.${opts.context ? ` Context: ${opts.context}` : ''}\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  const prompt = buildTranslationPrompt(opts);
 
   const res = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -226,8 +245,7 @@ async function translateWithAnthropic(
   apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
-  const srcLang = opts.sourceLanguage || 'en';
-  const prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.${opts.context ? ` Context: ${opts.context}` : ''}\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  const prompt = buildTranslationPrompt(opts);
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -271,8 +289,7 @@ async function translateWithOpenAICompatible(
   model: string,
   providerName: string,
 ): Promise<string[]> {
-  const srcLang = opts.sourceLanguage || 'en';
-  const prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.${opts.context ? ` Context: ${opts.context}` : ''}\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  const prompt = buildTranslationPrompt(opts);
 
   const res = await fetch(endpoint, {
     method: 'POST',
@@ -316,12 +333,11 @@ async function translateWithMistral(apiKey: string, opts: TranslateOptions): Pro
   );
 }
 
-/** Cohere — Command R+, API diversa */
+/** Cohere — Command R+, API v1 */
 async function translateWithCohere(apiKey: string, opts: TranslateOptions): Promise<string[]> {
-  const srcLang = opts.sourceLanguage || 'en';
-  const prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.${opts.context ? ` Context: ${opts.context}` : ''}\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch('https://api.cohere.com/v2/chat', {
+  const res = await fetch('https://api.cohere.com/v1/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -329,18 +345,20 @@ async function translateWithCohere(apiKey: string, opts: TranslateOptions): Prom
     },
     body: JSON.stringify({
       model: 'command-r-plus',
-      messages: [{ role: 'user', content: prompt }],
+      message: prompt,
       temperature: 0.3,
     }),
   });
 
+  if (res.status === 429) {
+    throw new Error(`RateLimit`);
+  }
   if (!res.ok) {
-    blockProvider('cohere');
     throw new Error(`Cohere ${res.status}`);
   }
 
   const data = await res.json();
-  const responseText = data?.message?.content?.[0]?.text || '';
+  const responseText = data?.text || '';
 
   try {
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
@@ -373,8 +391,7 @@ async function translateWithFireworks(apiKey: string, opts: TranslateOptions): P
 
 /** OpenRouter — aggregatore, OpenAI-compatible, modelli gratuiti disponibili */
 async function translateWithOpenRouter(apiKey: string, opts: TranslateOptions): Promise<string[]> {
-  const srcLang = opts.sourceLanguage || 'en';
-  const prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.${opts.context ? ` Context: ${opts.context}` : ''}\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
+  const prompt = buildTranslationPrompt(opts);
 
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -612,6 +629,98 @@ async function translateWithHYMT(
   return results;
 }
 
+/** Ollama Generico — qualsiasi modello installato in Ollama (llama3, mistral, phi, qwen, ecc.) */
+async function translateWithOllamaGeneric(
+  _apiKey: string,
+  opts: TranslateOptions
+): Promise<string[]> {
+  const ollamaUrl = 'http://localhost:11434';
+  const srcLang = opts.sourceLanguage || 'en';
+  const keys = getApiKeys();
+  const preferredModel = keys.ollamaModel;
+
+  // Trova modello disponibile
+  let selectedModel = '';
+  try {
+    const tagsRes = await fetch(`${ollamaUrl}/api/tags`, { method: 'GET', signal: AbortSignal.timeout(3000) });
+    if (!tagsRes.ok) throw new Error('Ollama non raggiungibile');
+    const tagsData = await tagsRes.json();
+    const available = (tagsData.models || []).map((m: any) => m.name) as string[];
+    if (available.length === 0) throw new Error('Nessun modello Ollama installato');
+
+    // Usa modello preferito se disponibile, altrimenti primo disponibile
+    if (preferredModel && available.some(n => n.startsWith(preferredModel))) {
+      selectedModel = available.find(n => n.startsWith(preferredModel))!;
+    } else {
+      selectedModel = available[0];
+    }
+  } catch (err) {
+    blockProvider('ollama');
+    throw err;
+  }
+
+  const prompt = buildTranslationPrompt(opts);
+
+  try {
+    const res = await fetch(`${ollamaUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        options: { temperature: 0.3, num_predict: 4096 },
+      }),
+      signal: AbortSignal.timeout(120000),
+    });
+
+    if (!res.ok) {
+      blockProvider('ollama');
+      throw new Error(`Ollama ${res.status}`);
+    }
+
+    const data = await res.json();
+    const responseText = data?.message?.content?.trim() || '';
+
+    // Parse JSON array
+    try {
+      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    } catch {}
+
+    // Fallback: split per newline
+    const lines = responseText
+      .split('\n')
+      .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+      .filter((line: string) => line.length > 0);
+
+    if (lines.length >= opts.texts.length) return lines.slice(0, opts.texts.length);
+
+    // Ultimo fallback: testo uno a uno
+    const results: string[] = [];
+    for (const text of opts.texts) {
+      const singleRes = await fetch(`${ollamaUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [{ role: 'user', content: `Translate from ${srcLang} to ${opts.targetLanguage}. Return ONLY the translation:\n${text}` }],
+          stream: false,
+          options: { temperature: 0.3, num_predict: 500 },
+        }),
+        signal: AbortSignal.timeout(60000),
+      });
+      if (!singleRes.ok) throw new Error(`Ollama ${singleRes.status}`);
+      const singleData = await singleRes.json();
+      results.push(singleData?.message?.content?.trim() || text);
+    }
+    return results;
+  } catch (err) {
+    blockProvider('ollama');
+    throw err;
+  }
+}
+
 /** Lingva Translate — gratis, nessuna API key, proxy Google Translate */
 async function translateWithLingva(
   _apiKey: string,
@@ -660,7 +769,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '$0',
     quality: '⭐⭐⭐⭐',
     speed: '🏎 Media',
-    providers: ['translategemma', 'hymt', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
+    providers: ['translategemma', 'hymt', 'ollama', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
   },
   {
     id: 'economy',
@@ -696,7 +805,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$1.00+',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['deepl', 'anthropic', 'openai', 'translategemma', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
+    providers: ['deepl', 'anthropic', 'openai', 'translategemma', 'ollama', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
   },
 ];
 
@@ -737,6 +846,7 @@ const PROVIDER_MAP: Record<string, {
   lingva: { getKey: () => 'free', fn: translateWithLingva, isBlocked: () => blockedProviders.has('lingva'), needsKey: false },
   translategemma: { getKey: () => 'free', fn: translateWithTranslateGemma, isBlocked: () => blockedProviders.has('translategemma'), needsKey: false },
   hymt: { getKey: () => 'free', fn: translateWithHYMT, isBlocked: () => blockedProviders.has('hymt'), needsKey: false },
+  ollama: { getKey: () => 'free', fn: translateWithOllamaGeneric, isBlocked: () => blockedProviders.has('ollama'), needsKey: false },
 };
 
 /** Info requisito mancante per un provider */
@@ -768,10 +878,11 @@ const PROVIDER_LABELS: Record<string, string> = {
   deepl: 'DeepL',
   mymemory: 'MyMemory',
   lingva: 'Lingva Translate',
+  ollama: 'Ollama (qualsiasi modello)',
 };
 
 /** Provider che richiedono Ollama */
-const OLLAMA_PROVIDERS = ['translategemma', 'hymt'];
+const OLLAMA_PROVIDERS = ['translategemma', 'hymt', 'ollama'];
 
 /** Provider → URL per ottenere API key */
 const API_KEY_URLS: Record<string, string> = {
@@ -930,15 +1041,41 @@ export async function translateWithFallback(
   }
 
   for (const provider of providers) {
-    try {
-      const translations = await provider.fn(provider.key, opts);
-      if (translations.length > 0) {
-        return { translations, provider: provider.name, success: true };
+    const MAX_RETRIES = 3;
+    let retries = 0;
+    let lastErr: unknown = null;
+    
+    while (retries <= MAX_RETRIES) {
+      try {
+        const translations = await provider.fn(provider.key, opts);
+        if (translations.length > 0) {
+          return { translations, provider: provider.name, success: true };
+        }
+        break;
+      } catch (err) {
+        lastErr = err;
+        const errMsg = err instanceof Error ? err.message : String(err);
+        
+        if (errMsg === 'RateLimit' && retries < MAX_RETRIES) {
+          const delay = Math.pow(2, retries) * 2000; // 2s, 4s, 8s
+          console.warn(`[translateWithFallback] ${provider.name} rate-limited, retry ${retries + 1}/${MAX_RETRIES} in ${delay}ms`);
+          await sleep(delay);
+          retries++;
+          continue;
+        }
+        
+        console.warn(`[translateWithFallback] ${provider.name} failed:`, err);
+        if (errMsg !== 'ContentTooLarge' && errMsg !== 'RateLimit') {
+          blockProvider(provider.name);
+        }
+        break;
       }
-    } catch (err) {
-      console.warn(`[translateWithFallback] ${provider.name} failed:`, err);
+    }
+    
+    // Se dopo tutti i retry è ancora RateLimit, blocca
+    if (lastErr instanceof Error && lastErr.message === 'RateLimit' && retries >= MAX_RETRIES) {
+      console.warn(`[translateWithFallback] ${provider.name} bloccato dopo ${MAX_RETRIES} retry`);
       blockProvider(provider.name);
-      continue;
     }
   }
 
@@ -964,5 +1101,484 @@ export async function translateSingleWithFallback(
   return {
     translated: result.translations[0] || text,
     provider: result.provider,
+  };
+}
+
+/**
+ * Traduzione con fallback + batching automatico.
+ * Splitta testi in chunk di maxBatch per evitare 413/payload too large.
+ */
+export async function translateWithFallbackBatched(
+  opts: TranslateOptions,
+  maxBatch: number = 50,
+  onProgress?: (done: number, total: number) => void
+): Promise<TranslateResult> {
+  const { texts, ...rest } = opts;
+  if (texts.length <= maxBatch) {
+    return translateWithFallback(opts);
+  }
+  
+  const allTranslations: string[] = [];
+  let lastProvider = 'none';
+  let anySuccess = false;
+  
+  for (let i = 0; i < texts.length; i += maxBatch) {
+    const chunk = texts.slice(i, i + maxBatch);
+    const result = await translateWithFallback({ ...rest, texts: chunk });
+    allTranslations.push(...result.translations);
+    if (result.success) {
+      anySuccess = true;
+      lastProvider = result.provider;
+    }
+    onProgress?.(Math.min(i + maxBatch, texts.length), texts.length);
+    
+    // Delay tra batch per evitare rate-limit
+    if (i + maxBatch < texts.length) {
+      await sleep(1500);
+    }
+  }
+  
+  return { translations: allTranslations, provider: lastProvider, success: anySuccess };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MULTI-LLM COMPARISON SYSTEM
+// Invia la stessa traduzione a N provider in parallelo,
+// un giudice (euristico + opzionale LLM) sceglie la migliore.
+// ═══════════════════════════════════════════════════════════════════
+
+/** Risultato di un singolo candidato */
+export interface ComparisonCandidate {
+  provider: string;
+  label: string;
+  translations: string[];
+  score: number;
+  scoreDetails: {
+    lengthSimilarity: number;
+    noArtifacts: number;
+    punctuation: number;
+    noUntranslated: number;
+    llmScore: number | null;
+  };
+  timeMs: number;
+  error?: string;
+}
+
+/** Risultato completo del confronto */
+export interface ComparisonResult {
+  winner: ComparisonCandidate;
+  candidates: ComparisonCandidate[];
+  translations: string[];
+  provider: string;
+  success: boolean;
+  comparisonTimeMs: number;
+  judgeUsed: 'heuristic' | 'llm' | 'heuristic+llm';
+}
+
+/** Configurazione Multi-LLM Comparison */
+export interface ComparisonConfig {
+  enabled: boolean;
+  maxCandidates: number;        // Quanti provider usare (default: 3)
+  useLlmJudge: boolean;         // Usa LLM per giudicare (più preciso ma costa)
+  llmJudgeProvider: string;     // Provider per il giudice LLM
+  timeoutMs: number;            // Timeout per singolo provider
+}
+
+const DEFAULT_COMPARISON_CONFIG: ComparisonConfig = {
+  enabled: false,
+  maxCandidates: 3,
+  useLlmJudge: false,
+  llmJudgeProvider: 'gemini',
+  timeoutMs: 15000,
+};
+
+let comparisonConfig: ComparisonConfig = { ...DEFAULT_COMPARISON_CONFIG };
+
+/** Carica configurazione da localStorage */
+export function loadComparisonConfig(): ComparisonConfig {
+  try {
+    const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+    const saved = settings?.translation?.comparison;
+    if (saved) {
+      comparisonConfig = { ...DEFAULT_COMPARISON_CONFIG, ...saved };
+    }
+  } catch {}
+  return comparisonConfig;
+}
+
+/** Salva configurazione in localStorage */
+export function saveComparisonConfig(config: Partial<ComparisonConfig>): void {
+  comparisonConfig = { ...comparisonConfig, ...config };
+  try {
+    const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+    if (!settings.translation) settings.translation = {};
+    settings.translation.comparison = comparisonConfig;
+    localStorage.setItem('gameStringerSettings', JSON.stringify(settings));
+  } catch {}
+}
+
+/** Getter per config corrente */
+export function getComparisonConfig(): ComparisonConfig {
+  return { ...comparisonConfig };
+}
+
+/** Controlla se la comparison è attiva */
+export function isComparisonEnabled(): boolean {
+  return comparisonConfig.enabled;
+}
+
+/**
+ * Scoring euristico per una traduzione (0-100)
+ * Valuta qualità senza bisogno di un LLM
+ */
+function heuristicScore(
+  original: string,
+  translated: string,
+  targetLanguage: string
+): { total: number; lengthSimilarity: number; noArtifacts: number; punctuation: number; noUntranslated: number } {
+  let lengthSimilarity = 0;
+  let noArtifacts = 0;
+  let punctuation = 0;
+  let noUntranslated = 0;
+
+  // 1. Similarità lunghezza (max 25 punti)
+  // Traduzioni buone hanno lunghezza simile all'originale (±50%)
+  const ratio = translated.length / Math.max(original.length, 1);
+  if (ratio >= 0.5 && ratio <= 2.0) {
+    lengthSimilarity = 25 - Math.abs(1 - ratio) * 20;
+  } else {
+    lengthSimilarity = Math.max(0, 10 - Math.abs(1 - ratio) * 5);
+  }
+
+  // 2. Assenza di artefatti (max 25 punti)
+  // Penalizza JSON, markdown, spiegazioni, tag non voluti
+  noArtifacts = 25;
+  if (translated.includes('```')) noArtifacts -= 15;
+  if (translated.includes('"translatedText"')) noArtifacts -= 20;
+  if (translated.match(/^\[[\s\S]*\]$/)) noArtifacts -= 10;
+  if (translated.match(/^\{[\s\S]*\}$/)) noArtifacts -= 15;
+  if (translated.toLowerCase().includes('here is the translation')) noArtifacts -= 15;
+  if (translated.toLowerCase().includes('translation:')) noArtifacts -= 10;
+  if (translated.startsWith('"') && translated.endsWith('"')) noArtifacts -= 3;
+  noArtifacts = Math.max(0, noArtifacts);
+
+  // 3. Punteggiatura preservata (max 25 punti)
+  // Verifica che punteggiatura finale sia coerente
+  punctuation = 25;
+  const origEnds = original.match(/[.!?…。！？]$/);
+  const transEnds = translated.match(/[.!?…。！？]$/);
+  if (origEnds && !transEnds) punctuation -= 10;
+  if (!origEnds && transEnds) punctuation -= 5;
+  // Verifica variabili preservate
+  const origVars = original.match(/\{[^}]+\}|%[sd]|\$\d+/g) || [];
+  const transVars = translated.match(/\{[^}]+\}|%[sd]|\$\d+/g) || [];
+  if (origVars.length !== transVars.length) punctuation -= 15;
+  punctuation = Math.max(0, punctuation);
+
+  // 4. Non tradotto / testo identico (max 25 punti)
+  noUntranslated = 25;
+  // Se originale e traduzione sono identici (e lingua diversa), probabilmente non è stato tradotto
+  if (translated.trim().toLowerCase() === original.trim().toLowerCase() && targetLanguage !== 'en') {
+    noUntranslated = 0;
+  }
+  // Se contiene troppo testo identico all'originale
+  const origWords = original.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  if (origWords.length > 2) {
+    const untranslatedCount = origWords.filter(w => translated.toLowerCase().includes(w)).length;
+    const untranslatedRatio = untranslatedCount / origWords.length;
+    if (untranslatedRatio > 0.8) noUntranslated = 5;
+    else if (untranslatedRatio > 0.5) noUntranslated = 15;
+  }
+
+  const total = Math.round(lengthSimilarity + noArtifacts + punctuation + noUntranslated);
+
+  return {
+    total: Math.max(0, Math.min(100, total)),
+    lengthSimilarity: Math.round(lengthSimilarity),
+    noArtifacts: Math.round(noArtifacts),
+    punctuation: Math.round(punctuation),
+    noUntranslated: Math.round(noUntranslated),
+  };
+}
+
+/**
+ * Giudice LLM — chiede a un LLM di scegliere la traduzione migliore
+ * Ritorna indice del vincitore (0-based)
+ */
+async function llmJudge(
+  original: string,
+  candidates: { provider: string; translation: string }[],
+  targetLanguage: string
+): Promise<{ winnerIndex: number; scores: number[] }> {
+  const keys = getApiKeys();
+  const judgeProvider = comparisonConfig.llmJudgeProvider;
+  const info = PROVIDER_MAP[judgeProvider];
+
+  if (!info) {
+    return { winnerIndex: 0, scores: candidates.map(() => 50) };
+  }
+
+  const key = info.getKey(keys);
+  if (info.needsKey && !key) {
+    return { winnerIndex: 0, scores: candidates.map(() => 50) };
+  }
+
+  const candidateList = candidates
+    .map((c, i) => `[${i + 1}] (${c.provider}): "${c.translation}"`)
+    .join('\n');
+
+  const judgePrompt = `You are a translation quality judge. Given the original text and ${candidates.length} translation candidates to ${targetLanguage}, rate each on a scale of 0-100 and pick the best one.
+
+ORIGINAL: "${original}"
+
+CANDIDATES:
+${candidateList}
+
+Evaluate based on: accuracy, naturalness, preservation of tone/style, no artifacts.
+Reply ONLY with a JSON object: {"winner": <1-based index>, "scores": [<score1>, <score2>, ...]}`;
+
+  try {
+    const result = await info.fn(key, {
+      texts: [judgePrompt],
+      targetLanguage: 'en',
+      sourceLanguage: 'en',
+    });
+
+    const responseText = result[0] || '';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      const winnerIdx = Math.max(0, Math.min(candidates.length - 1, (parsed.winner || 1) - 1));
+      const scores = Array.isArray(parsed.scores) ? parsed.scores.map(Number) : candidates.map(() => 50);
+      return { winnerIndex: winnerIdx, scores };
+    }
+  } catch (err) {
+    console.warn('[Multi-LLM Judge] LLM judge failed:', err);
+  }
+
+  return { winnerIndex: 0, scores: candidates.map(() => 50) };
+}
+
+/**
+ * MULTI-LLM COMPARISON — Traduzione parallela con N provider + giudizio
+ */
+export async function translateWithComparison(
+  opts: TranslateOptions
+): Promise<ComparisonResult> {
+  const startTime = Date.now();
+  const keys = getApiKeys();
+  const preset = CHAIN_PRESETS.find(p => p.id === activeChainPreset) || CHAIN_PRESETS[2];
+
+  // Seleziona i provider disponibili
+  const availableProviders: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
+
+  for (const providerName of preset.providers) {
+    const info = PROVIDER_MAP[providerName];
+    if (!info) continue;
+    if (info.isBlocked()) continue;
+    const key = info.getKey(keys);
+    if (info.needsKey && !key) continue;
+    availableProviders.push({ name: providerName, key, fn: info.fn });
+  }
+
+  // Prendi i primi N provider
+  const maxCandidates = Math.min(comparisonConfig.maxCandidates, availableProviders.length);
+
+  if (maxCandidates === 0) {
+    return {
+      winner: { provider: 'none', label: '-', translations: opts.texts, score: 0, scoreDetails: { lengthSimilarity: 0, noArtifacts: 0, punctuation: 0, noUntranslated: 0, llmScore: null }, timeMs: 0 },
+      candidates: [],
+      translations: opts.texts,
+      provider: 'none',
+      success: false,
+      comparisonTimeMs: Date.now() - startTime,
+      judgeUsed: 'heuristic',
+    };
+  }
+
+  const selectedProviders = availableProviders.slice(0, maxCandidates);
+
+  // Invio parallelo con timeout
+  const promises = selectedProviders.map(async (provider) => {
+    const provStart = Date.now();
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), comparisonConfig.timeoutMs);
+
+      const translations = await Promise.race([
+        provider.fn(provider.key, opts),
+        new Promise<string[]>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), comparisonConfig.timeoutMs)
+        ),
+      ]);
+
+      clearTimeout(timeout);
+
+      return {
+        provider: provider.name,
+        label: PROVIDER_LABELS[provider.name] || provider.name,
+        translations,
+        timeMs: Date.now() - provStart,
+        error: undefined as string | undefined,
+      };
+    } catch (err: any) {
+      return {
+        provider: provider.name,
+        label: PROVIDER_LABELS[provider.name] || provider.name,
+        translations: [] as string[],
+        timeMs: Date.now() - provStart,
+        error: err?.message || 'Unknown error',
+      };
+    }
+  });
+
+  const results = await Promise.allSettled(promises);
+
+  // Raccogli i candidati riusciti
+  const candidates: ComparisonCandidate[] = [];
+
+  for (const result of results) {
+    if (result.status === 'fulfilled' && result.value.translations.length > 0 && !result.value.error) {
+      const val = result.value;
+      // Score euristico per la prima stringa tradotta
+      const hScore = heuristicScore(
+        opts.texts[0] || '',
+        val.translations[0] || '',
+        opts.targetLanguage
+      );
+
+      candidates.push({
+        provider: val.provider,
+        label: val.label,
+        translations: val.translations,
+        score: hScore.total,
+        scoreDetails: {
+          lengthSimilarity: hScore.lengthSimilarity,
+          noArtifacts: hScore.noArtifacts,
+          punctuation: hScore.punctuation,
+          noUntranslated: hScore.noUntranslated,
+          llmScore: null,
+        },
+        timeMs: val.timeMs,
+      });
+    } else if (result.status === 'fulfilled' && result.value.error) {
+      candidates.push({
+        provider: result.value.provider,
+        label: result.value.label,
+        translations: [],
+        score: 0,
+        scoreDetails: { lengthSimilarity: 0, noArtifacts: 0, punctuation: 0, noUntranslated: 0, llmScore: null },
+        timeMs: result.value.timeMs,
+        error: result.value.error,
+      });
+    }
+  }
+
+  // Se nessun candidato riuscito, fallback
+  if (candidates.filter(c => !c.error).length === 0) {
+    console.warn('[Multi-LLM] Nessun candidato riuscito, fallback a translateWithFallback');
+    const fallback = await translateWithFallback(opts);
+    return {
+      winner: { provider: fallback.provider, label: PROVIDER_LABELS[fallback.provider] || fallback.provider, translations: fallback.translations, score: 50, scoreDetails: { lengthSimilarity: 12, noArtifacts: 12, punctuation: 12, noUntranslated: 12, llmScore: null }, timeMs: Date.now() - startTime },
+      candidates,
+      translations: fallback.translations,
+      provider: fallback.provider,
+      success: fallback.success,
+      comparisonTimeMs: Date.now() - startTime,
+      judgeUsed: 'heuristic',
+    };
+  }
+
+  // Giudice LLM opzionale
+  let judgeUsed: 'heuristic' | 'llm' | 'heuristic+llm' = 'heuristic';
+  const successCandidates = candidates.filter(c => !c.error);
+
+  if (comparisonConfig.useLlmJudge && successCandidates.length >= 2) {
+    try {
+      const judgeResult = await llmJudge(
+        opts.texts[0] || '',
+        successCandidates.map(c => ({ provider: c.label, translation: c.translations[0] || '' })),
+        opts.targetLanguage
+      );
+
+      // Integra score LLM (peso 40%) con euristico (peso 60%)
+      for (let i = 0; i < successCandidates.length; i++) {
+        const llmScore = judgeResult.scores[i] || 50;
+        successCandidates[i].scoreDetails.llmScore = llmScore;
+        successCandidates[i].score = Math.round(successCandidates[i].score * 0.6 + llmScore * 0.4);
+      }
+
+      judgeUsed = 'heuristic+llm';
+      console.log(`[Multi-LLM] Giudice LLM applicato, vincitore index: ${judgeResult.winnerIndex}`);
+    } catch (err) {
+      console.warn('[Multi-LLM] Giudice LLM fallito, uso solo euristico:', err);
+    }
+  }
+
+  // Ordina per score decrescente
+  const sorted = [...successCandidates].sort((a, b) => b.score - a.score);
+  const winner = sorted[0];
+
+  console.log(
+    `[Multi-LLM] Confronto completato: ${successCandidates.length}/${selectedProviders.length} candidati | ` +
+    `Vincitore: ${winner.label} (${winner.score}pts) | ` +
+    `Tempo: ${Date.now() - startTime}ms | Giudice: ${judgeUsed}`
+  );
+
+  return {
+    winner,
+    candidates: [...candidates].sort((a, b) => b.score - a.score),
+    translations: winner.translations,
+    provider: winner.provider,
+    success: true,
+    comparisonTimeMs: Date.now() - startTime,
+    judgeUsed,
+  };
+}
+
+let comparisonConfigLoaded = false;
+
+/**
+ * Traduzione smart — usa comparison se attiva, altrimenti fallback normale
+ */
+export async function translateSmart(
+  opts: TranslateOptions
+): Promise<TranslateResult & { comparison?: ComparisonResult }> {
+  // Lazy load config da localStorage alla prima chiamata
+  if (!comparisonConfigLoaded) {
+    try { loadComparisonConfig(); } catch {}
+    comparisonConfigLoaded = true;
+  }
+  if (comparisonConfig.enabled) {
+    const result = await translateWithComparison(opts);
+    return {
+      translations: result.translations,
+      provider: result.provider,
+      success: result.success,
+      comparison: result,
+    };
+  }
+  return translateWithFallback(opts);
+}
+
+/**
+ * Traduzione singola smart
+ */
+export async function translateSingleSmart(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage?: string,
+  context?: string
+): Promise<{ translated: string; provider: string; comparison?: ComparisonResult }> {
+  const result = await translateSmart({
+    texts: [text],
+    targetLanguage,
+    sourceLanguage,
+    context,
+  });
+  return {
+    translated: result.translations[0] || text,
+    provider: result.provider,
+    comparison: result.comparison,
   };
 }

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { VisuallyHidden } from 'radix-ui';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
@@ -68,9 +68,8 @@ export function CommandPalette() {
     { id: 'scan', title: t('commandPalette.scanGames'), description: t('commandPalette.scanGamesDesc'), icon: <RefreshCw className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('scan-games')); }, keywords: ['refresh', 'find', 'scansiona'], category: 'action' },
     { id: 'shortcuts', title: t('commandPalette.shortcuts'), description: t('commandPalette.shortcutsDesc'), icon: <Keyboard className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('show-shortcuts')); }, keywords: ['keyboard', 'hotkeys', 'scorciatoie'], category: 'action' },
     
-    // Settings
+    // Settings (dark mode forzato — light non supportato)
     { id: 'theme-dark', title: t('commandPalette.darkTheme'), description: t('commandPalette.darkThemeDesc'), icon: <Moon className="h-4 w-4" />, action: () => setTheme('dark'), keywords: ['dark', 'night', 'scuro'], category: 'settings' },
-    { id: 'theme-light', title: t('commandPalette.lightTheme'), description: t('commandPalette.lightThemeDesc'), icon: <Sun className="h-4 w-4" />, action: () => setTheme('light'), keywords: ['light', 'day', 'chiaro'], category: 'settings' },
   ], [router, setTheme, t]);
 
   const filteredCommands = useMemo(() => {
@@ -146,9 +145,9 @@ export function CommandPalette() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="p-0 gap-0 max-w-lg overflow-hidden">
-        <VisuallyHidden>
+        <VisuallyHidden.Root>
           <DialogTitle>Command Palette</DialogTitle>
-        </VisuallyHidden>
+        </VisuallyHidden.Root>
         <div className="flex items-center border-b px-3">
           <Search className="h-4 w-4 text-muted-foreground mr-2" />
           <Input

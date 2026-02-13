@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { invoke } from '@/lib/tauri-api';
-import { translateWithFallback, CHAIN_PRESETS, setChainPreset, getApiKeys, getChainPreset, hasAvailableProviders, checkChainRequirements, type ChainPreset, type ProviderRequirement } from '@/lib/ai-translate-direct';
+import { translateWithFallback, translateWithFallbackBatched, CHAIN_PRESETS, setChainPreset, getApiKeys, getChainPreset, hasAvailableProviders, checkChainRequirements, type ChainPreset, type ProviderRequirement } from '@/lib/ai-translate-direct';
 import { filterDanganronpaDialogues, type FilterStats } from '@/lib/danganronpa-filter';
 import { canTranslate, addTranslationCount } from '@/lib/donation-gate';
 import { DonationDialog } from '@/components/donation-dialog';
@@ -534,36 +534,107 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
         break;
 
       case 'unreal_patcher':
-        updateProgress(10, 'Cercando file .pak di Unreal...');
+        updateProgress(10, 'Cercando file .locres di Unreal...');
         await new Promise(r => setTimeout(r, 500));
         
         try {
-          const pakFiles = await invoke<string[]>('find_files_by_extension', { 
-            folderPath: gamePath, 
-            extension: 'pak' 
-          });
+          // 1. Prova IoStore (UTOC/UCAS + Oodle) — giochi moderni UE4.25+/UE5
+          updateProgress(15, 'Analisi container IoStore (UTOC/UCAS)...');
+          let extractResult: {
+            success: boolean;
+            entries: Array<{ namespace: string; key: string; source_hash: number; value: string }>;
+            message: string;
+            locres_path?: string;
+          } | null = null;
           
-          if (pakFiles && pakFiles.length > 0) {
-            updateProgress(30, `Trovati ${pakFiles.length} file .pak`);
-            updateProgress(50, 'Estraendo file localization...');
-            
-            const result = await invoke<{ success: boolean; locres_files: string[] }>('extract_unreal_localization', {
-              pakPath: pakFiles[0],
-              gamePath: gamePath
-            });
-            
-            if (result.success && result.locres_files.length > 0) {
-              updateProgress(100, `✅ Trovati ${result.locres_files.length} file .locres!`);
-              toast.success('File localization estratti! Ora traduci con Neural Translator.');
+          let iostoreError = '';
+          try {
+            extractResult = await invoke<typeof extractResult>('extract_iostore_localization', { gamePath });
+            if (extractResult && extractResult.success) {
+              updateProgress(30, `IoStore: ${extractResult.message}`);
             } else {
-              updateProgress(100, '⚠️ Nessun file localization trovato');
+              extractResult = null;
+            }
+          } catch (ioErr) {
+            iostoreError = ioErr instanceof Error ? ioErr.message : String(ioErr);
+            console.info('IoStore:', iostoreError);
+          }
+          
+          // 2. Fallback: estrazione standard da .pak
+          if (!extractResult) {
+            updateProgress(20, 'Analisi file .pak e .locres...');
+            try {
+              extractResult = await invoke<typeof extractResult>('extract_unreal_localization', { gamePath });
+            } catch (pakErr) {
+              const pakError = pakErr instanceof Error ? pakErr.message : String(pakErr);
+              // Combina errori IoStore + PAK per messaggio completo
+              const combined = iostoreError 
+                ? `IoStore: ${iostoreError}\nPAK: ${pakError}`
+                : pakError;
+              throw new Error(combined);
+            }
+          }
+          
+          if (extractResult && extractResult.success && extractResult.entries.length > 0) {
+            updateProgress(50, `Estratte ${extractResult.entries.length} stringhe!`);
+            
+            // Traduci le stringhe
+            const textsToTranslate = extractResult.entries
+              .filter(e => e.value.trim().length > 0)
+              .map(e => e.value);
+            
+            if (textsToTranslate.length > 0) {
+              updateProgress(60, `Traducendo ${textsToTranslate.length} stringhe...`);
+              const trResult = await translateWithFallbackBatched({
+                texts: textsToTranslate,
+                targetLanguage: 'it',
+                sourceLanguage: 'en',
+              }, 50, (done, total) => {
+                const pct = 60 + Math.round((done / total) * 30);
+                updateProgress(pct, `Tradotte ${done}/${total} stringhe...`);
+              });
+              
+              // Crea mappa traduzioni
+              const translations: Record<string, string> = {};
+              let idx = 0;
+              for (const entry of extractResult.entries) {
+                if (entry.value.trim().length > 0 && idx < trResult.translations.length) {
+                  translations[`${entry.namespace}::${entry.key}`] = trResult.translations[idx];
+                  idx++;
+                }
+              }
+              
+              updateProgress(90, 'Creando .pak tradotto...');
+              
+              // Determina se usare DataTable patching o .locres standard
+              const isDataTable = extractResult.locres_path === 'DataTable .uasset';
+              const applyCommand = isDataTable ? 'apply_datatable_translation' : 'apply_unreal_translation';
+              
+              const pakResult = await invoke<{ success: boolean; pak_path: string; message: string }>(applyCommand, {
+                gamePath,
+                translations: extractResult.entries.map(e => ({
+                  namespace: e.namespace,
+                  key: e.key,
+                  source_hash: e.source_hash,
+                  original: e.value,
+                  translated: translations[`${e.namespace}::${e.key}`] || e.value,
+                })),
+                targetLanguage: 'it',
+              });
+              
+              updateProgress(100, `✅ ${pakResult.message}`);
+              toast.success(`Traduzione Unreal completata! ${idx} stringhe tradotte.`);
             }
           } else {
-            updateProgress(100, '📦 Usa UnrealPak per estrarre manualmente');
+            throw new Error('Nessun .locres trovato automaticamente');
           }
         } catch (e) {
-          updateProgress(100, '📦 Usa FModel o UnrealPak per estrarre');
-          toast.info('Per Unreal, usa FModel: https://fmodel.app/');
+          const errMsg = e instanceof Error ? e.message : String(e);
+          updateProgress(100, `❌ ${errMsg}`);
+          toast.error(
+            `Impossibile estrarre automaticamente le stringhe di localizzazione. ${errMsg}`,
+            { duration: 8000 }
+          );
         }
         break;
 

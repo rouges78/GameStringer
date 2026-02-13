@@ -40,7 +40,7 @@ export interface NotificationMetadata {
 }
 
 export interface CreateNotificationRequest {
-  profileId: string;
+  profileId?: string;
   type: NotificationType;
   title: string;
   message: string;

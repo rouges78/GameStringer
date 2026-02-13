@@ -99,6 +99,48 @@ export default function GameDetailPage() {
     last_used: string | null;
   } | null>(null);
 
+  // Client-side engine detection fallback (nome gioco → engine)
+  const detectEngineByName = (name: string): string | null => {
+    const n = name.toLowerCase();
+    const db: [string[], string][] = [
+      // FromSoftware (prima per evitare falsi positivi)
+      [['elden ring','dark souls','sekiro','bloodborne','armored core vi','armored core 6',"demon's souls"], 'FromSoftware Engine'],
+      [['nier automata','nier replicant','bayonetta','metal gear rising','astral chain','vanquish'], 'Platinum Engine'],
+      [['grand theft auto','gta v','gta iv','red dead redemption','max payne 3'], 'RAGE Engine'],
+      [['call of duty','warzone','modern warfare','black ops','vanguard'], 'IW Engine'],
+      [['hitman','world of assassination'], 'Glacier Engine'],
+      [['dying light','dead island','call of juarez'], 'C-Engine (Techland)'],
+      [['final fantasy xv','forspoken'], 'Luminous Engine'],
+      [['dishonored 2','deathloop'], 'Void Engine'],
+      [['resident evil village','resident evil 4 remake','resident evil 2 remake','devil may cry 5','monster hunter rise','monster hunter wilds','street fighter 6'], 'RE Engine'],
+      [['resident evil 5','resident evil 6',"dragon's dogma",'monster hunter world','devil may cry 4'], 'MT Framework'],
+      [["assassin's creed",'watch dogs','for honor','prince of persia'], 'Anvil Engine'],
+      [['horizon zero dawn','horizon forbidden west','death stranding'], 'Decima'],
+      [['metal gear solid v','pro evolution soccer'], 'FOX Engine'],
+      [['the division','mario + rabbids','star wars outlaws'], 'Snowdrop'],
+      // Grandi engine
+      [['hollow knight','cuphead','subnautica','valheim','among us','fall guys','phasmophobia','lethal company','rimworld','slay the spire','cult of the lamb','vampire survivors','beat saber','escape from tarkov','cities skylines','kerbal space program','ori and','7 days to die','outer wilds','inscryption','balatro','ultrakill','ghostrunner','dredge','dave the diver','tarkov','genshin impact','dead cells','enter the gungeon','risk of rain','spiritfarer','tunic','unpacking'], 'Unity'],
+      [['fortnite','borderlands','bioshock','rocket league','dead by daylight','ark survival','pubg','deep rock galactic','hogwarts legacy','black myth wukong','lies of p','satisfactory','stray','sifu','valorant','ready or not','the finals','palworld','tekken','guilty gear strive','final fantasy vii remake','tales of arise','kingdom hearts 3','outlast','sons of the forest'], 'Unreal Engine'],
+      [['half-life: alyx','dota 2','counter-strike 2','deadlock'], 'Source 2'],
+      [['half-life 2','counter-strike','portal','team fortress 2','left 4 dead',"garry's mod",'the stanley parable','apex legends'], 'Source Engine'],
+      [['fallout 4','fallout 76','skyrim','starfield'], 'Creation Engine'],
+      [['battlefield','need for speed','fifa','ea sports fc','star wars battlefront','dead space remake','dragon age'], 'Frostbite'],
+      [['crysis','hunt showdown','kingdom come deliverance','star citizen'], 'CryEngine'],
+      [['cyberpunk 2077','witcher 3'], 'REDengine'],
+      [['doom','quake','wolfenstein','evil within'], 'id Tech'],
+      [['celeste','stardew valley','terraria','hades','bastion','transistor','fez'], 'MonoGame/FNA'],
+      [['undertale','deltarune','hyper light drifter','hotline miami','katana zero','decarnation'], 'GameMaker'],
+      [['omori','to the moon','oneshot','corpse party','yume nikki','lisa the painful'], 'RPG Maker'],
+      [['doki doki literature club','ddlc','va-11 hall-a','katawa shoujo'], "Ren'Py"],
+      [['cassette beasts','brotato','dome keeper'], 'Godot'],
+      [['metro exodus','metro last light','metro 2033'], '4A Engine'],
+    ];
+    for (const [names, engine] of db) {
+      if (names.some(g => n.includes(g))) return engine;
+    }
+    return null;
+  };
+
   // Rileva motore quando il gioco è caricato
   const detectEngine = async () => {
     if (!game) return;
@@ -116,10 +158,20 @@ export default function GameDetailPage() {
         installPath: game.installPath || null
       });
       setEngineInfo(result);
-      // Aggiorna anche il campo engine nel game state
       setGame((prev: any) => prev ? { ...prev, engine: result.engine } : null);
     } catch (error) {
-      console.error('Errore rilevamento motore:', error);
+      // Fallback client-side: detection per nome
+      const gameName = game.name || game.title;
+      const fallbackEngine = detectEngineByName(gameName);
+      if (fallbackEngine) {
+        setEngineInfo({
+          engine: fallbackEngine,
+          can_patch: false,
+          patch_tool: null,
+          patch_description: null,
+        });
+        setGame((prev: any) => prev ? { ...prev, engine: fallbackEngine } : null);
+      }
     } finally {
       setIsDetectingEngine(false);
     }
@@ -918,21 +970,62 @@ export default function GameDetailPage() {
             </Button>
           </Link>
           <h1 className="text-xl font-bold text-white">{game.title}</h1>
-          {(engineInfo || game.engine) && (
-            <Badge className={`text-xs px-2 py-0.5 ${
-              (engineInfo?.engine || game.engine) === 'Unity' ? 'bg-blue-600/80 text-white' :
-              (engineInfo?.engine || game.engine) === 'Unreal Engine' ? 'bg-orange-600/80 text-white' :
-              (engineInfo?.engine || game.engine) === 'RPG Maker' ? 'bg-green-600/80 text-white' :
-              (engineInfo?.engine || game.engine) === "Ren'Py" ? 'bg-pink-600/80 text-white' :
-              (engineInfo?.engine || game.engine) === 'Spike Chunsoft Engine' ? 'bg-purple-600/80 text-white' :
-              (engineInfo?.engine || game.engine) === 'Godot' ? 'bg-cyan-600/80 text-white' :
-              (engineInfo?.engine || game.engine) === 'GameMaker' ? 'bg-yellow-600/80 text-white' :
-              'bg-gray-600/80 text-white'
-            }`}>
-              <Settings className="h-3 w-3 mr-1" />
-              {engineInfo?.engine || game.engine}
+          {isDetectingEngine && (
+            <Badge className="text-xs px-2 py-0.5 bg-slate-700/80 text-slate-300 animate-pulse">
+              <Settings className="h-3 w-3 mr-1 animate-spin" />
+              Analisi engine...
             </Badge>
           )}
+          {!isDetectingEngine && (() => {
+            const eng = engineInfo?.engine || game.engine;
+            if (!eng || eng === 'Unknown' || eng === 'Sconosciuto') return null;
+            const engineColors: Record<string, string> = {
+              'Unity': 'bg-blue-600/80',
+              'Unreal Engine': 'bg-orange-600/80',
+              'RPG Maker': 'bg-green-600/80',
+              "Ren'Py": 'bg-pink-600/80',
+              'Spike Chunsoft Engine': 'bg-purple-600/80',
+              'Godot': 'bg-cyan-600/80',
+              'GameMaker': 'bg-yellow-600/80',
+              'Source Engine': 'bg-amber-700/80',
+              'Source 2': 'bg-amber-600/80',
+              'CryEngine': 'bg-red-600/80',
+              'Frostbite': 'bg-sky-600/80',
+              'REDengine': 'bg-red-700/80',
+              'Creation Engine': 'bg-emerald-700/80',
+              'id Tech': 'bg-red-800/80',
+              'RE Engine': 'bg-rose-600/80',
+              'MT Framework': 'bg-rose-700/80',
+              'RAGE Engine': 'bg-yellow-700/80',
+              'FromSoftware Engine': 'bg-stone-600/80',
+              'Platinum Engine': 'bg-indigo-600/80',
+              'Glacier Engine': 'bg-teal-700/80',
+              'FOX Engine': 'bg-orange-700/80',
+              'Anvil Engine': 'bg-slate-600/80',
+              'Decima': 'bg-blue-700/80',
+              'Snowdrop': 'bg-violet-600/80',
+              'IW Engine': 'bg-zinc-600/80',
+              'MonoGame/FNA': 'bg-fuchsia-600/80',
+              'Void Engine': 'bg-gray-700/80',
+              'Clausewitz': 'bg-amber-800/80',
+              'Luminous Engine': 'bg-yellow-500/80',
+              'Haxe/OpenFL': 'bg-lime-600/80',
+              'Telltale Tool': 'bg-teal-600/80',
+              'LÖVE': 'bg-pink-500/80',
+              'Construct': 'bg-emerald-600/80',
+              'Kirikiri': 'bg-fuchsia-700/80',
+              'Defold': 'bg-orange-500/80',
+              'Cocos2d': 'bg-blue-500/80',
+            };
+            const key = Object.keys(engineColors).find(k => eng.startsWith(k)) || '';
+            const bgColor = engineColors[key] || 'bg-gray-600/80';
+            return (
+              <Badge className={`text-xs px-2 py-0.5 text-white ${bgColor}`}>
+                <Settings className="h-3 w-3 mr-1" />
+                {eng}
+              </Badge>
+            );
+          })()}
           {game.metacritic && (
             <div className={`ml-auto w-9 h-9 rounded flex items-center justify-center font-bold text-sm ${
               game.metacritic.score >= 80 ? 'bg-green-600' : 

@@ -11,6 +11,9 @@ interface NotificationToastProps {
   onDismiss: (id: string) => void;
   onAction?: (id: string, action: string) => void;
   className?: string;
+  autoHideDuration?: number;
+  enableDynamicPositioning?: boolean;
+  customPosition?: { top?: number; right?: number; bottom?: number; left?: number };
 }
 
 const typeIcons: Record<NotificationType, React.ElementType> = {

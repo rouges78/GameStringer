@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { VisuallyHidden } from 'radix-ui';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
@@ -123,9 +123,9 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto p-0">
         {/* Accessibilità - DialogTitle nascosto */}
-        <VisuallyHidden>
+        <VisuallyHidden.Root>
           <DialogTitle>Profile Security</DialogTitle>
-        </VisuallyHidden>
+        </VisuallyHidden.Root>
         
         {/* Hero Header */}
         <div className="relative overflow-hidden rounded-t-lg border-b border-cyan-500/20 bg-gradient-to-r from-cyan-950/80 via-teal-950/60 to-emerald-950/80 p-6">

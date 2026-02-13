@@ -93,7 +93,7 @@ export function UpdateNotification() {
   const releaseItems = updateInfo.release_notes ? parseReleaseNotes(updateInfo.release_notes) : [];
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+    <div className="fixed bottom-4 right-4 z-[9999] animate-in slide-in-from-bottom-4 fade-in duration-300">
       <div className="bg-slate-900 rounded-xl shadow-2xl shadow-black/50 p-4 w-80 border border-slate-700/50">
         <div className="flex items-start gap-3">
           <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg">

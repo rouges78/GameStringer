@@ -1205,11 +1205,10 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
     let is_unity = unity_player || unity_crash_handler || mono_dll || has_data_folder;
     
     if is_unity {
-        // Versione semplice senza funzioni complesse
-        let ver_str = "?.?".to_string();
         let is_il2cpp = game_dir.join("GameAssembly.dll").exists();
         let runtime = if is_il2cpp { "IL2CPP" } else { "Mono" };
-        let unity_version: Option<String> = None;
+        let unity_version = detect_unity_version(game_dir);
+        let ver_str = unity_version.clone().unwrap_or_else(|| "?.?".to_string());
         
         return Ok(GameEngineCheck {
             is_unity: true,

@@ -206,8 +206,8 @@ export const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
 
       {/* Popup aggiornamento */}
       {showPopup && hasUpdate && updateInfo && (
-        <div className="absolute top-12 right-0 z-50 animate-in slide-in-from-top-2 fade-in duration-200">
-          <div className="bg-slate-900/95 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/50 p-4 w-80 border border-slate-700/50">
+        <div className="absolute top-12 right-0 z-[9999] animate-in slide-in-from-top-2 fade-in duration-200 pointer-events-auto">
+          <div className="bg-slate-900 rounded-xl shadow-2xl shadow-black/50 p-4 w-80 border border-slate-700/50">
             <div className="flex items-start gap-3">
               <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg">
                 <Download className="w-5 h-5 text-white" />

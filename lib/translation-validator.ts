@@ -90,7 +90,7 @@ const BUILTIN_RULES: ValidationRule[] = [
       const sourcePlaceholders = source.match(pattern) || [];
       const targetPlaceholders = target.match(pattern) || [];
 
-      const missing = sourcePlaceholders.filter(p => !targetPlaceholders.includes(p));
+      const missing = (sourcePlaceholders as string[]).filter(p => !(targetPlaceholders as string[]).includes(p));
       if (missing.length > 0) {
         return {
           id: 'missing-placeholder',
@@ -111,7 +111,7 @@ const BUILTIN_RULES: ValidationRule[] = [
     const sourcePlaceholders = source.match(pattern) || [];
     const targetPlaceholders = target.match(pattern) || [];
 
-    const extra = targetPlaceholders.filter(p => !sourcePlaceholders.includes(p));
+    const extra = (targetPlaceholders as string[]).filter(p => !(sourcePlaceholders as string[]).includes(p));
     if (extra.length > 0) {
       return {
         id: 'extra-placeholder',
@@ -216,7 +216,7 @@ const BUILTIN_RULES: ValidationRule[] = [
     const sourceNumbers = source.match(/\d+/g) || [];
     const targetNumbers = target.match(/\d+/g) || [];
 
-    const missing = sourceNumbers.filter(n => !targetNumbers.includes(n));
+    const missing = (sourceNumbers as string[]).filter(n => !(targetNumbers as string[]).includes(n));
     if (missing.length > 0) {
       return {
         id: 'missing-numbers',

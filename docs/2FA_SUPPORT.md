@@ -7,14 +7,17 @@ GameStringer supporta l'autenticazione a due fattori per i provider che la richi
 ## 📅 Cronologia Implementazioni
 
 ### 2 Luglio 2025 - GOG 2FA Support
+
 Prima implementazione completa del supporto 2FA nell'applicazione.
 
 ## 🎮 Provider con Supporto 2FA
 
 ### GOG (Good Old Games)
+
 **Status**: ✅ UI Completa, ⚠️ Backend da completare
 
-#### Caratteristiche Implementate:
+#### Caratteristiche Implementate
+
 1. **Flusso a Due Step**
    - Step 1: Inserimento credenziali (email e password)
    - Step 2: Inserimento codice 2FA (6 cifre)
@@ -34,14 +37,16 @@ Prima implementazione completa del supporto 2FA nell'applicazione.
    - Le funzioni `handleGenericLogin` e `handleUbisoftLogin` supportano il parametro `twoFactorCode`
    - Il codice viene passato correttamente alle API di autenticazione
 
-#### Limitazioni Attuali:
+#### Limitazioni Attuali
+
 - GOG non fornisce API pubbliche per l'autenticazione
 - L'implementazione backend richiede web scraping o SDK non ufficiali
 - Le credenziali vengono salvate per uso futuro quando le API saranno disponibili
 
 ## 🔧 Implementazione Tecnica
 
-### Component: GenericCredentialsModal
+### Component GenericCredentialsModal
+
 ```tsx
 // Supporto per flusso 2FA
 const [showTwoFactorField, setShowTwoFactorField] = useState(false);
@@ -59,6 +64,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 ```
 
 ### Funzioni di Login Aggiornate
+
 ```tsx
 // Supporto parametro opzionale twoFactorCode
 const handleGenericLogin = async (
@@ -80,16 +86,19 @@ const handleGenericLogin = async (
 ## 🚀 Prossimi Passi
 
 ### 1. Completamento Backend GOG
+
 - Implementare web scraping per il login GOG
 - Gestire il flusso completo di autenticazione 2FA
 - Validare e salvare i token di sessione
 
 ### 2. Estensione ad Altri Provider
+
 - **Ubisoft Connect**: Già predisposto per 2FA
 - **EA App**: Potrebbe richiedere 2FA in futuro
 - **Battle.net**: Supporta authenticator app
 
 ### 3. Miglioramenti UX
+
 - Supporto per authenticator app (TOTP)
 - Opzione "Ricorda questo dispositivo"
 - Gestione codici di backup
@@ -112,7 +121,8 @@ Per aggiungere supporto 2FA a un nuovo provider:
 
 ## 🧪 Testing
 
-### Test Manuali Richiesti:
+### Test Manuali Richiesti
+
 - [ ] Login con credenziali corrette
 - [ ] Login con credenziali errate
 - [ ] Inserimento codice 2FA corretto
@@ -120,7 +130,8 @@ Per aggiungere supporto 2FA a un nuovo provider:
 - [ ] Timeout sessione 2FA
 - [ ] Cambio provider durante il flusso
 
-### Test Automatici:
+### Test Automatici
+
 - Unit test per componenti UI
 - Integration test per flusso completo
 - E2E test con mock del provider

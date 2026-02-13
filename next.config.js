@@ -28,19 +28,18 @@ const nextConfig = {
     } : false,
   },
   experimental: {
-    // Ottimizza pacchetti grandi
+    // Ottimizza pacchetti grandi — tree-shaking automatico
     optimizePackageImports: [
       'lucide-react',
-      '@radix-ui/react-icons',
-      'date-fns',
       '@tabler/icons-react',
+      'date-fns',
+      'radix-ui',
+      'framer-motion',
+      'cmdk',
+      'recharts',
+      'react-hook-form',
+      'class-variance-authority',
     ],
-  },
-  // Modularize imports per ridurre bundle
-  modularizeImports: {
-    'lucide-react': {
-      transform: 'lucide-react/dist/esm/icons/{{member}}',
-    },
   },
   images: {
     unoptimized: true,

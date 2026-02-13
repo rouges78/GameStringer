@@ -48,6 +48,7 @@ import { getRssFeeds, saveRssFeeds, defaultRssFeeds, type RssFeed } from '@/comp
 import { toast } from 'sonner';
 import { ProfileNotificationSettings } from '@/components/notifications/profile-notification-settings';
 import { AutoBackupSettings } from '@/components/settings/auto-backup-settings';
+import { MultiLlmComparisonSettings } from '@/components/settings/multi-llm-comparison-settings';
 import { useVersion } from '@/lib/version';
 import { useTranslation } from '@/lib/i18n';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
@@ -898,6 +899,9 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Multi-LLM Comparison */}
+          <MultiLlmComparisonSettings />
         </TabsContent>
 
         {/* Backup Tab */}

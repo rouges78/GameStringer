@@ -347,7 +347,7 @@ function calculateAccuracyScore(source: string, translated: string, details: str
     const tgtMatches = translated.match(pattern) || [];
     
     totalPlaceholders += srcMatches.length;
-    preservedPlaceholders += srcMatches.filter((p: string) => tgtMatches.includes(p)).length;
+    preservedPlaceholders += (srcMatches as string[]).filter((p: string) => (tgtMatches as string[]).includes(p)).length;
   }
   
   if (totalPlaceholders > 0) {

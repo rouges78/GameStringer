@@ -1,452 +1,75 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useVersion } from '@/lib/version';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  HelpCircle, 
-  Gamepad2, 
-  Brain, 
-  Scan, 
-  Cpu, 
-  Wand2,
-  Settings,
-  Keyboard,
-  Puzzle,
-  ExternalLink,
-  BookOpen,
-  Book,
-  History,
-  Globe,
-  Zap,
-  ChevronRight,
-  Mic,
-  Database,
-  Layers,
-  FolderTree,
-  AudioLines,
-  Glasses,
-  ShieldCheck,
-  MessageSquare,
-  BarChart2
-} from 'lucide-react';
+import { Keyboard, BookOpen, Zap, ChevronRight } from 'lucide-react';
 import { getShortcutsList } from '@/lib/keyboard-shortcuts';
 import { useTranslation, translations } from '@/lib/i18n';
+import {
+  getToolsRegistry,
+  categoryMeta,
+  subcategoryLabels,
+  type ToolDefinition,
+} from '@/lib/tools-registry';
 
 export default function GuidePage() {
   const { t, language } = useTranslation();
+  const { version } = useVersion();
   const shortcuts = getShortcutsList();
-  const [activeTab, setActiveTab] = useState('tools');
+  const [activeTab, setActiveTab] = useState('translation');
 
-  // Accesso diretto alle traduzioni per gli array
   const guideTrans = translations[language]?.guidePage || translations.it.guidePage;
 
-  const toolsGuide = [
-    {
-      icon: Gamepad2,
-      name: guideTrans.gameLibrary || 'Game Library',
-      color: 'teal',
-      features: guideTrans.gameLibraryFeatures || [
-        'Automatic scan for Steam, Epic, GOG, Origin, Ubisoft, Battle.net',
-        'Filter by name, engine, supported language, genre',
-        'Game details: engine detection, localization files, DLC',
-        'Translation recommendations based on engine and available files',
-      ],
-    },
-    {
-      icon: Brain,
-      name: guideTrans.neuralTranslator || 'Neural Translator Pro',
-      color: 'violet',
-      features: guideTrans.neuralTranslatorFeatures || [
-        'AI translation with Claude, OpenAI, Gemini, DeepL',
-        'Supports JSON, PO, RESX, CSV, XLIFF, Unity YAML, Unreal Locres',
-        'Batch processing with progress tracking',
-        'Cost and time estimation before starting',
-        'Auto-save to Translation Memory',
-      ],
-    },
-    {
-      icon: Scan,
-      name: guideTrans.ocrTranslator || 'OCR Translator',
-      color: 'violet',
-      features: guideTrans.ocrTranslatorFeatures || [
-        'Capture text directly from game screen',
-        'Real-time AI translation',
-        'Transparent overlay on game',
-        'Global hotkey: Ctrl+Shift+T for quick capture',
-        'Smart cache to avoid duplicate translations',
-      ],
-    },
-    {
-      icon: Cpu,
-      name: guideTrans.ueTranslator || 'UE Translator',
-      color: 'violet',
-      features: guideTrans.ueTranslatorFeatures || [
-        '.locres file extraction from Unreal Engine 4/5 games',
-        'In-memory translation without modifying original files',
-        'Anti-cheat compatibility check',
-        'Translation cache for performance',
-      ],
-    },
-    {
-      icon: Wand2,
-      name: guideTrans.unityPatcher || 'Unity Patcher',
-      color: 'emerald',
-      features: guideTrans.unityPatcherFeatures || [
-        'Automatic BepInEx + XUnity.AutoTranslator installation',
-        'Supports Unity 5.x to latest versions',
-        'Modes: Capture only, Google Translate, DeepL',
-        'Status badge: 🥈 Silver (auto-translate) / 🥉 Bronze (capture)',
-        'Activity tracking in Dashboard',
-        'In-game hotkey: ALT+T for XUnity menu',
-      ],
-    },
-    {
-      icon: Gamepad2,
-      name: guideTrans.telltalePatcher || 'Telltale Patcher',
-      color: 'orange',
-      features: guideTrans.telltalePatcherFeatures || [
-        'Translations for Telltale games (Wolf Among Us, Walking Dead, Batman)',
-        'Supports .langdb, .landb, .dlog files',
-        'Automatic platform detection (Steam/GOG/Epic)',
-        'Specific instructions for GOG version (batch script)',
-        'Direct link to Italian translations download',
-        'Credits to original translation teams',
-      ],
-    },
-    {
-      icon: Mic,
-      name: guideTrans.voiceTranslator || 'Voice Translator',
-      color: 'blue',
-      features: guideTrans.voiceTranslatorFeatures || [
-        'Real-time voice translation while gaming',
-        'Speech-to-text with automatic language detection',
-        'AI translation with multiple providers',
-        'Text-to-speech output in target language',
-        'Customizable hotkeys for hands-free use',
-        'History of voice translations',
-      ],
-    },
-    {
-      icon: Layers,
-      name: guideTrans.multiLlmCompare || 'Multi-LLM Compare',
-      color: 'blue',
-      features: guideTrans.multiLlmCompareFeatures || [
-        'Compare translations from multiple AI providers',
-        'Side-by-side comparison: OpenAI, Gemini, Claude, DeepSeek, Mistral, DeepL',
-        'Quality scoring for each translation',
-        'Automatic best result selection',
-        'Consensus detection when providers agree',
-        'Latency and cost comparison',
-      ],
-    },
-    {
-      icon: Database,
-      name: guideTrans.dictionary || 'Dictionary',
-      color: 'blue',
-      features: guideTrans.dictionaryFeatures || [
-        'Persistent storage of all translations',
-        'Search and filter saved translations',
-        'Edit or delete existing entries',
-        'Filter by game or source',
-        'Export translations for backup',
-        'Automatic deduplication',
-      ],
-    },
-    {
-      icon: FolderTree,
-      name: guideTrans.projectManager || 'Project Manager',
-      color: 'blue',
-      features: guideTrans.projectManagerFeatures || [
-        'Complete translation project management',
-        'Integrated glossary for consistent terminology',
-        'Real-time progress tracking and statistics',
-        'Multi-file organization (JSON, PO, CSV...)',
-        'Export/import projects in .gsproj format',
-        'Located in Resources → Project Manager',
-      ],
-    },
-    {
-      icon: AudioLines,
-      name: guideTrans.voiceCloneGuide || 'Voice Clone Studio',
-      color: 'blue',
-      features: guideTrans.voiceCloneGuideFeatures || [
-        'AI voice cloning with ElevenLabs and OpenAI TTS',
-        'Text-to-speech synthesis with multiple voices',
-        'Upload audio samples to create custom voice clones',
-        'Voice presets: narrator, hero, villain, child, robot, elderly',
-        'Adjustable stability, speed, and similarity settings',
-        'Save and manage voice profiles',
-      ],
-    },
-    {
-      icon: Glasses,
-      name: guideTrans.vrOverlayGuide || 'VR Text Overlay',
-      color: 'emerald',
-      features: guideTrans.vrOverlayGuideFeatures || [
-        'Spatial subtitles for VR games',
-        'Automatic VR headset detection (Oculus, SteamVR, WMR)',
-        'Position presets: bottom center, top center, peripheral, wrist',
-        'Customizable style: font size, opacity, shadow',
-        'Follow head movement option',
-        'Real-time preview in 3D space',
-      ],
-    },
-    {
-      icon: ShieldCheck,
-      name: guideTrans.qualityGatesGuide || 'Quality Gates',
-      color: 'emerald',
-      features: guideTrans.qualityGatesGuideFeatures || [
-        'Automatic quality control system for translations',
-        'Checks: placeholders, numbers, HTML tags, length',
-        'Context-aware validation (UI, dialogue, narrative)',
-        'Quality score with pass/fail threshold',
-        'Detailed error, warning, and info reports',
-        'Export validation reports as JSON',
-      ],
-    },
-    {
-      icon: MessageSquare,
-      name: guideTrans.playerFeedbackGuide || 'Player Feedback',
-      color: 'emerald',
-      features: guideTrans.playerFeedbackGuideFeatures || [
-        'Collect and manage player translation feedback',
-        'Categories: accuracy, fluency, context, terminology, style',
-        'Rating system with 5-star reviews',
-        'Status tracking: pending, reviewed, applied, rejected',
-        'Statistics and trend analysis',
-        'Export feedback as JSON or CSV',
-      ],
-    },
-  ];
+  // Legge i tool dal registry centralizzato e li raggruppa per categoria → subcategory
+  const registry = useMemo(() => getToolsRegistry(), []);
 
-  const newFeatures = [
-    {
-      icon: Mic,
-      name: guideTrans.voiceTranslatorNew || 'Voice Translator',
-      color: 'blue',
-      desc: guideTrans.voiceTranslatorNewDesc || 'Real-time voice translation for gaming',
-      details: guideTrans.voiceTranslatorNewDetails || [
-        'Record or upload audio for translation',
-        'Whisper AI for accurate speech-to-text',
-        'Multiple AI providers for translation',
-        'Text-to-speech in 6 voices (Nova, Alloy, Echo...)',
-        'Hands-free gaming with hotkeys',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: Layers,
-      name: guideTrans.multiLlmCompareNew || 'Multi-LLM Compare',
-      color: 'blue',
-      desc: guideTrans.multiLlmCompareNewDesc || 'Compare translations from 7 AI providers',
-      details: guideTrans.multiLlmCompareNewDetails || [
-        'Side-by-side: OpenAI, Gemini, Claude, DeepSeek, Mistral, DeepL, Libre',
-        'Quality scoring (fluency, accuracy, consistency)',
-        'Automatic best result selection',
-        'Consensus detection when providers agree',
-        'Latency and cost comparison',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: Database,
-      name: guideTrans.dictionaryNew || 'Dictionary',
-      color: 'blue',
-      desc: guideTrans.dictionaryNewDesc || 'Persistent translation storage',
-      details: guideTrans.dictionaryNewDetails || [
-        'All translations saved automatically',
-        'Search, filter, edit entries',
-        'Filter by game or source',
-        'Export for backup',
-        'Automatic deduplication',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: Globe,
-      name: guideTrans.uiLanguageSelector || 'UI Language Selector',
-      color: 'blue',
-      desc: guideTrans.uiLanguageSelectorDesc || 'Quick language switch in header',
-      details: guideTrans.uiLanguageSelectorDetails || [
-        'Switch UI language from header',
-        'Currently: English, Italian',
-        'Coming soon: Spanish, French, German, Japanese, Chinese',
-        'Custom flag icons for each language',
-        'Instant switch without restart',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: Book,
-      name: guideTrans.customGlossary || 'Custom Glossary',
-      color: 'orange',
-      desc: guideTrans.customGlossaryDesc || 'Define terms with specific translations',
-      details: guideTrans.customGlossaryDetails || [
-        'Create global or game-specific glossaries',
-        'Categories: Names, Items, Abilities, Locations, UI, Lore',
-        'Options: case sensitive, whole word',
-        'Empty term = do not translate (e.g. proper names)',
-        'Import/Export JSON to share glossaries',
-        'Automatically applied in all tools',
-      ],
-      version: '0.9',
-    },
-    {
-      icon: History,
-      name: guideTrans.translationHistory || 'Translation History',
-      color: 'violet',
-      desc: guideTrans.translationHistoryDesc || 'Complete log of all translations',
-      details: guideTrans.translationHistoryDetails || [
-        'History of every translation made',
-        'Statistics: words, API cost, time, provider',
-        'Filter by tool, provider, game, date',
-        'Full-text search in translations',
-        'Export to JSON or CSV',
-        'Cache hit rate to optimize costs',
-      ],
-      version: '0.9',
-    },
-    {
-      icon: Globe,
-      name: guideTrans.autoDetectLanguage || 'Auto-Detect Language',
-      color: 'cyan',
-      desc: guideTrans.autoDetectLanguageDesc || 'Automatically detect source language',
-      details: guideTrans.autoDetectLanguageDetails || [
-        'Pattern matching for 15+ languages',
-        'Character support: Latin, Asian, Cyrillic, Arabic',
-        'Confidence score for reliability',
-        'Smart fallback if uncertain',
-        'Integrated in OCR and Neural Translator',
-      ],
-      version: '0.9',
-    },
-    {
-      icon: Keyboard,
-      name: guideTrans.globalHotkeys || 'Global Hotkeys',
-      color: 'green',
-      desc: guideTrans.globalHotkeysDesc || 'Shortcuts active even in fullscreen',
-      details: guideTrans.globalHotkeysDetails || [
-        'Ctrl+Shift+T → Start OCR capture',
-        'Works even with fullscreen games',
-        'Customizable configuration',
-        'Toast notification when activated',
-      ],
-      version: '0.9',
-    },
-    {
-      icon: History,
-      name: 'Undo/Redo System',
-      color: 'purple',
-      desc: 'Full edit history for translations',
-      details: [
-        'Unlimited undo/redo with Ctrl+Z / Ctrl+Y',
-        'Command pattern for all edit operations',
-        'Persistent history across sessions',
-        'Visual history browser',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: Database,
-      name: 'Auto-Backup',
-      color: 'green',
-      desc: 'Automatic backup every 5 minutes',
-      details: [
-        'Automatic save every 5 minutes',
-        'Manual backup button',
-        'Restore from any backup point',
-        'Keep last 10 backups',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: MessageSquare,
-      name: 'String Notes & Comments',
-      color: 'cyan',
-      desc: 'Add notes and discussions to strings',
-      details: [
-        'Add notes, comments, questions to any string',
-        'Reply threads for collaboration',
-        'Mark issues as resolved',
-        'Priority levels (low, medium, high)',
-        'Version history for each string',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: Puzzle,
-      name: 'String Tags & Labels',
-      color: 'orange',
-      desc: 'Organize strings with custom tags',
-      details: [
-        '12 predefined gaming tags (UI, Dialogue, Quest...)',
-        'Create custom tags with colors',
-        'Bulk tagging operations',
-        'Filter strings by tags',
-        'Tag presets for quick application',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: Zap,
-      name: 'Batch Operations',
-      color: 'yellow',
-      desc: 'Mass operations on translations',
-      details: [
-        'Translate, review, approve multiple strings',
-        'Find & replace across project',
-        'Progress tracking with pause/resume',
-        'Estimated time remaining',
-        'Error reporting per string',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: Scan,
-      name: 'Advanced Search',
-      color: 'blue',
-      desc: 'Powerful search with filters',
-      details: [
-        'Regex and fuzzy matching',
-        'Search in source, target, notes',
-        'Filter by status, tags, author, date',
-        'Save searches for quick access',
-        'Search suggestions and history',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: ShieldCheck,
-      name: 'Real-time Validation',
-      color: 'red',
-      desc: 'Quality checks while you type',
-      details: [
-        '12+ built-in validation rules',
-        'Check placeholders, length, punctuation',
-        'Auto-fix common issues',
-        'Quality score per string',
-        'Glossary term enforcement',
-      ],
-      version: '1.0',
-    },
-    {
-      icon: BarChart2,
-      name: 'Translation Analytics',
-      color: 'violet',
-      desc: 'Detailed statistics and insights',
-      details: [
-        'Daily activity tracking',
-        'Words/characters per session',
-        'Quality score trends',
-        'Productivity insights',
-        'Estimated completion date',
-      ],
-      version: '1.0',
-    },
-  ];
+  const groupedByCategory = useMemo(() => {
+    const groups: Record<string, { subcategory: string; tools: ToolDefinition[] }[]> = {};
+    for (const tool of registry) {
+      if (!groups[tool.category]) groups[tool.category] = [];
+      const sub = tool.subcategory || '_root';
+      let existing = groups[tool.category].find((g) => g.subcategory === sub);
+      if (!existing) {
+        existing = { subcategory: sub, tools: [] };
+        groups[tool.category].push(existing);
+      }
+      existing.tools.push(tool);
+    }
+    return groups;
+  }, [registry]);
+
+  const tabCategories = ['translation', 'tools', 'resources'] as const;
+
+  const renderToolCard = (tool: ToolDefinition) => {
+    const color = tool.color;
+    const Icon = tool.icon;
+    return (
+      <Card key={tool.id} className="border-slate-800/50 bg-slate-900/30">
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <div className={`p-1.5 rounded-lg bg-${color}-500/20`}>
+              <Icon className={`h-4 w-4 text-${color}-400`} />
+            </div>
+            <span className={`text-${color}-400`}>{tool.name}</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="py-2 px-3">
+          <ul className="space-y-1">
+            {tool.features.map((f, j) => (
+              <li key={j} className="flex items-start gap-2 text-xs text-muted-foreground">
+                <ChevronRight className="h-3 w-3 mt-0.5 text-slate-600 shrink-0" />
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-3 overflow-y-auto">
@@ -460,89 +83,52 @@ export default function GuidePage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-orange-400">{t('guidePage.detailedGuide')}</h1>
-              <p className="text-xs text-muted-foreground">{t('guidePage.everythingAbout')} v1.0.0</p>
+              <p className="text-xs text-muted-foreground">{t('guidePage.everythingAbout')} v{version}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-400 border-green-500/30">
-              <Zap className="h-3 w-3 mr-1" />
-              New features
-            </Badge>
-          </div>
+          <Badge variant="outline" className="text-[10px] bg-orange-500/10 text-orange-400 border-orange-500/30">
+            {registry.length} strumenti
+          </Badge>
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — una per ogni categoria + scorciatoie */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid grid-cols-3 w-full h-9 shrink-0">
-          <TabsTrigger value="tools" className="text-xs">🛠️ {t('guidePage.tools')}</TabsTrigger>
-          <TabsTrigger value="new" className="text-xs">✨ {t('guidePage.newInVersion')} v1.0</TabsTrigger>
-          <TabsTrigger value="shortcuts" className="text-xs">⌨️ {t('guidePage.shortcuts')}</TabsTrigger>
+        <TabsList className="grid grid-cols-4 w-full h-9 shrink-0">
+          {tabCategories.map((cat) => (
+            <TabsTrigger key={cat} value={cat} className="text-xs">
+              {categoryMeta[cat]?.label}
+              <Badge variant="secondary" className="ml-1.5 text-[9px] px-1 py-0 h-4">
+                {groupedByCategory[cat]?.reduce((acc, g) => acc + g.tools.length, 0) || 0}
+              </Badge>
+            </TabsTrigger>
+          ))}
+          <TabsTrigger value="shortcuts" className="text-xs">
+            ⌨️ {t('guidePage.shortcuts')}
+          </TabsTrigger>
         </TabsList>
 
-        {/* Tab: Strumenti */}
-        <TabsContent value="tools" className="flex-1 overflow-hidden mt-3">
-          <ScrollArea className="h-full">
-            <div className="space-y-3 pr-3">
-              {toolsGuide.map((tool, i) => (
-                <Card key={i} className="border-slate-800/50 bg-slate-900/30">
-                  <CardHeader className="py-2 px-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <div className={`p-1.5 rounded-lg bg-${tool.color}-500/20`}>
-                        <tool.icon className={`h-4 w-4 text-${tool.color}-400`} />
-                      </div>
-                      <span className={`text-${tool.color}-400`}>{tool.name}</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-2 px-3">
-                    <ul className="space-y-1">
-                      {tool.features.map((f: string, j: number) => (
-                        <li key={j} className="flex items-start gap-2 text-xs text-muted-foreground">
-                          <ChevronRight className="h-3 w-3 mt-0.5 text-slate-600 shrink-0" />
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
-        {/* Tab: Novità */}
-        <TabsContent value="new" className="flex-1 overflow-hidden mt-3">
-          <ScrollArea className="h-full">
-            <div className="space-y-3 pr-3">
-              {newFeatures.map((feature, i) => (
-                <Card key={i} className="border-slate-800/50 bg-slate-900/30">
-                  <CardHeader className="py-2 px-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <div className={`p-1.5 rounded-lg bg-${feature.color}-500/20`}>
-                        <feature.icon className={`h-4 w-4 text-${feature.color}-400`} />
-                      </div>
-                      <div>
-                        <span className={`text-${feature.color}-400`}>{feature.name}</span>
-                        <p className="text-[10px] text-muted-foreground font-normal">{feature.desc}</p>
-                      </div>
-                      <Badge className="ml-auto text-[9px] bg-green-500/20 text-green-400">NEW</Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="py-2 px-3">
-                    <ul className="space-y-1">
-                      {feature.details.map((d, j) => (
-                        <li key={j} className="flex items-start gap-2 text-xs text-muted-foreground">
-                          <ChevronRight className="h-3 w-3 mt-0.5 text-slate-600 shrink-0" />
-                          <span>{d}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </TabsContent>
+        {/* Tab dinamiche per ogni categoria */}
+        {tabCategories.map((cat) => (
+          <TabsContent key={cat} value={cat} className="flex-1 overflow-hidden mt-3">
+            <ScrollArea className="h-full">
+              <div className="space-y-4 pr-3">
+                {groupedByCategory[cat]?.map((group) => (
+                  <div key={group.subcategory}>
+                    {group.subcategory !== '_root' && (
+                      <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+                        {subcategoryLabels[group.subcategory] || group.subcategory}
+                      </h3>
+                    )}
+                    <div className="space-y-2">
+                      {group.tools.map(renderToolCard)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+        ))}
 
         {/* Tab: Scorciatoie */}
         <TabsContent value="shortcuts" className="flex-1 overflow-hidden mt-3">
@@ -550,17 +136,17 @@ export default function GuidePage() {
             <CardHeader className="py-2 px-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Keyboard className="w-4 h-4 text-red-400" />
-                {guideTrans.keyboardShortcutsTitle || 'Keyboard Shortcuts'}
+                {guideTrans.keyboardShortcutsTitle || 'Scorciatoie da Tastiera'}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3">
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { shortcut: 'Ctrl + F', description: guideTrans.openSearch || 'Open search' },
-                  { shortcut: 'Esc', description: guideTrans.closeModal || 'Close modal/panel' },
-                  { shortcut: 'Ctrl + R', description: guideTrans.refreshLibrary || 'Refresh library' },
-                  { shortcut: 'Ctrl + ,', description: guideTrans.openSettings || 'Open settings' },
-                  { shortcut: 'Shift + ?', description: guideTrans.showShortcutHelp || 'Show shortcut help' },
+                  { shortcut: 'Ctrl + F', description: guideTrans.openSearch || 'Apri ricerca' },
+                  { shortcut: 'Esc', description: guideTrans.closeModal || 'Chiudi modale/pannello' },
+                  { shortcut: 'Ctrl + R', description: guideTrans.refreshLibrary || 'Aggiorna libreria' },
+                  { shortcut: 'Ctrl + ,', description: guideTrans.openSettings || 'Apri impostazioni' },
+                  { shortcut: 'Shift + ?', description: guideTrans.showShortcutHelp || 'Mostra scorciatoie' },
                 ].map((s, i) => (
                   <div key={i} className="flex items-center justify-between p-2 rounded bg-slate-800/30">
                     <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-xs font-mono text-red-400">
@@ -569,31 +155,39 @@ export default function GuidePage() {
                     <span className="text-xs text-muted-foreground">{s.description}</span>
                   </div>
                 ))}
-                
+
                 {/* Hotkey globali */}
                 <div className="col-span-2 mt-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                   <div className="flex items-center gap-2 mb-2">
                     <Zap className="h-4 w-4 text-green-400" />
-                    <span className="text-sm font-medium text-green-400">{guideTrans.globalHotkeysAlwaysWork || 'Global Hotkeys (always work)'}</span>
+                    <span className="text-sm font-medium text-green-400">
+                      {guideTrans.globalHotkeysAlwaysWork || 'Hotkey Globali (sempre attive)'}
+                    </span>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <kbd className="px-2 py-1 bg-slate-900 rounded border border-green-500/30 text-xs font-mono text-green-400">
                         Ctrl+Shift+T
                       </kbd>
-                      <span className="text-xs text-muted-foreground">{guideTrans.startOcrTranslator || 'Start OCR Translator'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {guideTrans.startOcrTranslator || 'Avvia OCR Translator'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <kbd className="px-2 py-1 bg-slate-900 rounded border border-green-500/30 text-xs font-mono text-green-400">
                         Ctrl+Shift+Q
                       </kbd>
-                      <span className="text-xs text-muted-foreground">{guideTrans.quickTranslate || 'Quick Translate'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {guideTrans.quickTranslate || 'Traduzione Rapida'}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <kbd className="px-2 py-1 bg-slate-900 rounded border border-green-500/30 text-xs font-mono text-green-400">
                         Ctrl+Alt+O
                       </kbd>
-                      <span className="text-xs text-muted-foreground">{guideTrans.toggleOverlay || 'Toggle Overlay'}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {guideTrans.toggleOverlay || 'Toggle Overlay'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -605,6 +199,3 @@ export default function GuidePage() {
     </div>
   );
 }
-
-
-

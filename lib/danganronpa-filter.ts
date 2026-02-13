@@ -9,7 +9,7 @@
  * 2. Classificazione AI (opzionale) — classifica i dialoghi per priorità
  */
 
-import { translateWithFallback } from './ai-translate-direct';
+import { translateSmart } from './ai-translate-direct';
 
 // ============================================================================
 // TYPES
@@ -353,7 +353,7 @@ export async function aiClassifyDialogues(
     const texts = batch.map((d, idx) => `${idx + 1}. [${d.speaker || '???'}] ${d.original}`).join('\n');
 
     try {
-      const result = await translateWithFallback({
+      const result = await translateSmart({
         texts: [
           `Classify these Danganronpa game dialogue lines by translation priority (1=skip/system, 2=low, 3=medium, 4=important, 5=critical story). Return ONLY a JSON array of numbers, one per line.\n\n${texts}`
         ],

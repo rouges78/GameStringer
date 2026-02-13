@@ -55,6 +55,8 @@ pub mod global_hotkeys;
 pub mod store_detection;
 pub mod unity_bundle;
 pub mod universal_injector;
+pub mod unreal_localization;
+pub mod unreal_iostore;
 pub mod screen_capture;
 pub mod batch_processor;
 pub mod community_hub;
@@ -62,4 +64,5 @@ pub mod danganronpa_patcher;
 pub mod rpgmaker_patcher;
 pub mod renpy_patcher;
 pub mod wolfrpg_patcher;
+pub mod steam_workshop;
 // pub mod notifications; // TEMPORANEAMENTE DISABILITATO

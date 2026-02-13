@@ -32,7 +32,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { VisuallyHidden } from 'radix-ui';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { useTranslation } from '@/lib/i18n';
@@ -385,9 +385,9 @@ export function OnboardingWizard() {
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg p-0 gap-0 overflow-hidden">
-        <VisuallyHidden>
+        <VisuallyHidden.Root>
           <DialogTitle>{t('onboarding.dialogTitle')}</DialogTitle>
-        </VisuallyHidden>
+        </VisuallyHidden.Root>
         {/* Progress */}
         <div className="px-6 pt-6">
           <div className="flex items-center gap-2 mb-2">

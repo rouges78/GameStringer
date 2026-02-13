@@ -191,6 +191,8 @@ fn convert_steam_app_to_game_info(app: &steamlocate::App, library_path: &str) ->
         }
     };
     
+    let engine = crate::engine_detector::detect_engine_by_name(&name);
+    
     GameInfo {
         id: app_id_str.clone(),
         title: name,
@@ -203,7 +205,7 @@ fn convert_steam_app_to_game_info(app: &steamlocate::App, library_path: &str) ->
         is_installed: true,
         steam_app_id: Some(app.app_id),
         is_vr: false, // Default, da implementare rilevamento
-        engine: None, // Default, da implementare rilevamento
+        engine,
         last_played: None,
         is_shared: false,
         supported_languages: None, // Default, da implementare rilevamento
@@ -517,13 +519,14 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                         let full_install_path = library_path.join("steamapps").join("common").join(&app.install_dir);
                         let full_path_str = full_install_path.to_string_lossy().to_string();
                         
-                        // Rileva il motore di gioco
+                        // Rileva il motore di gioco (file system + fallback nome)
                         let engine = {
                             let detected = crate::engine_detector::detect_engine(&full_install_path);
                             if detected != crate::engine_detector::GameEngine::Unknown {
                                 Some(detected.as_str().to_string())
                             } else {
-                                None
+                                // Fallback: detection per nome se file system non trova nulla
+                                crate::engine_detector::detect_engine_by_name(&name)
                             }
                         };
                         
@@ -624,6 +627,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                                     if !all_games.contains_key(&appid) && appid > 100 {
                                         let name = get_name(appid);
                                         let last_played = last_played_map.get(&appid).copied();
+                                        let engine = crate::engine_detector::detect_engine_by_name(&name);
                                         all_games.insert(appid, GameInfo {
                                             id: format!("steam_{}", appid),
                                             title: name,
@@ -636,7 +640,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                                             is_installed: false,
                                             steam_app_id: Some(appid),
                                             is_vr: false,
-                                            engine: None,
+                                            engine,
                                             last_played,
                                             is_shared: false,
                                             supported_languages: None,
@@ -690,7 +694,8 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                                         }
                                         if !all_games.contains_key(&appid) && appid > 100 {
                                             let name = get_name(appid);
-                                            all_games.insert(appid, GameInfo {
+                                            let engine = crate::engine_detector::detect_engine_by_name(&name);
+                                        all_games.insert(appid, GameInfo {
                                                 id: format!("steam_shared_{}", appid),
                                                 title: name,
                                                 platform: "Steam".to_string(),
@@ -702,7 +707,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                                                 is_installed: false,
                                                 steam_app_id: Some(appid),
                                                 is_vr: false,
-                                                engine: None,
+                                                engine,
                                                 last_played: None,
                                                 is_shared: true,
                                                 supported_languages: None,
@@ -739,6 +744,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                                         let name = get_name(appid);
                                         // Skip se il nome è generico
                                         if name.starts_with("Game ") { continue; }
+                                        let engine = crate::engine_detector::detect_engine_by_name(&name);
                                         all_games.insert(appid, GameInfo {
                                             id: format!("steam_shared_{}", appid),
                                             title: name,
@@ -751,7 +757,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                                             is_installed: false,
                                             steam_app_id: Some(appid),
                                             is_vr: false,
-                                            engine: None,
+                                            engine,
                                             last_played: None,
                                             is_shared: true,
                                             supported_languages: None,
@@ -789,6 +795,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                             if !all_games.contains_key(&appid) {
                                 let name = get_name(appid);
                                 if name.starts_with("Game ") { continue; }
+                                let engine = crate::engine_detector::detect_engine_by_name(&name);
                                 all_games.insert(appid, GameInfo {
                                     id: format!("steam_shared_{}", appid),
                                     title: name,
@@ -801,7 +808,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                                     is_installed: false,
                                     steam_app_id: Some(appid),
                                     is_vr: false,
-                                    engine: None,
+                                    engine,
                                     last_played: None,
                                     is_shared: true,
                                     supported_languages: None,
@@ -834,6 +841,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
         // Aggiungi solo se ha un nome valido (significa che l'utente ha accesso)
         if !app_data.name.starts_with("Game ") && !app_data.name.is_empty() {
             appinfo_added += 1;
+            let engine = crate::engine_detector::detect_engine_by_name(&app_data.name);
             all_games.insert(appid, GameInfo {
                 id: format!("steam_shared_{}", appid),
                 title: app_data.name.clone(),
@@ -846,7 +854,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                 is_installed: false,
                 steam_app_id: Some(appid),
                 is_vr: false,
-                engine: None,
+                engine,
                 last_played: None,
                 is_shared: true,
                 supported_languages: None,
@@ -872,6 +880,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                     }
                     if !all_games.contains_key(&appid) && appid > 100 {
                         let name = get_name(appid);
+                        let engine = crate::engine_detector::detect_engine_by_name(&name);
                         all_games.insert(appid, GameInfo {
                             id: format!("steam_{}", appid),
                             title: name,
@@ -884,7 +893,7 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                             is_installed: false,
                             steam_app_id: Some(appid),
                             is_vr: false,
-                            engine: None,
+                            engine,
                             last_played: None,
                             is_shared: false,
                             supported_languages: None,
@@ -1382,6 +1391,7 @@ pub async fn load_family_sharing_games(
         
         // Aggiungi solo se non esiste già come family (evita duplicati tra condivisori)
         if !existing_games.contains_key(&family_id) {
+            let engine = crate::engine_detector::detect_engine_by_name(&name);
             existing_games.insert(family_id.clone(), GameInfo {
                 id: family_id,
                 title: name,
@@ -1394,7 +1404,7 @@ pub async fn load_family_sharing_games(
                 is_installed: false,
                 steam_app_id: Some(appid),
                 is_vr: false,
-                engine: None,
+                engine,
                 last_played: None,
                 is_shared: true,
                 supported_languages: None,

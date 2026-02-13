@@ -68,7 +68,6 @@ import { SupportButton } from '@/components/support/support-button';
 import { NotificationCenter } from '@/components/notifications/notification-center';
 import { useNotificationShortcuts } from '@/hooks/use-global-shortcuts';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { UpdateBell } from '@/components/notifications/update-bell';
 import { FeaturedGameWidget } from '@/components/ui/featured-game-widget';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -164,6 +163,7 @@ const getNavGroups = (t: (key: string) => string) => [
         subItems: [
           { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
           { name: t('nav.dictionary'), href: '/memory', icon: Database },
+          { name: 'Glossario', href: '/glossary', icon: BookOpen },
           { name: 'Translator Tools', href: '/translator/tools', icon: Sparkles },
         ]
       },
@@ -248,6 +248,7 @@ const getNavGroups = (t: (key: string) => string) => [
         subItems: [
           { name: t('nav.community'), href: '/community-hub', icon: Users },
           { name: 'Stores', href: '/stores', icon: ShoppingBag },
+          { name: 'Workshop', href: '/workshop', icon: Globe },
         ]
       },
       { 
@@ -300,6 +301,29 @@ const CHANGELOG_CONTENT = `
 ---
 
 ## 📅 Febbraio 2026
+
+### 🧹 v1.4.0 — Radix Unificato, Quality Badges & Pulizia Codebase
+\`2026-02-13\`
+
+**Migrazione Radix UI**
+- 37 file migrati da @radix-ui/react-* a radix-ui
+- 27 pacchetti rimossi, bundle più leggero
+
+**Quality Badge nel Traduttore Pro**
+- Punteggio qualità per-riga (0-100) con colori
+- Live preview durante traduzione batch
+- Tabella risultati con tipo contenuto e score
+
+**Nuove Feature**
+- Supporto RTL automatico per lingue arabe/ebraiche
+- Ollama Generico con chain presets fallback
+
+**Ottimizzazione & Fix**
+- Bundle ottimizzato con optimizePackageImports
+- 0 errori TypeScript nei sorgenti (da ~15)
+- Fix props mancanti in notifiche, tutorial, TM
+
+---
 
 ### 🎮 v1.3.0 — Danganronpa WAD Patcher & Export System
 \`2026-02-09\`
@@ -1299,7 +1323,6 @@ export function MainLayout({ children }: MainLayoutProps) {
               <NotificationIndicator 
                 onClick={() => setNotificationCenterOpen(true)}
               />
-              <ThemeToggle />
               <Button
               variant="ghost"
               size="icon"

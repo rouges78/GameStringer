@@ -9,7 +9,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     <NextThemesProvider
       attribute="class"
       defaultTheme="dark"
-      enableSystem
+      forcedTheme="dark"
       disableTransitionOnChange
       storageKey="gamestringer-theme"
       {...props}

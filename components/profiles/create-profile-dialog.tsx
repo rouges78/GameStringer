@@ -26,7 +26,7 @@ import { useTranslation, Language } from '@/lib/i18n';
 import { Globe } from 'lucide-react';
 import { generateRecoveryKey, saveRecoveryKeyHash } from '@/lib/recovery-key';
 import { RecoveryKeyDisplay } from '@/components/profiles/recovery-key-display';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { VisuallyHidden } from 'radix-ui';
 import { DialogTitle } from '@/components/ui/dialog';
 
 interface CreateProfileDialogProps {
@@ -231,7 +231,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden bg-slate-950/95 backdrop-blur-xl border-slate-800/50 shadow-2xl">
-        <VisuallyHidden><DialogTitle>{t('profile.newProfile')}</DialogTitle></VisuallyHidden>
+        <VisuallyHidden.Root><DialogTitle>{t('profile.newProfile')}</DialogTitle></VisuallyHidden.Root>
         
         {/* Hero Header */}
         <motion.div 

@@ -98,7 +98,8 @@ export default function RssViewerPage() {
     if (!dateStr) return '';
     try {
       const date = new Date(dateStr);
-      const locale = language === 'ja' ? 'ja-JP' : language === 'zh' ? 'zh-CN' : language === 'ko' ? 'ko-KR' : `${language}-${language.toUpperCase()}`;
+      const lang = language as string;
+      const locale = lang === 'ja' ? 'ja-JP' : lang === 'zh' ? 'zh-CN' : lang === 'ko' ? 'ko-KR' : `${lang}-${lang.toUpperCase()}`;
       return date.toLocaleDateString(locale, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     } catch {
       return dateStr;

@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { VisuallyHidden } from 'radix-ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   Settings, 
@@ -69,9 +69,9 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-0">
         {/* Accessibilità - DialogTitle nascosto */}
-        <VisuallyHidden>
+        <VisuallyHidden.Root>
           <DialogTitle>Profile Settings</DialogTitle>
-        </VisuallyHidden>
+        </VisuallyHidden.Root>
         
         {/* Hero Header */}
         <div className="relative overflow-hidden rounded-t-lg border-b border-purple-500/20 bg-gradient-to-r from-purple-950/80 via-violet-950/60 to-pink-950/80 p-6">

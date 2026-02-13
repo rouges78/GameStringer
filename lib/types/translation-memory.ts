@@ -9,7 +9,7 @@ export interface TranslationMemoryEntry {
   confidence: number; // 0-1
   createdAt: Date;
   updatedAt: Date;
-  usageCount: number;
+  usageCount?: number;
   projectId?: string;
   gameId?: string;
   filePath?: string;

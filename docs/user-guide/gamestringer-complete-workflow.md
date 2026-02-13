@@ -15,7 +15,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    - Se è la prima volta, vedrai la schermata di creazione profilo
 
 2. **Crea il Tuo Profilo**
-   ```
+
+   ```text
    📝 Nome Profilo: [Il tuo nome] (es. "Mario Gaming")
    🎨 Avatar: Scegli un colore/gradiente che ti piace
    🔒 Password: Imposta una password sicura (minimo 4 caratteri)
@@ -31,6 +32,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### Passo 1.2: Familiarizzare con l'Interfaccia
 
 **Elementi Principali:**
+
 - **Header**: Nome profilo (in alto a destra)
 - **Menu Laterale**: Navigazione principale
 - **Dashboard**: Panoramica giochi e attività
@@ -47,7 +49,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    - Oppure: Dashboard → **"Gestisci Store"**
 
 2. **Panoramica Store Disponibili**
-   ```
+
+   ```text
    🎮 Steam - Il più importante per PC gaming
    🏪 Epic Games Store - Giochi gratuiti settimanali
    🎯 GOG - Giochi DRM-free
@@ -63,21 +66,24 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 **Steam è il più importante - inizia da qui!**
 
 1. **Ottieni Steam API Key**
-   ```
+
+   ```text
    🌐 Vai su: https://steamcommunity.com/dev/apikey
    🔑 Inserisci Domain Name: localhost
    📋 Copia la API Key generata
    ```
 
 2. **Trova il tuo Steam ID**
-   ```
+
+   ```text
    🌐 Vai su: https://steamid.io/
    📝 Inserisci il tuo username Steam
    📋 Copia il "steamID64" (numero lungo)
    ```
 
 3. **Configura in GameStringer**
-   ```
+
+   ```text
    📍 Store Manager → Sezione Steam
    🔑 Steam API Key: [Incolla la tua API Key]
    🆔 Steam ID: [Incolla il tuo steamID64]
@@ -88,7 +94,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### Passo 2.3: Configurare Epic Games Store
 
 1. **Ottieni Credenziali Epic**
-   ```
+
+   ```text
    🌐 Vai su: https://dev.epicgames.com/portal/
    📝 Crea account sviluppatore (gratuito)
    🔑 Crea una nuova "Application"
@@ -96,7 +103,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    ```
 
 2. **Configura in GameStringer**
-   ```
+
+   ```text
    📍 Store Manager → Sezione Epic Games
    🔑 Client ID: [Incolla Client ID]
    🔐 Client Secret: [Incolla Client Secret]
@@ -108,28 +116,32 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 **Per ogni store che usi:**
 
 #### GOG
-```
+
+```text
 🌐 Account GOG esistente
 📝 Username e Password del tuo account
 ⚠️ Nota: GOG ha API limitate
 ```
 
 #### Ubisoft Connect
-```
+
+```text
 🌐 Account Ubisoft esistente
 📝 Email e Password del tuo account
 🎮 Assicurati di avere Ubisoft Connect installato
 ```
 
 #### Origin/EA
-```
+
+```text
 🌐 Account EA/Origin esistente
 📝 Email e Password del tuo account
 🎮 Assicurati di avere EA App installato
 ```
 
 #### Itch.io
-```
+
+```text
 🌐 Vai su: https://itch.io/user/settings/api-keys
 🔑 Genera una nuova API Key
 📋 Copia la API Key
@@ -146,14 +158,16 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    - Vedrai la sezione "I Tuoi Giochi"
 
 2. **Avvia Sincronizzazione**
-   ```
+
+   ```text
    🔄 Clicca "Aggiorna Libreria Giochi"
    ⏳ Attendi il caricamento (può richiedere 1-2 minuti)
    📊 Vedrai il progresso per ogni store configurato
    ```
 
 3. **Verifica Risultati**
-   ```
+
+   ```text
    ✅ Steam: X giochi trovati
    ✅ Epic: Y giochi trovati
    ✅ Altri store: Z giochi trovati
@@ -165,7 +179,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 **Se non vedi giochi:**
 
 #### Steam Non Funziona
-```
+
+```text
 ❌ Problema: "0 giochi Steam trovati"
 🔧 Soluzione:
    1. Verifica API Key corretta
@@ -175,7 +190,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ```
 
 #### Epic Games Non Funziona
-```
+
+```text
 ❌ Problema: "Errore connessione Epic"
 🔧 Soluzione:
    1. Verifica Client ID e Secret corretti
@@ -184,7 +200,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ```
 
 #### Altri Store
-```
+
+```text
 ❌ Problema: Store non risponde
 🔧 Soluzione:
    1. Verifica credenziali corrette
@@ -204,7 +221,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    - Oppure: Menu laterale → **"I Miei Giochi"**
 
 2. **Scegli un Gioco**
-   ```
+
+   ```text
    🎯 Criteri di Scelta:
    ✅ Gioco che conosci bene
    ✅ Gioco con testo in inglese
@@ -223,7 +241,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    - Si aprirà il **Translation Manager**
 
 2. **Scegli Modalità Traduzione**
-   ```
+
+   ```text
    🤖 Traduzione Automatica (Consigliata per iniziare)
    ├── Usa AI per tradurre automaticamente
    ├── Più veloce ma meno precisa
@@ -243,7 +262,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### Passo 4.3: Configurazione Traduzione
 
 1. **Impostazioni Traduzione**
-   ```
+
+   ```text
    🌍 Lingua Origine: English (di solito auto-rilevata)
    🇮🇹 Lingua Destinazione: Italiano
    🤖 Motore AI: GPT-4 (consigliato) / Claude / Gemini
@@ -251,7 +271,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    ```
 
 2. **Opzioni Avanzate**
-   ```
+
+   ```text
    🎮 Mantieni Termini Gaming: ✅ (mantiene "boss", "quest", etc.)
    🔤 Mantieni Nomi Propri: ✅ (mantiene nomi personaggi)
    💬 Traduci Dialoghi: ✅
@@ -262,21 +283,24 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### Passo 4.4: Processo di Traduzione Automatica
 
 1. **Avvia Scansione File**
-   ```
+
+   ```text
    🔍 GameStringer scansiona i file del gioco
    📁 Trova file di testo/localizzazione
    📊 Mostra progresso: "Trovati X file, Y stringhe"
    ```
 
 2. **Traduzione AI**
-   ```
+
+   ```text
    🤖 L'AI inizia a tradurre le stringhe
    📊 Progresso in tempo reale: "Tradotte X/Y stringhe"
    ⏱️ Tempo stimato: dipende dal numero di stringhe
    ```
 
 3. **Revisione e Correzioni**
-   ```
+
+   ```text
    📝 Vedrai lista stringhe tradotte
    ✏️ Clicca su una stringa per modificarla
    🔍 Cerca stringhe specifiche
@@ -286,14 +310,16 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### Passo 4.5: Applicazione Traduzione
 
 1. **Anteprima Modifiche**
-   ```
+
+   ```text
    👁️ Clicca "Anteprima" per vedere le modifiche
    📊 Statistiche: X stringhe tradotte, Y modificate
    ⚠️ Backup automatico dei file originali
    ```
 
 2. **Applica Traduzione**
-   ```
+
+   ```text
    ✅ Clicca "Applica Traduzione"
    💾 GameStringer modifica i file del gioco
    🔄 Crea backup dei file originali
@@ -301,7 +327,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    ```
 
 3. **Test del Gioco**
-   ```
+
+   ```text
    🎮 Avvia il gioco per testare la traduzione
    👀 Controlla menu, dialoghi, interfaccia
    📝 Annota eventuali problemi o errori
@@ -314,14 +341,16 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### Passo 5.1: Gestione Traduzioni
 
 1. **Cronologia Traduzioni**
-   ```
+
+   ```text
    📚 Menu → "Le Mie Traduzioni"
    📊 Vedi tutte le traduzioni fatte
    📅 Data, gioco, stato, qualità
    ```
 
 2. **Backup e Ripristino**
-   ```
+
+   ```text
    💾 Backup automatici creati sempre
    🔄 Ripristina versione originale se necessario
    📤 Esporta traduzioni per condividerle
@@ -331,7 +360,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### Passo 5.2: Miglioramento Traduzioni
 
 1. **Revisione Post-Gioco**
-   ```
+
+   ```text
    🎮 Dopo aver giocato, torna su GameStringer
    📝 Menu → "Migliora Traduzione"
    ✏️ Correggi errori trovati durante il gioco
@@ -339,7 +369,8 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    ```
 
 2. **Condivisione Community**
-   ```
+
+   ```text
    🌍 Condividi traduzioni di qualità
    ⭐ Vota traduzioni di altri utenti
    💬 Commenta e suggerisci miglioramenti
@@ -421,6 +452,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 ### Passo 7.2: Dashboard Statistiche Reali
 
 La dashboard mostra dati reali dal backend:
+
 - **Traduzioni Totali**: conteggio da activity history
 - **Giochi Patchati**: patch applicate registrate
 - **Tempo Risparmiato**: calcolato da TM entries + traduzioni
@@ -484,11 +516,13 @@ La dashboard mostra dati reali dal backend:
 ## 📋 CHECKLIST COMPLETAMENTO
 
 ### ✅ Setup Iniziale
+
 - [ ] Profilo GameStringer creato
 - [ ] Password profilo annotata in sicurezza
 - [ ] Interfaccia esplorata e compresa
 
 ### ✅ Configurazione Store
+
 - [ ] Steam API Key configurata
 - [ ] Steam ID configurato
 - [ ] Connessione Steam testata e funzionante
@@ -496,12 +530,14 @@ La dashboard mostra dati reali dal backend:
 - [ ] Altri store configurati (se usati)
 
 ### ✅ Libreria Giochi
+
 - [ ] Sincronizzazione giochi completata
 - [ ] Lista giochi visibile e corretta
 - [ ] Giochi da tradurre identificati
 - [ ] Problemi di sincronizzazione risolti
 
 ### ✅ Prima Traduzione
+
 - [ ] Gioco di test selezionato
 - [ ] Modalità traduzione scelta
 - [ ] Impostazioni traduzione configurate
@@ -509,6 +545,7 @@ La dashboard mostra dati reali dal backend:
 - [ ] Gioco testato e funzionante
 
 ### ✅ Gestione Avanzata
+
 - [ ] Backup verificati e funzionanti
 - [ ] Sistema revisione compreso
 - [ ] Condivisione community esplorata
@@ -542,7 +579,7 @@ La dashboard mostra dati reali dal backend:
 
 ### 🚀 Workflow Ottimale
 
-```
+```text
 1. 🎮 Scegli gioco → 2. 🤖 Traduzione automatica → 3. ✏️ Revisione manuale → 
 4. 💾 Applica → 5. 🎯 Testa → 6. 🔄 Migliora → 7. 🌍 Condividi
 ```
@@ -552,12 +589,14 @@ La dashboard mostra dati reali dal backend:
 ## 📞 Supporto e Risorse
 
 ### 🆘 Se Hai Problemi
+
 - **Documentazione**: Leggi le guide dettagliate in `docs/`
 - **FAQ**: Controlla `docs/faq/profiles-faq.md`
 - **Community**: Forum, Reddit
-- **Supporto**: support@gamestringer.com
+- **Supporto**: <support@gamestringer.com>
 
 ### 📚 Risorse Utili
+
 - **Video Tutorial**: [Link ai tutorial]
 - **Esempi Traduzioni**: [Link esempi]
 - **Best Practices**: [Link guide avanzate]
@@ -565,6 +604,4 @@ La dashboard mostra dati reali dal backend:
 
 ---
 
-**🎉 Congratulazioni! Ora sai come usare GameStringer dall'inizio alla fine!**
-
-*Buona traduzione e buon gaming! 🎮🌍*
+**Congratulazioni! Ora sai come usare GameStringer dall'inizio alla fine!**
