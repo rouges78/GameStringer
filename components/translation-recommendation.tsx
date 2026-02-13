@@ -589,7 +589,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 texts: textsToTranslate,
                 targetLanguage: 'it',
                 sourceLanguage: 'en',
-              }, 50, (done, total) => {
+              }, 20, (done, total) => {
                 const pct = 60 + Math.round((done / total) * 30);
                 updateProgress(pct, `Tradotte ${done}/${total} stringhe...`);
               });

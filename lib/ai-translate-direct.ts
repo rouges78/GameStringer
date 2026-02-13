@@ -90,7 +90,7 @@ async function translateWithGemini(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
+        generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
       }),
     }
   );
@@ -133,7 +133,7 @@ async function translateWithDeepSeek(
       model: 'deepseek-chat',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 4096,
+      max_tokens: 8192,
     }),
   });
 
@@ -174,7 +174,7 @@ async function translateWithGroq(
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 4096,
+      max_tokens: 8192,
     }),
   });
 
@@ -217,7 +217,7 @@ async function translateWithOpenAI(
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 4096,
+      max_tokens: 8192,
     }),
   });
 
@@ -257,7 +257,7 @@ async function translateWithAnthropic(
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
+      max_tokens: 8192,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
@@ -301,7 +301,7 @@ async function translateWithOpenAICompatible(
       model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 4096,
+      max_tokens: 8192,
     }),
   });
 
@@ -405,7 +405,7 @@ async function translateWithOpenRouter(apiKey: string, opts: TranslateOptions): 
       model: 'meta-llama/llama-3.3-70b-instruct:free',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 4096,
+      max_tokens: 8192,
     }),
   });
 
@@ -1047,8 +1047,17 @@ export async function translateWithFallback(
     
     while (retries <= MAX_RETRIES) {
       try {
-        const translations = await provider.fn(provider.key, opts);
+        let translations = await provider.fn(provider.key, opts);
         if (translations.length > 0) {
+          // Validazione: se il provider ha restituito meno traduzioni degli input,
+          // completa con i testi originali per evitare stringhe mancanti
+          if (translations.length < opts.texts.length) {
+            console.warn(`[translateWithFallback] ${provider.name}: ricevute ${translations.length}/${opts.texts.length} traduzioni, padding con originali`);
+            translations = [
+              ...translations,
+              ...opts.texts.slice(translations.length),
+            ];
+          }
           return { translations, provider: provider.name, success: true };
         }
         break;
@@ -1110,7 +1119,7 @@ export async function translateSingleWithFallback(
  */
 export async function translateWithFallbackBatched(
   opts: TranslateOptions,
-  maxBatch: number = 50,
+  maxBatch: number = 20,
   onProgress?: (done: number, total: number) => void
 ): Promise<TranslateResult> {
   const { texts, ...rest } = opts;
