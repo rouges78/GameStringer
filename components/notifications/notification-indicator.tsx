@@ -60,9 +60,9 @@ export const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
     return notes
       .split('\n')
       .filter(line => line.trim())
-      .map(line => line.replace(/^[-*]\s*/, '').replace(/\*\*/g, '').replace(/`[^`]*`/g, '').trim())
-      .filter(line => line && !line.startsWith('#') && !line.startsWith('---') && !line.startsWith('Download'))
-      .map(line => line.length > 60 ? line.substring(0, 57) + '...' : line);
+      .map(line => line.replace(/^[-*]\s*/, '').replace(/\*\*/g, '').replace(/`/g, '').trim())
+      .filter(line => line && !line.startsWith('#') && !line.startsWith('---') && !line.startsWith('Download') && line.length > 5)
+      .map(line => line.length > 55 ? line.substring(0, 52) + '...' : line);
   };
 
   const releaseItems = updateInfo?.release_notes ? parseReleaseNotes(updateInfo.release_notes) : [];

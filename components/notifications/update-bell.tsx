@@ -49,8 +49,9 @@ export function UpdateBell() {
     return notes
       .split('\n')
       .filter(line => line.trim())
-      .map(line => line.replace(/^[-*]\s*/, '').replace(/\*\*/g, '').trim())
-      .filter(line => line && !line.startsWith('#'))
+      .map(line => line.replace(/^[-*]\s*/, '').replace(/\*\*/g, '').replace(/`/g, '').trim())
+      .filter(line => line && !line.startsWith('#') && !line.startsWith('---') && !line.startsWith('Download') && line.length > 5)
+      .map(line => line.length > 55 ? line.substring(0, 52) + '...' : line)
       .slice(0, 6);
   };
 
