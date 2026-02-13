@@ -17,19 +17,36 @@ export interface TranslateResult {
   success: boolean;
 }
 
-// Session-level flags: skip provider dopo primo errore fatale
+// Session-level flags: skip provider dopo errore fatale (permanente) o rate-limit (cooldown)
 const blockedProviders = new Set<string>();
+const cooldownProviders = new Map<string, number>(); // provider → timestamp sblocco
 
-function blockProvider(name: string) {
-  if (!blockedProviders.has(name)) {
+function blockProvider(name: string, permanent = true) {
+  if (permanent) {
     blockedProviders.add(name);
-    console.warn(`[Session] ${name} bloccato per questa sessione`);
+    console.warn(`[Session] ${name} bloccato permanentemente (errore fatale)`);
+  } else {
+    // Cooldown 30s per rate-limit — il provider verrà riprovato dopo
+    const unblockAt = Date.now() + 30000;
+    cooldownProviders.set(name, unblockAt);
+    console.warn(`[Session] ${name} in cooldown 30s (rate-limit)`);
   }
+}
+
+function isProviderBlocked(name: string): boolean {
+  if (blockedProviders.has(name)) return true;
+  const cooldownUntil = cooldownProviders.get(name);
+  if (cooldownUntil) {
+    if (Date.now() < cooldownUntil) return true;
+    cooldownProviders.delete(name); // Cooldown scaduto, riprova
+  }
+  return false;
 }
 
 /** Reset provider blocks (es. quando si cambia API key) */
 export function resetProviderBlocks() {
   blockedProviders.clear();
+  cooldownProviders.clear();
 }
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -333,20 +350,21 @@ async function translateWithMistral(apiKey: string, opts: TranslateOptions): Pro
   );
 }
 
-/** Cohere — Command R+, API v1 */
+/** Cohere — Command R+, API v2 (OpenAI-compatible messages) */
 async function translateWithCohere(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch('https://api.cohere.com/v1/chat', {
+  const res = await fetch('https://api.cohere.com/v2/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'command-r-plus',
-      message: prompt,
+      model: 'command-r-plus-08-2024',
+      messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
+      max_tokens: 8192,
     }),
   });
 
@@ -358,7 +376,7 @@ async function translateWithCohere(apiKey: string, opts: TranslateOptions): Prom
   }
 
   const data = await res.json();
-  const responseText = data?.text || '';
+  const responseText = data?.message?.content?.[0]?.text || '';
 
   try {
     const jsonMatch = responseText.match(/\[[\s\S]*\]/);
@@ -830,23 +848,23 @@ const PROVIDER_MAP: Record<string, {
   isBlocked: () => boolean;
   needsKey: boolean;
 }> = {
-  gemini: { getKey: (k) => k.gemini, fn: translateWithGemini, isBlocked: () => blockedProviders.has('gemini'), needsKey: true },
-  groq: { getKey: (k) => k.groq, fn: translateWithGroq, isBlocked: () => blockedProviders.has('groq'), needsKey: true },
-  deepseek: { getKey: (k) => k.deepseek, fn: translateWithDeepSeek, isBlocked: () => blockedProviders.has('deepseek'), needsKey: true },
-  openai: { getKey: (k) => k.openai, fn: translateWithOpenAI, isBlocked: () => blockedProviders.has('openai'), needsKey: true },
-  anthropic: { getKey: (k) => k.anthropic, fn: translateWithAnthropic, isBlocked: () => blockedProviders.has('anthropic'), needsKey: true },
-  mistral: { getKey: (k) => k.mistral, fn: translateWithMistral, isBlocked: () => blockedProviders.has('mistral'), needsKey: true },
-  cohere: { getKey: (k) => k.cohere, fn: translateWithCohere, isBlocked: () => blockedProviders.has('cohere'), needsKey: true },
-  together: { getKey: (k) => k.together, fn: translateWithTogether, isBlocked: () => blockedProviders.has('together'), needsKey: true },
-  fireworks: { getKey: (k) => k.fireworks, fn: translateWithFireworks, isBlocked: () => blockedProviders.has('fireworks'), needsKey: true },
-  openrouter: { getKey: (k) => k.openrouter, fn: translateWithOpenRouter, isBlocked: () => blockedProviders.has('openrouter'), needsKey: true },
-  cerebras: { getKey: (k) => k.cerebras, fn: translateWithCerebras, isBlocked: () => blockedProviders.has('cerebras'), needsKey: true },
-  deepl: { getKey: (k) => k.deepl, fn: translateWithDeepL, isBlocked: () => blockedProviders.has('deepl'), needsKey: true },
-  mymemory: { getKey: () => 'free', fn: translateWithMyMemory, isBlocked: () => blockedProviders.has('mymemory'), needsKey: false },
-  lingva: { getKey: () => 'free', fn: translateWithLingva, isBlocked: () => blockedProviders.has('lingva'), needsKey: false },
-  translategemma: { getKey: () => 'free', fn: translateWithTranslateGemma, isBlocked: () => blockedProviders.has('translategemma'), needsKey: false },
-  hymt: { getKey: () => 'free', fn: translateWithHYMT, isBlocked: () => blockedProviders.has('hymt'), needsKey: false },
-  ollama: { getKey: () => 'free', fn: translateWithOllamaGeneric, isBlocked: () => blockedProviders.has('ollama'), needsKey: false },
+  gemini: { getKey: (k) => k.gemini, fn: translateWithGemini, isBlocked: () => isProviderBlocked('gemini'), needsKey: true },
+  groq: { getKey: (k) => k.groq, fn: translateWithGroq, isBlocked: () => isProviderBlocked('groq'), needsKey: true },
+  deepseek: { getKey: (k) => k.deepseek, fn: translateWithDeepSeek, isBlocked: () => isProviderBlocked('deepseek'), needsKey: true },
+  openai: { getKey: (k) => k.openai, fn: translateWithOpenAI, isBlocked: () => isProviderBlocked('openai'), needsKey: true },
+  anthropic: { getKey: (k) => k.anthropic, fn: translateWithAnthropic, isBlocked: () => isProviderBlocked('anthropic'), needsKey: true },
+  mistral: { getKey: (k) => k.mistral, fn: translateWithMistral, isBlocked: () => isProviderBlocked('mistral'), needsKey: true },
+  cohere: { getKey: (k) => k.cohere, fn: translateWithCohere, isBlocked: () => isProviderBlocked('cohere'), needsKey: true },
+  together: { getKey: (k) => k.together, fn: translateWithTogether, isBlocked: () => isProviderBlocked('together'), needsKey: true },
+  fireworks: { getKey: (k) => k.fireworks, fn: translateWithFireworks, isBlocked: () => isProviderBlocked('fireworks'), needsKey: true },
+  openrouter: { getKey: (k) => k.openrouter, fn: translateWithOpenRouter, isBlocked: () => isProviderBlocked('openrouter'), needsKey: true },
+  cerebras: { getKey: (k) => k.cerebras, fn: translateWithCerebras, isBlocked: () => isProviderBlocked('cerebras'), needsKey: true },
+  deepl: { getKey: (k) => k.deepl, fn: translateWithDeepL, isBlocked: () => isProviderBlocked('deepl'), needsKey: true },
+  mymemory: { getKey: () => 'free', fn: translateWithMyMemory, isBlocked: () => isProviderBlocked('mymemory'), needsKey: false },
+  lingva: { getKey: () => 'free', fn: translateWithLingva, isBlocked: () => isProviderBlocked('lingva'), needsKey: false },
+  translategemma: { getKey: () => 'free', fn: translateWithTranslateGemma, isBlocked: () => isProviderBlocked('translategemma'), needsKey: false },
+  hymt: { getKey: () => 'free', fn: translateWithHYMT, isBlocked: () => isProviderBlocked('hymt'), needsKey: false },
+  ollama: { getKey: () => 'free', fn: translateWithOllamaGeneric, isBlocked: () => isProviderBlocked('ollama'), needsKey: false },
 };
 
 /** Info requisito mancante per un provider */
@@ -1074,17 +1092,21 @@ export async function translateWithFallback(
         }
         
         console.warn(`[translateWithFallback] ${provider.name} failed:`, err);
-        if (errMsg !== 'ContentTooLarge' && errMsg !== 'RateLimit') {
-          blockProvider(provider.name);
+        if (errMsg === 'RateLimit' || errMsg === 'ContentTooLarge') {
+          // Rate-limit/payload: cooldown temporaneo, riprova dopo 30s
+          blockProvider(provider.name, false);
+        } else {
+          // Errore fatale (402, 404, auth, offline): blocco permanente
+          blockProvider(provider.name, true);
         }
         break;
       }
     }
     
-    // Se dopo tutti i retry è ancora RateLimit, blocca
+    // Se dopo tutti i retry è ancora RateLimit, cooldown (non permanente)
     if (lastErr instanceof Error && lastErr.message === 'RateLimit' && retries >= MAX_RETRIES) {
-      console.warn(`[translateWithFallback] ${provider.name} bloccato dopo ${MAX_RETRIES} retry`);
-      blockProvider(provider.name);
+      console.warn(`[translateWithFallback] ${provider.name} in cooldown dopo ${MAX_RETRIES} retry`);
+      blockProvider(provider.name, false);
     }
   }
 
@@ -1143,7 +1165,7 @@ export async function translateWithFallbackBatched(
     
     // Delay tra batch per evitare rate-limit
     if (i + maxBatch < texts.length) {
-      await sleep(1500);
+      await sleep(2500);
     }
   }
   
