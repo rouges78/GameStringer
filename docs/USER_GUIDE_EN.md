@@ -44,6 +44,7 @@ GameStringer is an advanced system for automatic and manual video game translati
 - **NEW v1.0.7**: Community Hub, GitHub Discussions, License v1.1
 - **NEW v1.0.8**: Update download fix
 - **NEW v1.0.9**: Animated headers, update notifications, UI polish
+- **NEW v1.4.0**: Unified Radix UI, per-row Quality Badges, RTL support, generic Ollama, TypeScript cleanup
 
 ---
 
@@ -896,4 +897,42 @@ Dictionaries save translations for each game.
 
 ---
 
-*GameStringer v1.1.0 - Guide updated 05/02/2026*
+## What's New in v1.4.0
+
+### Unified Radix UI
+
+The UI library has been migrated from individual `@radix-ui/react-*` packages to the unified `radix-ui` package:
+
+- **37 components migrated** with simplified imports
+- **27 packages removed** from dependencies, lighter bundle
+- No visual changes — same UI, fewer dependencies
+
+### Quality Badges in Translator Pro
+
+Each translated row now shows visual quality indicators:
+
+- **QualityScoreBadge**: score 0-100 with colors (🟢 ≥80, 🟡 ≥60, 🔴 <60)
+- **ContentTypeBadge**: classifies content type (UI, Dialogue, Narrative, System, Tutorial, etc.)
+- **Live Preview**: during batch translation, last 3 translated rows appear with real-time score
+- **Detail Table**: in results page, up to 200 rows with source, translation, type, and quality
+
+### RTL Support
+
+- Automatic text direction detection for RTL languages (Arabic, Hebrew)
+- `dir` attribute dynamically applied to the HTML document
+- Works with the existing i18n system
+
+### Generic Ollama
+
+- New `translateWithOllamaGeneric` provider to use any Ollama model
+- PROVIDER_MAP with automatic model mapping
+- Chain presets with automatic fallback between providers
+
+### Bundle Optimization
+
+- `optimizePackageImports` updated with `radix-ui`, `framer-motion`, `recharts`, `cmdk`, `react-hook-form`
+- Zero TypeScript errors in source files
+
+---
+
+*GameStringer v1.4.0 - Guide updated 13/02/2026*

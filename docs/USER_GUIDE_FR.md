@@ -811,4 +811,41 @@ Les dictionnaires sauvegardent les traductions pour chaque jeu.
 
 ---
 
-*GameStringer v1.0.9 - Guide mis à jour le 31/01/2026*
+## Nouveautés v1.4.0
+
+### Radix UI Unifié
+
+La bibliothèque UI a été migrée des packages individuels `@radix-ui/react-*` vers le package unifié `radix-ui` :
+
+- **37 composants migrés** avec des imports simplifiés
+- **27 packages supprimés** des dépendances, bundle plus léger
+- Aucun changement visuel — même UI, moins de dépendances
+
+### Quality Badges dans Translator Pro
+
+Chaque ligne traduite affiche désormais des indicateurs de qualité visuels :
+
+- **QualityScoreBadge** : score 0-100 avec couleurs (🟢 ≥80, 🟡 ≥60, 🔴 <60)
+- **ContentTypeBadge** : classifie le type de contenu (UI, Dialogue, Narratif, Système, Tutoriel, etc.)
+- **Aperçu en direct** : pendant la traduction batch, les 3 dernières lignes apparaissent avec le score en temps réel
+- **Tableau de détails** : dans la page résultats, jusqu'à 200 lignes avec source, traduction, type et qualité
+
+### Support RTL
+
+- Détection automatique de la direction du texte pour les langues RTL (arabe, hébreu)
+- Attribut `dir` appliqué dynamiquement au document HTML
+
+### Ollama Générique
+
+- Nouveau provider `translateWithOllamaGeneric` pour utiliser n'importe quel modèle Ollama
+- PROVIDER_MAP avec mappage automatique des modèles
+- Chain presets avec fallback automatique entre providers
+
+### Optimisation du Bundle
+
+- `optimizePackageImports` mis à jour avec `radix-ui`, `framer-motion`, `recharts`, `cmdk`, `react-hook-form`
+- Zéro erreurs TypeScript dans les fichiers source
+
+---
+
+*GameStringer v1.4.0 - Guide mis à jour le 13/02/2026*

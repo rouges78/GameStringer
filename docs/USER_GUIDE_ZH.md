@@ -811,4 +811,41 @@ XUnity格式兼容：
 
 ---
 
-*GameStringer v1.0.9 - 指南更新于 2026/01/31*
+## v1.4.0 新功能
+
+### 统一 Radix UI
+
+UI库已从单独的 `@radix-ui/react-*` 包迁移到统一的 `radix-ui` 包：
+
+- **37个组件已迁移** — 简化导入
+- **27个包已移除** — 更轻量的依赖
+- 无视觉变化 — 相同的UI，更少的依赖
+
+### Translator Pro 中的质量徽章
+
+每个翻译行现在显示可视化质量指标：
+
+- **QualityScoreBadge**：0-100分（🟢 ≥80、🟡 ≥60、🔴 <60）
+- **ContentTypeBadge**：分类内容类型（UI、对话、叙事、系统、教程等）
+- **实时预览**：批量翻译期间，最后3行实时显示分数
+- **详情表格**：结果页面最多显示200行（原文、翻译、类型、质量）
+
+### RTL支持
+
+- 自动检测RTL语言（阿拉伯语、希伯来语）的文本方向
+- `dir` 属性动态应用于HTML文档
+
+### 通用 Ollama
+
+- 新的 `translateWithOllamaGeneric` 提供商，可使用任何Ollama模型
+- PROVIDER_MAP 自动模型映射
+- 提供商之间自动回退的链式预设
+
+### Bundle优化
+
+- `optimizePackageImports` 已更新：`radix-ui`、`framer-motion`、`recharts`、`cmdk`、`react-hook-form`
+- 源文件中零TypeScript错误
+
+---
+
+*GameStringer v1.4.0 - 指南更新于 2026/02/13*

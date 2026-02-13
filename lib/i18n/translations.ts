@@ -910,6 +910,28 @@ export const translations = {
         'Statistiche e analisi trend',
         'Esporta feedback in JSON o CSV',
       ],
+      // v1.4.0
+      qualityBadgeGuide: 'Quality Badge nel Traduttore',
+      qualityBadgeGuideFeatures: [
+        'Punteggio qualità 0-100 per ogni riga tradotta',
+        'Badge tipo contenuto: UI, Dialogo, Narrativa, Sistema, Tutorial',
+        'Anteprima qualità in tempo reale durante la traduzione batch',
+        'Tabella dettaglio risultati con fino a 200 righe',
+        'Colori: verde (≥80), giallo (≥60), rosso (<60)',
+      ],
+      rtlSupportGuide: 'Supporto RTL',
+      rtlSupportGuideFeatures: [
+        'Rilevamento automatico direzione testo per lingue RTL',
+        'Supporto arabo, ebraico e altre lingue da destra a sinistra',
+        'Attributo dir applicato dinamicamente al documento',
+      ],
+      ollamaGenericGuide: 'Ollama Generico',
+      ollamaGenericGuideFeatures: [
+        'Usa qualsiasi modello Ollama installato localmente',
+        'PROVIDER_MAP con mapping automatico dei modelli',
+        'Chain presets con fallback automatico tra provider',
+        'Completamente gratuito e offline',
+      ],
     },
     // Game Patcher
     gamePatcher: {
@@ -3089,6 +3111,28 @@ export const translations = {
         'Status tracking: pending, reviewed, applied, rejected',
         'Statistics and trend analysis',
         'Export feedback as JSON or CSV',
+      ],
+      // v1.4.0
+      qualityBadgeGuide: 'Quality Badges in Translator',
+      qualityBadgeGuideFeatures: [
+        'Quality score 0-100 for each translated row',
+        'Content type badge: UI, Dialogue, Narrative, System, Tutorial',
+        'Real-time quality preview during batch translation',
+        'Detail results table with up to 200 rows',
+        'Colors: green (≥80), yellow (≥60), red (<60)',
+      ],
+      rtlSupportGuide: 'RTL Support',
+      rtlSupportGuideFeatures: [
+        'Automatic text direction detection for RTL languages',
+        'Support for Arabic, Hebrew, and other right-to-left languages',
+        'Dir attribute dynamically applied to document',
+      ],
+      ollamaGenericGuide: 'Generic Ollama',
+      ollamaGenericGuideFeatures: [
+        'Use any locally installed Ollama model',
+        'PROVIDER_MAP with automatic model mapping',
+        'Chain presets with automatic fallback between providers',
+        'Completely free and offline',
       ],
     },
     // Dictionary/Memory Page
@@ -5902,6 +5946,28 @@ export const translations = {
         'Estadísticas y análisis de tendencias',
         'Exporta feedback en JSON o CSV',
       ],
+      // v1.4.0
+      qualityBadgeGuide: 'Quality Badge en el Traductor',
+      qualityBadgeGuideFeatures: [
+        'Puntuación de calidad 0-100 para cada fila traducida',
+        'Badge de tipo de contenido: UI, Diálogo, Narrativa, Sistema, Tutorial',
+        'Vista previa de calidad en tiempo real durante traducción batch',
+        'Tabla de detalle de resultados con hasta 200 filas',
+        'Colores: verde (≥80), amarillo (≥60), rojo (<60)',
+      ],
+      rtlSupportGuide: 'Soporte RTL',
+      rtlSupportGuideFeatures: [
+        'Detección automática de dirección de texto para idiomas RTL',
+        'Soporte para árabe, hebreo y otros idiomas de derecha a izquierda',
+        'Atributo dir aplicado dinámicamente al documento',
+      ],
+      ollamaGenericGuide: 'Ollama Genérico',
+      ollamaGenericGuideFeatures: [
+        'Usa cualquier modelo Ollama instalado localmente',
+        'PROVIDER_MAP con mapeo automático de modelos',
+        'Chain presets con fallback automático entre providers',
+        'Completamente gratuito y offline',
+      ],
     },
     // Game Patcher
     gamePatcher: {
@@ -7615,6 +7681,28 @@ export const translations = {
         'Suivi d\'état : en attente, révisé, appliqué, rejeté',
         'Statistiques et analyse des tendances',
         'Exportez les retours en JSON ou CSV',
+      ],
+      // v1.4.0
+      qualityBadgeGuide: 'Quality Badge dans le Traducteur',
+      qualityBadgeGuideFeatures: [
+        'Score de qualité 0-100 pour chaque ligne traduite',
+        'Badge de type de contenu : UI, Dialogue, Narratif, Système, Tutoriel',
+        'Aperçu qualité en temps réel pendant la traduction batch',
+        'Tableau de détails des résultats jusqu\'à 200 lignes',
+        'Couleurs : vert (≥80), jaune (≥60), rouge (<60)',
+      ],
+      rtlSupportGuide: 'Support RTL',
+      rtlSupportGuideFeatures: [
+        'Détection automatique de la direction du texte pour les langues RTL',
+        'Support de l\'arabe, de l\'hébreu et autres langues de droite à gauche',
+        'Attribut dir appliqué dynamiquement au document',
+      ],
+      ollamaGenericGuide: 'Ollama Générique',
+      ollamaGenericGuideFeatures: [
+        'Utilisez n\'importe quel modèle Ollama installé localement',
+        'PROVIDER_MAP avec mappage automatique des modèles',
+        'Chain presets avec fallback automatique entre providers',
+        'Entièrement gratuit et hors ligne',
       ],
     },
     // Game Patcher
@@ -9405,6 +9493,28 @@ export const translations = {
         'Statistiken und Trendanalyse',
         'Feedback als JSON oder CSV exportieren',
       ],
+      // v1.4.0
+      qualityBadgeGuide: 'Quality Badge im Übersetzer',
+      qualityBadgeGuideFeatures: [
+        'Qualitätsbewertung 0-100 für jede übersetzte Zeile',
+        'Inhaltstyp-Badge: UI, Dialog, Erzählung, System, Tutorial',
+        'Echtzeit-Qualitätsvorschau während der Batch-Übersetzung',
+        'Ergebnis-Detailtabelle mit bis zu 200 Zeilen',
+        'Farben: grün (≥80), gelb (≥60), rot (<60)',
+      ],
+      rtlSupportGuide: 'RTL-Unterstützung',
+      rtlSupportGuideFeatures: [
+        'Automatische Textrichtungserkennung für RTL-Sprachen',
+        'Unterstützung für Arabisch, Hebräisch und andere Rechts-nach-Links-Sprachen',
+        'Dir-Attribut dynamisch auf das Dokument angewendet',
+      ],
+      ollamaGenericGuide: 'Generisches Ollama',
+      ollamaGenericGuideFeatures: [
+        'Jedes lokal installierte Ollama-Modell verwenden',
+        'PROVIDER_MAP mit automatischem Modell-Mapping',
+        'Chain Presets mit automatischem Fallback zwischen Providern',
+        'Komplett kostenlos und offline',
+      ],
     },
     // Game Patcher
     gamePatcher: {
@@ -10977,6 +11087,28 @@ export const translations = {
         'ステータス追跡：保留中、レビュー済み、適用済み、却下',
         '統計とトレンド分析',
         'フィードバックをJSONまたはCSVでエクスポート',
+      ],
+      // v1.4.0
+      qualityBadgeGuide: '翻訳の品質バッジ',
+      qualityBadgeGuideFeatures: [
+        '翻訳行ごとの品質スコア0-100',
+        'コンテンツタイプバッジ：UI、ダイアログ、ナラティブ、システム、チュートリアル',
+        'バッチ翻訳中のリアルタイム品質プレビュー',
+        '最大200行の詳細結果テーブル',
+        '色分け：緑（≥80）、黄（≥60）、赤（<60）',
+      ],
+      rtlSupportGuide: 'RTLサポート',
+      rtlSupportGuideFeatures: [
+        'RTL言語のテキスト方向自動検出',
+        'アラビア語、ヘブライ語、その他の右から左への言語をサポート',
+        'dir属性をドキュメントに動的に適用',
+      ],
+      ollamaGenericGuide: '汎用Ollama',
+      ollamaGenericGuideFeatures: [
+        'ローカルにインストールされた任意のOllamaモデルを使用',
+        'PROVIDER_MAPによる自動モデルマッピング',
+        'プロバイダー間の自動フォールバック付きチェーンプリセット',
+        '完全無料でオフライン対応',
       ],
     },
     // Game Patcher
@@ -12559,6 +12691,28 @@ export const translations = {
         '状态跟踪：待处理、已审核、已应用、已拒绝',
         '统计和趋势分析',
         '将反馈导出为JSON或CSV',
+      ],
+      // v1.4.0
+      qualityBadgeGuide: '翻译质量徽章',
+      qualityBadgeGuideFeatures: [
+        '每个翻译行的质量评分0-100',
+        '内容类型徽章：UI、对话、叙事、系统、教程',
+        '批量翻译期间的实时质量预览',
+        '最多200行的详情结果表',
+        '颜色：绿色（≥80）、黄色（≥60）、红色（<60）',
+      ],
+      rtlSupportGuide: 'RTL支持',
+      rtlSupportGuideFeatures: [
+        '自动检测RTL语言的文本方向',
+        '支持阿拉伯语、希伯来语等从右到左的语言',
+        'dir属性动态应用于文档',
+      ],
+      ollamaGenericGuide: '通用Ollama',
+      ollamaGenericGuideFeatures: [
+        '使用任何本地安装的Ollama模型',
+        'PROVIDER_MAP自动模型映射',
+        '提供商之间自动回退的链式预设',
+        '完全免费且离线可用',
       ],
     },
     // Game Patcher

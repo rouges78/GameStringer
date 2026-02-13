@@ -43,6 +43,7 @@ GameStringer è un sistema avanzato per la traduzione automatica e manuale di vi
 - **NUOVO v1.0.7**: Community Hub, GitHub Discussions, Licenza v1.1
 - **NUOVO v1.0.8**: Fix download aggiornamenti
 - **NUOVO v1.0.9**: Header animati, notifiche aggiornamenti, UI polish
+- **NUOVO v1.4.0**: Radix UI unificato, Quality Badge per-riga, supporto RTL, Ollama generico, pulizia TypeScript
 
 ---
 
@@ -811,4 +812,42 @@ I dizionari salvano le traduzioni per ogni gioco.
 
 ---
 
-*GameStringer v1.0.9 - Guida aggiornata al 31/01/2026*
+## Novità v1.4.0
+
+### Radix UI Unificato
+
+La libreria UI è stata migrata dal pacchetto individuale `@radix-ui/react-*` al pacchetto unificato `radix-ui`:
+
+- **37 componenti migrati** con import semplificati
+- **27 pacchetti rimossi** dalle dipendenze, bundle più leggero
+- Nessun cambiamento visivo — stessa UI, meno dipendenze
+
+### Quality Badge nel Traduttore Pro
+
+Ogni riga tradotta ora mostra indicatori di qualità visivi:
+
+- **QualityScoreBadge**: punteggio 0-100 con colori (🟢 ≥80, 🟡 ≥60, 🔴 <60)
+- **ContentTypeBadge**: classifica il tipo di contenuto (UI, Dialogo, Narrativa, Sistema, Tutorial, etc.)
+- **Live Preview**: durante la traduzione batch, le ultime 3 righe tradotte appaiono con il punteggio in tempo reale
+- **Tabella Dettaglio**: nella pagina risultati, fino a 200 righe con originale, traduzione, tipo e qualità
+
+### Supporto RTL
+
+- Rilevamento automatico della direzione del testo per lingue RTL (arabo, ebraico)
+- Attributo `dir` applicato dinamicamente al documento HTML
+- Funziona con il sistema i18n esistente
+
+### Ollama Generico
+
+- Nuovo provider `translateWithOllamaGeneric` per usare qualsiasi modello Ollama
+- PROVIDER_MAP con mapping automatico dei modelli
+- Chain presets con fallback automatico tra provider
+
+### Ottimizzazione Bundle
+
+- `optimizePackageImports` aggiornato con `radix-ui`, `framer-motion`, `recharts`, `cmdk`, `react-hook-form`
+- Zero errori TypeScript nei file sorgente
+
+---
+
+*GameStringer v1.4.0 - Guida aggiornata al 13/02/2026*
