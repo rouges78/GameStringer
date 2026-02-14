@@ -654,11 +654,10 @@ async function translateWithHYMT(
   const CONCURRENCY = 3;
   const results: string[] = new Array(opts.texts.length).fill('');
 
-  const translateOne = async (text: string, index: number): Promise<void> => {
-    // Prompt specifico per modelli di traduzione specializzati
-    const systemPrompt = `You are a professional translator. Translate the source text from ${srcLang} to ${tgtLang}. Output ONLY the translation, nothing else. Do not add explanations, notes, or the original text.`;
-    const userPrompt = text;
+  // Prompt base per contesto videogioco
+  const systemPrompt = `You are a professional video game translator. Translate the source text from ${srcLang} to ${tgtLang}. This text is from a video game (menus, dialogues, items, UI). Output ONLY the translation, nothing else. Keep the same length and tone. Do not add punctuation that was not in the original. Do not add explanations.`;
 
+  const translateOne = async (text: string, index: number): Promise<void> => {
     try {
       const res = await fetch(`${ollamaUrl}/api/chat`, {
         method: 'POST',
@@ -667,7 +666,7 @@ async function translateWithHYMT(
           model: modelName,
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
+            { role: 'user', content: text },
           ],
           stream: false,
           options: { temperature: 0.1, num_predict: 500 },
@@ -680,6 +679,10 @@ async function translateWithHYMT(
       // Rimuovi eventuali prefissi come "Translation:" o virgolette
       translated = translated.replace(/^(Translation|Traduzione|Output)\s*:\s*/i, '');
       translated = translated.replace(/^["']|["']$/g, '');
+      // Post-processing: rimuovi punti aggiunti dal modello su stringhe corte senza punto originale
+      if (text.length < 30 && !text.endsWith('.') && translated.endsWith('.')) {
+        translated = translated.slice(0, -1);
+      }
       results[index] = translated || text;
     } catch {
       results[index] = text; // Fallback: testo originale

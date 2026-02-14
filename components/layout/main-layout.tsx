@@ -90,6 +90,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { InteractiveTutorial } from '@/components/onboarding/interactive-tutorial';
+import { TutorialProvider } from '@/components/tutorial/tutorial-provider';
+import { TutorialOverlay } from '@/components/tutorial/tutorial-overlay';
+import { TutorialMenu } from '@/components/tutorial/tutorial-menu';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { GlobalSearch } from '@/components/layout/global-search';
@@ -882,6 +885,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }
 
   return (
+    <TutorialProvider>
       <div className="flex h-screen bg-background">
         {/* Sidebar */}
         <aside 
@@ -1149,6 +1153,18 @@ export function MainLayout({ children }: MainLayoutProps) {
               );
             })}
           </nav>
+
+          {/* Tutorial Help */}
+          <div className="shrink-0 px-2 py-1 flex items-center justify-center">
+            {sidebarOpen ? (
+              <div className="w-full flex items-center gap-2 px-1">
+                <TutorialMenu />
+                <span className="text-[10px] text-slate-600">Tutorial</span>
+              </div>
+            ) : (
+              <TutorialMenu />
+            )}
+          </div>
 
           {/* Widget Gioco in Evidenza */}
           <div className="shrink-0 border-t border-border/50 mb-4">
@@ -1426,8 +1442,11 @@ export function MainLayout({ children }: MainLayoutProps) {
           </DialogContent>
         </Dialog>
 
-        {/* Tutorial Interattivo */}
+        {/* Tutorial Interattivo (onboarding prima visita) */}
         <InteractiveTutorial />
+        
+        {/* Tutorial per-pagina (provider context) */}
+        <TutorialOverlay />
         
         {/* Command Palette (Ctrl+K) */}
         <CommandPalette />
@@ -1462,6 +1481,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+    </TutorialProvider>
   );
 }
 
