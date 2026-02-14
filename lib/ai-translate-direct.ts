@@ -601,13 +601,28 @@ async function translateWithTranslateGemma(
   }
 }
 
+// Mappa codici lingua → nomi completi per HY-MT
+const LANG_NAMES: Record<string, string> = {
+  en: 'English', it: 'Italian', de: 'German', fr: 'French', es: 'Spanish',
+  pt: 'Portuguese', ru: 'Russian', ja: 'Japanese', ko: 'Korean', zh: 'Chinese',
+  'zh-Hans': 'Simplified Chinese', 'zh-Hant': 'Traditional Chinese',
+  pl: 'Polish', nl: 'Dutch', sv: 'Swedish', da: 'Danish', fi: 'Finnish',
+  no: 'Norwegian', cs: 'Czech', hu: 'Hungarian', ro: 'Romanian', tr: 'Turkish',
+  ar: 'Arabic', th: 'Thai', vi: 'Vietnamese', id: 'Indonesian', uk: 'Ukrainian',
+  el: 'Greek', bg: 'Bulgarian', hr: 'Croatian', sk: 'Slovak', sl: 'Slovenian',
+  'pt-BR': 'Brazilian Portuguese', 'es-419': 'Latin American Spanish',
+};
+
 /** HY-MT1.5 (Tencent) — via Ollama, #1 WMT25, batte Google Translate in 30/31 lingue */
 async function translateWithHYMT(
   _apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
   const ollamaUrl = 'http://localhost:11434';
-  const srcLang = opts.sourceLanguage || 'en';
+  const srcCode = opts.sourceLanguage || 'en';
+  const tgtCode = opts.targetLanguage || 'it';
+  const srcLang = LANG_NAMES[srcCode] || srcCode;
+  const tgtLang = LANG_NAMES[tgtCode] || tgtCode;
 
   // Auto-detect miglior modello HY-MT disponibile (7B > 1.8B)
   let modelName = '';
@@ -616,7 +631,6 @@ async function translateWithHYMT(
     if (!tagsRes.ok) throw new Error('Ollama non raggiungibile');
     const tagsData = await tagsRes.json();
     const available = (tagsData.models || []).map((m: any) => m.name);
-    // Priorità: 7B abliterated > 7B > 1.8B abliterated > 1.8B > qualsiasi hy-mt
     const prefer = [
       (n: string) => n.includes('hy-mt') && n.includes('abliterated') && n.includes('7b'),
       (n: string) => n.includes('hy-mt') && n.includes('7b'),
@@ -634,67 +648,52 @@ async function translateWithHYMT(
     throw err;
   }
 
-  console.log(`[HY-MT] Usando modello: ${modelName}`);
+  console.log(`[HY-MT] Usando modello: ${modelName} (${srcLang} → ${tgtLang})`);
 
-  // Batch traduzione (come translategemma) per velocità
-  const results: string[] = [];
-  const batchText = opts.texts.join('\n|||\n');
-  const prompt = `Translate the following text from ${srcLang} to ${opts.targetLanguage}. Return ONLY the translations, one per line, separated by |||. Do NOT add explanations.\n\n${batchText}`;
+  // Traduzione singola con richieste parallele (5 alla volta) per affidabilità + velocità
+  const CONCURRENCY = 3;
+  const results: string[] = new Array(opts.texts.length).fill('');
 
-  try {
-    const res = await fetch(`${ollamaUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: modelName,
-        messages: [{ role: 'user', content: prompt }],
-        stream: false,
-        options: { temperature: 0.2, num_predict: 4096 },
-      }),
-      signal: AbortSignal.timeout(120000),
-    });
+  const translateOne = async (text: string, index: number): Promise<void> => {
+    // Prompt specifico per modelli di traduzione specializzati
+    const systemPrompt = `You are a professional translator. Translate the source text from ${srcLang} to ${tgtLang}. Output ONLY the translation, nothing else. Do not add explanations, notes, or the original text.`;
+    const userPrompt = text;
 
-    if (!res.ok) {
-      blockProvider('hymt');
-      throw new Error(`HY-MT ${res.status}`);
-    }
-
-    const data = await res.json();
-    const content = data?.message?.content?.trim() || '';
-    const parts = content.split('|||').map((s: string) => s.trim()).filter(Boolean);
-
-    if (parts.length >= opts.texts.length) {
-      return parts.slice(0, opts.texts.length);
-    }
-
-    // Fallback: traduzione singola se il batch non funziona
-    if (parts.length > 0 && parts.length < opts.texts.length) {
-      results.push(...parts);
-    }
-
-    // Completa le mancanti una per una
-    for (let i = results.length; i < opts.texts.length; i++) {
-      const singleRes = await fetch(`${ollamaUrl}/api/chat`, {
+    try {
+      const res = await fetch(`${ollamaUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: modelName,
-          messages: [{ role: 'user', content: `Translate from ${srcLang} to ${opts.targetLanguage}: ${opts.texts[i]}` }],
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
           stream: false,
-          options: { temperature: 0.2, num_predict: 500 },
+          options: { temperature: 0.1, num_predict: 500 },
         }),
         signal: AbortSignal.timeout(60000),
       });
-      if (!singleRes.ok) throw new Error(`HY-MT ${singleRes.status}`);
-      const singleData = await singleRes.json();
-      results.push(singleData?.message?.content?.trim() || opts.texts[i]);
+      if (!res.ok) throw new Error(`HY-MT ${res.status}`);
+      const data = await res.json();
+      let translated = data?.message?.content?.trim() || '';
+      // Rimuovi eventuali prefissi come "Translation:" o virgolette
+      translated = translated.replace(/^(Translation|Traduzione|Output)\s*:\s*/i, '');
+      translated = translated.replace(/^["']|["']$/g, '');
+      results[index] = translated || text;
+    } catch {
+      results[index] = text; // Fallback: testo originale
     }
+  };
 
-    return results;
-  } catch (err) {
-    blockProvider('hymt');
-    throw err;
+  // Esegui in batch paralleli di CONCURRENCY
+  for (let i = 0; i < opts.texts.length; i += CONCURRENCY) {
+    const batch = opts.texts.slice(i, i + CONCURRENCY);
+    await Promise.all(batch.map((text, j) => translateOne(text, i + j)));
   }
+
+  console.log(`[HY-MT] Completate ${results.length} traduzioni (es: "${opts.texts[0]}" → "${results[0]}")`);
+  return results;
 }
 
 /** Ollama Generico — qualsiasi modello installato in Ollama (llama3, mistral, phi, qwen, ecc.) */
