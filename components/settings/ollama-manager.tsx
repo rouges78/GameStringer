@@ -57,7 +57,7 @@ export function OllamaManager() {
 
   const checkStatus = useCallback(async () => {
     try {
-      if (typeof window !== 'undefined' && window.__TAURI_IPC__) {
+      if (typeof window !== 'undefined' && ((window as any).__TAURI_INTERNALS__ || (window as any).__TAURI_IPC__)) {
         const { invoke } = await import('@tauri-apps/api/core');
         const result = await invoke<OllamaStatus>('check_ollama_status');
         setStatus(result);
@@ -94,7 +94,7 @@ export function OllamaManager() {
 
   const loadRecommendedModels = useCallback(async () => {
     try {
-      if (typeof window !== 'undefined' && window.__TAURI_IPC__) {
+      if (typeof window !== 'undefined' && ((window as any).__TAURI_INTERNALS__ || (window as any).__TAURI_IPC__)) {
         const { invoke } = await import('@tauri-apps/api/core');
         const models = await invoke<OllamaModelInfo[]>('get_recommended_ollama_models');
         setRecommendedModels(models);
@@ -123,7 +123,7 @@ export function OllamaManager() {
     let unlisten2: (() => void) | null = null;
 
     const setupListeners = async () => {
-      if (typeof window !== 'undefined' && window.__TAURI_IPC__) {
+      if (typeof window !== 'undefined' && ((window as any).__TAURI_INTERNALS__ || (window as any).__TAURI_IPC__)) {
         try {
           const { listen } = await import('@tauri-apps/api/event');
           
