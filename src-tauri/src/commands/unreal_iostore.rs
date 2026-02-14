@@ -1470,14 +1470,17 @@ fn find_uasset_data_offset(data: &[u8]) -> usize {
 /// Patcha un .uasset binario sostituendo le FString originali con le traduzioni.
 /// SICUREZZA: salta l'header UAsset (Name Map, Import/Export tables) per evitare
 /// di corrompere i dati strutturali. Patcha SOLO la sezione dati serializzati.
-/// Restituisce il binario modificato (stessa dimensione dell'originale).
+/// Il file può crescere: il length prefix FString viene aggiornato alla nuova lunghezza,
+/// e il SerialSize nell'export table viene corretto di conseguenza.
 fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<String, String>) -> Vec<u8> {
-    let mut result = Vec::with_capacity(data.len());
+    let mut result = Vec::with_capacity(data.len() + data.len() / 4);
     let mut patch_count = 0u32;
-    let mut truncated_count = 0u32;
     
     // Trova dove inizia la sezione dati (dopo header strutturale)
     let data_offset = find_uasset_data_offset(data);
+    
+    // Trova SerialSize nell'header ORIGINALE (prima del patching)
+    let serial_info = find_serial_size_in_header(data);
     
     // Copia header verbatim (Name Map, Import/Export tables, etc.)
     result.extend_from_slice(&data[..data_offset]);
@@ -1488,8 +1491,8 @@ fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<Str
         if i + 4 < data.len() {
             let len = i32::from_le_bytes([data[i], data[i+1], data[i+2], data[i+3]]);
             
-            // FString valida: lunghezza ragionevole (min 5 chars per evitare falsi positivi)
-            if len >= 5 && len <= 2000 {
+            // FString valida: lunghezza ragionevole (min 3 chars)
+            if len >= 3 && len <= 2000 {
                 let str_start = i + 4;
                 let str_end = str_start + (len as usize);
                 
@@ -1509,53 +1512,12 @@ fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<Str
                             // Match diretto (testo identico)
                             if let Some(translated) = replacements.get(trimmed) {
                                 let new_bytes = translated.as_bytes();
-                                let capacity = text_bytes.len();
-                                // Forza stessa lunghezza: pad con null o tronca
-                                let mut fitted = vec![0u8; capacity];
-                                let copy_len = std::cmp::min(new_bytes.len(), capacity);
-                                fitted[..copy_len].copy_from_slice(&new_bytes[..copy_len]);
+                                // Nuovo length prefix: lunghezza traduzione + 1 (null terminator)
+                                let new_len = (new_bytes.len() + 1) as i32;
                                 
-                                // Se troncato, fix UTF-8 incompleto alla fine
-                                if new_bytes.len() > capacity {
-                                    truncated_count += 1;
-                                    if truncated_count <= 5 {
-                                        log::warn!("✂️ Troncata: '{}' → '{}' ({} bytes disponibili, {} necessari, tagliati {} bytes)",
-                                            &trimmed[..std::cmp::min(trimmed.len(), 40)],
-                                            &translated[..std::cmp::min(translated.len(), 40)],
-                                            capacity, new_bytes.len(), new_bytes.len() - capacity);
-                                    }
-                                    
-                                    // Scansiona all'indietro per trovare ultimo char UTF-8 completo
-                                    let mut check = copy_len;
-                                    while check > 0 {
-                                        let b = fitted[check - 1];
-                                        if b < 0x80 {
-                                            // ASCII: char completo, tutto ok
-                                            break;
-                                        } else if (b & 0xC0) == 0x80 {
-                                            // Continuation byte (10xxxxxx): continua a cercare lo start
-                                            check -= 1;
-                                        } else {
-                                            // Start byte di sequenza multi-byte
-                                            let expected_len = if b < 0xE0 { 2 }
-                                                else if b < 0xF0 { 3 }
-                                                else { 4 };
-                                            let actual_bytes = copy_len - (check - 1);
-                                            if actual_bytes < expected_len {
-                                                // Sequenza incompleta: azzera dallo start byte in poi
-                                                for j in (check - 1)..copy_len {
-                                                    fitted[j] = 0x00;
-                                                }
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-                                
-                                // Mantieni length prefix originale (stessa dimensione)
-                                result.extend_from_slice(&len.to_le_bytes());
-                                result.extend_from_slice(&fitted);
-                                result.push(0);
+                                result.extend_from_slice(&new_len.to_le_bytes());
+                                result.extend_from_slice(new_bytes);
+                                result.push(0); // null terminator
                                 i = str_end;
                                 patch_count += 1;
                                 continue;
@@ -1570,14 +1532,22 @@ fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<Str
         i += 1;
     }
     
-    if truncated_count > 0 {
-        log::warn!("✂️ Totale: {} stringhe troncate su {} patchate (traduzione IT più lunga dell'originale EN)", 
-            truncated_count, patch_count);
+    // Aggiorna SerialSize se la dimensione del file è cambiata
+    let size_diff = result.len() as i64 - data.len() as i64;
+    if size_diff != 0 {
+        if let Some((serial_size_offset, old_serial_size, _serial_offset)) = serial_info {
+            let new_serial_size = old_serial_size + size_diff;
+            if serial_size_offset + 8 <= result.len() {
+                result[serial_size_offset..serial_size_offset+8]
+                    .copy_from_slice(&new_serial_size.to_le_bytes());
+                log::info!("📐 SerialSize aggiornato: {} → {} (diff: {:+})", 
+                    old_serial_size, new_serial_size, size_diff);
+            }
+        }
     }
-    log::info!("🔧 Patchate {} stringhe (solo sezione dati, offset {}+), size invariata: {} bytes", 
-        patch_count, data_offset, result.len());
     
-    debug_assert_eq!(result.len(), data.len(), "patch_uasset_binary: la dimensione del file deve restare invariata");
+    log::info!("🔧 Patchate {} stringhe (sezione dati, offset {}+), size: {} → {} bytes ({:+})", 
+        patch_count, data_offset, data.len(), result.len(), size_diff);
     
     result
 }

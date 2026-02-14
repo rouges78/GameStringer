@@ -1076,6 +1076,7 @@ export async function translateWithFallback(
               ...opts.texts.slice(translations.length),
             ];
           }
+          console.log(`[translateWithFallback] ✅ ${provider.name}: ${translations.length} traduzioni (es: "${opts.texts[0]?.substring(0, 40)}" → "${translations[0]?.substring(0, 40)}")`);
           return { translations, provider: provider.name, success: true };
         }
         break;
@@ -1111,6 +1112,7 @@ export async function translateWithFallback(
   }
 
   // Nessun provider disponibile, ritorna originali
+  console.error(`[translateWithFallback] ❌ NESSUN provider riuscito! ${opts.texts.length} stringhe NON tradotte (restituite come originali)`);
   return { translations: opts.texts, provider: 'none', success: false };
 }
 
@@ -1153,13 +1155,19 @@ export async function translateWithFallbackBatched(
   let lastProvider = 'none';
   let anySuccess = false;
   
+  const totalBatches = Math.ceil(texts.length / maxBatch);
+  console.log(`[Batched] Inizio traduzione: ${texts.length} stringhe in ${totalBatches} batch da ${maxBatch}`);
+  
   for (let i = 0; i < texts.length; i += maxBatch) {
+    const batchNum = Math.floor(i / maxBatch) + 1;
     const chunk = texts.slice(i, i + maxBatch);
     const result = await translateWithFallback({ ...rest, texts: chunk });
     allTranslations.push(...result.translations);
     if (result.success) {
       anySuccess = true;
       lastProvider = result.provider;
+    } else {
+      console.warn(`[Batched] ⚠️ Batch ${batchNum}/${totalBatches} FALLITO — stringhe non tradotte`);
     }
     onProgress?.(Math.min(i + maxBatch, texts.length), texts.length);
     

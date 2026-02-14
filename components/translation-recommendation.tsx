@@ -583,6 +583,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               .filter(e => e.value.trim().length > 0)
               .map(e => e.value);
             
+            console.log(`[Unreal] Entries: ${extractResult.entries.length}, con testo non vuoto: ${textsToTranslate.length}`);
             if (textsToTranslate.length > 0) {
               updateProgress(60, `Traducendo ${textsToTranslate.length} stringhe...`);
               const trResult = await translateWithFallbackBatched({
@@ -593,6 +594,12 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 const pct = 60 + Math.round((done / total) * 30);
                 updateProgress(pct, `Tradotte ${done}/${total} stringhe...`);
               });
+              
+              // Log diagnostico traduzione
+              console.log(`[Unreal] Traduzione completata: provider=${trResult.provider}, success=${trResult.success}, risultati=${trResult.translations.length}`);
+              if (trResult.translations.length > 0) {
+                console.log(`[Unreal] Campione: "${textsToTranslate[0]?.substring(0, 50)}" → "${trResult.translations[0]?.substring(0, 50)}"`);
+              }
               
               // Crea mappa traduzioni
               const translations: Record<string, string> = {};
