@@ -686,6 +686,97 @@ fn scan_ftext_entries(data: &[u8]) -> Vec<(String, String, String)> {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// STRINGTABLE PARSER (proper namespace/key/value extraction)
+// ═══════════════════════════════════════════════════════════════════
+
+/// Parsa le entry di un UStringTable serializzato nel .uasset.
+/// Formato UE5 StringTable (dopo UObject properties):
+///   [FString TableNamespace][i32 NumEntries][FString Key, FString Value]...
+/// Restituisce (namespace, key, value) per ogni entry.
+fn scan_stringtable_entries(data: &[u8]) -> Vec<(String, String, String)> {
+    let data_offset = find_uasset_data_offset(data);
+    let mut best_result: Vec<(String, String, String)> = Vec::new();
+    
+    // Scansiona il data section cercando il pattern StringTable
+    let mut i = data_offset;
+    while i + 8 < data.len() {
+        let mut off = i;
+        
+        // Prova a leggere un FString (potenziale namespace)
+        if let Some(ns) = try_read_fstring_at(data, &mut off) {
+            // Namespace valido: non vuoto, non troppo lungo, sembra un path o nome
+            if ns.len() >= 2 && ns.len() <= 500 {
+                // Prova a leggere il count
+                if off + 4 <= data.len() {
+                    let count = i32::from_le_bytes([data[off], data[off+1], data[off+2], data[off+3]]);
+                    
+                    // Count ragionevole per una StringTable
+                    if count >= 2 && count <= 50000 {
+                        let mut pairs_off = off + 4;
+                        let mut pairs: Vec<(String, String)> = Vec::new();
+                        let mut valid = true;
+                        
+                        for _ in 0..count {
+                            let saved = pairs_off;
+                            if let Some(key) = try_read_fstring_at(data, &mut pairs_off) {
+                                if let Some(val) = try_read_fstring_at(data, &mut pairs_off) {
+                                    // Key non vuota, value non vuota
+                                    if !key.is_empty() && !val.is_empty() {
+                                        pairs.push((key, val));
+                                    } else if key.is_empty() && val.is_empty() {
+                                        // Due stringhe vuote consecutive = probabilmente fine dati
+                                        valid = false;
+                                        break;
+                                    } else {
+                                        pairs.push((key, val));
+                                    }
+                                } else {
+                                    pairs_off = saved;
+                                    valid = false;
+                                    break;
+                                }
+                            } else {
+                                pairs_off = saved;
+                                valid = false;
+                                break;
+                            }
+                        }
+                        
+                        // Successo: abbiamo letto TUTTE le entry previste
+                        if valid && pairs.len() == count as usize && pairs.len() >= 2 {
+                            // Verifica che almeno alcune values siano testo leggibile (non binario)
+                            let readable = pairs.iter()
+                                .filter(|(_, v)| v.chars().any(|c| c.is_alphabetic()))
+                                .count();
+                            
+                            if readable >= pairs.len() / 2 {
+                                log::info!("📋 StringTable trovata! ns=\"{}\" count={} readable={}", 
+                                    &ns[..std::cmp::min(ns.len(), 60)], pairs.len(), readable);
+                                
+                                // Se è meglio del risultato precedente, usala
+                                if pairs.len() > best_result.len() {
+                                    best_result = pairs.iter()
+                                        .map(|(k, v)| (ns.clone(), k.clone(), v.clone()))
+                                        .collect();
+                                }
+                                
+                                // Salta oltre questa tabella e continua a cercare altre
+                                i = pairs_off;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        i += 1;
+    }
+    
+    best_result
+}
+
+// ═══════════════════════════════════════════════════════════════════
 // UASSET STRING SCANNER (for DataTable localization)
 // ═══════════════════════════════════════════════════════════════════
 
@@ -1242,9 +1333,11 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
     if !loc_asset_contexts.is_empty() {
         log::info!("📦 Fallback .uasset: analisi {} file di localizzazione", loc_asset_contexts.len());
         
+        let mut stringtable_entries = Vec::new();
         let mut ftext_entries = Vec::new();
         let mut heuristic_entries = Vec::new();
         let mut extract_err_count = 0u32;
+        let mut seen_st = std::collections::HashSet::new();
         let mut seen_ftext = std::collections::HashSet::new();
         
         let mut chunk_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
@@ -1274,6 +1367,28 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
                 &oodle,
             ) {
                 Ok(uasset_data) => {
+                    // 0) Prova StringTable parser (namespace/key/value reali per .locres)
+                    let st_entries = scan_stringtable_entries(&uasset_data);
+                    if !st_entries.is_empty() {
+                        log::info!("📋 StringTable: {} entry trovate in {}", st_entries.len(), ctx.file.path);
+                        for (idx, (ns, key, val)) in st_entries.iter().enumerate().take(3) {
+                            log::info!("  📋 [{}] ns=\"{}\" key=\"{}\" val=\"{}\"", idx, ns, key,
+                                &val[..std::cmp::min(60, val.len())]);
+                        }
+                        for (ns, key, val) in st_entries {
+                            let dedup_key = format!("{}::{}", ns, key);
+                            if !seen_st.contains(&dedup_key) && val.len() >= 1 {
+                                seen_st.insert(dedup_key);
+                                stringtable_entries.push(super::unreal_localization::LocEntry {
+                                    namespace: ns,
+                                    key,
+                                    source_hash: 0,
+                                    value: val,
+                                });
+                            }
+                        }
+                    }
+                    
                     // 1) Prova FText scanner (namespace/key reali per .locres)
                     let ftexts = scan_ftext_entries(&uasset_data);
                     if !ftexts.is_empty() {
@@ -1357,7 +1472,24 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
             }
         }
         
-        // Preferisci FText entries (hanno namespace/key reali per .locres) → nessun vincolo dimensione
+        // PRIORITÀ 1: StringTable entries (namespace/key/value reali dal parser StringTable)
+        if !stringtable_entries.is_empty() {
+            let count = stringtable_entries.len();
+            log::info!("📋 Usando {} entry StringTable per .locres (nessun vincolo dimensione)", count);
+            return Ok(ExtractionResult {
+                success: true,
+                entries: stringtable_entries,
+                source_file: "IoStore DataTable".to_string(),
+                pak_version: 0,
+                locres_path: "StringTable .locres".to_string(),
+                message: format!(
+                    "Estratte {} stringhe StringTable da {} .uasset (con namespace/key per .locres)",
+                    count, loc_asset_contexts.len()
+                ),
+            });
+        }
+        
+        // PRIORITÀ 2: FText entries (namespace/key reali per .locres)
         if !ftext_entries.is_empty() {
             let count = ftext_entries.len();
             log::info!("✨ Usando {} entry FText per .locres (nessun vincolo dimensione, {} euristiche scartate)", 
@@ -1375,7 +1507,7 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
             });
         }
         
-        // Fallback: heuristic entries → IoStore binary patching (vincolo same-size)
+        // PRIORITÀ 3: heuristic entries → IoStore binary patching (vincolo same-size)
         if !heuristic_entries.is_empty() {
             let count = heuristic_entries.len();
             log::info!("📦 Fallback: usando {} entry euristiche (binary patching, no FText)", count);
