@@ -548,10 +548,10 @@ fn write_locres_v0(entries: &[LocEntry]) -> Vec<u8> {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// PAK WRITER (formato semplice v4)
+// PAK WRITER (formato v8, compatibile UE5)
 // ═══════════════════════════════════════════════════════════════════
 
-/// Crea un file .pak v4 con i file specificati
+/// Crea un file .pak v8 con i file specificati (compatibile UE5)
 pub fn create_pak_v4(files: &[(&str, &[u8])]) -> Vec<u8> {
     let mut buf = Vec::new();
     let mount_point = "../../../";
@@ -635,12 +635,23 @@ pub fn create_pak_v4(files: &[(&str, &[u8])]) -> Vec<u8> {
     index_hasher.update(index_data);
     let index_hash = index_hasher.finalize();
     
-    // Footer
+    // Footer v8 (compatibile UE5)
+    // 1. EncryptionKeyGuid (16 bytes, all zeros = no encryption)
+    buf.extend_from_slice(&[0u8; 16]);
+    // 2. bEncryptedIndex (1 byte, 0 = not encrypted)
+    buf.push(0u8);
+    // 3. Magic
     write_u32(&mut buf, PAK_MAGIC);
-    write_i32(&mut buf, 4); // Version 4
+    // 4. Version 8 (FNameBasedCompressionMethod — compatibile UE5)
+    write_i32(&mut buf, 8);
+    // 5. Index offset
     write_i64(&mut buf, index_offset);
+    // 6. Index size
     write_i64(&mut buf, index_size);
-    buf.extend_from_slice(&index_hash); // SHA1 reale dell'indice
+    // 7. Index SHA1 hash
+    buf.extend_from_slice(&index_hash);
+    // 8. CompressionMethods (5 entries * 32 bytes = 160 bytes, all zeros = no compression)
+    buf.extend_from_slice(&[0u8; 160]);
     
     buf
 }
