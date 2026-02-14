@@ -6,6 +6,7 @@ import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTutorial } from './tutorial-provider';
+import { useTranslation } from '@/lib/i18n';
 
 export function TutorialOverlay() {
   const {
@@ -18,6 +19,7 @@ export function TutorialOverlay() {
     prevStep,
     skipTutorial,
   } = useTutorial();
+  const { t } = useTranslation();
 
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
 
@@ -171,7 +173,7 @@ export function TutorialOverlay() {
                     className="h-7 px-2 text-slate-500 hover:text-slate-300 text-xs"
                   >
                     <X className="h-3.5 w-3.5 mr-1" />
-                    Salta
+                    {t('tutorial.overlay.skip')}
                   </Button>
                 )}
               </div>
@@ -206,7 +208,7 @@ export function TutorialOverlay() {
                   )}
                 >
                   <ChevronLeft className="h-3.5 w-3.5 mr-1" />
-                  Indietro
+                  {t('tutorial.overlay.back')}
                 </Button>
 
                 <span className="text-[10px] text-slate-600">
@@ -220,12 +222,12 @@ export function TutorialOverlay() {
                 >
                   {isLastStep ? (
                     <>
-                      Fatto
+                      {t('tutorial.overlay.done')}
                       <Sparkles className="h-3.5 w-3.5 ml-1" />
                     </>
                   ) : (
                     <>
-                      Avanti
+                      {t('tutorial.overlay.forward')}
                       <ChevronRight className="h-3.5 w-3.5 ml-1" />
                     </>
                   )}
@@ -235,7 +237,7 @@ export function TutorialOverlay() {
               {/* Hint */}
               <div className="px-3 pb-2 text-center">
                 <span className="text-[9px] text-slate-600">
-                  Premi Spazio per avanzare · Esc per chiudere
+                  {t('tutorial.overlay.hint')}
                 </span>
               </div>
             </div>
