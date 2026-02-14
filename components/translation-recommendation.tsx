@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Dialog,
@@ -184,6 +184,8 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [pendingCheckpoint, setPendingCheckpoint] = useState<TranslationCheckpoint | null>(null);
   const [showResumeDialog, setShowResumeDialog] = useState(false);
+  // Ref per catturare coppie tradotte tra step (per QA reale)
+  const lastTranslatedPairs = useRef<Array<{ original: string; translated: string }>>([]);
 
   // Check requisiti chain quando si cambia preset o si apre il dialog
   useEffect(() => {
@@ -451,11 +453,24 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
         }
         break;
 
-      case 'quality':
-        updateProgress(50, 'Verificando qualità traduzioni...');
-        await new Promise(r => setTimeout(r, 600));
-        updateProgress(100, 'Qualità OK');
+      case 'quality': {
+        updateProgress(10, 'Verificando qualità traduzioni...');
+        const pairs = lastTranslatedPairs.current;
+        if (pairs.length > 0) {
+          const validation = validateTranslations(pairs);
+          setValidationResult(validation);
+          const errCount = validation.issues.filter(i => i.severity === 'error').length;
+          const warnCount = validation.issues.filter(i => i.severity === 'warning').length;
+          updateProgress(100, `QA: ${validation.score}/100 — ${errCount} errori, ${warnCount} warning su ${validation.totalChecked} stringhe`);
+          console.log(`[QA] Score: ${validation.score}/100, errori: ${errCount}, warning: ${warnCount}, totale: ${validation.totalChecked}`);
+          if (validation.issues.length > 0) {
+            console.log(`[QA] Primi 5 problemi:`, validation.issues.slice(0, 5));
+          }
+        } else {
+          updateProgress(100, 'Nessuna traduzione da validare');
+        }
         break;
+      }
 
       case 'apply':
         updateProgress(20, 'Preparando avvio gioco...');
@@ -600,6 +615,12 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               if (trResult.translations.length > 0) {
                 console.log(`[Unreal] Campione: "${textsToTranslate[0]?.substring(0, 50)}" → "${trResult.translations[0]?.substring(0, 50)}"`);
               }
+              
+              // Salva coppie per QA nello step 'quality'
+              lastTranslatedPairs.current = textsToTranslate.map((orig, i) => ({
+                original: orig,
+                translated: trResult.translations[i] || orig,
+              }));
               
               // Crea mappa traduzioni
               const translations: Record<string, string> = {};
@@ -1040,9 +1061,9 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           
           // Step 4b: Validazione automatica
           updateProgress(91, '🔍 Validazione traduzioni...');
-          const validation = validateTranslations(
-            translatedDialogues.map(d => ({ original: d.original, translated: d.translated }))
-          );
+          const translatedPairsForQA = translatedDialogues.map(d => ({ original: d.original, translated: d.translated }));
+          lastTranslatedPairs.current = translatedPairsForQA;
+          const validation = validateTranslations(translatedPairsForQA);
           setValidationResult(validation);
           
           // Step 4c: Salva risultati
