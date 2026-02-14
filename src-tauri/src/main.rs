@@ -376,6 +376,13 @@ fn main() {
             commands::unreal_localization::create_translation_pak,
             commands::unreal_iostore::extract_iostore_localization,
             commands::unreal_iostore::apply_datatable_translation,
+            // Ollama Manager
+            commands::ollama_manager::check_ollama_status,
+            commands::ollama_manager::download_ollama,
+            commands::ollama_manager::start_ollama,
+            commands::ollama_manager::stop_ollama,
+            commands::ollama_manager::pull_ollama_model,
+            commands::ollama_manager::get_recommended_ollama_models,
             // Cache Management
 
             // Error Management

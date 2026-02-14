@@ -52,6 +52,7 @@ import { MultiLlmComparisonSettings } from '@/components/settings/multi-llm-comp
 import { useVersion } from '@/lib/version';
 import { useTranslation } from '@/lib/i18n';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
+import { OllamaManager } from '@/components/settings/ollama-manager';
 import { invoke } from '@tauri-apps/api/core';
 
 // Cache Stats Component
@@ -590,6 +591,7 @@ export default function SettingsPage() {
         <form onSubmit={(e) => e.preventDefault()} autoComplete="off">
         {/* Translation Tab */}
         <TabsContent value="translation" className="space-y-6">
+          <OllamaManager />
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">

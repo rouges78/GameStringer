@@ -47,7 +47,7 @@ windows = { version = "0.51", features = [
     "Foundation_Collections"
 ] }
 # Dipendenze per migrazione API
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json", "stream"] }
 moka = { version = "0.12", features = ["future"] }
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"] }
 rand = "0.8"
