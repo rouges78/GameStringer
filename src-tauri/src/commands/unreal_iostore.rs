@@ -1357,10 +1357,28 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
             }
         }
         
-        // Preferisci heuristic entries (più copertura) → IoStore container override
+        // Preferisci FText entries (hanno namespace/key reali per .locres) → nessun vincolo dimensione
+        if !ftext_entries.is_empty() {
+            let count = ftext_entries.len();
+            log::info!("✨ Usando {} entry FText per .locres (nessun vincolo dimensione, {} euristiche scartate)", 
+                count, heuristic_entries.len());
+            return Ok(ExtractionResult {
+                success: true,
+                entries: ftext_entries,
+                source_file: "IoStore DataTable".to_string(),
+                pak_version: 0,
+                locres_path: "FText .locres".to_string(),
+                message: format!(
+                    "Estratte {} stringhe FText da {} .uasset (con namespace/key per .locres)",
+                    count, loc_asset_contexts.len()
+                ),
+            });
+        }
+        
+        // Fallback: heuristic entries → IoStore binary patching (vincolo same-size)
         if !heuristic_entries.is_empty() {
             let count = heuristic_entries.len();
-            log::info!("📦 Fallback: usando {} entry euristiche (binary patching)", count);
+            log::info!("📦 Fallback: usando {} entry euristiche (binary patching, no FText)", count);
             return Ok(ExtractionResult {
                 success: true,
                 entries: heuristic_entries,
@@ -1470,17 +1488,15 @@ fn find_uasset_data_offset(data: &[u8]) -> usize {
 /// Patcha un .uasset binario sostituendo le FString originali con le traduzioni.
 /// SICUREZZA: salta l'header UAsset (Name Map, Import/Export tables) per evitare
 /// di corrompere i dati strutturali. Patcha SOLO la sezione dati serializzati.
-/// Il file può crescere: il length prefix FString viene aggiornato alla nuova lunghezza,
-/// e il SerialSize nell'export table viene corretto di conseguenza.
+/// VINCOLO IoStore: il file DEVE mantenere la stessa dimensione esatta (SerialSize nel UTOC).
+/// Le traduzioni più lunghe vengono troncate al confine di parola UTF-8.
 fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<String, String>) -> Vec<u8> {
-    let mut result = Vec::with_capacity(data.len() + data.len() / 4);
+    let mut result = Vec::with_capacity(data.len());
     let mut patch_count = 0u32;
+    let mut truncated_count = 0u32;
     
     // Trova dove inizia la sezione dati (dopo header strutturale)
     let data_offset = find_uasset_data_offset(data);
-    
-    // Trova SerialSize nell'header ORIGINALE (prima del patching)
-    let serial_info = find_serial_size_in_header(data);
     
     // Copia header verbatim (Name Map, Import/Export tables, etc.)
     result.extend_from_slice(&data[..data_offset]);
@@ -1512,12 +1528,36 @@ fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<Str
                             // Match diretto (testo identico)
                             if let Some(translated) = replacements.get(trimmed) {
                                 let new_bytes = translated.as_bytes();
-                                // Nuovo length prefix: lunghezza traduzione + 1 (null terminator)
-                                let new_len = (new_bytes.len() + 1) as i32;
+                                let capacity = text_bytes.len(); // spazio disponibile (stessa dimensione originale)
+                                let mut fitted = vec![0u8; capacity];
                                 
-                                result.extend_from_slice(&new_len.to_le_bytes());
-                                result.extend_from_slice(new_bytes);
-                                result.push(0); // null terminator
+                                if new_bytes.len() <= capacity {
+                                    // La traduzione ci sta: copia e pad con null
+                                    fitted[..new_bytes.len()].copy_from_slice(new_bytes);
+                                } else {
+                                    // Traduzione troppo lunga: tronca al confine UTF-8 valido
+                                    truncated_count += 1;
+                                    
+                                    // Trova ultimo confine di carattere UTF-8 completo entro capacity
+                                    let mut safe_end = capacity;
+                                    while safe_end > 0 && !translated.is_char_boundary(safe_end) {
+                                        safe_end -= 1;
+                                    }
+                                    
+                                    fitted[..safe_end].copy_from_slice(&new_bytes[..safe_end]);
+                                    
+                                    if truncated_count <= 5 {
+                                        log::warn!("✂️ Troncata: '{}' → '{}' (cap={}, need={})",
+                                            &trimmed[..std::cmp::min(trimmed.len(), 30)],
+                                            &translated[..std::cmp::min(safe_end, 30)],
+                                            capacity, new_bytes.len());
+                                    }
+                                }
+                                
+                                // Mantieni length prefix originale (stessa dimensione)
+                                result.extend_from_slice(&len.to_le_bytes());
+                                result.extend_from_slice(&fitted);
+                                result.push(0);
                                 i = str_end;
                                 patch_count += 1;
                                 continue;
@@ -1532,22 +1572,14 @@ fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<Str
         i += 1;
     }
     
-    // Aggiorna SerialSize se la dimensione del file è cambiata
-    let size_diff = result.len() as i64 - data.len() as i64;
-    if size_diff != 0 {
-        if let Some((serial_size_offset, old_serial_size, _serial_offset)) = serial_info {
-            let new_serial_size = old_serial_size + size_diff;
-            if serial_size_offset + 8 <= result.len() {
-                result[serial_size_offset..serial_size_offset+8]
-                    .copy_from_slice(&new_serial_size.to_le_bytes());
-                log::info!("📐 SerialSize aggiornato: {} → {} (diff: {:+})", 
-                    old_serial_size, new_serial_size, size_diff);
-            }
-        }
+    if truncated_count > 0 {
+        log::warn!("✂️ Totale: {} stringhe troncate su {} patchate (traduzione più lunga dell'originale)", 
+            truncated_count, patch_count);
     }
+    log::info!("🔧 Patchate {} stringhe (sezione dati, offset {}+), size invariata: {} bytes", 
+        patch_count, data_offset, result.len());
     
-    log::info!("🔧 Patchate {} stringhe (sezione dati, offset {}+), size: {} → {} bytes ({:+})", 
-        patch_count, data_offset, data.len(), result.len(), size_diff);
+    debug_assert_eq!(result.len(), data.len(), "patch_uasset_binary: la dimensione del file DEVE restare invariata per IoStore");
     
     result
 }

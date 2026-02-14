@@ -988,15 +988,32 @@ pub async fn apply_unreal_translation(
     // Determina il path del .locres nel .pak
     // Pattern standard: [ProjectName]/Content/Localization/Game/[lang]/Game.locres
     let project_name = find_project_name(game_dir).unwrap_or_else(|| "Game".to_string());
-    let locres_path_in_pak = format!(
+    let locres_path_target = format!(
         "{}/Content/Localization/Game/{}/{}.locres",
         project_name, target_language, project_name
     );
     
-    log::info!("📦 Creazione PAK con: {}", locres_path_in_pak);
+    // Crea il .locres anche al path "en" — UE5 potrebbe non caricare la cultura target
+    // se il gioco non la supporta ufficialmente, ma caricherà sempre la cultura inglese.
+    let mut pak_files: Vec<(String, Vec<u8>)> = Vec::new();
+    pak_files.push((locres_path_target.clone(), locres_data.clone()));
     
-    // Crea il .pak
-    let pak_data = create_pak_v4(&[(&locres_path_in_pak, &locres_data)]);
+    if target_language != "en" {
+        let locres_path_en = format!(
+            "{}/Content/Localization/Game/en/{}.locres",
+            project_name, project_name
+        );
+        log::info!("📦 Anche .locres override inglese: {}", locres_path_en);
+        pak_files.push((locres_path_en, locres_data.clone()));
+    }
+    
+    log::info!("📦 Creazione PAK con {} .locres: {}", pak_files.len(), locres_path_target);
+    
+    // Crea il .pak con tutti i .locres
+    let pak_file_refs: Vec<(&str, &[u8])> = pak_files.iter()
+        .map(|(path, data)| (path.as_str(), data.as_slice()))
+        .collect();
+    let pak_data = create_pak_v4(&pak_file_refs);
     
     // Trova la directory Paks
     let paks_dir = find_paks_dir(game_dir)
