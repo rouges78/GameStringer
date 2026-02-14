@@ -601,7 +601,7 @@ async function translateWithTranslateGemma(
   }
 }
 
-/** HY-MT1.5 (Tencent) — via Ollama, ultraleggero 1.8B, 33 lingue, per PC con poca RAM */
+/** HY-MT1.5 (Tencent) — via Ollama, #1 WMT25, batte Google Translate in 30/31 lingue */
 async function translateWithHYMT(
   _apiKey: string,
   opts: TranslateOptions
@@ -609,42 +609,92 @@ async function translateWithHYMT(
   const ollamaUrl = 'http://localhost:11434';
   const srcLang = opts.sourceLanguage || 'en';
 
-  // Verifica se il modello è installato (cerca hy-mt o hunyuan-mt)
+  // Auto-detect miglior modello HY-MT disponibile (7B > 1.8B)
+  let modelName = '';
   try {
     const tagsRes = await fetch(`${ollamaUrl}/api/tags`, { method: 'GET', signal: AbortSignal.timeout(3000) });
     if (!tagsRes.ok) throw new Error('Ollama non raggiungibile');
     const tagsData = await tagsRes.json();
     const available = (tagsData.models || []).map((m: any) => m.name);
-    const hasModel = available.some((n: string) => n.includes('hy-mt') || n.startsWith('hunyuan'));
-    if (!hasModel) throw new Error('HY-MT1.5 non installato. Esegui: ollama pull ali6parmak/hy-mt1.5:1.8b');
+    // Priorità: 7B abliterated > 7B > 1.8B abliterated > 1.8B > qualsiasi hy-mt
+    const prefer = [
+      (n: string) => n.includes('hy-mt') && n.includes('abliterated') && n.includes('7b'),
+      (n: string) => n.includes('hy-mt') && n.includes('7b'),
+      (n: string) => n.includes('hy-mt') && n.includes('abliterated'),
+      (n: string) => n.includes('hy-mt'),
+      (n: string) => n.includes('hunyuan') && n.includes('mt'),
+    ];
+    for (const check of prefer) {
+      const found = available.find(check);
+      if (found) { modelName = found; break; }
+    }
+    if (!modelName) throw new Error('HY-MT1.5 non installato. Vai in Settings → Ollama e premi Pull su HY-MT');
   } catch (err) {
     blockProvider('hymt');
     throw err;
   }
 
+  console.log(`[HY-MT] Usando modello: ${modelName}`);
+
+  // Batch traduzione (come translategemma) per velocità
   const results: string[] = [];
-  for (const text of opts.texts) {
-    try {
-      const res = await fetch(`${ollamaUrl}/api/chat`, {
+  const batchText = opts.texts.join('\n|||\n');
+  const prompt = `Translate the following text from ${srcLang} to ${opts.targetLanguage}. Return ONLY the translations, one per line, separated by |||. Do NOT add explanations.\n\n${batchText}`;
+
+  try {
+    const res = await fetch(`${ollamaUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: modelName,
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        options: { temperature: 0.2, num_predict: 4096 },
+      }),
+      signal: AbortSignal.timeout(120000),
+    });
+
+    if (!res.ok) {
+      blockProvider('hymt');
+      throw new Error(`HY-MT ${res.status}`);
+    }
+
+    const data = await res.json();
+    const content = data?.message?.content?.trim() || '';
+    const parts = content.split('|||').map((s: string) => s.trim()).filter(Boolean);
+
+    if (parts.length >= opts.texts.length) {
+      return parts.slice(0, opts.texts.length);
+    }
+
+    // Fallback: traduzione singola se il batch non funziona
+    if (parts.length > 0 && parts.length < opts.texts.length) {
+      results.push(...parts);
+    }
+
+    // Completa le mancanti una per una
+    for (let i = results.length; i < opts.texts.length; i++) {
+      const singleRes = await fetch(`${ollamaUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'ali6parmak/hy-mt1.5:1.8b',
-          messages: [{ role: 'user', content: `Translate from ${srcLang} to ${opts.targetLanguage}: ${text}` }],
+          model: modelName,
+          messages: [{ role: 'user', content: `Translate from ${srcLang} to ${opts.targetLanguage}: ${opts.texts[i]}` }],
           stream: false,
           options: { temperature: 0.2, num_predict: 500 },
         }),
         signal: AbortSignal.timeout(60000),
       });
-      if (!res.ok) throw new Error(`HY-MT ${res.status}`);
-      const data = await res.json();
-      results.push(data?.message?.content?.trim() || text);
-    } catch (err) {
-      blockProvider('hymt');
-      throw err;
+      if (!singleRes.ok) throw new Error(`HY-MT ${singleRes.status}`);
+      const singleData = await singleRes.json();
+      results.push(singleData?.message?.content?.trim() || opts.texts[i]);
     }
+
+    return results;
+  } catch (err) {
+    blockProvider('hymt');
+    throw err;
   }
-  return results;
 }
 
 /** Ollama Generico — qualsiasi modello installato in Ollama (llama3, mistral, phi, qwen, ecc.) */
@@ -783,29 +833,29 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
   {
     id: 'free',
     name: '🆓 Gratis',
-    description: 'Solo provider gratuiti — TranslateGemma locale, Groq, Cerebras, OpenRouter free, MyMemory',
+    description: 'Solo provider gratuiti — HY-MT + TranslateGemma locali, Groq, Cerebras, OpenRouter free',
     cost: '$0',
     quality: '⭐⭐⭐⭐',
     speed: '🏎 Media',
-    providers: ['translategemma', 'hymt', 'ollama', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'ollama', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
   },
   {
     id: 'economy',
     name: '💰 Economica',
-    description: 'TranslateGemma + Gemini free + DeepSeek economico + fallback gratuiti',
+    description: 'HY-MT/TranslateGemma locali + Gemini free + DeepSeek economico + fallback',
     cost: '~$0.10',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['translategemma', 'gemini', 'groq', 'cerebras', 'deepseek', 'mistral', 'openrouter', 'hymt', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'gemini', 'groq', 'cerebras', 'deepseek', 'mistral', 'openrouter', 'mymemory', 'lingva'],
   },
   {
     id: 'balanced',
     name: '⚖️ Bilanciata',
-    description: 'Miglior rapporto qualità/prezzo — TranslateGemma + tutti i provider',
+    description: 'Miglior rapporto qualità/prezzo — HY-MT locale + tutti i provider cloud',
     cost: '~$0.25',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['translategemma', 'gemini', 'deepseek', 'deepl', 'mistral', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'hymt', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'mistral', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'mymemory', 'lingva'],
   },
   {
     id: 'quality',
@@ -881,7 +931,7 @@ export interface ProviderRequirement {
 /** Provider → nome leggibile */
 const PROVIDER_LABELS: Record<string, string> = {
   translategemma: 'TranslateGemma (locale)',
-  hymt: 'HY-MT1.5 (locale)',
+  hymt: 'HY-MT1.5 Tencent (locale, #1 WMT25)',
   gemini: 'Google Gemini',
   groq: 'Groq',
   deepseek: 'DeepSeek',
@@ -941,18 +991,19 @@ export async function checkChainRequirements(presetId: ChainPreset): Promise<Pro
         // Check modelli installati
         for (const prov of ollamaProviders) {
           const idx = preset.providers.indexOf(prov);
-          const modelName = prov === 'translategemma' ? 'translategemma' : 'hy-mt';
-          const hasModel = installedModels.some((m: string) => m.includes(modelName));
+          const hasModel = prov === 'translategemma'
+            ? installedModels.some((m: string) => m.includes('translategemma'))
+            : installedModels.some((m: string) => m.includes('hy-mt') || m.includes('hunyuan'));
           if (!hasModel) {
             warnings.push({
               provider: prov,
               label: PROVIDER_LABELS[prov] || prov,
               issue: 'ollama_no_model',
               severity: idx === 0 ? 'critical' : 'warning',
-              message: `Modello ${prov === 'translategemma' ? 'translategemma' : 'hy-mt1.5'} non installato in Ollama`,
+              message: `Modello ${prov === 'translategemma' ? 'translategemma' : 'HY-MT1.5'} non installato in Ollama`,
               fixSteps: [
-                'Apri un terminale',
-                `Esegui: ollama pull ${prov === 'translategemma' ? 'translategemma' : 'ali6parmak/hy-mt1.5:1.8b'}`,
+                'Vai in Settings → Ollama Manager',
+                `Premi "Pull" su ${prov === 'translategemma' ? 'translategemma' : 'HY-MT 1.5 7B (consigliato) o 1.8B'}`,
                 'Attendi il download (~2-4 GB)',
               ],
               links: [

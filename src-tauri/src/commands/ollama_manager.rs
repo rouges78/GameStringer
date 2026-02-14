@@ -358,24 +358,29 @@ pub async fn pull_ollama_model(app: tauri::AppHandle, model_name: String) -> Res
 pub async fn get_recommended_ollama_models() -> Result<Vec<OllamaModelInfo>, String> {
     Ok(vec![
         OllamaModelInfo {
+            name: "huihui_ai/hy-mt1.5-abliterated:7b".to_string(),
+            size: "~4.5 GB".to_string(),
+            description: "⭐ Tencent HY-MT 1.5 7B — #1 WMT25, batte Google Translate in 30/31 lingue, 33 lingue".to_string(),
+        },
+        OllamaModelInfo {
+            name: "huihui_ai/hy-mt1.5-abliterated:1.8b".to_string(),
+            size: "~1.2 GB".to_string(),
+            description: "Tencent HY-MT 1.5 1.8B — Versione leggera e velocissima, ottima per batch massicci".to_string(),
+        },
+        OllamaModelInfo {
+            name: "translategemma:12b".to_string(),
+            size: "~8.0 GB".to_string(),
+            description: "Google TranslateGemma 12B — 55 lingue, qualità alta, richiede 10+ GB VRAM".to_string(),
+        },
+        OllamaModelInfo {
             name: "translategemma:2b".to_string(),
             size: "~1.5 GB".to_string(),
-            description: "Google TranslateGemma - Specializzato per traduzione, veloce e preciso".to_string(),
+            description: "Google TranslateGemma 2B — 55 lingue, veloce e leggero".to_string(),
         },
         OllamaModelInfo {
             name: "qwen3:4b".to_string(),
             size: "~2.5 GB".to_string(),
-            description: "Alibaba Qwen 3 4B - Ottimo per lingue asiatiche e europee".to_string(),
-        },
-        OllamaModelInfo {
-            name: "qwen3:8b".to_string(),
-            size: "~4.9 GB".to_string(),
-            description: "Alibaba Qwen 3 8B - Qualità superiore, richiede più VRAM".to_string(),
-        },
-        OllamaModelInfo {
-            name: "gemma3:4b".to_string(),
-            size: "~3.0 GB".to_string(),
-            description: "Google Gemma 3 4B - Buon bilanciamento qualità/velocità".to_string(),
+            description: "Alibaba Qwen 3 4B — General purpose, buono per traduzione conversazionale".to_string(),
         },
     ])
 }
