@@ -100,9 +100,11 @@ export function OllamaManager() {
         setRecommendedModels(models);
       } else {
         setRecommendedModels([
-          { name: 'translategemma:2b', size: '~1.5 GB', description: 'Google TranslateGemma - Specializzato per traduzione' },
-          { name: 'qwen3:4b', size: '~2.5 GB', description: 'Alibaba Qwen 3 4B - Ottimo per lingue asiatiche e europee' },
-          { name: 'gemma3:4b', size: '~3.0 GB', description: 'Google Gemma 3 4B - Buon bilanciamento qualità/velocità' },
+          { name: 'huihui_ai/hy-mt1.5-abliterated:7b', size: '~4.5 GB', description: '⭐ Tencent HY-MT 1.5 7B — #1 WMT25, batte Google Translate in 30/31 lingue' },
+          { name: 'huihui_ai/hy-mt1.5-abliterated:1.8b', size: '~1.2 GB', description: 'Tencent HY-MT 1.5 1.8B — Versione leggera e velocissima' },
+          { name: 'translategemma:12b', size: '~8.0 GB', description: 'Google TranslateGemma 12B — 55 lingue, qualità alta' },
+          { name: 'translategemma:2b', size: '~1.5 GB', description: 'Google TranslateGemma 2B — 55 lingue, veloce e leggero' },
+          { name: 'qwen3:4b', size: '~2.5 GB', description: 'Alibaba Qwen 3 4B — General purpose, buono per traduzione' },
         ]);
       }
     } catch (error) {
@@ -367,55 +369,59 @@ export function OllamaManager() {
         )}
 
         {/* Modelli consigliati */}
-        {status?.running && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-              <HardDrive className="h-3.5 w-3.5" />
-              Modelli consigliati per traduzione
-            </h4>
-            <div className="grid gap-2">
-              {recommendedModels.map((model) => {
-                const isInstalled = status.models.some(m => m.startsWith(model.name.split(':')[0]));
-                const isPulling = actionLoading === `pull-${model.name}`;
-                return (
-                  <div key={model.name} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono font-medium">{model.name}</span>
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">{model.size}</Badge>
-                        {isInstalled && (
-                          <Badge className="text-[10px] px-1.5 py-0 bg-green-500/20 text-green-500 border-green-500/30">
-                            <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
-                            Installato
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{model.description}</p>
+        <div className="space-y-2">
+          <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+            <HardDrive className="h-3.5 w-3.5" />
+            Modelli consigliati per traduzione
+          </h4>
+          {!status?.running && (
+            <p className="text-[10px] text-amber-400/80">Avvia Ollama per installare i modelli</p>
+          )}
+          <div className="grid gap-2">
+            {recommendedModels.map((model) => {
+              const modelBase = model.name.split(':')[0];
+              const isInstalled = (status?.models || []).some(m => 
+                m.startsWith(modelBase) || m.includes(modelBase.split('/').pop() || '')
+              );
+              const isPulling = actionLoading === `pull-${model.name}`;
+              return (
+                <div key={model.name} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-medium">{model.name}</span>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{model.size}</Badge>
+                      {isInstalled && (
+                        <Badge className="text-[10px] px-1.5 py-0 bg-green-500/20 text-green-500 border-green-500/30">
+                          <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
+                          Installato
+                        </Badge>
+                      )}
                     </div>
-                    {!isInstalled && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="ml-2 h-7 text-xs shrink-0"
-                        onClick={() => handlePullModel(model.name)}
-                        disabled={isPulling || !!pullProgress}
-                      >
-                        {isPulling ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <>
-                            <Download className="h-3 w-3 mr-1" />
-                            Pull
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{model.description}</p>
                   </div>
-                );
-              })}
-            </div>
+                  {!isInstalled && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="ml-2 h-7 text-xs shrink-0"
+                      onClick={() => handlePullModel(model.name)}
+                      disabled={isPulling || !!pullProgress || !status?.running}
+                    >
+                      {isPulling ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <>
+                          <Download className="h-3 w-3 mr-1" />
+                          Pull
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
 
         {/* Info */}
         {status?.installed && status.version && (
