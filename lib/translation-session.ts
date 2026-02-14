@@ -250,13 +250,23 @@ export function validateTranslations(
       continue;
     }
 
-    // Identica all'originale
+    // Identica all'originale — skip per probabili nomi propri
     if (translated.trim() === original.trim()) {
-      issues.push({
-        index: i, original, translated,
-        type: 'identical', severity: 'warning',
-        message: 'Traduzione identica all\'originale',
-      });
+      const trimmed = original.trim();
+      const looksLikeProperName = (
+        trimmed.length < 40 &&                                    // corta
+        /^[A-ZÀ-ÿ]/.test(trimmed) &&                             // inizia maiuscola
+        (trimmed.split(/\s+/).length <= 5) &&                     // max 5 parole
+        !/[.!?]$/.test(trimmed)                                   // non finisce con punteggiatura
+      );
+      const isShortOrNumeric = trimmed.length <= 3 || /^[\d.,%:\/\-+x×]+$/.test(trimmed);
+      if (!looksLikeProperName && !isShortOrNumeric) {
+        issues.push({
+          index: i, original, translated,
+          type: 'identical', severity: 'warning',
+          message: 'Traduzione identica all\'originale',
+        });
+      }
     }
 
     // Ratio lunghezza anomala (traduzione > 3x o < 0.2x dell'originale)
@@ -281,8 +291,21 @@ export function validateTranslations(
       /%[sd]/g,                   // %s, %d
       /\$\{[^}]+\}/g,            // ${var}
       /\\n/g,                     // \n newlines
-      /<[^>]+>/g,                 // <tags>
     ];
+    // Tag non-HTML (skip <b>, <i>, <br>, <em>, <strong>, etc. — sono formattazione, non variabili)
+    const tagPattern = /<(?!\/?(?:b|i|u|br|em|strong|p|span|div|font|color|size)\b)[^>]+>/g;
+    const origTags: string[] = original.match(tagPattern) || [];
+    const transTags: string[] = translated.match(tagPattern) || [];
+    for (const v of origTags) {
+      if (!transTags.includes(v)) {
+        issues.push({
+          index: i, original, translated,
+          type: 'missing_variable', severity: 'error',
+          message: `Tag mancante: ${v}`,
+        });
+        break;
+      }
+    }
 
     for (const pattern of varPatterns) {
       const origVars: string[] = original.match(pattern) || [];
@@ -312,7 +335,11 @@ export function validateTranslations(
 
   const errorCount = issues.filter(i => i.severity === 'error').length;
   const warningCount = issues.filter(i => i.severity === 'warning').length;
-  const score = Math.max(0, Math.round(100 - (errorCount * 5) - (warningCount * 1)));
+  const total = dialogues.length || 1;
+  // Score basato su percentuale di stringhe con problemi (non conta assoluto)
+  const errorPenalty = (errorCount / total) * 200;   // errori pesano 2x
+  const warningPenalty = (warningCount / total) * 50; // warning pesano 0.5x
+  const score = Math.max(0, Math.round(100 - errorPenalty - warningPenalty));
 
   return {
     totalChecked: dialogues.length,
