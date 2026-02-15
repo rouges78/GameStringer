@@ -72,6 +72,8 @@ import {
   BookOpen
 } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-shell';
+import { TranslationMemoryManager } from '@/lib/translation-memory';
+import { extractTerms, loadGlossaryConfig } from '@/lib/auto-glossary';
 
 interface AlternativeMethod {
   method: string;
@@ -650,8 +652,77 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 targetLanguage: 'it',
               });
               
+              // === SALVA IN TRANSLATION MEMORY ===
+              try {
+                const tm = new TranslationMemoryManager();
+                await tm.initialize('en', 'it');
+                const tmBatch = lastTranslatedPairs.current
+                  .filter(p => p.translated && p.original && p.original.length > 2 && p.translated !== p.original)
+                  .map(p => ({
+                    source: p.original,
+                    target: p.translated,
+                    gameId: gameId,
+                    context: gameName,
+                  }));
+                if (tmBatch.length > 0) {
+                  await tm.addBatch(tmBatch);
+                  await tm.save();
+                  console.log(`[Unreal] ✅ TM: salvate ${tmBatch.length} traduzioni`);
+                }
+              } catch (tmErr) {
+                console.warn('[Unreal] TM salvataggio fallito:', tmErr);
+              }
+
+              // === AUTO-GLOSSARIO: estrai termini dal gioco ===
+              try {
+                const glossaryConfig = loadGlossaryConfig();
+                if (glossaryConfig.enabled && glossaryConfig.autoExtractOnFirstBatch) {
+                  const sampleTexts = textsToTranslate.slice(0, 60);
+                  const extraction = await extractTerms(
+                    gameId || `unreal_${gameName.replace(/\s+/g, '_').toLowerCase()}`,
+                    gameName,
+                    sampleTexts,
+                    'en',
+                    'it',
+                  );
+                  if (extraction.newTerms.length > 0) {
+                    console.log(`[Unreal] ✅ Glossario: ${extraction.newTerms.length} termini estratti (${extraction.duplicates} duplicati)`);
+                  }
+                }
+              } catch (glErr) {
+                console.warn('[Unreal] Glossario estrazione fallita:', glErr);
+              }
+
+              // === SALVA FILE JSON PER REVISIONI FUTURE ===
+              try {
+                const revisionData = {
+                  gameName,
+                  gameId: gameId || '',
+                  gamePath,
+                  sourceLanguage: 'en',
+                  targetLanguage: 'it',
+                  provider: trResult.provider,
+                  createdAt: new Date().toISOString(),
+                  pakPath: pakResult.pak_path,
+                  totalStrings: idx,
+                  entries: extractResult.entries.map(e => ({
+                    namespace: e.namespace,
+                    key: e.key,
+                    original: e.value,
+                    translated: translations[`${e.namespace}::${e.key}`] || e.value,
+                  })),
+                };
+                const revisionJson = JSON.stringify(revisionData, null, 2);
+                const revisionPath = `${gamePath}/GameStringer/translation_session.json`;
+                await invoke('ensure_directory', { path: `${gamePath}/GameStringer` });
+                await invoke('write_text_file', { path: revisionPath, content: revisionJson });
+                console.log(`[Unreal] ✅ Revisione: salvata in ${revisionPath}`);
+              } catch (revErr) {
+                console.warn('[Unreal] Salvataggio revisione fallito:', revErr);
+              }
+
               updateProgress(100, `✅ ${pakResult.message}`);
-              toast.success(`Traduzione Unreal completata! ${idx} stringhe tradotte.`);
+              toast.success(`Traduzione Unreal completata! ${idx} stringhe tradotte. TM e glossario aggiornati.`);
             }
           } else {
             throw new Error('Nessun .locres trovato automaticamente');
