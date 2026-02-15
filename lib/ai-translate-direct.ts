@@ -655,10 +655,71 @@ async function translateWithHYMT(
   const results: string[] = new Array(opts.texts.length).fill('');
 
   // Prompt base per contesto videogioco
-  const systemPrompt = `You are a professional video game translator. Translate the source text from ${srcLang} to ${tgtLang}. This text is from a video game (menus, dialogues, items, UI). Output ONLY the translation, nothing else. Keep the same length and tone. Do not add punctuation that was not in the original. Do not add explanations.`;
+  const systemPrompt = `You are a professional video game translator. Translate the source text from ${srcLang} to ${tgtLang}.
+Rules:
+- This text is from a video game (menus, dialogues, items, UI).
+- Output ONLY the translation, nothing else.
+- Keep the same length, tone, and capitalization style.
+- Do NOT add punctuation that was not in the original.
+- Do NOT add explanations or notes.
+- PRESERVE ALL HTML/XML tags exactly as they appear: <b>, </>, <i>, </i>, <br>, etc. Copy them character-by-character.
+- PRESERVE placeholders like {0}, {name}, %s, %d, ID_INTERACT, ID_RUN, ID_CROUCH exactly as-is.
+- For game UI terms: "Resume" = resume/continue play (not CV), "Hold" = hold button, "Run" = run/sprint, "Select" = select/choose.`;
+
+  // Pre-processing: proteggi tag HTML/XML con placeholder prima di inviare al LLM
+  const TAG_REGEX = /<\/?[a-zA-Z][^>]*\/?>/g;  // Standard HTML tags
+  const UNREAL_CLOSE_REGEX = /<\/>/g;           // Unreal rich text close tag
+  const protectTags = (text: string): { cleaned: string; tags: Map<string, string> } => {
+    const tags = new Map<string, string>();
+    let counter = 0;
+    // Prima proteggi tag standard HTML/XML
+    let cleaned = text.replace(TAG_REGEX, (match) => {
+      const placeholder = `[[T${counter}]]`;
+      tags.set(placeholder, match);
+      counter++;
+      return placeholder;
+    });
+    // Poi proteggi </> di Unreal (non catturato dal regex standard)
+    cleaned = cleaned.replace(UNREAL_CLOSE_REGEX, () => {
+      const placeholder = `[[T${counter}]]`;
+      tags.set(placeholder, '</>');
+      counter++;
+      return placeholder;
+    });
+    return { cleaned, tags };
+  };
+  const restoreTags = (text: string, tags: Map<string, string>): string => {
+    let result = text;
+    for (const [placeholder, original] of tags) {
+      result = result.replace(placeholder, original);
+    }
+    return result;
+  };
+
+  // Post-processing: correggi typos comuni del LLM
+  const fixCommonTypos = (text: string): string => {
+    return text
+      .replace(/\bSOIO\b/g, 'SONO')
+      .replace(/\bsoio\b/g, 'sono')
+      .replace(/\bperchè\b/g, 'perché')
+      .replace(/\bPERCHÈ\b/g, 'PERCHÉ')
+      .replace(/\bpò\b/g, 'po\'')
+      .replace(/\bquà\b/g, 'qua')
+      .replace(/\bsù\b/g, 'su')
+      .replace(/\bfà\b/g, 'fa');
+  };
 
   const translateOne = async (text: string, index: number): Promise<void> => {
     try {
+      // Proteggi tag HTML prima dell'invio
+      TAG_REGEX.lastIndex = 0; // Reset regex state prima di test()
+      const hasTags = TAG_REGEX.test(text) || text.includes('</>');
+      TAG_REGEX.lastIndex = 0; // Reset dopo test() per protectTags
+      const { cleaned: inputText, tags } = hasTags ? protectTags(text) : { cleaned: text, tags: new Map<string, string>() };
+
+      // Scala num_predict in base alla lunghezza del testo
+      const numPredict = Math.max(500, Math.min(2000, text.length * 3));
+
       const res = await fetch(`${ollamaUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -666,12 +727,12 @@ async function translateWithHYMT(
           model: modelName,
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: text },
+            { role: 'user', content: inputText },
           ],
           stream: false,
-          options: { temperature: 0.1, num_predict: 500 },
+          options: { temperature: 0.1, num_predict: numPredict },
         }),
-        signal: AbortSignal.timeout(60000),
+        signal: AbortSignal.timeout(90000),
       });
       if (!res.ok) throw new Error(`HY-MT ${res.status}`);
       const data = await res.json();
@@ -683,6 +744,12 @@ async function translateWithHYMT(
       if (text.length < 30 && !text.endsWith('.') && translated.endsWith('.')) {
         translated = translated.slice(0, -1);
       }
+      // Ripristina tag HTML protetti
+      if (hasTags) {
+        translated = restoreTags(translated, tags);
+      }
+      // Correggi typos comuni
+      translated = fixCommonTypos(translated);
       results[index] = translated || text;
     } catch {
       results[index] = text; // Fallback: testo originale
