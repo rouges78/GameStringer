@@ -1336,6 +1336,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               <div className="w-px h-4 bg-border" />
               <SupportButton />
               <ProfileHeader />
+              <UpdateBell />
               <NotificationIndicator 
                 onClick={() => setNotificationCenterOpen(true)}
               />
