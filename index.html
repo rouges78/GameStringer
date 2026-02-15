@@ -69,10 +69,10 @@
     
     <!-- HERO -->
     <div class="hero">
-      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.3.0 — Danganronpa WAD Patcher, Export System & Dashboard Stats</span></span>
+      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> <span data-i18n="hero.badge">v1.4.0 — Tutorial Interattivo, Auto-Glossario AI, One-Click Unreal con TM & Revisione</span></span>
       <h1 data-i18n="hero.title">GameStringer</h1>
       <p class="hero-subtitle" data-i18n="hero.subtitle">Localizza videogiochi con l'AI. Open source. Gratuito.</p>
-      <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>10+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente. <strong>500 stringhe gratuite</strong>, poi donazione libera.</p>
+      <p class="hero-desc" data-i18n="hero.desc">Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente. <strong>Auto-glossario AI</strong>, Translation Memory persistente. <strong>500 stringhe gratuite</strong>, poi donazione libera.</p>
       
       <div class="hero-buttons">
         <a href="https://github.com/rouges78/GameStringer/releases/latest" target="_blank" rel="noopener" class="btn btn-primary btn-lg" data-i18n="hero.download">⬇️ Download Gratuito per Windows</a>
@@ -88,7 +88,7 @@
       
       <div class="stats">
         <div class="stat"><div class="stat-value">11+</div><div class="stat-label">Game Engine</div><div class="stat-detail">Unity, Unreal, Godot, RPG Maker, Danganronpa...</div></div>
-        <div class="stat"><div class="stat-value">20+</div><div class="stat-label">Provider AI</div><div class="stat-detail">10 gratuiti, 8 locali</div></div>
+        <div class="stat"><div class="stat-value">20+</div><div class="stat-label">Provider AI</div><div class="stat-detail">10 gratuiti, 8 locali, HY-MT ottimizzato</div></div>
         <div class="stat"><div class="stat-value">7</div><div class="stat-label">Store Integrati</div><div class="stat-detail">Steam, Epic, GOG, Origin...</div></div>
         <div class="stat"><div class="stat-value">∞</div><div class="stat-label">Games Traducibili</div><div class="stat-detail">Indie, retro, AAA</div></div>
       </div>
@@ -194,8 +194,14 @@
       <div class="card feature-card">
         <div class="icon-box" style="background: linear-gradient(135deg, #06b6d4, #14b8a6);">🪄</div>
         <h3 class="feature-title">One-Click Auto Patcher</h3>
-        <p class="feature-desc">Installa automaticamente BepInEx, XUnity.AutoTranslator per Unity, UnrealLocres per UE. Zero configurazione manuale.</p>
-        <div class="feature-tags"><span class="feature-tag">BepInEx auto</span><span class="feature-tag">XUnity setup</span><span class="feature-tag">UnrealLocres</span></div>
+        <p class="feature-desc">Un click: traduce, salva in TM, estrae glossario, crea file revisione e genera PAK/patch. Unity (BepInEx+XUnity), Unreal (IoStore/PAK), Godot, RPG Maker, Ren'Py.</p>
+        <div class="feature-tags"><span class="feature-tag">TM + Glossario auto</span><span class="feature-tag">File revisione JSON</span><span class="feature-tag">11 engine</span></div>
+      </div>
+      <div class="card feature-card">
+        <div class="icon-box" style="background: linear-gradient(135deg, #f59e0b, #f97316);">🎓</div>
+        <h3 class="feature-title">Tutorial Interattivo</h3>
+        <p class="feature-desc">Sistema tutorial guidato con overlay visivo, highlight degli elementi UI, navigazione step-by-step. Multilingua (IT/EN/ES/FR/DE).</p>
+        <div class="feature-tags"><span class="feature-tag">Step-by-step</span><span class="feature-tag">5 lingue</span><span class="feature-tag">Per-page guides</span></div>
       </div>
       <div class="card feature-card">
         <div class="icon-box" style="background: linear-gradient(135deg, #0ea5e9, #14b8a6);">👥</div>
@@ -205,9 +211,9 @@
       </div>
       <div class="card feature-card">
         <div class="icon-box" style="background: linear-gradient(135deg, #84cc16, #22c55e);">📖</div>
-        <h3 class="feature-title">Glossary & TM Manager</h3>
-        <p class="feature-desc">Gestisci terminologia specifica per ogni gioco. Import/export TMX standard, auto-learning da traduzioni approvate.</p>
-        <div class="feature-tags"><span class="feature-tag">TMX import/export</span><span class="feature-tag">Auto-learning</span><span class="feature-tag">Context hints</span></div>
+        <h3 class="feature-title">Auto-Glossario & TM</h3>
+        <p class="feature-desc">Glossario estratto automaticamente dall'AI durante la traduzione. Translation Memory persistente con salvataggio automatico post-traduzione.</p>
+        <div class="feature-tags"><span class="feature-tag">Auto-extract AI</span><span class="feature-tag">TM persistente</span><span class="feature-tag">TMX import/export</span></div>
       </div>
     </div>
   </div>
@@ -256,7 +262,7 @@
     
     <div class="grid grid-5">
       <div class="card ai-card recommended"><div class="ai-header"><span class="ai-name">⭐ TranslateGemma</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Google • Specializzato traduzione • 55 lingue</div><div class="ai-features"><span class="ai-feature">4B / 12B / 27B</span><span class="ai-feature">Multimodale</span><span class="ai-feature">Ollama</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span></div><div class="ai-cost">💚 Gratuito • 3.3GB (4B) • Consigliato!</div></div>
-      <div class="card ai-card"><div class="ai-header"><span class="ai-name">HY-MT1.5</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Tencent • Ultraleggero • 33 lingue</div><div class="ai-features"><span class="ai-feature">1.8B / 7B</span><span class="ai-feature">~1GB RAM</span><span class="ai-feature">Ollama</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Gratuito • PC con poca RAM</div></div>
+      <div class="card ai-card"><div class="ai-header"><span class="ai-name">HY-MT1.5</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Tencent • Ultraleggero • 33 lingue • Tag HTML protetti</div><div class="ai-features"><span class="ai-feature">1.8B / 7B</span><span class="ai-feature">~1GB RAM</span><span class="ai-feature">Gaming context</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span></div><div class="ai-cost">💚 Gratuito • PC con poca RAM • Ottimizzato v1.4</div></div>
       <div class="card ai-card recommended"><div class="ai-header"><span class="ai-name">Ollama</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Esegue sul tuo PC • Privacy 100%</div><div class="ai-features"><span class="ai-feature">Llama 3.2</span><span class="ai-feature">Mistral</span><span class="ai-feature">Qwen2.5</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Gratuito • 8GB+ RAM</div></div>
       <div class="card ai-card"><div class="ai-header"><span class="ai-name">LM Studio</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ GUI per modelli locali</div><div class="ai-features"><span class="ai-feature">GGUF models</span><span class="ai-feature">GUI friendly</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Gratuito • 8GB+ RAM</div></div>
       <div class="card ai-card recommended"><div class="ai-header"><span class="ai-name">Google Gemini</span><span class="ai-badge free">Free Tier</span></div><div class="ai-type">☁️ Cloud • 1M context window</div><div class="ai-features"><span class="ai-feature">Gemini 2.0</span><span class="ai-feature">Multimodal</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span></div><div class="ai-cost">💚 15 RPM free tier</div></div>

@@ -6,17 +6,17 @@ const siteTranslations = {
     description: 'GameStringer is the ultimate open source suite for AI-powered video game translation. Supports Unity, Unreal, Godot, RPG Maker and 10+ engines. 15+ AI providers including free Ollama, GPT-4, Claude, Gemini.',
     nav: { features: 'Features', engines: 'Engines', ai: 'AI Providers', usecases: 'Use Cases', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — Danganronpa Auto-Translator, E2E Tests & 9 Languages',
+      badge: 'v1.4.0 — Interactive Tutorial, AI Auto-Glossary, One-Click Unreal with TM & Revision',
       title: 'GameStringer',
       subtitle: 'Localize video games with AI. Open source. Free.',
-      desc: 'Supports <strong>10+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py...) and <strong>15+ AI providers</strong> (free Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extract, translate and inject text automatically.',
+      desc: 'Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) and <strong>20+ AI providers</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extract, translate and inject text automatically. <strong>AI Auto-glossary</strong>, persistent Translation Memory.',
       download: '⬇️ Free Download for Windows',
       source: '📂 View Source Code',
       meta: ['100% Free & Open Source', 'No account required', 'Local AI with Ollama', 'Windows 10/11 64-bit']
     },
     stats: {
-      engines: { value: '10+', label: 'Game Engines', detail: 'Unity, Unreal, Godot, RPG Maker...' },
-      ai: { value: '15+', label: 'AI Providers', detail: '6 free, 5 local' },
+      engines: { value: '11+', label: 'Game Engines', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
+      ai: { value: '20+', label: 'AI Providers', detail: '10 free, 8 local, HY-MT optimized' },
       stores: { value: '7', label: 'Integrated Stores', detail: 'Steam, Epic, GOG, Origin...' },
       games: { value: '∞', label: 'Translatable Games', detail: 'Indie, retro, AAA' }
     },
@@ -27,12 +27,12 @@ const siteTranslations = {
     },
     engines_section: {
       badge: '🎮 Compatibility',
-      title: '10+ Supported Game Engines',
+      title: '11+ Supported Game Engines',
       desc: 'Native support for major engines. GameStringer automatically detects the engine and configures the optimal method.'
     },
     ai_section: {
       badge: '🤖 AI Providers',
-      title: '15+ AI Providers for Every Need',
+      title: '20+ AI Providers for Every Need',
       desc: 'Free options, local for total privacy, or cloud for maximum quality. Each provider is optimized for gaming translations.'
     },
     tools_section: {
@@ -94,17 +94,17 @@ const siteTranslations = {
     description: 'GameStringer è la suite open source definitiva per tradurre videogiochi con AI. Supporta Unity, Unreal, Godot, RPG Maker e 10+ engine. 15+ provider AI inclusi Ollama gratuito, GPT-4, Claude, Gemini.',
     nav: { features: 'Features', engines: 'Engines', ai: 'AI Providers', usecases: 'Use Cases', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — Danganronpa Auto-Translator, Test E2E & 9 Lingue',
+      badge: 'v1.4.0 — Tutorial Interattivo, Auto-Glossario AI, One-Click Unreal con TM & Revisione',
       title: 'GameStringer',
       subtitle: 'Localizza videogiochi con l\'AI. Open source. Gratuito.',
-      desc: 'Supporta <strong>10+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py...) e <strong>15+ provider AI</strong> (Ollama gratuito, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente.',
+      desc: 'Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) e <strong>20+ provider AI</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente. <strong>Auto-glossario AI</strong>, Translation Memory persistente.',
       download: '⬇️ Download Gratuito per Windows',
       source: '📂 Vedi Codice Sorgente',
       meta: ['100% Gratuito & Open Source', 'Nessun account richiesto', 'AI locale con Ollama', 'Windows 10/11 64-bit']
     },
     stats: {
-      engines: { value: '10+', label: 'Game Engine', detail: 'Unity, Unreal, Godot, RPG Maker...' },
-      ai: { value: '15+', label: 'Provider AI', detail: '6 gratuiti, 5 locali' },
+      engines: { value: '11+', label: 'Game Engine', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
+      ai: { value: '20+', label: 'Provider AI', detail: '10 gratuiti, 8 locali, HY-MT ottimizzato' },
       stores: { value: '7', label: 'Store Integrati', detail: 'Steam, Epic, GOG, Origin...' },
       games: { value: '∞', label: 'Games Traducibili', detail: 'Indie, retro, AAA' }
     },
@@ -115,12 +115,12 @@ const siteTranslations = {
     },
     engines_section: {
       badge: '🎮 Compatibilità',
-      title: '10+ Engine di Gioco Supportati',
+      title: '11+ Engine di Gioco Supportati',
       desc: 'Supporto nativo per i principali engine. GameStringer rileva automaticamente l\'engine e configura il metodo ottimale.'
     },
     ai_section: {
       badge: '🤖 AI Providers',
-      title: '15+ Provider AI per Ogni Esigenza',
+      title: '20+ Provider AI per Ogni Esigenza',
       desc: 'Opzioni gratuite, locali per privacy totale, o cloud per massima qualità. Ogni provider è ottimizzato per traduzioni gaming.'
     },
     tools_section: {
@@ -182,17 +182,17 @@ const siteTranslations = {
     description: 'GameStringer es la suite open source definitiva para traducir videojuegos con IA. Soporta Unity, Unreal, Godot, RPG Maker y 10+ motores. 15+ proveedores de IA incluido Ollama gratuito, GPT-4, Claude, Gemini.',
     nav: { features: 'Características', engines: 'Motores', ai: 'Proveedores IA', usecases: 'Casos de Uso', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — Danganronpa Auto-Translator, Tests E2E & 9 Idiomas',
+      badge: 'v1.4.0 — Tutorial Interactivo, Auto-Glosario IA, One-Click Unreal con TM & Revisión',
       title: 'GameStringer',
       subtitle: 'Localiza videojuegos con IA. Open source. Gratis.',
-      desc: 'Soporta <strong>10+ motores</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py...) y <strong>15+ proveedores IA</strong> (Ollama gratis, GPT-4, Claude, Gemini, DeepSeek...). Extrae, traduce e inyecta textos automáticamente.',
+      desc: 'Soporta <strong>11+ motores</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) y <strong>20+ proveedores IA</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extrae, traduce e inyecta textos automáticamente. <strong>Auto-glosario IA</strong>, Translation Memory persistente.',
       download: '⬇️ Descarga Gratuita para Windows',
       source: '📂 Ver Código Fuente',
       meta: ['100% Gratis & Open Source', 'Sin cuenta requerida', 'IA local con Ollama', 'Windows 10/11 64-bit']
     },
     stats: {
-      engines: { value: '10+', label: 'Motores de Juego', detail: 'Unity, Unreal, Godot, RPG Maker...' },
-      ai: { value: '15+', label: 'Proveedores IA', detail: '6 gratis, 5 locales' },
+      engines: { value: '11+', label: 'Motores de Juego', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
+      ai: { value: '20+', label: 'Proveedores IA', detail: '10 gratis, 8 locales, HY-MT optimizado' },
       stores: { value: '7', label: 'Tiendas Integradas', detail: 'Steam, Epic, GOG, Origin...' },
       games: { value: '∞', label: 'Juegos Traducibles', detail: 'Indie, retro, AAA' }
     },
@@ -230,17 +230,17 @@ const siteTranslations = {
     description: 'GameStringer ist die ultimative Open-Source-Suite für KI-gestützte Videospielübersetzung. Unterstützt Unity, Unreal, Godot, RPG Maker und 10+ Engines. 15+ KI-Anbieter inklusive kostenlosem Ollama, GPT-4, Claude, Gemini.',
     nav: { features: 'Funktionen', engines: 'Engines', ai: 'KI-Anbieter', usecases: 'Anwendungsfälle', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — Danganronpa Auto-Translator, E2E-Tests & 9 Sprachen',
+      badge: 'v1.4.0 — Interaktives Tutorial, KI Auto-Glossar, One-Click Unreal mit TM & Revision',
       title: 'GameStringer',
       subtitle: 'Lokalisiere Videospiele mit KI. Open Source. Kostenlos.',
-      desc: 'Unterstützt <strong>10+ Engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py...) und <strong>15+ KI-Anbieter</strong> (kostenloses Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extrahiere, übersetze und injiziere Texte automatisch.',
+      desc: 'Unterstützt <strong>11+ Engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) und <strong>20+ KI-Anbieter</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extrahiere, übersetze und injiziere Texte automatisch. <strong>KI Auto-Glossar</strong>, persistenter Translation Memory.',
       download: '⬇️ Kostenloser Download für Windows',
       source: '📂 Quellcode Ansehen',
       meta: ['100% Kostenlos & Open Source', 'Kein Konto erforderlich', 'Lokale KI mit Ollama', 'Windows 10/11 64-bit']
     },
     stats: {
-      engines: { value: '10+', label: 'Spiel-Engines', detail: 'Unity, Unreal, Godot, RPG Maker...' },
-      ai: { value: '15+', label: 'KI-Anbieter', detail: '6 kostenlos, 5 lokal' },
+      engines: { value: '11+', label: 'Spiel-Engines', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
+      ai: { value: '20+', label: 'KI-Anbieter', detail: '10 kostenlos, 8 lokal, HY-MT optimiert' },
       stores: { value: '7', label: 'Integrierte Stores', detail: 'Steam, Epic, GOG, Origin...' },
       games: { value: '∞', label: 'Übersetzbare Spiele', detail: 'Indie, Retro, AAA' }
     },
@@ -273,17 +273,17 @@ const siteTranslations = {
     description: 'GameStringer est la suite open source ultime pour traduire des jeux vidéo avec l\'IA. Supporte Unity, Unreal, Godot, RPG Maker et 10+ moteurs. 15+ fournisseurs IA incluant Ollama gratuit, GPT-4, Claude, Gemini.',
     nav: { features: 'Fonctionnalités', engines: 'Moteurs', ai: 'Fournisseurs IA', usecases: 'Cas d\'Usage', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — Danganronpa Auto-Translator, Tests E2E & 9 Langues',
+      badge: 'v1.4.0 — Tutoriel Interactif, Auto-Glossaire IA, One-Click Unreal avec TM & Révision',
       title: 'GameStringer',
       subtitle: 'Localisez des jeux vidéo avec l\'IA. Open source. Gratuit.',
-      desc: 'Supporte <strong>10+ moteurs</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py...) et <strong>15+ fournisseurs IA</strong> (Ollama gratuit, GPT-4, Claude, Gemini, DeepSeek...). Extrayez, traduisez et injectez des textes automatiquement.',
+      desc: 'Supporte <strong>11+ moteurs</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) et <strong>20+ fournisseurs IA</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extrayez, traduisez et injectez des textes automatiquement. <strong>Auto-glossaire IA</strong>, Translation Memory persistante.',
       download: '⬇️ Téléchargement Gratuit pour Windows',
       source: '📂 Voir le Code Source',
       meta: ['100% Gratuit & Open Source', 'Aucun compte requis', 'IA locale avec Ollama', 'Windows 10/11 64-bit']
     },
     stats: {
-      engines: { value: '10+', label: 'Moteurs de Jeu', detail: 'Unity, Unreal, Godot, RPG Maker...' },
-      ai: { value: '15+', label: 'Fournisseurs IA', detail: '6 gratuits, 5 locaux' },
+      engines: { value: '11+', label: 'Moteurs de Jeu', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
+      ai: { value: '20+', label: 'Fournisseurs IA', detail: '10 gratuits, 8 locaux, HY-MT optimisé' },
       stores: { value: '7', label: 'Boutiques Intégrées', detail: 'Steam, Epic, GOG, Origin...' },
       games: { value: '∞', label: 'Jeux Traduisibles', detail: 'Indie, rétro, AAA' }
     },
@@ -316,17 +316,17 @@ const siteTranslations = {
     description: 'GameStringerはAIによるビデオゲーム翻訳のための究極のオープンソーススイートです。Unity、Unreal、Godot、RPG Makerなど10以上のエンジンをサポート。無料のOllama、GPT-4、Claude、Geminiなど15以上のAIプロバイダー。',
     nav: { features: '機能', engines: 'エンジン', ai: 'AIプロバイダー', usecases: '使用例', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — ダンガンロンパ自動翻訳、E2Eテスト＆9言語',
+      badge: 'v1.4.0 — インタラクティブチュートリアル、AI自動用語集、ワンクリックUnreal TM&リビジョン',
       title: 'GameStringer',
       subtitle: 'AIでゲームをローカライズ。オープンソース。無料。',
-      desc: '<strong>10以上のエンジン</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py...）と<strong>15以上のAIプロバイダー</strong>（無料Ollama、GPT-4、Claude、Gemini、DeepSeek...）をサポート。テキストの抽出、翻訳、注入を自動で。',
+      desc: '<strong>11以上のエンジン</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、ダンガンロンパ...）と<strong>20以上のAIプロバイダー</strong>（TranslateGemma、Ollama、GPT-4、Claude、Gemini、DeepSeek...）をサポート。テキストの抽出、翻訳、注入を自動で。<strong>AI自動用語集</strong>、永続Translation Memory。',
       download: '⬇️ Windows版無料ダウンロード',
       source: '📂 ソースコードを見る',
       meta: ['100%無料＆オープンソース', 'アカウント不要', 'Ollamaでローカルで', 'Windows 10/11 64-bit']
     },
     stats: {
-      engines: { value: '10+', label: 'ゲームエンジン', detail: 'Unity、Unreal、Godot、RPG Maker...' },
-      ai: { value: '15+', label: 'AIプロバイダー', detail: '6無料、5ローカル' },
+      engines: { value: '11+', label: 'ゲームエンジン', detail: 'Unity、Unreal、Godot、RPG Maker、ダンガンロンパ...' },
+      ai: { value: '20+', label: 'AIプロバイダー', detail: '10無料、8ローカル、HY-MT最適化' },
       stores: { value: '7', label: '統合ストア', detail: 'Steam、Epic、GOG、Origin...' },
       games: { value: '∞', label: '翻訳可能なゲーム', detail: 'インディー、レトロ、AAA' }
     },
@@ -359,17 +359,17 @@ const siteTranslations = {
     description: 'GameStringer是用于AI驱动视频游戏翻译的终极开源套件。支持Unity、Unreal、Godot、RPG Maker等10多种引擎。15多种AI提供商，包括免费的Ollama、GPT-4、Claude、Gemini。',
     nav: { features: '功能', engines: '引擎', ai: 'AI提供商', usecases: '使用场景', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — 弹丸论破自动翻译、E2E测试和9种语言',
+      badge: 'v1.4.0 — 交互式教程、AI自动术语表、一键点击Unreal TM&修订',
       title: 'GameStringer',
       subtitle: '用AI本地化游戏。开源。免费。',
-      desc: '支持<strong>10多种引擎</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py...）和<strong>15多种AI提供商</strong>（免费Ollama、GPT-4、Claude、Gemini、DeepSeek...）。自动提取、翻译和注入文本。',
+      desc: '支持<strong>11多种引擎</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、弹丸论破...）和<strong>20多种AI提供商</strong>（TranslateGemma、Ollama、GPT-4、Claude、Gemini、DeepSeek...）。自动提取、翻译和注入文本。<strong>AI自动术语表</strong>，持久Translation Memory。',
       download: '⬇️ Windows免费下载',
       source: '📂 查看源代码',
       meta: ['100%免费且开源', '无需账户', '使用Ollama本地AI', 'Windows 10/11 64位']
     },
     stats: {
-      engines: { value: '10+', label: '游戏引擎', detail: 'Unity、Unreal、Godot、RPG Maker...' },
-      ai: { value: '15+', label: 'AI提供商', detail: '6个免费，5个本地' },
+      engines: { value: '11+', label: '游戏引擎', detail: 'Unity、Unreal、Godot、RPG Maker、弹丸论破...' },
+      ai: { value: '20+', label: 'AI提供商', detail: '10个免费，8个本地，HY-MT优化' },
       stores: { value: '7', label: '集成商店', detail: 'Steam、Epic、GOG、Origin...' },
       games: { value: '∞', label: '可翻译游戏', detail: '独立、复古、AAA' }
     },
@@ -402,17 +402,17 @@ const siteTranslations = {
     description: 'GameStringer는 AI 기반 비디오 게임 번역을 위한 최고의 오픈 소스 제품군입니다. Unity, Unreal, Godot, RPG Maker 등 10개 이상의 엔진을 지원합니다. 무료 Ollama, GPT-4, Claude, Gemini를 포함한 15개 이상의 AI 제공자.',
     nav: { features: '기능', engines: '엔진', ai: 'AI 제공자', usecases: '사용 사례', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — 단간론파 자동 번역기, E2E 테스트 & 9개 언어',
+      badge: 'v1.4.0 — 인터랙티브 튜토리얼, AI 자동 용어집, 원클릭 Unreal TM&리비전',
       title: 'GameStringer',
       subtitle: 'AI로 게임 현지화. 오픈 소스. 무료.',
-      desc: '<strong>10개 이상의 엔진</strong>(Unity, Unreal, Godot, RPG Maker, Ren\'Py...)과 <strong>15개 이상의 AI 제공자</strong>(무료 Ollama, GPT-4, Claude, Gemini, DeepSeek...)를 지원합니다. 텍스트를 자동으로 추출, 번역 및 주입합니다.',
+      desc: '<strong>11개 이상의 엔진</strong>(Unity, Unreal, Godot, RPG Maker, Ren\'Py, 단간론파...)과 <strong>20개 이상의 AI 제공자</strong>(TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...)를 지원합니다. 텍스트를 자동으로 추출, 번역 및 주입합니다. <strong>AI 자동 용어집</strong>, 영구 Translation Memory.',
       download: '⬇️ Windows용 무료 다운로드',
       source: '📂 소스 코드 보기',
       meta: ['100% 무료 & 오픈 소스', '계정 필요 없음', 'Ollama로 로컬 AI', 'Windows 10/11 64비트']
     },
     stats: {
-      engines: { value: '10+', label: '게임 엔진', detail: 'Unity, Unreal, Godot, RPG Maker...' },
-      ai: { value: '15+', label: 'AI 제공자', detail: '6개 무료, 5개 로컬' },
+      engines: { value: '11+', label: '게임 엔진', detail: 'Unity, Unreal, Godot, RPG Maker, 단간론파...' },
+      ai: { value: '20+', label: 'AI 제공자', detail: '10개 무료, 8개 로컬, HY-MT 최적화' },
       stores: { value: '7', label: '통합 스토어', detail: 'Steam, Epic, GOG, Origin...' },
       games: { value: '∞', label: '번역 가능한 게임', detail: '인디, 레트로, AAA' }
     },
@@ -445,17 +445,17 @@ const siteTranslations = {
     description: 'GameStringer é a suite open source definitiva para tradução de videogames com IA. Suporta Unity, Unreal, Godot, RPG Maker e 10+ engines. 15+ provedores de IA incluindo Ollama gratuito, GPT-4, Claude, Gemini.',
     nav: { features: 'Recursos', engines: 'Engines', ai: 'Provedores IA', usecases: 'Casos de Uso', faq: 'FAQ' },
     hero: {
-      badge: 'v1.1.0 — Danganronpa Auto-Translator, Testes E2E & 9 Idiomas',
+      badge: 'v1.4.0 — Tutorial Interativo, Auto-Glossário IA, One-Click Unreal com TM & Revisão',
       title: 'GameStringer',
       subtitle: 'Localize jogos com IA. Open source. Grátis.',
-      desc: 'Suporta <strong>10+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py...) e <strong>15+ provedores IA</strong> (Ollama gratuito, GPT-4, Claude, Gemini, DeepSeek...). Extraia, traduza e injete textos automaticamente.',
+      desc: 'Suporta <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) e <strong>20+ provedores IA</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extraia, traduza e injete textos automaticamente. <strong>Auto-glossário IA</strong>, Translation Memory persistente.',
       download: '⬇️ Download Gratuito para Windows',
       source: '📂 Ver Código Fonte',
       meta: ['100% Gratuito & Open Source', 'Sem conta necessária', 'IA local com Ollama', 'Windows 10/11 64-bit']
     },
     stats: {
-      engines: { value: '10+', label: 'Game Engines', detail: 'Unity, Unreal, Godot, RPG Maker...' },
-      ai: { value: '15+', label: 'Provedores IA', detail: '6 gratuitos, 5 locais' },
+      engines: { value: '11+', label: 'Game Engines', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
+      ai: { value: '20+', label: 'Provedores IA', detail: '10 gratuitos, 8 locais, HY-MT otimizado' },
       stores: { value: '7', label: 'Lojas Integradas', detail: 'Steam, Epic, GOG, Origin...' },
       games: { value: '∞', label: 'Jogos Traduzíveis', detail: 'Indie, retro, AAA' }
     },
