@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "powershell -ExecutionPolicy Bypass -File scripts/build-tauri.ps1",
-    "devUrl": "http://127.0.0.1:3198",
+    "devUrl": "http://127.0.0.1:3199",
     "frontendDist": "../out"
   },
   "app": {
