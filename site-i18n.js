@@ -1,596 +1,612 @@
-// GameStringer Website Internationalization
-const siteTranslations = {
-  en: {
-    lang: 'en',
-    title: 'GameStringer - Translate Any Video Game with AI | Complete Localization Suite',
-    description: 'GameStringer is the ultimate open source suite for AI-powered video game translation. Supports Unity, Unreal, Godot, RPG Maker and 10+ engines. 15+ AI providers including free Ollama, GPT-4, Claude, Gemini.',
-    nav: { features: 'Features', engines: 'Engines', ai: 'AI Providers', usecases: 'Use Cases', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — Interactive Tutorial, AI Auto-Glossary, One-Click Unreal with TM & Revision',
-      title: 'GameStringer',
-      subtitle: 'Localize video games with AI. Open source. Free.',
-      desc: 'Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) and <strong>20+ AI providers</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extract, translate and inject text automatically. <strong>AI Auto-glossary</strong>, persistent Translation Memory.',
-      download: '⬇️ Free Download for Windows',
-      source: '📂 View Source Code',
-      meta: ['100% Free & Open Source', 'No account required', 'Local AI with Ollama', 'Windows 10/11 64-bit']
-    },
-    stats: {
-      engines: { value: '11+', label: 'Game Engines', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
-      ai: { value: '20+', label: 'AI Providers', detail: '10 free, 8 local, HY-MT optimized' },
-      stores: { value: '7', label: 'Integrated Stores', detail: 'Steam, Epic, GOG, Origin...' },
-      games: { value: '∞', label: 'Translatable Games', detail: 'Indie, retro, AAA' }
-    },
-    features: {
-      badge: '✨ Complete Features',
-      title: 'Everything You Need to Translate Video Games',
-      desc: 'A complete ecosystem of AI tools designed specifically for video game localization.'
-    },
-    engines_section: {
-      badge: '🎮 Compatibility',
-      title: '11+ Supported Game Engines',
-      desc: 'Native support for major engines. GameStringer automatically detects the engine and configures the optimal method.'
-    },
-    ai_section: {
-      badge: '🤖 AI Providers',
-      title: '20+ AI Providers for Every Need',
-      desc: 'Free options, local for total privacy, or cloud for maximum quality. Each provider is optimized for gaming translations.'
-    },
-    tools_section: {
-      badge: '🛠️ Professional Tools',
-      title: '10+ Professional Tools Included',
-      desc: 'Every tool needed to translate any type of game, from visual novel to AAA.'
-    },
-    usecases_section: {
-      badge: '🎯 Use Cases',
-      title: 'Who Uses GameStringer?',
-      desc: 'GameStringer is designed for different types of users with specific needs.'
-    },
-    howto: {
-      badge: '⚡ How It Works',
-      title: '3 Simple Steps',
-      steps: [
-        { title: 'Select the Game', desc: 'Choose from Steam, Epic, GOG library or add manually. GameStringer automatically detects engine and translatable files.', detail: 'Auto-detect: Unity, Unreal, Godot, RPG Maker...' },
-        { title: 'Configure Translation', desc: 'Choose AI provider, target language, glossary and context. The AI automatically adapts tone to the game genre.', detail: 'Context-aware: JRPG, Horror, Visual Novel...' },
-        { title: 'Translate and Play', desc: 'Press a button and translations are automatically injected. Backup included, one-click restore.', detail: 'Auto-patch: BepInEx, XUnity, UnrealLocres...' }
-      ]
-    },
-    faq_section: {
-      badge: '❓ FAQ',
-      title: 'Frequently Asked Questions'
-    },
-    cta: {
-      title: 'Ready to Translate?',
-      desc: 'Download GameStringer for free and start playing your favorite games in your language. No account, no subscription, no limits.',
-      download: '⬇️ Download for Windows (Free)',
-      star: '⭐ Star on GitHub',
-      features: ['100% Free Forever', 'Open Source', 'No Account', 'Local AI Available', 'Free Updates']
-    },
-    support: {
-      title: '❤️ Support the Project',
-      desc: 'GameStringer is developed in free time. Your support helps keep the project active and add new features!',
-      kofi: '☕ Buy me a Coffee on Ko-fi',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: 'The ultimate open source suite for translating video games with artificial intelligence. Supports any engine, any AI, any language.',
-      resources: 'Resources',
-      community: 'Community',
-      support: 'Support',
-      download: 'Download',
-      docs: 'Documentation',
-      guide: 'Complete Guide',
-      changelog: 'Changelog',
-      discussions: 'Discussions',
-      bugs: 'Bug Report',
-      contribute: 'Contribute',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Made with',
-      inCountry: 'in Italy 🇮🇹'
-    }
-  },
+// GameStringer Website i18n — 9 languages
+// v1.4.0 — Quality Badges, RTL, Radix UI, Ollama Generico
+
+const translations = {
   it: {
-    lang: 'it',
-    title: 'GameStringer - Traduci Qualsiasi Videogioco con l\'AI | Suite Completa di Localizzazione',
-    description: 'GameStringer è la suite open source definitiva per tradurre videogiochi con AI. Supporta Unity, Unreal, Godot, RPG Maker e 10+ engine. 15+ provider AI inclusi Ollama gratuito, GPT-4, Claude, Gemini.',
-    nav: { features: 'Features', engines: 'Engines', ai: 'AI Providers', usecases: 'Use Cases', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — Tutorial Interattivo, Auto-Glossario AI, One-Click Unreal con TM & Revisione',
-      title: 'GameStringer',
-      subtitle: 'Localizza videogiochi con l\'AI. Open source. Gratuito.',
-      desc: 'Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) e <strong>20+ provider AI</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Estrai, traduci e inietta testi automaticamente. <strong>Auto-glossario AI</strong>, Translation Memory persistente.',
-      download: '⬇️ Download Gratuito per Windows',
-      source: '📂 Vedi Codice Sorgente',
-      meta: ['100% Gratuito & Open Source', 'Nessun account richiesto', 'AI locale con Ollama', 'Windows 10/11 64-bit']
-    },
-    stats: {
-      engines: { value: '11+', label: 'Game Engine', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
-      ai: { value: '20+', label: 'Provider AI', detail: '10 gratuiti, 8 locali, HY-MT ottimizzato' },
-      stores: { value: '7', label: 'Store Integrati', detail: 'Steam, Epic, GOG, Origin...' },
-      games: { value: '∞', label: 'Games Traducibili', detail: 'Indie, retro, AAA' }
-    },
-    features: {
-      badge: '✨ Features Complete',
-      title: 'Tutto il Necessario per Tradurre Videogiochi',
-      desc: 'Un ecosistema completo di strumenti AI progettati specificamente per la localizzazione di videogiochi.'
-    },
-    engines_section: {
-      badge: '🎮 Compatibilità',
-      title: '11+ Engine di Gioco Supportati',
-      desc: 'Supporto nativo per i principali engine. GameStringer rileva automaticamente l\'engine e configura il metodo ottimale.'
-    },
-    ai_section: {
-      badge: '🤖 AI Providers',
-      title: '20+ Provider AI per Ogni Esigenza',
-      desc: 'Opzioni gratuite, locali per privacy totale, o cloud per massima qualità. Ogni provider è ottimizzato per traduzioni gaming.'
-    },
-    tools_section: {
-      badge: '🛠️ Professional Tools',
-      title: '10+ Strumenti Professionali Inclusi',
-      desc: 'Ogni strumento necessario per tradurre qualsiasi tipo di gioco, dalla visual novel al AAA.'
-    },
-    usecases_section: {
-      badge: '🎯 Use Cases',
-      title: 'Chi Usa GameStringer?',
-      desc: 'GameStringer è progettato per diversi tipi di utenti con esigenze specifiche.'
-    },
-    howto: {
-      badge: '⚡ Come Funziona',
-      title: '3 Semplici Passi',
-      steps: [
-        { title: 'Seleziona il Game', desc: 'Scegli dalla libreria Steam, Epic, GOG o aggiungi manualmente. GameStringer rileva automaticamente engine e file traducibili.', detail: 'Auto-detect: Unity, Unreal, Godot, RPG Maker...' },
-        { title: 'Configura la Traduzione', desc: 'Scegli provider AI, lingua target, glossario e contesto. L\'AI adatta automaticamente il tono al genere del gioco.', detail: 'Context-aware: JRPG, Horror, Visual Novel...' },
-        { title: 'Traduci e Gioca', desc: 'Premi un bottone e le traduzioni vengono iniettate automaticamente. Backup incluso, ripristino con un click.', detail: 'Auto-patch: BepInEx, XUnity, UnrealLocres...' }
-      ]
-    },
-    faq_section: {
-      badge: '❓ FAQ',
-      title: 'Domande Frequenti'
-    },
-    cta: {
-      title: 'Pronto a Tradurre?',
-      desc: 'Scarica GameStringer gratuitamente e inizia a giocare i tuoi giochi preferiti nella tua lingua. Nessun account, nessun abbonamento, nessun limite.',
-      download: '⬇️ Download per Windows (Gratuito)',
-      star: '⭐ Star su GitHub',
-      features: ['100% Gratuito Forever', 'Open Source', 'Nessun Account', 'AI Locale Disponibile', 'Aggiornamenti Gratuiti']
-    },
-    support: {
-      title: '❤️ Supporta il Progetto',
-      desc: 'GameStringer è sviluppato nel tempo libero. Il tuo supporto aiuta a mantenere il progetto attivo e ad aggiungere nuove features!',
-      kofi: '☕ Offrimi un Caffè su Ko-fi',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: 'La suite open source definitiva per tradurre videogiochi con intelligenza artificiale. Supporta qualsiasi engine, qualsiasi AI, qualsiasi lingua.',
-      resources: 'Risorse',
-      community: 'Community',
-      support: 'Supporta',
-      download: 'Download',
-      docs: 'Documentazione',
-      guide: 'Guida Completa',
-      changelog: 'Changelog',
-      discussions: 'Discussions',
-      bugs: 'Bug Report',
-      contribute: 'Contribuisci',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Made with',
-      inCountry: 'in Italy 🇮🇹'
-    }
+    'hero.badge': 'v1.4.0 — Quality Badges, RTL Support, Radix UI Unificato, Ollama Generico',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'Localizza videogiochi con l\'AI. Open source. Gratuito.',
+    'hero.desc': 'Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi donazione libera.',
+    'hero.download': '⬇️ Download Gratuito per Windows',
+    'hero.source': '📂 Vedi Codice Sorgente',
+    'stats.engines': 'Game Engine',
+    'stats.ai': 'Provider AI',
+    'stats.stores': 'Store Integrati',
+    'stats.games': 'Games Traducibili',
+    'features.title': 'Tutto il Necessario per Tradurre Videogiochi',
+    'features.desc': 'Un ecosistema completo di strumenti AI progettati specificamente per la localizzazione di videogiochi.',
+    'engines.title': '11+ Engine di Gioco Supportati',
+    'engines.desc': 'Supporto nativo per i principali engine. GameStringer rileva automaticamente l\'engine e configura il metodo ottimale.',
+    'engines.stores': '📚 Store & Library Integrati',
+    'ai.title': '20+ Provider AI per Ogni Esigenza',
+    'ai.desc': 'Opzioni gratuite, locali per privacy totale, o cloud per massima qualità. Ogni provider è ottimizzato per traduzioni gaming.',
+    'tools.title': '10+ Strumenti Professionali Inclusi',
+    'tools.desc': 'Ogni strumento necessario per tradurre qualsiasi tipo di gioco, dalla visual novel al AAA.',
+    'usecases.title': 'Chi Usa GameStringer?',
+    'usecases.desc': 'Progettato per diversi tipi di utenti con esigenze specifiche.',
+    'usecases.gamer.title': 'Gamer & Appassionati',
+    'usecases.gamer.desc': 'Vuoi giocare quel gioco giapponese mai tradotto? GameStringer crea traduzioni fan di qualità professionale.',
+    'usecases.fantl.title': 'Fan Translator & Community',
+    'usecases.fantl.desc': 'Fai parte di un gruppo di traduzione? GameStringer accelera il lavoro con Translation Memory condivisa e glossari.',
+    'usecases.indie.title': 'Indie Dev & Studi',
+    'usecases.indie.desc': 'Budget limitato? Traduci il tuo gioco in 20+ lingue senza assumere traduttori professionisti.',
+    'howitworks.title': '3 Semplici Passi',
+    'howitworks.step1.title': 'Seleziona il Game',
+    'howitworks.step1.desc': 'Scegli dalla libreria Steam, Epic, GOG o aggiungi manualmente. Auto-detect engine e file traducibili.',
+    'howitworks.step2.title': 'Configura la Traduzione',
+    'howitworks.step2.desc': 'Scegli provider AI, lingua target, glossario e contesto. L\'AI adatta il tono al genere del gioco.',
+    'howitworks.step3.title': 'Traduci e Gioca',
+    'howitworks.step3.desc': 'Premi un bottone: traduzioni iniettate automaticamente. Quality Badge per ogni riga. Backup incluso.',
+    'pricing.title': '500 Stringhe Gratuite, Poi Donazione Libera',
+    'pricing.desc': 'Modello basato sulla fiducia: traduci gratis fino a 500 stringhe, poi donazione di qualsiasi importo per sbloccare traduzioni illimitate.',
+    'pricing.free.title': 'Gratis per Sempre',
+    'pricing.free.desc': 'Le prime <strong>500 stringhe</strong> sono completamente gratuite. Nessun account, nessuna carta, nessun limite di tempo.',
+    'pricing.donation.title': 'Donazione Libera',
+    'pricing.donation.desc': 'Dopo 500 stringhe, <strong>anche solo 1€</strong> sblocca traduzioni illimitate per sempre. Honor system basato sulla fiducia.',
+    'pricing.unlimited.title': 'Illimitato per Sempre',
+    'pricing.unlimited.desc': 'Una volta sbloccato, traduci <strong>quante stringhe vuoi</strong>. Nessun abbonamento, nessun rinnovo, nessun trucco.',
+    'faq.title': 'Domande Frequenti',
+    'faq.q1': 'GameStringer è davvero gratuito?',
+    'faq.q2': 'Quali AI posso usare senza pagare?',
+    'faq.q3': 'Posso essere bannato per traduzioni fan?',
+    'faq.q4': 'Come funziona con giochi Unity?',
+    'faq.q5': 'Quanto tempo ci vuole?',
+    'faq.q6': 'La qualità è paragonabile a traduzioni pro?',
+    'faq.q7': 'Supporta giochi retro/DOS?',
+    'faq.q8': 'Posso contribuire al progetto?',
+    'cta.title': 'Pronto a Tradurre?',
+    'cta.desc': 'Scarica GameStringer gratuitamente e inizia a giocare nella tua lingua. Nessun account, nessun abbonamento.',
+    'cta.download': '⬇️ Download per Windows',
+    'support.title': '❤️ Supporta il Progetto',
+    'support.desc': 'GameStringer è sviluppato nel tempo libero. Il tuo supporto aiuta a mantenere il progetto attivo!',
+    'footer.resources': 'Risorse',
+    'footer.community': 'Community',
+    'footer.support': 'Supporta',
   },
+
+  en: {
+    'hero.badge': 'v1.4.0 — Quality Badges, RTL Support, Unified Radix UI, Generic Ollama',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'Localize video games with AI. Open source. Free.',
+    'hero.desc': 'Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) and <strong>20+ AI providers</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-line (0-100), AI Auto-glossary, persistent Translation Memory, Interactive Tutorial. <strong>500 free strings</strong>, then pay-what-you-want.',
+    'hero.download': '⬇️ Free Download for Windows',
+    'hero.source': '📂 View Source Code',
+    'stats.engines': 'Game Engines',
+    'stats.ai': 'AI Providers',
+    'stats.stores': 'Integrated Stores',
+    'stats.games': 'Translatable Games',
+    'features.title': 'Everything You Need to Translate Games',
+    'features.desc': 'A complete ecosystem of AI tools designed specifically for video game localization.',
+    'engines.title': '11+ Game Engines Supported',
+    'engines.desc': 'Native support for major engines. GameStringer auto-detects the engine and configures the optimal method.',
+    'engines.stores': '📚 Integrated Stores & Libraries',
+    'ai.title': '20+ AI Providers for Every Need',
+    'ai.desc': 'Free options, local for total privacy, or cloud for maximum quality. Every provider optimized for gaming translations.',
+    'tools.title': '10+ Professional Tools Included',
+    'tools.desc': 'Every tool needed to translate any type of game, from visual novels to AAA.',
+    'usecases.title': 'Who Uses GameStringer?',
+    'usecases.desc': 'Designed for different types of users with specific needs.',
+    'usecases.gamer.title': 'Gamers & Enthusiasts',
+    'usecases.gamer.desc': 'Want to play that Japanese game never translated? GameStringer creates professional-quality fan translations.',
+    'usecases.fantl.title': 'Fan Translators & Community',
+    'usecases.fantl.desc': 'Part of a translation group? GameStringer accelerates work with shared Translation Memory and glossaries.',
+    'usecases.indie.title': 'Indie Devs & Studios',
+    'usecases.indie.desc': 'Limited budget? Translate your game into 20+ languages without hiring professional translators.',
+    'howitworks.title': '3 Simple Steps',
+    'howitworks.step1.title': 'Select the Game',
+    'howitworks.step1.desc': 'Choose from Steam, Epic, GOG library or add manually. Auto-detect engine and translatable files.',
+    'howitworks.step2.title': 'Configure Translation',
+    'howitworks.step2.desc': 'Choose AI provider, target language, glossary and context. AI adapts tone to game genre.',
+    'howitworks.step3.title': 'Translate & Play',
+    'howitworks.step3.desc': 'Press a button: translations injected automatically. Quality Badge for every line. Backup included.',
+    'pricing.title': '500 Free Strings, Then Pay What You Want',
+    'pricing.desc': 'Trust-based model: translate free up to 500 strings, then any donation unlocks unlimited translations.',
+    'pricing.free.title': 'Free Forever',
+    'pricing.free.desc': 'First <strong>500 strings</strong> completely free. No account, no credit card, no time limit.',
+    'pricing.donation.title': 'Pay What You Want',
+    'pricing.donation.desc': 'After 500 strings, <strong>even just $1</strong> unlocks unlimited translations forever. Honor system.',
+    'pricing.unlimited.title': 'Unlimited Forever',
+    'pricing.unlimited.desc': 'Once unlocked, translate <strong>as many strings as you want</strong>. No subscription, no renewal, no tricks.',
+    'faq.title': 'Frequently Asked Questions',
+    'faq.q1': 'Is GameStringer really free?',
+    'faq.q2': 'Which AI can I use without paying?',
+    'faq.q3': 'Can I get banned for fan translations?',
+    'faq.q4': 'How does it work with Unity games?',
+    'faq.q5': 'How long does it take?',
+    'faq.q6': 'Is quality comparable to professional translations?',
+    'faq.q7': 'Does it support retro/DOS games?',
+    'faq.q8': 'Can I contribute to the project?',
+    'cta.title': 'Ready to Translate?',
+    'cta.desc': 'Download GameStringer for free and start playing in your language. No account, no subscription.',
+    'cta.download': '⬇️ Download for Windows',
+    'support.title': '❤️ Support the Project',
+    'support.desc': 'GameStringer is developed in spare time. Your support helps keep the project alive!',
+    'footer.resources': 'Resources',
+    'footer.community': 'Community',
+    'footer.support': 'Support',
+  },
+
   es: {
-    lang: 'es',
-    title: 'GameStringer - Traduce Cualquier Videojuego con IA | Suite Completa de Localización',
-    description: 'GameStringer es la suite open source definitiva para traducir videojuegos con IA. Soporta Unity, Unreal, Godot, RPG Maker y 10+ motores. 15+ proveedores de IA incluido Ollama gratuito, GPT-4, Claude, Gemini.',
-    nav: { features: 'Características', engines: 'Motores', ai: 'Proveedores IA', usecases: 'Casos de Uso', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — Tutorial Interactivo, Auto-Glosario IA, One-Click Unreal con TM & Revisión',
-      title: 'GameStringer',
-      subtitle: 'Localiza videojuegos con IA. Open source. Gratis.',
-      desc: 'Soporta <strong>11+ motores</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) y <strong>20+ proveedores IA</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extrae, traduce e inyecta textos automáticamente. <strong>Auto-glosario IA</strong>, Translation Memory persistente.',
-      download: '⬇️ Descarga Gratuita para Windows',
-      source: '📂 Ver Código Fuente',
-      meta: ['100% Gratis & Open Source', 'Sin cuenta requerida', 'IA local con Ollama', 'Windows 10/11 64-bit']
-    },
-    stats: {
-      engines: { value: '11+', label: 'Motores de Juego', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
-      ai: { value: '20+', label: 'Proveedores IA', detail: '10 gratis, 8 locales, HY-MT optimizado' },
-      stores: { value: '7', label: 'Tiendas Integradas', detail: 'Steam, Epic, GOG, Origin...' },
-      games: { value: '∞', label: 'Juegos Traducibles', detail: 'Indie, retro, AAA' }
-    },
-    features: {
-      badge: '✨ Características Completas',
-      title: 'Todo lo Necesario para Traducir Videojuegos',
-      desc: 'Un ecosistema completo de herramientas IA diseñadas específicamente para localización de videojuegos.'
-    },
-    cta: {
-      title: '¿Listo para Traducir?',
-      desc: 'Descarga GameStringer gratis y empieza a jugar tus juegos favoritos en tu idioma. Sin cuenta, sin suscripción, sin límites.',
-      download: '⬇️ Descargar para Windows (Gratis)',
-      star: '⭐ Star en GitHub',
-      features: ['100% Gratis Siempre', 'Open Source', 'Sin Cuenta', 'IA Local Disponible', 'Actualizaciones Gratis']
-    },
-    support: {
-      title: '❤️ Apoya el Proyecto',
-      desc: 'GameStringer se desarrolla en tiempo libre. ¡Tu apoyo ayuda a mantener el proyecto activo y añadir nuevas funciones!',
-      kofi: '☕ Invítame un Café en Ko-fi',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: 'La suite open source definitiva para traducir videojuegos con inteligencia artificial. Soporta cualquier motor, cualquier IA, cualquier idioma.',
-      resources: 'Recursos',
-      community: 'Comunidad',
-      support: 'Apoyar',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Hecho con',
-      inCountry: 'en Italia 🇮🇹'
-    }
+    'hero.badge': 'v1.4.0 — Quality Badges, Soporte RTL, Radix UI Unificado, Ollama Genérico',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'Localiza videojuegos con IA. Open source. Gratuito.',
+    'hero.desc': 'Soporta <strong>11+ motores</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) y <strong>20+ proveedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por línea (0-100), Auto-glosario IA, Translation Memory persistente, Tutorial interactivo. <strong>500 cadenas gratis</strong>, luego donación libre.',
+    'hero.download': '⬇️ Descarga Gratuita para Windows',
+    'hero.source': '📂 Ver Código Fuente',
+    'stats.engines': 'Motores de Juego',
+    'stats.ai': 'Proveedores IA',
+    'stats.stores': 'Tiendas Integradas',
+    'stats.games': 'Juegos Traducibles',
+    'features.title': 'Todo lo Necesario para Traducir Videojuegos',
+    'features.desc': 'Un ecosistema completo de herramientas IA diseñadas específicamente para la localización de videojuegos.',
+    'engines.title': '11+ Motores de Juego Soportados',
+    'engines.desc': 'Soporte nativo para los principales motores. GameStringer detecta automáticamente el motor y configura el método óptimo.',
+    'engines.stores': '📚 Tiendas y Librerías Integradas',
+    'ai.title': '20+ Proveedores IA para Cada Necesidad',
+    'ai.desc': 'Opciones gratuitas, locales para privacidad total, o cloud para máxima calidad.',
+    'tools.title': '10+ Herramientas Profesionales Incluidas',
+    'tools.desc': 'Cada herramienta necesaria para traducir cualquier tipo de juego.',
+    'usecases.title': '¿Quién Usa GameStringer?',
+    'usecases.desc': 'Diseñado para diferentes tipos de usuarios con necesidades específicas.',
+    'usecases.gamer.title': 'Gamers y Aficionados',
+    'usecases.gamer.desc': '¿Quieres jugar ese juego japonés nunca traducido? GameStringer crea traducciones fan de calidad profesional.',
+    'usecases.fantl.title': 'Fan Translators y Comunidad',
+    'usecases.fantl.desc': '¿Parte de un grupo de traducción? GameStringer acelera el trabajo con Translation Memory compartida.',
+    'usecases.indie.title': 'Indie Devs y Estudios',
+    'usecases.indie.desc': '¿Presupuesto limitado? Traduce tu juego a 20+ idiomas sin contratar traductores profesionales.',
+    'howitworks.title': '3 Simples Pasos',
+    'howitworks.step1.title': 'Selecciona el Juego',
+    'howitworks.step1.desc': 'Elige de Steam, Epic, GOG o añade manualmente. Auto-detección de motor y archivos traducibles.',
+    'howitworks.step2.title': 'Configura la Traducción',
+    'howitworks.step2.desc': 'Elige proveedor IA, idioma objetivo, glosario y contexto.',
+    'howitworks.step3.title': 'Traduce y Juega',
+    'howitworks.step3.desc': 'Pulsa un botón: traducciones inyectadas automáticamente. Quality Badge por línea. Backup incluido.',
+    'pricing.title': '500 Cadenas Gratis, Luego Donación Libre',
+    'pricing.desc': 'Modelo basado en la confianza: traduce gratis hasta 500 cadenas, luego donación libre para desbloquear ilimitado.',
+    'pricing.free.title': 'Gratis para Siempre',
+    'pricing.free.desc': 'Las primeras <strong>500 cadenas</strong> completamente gratis. Sin cuenta, sin tarjeta.',
+    'pricing.donation.title': 'Donación Libre',
+    'pricing.donation.desc': 'Después de 500, <strong>incluso solo 1€</strong> desbloquea traducciones ilimitadas para siempre.',
+    'pricing.unlimited.title': 'Ilimitado para Siempre',
+    'pricing.unlimited.desc': 'Una vez desbloqueado, traduce <strong>cuantas cadenas quieras</strong>. Sin suscripción.',
+    'faq.title': 'Preguntas Frecuentes',
+    'faq.q1': '¿GameStringer es realmente gratuito?',
+    'faq.q2': '¿Qué IA puedo usar sin pagar?',
+    'faq.q3': '¿Me pueden banear por traducciones fan?',
+    'faq.q4': '¿Cómo funciona con juegos Unity?',
+    'faq.q5': '¿Cuánto tiempo toma?',
+    'faq.q6': '¿La calidad es comparable a traducciones profesionales?',
+    'faq.q7': '¿Soporta juegos retro/DOS?',
+    'faq.q8': '¿Puedo contribuir al proyecto?',
+    'cta.title': '¿Listo para Traducir?',
+    'cta.desc': 'Descarga GameStringer gratis y empieza a jugar en tu idioma.',
+    'cta.download': '⬇️ Descarga para Windows',
+    'support.title': '❤️ Apoya el Proyecto',
+    'support.desc': 'GameStringer se desarrolla en tiempo libre. ¡Tu apoyo ayuda a mantener el proyecto!',
+    'footer.resources': 'Recursos',
+    'footer.community': 'Comunidad',
+    'footer.support': 'Apoyar',
   },
+
   de: {
-    lang: 'de',
-    title: 'GameStringer - Übersetze Jedes Videospiel mit KI | Komplette Lokalisierungs-Suite',
-    description: 'GameStringer ist die ultimative Open-Source-Suite für KI-gestützte Videospielübersetzung. Unterstützt Unity, Unreal, Godot, RPG Maker und 10+ Engines. 15+ KI-Anbieter inklusive kostenlosem Ollama, GPT-4, Claude, Gemini.',
-    nav: { features: 'Funktionen', engines: 'Engines', ai: 'KI-Anbieter', usecases: 'Anwendungsfälle', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — Interaktives Tutorial, KI Auto-Glossar, One-Click Unreal mit TM & Revision',
-      title: 'GameStringer',
-      subtitle: 'Lokalisiere Videospiele mit KI. Open Source. Kostenlos.',
-      desc: 'Unterstützt <strong>11+ Engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) und <strong>20+ KI-Anbieter</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extrahiere, übersetze und injiziere Texte automatisch. <strong>KI Auto-Glossar</strong>, persistenter Translation Memory.',
-      download: '⬇️ Kostenloser Download für Windows',
-      source: '📂 Quellcode Ansehen',
-      meta: ['100% Kostenlos & Open Source', 'Kein Konto erforderlich', 'Lokale KI mit Ollama', 'Windows 10/11 64-bit']
-    },
-    stats: {
-      engines: { value: '11+', label: 'Spiel-Engines', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
-      ai: { value: '20+', label: 'KI-Anbieter', detail: '10 kostenlos, 8 lokal, HY-MT optimiert' },
-      stores: { value: '7', label: 'Integrierte Stores', detail: 'Steam, Epic, GOG, Origin...' },
-      games: { value: '∞', label: 'Übersetzbare Spiele', detail: 'Indie, Retro, AAA' }
-    },
-    cta: {
-      title: 'Bereit zum Übersetzen?',
-      desc: 'Lade GameStringer kostenlos herunter und spiele deine Lieblingsspiele in deiner Sprache. Kein Konto, kein Abo, keine Limits.',
-      download: '⬇️ Download für Windows (Kostenlos)',
-      star: '⭐ Star auf GitHub',
-      features: ['100% Kostenlos Forever', 'Open Source', 'Kein Konto', 'Lokale KI Verfügbar', 'Kostenlose Updates']
-    },
-    support: {
-      title: '❤️ Unterstütze das Projekt',
-      desc: 'GameStringer wird in der Freizeit entwickelt. Deine Unterstützung hilft, das Projekt aktiv zu halten und neue Funktionen hinzuzufügen!',
-      kofi: '☕ Kauf mir einen Kaffee auf Ko-fi',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: 'Die ultimative Open-Source-Suite zum Übersetzen von Videospielen mit künstlicher Intelligenz. Unterstützt jede Engine, jede KI, jede Sprache.',
-      resources: 'Ressourcen',
-      community: 'Community',
-      support: 'Unterstützen',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Made with',
-      inCountry: 'in Italien 🇮🇹'
-    }
+    'hero.badge': 'v1.4.0 — Quality Badges, RTL-Support, Einheitliches Radix UI, Generisches Ollama',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'Lokalisiere Videospiele mit KI. Open Source. Kostenlos.',
+    'hero.desc': 'Unterstützt <strong>11+ Engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) und <strong>20+ KI-Anbieter</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> pro Zeile (0-100), KI-Auto-Glossar, persistenter Translation Memory, Interaktives Tutorial. <strong>500 Strings kostenlos</strong>, dann freiwillige Spende.',
+    'hero.download': '⬇️ Kostenloser Download für Windows',
+    'hero.source': '📂 Quellcode ansehen',
+    'stats.engines': 'Game Engines',
+    'stats.ai': 'KI-Anbieter',
+    'stats.stores': 'Integrierte Stores',
+    'stats.games': 'Übersetzbare Spiele',
+    'features.title': 'Alles für die Spieleübersetzung',
+    'features.desc': 'Ein komplettes Ökosystem von KI-Tools für die Lokalisierung von Videospielen.',
+    'engines.title': '11+ Game Engines unterstützt',
+    'engines.desc': 'Native Unterstützung für alle wichtigen Engines. Automatische Erkennung und optimale Konfiguration.',
+    'engines.stores': '📚 Integrierte Stores & Bibliotheken',
+    'ai.title': '20+ KI-Anbieter für jeden Bedarf',
+    'ai.desc': 'Kostenlose Optionen, lokal für totale Privatsphäre, oder Cloud für maximale Qualität.',
+    'tools.title': '10+ Professionelle Tools inklusive',
+    'tools.desc': 'Jedes Werkzeug das man braucht um jede Art von Spiel zu übersetzen.',
+    'usecases.title': 'Wer nutzt GameStringer?',
+    'usecases.desc': 'Entwickelt für verschiedene Nutzertypen mit spezifischen Anforderungen.',
+    'usecases.gamer.title': 'Gamer & Enthusiasten',
+    'usecases.gamer.desc': 'Willst du das nie übersetzte japanische Spiel spielen? GameStringer erstellt professionelle Fan-Übersetzungen.',
+    'usecases.fantl.title': 'Fan-Übersetzer & Community',
+    'usecases.fantl.desc': 'Teil einer Übersetzungsgruppe? GameStringer beschleunigt die Arbeit mit geteiltem Translation Memory.',
+    'usecases.indie.title': 'Indie-Entwickler & Studios',
+    'usecases.indie.desc': 'Begrenztes Budget? Übersetze dein Spiel in 20+ Sprachen ohne professionelle Übersetzer.',
+    'howitworks.title': '3 Einfache Schritte',
+    'howitworks.step1.title': 'Spiel auswählen',
+    'howitworks.step1.desc': 'Wähle aus Steam, Epic, GOG oder füge manuell hinzu. Auto-Erkennung von Engine und Dateien.',
+    'howitworks.step2.title': 'Übersetzung konfigurieren',
+    'howitworks.step2.desc': 'Wähle KI-Anbieter, Zielsprache, Glossar und Kontext.',
+    'howitworks.step3.title': 'Übersetzen & Spielen',
+    'howitworks.step3.desc': 'Einen Knopf drücken: Übersetzungen automatisch eingefügt. Quality Badge pro Zeile. Backup inklusive.',
+    'pricing.title': '500 Strings kostenlos, dann freiwillige Spende',
+    'pricing.desc': 'Vertrauensbasiertes Modell: bis 500 Strings kostenlos, dann beliebige Spende für unbegrenzt.',
+    'pricing.free.title': 'Für immer kostenlos',
+    'pricing.free.desc': 'Die ersten <strong>500 Strings</strong> komplett kostenlos. Kein Konto, keine Karte.',
+    'pricing.donation.title': 'Freiwillige Spende',
+    'pricing.donation.desc': 'Nach 500, <strong>schon ab 1€</strong> schaltet unbegrenzte Übersetzungen frei.',
+    'pricing.unlimited.title': 'Für immer unbegrenzt',
+    'pricing.unlimited.desc': 'Einmal freigeschaltet, übersetze <strong>so viele Strings wie du willst</strong>. Kein Abo.',
+    'faq.title': 'Häufig gestellte Fragen',
+    'faq.q1': 'Ist GameStringer wirklich kostenlos?',
+    'faq.q2': 'Welche KI kann ich kostenlos nutzen?',
+    'faq.q3': 'Kann ich gebannt werden?',
+    'faq.q4': 'Wie funktioniert es mit Unity-Spielen?',
+    'faq.q5': 'Wie lange dauert es?',
+    'faq.q6': 'Ist die Qualität vergleichbar mit professionellen Übersetzungen?',
+    'faq.q7': 'Unterstützt es Retro/DOS-Spiele?',
+    'faq.q8': 'Kann ich zum Projekt beitragen?',
+    'cta.title': 'Bereit zum Übersetzen?',
+    'cta.desc': 'Lade GameStringer kostenlos herunter und spiele in deiner Sprache.',
+    'cta.download': '⬇️ Download für Windows',
+    'support.title': '❤️ Unterstütze das Projekt',
+    'support.desc': 'GameStringer wird in der Freizeit entwickelt. Deine Unterstützung hilft!',
+    'footer.resources': 'Ressourcen',
+    'footer.community': 'Community',
+    'footer.support': 'Unterstützen',
   },
+
   fr: {
-    lang: 'fr',
-    title: 'GameStringer - Traduisez N\'importe Quel Jeu Vidéo avec l\'IA | Suite Complète de Localisation',
-    description: 'GameStringer est la suite open source ultime pour traduire des jeux vidéo avec l\'IA. Supporte Unity, Unreal, Godot, RPG Maker et 10+ moteurs. 15+ fournisseurs IA incluant Ollama gratuit, GPT-4, Claude, Gemini.',
-    nav: { features: 'Fonctionnalités', engines: 'Moteurs', ai: 'Fournisseurs IA', usecases: 'Cas d\'Usage', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — Tutoriel Interactif, Auto-Glossaire IA, One-Click Unreal avec TM & Révision',
-      title: 'GameStringer',
-      subtitle: 'Localisez des jeux vidéo avec l\'IA. Open source. Gratuit.',
-      desc: 'Supporte <strong>11+ moteurs</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) et <strong>20+ fournisseurs IA</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extrayez, traduisez et injectez des textes automatiquement. <strong>Auto-glossaire IA</strong>, Translation Memory persistante.',
-      download: '⬇️ Téléchargement Gratuit pour Windows',
-      source: '📂 Voir le Code Source',
-      meta: ['100% Gratuit & Open Source', 'Aucun compte requis', 'IA locale avec Ollama', 'Windows 10/11 64-bit']
-    },
-    stats: {
-      engines: { value: '11+', label: 'Moteurs de Jeu', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
-      ai: { value: '20+', label: 'Fournisseurs IA', detail: '10 gratuits, 8 locaux, HY-MT optimisé' },
-      stores: { value: '7', label: 'Boutiques Intégrées', detail: 'Steam, Epic, GOG, Origin...' },
-      games: { value: '∞', label: 'Jeux Traduisibles', detail: 'Indie, rétro, AAA' }
-    },
-    cta: {
-      title: 'Prêt à Traduire ?',
-      desc: 'Téléchargez GameStringer gratuitement et commencez à jouer à vos jeux préférés dans votre langue. Pas de compte, pas d\'abonnement, pas de limites.',
-      download: '⬇️ Télécharger pour Windows (Gratuit)',
-      star: '⭐ Star sur GitHub',
-      features: ['100% Gratuit Pour Toujours', 'Open Source', 'Pas de Compte', 'IA Locale Disponible', 'Mises à Jour Gratuites']
-    },
-    support: {
-      title: '❤️ Soutenez le Projet',
-      desc: 'GameStringer est développé pendant le temps libre. Votre soutien aide à maintenir le projet actif et à ajouter de nouvelles fonctionnalités !',
-      kofi: '☕ Offrez-moi un Café sur Ko-fi',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: 'La suite open source ultime pour traduire des jeux vidéo avec l\'intelligence artificielle. Supporte n\'importe quel moteur, n\'importe quelle IA, n\'importe quelle langue.',
-      resources: 'Ressources',
-      community: 'Communauté',
-      support: 'Soutenir',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Fait avec',
-      inCountry: 'en Italie 🇮🇹'
-    }
+    'hero.badge': 'v1.4.0 — Quality Badges, Support RTL, Radix UI Unifié, Ollama Générique',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'Localisez les jeux vidéo avec l\'IA. Open source. Gratuit.',
+    'hero.desc': 'Supporte <strong>11+ moteurs</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) et <strong>20+ fournisseurs IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> par ligne (0-100), Auto-glossaire IA, Translation Memory persistante, Tutoriel interactif. <strong>500 chaînes gratuites</strong>, puis don libre.',
+    'hero.download': '⬇️ Téléchargement Gratuit pour Windows',
+    'hero.source': '📂 Voir le Code Source',
+    'stats.engines': 'Moteurs de Jeu',
+    'stats.ai': 'Fournisseurs IA',
+    'stats.stores': 'Stores Intégrés',
+    'stats.games': 'Jeux Traduisibles',
+    'features.title': 'Tout le Nécessaire pour Traduire des Jeux',
+    'features.desc': 'Un écosystème complet d\'outils IA conçus pour la localisation de jeux vidéo.',
+    'engines.title': '11+ Moteurs de Jeu Supportés',
+    'engines.desc': 'Support natif des principaux moteurs. Détection automatique et configuration optimale.',
+    'engines.stores': '📚 Stores et Bibliothèques Intégrés',
+    'ai.title': '20+ Fournisseurs IA pour Chaque Besoin',
+    'ai.desc': 'Options gratuites, locales pour la confidentialité, ou cloud pour la qualité maximale.',
+    'tools.title': '10+ Outils Professionnels Inclus',
+    'tools.desc': 'Chaque outil nécessaire pour traduire tout type de jeu.',
+    'usecases.title': 'Qui Utilise GameStringer ?',
+    'usecases.desc': 'Conçu pour différents types d\'utilisateurs.',
+    'usecases.gamer.title': 'Gamers et Passionnés',
+    'usecases.gamer.desc': 'Vous voulez jouer à ce jeu japonais jamais traduit ? GameStringer crée des traductions fan de qualité pro.',
+    'usecases.fantl.title': 'Fan Traducteurs et Communauté',
+    'usecases.fantl.desc': 'Dans un groupe de traduction ? GameStringer accélère le travail avec TM partagée et glossaires.',
+    'usecases.indie.title': 'Indie Devs et Studios',
+    'usecases.indie.desc': 'Budget limité ? Traduisez votre jeu en 20+ langues sans traducteurs professionnels.',
+    'howitworks.title': '3 Étapes Simples',
+    'howitworks.step1.title': 'Sélectionner le Jeu',
+    'howitworks.step1.desc': 'Choisissez depuis Steam, Epic, GOG ou ajoutez manuellement.',
+    'howitworks.step2.title': 'Configurer la Traduction',
+    'howitworks.step2.desc': 'Choisissez fournisseur IA, langue cible, glossaire et contexte.',
+    'howitworks.step3.title': 'Traduire et Jouer',
+    'howitworks.step3.desc': 'Appuyez sur un bouton : traductions injectées automatiquement. Quality Badge par ligne.',
+    'pricing.title': '500 Chaînes Gratuites, Puis Don Libre',
+    'pricing.desc': 'Modèle basé sur la confiance : traduisez gratuitement jusqu\'à 500 chaînes, puis don libre pour illimité.',
+    'pricing.free.title': 'Gratuit pour Toujours',
+    'pricing.free.desc': 'Les premières <strong>500 chaînes</strong> complètement gratuites.',
+    'pricing.donation.title': 'Don Libre',
+    'pricing.donation.desc': 'Après 500, <strong>même juste 1€</strong> débloque les traductions illimitées.',
+    'pricing.unlimited.title': 'Illimité pour Toujours',
+    'pricing.unlimited.desc': 'Une fois débloqué, traduisez <strong>autant que vous voulez</strong>. Sans abonnement.',
+    'faq.title': 'Questions Fréquentes',
+    'faq.q1': 'GameStringer est-il vraiment gratuit ?',
+    'faq.q2': 'Quelles IA puis-je utiliser gratuitement ?',
+    'faq.q3': 'Puis-je être banni pour des traductions fan ?',
+    'faq.q4': 'Comment ça marche avec les jeux Unity ?',
+    'faq.q5': 'Combien de temps faut-il ?',
+    'faq.q6': 'La qualité est-elle comparable aux traductions pro ?',
+    'faq.q7': 'Supporte-t-il les jeux rétro/DOS ?',
+    'faq.q8': 'Puis-je contribuer au projet ?',
+    'cta.title': 'Prêt à Traduire ?',
+    'cta.desc': 'Téléchargez GameStringer gratuitement et jouez dans votre langue.',
+    'cta.download': '⬇️ Télécharger pour Windows',
+    'support.title': '❤️ Soutenez le Projet',
+    'support.desc': 'GameStringer est développé sur le temps libre. Votre soutien aide !',
+    'footer.resources': 'Ressources',
+    'footer.community': 'Communauté',
+    'footer.support': 'Soutenir',
   },
+
   ja: {
-    lang: 'ja',
-    title: 'GameStringer - AIでゲームを翻訳 | 完全ローカライゼーションスイート',
-    description: 'GameStringerはAIによるビデオゲーム翻訳のための究極のオープンソーススイートです。Unity、Unreal、Godot、RPG Makerなど10以上のエンジンをサポート。無料のOllama、GPT-4、Claude、Geminiなど15以上のAIプロバイダー。',
-    nav: { features: '機能', engines: 'エンジン', ai: 'AIプロバイダー', usecases: '使用例', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — インタラクティブチュートリアル、AI自動用語集、ワンクリックUnreal TM&リビジョン',
-      title: 'GameStringer',
-      subtitle: 'AIでゲームをローカライズ。オープンソース。無料。',
-      desc: '<strong>11以上のエンジン</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、ダンガンロンパ...）と<strong>20以上のAIプロバイダー</strong>（TranslateGemma、Ollama、GPT-4、Claude、Gemini、DeepSeek...）をサポート。テキストの抽出、翻訳、注入を自動で。<strong>AI自動用語集</strong>、永続Translation Memory。',
-      download: '⬇️ Windows版無料ダウンロード',
-      source: '📂 ソースコードを見る',
-      meta: ['100%無料＆オープンソース', 'アカウント不要', 'Ollamaでローカルで', 'Windows 10/11 64-bit']
-    },
-    stats: {
-      engines: { value: '11+', label: 'ゲームエンジン', detail: 'Unity、Unreal、Godot、RPG Maker、ダンガンロンパ...' },
-      ai: { value: '20+', label: 'AIプロバイダー', detail: '10無料、8ローカル、HY-MT最適化' },
-      stores: { value: '7', label: '統合ストア', detail: 'Steam、Epic、GOG、Origin...' },
-      games: { value: '∞', label: '翻訳可能なゲーム', detail: 'インディー、レトロ、AAA' }
-    },
-    cta: {
-      title: '翻訳の準備はできましたか？',
-      desc: 'GameStringerを無料でダウンロードして、お気に入りのゲームをあなたの言語でプレイしましょう。アカウント不要、サブスクリプション不要、制限なし。',
-      download: '⬇️ Windows版ダウンロード（無料）',
-      star: '⭐ GitHubでスター',
-      features: ['永久無料', 'オープンソース', 'アカウント不要', 'ローカルAI対応', '無料アップデート']
-    },
-    support: {
-      title: '❤️ プロジェクトを支援',
-      desc: 'GameStringerは趣味の時間で開発されています。あなたの支援がプロジェクトの維持と新機能の追加に役立ちます！',
-      kofi: '☕ Ko-fiでコーヒーを奢る',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: '人工知能でビデオゲームを翻訳するための究極のオープンソーススイート。あらゆるエンジン、あらゆるAI、あらゆる言語をサポート。',
-      resources: 'リソース',
-      community: 'コミュニティ',
-      support: '支援',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Made with',
-      inCountry: 'イタリアで 🇮🇹'
-    }
+    'hero.badge': 'v1.4.0 — 品質バッジ、RTLサポート、統合Radix UI、汎用Ollama',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'AIでビデオゲームをローカライズ。オープンソース。無料。',
+    'hero.desc': '<strong>11以上のエンジン</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>ダンガンロンパ</strong>...）と<strong>20以上のAIプロバイダー</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）をサポート。行ごとの<strong>品質バッジ</strong>（0-100）、AI自動用語集、永続的翻訳メモリ、インタラクティブチュートリアル。<strong>500文字列無料</strong>、その後は任意の寄付。',
+    'hero.download': '⬇️ Windows用無料ダウンロード',
+    'hero.source': '📂 ソースコードを見る',
+    'stats.engines': 'ゲームエンジン',
+    'stats.ai': 'AIプロバイダー',
+    'stats.stores': '統合ストア',
+    'stats.games': '翻訳可能なゲーム',
+    'features.title': 'ゲーム翻訳に必要なすべて',
+    'features.desc': 'ビデオゲームのローカライズに特化したAIツールの完全なエコシステム。',
+    'engines.title': '11以上のゲームエンジンをサポート',
+    'engines.desc': '主要エンジンのネイティブサポート。エンジンを自動検出し最適な方法を設定。',
+    'engines.stores': '📚 統合ストア＆ライブラリ',
+    'ai.title': 'あらゆるニーズに20以上のAIプロバイダー',
+    'ai.desc': '無料オプション、プライバシーのためのローカル、最高品質のためのクラウド。',
+    'tools.title': '10以上のプロツール搭載',
+    'tools.desc': 'あらゆるタイプのゲームを翻訳するために必要なすべてのツール。',
+    'usecases.title': '誰がGameStringerを使う？',
+    'usecases.desc': '特定のニーズを持つさまざまなユーザー向けに設計。',
+    'usecases.gamer.title': 'ゲーマーと愛好家',
+    'usecases.gamer.desc': '未翻訳の日本語ゲームをプレイしたい？GameStringerはプロ品質のファン翻訳を作成。',
+    'usecases.fantl.title': 'ファン翻訳者とコミュニティ',
+    'usecases.fantl.desc': '翻訳グループの一員？共有TM とグロッサリーで作業を加速。',
+    'usecases.indie.title': 'インディー開発者とスタジオ',
+    'usecases.indie.desc': '予算が限られている？プロの翻訳者なしで20以上の言語に翻訳。',
+    'howitworks.title': '3つの簡単なステップ',
+    'howitworks.step1.title': 'ゲームを選択',
+    'howitworks.step1.desc': 'Steam、Epic、GOGから選択、または手動で追加。エンジンとファイルを自動検出。',
+    'howitworks.step2.title': '翻訳を設定',
+    'howitworks.step2.desc': 'AIプロバイダー、対象言語、グロッサリー、コンテキストを選択。',
+    'howitworks.step3.title': '翻訳してプレイ',
+    'howitworks.step3.desc': 'ボタンを押すだけ：翻訳が自動で注入。行ごとの品質バッジ。バックアップ付き。',
+    'pricing.title': '500文字列無料、その後は任意の寄付',
+    'pricing.desc': '信頼ベースのモデル：500文字列まで無料、その後は任意額の寄付で無制限。',
+    'pricing.free.title': '永久無料',
+    'pricing.free.desc': '最初の<strong>500文字列</strong>は完全無料。アカウント不要。',
+    'pricing.donation.title': '任意の寄付',
+    'pricing.donation.desc': '500文字列後、<strong>1ドルでも</strong>永久に無制限翻訳を解除。',
+    'pricing.unlimited.title': '永久無制限',
+    'pricing.unlimited.desc': '解除後、<strong>好きなだけ</strong>翻訳可能。サブスクリプションなし。',
+    'faq.title': 'よくある質問',
+    'faq.q1': 'GameStringerは本当に無料ですか？',
+    'faq.q2': '無料で使えるAIは？',
+    'faq.q3': 'ファン翻訳でBANされる？',
+    'faq.q4': 'Unityゲームではどう動作する？',
+    'faq.q5': 'どのくらい時間がかかる？',
+    'faq.q6': 'プロの翻訳と比べて品質は？',
+    'faq.q7': 'レトロ/DOSゲームに対応？',
+    'faq.q8': 'プロジェクトに貢献できる？',
+    'cta.title': '翻訳の準備はできた？',
+    'cta.desc': 'GameStringerを無料でダウンロードして、あなたの言語でプレイしよう。',
+    'cta.download': '⬇️ Windows用ダウンロード',
+    'support.title': '❤️ プロジェクトを支援',
+    'support.desc': 'GameStringerは余暇に開発されています。あなたのサポートが力になります！',
+    'footer.resources': 'リソース',
+    'footer.community': 'コミュニティ',
+    'footer.support': 'サポート',
   },
+
   zh: {
-    lang: 'zh',
-    title: 'GameStringer - AI翻译任何游戏 | 完整本地化套件',
-    description: 'GameStringer是用于AI驱动视频游戏翻译的终极开源套件。支持Unity、Unreal、Godot、RPG Maker等10多种引擎。15多种AI提供商，包括免费的Ollama、GPT-4、Claude、Gemini。',
-    nav: { features: '功能', engines: '引擎', ai: 'AI提供商', usecases: '使用场景', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — 交互式教程、AI自动术语表、一键点击Unreal TM&修订',
-      title: 'GameStringer',
-      subtitle: '用AI本地化游戏。开源。免费。',
-      desc: '支持<strong>11多种引擎</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、弹丸论破...）和<strong>20多种AI提供商</strong>（TranslateGemma、Ollama、GPT-4、Claude、Gemini、DeepSeek...）。自动提取、翻译和注入文本。<strong>AI自动术语表</strong>，持久Translation Memory。',
-      download: '⬇️ Windows免费下载',
-      source: '📂 查看源代码',
-      meta: ['100%免费且开源', '无需账户', '使用Ollama本地AI', 'Windows 10/11 64位']
-    },
-    stats: {
-      engines: { value: '11+', label: '游戏引擎', detail: 'Unity、Unreal、Godot、RPG Maker、弹丸论破...' },
-      ai: { value: '20+', label: 'AI提供商', detail: '10个免费，8个本地，HY-MT优化' },
-      stores: { value: '7', label: '集成商店', detail: 'Steam、Epic、GOG、Origin...' },
-      games: { value: '∞', label: '可翻译游戏', detail: '独立、复古、AAA' }
-    },
-    cta: {
-      title: '准备好翻译了吗？',
-      desc: '免费下载GameStringer，开始用您的语言玩您最喜欢的游戏。无需账户，无需订阅，没有限制。',
-      download: '⬇️ 下载Windows版（免费）',
-      star: '⭐ GitHub上加星',
-      features: ['永久免费', '开源', '无需账户', '本地AI可用', '免费更新']
-    },
-    support: {
-      title: '❤️ 支持项目',
-      desc: 'GameStringer在业余时间开发。您的支持有助于保持项目活跃并添加新功能！',
-      kofi: '☕ 在Ko-fi上请我喝咖啡',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: '使用人工智能翻译视频游戏的终极开源套件。支持任何引擎、任何AI、任何语言。',
-      resources: '资源',
-      community: '社区',
-      support: '支持',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Made with',
-      inCountry: '在意大利 🇮🇹'
-    }
+    'hero.badge': 'v1.4.0 — 质量徽章、RTL支持、统一Radix UI、通用Ollama',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': '用AI本地化电子游戏。开源。免费。',
+    'hero.desc': '支持<strong>11+引擎</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>弹丸论破</strong>...）和<strong>20+ AI提供商</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）。逐行<strong>质量徽章</strong>（0-100）、AI自动术语表、持久化翻译记忆、交互式教程。<strong>500条字符串免费</strong>，之后自愿捐赠。',
+    'hero.download': '⬇️ Windows免费下载',
+    'hero.source': '📂 查看源代码',
+    'stats.engines': '游戏引擎',
+    'stats.ai': 'AI提供商',
+    'stats.stores': '集成商店',
+    'stats.games': '可翻译游戏',
+    'features.title': '翻译游戏所需的一切',
+    'features.desc': '专为电子游戏本地化设计的完整AI工具生态系统。',
+    'engines.title': '支持11+游戏引擎',
+    'engines.desc': '原生支持主流引擎。自动检测引擎并配置最佳方法。',
+    'engines.stores': '📚 集成商店和库',
+    'ai.title': '20+ AI提供商满足各种需求',
+    'ai.desc': '免费选项、本地隐私保护、或云端最高质量。',
+    'tools.title': '包含10+专业工具',
+    'tools.desc': '翻译任何类型游戏所需的所有工具。',
+    'usecases.title': '谁在使用GameStringer？',
+    'usecases.desc': '为不同需求的用户设计。',
+    'usecases.gamer.title': '玩家和爱好者',
+    'usecases.gamer.desc': '想玩从未翻译的日本游戏？GameStringer创建专业质量的粉丝翻译。',
+    'usecases.fantl.title': '粉丝翻译者和社区',
+    'usecases.fantl.desc': '翻译组成员？通过共享TM和术语表加速工作。',
+    'usecases.indie.title': '独立开发者和工作室',
+    'usecases.indie.desc': '预算有限？无需专业翻译即可将游戏翻译成20+种语言。',
+    'howitworks.title': '3个简单步骤',
+    'howitworks.step1.title': '选择游戏',
+    'howitworks.step1.desc': '从Steam、Epic、GOG选择或手动添加。自动检测引擎和文件。',
+    'howitworks.step2.title': '配置翻译',
+    'howitworks.step2.desc': '选择AI提供商、目标语言、术语表和上下文。',
+    'howitworks.step3.title': '翻译并游玩',
+    'howitworks.step3.desc': '按下按钮：翻译自动注入。逐行质量徽章。包含备份。',
+    'pricing.title': '500条字符串免费，之后自愿捐赠',
+    'pricing.desc': '基于信任的模式：500条内免费，之后任意金额捐赠解锁无限翻译。',
+    'pricing.free.title': '永久免费',
+    'pricing.free.desc': '前<strong>500条字符串</strong>完全免费。无需账户。',
+    'pricing.donation.title': '自愿捐赠',
+    'pricing.donation.desc': '500条后，<strong>即使1美元</strong>也能永久解锁无限翻译。',
+    'pricing.unlimited.title': '永久无限',
+    'pricing.unlimited.desc': '解锁后，<strong>想翻译多少就翻译多少</strong>。无订阅。',
+    'faq.title': '常见问题',
+    'faq.q1': 'GameStringer真的免费吗？',
+    'faq.q2': '哪些AI可以免费使用？',
+    'faq.q3': '粉丝翻译会被封号吗？',
+    'faq.q4': '如何与Unity游戏配合？',
+    'faq.q5': '需要多长时间？',
+    'faq.q6': '质量能与专业翻译相比吗？',
+    'faq.q7': '支持复古/DOS游戏吗？',
+    'faq.q8': '可以为项目做贡献吗？',
+    'cta.title': '准备好翻译了吗？',
+    'cta.desc': '免费下载GameStringer，用你的语言开始游戏。',
+    'cta.download': '⬇️ Windows下载',
+    'support.title': '❤️ 支持项目',
+    'support.desc': 'GameStringer在业余时间开发。你的支持是最大的动力！',
+    'footer.resources': '资源',
+    'footer.community': '社区',
+    'footer.support': '支持',
   },
+
   ko: {
-    lang: 'ko',
-    title: 'GameStringer - AI로 모든 게임 번역 | 완전한 현지화 제품군',
-    description: 'GameStringer는 AI 기반 비디오 게임 번역을 위한 최고의 오픈 소스 제품군입니다. Unity, Unreal, Godot, RPG Maker 등 10개 이상의 엔진을 지원합니다. 무료 Ollama, GPT-4, Claude, Gemini를 포함한 15개 이상의 AI 제공자.',
-    nav: { features: '기능', engines: '엔진', ai: 'AI 제공자', usecases: '사용 사례', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — 인터랙티브 튜토리얼, AI 자동 용어집, 원클릭 Unreal TM&리비전',
-      title: 'GameStringer',
-      subtitle: 'AI로 게임 현지화. 오픈 소스. 무료.',
-      desc: '<strong>11개 이상의 엔진</strong>(Unity, Unreal, Godot, RPG Maker, Ren\'Py, 단간론파...)과 <strong>20개 이상의 AI 제공자</strong>(TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...)를 지원합니다. 텍스트를 자동으로 추출, 번역 및 주입합니다. <strong>AI 자동 용어집</strong>, 영구 Translation Memory.',
-      download: '⬇️ Windows용 무료 다운로드',
-      source: '📂 소스 코드 보기',
-      meta: ['100% 무료 & 오픈 소스', '계정 필요 없음', 'Ollama로 로컬 AI', 'Windows 10/11 64비트']
-    },
-    stats: {
-      engines: { value: '11+', label: '게임 엔진', detail: 'Unity, Unreal, Godot, RPG Maker, 단간론파...' },
-      ai: { value: '20+', label: 'AI 제공자', detail: '10개 무료, 8개 로컬, HY-MT 최적화' },
-      stores: { value: '7', label: '통합 스토어', detail: 'Steam, Epic, GOG, Origin...' },
-      games: { value: '∞', label: '번역 가능한 게임', detail: '인디, 레트로, AAA' }
-    },
-    cta: {
-      title: '번역할 준비가 되셨나요?',
-      desc: 'GameStringer를 무료로 다운로드하고 좋아하는 게임을 여러분의 언어로 플레이하세요. 계정 없이, 구독 없이, 제한 없이.',
-      download: '⬇️ Windows용 다운로드 (무료)',
-      star: '⭐ GitHub에서 스타',
-      features: ['영원히 무료', '오픈 소스', '계정 필요 없음', '로컬 AI 사용 가능', '무료 업데이트']
-    },
-    support: {
-      title: '❤️ 프로젝트 지원',
-      desc: 'GameStringer는 여가 시간에 개발됩니다. 여러분의 지원이 프로젝트를 활성화하고 새로운 기능을 추가하는 데 도움이 됩니다!',
-      kofi: '☕ Ko-fi에서 커피 사주기',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: '인공지능으로 비디오 게임을 번역하기 위한 최고의 오픈 소스 제품군. 모든 엔진, 모든 AI, 모든 언어를 지원합니다.',
-      resources: '리소스',
-      community: '커뮤니티',
-      support: '지원',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Made with',
-      inCountry: '이탈리아에서 🇮🇹'
-    }
+    'hero.badge': 'v1.4.0 — 품질 배지, RTL 지원, 통합 Radix UI, 범용 Ollama',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'AI로 비디오 게임을 현지화하세요. 오픈 소스. 무료.',
+    'hero.desc': '<strong>11개 이상의 엔진</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>단간론파</strong>...)과 <strong>20개 이상의 AI 제공업체</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...)를 지원합니다. 행별 <strong>품질 배지</strong> (0-100), AI 자동 용어집, 영구 번역 메모리, 인터랙티브 튜토리얼. <strong>500개 문자열 무료</strong>, 이후 자유 기부.',
+    'hero.download': '⬇️ Windows 무료 다운로드',
+    'hero.source': '📂 소스 코드 보기',
+    'stats.engines': '게임 엔진',
+    'stats.ai': 'AI 제공업체',
+    'stats.stores': '통합 스토어',
+    'stats.games': '번역 가능한 게임',
+    'features.title': '게임 번역에 필요한 모든 것',
+    'features.desc': '비디오 게임 현지화를 위해 특별히 설계된 완전한 AI 도구 생태계.',
+    'engines.title': '11개 이상의 게임 엔진 지원',
+    'engines.desc': '주요 엔진 네이티브 지원. 엔진을 자동 감지하고 최적의 방법을 구성합니다.',
+    'engines.stores': '📚 통합 스토어 및 라이브러리',
+    'ai.title': '모든 요구에 맞는 20개 이상의 AI 제공업체',
+    'ai.desc': '무료 옵션, 프라이버시를 위한 로컬, 또는 최고 품질의 클라우드.',
+    'tools.title': '10개 이상의 전문 도구 포함',
+    'tools.desc': '모든 유형의 게임을 번역하는 데 필요한 모든 도구.',
+    'usecases.title': '누가 GameStringer를 사용하나요?',
+    'usecases.desc': '다양한 요구 사항을 가진 다양한 유형의 사용자를 위해 설계되었습니다.',
+    'usecases.gamer.title': '게이머 및 열정가',
+    'usecases.gamer.desc': '번역되지 않은 일본 게임을 하고 싶으신가요? GameStringer가 전문 품질의 팬 번역을 만듭니다.',
+    'usecases.fantl.title': '팬 번역가 및 커뮤니티',
+    'usecases.fantl.desc': '번역 그룹의 일원인가요? 공유 TM과 용어집으로 작업을 가속화합니다.',
+    'usecases.indie.title': '인디 개발자 및 스튜디오',
+    'usecases.indie.desc': '예산이 제한적인가요? 전문 번역가 없이 20개 이상의 언어로 게임을 번역하세요.',
+    'howitworks.title': '3가지 간단한 단계',
+    'howitworks.step1.title': '게임 선택',
+    'howitworks.step1.desc': 'Steam, Epic, GOG에서 선택하거나 수동으로 추가. 엔진과 파일 자동 감지.',
+    'howitworks.step2.title': '번역 구성',
+    'howitworks.step2.desc': 'AI 제공업체, 대상 언어, 용어집 및 컨텍스트를 선택합니다.',
+    'howitworks.step3.title': '번역하고 플레이',
+    'howitworks.step3.desc': '버튼 하나로: 번역이 자동으로 주입됩니다. 행별 품질 배지. 백업 포함.',
+    'pricing.title': '500개 문자열 무료, 이후 자유 기부',
+    'pricing.desc': '신뢰 기반 모델: 500개 문자열까지 무료, 이후 임의의 기부로 무제한 해제.',
+    'pricing.free.title': '영구 무료',
+    'pricing.free.desc': '처음 <strong>500개 문자열</strong>은 완전 무료. 계정 불필요.',
+    'pricing.donation.title': '자유 기부',
+    'pricing.donation.desc': '500개 이후, <strong>1달러만으로도</strong> 영구적으로 무제한 번역을 해제합니다.',
+    'pricing.unlimited.title': '영구 무제한',
+    'pricing.unlimited.desc': '해제 후, <strong>원하는 만큼</strong> 번역 가능. 구독 없음.',
+    'faq.title': '자주 묻는 질문',
+    'faq.q1': 'GameStringer는 정말 무료인가요?',
+    'faq.q2': '무료로 사용할 수 있는 AI는?',
+    'faq.q3': '팬 번역으로 밴 당할 수 있나요?',
+    'faq.q4': 'Unity 게임에서 어떻게 작동하나요?',
+    'faq.q5': '얼마나 시간이 걸리나요?',
+    'faq.q6': '품질이 전문 번역과 비교할 수 있나요?',
+    'faq.q7': '레트로/DOS 게임을 지원하나요?',
+    'faq.q8': '프로젝트에 기여할 수 있나요?',
+    'cta.title': '번역할 준비가 되셨나요?',
+    'cta.desc': 'GameStringer를 무료로 다운로드하고 당신의 언어로 플레이하세요.',
+    'cta.download': '⬇️ Windows 다운로드',
+    'support.title': '❤️ 프로젝트 지원',
+    'support.desc': 'GameStringer는 여가 시간에 개발됩니다. 여러분의 지원이 힘이 됩니다!',
+    'footer.resources': '리소스',
+    'footer.community': '커뮤니티',
+    'footer.support': '지원',
   },
+
   pt: {
-    lang: 'pt',
-    title: 'GameStringer - Traduza Qualquer Jogo com IA | Suite Completa de Localização',
-    description: 'GameStringer é a suite open source definitiva para tradução de videogames com IA. Suporta Unity, Unreal, Godot, RPG Maker e 10+ engines. 15+ provedores de IA incluindo Ollama gratuito, GPT-4, Claude, Gemini.',
-    nav: { features: 'Recursos', engines: 'Engines', ai: 'Provedores IA', usecases: 'Casos de Uso', faq: 'FAQ' },
-    hero: {
-      badge: 'v1.4.0 — Tutorial Interativo, Auto-Glossário IA, One-Click Unreal com TM & Revisão',
-      title: 'GameStringer',
-      subtitle: 'Localize jogos com IA. Open source. Grátis.',
-      desc: 'Suporta <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, Danganronpa...) e <strong>20+ provedores IA</strong> (TranslateGemma, Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extraia, traduza e injete textos automaticamente. <strong>Auto-glossário IA</strong>, Translation Memory persistente.',
-      download: '⬇️ Download Gratuito para Windows',
-      source: '📂 Ver Código Fonte',
-      meta: ['100% Gratuito & Open Source', 'Sem conta necessária', 'IA local com Ollama', 'Windows 10/11 64-bit']
-    },
-    stats: {
-      engines: { value: '11+', label: 'Game Engines', detail: 'Unity, Unreal, Godot, RPG Maker, Danganronpa...' },
-      ai: { value: '20+', label: 'Provedores IA', detail: '10 gratuitos, 8 locais, HY-MT otimizado' },
-      stores: { value: '7', label: 'Lojas Integradas', detail: 'Steam, Epic, GOG, Origin...' },
-      games: { value: '∞', label: 'Jogos Traduzíveis', detail: 'Indie, retro, AAA' }
-    },
-    cta: {
-      title: 'Pronto para Traduzir?',
-      desc: 'Baixe o GameStringer gratuitamente e comece a jogar seus jogos favoritos no seu idioma. Sem conta, sem assinatura, sem limites.',
-      download: '⬇️ Download para Windows (Gratuito)',
-      star: '⭐ Star no GitHub',
-      features: ['100% Gratuito Para Sempre', 'Open Source', 'Sem Conta', 'IA Local Disponível', 'Atualizações Gratuitas']
-    },
-    support: {
-      title: '❤️ Apoie o Projeto',
-      desc: 'GameStringer é desenvolvido no tempo livre. Seu apoio ajuda a manter o projeto ativo e adicionar novos recursos!',
-      kofi: '☕ Me pague um Café no Ko-fi',
-      sponsors: '💜 GitHub Sponsors'
-    },
-    footer: {
-      desc: 'A suite open source definitiva para traduzir videogames com inteligência artificial. Suporta qualquer engine, qualquer IA, qualquer idioma.',
-      resources: 'Recursos',
-      community: 'Comunidade',
-      support: 'Apoiar',
-      copyright: '© 2025-2026 GameStringer by',
-      madeWith: 'Feito com',
-      inCountry: 'na Itália 🇮🇹'
-    }
-  }
+    'hero.badge': 'v1.4.0 — Quality Badges, Suporte RTL, Radix UI Unificado, Ollama Genérico',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'Localize videogames com IA. Open source. Gratuito.',
+    'hero.desc': 'Suporta <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por linha (0-100), Auto-glossário IA, Translation Memory persistente, Tutorial interativo. <strong>500 strings grátis</strong>, depois doação livre.',
+    'hero.download': '⬇️ Download Gratuito para Windows',
+    'hero.source': '📂 Ver Código Fonte',
+    'stats.engines': 'Engines de Jogo',
+    'stats.ai': 'Provedores IA',
+    'stats.stores': 'Lojas Integradas',
+    'stats.games': 'Jogos Traduzíveis',
+    'features.title': 'Tudo o Necessário para Traduzir Jogos',
+    'features.desc': 'Um ecossistema completo de ferramentas IA projetadas para localização de videogames.',
+    'engines.title': '11+ Engines de Jogo Suportadas',
+    'engines.desc': 'Suporte nativo para os principais engines. Detecção automática e configuração otimizada.',
+    'engines.stores': '📚 Lojas e Bibliotecas Integradas',
+    'ai.title': '20+ Provedores IA para Cada Necessidade',
+    'ai.desc': 'Opções gratuitas, locais para privacidade total, ou cloud para qualidade máxima.',
+    'tools.title': '10+ Ferramentas Profissionais Incluídas',
+    'tools.desc': 'Todas as ferramentas necessárias para traduzir qualquer tipo de jogo.',
+    'usecases.title': 'Quem Usa GameStringer?',
+    'usecases.desc': 'Projetado para diferentes tipos de usuários com necessidades específicas.',
+    'usecases.gamer.title': 'Gamers e Entusiastas',
+    'usecases.gamer.desc': 'Quer jogar aquele jogo japonês nunca traduzido? GameStringer cria traduções fan de qualidade profissional.',
+    'usecases.fantl.title': 'Fan Tradutores e Comunidade',
+    'usecases.fantl.desc': 'Parte de um grupo de tradução? GameStringer acelera o trabalho com TM compartilhada e glossários.',
+    'usecases.indie.title': 'Indie Devs e Estúdios',
+    'usecases.indie.desc': 'Orçamento limitado? Traduza seu jogo em 20+ idiomas sem tradutores profissionais.',
+    'howitworks.title': '3 Passos Simples',
+    'howitworks.step1.title': 'Selecione o Jogo',
+    'howitworks.step1.desc': 'Escolha do Steam, Epic, GOG ou adicione manualmente. Auto-detecção de engine e arquivos.',
+    'howitworks.step2.title': 'Configure a Tradução',
+    'howitworks.step2.desc': 'Escolha provedor IA, idioma alvo, glossário e contexto.',
+    'howitworks.step3.title': 'Traduza e Jogue',
+    'howitworks.step3.desc': 'Pressione um botão: traduções injetadas automaticamente. Quality Badge por linha. Backup incluído.',
+    'pricing.title': '500 Strings Grátis, Depois Doação Livre',
+    'pricing.desc': 'Modelo baseado em confiança: traduza grátis até 500 strings, depois doação livre para ilimitado.',
+    'pricing.free.title': 'Grátis para Sempre',
+    'pricing.free.desc': 'As primeiras <strong>500 strings</strong> completamente grátis. Sem conta, sem cartão.',
+    'pricing.donation.title': 'Doação Livre',
+    'pricing.donation.desc': 'Após 500, <strong>mesmo só 1€</strong> desbloqueia traduções ilimitadas para sempre.',
+    'pricing.unlimited.title': 'Ilimitado para Sempre',
+    'pricing.unlimited.desc': 'Uma vez desbloqueado, traduza <strong>quantas strings quiser</strong>. Sem assinatura.',
+    'faq.title': 'Perguntas Frequentes',
+    'faq.q1': 'GameStringer é realmente gratuito?',
+    'faq.q2': 'Quais IA posso usar sem pagar?',
+    'faq.q3': 'Posso ser banido por traduções fan?',
+    'faq.q4': 'Como funciona com jogos Unity?',
+    'faq.q5': 'Quanto tempo leva?',
+    'faq.q6': 'A qualidade é comparável a traduções profissionais?',
+    'faq.q7': 'Suporta jogos retro/DOS?',
+    'faq.q8': 'Posso contribuir com o projeto?',
+    'cta.title': 'Pronto para Traduzir?',
+    'cta.desc': 'Baixe GameStringer gratuitamente e comece a jogar no seu idioma.',
+    'cta.download': '⬇️ Download para Windows',
+    'support.title': '❤️ Apoie o Projeto',
+    'support.desc': 'GameStringer é desenvolvido no tempo livre. Seu apoio ajuda a manter o projeto!',
+    'footer.resources': 'Recursos',
+    'footer.community': 'Comunidade',
+    'footer.support': 'Apoiar',
+  },
 };
 
-// Language flags and names
-const languages = [
-  { code: 'en', flag: '🇬🇧', name: 'English' },
-  { code: 'it', flag: '🇮🇹', name: 'Italiano' },
-  { code: 'es', flag: '🇪🇸', name: 'Español' },
-  { code: 'de', flag: '🇩🇪', name: 'Deutsch' },
-  { code: 'fr', flag: '🇫🇷', name: 'Français' },
-  { code: 'ja', flag: '🇯🇵', name: '日本語' },
-  { code: 'zh', flag: '🇨🇳', name: '中文' },
-  { code: 'ko', flag: '🇰🇷', name: '한국어' },
-  { code: 'pt', flag: '🇧🇷', name: 'Português' }
-];
+// --- i18n Engine ---
+const langFlags = { en:'🇬🇧', it:'🇮🇹', es:'🇪🇸', de:'🇩🇪', fr:'🇫🇷', ja:'🇯🇵', zh:'🇨🇳', ko:'🇰🇷', pt:'🇧🇷' };
+const langNames = { en:'EN', it:'IT', es:'ES', de:'DE', fr:'FR', ja:'JA', zh:'ZH', ko:'KO', pt:'PT' };
 
-// Get current language from URL or localStorage
-function getCurrentLang() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const urlLang = urlParams.get('lang');
-  if (urlLang && siteTranslations[urlLang]) return urlLang;
-  
-  const savedLang = localStorage.getItem('gamestringer-site-lang');
-  if (savedLang && siteTranslations[savedLang]) return savedLang;
-  
-  const browserLang = navigator.language.split('-')[0];
-  if (siteTranslations[browserLang]) return browserLang;
-  
-  return 'en';
+function getLanguage() {
+  const saved = localStorage.getItem('gs_site_lang');
+  if (saved && translations[saved]) return saved;
+  const nav = (navigator.language || '').substring(0,2).toLowerCase();
+  return translations[nav] ? nav : 'it';
 }
 
-// Set language
-function setLanguage(lang) {
-  if (!siteTranslations[lang]) return;
-  
-  localStorage.setItem('gamestringer-site-lang', lang);
-  document.documentElement.lang = lang;
-  
-  const t = siteTranslations[lang];
-  
-  // Update page title and meta
-  document.title = t.title;
-  const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc) metaDesc.content = t.description;
-  
-  // Update elements with data-i18n attribute
+let currentLang = getLanguage();
+
+function applyTranslations(lang) {
+  currentLang = lang;
+  const t = translations[lang];
+  if (!t) return;
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    const value = getNestedValue(t, key);
-    if (value) {
-      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-        el.placeholder = value;
-      } else {
-        el.innerHTML = value;
-      }
-    }
+    if (t[key]) el.innerHTML = t[key];
   });
-  
-  // Update language selector
-  const langBtn = document.getElementById('lang-current');
-  if (langBtn) {
-    const currentLang = languages.find(l => l.code === lang);
-    langBtn.innerHTML = `${currentLang.flag} ${currentLang.code.toUpperCase()}`;
-  }
-  
-  // Update URL without reload
-  const url = new URL(window.location);
-  url.searchParams.set('lang', lang);
-  window.history.replaceState({}, '', url);
+  document.documentElement.lang = lang;
+  const btn = document.getElementById('lang-current');
+  if (btn) btn.innerHTML = (langFlags[lang]||'🌐') + ' ' + (langNames[lang]||lang.toUpperCase());
+  document.querySelectorAll('.lang-option').forEach(opt => {
+    opt.classList.toggle('active', opt.textContent.includes(langNames[lang]||''));
+  });
 }
 
-// Helper to get nested object value
-function getNestedValue(obj, path) {
-  return path.split('.').reduce((o, k) => o && o[k], obj);
-}
-
-// Create language selector HTML
-function createLanguageSelector() {
-  const currentLang = languages.find(l => l.code === getCurrentLang());
-  
-  return `
-    <div class="lang-selector">
-      <button id="lang-current" class="lang-btn" onclick="toggleLangMenu()">
-        ${currentLang.flag} ${currentLang.code.toUpperCase()}
-      </button>
-      <div id="lang-menu" class="lang-menu">
-        ${languages.map(l => `
-          <button class="lang-option ${l.code === currentLang.code ? 'active' : ''}" onclick="setLanguage('${l.code}')">
-            ${l.flag} ${l.name}
-          </button>
-        `).join('')}
-      </div>
-    </div>
-  `;
+function setLanguage(lang) {
+  localStorage.setItem('gs_site_lang', lang);
+  applyTranslations(lang);
+  toggleLangMenu();
 }
 
 function toggleLangMenu() {
   const menu = document.getElementById('lang-menu');
-  menu.classList.toggle('open');
+  if (menu) menu.classList.toggle('open');
 }
 
-// Close menu when clicking outside
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.lang-selector')) {
-    const menu = document.getElementById('lang-menu');
-    if (menu) menu.classList.remove('open');
-  }
+  const sel = document.querySelector('.lang-selector');
+  const menu = document.getElementById('lang-menu');
+  if (sel && menu && !sel.contains(e.target)) menu.classList.remove('open');
 });
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-  setLanguage(getCurrentLang());
+  applyTranslations(currentLang);
 });
