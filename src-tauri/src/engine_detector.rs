@@ -1647,75 +1647,276 @@ fn is_techland(path: &Path) -> bool {
     false
 }
 
-/// Scansiona gli .exe nella root per stringhe engine embedded (fallback potente)
+/// Scansiona gli .exe nella root per stringhe engine embedded e PE headers (fallback potente)
 fn scan_exe_for_engine(path: &Path) -> GameEngine {
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
             let p = entry.path();
             if p.extension().map_or(false, |e| e == "exe") {
                 if let Ok(data) = std::fs::read(&p) {
-                    // Scan solo primi 2MB per performance
-                    let scan_len = data.len().min(2 * 1024 * 1024);
+                    // FASE 1: Analisi PE Import Table (DLL names) — molto affidabile
+                    if let Some(engine) = detect_engine_from_pe_imports(&data) {
+                        return engine;
+                    }
+
+                    // FASE 2: Scan stringhe nei primi 8MB
+                    let scan_len = data.len().min(8 * 1024 * 1024);
                     let slice = &data[..scan_len];
-                    
-                    // Cerca stringhe ASCII nel binario
                     let haystack = String::from_utf8_lossy(slice);
                     
                     // Ordine di priorità (più specifico prima)
-                    if haystack.contains("UnityPlayer") || haystack.contains("unity_builtin_extra") {
+                    if haystack.contains("UnityPlayer") || haystack.contains("unity_builtin_extra") || haystack.contains("mono_jit_init") {
                         return GameEngine::Unity;
                     }
-                    if haystack.contains("UnrealEngine") || haystack.contains("UE4Editor") || haystack.contains("Epic Games") {
+                    if haystack.contains("UnrealEngine") || haystack.contains("UE4Editor") || haystack.contains("Epic Games") || haystack.contains("UObjectBase") {
                         return GameEngine::Unreal;
                     }
-                    if haystack.contains("Godot Engine") || haystack.contains("godot_") {
+                    if haystack.contains("Godot Engine") || haystack.contains("godot_") || haystack.contains("GDScript") {
                         return GameEngine::Godot;
                     }
-                    if haystack.contains("CRYENGINE") || haystack.contains("CrySystem") {
+                    if haystack.contains("CRYENGINE") || haystack.contains("CrySystem") || haystack.contains("CryRender") {
                         return GameEngine::CryEngine;
                     }
-                    if haystack.contains("Frostbite") || haystack.contains("fb://") {
+                    if haystack.contains("Frostbite") || haystack.contains("fb://") || haystack.contains("FrostbiteEngine") {
                         return GameEngine::Frostbite;
                     }
-                    if haystack.contains("REDengine") || haystack.contains("CDProjektRed") {
+                    if haystack.contains("REDengine") || haystack.contains("CDProjektRed") || haystack.contains("W2RC") {
                         return GameEngine::REDengine;
                     }
-                    if haystack.contains("RE ENGINE") || haystack.contains("re_engine") {
+                    if haystack.contains("RE ENGINE") || haystack.contains("re_engine") || haystack.contains("via.render") {
                         return GameEngine::REEngine;
                     }
-                    if haystack.contains("FOX ENGINE") || haystack.contains("fox_engine") {
+                    if haystack.contains("FOX ENGINE") || haystack.contains("fox_engine") || haystack.contains("FoxLib") {
                         return GameEngine::FOXEngine;
                     }
                     if haystack.contains("Glacier") && haystack.contains("IOInteractive") {
                         return GameEngine::Glacier;
                     }
-                    if haystack.contains("GameMaker") || haystack.contains("YoYoGames") {
+                    if haystack.contains("GameMaker") || haystack.contains("YoYoGames") || haystack.contains("GMLua") {
                         return GameEngine::GameMaker;
                     }
-                    if haystack.contains("MonoGame") || haystack.contains("Microsoft.Xna") {
+                    if haystack.contains("MonoGame") || haystack.contains("Microsoft.Xna") || haystack.contains("XnaFramework") {
                         return GameEngine::MonoGame;
                     }
                     if haystack.contains("libgdx") || haystack.contains("com.badlogic") {
                         return GameEngine::LibGDX;
                     }
-                    if haystack.contains("HashLink") || haystack.contains("hlboot") {
+                    if haystack.contains("HashLink") || haystack.contains("hlboot") || haystack.contains("hl_") {
                         return GameEngine::Haxe;
                     }
-                    if haystack.contains("love.dll") || haystack.contains("love2d") {
+                    if haystack.contains("love.dll") || haystack.contains("love2d") || haystack.contains("LOVE ") {
                         return GameEngine::Love2D;
                     }
-                    if haystack.contains("Defold") || haystack.contains("defold_engine") {
+                    if haystack.contains("Defold") || haystack.contains("defold_engine") || haystack.contains("dmengine") {
                         return GameEngine::Defold;
                     }
                     if haystack.contains("rpg_core") || haystack.contains("RGSS") || haystack.contains("RPGMaker") {
                         return GameEngine::RPGMaker;
                     }
-                    if haystack.contains("renpy") || haystack.contains("Ren'Py") {
+                    if haystack.contains("renpy") || haystack.contains("Ren'Py") || haystack.contains("pygame") {
                         return GameEngine::RenPy;
+                    }
+                    if haystack.contains("Cocos2d") || haystack.contains("cocos2d-x") {
+                        return GameEngine::Cocos2d;
+                    }
+                    if haystack.contains("RAGE") && haystack.contains("Rockstar") {
+                        return GameEngine::RAGE;
+                    }
+                    if haystack.contains("IW Engine") || haystack.contains("iw_") || (haystack.contains("Infinity Ward") && haystack.contains("iwdll")) {
+                        return GameEngine::IWEngine;
+                    }
+                    if haystack.contains("AnvilNext") || haystack.contains("Scimitar") || haystack.contains("Ubisoft") {
+                        return GameEngine::Clausewitz; // Ubisoft Anvil as generic
+                    }
+                    if haystack.contains("id Tech") || haystack.contains("idlib") || haystack.contains("Doom") && haystack.contains("idSoft") {
+                        return GameEngine::IdTech;
+                    }
+                    if haystack.contains("Creation Engine") || haystack.contains("Bethesda") && haystack.contains("Papyrus") {
+                        return GameEngine::Creation;
                     }
                 }
             }
         }
     }
     GameEngine::Unknown
+}
+
+/// Analizza la PE Import Table per rilevare DLL engine-specifiche
+fn detect_engine_from_pe_imports(data: &[u8]) -> Option<GameEngine> {
+    // Verifica PE signature: MZ header
+    if data.len() < 64 || data[0] != b'M' || data[1] != b'Z' {
+        return None;
+    }
+
+    // Offset del PE header (a offset 0x3C nel DOS header)
+    let pe_offset = u32::from_le_bytes([data[0x3C], data[0x3D], data[0x3E], data[0x3F]]) as usize;
+    if pe_offset + 4 > data.len() { return None; }
+
+    // Verifica PE\0\0 signature
+    if &data[pe_offset..pe_offset+4] != b"PE\0\0" {
+        return None;
+    }
+
+    // COFF header starts at pe_offset + 4
+    let coff_start = pe_offset + 4;
+    if coff_start + 20 > data.len() { return None; }
+
+    // Dimensione optional header
+    let optional_header_size = u16::from_le_bytes([data[coff_start + 16], data[coff_start + 17]]) as usize;
+    let optional_start = coff_start + 20;
+    if optional_start + optional_header_size > data.len() { return None; }
+
+    // Determina se PE32 o PE32+
+    let magic = u16::from_le_bytes([data[optional_start], data[optional_start + 1]]);
+    let import_dir_offset = match magic {
+        0x10b => optional_start + 104, // PE32: Import Directory RVA at offset 104
+        0x20b => optional_start + 120, // PE32+: Import Directory RVA at offset 120
+        _ => return None,
+    };
+
+    if import_dir_offset + 8 > data.len() { return None; }
+
+    let import_rva = u32::from_le_bytes([
+        data[import_dir_offset], data[import_dir_offset+1],
+        data[import_dir_offset+2], data[import_dir_offset+3],
+    ]) as usize;
+    let import_size = u32::from_le_bytes([
+        data[import_dir_offset+4], data[import_dir_offset+5],
+        data[import_dir_offset+6], data[import_dir_offset+7],
+    ]) as usize;
+
+    if import_rva == 0 || import_size == 0 { return None; }
+
+    // Trova la sezione che contiene l'Import Directory
+    let num_sections = u16::from_le_bytes([data[coff_start + 2], data[coff_start + 3]]) as usize;
+    let sections_start = optional_start + optional_header_size;
+
+    let mut dll_names: Vec<String> = Vec::new();
+
+    for i in 0..num_sections {
+        let sec_offset = sections_start + i * 40;
+        if sec_offset + 40 > data.len() { break; }
+
+        let virt_addr = u32::from_le_bytes([
+            data[sec_offset + 12], data[sec_offset + 13],
+            data[sec_offset + 14], data[sec_offset + 15],
+        ]) as usize;
+        let virt_size = u32::from_le_bytes([
+            data[sec_offset + 8], data[sec_offset + 9],
+            data[sec_offset + 10], data[sec_offset + 11],
+        ]) as usize;
+        let raw_offset = u32::from_le_bytes([
+            data[sec_offset + 20], data[sec_offset + 21],
+            data[sec_offset + 22], data[sec_offset + 23],
+        ]) as usize;
+
+        // Verifica se l'import directory è in questa sezione
+        if import_rva >= virt_addr && import_rva < virt_addr + virt_size {
+            let file_offset = raw_offset + (import_rva - virt_addr);
+
+            // Itera le Import Directory entries (20 bytes ciascuna)
+            let mut idx = file_offset;
+            for _ in 0..100 { // Max 100 DLL
+                if idx + 20 > data.len() { break; }
+
+                let name_rva = u32::from_le_bytes([
+                    data[idx + 12], data[idx + 13], data[idx + 14], data[idx + 15],
+                ]) as usize;
+
+                // End of import directory (null entry)
+                if name_rva == 0 { break; }
+
+                // Converti RVA del nome DLL in file offset
+                let name_file_offset = raw_offset + (name_rva - virt_addr);
+                if name_file_offset < data.len() {
+                    // Leggi stringa null-terminated
+                    let mut name = String::new();
+                    let mut pos = name_file_offset;
+                    while pos < data.len() && data[pos] != 0 && name.len() < 256 {
+                        name.push(data[pos] as char);
+                        pos += 1;
+                    }
+                    if !name.is_empty() {
+                        dll_names.push(name.to_lowercase());
+                    }
+                }
+
+                idx += 20;
+            }
+            break;
+        }
+    }
+
+    // Mappa DLL → Engine (ordine specifico → generico)
+    for dll in &dll_names {
+        // Unity
+        if dll.contains("unityplayer") || dll.contains("mono-2.0") || dll.contains("il2cpp") {
+            return Some(GameEngine::Unity);
+        }
+        // Godot
+        if dll.contains("godot") || dll.contains("libgodot") {
+            return Some(GameEngine::Godot);
+        }
+        // GameMaker
+        if dll.contains("yoyo") || dll.contains("gamemaker") {
+            return Some(GameEngine::GameMaker);
+        }
+        // CryEngine
+        if dll.contains("crysystem") || dll.contains("cryrender") || dll.contains("cryaction") {
+            return Some(GameEngine::CryEngine);
+        }
+        // Frostbite
+        if dll.contains("frostbite") || dll.contains("fbcore") {
+            return Some(GameEngine::Frostbite);
+        }
+        // REDengine
+        if dll.contains("redengine") || dll.contains("w2rc") {
+            return Some(GameEngine::REDengine);
+        }
+        // RE Engine
+        if dll.contains("re_engine") || dll.contains("via.dll") {
+            return Some(GameEngine::REEngine);
+        }
+        // Source Engine
+        if dll.contains("tier0") && dll.contains("vstdlib") {
+            return Some(GameEngine::Source);
+        }
+        // MonoGame/XNA
+        if dll.contains("monogame") || dll.contains("fna.dll") || dll.contains("sdl2.dll") && dll_names.iter().any(|d| d.contains("fna")) {
+            return Some(GameEngine::MonoGame);
+        }
+        // Haxe/HashLink
+        if dll.contains("hashlink") || dll.contains("hl.dll") || dll.contains("libhl") {
+            return Some(GameEngine::Haxe);
+        }
+        // LOVE2D
+        if dll.contains("love.dll") || dll.contains("lua51") && dll_names.iter().any(|d| d.contains("sdl2")) {
+            return Some(GameEngine::Love2D);
+        }
+        // RPG Maker (RGSS)
+        if dll.contains("rgss") {
+            return Some(GameEngine::RPGMaker);
+        }
+        // Ren'Py (Python)
+        if dll.contains("python") && dll_names.iter().any(|d| d.contains("sdl2")) {
+            return Some(GameEngine::RenPy);
+        }
+        // Cocos2d
+        if dll.contains("cocos2d") || dll.contains("libcocos") {
+            return Some(GameEngine::Cocos2d);
+        }
+        // Defold
+        if dll.contains("defold") || dll.contains("dmengine") {
+            return Some(GameEngine::Defold);
+        }
+    }
+
+    // Check Source Engine via combined DLL presence
+    let has_tier0 = dll_names.iter().any(|d| d.contains("tier0"));
+    let has_vstdlib = dll_names.iter().any(|d| d.contains("vstdlib"));
+    if has_tier0 && has_vstdlib {
+        return Some(GameEngine::Source);
+    }
+
+    None
 }

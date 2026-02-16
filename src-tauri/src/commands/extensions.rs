@@ -474,6 +474,249 @@ MIT
     Ok(ext_path.to_string_lossy().to_string())
 }
 
+// ============================================================================
+// PLUGIN ENGINE DETECTOR — Carica regole engine da JSON senza ricompilare
+// ============================================================================
+
+/// Regola per rilevare un engine da file/directory
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EngineDetectionRule {
+    pub engine_name: String,
+    pub file_patterns: Vec<String>,       // file che devono esistere (glob)
+    pub dll_patterns: Vec<String>,        // DLL nell'import table (substring)
+    pub string_patterns: Vec<String>,     // stringhe nell'exe (substring)
+    pub priority: i32,                    // priorità (più alto = prima)
+}
+
+/// Definizione plugin provider traduzione
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TranslationProviderPlugin {
+    pub id: String,
+    pub name: String,
+    pub api_url: String,
+    pub api_key_header: String,           // es. "Authorization", "X-API-Key"
+    pub api_key_prefix: Option<String>,   // es. "Bearer ", "DeepL-Auth-Key "
+    pub request_method: String,           // "POST" o "GET"
+    pub request_body_template: String,    // JSON template con {{text}}, {{source}}, {{target}}
+    pub response_path: String,            // jq-like path es. "translations[0].text"
+    pub supported_languages: Vec<String>,
+    pub max_batch_size: u32,
+    pub rate_limit_ms: u32,
+}
+
+/// Carica regole engine plugin dalla directory estensioni
+#[tauri::command]
+pub async fn load_engine_plugins() -> Result<Vec<EngineDetectionRule>, String> {
+    let dir = get_extensions_dir().join("engine_rules");
+    let mut rules: Vec<EngineDetectionRule> = Vec::new();
+
+    if !dir.exists() {
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| format!("Errore creazione dir engine_rules: {}", e))?;
+        // Crea file esempio
+        let example = vec![EngineDetectionRule {
+            engine_name: "MyCustomEngine".to_string(),
+            file_patterns: vec!["MyEngine.dll".to_string(), "data/*.pak".to_string()],
+            dll_patterns: vec!["myengine".to_string()],
+            string_patterns: vec!["MyEngine Runtime".to_string()],
+            priority: 50,
+        }];
+        let json = serde_json::to_string_pretty(&example).unwrap_or_default();
+        let _ = std::fs::write(dir.join("_example.json"), json);
+        return Ok(rules);
+    }
+
+    if let Ok(entries) = std::fs::read_dir(&dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |e| e == "json") && !path.file_name().map_or(false, |n| n.to_string_lossy().starts_with('_')) {
+                if let Ok(content) = std::fs::read_to_string(&path) {
+                    match serde_json::from_str::<Vec<EngineDetectionRule>>(&content) {
+                        Ok(mut file_rules) => {
+                            info!("[PLUGINS] Caricate {} regole engine da {:?}", file_rules.len(), path.file_name());
+                            rules.append(&mut file_rules);
+                        }
+                        Err(e) => warn!("[PLUGINS] Errore parsing {:?}: {}", path.file_name(), e),
+                    }
+                }
+            }
+        }
+    }
+
+    rules.sort_by(|a, b| b.priority.cmp(&a.priority));
+    info!("[PLUGINS] Totale {} regole engine plugin caricate", rules.len());
+    Ok(rules)
+}
+
+/// Salva nuove regole engine plugin
+#[tauri::command]
+pub async fn save_engine_plugin(filename: String, rules: Vec<EngineDetectionRule>) -> Result<(), String> {
+    let dir = get_extensions_dir().join("engine_rules");
+    std::fs::create_dir_all(&dir)
+        .map_err(|e| format!("Errore creazione dir: {}", e))?;
+
+    let safe_name = filename.replace(['/', '\\'], "_").replace("..", "_");
+    let path = dir.join(format!("{}.json", safe_name));
+    let json = serde_json::to_string_pretty(&rules)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    std::fs::write(&path, json)
+        .map_err(|e| format!("Errore scrittura: {}", e))?;
+
+    info!("[PLUGINS] Salvate {} regole engine in {:?}", rules.len(), path);
+    Ok(())
+}
+
+/// Carica plugin provider traduzione dalla directory estensioni
+#[tauri::command]
+pub async fn load_translation_provider_plugins() -> Result<Vec<TranslationProviderPlugin>, String> {
+    let dir = get_extensions_dir().join("translation_providers");
+    let mut providers: Vec<TranslationProviderPlugin> = Vec::new();
+
+    if !dir.exists() {
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| format!("Errore creazione dir translation_providers: {}", e))?;
+        // Crea file esempio
+        let example = vec![TranslationProviderPlugin {
+            id: "my-provider".to_string(),
+            name: "My Translation API".to_string(),
+            api_url: "https://api.example.com/translate".to_string(),
+            api_key_header: "Authorization".to_string(),
+            api_key_prefix: Some("Bearer ".to_string()),
+            request_method: "POST".to_string(),
+            request_body_template: r#"{"text": "{{text}}", "source": "{{source}}", "target": "{{target}}"}"#.to_string(),
+            response_path: "translation".to_string(),
+            supported_languages: vec!["en".to_string(), "it".to_string(), "de".to_string(), "fr".to_string(), "es".to_string()],
+            max_batch_size: 50,
+            rate_limit_ms: 100,
+        }];
+        let json = serde_json::to_string_pretty(&example).unwrap_or_default();
+        let _ = std::fs::write(dir.join("_example.json"), json);
+        return Ok(providers);
+    }
+
+    if let Ok(entries) = std::fs::read_dir(&dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |e| e == "json") && !path.file_name().map_or(false, |n| n.to_string_lossy().starts_with('_')) {
+                if let Ok(content) = std::fs::read_to_string(&path) {
+                    match serde_json::from_str::<Vec<TranslationProviderPlugin>>(&content) {
+                        Ok(mut file_providers) => {
+                            info!("[PLUGINS] Caricati {} provider traduzione da {:?}", file_providers.len(), path.file_name());
+                            providers.append(&mut file_providers);
+                        }
+                        Err(e) => warn!("[PLUGINS] Errore parsing {:?}: {}", path.file_name(), e),
+                    }
+                }
+            }
+        }
+    }
+
+    info!("[PLUGINS] Totale {} provider traduzione plugin caricati", providers.len());
+    Ok(providers)
+}
+
+/// Salva un plugin provider traduzione
+#[tauri::command]
+pub async fn save_translation_provider_plugin(provider: TranslationProviderPlugin) -> Result<(), String> {
+    let dir = get_extensions_dir().join("translation_providers");
+    std::fs::create_dir_all(&dir)
+        .map_err(|e| format!("Errore creazione dir: {}", e))?;
+
+    let path = dir.join(format!("{}.json", provider.id));
+    let json = serde_json::to_string_pretty(&vec![&provider])
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
+    std::fs::write(&path, json)
+        .map_err(|e| format!("Errore scrittura: {}", e))?;
+
+    info!("[PLUGINS] Salvato provider '{}' in {:?}", provider.name, path);
+    Ok(())
+}
+
+/// Esegue una traduzione tramite plugin provider
+#[tauri::command]
+pub async fn translate_with_plugin_provider(
+    provider_id: String,
+    text: String,
+    source_lang: String,
+    target_lang: String,
+    api_key: String,
+) -> Result<String, String> {
+    let providers = load_translation_provider_plugins().await?;
+    let provider = providers.iter()
+        .find(|p| p.id == provider_id)
+        .ok_or(format!("Provider plugin '{}' non trovato", provider_id))?;
+
+    // Costruisci il body dalla template
+    let body = provider.request_body_template
+        .replace("{{text}}", &text)
+        .replace("{{source}}", &source_lang)
+        .replace("{{target}}", &target_lang);
+
+    // Costruisci header autenticazione
+    let auth_value = if let Some(ref prefix) = provider.api_key_prefix {
+        format!("{}{}", prefix, api_key)
+    } else {
+        api_key.clone()
+    };
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("Errore client HTTP: {}", e))?;
+
+    let request = match provider.request_method.to_uppercase().as_str() {
+        "POST" => client.post(&provider.api_url)
+            .header(&provider.api_key_header, &auth_value)
+            .header("Content-Type", "application/json")
+            .body(body),
+        "GET" => client.get(&provider.api_url)
+            .header(&provider.api_key_header, &auth_value),
+        _ => return Err(format!("Metodo HTTP non supportato: {}", provider.request_method)),
+    };
+
+    let response = request.send().await
+        .map_err(|e| format!("Errore richiesta API: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("API errore HTTP {}: {}", response.status(), response.text().await.unwrap_or_default()));
+    }
+
+    let json: serde_json::Value = response.json().await
+        .map_err(|e| format!("Errore parsing risposta: {}", e))?;
+
+    // Naviga il JSON usando response_path (supporta "field", "field.subfield", "field[0].subfield")
+    let result = navigate_json(&json, &provider.response_path)
+        .ok_or(format!("Campo '{}' non trovato nella risposta", provider.response_path))?;
+
+    Ok(result)
+}
+
+/// Naviga un JSON value usando un path tipo "translations[0].text"
+fn navigate_json(value: &serde_json::Value, path: &str) -> Option<String> {
+    let mut current = value;
+    for part in path.split('.') {
+        if part.contains('[') {
+            // Array access: "field[0]"
+            let bracket = part.find('[')?;
+            let field = &part[..bracket];
+            let idx_str = &part[bracket+1..part.len()-1];
+            let idx: usize = idx_str.parse().ok()?;
+
+            if !field.is_empty() {
+                current = current.get(field)?;
+            }
+            current = current.get(idx)?;
+        } else {
+            current = current.get(part)?;
+        }
+    }
+
+    match current {
+        serde_json::Value::String(s) => Some(s.clone()),
+        other => Some(other.to_string()),
+    }
+}
+
 // Helper: trova la directory radice di un'estensione (contiene manifest.json)
 fn find_extension_root(dir: &PathBuf) -> Option<PathBuf> {
     // manifest.json nella root stessa?

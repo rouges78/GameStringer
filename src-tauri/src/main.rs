@@ -665,6 +665,26 @@ fn main() {
             commands::notifications::expire_old_system_notifications,
             commands::notifications::get_profiles_for_notification_admin,
 
+            // Project Export/Import
+            commands::project_export::export_translation_project,
+            commands::project_export::import_translation_project,
+            commands::project_export::preview_translation_project,
+            commands::project_export::list_exportable_projects,
+            commands::project_export::save_translation_strings,
+            commands::project_export::load_translation_strings,
+
+            // Translation Dashboard Stats
+            commands::translation_stats::get_translation_dashboard_stats,
+            commands::translation_stats::get_game_translation_stats,
+
+            // Translation Diff Viewer
+            commands::translation_diff::save_translation_snapshot,
+            commands::translation_diff::list_translation_snapshots,
+            commands::translation_diff::delete_translation_snapshot,
+            commands::translation_diff::diff_translation_snapshots,
+            commands::translation_diff::diff_current_vs_snapshot,
+            commands::translation_diff::diff_translation_files,
+
             // Steam Workshop API
             commands::steam_workshop::search_steam_workshop,
             commands::steam_workshop::get_workshop_item_details,
@@ -784,6 +804,12 @@ fn main() {
             commands::extensions::install_extension,
             commands::extensions::uninstall_extension,
             commands::extensions::create_extension_template,
+            // Plugin System (engine + translation providers)
+            commands::extensions::load_engine_plugins,
+            commands::extensions::save_engine_plugin,
+            commands::extensions::load_translation_provider_plugins,
+            commands::extensions::save_translation_provider_plugin,
+            commands::extensions::translate_with_plugin_provider,
             
             // Mod Profiles System (Vortex-inspired)
             commands::mod_profiles::init_mod_profiles,

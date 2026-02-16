@@ -67,3 +67,6 @@ pub mod wolfrpg_patcher;
 pub mod steam_workshop;
 pub mod ollama_manager;
 pub mod notifications;
+pub mod project_export;
+pub mod translation_diff;
+pub mod translation_stats;
