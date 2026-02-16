@@ -23,6 +23,7 @@ import { GenericCredentialsModal } from '@/components/modals/generic-credentials
 import { SteamModal } from '@/components/modals/steam-modal';
 import { SteamFamilySharing } from '@/components/steam-family-sharing';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { open as shellOpen } from '@tauri-apps/plugin-shell';
 
 // Define a type for the store object for better type safety
 type Store = {
@@ -618,7 +619,7 @@ export default function StoresPage() {
                         variant="outline"
                         size="sm"
                         className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
-                        onClick={() => window.open('https://www.gog.com/account', '_blank', 'noopener,noreferrer')}
+                        onClick={() => shellOpen('https://www.gog.com/account').catch(() => window.open('https://www.gog.com/account', '_blank'))}
                         title="Apri GOG.com"
                       >
                         <ExternalLink className="h-3 w-3" />
@@ -659,7 +660,7 @@ export default function StoresPage() {
                           variant="outline"
                           size="sm"
                           className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
-                          onClick={() => window.open('https://www.gog.com/en/games', '_blank', 'noopener,noreferrer')}
+                          onClick={() => shellOpen('https://www.gog.com/en/games').catch(() => window.open('https://www.gog.com/en/games', '_blank'))}
                           title="GOG Store"
                         >
                           <StoreIcon className="h-3 w-3" />
@@ -668,7 +669,7 @@ export default function StoresPage() {
                           variant="outline"
                           size="sm"
                           className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
-                          onClick={() => window.open('https://www.gog.com/galaxy', '_blank', 'noopener,noreferrer')}
+                          onClick={() => shellOpen('https://www.gog.com/galaxy').catch(() => window.open('https://www.gog.com/galaxy', '_blank'))}
                           title="Scarica GOG Galaxy"
                         >
                           <ExternalLink className="h-3 w-3" />
