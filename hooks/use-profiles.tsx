@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { 
   UserProfile, 
@@ -24,7 +24,46 @@ const dispatchAuthChanged = () => {
   }
 };
 
+// ============================================================
+// Context — singola istanza condivisa da tutti i consumatori
+// ============================================================
+
+const ProfilesContext = createContext<UseProfilesReturn | null>(null);
+
+interface ProfilesProviderProps {
+  children: ReactNode;
+}
+
+/**
+ * Provider centralizzato per i profili.
+ * Monta UNA SOLA VOLTA nel layout dell'app.
+ * Tutti i componenti che usano useProfiles() condividono questo stato.
+ */
+export function ProfilesProvider({ children }: ProfilesProviderProps) {
+  const value = useProfilesCore();
+  return (
+    <ProfilesContext.Provider value={value}>
+      {children}
+    </ProfilesContext.Provider>
+  );
+}
+
+/**
+ * Hook pubblico — legge dal Context se disponibile (zero fetch aggiuntivi),
+ * altrimenti crea una istanza standalone (backward-compat per test/storybook).
+ */
 export function useProfiles(): UseProfilesReturn {
+  const ctx = useContext(ProfilesContext);
+  if (ctx) return ctx;
+  // Fallback standalone se usato fuori dal Provider (non dovrebbe succedere in prod)
+  return useProfilesCore();
+}
+
+// ============================================================
+// Core — logica interna (usata solo dal Provider)
+// ============================================================
+
+function useProfilesCore(): UseProfilesReturn {
   const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,12 +127,10 @@ export function useProfiles(): UseProfilesReturn {
     const initialize = async () => {
       setIsLoading(true);
       try {
-        // Log rimosso per ridurre spam console
         await Promise.all([
           loadProfiles(),
           loadCurrentProfile()
         ]);
-        // Log rimosso per ridurre spam console
       } catch (error) {
         console.error('❌ useProfiles: Errore durante inizializzazione sistema profili:', error);
         setError('Errore inizializzazione sistema profili');
@@ -103,12 +140,11 @@ export function useProfiles(): UseProfilesReturn {
     };
 
     initialize();
-  }, []); // 🚨 NESSUNA DIPENDENZA per evitare loop infinito
+  }, []); // NESSUNA DIPENDENZA per evitare loop infinito
 
   // Listen for auth changes from other instances and refresh current profile
   useEffect(() => {
     const handler = () => {
-      // Log rimosso per ridurre spam console
       loadCurrentProfile().catch(err => console.warn('useProfiles loadCurrentProfile error:', err));
     };
     if (typeof window !== 'undefined') {

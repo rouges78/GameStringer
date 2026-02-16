@@ -7,6 +7,61 @@ use tokio::fs;
 use std::collections::HashMap;
 use chrono::Utc;
 
+// ============================================================
+// Helper: Conversione InstalledGame → GameInfo / GameScanResult
+// Evita duplicazione dello stesso blocco per ogni store
+// ============================================================
+
+/// Converte un InstalledGame generico (GOG, Origin, Ubisoft, Battle.net, itch.io, Rockstar) in GameInfo
+fn installed_game_to_game_info(
+    game: &library::InstalledGame,
+    header_image: Option<String>,
+    default_languages: Option<Vec<String>>,
+) -> GameInfo {
+    GameInfo {
+        id: game.id.clone(),
+        title: game.name.clone(),
+        platform: game.platform.clone(),
+        install_path: Some(game.path.clone()),
+        executable_path: game.executable.clone(),
+        icon: None,
+        image_url: header_image.clone(),
+        header_image,
+        is_installed: true,
+        steam_app_id: None,
+        is_vr: is_vr_game(&game.name),
+        engine: None,
+        last_played: game.last_modified,
+        is_shared: false,
+        supported_languages: default_languages.or_else(|| Some(vec!["english".to_string()])),
+        genres: None,
+        added_date: None,
+    }
+}
+
+/// Converte un InstalledGame generico in GameScanResult
+fn installed_game_to_scan_result(
+    game: &library::InstalledGame,
+    source: &str,
+) -> GameScanResult {
+    GameScanResult {
+        title: game.name.clone(),
+        path: game.path.clone(),
+        executable_path: game.executable.clone(),
+        app_id: Some(game.id.clone()),
+        source: source.to_string(),
+        is_installed: true,
+        id: game.id.clone(),
+        platform: game.platform.clone(),
+        header_image: None,
+        is_vr: is_vr_game(&game.name),
+        engine: None,
+        supported_languages: None,
+        genres: None,
+        last_played: game.last_modified,
+    }
+}
+
 // Funzione helper per rilevare giochi VR dal nome
 pub fn is_vr_game(game_name: &str) -> bool {
     let name_lower = game_name.to_lowercase();
@@ -1154,193 +1209,58 @@ pub async fn get_games(
         Ok(gog_games) => {
             log::info!("🎮 Trovati {} giochi GOG installati", gog_games.len());
             
-            // Raccogli gli ID per recuperare le copertine
+            // Recupera le copertine GOG in batch
             let gog_game_ids: Vec<String> = gog_games.iter()
                 .map(|g| g.id.replace("gog_", ""))
                 .collect();
-            
-            // Recupera le copertine GOG in batch
             let gog_covers = match gog::get_gog_covers_batch(gog_game_ids).await {
                 Ok(covers) => covers,
-                Err(e) => {
-                    log::warn!("⚠️ Errore recupero copertine GOG: {}", e);
-                    HashMap::new()
-                }
+                Err(e) => { log::warn!("⚠️ Errore recupero copertine GOG: {}", e); HashMap::new() }
             };
             
-            // Converti i giochi GOG in GameInfo
-            for gog_game in gog_games {
-                let game_id_clean = gog_game.id.replace("gog_", "");
-                let header_image = gog_covers.get(&game_id_clean).cloned();
-                
-                let game_info = GameInfo {
-                    id: gog_game.id.clone(),
-                    title: gog_game.name.clone(),
-                    platform: "GOG".to_string(),
-                    install_path: Some(gog_game.path.clone()),
-                    executable_path: gog_game.executable.clone(),
-                    icon: None,
-                    image_url: header_image.clone(),
-                    header_image,
-                    is_installed: true,
-                    steam_app_id: None,
-                    is_vr: false,
-                    engine: None,
-                    last_played: gog_game.last_modified,
-                    is_shared: false,
-                    supported_languages: Some(vec!["english".to_string(), "italian".to_string()]),
-                genres: None, added_date: None,
-                };
-                all_games.push(game_info);
+            for gog_game in &gog_games {
+                let cover = gog_covers.get(&gog_game.id.replace("gog_", "")).cloned();
+                let langs = Some(vec!["english".to_string(), "italian".to_string()]);
+                all_games.push(installed_game_to_game_info(gog_game, cover, langs));
             }
         }
-        Err(e) => {
-            log::warn!("⚠️ Errore caricamento giochi GOG: {}", e);
-        }
+        Err(e) => { log::warn!("⚠️ Errore caricamento giochi GOG: {}", e); }
     }
 
     // Aggiungi giochi Origin/EA App installati
     match origin::get_origin_installed_games().await {
-        Ok(origin_games) => {
-            log::info!("🎮 Trovati {} giochi Origin/EA App installati", origin_games.len());
-            
-            // Origin/EA App non ha API pubblica per le copertine
-            // Usiamo placeholder per ora
-            
-            // Converti i giochi Origin in GameInfo
-            for origin_game in origin_games {
-                let game_info = GameInfo {
-                    id: origin_game.id.clone(),
-                    title: origin_game.name.clone(),
-                    platform: origin_game.platform.clone(),
-                    install_path: Some(origin_game.path.clone()),
-                    executable_path: origin_game.executable.clone(),
-                    icon: None,
-                    image_url: None, // Nessuna API pubblica per le copertine
-                    header_image: None,
-                    is_installed: true,
-                    steam_app_id: None,
-                    is_vr: false,
-                    engine: None,
-                    last_played: origin_game.last_modified,
-                    is_shared: false,
-                    supported_languages: Some(vec!["english".to_string()]),
-                    genres: None, added_date: None,
-                };
-                all_games.push(game_info);
-            }
+        Ok(games) => {
+            log::info!("🎮 Trovati {} giochi Origin/EA App installati", games.len());
+            for g in &games { all_games.push(installed_game_to_game_info(g, None, None)); }
         }
-        Err(e) => {
-            log::warn!("⚠️ Errore caricamento giochi Origin/EA App: {}", e);
-        }
+        Err(e) => { log::warn!("⚠️ Errore caricamento giochi Origin/EA App: {}", e); }
     }
 
     // Aggiungi giochi Ubisoft Connect installati
     match ubisoft::get_ubisoft_installed_games().await {
-        Ok(ubisoft_games) => {
-            log::info!("🎮 Trovati {} giochi Ubisoft Connect installati", ubisoft_games.len());
-            
-            // Ubisoft Connect non ha API pubblica per le copertine
-            // Usiamo placeholder per ora
-            
-            // Converti i giochi Ubisoft in GameInfo
-            for ubisoft_game in ubisoft_games {
-                let game_info = GameInfo {
-                    id: ubisoft_game.id.clone(),
-                    title: ubisoft_game.name.clone(),
-                    platform: ubisoft_game.platform.clone(),
-                    install_path: Some(ubisoft_game.path.clone()),
-                    executable_path: ubisoft_game.executable.clone(),
-                    icon: None,
-                    image_url: None, // Nessuna API pubblica per le copertine
-                    header_image: None,
-                    is_installed: true,
-                    steam_app_id: None,
-                    is_vr: false,
-                    engine: None,
-                    last_played: ubisoft_game.last_modified,
-                    is_shared: false,
-                    supported_languages: Some(vec!["english".to_string()]),
-                    genres: None, added_date: None,
-                };
-                all_games.push(game_info);
-            }
+        Ok(games) => {
+            log::info!("🎮 Trovati {} giochi Ubisoft Connect installati", games.len());
+            for g in &games { all_games.push(installed_game_to_game_info(g, None, None)); }
         }
-        Err(e) => {
-            log::warn!("⚠️ Errore caricamento giochi Ubisoft Connect: {}", e);
-        }
+        Err(e) => { log::warn!("⚠️ Errore caricamento giochi Ubisoft Connect: {}", e); }
     }
 
     // Aggiungi giochi Battle.net installati
     match battlenet::get_battlenet_installed_games().await {
-        Ok(battlenet_games) => {
-            log::info!("🎮 Trovati {} giochi Battle.net installati", battlenet_games.len());
-            
-            // Battle.net non ha API pubblica per le copertine
-            // Usiamo placeholder per ora
-            
-            // Converti i giochi Battle.net in GameInfo
-            for battlenet_game in battlenet_games {
-                let game_info = GameInfo {
-                    id: battlenet_game.id.clone(),
-                    title: battlenet_game.name.clone(),
-                    platform: battlenet_game.platform.clone(),
-                    install_path: Some(battlenet_game.path.clone()),
-                    executable_path: battlenet_game.executable.clone(),
-                    icon: None,
-                    image_url: None, // Nessuna API pubblica per le copertine
-                    header_image: None,
-                    is_installed: true,
-                    steam_app_id: None,
-                    is_vr: false,
-                    engine: None,
-                    last_played: battlenet_game.last_modified,
-                    is_shared: false,
-                    supported_languages: Some(vec!["english".to_string()]),
-                    genres: None, added_date: None,
-                };
-                all_games.push(game_info);
-            }
+        Ok(games) => {
+            log::info!("🎮 Trovati {} giochi Battle.net installati", games.len());
+            for g in &games { all_games.push(installed_game_to_game_info(g, None, None)); }
         }
-        Err(e) => {
-            log::warn!("⚠️ Errore caricamento giochi Battle.net: {}", e);
-        }
+        Err(e) => { log::warn!("⚠️ Errore caricamento giochi Battle.net: {}", e); }
     }
 
     // Aggiungi giochi itch.io installati
     match itchio::get_itchio_installed_games().await {
-        Ok(itchio_games) => {
-            log::info!("🎮 Trovati {} giochi itch.io installati", itchio_games.len());
-            
-            // itch.io non ha API pubblica per le copertine
-            // Usiamo placeholder per ora
-            
-            // Converti i giochi itch.io in GameInfo
-            for itchio_game in itchio_games {
-                let game_info = GameInfo {
-                    id: itchio_game.id.clone(),
-                    title: itchio_game.name.clone(),
-                    platform: itchio_game.platform.clone(),
-                    install_path: Some(itchio_game.path.clone()),
-                    executable_path: itchio_game.executable.clone(),
-                    icon: None,
-                    image_url: None, // Nessuna API pubblica per le copertine
-                    header_image: None,
-                    is_installed: true,
-                    steam_app_id: None,
-                    is_vr: false,
-                    engine: None,
-                    last_played: itchio_game.last_modified,
-                    is_shared: false,
-                    supported_languages: Some(vec!["english".to_string()]),
-                    genres: None, added_date: None,
-                };
-                all_games.push(game_info);
-            }
+        Ok(games) => {
+            log::info!("🎮 Trovati {} giochi itch.io installati", games.len());
+            for g in &games { all_games.push(installed_game_to_game_info(g, None, None)); }
         }
-        Err(e) => {
-            log::warn!("⚠️ Errore caricamento giochi itch.io: {}", e);
-        }
+        Err(e) => { log::warn!("⚠️ Errore caricamento giochi itch.io: {}", e); }
     }
 
     log::info!("✅ Totale giochi caricati: {}", all_games.len());
@@ -1412,172 +1332,29 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         Err(e) => log::error!("🔥 Panic in Epic task: {}", e),
     }
     
-    // 3. GOG
-    match gog_task.await {
-        Ok(Ok(gog_games)) => {
-            let gog_scan_results: Vec<GameScanResult> = gog_games.into_iter().map(|game| {
-                GameScanResult {
-                    title: game.name.clone(),
-                    path: game.path.clone(),
-                    executable_path: game.executable.clone(),
-                    app_id: Some(game.id.clone()),
-                    source: "GOG".to_string(),
-                    is_installed: true,
-                    id: game.id.clone(),
-                    platform: game.platform.clone(),
-                    header_image: None,
-                    is_vr: is_vr_game(&game.name),
-                    engine: None,
-                    supported_languages: None,
-                    genres: None,
-                    last_played: game.last_modified,
-                }
-            }).collect();
-            log::info!("✅ Trovati {} giochi GOG", gog_scan_results.len());
-            scan_results.extend(gog_scan_results);
-        }
-        Ok(Err(e)) => log::error!("❌ Errore scansione GOG: {}", e),
-        Err(e) => log::error!("🔥 Panic in GOG task: {}", e),
-    }
+    // 3-8. Store con struttura InstalledGame comune — usa helper
+    let store_tasks: Vec<(&str, Result<Result<Vec<library::InstalledGame>, String>, _>)> = vec![
+        ("GOG", gog_task.await),
+        ("Origin", origin_task.await),
+        ("Ubisoft Connect", ubisoft_task.await),
+        ("Battle.net", battlenet_task.await),
+        ("itch.io", itchio_task.await),
+        ("Rockstar Games", rockstar_task.await),
+    ];
     
-    // 4. Origin/EA
-    match origin_task.await {
-        Ok(Ok(origin_games)) => {
-            let origin_scan_results: Vec<GameScanResult> = origin_games.into_iter().map(|game| {
-                GameScanResult {
-                    title: game.name.clone(),
-                    path: game.path.clone(),
-                    executable_path: game.executable.clone(),
-                    app_id: Some(game.id.clone()),
-                    source: "Origin".to_string(),
-                    is_installed: true,
-                    id: game.id.clone(),
-                    platform: game.platform.clone(),
-                    header_image: None,
-                    is_vr: is_vr_game(&game.name),
-                    engine: None,
-                    supported_languages: None,
-                    genres: None,
-                    last_played: game.last_modified,
-                }
-            }).collect();
-            log::info!("✅ Trovati {} giochi Origin/EA", origin_scan_results.len());
-            scan_results.extend(origin_scan_results);
+    for (store_name, result) in store_tasks {
+        match result {
+            Ok(Ok(games)) => {
+                let count = games.len();
+                let results: Vec<GameScanResult> = games.iter()
+                    .map(|g| installed_game_to_scan_result(g, store_name))
+                    .collect();
+                log::info!("✅ Trovati {} giochi {}", count, store_name);
+                scan_results.extend(results);
+            }
+            Ok(Err(e)) => log::error!("❌ Errore scansione {}: {}", store_name, e),
+            Err(e) => log::error!("🔥 Panic in {} task: {}", store_name, e),
         }
-        Ok(Err(e)) => log::error!("❌ Errore scansione Origin: {}", e),
-        Err(e) => log::error!("🔥 Panic in Origin task: {}", e),
-    }
-    
-    // 5. Ubisoft Connect
-    match ubisoft_task.await {
-        Ok(Ok(ubisoft_games)) => {
-            let ubisoft_scan_results: Vec<GameScanResult> = ubisoft_games.into_iter().map(|game| {
-                GameScanResult {
-                    title: game.name.clone(),
-                    path: game.path.clone(),
-                    executable_path: game.executable.clone(),
-                    app_id: Some(game.id.clone()),
-                    source: "Ubisoft Connect".to_string(),
-                    is_installed: true,
-                    id: game.id.clone(),
-                    platform: game.platform.clone(),
-                    header_image: None,
-                    is_vr: is_vr_game(&game.name),
-                    engine: None,
-                    supported_languages: None,
-                    genres: None,
-                    last_played: game.last_modified,
-                }
-            }).collect();
-            log::info!("✅ Trovati {} giochi Ubisoft Connect", ubisoft_scan_results.len());
-            scan_results.extend(ubisoft_scan_results);
-        }
-        Ok(Err(e)) => log::error!("❌ Errore scansione Ubisoft Connect: {}", e),
-        Err(e) => log::error!("🔥 Panic in Ubisoft task: {}", e),
-    }
-    
-    // 6. Battle.net
-    match battlenet_task.await {
-        Ok(Ok(battlenet_games)) => {
-            let battlenet_scan_results: Vec<GameScanResult> = battlenet_games.into_iter().map(|game| {
-                GameScanResult {
-                    title: game.name.clone(),
-                    path: game.path.clone(),
-                    executable_path: game.executable.clone(),
-                    app_id: Some(game.id.clone()),
-                    source: "Battle.net".to_string(),
-                    is_installed: true,
-                    id: game.id.clone(),
-                    platform: game.platform.clone(),
-                    header_image: None,
-                    is_vr: is_vr_game(&game.name),
-                    engine: None,
-                    supported_languages: None,
-                    genres: None,
-                    last_played: game.last_modified,
-                }
-            }).collect();
-            log::info!("✅ Trovati {} giochi Battle.net", battlenet_scan_results.len());
-            scan_results.extend(battlenet_scan_results);
-        }
-        Ok(Err(e)) => log::error!("❌ Errore scansione Battle.net: {}", e),
-        Err(e) => log::error!("🔥 Panic in Battle.net task: {}", e),
-    }
-    
-    // 7. itch.io
-    match itchio_task.await {
-        Ok(Ok(itchio_games)) => {
-            let itchio_scan_results: Vec<GameScanResult> = itchio_games.into_iter().map(|game| {
-                GameScanResult {
-                    title: game.name.clone(),
-                    path: game.path.clone(),
-                    executable_path: game.executable.clone(),
-                    app_id: Some(game.id.clone()),
-                    source: "itch.io".to_string(),
-                    is_installed: true,
-                    id: game.id.clone(),
-                    platform: game.platform.clone(),
-                    header_image: None,
-                    is_vr: is_vr_game(&game.name),
-                    engine: None,
-                    supported_languages: None,
-                    genres: None,
-                    last_played: game.last_modified,
-                }
-            }).collect();
-            log::info!("✅ Trovati {} giochi itch.io", itchio_scan_results.len());
-            scan_results.extend(itchio_scan_results);
-        }
-        Ok(Err(e)) => log::error!("❌ Errore scansione itch.io: {}", e),
-        Err(e) => log::error!("🔥 Panic in itch.io task: {}", e),
-    }
-    
-    // 8. Rockstar Games
-    match rockstar_task.await {
-        Ok(Ok(rockstar_games)) => {
-            let rockstar_scan_results: Vec<GameScanResult> = rockstar_games.into_iter().map(|game| {
-                GameScanResult {
-                    title: game.name.clone(),
-                    path: game.path.clone(),
-                    executable_path: game.executable.clone(),
-                    app_id: Some(game.id.clone()),
-                    source: "Rockstar Games".to_string(),
-                    is_installed: true,
-                    id: game.id.clone(),
-                    platform: game.platform.clone(),
-                    header_image: None,
-                    is_vr: is_vr_game(&game.name),
-                    engine: None,
-                    supported_languages: None,
-                    genres: None,
-                    last_played: game.last_modified,
-                }
-            }).collect();
-            log::info!("✅ Trovati {} giochi Rockstar Games", rockstar_scan_results.len());
-            scan_results.extend(rockstar_scan_results);
-        }
-        Ok(Err(e)) => log::error!("❌ Errore scansione Rockstar Games: {}", e),
-        Err(e) => log::error!("🔥 Panic in Rockstar task: {}", e),
     }
     
     let elapsed = start_time.elapsed();

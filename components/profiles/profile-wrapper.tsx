@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { ProfileAuthProvider } from '@/lib/profile-auth';
+import { ProfilesProvider } from '@/hooks/use-profiles';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { MainLayout } from '@/components/layout/main-layout';
 import { sessionPersistence } from '@/lib/session-persistence';
@@ -83,13 +84,15 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
   }
 
   return (
-    <ProfileAuthProvider>
-      <ProtectedRoute requireAuth={requireAuth}>
-        <MainLayout>
-          {children}
-        </MainLayout>
-      </ProtectedRoute>
-    </ProfileAuthProvider>
+    <ProfilesProvider>
+      <ProfileAuthProvider>
+        <ProtectedRoute requireAuth={requireAuth}>
+          <MainLayout>
+            {children}
+          </MainLayout>
+        </ProtectedRoute>
+      </ProfileAuthProvider>
+    </ProfilesProvider>
   );
 }
 
