@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, useCallback, useContext, createContext } from 'react';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { 
   UserProfile, 
@@ -13,6 +13,10 @@ import { ensureArray } from '@/lib/array-utils';
 import { profileCache } from '@/lib/profile-cache';
 import { profilePreloader } from '@/lib/profile-preloader';
 
+export const ProfilesContext = createContext<UseProfilesReturn | null>(null);
+
+export { ProfilesProvider } from '@/hooks/profiles-provider';
+
 // Broadcast helper for cross-instance synchronization
 const dispatchAuthChanged = () => {
   try {
@@ -23,30 +27,6 @@ const dispatchAuthChanged = () => {
     console.warn('dispatchAuthChanged failed:', e);
   }
 };
-
-// ============================================================
-// Context — singola istanza condivisa da tutti i consumatori
-// ============================================================
-
-const ProfilesContext = createContext<UseProfilesReturn | null>(null);
-
-interface ProfilesProviderProps {
-  children: ReactNode;
-}
-
-/**
- * Provider centralizzato per i profili.
- * Monta UNA SOLA VOLTA nel layout dell'app.
- * Tutti i componenti che usano useProfiles() condividono questo stato.
- */
-export function ProfilesProvider({ children }: ProfilesProviderProps) {
-  const value = useProfilesCore();
-  return (
-    <ProfilesContext.Provider value={value}>
-      {children}
-    </ProfilesContext.Provider>
-  );
-}
 
 /**
  * Hook pubblico — legge dal Context se disponibile (zero fetch aggiuntivi),
@@ -60,10 +40,10 @@ export function useProfiles(): UseProfilesReturn {
 }
 
 // ============================================================
-// Core — logica interna (usata solo dal Provider)
+// Core — logica interna (usata dal Provider)
 // ============================================================
 
-function useProfilesCore(): UseProfilesReturn {
+export function useProfilesCore(): UseProfilesReturn {
   const [profiles, setProfiles] = useState<ProfileInfo[]>([]);
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -94,64 +94,57 @@ export function UpdateNotification() {
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999] animate-in slide-in-from-bottom-4 fade-in duration-300">
-      <div className="bg-slate-900 rounded-xl shadow-2xl shadow-black/50 p-4 w-80 border border-slate-700/50">
-        <div className="flex items-start gap-3">
-          <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-lg">
-            <Sparkles className="w-5 h-5 text-white" />
+      <div className="bg-slate-900/98 backdrop-blur-md rounded-xl shadow-2xl shadow-black/50 w-80 border border-slate-700/50 overflow-hidden">
+        <div className="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border-b border-emerald-500/20 px-4 py-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="text-white text-[13px] font-semibold">
+                v{updateInfo.latest_version} disponibile
+              </span>
+            </div>
+            <button
+              onClick={handleDismiss}
+              className="text-slate-500 hover:text-slate-300 transition-colors p-1 rounded-md hover:bg-slate-800/50"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
+          <p className="text-slate-500 text-[10px] mt-0.5">
+            Versione attuale: {updateInfo.current_version}
+          </p>
+        </div>
+        
+        <div className="px-4 py-3">
+          {releaseItems.length > 0 && (
+            <div className="max-h-28 overflow-y-auto mb-3 pr-1 scrollbar-thin scrollbar-thumb-slate-700">
+              <p className="text-slate-500 text-[10px] uppercase tracking-wider font-medium mb-1.5">Novità</p>
+              <ul className="space-y-1">
+                {releaseItems.slice(0, 6).map((item, i) => (
+                  <li key={i} className="text-slate-300 text-[11px] flex items-start gap-2">
+                    <span className="text-emerald-500 mt-0.5 text-[8px]">●</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <h3 className="text-white font-semibold text-sm">
-                Aggiornamento disponibile!
-              </h3>
-              <button
-                onClick={handleDismiss}
-                className="text-slate-400 hover:text-white transition-colors p-1 rounded hover:bg-slate-800"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <p className="text-slate-300 text-xs mt-1">
-              Versione <span className="font-mono text-emerald-400">{updateInfo.latest_version}</span>
-              <span className="text-slate-500"> (attuale: {updateInfo.current_version})</span>
-            </p>
-            
-            {releaseItems.length > 0 && (
-              <div className="mt-3 max-h-32 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-700">
-                <p className="text-slate-400 text-[10px] uppercase tracking-wider mb-1.5">Novità:</p>
-                <ul className="space-y-1">
-                  {releaseItems.slice(0, 8).map((item, i) => (
-                    <li key={i} className="text-slate-300 text-xs flex items-start gap-1.5">
-                      <span className="text-emerald-500 mt-0.5">•</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            <div className="flex gap-2 mt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  handleDownload();
-                }}
-                className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 h-8 text-xs px-4 rounded-lg font-medium shadow-lg shadow-emerald-500/25 transition-all"
-              >
-                <Download className="w-3.5 h-3.5 mr-1.5" />
-                Scarica
-              </button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleDismiss}
-                className="text-slate-400 hover:text-white hover:bg-slate-800 h-8 text-xs"
-              >
-                Dopo
-              </Button>
-            </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { handleDownload(); }}
+              className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-400 hover:to-teal-500 h-8 text-xs px-4 rounded-lg font-medium shadow-lg shadow-emerald-500/20 transition-all"
+            >
+              <Download className="w-3.5 h-3.5 mr-1.5" />
+              Scarica
+            </button>
+            <button
+              onClick={handleDismiss}
+              className="text-slate-500 hover:text-slate-300 h-8 text-xs px-3 rounded-lg transition-colors hover:bg-slate-800/50"
+            >
+              Ignora
+            </button>
           </div>
         </div>
       </div>
