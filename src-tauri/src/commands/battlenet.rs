@@ -285,16 +285,21 @@ pub async fn get_battlenet_game_info(game_id: String) -> Result<BattlenetGame, S
     Err(format!("Gioco '{}' non trovato", game_id))
 }
 
-/// Recupera le copertine per i giochi Battle.net (placeholder)
+/// Recupera le copertine per i giochi Battle.net via Steam Store search
 #[tauri::command]
 pub async fn get_battlenet_covers_batch(game_ids: Vec<String>) -> Result<HashMap<String, String>, String> {
-    println!("[BATTLENET] Recupero copertine per {} giochi (placeholder)", game_ids.len());
+    println!("[BATTLENET] Recupero copertine per {} giochi via Steam Store API", game_ids.len());
     
-    // Battle.net non ha API pubblica per le copertine
-    // Restituiamo un HashMap vuoto per ora
-    // In futuro si potrebbe implementare il recupero da fonti alternative
-    let covers = HashMap::new();
+    let installed = get_battlenet_installed_games().await.unwrap_or_default();
+    let mut name_map: HashMap<String, String> = HashMap::new();
+    for game in &installed {
+        if game_ids.contains(&game.id) {
+            name_map.insert(game.id.clone(), game.name.clone());
+        }
+    }
     
+    let covers = crate::commands::games::search_covers_batch(&name_map).await;
+    println!("[BATTLENET] Trovate {} copertine su {}", covers.len(), game_ids.len());
     Ok(covers)
 }
 

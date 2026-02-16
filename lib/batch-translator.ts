@@ -20,6 +20,7 @@ export interface BatchTranslationJob {
   name: string;
   gameId?: string;
   gameName?: string;
+  gameGenre?: string;
   sourceLanguage: string;
   targetLanguage: string;
   provider: 'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google';
@@ -171,6 +172,7 @@ export class BatchTranslator {
       name: string;
       gameId?: string;
       gameName?: string;
+      gameGenre?: string;
       sourceLanguage?: string;
       targetLanguage?: string;
       provider?: 'openai' | 'gpt5' | 'gemini' | 'claude' | 'deepseek' | 'mistral' | 'openrouter' | 'deepl' | 'google';
@@ -183,6 +185,7 @@ export class BatchTranslator {
       name: options.name,
       gameId: options.gameId,
       gameName: options.gameName,
+      gameGenre: options.gameGenre,
       sourceLanguage: options.sourceLanguage || 'en',
       targetLanguage: options.targetLanguage || 'it',
       provider: options.provider || 'openai',
@@ -354,7 +357,7 @@ export class BatchTranslator {
     const texts = this.job.items.map(i => i.sourceText);
     const classification = classifyBatch(texts, {
       filename: this.job.items[0]?.metadata?.filename,
-      gameGenre: undefined // TODO: get from game info
+      gameGenre: this.job.gameGenre
     });
 
     // Applica classificazione agli items

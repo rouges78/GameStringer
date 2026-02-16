@@ -16,13 +16,14 @@ mod ue_translator;
 mod ocr_translator;
 
 pub mod profiles;
-// Notification system: vedi src/notifications_disabled/
+pub mod notifications;
 
 use profiles::storage::ProfileStorage;
 use profiles::manager::ProfileManager;
 use profiles::settings_manager::ProfileSettingsManager;
 use commands::profiles::ProfileManagerState;
 use commands::profile_settings::ProfileSettingsManagerState;
+use commands::notifications::NotificationManagerState;
 // use tauri::Manager; // Non usato attualmente
 
 mod process_utils;
@@ -55,6 +56,32 @@ fn main() {
         manager: std::sync::Arc::new(tokio::sync::Mutex::new(settings_manager)),
     };
 
+    // Inizializza NotificationManager
+    let notif_db_path = if cfg!(debug_assertions) {
+        std::path::PathBuf::from("../gamestringer_data/notifications.db")
+    } else {
+        let local_app = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".to_string());
+        std::path::PathBuf::from(local_app).join("GameStringer").join("notifications.db")
+    };
+    // Crea directory parent se non esiste
+    if let Some(parent) = notif_db_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    let notif_storage = notifications::NotificationStorage::new(notif_db_path);
+    let notif_manager = std::sync::Arc::new(tokio::sync::Mutex::new(
+        notifications::NotificationManager::new(notif_storage)
+    ));
+    let notif_integration = std::sync::Arc::new(tokio::sync::Mutex::new(
+        notifications::ProfileNotificationIntegration::new(notif_manager.clone())
+    ));
+    let notification_state = NotificationManagerState {
+        manager: notif_manager,
+        profile_integration: notif_integration,
+        event_system: None,
+        auto_integration: None,
+        system_event_integration: None,
+    };
+
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
@@ -67,6 +94,7 @@ fn main() {
         .manage(settings_state)
         .manage(commands::translation_bridge::TranslationBridgeState::new())
         .manage(commands::activity_history::ActivityHistoryState::default())
+        .manage(notification_state)
         .invoke_handler(tauri::generate_handler![
             close_app,
             commands::steam::auto_detect_steam_config,
@@ -593,50 +621,49 @@ fn main() {
             commands::game_dictionaries::import_from_xunity,
             commands::game_dictionaries::get_dictionaries_stats,
 
-            // NOTIFICATION SYSTEM TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
-            // commands::notifications::create_notification,
-            // commands::notifications::get_notifications,
-            // commands::notifications::get_notifications_sorted,
-            // commands::notifications::mark_notification_as_read,
-            // commands::notifications::mark_multiple_notifications_as_read,
-            // commands::notifications::mark_all_notifications_as_read,
-            // commands::notifications::delete_notification,
-            // commands::notifications::get_unread_notifications_count,
-            // commands::notifications::get_notification_counts,
-            // commands::notifications::clear_all_notifications,
-            // commands::notifications::get_notification_preferences,
-            // commands::notifications::update_notification_preferences,
-            // commands::notifications::update_partial_notification_preferences,
-            // commands::notifications::auto_save_notification_preferences,
-            // commands::notifications::sync_notification_preferences_on_profile_switch,
-            // commands::notifications::toggle_notification_type,
-            // commands::notifications::reset_notification_preferences_to_default,
-            // commands::notifications::handle_profile_event,
-            // commands::notifications::handle_profile_switch,
-            // commands::notifications::cleanup_profile_notifications,
-            // commands::notifications::generate_notification_security_report, // TODO: Implementare
-            // commands::notifications::verify_profile_notifications_integrity,
-            // commands::notifications::get_high_priority_unread_notifications,
-            // commands::notifications::cleanup_expired_notifications,
-            // commands::notifications::create_authentication_error_notification,
-            // commands::notifications::create_profile_locked_notification,
-            // commands::notifications::create_credential_operation_notification,
-            // commands::notifications::create_settings_update_notification,
-            // commands::notifications::create_backup_notification,
-            
-            // System Notification Commands - TODO: Implementare quando necessario
-            // commands::notifications::create_system_broadcast_notification,
-            // commands::notifications::create_urgent_system_notification,
-            // commands::notifications::create_maintenance_notification,
-            // commands::notifications::create_update_available_notification,
-            // commands::notifications::get_active_system_notifications,
-            // commands::notifications::get_system_notification_stats,
-            // commands::notifications::delete_system_notification_from_all_profiles,
-            // commands::notifications::update_system_notification_expiry,
-            // commands::notifications::update_system_notification_priority,
-            // commands::notifications::get_system_notification_read_status,
-            // commands::notifications::expire_old_system_notifications,
-            // commands::notifications::get_profiles_for_notification_admin,
+            // Notification System
+            commands::notifications::create_notification,
+            commands::notifications::get_notifications,
+            commands::notifications::get_notifications_sorted,
+            commands::notifications::mark_notification_as_read,
+            commands::notifications::mark_multiple_notifications_as_read,
+            commands::notifications::mark_all_notifications_as_read,
+            commands::notifications::delete_notification,
+            commands::notifications::get_unread_notifications_count,
+            commands::notifications::get_notification_counts,
+            commands::notifications::clear_all_notifications,
+            commands::notifications::get_notification_preferences,
+            commands::notifications::update_notification_preferences,
+            commands::notifications::update_partial_notification_preferences,
+            commands::notifications::auto_save_notification_preferences,
+            commands::notifications::sync_notification_preferences_on_profile_switch,
+            commands::notifications::toggle_notification_type,
+            commands::notifications::reset_notification_preferences_to_default,
+            commands::notifications::handle_profile_event,
+            commands::notifications::handle_profile_switch,
+            commands::notifications::cleanup_profile_notifications,
+            commands::notifications::generate_notification_security_report,
+            commands::notifications::verify_profile_notifications_integrity,
+            commands::notifications::get_high_priority_unread_notifications,
+            commands::notifications::cleanup_expired_notifications,
+            commands::notifications::create_authentication_error_notification,
+            commands::notifications::create_profile_locked_notification,
+            commands::notifications::create_credential_operation_notification,
+            commands::notifications::create_settings_update_notification,
+            commands::notifications::create_backup_notification,
+            // System Notification Commands
+            commands::notifications::create_system_broadcast_notification,
+            commands::notifications::create_urgent_system_notification,
+            commands::notifications::create_maintenance_notification,
+            commands::notifications::create_update_available_notification,
+            commands::notifications::get_active_system_notifications,
+            commands::notifications::get_system_notification_stats,
+            commands::notifications::delete_system_notification_from_all_profiles,
+            commands::notifications::update_system_notification_expiry,
+            commands::notifications::update_system_notification_priority,
+            commands::notifications::get_system_notification_read_status,
+            commands::notifications::expire_old_system_notifications,
+            commands::notifications::get_profiles_for_notification_admin,
 
             // Steam Workshop API
             commands::steam_workshop::search_steam_workshop,

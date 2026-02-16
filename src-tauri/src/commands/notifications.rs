@@ -277,8 +277,6 @@ pub async fn cleanup_profile_notifications(
         .map_err(|e| e.to_string())
 }
 
-// TODO: Implementare quando necessario
-/*
 /// Genera un report di sicurezza per un profilo
 #[tauri::command]
 pub async fn generate_notification_security_report(
@@ -289,7 +287,6 @@ pub async fn generate_notification_security_report(
     manager.generate_security_report(&profile_id).await
         .map_err(|e| e.to_string())
 }
-*/
 
 /// Verifica l'integrità delle notifiche di un profilo
 #[tauri::command]
@@ -387,8 +384,6 @@ pub async fn create_backup_notification(
 
 // ===== SYSTEM NOTIFICATION COMMANDS =====
 
-// TODO: Implementare funzioni di sistema quando necessario
-/*
 /// Crea una notifica di sistema broadcast a tutti i profili attivi
 #[tauri::command]
 pub async fn create_system_broadcast_notification(
@@ -531,7 +526,6 @@ pub async fn get_profiles_for_notification_admin(
     manager.get_profiles_for_notification_admin().await
         .map_err(|e| e.to_string())
 }
-*/
 
 // ===== EVENT SYSTEM COMMANDS =====
 

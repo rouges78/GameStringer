@@ -62,6 +62,137 @@ fn installed_game_to_scan_result(
     }
 }
 
+// ============================================================
+// Helper: Cerca copertina gioco via Steam Store API per nome
+// Usata da Origin, Ubisoft, Battle.net che non hanno API copertine
+// ============================================================
+
+/// Mapping statico per titoli noti che non sono su Steam o hanno nomi diversi
+fn get_known_cover_url(game_name: &str) -> Option<String> {
+    let name_lower = game_name.to_lowercase();
+    let mappings: &[(&[&str], u32)] = &[
+        // Blizzard / Battle.net
+        (&["overwatch"], 2357570),
+        (&["diablo iv", "diablo 4"], 2344520),
+        (&["diablo iii", "diablo 3", "diabloiii"], 0), // no Steam
+        (&["world of warcraft", "wow"], 0),
+        (&["hearthstone"], 0),
+        (&["starcraft ii", "starcraft 2", "starcraftii"], 0),
+        (&["heroes of the storm"], 0),
+        (&["call of duty: modern warfare", "cod modern warfare", "call of duty modern warfare"], 393080),
+        (&["call of duty: warzone", "cod warzone", "call of duty warzone"], 1962663),
+        (&["call of duty: black ops", "cod black ops"], 311210),
+        (&["crash bandicoot"], 731490),
+        // EA / Origin
+        (&["apex legends"], 1172470),
+        (&["battlefield 2042"], 1517290),
+        (&["battlefield v", "battlefield 5"], 1238810),
+        (&["battlefield 1"], 1238840),
+        (&["the sims 4", "sims 4"], 1222670),
+        (&["star wars jedi: survivor"], 1774580),
+        (&["star wars jedi: fallen order"], 1172380),
+        (&["dead space"], 2231750),
+        (&["it takes two"], 1426210),
+        (&["mass effect legendary"], 1328670),
+        (&["dragon age: the veilguard"], 1845910),
+        (&["titanfall 2"], 1237970),
+        (&["need for speed"], 1846380), // Unbound
+        (&["fifa", "ea sports fc"], 2195250),
+        // Ubisoft
+        (&["assassin's creed valhalla", "ac valhalla"], 2208920),
+        (&["assassin's creed mirage", "ac mirage"], 2593960),
+        (&["assassin's creed odyssey", "ac odyssey"], 812140),
+        (&["assassin's creed origins", "ac origins"], 582160),
+        (&["far cry 6"], 2369390),
+        (&["far cry 5"], 552520),
+        (&["rainbow six siege", "r6 siege"], 359550),
+        (&["watch dogs: legion"], 2289860),
+        (&["watch dogs 2"], 447040),
+        (&["the division 2"], 2221490),
+        (&["ghost recon breakpoint"], 2231380),
+        (&["anno 1800"], 916440),
+        (&["immortals fenyx rising"], 2231920),
+        (&["prince of persia: the lost crown"], 2344520),
+        (&["riders republic"], 2231930),
+        (&["skull and bones"], 2379780),
+        (&["avatar: frontiers of pandora"], 2508790),
+    ];
+
+    for (keywords, appid) in mappings {
+        for keyword in *keywords {
+            if name_lower.contains(keyword) {
+                if *appid > 0 {
+                    return Some(format!(
+                        "https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg",
+                        appid
+                    ));
+                }
+                return None; // Gioco noto ma non su Steam
+            }
+        }
+    }
+    None
+}
+
+/// Cerca un gioco su Steam Store API per nome e restituisce l'URL copertina
+pub async fn search_steam_cover_by_name(game_name: &str) -> Option<String> {
+    // 1. Prima controlla il mapping statico
+    if let Some(url) = get_known_cover_url(game_name) {
+        return Some(url);
+    }
+
+    // 2. Cerca via Steam Store search API
+    let search_term = game_name
+        .replace("™", "")
+        .replace("®", "")
+        .replace("'", "'")
+        .trim()
+        .to_string();
+
+    let url = format!(
+        "https://store.steampowered.com/api/storesearch/?term={}&l=english&cc=US",
+        urlencoding::encode(&search_term)
+    );
+
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .ok()?;
+
+    let response = client.get(&url).send().await.ok()?;
+    if !response.status().is_success() {
+        return None;
+    }
+
+    let body: serde_json::Value = response.json().await.ok()?;
+    let items = body.get("items")?.as_array()?;
+
+    if let Some(first) = items.first() {
+        let appid = first.get("id")?.as_u64()?;
+        return Some(format!(
+            "https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg",
+            appid
+        ));
+    }
+
+    None
+}
+
+/// Cerca copertine per un batch di nomi gioco (usata da Origin, Ubisoft, Battle.net)
+pub async fn search_covers_batch(game_names: &HashMap<String, String>) -> HashMap<String, String> {
+    let mut covers = HashMap::new();
+    
+    for (game_id, game_name) in game_names {
+        if let Some(cover_url) = search_steam_cover_by_name(game_name).await {
+            covers.insert(game_id.clone(), cover_url);
+        }
+        // Rate limit: 200ms tra richieste per non sovraccaricare Steam API
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    }
+    
+    covers
+}
+
 // Funzione helper per rilevare giochi VR dal nome
 pub fn is_vr_game(game_name: &str) -> bool {
     let name_lower = game_name.to_lowercase();

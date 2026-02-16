@@ -214,7 +214,7 @@ impl NotificationAccessControl {
 }
 
 /// Report di sicurezza per le notifiche
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct SecurityReport {
     pub profile_id: String,
     pub total_notifications: u32,

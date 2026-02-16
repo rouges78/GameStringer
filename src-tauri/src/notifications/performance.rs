@@ -386,14 +386,11 @@ impl OptimizedQueryManager {
     /// Esegue una query ottimizzata per il conteggio delle notifiche non lette
     pub async fn get_unread_count_optimized(&self, profile_id: &str) -> NotificationResult<u32> {
         let conn = self.pool.get_connection()?;
-        
-        // Query ottimizzata che usa l'indice
         let count: i64 = conn.as_ref().query_row(
             "SELECT COUNT(*) FROM notifications WHERE profile_id = ?1 AND read_at IS NULL",
             params![profile_id],
             |row| row.get(0),
         )?;
-
         Ok(count as u32)
     }
 
@@ -406,22 +403,24 @@ impl OptimizedQueryManager {
         notification_type: Option<&str>,
     ) -> NotificationResult<Vec<Notification>> {
         let conn = self.pool.get_connection()?;
-        
-        let (query, params) = if let Some(ntype) = notification_type {
+        let limit_str = limit.to_string();
+        let offset_str = offset.to_string();
+
+        let (query, params): (&str, Vec<&str>) = if let Some(ntype) = notification_type {
             (
                 "SELECT * FROM notifications WHERE profile_id = ?1 AND notification_type = ?2 ORDER BY created_at DESC LIMIT ?3 OFFSET ?4",
-                vec![profile_id, ntype, &limit.to_string(), &offset.to_string()]
+                vec![profile_id, ntype, &limit_str, &offset_str]
             )
         } else {
             (
                 "SELECT * FROM notifications WHERE profile_id = ?1 ORDER BY created_at DESC LIMIT ?2 OFFSET ?3",
-                vec![profile_id, &limit.to_string(), &offset.to_string()]
+                vec![profile_id, &limit_str, &offset_str]
             )
         };
 
         let mut stmt = conn.as_ref().prepare(query)?;
         let notification_iter = stmt.query_map(
-            params.as_slice(),
+            rusqlite::params_from_iter(params.iter()),
             |row| self.row_to_notification(row),
         )?;
 
@@ -429,15 +428,11 @@ impl OptimizedQueryManager {
         for notification in notification_iter {
             notifications.push(notification??);
         }
-
         Ok(notifications)
     }
 
     /// Converte una riga in Notification (versione ottimizzata)
     fn row_to_notification(&self, row: &rusqlite::Row) -> rusqlite::Result<NotificationResult<Notification>> {
-        // Implementazione ottimizzata della conversione riga -> Notification
-        // (stessa logica del metodo originale ma con alcune ottimizzazioni)
-        
         let id: String = row.get("id")?;
         let profile_id: String = row.get("profile_id")?;
         let notification_type_str: String = row.get("notification_type")?;
@@ -451,59 +446,31 @@ impl OptimizedQueryManager {
         let expires_at_str: Option<String> = row.get("expires_at")?;
         let metadata_json: String = row.get("metadata")?;
 
-        // Parse con gestione errori ottimizzata
         let notification_type = notification_type_str.parse().map_err(|e| {
-            rusqlite::Error::FromSqlConversionFailure(
-                0,
-                rusqlite::types::Type::Text,
-                Box::new(e),
-            )
+            rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
         })?;
-
         let priority = priority_str.parse().map_err(|e| {
-            rusqlite::Error::FromSqlConversionFailure(
-                0,
-                rusqlite::types::Type::Text,
-                Box::new(e),
-            )
+            rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e))
         })?;
-
         let created_at = DateTime::parse_from_rfc3339(&created_at_str)
             .map_err(|_| rusqlite::Error::InvalidColumnType(0, "created_at".to_string(), rusqlite::types::Type::Text))?
             .with_timezone(&Utc);
-
         let read_at = read_at_str
             .map(|s| DateTime::parse_from_rfc3339(&s))
             .transpose()
             .map_err(|_| rusqlite::Error::InvalidColumnType(0, "read_at".to_string(), rusqlite::types::Type::Text))?
             .map(|dt| dt.with_timezone(&Utc));
-
         let expires_at = expires_at_str
             .map(|s| DateTime::parse_from_rfc3339(&s))
             .transpose()
             .map_err(|_| rusqlite::Error::InvalidColumnType(0, "expires_at".to_string(), rusqlite::types::Type::Text))?
             .map(|dt| dt.with_timezone(&Utc));
-
         let metadata = serde_json::from_str(&metadata_json)
-            .map_err(|e| rusqlite::Error::FromSqlConversionFailure(
-                0,
-                rusqlite::types::Type::Text,
-                Box::new(e),
-            ))?;
+            .map_err(|e| rusqlite::Error::FromSqlConversionFailure(0, rusqlite::types::Type::Text, Box::new(e)))?;
 
         Ok(Ok(Notification {
-            id,
-            profile_id,
-            notification_type,
-            title,
-            message,
-            icon,
-            action_url,
-            priority,
-            created_at,
-            read_at,
-            expires_at,
-            metadata,
+            id, profile_id, notification_type, title, message, icon, action_url,
+            priority, created_at, read_at, expires_at, metadata,
         }))
     }
 }

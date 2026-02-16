@@ -44,8 +44,14 @@ export default function GuidePage() {
 
   const tabCategories = ['translation', 'tools', 'resources'] as const;
 
-  const renderToolCard = (tool: ToolDefinition) => {
-    const color = tool.color;
+  const categoryColor: Record<string, string> = {
+    translation: 'sky',
+    tools: 'emerald',
+    resources: 'purple',
+  };
+
+  const renderToolCard = (tool: ToolDefinition, category?: string) => {
+    const color = category ? (categoryColor[category] || tool.color) : tool.color;
     const Icon = tool.icon;
     return (
       <Card key={tool.id} className="border-slate-800/50 bg-slate-900/30">
@@ -121,7 +127,7 @@ export default function GuidePage() {
                       </h3>
                     )}
                     <div className="space-y-2">
-                      {group.tools.map(renderToolCard)}
+                      {group.tools.map((tool) => renderToolCard(tool, cat))}
                     </div>
                   </div>
                 ))}

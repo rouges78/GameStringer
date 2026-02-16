@@ -712,7 +712,6 @@ impl NotificationStorage {
     pub fn cleanup_connections(&self) {
         self.connection_pool.cleanup_idle_connections();
     }
-}
 
     // === SYSTEM NOTIFICATION STORAGE METHODS ===
 
@@ -1111,3 +1110,4 @@ impl NotificationStorage {
 
         Ok(profile_ids)
     }
+}

@@ -265,16 +265,22 @@ pub async fn get_origin_game_info(game_id: String) -> Result<OriginGame, String>
     Err(format!("Gioco '{}' non trovato", game_id))
 }
 
-/// Recupera le copertine per i giochi Origin/EA App (placeholder)
+/// Recupera le copertine per i giochi Origin/EA App via Steam Store search
 #[tauri::command]
 pub async fn get_origin_covers_batch(game_ids: Vec<String>) -> Result<HashMap<String, String>, String> {
-    println!("[ORIGIN] Recupero copertine per {} giochi (placeholder)", game_ids.len());
+    println!("[ORIGIN] Recupero copertine per {} giochi via Steam Store API", game_ids.len());
     
-    // Origin/EA App non ha API pubblica per le copertine
-    // Restituiamo un HashMap vuoto per ora
-    // In futuro si potrebbe implementare il recupero da fonti alternative
-    let covers = HashMap::new();
+    // Recupera i nomi dei giochi installati
+    let installed = get_origin_installed_games().await.unwrap_or_default();
+    let mut name_map: HashMap<String, String> = HashMap::new();
+    for game in &installed {
+        if game_ids.contains(&game.id) {
+            name_map.insert(game.id.clone(), game.name.clone());
+        }
+    }
     
+    let covers = crate::commands::games::search_covers_batch(&name_map).await;
+    println!("[ORIGIN] Trovate {} copertine su {}", covers.len(), game_ids.len());
     Ok(covers)
 }
 

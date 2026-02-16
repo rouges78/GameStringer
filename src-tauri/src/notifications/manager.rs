@@ -1044,5 +1044,141 @@ impl NotificationManager {
         
         Ok(integrity_errors)
     }
+
+    // ===== SYSTEM NOTIFICATION METHODS =====
+
+    /// Crea notifica broadcast a tutti i profili attivi
+    pub async fn create_system_broadcast_notification(
+        &self,
+        title: String,
+        message: String,
+        priority: NotificationPriority,
+        expires_at: Option<DateTime<Utc>>,
+        icon: Option<String>,
+        action_url: Option<String>,
+    ) -> NotificationResult<Vec<String>> {
+        let profile_ids = self.storage.get_all_profile_ids().await?;
+        let broadcast_id = Uuid::new_v4().to_string();
+        let mut created_ids = Vec::new();
+
+        for profile_id in &profile_ids {
+            let mut custom = HashMap::new();
+                custom.insert("broadcast_id".to_string(), serde_json::Value::String(broadcast_id.clone()));
+            let request = CreateNotificationRequest {
+                profile_id: profile_id.clone(),
+                notification_type: NotificationType::System,
+                title: title.clone(),
+                message: message.clone(),
+                icon: icon.clone(),
+                action_url: action_url.clone(),
+                priority: Some(priority.clone()),
+                expires_at,
+                metadata: Some(NotificationMetadata {
+                    category: "system_broadcast".to_string(),
+                    tags: vec!["broadcast".to_string()],
+                    source: "system".to_string(),
+                    custom_data: Some(custom),
+                }),
+            };
+            match self.create_notification(request).await {
+                Ok(notif) => created_ids.push(notif.id),
+                Err(e) => println!("[NOTIFICATION MANAGER] Errore broadcast per {}: {}", profile_id, e),
+            }
+        }
+        Ok(created_ids)
+    }
+
+    /// Crea notifica urgente per tutti i profili
+    pub async fn create_urgent_system_notification(
+        &self,
+        title: String,
+        message: String,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> NotificationResult<Vec<String>> {
+        self.create_system_broadcast_notification(
+            title, message, NotificationPriority::High, expires_at, None, None,
+        ).await
+    }
+
+    /// Crea notifica di manutenzione programmata
+    pub async fn create_maintenance_notification(
+        &self,
+        maintenance_start: DateTime<Utc>,
+        maintenance_end: DateTime<Utc>,
+        description: String,
+    ) -> NotificationResult<Vec<String>> {
+        let title = "Manutenzione programmata".to_string();
+        let message = format!(
+            "{}\nInizio: {}\nFine: {}",
+            description,
+            maintenance_start.format("%d/%m/%Y %H:%M UTC"),
+            maintenance_end.format("%d/%m/%Y %H:%M UTC")
+        );
+        self.create_system_broadcast_notification(
+            title, message, NotificationPriority::Normal, Some(maintenance_end), None, None,
+        ).await
+    }
+
+    /// Crea notifica aggiornamento disponibile
+    pub async fn create_update_available_notification(
+        &self,
+        version: String,
+        release_notes: String,
+        download_url: Option<String>,
+    ) -> NotificationResult<Vec<String>> {
+        let title = format!("Aggiornamento v{} disponibile", version);
+        self.create_system_broadcast_notification(
+            title, release_notes, NotificationPriority::Normal, None, None, download_url,
+        ).await
+    }
+
+    /// Ottiene notifiche di sistema attive
+    pub async fn get_active_system_notifications(&self) -> NotificationResult<Vec<Notification>> {
+        let filter = NotificationFilter {
+            notification_type: Some(NotificationType::System),
+            priority: None,
+            unread_only: None,
+            category: None,
+            limit: None,
+            offset: None,
+        };
+        self.storage.load_system_notifications(&filter).await
+    }
+
+    /// Statistiche notifiche di sistema
+    pub async fn get_system_notification_stats(&self) -> NotificationResult<crate::notifications::models::SystemNotificationStats> {
+        self.storage.get_system_notification_stats().await
+    }
+
+    /// Elimina notifica di sistema da tutti i profili
+    pub async fn delete_system_notification_from_all_profiles(&self, notification_id: &str) -> NotificationResult<u32> {
+        self.storage.delete_system_notification_from_all_profiles(notification_id).await
+    }
+
+    /// Aggiorna scadenza notifica di sistema
+    pub async fn update_system_notification_expiry(&self, notification_id: &str, new_expiry: Option<DateTime<Utc>>) -> NotificationResult<u32> {
+        self.storage.update_system_notification_expiry(notification_id, new_expiry).await
+    }
+
+    /// Aggiorna priorità notifica di sistema
+    pub async fn update_system_notification_priority(&self, notification_id: &str, new_priority: NotificationPriority) -> NotificationResult<u32> {
+        self.storage.update_system_notification_priority(notification_id, new_priority).await
+    }
+
+    /// Stato lettura notifica di sistema
+    pub async fn get_system_notification_read_status(&self, notification_id: &str) -> NotificationResult<crate::notifications::models::SystemNotificationReadStatus> {
+        self.storage.get_system_notification_read_status(notification_id).await
+    }
+
+    /// Scade notifiche di sistema vecchie
+    pub async fn expire_old_system_notifications(&self, days_old: u32) -> NotificationResult<u32> {
+        let cutoff = Utc::now() - chrono::Duration::days(days_old as i64);
+        self.storage.expire_old_system_notifications(cutoff).await
+    }
+
+    /// Lista profili per amministrazione notifiche
+    pub async fn get_profiles_for_notification_admin(&self) -> NotificationResult<Vec<crate::notifications::models::ProfileNotificationSummary>> {
+        self.storage.get_profiles_for_notification_admin().await
+    }
 }
 

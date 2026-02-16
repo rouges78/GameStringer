@@ -20,6 +20,13 @@ const config: Config = {
     'hover:bg-orange-500/20',
     'group-hover:text-orange-300',
     'shadow-orange-500/20',
+    // Guide page category colors
+    'text-sky-400',
+    'bg-sky-500/20',
+    'text-emerald-400',
+    'bg-emerald-500/20',
+    'text-purple-400',
+    'bg-purple-500/20',
   ],
   theme: {
     extend: {
