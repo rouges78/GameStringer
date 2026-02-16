@@ -80,11 +80,24 @@ pub struct GogUser {
     pub profile_id: Option<String>,
 }
 
-/// Scansiona i giochi GOG installati localmente
+/// Scansiona i giochi GOG: legge il database GOG Galaxy per i giochi posseduti
+/// e combina con i giochi installati localmente
 pub async fn get_gog_installed_games() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
+    let mut found_ids: std::collections::HashSet<String> = std::collections::HashSet::new();
     
-    // GOG Galaxy installa i giochi in diverse cartelle
+    // METODO PRIMARIO: Leggi dal database GOG Galaxy 2.0 (tutti i giochi posseduti)
+    if let Ok(galaxy_games) = get_gog_games_from_galaxy_db().await {
+        println!("[GOG] 🗄️ Galaxy DB: {} giochi posseduti trovati", galaxy_games.len());
+        for game in galaxy_games {
+            if !found_ids.contains(&game.id) {
+                found_ids.insert(game.id.clone());
+                games.push(game);
+            }
+        }
+    }
+    
+    // FALLBACK: Scansione cartelle locali
     let possible_paths = vec![
         r"C:\Program Files (x86)\GOG Galaxy\Games",
         r"C:\GOG Games",
@@ -99,7 +112,10 @@ pub async fn get_gog_installed_games() -> Result<Vec<InstalledGame>, String> {
                 for entry in entries.flatten() {
                     if entry.path().is_dir() {
                         if let Ok(game) = parse_gog_game_folder(&entry.path()).await {
-                            games.push(game);
+                            if !found_ids.contains(&game.id) {
+                                found_ids.insert(game.id.clone());
+                                games.push(game);
+                            }
                         }
                     }
                 }
@@ -107,10 +123,84 @@ pub async fn get_gog_installed_games() -> Result<Vec<InstalledGame>, String> {
         }
     }
     
-    // Controlla anche il registro di Windows per i giochi GOG
+    // FALLBACK: Registro di Windows
     if let Ok(registry_games) = get_gog_games_from_registry().await {
-        games.extend(registry_games);
+        for game in registry_games {
+            if !found_ids.contains(&game.id) {
+                found_ids.insert(game.id.clone());
+                games.push(game);
+            }
+        }
     }
+    
+    println!("[GOG] ✅ Totale giochi GOG trovati: {}", games.len());
+    Ok(games)
+}
+
+/// Legge i giochi posseduti dal database SQLite di GOG Galaxy 2.0
+async fn get_gog_games_from_galaxy_db() -> Result<Vec<InstalledGame>, String> {
+    use rusqlite::Connection;
+    
+    let db_path = PathBuf::from(std::env::var("ProgramData").unwrap_or_else(|_| r"C:\ProgramData".to_string()))
+        .join(r"GOG.com\Galaxy\storage\galaxy-2.0.db");
+    
+    if !db_path.exists() {
+        return Err(format!("GOG Galaxy DB non trovato: {}", db_path.display()));
+    }
+    
+    println!("[GOG] 📂 Apertura Galaxy DB: {}", db_path.display());
+    
+    // Apri il DB in sola lettura (GOG Galaxy potrebbe averlo aperto)
+    let conn = Connection::open_with_flags(
+        &db_path,
+        rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY | rusqlite::OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    ).map_err(|e| format!("Errore apertura Galaxy DB: {}", e))?;
+    
+    // Query: prendi tutti i giochi GOG dalla libreria con il loro titolo
+    let query = r#"
+        SELECT DISTINCT lr.releaseKey, gp.value
+        FROM LibraryReleases lr
+        JOIN GamePieces gp ON lr.releaseKey = gp.releaseKey
+        JOIN GamePieceTypes gpt ON gp.gamePieceTypeId = gpt.id
+        WHERE lr.releaseKey LIKE 'gog_%'
+          AND gpt.type = 'title'
+          AND gp.value NOT LIKE '%discount code%'
+          AND gp.value NOT LIKE '%Amazon Prime%'
+          AND gp.value NOT LIKE '%Amazon Luna%'
+        ORDER BY gp.value
+    "#;
+    
+    let mut stmt = conn.prepare(query)
+        .map_err(|e| format!("Errore query Galaxy DB: {}", e))?;
+    
+    let games: Vec<InstalledGame> = stmt.query_map([], |row| {
+        let release_key: String = row.get(0)?;
+        let title_json: String = row.get(1)?;
+        Ok((release_key, title_json))
+    })
+    .map_err(|e| format!("Errore lettura Galaxy DB: {}", e))?
+    .filter_map(|r| r.ok())
+    .filter_map(|(release_key, title_json)| {
+        // Il titolo è in formato JSON: {"title":"Game Name"}
+        let title = serde_json::from_str::<serde_json::Value>(&title_json)
+            .ok()
+            .and_then(|v| v["title"].as_str().map(|s| s.to_string()))
+            .unwrap_or_else(|| release_key.replace("gog_", ""));
+        
+        // Estrai l'ID numerico GOG dalla release key (es: "gog_1423049311" -> "1423049311")
+        let gog_id = release_key.replace("gog_", "");
+        
+        Some(InstalledGame {
+            id: format!("gog_{}", gog_id),
+            name: title,
+            path: String::new(),
+            executable: None,
+            size_bytes: None,
+            last_modified: None,
+            platform: "GOG".to_string(),
+        })
+    })
+    .collect();
     
     Ok(games)
 }
