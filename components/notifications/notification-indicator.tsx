@@ -97,25 +97,22 @@ export const NotificationIndicator: React.FC<NotificationIndicatorProps> = ({
       )}
 
       {showBadge && unreadCount > 0 && (
-        <Badge
-          variant="destructive"
+        <span
           className={cn(
-            "absolute -top-1 -right-1 h-4 min-w-[1rem] px-1",
-            "text-[10px] font-medium flex items-center justify-center",
+            "absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 border-2 border-background",
+            "text-[9px] font-bold text-white flex items-center justify-center",
             "transition-all duration-200",
             isAnimating && "scale-110"
           )}
           aria-hidden="true"
-        >
-          {displayCount}
-        </Badge>
+        >!</span>
       )}
 
       {!showBadge && hasNotifications && (
-        <div 
-          className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500 border border-background"
+        <span 
+          className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-red-500 border border-background text-[8px] font-bold text-white flex items-center justify-center"
           aria-hidden="true"
-        />
+        >!</span>
       )}
     </Button>
   );
