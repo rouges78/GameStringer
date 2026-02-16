@@ -1268,13 +1268,55 @@ pub async fn get_games(
 }
 
 #[tauri::command]
-pub async fn get_game_by_id(game_id: String) -> Result<Option<GameInfo>, String> {
+pub async fn get_game_by_id(
+    game_id: String,
+    profile_state: tauri::State<'_, crate::commands::profiles::ProfileManagerState>
+) -> Result<Option<GameInfo>, String> {
     log::info!("🔍 Recupero gioco con ID: {}", game_id);
     
-    // TODO: Implementare query database per ID specifico
-    // Per ora restituiamo None come placeholder
-    log::warn!("⚠️ Funzione get_game_by_id non ancora implementata");
-    Ok(None)
+    // Strategia 1: Se è un ID Steam, prova lettura veloce dal cache JSON locale
+    if game_id.starts_with("steam_") {
+        if let Ok(Some(game)) = find_steam_game_fast(&game_id).await {
+            return Ok(Some(game));
+        }
+    }
+    
+    // Strategia 2: Cerca tra tutti i giochi caricati
+    let all_games = get_games(profile_state).await?;
+    let found = all_games.into_iter().find(|g| g.id == game_id);
+    
+    if found.is_some() {
+        log::info!("✅ Gioco trovato: {}", game_id);
+    } else {
+        log::warn!("⚠️ Gioco non trovato: {}", game_id);
+    }
+    
+    Ok(found)
+}
+
+/// Ricerca veloce di un gioco Steam dal cache JSON locale senza caricare tutto
+async fn find_steam_game_fast(game_id: &str) -> Result<Option<GameInfo>, String> {
+    let appid_str = game_id.strip_prefix("steam_").unwrap_or(game_id);
+    let appid: u32 = appid_str.parse().map_err(|_| "ID Steam non valido".to_string())?;
+    
+    let cache_path = get_steam_cache_path();
+    if !cache_path.exists() {
+        return Ok(None);
+    }
+    
+    let data = fs::read_to_string(&cache_path).await.map_err(|e| e.to_string())?;
+    let games: Vec<GameInfo> = serde_json::from_str(&data).unwrap_or_default();
+    
+    Ok(games.into_iter().find(|g| g.steam_app_id == Some(appid) || g.id == game_id.to_string()))
+}
+
+/// Percorso cache Steam
+fn get_steam_cache_path() -> std::path::PathBuf {
+    let local_app_data = std::env::var("LOCALAPPDATA")
+        .unwrap_or_else(|_| ".".to_string());
+    std::path::PathBuf::from(local_app_data)
+        .join("GameStringer")
+        .join("steam_games_cache.json")
 }
 
 #[tauri::command]

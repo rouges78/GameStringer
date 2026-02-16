@@ -249,11 +249,99 @@ pub async fn install_extension(source: String) -> Result<String, String> {
             .map_err(|e| format!("Errore creazione directory: {}", e))?;
     }
     
-    // TODO: Implementare download da URL
-    // Per ora supporta solo path locali
-    
+    // Download da URL HTTP/HTTPS
     if source.starts_with("http") {
-        return Err("Download da URL non ancora implementato. Usa path locale.".to_string());
+        info!("[EXTENSIONS] Download estensione da URL: {}", source);
+        
+        let temp_dir = std::env::temp_dir().join("gamestringer_ext_download");
+        std::fs::create_dir_all(&temp_dir)
+            .map_err(|e| format!("Errore creazione temp dir: {}", e))?;
+        
+        // Scarica il file
+        let response = reqwest::get(&source).await
+            .map_err(|e| format!("Errore download: {}", e))?;
+        
+        if !response.status().is_success() {
+            return Err(format!("Download fallito: HTTP {}", response.status()));
+        }
+        
+        let content_type = response.headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("")
+            .to_string();
+        
+        let bytes = response.bytes().await
+            .map_err(|e| format!("Errore lettura risposta: {}", e))?;
+        
+        // Determina nome file dall'URL
+        let url_path = source.split('?').next().unwrap_or(&source);
+        let file_name = url_path.rsplit('/').next().unwrap_or("extension.zip").to_string();
+        let is_zip = file_name.ends_with(".zip") || content_type.contains("zip");
+        
+        if is_zip {
+            // Salva come ZIP temporaneo
+            let zip_path = temp_dir.join(&file_name);
+            std::fs::write(&zip_path, &bytes)
+                .map_err(|e| format!("Errore scrittura file temp: {}", e))?;
+            
+            // Estrai ZIP
+            let extract_dir = temp_dir.join("extracted");
+            if extract_dir.exists() {
+                let _ = std::fs::remove_dir_all(&extract_dir);
+            }
+            std::fs::create_dir_all(&extract_dir)
+                .map_err(|e| format!("Errore creazione dir estrazione: {}", e))?;
+            
+            let zip_file = std::fs::File::open(&zip_path)
+                .map_err(|e| format!("Errore apertura zip: {}", e))?;
+            let mut archive = zip::ZipArchive::new(zip_file)
+                .map_err(|e| format!("Errore lettura zip: {}", e))?;
+            
+            for i in 0..archive.len() {
+                let mut file = archive.by_index(i)
+                    .map_err(|e| format!("Errore file zip #{}: {}", i, e))?;
+                let out_path = extract_dir.join(file.mangled_name());
+                
+                if file.name().ends_with('/') {
+                    std::fs::create_dir_all(&out_path)
+                        .map_err(|e| format!("Errore creazione dir: {}", e))?;
+                } else {
+                    if let Some(parent) = out_path.parent() {
+                        std::fs::create_dir_all(parent)
+                            .map_err(|e| format!("Errore creazione parent dir: {}", e))?;
+                    }
+                    let mut outfile = std::fs::File::create(&out_path)
+                        .map_err(|e| format!("Errore creazione file: {}", e))?;
+                    std::io::copy(&mut file, &mut outfile)
+                        .map_err(|e| format!("Errore estrazione file: {}", e))?;
+                }
+            }
+            
+            // Trova la directory radice dell'estensione (contiene manifest.json)
+            let ext_root = find_extension_root(&extract_dir)
+                .ok_or("Nessun manifest.json trovato nell'archivio. Assicurati che il ZIP contenga una cartella con manifest.json.")?;
+            
+            let ext_name = ext_root.file_name()
+                .unwrap_or_else(|| std::ffi::OsStr::new("unknown-ext"))
+                .to_string_lossy()
+                .to_string();
+            
+            let dest_path = extensions_dir.join(&ext_name);
+            copy_dir_recursive(&ext_root, &dest_path)?;
+            
+            // Pulizia temp
+            let _ = std::fs::remove_dir_all(&temp_dir);
+            
+            // Ricarica estensioni
+            init_extension_system().await?;
+            
+            info!("[EXTENSIONS] ✅ Estensione installata da URL: {}", ext_name);
+            return Ok(ext_name);
+        } else {
+            let _ = std::fs::remove_dir_all(&temp_dir);
+            return Err("Il file scaricato non è un archivio ZIP. Sono supportati solo file .zip.".to_string());
+        }
     }
     
     let source_path = PathBuf::from(&source);
@@ -384,6 +472,35 @@ MIT
     info!("[EXTENSIONS] ✅ Template creato: {:?}", ext_path);
     
     Ok(ext_path.to_string_lossy().to_string())
+}
+
+// Helper: trova la directory radice di un'estensione (contiene manifest.json)
+fn find_extension_root(dir: &PathBuf) -> Option<PathBuf> {
+    // manifest.json nella root stessa?
+    if dir.join("manifest.json").exists() {
+        return Some(dir.clone());
+    }
+    // Cerca nelle sottodirectory (massimo 2 livelli)
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if path.join("manifest.json").exists() {
+                    return Some(path);
+                }
+                // Un livello più in profondità
+                if let Ok(sub_entries) = std::fs::read_dir(&path) {
+                    for sub in sub_entries.flatten() {
+                        let sub_path = sub.path();
+                        if sub_path.is_dir() && sub_path.join("manifest.json").exists() {
+                            return Some(sub_path);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    None
 }
 
 // Helper per copiare directory

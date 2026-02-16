@@ -514,6 +514,8 @@ fn main() {
             ocr_translator::ocr_recognize,
             ocr_translator::open_ocr_overlay,
             ocr_translator::select_screen_region,
+            ocr_translator::confirm_region_selection,
+            ocr_translator::cancel_region_selection,
             ocr_translator::save_ocr_translations,
             ocr_translator::load_ocr_translations,
             ocr_translator::get_ocr_translations,

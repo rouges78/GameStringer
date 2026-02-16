@@ -709,17 +709,119 @@ pub async fn open_ocr_overlay(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+// Channel per comunicazione tra finestra selezione e comando async
+static REGION_SENDER: Lazy<Mutex<Option<tokio::sync::oneshot::Sender<Option<CaptureRegion>>>>> = 
+    Lazy::new(|| Mutex::new(None));
+
 /// Seleziona una regione dello schermo (interattivo)
+/// Apre una finestra trasparente fullscreen dove l'utente trascina un rettangolo
 #[command]
-pub async fn select_screen_region() -> Result<CaptureRegion, String> {
-    // TODO: Implementare selezione interattiva con finestra trasparente
-    // Per ora restituisce una regione di default
-    Ok(CaptureRegion {
-        x: 100,
-        y: 100,
-        width: 800,
-        height: 600,
-    })
+pub async fn select_screen_region(app: tauri::AppHandle) -> Result<CaptureRegion, String> {
+    use tauri::Manager;
+    
+    // Crea channel oneshot per ricevere la regione selezionata
+    let (tx, rx) = tokio::sync::oneshot::channel::<Option<CaptureRegion>>();
+    
+    // Salva il sender nel global static
+    {
+        let mut sender = REGION_SENDER.lock().map_err(|e| e.to_string())?;
+        *sender = Some(tx);
+    }
+    
+    // Chiudi finestra precedente se esiste
+    if let Some(existing) = app.get_webview_window("region-select") {
+        let _ = existing.close();
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    }
+    
+    // Crea finestra trasparente fullscreen per la selezione
+    let _window = tauri::WebviewWindowBuilder::new(
+        &app,
+        "region-select",
+        tauri::WebviewUrl::App("/region-select".into())
+    )
+    .title("Seleziona Regione OCR")
+    .transparent(true)
+    .decorations(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .visible(true)
+    .fullscreen(true)
+    .build()
+    .map_err(|e| format!("Errore creazione finestra selezione: {}", e))?;
+    
+    log::info!("🖱️ Finestra selezione regione aperta — in attesa della selezione utente...");
+    
+    // Attendi la selezione (con timeout 60s)
+    match tokio::time::timeout(std::time::Duration::from_secs(60), rx).await {
+        Ok(Ok(Some(region))) => {
+            log::info!("✅ Regione selezionata: {}x{} at ({},{})", region.width, region.height, region.x, region.y);
+            Ok(region)
+        }
+        Ok(Ok(None)) => {
+            Err("Selezione annullata dall'utente".to_string())
+        }
+        Ok(Err(_)) => {
+            Err("Errore comunicazione con finestra selezione".to_string())
+        }
+        Err(_) => {
+            // Timeout — chiudi finestra
+            if let Some(w) = app.get_webview_window("region-select") {
+                let _ = w.close();
+            }
+            Err("Timeout selezione regione (60s)".to_string())
+        }
+    }
+}
+
+/// Conferma la regione selezionata dalla finestra di selezione
+#[command]
+pub async fn confirm_region_selection(
+    app: tauri::AppHandle,
+    x: i32, y: i32, width: i32, height: i32
+) -> Result<(), String> {
+    use tauri::Manager;
+    
+    let region = CaptureRegion { x, y, width, height };
+    log::info!("📐 confirm_region_selection: {}x{} at ({},{})", width, height, x, y);
+    
+    // Invia regione al comando in attesa
+    let sender = {
+        let mut guard = REGION_SENDER.lock().map_err(|e| e.to_string())?;
+        guard.take()
+    };
+    
+    if let Some(tx) = sender {
+        let _ = tx.send(Some(region));
+    }
+    
+    // Chiudi finestra selezione
+    if let Some(w) = app.get_webview_window("region-select") {
+        let _ = w.close();
+    }
+    
+    Ok(())
+}
+
+/// Annulla la selezione della regione
+#[command]
+pub async fn cancel_region_selection(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri::Manager;
+    
+    let sender = {
+        let mut guard = REGION_SENDER.lock().map_err(|e| e.to_string())?;
+        guard.take()
+    };
+    
+    if let Some(tx) = sender {
+        let _ = tx.send(None);
+    }
+    
+    if let Some(w) = app.get_webview_window("region-select") {
+        let _ = w.close();
+    }
+    
+    Ok(())
 }
 
 // ============================================================================
