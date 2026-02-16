@@ -1,44 +1,113 @@
 use serde_json;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::collections::HashMap;
+use uuid::Uuid;
+
+/// Directory di storage per le patch
+fn get_patches_dir() -> Result<PathBuf, String> {
+    let patches_dir = if cfg!(debug_assertions) {
+        PathBuf::from("../gamestringer_data/patches")
+    } else {
+        dirs::data_dir()
+            .ok_or("Impossibile trovare directory dati")?
+            .join("gamestringer")
+            .join("patches")
+    };
+    
+    if !patches_dir.exists() {
+        fs::create_dir_all(&patches_dir)
+            .map_err(|e| format!("Errore creazione directory patches: {}", e))?;
+    }
+    Ok(patches_dir)
+}
+
+/// Legge una patch da file
+fn read_patch_file(path: &Path) -> Result<serde_json::Value, String> {
+    let content = fs::read_to_string(path)
+        .map_err(|e| format!("Errore lettura patch: {}", e))?;
+    serde_json::from_str(&content)
+        .map_err(|e| format!("Errore parsing patch JSON: {}", e))
+}
+
+/// Salva una patch su file
+fn write_patch_file(path: &Path, patch: &serde_json::Value) -> Result<(), String> {
+    let json = serde_json::to_string_pretty(patch)
+        .map_err(|e| format!("Errore serializzazione patch: {}", e))?;
+    fs::write(path, json)
+        .map_err(|e| format!("Errore scrittura patch: {}", e))
+}
 
 #[tauri::command]
 pub async fn get_patches(patch_id: Option<String>) -> Result<serde_json::Value, String> {
     log::info!("📦 Recupero patch{}", 
-        if let Some(ref id) = patch_id { format!(" con ID: {}", id) } else { "".to_string() });
+        if let Some(ref id) = patch_id { format!(" con ID: {}", id) } else { " (tutte)".to_string() });
     
-    // TODO: Implementare patch manager con database/file system
-    if let Some(_id) = patch_id {
+    let patches_dir = get_patches_dir()?;
+    
+    if let Some(id) = patch_id {
         // Recupera patch specifica
-        log::warn!("⚠️ Recupero patch specifica non ancora implementato");
-        Err("Patch non trovata".to_string())
+        let patch_file = patches_dir.join(format!("{}.json", id));
+        if !patch_file.exists() {
+            return Err(format!("Patch non trovata: {}", id));
+        }
+        let patch = read_patch_file(&patch_file)?;
+        log::info!("✅ Patch '{}' recuperata", id);
+        Ok(patch)
     } else {
         // Recupera tutte le patch
-        let patches = serde_json::json!([]);
-        log::info!("✅ Recuperate {} patch", 0);
-        Ok(patches)
+        let mut patches = Vec::new();
+        if let Ok(entries) = fs::read_dir(&patches_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|e| e.to_str()) == Some("json") {
+                    match read_patch_file(&path) {
+                        Ok(patch) => patches.push(patch),
+                        Err(e) => log::warn!("⚠️ Errore lettura patch {:?}: {}", path, e),
+                    }
+                }
+            }
+        }
+        // Ordina per created_at decrescente
+        patches.sort_by(|a, b| {
+            let a_date = a.get("created_at").and_then(|v| v.as_str()).unwrap_or("");
+            let b_date = b.get("created_at").and_then(|v| v.as_str()).unwrap_or("");
+            b_date.cmp(a_date)
+        });
+        log::info!("✅ Recuperate {} patch", patches.len());
+        Ok(serde_json::json!(patches))
     }
 }
 
 #[tauri::command]
 pub async fn create_patch(options: serde_json::Value, translations: serde_json::Value) -> Result<serde_json::Value, String> {
-    log::info!("🔨 Creazione nuova patch");
-    log::info!("📝 Opzioni: {}", options);
-    log::info!("🌐 Traduzioni: {} elementi", 
-        translations.as_array().map(|arr| arr.len()).unwrap_or(0));
+    let count = translations.as_array().map(|arr| arr.len()).unwrap_or(0);
+    log::info!("🔨 Creazione nuova patch ({} traduzioni)", count);
     
-    // TODO: Implementare creazione patch con patch manager
+    let patches_dir = get_patches_dir()?;
+    let patch_id = Uuid::new_v4().to_string();
+    let now = chrono::Utc::now().to_rfc3339();
+    
+    let name = options.get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("Patch senza nome")
+        .to_string();
+    
     let patch = serde_json::json!({
-        "id": "patch_placeholder",
-        "name": "Patch Placeholder",
-        "created_at": chrono::Utc::now().to_rfc3339(),
+        "id": patch_id,
+        "name": name,
+        "created_at": now,
+        "updated_at": now,
         "status": "created",
+        "translation_count": count,
         "options": options,
         "translations": translations
     });
     
-    log::warn!("⚠️ Creazione patch non ancora implementata - restituito placeholder");
+    let patch_file = patches_dir.join(format!("{}.json", patch_id));
+    write_patch_file(&patch_file, &patch)?;
+    
+    log::info!("✅ Patch '{}' creata: {} ({} traduzioni)", patch_id, name, count);
     Ok(patch)
 }
 
@@ -46,16 +115,42 @@ pub async fn create_patch(options: serde_json::Value, translations: serde_json::
 pub async fn update_patch(patch_id: String, options: serde_json::Value, translations: serde_json::Value) -> Result<serde_json::Value, String> {
     log::info!("✏️ Aggiornamento patch: {}", patch_id);
     
-    // TODO: Implementare aggiornamento patch
+    let patches_dir = get_patches_dir()?;
+    let patch_file = patches_dir.join(format!("{}.json", patch_id));
+    
+    if !patch_file.exists() {
+        return Err(format!("Patch non trovata: {}", patch_id));
+    }
+    
+    // Leggi patch esistente per preservare created_at
+    let existing = read_patch_file(&patch_file)?;
+    let created_at = existing.get("created_at")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    
+    let count = translations.as_array().map(|arr| arr.len()).unwrap_or(0);
+    let name = options.get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or(
+            existing.get("name").and_then(|v| v.as_str()).unwrap_or("Patch senza nome")
+        )
+        .to_string();
+    
     let updated_patch = serde_json::json!({
         "id": patch_id,
+        "name": name,
+        "created_at": created_at,
         "updated_at": chrono::Utc::now().to_rfc3339(),
         "status": "updated",
+        "translation_count": count,
         "options": options,
         "translations": translations
     });
     
-    log::warn!("⚠️ Aggiornamento patch non ancora implementato");
+    write_patch_file(&patch_file, &updated_patch)?;
+    
+    log::info!("✅ Patch '{}' aggiornata ({} traduzioni)", patch_id, count);
     Ok(updated_patch)
 }
 
@@ -63,85 +158,204 @@ pub async fn update_patch(patch_id: String, options: serde_json::Value, translat
 pub async fn export_patch(patch_id: String, format: String) -> Result<serde_json::Value, String> {
     log::info!("📤 Export patch {} in formato: {}", patch_id, format);
     
-    // TODO: Implementare export patch in vari formati
-    let export_result = serde_json::json!({
-        "patch_id": patch_id,
-        "format": format,
-        "exported_at": chrono::Utc::now().to_rfc3339(),
-        "file_path": format!("./exports/patch_{}.{}", patch_id, format),
-        "status": "exported"
-    });
+    let patches_dir = get_patches_dir()?;
+    let patch_file = patches_dir.join(format!("{}.json", patch_id));
     
-    log::warn!("⚠️ Export patch non ancora implementato");
-    Ok(export_result)
+    if !patch_file.exists() {
+        return Err(format!("Patch non trovata: {}", patch_id));
+    }
+    
+    let patch = read_patch_file(&patch_file)?;
+    let translations = patch.get("translations")
+        .cloned()
+        .unwrap_or(serde_json::json!([]));
+    let translations_vec: Vec<serde_json::Value> = translations
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    
+    let source_lang = patch.get("options")
+        .and_then(|o| o.get("source_language"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    let target_lang = patch.get("options")
+        .and_then(|o| o.get("target_language"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+    
+    // Esporta nella directory exports accanto alle patch
+    let exports_dir = patches_dir.parent()
+        .unwrap_or(Path::new("."))
+        .join("exports");
+    fs::create_dir_all(&exports_dir)
+        .map_err(|e| format!("Errore creazione directory exports: {}", e))?;
+    
+    let patch_name = patch.get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or(&patch_id);
+    let safe_name: String = patch_name.chars()
+        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '_' })
+        .collect();
+    let export_file = exports_dir.join(format!("{}_{}.{}", safe_name, &patch_id[..8], format));
+    let export_path = export_file.to_string_lossy().to_string();
+    
+    // Delega all'export_translations esistente
+    export_translations(export_path.clone(), format.clone(), translations_vec, source_lang, target_lang).await
 }
 
 #[tauri::command]
-#[allow(dead_code)] // Comando traduzione testo - essenziale per sistema injection/traduzione
-pub async fn translate_text(text: String, provider: String, _api_key: String, target_lang: String) -> Result<serde_json::Value, String> {
+#[allow(dead_code)]
+pub async fn translate_text(text: String, provider: String, api_key: String, target_lang: String) -> Result<serde_json::Value, String> {
     log::info!("🌐 Traduzione testo con {}: '{}' -> {}", provider, 
         if text.len() > 50 { format!("{}...", &text[..50]) } else { text.clone() }, 
         target_lang);
     
-    // TODO: Implementare integrazione con servizi di traduzione
-    match provider.as_str() {
-        "openai" => {
-            log::info!("🤖 Usando OpenAI per traduzione");
-            // TODO: Implementare chiamata OpenAI API
-        }
-        "deepl" => {
-            log::info!("🔵 Usando DeepL per traduzione");
-            // TODO: Implementare chiamata DeepL API
-        }
-        "google" => {
-            log::info!("🔍 Usando Google Translate per traduzione");
-            // TODO: Implementare chiamata Google Translate API
-        }
-        _ => {
-            return Err(format!("Provider di traduzione non supportato: {}", provider));
-        }
-    }
-    
-    // Placeholder per ora
-    let translation_result = serde_json::json!({
-        "original_text": text,
-        "translated_text": format!("[{}] {}", target_lang.to_uppercase(), text),
-        "provider": provider,
-        "target_language": target_lang,
-        "confidence": 0.95,
-        "translated_at": chrono::Utc::now().to_rfc3339()
+    // Chiama l'API frontend Next.js che gestisce già 14+ provider con fallback chain
+    let client = reqwest::Client::new();
+    let mut body = serde_json::json!({
+        "text": text,
+        "targetLanguage": target_lang,
+        "provider": provider
     });
     
-    log::warn!("⚠️ Traduzione non ancora implementata - restituito placeholder");
-    Ok(translation_result)
+    // Passa API key se fornita
+    if !api_key.is_empty() {
+        body["apiKey"] = serde_json::Value::String(api_key);
+    }
+    
+    let response = client
+        .post("http://127.0.0.1:3199/api/translate")
+        .json(&body)
+        .timeout(std::time::Duration::from_secs(30))
+        .send()
+        .await
+        .map_err(|e| format!("Errore connessione API traduzione: {}", e))?;
+    
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("API traduzione errore {}: {}", status, error_text));
+    }
+    
+    let api_result: serde_json::Value = response.json().await
+        .map_err(|e| format!("Errore parsing risposta traduzione: {}", e))?;
+    
+    let translated_text = api_result.get("translatedText")
+        .and_then(|v| v.as_str())
+        .unwrap_or(&text)
+        .to_string();
+    
+    let confidence = api_result.get("confidence")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.8);
+    
+    let used_provider = api_result.get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or(&provider)
+        .to_string();
+    
+    log::info!("✅ Traduzione completata via {} (confidence: {:.0}%)", used_provider, confidence * 100.0);
+    
+    Ok(serde_json::json!({
+        "original_text": text,
+        "translated_text": translated_text,
+        "provider": used_provider,
+        "target_language": target_lang,
+        "confidence": confidence,
+        "suggestions": api_result.get("suggestions").cloned().unwrap_or(serde_json::json!([])),
+        "translated_at": chrono::Utc::now().to_rfc3339()
+    }))
 }
 
 #[tauri::command]
-pub async fn get_translation_suggestions(text: String, context: Option<String>) -> Result<serde_json::Value, String> {
+pub async fn get_translation_suggestions(text: String, context: Option<String>, target_language: Option<String>) -> Result<serde_json::Value, String> {
     log::info!("💡 Recupero suggerimenti traduzione per: '{}'", 
         if text.len() > 50 { format!("{}...", &text[..50]) } else { text.clone() });
     
-    // TODO: Implementare sistema suggerimenti basato su database/AI
-    let suggestions = serde_json::json!({
-        "original_text": text,
-        "context": context,
-        "suggestions": [
-            {
-                "text": format!("Suggerimento 1 per: {}", text),
-                "confidence": 0.9,
-                "source": "database"
-            },
-            {
-                "text": format!("Suggerimento 2 per: {}", text),
-                "confidence": 0.8,
-                "source": "ai"
+    let target = target_language.unwrap_or_else(|| "it".to_string());
+    let client = reqwest::Client::new();
+    
+    // Chiedi suggerimenti a più provider in parallelo
+    let providers = vec!["libre", "mock"];
+    let mut suggestions = Vec::new();
+    
+    for prov in &providers {
+        let mut body = serde_json::json!({
+            "text": text,
+            "targetLanguage": target,
+            "provider": prov
+        });
+        if let Some(ref ctx) = context {
+            body["context"] = serde_json::Value::String(ctx.clone());
+        }
+        
+        match client
+            .post("http://127.0.0.1:3199/api/translate")
+            .json(&body)
+            .timeout(std::time::Duration::from_secs(15))
+            .send()
+            .await
+        {
+            Ok(resp) if resp.status().is_success() => {
+                if let Ok(data) = resp.json::<serde_json::Value>().await {
+                    let translated = data.get("translatedText")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string();
+                    let confidence = data.get("confidence")
+                        .and_then(|v| v.as_f64())
+                        .unwrap_or(0.5);
+                    
+                    if !translated.is_empty() && translated != text {
+                        suggestions.push(serde_json::json!({
+                            "text": translated,
+                            "confidence": confidence,
+                            "source": prov
+                        }));
+                    }
+                    
+                    // Aggiungi anche le suggestions interne del provider
+                    if let Some(sug_arr) = data.get("suggestions").and_then(|v| v.as_array()) {
+                        for s in sug_arr.iter().take(2) {
+                            if let Some(s_text) = s.as_str() {
+                                if !s_text.is_empty() && !s_text.starts_with('⚠') && !s_text.starts_with('💡') && !s_text.starts_with('🔧') {
+                                    suggestions.push(serde_json::json!({
+                                        "text": s_text,
+                                        "confidence": confidence * 0.9,
+                                        "source": format!("{}_alt", prov)
+                                    }));
+                                }
+                            }
+                        }
+                    }
+                }
             }
-        ],
-        "generated_at": chrono::Utc::now().to_rfc3339()
+            Ok(resp) => {
+                log::warn!("⚠️ Provider {} errore: {}", prov, resp.status());
+            }
+            Err(e) => {
+                log::warn!("⚠️ Provider {} timeout/errore: {}", prov, e);
+            }
+        }
+    }
+    
+    // Ordina per confidence decrescente
+    suggestions.sort_by(|a, b| {
+        let ca = a.get("confidence").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let cb = b.get("confidence").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        cb.partial_cmp(&ca).unwrap_or(std::cmp::Ordering::Equal)
     });
     
-    log::warn!("⚠️ Suggerimenti traduzione non ancora implementati");
-    Ok(suggestions)
+    log::info!("✅ {} suggerimenti generati per: '{}'", suggestions.len(),
+        if text.len() > 30 { format!("{}...", &text[..30]) } else { text.clone() });
+    
+    Ok(serde_json::json!({
+        "original_text": text,
+        "context": context,
+        "target_language": target,
+        "suggestions": suggestions,
+        "generated_at": chrono::Utc::now().to_rfc3339()
+    }))
 }
 
 #[tauri::command]
