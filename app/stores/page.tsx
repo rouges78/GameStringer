@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2, Clock, Trophy, Gamepad2, BarChart3, Store as StoreIcon, ChevronDown } from 'lucide-react';
+import { CheckCircle, Plug, Unplug, XCircle, Loader2, AlertCircle, CheckCircle2, Clock, Trophy, Gamepad2, BarChart3, Store as StoreIcon, ChevronDown, ExternalLink } from 'lucide-react';
 
 import React, { useState, useEffect } from 'react';
 import Image, { StaticImageData } from 'next/image';
@@ -613,6 +613,17 @@ export default function StoresPage() {
                         👨‍👩‍👧‍👦
                       </Button>
                     )}
+                    {store.id === 'gog' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                        onClick={() => window.open('https://www.gog.com/account', '_blank', 'noopener,noreferrer')}
+                        title="Apri GOG.com"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="icon"
@@ -631,16 +642,40 @@ export default function StoresPage() {
                     </Button>
                   </>
                 ) : isConnectable ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 h-7 text-[10px] border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
-                    disabled={isLoading || currentLoading}
-                    onClick={() => handleConnect(store.id)}
-                  >
-                    {currentLoading ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <Plug className="h-3 w-3 mr-1" />}
-                    {t('stores.connect')}
-                  </Button>
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-7 text-[10px] border-orange-500/50 text-orange-400 hover:bg-orange-500/10 hover:border-orange-400"
+                      disabled={isLoading || currentLoading}
+                      onClick={() => handleConnect(store.id)}
+                    >
+                      {currentLoading ? <Loader2 className="animate-spin h-3 w-3 mr-1" /> : <Plug className="h-3 w-3 mr-1" />}
+                      {t('stores.connect')}
+                    </Button>
+                    {store.id === 'gog' && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                          onClick={() => window.open('https://www.gog.com/en/games', '_blank', 'noopener,noreferrer')}
+                          title="GOG Store"
+                        >
+                          <StoreIcon className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-[10px] border-violet-500/50 text-violet-400 hover:bg-violet-500/10"
+                          onClick={() => window.open('https://www.gog.com/galaxy', '_blank', 'noopener,noreferrer')}
+                          title="Scarica GOG Galaxy"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                  </>
                 ) : (
                   <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px] border-orange-500/30 text-orange-300/50" disabled={true}>
                     {t('stores.notAvailable')}
