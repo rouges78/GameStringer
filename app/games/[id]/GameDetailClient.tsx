@@ -1606,7 +1606,7 @@ export default function GameDetailPage() {
         <CoverPicker
           isOpen={isCoverPickerOpen}
           onClose={() => setIsCoverPickerOpen(false)}
-          appId={game.appid || parseInt(game.app_id?.replace('steam_', '') || '0')}
+          appId={game.appid > 0 ? game.appid : (game.app_id?.startsWith('steam_') ? parseInt(game.app_id.replace('steam_', '')) || 0 : 0)}
           gameName={game.title || game.name || ''}
           currentCover={game.headerUrl || fallbackImage || undefined}
           onCoverSelected={(url) => {
