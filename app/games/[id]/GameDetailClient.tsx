@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -89,6 +89,10 @@ export default function GameDetailPage() {
   // SteamGridDB fallback image
   const [fallbackImage, setFallbackImage] = useState<string | null>(null);
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
+  
+  // Ref guards per StrictMode
+  const gameDataLoadedRef = useRef(false);
+  const sideEffectsRunRef = useRef<string | null>(null);
 
   // Unreal Engine Patcher
   const [unrealPatchStatus, setUnrealPatchStatus] = useState<{
@@ -446,6 +450,8 @@ export default function GameDetailPage() {
 
   useEffect(() => {
     if (gameId) {
+      if (gameDataLoadedRef.current) return;
+      gameDataLoadedRef.current = true;
       const fetchGameData = async () => {
         setIsLoading(true);
         try {
@@ -708,29 +714,37 @@ export default function GameDetailPage() {
 
   // Rileva motore automaticamente quando il gioco è caricato
   useEffect(() => {
-    if (game && !engineInfo && !isDetectingEngine) {
-      detectEngine();
-    }
-    // Carica stato patch Unreal se è un gioco Unreal
-    if (game?.engine === 'Unreal Engine' && game?.installPath) {
-      loadUnrealPatchStatus();
+    if (!game) return;
+    // Guard per side effects pesanti (fetch API) - esegui solo una volta per game ID
+    const gameKey = game.id || game.appid || gameId;
+    const isFirstRun = sideEffectsRunRef.current !== gameKey;
+    
+    if (isFirstRun) {
+      sideEffectsRunRef.current = gameKey;
+      
+      if (!engineInfo && !isDetectingEngine) {
+        detectEngine();
+      }
+      if (game.engine === 'Unreal Engine' && game.installPath) {
+        loadUnrealPatchStatus();
+      }
+      // Cerca descrizione da Steam API se mancante
+      if (!game.shortDescription && !game.description && game.appid && game.appid > 0) {
+        fetchDescriptionFromSteam();
+      }
+      // Cerca descrizione da GOG API se mancante e gioco è GOG
+      if (!game.shortDescription && !game.description && (game.platform === 'GOG' || game.source === 'GOG' || game.storeId?.toString().startsWith('gog_') || gameId.startsWith('gog_'))) {
+        fetchDescriptionFromGog();
+      }
+      // Cerca immagine su SteamGridDB se non c'è header
+      if (!game.headerUrl && !fallbackImage) {
+        fetchFallbackImage();
+      }
     }
     // Traduci descrizione nella lingua utente (ritraduce quando cambia lingua)
-    if (game?.shortDescription) {
+    if (game.shortDescription) {
       setTranslatedDescription(null);
       translateDescription(game.shortDescription);
-    }
-    // Cerca descrizione da Steam API se mancante
-    if (game && !game.shortDescription && !game.description && game.appid && game.appid > 0) {
-      fetchDescriptionFromSteam();
-    }
-    // Cerca descrizione da GOG API se mancante e gioco è GOG
-    if (game && !game.shortDescription && !game.description && (game.platform === 'GOG' || game.source === 'GOG' || game.storeId?.toString().startsWith('gog_') || gameId.startsWith('gog_'))) {
-      fetchDescriptionFromGog();
-    }
-    // Cerca immagine su SteamGridDB se non c'è header
-    if (game && !game.headerUrl && !fallbackImage) {
-      fetchFallbackImage();
     }
   }, [game, language]);
 
@@ -759,7 +773,7 @@ export default function GameDetailPage() {
       const gogId = game.appid?.toString().replace('gog_', '') || game.id?.replace('gog_', '') || '';
       if (!gogId) return;
       
-      const details = await invoke<any>('get_gog_game_details', { gameId: gogId });
+      const details = await invoke<any>('get_gog_game_details', { gameId: gogId, gameName: game.title || game.name || null });
       if (details?.description) {
         const desc = details.description.replace(/<[^>]*>?/gm, '');
         setGame((prev: any) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
@@ -822,7 +836,7 @@ export default function GameDetailPage() {
         try {
           const gogId = gameId.replace('gog_', '') || game.storeId?.toString().replace('gog_', '') || '';
           if (gogId) {
-            const gogCover = await invoke<string | null>('get_gog_game_cover', { gameId: gogId });
+            const gogCover = await invoke<string | null>('get_gog_game_cover', { gameId: gogId, gameName: game.title || game.name || null });
             if (gogCover) {
               setFallbackImage(gogCover);
               console.log('[GameDetail] ✅ GOG API cover:', gogCover);

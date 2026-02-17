@@ -206,26 +206,80 @@ async fn get_gog_games_from_galaxy_db() -> Result<Vec<InstalledGame>, String> {
 }
 
 /// Recupera i dettagli di un gioco GOG tramite l'API pubblica
+/// Se l'ID non funziona (404/500), prova con ricerca per nome (fallback)
 #[tauri::command]
-pub async fn get_gog_game_details(game_id: String) -> Result<GogGame, String> {
-    println!("[GOG] Recupero dettagli per: {}", game_id);
+pub async fn get_gog_game_details(game_id: String, game_name: Option<String>) -> Result<GogGame, String> {
+    println!("[GOG] Recupero dettagli per: {} (nome: {:?})", game_id, game_name);
     
-    // GOG API endpoint pubblico
+    // METODO 1: Lookup diretto per ID prodotto
     let url = format!("https://api.gog.com/products/{}?expand=description", game_id);
     
     match HTTP_CLIENT.get(&url).send().await {
         Ok(response) => {
             if response.status().is_success() {
                 match response.json::<serde_json::Value>().await {
-                    Ok(data) => parse_gog_game_data(&data),
-                    Err(e) => Err(format!("Errore parsing JSON GOG API: {}", e)),
+                    Ok(data) => return parse_gog_game_data(&data),
+                    Err(e) => println!("[GOG] Parse fallito per ID {}: {}", game_id, e),
                 }
             } else {
-                Err(format!("Errore HTTP GOG API: {}", response.status()))
+                println!("[GOG] ID {} non trovato: {}", game_id, response.status());
             }
         }
-        Err(e) => Err(format!("Errore connessione GOG API: {}", e)),
+        Err(e) => println!("[GOG] Connessione fallita per ID {}: {}", game_id, e),
     }
+    
+    // METODO 2: Fallback ricerca per nome
+    if let Some(name) = game_name {
+        if !name.is_empty() {
+            println!("[GOG] Fallback: ricerca per nome '{}'", name);
+            // Rimuovi suffissi comuni per migliorare la ricerca
+            let clean_name = name
+                .replace("™", "")
+                .replace("®", "")
+                .replace(" Game of the Year Edition", "")
+                .replace(" GOTY", "")
+                .replace(" Complete Edition", "")
+                .replace(" Remastered", "")
+                .trim()
+                .to_string();
+            
+            let search_url = format!("https://api.gog.com/products?search={}&limit=5", 
+                                     urlencoding::encode(&clean_name));
+            
+            match HTTP_CLIENT.get(&search_url).send().await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        if let Ok(data) = response.json::<serde_json::Value>().await {
+                            if let Some(products) = data["products"].as_array() {
+                                // Cerca il match migliore
+                                let name_lower = name.to_lowercase();
+                                let clean_lower = clean_name.to_lowercase();
+                                for product in products {
+                                    if let Ok(game) = parse_gog_game_data(product) {
+                                        let title_lower = game.title.to_lowercase();
+                                        if title_lower.contains(&clean_lower) || clean_lower.contains(&title_lower) || title_lower == name_lower {
+                                            println!("[GOG] ✅ Trovato per nome: '{}' -> '{}'", name, game.title);
+                                            return Ok(game);
+                                        }
+                                    }
+                                }
+                                // Se nessun match esatto, prendi il primo risultato
+                                if let Some(first) = products.first() {
+                                    if let Ok(game) = parse_gog_game_data(first) {
+                                        println!("[GOG] ✅ Primo risultato per '{}': '{}'", name, game.title);
+                                        return Ok(game);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(e) => println!("[GOG] Ricerca per nome fallita: {}", e),
+            }
+        }
+    }
+    
+    Err(format!("Gioco GOG non trovato per ID {} né per nome", game_id))
 }
 
 /// Cerca un gioco GOG per nome
@@ -263,10 +317,10 @@ pub async fn search_gog_game(query: String) -> Result<Vec<GogGame>, String> {
 
 /// Recupera l'URL della copertina di un gioco GOG
 #[tauri::command]
-pub async fn get_gog_game_cover(game_id: String) -> Result<String, String> {
-    println!("[GOG] Recupero copertina per: {}", game_id);
+pub async fn get_gog_game_cover(game_id: String, game_name: Option<String>) -> Result<String, String> {
+    println!("[GOG] Recupero copertina per: {} (nome: {:?})", game_id, game_name);
     
-    match get_gog_game_details(game_id).await {
+    match get_gog_game_details(game_id, game_name).await {
         Ok(game) => {
             // Priorità: background > logo > boxart > icon
             let url = game.images.background
@@ -297,7 +351,7 @@ pub async fn get_gog_covers_batch(game_ids: Vec<String>) -> Result<HashMap<Strin
         for game_id in chunk {
             let game_id_clone = game_id.clone();
             tasks.push(tokio::spawn(async move {
-                (game_id_clone.clone(), get_gog_game_cover(game_id_clone).await)
+                (game_id_clone.clone(), get_gog_game_cover(game_id_clone, None).await)
             }));
         }
         

@@ -187,7 +187,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
           try {
             const gogId = game.app_id?.replace('gog_', '') || game.id?.replace('gog_', '') || '';
             if (gogId) {
-              const gogCover = await invoke<string | null>('get_gog_game_cover', { gameId: gogId });
+              const gogCover = await invoke<string | null>('get_gog_game_cover', { gameId: gogId, gameName: game.title || null });
               if (gogCover) {
                 setSteamGridDbImage(gogCover);
                 queueCoverSave(game.app_id, gogCover);
@@ -586,6 +586,21 @@ export default function LibraryPage() {
   useEffect(() => {
     if (libraryLoadedRef.current) return;
     libraryLoadedRef.current = true;
+    
+    // Controlla se c'è una cache di sessione (navigazione back veloce)
+    try {
+      const cached = sessionStorage.getItem('gs_library_games');
+      if (cached) {
+        const cachedGames = JSON.parse(cached) as Game[];
+        if (cachedGames.length > 0) {
+          console.log(`⚡ Libreria caricata da cache sessione: ${cachedGames.length} giochi`);
+          setGamesWithValidation(cachedGames);
+          setIsLoading(false);
+          return; // Skip full load
+        }
+      }
+    } catch {}
+    
     const fetchGames = async () => {
       try {
         setIsLoading(true);
@@ -818,6 +833,12 @@ export default function LibraryPage() {
         
         await activityHistory.trackSteamSync(finalGames.length);
         setGamesWithValidation(finalGames);
+        
+        // Salva in sessionStorage per navigazione back veloce
+        try {
+          sessionStorage.setItem('gs_library_games', JSON.stringify(finalGames));
+        } catch {}
+
         
         // 🌍 Carica lingue in background per i giochi Steam senza lingue in cache
         const loadLanguagesInBackground = async () => {
