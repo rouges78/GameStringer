@@ -511,8 +511,8 @@ async function translateWithMyMemory(
     }
     const data = await res.json();
     if (data?.responseStatus === 429) {
-      blockProvider('mymemory');
-      throw new Error('MyMemory quota exceeded');
+      blockProvider('mymemory', false); // cooldown, non blocco permanente
+      throw new Error('RateLimit');
     }
     results.push(data?.responseData?.translatedText || text);
   }
@@ -870,15 +870,15 @@ async function translateWithLingva(
   for (const text of opts.texts) {
     const url = `https://lingva.ml/api/v1/${srcLang}/${tgtLang}/${encodeURIComponent(text)}`;
     try {
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) {
-        blockProvider('lingva');
+        blockProvider('lingva', false); // cooldown, non blocco permanente
         throw new Error(`Lingva ${res.status}`);
       }
       const data = await res.json();
       results.push(data?.translation || text);
     } catch (err) {
-      blockProvider('lingva');
+      blockProvider('lingva', false); // cooldown, non blocco permanente
       throw err;
     }
   }
@@ -1213,11 +1213,12 @@ export async function translateWithFallback(
         }
         
         console.warn(`[translateWithFallback] ${provider.name} failed:`, err);
-        if (errMsg === 'RateLimit' || errMsg === 'ContentTooLarge') {
-          // Rate-limit/payload: cooldown temporaneo, riprova dopo 30s
+        const isFreeProvider = !PROVIDER_MAP[provider.name]?.needsKey;
+        if (errMsg === 'RateLimit' || errMsg === 'ContentTooLarge' || isFreeProvider) {
+          // Rate-limit/payload o provider gratuito: cooldown temporaneo (mai blocco permanente)
           blockProvider(provider.name, false);
         } else {
-          // Errore fatale (402, 404, auth, offline): blocco permanente
+          // Errore fatale (402, 404, auth, offline) su provider a pagamento: blocco permanente
           blockProvider(provider.name, true);
         }
         break;
