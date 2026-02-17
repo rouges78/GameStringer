@@ -112,24 +112,29 @@ export default function Dashboard() {
       
       let games: any[] = [];
       
+      // Prima prova dalla cache sessione della libreria (già popolata, multi-store)
       try {
-        const userGames = await invoke('get_steam_games', {
-          apiKey: '',
-          steamId: '',
-          forceRefresh: false
-        }) as any[];
-        
-        if (userGames && userGames.length > 0) {
-          games = userGames;
-        }
-      } catch (e) {
-        try {
-          const fallbackGames = await invoke('get_games') as any[];
-          if (fallbackGames && fallbackGames.length > 0) {
-            games = fallbackGames;
+        const cached = sessionStorage.getItem('gs_library_games');
+        if (cached) {
+          const cachedGames = JSON.parse(cached);
+          if (Array.isArray(cachedGames) && cachedGames.length > 0) {
+            games = cachedGames;
           }
-        } catch (fallbackError) {
-          console.log('Dashboard: No games loaded');
+        }
+      } catch {}
+
+      // Se non c'è cache, carica da backend
+      if (games.length === 0) {
+        try {
+          const allGames = await invoke('get_games') as any[];
+          if (allGames && allGames.length > 0) games = allGames;
+        } catch {
+          try {
+            const steamGames = await invoke('get_steam_games', { apiKey: '', steamId: '', forceRefresh: false }) as any[];
+            if (steamGames && steamGames.length > 0) games = steamGames;
+          } catch {
+            console.log('Dashboard: No games loaded');
+          }
         }
       }
       
@@ -165,14 +170,32 @@ export default function Dashboard() {
       // Tempo risparmiato: ~2 min per entry TM (traduzione manuale) salvati con AI
       const timeSavedMinutes = tmEntries * 2 + savedTranslations.length * 15;
       
+      // Conta giochi per piattaforma/store dai dati reali
+      const platformCount: Record<string, number> = {};
+      games.forEach((g: any) => {
+        const p = (g.platform || g.source || 'Steam').toLowerCase();
+        const key = p.includes('steam') ? 'steam'
+          : p.includes('epic') ? 'epic'
+          : p.includes('gog') ? 'gog'
+          : p.includes('origin') || p.includes('ea') ? 'origin'
+          : p.includes('ubisoft') || p.includes('uplay') ? 'ubisoft'
+          : p.includes('battle') ? 'battlenet'
+          : p.includes('itch') ? 'itchio'
+          : 'steam';
+        // Anche dall'id del gioco (es. 'gog_123')
+        const idKey = (g.id || g.app_id || '').toString().split('_')[0];
+        const resolvedKey = idKey === 'gog' ? 'gog' : idKey === 'epic' ? 'epic' : key;
+        platformCount[resolvedKey] = (platformCount[resolvedKey] || 0) + 1;
+      });
+
       const storeStats: Record<string, StoreStats> = {
-        steam: { connected: games.length > 0, games: games.length },
-        epic: { connected: false, games: 0 },
-        gog: { connected: false, games: 0 },
-        origin: { connected: false, games: 0 },
-        ubisoft: { connected: false, games: 0 },
-        battlenet: { connected: false, games: 0 },
-        itchio: { connected: false, games: 0 }
+        steam:     { connected: (platformCount.steam || 0) > 0,     games: platformCount.steam || 0 },
+        epic:      { connected: (platformCount.epic || 0) > 0,      games: platformCount.epic || 0 },
+        gog:       { connected: (platformCount.gog || 0) > 0,       games: platformCount.gog || 0 },
+        origin:    { connected: (platformCount.origin || 0) > 0,    games: platformCount.origin || 0 },
+        ubisoft:   { connected: (platformCount.ubisoft || 0) > 0,   games: platformCount.ubisoft || 0 },
+        battlenet: { connected: (platformCount.battlenet || 0) > 0, games: platformCount.battlenet || 0 },
+        itchio:    { connected: (platformCount.itchio || 0) > 0,    games: platformCount.itchio || 0 },
       };
       
       const engineStats: Record<string, number> = {};
@@ -406,6 +429,37 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Store Stats */}
+      {Object.values(stats.storeStats).some(s => s.games > 0) && (
+        <Card className="border-slate-500/20 bg-slate-950/40 backdrop-blur-sm">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Gamepad2 className="h-4 w-4 text-slate-400" />
+              <h3 className="text-sm font-semibold text-slate-300">Store Connessi</h3>
+              <span className="ml-auto text-xs text-slate-500">
+                {Object.values(stats.storeStats).reduce((s, v) => s + v.games, 0)} giochi totali
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: 'steam',     label: 'Steam',      color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20' },
+                { key: 'gog',       label: 'GOG',        color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
+                { key: 'epic',      label: 'Epic',       color: 'text-cyan-400',   bg: 'bg-cyan-500/10 border-cyan-500/20' },
+                { key: 'ubisoft',   label: 'Ubisoft',    color: 'text-sky-400',    bg: 'bg-sky-500/10 border-sky-500/20' },
+                { key: 'origin',    label: 'EA/Origin',  color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
+                { key: 'battlenet', label: 'Battle.net', color: 'text-blue-300',   bg: 'bg-blue-500/10 border-blue-500/20' },
+                { key: 'itchio',    label: 'itch.io',    color: 'text-rose-400',   bg: 'bg-rose-500/10 border-rose-500/20' },
+              ].filter(s => stats.storeStats[s.key]?.games > 0).map(store => (
+                <div key={store.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs ${store.bg}`}>
+                  <span className={`font-semibold ${store.color}`}>{stats.storeStats[store.key].games}</span>
+                  <span className="text-slate-400">{store.label}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
