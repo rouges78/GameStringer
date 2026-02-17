@@ -769,9 +769,11 @@ export default function GameDetailPage() {
     if (!game) return;
     try {
       const { invoke } = await import('@tauri-apps/api/core');
-      // Estrai ID numerico GOG dal game id (es: "gog_1207664503" -> "1207664503")
-      const gogId = game.appid?.toString().replace('gog_', '') || game.id?.replace('gog_', '') || '';
-      if (!gogId) return;
+      // Estrai ID numerico GOG dal gameId URL (es: "gog_1803553877" -> "1803553877")
+      // NON usare game.appid perché è 0 per giochi GOG
+      const gogId = gameId.startsWith('gog_') ? gameId.replace('gog_', '') 
+        : (game.storeId?.toString().replace('gog_', '') || game.id?.replace('gog_', '') || '');
+      if (!gogId || gogId === '0') return;
       
       const details = await invoke<any>('get_gog_game_details', { gameId: gogId, gameName: game.title || game.name || null });
       if (details?.description) {

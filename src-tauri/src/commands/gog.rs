@@ -254,20 +254,38 @@ pub async fn get_gog_game_details(game_id: String, game_name: Option<String>) ->
                                 // Cerca il match migliore
                                 let name_lower = name.to_lowercase();
                                 let clean_lower = clean_name.to_lowercase();
+                                let mut found_id: Option<u64> = None;
                                 for product in products {
                                     if let Ok(game) = parse_gog_game_data(product) {
                                         let title_lower = game.title.to_lowercase();
                                         if title_lower.contains(&clean_lower) || clean_lower.contains(&title_lower) || title_lower == name_lower {
-                                            println!("[GOG] ✅ Trovato per nome: '{}' -> '{}'", name, game.title);
-                                            return Ok(game);
+                                            println!("[GOG] ✅ Trovato per nome: '{}' -> '{}' (id: {})", name, game.title, game.id);
+                                            found_id = Some(game.id);
+                                            break;
                                         }
                                     }
                                 }
                                 // Se nessun match esatto, prendi il primo risultato
-                                if let Some(first) = products.first() {
-                                    if let Ok(game) = parse_gog_game_data(first) {
-                                        println!("[GOG] ✅ Primo risultato per '{}': '{}'", name, game.title);
-                                        return Ok(game);
+                                if found_id.is_none() {
+                                    if let Some(first) = products.first() {
+                                        if let Some(id) = first["id"].as_u64() {
+                                            println!("[GOG] ✅ Primo risultato per '{}': id {}", name, id);
+                                            found_id = Some(id);
+                                        }
+                                    }
+                                }
+                                // Lookup dettagliato con ?expand=description
+                                if let Some(product_id) = found_id {
+                                    let detail_url = format!("https://api.gog.com/products/{}?expand=description", product_id);
+                                    if let Ok(detail_resp) = HTTP_CLIENT.get(&detail_url).send().await {
+                                        if detail_resp.status().is_success() {
+                                            if let Ok(detail_data) = detail_resp.json::<serde_json::Value>().await {
+                                                if let Ok(game) = parse_gog_game_data(&detail_data) {
+                                                    println!("[GOG] ✅ Dettagli completi caricati per: {}", game.title);
+                                                    return Ok(game);
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
