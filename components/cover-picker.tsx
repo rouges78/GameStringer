@@ -131,7 +131,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
         game_name?: string;
         total: number;
       }>('fetch_steamgriddb_covers', {
-        appId: appId,
+        appId: appId ?? 0,
         gameName: gameName,
         apiKey: apiKey,
         coverType: type
