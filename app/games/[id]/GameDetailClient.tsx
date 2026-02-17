@@ -596,7 +596,7 @@ export default function GameDetailPage() {
             // Usa engine rilevato automaticamente
             engine: detectedEngine,
             title: steamApiData?.name || data.name,
-            description: steamApiData?.short_description?.replace(/<[^>]*>?/gm, '') || 'Nessuna descrizione disponibile.',
+            description: steamApiData?.short_description?.replace(/<[^>]*>?/gm, '') || (isNonSteamGame ? null : 'Nessuna descrizione disponibile.'),
             detailedDescription: steamApiData?.detailed_description?.replace(/<[^>]*>?/gm, '') || null,
             aboutGame: steamApiData?.about_the_game?.replace(/<[^>]*>?/gm, '') || null,
             // Cover e header: usa Steam per giochi Steam, URL passato per altri store
@@ -721,11 +721,11 @@ export default function GameDetailPage() {
       translateDescription(game.shortDescription);
     }
     // Cerca descrizione da Steam API se mancante
-    if (game && !game.shortDescription && !game.description && game.appid) {
+    if (game && !game.shortDescription && !game.description && game.appid && game.appid > 0) {
       fetchDescriptionFromSteam();
     }
     // Cerca descrizione da GOG API se mancante e gioco è GOG
-    if (game && !game.shortDescription && !game.description && (game.platform === 'GOG' || game.source === 'GOG')) {
+    if (game && !game.shortDescription && !game.description && (game.platform === 'GOG' || game.source === 'GOG' || game.storeId?.toString().startsWith('gog_') || gameId.startsWith('gog_'))) {
       fetchDescriptionFromGog();
     }
     // Cerca immagine su SteamGridDB se non c'è header
@@ -793,8 +793,10 @@ export default function GameDetailPage() {
         gameName: game.title || game.name || '',
         apiKey: apiKey
       });
+      let coverFound = false;
       if (result) {
         setFallbackImage(result);
+        coverFound = true;
         console.log('[GameDetail] SteamGridDB fallback:', result);
         // Salva in cache per la libreria
         const cacheId = game.appid ? String(game.appid) : (game.id || game.title);
@@ -806,12 +808,30 @@ export default function GameDetailPage() {
           const storeImage = await invoke<string | null>('fetch_steam_store_image', { appId: game.appid });
           if (storeImage) {
             setFallbackImage(storeImage);
+            coverFound = true;
             console.log('[GameDetail] Steam Store scraping fallback:', storeImage);
             const cacheId = String(game.appid);
             await invoke('save_cover_cache', { gameId: cacheId, imageUrl: storeImage });
           }
         } catch (e2) {
           console.warn('[GameDetail] Steam Store scraping failed:', e2);
+        }
+      }
+      // Fallback GOG: usa API pubblica GOG per copertina
+      if (!coverFound && (game.platform === 'GOG' || gameId.startsWith('gog_'))) {
+        try {
+          const gogId = gameId.replace('gog_', '') || game.storeId?.toString().replace('gog_', '') || '';
+          if (gogId) {
+            const gogCover = await invoke<string | null>('get_gog_game_cover', { gameId: gogId });
+            if (gogCover) {
+              setFallbackImage(gogCover);
+              console.log('[GameDetail] ✅ GOG API cover:', gogCover);
+              const cacheId = game.id || gameId;
+              await invoke('save_cover_cache', { gameId: cacheId, imageUrl: gogCover });
+            }
+          }
+        } catch (e3) {
+          console.warn('[GameDetail] GOG API cover failed:', e3);
         }
       }
     } catch (e) {
