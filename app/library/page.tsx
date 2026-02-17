@@ -50,6 +50,34 @@ const getGameDetailUrl = (game: Game): string => {
   return `/games/${game.id || game.app_id}?${params.toString()}`;
 }
 
+// Module-level dedup per evitare doppi fetch SteamGridDB (sopravvive a StrictMode remount)
+const _fetchedCovers = new Set<string>();
+const _pendingCoverSaves: Record<string, string> = {};
+let _coverSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+const flushCoverSaves = async () => {
+  const toSave = { ..._pendingCoverSaves };
+  // Svuota il buffer
+  for (const key of Object.keys(_pendingCoverSaves)) delete _pendingCoverSaves[key];
+  if (Object.keys(toSave).length === 0) return;
+  try {
+    await invoke('save_batch_cover_cache', { covers: toSave });
+    console.log(`[Library] 💾 Batch cover cache salvata: ${Object.keys(toSave).length} cover`);
+  } catch (e) {
+    console.warn('[Library] Batch cover save failed:', e);
+    // Fallback: riprova singolarmente
+    for (const [gameId, imageUrl] of Object.entries(toSave)) {
+      try { await invoke('save_cover_cache', { gameId, imageUrl }); } catch {}
+    }
+  }
+};
+
+const queueCoverSave = (gameId: string, imageUrl: string) => {
+  _pendingCoverSaves[gameId] = imageUrl;
+  if (_coverSaveTimer) clearTimeout(_coverSaveTimer);
+  _coverSaveTimer = setTimeout(flushCoverSaves, 2000);
+};
+
 // Componente per immagine game con fallback e cache SteamGridDB
 const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes: string; coverCache?: Record<string, string> }) => {
   const [hasError, setHasError] = React.useState(false);
@@ -89,6 +117,10 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
   // Cerca su SteamGridDB quando non c'è immagine
   const fetchSteamGridDbImage = React.useCallback(async () => {
     if (triedSteamGridDb || !game.app_id || !game.title) return;
+    // Dedup globale: se già fetchato in questa sessione, skip
+    const dedupKey = game.app_id || game.id;
+    if (_fetchedCovers.has(dedupKey)) return;
+    _fetchedCovers.add(dedupKey);
     setTriedSteamGridDb(true);
     setIsLoading(true);
     
@@ -114,8 +146,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
       
       if (result) {
         setSteamGridDbImage(result);
-        // Salva in cache
-        await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: result });
+        queueCoverSave(game.app_id, result);
         console.log(`[Library] ✅ SteamGridDB cover found for ${game.title}`);
       } else {
         // Fallback 1: usa Steam API appdetails per ottenere header_image
@@ -126,7 +157,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
             const details = await invoke<any>('fetch_steam_game_details', { appId: steamAppId });
             if (details?.header_image) {
               setSteamGridDbImage(details.header_image);
-              await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: details.header_image });
+              queueCoverSave(game.app_id, details.header_image);
               console.log(`[Library] ✅ Steam API header fallback for ${game.title}: ${details.header_image}`);
               found = true;
             }
@@ -142,7 +173,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
               const storeImage = await invoke<string | null>('fetch_steam_store_image', { appId: steamAppId });
               if (storeImage) {
                 setSteamGridDbImage(storeImage);
-                await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: storeImage });
+                queueCoverSave(game.app_id, storeImage);
                 console.log(`[Library] ✅ Steam Store scraping fallback for ${game.title}: ${storeImage}`);
                 found = true;
               }
@@ -159,7 +190,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
               const gogCover = await invoke<string | null>('get_gog_game_cover', { gameId: gogId });
               if (gogCover) {
                 setSteamGridDbImage(gogCover);
-                await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: gogCover });
+                queueCoverSave(game.app_id, gogCover);
                 console.log(`[Library] ✅ GOG API cover for ${game.title}: ${gogCover}`);
                 found = true;
               }
@@ -336,6 +367,7 @@ export default function LibraryPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [coverCache, setCoverCache] = useState<Record<string, string>>({});
+  const libraryLoadedRef = React.useRef(false);
   
   // Safe setter per games con validazione
   const setGamesWithValidation = (value: unknown) => {
@@ -389,8 +421,11 @@ export default function LibraryPage() {
   // 📷 Carica cache cover SteamGridDB all'avvio
   const [addedDatesCache, setAddedDatesCache] = useState<Record<string, number>>({});
   const [languagesCache, setLanguagesCache] = useState<Record<string, string[]>>({});
+  const cachesLoadedRef = React.useRef(false);
   
   useEffect(() => {
+    if (cachesLoadedRef.current) return;
+    cachesLoadedRef.current = true;
     const loadCaches = async () => {
       try {
         // Cover cache
@@ -549,6 +584,8 @@ export default function LibraryPage() {
   };
 
   useEffect(() => {
+    if (libraryLoadedRef.current) return;
+    libraryLoadedRef.current = true;
     const fetchGames = async () => {
       try {
         setIsLoading(true);

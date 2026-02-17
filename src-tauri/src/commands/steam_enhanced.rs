@@ -1770,6 +1770,43 @@ pub async fn save_cover_cache(game_id: String, image_url: String) -> Result<(), 
     }
 }
 
+/// 💾 SALVA BATCH COVER IN CACHE LOCALE (evita race condition)
+#[tauri::command]
+pub async fn save_batch_cover_cache(covers: std::collections::HashMap<String, String>) -> Result<(), String> {
+    use std::fs;
+    use std::collections::HashMap;
+    
+    if covers.is_empty() {
+        return Ok(());
+    }
+    
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let cache_dir = data_dir.join("GameStringer").join("covers");
+        fs::create_dir_all(&cache_dir).map_err(|e| e.to_string())?;
+        
+        let cache_file = cache_dir.join("cover_cache.json");
+        
+        // Leggi cache esistente o crea nuova
+        let mut cache: HashMap<String, String> = if cache_file.exists() {
+            let json = fs::read_to_string(&cache_file).unwrap_or_default();
+            serde_json::from_str(&json).unwrap_or_default()
+        } else {
+            HashMap::new()
+        };
+        
+        let count = covers.len();
+        cache.extend(covers);
+        
+        let json = serde_json::to_string_pretty(&cache).map_err(|e| e.to_string())?;
+        fs::write(&cache_file, json).map_err(|e| e.to_string())?;
+        
+        info!("💾 Batch cover cache: {} nuove cover salvate (totale: {})", count, cache.len());
+        Ok(())
+    } else {
+        Err("Directory dati non trovata".to_string())
+    }
+}
+
 /// 📖 LEGGI COVER DA CACHE LOCALE
 #[tauri::command]
 pub async fn get_cover_cache(game_id: String) -> Result<Option<String>, String> {

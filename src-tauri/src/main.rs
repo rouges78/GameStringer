@@ -142,6 +142,7 @@ fn main() {
             commands::steam_enhanced::fetch_steamgriddb_covers,
             commands::steam_enhanced::fetch_igdb_covers,
             commands::steam_enhanced::save_cover_cache,
+            commands::steam_enhanced::save_batch_cover_cache,
             commands::steam_enhanced::get_cover_cache,
             commands::steam_enhanced::get_all_cover_cache,
             commands::steam_enhanced::save_game_added_date,
