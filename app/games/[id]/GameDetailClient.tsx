@@ -716,7 +716,7 @@ export default function GameDetailPage() {
   useEffect(() => {
     if (!game) return;
     // Guard per side effects pesanti (fetch API) - esegui solo una volta per game ID
-    const gameKey = game.id || game.appid || gameId;
+    const gameKey = game.id || (game.appid ? String(game.appid) : null) || gameId;
     const isFirstRun = sideEffectsRunRef.current !== gameKey;
     
     if (isFirstRun) {
@@ -773,14 +773,18 @@ export default function GameDetailPage() {
       // NON usare game.appid perché è 0 per giochi GOG
       const gogId = gameId.startsWith('gog_') ? gameId.replace('gog_', '') 
         : (game.storeId?.toString().replace('gog_', '') || game.id?.replace('gog_', '') || '');
+      console.log(`[GameDetail] GOG fetch: gameId=${gameId}, gogId=${gogId}, title=${game.title || game.name}`);
       if (!gogId || gogId === '0') return;
       
       const details = await invoke<any>('get_gog_game_details', { gameId: gogId, gameName: game.title || game.name || null });
+      console.log(`[GameDetail] GOG details response:`, details);
       if (details?.description) {
         const desc = details.description.replace(/<[^>]*>?/gm, '');
         setGame((prev: any) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
         translateDescription(desc);
         console.log(`[GameDetail] ✅ GOG description loaded for ${game.title || game.name}`);
+      } else {
+        console.warn(`[GameDetail] GOG details found but no description field:`, Object.keys(details || {}));
       }
     } catch (e) {
       console.warn('[GameDetail] GOG description fetch failed:', e);
@@ -1117,10 +1121,12 @@ export default function GameDetailPage() {
                   }}
                 />
               ) : null}
-              {/* Fallback gradiente con titolo */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-indigo-900/80 to-slate-900/80 flex items-center justify-center md:rounded-l-xl -z-10">
-                <span className="text-2xl font-bold text-white/30 text-center px-4">{game.title}</span>
-              </div>
+              {/* Fallback gradiente con titolo (solo se non c'è immagine) */}
+              {!(game.headerUrl || game.heroUrl || game.coverUrl || fallbackImage) && (
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-indigo-900/80 to-slate-900/80 flex items-center justify-center md:rounded-l-xl">
+                  <span className="text-2xl font-bold text-white/30 text-center px-4">{game.title}</span>
+                </div>
+              )}
               {/* Badge "In Libreria" */}
               {game.is_installed && (
                 <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[#4c6b22] px-2.5 py-1 rounded text-xs font-medium text-white shadow-lg z-10">

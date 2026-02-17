@@ -676,7 +676,16 @@ fn parse_gog_game_data(data: &serde_json::Value) -> Result<GogGame, String> {
     let id = data["id"].as_u64().unwrap_or(0);
     let title = data["title"].as_str().unwrap_or("Unknown").to_string();
     let slug = data["slug"].as_str().unwrap_or("").to_string();
-    let description = data["description"].as_str().map(|s| s.to_string());
+    // Con ?expand=description, la descrizione è un oggetto {full, lead, whats_cool_about_it}
+    // Senza expand, è una stringa diretta (o assente)
+    let description = if data["description"].is_object() {
+        data["description"]["full"].as_str()
+            .filter(|s| !s.is_empty())
+            .or_else(|| data["description"]["lead"].as_str().filter(|s| !s.is_empty()))
+            .map(|s| s.to_string())
+    } else {
+        data["description"].as_str().map(|s| s.to_string())
+    };
     
     // Parsing delle immagini
     let images = GogImages {
