@@ -268,17 +268,15 @@ pub async fn get_gog_game_cover(game_id: String) -> Result<String, String> {
     
     match get_gog_game_details(game_id).await {
         Ok(game) => {
-            // Priorità: boxart > logo > icon > background
-            if let Some(boxart) = &game.images.boxart {
-                Ok(boxart.clone())
-            } else if let Some(logo) = &game.images.logo {
-                Ok(logo.clone())
-            } else if let Some(icon) = &game.images.icon {
-                Ok(icon.clone())
-            } else if let Some(background) = &game.images.background {
-                Ok(background.clone())
-            } else {
-                Err("Nessuna immagine disponibile per questo gioco".to_string())
+            // Priorità: background > logo > boxart > icon
+            let url = game.images.background
+                .or(game.images.logo)
+                .or(game.images.boxart)
+                .or(game.images.icon);
+            
+            match url {
+                Some(u) => Ok(fix_gog_url(&u)),
+                None => Err("Nessuna immagine disponibile per questo gioco".to_string()),
             }
         }
         Err(e) => Err(e),
@@ -589,6 +587,17 @@ async fn get_gog_games_from_registry() -> Result<Vec<InstalledGame>, String> {
     
     println!("[GOG] ✅ Totale {} giochi GOG trovati dal registro", games.len());
     Ok(games)
+}
+
+/// Corregge URL GOG aggiungendo https: se necessario (GOG restituisce URL come //images-1.gog.com/...)
+fn fix_gog_url(url: &str) -> String {
+    if url.starts_with("//") {
+        format!("https:{}", url)
+    } else if url.starts_with("http") {
+        url.to_string()
+    } else {
+        format!("https://{}", url)
+    }
 }
 
 fn parse_gog_game_data(data: &serde_json::Value) -> Result<GogGame, String> {

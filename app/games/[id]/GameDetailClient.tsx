@@ -724,6 +724,10 @@ export default function GameDetailPage() {
     if (game && !game.shortDescription && !game.description && game.appid) {
       fetchDescriptionFromSteam();
     }
+    // Cerca descrizione da GOG API se mancante e gioco è GOG
+    if (game && !game.shortDescription && !game.description && (game.platform === 'GOG' || game.source === 'GOG')) {
+      fetchDescriptionFromGog();
+    }
     // Cerca immagine su SteamGridDB se non c'è header
     if (game && !game.headerUrl && !fallbackImage) {
       fetchFallbackImage();
@@ -743,6 +747,27 @@ export default function GameDetailPage() {
       }
     } catch (e) {
       console.warn('[GameDetail] Steam description fetch failed:', e);
+    }
+  };
+
+  // Cerca descrizione da GOG API
+  const fetchDescriptionFromGog = async () => {
+    if (!game) return;
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      // Estrai ID numerico GOG dal game id (es: "gog_1207664503" -> "1207664503")
+      const gogId = game.appid?.toString().replace('gog_', '') || game.id?.replace('gog_', '') || '';
+      if (!gogId) return;
+      
+      const details = await invoke<any>('get_gog_game_details', { gameId: gogId });
+      if (details?.description) {
+        const desc = details.description.replace(/<[^>]*>?/gm, '');
+        setGame((prev: any) => prev ? { ...prev, shortDescription: desc, description: desc } : null);
+        translateDescription(desc);
+        console.log(`[GameDetail] ✅ GOG description loaded for ${game.title || game.name}`);
+      }
+    } catch (e) {
+      console.warn('[GameDetail] GOG description fetch failed:', e);
     }
   };
 

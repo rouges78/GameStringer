@@ -144,10 +144,28 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
                 setSteamGridDbImage(storeImage);
                 await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: storeImage });
                 console.log(`[Library] ✅ Steam Store scraping fallback for ${game.title}: ${storeImage}`);
+                found = true;
               }
             }
           } catch (e3) {
             console.warn(`[Library] Steam Store scraping failed for ${game.title}:`, e3);
+          }
+        }
+        // Fallback 3: GOG API per giochi GOG
+        if (!found && (game.platform === 'GOG' || game.id?.startsWith('gog_'))) {
+          try {
+            const gogId = game.app_id?.replace('gog_', '') || game.id?.replace('gog_', '') || '';
+            if (gogId) {
+              const gogCover = await invoke<string | null>('get_gog_game_cover', { gameId: gogId });
+              if (gogCover) {
+                setSteamGridDbImage(gogCover);
+                await invoke('save_cover_cache', { gameId: game.app_id, imageUrl: gogCover });
+                console.log(`[Library] ✅ GOG API cover for ${game.title}: ${gogCover}`);
+                found = true;
+              }
+            }
+          } catch (e4) {
+            console.warn(`[Library] GOG API cover failed for ${game.title}:`, e4);
           }
         }
       }
