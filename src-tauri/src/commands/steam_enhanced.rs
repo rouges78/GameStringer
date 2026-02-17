@@ -2441,14 +2441,8 @@ pub async fn steam_load_auth() -> Result<Option<SteamUser>, String> {
 
 /// 🎮 Importa wishlist Steam
 #[tauri::command]
-pub async fn steam_get_wishlist(steam_id: String) -> Result<Vec<WishlistGame>, String> {
+pub async fn steam_get_wishlist(steam_id: String, api_key: Option<String>) -> Result<Vec<WishlistGame>, String> {
     info!("🎮 Importando wishlist Steam per: {}", steam_id);
-    
-    // Prova prima con profiles/ poi con id/
-    let urls = vec![
-        format!("https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/?p=0", steam_id),
-        format!("https://store.steampowered.com/wishlist/id/{}/wishlistdata/?p=0", steam_id),
-    ];
     
     let client = reqwest::Client::builder()
         .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -2457,8 +2451,88 @@ pub async fn steam_get_wishlist(steam_id: String) -> Result<Vec<WishlistGame>, S
     
     let mut last_error = String::new();
     
+    // METODO 1: Nuova Steam Web API (IWishlistService) - richiede API key
+    if let Some(ref key) = api_key {
+        if !key.is_empty() {
+            let api_url = format!(
+                "https://api.steampowered.com/IWishlistService/GetWishlist/v1/?steamid={}&key={}",
+                steam_id, key
+            );
+            info!("🔍 Tentativo nuova API: IWishlistService/GetWishlist/v1/");
+            
+            match client.get(&api_url).send().await {
+                Ok(response) => {
+                    if response.status().is_success() {
+                        let body = response.text().await.unwrap_or_default();
+                        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&body) {
+                            let mut wishlist = Vec::new();
+                            
+                            if let Some(items) = json["response"]["items"].as_array() {
+                                for item in items {
+                                    let app_id = item["appid"].as_u64().unwrap_or(0) as u32;
+                                    let priority = item["priority"].as_u64().unwrap_or(0) as u32;
+                                    let added = item["date_added"].as_u64().unwrap_or(0);
+                                    
+                                    if app_id > 0 {
+                                        wishlist.push(WishlistGame {
+                                            app_id,
+                                            name: String::new(), // L'API non restituisce il nome
+                                            priority,
+                                            added_timestamp: added,
+                                        });
+                                    }
+                                }
+                            }
+                            
+                            if !wishlist.is_empty() {
+                                // Recupera i nomi dei giochi in batch
+                                for game in &mut wishlist {
+                                    if game.name.is_empty() {
+                                        match client.get(&format!(
+                                            "https://store.steampowered.com/api/appdetails?appids={}&filters=basic",
+                                            game.app_id
+                                        )).send().await {
+                                            Ok(r) => {
+                                                if let Ok(text) = r.text().await {
+                                                    if let Ok(details) = serde_json::from_str::<serde_json::Value>(&text) {
+                                                        let key = game.app_id.to_string();
+                                                        if let Some(name) = details[&key]["data"]["name"].as_str() {
+                                                            game.name = name.to_string();
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            Err(_) => {}
+                                        }
+                                    }
+                                }
+                                
+                                wishlist.sort_by(|a, b| a.priority.cmp(&b.priority));
+                                info!("✅ Importati {} giochi dalla wishlist (nuova API)", wishlist.len());
+                                return Ok(wishlist);
+                            }
+                        }
+                    } else {
+                        last_error = format!("IWishlistService error: {}", response.status());
+                        info!("⚠️ {}", last_error);
+                    }
+                },
+                Err(e) => {
+                    last_error = format!("IWishlistService request failed: {}", e);
+                    info!("⚠️ {}", last_error);
+                }
+            }
+        }
+    }
+    
+    // METODO 2: Vecchio endpoint wishlistdata (fallback)
+    let urls = vec![
+        format!("https://store.steampowered.com/wishlist/profiles/{}/wishlistdata/?p=0", steam_id),
+        format!("https://store.steampowered.com/wishlist/id/{}/wishlistdata/?p=0", steam_id),
+    ];
+    
     for url in &urls {
-        info!("🔍 Tentativo URL: {}", url);
+        info!("🔍 Tentativo URL legacy: {}", url);
         
         let response = match client.get(url)
             .header("Accept", "application/json")
@@ -2473,11 +2547,26 @@ pub async fn steam_get_wishlist(steam_id: String) -> Result<Vec<WishlistGame>, S
             };
         
         if response.status().is_success() {
-            // Prova a parsare la risposta
-            let json: serde_json::Value = match response.json().await {
+            // Leggi come testo prima per evitare errori di parsing su HTML/vuoto
+            let body = match response.text().await {
+                Ok(t) => t,
+                Err(e) => {
+                    last_error = format!("Read body failed: {}", e);
+                    continue;
+                }
+            };
+            
+            // Controlla se è JSON valido (non HTML/vuoto)
+            let trimmed = body.trim();
+            if trimmed.is_empty() || trimmed.starts_with("<!") || trimmed.starts_with("<html") {
+                last_error = "Steam ha restituito una pagina HTML invece di JSON. L'endpoint wishlist potrebbe essere cambiato. Assicurati che la tua API Key Steam sia configurata nelle impostazioni.".to_string();
+                continue;
+            }
+            
+            let json: serde_json::Value = match serde_json::from_str(&body) {
                 Ok(j) => j,
                 Err(e) => {
-                    last_error = format!("Parse failed: {}", e);
+                    last_error = format!("Parse JSON failed: {}", e);
                     continue;
                 }
             };
@@ -2503,7 +2592,7 @@ pub async fn steam_get_wishlist(steam_id: String) -> Result<Vec<WishlistGame>, S
             }
             
             wishlist.sort_by(|a, b| a.priority.cmp(&b.priority));
-            info!("✅ Importati {} giochi dalla wishlist", wishlist.len());
+            info!("✅ Importati {} giochi dalla wishlist (legacy)", wishlist.len());
             return Ok(wishlist);
         } else if response.status() == 403 {
             last_error = "La wishlist Steam è privata o non accessibile. Verifica che sia impostata su 'Pubblico' nelle impostazioni privacy di Steam.".to_string();

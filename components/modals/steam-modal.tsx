@@ -216,10 +216,18 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
     if (!steamUser) return;
     setLoadingWishlist(true);
     try {
-      const list = await invoke<any[]>('steam_get_wishlist', { steamId: steamUser.steam_id });
+      // Carica API key dalle credenziali salvate
+      let apiKey: string | null = null;
+      try {
+        const creds = await invoke<any>('load_steam_credentials');
+        if (creds?.api_key_encrypted) {
+          apiKey = creds.api_key_encrypted;
+        }
+      } catch {}
+      const list = await invoke<any[]>('steam_get_wishlist', { steamId: steamUser.steam_id, apiKey });
       setWishlist(list);
     } catch (e: any) {
-      setError(e?.message || 'Errore importazione wishlist');
+      setError(typeof e === 'string' ? e : (e?.message || 'Errore importazione wishlist'));
     }
     setLoadingWishlist(false);
   };
