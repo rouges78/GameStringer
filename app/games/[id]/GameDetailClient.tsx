@@ -1286,12 +1286,13 @@ export default function GameDetailPage() {
             />
           )}
 
-          {/* Tabs File/Traduzioni/Patch */}
+          {/* Tabs File/Traduzioni/Patch/Info */}
           <Tabs defaultValue="files" className="space-y-3">
             <TabsList className="h-8 bg-black/30 border-white/10">
               <TabsTrigger value="files" className="text-xs data-[state=active]:bg-purple-600">📁 {t('gameDetails.tabFiles')}</TabsTrigger>
               <TabsTrigger value="translations" className="text-xs data-[state=active]:bg-purple-600">🌍 {t('gameDetails.tabTranslations')}</TabsTrigger>
               <TabsTrigger value="patches" className="text-xs data-[state=active]:bg-purple-600">⚡ {t('gameDetails.tabPatch')}</TabsTrigger>
+              <TabsTrigger value="info" className="text-xs data-[state=active]:bg-purple-600">🖥️ Info</TabsTrigger>
             </TabsList>
 
           <TabsContent value="files" className="space-y-2">
@@ -1433,6 +1434,88 @@ export default function GameDetailPage() {
               </CardContent>
             </Card>
           </TabsContent>
+          {/* Tab Info: Requisiti di sistema */}
+          <TabsContent value="info" className="space-y-2">
+            <Card className="bg-black/20 border-white/10">
+              <CardContent className="p-3 space-y-3">
+                {/* Requisiti di sistema */}
+                {game.pc_requirements && (game.pc_requirements.minimum || game.pc_requirements.recommended) ? (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
+                      <Monitor className="h-3.5 w-3.5" /> Requisiti di Sistema
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {game.pc_requirements.minimum && (
+                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <div className="text-[10px] font-semibold text-amber-400 mb-1.5 uppercase tracking-wide">Minimi</div>
+                          <p className="text-[10px] text-white/60 leading-relaxed whitespace-pre-wrap">
+                            {game.pc_requirements.minimum.replace(/<[^>]*>?/gm, '').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').trim()}
+                          </p>
+                        </div>
+                      )}
+                      {game.pc_requirements.recommended && (
+                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <div className="text-[10px] font-semibold text-green-400 mb-1.5 uppercase tracking-wide">Raccomandati</div>
+                          <p className="text-[10px] text-white/60 leading-relaxed whitespace-pre-wrap">
+                            {game.pc_requirements.recommended.replace(/<[^>]*>?/gm, '').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').trim()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-white/30">
+                    <Monitor className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-xs">Requisiti di sistema non disponibili</p>
+                    {!game.appid || game.appid === 0 ? (
+                      <p className="text-[10px] mt-1 opacity-60">Disponibili solo per giochi Steam</p>
+                    ) : null}
+                  </div>
+                )}
+
+                {/* Metacritic */}
+                {game.metacritic?.score && (
+                  <div className="flex items-center gap-3 pt-2 border-t border-white/10">
+                    <div className={`flex items-center justify-center w-10 h-10 rounded font-bold text-sm ${
+                      game.metacritic.score >= 75 ? 'bg-green-600 text-white' :
+                      game.metacritic.score >= 50 ? 'bg-amber-500 text-white' : 'bg-red-600 text-white'
+                    }`}>
+                      {game.metacritic.score}
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-white/80">Metacritic</div>
+                      {game.metacritic.url && (
+                        <a href={game.metacritic.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">
+                          Leggi recensioni →
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recensioni Steam */}
+                {game.recommendations?.total > 0 && (
+                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                    <span className="text-lg">👍</span>
+                    <div>
+                      <div className="text-xs text-white/80">{game.recommendations.total.toLocaleString()} recensioni Steam</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Website */}
+                {game.website && (
+                  <div className="pt-2 border-t border-white/10">
+                    <a href={game.website} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-[11px] text-blue-400 hover:text-blue-300 transition-colors">
+                      <Globe className="h-3 w-3" /> Sito ufficiale
+                    </a>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           </Tabs>
         </div>
 
@@ -1488,6 +1571,66 @@ export default function GameDetailPage() {
                 <div className="flex items-center gap-1.5 pt-2 border-t border-white/10">
                   <Languages className="h-3 w-3 text-cyan-400 shrink-0" />
                   <LanguageFlags supportedLanguages={game.supported_languages.replace(/<[^>]*>?/gm, '')} maxFlags={6} />
+                </div>
+              )}
+
+              {/* Rating Steam */}
+              {game.recommendations?.total > 0 && (
+                <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                  <span className="text-base">👍</span>
+                  <span className="text-[11px] text-white/60">{game.recommendations.total.toLocaleString()} rec.</span>
+                  {game.metacritic?.score && (
+                    <span className={`ml-auto text-xs font-bold px-1.5 py-0.5 rounded ${
+                      game.metacritic.score >= 75 ? 'bg-green-600/80 text-white' :
+                      game.metacritic.score >= 50 ? 'bg-amber-500/80 text-white' : 'bg-red-600/80 text-white'
+                    }`}>{game.metacritic.score}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Link Store */}
+              <div className="flex flex-col gap-1 pt-2 border-t border-white/10">
+                {game.appid > 0 && (
+                  <a
+                    href={`https://store.steampowered.com/app/${game.appid}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-[11px] text-[#67c1f5] hover:text-white transition-colors"
+                  >
+                    <Globe className="h-3 w-3" /> Apri su Steam
+                  </a>
+                )}
+                {(game.platform === 'GOG' || gameId.startsWith('gog_')) && (
+                  <a
+                    href={`https://www.gog.com/game/${game.slug || (game.title || '').toLowerCase().replace(/[^a-z0-9]/g, '_')}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-[11px] text-purple-400 hover:text-white transition-colors"
+                  >
+                    <Globe className="h-3 w-3" /> Apri su GOG
+                  </a>
+                )}
+                {game.website && (
+                  <a
+                    href={game.website}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-[11px] text-blue-400 hover:text-white transition-colors"
+                  >
+                    <Globe className="h-3 w-3" /> Sito ufficiale
+                  </a>
+                )}
+              </div>
+
+              {/* DLC */}
+              {dlcGames.length > 0 && (
+                <div className="pt-2 border-t border-white/10">
+                  <div className="text-[10px] font-semibold text-cyan-400 mb-1.5 uppercase tracking-wide">DLC ({dlcGames.length})</div>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {dlcGames.map((dlc: any, i: number) => (
+                      <div key={i} className="flex items-center gap-1.5 text-[10px] text-white/50 hover:text-white/80 transition-colors">
+                        <Download className="h-2.5 w-2.5 shrink-0" />
+                        <span className="truncate">{dlc.name || dlc.title || `DLC ${i + 1}`}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
