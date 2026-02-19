@@ -34,6 +34,7 @@ import { RssTicker } from '@/components/ui/rss-ticker';
 import { activityHistory, Activity, activityColors, activityIcons, ActivityType } from '@/lib/activity-history';
 import { useTranslation, translations } from '@/lib/i18n';
 import { blogService, BlogPost } from '@/lib/blog';
+import { storageManager } from '@/lib/storage-manager';
 
 interface RecentActivityProps {
   color: string;
@@ -151,9 +152,9 @@ export default function Dashboard() {
           a.activity_type === 'patch' || a.title?.includes('Patch') || a.title?.includes('Applicat')
         );
       } catch (e) {
-        // Fallback: localStorage
-        savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
-        savedPatches = JSON.parse(localStorage.getItem('gamePatches') || '[]');
+        // Fallback: IndexedDB
+        savedTranslations = await storageManager.getTranslations();
+        savedPatches = await storageManager.getPatches();
       }
       
       // --- Dati reali: Translation Memory (backend Rust) ---

@@ -110,6 +110,8 @@ type Step = 'select-game' | 'select-files' | 'configure' | 'translate' | 'result
 // COMPONENT
 // ============================================================================
 
+import { storageManager } from '@/lib/storage-manager';
+
 export default function TranslatorProPage() {
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -956,20 +958,19 @@ export default function TranslatorProPage() {
         }
       });
       
-      // Salva statistica traduzione per dashboard
-      const savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
+      // Salva statistica traduzione per dashboard (su IndexedDB)
+      const savedTranslations = await storageManager.getTranslations();
       savedTranslations.push({
         id: `trans_${Date.now()}`,
         gameId: selectedGame?.id,
         gameName: selectedGame?.name,
-        filesCount: filesToTranslate.length,
-        sourceLang: sourceLanguage,
-        targetLang: targetLanguage,
-        provider: provider,
+        title: `Traduzione completata: ${selectedGame?.name || 'File locale'}`,
+        description: `Tradotti ${translatedItems.length} testi in ${targetLanguage}`,
+        activity_type: 'translation',
         status: 'completed',
         timestamp: new Date().toISOString()
       });
-      localStorage.setItem('gameTranslations', JSON.stringify(savedTranslations));
+      await storageManager.saveTranslations(savedTranslations);
       
       // 🧠 Salva automaticamente in Translation Memory
       if (translatedItems.length > 0) {

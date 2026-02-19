@@ -126,6 +126,7 @@
     "dotenv": "16.5.0",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^10.18.0",
+    "idb-keyval": "^6.2.2",
     "ini": "^5.0.0",
     "input-otp": "1.2.4",
     "jsonwebtoken": "9.0.2",

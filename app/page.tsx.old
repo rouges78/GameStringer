@@ -63,6 +63,8 @@ interface DashboardStats {
 }
 
 // Pagina Dashboard
+import { storageManager } from '@/lib/storage-manager';
+
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalGames: 0,
@@ -140,55 +142,60 @@ export default function Dashboard() {
         }
       }
       
-      // Recupera statistiche traduzioni da localStorage E dalle attività
-      let savedTranslations = JSON.parse(localStorage.getItem('gameTranslations') || '[]');
-      let savedPatches = JSON.parse(localStorage.getItem('gamePatches') || '[]');
+      // Recupera statistiche traduzioni da IndexedDB E dalle attività
+      let savedTranslations = await storageManager.getTranslations();
+      let savedPatches = await storageManager.getPatches();
       
       // Sincronizza con attività dal backend se i contatori sono vuoti
       if (savedTranslations.length === 0 || savedPatches.length === 0) {
         try {
           const allActivities = await activityHistory.getRecent(100);
-          const translationActivities = allActivities.filter((a: Activity) => 
-            a.activity_type === 'translation' && a.title?.includes('completata')
-          );
-          const patchActivities = allActivities.filter((a: Activity) => 
-            a.activity_type === 'patch' || a.title?.includes('Applicat')
-          );
           
           // Popola traduzioni da attività se vuoto
-          if (savedTranslations.length === 0 && translationActivities.length > 0) {
-            savedTranslations = translationActivities.map((a: Activity) => ({
+          if (savedTranslations.length === 0) {
+            const transActivities = allActivities.filter(a => a.activity_type === 'translation');
+            savedTranslations = transActivities.map(a => ({
               id: a.id,
               gameId: a.game_id,
               gameName: a.game_name,
+              title: a.title,
+              description: a.description,
+              activity_type: 'translation',
               status: 'completed',
               timestamp: a.timestamp
             }));
-            localStorage.setItem('gameTranslations', JSON.stringify(savedTranslations));
+            await storageManager.saveTranslations(savedTranslations);
           }
           
           // Popola patch da attività se vuoto
-          if (savedPatches.length === 0 && patchActivities.length > 0) {
-            savedPatches = patchActivities.map((a: Activity) => ({
+          if (savedPatches.length === 0) {
+            const patchActivities = allActivities.filter(a => a.activity_type === 'patch');
+            savedPatches = patchActivities.map(a => ({
               id: a.id,
               gameId: a.game_id,
               gameName: a.game_name,
+              title: a.title,
+              description: a.description,
+              activity_type: 'patch',
               status: 'applied',
               timestamp: a.timestamp
             }));
-            localStorage.setItem('gamePatches', JSON.stringify(savedPatches));
+            await storageManager.savePatches(savedPatches);
           }
           
           // Se ci sono traduzioni ma nessuna patch, assumiamo che siano state applicate
-          if (savedPatches.length === 0 && savedTranslations.length > 0) {
+          if (savedTranslations.length > 0 && savedPatches.length === 0) {
             savedPatches = savedTranslations.map((t: any) => ({
-              id: `patch_${t.id}`,
+              id: t.id.replace('trans_', 'patch_'),
               gameId: t.gameId,
               gameName: t.gameName,
+              title: `Patch applicata: ${t.gameName || 'File locale'}`,
+              description: 'Patch di traduzione generata e applicata automaticamente',
+              activity_type: 'patch',
               status: 'applied',
               timestamp: t.timestamp
             }));
-            localStorage.setItem('gamePatches', JSON.stringify(savedPatches));
+            await storageManager.savePatches(savedPatches);
           }
         } catch (e) {
           console.log('Dashboard: Errore sincronizzazione attività', e);

@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { invoke } from '@/lib/tauri-api';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
+import { storageManager } from '@/lib/storage-manager';
 
 // --- Types ---
 interface Game {
@@ -278,136 +279,143 @@ export default function EditorPage() {
 
   useEffect(() => {
     // Non caricare traduzioni dal server se ci sono results parziali da Neural Translator
-    const hasPartialData = localStorage.getItem('gamestringer_partial_translations');
-    const hasEditorFile = sessionStorage.getItem('editorFile');
-    if (!hasPartialData && !hasEditorFile) {
-      fetchTranslations();
-    }
+    const checkStorage = async () => {
+      const hasPartialData = await storageManager.getPartialTranslations();
+      const hasEditorFile = await storageManager.getEditorFile();
+      if (!hasPartialData && !hasEditorFile) {
+        fetchTranslations();
+      }
+    };
+    checkStorage();
   }, [filterGame, filterStatus]);
 
   // Load from session storage (Neural Translator integration)
   useEffect(() => {
-    const editorFileData = sessionStorage.getItem('editorFile');
-    if (editorFileData) {
-      try {
-        const data = JSON.parse(editorFileData);
-        const content = data.originalContent || data.content || '';
-        setRawContent(content);
-        
-        // Rileva se è un file multi-lingua
-        const isMultiLang = detectMultiLanguageFormat(content);
-        setIsMultiLangFile(isMultiLang);
-        
-        // Se multi-lingua, rileva le lingue disponibili dalla prima riga con dati
-        if (isMultiLang) {
-          const lines = content.split('\n').filter((l: string) => l.trim());
-          // Trova una riga con molti ,, per contare le lingue
-          const sampleLines = lines.filter((l: string) => l.includes(',,'));
-          if (sampleLines.length > 0) {
-            // Conta quante volte appare ,, + 1 = numero di lingue
-            const maxSeparators = Math.max(...sampleLines.slice(0, 10).map((l: string) => (l.match(/,,/g) || []).length));
-            const langCount = maxSeparators + 1;
-            // Genera nomi lingue basati sul numero di colonne trovate
-            const defaultLangs = ['Francese', 'Inglese', 'Tedesco', 'Spagnolo', 'Polacco', 'Cinese', 'Giapponese', 'Coreano', 'Russo', 'Portoghese'];
-            setDetectedLanguages(defaultLangs.slice(0, Math.min(langCount, defaultLangs.length)));
-            console.log(`[Editor] Rilevate ${langCount} lingue nel file multi-lingua`);
+    const loadEditorFile = async () => {
+      const data = await storageManager.getEditorFile();
+      if (data) {
+        try {
+          const content = data.originalContent || data.content || '';
+          setRawContent(content);
+          
+          // Rileva se è un file multi-lingua
+          const isMultiLang = detectMultiLanguageFormat(content);
+          setIsMultiLangFile(isMultiLang);
+          
+          // Se multi-lingua, rileva le lingue disponibili dalla prima riga con dati
+          if (isMultiLang) {
+            const lines = content.split('\n').filter((l: string) => l.trim());
+            // Trova una riga con molti ,, per contare le lingue
+            const sampleLines = lines.filter((l: string) => l.includes(',,'));
+            if (sampleLines.length > 0) {
+              // Conta quante volte appare ,, + 1 = numero di lingue
+              const maxSeparators = Math.max(...sampleLines.slice(0, 10).map((l: string) => (l.match(/,,/g) || []).length));
+              const langCount = maxSeparators + 1;
+              // Genera nomi lingue basati sul numero di colonne trovate
+              const defaultLangs = ['Francese', 'Inglese', 'Tedesco', 'Spagnolo', 'Polacco', 'Cinese', 'Giapponese', 'Coreano', 'Russo', 'Portoghese'];
+              setDetectedLanguages(defaultLangs.slice(0, Math.min(langCount, defaultLangs.length)));
+              console.log(`[Editor] Rilevate ${langCount} lingue nel file multi-lingua`);
+            }
           }
-        }
-        
-        const parsedLines = parseLocalizationContent(content, 0);
-        
-        const translatorTranslation: Translation = {
-          id: `translator-${Date.now()}`,
-          gameId: data.gameId || 'unknown',
-          filePath: data.filePath || data.filename,
-          originalText: content,
-          translatedText: data.content || '',
-          targetLanguage: data.targetLanguage || 'it',
-          sourceLanguage: data.sourceLanguage || 'en',
-          status: 'pending',
-          confidence: 85,
-          isManualEdit: false,
-          context: `Tradotto con Neural Translator - ${data.gameName || 'game sconosciuto'}`,
-          updatedAt: new Date().toISOString(),
-          game: {
-            id: data.gameId || 'unknown',
-            title: data.gameName || 'game sconosciuto',
-            platform: 'Neural Translator'
-          },
-          suggestions: [],
-          parsedLines
-        };
-        
-        setTranslations([translatorTranslation]);
-        setSelectedTranslation(translatorTranslation);
-        if (parsedLines.length > 0) {
-          setSelectedLine(parsedLines[0]);
-        }
-        sessionStorage.removeItem('editorFile');
-        
-        toast({
-          title: "File caricato",
-          description: isMultiLang 
-            ? `${data.filename} - ${parsedLines.length} stringhe (multi-lingua rilevato)`
-            : `${data.filename} - ${parsedLines.length} stringhe trovate`,
-        });
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error loading editor file:', err);
-        sessionStorage.removeItem('editorFile');
-      }
-    }
-  }, [toast]);
-
-  // Load partial translations from Neural Translator (localStorage)
-  useEffect(() => {
-    const partialData = localStorage.getItem('gamestringer_partial_translations');
-    if (partialData) {
-      try {
-        const data = JSON.parse(partialData);
-        console.log('[Editor] Loading...sultati parziali:', data.items?.length, 'traduzioni');
-        
-        // Crea traduzioni dall'array di items
-        if (data.items && data.items.length > 0) {
-          const partialTranslations: Translation[] = data.items.map((item: any, index: number) => ({
-            id: `partial-${index}-${item.id}`,
+          
+          const parsedLines = parseLocalizationContent(content, 0);
+          
+          const translatorTranslation: Translation = {
+            id: `translator-${Date.now()}`,
             gameId: data.gameId || 'unknown',
-            filePath: data.files?.[0]?.path || 'Neural Translator',
-            originalText: item.sourceText,
-            translatedText: item.translatedText || '',
+            filePath: data.filePath || data.filename,
+            originalText: content,
+            translatedText: data.content || '',
             targetLanguage: data.targetLanguage || 'it',
             sourceLanguage: data.sourceLanguage || 'en',
-            status: item.translatedText ? 'completed' : 'pending',
-            confidence: item.fromMemory ? 100 : 85,
+            status: 'pending',
+            confidence: 85,
             isManualEdit: false,
-            context: item.metadata?.key || `Riga ${item.metadata?.lineNumber || index + 1}`,
-            updatedAt: new Date(data.timestamp).toISOString(),
+            context: `Tradotto con Neural Translator - ${data.gameName || 'game sconosciuto'}`,
+            updatedAt: new Date().toISOString(),
             game: {
               id: data.gameId || 'unknown',
               title: data.gameName || 'game sconosciuto',
               platform: 'Neural Translator'
             },
             suggestions: [],
-          }));
+            parsedLines
+          };
           
-          setTranslations(partialTranslations);
-          if (partialTranslations.length > 0) {
-            setSelectedTranslation(partialTranslations[0]);
+          setTranslations([translatorTranslation]);
+          setSelectedTranslation(translatorTranslation);
+          if (parsedLines.length > 0) {
+            setSelectedLine(parsedLines[0]);
           }
+          await storageManager.clearEditorFile();
           
           toast({
-            title: "results parziali caricati",
-            description: `${data.completed}/${data.total} stringhe tradotte da ${data.gameName || 'Neural Translator'}`,
+            title: "File caricato",
+            description: isMultiLang 
+              ? `${data.filename} - ${parsedLines.length} stringhe (multi-lingua rilevato)`
+              : `${data.filename} - ${parsedLines.length} stringhe trovate`,
           });
-          
-          // Non rimuovere i dati - l'utente potrebbe volerli rivedere più volte
-          // localStorage.removeItem('gamestringer_partial_translations');
+          setIsLoading(false);
+        } catch (err) {
+          console.error('Error loading editor file:', err);
+          await storageManager.clearEditorFile();
         }
-        setIsLoading(false);
-      } catch (err) {
-        console.error('[Editor] Error loading partial translations:', err);
       }
-    }
+    };
+    loadEditorFile();
+  }, [toast]);
+
+  // Load partial translations from Neural Translator (localStorage)
+  useEffect(() => {
+    const loadPartialTranslations = async () => {
+      const data = await storageManager.getPartialTranslations();
+      if (data) {
+        try {
+          console.log('[Editor] Loading...sultati parziali:', data.items?.length, 'traduzioni');
+          
+          // Crea traduzioni dall'array di items
+          if (data.items && data.items.length > 0) {
+            const partialTranslations: Translation[] = data.items.map((item: any, index: number) => ({
+              id: `partial-${index}-${item.id}`,
+              gameId: data.gameId || 'unknown',
+              filePath: data.files?.[0]?.path || 'Neural Translator',
+              originalText: item.sourceText,
+              translatedText: item.translatedText || '',
+              targetLanguage: data.targetLanguage || 'it',
+              sourceLanguage: data.sourceLanguage || 'en',
+              status: item.translatedText ? 'completed' : 'pending',
+              confidence: item.fromMemory ? 100 : 85,
+              isManualEdit: false,
+              context: item.metadata?.key || `Riga ${item.metadata?.lineNumber || index + 1}`,
+              updatedAt: new Date(data.timestamp).toISOString(),
+              game: {
+                id: data.gameId || 'unknown',
+                title: data.gameName || 'game sconosciuto',
+                platform: 'Neural Translator'
+              },
+              suggestions: [],
+            }));
+            
+            setTranslations(partialTranslations);
+            if (partialTranslations.length > 0) {
+              setSelectedTranslation(partialTranslations[0]);
+            }
+            
+            toast({
+              title: "results parziali caricati",
+              description: `${data.completed}/${data.total} stringhe tradotte da ${data.gameName || 'Neural Translator'}`,
+            });
+            
+            // Non rimuovere i dati - l'utente potrebbe volerli rivedere più volte
+            // await storageManager.clearPartialTranslations();
+          }
+          setIsLoading(false);
+        } catch (err) {
+          console.error('[Editor] Error loading partial translations:', err);
+        }
+      }
+    };
+    loadPartialTranslations();
   }, [toast]);
 
   // Ri-parsa quando cambia la lingua sorgente
