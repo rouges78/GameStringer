@@ -5,19 +5,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Square, Scan, Monitor, ArrowRight, Loader2, RefreshCw, Settings2, ChevronDown, ChevronUp, Layers } from 'lucide-react';
+import { Play, Square, Scan, Monitor, ArrowRight, Loader2, RefreshCw, Settings2, ChevronDown, ChevronUp, Layers, Image as ImageIcon } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { useOcrHotkey } from '@/hooks/use-global-hotkeys';
 import { useTranslation } from '@/lib/i18n';
+import { VlmTranslator } from '@/lib/vlm-translator';
+import { rawPixelsToBase64 } from '@/lib/image-utils';
 
 interface DetectedText {
   text: string;
-  translated: string | null;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  translated?: string | null;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
   confidence: number;
 }
 
@@ -71,7 +73,7 @@ export default function OcrTranslatorPage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [ocrProvider, setOcrProvider] = useState<'libre' | 'ollama' | 'gemini'>('libre');
+  const [ocrProvider, setOcrProvider] = useState<'libre' | 'ollama' | 'vlm' | 'gemini'>('libre');
   const [lastTranslationTime, setLastTranslationTime] = useState(0);
   const [overlayOpen, setOverlayOpen] = useState(false);
 
@@ -177,8 +179,59 @@ export default function OcrTranslatorPage() {
     return null;
   };
 
+  // Loop VLM: Se VLM è attivo, cattura l'immagine dal backend e mandala a Ollama
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning || ocrProvider !== 'vlm') return;
+    
+    let isProcessing = false;
+    const interval = setInterval(async () => {
+      if (isProcessing) return;
+      isProcessing = true;
+      try {
+        // 1. Cattura l'immagine da Rust
+        const capture = await invoke<{width: number, height: number, data: number[]}>('capture_screen_region', { region: config.region });
+        if (capture && capture.data.length > 0) {
+          // 2. Converti i pixel in Base64
+          const base64 = rawPixelsToBase64(capture.data, capture.width, capture.height);
+          
+          setIsTranslating(true);
+          // 3. Passa al VLM
+          const translated = await VlmTranslator.translateImage({
+            imageBase64: base64,
+            sourceLanguage: config.language,
+            targetLanguage: config.target_language,
+            context: 'game_ui'
+          });
+          
+          if (translated) {
+            // Sostituisce i testi rilevati con un singolo blocco grande dal VLM
+            setDetectedTexts([{
+              text: 'Immagine analizzata (VLM)',
+              translated: translated,
+              confidence: 1.0,
+              x: 50,
+              y: 50,
+              width: capture.width - 100,
+              height: capture.height - 100
+            }]);
+            setTranslationError(null);
+          }
+        }
+      } catch (e: any) {
+        console.error('[VLM Loop] Errore:', e);
+        setTranslationError(e.message || String(e));
+      } finally {
+        setIsTranslating(false);
+        isProcessing = false;
+      }
+    }, Math.max(3000, config.capture_interval_ms)); // I VLM sono pesanti, min 3s
+
+    return () => clearInterval(interval);
+  }, [isRunning, ocrProvider, config.language, config.target_language, config.region, config.capture_interval_ms]);
+
+  // Loop Testuale standard
+  useEffect(() => {
+    if (!isRunning || ocrProvider === 'vlm') return;
     const interval = setInterval(async () => {
       try {
         const texts = await invoke<DetectedText[]>('get_detected_texts');
@@ -204,7 +257,7 @@ export default function OcrTranslatorPage() {
       } catch {}
     }, 300);
     return () => clearInterval(interval);
-  }, [isRunning, config.language, config.target_language, geminiApiKey]);
+  }, [isRunning, ocrProvider, config.language, config.target_language, geminiApiKey]);
 
   const toggleOcr = async () => {
     try {
@@ -346,19 +399,23 @@ export default function OcrTranslatorPage() {
               <div className="mt-3 p-4 rounded-lg bg-muted/30 space-y-4">
                 {/* Provider Traduzione */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-2 block">
-                    Provider Traduzione
-                  </label>
+                  <div className="text-xs mb-2 text-muted-foreground">{t('ocrTranslator.aiProvider')}</div>
                   <select 
-                    className="w-full h-9 px-3 rounded-lg border bg-background text-sm"
+                    className="w-full h-9 px-2 rounded-lg border bg-background text-sm"
                     value={ocrProvider}
-                    onChange={(e) => setOcrProvider(e.target.value as 'libre' | 'ollama' | 'gemini')}
+                    onChange={(e) => setOcrProvider(e.target.value as any)}
                     disabled={isRunning}
                   >
-                    <option value="libre">🆓 MyMemory (Gratuito, nessuna API)</option>
-                    <option value="ollama">🦙 Ollama - deepseek-ocr (Locale)</option>
+                    <option value="libre">� Lingva (Gratis/Veloce)</option>
+                    <option value="ollama">🦙 Ollama (deepseek-ocr locale)</option>
+                    <option value="vlm">👁️ Ollama VLM (LLaVA/Qwen-VL)</option>
                     <option value="gemini">✨ Gemini (API Key richiesta)</option>
                   </select>
+                  {ocrProvider === 'vlm' && (
+                    <div className="mt-2 text-[10px] text-amber-400 bg-amber-500/10 p-2 rounded">
+                      <strong>Nota VLM:</strong> L'immagine verrà inviata direttamente a Ollama. Assicurati di aver scaricato `llava`, `qwen2-vl` o `pixtral`. Questa modalità è lenta ma precisissima per il giapponese e lingue complesse.
+                    </div>
+                  )}
                 </div>
                 
                 {/* Gemini API Key */}
