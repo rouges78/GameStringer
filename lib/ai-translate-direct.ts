@@ -1,3 +1,5 @@
+import { RagGlossary } from './rag-glossary';
+
 /**
  * AI Translation - Chiamate dirette API (NO API routes Next.js)
  * Supporta fallback automatico: Gemini → Groq → DeepSeek → OpenAI → originale
@@ -9,6 +11,7 @@ export interface TranslateOptions {
   sourceLanguage?: string;
   context?: string;
   glossaryHint?: string;
+  gameId?: string; // Usato per caricare il RAG locale
 }
 
 export interface TranslateResult {
@@ -75,11 +78,26 @@ export function getApiKeys() {
   }
 }
 
-/** Costruisce il prompt di traduzione con glossario opzionale */
+/** Costruisce il prompt di traduzione con RAG/glossario opzionale */
 function buildTranslationPrompt(opts: TranslateOptions): string {
   const srcLang = opts.sourceLanguage || 'en';
   let prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.`;
   
+  // RAG Dinamico: Estrae i termini dal glossario e li inietta nel prompt SOLO se rilevanti per questo blocco di testo
+  if (opts.gameId) {
+    try {
+      const rag = new RagGlossary();
+      rag.loadFromStorage(opts.gameId);
+      const ragPrompt = rag.getRelevantContext(opts.texts);
+      if (ragPrompt) {
+        prompt += `\n${ragPrompt}`;
+      }
+    } catch (e) {
+      console.warn('[RAG] Fallimento estrazione dinamica glossario', e);
+    }
+  }
+
+  // Glossario/Hint manuale passato da fuori
   if (opts.glossaryHint) {
     prompt += `\n\n${opts.glossaryHint}`;
   }
@@ -766,13 +784,14 @@ Rules:
   return results;
 }
 
-/** Ollama Generico — qualsiasi modello installato in Ollama (llama3, mistral, phi, qwen, ecc.) */
+/** Ollama Generico — qualsiasi modello installato in Ollama (llama3, mistral, towerinstruct, qwen, ecc.) */
 async function translateWithOllamaGeneric(
   _apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
   const ollamaUrl = 'http://localhost:11434';
   const srcLang = opts.sourceLanguage || 'en';
+  const tgtLang = opts.targetLanguage || 'it';
   const keys = getApiKeys();
   const preferredModel = keys.ollamaModel;
 
@@ -785,77 +804,116 @@ async function translateWithOllamaGeneric(
     const available = (tagsData.models || []).map((m: any) => m.name) as string[];
     if (available.length === 0) throw new Error('Nessun modello Ollama installato');
 
-    // Usa modello preferito se disponibile, altrimenti primo disponibile
+    // Usa modello preferito se disponibile, altrimenti cerca modelli specializzati in localizzazione (towerinstruct, aya, qwen), altrimenti primo
     if (preferredModel && available.some(n => n.startsWith(preferredModel))) {
       selectedModel = available.find(n => n.startsWith(preferredModel))!;
     } else {
-      selectedModel = available[0];
+      const specialized = available.find(n => n.includes('tower') || n.includes('aya') || n.includes('qwen') || n.includes('llama3'));
+      selectedModel = specialized || available[0];
     }
   } catch (err) {
-    blockProvider('ollama');
+    blockProvider('ollama', false); // Cooldown
     throw err;
   }
 
-  const prompt = buildTranslationPrompt(opts);
+  // Pre-processing: proteggi tag HTML/XML/RichText per non romperli durante la traduzione (critico per GameStringer)
+  const TAG_REGEX = /<\/?[a-zA-Z][^>]*\/?>/g;
+  const UNREAL_CLOSE_REGEX = /<\/>/g;
+  const protectTags = (text: string): { cleaned: string; tags: Map<string, string> } => {
+    const tags = new Map<string, string>();
+    let counter = 0;
+    let cleaned = text.replace(TAG_REGEX, (match) => {
+      const placeholder = `[[T${counter}]]`;
+      tags.set(placeholder, match);
+      counter++;
+      return placeholder;
+    });
+    cleaned = cleaned.replace(UNREAL_CLOSE_REGEX, () => {
+      const placeholder = `[[T${counter}]]`;
+      tags.set(placeholder, '</>');
+      counter++;
+      return placeholder;
+    });
+    return { cleaned, tags };
+  };
 
-  try {
-    const res = await fetch(`${ollamaUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: [{ role: 'user', content: prompt }],
-        stream: false,
-        options: { temperature: 0.3, num_predict: 4096 },
-      }),
-      signal: AbortSignal.timeout(120000),
+  const restoreTags = (text: string, tags: Map<string, string>): string => {
+    let result = text;
+    for (const [placeholder, original] of tags) {
+      result = result.replace(placeholder, original);
+    }
+    return result;
+  };
+
+  const systemPrompt = `You are an expert video game localizer. Translate from ${srcLang} to ${tgtLang}.
+Rules:
+- Output ONLY the translation. No explanations, no notes, no markdown blocks.
+- Maintain the original tone and context.
+- Keep UI terms concise (e.g., "Play" -> "Gioca", "Settings" -> "Impostazioni").
+- PRESERVE ALL placeholders like [[T0]], {0}, %s, %d EXACTLY. Do not translate them.
+${opts.glossaryHint ? `\nGlossary/Lore:\n${opts.glossaryHint}` : ''}
+${opts.context ? `\nContext: ${opts.context}` : ''}`;
+
+  const results: string[] = [];
+
+  // Traduciamo le stringhe in parallelo controllato (batch di 3 per non sovraccaricare Ollama)
+  const BATCH_SIZE = 3;
+  for (let i = 0; i < opts.texts.length; i += BATCH_SIZE) {
+    const batch = opts.texts.slice(i, i + BATCH_SIZE);
+    
+    const batchPromises = batch.map(async (text) => {
+      // 1. Proteggi i tag
+      TAG_REGEX.lastIndex = 0;
+      const hasTags = TAG_REGEX.test(text) || text.includes('</>');
+      TAG_REGEX.lastIndex = 0;
+      const { cleaned: inputText, tags } = hasTags ? protectTags(text) : { cleaned: text, tags: new Map<string, string>() };
+
+      // Se il modello è TowerInstruct, usa il suo formato nativo per risultati migliori
+      const isTower = selectedModel.includes('tower');
+      const messages = isTower 
+        ? [{ role: 'user', content: `Translate the following text from ${srcLang} into ${tgtLang}.\n${srcLang}: ${inputText}\n${tgtLang}:` }]
+        : [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: inputText }
+          ];
+
+      try {
+        const res = await fetch(`${ollamaUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: selectedModel,
+            messages,
+            stream: false,
+            options: { temperature: 0.1, num_predict: Math.max(256, inputText.length * 3) },
+          }),
+          signal: AbortSignal.timeout(60000),
+        });
+
+        if (!res.ok) throw new Error(`Ollama ${res.status}`);
+        const data = await res.json();
+        
+        let translated = data?.message?.content?.trim() || text;
+        // Pulisci output errati frequenti nei LLM minori
+        translated = translated.replace(/^(Translation|Traduzione|Output)\s*:\s*/i, '').replace(/^["']|["']$/g, '');
+        
+        // 2. Ripristina i tag
+        if (hasTags) {
+          translated = restoreTags(translated, tags);
+        }
+        
+        return translated;
+      } catch (err) {
+        console.warn(`[Ollama] Errore traduzione stringa:`, err);
+        return text; // Fallback all'originale
+      }
     });
 
-    if (!res.ok) {
-      blockProvider('ollama');
-      throw new Error(`Ollama ${res.status}`);
-    }
-
-    const data = await res.json();
-    const responseText = data?.message?.content?.trim() || '';
-
-    // Parse JSON array
-    try {
-      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
-      if (jsonMatch) return JSON.parse(jsonMatch[0]);
-    } catch {}
-
-    // Fallback: split per newline
-    const lines = responseText
-      .split('\n')
-      .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
-      .filter((line: string) => line.length > 0);
-
-    if (lines.length >= opts.texts.length) return lines.slice(0, opts.texts.length);
-
-    // Ultimo fallback: testo uno a uno
-    const results: string[] = [];
-    for (const text of opts.texts) {
-      const singleRes = await fetch(`${ollamaUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [{ role: 'user', content: `Translate from ${srcLang} to ${opts.targetLanguage}. Return ONLY the translation:\n${text}` }],
-          stream: false,
-          options: { temperature: 0.3, num_predict: 500 },
-        }),
-        signal: AbortSignal.timeout(60000),
-      });
-      if (!singleRes.ok) throw new Error(`Ollama ${singleRes.status}`);
-      const singleData = await singleRes.json();
-      results.push(singleData?.message?.content?.trim() || text);
-    }
-    return results;
-  } catch (err) {
-    blockProvider('ollama');
-    throw err;
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
   }
+
+  return results;
 }
 
 /** Lingva Translate — gratis, nessuna API key, proxy Google Translate */
