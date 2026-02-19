@@ -71,7 +71,7 @@ impl Default for OcrConfig {
 
 /// Avvia il sistema OCR translator
 #[command]
-pub async fn start_ocr_translator(config: OcrConfig) -> Result<String, String> {
+pub async fn start_ocr_translator(app: tauri::AppHandle, config: OcrConfig) -> Result<String, String> {
     if OCR_RUNNING.load(Ordering::SeqCst) {
         return Ok("OCR già in esecuzione".to_string());
     }
@@ -87,7 +87,7 @@ pub async fn start_ocr_translator(config: OcrConfig) -> Result<String, String> {
     // Avvia thread OCR
     let cfg = config.clone();
     std::thread::spawn(move || {
-        run_ocr_loop(cfg);
+        run_ocr_loop(app, cfg);
     });
     
     Ok(format!("OCR Translator avviato ({} → {})", config.language, config.target_language))
@@ -216,7 +216,8 @@ pub async fn position_overlay_on_window(app: tauri::AppHandle, hwnd: isize) -> R
     Ok(())
 }
 
-fn run_ocr_loop(config: OcrConfig) {
+fn run_ocr_loop(app: tauri::AppHandle, config: OcrConfig) {
+    use tauri::Manager;
     log::info!("📷 OCR loop avviato (target_window: {:?})", config.target_window);
     
     while OCR_RUNNING.load(Ordering::SeqCst) {
@@ -238,7 +239,7 @@ fn run_ocr_loop(config: OcrConfig) {
                             .filter(|t| t.confidence >= config.min_confidence)
                             .collect();
                         
-                        // 3. Traduci i testi
+                        // 3. Traduci i testi localmente via TM
                         translate_detected_texts(&mut filtered, &config.target_language);
                         
                         if !filtered.is_empty() {
@@ -246,10 +247,11 @@ fn run_ocr_loop(config: OcrConfig) {
                             log::debug!("🔤 Rilevati {} testi, {} tradotti", filtered.len(), translated_count);
                         }
                         
-                        // Salva risultati
+                        // Salva risultati e EMETTI EVENTO TAURI per bypassare il polling frontend
                         if let Ok(mut last) = LAST_TEXTS.lock() {
-                            *last = filtered;
+                            *last = filtered.clone();
                         }
+                        let _ = app.emit("ocr_text_detected", filtered);
                     }
                     Err(e) => {
                         log::warn!("OCR error: {}", e);

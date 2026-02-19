@@ -229,34 +229,47 @@ export default function OcrTranslatorPage() {
     return () => clearInterval(interval);
   }, [isRunning, ocrProvider, config.language, config.target_language, config.region, config.capture_interval_ms]);
 
-  // Loop Testuale standard
+  // Ascolto Eventi Nativi Tauri invece del Polling (Risparmio CPU)
   useEffect(() => {
     if (!isRunning || ocrProvider === 'vlm') return;
-    const interval = setInterval(async () => {
+    
+    let unlisten: (() => void) | null = null;
+    
+    const setupListener = async () => {
       try {
-        const texts = await invoke<DetectedText[]>('get_detected_texts');
-        
-        const untranslated = texts.filter(t => !t.translated && t.text.length > 2);
-        if (untranslated.length > 0) {
-          setIsTranslating(true);
-          const toTranslate = untranslated.slice(0, 3);
-          await Promise.all(toTranslate.map(async (t) => {
-            const translated = await translateWithAi(t.text);
-            if (translated) t.translated = translated;
-          }));
-          setIsTranslating(false);
-        }
-        
-        texts.forEach(t => {
-          if (!t.translated && translationCache.has(t.text)) {
-            t.translated = translationCache.get(t.text) || null;
+        const { listen } = await import('@tauri-apps/api/event');
+        unlisten = await listen<DetectedText[]>('ocr_text_detected', async (event) => {
+          const texts = event.payload;
+          
+          const untranslated = texts.filter(t => !t.translated && t.text.length > 2);
+          if (untranslated.length > 0) {
+            setIsTranslating(true);
+            const toTranslate = untranslated.slice(0, 3);
+            await Promise.all(toTranslate.map(async (t) => {
+              const translated = await translateWithAi(t.text);
+              if (translated) t.translated = translated;
+            }));
+            setIsTranslating(false);
           }
+          
+          texts.forEach(t => {
+            if (!t.translated && translationCache.has(t.text)) {
+              t.translated = translationCache.get(t.text) || null;
+            }
+          });
+          
+          setDetectedTexts(texts);
         });
-        
-        setDetectedTexts(texts);
-      } catch {}
-    }, 300);
-    return () => clearInterval(interval);
+      } catch (e) {
+        console.warn('[OCR] Impossibile setup event listener Tauri', e);
+      }
+    };
+    
+    setupListener();
+    
+    return () => {
+      if (unlisten) unlisten();
+    };
   }, [isRunning, ocrProvider, config.language, config.target_language, geminiApiKey]);
 
   const toggleOcr = async () => {
