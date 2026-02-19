@@ -1000,6 +1000,92 @@ export default function LibraryPage() {
       }
     });
 
+  const renderGameCardMemoized = useCallback((index: number) => {
+    const game = filteredGames[index];
+    if (!game) return null;
+
+    const gameId = game.app_id || game.id || '';
+    
+    // Controlla se abbiamo un'immagine in cache, altrimenti usa quella di default
+    const cachedCover = coverCache[gameId];
+    const imageSrc = cachedCover || (game.header_image && game.header_image.trim() !== '' ? game.header_image : null);
+
+    return (
+      <Link 
+        key={`game-${game.id || index}`}
+        href={getGameDetailUrl(game)}
+        className="group relative flex flex-col bg-slate-800/50 rounded-xl overflow-hidden border border-slate-700/50 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-200"
+      >
+        <div className="relative aspect-[3/4] w-full bg-slate-900">
+          {imageSrc ? (
+            <img 
+              src={imageSrc} 
+              alt={game.title || 'Cover'} 
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+              <span className="text-xs text-slate-500 text-center px-2">{game.title}</span>
+            </div>
+          )}
+          
+          {/* Overlay gradiente */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+          
+          {/* Badges in alto a destra */}
+          <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 items-end">
+            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm ${
+              game.platform === 'Steam' ? 'bg-[#171a21]/90 text-white border border-[#66c0f4]/30' :
+              game.platform === 'Epic Games' ? 'bg-[#2a2a2a]/90 text-white border border-white/20' :
+              game.platform === 'GOG' ? 'bg-[#5c2f82]/90 text-white border border-purple-400/30' :
+              'bg-slate-800/90 text-slate-300 border border-slate-600/50'
+            }`}>
+              {game.platform || 'Sconosciuto'}
+            </span>
+            {game.isShared && (
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm bg-blue-500/90 text-white border border-blue-400/30">
+                Shared
+              </span>
+            )}
+          </div>
+          
+          {/* Info in basso sull'immagine (solo hover) */}
+          <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-200 bg-slate-900/90 backdrop-blur-sm border-t border-slate-700/50">
+            {game.engine && game.engine !== 'Unknown' && (
+              <p className="text-[10px] text-cyan-400 font-medium mb-1">{game.engine}</p>
+            )}
+            {game.is_installed && (
+              <p className="text-[10px] text-green-400 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                Installato
+              </p>
+            )}
+          </div>
+        </div>
+        
+        {/* Info sotto l'immagine (sempre visibile) */}
+        <div className="p-2 bg-slate-900 flex-1 flex flex-col justify-between">
+          <p className="text-xs font-medium text-slate-200 line-clamp-2 leading-tight" title={game.title ?? 'Unnamed game'}>
+            {game.title ?? 'Unnamed game'}
+          </p>
+          
+          {(() => {
+            const gameKey = game.app_id || game.id;
+            const cachedLangs = languagesCache[gameKey];
+            const languages = cachedLangs && cachedLangs.length > 0 ? cachedLangs : game.supported_languages;
+            return languages && languages.length > 0 ? (
+              <div className="mt-1.5 pt-1.5 border-t border-slate-800">
+                <LanguageFlags supportedLanguages={languages} maxFlags={5} />
+              </div>
+            ) : null;
+          })()}
+        </div>
+      </Link>
+    );
+  }, [filteredGames, coverCache, languagesCache]);
+
   const renderContent = () => {
     if (isLoading) {
       // Loader migliorato con progress
@@ -1102,18 +1188,6 @@ export default function LibraryPage() {
                     <span className="text-[10px]" title="Family Sharing">🔗</span>
                   )}
                 </div>
-                
-                {/* Lingue - mostra solo se ci sono più di 1 lingua */}
-                <div className="flex-shrink-0">
-                  {(() => {
-                    const gameKey = game.app_id || game.id;
-                    const cachedLangs = languagesCache[gameKey];
-                    const languages = cachedLangs && cachedLangs.length > 0 ? cachedLangs : game.supported_languages;
-                    return languages && languages.length > 1 ? (
-                      <LanguageFlags supportedLanguages={languages} maxFlags={5} />
-                    ) : null;
-                  })()}
-                </div>
               </div>
             </Link>
           ))}
@@ -1121,93 +1195,14 @@ export default function LibraryPage() {
       );
     }
 
-    // Vista griglia (default) - VIRTUALIZZATA per ottimizzazione memoria
-    const renderGameCard = (index: number) => {
-      const game = filteredGames[index];
-      if (!game) return null;
-      
-      return (
-        <Link key={game.id || `game-${index}`} href={getGameDetailUrl(game)}>
-          <div className="group overflow-hidden rounded-lg border border-transparent hover:border-purple-500 transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-purple-500/20 cursor-pointer bg-gray-900">
-            {/* Immagine */}
-            <div className="relative aspect-[16/9]">
-              <GameImageWithFallback 
-                key={`img-${game.id}-${game.app_id}`}
-                game={game} 
-                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                coverCache={coverCache}
-              />
-              
-              {/* Badge Engine/VR/Installed */}
-              <div className="absolute top-1 left-1 flex flex-wrap gap-0.5">
-                {game.is_installed && (
-                  <span className="bg-green-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">✓</span>
-                )}
-                {game.engine && game.engine !== 'Unknown' && (
-                  <span className="bg-blue-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">{game.engine}</span>
-                )}
-                {game.is_vr && (
-                  <span className="bg-purple-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">VR</span>
-                )}
-                {game.isShared && (
-                  <span className="bg-orange-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">🔗</span>
-                )}
-              </div>
-              {/* Bottone Cambia Cover */}
-              <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverPickerGame(game); }}
-                className="absolute bottom-1 right-1 flex items-center gap-0.5 bg-black/70 hover:bg-blue-600 px-1.5 py-0.5 rounded text-[9px] font-medium text-white/80 hover:text-white transition-all z-10 opacity-0 group-hover:opacity-100"
-                title="Cambia cover"
-              >
-                <ImageIcon className="h-3 w-3" />
-              </button>
-            </div>
-            
-            {/* Info sotto l'immagine */}
-            <div className="p-1.5">
-              <p className="text-xs font-medium truncate text-white" title={game.title ?? 'Unnamed game'}>
-                {game.title ?? 'Unnamed game'}
-              </p>
-              {(() => {
-                // Usa lingue dalla cache se disponibili, altrimenti fallback ai dati del gioco
-                const gameKey = game.app_id || game.id;
-                const cachedLangs = languagesCache[gameKey];
-                const languages = cachedLangs && cachedLangs.length > 0 ? cachedLangs : game.supported_languages;
-                return languages && languages.length > 1 ? (
-                  <div className="mt-1">
-                    <LanguageFlags supportedLanguages={languages} maxFlags={12} />
-                  </div>
-                ) : null;
-              })()}
-            </div>
-          </div>
-        </Link>
-      );
-    };
-
-    // Per pochi games, usa rendering normale
-    if (filteredGames.length <= 30) {
-      return (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1.5">
-          {filteredGames.map((_, index) => renderGameCard(index))}
-        </div>
-      );
-    }
-
-    // Per molti games, usa virtualizzazione
-    // Key basata sui filtri + coverCache per forzare re-render quando cambiano
-    const coverCacheKey = Object.keys(coverCache).length;
-    const gridKey = `${sortBy}-${selectedPlatforms.join(',')}-${selectedEngines.join(',')}-${selectedStatus.join(',')}-${selectedTags.join(',')}-${debouncedSearchTerm}-covers${coverCacheKey}`;
-    
     return (
       <VirtuosoGrid
-        key={gridKey}
         style={{ height: 'calc(100vh - 280px)' }}
         totalCount={filteredGames.length}
-        overscan={200}
-        listClassName="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1.5"
-        itemClassName="min-h-[120px]"
-        itemContent={renderGameCard}
+        overscan={40}
+        listClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 pb-8"
+        itemClassName="h-full"
+        itemContent={renderGameCardMemoized}
       />
     );
   };
@@ -1252,9 +1247,9 @@ export default function LibraryPage() {
               toast.info(lib.downloadingNames);
               try {
                 const result = await invoke('update_remote_game_database');
-                const games = Object.values(result as any) as Game[];
-                setGames(games);
-                toast.success(`${lib.databaseUpdated} ${games.length} ${lib.games}`);
+                const updatedGames = Object.values(result as any) as Game[];
+                setGames(updatedGames);
+                toast.success(`${lib.databaseUpdated} ${updatedGames.length} ${lib.games}`);
               } catch (e) {
                 toast.error(lib.updateError + ': ' + e);
               }
