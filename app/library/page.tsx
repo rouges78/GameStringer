@@ -925,14 +925,18 @@ export default function LibraryPage() {
   };
 
   // Estrai le piattaforme, engine, lingue e generi unici dai games caricati
-  const safeGames = ensureArray<Game>(games);
-  const platforms = ['All', ...new Set(safeGames.map(game => game.platform))];
-  const engines = ['All', ...new Set(safeGames.filter(game => game.engine && game.engine.toLowerCase() !== 'unknown').map(game => game.engine!))];
-  const allLanguages = safeGames.flatMap(game => game.supported_languages || []);
-  const normalizedLanguages = allLanguages.map(lang => normalizeLanguage(lang));
-  const languages = ['All', ...new Set(normalizedLanguages)].sort();
-  const allGenres = safeGames.flatMap(game => game.genres || []).filter(genre => typeof genre === 'string');
-  const genres = ['All', ...new Set(allGenres)];
+  const safeGames = useMemo(() => ensureArray<Game>(games), [games]);
+  const platforms = useMemo(() => ['All', ...new Set(safeGames.map(game => game.platform))], [safeGames]);
+  const engines = useMemo(() => ['All', ...new Set(safeGames.filter(game => game.engine && game.engine.toLowerCase() !== 'unknown').map(game => game.engine!))], [safeGames]);
+  const languages = useMemo(() => {
+    const allLanguages = safeGames.flatMap(game => game.supported_languages || []);
+    const normalizedLanguages = allLanguages.map(lang => normalizeLanguage(lang));
+    return ['All', ...new Set(normalizedLanguages)].sort();
+  }, [safeGames]);
+  const genres = useMemo(() => {
+    const allGenres = safeGames.flatMap(game => game.genres || []).filter(genre => typeof genre === 'string');
+    return ['All', ...new Set(allGenres)];
+  }, [safeGames]);
 
   // Filtriamo e ordiniamo i games (multiselezione)
   const filteredGames = useMemo(() => {
