@@ -1,4 +1,5 @@
 import { RagGlossary } from './rag-glossary';
+import { AgenticTranslator } from './agentic-translator';
 
 /**
  * AI Translation - Chiamate dirette API (NO API routes Next.js)
@@ -12,6 +13,7 @@ export interface TranslateOptions {
   context?: string;
   glossaryHint?: string;
   gameId?: string; // Usato per caricare il RAG locale
+  useAgenticPipeline?: boolean; // Se true, usa il QA multi-agente per la massima qualità
 }
 
 export interface TranslateResult {
@@ -855,6 +857,32 @@ ${opts.glossaryHint ? `\nGlossary/Lore:\n${opts.glossaryHint}` : ''}
 ${opts.context ? `\nContext: ${opts.context}` : ''}`;
 
   const results: string[] = [];
+
+  // Se l'utente ha richiesto la pipeline agentica (QA LLM) ed è disponibile Ollama
+  if (opts.useAgenticPipeline) {
+    console.log(`[Ollama] Eseguo Pipeline Agentica (Traduttore + QA) su ${opts.texts.length} testi...`);
+    const results: string[] = [];
+    
+    // La pipeline agentica va stringa per stringa per garantire il QA individuale
+    for (const text of opts.texts) {
+      if (!text.trim() || text.length <= 1) {
+        results.push(text);
+        continue;
+      }
+      
+      const { translation } = await AgenticTranslator.translate({
+        text,
+        sourceLanguage: srcLang,
+        targetLanguage: tgtLang,
+        context: opts.context,
+        maxAttempts: 3
+      });
+      
+      results.push(translation);
+    }
+    
+    return results;
+  }
 
   // Traduciamo le stringhe in parallelo controllato (batch di 3 per non sovraccaricare Ollama)
   const BATCH_SIZE = 3;
