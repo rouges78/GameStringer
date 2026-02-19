@@ -935,70 +935,72 @@ export default function LibraryPage() {
   const genres = ['All', ...new Set(allGenres)];
 
   // Filtriamo e ordiniamo i games (multiselezione)
-  const filteredGames = safeGames
-    .filter((game) => {
-      // 🚫 Nascondi games senza nome valido
-      const hasValidName = game.title && !game.title.match(/^(Game|Shared Game) \d+$/);
-      if (!hasValidName) return false;
-      
-      const matchesSearch = fuzzyMatch(game.title ?? '', debouncedSearchTerm);
-      const matchesPlatform = selectedPlatforms.length === 0 || selectedPlatforms.includes(game.platform);
-      const matchesEngine = selectedEngines.length === 0 || selectedEngines.some(eng => 
-        (game.engine || 'Unknown').toLowerCase().includes(eng.toLowerCase()) || 
-        eng.toLowerCase().includes((game.engine || '').toLowerCase())
-      );
-      const matchesLanguage = selectedLanguages.length === 0 || (game.supported_languages && game.supported_languages.some(lang => selectedLanguages.includes(normalizeLanguage(lang))));
-      const matchesGenre = selectedGenres.length === 0 || (game.genres && game.genres.some(g => selectedGenres.includes(g)));
-      
-      // Status filter
-      const matchesStatus = selectedStatus.length === 0 || 
-        (selectedStatus.includes('Installed') && game.is_installed) ||
-        (selectedStatus.includes('NotInstalled') && !game.is_installed);
-      
-      // Tags filter  
-      const matchesTags = selectedTags.length === 0 || (
-        (selectedTags.includes('VR') ? game.is_vr : true) &&
-        (selectedTags.includes('Shared') ? game.isShared === true : true) &&
-        (selectedTags.includes('Backlog') ? (!game.last_played || game.last_played === 0) : true)
-      );
-      
-      return matchesSearch && matchesPlatform && matchesEngine && matchesLanguage && matchesGenre && matchesStatus && matchesTags;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'recentlyAdded':
-          // Sort per data di aggiunta alla libreria (dal più recente)
-          // Usa la cache delle date di aggiunta tracciata da GameStringer
-          const aKey = a.app_id || a.id;
-          const bKey = b.app_id || b.id;
-          const aAdded = addedDatesCache[aKey] || a.added_date || 0;
-          const bAdded = addedDatesCache[bKey] || b.added_date || 0;
-          if (aAdded !== bAdded) {
-            return bAdded - aAdded;
-          }
-          // Se uguali, ordina alfabeticamente
-          return (a.title || '').localeCompare(b.title || '');
-        case 'lastPlayed':
-          // Sort per ultimo accesso (se disponibile)
-          const aPlayed = a.last_played || 0;
-          const bPlayed = b.last_played || 0;
-          if (aPlayed !== bPlayed) {
-            return bPlayed - aPlayed;
-          }
-          return (a.title || '').localeCompare(b.title || '');
-        case 'playtime':
-          // Sort per tempo di gioco (se disponibile)
-          const aTime = (a as any).playtime_forever || 0;
-          const bTime = (b as any).playtime_forever || 0;
-          if (aTime !== bTime) {
-            return bTime - aTime;
-          }
-          return (a.title || '').localeCompare(b.title || '');
-        default:
-          // Ordinamento alfabetico
-          return (a.title || '').localeCompare(b.title || '');
-      }
-    });
+  const filteredGames = useMemo(() => {
+    return safeGames
+      .filter((game) => {
+        // 🚫 Nascondi games senza nome valido
+        const hasValidName = game.title && !game.title.match(/^(Game|Shared Game) \d+$/);
+        if (!hasValidName) return false;
+        
+        const matchesSearch = fuzzyMatch(game.title ?? '', debouncedSearchTerm);
+        const matchesPlatform = selectedPlatforms.length === 0 || selectedPlatforms.includes(game.platform);
+        const matchesEngine = selectedEngines.length === 0 || selectedEngines.some(eng => 
+          (game.engine || 'Unknown').toLowerCase().includes(eng.toLowerCase()) || 
+          eng.toLowerCase().includes((game.engine || '').toLowerCase())
+        );
+        const matchesLanguage = selectedLanguages.length === 0 || (game.supported_languages && game.supported_languages.some(lang => selectedLanguages.includes(normalizeLanguage(lang))));
+        const matchesGenre = selectedGenres.length === 0 || (game.genres && game.genres.some(g => selectedGenres.includes(g)));
+        
+        // Status filter
+        const matchesStatus = selectedStatus.length === 0 || 
+          (selectedStatus.includes('Installed') && game.is_installed) ||
+          (selectedStatus.includes('NotInstalled') && !game.is_installed);
+        
+        // Tags filter  
+        const matchesTags = selectedTags.length === 0 || (
+          (selectedTags.includes('VR') ? game.is_vr : true) &&
+          (selectedTags.includes('Shared') ? game.isShared === true : true) &&
+          (selectedTags.includes('Backlog') ? (!game.last_played || game.last_played === 0) : true)
+        );
+        
+        return matchesSearch && matchesPlatform && matchesEngine && matchesLanguage && matchesGenre && matchesStatus && matchesTags;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case 'recentlyAdded':
+            // Sort per data di aggiunta alla libreria (dal più recente)
+            // Usa la cache delle date di aggiunta tracciata da GameStringer
+            const aKey = a.app_id || a.id;
+            const bKey = b.app_id || b.id;
+            const aAdded = addedDatesCache[aKey] || a.added_date || 0;
+            const bAdded = addedDatesCache[bKey] || b.added_date || 0;
+            if (aAdded !== bAdded) {
+              return bAdded - aAdded;
+            }
+            // Se uguali, ordina alfabeticamente
+            return (a.title || '').localeCompare(b.title || '');
+          case 'lastPlayed':
+            // Sort per ultimo accesso (se disponibile)
+            const aPlayed = a.last_played || 0;
+            const bPlayed = b.last_played || 0;
+            if (aPlayed !== bPlayed) {
+              return bPlayed - aPlayed;
+            }
+            return (a.title || '').localeCompare(b.title || '');
+          case 'playtime':
+            // Sort per tempo di gioco (se disponibile)
+            const aTime = (a as any).playtime_forever || 0;
+            const bTime = (b as any).playtime_forever || 0;
+            if (aTime !== bTime) {
+              return bTime - aTime;
+            }
+            return (a.title || '').localeCompare(b.title || '');
+          default:
+            // Ordinamento alfabetico
+            return (a.title || '').localeCompare(b.title || '');
+        }
+      });
+  }, [safeGames, debouncedSearchTerm, selectedPlatforms, selectedEngines, selectedLanguages, selectedGenres, selectedStatus, selectedTags, sortBy, addedDatesCache]);
 
   const renderGameCardMemoized = useCallback((index: number) => {
     const game = filteredGames[index];
