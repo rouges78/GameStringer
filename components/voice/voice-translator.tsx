@@ -83,7 +83,8 @@ const TTS_VOICES = [
   { id: 'echo', name: 'Echo', description: 'Male, deep' },
   { id: 'fable', name: 'Fable', description: 'Narrative, expressive' },
   { id: 'onyx', name: 'Onyx', description: 'Male, authoritative' },
-  { id: 'shimmer', name: 'Shimmer', description: 'Female, bright' }
+  { id: 'shimmer', name: 'Shimmer', description: 'Female, bright' },
+  { id: 'clone', name: '🎤 Voice Clone (Locale/XTTS)', description: 'Clona la voce originale (Richiede XTTS/AllTalk locale)' }
 ];
 
 export function VoiceTranslator() {
@@ -300,23 +301,65 @@ export function VoiceTranslator() {
 
     try {
       const { openai: openaiKey } = getApiKeys();
-      if (!openaiKey) {
-        throw new Error('OpenAI API key non configurata. Vai nelle Impostazioni.');
+      
+      let ttsUrl = 'https://api.openai.com/v1/audio/speech';
+      let requestBody: any = {
+        model: 'tts-1',
+        input: state.translation,
+        voice: state.selectedVoice,
+        speed: state.speechSpeed,
+        response_format: 'mp3',
+      };
+      let headers: any = {
+        'Content-Type': 'application/json',
+      };
+
+      // Se l'utente sceglie "clone", proviamo a usare un endpoint locale (es. AllTalk/XTTS)
+      if (state.selectedVoice === 'clone') {
+        if (!state.audioBlob) {
+          throw new Error('Per clonare la voce serve prima registrare o caricare un audio sorgente.');
+        }
+        
+        // Converti l'audio sorgente in base64 per inviarlo come reference al server di cloning locale
+        const reader = new FileReader();
+        const base64Audio = await new Promise<string>((resolve) => {
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(state.audioBlob!);
+        });
+
+        // Configurazione per server locale XTTS/AllTalk (API compatibile o custom)
+        const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+        ttsUrl = settings?.voice?.localTtsUrl || 'http://127.0.0.1:8000/v1/audio/speech';
+        
+        requestBody = {
+          model: 'xtts',
+          input: state.translation,
+          voice: 'clone',
+          language: state.targetLanguage,
+          speed: state.speechSpeed,
+          reference_audio: base64Audio, // Payload custom per il cloning
+          response_format: 'wav',
+        };
+        
+        // Se non abbiamo chiave OpenAI ma usiamo server locale, bypassiamo l'errore
+        if ((!openaiKey && ttsUrl.includes('127.0.0.1')) || ttsUrl.includes('localhost')) {
+          headers['Authorization'] = 'Bearer local';
+        } else if (!openaiKey && !ttsUrl.includes('127.0.0.1') && !ttsUrl.includes('localhost')) {
+          throw new Error('Chiave API mancante per server remoto.');
+        } else {
+          headers['Authorization'] = `Bearer ${openaiKey || 'local'}`;
+        }
+      } else {
+        if (!openaiKey) {
+          throw new Error('OpenAI API key non configurata. Vai nelle Impostazioni.');
+        }
+        headers['Authorization'] = `Bearer ${openaiKey}`;
       }
 
-      const response = await fetch('https://api.openai.com/v1/audio/speech', {
+      const response = await fetch(ttsUrl, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openaiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'tts-1',
-          input: state.translation,
-          voice: state.selectedVoice,
-          speed: state.speechSpeed,
-          response_format: 'mp3',
-        })
+        headers,
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
