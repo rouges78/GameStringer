@@ -21,8 +21,12 @@ export class VlmTranslator {
    * Verifica quali modelli Vision sono disponibili in locale su Ollama
    */
   public static async getAvailableVisionModels(): Promise<string[]> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
     try {
-      const res = await fetch(`${this.OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(3000) });
+      const res = await fetch(`${this.OLLAMA_URL}/api/tags`, { signal: controller.signal });
+      clearTimeout(timeoutId);
       if (!res.ok) return [];
       const data = await res.json();
       
@@ -36,6 +40,7 @@ export class VlmTranslator {
         m.includes('vision')
       );
     } catch (e) {
+      clearTimeout(timeoutId);
       return [];
     }
   }
@@ -64,6 +69,9 @@ If there are multiple text elements, preserve their approximate spatial arrangem
 ${opts.context ? `Context: ${opts.context}` : ''}`;
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
       const res = await fetch(`${this.OLLAMA_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,8 +88,10 @@ ${opts.context ? `Context: ${opts.context}` : ''}`;
           stream: false,
           options: { temperature: 0.1, num_predict: 1024 }
         }),
-        signal: AbortSignal.timeout(60000) // I VLM sono pesanti, diamo 60 secondi
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!res.ok) {
         throw new Error(`Ollama VLM Error: ${res.status}`);
