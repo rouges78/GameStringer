@@ -7,6 +7,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { invoke } from '@/lib/tauri-api';
 import { listen } from '@tauri-apps/api/event';
+import { toast } from 'sonner';
 
 interface HotkeyEvent {
   action: string;
@@ -101,6 +102,7 @@ export function useGlobalHotkeys(handlers: Record<string, () => void>) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(hotkeys));
     } catch (e) {
       console.warn('[HOTKEY] Errore salvataggio configurazione hotkeys:', e);
+      toast.error('Impossibile salvare la configurazione delle hotkey');
     }
   }, []);
 

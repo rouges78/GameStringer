@@ -26,6 +26,36 @@ interface TranslationResponse {
 // Simple in-memory cache for translations
 const translationCache = new Map<string, TranslationResponse>();
 
+// --- RETRY LOGIC ---
+const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 2): Promise<Response> => {
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    try {
+      const response = await fetch(url, options);
+      
+      // 429 Too Many Requests o 503/502 Service Error -> Retry
+      if (response.status === 429 || response.status === 503 || response.status === 502) {
+        attempt++;
+        const retryAfter = response.headers.get('Retry-After');
+        const delayMs = retryAfter ? parseInt(retryAfter) * 1000 : 2000 * attempt;
+        logger.warn(`API Rate limit o Service Unavailable (${response.status}). Retrying in ${delayMs}ms... (Attempt ${attempt}/${maxRetries})`);
+        await new Promise(res => setTimeout(res, delayMs));
+        continue;
+      }
+      return response;
+    } catch (e: any) {
+      if (e.name === 'AbortError' || e.message.includes('fetch failed')) {
+        attempt++;
+        logger.warn(`Fetch error. Retrying in ${2000 * attempt}ms... (Attempt ${attempt}/${maxRetries})`);
+        await new Promise(res => setTimeout(res, 2000 * attempt));
+        continue;
+      }
+      throw e;
+    }
+  }
+  return fetch(url, options); // Ultimo tentativo senza catturare l'eccezione
+};
+
 // Rate limiter rimosso per supportare OCR real-time
 export const POST = withErrorHandler(async function(request: NextRequest) {
   try {
@@ -204,7 +234,7 @@ async function translateWithOpenAI(
     4. Provide confidence score (0-1)
     5. Include 3 alternative translations in suggestions array`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetchWithRetry('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -219,10 +249,11 @@ async function translateWithOpenAI(
         temperature: 0.3,
         max_tokens: 1000
       })
-    });
+    }, 3); // 3 tentativi per OpenAI
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`OpenAI API error: ${response.status} - ${errorData?.error?.message || JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
@@ -307,7 +338,7 @@ async function translateWithGemini(
     5. Include 3 alternative translations in suggestions array`;
 
     // Gemini 1.5 Flash - Stable model
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -326,7 +357,7 @@ async function translateWithGemini(
           responseMimeType: "application/json"
         }
       })
-    });
+    }, 3);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -456,7 +487,7 @@ async function translateWithClaude(
       "suggestions": ["alternative 1", "alternative 2", "alternative 3"]
     }`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetchWithRetry('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
@@ -471,7 +502,7 @@ async function translateWithClaude(
           { role: 'user', content: text }
         ]
       })
-    });
+    }, 3);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
