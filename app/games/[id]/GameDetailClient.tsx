@@ -1270,12 +1270,13 @@ export default function GameDetailPage() {
             />
           )}
 
-          {/* Tabs File/Traduzioni/Patch/Info */}
+          {/* Tabs File/Traduzioni/Patch/Info/Audio */}
           <Tabs defaultValue="files" className="space-y-3">
-            <TabsList className="h-8 bg-black/30 border-white/10">
+            <TabsList className="h-8 bg-black/30 border-white/10 flex flex-wrap max-w-full">
               <TabsTrigger value="files" className="text-xs data-[state=active]:bg-purple-600">📁 {t('gameDetails.tabFiles')}</TabsTrigger>
               <TabsTrigger value="translations" className="text-xs data-[state=active]:bg-purple-600">🌍 {t('gameDetails.tabTranslations')}</TabsTrigger>
               <TabsTrigger value="patches" className="text-xs data-[state=active]:bg-purple-600">⚡ {t('gameDetails.tabPatch')}</TabsTrigger>
+              <TabsTrigger value="audio" className="text-xs data-[state=active]:bg-purple-600">🎤 Audio Patcher</TabsTrigger>
               <TabsTrigger value="info" className="text-xs data-[state=active]:bg-purple-600">🖥️ Info</TabsTrigger>
             </TabsList>
 
@@ -1408,6 +1409,25 @@ export default function GameDetailPage() {
                     </Button>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="audio" className="space-y-2">
+            <Card className="bg-black/20 border-white/10">
+              <CardContent className="p-4 flex flex-col items-center justify-center min-h-[200px] text-center">
+                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mb-3">
+                  <span className="text-2xl">🎤</span>
+                </div>
+                <h3 className="text-lg font-medium text-white mb-2">Audio Patcher In-Game</h3>
+                <p className="text-sm text-slate-400 max-w-md mb-6">
+                  Estrai i dialoghi originali del gioco e usa la clonazione vocale locale (XTTS) per generare file audio in italiano con le voci originali.
+                </p>
+                <div className="flex gap-3">
+                  <Button onClick={() => toast({title: "In sviluppo", description: "La scansione dei file audio sarà disponibile a breve."})}>
+                    <Search className="h-4 w-4 mr-2" /> Cerca File Audio
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
