@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { invoke } from '@/lib/tauri-api';
+import { get, set } from 'idb-keyval';
 import { activityHistory } from '@/lib/activity-history';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -588,19 +589,23 @@ export default function LibraryPage() {
     libraryLoadedRef.current = true;
     
     // Controlla se c'è una cache di sessione (navigazione back veloce)
-    try {
-      const cached = sessionStorage.getItem('gs_library_games');
-      if (cached) {
-        const cachedGames = JSON.parse(cached) as Game[];
-        if (cachedGames.length > 0) {
-          console.log(`⚡ Libreria caricata da cache sessione: ${cachedGames.length} giochi`);
+    const checkCacheAndFetch = async () => {
+      try {
+        const cachedGames = await get<Game[]>('gs_library_games');
+        if (cachedGames && Array.isArray(cachedGames) && cachedGames.length > 0) {
+          console.log(`⚡ Libreria caricata da cache IndexedDB: ${cachedGames.length} giochi`);
           setGamesWithValidation(cachedGames);
           setIsLoading(false);
           return; // Skip full load
         }
+      } catch (e) {
+        console.warn('Errore lettura cache IndexedDB libreria:', e);
       }
-    } catch {}
-    
+      
+      // Se non c'è cache, esegui il fetch completo
+      fetchGames();
+    };
+
     const fetchGames = async () => {
       try {
         setIsLoading(true);
@@ -834,10 +839,12 @@ export default function LibraryPage() {
         await activityHistory.trackSteamSync(finalGames.length);
         setGamesWithValidation(finalGames);
         
-        // Salva in sessionStorage per navigazione back veloce
+        // Salva in IndexedDB per navigazione back veloce
         try {
-          sessionStorage.setItem('gs_library_games', JSON.stringify(finalGames));
-        } catch {}
+          await set('gs_library_games', finalGames);
+        } catch (e) {
+          console.warn('Errore salvataggio cache IndexedDB libreria:', e);
+        }
 
         
         // 🌍 Carica lingue in background per i giochi Steam senza lingue in cache
