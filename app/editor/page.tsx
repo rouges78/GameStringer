@@ -27,6 +27,7 @@ import { invoke } from '@/lib/tauri-api';
 import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
 import { storageManager } from '@/lib/storage-manager';
+import { get, set } from 'idb-keyval';
 
 // --- Types ---
 interface Game {
@@ -708,7 +709,7 @@ export default function EditorPage() {
     setSaveTimeoutId(newTimeoutId);
   }, [selectedTranslation, saveTimeoutId]);
 
-  const handleManualSave = () => {
+  const handleManualSave = async () => {
     if (!selectedTranslation || !hasUnsavedChanges) return;
     if (saveTimeoutId) clearTimeout(saveTimeoutId);
     
@@ -748,53 +749,47 @@ export default function EditorPage() {
         return [...updated, ...toAdd];
       });
       
-      // Salva anche in localStorage per persistenza
-      const existingData = localStorage.getItem('gamestringer_partial_translations');
-      if (existingData) {
-        try {
-          const data = JSON.parse(existingData);
-          // Aggiorna gli items esistenti con le modifiche manuali
-          const updatedItems = data.items.map((item: any) => {
-            const editedLine = translatedLines.find(l => 
-              l.originalText === item.sourceText || l.id === item.id
-            );
-            if (editedLine) {
-              return {
-                ...item,
-                translatedText: editedLine.translatedText,
-                isManualEdit: true,
-              };
-            }
-            return item;
+      // Salva anche in IndexedDB per persistenza
+      try {
+        const existingData = await get<any>('gamestringer_partial_translations');
+        if (existingData) {
+          const updatedItems = existingData.items.filter((item: any) => 
+            !translatedLines.some(l => 
+              (item.metadata?.key === l.key && item.metadata?.lineNumber === l.lineNumber) ||
+              item.sourceText === l.originalText
+            )
+          );
+          
+          translatedLines.forEach(line => {
+            updatedItems.push({
+              sourceText: line.originalText,
+              translatedText: line.translatedText,
+              fromMemory: false,
+              metadata: { key: line.key, lineNumber: line.lineNumber }
+            });
           });
-          data.items = updatedItems;
-          data.timestamp = Date.now();
-          localStorage.setItem('gamestringer_partial_translations', JSON.stringify(data));
-          console.log('[Editor] saved modifiche manuali in localStorage:', translatedLines.length);
-        } catch (err) {
-          console.error('[Editor] error salvataggio localStorage:', err);
+          
+          existingData.items = updatedItems;
+          existingData.timestamp = Date.now();
+          await set('gamestringer_partial_translations', existingData);
+          console.log('[Editor] saved modifiche manuali in IndexedDB:', translatedLines.length);
+        } else {
+          // Crea nuova struttura
+          const newData = {
+            timestamp: Date.now(),
+            gameId: selectedTranslation.gameId,
+            items: translatedLines.map(line => ({
+              sourceText: line.originalText,
+              translatedText: line.translatedText,
+              fromMemory: false,
+              metadata: { key: line.key, lineNumber: line.lineNumber }
+            })),
+          };
+          await set('gamestringer_partial_translations', newData);
+          console.log('[Editor] Creati nuovi dati in IndexedDB:', translatedLines.length);
         }
-      } else {
-        // Crea nuovi dati se non esistono
-        const newData = {
-          timestamp: Date.now(),
-          gameId: selectedTranslation.gameId,
-          gameName: selectedTranslation.game.title,
-          sourceLanguage: selectedTranslation.sourceLanguage,
-          targetLanguage: 'it',
-          completed: translatedLines.length,
-          total: selectedTranslation.parsedLines.length,
-          items: translatedLines.map(line => ({
-            id: `manual-${line.lineNumber}`,
-            sourceText: line.originalText,
-            translatedText: line.translatedText,
-            fromMemory: false,
-            isManualEdit: true,
-            metadata: { key: line.key, lineNumber: line.lineNumber }
-          })),
-        };
-        localStorage.setItem('gamestringer_partial_translations', JSON.stringify(newData));
-        console.log('[Editor] Creati nuovi dati in localStorage:', translatedLines.length);
+      } catch (err) {
+        console.error('[Editor] error salvataggio IndexedDB:', err);
       }
       
       setHasUnsavedChanges(false);

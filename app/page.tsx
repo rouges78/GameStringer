@@ -35,6 +35,7 @@ import { activityHistory, Activity, activityColors, activityIcons, ActivityType 
 import { useTranslation, translations } from '@/lib/i18n';
 import { blogService, BlogPost } from '@/lib/blog';
 import { storageManager } from '@/lib/storage-manager';
+import { get } from 'idb-keyval';
 
 interface RecentActivityProps {
   color: string;
@@ -222,6 +223,16 @@ export default function Dashboard() {
         edited: savedTranslations.filter((t: any) => t.status === 'edited').length
       };
       
+      let lastScan = new Date(Date.now());
+      try {
+        const savedLastScan = await get<string>('lastSteamScan');
+        if (savedLastScan) {
+          lastScan = new Date(savedLastScan);
+        }
+      } catch (e) {
+        // Ignora errore
+      }
+      
       setStats({
         totalGames: games.length,
         installedGames: games.filter((g: any) => g.is_installed).length,
@@ -229,7 +240,7 @@ export default function Dashboard() {
         patches: savedPatches.length,
         tmEntries,
         timeSavedMinutes,
-        lastScan: new Date(localStorage.getItem('lastSteamScan') || Date.now()),
+        lastScan,
         storeStats,
         engineStats,
         platformStats,
