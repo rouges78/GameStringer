@@ -10,23 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  ArrowLeft, 
-  Play, 
-  Settings, 
-  Download, 
-  FileText, 
-  Archive,
-  Calendar,
-  HardDrive,
-  Monitor,
-  Folder,
-  Languages,
-  Zap,
-  Eye,
-  Globe,
-  Sparkles,
-  AlertTriangle,
-  Trash2
+  Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
+  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -39,7 +24,6 @@ import { TranslationRecommendation } from '@/components/translation-recommendati
 import { useTranslation } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
 import { HltbStats } from '@/components/hltb-stats';
-import { ImageIcon } from 'lucide-react';
 
 export default function GameDetailPage() {
   const params = useParams();
@@ -1398,48 +1382,41 @@ export default function GameDetailPage() {
                     <Zap className="h-3 w-3 inline mr-1" />Ren'Py - Traduzioni in game/tl
                   </div>
                 )}
-                {/* UNKNOWN - con suggerimenti intelligenti */}
-                {(!game.engine || game.engine === 'Unknown') && (
-                  <div className="p-2 bg-gray-500/10 rounded space-y-2">
-                    <div className="text-xs text-gray-300">
-                      <AlertTriangle className="h-3 w-3 inline mr-1" />{t('gameDetails.engineNotRecognized')}
+                
+                {/* Auto-Patch (Nuovo sistema) */}
+                {engineInfo?.can_patch && !game.engine?.match(/Unity|Unreal|RPG Maker|Ren'Py/i) && (
+                  <div className="flex items-center justify-between p-2 bg-purple-500/10 rounded">
+                    <div>
+                      <span className="text-xs text-purple-100 font-medium block"><Sparkles className="h-3 w-3 inline mr-1" />{engineInfo.patch_tool || 'Auto-Patcher'}</span>
+                      <span className="text-[10px] text-purple-200/70 block mt-0.5">{engineInfo.patch_description}</span>
                     </div>
-                    {engineInfo?.tips && engineInfo.tips.length > 0 && (
-                      <div className="space-y-1 border-t border-white/10 pt-2">
-                        <div className="text-[10px] text-amber-400 font-medium">💡 Suggerimenti:</div>
-                        {engineInfo.tips.slice(0, 5).map((tip, i) => (
-                          <div key={i} className="text-[10px] text-gray-400">{tip}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-                {/* Tips per engine riconosciuto */}
-                {engineInfo?.tips && engineInfo.tips.length > 0 && game.engine && game.engine !== 'Unknown' && (
-                  <div className="space-y-1 mt-2 p-2 bg-white/5 rounded">
-                    {engineInfo.tips.map((tip, i) => (
-                      <div key={i} className="text-[10px] text-gray-400">{tip}</div>
-                    ))}
-                    {engineInfo.source && engineInfo.source !== 'local' && (
-                      <div className="text-[9px] text-gray-500 mt-1">📡 Fonte: {engineInfo.source}</div>
-                    )}
-                  </div>
-                )}
-                {/* Status */}
-                {patchStatus && (
-                  <div className={`p-2 rounded text-xs ${patchStatus.success ? 'bg-green-500/20 text-green-200' : 'bg-red-500/20 text-red-200'}`}>
-                    {patchStatus.message}
+                    <Button 
+                      size="sm" 
+                      className="h-7 text-xs bg-purple-600 ml-2" 
+                      onClick={() => {
+                        if (engineInfo.engine.includes('Unity')) handleInstallUnityPatch();
+                        else if (engineInfo.engine.includes('Unreal')) handleInstallUnrealPatch();
+                        else {
+                          import('sonner').then(({ toast }) => {
+                            toast.info("In sviluppo", { description: `Il patcher per ${engineInfo.engine} sarà disponibile presto.`});
+                          });
+                        }
+                      }} 
+                      disabled={isInstallingPatch || !game.is_installed}
+                    >
+                      {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Installa Patch'}
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
-          {/* Tab Info: Requisiti di sistema */}
+
           <TabsContent value="info" className="space-y-2">
             <Card className="bg-black/20 border-white/10">
-              <CardContent className="p-3 space-y-3">
+              <CardContent className="p-3 space-y-2">
                 {/* Requisiti di sistema */}
-                {game.pc_requirements && (game.pc_requirements.minimum || game.pc_requirements.recommended) ? (
+                {game.pc_requirements ? (
                   <div className="space-y-3">
                     <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
                       <Monitor className="h-3.5 w-3.5" /> Requisiti di Sistema
@@ -1521,124 +1498,6 @@ export default function GameDetailPage() {
 
         {/* Sidebar Destra - Info e Azioni */}
         <div className="space-y-4">
-          {/* Info Gioco */}
-          <Card className="bg-black/30 backdrop-blur-xl border-white/10">
-            <CardContent className="p-3 space-y-2">
-              {/* Badges */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Badge className={`text-[10px] ${getPlatformColor(game.platform)}`}>{game.platform}</Badge>
-                <Badge variant={game.is_installed ? "default" : "secondary"} className="text-[10px]">
-                  {game.is_installed ? `✓ ${t('gameDetails.installed')}` : `✗ ${t('gameDetails.notInstalled')}`}
-                </Badge>
-                {game.is_free && <Badge className="bg-green-600 text-[10px]">🎁 Free</Badge>}
-              </div>
-
-              {/* Info Base */}
-              <div className="space-y-1 text-xs">
-                {game.developers?.length > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-white/50">{t('gameDetails.developer')}</span>
-                    <span className="text-white/90 text-right">{game.developers.join(', ')}</span>
-                  </div>
-                )}
-                {game.publishers?.length > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-white/50">{t('gameDetails.publisher')}</span>
-                    <span className="text-white/90 text-right">{game.publishers.join(', ')}</span>
-                  </div>
-                )}
-                {game.release_date?.date && (
-                  <div className="flex justify-between">
-                    <span className="text-white/50">{t('gameDetails.releaseDate')}</span>
-                    <span className="text-white/90">{game.release_date.date}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Generi */}
-              {game.genres?.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-2 border-t border-white/10">
-                  {game.genres.slice(0, 4).map((g: any) => (
-                    <Badge key={g.id || g} variant="outline" className="text-[10px] bg-purple-500/20 border-purple-500/40">
-                      {g.description || g}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              {/* Lingue */}
-              {game.supported_languages && (
-                <div className="flex items-center gap-1.5 pt-2 border-t border-white/10">
-                  <Languages className="h-3 w-3 text-cyan-400 shrink-0" />
-                  <LanguageFlags supportedLanguages={game.supported_languages.replace(/<[^>]*>?/gm, '')} maxFlags={6} />
-                </div>
-              )}
-
-              {/* Rating Steam */}
-              {game.recommendations?.total > 0 && (
-                <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                  <span className="text-base">👍</span>
-                  <span className="text-[11px] text-white/60">{game.recommendations.total.toLocaleString()} rec.</span>
-                  {game.metacritic?.score && (
-                    <span className={`ml-auto text-xs font-bold px-1.5 py-0.5 rounded ${
-                      game.metacritic.score >= 75 ? 'bg-green-600/80 text-white' :
-                      game.metacritic.score >= 50 ? 'bg-amber-500/80 text-white' : 'bg-red-600/80 text-white'
-                    }`}>{game.metacritic.score}</span>
-                  )}
-                </div>
-              )}
-
-              {/* Link Store */}
-              <div className="flex flex-col gap-1 pt-2 border-t border-white/10">
-                {game.appid > 0 && (
-                  <a
-                    href={`https://store.steampowered.com/app/${game.appid}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-[11px] text-[#67c1f5] hover:text-white transition-colors"
-                  >
-                    <Globe className="h-3 w-3" /> Apri su Steam
-                  </a>
-                )}
-                {(game.platform === 'GOG' || gameId.startsWith('gog_')) && (
-                  <a
-                    href={`https://www.gog.com/game/${game.slug || (game.title || '').toLowerCase().replace(/[^a-z0-9]/g, '_')}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-[11px] text-purple-400 hover:text-white transition-colors"
-                  >
-                    <Globe className="h-3 w-3" /> Apri su GOG
-                  </a>
-                )}
-                {game.website && (
-                  <a
-                    href={game.website}
-                    target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-[11px] text-blue-400 hover:text-white transition-colors"
-                  >
-                    <Globe className="h-3 w-3" /> Sito ufficiale
-                  </a>
-                )}
-              </div>
-
-              {/* DLC */}
-              {dlcGames.length > 0 && (
-                <div className="pt-2 border-t border-white/10">
-                  <div className="text-[10px] font-semibold text-cyan-400 mb-1.5 uppercase tracking-wide">DLC ({dlcGames.length})</div>
-                  <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {dlcGames.map((dlc: any, i: number) => (
-                      <div key={i} className="flex items-center gap-1.5 text-[10px] text-white/50 hover:text-white/80 transition-colors">
-                        <Download className="h-2.5 w-2.5 shrink-0" />
-                        <span className="truncate">{dlc.name || dlc.title || `DLC ${i + 1}`}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* Inline Translator Modal */}
       {showTranslation && game && (
         <InlineTranslator
           gameId={game.appid.toString()}
