@@ -1424,7 +1424,7 @@ export default function GameDetailPage() {
                   Estrai i dialoghi originali del gioco e usa la clonazione vocale locale (XTTS) per generare file audio in italiano con le voci originali.
                 </p>
                 <div className="flex gap-3">
-                  <Button onClick={() => toast({title: "In sviluppo", description: "La scansione dei file audio sarà disponibile a breve."})}>
+                  <Button onClick={() => import('sonner').then(({toast}) => toast.info("In sviluppo", { description: "La scansione dei file audio sarà disponibile a breve."}))}>
                     <Search className="h-4 w-4 mr-2" /> Cerca File Audio
                   </Button>
                 </div>
@@ -1623,17 +1623,18 @@ export default function GameDetailPage() {
         document.body
       )}
 
-      {/* Cover Picker */}
-      {isCoverPickerOpen && game.appid && (
+      {/* Cover Picker (Supporta giochi Steam e non-Steam) */}
+      {isCoverPickerOpen && game && (
         <CoverPicker
           isOpen={isCoverPickerOpen}
           onClose={() => setIsCoverPickerOpen(false)}
-          appId={game.appid}
-          gameName={game.title}
+          appId={game.appid || 0}
+          gameName={game.title || game.name}
           onCoverSelected={(url) => {
             // Salva la nuova cover
             import('@tauri-apps/api/core').then(({ invoke }) => {
-              invoke('save_cover_cache', { gameId: game.appid.toString(), imageUrl: url })
+              const gameIdentifier = game.appid ? game.appid.toString() : (game.id || game.title || 'unknown');
+              invoke('save_cover_cache', { gameId: gameIdentifier, imageUrl: url })
                 .then(() => {
                   setGame({ ...game, headerUrl: url, heroUrl: url, coverUrl: url });
                   setFallbackImage(url);
@@ -1647,6 +1648,9 @@ export default function GameDetailPage() {
           }}
         />
       )}
+    </div>
+    </div>
+    </div>
     </div>
   );
 }
