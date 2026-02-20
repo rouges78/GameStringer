@@ -1623,22 +1623,30 @@ export default function GameDetailPage() {
         document.body
       )}
 
-      {/* Cover Picker Modal */}
-      {game && (
+      {/* Cover Picker */}
+      {isCoverPickerOpen && game.appid && (
         <CoverPicker
           isOpen={isCoverPickerOpen}
           onClose={() => setIsCoverPickerOpen(false)}
-          appId={game.appid > 0 ? game.appid : (game.app_id?.startsWith('steam_') ? parseInt(game.app_id.replace('steam_', '')) || 0 : 0)}
-          gameName={game.title || game.name || ''}
-          currentCover={game.headerUrl || fallbackImage || undefined}
+          appId={game.appid}
+          gameName={game.title}
           onCoverSelected={(url) => {
-            setFallbackImage(url);
-            // Aggiorna anche il game object per riflettere la nuova cover
-            setGame((prev: any) => prev ? { ...prev, headerUrl: url } : null);
+            // Salva la nuova cover
+            import('@tauri-apps/api/core').then(({ invoke }) => {
+              invoke('save_cover_cache', { gameId: game.appid.toString(), imageUrl: url })
+                .then(() => {
+                  setGame({ ...game, headerUrl: url, heroUrl: url, coverUrl: url });
+                  setFallbackImage(url);
+                  setIsCoverPickerOpen(false);
+                  import('sonner').then(({ toast }) => {
+                    toast.success('Copertina aggiornata con successo');
+                  });
+                })
+                .catch(err => console.error('Errore salvataggio cover:', err));
+            });
           }}
         />
       )}
-      </div>
     </div>
   );
 }
