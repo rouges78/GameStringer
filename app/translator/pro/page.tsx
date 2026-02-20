@@ -16,6 +16,7 @@ import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { get, set } from 'idb-keyval';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
@@ -1373,19 +1374,23 @@ export default function TranslatorProPage() {
         console.log(`[ApplyToGame] saved ${tmBatch.length} traduzioni in TM`);
       }
       
-      // Salva statistica patch per dashboard
-      const savedPatches = JSON.parse(localStorage.getItem('gamePatches') || '[]');
-      savedPatches.push({
-        id: `patch_${Date.now()}`,
-        gameId: selectedGame.id,
-        gameName: selectedGame.name,
-        gamePath: currentGamePath,
-        method: localizationInfo?.has_localization ? 'direct' : (engineInfo?.is_unity ? 'xunity' : 'fallback'),
-        translationsCount: tmBatch.length,
-        status: 'applied',
-        timestamp: new Date().toISOString()
-      });
-      localStorage.setItem('gamePatches', JSON.stringify(savedPatches));
+      // Salva statistica patch per dashboard in IndexedDB
+      try {
+        const savedPatches = await get<any[]>('gamePatches') || [];
+        savedPatches.push({
+          id: `patch_${Date.now()}`,
+          gameId: selectedGame.id,
+          gameName: selectedGame.name,
+          gamePath: currentGamePath,
+          method: localizationInfo?.has_localization ? 'direct' : (engineInfo?.is_unity ? 'xunity' : 'fallback'),
+          translationsCount: tmBatch.length,
+          status: 'applied',
+          timestamp: new Date().toISOString()
+        });
+        await set('gamePatches', savedPatches);
+      } catch (e) {
+        console.warn('Errore salvataggio patch in IndexedDB:', e);
+      }
       
       // Traccia attività patch per sincronizzazione
       await activityHistory.add({
@@ -2394,22 +2399,11 @@ export default function TranslatorProPage() {
                                   timestamp: Date.now(),
                                   gameId: selectedGame?.id,
                                   gameName: selectedGame?.name,
-                                  sourceLanguage,
-                                  targetLanguage,
-                                  provider,
-                                  completed: progress.completed,
-                                  total: progress.total,
-                                  files: selectedFiles.map(f => ({
-                                    name: f.name,
-                                    path: f.path,
-                                    format: f.format,
-                                    originalContent: f.content,
-                                  })),
                                   items: translatedItems,
                                 };
                                 
-                                localStorage.setItem('gamestringer_partial_translations', JSON.stringify(partialResults));
-                                console.log('[Neural Translator] Salvati', partialResults.items.length, 'results parziali in localStorage');
+                                set('gamestringer_partial_translations', partialResults).catch(e => console.warn('Errore IndexedDB:', e));
+                                console.log('[Neural Translator] Salvati', partialResults.items.length, 'results parziali in IndexedDB');
                                 
                                 // Genera i file tradotti dai results parziali
                                 const newTranslatedFiles = new Map<string, string>();
