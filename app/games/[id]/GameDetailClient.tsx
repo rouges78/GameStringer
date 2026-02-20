@@ -25,6 +25,8 @@ import { useTranslation } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
 import { HltbStats } from '@/components/hltb-stats';
 
+import AudioPatcher from '@/components/audio-patcher';
+
 export default function GameDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -1414,22 +1416,7 @@ export default function GameDetailPage() {
           </TabsContent>
 
           <TabsContent value="audio" className="space-y-2">
-            <Card className="bg-black/20 border-white/10">
-              <CardContent className="p-4 flex flex-col items-center justify-center min-h-[200px] text-center">
-                <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mb-3">
-                  <span className="text-2xl">🎤</span>
-                </div>
-                <h3 className="text-lg font-medium text-white mb-2">Audio Patcher In-Game</h3>
-                <p className="text-sm text-slate-400 max-w-md mb-6">
-                  Estrai i dialoghi originali del gioco e usa la clonazione vocale locale (XTTS) per generare file audio in italiano con le voci originali.
-                </p>
-                <div className="flex gap-3">
-                  <Button onClick={() => import('sonner').then(({toast}) => toast.info("In sviluppo", { description: "La scansione dei file audio sarà disponibile a breve."}))}>
-                    <Search className="h-4 w-4 mr-2" /> Cerca File Audio
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <AudioPatcher gamePath={game.installPath || ''} />
           </TabsContent>
 
           <TabsContent value="info" className="space-y-2">
