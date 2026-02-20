@@ -842,6 +842,7 @@ export default function LibraryPage() {
         // Salva in IndexedDB per navigazione back veloce
         try {
           await set('gs_library_games', finalGames);
+          await set('lastSteamScan', new Date().toISOString());
         } catch (e) {
           console.warn('Errore salvataggio cache IndexedDB libreria:', e);
         }
