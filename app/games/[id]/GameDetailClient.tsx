@@ -1416,7 +1416,7 @@ export default function GameDetailPage() {
           </TabsContent>
 
           <TabsContent value="audio" className="space-y-2">
-            <AudioPatcher gamePath={game.installPath || ''} />
+            <AudioPatcher gamePath={game?.installPath || ''} />
           </TabsContent>
 
           <TabsContent value="info" className="space-y-2">
