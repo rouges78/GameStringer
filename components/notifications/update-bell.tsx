@@ -172,7 +172,7 @@ export function UpdateBell() {
             <CheckCircle2 className="w-8 h-8 text-emerald-500/50 mx-auto mb-2" />
             <p className="text-slate-300 text-xs font-medium">Tutto aggiornato!</p>
             <p className="text-slate-500 text-[11px] mt-0.5">
-              v{updateInfo?.current_version || '1.4.0'}
+              v{updateInfo?.current_version || '1.4.1'}
             </p>
             <Button
               size="sm"
