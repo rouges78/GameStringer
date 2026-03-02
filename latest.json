@@ -1,11 +1,15 @@
 {
-  "version": "1.1.0",
-  "notes": "v1.1.0 - Supporto Danganronpa & Auto-Update\n\n- Danganronpa Auto-Translator per file PAK/LIN/STX\n- Aggiornamento automatico in-app\n- Test E2E con Playwright\n- Miglioramenti UI notifiche",
-  "pub_date": "2026-02-05T17:30:00.000Z",
+  "version": "1.4.1",
+  "notes": "v1.4.1 - GOG Galaxy, Dashboard, Cross-platform Linux build\n\n- Integrazione GOG Galaxy: copertine e descrizioni via GOG API\n- Dashboard potenziata: statistiche avanzate e grafici interattivi\n- Tab Info: requisiti di sistema, Metacritic, link store, lista DLC\n- Pipeline AI migliorata: retry logic, temperature adattiva, fallback robusto\n- Build cross-platform: supporto Linux (deb, AppImage, rpm)\n- Guide utente aggiornate in 11 lingue\n- Fix performance e stabilità",
+  "pub_date": "2026-03-02T20:58:57.000Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTaGJxaG0yenprSFd6VFJud29SWWtXNHlsRVI5S0N3WmEvZ3cwaXJKeUt0SNWtIaUFIakY2NDQxTEtzVXY5YVFiZU9KTzQzWlo1bUxkQm1rQ0lwNDBEbC9FY1l5NGJweGdVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzcwMzI3NzQ3CWZpbGU6R2FtZVN0cmluZ2VyXzEuMS4wX3g2NC1zZXR1cC5leGUKZE4rNmtMS3F0NmxoSzcrM2dFeWRaNTRwWlNwWmFoWnhKcHB1Z0VDRzJDK3k2ay90TGpTYnUxblo5Q0pHbXROS0wrMXZsaXhVbWVPV0NaQ05rTU94QWc9PQo=",
-      "url": "https://github.com/rouges78/GameStringer/releases/download/v1.1.0/GameStringer_1.1.0_x64-setup.exe"
+      "signature": "",
+      "url": "https://github.com/rouges78/GameStringer/releases/download/v1.4.1/GameStringer_1.4.1_x64-setup.exe"
+    },
+    "linux-x86_64": {
+      "signature": "",
+      "url": "https://github.com/rouges78/GameStringer/releases/download/v1.4.1/GameStringer_1.4.1_amd64.AppImage.tar.gz"
     }
   }
 }
