@@ -5,7 +5,7 @@
   "identifier": "com.gamestringer.app",
   "build": {
     "beforeDevCommand": "",
-    "beforeBuildCommand": "powershell -ExecutionPolicy Bypass -File scripts/build-tauri.ps1",
+    "beforeBuildCommand": "node scripts/build-tauri-cross.js",
     "devUrl": "http://127.0.0.1:3204",
     "frontendDist": "../out"
   },
