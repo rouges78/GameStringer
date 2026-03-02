@@ -67,7 +67,6 @@ import { ProfileHeader } from '@/components/profiles/profile-header';
 import { AuthStatusSidebar } from '@/components/auth/auth-status-sidebar';
 import { ProfileNotifications } from '@/components/profiles/profile-notifications';
 import { DefaultProfileAlert } from '@/components/profiles/default-profile-alert';
-import { NotificationIndicator } from '@/components/notifications/notification-indicator';
 import { SupportButton } from '@/components/support/support-button';
 import { NotificationCenter } from '@/components/notifications/notification-center';
 import { useNotificationShortcuts } from '@/hooks/use-global-shortcuts';
@@ -1367,9 +1366,6 @@ export function MainLayout({ children }: MainLayoutProps) {
               <SupportButton />
               <ProfileHeader />
               <UpdateBell />
-              <NotificationIndicator 
-                onClick={() => setNotificationCenterOpen(true)}
-              />
               <Button
               variant="ghost"
               size="icon"
