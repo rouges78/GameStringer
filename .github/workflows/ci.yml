@@ -23,6 +23,9 @@ jobs:
         with:
           workspaces: src-tauri
 
+      - name: Create frontend dist stub
+        run: mkdir out && echo "<html></html>" > out/index.html
+
       - name: Cargo check (Windows)
         working-directory: src-tauri
         run: cargo check --verbose
@@ -50,6 +53,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+
+      - name: Create frontend dist stub
+        run: mkdir -p out && echo '<html></html>' > out/index.html
 
       - name: Cargo check (Linux)
         working-directory: src-tauri
