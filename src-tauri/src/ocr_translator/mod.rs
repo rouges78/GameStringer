@@ -175,6 +175,7 @@ pub async fn toggle_ocr_overlay(app: tauri::AppHandle, show: bool) -> Result<(),
 
 /// Posiziona l'overlay sulla finestra target
 #[command]
+#[cfg(target_os = "windows")]
 pub async fn position_overlay_on_window(app: tauri::AppHandle, hwnd: isize) -> Result<(), String> {
     use tauri::Manager;
     use std::ffi::c_void;
@@ -216,6 +217,13 @@ pub async fn position_overlay_on_window(app: tauri::AppHandle, hwnd: isize) -> R
     }
     
     Ok(())
+}
+
+/// Posiziona l'overlay sulla finestra target (stub non-Windows)
+#[command]
+#[cfg(not(target_os = "windows"))]
+pub async fn position_overlay_on_window(_app: tauri::AppHandle, _hwnd: isize) -> Result<(), String> {
+    Err("Posizionamento overlay supportato solo su Windows".to_string())
 }
 
 fn run_ocr_loop(app: tauri::AppHandle, config: OcrConfig) {
