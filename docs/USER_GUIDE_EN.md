@@ -46,6 +46,7 @@ GameStringer is an advanced system for automatic and manual video game translati
 - **NEW v1.0.8**: Update download fix
 - **NEW v1.0.9**: Animated headers, update notifications, UI polish
 - **NEW v1.4.0**: Unified Radix UI, per-row Quality Badges, RTL support, generic Ollama, TypeScript cleanup
+- **NEW v1.4.1**: Complete GOG Galaxy, improved dashboard, game Info tab, AI provider fixes, cross-platform Linux build
 
 ---
 
@@ -954,6 +955,51 @@ Each translated row now shows visual quality indicators:
 
 - `optimizePackageImports` updated with `radix-ui`, `framer-motion`, `recharts`, `cmdk`, `react-hook-form`
 - Zero TypeScript errors in source files
+
+---
+
+## What's New in v1.4.1
+
+### Complete GOG Galaxy Support
+
+- **GOG Galaxy 2.0 library reading**: reads owned games from local SQLite database
+- **Covers and descriptions via GOG API**: automatic image and detail fetching
+- **Merge with installed games**: combines registry data with Galaxy database
+- **Store and download links**: Store page with direct GOG Galaxy links
+
+### Improved Dashboard
+
+- **Connected Stores at top**: stores are now side-by-side with the last opened game
+- **Store badges with real counts**: shows actual game count per store
+- **Last game placeholder**: elegant display when no game has been opened
+
+### Enhanced Game Detail
+
+- **Info Tab**: system requirements, Metacritic score, store links, DLC list in sidebar
+- **GOG covers**: automatic fallback for GOG game covers
+- **GOG descriptions**: full description fetch via GOG API
+
+### AI Provider Fixes
+
+- **Free providers never permanently blocked**: MyMemory, Lingva use cooldown (30s) instead of permanent block
+- **Steam Wishlist**: new IWishlistService endpoint with legacy fallback
+
+### Performance
+
+- **sessionStorage cache**: instant navigation back from game detail to library
+- **Batch cover save**: cover saving with debounce (2s) to avoid race conditions
+- **SteamGridDB fetch dedup**: avoids duplicate requests in StrictMode
+
+### Cross-Platform Build
+
+- **Node.js build script**: `build-tauri-cross.js` replaces PowerShell-only script
+- **Linux support**: GitHub Actions workflow now builds for Linux (.deb, .AppImage)
+- **Windows**: installer (.msi, .exe NSIS) and portable version (.zip)
+
+### Documentation
+
+- **11 user guides**: markdown lint fixes (MD029, MD024, MD032, MD036, MD040, MD022, MD031)
+- **Corrected index numbering**: ordered index without numbering gaps
 
 ---
 

@@ -46,6 +46,7 @@ GameStringer to zaawansowany system do automatycznego i ręcznego tłumaczenia g
 - **NOWE v1.0.8**: Poprawka pobierania aktualizacji
 - **NOWE v1.0.9**: Animowane nagłówki, powiadomienia o aktualizacjach, ulepszenia UI
 - **NOWE v1.4.0**: Zunifikowany Radix UI, Quality Badges na wiersz, obsługa RTL, uniwersalny Ollama, porządki TypeScript
+- **NOWE v1.4.1**: Pełne GOG Galaxy, ulepszony dashboard, zakładka Info, poprawki dostawców AI, build Linux
 
 ---
 
@@ -957,4 +958,49 @@ Each translated row now shows visual quality indicators:
 
 ---
 
-*GameStringer v1.4.1 - Przewodnik zaktualizowany 02/03/2026*
+## Nowości w v1.4.1
+
+### Pełne wsparcie GOG Galaxy
+
+- **Odczyt biblioteki GOG Galaxy 2.0**: czyta posiadane gry z lokalnej bazy SQLite
+- **Okładki i opisy przez GOG API**: automatyczne pobieranie obrazów i szczegółów
+- **Scalanie z zainstalowanymi grami**: łączy dane rejestru z bazą Galaxy
+- **Linki sklepu i pobierania**: strona Store z bezpośrednimi linkami GOG Galaxy
+
+### Ulepszony Dashboard
+
+- **Połączone sklepy na górze**: sklepy są teraz obok ostatnio otwartej gry
+- **Odznaki sklepów z prawdziwymi liczbami**: pokazuje rzeczywistą liczbę gier
+- **Placeholder ostatniej gry**: eleganckie wyświetlanie gdy brak otwartej gry
+
+### Ulepszone szczegóły gry
+
+- **Zakładka Info**: wymagania systemowe, ocena Metacritic, linki sklepu, lista DLC
+- **Okładki GOG**: automatyczny fallback dla okładek gier GOG
+- **Opisy GOG**: pełny opis przez GOG API
+
+### Poprawki dostawców AI
+
+- **Darmowi dostawcy nigdy nie blokowani na stałe**: MyMemory, Lingva używają cooldown (30s)
+- **Steam Wishlist**: nowy endpoint IWishlistService z fallbackiem legacy
+
+### Wydajność
+
+- **Cache sessionStorage**: natychmiastowa nawigacja z detali do biblioteki
+- **Zapis okładek w partiach**: z debounce (2s) aby uniknąć race conditions
+- **Deduplikacja fetch SteamGridDB**: unika duplikatów żądań w StrictMode
+
+### Build wieloplatformowy
+
+- **Skrypt build Node.js**: `build-tauri-cross.js` zastępuje skrypt PowerShell
+- **Wsparcie Linux**: workflow GitHub Actions kompiluje teraz też dla Linux (.deb, .AppImage)
+- **Windows**: instalator (.msi, .exe NSIS) i wersja przenośna (.zip)
+
+### Dokumentacja
+
+- **11 przewodników użytkownika**: poprawki markdown lint
+- **Poprawiona numeracja indeksu**: uporządkowany indeks bez przeskoków
+
+---
+
+*GameStringer v1.4.1 - Przewodnik zaktualizowany 02.03.2026*

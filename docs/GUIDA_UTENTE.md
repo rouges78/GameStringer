@@ -25,6 +25,8 @@
 21. [Activity History](#activity-history)
 22. [Dizionari](#dizionari)
 23. [Risoluzione Problemi](#risoluzione-problemi)
+24. [Novità v1.4.0](#novità-v140)
+25. [Novità v1.4.1](#novità-v141)
 
 ---
 
@@ -44,6 +46,7 @@ GameStringer è un sistema avanzato per la traduzione automatica e manuale di vi
 - **NUOVO v1.0.8**: Fix download aggiornamenti
 - **NUOVO v1.0.9**: Header animati, notifiche aggiornamenti, UI polish
 - **NUOVO v1.4.0**: Radix UI unificato, Quality Badge per-riga, supporto RTL, Ollama generico, pulizia TypeScript
+- **NUOVO v1.4.1**: GOG Galaxy completo, dashboard migliorata, tab Info gioco, fix provider AI, build cross-platform Linux
 
 ---
 
@@ -861,6 +864,51 @@ Ogni riga tradotta ora mostra indicatori di qualità visivi:
 
 - `optimizePackageImports` aggiornato con `radix-ui`, `framer-motion`, `recharts`, `cmdk`, `react-hook-form`
 - Zero errori TypeScript nei file sorgente
+
+---
+
+## Novità v1.4.1
+
+### GOG Galaxy Completo
+
+- **Lettura libreria GOG Galaxy 2.0**: legge i giochi posseduti dal database SQLite locale
+- **Copertine e descrizioni via GOG API**: fetch automatico delle immagini e dei dettagli
+- **Merge con giochi installati**: unisce i dati del registro con quelli del database Galaxy
+- **Link store e download**: pagina Store con link diretti a GOG Galaxy
+
+### Dashboard Migliorata
+
+- **Store Connessi in alto**: gli store connessi sono ora affiancati all'ultimo gioco aperto
+- **Badge store con conteggi reali**: mostra il numero effettivo di giochi per ogni store
+- **Placeholder ultimo gioco**: visualizzazione elegante quando nessun gioco è stato aperto
+
+### Dettaglio Gioco Potenziato
+
+- **Tab Info**: requisiti di sistema, punteggio Metacritic, link store, lista DLC nella sidebar
+- **Copertine GOG**: fallback automatico per le copertine dei giochi GOG
+- **Descrizioni GOG**: fetch descrizione completa via GOG API
+
+### Fix Provider AI
+
+- **Provider gratuiti mai bloccati permanentemente**: MyMemory, Lingva e altri usano cooldown (30s) invece di blocco permanente
+- **Steam Wishlist**: nuovo endpoint IWishlistService con fallback al legacy
+
+### Performance
+
+- **Cache sessionStorage**: navigazione istantanea tornando dalla pagina dettaglio alla libreria
+- **Batch cover save**: salvataggio copertine in batch con debounce (2s) per evitare race condition
+- **Deduplica fetch SteamGridDB**: evita richieste duplicate in StrictMode
+
+### Build Cross-Platform
+
+- **Script build Node.js**: `build-tauri-cross.js` sostituisce lo script PowerShell-only
+- **Supporto Linux**: il workflow GitHub Actions ora compila anche per Linux (.deb, .AppImage)
+- **Windows**: installer (.msi, .exe NSIS) e versione portable (.zip)
+
+### Documentazione
+
+- **11 guide utente**: fix markdown lint (MD029, MD024, MD032, MD036, MD040, MD022, MD031)
+- **Numerazione indice corretta**: indice ordinato senza salti di numerazione
 
 ---
 

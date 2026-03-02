@@ -46,6 +46,7 @@ GameStringer é um sistema avançado para tradução automática e manual de vid
 - **NOVO v1.0.8**: Correção de download de atualizações
 - **NOVO v1.0.9**: Cabeçalhos animados, notificações de atualização, melhorias de UI
 - **NOVO v1.4.0**: Radix UI unificado, Quality Badges por linha, suporte RTL, Ollama genérico, limpeza TypeScript
+- **NOVO v1.4.1**: GOG Galaxy completo, dashboard melhorado, aba Info, fix provedores AI, build multiplataforma Linux
 
 ---
 
@@ -957,4 +958,49 @@ Each translated row now shows visual quality indicators:
 
 ---
 
-*GameStringer v1.4.1 - Guia atualizado 02/03/2026*
+## Novidades v1.4.1
+
+### Suporte Completo GOG Galaxy
+
+- **Leitura biblioteca GOG Galaxy 2.0**: lê jogos possuídos do banco de dados SQLite local
+- **Capas e descrições via GOG API**: busca automática de imagens e detalhes
+- **Fusão com jogos instalados**: combina dados do registro com banco Galaxy
+- **Links de loja e download**: página Store com links diretos GOG Galaxy
+
+### Dashboard Melhorado
+
+- **Lojas conectadas no topo**: lojas agora ficam ao lado do último jogo aberto
+- **Badges de loja com contagens reais**: mostra número real de jogos por loja
+- **Placeholder último jogo**: exibição elegante quando nenhum jogo foi aberto
+
+### Detalhe do Jogo Aprimorado
+
+- **Aba Info**: requisitos do sistema, pontuação Metacritic, links de loja, lista DLC
+- **Capas GOG**: fallback automático para capas de jogos GOG
+- **Descrições GOG**: busca completa de descrição via GOG API
+
+### Correções Provedores AI
+
+- **Provedores gratuitos nunca bloqueados permanentemente**: MyMemory, Lingva usam cooldown (30s)
+- **Steam Wishlist**: novo endpoint IWishlistService com fallback legacy
+
+### Desempenho
+
+- **Cache sessionStorage**: navegação instantânea de volta do detalhe para biblioteca
+- **Salvamento batch de capas**: com debounce (2s) para evitar race conditions
+- **Dedup fetch SteamGridDB**: evita requisições duplicadas no StrictMode
+
+### Build Multiplataforma
+
+- **Script build Node.js**: `build-tauri-cross.js` substitui o script PowerShell
+- **Suporte Linux**: workflow GitHub Actions agora compila para Linux (.deb, .AppImage)
+- **Windows**: instalador (.msi, .exe NSIS) e versão portátil (.zip)
+
+### Documentação
+
+- **11 guias do usuário**: correções markdown lint
+- **Numeração de índice corrigida**: índice ordenado sem saltos
+
+---
+
+*GameStringer v1.4.1 - Guia atualizado em 02/03/2026*

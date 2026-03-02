@@ -868,4 +868,49 @@ Jede übersetzte Zeile zeigt nun visuelle Qualitätsindikatoren:
 
 ---
 
-*GameStringer v1.4.1 - Anleitung aktualisiert 02.03.2026*
+## Neuigkeiten v1.4.1
+
+### Vollständige GOG Galaxy Unterstützung
+
+- **GOG Galaxy 2.0 Bibliothek**: liest besessene Spiele aus lokaler SQLite-Datenbank
+- **Cover und Beschreibungen via GOG API**: automatisches Abrufen von Bildern und Details
+- **Zusammenführung mit installierten Spielen**: kombiniert Registry-Daten mit Galaxy
+- **Store- und Download-Links**: Store-Seite mit direkten GOG Galaxy Links
+
+### Verbessertes Dashboard
+
+- **Verbundene Stores oben**: Stores sind jetzt neben dem zuletzt geöffneten Spiel
+- **Store-Badges mit echten Zahlen**: zeigt tatsächliche Spielanzahl pro Store
+- **Letztes Spiel Platzhalter**: elegante Anzeige wenn kein Spiel geöffnet
+
+### Verbessertes Spieldetail
+
+- **Info-Tab**: Systemanforderungen, Metacritic-Score, Store-Links, DLC-Liste
+- **GOG-Cover**: automatisches Fallback für GOG-Spielcover
+- **GOG-Beschreibungen**: vollständige Beschreibung via GOG API
+
+### AI-Provider Korrekturen
+
+- **Kostenlose Provider nie permanent gesperrt**: MyMemory, Lingva verwenden Cooldown (30s)
+- **Steam Wishlist**: neuer IWishlistService-Endpoint mit Legacy-Fallback
+
+### Leistung
+
+- **sessionStorage-Cache**: sofortige Navigation zurück von Detail zur Bibliothek
+- **Batch-Cover-Speicherung**: mit Debounce (2s) um Race Conditions zu vermeiden
+- **SteamGridDB Fetch Deduplizierung**: vermeidet doppelte Anfragen im StrictMode
+
+### Plattformübergreifender Build
+
+- **Node.js Build-Skript**: `build-tauri-cross.js` ersetzt das PowerShell-Skript
+- **Linux-Unterstützung**: GitHub Actions Workflow kompiliert jetzt auch für Linux (.deb, .AppImage)
+- **Windows**: Installer (.msi, .exe NSIS) und portable Version (.zip)
+
+### Dokumentation
+
+- **11 Benutzerhandbücher**: Markdown-Lint-Korrekturen
+- **Korrigierte Indexnummerierung**: geordneter Index ohne Lücken
+
+---
+
+*GameStringer v1.4.1 - Anleitung aktualisiert am 02.03.2026*

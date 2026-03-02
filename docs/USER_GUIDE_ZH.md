@@ -850,4 +850,49 @@ UI库已从单独的 `@radix-ui/react-*` 包迁移到统一的 `radix-ui` 包：
 
 ---
 
+## v1.4.1新功能
+
+### GOG Galaxy完整支持
+
+- **GOG Galaxy 2.0库读取**: 从本地SQLite数据库读取拥有的游戏
+- **通过GOG API获取封面和描述**: 自动获取图片和详情
+- **与已安装游戏合并**: 结合注册表数据和Galaxy数据库
+- **商店和下载链接**: 带有GOG Galaxy直接链接的商店页面
+
+### 改进的仪表板
+
+- **顶部连接商店**: 商店现在在最后打开的游戏旁边
+- **带真实计数的商店徽章**: 显示每个商店的实际游戏数量
+- **最后游戏占位符**: 未打开游戏时的优雅显示
+
+### 增强的游戏详情
+
+- **信息标签**: 系统要求、Metacritic评分、商店链接、DLC列表
+- **GOG封面**: GOG游戏封面的自动回退
+- **GOG描述**: 通过GOG API获取完整描述
+
+### AI提供商修复
+
+- **免费提供商永不永久封锁**: MyMemory、Lingva使用冷却时间（30秒）
+- **Steam Wishlist**: 带有旧版回退的新IWishlistService端点
+
+### 性能
+
+- **sessionStorage缓存**: 从游戏详情返回库的即时导航
+- **批量封面保存**: 带去抖（2秒）的保存以避免竞态条件
+- **SteamGridDB获取去重**: 避免StrictMode中的重复请求
+
+### 跨平台构建
+
+- **Node.js构建脚本**: `build-tauri-cross.js`替换PowerShell脚本
+- **Linux支持**: GitHub Actions工作流现在也为Linux构建 (.deb, .AppImage)
+- **Windows**: 安装程序 (.msi, .exe NSIS) 和便携版 (.zip)
+
+### 文档
+
+- **11份用户指南**: markdown lint修复
+- **修正索引编号**: 无跳跃的有序索引
+
+---
+
 *GameStringer v1.4.1 - 指南更新于 2026/03/02*

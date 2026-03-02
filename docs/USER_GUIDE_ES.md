@@ -867,4 +867,49 @@ Cada fila traducida ahora muestra indicadores de calidad visuales:
 
 ---
 
-*GameStringer v1.4.1 - Guía actualizada 02/03/2026*
+## Novedades v1.4.1
+
+### Soporte Completo GOG Galaxy
+
+- **Lectura librería GOG Galaxy 2.0**: lee juegos poseídos desde la base de datos SQLite local
+- **Portadas y descripciones vía GOG API**: obtención automática de imágenes y detalles
+- **Fusión con juegos instalados**: combina datos del registro con la base de datos Galaxy
+- **Enlaces tienda y descarga**: página Store con enlaces directos a GOG Galaxy
+
+### Dashboard Mejorado
+
+- **Tiendas conectadas arriba**: las tiendas están junto al último juego abierto
+- **Badges de tienda con conteos reales**: muestra el número real de juegos por tienda
+- **Placeholder último juego**: visualización elegante cuando no se ha abierto ningún juego
+
+### Detalle de Juego Mejorado
+
+- **Pestaña Info**: requisitos del sistema, puntuación Metacritic, enlaces de tienda, lista DLC
+- **Portadas GOG**: fallback automático para portadas de juegos GOG
+- **Descripciones GOG**: obtención de descripción completa vía GOG API
+
+### Correcciones Proveedores AI
+
+- **Proveedores gratuitos nunca bloqueados permanentemente**: MyMemory, Lingva usan cooldown (30s)
+- **Steam Wishlist**: nuevo endpoint IWishlistService con fallback legacy
+
+### Rendimiento
+
+- **Caché sessionStorage**: navegación instantánea al volver de detalle a librería
+- **Guardado batch de portadas**: guardado con debounce (2s) para evitar race conditions
+- **Deduplicación fetch SteamGridDB**: evita peticiones duplicadas en StrictMode
+
+### Build Multiplataforma
+
+- **Script build Node.js**: `build-tauri-cross.js` reemplaza el script solo-PowerShell
+- **Soporte Linux**: el workflow GitHub Actions ahora compila para Linux (.deb, .AppImage)
+- **Windows**: instalador (.msi, .exe NSIS) y versión portable (.zip)
+
+### Documentación
+
+- **11 guías de usuario**: correcciones markdown lint
+- **Numeración de índice corregida**: índice ordenado sin saltos
+
+---
+
+*GameStringer v1.4.1 - Guía actualizada el 02/03/2026*

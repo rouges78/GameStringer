@@ -866,4 +866,49 @@ Chaque ligne traduite affiche désormais des indicateurs de qualité visuels :
 
 ---
 
+## Nouveautés v1.4.1
+
+### Support Complet GOG Galaxy
+
+- **Lecture bibliothèque GOG Galaxy 2.0** : lit les jeux possédés depuis la base SQLite locale
+- **Couvertures et descriptions via GOG API** : récupération automatique des images et détails
+- **Fusion avec jeux installés** : combine les données du registre avec Galaxy
+- **Liens store et téléchargement** : page Store avec liens directs GOG Galaxy
+
+### Tableau de Bord Amélioré
+
+- **Stores connectés en haut** : les stores sont maintenant à côté du dernier jeu ouvert
+- **Badges store avec comptages réels** : affiche le nombre réel de jeux par store
+- **Placeholder dernier jeu** : affichage élégant quand aucun jeu ouvert
+
+### Détail Jeu Amélioré
+
+- **Onglet Info** : config requise, score Metacritic, liens store, liste DLC
+- **Couvertures GOG** : fallback automatique pour les jeux GOG
+- **Descriptions GOG** : récupération complète via GOG API
+
+### Corrections Fournisseurs AI
+
+- **Fournisseurs gratuits jamais bloqués définitivement** : MyMemory, Lingva utilisent cooldown (30s)
+- **Steam Wishlist** : nouvel endpoint IWishlistService avec fallback legacy
+
+### Performance
+
+- **Cache sessionStorage** : navigation instantanée retour détail → bibliothèque
+- **Sauvegarde batch couvertures** : avec debounce (2s) pour éviter les race conditions
+- **Dédup fetch SteamGridDB** : évite les requêtes dupliquées en StrictMode
+
+### Build Multi-Plateforme
+
+- **Script build Node.js** : `build-tauri-cross.js` remplace le script PowerShell
+- **Support Linux** : le workflow GitHub Actions compile aussi pour Linux (.deb, .AppImage)
+- **Windows** : installeur (.msi, .exe NSIS) et version portable (.zip)
+
+### Documentation
+
+- **11 guides utilisateur** : corrections markdown lint
+- **Numérotation index corrigée** : index ordonné sans sauts
+
+---
+
 *GameStringer v1.4.1 - Guide mis à jour le 02/03/2026*

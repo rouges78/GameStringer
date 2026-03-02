@@ -957,4 +957,49 @@ Each translated row now shows visual quality indicators:
 
 ---
 
-*GameStringer v1.4.1 - 가이드 업데이트 02/03/2026*
+## v1.4.1 새로운 기능
+
+### GOG Galaxy 완전 지원
+
+- **GOG Galaxy 2.0 라이브러리 읽기**: 로컬 SQLite 데이터베이스에서 소유 게임 읽기
+- **GOG API를 통한 커버 및 설명**: 이미지 및 세부 정보 자동 가져오기
+- **설치된 게임과 병합**: 레지스트리 데이터와 Galaxy 데이터베이스 결합
+- **스토어 및 다운로드 링크**: GOG Galaxy 직접 링크가 있는 스토어 페이지
+
+### 개선된 대시보드
+
+- **상단 연결 스토어**: 스토어가 마지막으로 연 게임 옆에 표시
+- **실제 수치의 스토어 배지**: 스토어별 실제 게임 수 표시
+- **마지막 게임 플레이스홀더**: 게임이 열리지 않았을 때 우아한 표시
+
+### 향상된 게임 상세
+
+- **정보 탭**: 시스템 요구사항, Metacritic 점수, 스토어 링크, DLC 목록
+- **GOG 커버**: GOG 게임 커버 자동 폴백
+- **GOG 설명**: GOG API를 통한 전체 설명 가져오기
+
+### AI 제공자 수정
+
+- **무료 제공자 영구 차단 없음**: MyMemory, Lingva는 쿨다운(30초) 사용
+- **Steam Wishlist**: 레거시 폴백이 있는 새 IWishlistService 엔드포인트
+
+### 성능
+
+- **sessionStorage 캐시**: 게임 상세에서 라이브러리로 즉시 돌아가기
+- **배치 커버 저장**: 경쟁 조건 방지를 위한 디바운스(2초) 저장
+- **SteamGridDB 가져오기 중복 제거**: StrictMode에서 중복 요청 방지
+
+### 크로스 플랫폼 빌드
+
+- **Node.js 빌드 스크립트**: `build-tauri-cross.js`가 PowerShell 스크립트를 대체
+- **Linux 지원**: GitHub Actions 워크플로가 Linux(.deb, .AppImage)도 빌드
+- **Windows**: 설치 프로그램(.msi, .exe NSIS) 및 포터블 버전(.zip)
+
+### 문서
+
+- **11개 사용자 가이드**: 마크다운 린트 수정
+- **인덱스 번호 수정**: 번호 건너뛰기 없는 정렬된 인덱스
+
+---
+
+*GameStringer v1.4.1 - 가이드 업데이트 2026/03/02*
