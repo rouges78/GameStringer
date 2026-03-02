@@ -1,0 +1,116 @@
+{
+  "app": {
+    "name": "GameStringer",
+    "tagline": "Простой перевод игр",
+    "version": "Версия"
+  },
+  "nav": {
+    "home": "Главная",
+    "projects": "Проекты",
+    "translation": "Перевод",
+    "settings": "Настройки",
+    "help": "Помощь",
+    "about": "О программе"
+  },
+  "actions": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "import": "Импорт",
+    "export": "Экспорт",
+    "translate": "Перевести",
+    "apply": "Применить",
+    "reset": "Сбросить",
+    "search": "Поиск",
+    "filter": "Фильтр",
+    "close": "Закрыть",
+    "confirm": "Подтвердить",
+    "back": "Назад",
+    "next": "Далее",
+    "finish": "Завершить"
+  },
+  "translation": {
+    "title": "Перевод",
+    "sourceLanguage": "Исходный язык",
+    "targetLanguage": "Целевой язык",
+    "provider": "AI Провайдер",
+    "apiKey": "API Ключ",
+    "startTranslation": "Начать перевод",
+    "stopTranslation": "Остановить перевод",
+    "progress": "Прогресс",
+    "estimated": "Ожидаемое",
+    "completed": "Завершено",
+    "failed": "Ошибка",
+    "remaining": "Осталось",
+    "costEstimate": "Оценка стоимости",
+    "batchSize": "Размер пакета",
+    "rateLimit": "Лимит запросов",
+    "retrying": "Повторная попытка..."
+  },
+  "files": {
+    "title": "Файлы",
+    "open": "Открыть файл",
+    "openFolder": "Открыть папку",
+    "saveAs": "Сохранить как",
+    "recentFiles": "Недавние файлы",
+    "noFiles": "Файлы не выбраны",
+    "dragDrop": "Перетащите файлы сюда",
+    "supported": "Поддерживаемые форматы"
+  },
+  "engines": {
+    "unity": "Unity",
+    "unreal": "Unreal Engine",
+    "rpgmaker": "RPG Maker",
+    "renpy": "Ren'Py",
+    "godot": "Godot",
+    "gamemaker": "GameMaker",
+    "danganronpa": "Danganronpa"
+  },
+  "settings": {
+    "title": "Настройки",
+    "general": "Общие",
+    "appearance": "Внешний вид",
+    "language": "Язык",
+    "theme": "Тема",
+    "darkMode": "Тёмная тема",
+    "lightMode": "Светлая тема",
+    "system": "Системная",
+    "apiKeys": "API Ключи",
+    "advanced": "Дополнительно",
+    "backup": "Резервная копия",
+    "restore": "Восстановить"
+  },
+  "messages": {
+    "success": "Успешно",
+    "error": "Ошибка",
+    "warning": "Предупреждение",
+    "info": "Информация",
+    "loading": "Загрузка...",
+    "saving": "Сохранение...",
+    "translating": "Перевод...",
+    "completed": "Завершено!",
+    "failed": "Операция не удалась",
+    "noResults": "Результаты не найдены",
+    "confirmDelete": "Вы уверены, что хотите удалить?"
+  },
+  "danganronpa": {
+    "title": "Danganronpa Авто-переводчик",
+    "detectGames": "Обнаружить игры",
+    "extractPak": "Извлечь PAK",
+    "selectGame": "Выбрать игру",
+    "games": {
+      "dr1": "Danganronpa: Trigger Happy Havoc",
+      "dr2": "Danganronpa 2: Goodbye Despair",
+      "drae": "Danganronpa Another Episode",
+      "drv3": "Danganronpa V3: Killing Harmony"
+    },
+    "pakTypes": {
+      "text": "Текст PAK",
+      "script": "Скрипт LIN",
+      "texture": "Текстура PAK",
+      "font": "Шрифт PAK"
+    }
+  }
+}

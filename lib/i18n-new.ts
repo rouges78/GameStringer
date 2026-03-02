@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type Locale = 'en' | 'it' | 'es' | 'de' | 'fr' | 'ja' | 'zh' | 'ko' | 'pt';
+export type Locale = 'en' | 'it' | 'es' | 'de' | 'fr' | 'ja' | 'zh' | 'ko' | 'pt' | 'ru' | 'pl';
 
 export interface LocaleInfo {
   code: Locale;
@@ -20,6 +20,8 @@ export const SUPPORTED_LOCALES: LocaleInfo[] = [
   { code: 'zh', name: 'Chinese', nativeName: '中文', flag: '🇨🇳' },
   { code: 'ko', name: 'Korean', nativeName: '한국어', flag: '🇰🇷' },
   { code: 'pt', name: 'Portuguese', nativeName: 'Português', flag: '🇧🇷' },
+  { code: 'ru', name: 'Russian', nativeName: 'Русский', flag: '🇷🇺' },
+  { code: 'pl', name: 'Polish', nativeName: 'Polski', flag: '🇵🇱' },
 ];
 
 type TranslationDict = Record<string, unknown>;
