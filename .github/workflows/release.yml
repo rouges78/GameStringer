@@ -196,3 +196,4 @@ jobs:
           releaseDraft: ${{ github.event.inputs.create_release }}
           prerelease: false
           includeDebug: false
+          args: --bundles deb,appimage,rpm
