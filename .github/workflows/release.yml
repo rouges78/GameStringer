@@ -106,24 +106,25 @@ jobs:
             "GameStringer Portable Version $version" | Out-File -FilePath "$portableDir/PORTABLE"
             
             # Create README for portable
-            @"
-            # GameStringer Portable
-            
-            Versione: $version
-            
-            ## Istruzioni
-            1. Estrai questa cartella dove preferisci
-            2. Esegui GameStringer.exe
-            3. I dati verranno salvati nella sottocartella 'data'
-            
-            ## Requisiti
-            - Windows 10/11 (64-bit)
-            - WebView2 Runtime (installato automaticamente su Windows 11)
-            
-            ## Note
-            Questa è la versione portable, non richiede installazione.
-            Per la versione con installer, scarica il file .exe o .msi.
-            "@ | Out-File -FilePath "$portableDir/README.txt" -Encoding UTF8
+            $readme = @(
+              "# GameStringer Portable",
+              "",
+              "Versione: $version",
+              "",
+              "## Istruzioni",
+              "1. Estrai questa cartella dove preferisci",
+              "2. Esegui GameStringer.exe",
+              "3. I dati verranno salvati nella sottocartella 'data'",
+              "",
+              "## Requisiti",
+              "- Windows 10/11 (64-bit)",
+              "- WebView2 Runtime (installato automaticamente su Windows 11)",
+              "",
+              "## Note",
+              "Questa e' la versione portable, non richiede installazione.",
+              "Per la versione con installer, scarica il file .exe o .msi."
+            ) -join "`n"
+            $readme | Out-File -FilePath "$portableDir/README.txt" -Encoding UTF8
             
             # Create ZIP
             Compress-Archive -Path "$portableDir/*" -DestinationPath "GameStringer_${version}_x64-portable.zip" -Force
