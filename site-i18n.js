@@ -1,9 +1,9 @@
-// GameStringer Website i18n — 9 languages
-// v1.4.0 — Quality Badges, RTL, Radix UI, Ollama Generico
+// GameStringer Website i18n — 11 languages
+// v1.4.1 — i18n 11 Lingue, Guide Complete, CI Fix
 
 const translations = {
   it: {
-    'hero.badge': 'v1.4.0 — Quality Badges, RTL Support, Radix UI Unificato, Ollama Generico',
+    'hero.badge': 'v1.4.1 — 11 Lingue UI, Guide Complete, Quality Badges, RTL, Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localizza videogiochi con l\'AI. Open source. Gratuito.',
     'hero.desc': 'Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi donazione libera.',
@@ -65,7 +65,7 @@ const translations = {
   },
 
   en: {
-    'hero.badge': 'v1.4.0 — Quality Badges, RTL Support, Unified Radix UI, Generic Ollama',
+    'hero.badge': 'v1.4.1 — 11 UI Languages, Complete Guides, Quality Badges, RTL, Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localize video games with AI. Open source. Free.',
     'hero.desc': 'Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) and <strong>20+ AI providers</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-line (0-100), AI Auto-glossary, persistent Translation Memory, Interactive Tutorial. <strong>500 free strings</strong>, then pay-what-you-want.',
@@ -127,7 +127,7 @@ const translations = {
   },
 
   es: {
-    'hero.badge': 'v1.4.0 — Quality Badges, Soporte RTL, Radix UI Unificado, Ollama Genérico',
+    'hero.badge': 'v1.4.1 — 11 Idiomas UI, Guías Completas, Quality Badges, RTL, Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localiza videojuegos con IA. Open source. Gratuito.',
     'hero.desc': 'Soporta <strong>11+ motores</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) y <strong>20+ proveedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por línea (0-100), Auto-glosario IA, Translation Memory persistente, Tutorial interactivo. <strong>500 cadenas gratis</strong>, luego donación libre.',
@@ -189,7 +189,7 @@ const translations = {
   },
 
   de: {
-    'hero.badge': 'v1.4.0 — Quality Badges, RTL-Support, Einheitliches Radix UI, Generisches Ollama',
+    'hero.badge': 'v1.4.1 — 11 UI-Sprachen, Vollständige Anleitungen, Quality Badges, RTL, Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Lokalisiere Videospiele mit KI. Open Source. Kostenlos.',
     'hero.desc': 'Unterstützt <strong>11+ Engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) und <strong>20+ KI-Anbieter</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> pro Zeile (0-100), KI-Auto-Glossar, persistenter Translation Memory, Interaktives Tutorial. <strong>500 Strings kostenlos</strong>, dann freiwillige Spende.',
@@ -251,7 +251,7 @@ const translations = {
   },
 
   fr: {
-    'hero.badge': 'v1.4.0 — Quality Badges, Support RTL, Radix UI Unifié, Ollama Générique',
+    'hero.badge': 'v1.4.1 — 11 Langues UI, Guides Complets, Quality Badges, RTL, Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localisez les jeux vidéo avec l\'IA. Open source. Gratuit.',
     'hero.desc': 'Supporte <strong>11+ moteurs</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) et <strong>20+ fournisseurs IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> par ligne (0-100), Auto-glossaire IA, Translation Memory persistante, Tutoriel interactif. <strong>500 chaînes gratuites</strong>, puis don libre.',
@@ -313,7 +313,7 @@ const translations = {
   },
 
   ja: {
-    'hero.badge': 'v1.4.0 — 品質バッジ、RTLサポート、統合Radix UI、汎用Ollama',
+    'hero.badge': 'v1.4.1 — 11言語UI、完全ガイド、品質バッジ、RTL、Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'AIでビデオゲームをローカライズ。オープンソース。無料。',
     'hero.desc': '<strong>11以上のエンジン</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>ダンガンロンパ</strong>...）と<strong>20以上のAIプロバイダー</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）をサポート。行ごとの<strong>品質バッジ</strong>（0-100）、AI自動用語集、永続的翻訳メモリ、インタラクティブチュートリアル。<strong>500文字列無料</strong>、その後は任意の寄付。',
@@ -375,7 +375,7 @@ const translations = {
   },
 
   zh: {
-    'hero.badge': 'v1.4.0 — 质量徽章、RTL支持、统一Radix UI、通用Ollama',
+    'hero.badge': 'v1.4.1 — 11种语言UI、完整指南、质量徽章、RTL、Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': '用AI本地化电子游戏。开源。免费。',
     'hero.desc': '支持<strong>11+引擎</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>弹丸论破</strong>...）和<strong>20+ AI提供商</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）。逐行<strong>质量徽章</strong>（0-100）、AI自动术语表、持久化翻译记忆、交互式教程。<strong>500条字符串免费</strong>，之后自愿捐赠。',
@@ -437,7 +437,7 @@ const translations = {
   },
 
   ko: {
-    'hero.badge': 'v1.4.0 — 품질 배지, RTL 지원, 통합 Radix UI, 범용 Ollama',
+    'hero.badge': 'v1.4.1 — 11개 언어 UI, 완전한 가이드, 품질 배지, RTL, Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'AI로 비디오 게임을 현지화하세요. 오픈 소스. 무료.',
     'hero.desc': '<strong>11개 이상의 엔진</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>단간론파</strong>...)과 <strong>20개 이상의 AI 제공업체</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...)를 지원합니다. 행별 <strong>품질 배지</strong> (0-100), AI 자동 용어집, 영구 번역 메모리, 인터랙티브 튜토리얼. <strong>500개 문자열 무료</strong>, 이후 자유 기부.',
@@ -499,7 +499,7 @@ const translations = {
   },
 
   pt: {
-    'hero.badge': 'v1.4.0 — Quality Badges, Suporte RTL, Radix UI Unificado, Ollama Genérico',
+    'hero.badge': 'v1.4.1 — 11 Idiomas UI, Guias Completos, Quality Badges, RTL, Radix UI',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localize videogames com IA. Open source. Gratuito.',
     'hero.desc': 'Suporta <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por linha (0-100), Auto-glossário IA, Translation Memory persistente, Tutorial interativo. <strong>500 strings grátis</strong>, depois doação livre.',
@@ -559,11 +559,109 @@ const translations = {
     'footer.community': 'Comunidade',
     'footer.support': 'Apoiar',
   },
+
+  ru: {
+    'hero.badge': 'v1.4.1 — 11 языков UI, полные руководства, CI исправлен',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'Локализуйте видеоигры с ИИ. Открытый код. Бесплатно.',
+    'hero.desc': 'Поддержка <strong>11+ движков</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) и <strong>20+ провайдеров ИИ</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> построчно (0-100), авто-глоссарий ИИ, постоянная память переводов, интерактивный учебник. <strong>500 строк бесплатно</strong>, затем свободные пожертвования.',
+    'hero.download': '⬇️ Бесплатная загрузка для Windows',
+    'hero.source': '📂 Посмотреть исходный код',
+    'stats.engines': 'Игровых движков',
+    'stats.ai': 'ИИ провайдеров',
+    'stats.stores': 'Магазинов',
+    'stats.games': 'Игр для перевода',
+    'features.title': 'Всё необходимое для перевода видеоигр',
+    'features.desc': 'Полная экосистема ИИ-инструментов, разработанных специально для локализации видеоигр.',
+    'engines.title': '11+ поддерживаемых игровых движков',
+    'engines.desc': 'Нативная поддержка основных движков. GameStringer автоматически определяет движок и настраивает оптимальный метод.',
+    'engines.stores': '📚 Магазины и библиотеки',
+    'ai.title': '20+ ИИ провайдеров на любой вкус',
+    'ai.desc': 'Бесплатные, локальные для полной конфиденциальности или облачные для максимального качества.',
+    'tools.title': '10+ профессиональных инструментов',
+    'tools.desc': 'Все необходимые инструменты для перевода любой игры.',
+    'usecases.title': 'Кто использует GameStringer?',
+    'usecases.desc': 'Разработан для различных типов пользователей.',
+    'usecases.gamer.title': 'Геймеры и энтузиасты',
+    'usecases.gamer.desc': 'Хотите поиграть в ту японскую игру, которую никогда не переводили? GameStringer создаёт фанатские переводы профессионального качества.',
+    'usecases.fantl.title': 'Фанатские переводчики',
+    'usecases.fantl.desc': 'Состоите в группе переводчиков? GameStringer ускоряет работу с общей памятью переводов и глоссариями.',
+    'usecases.indie.title': 'Инди-разработчики',
+    'usecases.indie.desc': 'Выпускаете игру и хотите перевести её на 20 языков? GameStringer — это мгновенная локализация.',
+    'usecases.studio.title': 'Студии и QA',
+    'usecases.studio.desc': 'Проверяйте переводы с автоматическим QA, глоссариями и памятью переводов.',
+    'faq.title': 'Часто задаваемые вопросы',
+    'faq.q1': 'GameStringer действительно бесплатный?',
+    'faq.q2': 'Какие ИИ провайдеры поддерживаются?',
+    'faq.q3': 'Работает ли он офлайн?',
+    'faq.q4': 'Как установить перевод в игру?',
+    'faq.q5': 'Какие языки поддерживаются?',
+    'faq.q6': 'Качество сравнимо с профессиональным переводом?',
+    'faq.q7': 'Поддерживает ли ретро/DOS игры?',
+    'faq.q8': 'Могу ли я помочь проекту?',
+    'cta.title': 'Готовы переводить?',
+    'cta.desc': 'Скачайте GameStringer бесплатно и начните играть на своём языке.',
+    'cta.download': '⬇️ Скачать для Windows',
+    'support.title': '❤️ Поддержите проект',
+    'support.desc': 'GameStringer разрабатывается в свободное время. Ваша поддержка помогает проекту!',
+    'footer.resources': 'Ресурсы',
+    'footer.community': 'Сообщество',
+    'footer.support': 'Поддержка',
+  },
+
+  pl: {
+    'hero.badge': 'v1.4.1 — 11 języków UI, kompletne przewodniki, naprawa CI',
+    'hero.title': 'GameStringer',
+    'hero.subtitle': 'Lokalizuj gry wideo z AI. Open source. Za darmo.',
+    'hero.desc': 'Obsługa <strong>11+ silników</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) i <strong>20+ dostawców AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> na wiersz (0-100), auto-glosariusz AI, trwała pamięć tłumaczeń, interaktywny samouczek. <strong>500 ciągów za darmo</strong>, potem dobrowolna donacja.',
+    'hero.download': '⬇️ Darmowe pobieranie dla Windows',
+    'hero.source': '📂 Zobacz kod źródłowy',
+    'stats.engines': 'Silników gier',
+    'stats.ai': 'Dostawców AI',
+    'stats.stores': 'Sklepów',
+    'stats.games': 'Gier do tłumaczenia',
+    'features.title': 'Wszystko co potrzebne do tłumaczenia gier',
+    'features.desc': 'Kompletny ekosystem narzędzi AI zaprojektowanych specjalnie do lokalizacji gier wideo.',
+    'engines.title': '11+ obsługiwanych silników gier',
+    'engines.desc': 'Natywna obsługa głównych silników. GameStringer automatycznie wykrywa silnik i konfiguruje optymalną metodę.',
+    'engines.stores': '📚 Sklepy i biblioteki',
+    'ai.title': '20+ dostawców AI na każdą potrzebę',
+    'ai.desc': 'Darmowe, lokalne dla pełnej prywatności lub chmurowe dla maksymalnej jakości.',
+    'tools.title': '10+ profesjonalnych narzędzi',
+    'tools.desc': 'Wszystkie narzędzia potrzebne do tłumaczenia każdego rodzaju gry.',
+    'usecases.title': 'Kto używa GameStringer?',
+    'usecases.desc': 'Zaprojektowany dla różnych typów użytkowników.',
+    'usecases.gamer.title': 'Gracze i entuzjaści',
+    'usecases.gamer.desc': 'Chcesz zagrać w tę japońską grę, która nigdy nie została przetłumaczona? GameStringer tworzy fanowskie tłumaczenia profesjonalnej jakości.',
+    'usecases.fantl.title': 'Tłumacze fanowscy',
+    'usecases.fantl.desc': 'Jesteś w grupie tłumaczy? GameStringer przyspiesza pracę ze współdzieloną pamięcią tłumaczeń i glosariuszami.',
+    'usecases.indie.title': 'Deweloperzy indie',
+    'usecases.indie.desc': 'Wydajesz grę i chcesz ją przetłumaczyć na 20 języków? GameStringer to natychmiastowa lokalizacja.',
+    'usecases.studio.title': 'Studia i QA',
+    'usecases.studio.desc': 'Sprawdzaj tłumaczenia z automatycznym QA, glosariuszami i pamięcią tłumaczeń.',
+    'faq.title': 'Często zadawane pytania',
+    'faq.q1': 'Czy GameStringer jest naprawdę darmowy?',
+    'faq.q2': 'Jakich dostawców AI obsługuje?',
+    'faq.q3': 'Czy działa offline?',
+    'faq.q4': 'Jak zainstalować tłumaczenie w grze?',
+    'faq.q5': 'Jakie języki są obsługiwane?',
+    'faq.q6': 'Czy jakość jest porównywalna z profesjonalnym tłumaczeniem?',
+    'faq.q7': 'Czy obsługuje gry retro/DOS?',
+    'faq.q8': 'Czy mogę pomóc w projekcie?',
+    'cta.title': 'Gotowy do tłumaczenia?',
+    'cta.desc': 'Pobierz GameStringer za darmo i zacznij grać w swoim języku.',
+    'cta.download': '⬇️ Pobierz dla Windows',
+    'support.title': '❤️ Wesprzyj projekt',
+    'support.desc': 'GameStringer jest rozwijany w wolnym czasie. Twoje wsparcie pomaga utrzymać projekt!',
+    'footer.resources': 'Zasoby',
+    'footer.community': 'Społeczność',
+    'footer.support': 'Wsparcie',
+  },
 };
 
 // --- i18n Engine ---
-const langFlags = { en:'🇬🇧', it:'🇮🇹', es:'🇪🇸', de:'🇩🇪', fr:'🇫🇷', ja:'🇯🇵', zh:'🇨🇳', ko:'🇰🇷', pt:'🇧🇷' };
-const langNames = { en:'EN', it:'IT', es:'ES', de:'DE', fr:'FR', ja:'JA', zh:'ZH', ko:'KO', pt:'PT' };
+const langFlags = { en:'🇬🇧', it:'🇮🇹', es:'🇪🇸', de:'🇩🇪', fr:'🇫🇷', ja:'🇯🇵', zh:'🇨🇳', ko:'🇰🇷', pt:'🇧🇷', ru:'🇷🇺', pl:'🇵🇱' };
+const langNames = { en:'EN', it:'IT', es:'ES', de:'DE', fr:'FR', ja:'JA', zh:'ZH', ko:'KO', pt:'PT', ru:'RU', pl:'PL' };
 
 function getLanguage() {
   const saved = localStorage.getItem('gs_site_lang');
