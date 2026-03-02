@@ -33,6 +33,7 @@
 
 GameStringer é um sistema avançado para tradução automática e manual de videojogos. Suporta:
 
+
 - **Motores de jogo**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri e outros
 - **Formatos de arquivo**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA e outros
 - **Provedores AI**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ provedores)
@@ -54,6 +55,7 @@ GameStringer é um sistema avançado para tradução automática e manual de vid
 
 On first launch, GameStringer requires creating a user profile:
 
+
 1. **Click "Create Profile"** on the initial screen
 2. **Enter a name** for the profile (e.g., "MyName")
 3. **Set a password** (minimum 6 characters)
@@ -62,6 +64,7 @@ On first launch, GameStringer requires creating a user profile:
 ### Login
 
 To access an existing profile:
+
 
 1. **Select the profile** from the list
 2. **Enter the password**
@@ -142,6 +145,7 @@ At the bottom of the page, the system analyzes the game and suggests the **best 
 ### Estimated Costs
 
 The system shows a cost estimate before starting:
+
 - **Claude**: ~$0.003 per 1K tokens
 - **Gemini**: ~$0.0005 per 1K tokens (cheaper)
 - **GPT-4**: ~$0.01 per 1K tokens
@@ -208,7 +212,7 @@ Translation Bridge allows translating Unity games **in real-time** during gamepl
 
 ## Subtitle Translator Pro
 
-*(NEW in v1.0.4)*
+> NEW in v1.0.4
 
 Subtitle Translator Pro allows translating subtitles in various formats.
 
@@ -238,7 +242,7 @@ Subtitle Translator Pro allows translating subtitles in various formats.
 
 ## Retro ROM Tools
 
-*(NEW in v1.0.4)*
+> NEW in v1.0.4
 
 Tools to translate retro games on ROMs.
 
@@ -255,13 +259,13 @@ Tools to translate retro games on ROMs.
 | PlayStation 1 | PSX |
 | Nintendo 64 | N64 |
 
-### Features
+### Features (2)
 
 - **Table File Parser**: Reads and generates .TBL files for character mapping
 - **Font Injection**: Injects fonts with accented characters
 - **Integrated Hex Editor**: Direct ROM modification
 
-### How to Use
+### How to Use (2)
 
 1. **Go to Retro ROM Tools** in the menu
 2. **Load the ROM** of the game
@@ -274,7 +278,7 @@ Tools to translate retro games on ROMs.
 
 ## Public API v1
 
-*(NEW in v1.0.4)*
+> NEW in v1.0.4
 
 GameStringer exposes a REST API for external integrations.
 
@@ -319,7 +323,7 @@ The API is ideal for integrating GameStringer into automated build pipelines.
 
 ## Voice Clone Studio
 
-*(NEW in v1.0.5)*
+> NEW in v1.0.5
 
 Clone voices with AI for automatic game dubbing.
 
@@ -339,7 +343,7 @@ Clone voices with AI for automatic game dubbing.
 - 🤖 **Robot**: Synthetic and metallic voice
 - 👻 **Whisper**: Low and mysterious voice
 
-### How to Use
+### How to Use (3)
 
 1. **Go to Voice Clone** in the menu
 2. **Enter the text** to convert to audio
@@ -351,7 +355,7 @@ Clone voices with AI for automatic game dubbing.
 
 ## VR Text Overlay
 
-*(NEW in v1.0.5)*
+> NEW in v1.0.5
 
 3D spatial subtitles for VR games.
 
@@ -370,7 +374,7 @@ Clone voices with AI for automatic game dubbing.
 - **Top** - At the top (notifications)
 - **Follow Head** - Follows gaze
 
-### How to Use
+### How to Use (4)
 
 1. **Go to VR Overlay** in the menu
 2. **Detect headset** automatically
@@ -382,7 +386,7 @@ Clone voices with AI for automatic game dubbing.
 
 ## Quality Gates
 
-*(NEW in v1.0.5)*
+> NEW in v1.0.5
 
 Automatic translation quality control system.
 
@@ -406,7 +410,7 @@ Automatic translation quality control system.
 | 🟢 High | 75-89% | Green |
 | 💚 Perfect | 90-100% | Dark green |
 
-### How to Use
+### How to Use (5)
 
 1. **Go to Quality Gates** in the menu
 2. **Load translations** (JSON, CSV, or paste)
@@ -418,7 +422,7 @@ Automatic translation quality control system.
 
 ## Player Feedback
 
-*(NEW in v1.0.5)*
+> NEW in v1.0.5
 
 Collect and manage player feedback on translations.
 
@@ -443,7 +447,7 @@ Collect and manage player feedback on translations.
 | ✅ Resolved | Corrected |
 | ❌ Rejected | Not applicable |
 
-### How to Use
+### How to Use (6)
 
 1. **Go to Player Feedback** in the menu
 2. **View received feedback**
@@ -455,7 +459,7 @@ Collect and manage player feedback on translations.
 
 ## New AI Providers v1.0.6
 
-*(NEW in v1.0.6)*
+> NEW in v1.0.6
 
 ### Qwen 3 - Asian Languages
 
@@ -468,8 +472,9 @@ Provider optimized for Chinese, Japanese and Korean.
 | `qwen3:14b` | 14B | 16GB |
 | `qwen3:32b` | 32B | 32GB |
 
-**Installation**:
-```bash
+
+
+``bash
 ollama pull qwen3:14b
 ```
 
@@ -479,12 +484,15 @@ ollama pull qwen3:14b
 
 Meta AI provider with support for 200 languages, including rare ones.
 
-**Special languages supported**:
-- Thai, Vietnamese, Hindi, Arabic
+
+
+Thai, Vietnamese, Hindi, Arabic
 - Swahili, Indonesian, Turkish
 - Ukrainian, Bengali, Tamil
 
 **Configuration**:
+
+
 1. Go to **Settings → API Keys**
 2. Enter **HuggingFace API Key** (free)
 3. Select **NLLB-200** as provider
@@ -493,8 +501,9 @@ Meta AI provider with support for 200 languages, including rare ones.
 
 Use any Ollama-installed model for translations.
 
-**Recommended models**:
-- `llama3.2` - Good quality/speed balance
+
+
+`llama3.2` - Good quality/speed balance
 - `mistral` - Great for European languages
 - `gemma2` - Fast and lightweight
 
@@ -502,13 +511,14 @@ Use any Ollama-installed model for translations.
 
 ## Community Hub v1.0.7
 
-*(NEW in v1.0.7)*
+> NEW in v1.0.7
 
 Centralized hub for the GameStringer community.
 
 ### GitHub Discussions
 
 Direct access to community discussions:
+
 
 - **Announcements**: Official news and updates
 - **Q&A**: Questions and answers from the community
@@ -531,13 +541,14 @@ Direct access to community discussions:
 
 ## UI Improvements v1.0.9
 
-*(NEW in v1.0.9)*
+> NEW in v1.0.9
 
 Aesthetic and functional interface updates.
 
 ### Animated Headers
 
 All translation pages now have headers with:
+
 
 - **"Breathing" effect**: Gradient that expands/contracts smoothly (12s)
 - **Deep shadows**: shadow-xl with blue tint
@@ -553,8 +564,9 @@ The **bell** in the navbar now handles updates:
 | 🔔 Yellow | Unread notifications |
 | 🔔 Green + pulse | Update available! |
 
-**Features**:
-- **Sound**: Two melodic tones when detecting update
+
+
+**Sound**: Two melodic tones when detecting update
 - **Green badge**: Animated download icon
 - **Click**: Opens popup with changelog
 - **Download button**: Opens download page
@@ -573,7 +585,7 @@ The **bell** in the navbar now handles updates:
 
 ## Danganronpa Auto-Translator
 
-*(NEW in v1.1.0)*
+> NEW in v1.1.0
 
 Automatic translation system for Danganronpa series games.
 
@@ -594,7 +606,7 @@ Automatic translation system for Danganronpa series games.
 | **Type 3 - Font** | bin_special_font_l.pak | Nested PAK (fonts) |
 | **Texture** | Various | PNG images |
 
-### How to Use
+### How to Use (7)
 
 1. **Select Danganronpa** from your library
 2. **Click "Auto-Translate"** in the Translation Recommendation section
@@ -619,6 +631,7 @@ Before translation starts, you'll see:
 
 The system automatically handles API rate limits:
 
+
 - **429 Error**: Waits 20 seconds, then retries
 - **Batch Delay**: 2 second pause between batches
 - **Progress Updates**: Shows "⏳ Rate limit, waiting 20s..."
@@ -638,6 +651,7 @@ After translation, files are saved to:
 ### Applying Translations
 
 Use **DRAT (Danganronpa Another Tool)** to repack:
+
 
 1. Download DRAT from [GitHub](https://github.com/Liquid-S/Danganronpa-Another-Tool)
 2. Open the translated .PO file in DRAT
@@ -659,7 +673,7 @@ Use **DRAT (Danganronpa Another Tool)** to repack:
 
 The Unity Patcher automatically installs BepInEx and XUnity.AutoTranslator on Unity games.
 
-### How to Use
+### How to Use (8)
 
 1. **Go to Unity Patcher** in the sidebar
 2. **Select a Unity game** from the list (green "Unity" badge)
@@ -683,6 +697,7 @@ After installation, you'll see a badge indicating the status:
 ### Activity Tracking
 
 Every installed patch is recorded in **Recent Activity** on the Dashboard with:
+
 - Game name
 - Chosen translation mode
 - Target language
@@ -743,6 +758,7 @@ Creates a ZIP file on your **Desktop** containing:
 ### XUnity.AutoTranslator Format
 
 The XUnity format is compatible with:
+
 - **Unity games** with BepInEx + XUnity.AutoTranslator
 - Format: `original_text=translated_text`
 
@@ -753,6 +769,7 @@ The XUnity format is compatible with:
 ### "Apply to game" Button
 
 Installs the translation **directly into the game** automatically:
+
 
 1. **Detects the engine** of the game (Unity, Unreal, etc.)
 2. **Checks compatibility** with available patchers
@@ -786,18 +803,21 @@ Installs the translation **directly into the game** automatically:
 
 Backups are saved in two places:
 
+
 1. **In the game folder**: `[game_folder]/.gamestringer_backups/`
 2. **In the exported ZIP package**: `backup/` folder
 
 ### How to Restore a Backup
 
-#### Method 1: From GameStringer App
-1. Go to the **Backup** section of the app
+
+
+Go to the **Backup** section of the app
 2. Select the file to restore
 3. Click **Restore**
 
-#### Method 2: Manually
-1. Find the backup file in `.gamestringer_backups/`
+
+
+Find the backup file in `.gamestringer_backups/`
 2. Copy the file to the original location
 3. Rename by removing the timestamp
 
@@ -818,7 +838,7 @@ The Editor allows manual translation editing.
     └── 📄 texts.json (456 strings)
 ```
 
-### Features
+### Features (3)
 
 - **Search**: find strings by text
 - **Filters**: show only incomplete translations, with errors, etc.
@@ -903,6 +923,7 @@ Dictionaries save translations for each game.
 
 The UI library has been migrated from individual `@radix-ui/react-*` packages to the unified `radix-ui` package:
 
+
 - **37 components migrated** with simplified imports
 - **27 packages removed** from dependencies, lighter bundle
 - No visual changes — same UI, fewer dependencies
@@ -910,6 +931,7 @@ The UI library has been migrated from individual `@radix-ui/react-*` packages to
 ### Quality Badges in Translator Pro
 
 Each translated row now shows visual quality indicators:
+
 
 - **QualityScoreBadge**: score 0-100 with colors (🟢 ≥80, 🟡 ≥60, 🔴 <60)
 - **ContentTypeBadge**: classifies content type (UI, Dialogue, Narrative, System, Tutorial, etc.)
@@ -922,7 +944,7 @@ Each translated row now shows visual quality indicators:
 - `dir` attribute dynamically applied to the HTML document
 - Works with the existing i18n system
 
-### Generic Ollama
+### Generic Ollama Models
 
 - New `translateWithOllamaGeneric` provider to use any Ollama model
 - PROVIDER_MAP with automatic model mapping

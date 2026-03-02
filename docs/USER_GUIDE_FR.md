@@ -32,6 +32,7 @@
 
 GameStringer est un système avancé pour la traduction automatique et manuelle de jeux vidéo. Il supporte :
 
+
 - **Moteurs de jeu** : Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri et autres
 - **Formats de fichiers** : CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA et autres
 - **Fournisseurs AI** : Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ fournisseurs)
@@ -52,6 +53,7 @@ GameStringer est un système avancé pour la traduction automatique et manuelle 
 
 Au premier lancement, GameStringer demande de créer un profil utilisateur :
 
+
 1. **Cliquez sur "Créer Profil"** sur l'écran initial
 2. **Entrez un nom** pour le profil (ex. "MonNom")
 3. **Définissez un mot de passe** (minimum 6 caractères)
@@ -60,6 +62,7 @@ Au premier lancement, GameStringer demande de créer un profil utilisateur :
 ### Connexion
 
 Pour accéder à un profil existant :
+
 
 1. **Sélectionnez le profil** dans la liste
 2. **Entrez le mot de passe**
@@ -140,6 +143,7 @@ En bas de la page, le système analyse le jeu et suggère la **meilleure méthod
 ### Coûts Estimés
 
 Le système affiche une estimation des coûts avant de commencer :
+
 - **Claude** : ~$0.003 pour 1K tokens
 - **Gemini** : ~$0.0005 pour 1K tokens (moins cher)
 - **GPT-4** : ~$0.01 pour 1K tokens
@@ -206,7 +210,7 @@ Translation Bridge permet de traduire les jeux Unity **en temps réel** pendant 
 
 ## Subtitle Translator Pro
 
-*(NOUVEAU dans v1.0.4)*
+> NOUVEAU dans v1.0.4
 
 Subtitle Translator Pro permet de traduire des sous-titres dans différents formats.
 
@@ -236,7 +240,7 @@ Subtitle Translator Pro permet de traduire des sous-titres dans différents form
 
 ## Retro ROM Tools
 
-*(NOUVEAU dans v1.0.4)*
+> NOUVEAU dans v1.0.4
 
 Outils pour traduire des jeux rétro sur ROM.
 
@@ -253,13 +257,13 @@ Outils pour traduire des jeux rétro sur ROM.
 | PlayStation 1 | PSX |
 | Nintendo 64 | N64 |
 
-### Fonctionnalités
+### Fonctionnalités (2)
 
 - **Table File Parser** : Lit et génère des fichiers .TBL pour mappage de caractères
 - **Font Injection** : Injecte des polices avec caractères accentués
 - **Éditeur Hex intégré** : Modification directe des ROMs
 
-### Comment Utiliser
+### Comment Utiliser (2)
 
 1. **Allez dans Retro ROM Tools** dans le menu
 2. **Chargez la ROM** du jeu
@@ -272,7 +276,7 @@ Outils pour traduire des jeux rétro sur ROM.
 
 ## API Publique v1
 
-*(NOUVEAU dans v1.0.4)*
+> NOUVEAU dans v1.0.4
 
 GameStringer expose une API REST pour les intégrations externes.
 
@@ -317,7 +321,7 @@ L'API est idéale pour intégrer GameStringer dans des pipelines de build automa
 
 ## Voice Clone Studio
 
-*(NOUVEAU dans v1.0.5)*
+> NOUVEAU dans v1.0.5
 
 Clonez des voix avec AI pour le doublage automatique de jeux.
 
@@ -337,7 +341,7 @@ Clonez des voix avec AI pour le doublage automatique de jeux.
 - 🤖 **Robot** : Voix synthétique et métallique
 - 👻 **Chuchotement** : Voix basse et mystérieuse
 
-### Comment Utiliser
+### Comment Utiliser (3)
 
 1. **Allez dans Voice Clone** dans le menu
 2. **Entrez le texte** à convertir en audio
@@ -349,7 +353,7 @@ Clonez des voix avec AI pour le doublage automatique de jeux.
 
 ## VR Text Overlay
 
-*(NOUVEAU dans v1.0.5)*
+> NOUVEAU dans v1.0.5
 
 Sous-titres spatiaux 3D pour jeux VR.
 
@@ -368,7 +372,7 @@ Sous-titres spatiaux 3D pour jeux VR.
 - **Top** - En haut (notifications)
 - **Follow Head** - Suit le regard
 
-### Comment Utiliser
+### Comment Utiliser (4)
 
 1. **Allez dans VR Overlay** dans le menu
 2. **Détectez le casque** automatiquement
@@ -380,7 +384,7 @@ Sous-titres spatiaux 3D pour jeux VR.
 
 ## Quality Gates
 
-*(NOUVEAU dans v1.0.5)*
+> NOUVEAU dans v1.0.5
 
 Système automatique de contrôle qualité des traductions.
 
@@ -404,7 +408,7 @@ Système automatique de contrôle qualité des traductions.
 | 🟢 Élevé | 75-89% | Vert |
 | 💚 Parfait | 90-100% | Vert foncé |
 
-### Comment Utiliser
+### Comment Utiliser (5)
 
 1. **Allez dans Quality Gates** dans le menu
 2. **Chargez les traductions** (JSON, CSV, ou collez)
@@ -416,7 +420,7 @@ Système automatique de contrôle qualité des traductions.
 
 ## Player Feedback
 
-*(NOUVEAU dans v1.0.5)*
+> NOUVEAU dans v1.0.5
 
 Collectez et gérez les retours des joueurs sur les traductions.
 
@@ -441,7 +445,7 @@ Collectez et gérez les retours des joueurs sur les traductions.
 | ✅ Résolu | Corrigé |
 | ❌ Rejeté | Non applicable |
 
-### Comment Utiliser
+### Comment Utiliser (6)
 
 1. **Allez dans Player Feedback** dans le menu
 2. **Visualisez les feedbacks** reçus
@@ -453,7 +457,7 @@ Collectez et gérez les retours des joueurs sur les traductions.
 
 ## Nouveaux Fournisseurs AI v1.0.6
 
-*(NOUVEAU dans v1.0.6)*
+> NOUVEAU dans v1.0.6
 
 ### Qwen 3 - Langues Asiatiques
 
@@ -478,11 +482,13 @@ ollama pull qwen3:14b
 Fournisseur Meta AI avec support pour 200 langues, y compris les rares.
 
 **Langues spéciales supportées** :
+
 - Thaï, Vietnamien, Hindi, Arabe
 - Swahili, Indonésien, Turc
 - Ukrainien, Bengali, Tamil
 
 **Configuration** :
+
 1. Allez dans **Paramètres → Clés API**
 2. Entrez **HuggingFace API Key** (gratuit)
 3. Sélectionnez **NLLB-200** comme fournisseur
@@ -492,6 +498,7 @@ Fournisseur Meta AI avec support pour 200 langues, y compris les rares.
 Utilisez n'importe quel modèle Ollama installé pour les traductions.
 
 **Modèles recommandés** :
+
 - `llama3.2` - Bon équilibre qualité/vitesse
 - `mistral` - Excellent pour langues européennes
 - `gemma2` - Rapide et léger
@@ -500,13 +507,14 @@ Utilisez n'importe quel modèle Ollama installé pour les traductions.
 
 ## Community Hub v1.0.7
 
-*(NOUVEAU dans v1.0.7)*
+> NOUVEAU dans v1.0.7
 
 Hub centralisé pour la communauté GameStringer.
 
 ### GitHub Discussions
 
 Accès direct aux discussions de la communauté :
+
 
 - **Annonces** : Actualités et mises à jour officielles
 - **Q&A** : Questions et réponses de la communauté
@@ -529,13 +537,14 @@ Accès direct aux discussions de la communauté :
 
 ## Améliorations UI v1.0.9
 
-*(NOUVEAU dans v1.0.9)*
+> NOUVEAU dans v1.0.9
 
 Mises à jour esthétiques et fonctionnelles de l'interface.
 
 ### En-têtes Animés
 
 Toutes les pages de traduction ont maintenant des en-têtes avec :
+
 
 - **Effet "Respiration"** : Dégradé qui s'étend/se contracte doucement (12s)
 - **Ombres profondes** : shadow-xl avec teinte bleue
@@ -552,6 +561,7 @@ La **cloche** dans la barre de navigation gère maintenant les mises à jour :
 | 🔔 Verte + pulse | Mise à jour disponible ! |
 
 **Fonctionnalités** :
+
 - **Son** : Deux tons mélodiques lors de la détection de mise à jour
 - **Badge vert** : Icône de téléchargement animée
 - **Clic** : Ouvre popup avec liste des nouveautés
@@ -573,7 +583,7 @@ La **cloche** dans la barre de navigation gère maintenant les mises à jour :
 
 Le Unity Patcher installe automatiquement BepInEx et XUnity.AutoTranslator sur les jeux Unity.
 
-### Comment Utiliser
+### Comment Utiliser (7)
 
 1. **Allez dans Unity Patcher** dans le menu latéral
 2. **Sélectionnez un jeu Unity** de la liste (badge vert "Unity")
@@ -597,6 +607,7 @@ Après l'installation, vous verrez un badge indiquant l'état :
 ### Suivi d'Activité
 
 Chaque patch installé est enregistré dans **Activité Récente** sur le Dashboard avec :
+
 - Nom du jeu
 - Mode de traduction choisi
 - Langue cible
@@ -657,6 +668,7 @@ Crée un fichier ZIP sur votre **Bureau** contenant :
 ### Format XUnity.AutoTranslator
 
 Le format XUnity est compatible avec :
+
 - **Jeux Unity** avec BepInEx + XUnity.AutoTranslator
 - Format : `texte_original=texte_traduit`
 
@@ -667,6 +679,7 @@ Le format XUnity est compatible avec :
 ### Bouton "Appliquer au jeu"
 
 Installe la traduction **directement dans le jeu** automatiquement :
+
 
 1. **Détecte le moteur** du jeu (Unity, Unreal, etc.)
 2. **Vérifie la compatibilité** avec les patchers disponibles
@@ -700,18 +713,21 @@ Installe la traduction **directement dans le jeu** automatiquement :
 
 Les sauvegardes sont enregistrées à deux endroits :
 
+
 1. **Dans le dossier du jeu** : `[dossier_jeu]/.gamestringer_backups/`
 2. **Dans le paquet ZIP exporté** : dossier `backup/`
 
 ### Comment Restaurer une Sauvegarde
 
-#### Méthode 1 : Depuis l'App GameStringer
-1. Allez dans la section **Backup** de l'app
+
+
+Allez dans la section **Backup** de l'app
 2. Sélectionnez le fichier à restaurer
 3. Cliquez sur **Restaurer**
 
-#### Méthode 2 : Manuellement
-1. Trouvez le fichier de sauvegarde dans `.gamestringer_backups/`
+
+
+Trouvez le fichier de sauvegarde dans `.gamestringer_backups/`
 2. Copiez le fichier à l'emplacement original
 3. Renommez en supprimant le timestamp
 
@@ -732,7 +748,7 @@ L'Éditeur permet de modifier manuellement les traductions.
     └── 📄 textes.json (456 chaînes)
 ```
 
-### Fonctionnalités
+### Fonctionnalités (3)
 
 - **Recherche** : trouver des chaînes par texte
 - **Filtres** : afficher uniquement les traductions incomplètes, avec erreurs, etc.
@@ -817,6 +833,7 @@ Les dictionnaires sauvegardent les traductions pour chaque jeu.
 
 La bibliothèque UI a été migrée des packages individuels `@radix-ui/react-*` vers le package unifié `radix-ui` :
 
+
 - **37 composants migrés** avec des imports simplifiés
 - **27 packages supprimés** des dépendances, bundle plus léger
 - Aucun changement visuel — même UI, moins de dépendances
@@ -824,6 +841,7 @@ La bibliothèque UI a été migrée des packages individuels `@radix-ui/react-*`
 ### Quality Badges dans Translator Pro
 
 Chaque ligne traduite affiche désormais des indicateurs de qualité visuels :
+
 
 - **QualityScoreBadge** : score 0-100 avec couleurs (🟢 ≥80, 🟡 ≥60, 🔴 <60)
 - **ContentTypeBadge** : classifie le type de contenu (UI, Dialogue, Narratif, Système, Tutoriel, etc.)

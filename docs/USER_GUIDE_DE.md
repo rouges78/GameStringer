@@ -32,6 +32,7 @@
 
 GameStringer ist ein fortschrittliches System für automatische und manuelle Videospielübersetzungen. Es unterstützt:
 
+
 - **Spiel-Engines**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri und andere
 - **Dateiformate**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA und andere
 - **AI-Anbieter**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ Anbieter)
@@ -52,6 +53,7 @@ GameStringer ist ein fortschrittliches System für automatische und manuelle Vid
 
 Beim ersten Start erfordert GameStringer die Erstellung eines Benutzerprofils:
 
+
 1. **Klicken Sie auf "Profil erstellen"** auf dem Startbildschirm
 2. **Geben Sie einen Namen** für das Profil ein (z.B. "MeinName")
 3. **Legen Sie ein Passwort fest** (mindestens 6 Zeichen)
@@ -60,6 +62,7 @@ Beim ersten Start erfordert GameStringer die Erstellung eines Benutzerprofils:
 ### Anmeldung
 
 Um auf ein bestehendes Profil zuzugreifen:
+
 
 1. **Wählen Sie das Profil** aus der Liste
 2. **Geben Sie das Passwort ein**
@@ -140,6 +143,7 @@ Am Ende der Seite analysiert das System das Spiel und schlägt die **beste Über
 ### Geschätzte Kosten
 
 Das System zeigt eine Kostenschätzung vor dem Start:
+
 - **Claude**: ~$0.003 pro 1K Token
 - **Gemini**: ~$0.0005 pro 1K Token (günstiger)
 - **GPT-4**: ~$0.01 pro 1K Token
@@ -206,7 +210,7 @@ Translation Bridge ermöglicht die Übersetzung von Unity-Spielen **in Echtzeit*
 
 ## Subtitle Translator Pro
 
-*(NEU in v1.0.4)*
+> NEU in v1.0.4
 
 Subtitle Translator Pro ermöglicht die Übersetzung von Untertiteln in verschiedenen Formaten.
 
@@ -236,7 +240,7 @@ Subtitle Translator Pro ermöglicht die Übersetzung von Untertiteln in verschie
 
 ## Retro ROM Tools
 
-*(NEU in v1.0.4)*
+> NEU in v1.0.4
 
 Tools zum Übersetzen von Retro-Spielen auf ROMs.
 
@@ -253,13 +257,13 @@ Tools zum Übersetzen von Retro-Spielen auf ROMs.
 | PlayStation 1 | PSX |
 | Nintendo 64 | N64 |
 
-### Funktionen
+### Funktionen (2)
 
 - **Table File Parser**: Liest und generiert .TBL-Dateien für Zeichenzuordnung
 - **Font Injection**: Injiziert Schriften mit Umlauten und Sonderzeichen
 - **Integrierter Hex-Editor**: Direkte ROM-Modifikation
 
-### Wie man verwendet
+### Verwendung Voice Clone
 
 1. **Gehen Sie zu Retro ROM Tools** im Menü
 2. **Laden Sie die ROM** des Spiels
@@ -272,7 +276,7 @@ Tools zum Übersetzen von Retro-Spielen auf ROMs.
 
 ## Öffentliche API v1
 
-*(NEU in v1.0.4)*
+> NEU in v1.0.4
 
 GameStringer bietet eine REST-API für externe Integrationen.
 
@@ -317,7 +321,7 @@ Die API ist ideal für die Integration von GameStringer in automatisierte Build-
 
 ## Voice Clone Studio
 
-*(NEU in v1.0.5)*
+> NEU in v1.0.5
 
 Klonen Sie Stimmen mit AI für automatische Spielesynchronisation.
 
@@ -337,7 +341,7 @@ Klonen Sie Stimmen mit AI für automatische Spielesynchronisation.
 - 🤖 **Roboter**: Synthetische und metallische Stimme
 - 👻 **Flüstern**: Leise und mysteriöse Stimme
 
-### Wie man verwendet
+### Verwendung VR Overlay
 
 1. **Gehen Sie zu Voice Clone** im Menü
 2. **Geben Sie den Text** ein, der in Audio umgewandelt werden soll
@@ -349,7 +353,7 @@ Klonen Sie Stimmen mit AI für automatische Spielesynchronisation.
 
 ## VR Text Overlay
 
-*(NEU in v1.0.5)*
+> NEU in v1.0.5
 
 3D-Raum-Untertitel für VR-Spiele.
 
@@ -368,7 +372,7 @@ Klonen Sie Stimmen mit AI für automatische Spielesynchronisation.
 - **Top** - Oben (Benachrichtigungen)
 - **Follow Head** - Folgt dem Blick
 
-### Wie man verwendet
+### Verwendung Quality Gates
 
 1. **Gehen Sie zu VR Overlay** im Menü
 2. **Erkennen Sie das Headset** automatisch
@@ -380,7 +384,7 @@ Klonen Sie Stimmen mit AI für automatische Spielesynchronisation.
 
 ## Quality Gates
 
-*(NEU in v1.0.5)*
+> NEU in v1.0.5
 
 Automatisches Qualitätskontrollsystem für Übersetzungen.
 
@@ -404,7 +408,7 @@ Automatisches Qualitätskontrollsystem für Übersetzungen.
 | 🟢 Hoch | 75-89% | Grün |
 | 💚 Perfekt | 90-100% | Dunkelgrün |
 
-### Wie man verwendet
+### Verwendung Player Feedback
 
 1. **Gehen Sie zu Quality Gates** im Menü
 2. **Laden Sie Übersetzungen** (JSON, CSV, oder einfügen)
@@ -416,7 +420,7 @@ Automatisches Qualitätskontrollsystem für Übersetzungen.
 
 ## Player Feedback
 
-*(NEU in v1.0.5)*
+> NEU in v1.0.5
 
 Sammeln und verwalten Sie Spieler-Feedback zu Übersetzungen.
 
@@ -441,7 +445,7 @@ Sammeln und verwalten Sie Spieler-Feedback zu Übersetzungen.
 | ✅ Gelöst | Korrigiert |
 | ❌ Abgelehnt | Nicht anwendbar |
 
-### Wie man verwendet
+### Verwendung Unity Patcher
 
 1. **Gehen Sie zu Player Feedback** im Menü
 2. **Zeigen Sie empfangenes Feedback** an
@@ -453,7 +457,7 @@ Sammeln und verwalten Sie Spieler-Feedback zu Übersetzungen.
 
 ## Neue AI-Anbieter v1.0.6
 
-*(NEU in v1.0.6)*
+> NEU in v1.0.6
 
 ### Qwen 3 - Asiatische Sprachen
 
@@ -466,8 +470,9 @@ Optimierter Anbieter für Chinesisch, Japanisch und Koreanisch.
 | `qwen3:14b` | 14B | 16GB |
 | `qwen3:32b` | 32B | 32GB |
 
-**Installation**:
-```bash
+
+
+``bash
 ollama pull qwen3:14b
 ```
 
@@ -477,12 +482,15 @@ ollama pull qwen3:14b
 
 Meta AI-Anbieter mit Unterstützung für 200 Sprachen, einschließlich seltener.
 
-**Unterstützte Spezialsprachen**:
-- Thai, Vietnamesisch, Hindi, Arabisch
+
+
+Thai, Vietnamesisch, Hindi, Arabisch
 - Swahili, Indonesisch, Türkisch
 - Ukrainisch, Bengali, Tamil
 
 **Konfiguration**:
+
+
 1. Gehen Sie zu **Einstellungen → API-Schlüssel**
 2. Geben Sie **HuggingFace API Key** ein (kostenlos)
 3. Wählen Sie **NLLB-200** als Anbieter
@@ -491,8 +499,9 @@ Meta AI-Anbieter mit Unterstützung für 200 Sprachen, einschließlich seltener.
 
 Verwenden Sie jedes in Ollama installierte Modell für Übersetzungen.
 
-**Empfohlene Modelle**:
-- `llama3.2` - Gute Balance Qualität/Geschwindigkeit
+
+
+`llama3.2` - Gute Balance Qualität/Geschwindigkeit
 - `mistral` - Hervorragend für europäische Sprachen
 - `gemma2` - Schnell und leicht
 
@@ -500,13 +509,14 @@ Verwenden Sie jedes in Ollama installierte Modell für Übersetzungen.
 
 ## Community Hub v1.0.7
 
-*(NEU in v1.0.7)*
+> NEU in v1.0.7
 
 Zentraler Hub für die GameStringer-Community.
 
 ### GitHub Discussions
 
 Direkter Zugang zu Community-Diskussionen:
+
 
 - **Ankündigungen**: Offizielle Neuigkeiten und Updates
 - **Q&A**: Fragen und Antworten der Community
@@ -529,13 +539,14 @@ Direkter Zugang zu Community-Diskussionen:
 
 ## UI-Verbesserungen v1.0.9
 
-*(NEU in v1.0.9)*
+> NEU in v1.0.9
 
 Ästhetische und funktionale Interface-Updates.
 
 ### Animierte Header
 
 Alle Übersetzungsseiten haben jetzt Header mit:
+
 
 - **"Atem"-Effekt**: Farbverlauf, der sich sanft ausdehnt/zusammenzieht (12s)
 - **Tiefe Schatten**: shadow-xl mit Blauton
@@ -551,8 +562,9 @@ Die **Glocke** in der Navigationsleiste verwaltet jetzt Updates:
 | 🔔 Gelb | Ungelesene Benachrichtigungen |
 | 🔔 Grün + Puls | Update verfügbar! |
 
-**Funktionen**:
-- **Sound**: Zwei melodische Töne bei Update-Erkennung
+
+
+**Sound**: Zwei melodische Töne bei Update-Erkennung
 - **Grünes Badge**: Animiertes Download-Symbol
 - **Klick**: Öffnet Popup mit Änderungsliste
 - **Download-Button**: Öffnet Download-Seite
@@ -573,7 +585,7 @@ Die **Glocke** in der Navigationsleiste verwaltet jetzt Updates:
 
 Der Unity Patcher installiert automatisch BepInEx und XUnity.AutoTranslator auf Unity-Spielen.
 
-### Wie man verwendet
+### Verwendung Retro ROM
 
 1. **Gehen Sie zu Unity Patcher** in der Seitenleiste
 2. **Wählen Sie ein Unity-Spiel** aus der Liste (grünes "Unity"-Badge)
@@ -597,6 +609,7 @@ Nach der Installation sehen Sie ein Badge mit dem Status:
 ### Aktivitätsverfolgung
 
 Jeder installierte Patch wird in **Letzte Aktivität** im Dashboard aufgezeichnet mit:
+
 - Spielname
 - Gewählter Übersetzungsmodus
 - Zielsprache
@@ -657,6 +670,7 @@ Erstellt eine ZIP-Datei auf Ihrem **Desktop** mit:
 ### XUnity.AutoTranslator Format
 
 Das XUnity-Format ist kompatibel mit:
+
 - **Unity-Spielen** mit BepInEx + XUnity.AutoTranslator
 - Format: `originaltext=übersetzter_text`
 
@@ -667,6 +681,7 @@ Das XUnity-Format ist kompatibel mit:
 ### Button "Auf Spiel anwenden"
 
 Installiert die Übersetzung **direkt im Spiel** automatisch:
+
 
 1. **Erkennt die Engine** des Spiels (Unity, Unreal, etc.)
 2. **Prüft Kompatibilität** mit verfügbaren Patchern
@@ -700,18 +715,21 @@ Installiert die Übersetzung **direkt im Spiel** automatisch:
 
 Backups werden an zwei Orten gespeichert:
 
+
 1. **Im Spielordner**: `[spielordner]/.gamestringer_backups/`
 2. **Im exportierten ZIP-Paket**: Ordner `backup/`
 
 ### Wie man ein Backup wiederherstellt
 
-#### Methode 1: Aus der GameStringer-App
-1. Gehen Sie zum **Backup**-Bereich der App
+
+
+Gehen Sie zum **Backup**-Bereich der App
 2. Wählen Sie die wiederherzustellende Datei
 3. Klicken Sie auf **Wiederherstellen**
 
-#### Methode 2: Manuell
-1. Finden Sie die Backup-Datei in `.gamestringer_backups/`
+
+
+Finden Sie die Backup-Datei in `.gamestringer_backups/`
 2. Kopieren Sie die Datei an den ursprünglichen Ort
 3. Benennen Sie sie um und entfernen Sie den Zeitstempel
 
@@ -732,7 +750,7 @@ Der Editor ermöglicht manuelle Übersetzungsbearbeitung.
     └── 📄 texte.json (456 Strings)
 ```
 
-### Funktionen
+### Funktionen (3)
 
 - **Suche**: Strings nach Text finden
 - **Filter**: Nur unvollständige Übersetzungen, mit Fehlern, etc. anzeigen
@@ -817,6 +835,7 @@ Wörterbücher speichern Übersetzungen für jedes Spiel.
 
 Die UI-Bibliothek wurde von einzelnen `@radix-ui/react-*` Paketen auf das einheitliche `radix-ui` Paket migriert:
 
+
 - **37 Komponenten migriert** mit vereinfachten Imports
 - **27 Pakete entfernt** aus den Abhängigkeiten, leichteres Bundle
 - Keine visuellen Änderungen — gleiche UI, weniger Abhängigkeiten
@@ -824,6 +843,7 @@ Die UI-Bibliothek wurde von einzelnen `@radix-ui/react-*` Paketen auf das einhei
 ### Quality Badges im Translator Pro
 
 Jede übersetzte Zeile zeigt nun visuelle Qualitätsindikatoren:
+
 
 - **QualityScoreBadge**: Bewertung 0-100 mit Farben (🟢 ≥80, 🟡 ≥60, 🔴 <60)
 - **ContentTypeBadge**: klassifiziert den Inhaltstyp (UI, Dialog, Erzählung, System, Tutorial, etc.)

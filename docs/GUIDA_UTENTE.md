@@ -19,12 +19,12 @@
 15. [Community Hub v1.0.7](#community-hub-v107) *(NUOVO v1.0.7)*
 16. [UI Miglioramenti v1.0.9](#ui-miglioramenti-v109) *(NUOVO v1.0.9)*
 17. [Esportazione Patch](#esportazione-patch)
-16. [Applicazione al Gioco](#applicazione-al-gioco)
-17. [Gestione Backup](#gestione-backup)
-18. [Editor Traduzioni](#editor-traduzioni)
-19. [Activity History](#activity-history)
-20. [Dizionari](#dizionari)
-21. [Risoluzione Problemi](#risoluzione-problemi)
+18. [Applicazione al Gioco](#applicazione-al-gioco)
+19. [Gestione Backup](#gestione-backup)
+20. [Editor Traduzioni](#editor-traduzioni)
+21. [Activity History](#activity-history)
+22. [Dizionari](#dizionari)
+23. [Risoluzione Problemi](#risoluzione-problemi)
 
 ---
 
@@ -141,6 +141,7 @@ In fondo alla pagina, il sistema analizza il gioco e suggerisce il **metodo di t
 ### Costi Stimati
 
 Il sistema mostra una stima dei costi prima di iniziare:
+
 - **Claude**: ~$0.003 per 1K token
 - **Gemini**: ~$0.0005 per 1K token (più economico)
 - **GPT-4**: ~$0.01 per 1K token
@@ -207,7 +208,7 @@ Il Translation Bridge permette di tradurre i giochi Unity **in tempo reale** dur
 
 ## Subtitle Translator Pro
 
-*(NUOVO in v1.0.4)*
+> Aggiunto in v1.0.4
 
 Il Subtitle Translator Pro permette di tradurre sottotitoli in vari formati.
 
@@ -237,7 +238,7 @@ Il Subtitle Translator Pro permette di tradurre sottotitoli in vari formati.
 
 ## Retro ROM Tools
 
-*(NUOVO in v1.0.4)*
+> Aggiunto in v1.0.4
 
 Strumenti per tradurre giochi retro su ROM.
 
@@ -254,13 +255,13 @@ Strumenti per tradurre giochi retro su ROM.
 | PlayStation 1 | PSX |
 | Nintendo 64 | N64 |
 
-### Funzionalità
+### Funzionalità ROM
 
 - **Table File Parser**: Legge e genera file .TBL per mappatura caratteri
 - **Font Injection**: Inietta font con caratteri accentati italiani
 - **Hex Editor integrato**: Modifica diretta delle ROM
 
-### Come Usare
+### Utilizzo Retro ROM
 
 1. **Vai su Retro ROM Tools** nel menu
 2. **Carica la ROM** del gioco
@@ -273,7 +274,7 @@ Strumenti per tradurre giochi retro su ROM.
 
 ## API Pubblica v1
 
-*(NUOVO in v1.0.4)*
+> Aggiunto in v1.0.4
 
 GameStringer espone una API REST per integrazioni esterne.
 
@@ -318,7 +319,7 @@ L'API è ideale per integrare GameStringer in pipeline di build automatizzate.
 
 ## Voice Clone Studio
 
-*(NUOVO in v1.0.5)*
+> Aggiunto in v1.0.5
 
 Clona voci con AI per doppiaggio automatico dei giochi.
 
@@ -338,7 +339,7 @@ Clona voci con AI per doppiaggio automatico dei giochi.
 - 🤖 **Robot**: Voce sintetica e metallica
 - 👻 **Sussurro**: Voce bassa e misteriosa
 
-### Come Usare
+### Utilizzo Voice Clone
 
 1. **Vai su Voice Clone** nel menu
 2. **Inserisci il testo** da convertire in audio
@@ -350,7 +351,7 @@ Clona voci con AI per doppiaggio automatico dei giochi.
 
 ## VR Text Overlay
 
-*(NUOVO in v1.0.5)*
+> Aggiunto in v1.0.5
 
 Sottotitoli spaziali 3D per giochi VR.
 
@@ -369,7 +370,7 @@ Sottotitoli spaziali 3D per giochi VR.
 - **Top** - In alto (notifiche)
 - **Follow Head** - Segue lo sguardo
 
-### Come Usare
+### Utilizzo VR Overlay
 
 1. **Vai su VR Overlay** nel menu
 2. **Rileva headset** automaticamente
@@ -381,7 +382,7 @@ Sottotitoli spaziali 3D per giochi VR.
 
 ## Quality Gates
 
-*(NUOVO in v1.0.5)*
+> Aggiunto in v1.0.5
 
 Sistema automatico di controllo qualità traduzioni.
 
@@ -405,7 +406,7 @@ Sistema automatico di controllo qualità traduzioni.
 | 🟢 Alto | 75-89% | Verde |
 | 💚 Perfetto | 90-100% | Verde scuro |
 
-### Come Usare
+### Utilizzo Quality Gates
 
 1. **Vai su Quality Gates** nel menu
 2. **Carica traduzioni** (JSON, CSV, o incolla)
@@ -417,7 +418,7 @@ Sistema automatico di controllo qualità traduzioni.
 
 ## Player Feedback
 
-*(NUOVO in v1.0.5)*
+> Aggiunto in v1.0.5
 
 Raccogli e gestisci feedback dei giocatori sulle traduzioni.
 
@@ -442,7 +443,7 @@ Raccogli e gestisci feedback dei giocatori sulle traduzioni.
 | ✅ Risolto | Corretto |
 | ❌ Rifiutato | Non applicabile |
 
-### Come Usare
+### Utilizzo Player Feedback
 
 1. **Vai su Player Feedback** nel menu
 2. **Visualizza feedback** ricevuti
@@ -454,7 +455,7 @@ Raccogli e gestisci feedback dei giocatori sulle traduzioni.
 
 ## Nuovi Provider AI v1.0.6
 
-*(NUOVO in v1.0.6)*
+> Aggiunto in v1.0.6
 
 ### Qwen 3 - Lingue Asiatiche
 
@@ -468,6 +469,7 @@ Provider ottimizzato per cinese, giapponese e coreano.
 | `qwen3:32b` | 32B | 32GB |
 
 **Installazione**:
+
 ```bash
 ollama pull qwen3:14b
 ```
@@ -479,11 +481,15 @@ ollama pull qwen3:14b
 Provider Meta AI con supporto per 200 lingue, incluse quelle rare.
 
 **Lingue speciali supportate**:
+
+
 - Thai, Vietnamese, Hindi, Arabic
 - Swahili, Indonesian, Turkish
 - Ukrainian, Bengali, Tamil
 
 **Configurazione**:
+
+
 1. Vai su **Settings → API Keys**
 2. Inserisci **HuggingFace API Key** (gratuito)
 3. Seleziona **NLLB-200** come provider
@@ -493,6 +499,8 @@ Provider Meta AI con supporto per 200 lingue, incluse quelle rare.
 Usa qualsiasi modello installato in Ollama per traduzioni.
 
 **Modelli consigliati**:
+
+
 - `llama3.2` - Buon bilanciamento qualità/velocità
 - `mistral` - Ottimo per lingue europee
 - `gemma2` - Veloce e leggero
@@ -501,7 +509,7 @@ Usa qualsiasi modello installato in Ollama per traduzioni.
 
 ## Community Hub v1.0.7
 
-*(NUOVO in v1.0.7)*
+> Aggiunto in v1.0.7
 
 Hub centralizzato per la community di GameStringer.
 
@@ -530,7 +538,7 @@ Accesso diretto alle discussioni della community:
 
 ## UI Miglioramenti v1.0.9
 
-*(NUOVO in v1.0.9)*
+> Aggiunto in v1.0.9
 
 Aggiornamenti estetici e funzionali all'interfaccia.
 
@@ -553,6 +561,8 @@ La **campanella** nella navbar ora gestisce gli aggiornamenti:
 | 🔔 Verde + pulse | Aggiornamento disponibile! |
 
 **Funzionalità**:
+
+
 - **Suono**: Due toni melodici quando rileva update
 - **Badge verde**: Icona download animata
 - **Click**: Apre popup con lista novità
@@ -574,7 +584,7 @@ La **campanella** nella navbar ora gestisce gli aggiornamenti:
 
 Il Unity Patcher installa automaticamente BepInEx e XUnity.AutoTranslator sui giochi Unity.
 
-### Come Usare
+### Utilizzo Unity Patcher
 
 1. **Vai su Unity Patcher** nel menu laterale
 2. **Seleziona un gioco Unity** dalla lista (badge verde "Unity")
@@ -598,6 +608,7 @@ Dopo l'installazione, vedrai un badge che indica lo stato:
 ### Tracking Attività
 
 Ogni patch installata viene registrata in **Attività Recenti** nella Dashboard con:
+
 - Nome del gioco
 - Modalità di traduzione scelta
 - Lingua target
@@ -632,7 +643,7 @@ Vai su **Activity History** nel menu laterale.
 
 ---
 
-## Esportazione Patch
+## Esportazione e Distribuzione Patch
 
 Dopo aver completato una traduzione, puoi esportare un pacchetto pronto per la distribuzione.
 
@@ -640,7 +651,7 @@ Dopo aver completato una traduzione, puoi esportare un pacchetto pronto per la d
 
 Crea un file ZIP sul tuo **Desktop** contenente:
 
-```
+```text
 📦 NomeGioco_it_patch.zip
 ├── 📁 translated/          # File tradotti pronti all'uso
 │   └── file_tradotto.csv
@@ -658,6 +669,7 @@ Crea un file ZIP sul tuo **Desktop** contenente:
 ### Formato XUnity.AutoTranslator
 
 Il formato XUnity è compatibile con:
+
 - **Unity games** con BepInEx + XUnity.AutoTranslator
 - Formato: `testo_originale=testo_tradotto`
 
@@ -707,11 +719,13 @@ I backup sono salvati in due posti:
 ### Come Ripristinare un Backup
 
 #### Metodo 1: Dall'app GameStringer
+
 1. Vai nella sezione **Backup** dell'app
 2. Seleziona il file da ripristinare
 3. Clicca **Ripristina**
 
 #### Metodo 2: Manualmente
+
 1. Trova il file backup in `.gamestringer_backups/`
 2. Copia il file nella posizione originale
 3. Rinomina rimuovendo il timestamp
@@ -724,7 +738,7 @@ L'Editor permette di modificare manualmente le traduzioni.
 
 ### Struttura Gerarchica
 
-```
+```text
 📁 Giochi
 ├── 📁 Decarnation
 │   ├── 📄 dialoghi.csv (897 stringhe)
@@ -733,7 +747,7 @@ L'Editor permette di modificare manualmente le traduzioni.
     └── 📄 testi.json (456 stringhe)
 ```
 
-### Funzionalità
+### Funzionalità Editor
 
 - **Ricerca**: trova stringhe per testo
 - **Filtri**: mostra solo traduzioni incomplete, con errori, ecc.
@@ -755,7 +769,7 @@ I dizionari salvano le traduzioni per ogni gioco.
 
 ### Posizione dei Dizionari
 
-```
+```text
 %APPDATA%/GameStringer/dictionaries/
 ├── 1672310_decarnation.json
 ├── 123456_altro_gioco.json
