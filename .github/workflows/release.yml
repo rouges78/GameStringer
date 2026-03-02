@@ -79,9 +79,16 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ github.event.inputs.version }}".TrimStart('v')
-          $exePath = "src-tauri/target/x86_64-pc-windows-msvc/release/GameStringer.exe"
           
-          if (Test-Path $exePath) {
+          # Search for exe in possible paths
+          $candidates = @(
+            "src-tauri/target/x86_64-pc-windows-msvc/release/GameStringer.exe",
+            "src-tauri/target/release/GameStringer.exe"
+          )
+          $exePath = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          $releaseDir = if ($exePath) { Split-Path $exePath } else { "" }
+          
+          if ($exePath) {
             # Create portable folder
             $portableDir = "GameStringer-$version-portable"
             New-Item -ItemType Directory -Force -Path $portableDir
@@ -90,7 +97,7 @@ jobs:
             Copy-Item $exePath -Destination "$portableDir/GameStringer.exe"
             
             # Copy WebView2 loader if exists
-            $webview2 = "src-tauri/target/x86_64-pc-windows-msvc/release/WebView2Loader.dll"
+            $webview2 = Join-Path $releaseDir "WebView2Loader.dll"
             if (Test-Path $webview2) {
               Copy-Item $webview2 -Destination "$portableDir/"
             }
