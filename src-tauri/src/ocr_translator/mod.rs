@@ -1,6 +1,8 @@
 // OCR Translator Module
 // Cattura schermo → OCR → Traduzione → Overlay
 
+use tauri::Emitter;
+
 mod screen_capture;
 mod ocr_engine;
 mod overlay;
@@ -217,7 +219,6 @@ pub async fn position_overlay_on_window(app: tauri::AppHandle, hwnd: isize) -> R
 }
 
 fn run_ocr_loop(app: tauri::AppHandle, config: OcrConfig) {
-    use tauri::Manager;
     log::info!("📷 OCR loop avviato (target_window: {:?})", config.target_window);
     
     while OCR_RUNNING.load(Ordering::SeqCst) {
