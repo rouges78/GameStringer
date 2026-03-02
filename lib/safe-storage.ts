@@ -206,26 +206,62 @@ function cleanupOldBackups(): void {
 }
 
 /**
- * Pulisce dati vecchi per liberare spazio
+ * Pulisce dati vecchi per liberare spazio (aggressivo)
  */
 function cleanupOldData(): void {
   if (!isClient()) return;
   
-  const keysToCheck = [
+  // Step 1: Rimuovi tutti i backup e metadata (ridondanti)
+  const toRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.endsWith(BACKUP_SUFFIX) || key.endsWith(META_SUFFIX))) {
+      toRemove.push(key);
+    }
+  }
+  toRemove.forEach(key => {
+    try { localStorage.removeItem(key); } catch { /* ignora */ }
+  });
+
+  // Step 2: Rimuovi chiavi note non essenziali
+  const expendableKeys = [
     'gamestringer_progress_events',
     'gs_activity_log',
-    'gs_debug_logs'
+    'gs_debug_logs',
+    'gs_harvest_',
+    'gs_community_cache',
+    'gs_nexus_cache',
+    'gs_ocr_settings',
+    'gs_voice_cache',
+    'gs_vr_settings',
+    'gs_subtitle_settings',
   ];
   
-  keysToCheck.forEach(key => {
-    try {
-      localStorage.removeItem(key);
-      localStorage.removeItem(key + BACKUP_SUFFIX);
-      localStorage.removeItem(key + META_SUFFIX);
-    } catch {
-      // Ignora
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i);
+    if (!key) continue;
+    if (expendableKeys.some(prefix => key === prefix || key.startsWith(prefix))) {
+      try { localStorage.removeItem(key); } catch { /* ignora */ }
     }
-  });
+  }
+
+  // Step 3: Se ancora pieno, rimuovi le chiavi più grandi (escluse quelle critiche)
+  const criticalKeys = ['gs_profile_session', 'gs_last_activity', 'gs_site_lang'];
+  const items: { key: string; size: number }[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || criticalKeys.includes(key)) continue;
+    const val = localStorage.getItem(key);
+    items.push({ key, size: (val?.length || 0) + key.length });
+  }
+  // Ordina per dimensione decrescente e rimuovi i più grandi
+  items.sort((a, b) => b.size - a.size);
+  for (const item of items.slice(0, 5)) {
+    try {
+      localStorage.removeItem(item.key);
+      console.warn(`[SafeStorage] Rimosso "${item.key}" (${item.size} chars) per liberare spazio`);
+    } catch { /* ignora */ }
+  }
 }
 
 /**

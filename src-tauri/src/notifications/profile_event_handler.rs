@@ -141,6 +141,12 @@ impl ProfileEventHandler {
         Ok(0)
     }
 
+    /// Ottiene il notification_manager (solo per test)
+    #[cfg(test)]
+    pub fn get_notification_manager(&self) -> &Arc<Mutex<NotificationManager>> {
+        &self.notification_manager
+    }
+
     /// Ottiene statistiche sulle notifiche per un profilo
     pub async fn get_profile_notification_stats(&self, profile_id: &str) -> NotificationResult<crate::notifications::models::NotificationStats> {
         let manager = self.notification_manager.lock().await;

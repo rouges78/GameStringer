@@ -84,7 +84,7 @@ impl AutoEventIntegration {
             )
         };
 
-        let request = CreateNotificationRequest {
+        let _request = CreateNotificationRequest {
             profile_id: profile_id.to_string(),
             notification_type: if success { NotificationType::Profile } else { NotificationType::Security },
             title,

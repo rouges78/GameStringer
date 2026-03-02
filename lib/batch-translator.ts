@@ -10,6 +10,8 @@ import { runQualityGates, quickQualityCheck, QualityReport, validateBatch } from
 import { classifyBatch, classifyContent, ContentClassification, BatchClassificationResult } from './content-classifier';
 import { translateSmart } from './ai-translate-direct';
 import { buildRelevantGlossaryHint } from './auto-glossary';
+import { harvestBatch, type HarvestInput, type BatchHarvestResult } from './context-harvester';
+import { runPipeline, type PipelineResult } from './ai-pipeline';
 
 // ============================================================================
 // TYPES
@@ -107,6 +109,11 @@ export interface BatchOptions {
   glossaryTerms?: Array<{ original: string; translation: string }>;
   gameContext?: string;
   characterContext?: string;
+
+  // Pipeline options
+  usePipeline?: boolean;       // Se true, usa AI Pipeline multi-step per qualità massima
+  pipelineAutoFix?: boolean;   // Auto-fix errori QA (default: true)
+  pipelineReview?: boolean;    // Review finale AI (default: true)
 }
 
 export interface BatchResults {
@@ -474,12 +481,34 @@ export class BatchTranslator {
         ? buildRelevantGlossaryHint(this.job.gameId, batchTexts)
         : '';
 
+      // Context Harvester: estrai contesto automatico dai metadata dei file
+      let harvestedContext: BatchHarvestResult | undefined;
+      try {
+        const harvestInputs: HarvestInput[] = batchItems.map((item, idx) => ({
+          text: item.sourceText,
+          key: item.metadata?.key,
+          filename: item.metadata?.filename,
+          lineNumber: item.metadata?.lineNumber,
+          comment: item.metadata?.context,
+          maxLength: item.metadata?.maxLength,
+          previousText: idx > 0 ? batchItems[idx - 1].sourceText : undefined,
+          nextText: idx < batchItems.length - 1 ? batchItems[idx + 1].sourceText : undefined,
+          gameGenre: this.job?.gameGenre,
+          gameName: this.job?.gameName,
+        }));
+        harvestedContext = harvestBatch(harvestInputs);
+        console.log(`[BatchTranslator] Context harvested: ${harvestedContext.stats.stringsWithConstraints} constrained, ${harvestedContext.stats.stringsWithPlaceholders} with placeholders`);
+      } catch (e) {
+        console.warn('[BatchTranslator] Context harvest failed, continuing without:', e);
+      }
+
       const result = await translateSmart({
         texts: batchTexts,
         targetLanguage: this.job.targetLanguage,
         sourceLanguage: this.job.sourceLanguage || 'en',
         context: this.job.options.gameContext,
         glossaryHint: glossaryHint || undefined,
+        harvestedContext,
       });
       
       if (!result.success) {

@@ -853,11 +853,27 @@ pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, S
         "tres", "tscn", "translation"
     ];
     
+    // Cartelle da escludere (runtime engine, vcs, cache, NO dati di traduzione)
+    let excluded_dirs = [
+        "monobleedingedge", "__pycache__", "node_modules",
+        ".git", ".svn", ".hg",
+    ];
+    
     let mut found_files: Vec<String> = Vec::new();
     
     for entry in WalkDir::new(path)
         .max_depth(5)
         .into_iter()
+        .filter_entry(|e| {
+            // Escludi cartelle non pertinenti
+            if e.file_type().is_dir() {
+                if let Some(name) = e.file_name().to_str() {
+                    let name_lower = name.to_lowercase();
+                    return !excluded_dirs.contains(&name_lower.as_str());
+                }
+            }
+            true
+        })
         .filter_map(|e| e.ok())
     {
         if entry.file_type().is_file() {

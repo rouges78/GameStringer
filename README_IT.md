@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versione-1.0.9-blue" alt="Versione" />
+  <img src="https://img.shields.io/badge/versione-1.4.1-blue" alt="Versione" />
   <img src="https://img.shields.io/badge/piattaforma-Windows-lightgrey" alt="Piattaforma" />
   <img src="https://img.shields.io/badge/licenza-Source--Available-green" alt="Licenza" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -121,7 +121,7 @@
 
 ## � Documentazione
 
-Guide utente disponibili in 7 lingue:
+Guide utente disponibili in 11 lingue:
 
 | Lingua | Guida |
 |--------|-------|
@@ -132,6 +132,10 @@ Guide utente disponibili in 7 lingue:
 | 🇩🇪 Tedesco | [USER_GUIDE_DE.md](docs/USER_GUIDE_DE.md) |
 | 🇯🇵 Giapponese | [USER_GUIDE_JA.md](docs/USER_GUIDE_JA.md) |
 | 🇨🇳 Cinese | [USER_GUIDE_ZH.md](docs/USER_GUIDE_ZH.md) |
+| 🇰🇷 Coreano | [USER_GUIDE_KO.md](docs/USER_GUIDE_KO.md) |
+| 🇧🇷 Portoghese | [USER_GUIDE_PT.md](docs/USER_GUIDE_PT.md) |
+| 🇷🇺 Russo | [USER_GUIDE_RU.md](docs/USER_GUIDE_RU.md) |
+| 🇵🇱 Polacco | [USER_GUIDE_PL.md](docs/USER_GUIDE_PL.md) |
 
 ---
 

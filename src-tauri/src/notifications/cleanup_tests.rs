@@ -1,15 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::notifications::{
         models::{CreateNotificationRequest, NotificationType, NotificationPriority, NotificationMetadata, NotificationPreferences},
         storage::NotificationStorage,
         manager::NotificationManager,
-        cleanup::{NotificationCleanupManager, CleanupConfig},
+        cleanup::CleanupConfig,
     };
     use tempfile::tempdir;
     use chrono::{Duration, Utc};
-    use std::sync::Arc;
     use tokio::time::{sleep, Duration as TokioDuration};
 
     async fn create_test_manager_with_cleanup() -> (NotificationManager, tempfile::TempDir) {
@@ -155,7 +153,7 @@ mod tests {
         let cleanup_result = manager.run_manual_cleanup().await.unwrap();
         
         // Verifica che il cleanup sia stato eseguito
-        assert!(cleanup_result.total_cleaned >= 0); // Potrebbe essere 0 se non abbastanza vecchie
+        let _ = cleanup_result.total_cleaned; // Verifica che il cleanup sia stato eseguito
     }
 
     #[tokio::test]
@@ -296,6 +294,6 @@ mod tests {
         let cleanup_result = manager.run_manual_cleanup().await.unwrap();
         
         // Verifica che il cleanup sia stato eseguito (anche se potrebbe non eliminare nulla se troppo recente)
-        assert!(cleanup_result.total_cleaned >= 0);
+        let _ = cleanup_result.total_cleaned;
     }
 }

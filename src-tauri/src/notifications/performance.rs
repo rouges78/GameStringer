@@ -1,12 +1,12 @@
 use chrono::{DateTime, Utc};
-use rusqlite::{params, Connection, Transaction};
+use rusqlite::{params, Connection};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use crate::notifications::{
-    errors::{NotificationError, NotificationResult},
+    errors::NotificationResult,
     models::{Notification, NotificationPreferences},
 };
 
@@ -15,7 +15,7 @@ pub struct ConnectionPool {
     connections: Arc<Mutex<Vec<Connection>>>,
     db_path: PathBuf,
     max_connections: usize,
-    connection_timeout: Duration,
+    _connection_timeout: Duration,
     last_cleanup: Arc<Mutex<Instant>>,
 }
 
@@ -26,7 +26,7 @@ impl ConnectionPool {
             connections: Arc::new(Mutex::new(Vec::new())),
             db_path,
             max_connections,
-            connection_timeout: Duration::from_secs(30),
+            _connection_timeout: Duration::from_secs(30),
             last_cleanup: Arc::new(Mutex::new(Instant::now())),
         }
     }
@@ -372,14 +372,14 @@ impl BatchCleanupResult {
 /// Query ottimizzate con prepared statements cache
 pub struct OptimizedQueryManager {
     pool: Arc<ConnectionPool>,
-    prepared_statements_cache: Arc<Mutex<HashMap<String, String>>>,
+    _prepared_statements_cache: Arc<Mutex<HashMap<String, String>>>,
 }
 
 impl OptimizedQueryManager {
     pub fn new(pool: Arc<ConnectionPool>) -> Self {
         Self {
             pool,
-            prepared_statements_cache: Arc::new(Mutex::new(HashMap::new())),
+            _prepared_statements_cache: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 

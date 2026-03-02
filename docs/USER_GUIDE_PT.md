@@ -1,50 +1,50 @@
-# 📖 GameStringer - Complete User Guide
+# 📖 GameStringer - Guia do Usuário Completo
 
-## Table of Contents
+## Índice
 
-1. [Overview](#overview)
-2. [First Launch and Profiles](#first-launch-and-profiles)
-3. [Library and Game Details](#library-and-game-details)
+1. [Visão Geral](#visão-geral)
+2. [Primeiro Lançamento e Perfis](#primeiro-lançamento-e-perfis)
+3. [Biblioteca e Detalhes do Jogo](#biblioteca-e-detalhes-do-jogo)
 4. [Neural Translator Pro](#neural-translator-pro)
 5. [Translation Wizard](#translation-wizard)
 6. [Translation Bridge](#translation-bridge)
 7. [Subtitle Translator Pro](#subtitle-translator-pro)
 8. [Retro ROM Tools](#retro-rom-tools)
-9. [Public API v1](#public-api-v1)
-10. [Voice Clone Studio](#voice-clone-studio) *(NEW v1.0.5)*
-11. [VR Text Overlay](#vr-text-overlay) *(NEW v1.0.5)*
-12. [Quality Gates](#quality-gates) *(NEW v1.0.5)*
-13. [Player Feedback](#player-feedback) *(NEW v1.0.5)*
-14. [New AI Providers v1.0.6](#new-ai-providers-v106) *(NEW v1.0.6)*
-15. [Community Hub v1.0.7](#community-hub-v107) *(NEW v1.0.7)*
-16. [UI Improvements v1.0.9](#ui-improvements-v109) *(NEW v1.0.9)*
-17. [Danganronpa Auto-Translator](#danganronpa-auto-translator) *(NEW v1.1.0)*
-18. [Patch Export](#patch-export)
-19. [Apply to Game](#apply-to-game)
-20. [Backup Management](#backup-management)
-21. [Translation Editor](#translation-editor)
-22. [Activity History](#activity-history)
-23. [Dictionaries](#dictionaries)
-24. [Troubleshooting](#troubleshooting)
+9. [API Pública v1](#api-pública-v1)
+10. [Voice Clone Studio](#voice-clone-studio) *(NOVO v1.0.5)*
+11. [VR Text Overlay](#vr-text-overlay) *(NOVO v1.0.5)*
+12. [Quality Gates](#quality-gates) *(NOVO v1.0.5)*
+13. [Player Feedback](#player-feedback) *(NOVO v1.0.5)*
+14. [Novos Provedores AI v1.0.6](#novos-provedores-ai-v106) *(NOVO v1.0.6)*
+15. [Community Hub v1.0.7](#community-hub-v107) *(NOVO v1.0.7)*
+16. [Melhorias de UI v1.0.9](#melhorias-de-ui-v109) *(NOVO v1.0.9)*
+17. [Danganronpa Auto-Tradutor](#danganronpa-auto-tradutor) *(NOVO v1.1.0)*
+18. [Exportação de Patch](#exportação-de-patch)
+19. [Aplicar ao Jogo](#aplicar-ao-jogo)
+20. [Gerenciamento de Backup](#gerenciamento-de-backup)
+21. [Editor de Traduções](#editor-de-traduções)
+22. [Histórico de Atividades](#histórico-de-atividades)
+23. [Dicionários](#dicionários)
+24. [Solução de Problemas](#solução-de-problemas)
 
 ---
 
-## Overview
+## Visão Geral
 
-GameStringer is an advanced system for automatic and manual video game translation. It supports:
+GameStringer é um sistema avançado para tradução automática e manual de videojogos. Suporta:
 
-- **Game engines**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri and others
-- **File formats**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA and others
-- **AI Providers**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ providers)
-- **Languages**: 200+ supported languages (with NLLB-200)
-- **Multilingual UI**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL (11 languages)
-- **Gaming Stores**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
-- **NEW v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
-- **NEW v1.0.6**: Qwen 3 (Asian languages), NLLB-200 (200 languages), bug fixes
-- **NEW v1.0.7**: Community Hub, GitHub Discussions, License v1.1
-- **NEW v1.0.8**: Update download fix
-- **NEW v1.0.9**: Animated headers, update notifications, UI polish
-- **NEW v1.4.0**: Unified Radix UI, per-row Quality Badges, RTL support, generic Ollama, TypeScript cleanup
+- **Motores de jogo**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri e outros
+- **Formatos de arquivo**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA e outros
+- **Provedores AI**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ provedores)
+- **Idiomas**: 200+ idiomas suportados (com NLLB-200)
+- **UI Multilingual**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL (11 idiomas)
+- **Lojas de Jogos**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
+- **NOVO v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
+- **NOVO v1.0.6**: Qwen 3 (idiomas asiáticos), NLLB-200 (200 idiomas), correções
+- **NOVO v1.0.7**: Community Hub, GitHub Discussions, Licença v1.1
+- **NOVO v1.0.8**: Correção de download de atualizações
+- **NOVO v1.0.9**: Cabeçalhos animados, notificações de atualização, melhorias de UI
+- **NOVO v1.4.0**: Radix UI unificado, Quality Badges por linha, suporte RTL, Ollama genérico, limpeza TypeScript
 
 ---
 
@@ -935,4 +935,4 @@ Each translated row now shows visual quality indicators:
 
 ---
 
-*GameStringer v1.4.1 - Guide updated 02/03/2026*
+*GameStringer v1.4.1 - Guia atualizado 02/03/2026*

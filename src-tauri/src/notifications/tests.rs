@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::notifications::{
         models::{CreateNotificationRequest, NotificationFilter, NotificationMetadata, NotificationType, NotificationPriority},
         storage::NotificationStorage,

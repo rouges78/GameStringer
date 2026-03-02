@@ -1,21 +1,18 @@
 #[cfg(test)]
 mod integration_tests {
-    use super::*;
     use crate::notifications::{
-        models::{CreateNotificationRequest, NotificationType, NotificationPriority, NotificationFilter},
+        models::NotificationFilter,
         storage::NotificationStorage,
         manager::NotificationManager,
         profile_integration::ProfileNotificationIntegration,
         profile_event_handler::ProfileEventHandler,
-        access_control::NotificationAccessControl,
     };
     use crate::profiles::manager::ProfileEvent;
-    use chrono::Utc;
     use std::sync::Arc;
     use tokio::sync::Mutex;
 
     async fn create_test_system() -> (NotificationManager, ProfileNotificationIntegration, ProfileEventHandler) {
-        let storage = NotificationStorage::new("test_integration.db".into()).unwrap();
+        let storage = NotificationStorage::new("test_integration.db".into());
         let manager = NotificationManager::new(storage);
         manager.initialize().await.unwrap();
         
@@ -29,15 +26,15 @@ mod integration_tests {
         );
         
         // Estrai i valori dal Mutex per il test
-        let manager = Arc::try_unwrap(manager_arc).unwrap().into_inner();
-        let integration = Arc::try_unwrap(integration_arc).unwrap().into_inner();
+        let manager = Arc::try_unwrap(manager_arc).unwrap_or_else(|_| panic!("Failed to unwrap manager_arc")).into_inner();
+        let integration = Arc::try_unwrap(integration_arc).unwrap_or_else(|_| panic!("Failed to unwrap integration_arc")).into_inner();
         
         (manager, integration, event_handler)
     }
 
     #[tokio::test]
     async fn test_complete_profile_lifecycle() {
-        let (mut manager, integration, event_handler) = create_test_system().await;
+        let (manager, integration, event_handler) = create_test_system().await;
         
         let profile_id = "test_profile";
         let profile_name = "Test Profile";
@@ -110,7 +107,7 @@ mod integration_tests {
         assert!(profile2_notifications.iter().all(|n| n.profile_id == other_profile_id));
         
         // 5. Test eliminazione profilo
-        let delete_event = ProfileEvent::ProfileDeleted {
+        let _delete_event = ProfileEvent::ProfileDeleted {
             profile_id: other_profile_id.to_string(),
             name: "Other Profile".to_string(),
         };
@@ -137,7 +134,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_unauthorized_cross_profile_operations() {
-        let (mut manager, integration, _) = create_test_system().await;
+        let (manager, integration, _) = create_test_system().await;
         
         let profile1_id = "profile1";
         let profile2_id = "profile2";
@@ -194,7 +191,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_notification_preferences_isolation() {
-        let (mut manager, _, _) = create_test_system().await;
+        let (manager, _, _) = create_test_system().await;
         
         let profile1_id = "profile1";
         let profile2_id = "profile2";
@@ -227,7 +224,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_security_report_generation() {
-        let (mut manager, integration, event_handler) = create_test_system().await;
+        let (_manager, integration, event_handler) = create_test_system().await;
         
         let profile_id = "test_profile";
         
@@ -253,7 +250,7 @@ mod integration_tests {
 
     #[tokio::test]
     async fn test_notification_cleanup_on_profile_switch() {
-        let (mut manager, integration, event_handler) = create_test_system().await;
+        let (manager, integration, event_handler) = create_test_system().await;
         
         let profile1_id = "profile1";
         let profile2_id = "profile2";

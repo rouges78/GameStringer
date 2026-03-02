@@ -36,7 +36,7 @@ GameStringer è un sistema avanzato per la traduzione automatica e manuale di vi
 - **Formati file**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA e altri
 - **Provider AI**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ provider)
 - **Lingue**: 200+ lingue supportate (con NLLB-200)
-- **UI Multilingua**: IT, EN, ES, FR, DE, JA, ZH
+- **UI Multilingua**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL (11 lingue)
 - **Store Gaming**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
 - **NUOVO v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
 - **NUOVO v1.0.6**: Qwen 3 (lingue asiatiche), NLLB-200 (200 lingue), bug fixes
@@ -850,4 +850,4 @@ Ogni riga tradotta ora mostra indicatori di qualità visivi:
 
 ---
 
-*GameStringer v1.4.0 - Guida aggiornata al 13/02/2026*
+*GameStringer v1.4.1 - Guida aggiornata al 02/03/2026*

@@ -1,12 +1,10 @@
 #[cfg(test)]
 mod profile_integration_tests {
-    use super::*;
     use crate::notifications::{
         manager::NotificationManager,
         storage::NotificationStorage,
         profile_integration::ProfileNotificationIntegration,
         models::{NotificationFilter, NotificationType, NotificationPriority},
-        errors::NotificationError,
     };
     use crate::profiles::manager::ProfileEvent;
     use tempfile::tempdir;
@@ -14,6 +12,7 @@ mod profile_integration_tests {
     use tokio::sync::Mutex;
 
     /// Helper per creare un'integrazione di test
+    #[allow(dead_code)]
     async fn create_test_integration() -> (NotificationManager, ProfileNotificationIntegration) {
         let temp_dir = tempdir().unwrap();
         let db_path = temp_dir.path().join("test_integration.db");
@@ -25,7 +24,7 @@ mod profile_integration_tests {
         let integration = ProfileNotificationIntegration::new(Arc::clone(&manager_arc));
         
         // Estrai il manager per i test
-        let manager = Arc::try_unwrap(manager_arc).unwrap().into_inner();
+        let manager = Arc::try_unwrap(manager_arc).unwrap_or_else(|_| panic!("Failed to unwrap manager_arc")).into_inner();
         
         (manager, integration)
     }

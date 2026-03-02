@@ -53,7 +53,11 @@ import {
   MessageSquare,
   Monitor,
   User,
-  Heart
+  Heart,
+  Wheat,
+  Workflow,
+  ScanEye,
+  Rocket
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -135,6 +139,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: t('nav.multiLlm'), href: '/translator/compare', icon: Brain },
           { name: 'Emotion', href: '/emotion-translator', icon: Sparkles },
           { name: 'AI Review', href: '/ai-review', icon: Bot },
+          { name: t('nav.offlineTranslator') || 'Offline Translator', href: '/offline-translator', icon: WifiOff },
         ]
       },
       { 
@@ -164,9 +169,13 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/batch',
         icon: FolderTree,
         subItems: [
+          { name: 'Auto-Translate', href: '/auto-translate', icon: Rocket },
           { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
           { name: t('nav.dictionary'), href: '/memory', icon: Database },
           { name: 'Glossario', href: '/glossary', icon: BookOpen },
+          { name: 'Context Harvester', href: '/context-harvester', icon: Wheat },
+          { name: 'AI Pipeline', href: '/ai-pipeline', icon: Workflow },
+          { name: 'OCR Multi-Engine', href: '/ocr-engines', icon: ScanEye },
           { name: 'Translator Tools', href: '/translator/tools', icon: Sparkles },
         ]
       },
@@ -300,6 +309,27 @@ const CHANGELOG_CONTENT = `
 | Beta | 0.5.x - 0.8.x | ✅ Completato |
 | Release Candidate | 0.9.x | ✅ Completato |
 | **Release Pubblica** | **1.0.x** | ✅ Rilasciato |
+
+---
+
+## 📅 Marzo 2026
+
+### 🌍 v1.4.1 — i18n 11 Lingue, Guide Complete & CI Fix
+\`2026-03-02\`
+
+**i18n — 11 Lingue UI**
+- 4 nuove lingue: Coreano (KO), Portoghese (PT), Russo (RU), Polacco (PL)
+- translations.ts: +9.056 righe (da 13.472 a 22.528)
+- Lingue totali: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL
+
+**Guide Utente Aggiornate**
+- 7 guide esistenti aggiornate con sezioni v1.1-v1.4
+- 4 nuove guide: KO, PT, RU, PL
+- README aggiornati con 11 lingue
+
+**CI/CD**
+- Workflow CI Linux + Windows fixato
+- Stub frontend out/ per tauri::generate_context!()
 
 ---
 

@@ -1,21 +1,19 @@
 #[cfg(test)]
 mod manager_tests {
-    use super::*;
     use crate::notifications::{
         manager::NotificationManager,
         storage::NotificationStorage,
         models::{
             CreateNotificationRequest, NotificationFilter, NotificationMetadata, 
-            NotificationType, NotificationPriority, NotificationPreferences,
-            PartialNotificationPreferences, QuietHoursSettings, TypePreference,
+            NotificationType, NotificationPriority,
+            PartialNotificationPreferences, QuietHoursSettings,
             NotificationSortBy
         },
-        cleanup::{CleanupConfig, CleanupStats},
+        cleanup::CleanupConfig,
         errors::NotificationError,
     };
     use tempfile::tempdir;
     use chrono::{Utc, Duration};
-    use std::collections::HashMap;
 
     /// Helper per creare un manager di test
     async fn create_test_manager() -> NotificationManager {

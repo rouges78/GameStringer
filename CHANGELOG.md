@@ -17,6 +17,35 @@
 
 ---
 
+## 📅 Marzo 2026
+
+### v1.4.1 — i18n 11 Lingue, Guide Complete & CI Fix 🌍📚
+
+> **Data**: 2026-03-02
+
+#### 🌍 i18n — 11 Lingue UI
+
+- **4 nuove lingue**: Coreano (KO), Portoghese (PT), Russo (RU), Polacco (PL)
+- **translations.ts**: da 13.472 a 22.528 righe (+9.056 righe)
+- **Locale type** e **SUPPORTED_LOCALES** aggiornati con `ru` e `pl`
+- **locales/ru/common.json** e **locales/pl/common.json** creati
+- **Lingue totali UI**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL
+
+#### 📚 Guide Utente Aggiornate
+
+- **7 guide esistenti** (IT, EN, ES, FR, DE, JA, ZH) aggiornate con sezioni v1.1.0-v1.4.0
+- **4 nuove guide**: USER_GUIDE_KO.md, USER_GUIDE_PT.md, USER_GUIDE_RU.md, USER_GUIDE_PL.md
+- **README.md** e **README_IT.md** aggiornati con 11 lingue e tabella guide estesa
+- **site-i18n.js** aggiornato con supporto RU e PL
+
+#### 🔧 CI/CD
+
+- **Workflow CI** Linux + Windows fixato e funzionante
+- **Stub frontend** `out/` directory per `tauri::generate_context!()`
+- **Rust stable** toolchain (≥1.88) per compatibilità `home@0.5.12`
+
+---
+
 ## 📅 Febbraio 2026
 
 ### v1.4.0 — Radix Unificato, Quality Badges & Pulizia Codebase 🧹✨

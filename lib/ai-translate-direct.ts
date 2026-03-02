@@ -1,5 +1,7 @@
 import { RagGlossary } from './rag-glossary';
 import { AgenticTranslator } from './agentic-translator';
+import { harvestBatch, batchContextToPromptHint, type BatchHarvestResult, type HarvestInput } from './context-harvester';
+import { buildFewShotBlock } from './adaptive-mt';
 
 /**
  * AI Translation - Chiamate dirette API (NO API routes Next.js)
@@ -14,6 +16,9 @@ export interface TranslateOptions {
   glossaryHint?: string;
   gameId?: string; // Usato per caricare il RAG locale
   useAgenticPipeline?: boolean; // Se true, usa il QA multi-agente per la massima qualità
+  styleInstruction?: string; // DeepL Custom Instructions — es. "Usa un tono informale e amichevole"
+  harvestedContext?: BatchHarvestResult; // Contesto auto-estratto dal Context Harvester
+  harvestInputs?: HarvestInput[]; // Input per auto-harvest (se harvestedContext non fornito)
 }
 
 export interface TranslateResult {
@@ -107,7 +112,54 @@ function buildTranslationPrompt(opts: TranslateOptions): string {
   if (opts.context) {
     prompt += ` Context: ${opts.context}`;
   }
+
+  // Context Harvester: estrai contesto automatico dalle stringhe
+  let harvestResult = opts.harvestedContext;
+  if (!harvestResult && opts.texts.length > 0) {
+    try {
+      const inputs: HarvestInput[] = opts.harvestInputs || opts.texts.map(t => ({
+        text: t,
+        gameGenre: undefined,
+        gameName: undefined,
+      }));
+      harvestResult = harvestBatch(inputs);
+    } catch (e) {
+      console.warn('[ContextHarvester] Auto-harvest fallito:', e);
+    }
+  }
+  if (harvestResult) {
+    const contextHint = batchContextToPromptHint(harvestResult);
+    if (contextHint) {
+      prompt += `\n\n${contextHint}`;
+    }
+    // Aggiungi hint per-stringa dove significativo
+    const perStringHints: string[] = [];
+    for (let i = 0; i < Math.min(harvestResult.contexts.length, opts.texts.length); i++) {
+      const ctx = harvestResult.contexts[i];
+      if (ctx.promptHint && ctx.screenConfidence >= 0.3) {
+        perStringHints.push(`${i + 1}. ${ctx.promptHint}`);
+      }
+    }
+    if (perStringHints.length > 0) {
+      prompt += `\n\n[PER-STRING CONTEXT]\n${perStringHints.join('\n')}`;
+    }
+  }
   
+  // Adaptive MT: inietta few-shot examples dalle correzioni umane
+  try {
+    const fewShot = buildFewShotBlock(
+      opts.texts,
+      opts.sourceLanguage || 'en',
+      opts.targetLanguage,
+      { gameId: opts.gameId }
+    );
+    if (fewShot.prompt && fewShot.exampleCount > 0) {
+      prompt += `\n\n${fewShot.prompt}`;
+    }
+  } catch (e) {
+    console.warn('[AdaptiveMT] Few-shot injection failed:', e);
+  }
+
   prompt += `\n\n${opts.texts.map((t, i) => `${i + 1}. ${t}`).join('\n')}`;
   
   return prompt;
@@ -222,6 +274,49 @@ async function translateWithGroq(
     throw new Error(`ContentTooLarge`);
   }
   if (!res.ok) throw new Error(`Groq ${res.status}`);
+
+  const data = await res.json();
+  const responseText = data?.choices?.[0]?.message?.content || '';
+
+  try {
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+  } catch {}
+
+  return responseText
+    .split('\n')
+    .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
+    .filter((line: string) => line.length > 0);
+}
+
+/** Traduzione con Groq API — OpenAI GPT-OSS 120B (gratuito, ~500 tok/s) */
+async function translateWithGroqGptOss(
+  apiKey: string,
+  opts: TranslateOptions
+): Promise<string[]> {
+  const prompt = buildTranslationPrompt(opts);
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'openai/gpt-oss-120b',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 8192,
+    }),
+  });
+
+  if (res.status === 429) {
+    throw new Error(`RateLimit`);
+  }
+  if (res.status === 413) {
+    throw new Error(`ContentTooLarge`);
+  }
+  if (!res.ok) throw new Error(`GroqGptOss ${res.status}`);
 
   const data = await res.json();
   const responseText = data?.choices?.[0]?.message?.content || '';
@@ -409,7 +504,7 @@ async function translateWithCohere(apiKey: string, opts: TranslateOptions): Prom
     .filter((line: string) => line.length > 0);
 }
 
-/** Together AI — OpenAI-compatible, Llama/Mixtral/Qwen, $25 free credit */
+/** Together AI — OpenAI-compatible, Llama 3.3 70B, $25 free credit */
 async function translateWithTogether(apiKey: string, opts: TranslateOptions): Promise<string[]> {
   return translateWithOpenAICompatible(apiKey, opts,
     'https://api.together.xyz/v1/chat/completions',
@@ -475,22 +570,48 @@ async function translateWithCerebras(apiKey: string, opts: TranslateOptions): Pr
   );
 }
 
-/** DeepL — qualità top per traduzioni, 500K chars/mese gratis */
+/** DeepL — qualità top per traduzioni, 500K chars/mese gratis, 106 lingue target */
 async function translateWithDeepL(
   apiKey: string,
   opts: TranslateOptions
 ): Promise<string[]> {
-  // DeepL usa codici lingua diversi
+  // DeepL usa codici lingua specifici — mappa estesa a 106 target (Gen 2026)
   const langMap: Record<string, string> = {
-    en: 'EN', it: 'IT', de: 'DE', fr: 'FR', es: 'ES', pt: 'PT-BR',
-    nl: 'NL', pl: 'PL', ru: 'RU', ja: 'JA', zh: 'ZH', ko: 'KO',
+    // Lingue principali
+    en: 'EN', it: 'IT', de: 'DE', fr: 'FR', es: 'ES', pt: 'PT-BR', 'pt-br': 'PT-BR', 'pt-pt': 'PT-PT',
+    nl: 'NL', pl: 'PL', ru: 'RU', ja: 'JA', zh: 'ZH-HANS', 'zh-tw': 'ZH-HANT', ko: 'KO',
+    // Lingue europee
     sv: 'SV', da: 'DA', fi: 'FI', el: 'EL', cs: 'CS', ro: 'RO',
     hu: 'HU', sk: 'SK', bg: 'BG', sl: 'SL', et: 'ET', lv: 'LV', lt: 'LT',
+    nb: 'NB', uk: 'UK', tr: 'TR', id: 'ID', ar: 'AR',
+    // Lingue aggiunte 2025-2026
+    th: 'TH', vi: 'VI', he: 'HE', hi: 'HI', ms: 'MS', tl: 'TL',
+    bn: 'BN', ta: 'TA', te: 'TE', mr: 'MR', ur: 'UR',
+    sw: 'SW', am: 'AM', km: 'KM', lo: 'LO', my: 'MY',
+    ka: 'KA', hy: 'HY', az: 'AZ', uz: 'UZ', kk: 'KK',
+    mn: 'MN', ne: 'NE', si: 'SI', ps: 'PS', fa: 'FA',
+    hr: 'HR', sr: 'SR', bs: 'BS', mk: 'MK', sq: 'SQ',
+    mt: 'MT', is: 'IS', ga: 'GA', cy: 'CY', eu: 'EU',
+    ca: 'CA', gl: 'GL', af: 'AF', zu: 'ZU',
   };
   const targetLang = langMap[opts.targetLanguage] || opts.targetLanguage.toUpperCase();
   // Determina endpoint (free vs pro)
   const isFree = apiKey.endsWith(':fx');
   const baseUrl = isFree ? 'https://api-free.deepl.com' : 'https://api.deepl.com';
+
+  // Costruisci body con Custom Instructions opzionali (DeepL Feb 2026)
+  const body: Record<string, unknown> = {
+    text: opts.texts,
+    target_lang: targetLang,
+  };
+  // Custom Instructions — personalizza tono e stile della traduzione
+  if (opts.styleInstruction) {
+    body.custom_instructions = opts.styleInstruction;
+  }
+  // Context — aiuta DeepL a capire il contesto per traduzioni più accurate
+  if (opts.context) {
+    body.context = opts.context;
+  }
 
   const res = await fetch(`${baseUrl}/v2/translate`, {
     method: 'POST',
@@ -498,10 +619,7 @@ async function translateWithDeepL(
       'Content-Type': 'application/json',
       Authorization: `DeepL-Auth-Key ${apiKey}`,
     },
-    body: JSON.stringify({
-      text: opts.texts,
-      target_lang: targetLang,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
@@ -992,7 +1110,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '$0',
     quality: '⭐⭐⭐⭐',
     speed: '🏎 Media',
-    providers: ['hymt', 'translategemma', 'ollama', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'ollama', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
   },
   {
     id: 'economy',
@@ -1010,7 +1128,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$0.25',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'mistral', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'mymemory', 'lingva'],
   },
   {
     id: 'quality',
@@ -1028,7 +1146,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$1.00+',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['deepl', 'anthropic', 'openai', 'translategemma', 'ollama', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
+    providers: ['deepl', 'anthropic', 'openai', 'translategemma', 'ollama', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
   },
 ];
 
@@ -1055,6 +1173,7 @@ const PROVIDER_MAP: Record<string, {
 }> = {
   gemini: { getKey: (k) => k.gemini, fn: translateWithGemini, isBlocked: () => isProviderBlocked('gemini'), needsKey: true },
   groq: { getKey: (k) => k.groq, fn: translateWithGroq, isBlocked: () => isProviderBlocked('groq'), needsKey: true },
+  'groq-gptoss': { getKey: (k) => k.groq, fn: translateWithGroqGptOss, isBlocked: () => isProviderBlocked('groq-gptoss'), needsKey: true },
   deepseek: { getKey: (k) => k.deepseek, fn: translateWithDeepSeek, isBlocked: () => isProviderBlocked('deepseek'), needsKey: true },
   openai: { getKey: (k) => k.openai, fn: translateWithOpenAI, isBlocked: () => isProviderBlocked('openai'), needsKey: true },
   anthropic: { getKey: (k) => k.anthropic, fn: translateWithAnthropic, isBlocked: () => isProviderBlocked('anthropic'), needsKey: true },
@@ -1088,7 +1207,8 @@ const PROVIDER_LABELS: Record<string, string> = {
   translategemma: 'TranslateGemma (locale)',
   hymt: 'HY-MT1.5 Tencent (locale, #1 WMT25)',
   gemini: 'Google Gemini',
-  groq: 'Groq',
+  groq: 'Groq (Llama 3.3 70B)',
+  'groq-gptoss': 'Groq (GPT-OSS 120B)',
   deepseek: 'DeepSeek',
   openai: 'OpenAI',
   anthropic: 'Anthropic Claude',
@@ -1111,6 +1231,7 @@ const OLLAMA_PROVIDERS = ['translategemma', 'hymt', 'ollama'];
 const API_KEY_URLS: Record<string, string> = {
   gemini: 'https://aistudio.google.com/app/apikey',
   groq: 'https://console.groq.com/keys',
+  'groq-gptoss': 'https://console.groq.com/keys',
   deepseek: 'https://platform.deepseek.com/api_keys',
   openai: 'https://platform.openai.com/api-keys',
   anthropic: 'https://console.anthropic.com/settings/keys',
@@ -1255,14 +1376,16 @@ export async function translateWithFallback(
   
   const providers: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
 
+  console.log(`[translateWithFallback] Chain preset: ${preset.id}, providers nella catena: [${preset.providers.join(', ')}]`);
   for (const providerName of preset.providers) {
     const info = PROVIDER_MAP[providerName];
-    if (!info) continue;
-    if (info.isBlocked()) continue;
+    if (!info) { console.warn(`[translateWithFallback] ⏭️ ${providerName}: non trovato in PROVIDER_MAP`); continue; }
+    if (info.isBlocked()) { console.warn(`[translateWithFallback] ⏭️ ${providerName}: BLOCCATO`); continue; }
     const key = info.getKey(keys);
-    if (info.needsKey && !key) continue;
+    if (info.needsKey && !key) { console.warn(`[translateWithFallback] ⏭️ ${providerName}: API key mancante`); continue; }
     providers.push({ name: providerName, key, fn: info.fn });
   }
+  console.log(`[translateWithFallback] Provider disponibili: [${providers.map(p => p.name).join(', ')}] (${providers.length}/${preset.providers.length})`);
 
   for (const provider of providers) {
     const MAX_RETRIES = 3;

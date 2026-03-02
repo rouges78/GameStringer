@@ -1,14 +1,30 @@
 {
-  "version": "1.4.0",
+  "version": "1.4.1",
   "major": 1,
   "minor": 4,
-  "patch": 0,
+  "patch": 1,
   "prerelease": null,
-  "buildNumber": 117,
-  "buildDate": "2026-02-13T22:30:00.000Z",
+  "buildNumber": 118,
+  "buildDate": "2026-03-02T15:00:00.000Z",
   "gitHash": "",
   "branch": "main",
   "changelog": {
+    "1.4.1": {
+      "date": "2026-03-02",
+      "type": "feature",
+      "changes": [
+        "i18n: UI completa in 11 lingue (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL)",
+        "Aggiunte traduzioni KO (coreano), PT (portoghese), RU (russo), PL (polacco) a translations.ts",
+        "Aggiornato Locale type e SUPPORTED_LOCALES con ru e pl",
+        "Creati locales/ru/common.json e locales/pl/common.json",
+        "Guide utente aggiornate in tutte le 11 lingue con sezioni v1.1-v1.4",
+        "Nuove guide utente: USER_GUIDE_KO.md, USER_GUIDE_PT.md, USER_GUIDE_RU.md, USER_GUIDE_PL.md",
+        "README.md e README_IT.md aggiornati con 11 lingue e nuove guide",
+        "CHANGELOG.md e main-layout changelog aggiornati",
+        "site-i18n.js aggiornato con ru e pl",
+        "CI: workflow Linux + Windows fixato e funzionante"
+      ]
+    },
     "1.4.0": {
       "date": "2026-02-13",
       "type": "feature",

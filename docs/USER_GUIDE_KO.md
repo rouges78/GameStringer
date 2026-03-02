@@ -1,50 +1,50 @@
-# 📖 GameStringer - Complete User Guide
+# 📖 GameStringer - 완전한 사용자 가이드
 
-## Table of Contents
+## 목차
 
-1. [Overview](#overview)
-2. [First Launch and Profiles](#first-launch-and-profiles)
-3. [Library and Game Details](#library-and-game-details)
+1. [개요](#개요)
+2. [첫 실행과 프로필](#첫-실행과-프로필)
+3. [라이브러리와 게임 상세](#라이브러리와-게임-상세)
 4. [Neural Translator Pro](#neural-translator-pro)
 5. [Translation Wizard](#translation-wizard)
 6. [Translation Bridge](#translation-bridge)
 7. [Subtitle Translator Pro](#subtitle-translator-pro)
 8. [Retro ROM Tools](#retro-rom-tools)
-9. [Public API v1](#public-api-v1)
-10. [Voice Clone Studio](#voice-clone-studio) *(NEW v1.0.5)*
-11. [VR Text Overlay](#vr-text-overlay) *(NEW v1.0.5)*
-12. [Quality Gates](#quality-gates) *(NEW v1.0.5)*
-13. [Player Feedback](#player-feedback) *(NEW v1.0.5)*
-14. [New AI Providers v1.0.6](#new-ai-providers-v106) *(NEW v1.0.6)*
-15. [Community Hub v1.0.7](#community-hub-v107) *(NEW v1.0.7)*
-16. [UI Improvements v1.0.9](#ui-improvements-v109) *(NEW v1.0.9)*
-17. [Danganronpa Auto-Translator](#danganronpa-auto-translator) *(NEW v1.1.0)*
-18. [Patch Export](#patch-export)
-19. [Apply to Game](#apply-to-game)
-20. [Backup Management](#backup-management)
-21. [Translation Editor](#translation-editor)
-22. [Activity History](#activity-history)
-23. [Dictionaries](#dictionaries)
-24. [Troubleshooting](#troubleshooting)
+9. [공개 API v1](#공개-api-v1)
+10. [Voice Clone Studio](#voice-clone-studio) *(새 기능 v1.0.5)*
+11. [VR Text Overlay](#vr-text-overlay) *(새 기능 v1.0.5)*
+12. [Quality Gates](#quality-gates) *(새 기능 v1.0.5)*
+13. [Player Feedback](#player-feedback) *(새 기능 v1.0.5)*
+14. [새 AI 제공업체 v1.0.6](#새-ai-제공업체-v106) *(새 기능 v1.0.6)*
+15. [Community Hub v1.0.7](#community-hub-v107) *(새 기능 v1.0.7)*
+16. [UI 개선 v1.0.9](#ui-개선-v109) *(새 기능 v1.0.9)*
+17. [Danganronpa 자동 번역기](#danganronpa-자동-번역기) *(새 기능 v1.1.0)*
+18. [패치 내보내기](#패치-내보내기)
+19. [게임에 적용](#게임에-적용)
+20. [백업 관리](#백업-관리)
+21. [번역 편집기](#번역-편집기)
+22. [활동 기록](#활동-기록)
+23. [사전](#사전)
+24. [문제 해결](#문제-해결)
 
 ---
 
-## Overview
+## 개요
 
-GameStringer is an advanced system for automatic and manual video game translation. It supports:
+GameStringer는 비디오 게임의 자동 및 수동 번역을 위한 고급 시스템입니다. 지원:
 
-- **Game engines**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri and others
-- **File formats**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA and others
-- **AI Providers**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ providers)
-- **Languages**: 200+ supported languages (with NLLB-200)
-- **Multilingual UI**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL (11 languages)
-- **Gaming Stores**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
-- **NEW v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
-- **NEW v1.0.6**: Qwen 3 (Asian languages), NLLB-200 (200 languages), bug fixes
-- **NEW v1.0.7**: Community Hub, GitHub Discussions, License v1.1
-- **NEW v1.0.8**: Update download fix
-- **NEW v1.0.9**: Animated headers, update notifications, UI polish
-- **NEW v1.4.0**: Unified Radix UI, per-row Quality Badges, RTL support, generic Ollama, TypeScript cleanup
+- **게임 엔진**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri 등
+- **파일 형식**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA 등
+- **AI 제공업체**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18개 이상)
+- **언어**: 200개 이상 지원 (NLLB-200 사용 시)
+- **다국어 UI**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL (11개 언어)
+- **게임 스토어**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
+- **새 기능 v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
+- **새 기능 v1.0.6**: Qwen 3 (아시아 언어), NLLB-200 (200개 언어), 버그 수정
+- **새 기능 v1.0.7**: Community Hub, GitHub Discussions, 라이선스 v1.1
+- **새 기능 v1.0.8**: 업데이트 다운로드 수정
+- **새 기능 v1.0.9**: 애니메이션 헤더, 업데이트 알림, UI 개선
+- **새 기능 v1.4.0**: Radix UI 통합, 행별 Quality Badges, RTL 지원, 범용 Ollama, TypeScript 정리
 
 ---
 
@@ -935,4 +935,4 @@ Each translated row now shows visual quality indicators:
 
 ---
 
-*GameStringer v1.4.1 - Guide updated 02/03/2026*
+*GameStringer v1.4.1 - 가이드 업데이트 02/03/2026*

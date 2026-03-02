@@ -1620,12 +1620,13 @@ fn find_uasset_data_offset(data: &[u8]) -> usize {
 /// Patcha un .uasset binario sostituendo le FString originali con le traduzioni.
 /// SICUREZZA: salta l'header UAsset (Name Map, Import/Export tables) per evitare
 /// di corrompere i dati strutturali. Patcha SOLO la sezione dati serializzati.
-/// VINCOLO IoStore: il file DEVE mantenere la stessa dimensione esatta (SerialSize nel UTOC).
-/// Le traduzioni più lunghe vengono troncate al confine di parola UTF-8.
+/// Le FString vengono sostituite con la lunghezza corretta (length prefix aggiornato).
+/// La dimensione del file può cambiare — il container IoStore registrerà la nuova size.
+/// Dopo il patching, aggiorna SerialSize nell'export table per riflettere la nuova dimensione.
 fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<String, String>) -> Vec<u8> {
-    let mut result = Vec::with_capacity(data.len());
+    let mut result = Vec::with_capacity(data.len() + data.len() / 4);
     let mut patch_count = 0u32;
-    let mut truncated_count = 0u32;
+    let mut grown_count = 0u32;
     
     // Trova dove inizia la sezione dati (dopo header strutturale)
     let data_offset = find_uasset_data_offset(data);
@@ -1660,36 +1661,17 @@ fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<Str
                             // Match diretto (testo identico)
                             if let Some(translated) = replacements.get(trimmed) {
                                 let new_bytes = translated.as_bytes();
-                                let capacity = text_bytes.len(); // spazio disponibile (stessa dimensione originale)
-                                let mut fitted = vec![0u8; capacity];
+                                let new_len = (new_bytes.len() + 1) as i32; // +1 per null terminator
                                 
-                                if new_bytes.len() <= capacity {
-                                    // La traduzione ci sta: copia e pad con null
-                                    fitted[..new_bytes.len()].copy_from_slice(new_bytes);
-                                } else {
-                                    // Traduzione troppo lunga: tronca al confine UTF-8 valido
-                                    truncated_count += 1;
-                                    
-                                    // Trova ultimo confine di carattere UTF-8 completo entro capacity
-                                    let mut safe_end = capacity;
-                                    while safe_end > 0 && !translated.is_char_boundary(safe_end) {
-                                        safe_end -= 1;
-                                    }
-                                    
-                                    fitted[..safe_end].copy_from_slice(&new_bytes[..safe_end]);
-                                    
-                                    if truncated_count <= 5 {
-                                        log::warn!("✂️ Troncata: '{}' → '{}' (cap={}, need={})",
-                                            &trimmed[..std::cmp::min(trimmed.len(), 30)],
-                                            &translated[..std::cmp::min(safe_end, 30)],
-                                            capacity, new_bytes.len());
-                                    }
+                                if new_bytes.len() > text_bytes.len() {
+                                    grown_count += 1;
                                 }
                                 
-                                // Mantieni length prefix originale (stessa dimensione)
-                                result.extend_from_slice(&len.to_le_bytes());
-                                result.extend_from_slice(&fitted);
-                                result.push(0);
+                                // Scrivi nuovo length prefix e nuova stringa
+                                result.extend_from_slice(&new_len.to_le_bytes());
+                                result.extend_from_slice(new_bytes);
+                                result.push(0); // null terminator
+                                
                                 i = str_end;
                                 patch_count += 1;
                                 continue;
@@ -1704,14 +1686,31 @@ fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<Str
         i += 1;
     }
     
-    if truncated_count > 0 {
-        log::warn!("✂️ Totale: {} stringhe troncate su {} patchate (traduzione più lunga dell'originale)", 
-            truncated_count, patch_count);
-    }
-    log::info!("🔧 Patchate {} stringhe (sezione dati, offset {}+), size invariata: {} bytes", 
-        patch_count, data_offset, result.len());
+    let size_delta = result.len() as i64 - data.len() as i64;
     
-    debug_assert_eq!(result.len(), data.len(), "patch_uasset_binary: la dimensione del file DEVE restare invariata per IoStore");
+    // Aggiorna SerialSize nell'export table se la dimensione è cambiata.
+    // IMPORTANTE: cerchiamo nei dati ORIGINALI dove serial_size + serial_offset == data.len(),
+    // poi aggiorniamo il campo alla stessa posizione nel result (l'header è copiato verbatim).
+    if size_delta != 0 {
+        if let Some((ss_offset, old_serial_size, _serial_offset)) = find_serial_size_in_header(data) {
+            let new_serial_size = old_serial_size + size_delta;
+            if new_serial_size > 0 && ss_offset + 8 <= result.len() {
+                let new_ss_bytes = new_serial_size.to_le_bytes();
+                result[ss_offset..ss_offset + 8].copy_from_slice(&new_ss_bytes);
+                log::info!("📐 SerialSize aggiornata: {} → {} (delta={}, offset_field={})", 
+                    old_serial_size, new_serial_size, size_delta, ss_offset);
+            }
+        } else {
+            log::warn!("⚠️ SerialSize non trovata nell'header — il file potrebbe non funzionare (delta={})", size_delta);
+        }
+    }
+    
+    if grown_count > 0 {
+        log::info!("📏 {} stringhe cresciute (traduzione più lunga dell'originale), delta totale: {} bytes", 
+            grown_count, size_delta);
+    }
+    log::info!("🔧 Patchate {} stringhe (sezione dati, offset {}+), size: {} → {} bytes (delta={})", 
+        patch_count, data_offset, data.len(), result.len(), size_delta);
     
     result
 }
@@ -1932,7 +1931,7 @@ fn create_iostore_container(
         }
     }
     
-    let ucas_size = ucas.len() as u64;
+    let _ucas_size = ucas.len() as u64;
     
     // === UTOC ===
     let entry_count = entries.len() as u32;
@@ -2106,53 +2105,95 @@ pub async fn apply_datatable_translation(
         log::warn!("⚠️ Nessuna traduzione reale! Inietto marker '[IT] ' per test IoStore override");
     }
     
-    // Raggruppa traduzioni per namespace (= IoStore path)
-    let mut by_namespace: std::collections::HashMap<String, Vec<(String, String)>> = std::collections::HashMap::new();
+    // Costruisci lookup: original → translated per tutte le traduzioni
+    let mut translation_lookup: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     for t in &translations {
         let translated = if inject_test_markers && t.original.len() >= 5 {
             format!("[IT] {}", t.original)
         } else {
             t.translated.clone()
         };
-        by_namespace.entry(t.namespace.clone())
-            .or_default()
-            .push((t.original.clone(), translated));
+        translation_lookup.insert(t.original.trim().to_string(), translated);
     }
     
-    log::info!("📦 {} namespace (file .uasset) da patchare", by_namespace.len());
+    log::info!("📦 {} traduzioni nel lookup, {} file nel chunk_map", 
+        translation_lookup.len(), 
+        chunk_map_json.as_object().map(|m| m.len().saturating_sub(1)).unwrap_or(0));
     
-    // Per ogni namespace, carica il .uasset cached, patcha, e trova il ChunkID
+    // Per ogni file cached nel chunk_map, cerca stringhe originali nel .uasset e applica traduzioni
     let mut iostore_entries: Vec<([u8; 12], Vec<u8>)> = Vec::new();
     let mut total_patched = 0usize;
     let mut skipped_no_chunk = 0usize;
     
-    for (namespace, pairs) in &by_namespace {
-        let safe_name = namespace.replace('/', "_").replace('\\', "_");
-        let cache_path = cache_dir.join(&safe_name);
+    let chunk_map_obj = chunk_map_json.as_object()
+        .ok_or("chunk_map.json non è un oggetto JSON")?;
+    
+    for (file_key, chunk_id_val) in chunk_map_obj {
+        // Skip metadata
+        if file_key == "__meta" { continue; }
         
+        let chunk_id_hex = match chunk_id_val.as_str() {
+            Some(hex) => hex,
+            None => continue,
+        };
+        
+        let cache_path = cache_dir.join(file_key);
         if !cache_path.exists() {
-            log::warn!("⚠️ Cache non trovata per {}: {}", namespace, cache_path.display());
+            log::warn!("⚠️ Cache non trovata per {}", file_key);
             continue;
         }
         
-        // Cerca ChunkID nel chunk_map
-        let chunk_id_hex = match chunk_map_json.get(&safe_name).and_then(|v| v.as_str()) {
-            Some(hex) => hex,
-            None => {
-                log::warn!("⚠️ ChunkID non trovato per {}", safe_name);
-                skipped_no_chunk += 1;
+        // Leggi il .uasset cached
+        let uasset_data = match fs::read(&cache_path) {
+            Ok(d) => d,
+            Err(e) => {
+                log::warn!("⚠️ Errore lettura cache {}: {}", file_key, e);
                 continue;
             }
         };
         
-        // Decodifica hex → bytes
+        // Scansiona le FString nel .uasset e cerca match nella translation_lookup
+        // Questo è O(n+m) — scansioniamo il binary una volta e facciamo lookup diretto nel HashMap
+        let mut replacements: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        let data_offset = find_uasset_data_offset(&uasset_data);
+        
+        {
+            let mut scan_i = data_offset;
+            while scan_i + 4 < uasset_data.len() {
+                let len = i32::from_le_bytes([
+                    uasset_data[scan_i], uasset_data[scan_i+1], 
+                    uasset_data[scan_i+2], uasset_data[scan_i+3]
+                ]);
+                if len >= 3 && len <= 2000 {
+                    let str_start = scan_i + 4;
+                    let str_end = str_start + (len as usize);
+                    if str_end <= uasset_data.len() && uasset_data[str_end - 1] == 0 {
+                        if let Ok(text) = std::str::from_utf8(&uasset_data[str_start..str_end - 1]) {
+                            let trimmed = text.trim();
+                            if let Some(translated) = translation_lookup.get(trimmed) {
+                                replacements.insert(trimmed.to_string(), translated.clone());
+                            }
+                        }
+                        scan_i = str_end;
+                        continue;
+                    }
+                }
+                scan_i += 1;
+            }
+        }
+        
+        if replacements.is_empty() {
+            continue;
+        }
+        
+        // Decodifica ChunkID hex → bytes
         let chunk_id_bytes: Vec<u8> = (0..chunk_id_hex.len())
             .step_by(2)
             .filter_map(|i| u8::from_str_radix(&chunk_id_hex[i..i+2], 16).ok())
             .collect();
         
         if chunk_id_bytes.len() != 12 {
-            log::warn!("⚠️ ChunkID invalido per {} (len={}): {}", safe_name, chunk_id_bytes.len(), chunk_id_hex);
+            log::warn!("⚠️ ChunkID invalido per {} (len={}): {}", file_key, chunk_id_bytes.len(), chunk_id_hex);
             skipped_no_chunk += 1;
             continue;
         }
@@ -2160,14 +2201,8 @@ pub async fn apply_datatable_translation(
         let mut chunk_id = [0u8; 12];
         chunk_id.copy_from_slice(&chunk_id_bytes);
         
-        // Leggi e patcha .uasset
-        let uasset_data = fs::read(&cache_path)
-            .map_err(|e| format!("Errore lettura cache {}: {}", safe_name, e))?;
-        
-        let replacements: std::collections::HashMap<String, String> = pairs.iter().cloned().collect();
-        
         log::info!("🔧 Patching {} ({} stringhe, {} bytes, chunk={})", 
-            namespace, replacements.len(), uasset_data.len(), chunk_id_hex);
+            file_key, replacements.len(), uasset_data.len(), chunk_id_hex);
         
         let patched = patch_uasset_binary(&uasset_data, &replacements);
         

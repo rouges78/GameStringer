@@ -1,50 +1,50 @@
-# 📖 GameStringer - Complete User Guide
+# 📖 GameStringer - Kompletny Przewodnik Użytkownika
 
-## Table of Contents
+## Spis Treści
 
-1. [Overview](#overview)
-2. [First Launch and Profiles](#first-launch-and-profiles)
-3. [Library and Game Details](#library-and-game-details)
+1. [Przegląd](#przegląd)
+2. [Pierwsze uruchomienie i profile](#pierwsze-uruchomienie-i-profile)
+3. [Biblioteka i szczegóły gry](#biblioteka-i-szczegóły-gry)
 4. [Neural Translator Pro](#neural-translator-pro)
 5. [Translation Wizard](#translation-wizard)
 6. [Translation Bridge](#translation-bridge)
 7. [Subtitle Translator Pro](#subtitle-translator-pro)
 8. [Retro ROM Tools](#retro-rom-tools)
-9. [Public API v1](#public-api-v1)
-10. [Voice Clone Studio](#voice-clone-studio) *(NEW v1.0.5)*
-11. [VR Text Overlay](#vr-text-overlay) *(NEW v1.0.5)*
-12. [Quality Gates](#quality-gates) *(NEW v1.0.5)*
-13. [Player Feedback](#player-feedback) *(NEW v1.0.5)*
-14. [New AI Providers v1.0.6](#new-ai-providers-v106) *(NEW v1.0.6)*
-15. [Community Hub v1.0.7](#community-hub-v107) *(NEW v1.0.7)*
-16. [UI Improvements v1.0.9](#ui-improvements-v109) *(NEW v1.0.9)*
-17. [Danganronpa Auto-Translator](#danganronpa-auto-translator) *(NEW v1.1.0)*
-18. [Patch Export](#patch-export)
-19. [Apply to Game](#apply-to-game)
-20. [Backup Management](#backup-management)
-21. [Translation Editor](#translation-editor)
-22. [Activity History](#activity-history)
-23. [Dictionaries](#dictionaries)
-24. [Troubleshooting](#troubleshooting)
+9. [Publiczne API v1](#publiczne-api-v1)
+10. [Voice Clone Studio](#voice-clone-studio) *(NOWE v1.0.5)*
+11. [VR Text Overlay](#vr-text-overlay) *(NOWE v1.0.5)*
+12. [Quality Gates](#quality-gates) *(NOWE v1.0.5)*
+13. [Player Feedback](#player-feedback) *(NOWE v1.0.5)*
+14. [Nowi dostawcy AI v1.0.6](#nowi-dostawcy-ai-v106) *(NOWE v1.0.6)*
+15. [Community Hub v1.0.7](#community-hub-v107) *(NOWE v1.0.7)*
+16. [Ulepszenia UI v1.0.9](#ulepszenia-ui-v109) *(NOWE v1.0.9)*
+17. [Danganronpa Auto-Tłumacz](#danganronpa-auto-tłumacz) *(NOWE v1.1.0)*
+18. [Eksport patcha](#eksport-patcha)
+19. [Zastosuj do gry](#zastosuj-do-gry)
+20. [Zarządzanie kopiami zapasowymi](#zarządzanie-kopiami-zapasowymi)
+21. [Edytor tłumaczeń](#edytor-tłumaczeń)
+22. [Historia aktywności](#historia-aktywności)
+23. [Słowniki](#słowniki)
+24. [Rozwiązywanie problemów](#rozwiązywanie-problemów)
 
 ---
 
-## Overview
+## Przegląd
 
-GameStringer is an advanced system for automatic and manual video game translation. It supports:
+GameStringer to zaawansowany system do automatycznego i ręcznego tłumaczenia gier wideo. Obsługuje:
 
-- **Game engines**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri and others
-- **File formats**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA and others
-- **AI Providers**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ providers)
-- **Languages**: 200+ supported languages (with NLLB-200)
-- **Multilingual UI**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL (11 languages)
-- **Gaming Stores**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
-- **NEW v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
-- **NEW v1.0.6**: Qwen 3 (Asian languages), NLLB-200 (200 languages), bug fixes
-- **NEW v1.0.7**: Community Hub, GitHub Discussions, License v1.1
-- **NEW v1.0.8**: Update download fix
-- **NEW v1.0.9**: Animated headers, update notifications, UI polish
-- **NEW v1.4.0**: Unified Radix UI, per-row Quality Badges, RTL support, generic Ollama, TypeScript cleanup
+- **Silniki gier**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri i inne
+- **Formaty plików**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA i inne
+- **Dostawcy AI**: Claude, Gemini, GPT, DeepSeek, Mistral, Groq, Ollama, **Qwen 3**, **NLLB-200** (18+ dostawców)
+- **Języki**: 200+ obsługiwanych języków (z NLLB-200)
+- **Wielojęzyczny interfejs**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL (11 języków)
+- **Sklepy z grami**: Steam, Epic Games, GOG, Origin, Battle.net, Ubisoft, itch.io, Amazon Games
+- **NOWE v1.0.5**: Voice Clone Studio, VR Text Overlay, Quality Gates, Player Feedback
+- **NOWE v1.0.6**: Qwen 3 (języki azjatyckie), NLLB-200 (200 języków), poprawki błędów
+- **NOWE v1.0.7**: Community Hub, GitHub Discussions, Licencja v1.1
+- **NOWE v1.0.8**: Poprawka pobierania aktualizacji
+- **NOWE v1.0.9**: Animowane nagłówki, powiadomienia o aktualizacjach, ulepszenia UI
+- **NOWE v1.4.0**: Zunifikowany Radix UI, Quality Badges na wiersz, obsługa RTL, uniwersalny Ollama, porządki TypeScript
 
 ---
 
@@ -935,4 +935,4 @@ Each translated row now shows visual quality indicators:
 
 ---
 
-*GameStringer v1.4.1 - Guide updated 02/03/2026*
+*GameStringer v1.4.1 - Przewodnik zaktualizowany 02/03/2026*

@@ -494,8 +494,33 @@ export function parseJSON(content: string): ParseResult {
         }
       }
     } else if (typeof data === 'object') {
-      // Object format: { key: value } or nested
-      flattenJSON(data, '', strings);
+      // === GameStringer translation_session.json ===
+      // Formato: { entries: [{ namespace, key, original, translated }], sourceLanguage, targetLanguage, ... }
+      if (data.entries && Array.isArray(data.entries) && data.entries.length > 0 &&
+          data.entries[0].original !== undefined && data.entries[0].key !== undefined) {
+        if (data.sourceLanguage) metadata.sourceLanguage = data.sourceLanguage;
+        if (data.targetLanguage) metadata.targetLanguage = data.targetLanguage;
+        if (data.gameName) metadata.projectName = data.gameName;
+        
+        for (const entry of data.entries) {
+          if (entry.original && typeof entry.original === 'string' && entry.original.trim()) {
+            const ns = entry.namespace || '';
+            const fullKey = ns ? `${ns}::${entry.key}` : entry.key;
+            strings.push({
+              key: fullKey,
+              value: entry.original,
+              context: ns || undefined,
+              metadata: {
+                source: entry.original,
+                existingTranslation: entry.translated || undefined,
+              }
+            });
+          }
+        }
+      } else {
+        // Object format: { key: value } or nested
+        flattenJSON(data, '', strings);
+      }
     }
   } catch (e) {
     // Invalid JSON, return empty result instead of throwing

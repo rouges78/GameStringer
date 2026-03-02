@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod profile_isolation_tests {
-    use super::*;
     use crate::notifications::{
         models::{CreateNotificationRequest, NotificationType, NotificationPriority, NotificationFilter},
         storage::NotificationStorage,
@@ -8,11 +7,9 @@ mod profile_isolation_tests {
         access_control::NotificationAccessControl,
     };
     use chrono::Utc;
-    use std::sync::Arc;
-    use tokio::sync::Mutex;
 
     async fn create_test_manager() -> NotificationManager {
-        let storage = NotificationStorage::new("test_profile_isolation.db".into()).unwrap();
+        let storage = NotificationStorage::new("test_profile_isolation.db".into());
         let manager = NotificationManager::new(storage);
         manager.initialize().await.unwrap();
         manager

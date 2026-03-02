@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::notifications::{
         storage::NotificationStorage,
         manager::NotificationManager,
@@ -12,22 +11,21 @@ mod tests {
     use crate::profiles::manager::ProfileEvent;
     use std::sync::Arc;
     use tokio::sync::Mutex;
-    use chrono::Utc;
 
-    async fn create_test_event_system() -> (NotificationEventSystem, AutoEventIntegration) {
-        let storage = NotificationStorage::new("test_event_system.db".into()).unwrap();
+    async fn create_test_event_system() -> (Arc<NotificationEventSystem>, AutoEventIntegration) {
+        let storage = NotificationStorage::new("test_event_system.db".into());
         let manager = NotificationManager::new(storage);
         let manager_arc = Arc::new(Mutex::new(manager));
         
         let integration = ProfileNotificationIntegration::new(Arc::clone(&manager_arc));
         let integration_arc = Arc::new(Mutex::new(integration));
         
-        let event_system = NotificationEventSystem::new(
+        let event_system = Arc::new(NotificationEventSystem::new(
             Arc::clone(&manager_arc),
             Arc::clone(&integration_arc),
-        );
+        ));
         
-        let auto_integration = AutoEventIntegration::new(Arc::new(event_system.clone()));
+        let auto_integration = AutoEventIntegration::new(Arc::clone(&event_system));
         
         (event_system, auto_integration)
     }
@@ -60,7 +58,8 @@ mod tests {
         event_system.handle_profile_created(profile_id, profile_name).await.unwrap();
         
         // Verifica che sia stata creata una notifica di benvenuto
-        let manager = event_system.get_event_handler().notification_manager.lock().await;
+        let handler = event_system.get_event_handler();
+        let manager = handler.get_notification_manager().lock().await;
         let filter = NotificationFilter {
             notification_type: Some(crate::notifications::models::NotificationType::Profile),
             priority: None,
@@ -93,7 +92,8 @@ mod tests {
         event_system.handle_profile_authenticated(profile_id, profile_name).await.unwrap();
         
         // Verifica che sia stata creata una notifica di autenticazione
-        let manager = event_system.get_event_handler().notification_manager.lock().await;
+        let handler = event_system.get_event_handler();
+        let manager = handler.get_notification_manager().lock().await;
         let filter = NotificationFilter {
             notification_type: Some(crate::notifications::models::NotificationType::Profile),
             priority: None,
@@ -126,7 +126,8 @@ mod tests {
         event_system.handle_profile_switched(Some(from_profile_id), to_profile_id).await.unwrap();
         
         // Verifica che sia stata creata una notifica di cambio profilo
-        let manager = event_system.get_event_handler().notification_manager.lock().await;
+        let handler = event_system.get_event_handler();
+        let manager = handler.get_notification_manager().lock().await;
         let filter = NotificationFilter {
             notification_type: Some(crate::notifications::models::NotificationType::Profile),
             priority: None,
@@ -155,7 +156,8 @@ mod tests {
         let profile_name = "Profile To Delete";
         
         // Prima crea alcune notifiche per il profilo
-        let manager = event_system.get_event_handler().notification_manager.lock().await;
+        let handler = event_system.get_event_handler();
+        let manager = handler.get_notification_manager().lock().await;
         let request = crate::notifications::models::CreateNotificationRequest {
             profile_id: profile_id.to_string(),
             notification_type: crate::notifications::models::NotificationType::Profile,
@@ -171,7 +173,8 @@ mod tests {
         drop(manager);
         
         // Verifica che la notifica esista
-        let manager = event_system.get_event_handler().notification_manager.lock().await;
+        let handler = event_system.get_event_handler();
+        let manager = handler.get_notification_manager().lock().await;
         let filter = NotificationFilter {
             notification_type: None,
             priority: None,
@@ -188,7 +191,8 @@ mod tests {
         event_system.handle_profile_deleted(profile_id, profile_name).await.unwrap();
         
         // Verifica che le notifiche del profilo siano state eliminate
-        let manager = event_system.get_event_handler().notification_manager.lock().await;
+        let handler = event_system.get_event_handler();
+        let manager = handler.get_notification_manager().lock().await;
         let notifications_after = manager.get_notifications(profile_id, filter).await.unwrap();
         assert!(notifications_after.is_empty());
     }
@@ -259,7 +263,8 @@ mod tests {
         event_system.handle_profile_logged_out(profile_id).await.unwrap();
         
         // Verifica che tutte le notifiche siano state create
-        let manager = event_system.get_event_handler().notification_manager.lock().await;
+        let handler = event_system.get_event_handler();
+        let manager = handler.get_notification_manager().lock().await;
         let filter = NotificationFilter {
             notification_type: None,
             priority: None,

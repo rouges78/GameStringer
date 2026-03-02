@@ -24,7 +24,8 @@ import {
   Database,
   ArrowUpDown,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Play
 } from 'lucide-react';
 import Link from 'next/link';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
@@ -100,6 +101,7 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [activityOrder, setActivityOrder] = useState<'newest' | 'oldest'>('newest');
+  const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string } | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -233,6 +235,24 @@ export default function Dashboard() {
         // Ignora errore
       }
       
+      // Leggi ultimo gioco visitato su GameStringer da localStorage
+      try {
+        const saved = localStorage.getItem('gs_last_visited_game');
+        if (saved) {
+          const lg = JSON.parse(saved);
+          if (lg && lg.id && lg.title) {
+            setLastGame({
+              id: lg.id,
+              title: lg.title,
+              image: lg.image || null,
+              platform: lg.platform || 'Steam',
+              visitedAt: lg.visitedAt || Date.now(),
+              appId: lg.appId || ''
+            });
+          }
+        }
+      } catch {}
+
       setStats({
         totalGames: games.length,
         installedGames: games.filter((g: any) => g.is_installed).length,
@@ -299,6 +319,93 @@ export default function Dashboard() {
         <div className="pt-1.5 border-t border-border/30">
           <RssTicker />
         </div>
+      </div>
+
+      {/* Ultimo Gioco + Store Connessi affiancati */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Ultimo Gioco Aperto - SINISTRA */}
+        {lastGame ? (
+          <Link href={`/games/${lastGame.id}?name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`}>
+            <Card className="border-indigo-500/30 bg-indigo-950/40 backdrop-blur-sm hover:border-indigo-400/50 transition-all cursor-pointer group h-full">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  {lastGame.image ? (
+                    <img
+                      src={lastGame.image}
+                      alt={lastGame.title}
+                      className="w-28 h-14 rounded-lg object-cover border border-indigo-500/20 group-hover:border-indigo-400/40 transition-colors"
+                    />
+                  ) : (
+                    <div className="w-28 h-14 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                      <Gamepad2 className="h-6 w-6 text-indigo-400/50" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <Play className="h-3 w-3 text-indigo-400" />
+                      <span className="text-[10px] text-indigo-400/70 uppercase tracking-wider font-medium">{language === 'en' ? 'Last opened' : 'Ultimo gioco aperto'}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-indigo-100 truncate group-hover:text-white transition-colors">{lastGame.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-indigo-300/50">{lastGame.platform}</span>
+                      <span className="text-[10px] text-indigo-300/30">•</span>
+                      <span className="text-[10px] text-indigo-300/50">
+                        {new Date(lastGame.visitedAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-indigo-400/30 group-hover:text-indigo-400/60 transition-colors">
+                    <ExternalLink className="h-4 w-4" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ) : (
+          <Card className="border-indigo-500/20 bg-indigo-950/20 backdrop-blur-sm h-full">
+            <CardContent className="p-3 flex items-center justify-center h-full">
+              <div className="flex items-center gap-2 text-indigo-300/40">
+                <Gamepad2 className="h-5 w-5" />
+                <span className="text-xs">{language === 'en' ? 'No game opened yet' : 'Nessun gioco aperto'}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Store Connessi - DESTRA */}
+        <Card className="border-slate-500/20 bg-slate-950/40 backdrop-blur-sm h-full">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Gamepad2 className="h-4 w-4 text-slate-400" />
+              <h3 className="text-sm font-semibold text-slate-300">{language === 'en' ? 'Connected Stores' : 'Store Connessi'}</h3>
+              <span className="ml-auto text-xs text-slate-500">
+                {Object.values(stats.storeStats).reduce((s, v) => s + v.games, 0)} {language === 'en' ? 'total games' : 'giochi'}
+              </span>
+            </div>
+            {Object.values(stats.storeStats).some(s => s.games > 0) ? (
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: 'steam',     label: 'Steam',      color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20' },
+                  { key: 'gog',       label: 'GOG',        color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
+                  { key: 'epic',      label: 'Epic',       color: 'text-cyan-400',   bg: 'bg-cyan-500/10 border-cyan-500/20' },
+                  { key: 'ubisoft',   label: 'Ubisoft',    color: 'text-sky-400',    bg: 'bg-sky-500/10 border-sky-500/20' },
+                  { key: 'origin',    label: 'EA/Origin',  color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
+                  { key: 'battlenet', label: 'Battle.net', color: 'text-blue-300',   bg: 'bg-blue-500/10 border-blue-500/20' },
+                  { key: 'itchio',    label: 'itch.io',    color: 'text-rose-400',   bg: 'bg-rose-500/10 border-rose-500/20' },
+                ].filter(s => stats.storeStats[s.key]?.games > 0).map(store => (
+                  <div key={store.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs ${store.bg}`}>
+                    <span className={`font-semibold ${store.color}`}>{stats.storeStats[store.key].games}</span>
+                    <span className="text-slate-400">{store.label}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-2 text-slate-400/40">
+                <span className="text-xs">{language === 'en' ? 'No stores connected' : 'Nessuno store connesso'}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Grid: News (sinistra) + Attività Recenti (destra) */}
@@ -441,37 +548,6 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Store Stats */}
-      {Object.values(stats.storeStats).some(s => s.games > 0) && (
-        <Card className="border-slate-500/20 bg-slate-950/40 backdrop-blur-sm">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Gamepad2 className="h-4 w-4 text-slate-400" />
-              <h3 className="text-sm font-semibold text-slate-300">Store Connessi</h3>
-              <span className="ml-auto text-xs text-slate-500">
-                {Object.values(stats.storeStats).reduce((s, v) => s + v.games, 0)} giochi totali
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'steam',     label: 'Steam',      color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20' },
-                { key: 'gog',       label: 'GOG',        color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
-                { key: 'epic',      label: 'Epic',       color: 'text-cyan-400',   bg: 'bg-cyan-500/10 border-cyan-500/20' },
-                { key: 'ubisoft',   label: 'Ubisoft',    color: 'text-sky-400',    bg: 'bg-sky-500/10 border-sky-500/20' },
-                { key: 'origin',    label: 'EA/Origin',  color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
-                { key: 'battlenet', label: 'Battle.net', color: 'text-blue-300',   bg: 'bg-blue-500/10 border-blue-500/20' },
-                { key: 'itchio',    label: 'itch.io',    color: 'text-rose-400',   bg: 'bg-rose-500/10 border-rose-500/20' },
-              ].filter(s => stats.storeStats[s.key]?.games > 0).map(store => (
-                <div key={store.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs ${store.bg}`}>
-                  <span className={`font-semibold ${store.color}`}>{stats.storeStats[store.key].games}</span>
-                  <span className="text-slate-400">{store.label}</span>
-                </div>
-              ))}
-            </div>
           </CardContent>
         </Card>
       )}

@@ -332,7 +332,7 @@ impl SystemEventIntegration {
 
     /// Notifica avviso spazio disco
     pub async fn notify_disk_space_warning(&self, disk_path: String, free_space_gb: f64, total_space_gb: f64) -> NotificationResult<Vec<String>> {
-        let usage_percentage = ((total_space_gb - free_space_gb) / total_space_gb) * 100.0;
+        let _usage_percentage = ((total_space_gb - free_space_gb) / total_space_gb) * 100.0;
         
         self.notify_resource_warning(
             format!("Spazio Disco ({})", disk_path),
@@ -353,7 +353,7 @@ impl SystemEventIntegration {
     }
 
     /// Notifica problema connessione database
-    pub async fn notify_database_connection_issue(&self, database_name: String, error_message: String, auto_retry: bool) -> NotificationResult<Vec<String>> {
+    pub async fn notify_database_connection_issue(&self, database_name: String, _error_message: String, auto_retry: bool) -> NotificationResult<Vec<String>> {
         self.notify_database_issue(
             database_name,
             "Connection Error".to_string(),

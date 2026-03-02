@@ -1,19 +1,17 @@
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::notifications::{
         storage::NotificationStorage,
         manager::NotificationManager,
         system_event_handler::{SystemEventHandler, SystemEvent, SecuritySeverity},
         system_event_integration::SystemEventIntegration,
-        models::{NotificationFilter, NotificationType},
     };
     use std::sync::Arc;
     use tokio::sync::Mutex;
     use chrono::Utc;
 
     async fn create_test_system_event_integration() -> SystemEventIntegration {
-        let storage = NotificationStorage::new("test_system_events.db".into()).unwrap();
+        let storage = NotificationStorage::new("test_system_events.db".into());
         let manager = NotificationManager::new(storage);
         let manager_arc = Arc::new(Mutex::new(manager));
         

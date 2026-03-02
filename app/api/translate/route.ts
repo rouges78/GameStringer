@@ -703,7 +703,7 @@ async function translateWithMistral(
       "suggestions": ["alternative 1", "alternative 2", "alternative 3"]
     }`;
 
-    // Mixtral 8x7B - Open source, excellent multilingual performance
+    // Mistral Large - excellent multilingual performance
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {

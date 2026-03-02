@@ -1185,7 +1185,9 @@ pub async fn create_translation_pak(
     })
 }
 
-/// Rimuove la patch di traduzione dal gioco
+/// Rimuove la patch di traduzione dal gioco.
+/// Retry automatico per file bloccati (es. gioco ancora in esecuzione).
+/// Non abortisce al primo errore — prova a rimuovere tutti i file e segnala i fallimenti.
 #[tauri::command]
 pub async fn remove_unreal_translation(game_path: String) -> Result<String, String> {
     let game_dir = Path::new(&game_path);
@@ -1193,7 +1195,10 @@ pub async fn remove_unreal_translation(game_path: String) -> Result<String, Stri
         .ok_or("Directory Content/Paks non trovata")?;
     
     let mut removed = 0;
+    let mut failed: Vec<String> = Vec::new();
     
+    // Raccogli i file da rimuovere
+    let mut targets: Vec<std::path::PathBuf> = Vec::new();
     if let Ok(entries) = fs::read_dir(&paks_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
@@ -1201,14 +1206,42 @@ pub async fn remove_unreal_translation(game_path: String) -> Result<String, Stri
                 let name_str = name.to_string_lossy();
                 if name_str.contains("GameStringer") && 
                    (name_str.ends_with("_P.pak") || name_str.ends_with("_P.utoc") || name_str.ends_with("_P.ucas")) {
-                    fs::remove_file(&path)
-                        .map_err(|e| format!("Errore rimozione {}: {}", path.display(), e))?;
-                    removed += 1;
-                    log::info!("🗑️ Rimosso: {}", path.display());
+                    targets.push(path);
                 }
             }
         }
     }
     
-    Ok(format!("Rimossi {} file di traduzione", removed))
+    // Rimuovi con retry (3 tentativi, 500ms tra uno e l'altro)
+    for path in &targets {
+        let mut ok = false;
+        for attempt in 1..=3 {
+            match fs::remove_file(path) {
+                Ok(()) => {
+                    removed += 1;
+                    log::info!("🗑️ Rimosso: {}", path.display());
+                    ok = true;
+                    break;
+                }
+                Err(e) => {
+                    log::warn!("⚠️ Tentativo {}/3 rimozione {}: {}", attempt, path.display(), e);
+                    if attempt < 3 {
+                        std::thread::sleep(std::time::Duration::from_millis(500));
+                    }
+                }
+            }
+        }
+        if !ok {
+            failed.push(path.file_name().unwrap_or_default().to_string_lossy().to_string());
+        }
+    }
+    
+    if failed.is_empty() {
+        Ok(format!("Rimossi {} file di traduzione", removed))
+    } else {
+        Err(format!(
+            "Rimossi {}/{} file. {} file bloccati (chiudi il gioco e riprova): {}",
+            removed, targets.len(), failed.len(), failed.join(", ")
+        ))
+    }
 }

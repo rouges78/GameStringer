@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod validation_tests {
-    use super::*;
     use crate::notifications::{
         manager::NotificationManager,
         storage::NotificationStorage,
@@ -242,7 +241,7 @@ mod validation_tests {
         preferences.profile_id = "test_profile".to_string();
         preferences.max_notifications = 0; // Troppo basso
         
-        let result = manager.update_preferences(preferences).await;
+        let _result = manager.update_preferences(preferences).await;
         // Nota: il manager potrebbe non validare questo specifico caso,
         // ma testiamo comunque la struttura
         
@@ -252,8 +251,8 @@ mod validation_tests {
         preferences.auto_delete_after_days = 0; // Troppo basso
         
         // Il manager dovrebbe accettare questi valori ma potrebbero causare comportamenti inaspettati
-        let result = manager.update_preferences(preferences).await;
-        assert!(result.is_ok()); // Il manager non valida questi limiti specifici
+        let _result = manager.update_preferences(preferences).await;
+        assert!(_result.is_ok()); // Il manager non valida questi limiti specifici
     }
 
     #[tokio::test]
@@ -270,7 +269,7 @@ mod validation_tests {
         
         // Il manager potrebbe non validare il formato orario direttamente,
         // ma testiamo la struttura
-        let result = manager.update_quiet_hours("test_profile", Some(invalid_quiet_hours)).await;
+        let _result = manager.update_quiet_hours("test_profile", Some(invalid_quiet_hours)).await;
         // Nota: la validazione del formato orario potrebbe essere implementata in futuro
         
         // Test ore di silenzio valide
@@ -351,7 +350,7 @@ mod validation_tests {
         assert_eq!(notification.read_at.unwrap(), first_read_time);
         
         // Test notifica scaduta
-        let mut expired_request = CreateNotificationRequest {
+        let expired_request = CreateNotificationRequest {
             profile_id: "test_profile".to_string(),
             notification_type: NotificationType::System,
             title: "Expired Notification".to_string(),

@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod storage_tests {
-    use super::*;
     use crate::notifications::{
         storage::NotificationStorage,
         models::{
@@ -12,7 +11,6 @@ mod storage_tests {
     };
     use tempfile::tempdir;
     use chrono::{Utc, Duration};
-    use std::collections::HashMap;
 
     /// Helper per creare uno storage di test
     async fn create_test_storage() -> NotificationStorage {

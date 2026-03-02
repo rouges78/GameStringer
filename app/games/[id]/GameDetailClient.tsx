@@ -672,6 +672,20 @@ export default function GameDetailPage() {
             game_id: gameId,
           });
           
+          // Salva ultimo gioco visitato su GameStringer (per dashboard)
+          try {
+            localStorage.setItem('gs_last_visited_game', JSON.stringify({
+              id: gameId,
+              title: enhancedGame.title || enhancedGame.name,
+              image: enhancedGame.headerUrl || enhancedGame.coverUrl || null,
+              platform: enhancedGame.platform || 'Steam',
+              appId: String(enhancedGame.appid || ''),
+              installPath: enhancedGame.installPath || null,
+              visitedAt: Date.now(),
+            }));
+          } catch {}
+
+          
           // Carica i DLC se presenti
           if (steamApiData?.dlc && steamApiData.dlc.length > 0) {
             const dlcPromises = steamApiData.dlc.slice(0, 5).map(async (dlcId: number) => {
@@ -1186,6 +1200,15 @@ export default function GameDetailPage() {
           </div>
         </motion.div>
 
+        {/* One-Click Translate & Patch - CTA principale */}
+        <Button 
+          className="w-full h-12 text-base font-semibold bg-gradient-to-r from-rose-500 via-fuchsia-500 to-purple-500 hover:from-rose-600 hover:via-fuchsia-600 hover:to-purple-600 shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/40 transition-all"
+          onClick={() => router.push(`/auto-translate?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}&platform=${encodeURIComponent(game.platform || '')}`)}
+        >
+          <Zap className="h-5 w-5 mr-2" />
+          One-Click Translate &amp; Patch
+        </Button>
+
         {/* HowLongToBeat Stats - Stile Steam Deck */}
         <HltbStats gameName={game.title || game.name || ''} className="mt-4" />
 
@@ -1289,9 +1312,11 @@ export default function GameDetailPage() {
                   <div className="space-y-1">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-xs text-gray-400">{game.detectedFiles.length} {t('gameDetails.filesFound')}</span>
-                      <Button size="sm" className="h-7 text-xs bg-purple-600" onClick={() => router.push(`/translator?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`)}>
-                        <Sparkles className="h-3 w-3 mr-1" />Neural Translator
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button size="sm" className="h-7 text-xs bg-purple-600" onClick={() => router.push(`/translator?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`)}>
+                          <Sparkles className="h-3 w-3 mr-1" />Neural Translator
+                        </Button>
+                      </div>
                     </div>
                     <div className="max-h-48 overflow-y-auto space-y-1">
                       {game.detectedFiles.map((file: string, index: number) => (

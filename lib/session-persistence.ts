@@ -23,10 +23,14 @@ class SessionPersistence {
     return SessionPersistence.instance;
   }
 
-  // Save session data to localStorage
+  // Save session data to localStorage (non-critical, sistema sessioni disabilitato)
   saveSession(sessionData: SessionData): void {
-    if (safeSetItem(this.sessionKey, sessionData)) {
-      this.updateLastActivity();
+    try {
+      if (safeSetItem(this.sessionKey, sessionData)) {
+        this.updateLastActivity();
+      }
+    } catch {
+      // Ignora silenziosamente - il sistema sessioni è disabilitato
     }
   }
 
