@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs;
+#[cfg(windows)]
 use winreg::enums::*;
+#[cfg(windows)]
 use winreg::RegKey;
 use crate::commands::library::InstalledGame;
 use std::path::PathBuf;
@@ -89,6 +91,7 @@ pub async fn get_ubisoft_installed_games() -> Result<Vec<InstalledGame>, String>
 }
 
 /// Scansiona giochi Ubisoft Connect dal registro
+#[cfg(windows)]
 async fn scan_ubisoft_registry() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
@@ -117,7 +120,13 @@ async fn scan_ubisoft_registry() -> Result<Vec<InstalledGame>, String> {
     Ok(games)
 }
 
+#[cfg(not(windows))]
+async fn scan_ubisoft_registry() -> Result<Vec<InstalledGame>, String> {
+    Ok(Vec::new())
+}
+
 /// Scansiona giochi Uplay (legacy) dal registro
+#[cfg(windows)]
 async fn scan_uplay_registry() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
@@ -142,6 +151,11 @@ async fn scan_uplay_registry() -> Result<Vec<InstalledGame>, String> {
     }
     
     Ok(games)
+}
+
+#[cfg(not(windows))]
+async fn scan_uplay_registry() -> Result<Vec<InstalledGame>, String> {
+    Ok(Vec::new())
 }
 
 /// Scansiona cartelle di installazione comuni per Ubisoft Connect
@@ -265,6 +279,7 @@ pub async fn get_ubisoft_covers_batch(game_ids: Vec<String>) -> Result<HashMap<S
 
 // Funzioni helper private
 
+#[cfg(windows)]
 async fn parse_ubisoft_registry_entry(game_key: &RegKey, game_id: &str, platform: &str) -> Result<InstalledGame, String> {
     // Prova a leggere diversi campi possibili per Ubisoft Connect
     let name = game_key.get_value::<String, _>("DisplayName")

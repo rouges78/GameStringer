@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs;
+#[cfg(windows)]
 use winreg::enums::*;
+#[cfg(windows)]
 use winreg::RegKey;
 use crate::commands::library::InstalledGame;
 use std::path::PathBuf;
@@ -84,6 +86,7 @@ pub async fn get_rockstar_installed_games() -> Result<Vec<InstalledGame>, String
 }
 
 /// Scansiona giochi Rockstar Games dal registro
+#[cfg(windows)]
 async fn scan_rockstar_registry() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
@@ -117,6 +120,11 @@ async fn scan_rockstar_registry() -> Result<Vec<InstalledGame>, String> {
     }
     
     Ok(games)
+}
+
+#[cfg(not(windows))]
+async fn scan_rockstar_registry() -> Result<Vec<InstalledGame>, String> {
+    Ok(Vec::new())
 }
 
 /// Scansiona cartelle di installazione comuni per Rockstar Games
@@ -239,6 +247,7 @@ pub async fn get_rockstar_covers_batch(game_ids: Vec<String>) -> Result<HashMap<
 
 // Funzioni helper private
 
+#[cfg(windows)]
 async fn parse_rockstar_registry_entry(game_key: &RegKey, game_id: &str, platform: &str) -> Result<InstalledGame, String> {
     // Prova a leggere diversi campi possibili per Rockstar Games
     let name = game_key.get_value::<String, _>("DisplayName")
@@ -279,6 +288,7 @@ async fn parse_rockstar_registry_entry(game_key: &RegKey, game_id: &str, platfor
     })
 }
 
+#[cfg(windows)]
 async fn parse_rockstar_registry_key(game_key: &RegKey, registry_path: &str) -> Result<InstalledGame, String> {
     // Determina il nome del gioco dal percorso del registro
     let game_name = if registry_path.contains("Grand Theft Auto V") {

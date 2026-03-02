@@ -11,7 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.1.0-blue" alt="Version" />
-  <img src="https://img.shields.io/badge/platform-Windows-lightgrey" alt="Platform" />
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
   <img src="https://img.shields.io/badge/Next.js-15-black" alt="Next.js" />
@@ -148,9 +148,32 @@ Download the latest release from [GitHub Releases](https://github.com/rouges78/G
 - **GameStringer-Setup.exe** - Installer (recommended)
 - **GameStringer-Portable.zip** - Portable version
 
+### Linux
+
+Download the latest release from [GitHub Releases](https://github.com/rouges78/GameStringer/releases):
+
+- **GameStringer.deb** - Debian/Ubuntu package
+- **GameStringer.AppImage** - Universal AppImage (recommended)
+
+#### Linux Dependencies
+
+```bash
+# Debian/Ubuntu
+sudo apt install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+# Fedora
+sudo dnf install webkit2gtk4.1-devel libappindicator-gtk3-devel librsvg2-devel
+
+# Arch Linux
+sudo pacman -S webkit2gtk-4.1 libappindicator-gtk3 librsvg
+```
+
+> **Note**: On Linux, Windows-only features (DLL injection, anti-cheat detection, screen capture OCR, registry-based store detection) are not available. Game library detection uses filesystem paths instead of the Windows registry.
+
 ### Requirements
 
-- Windows 10/11 (64-bit)
+- **Windows**: Windows 10/11 (64-bit)
+- **Linux**: Ubuntu 22.04+ / Fedora 38+ / Arch (64-bit, WebKitGTK 4.1)
 - 4GB RAM minimum (8GB+ for local AI)
 - 500MB disk space
 
@@ -236,6 +259,7 @@ For games without extractable text:
 - Node.js 18+
 - Rust 1.70+
 - pnpm or npm
+- **Linux only**: WebKitGTK 4.1 dev libraries (see Linux Dependencies above)
 
 ### Steps
 

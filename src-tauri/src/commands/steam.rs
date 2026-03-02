@@ -14,6 +14,7 @@
 
 use tauri::State;
 use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, GameDetails, LocalGameInfo, GameStatus, SteamLibraryFolder, FamilySharingConfig};
+#[cfg(windows)]
 use winreg::HKEY;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -1689,7 +1690,9 @@ fn get_steam_status_path() -> Result<std::path::PathBuf, String> {
     Ok(app_dir.join("steam_status.json"))
 }
 
+#[cfg(windows)]
 use winreg::enums::*;
+#[cfg(windows)]
 use winreg::RegKey;
 
 // Global HTTP client and cache
@@ -1804,6 +1807,7 @@ pub async fn auto_detect_steam_config() -> Result<SteamConfig, String> {
     })
 }
 
+#[cfg(windows)]
 async fn find_steam_path_from_registry() -> Option<String> {
     // Cerca prima nella chiave a 64-bit
     if let Some(path) = find_steam_path_in_hive(HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam") {
@@ -1816,11 +1820,28 @@ async fn find_steam_path_from_registry() -> Option<String> {
     None
 }
 
+#[cfg(windows)]
 fn find_steam_path_in_hive(hive: HKEY, subkey: &str) -> Option<String> {
     RegKey::predef(hive)
         .open_subkey(subkey)
         .and_then(|key| key.get_value::<String, _>("InstallPath"))
         .ok()
+}
+
+#[cfg(not(windows))]
+async fn find_steam_path_from_registry() -> Option<String> {
+    let home = std::env::var("HOME").ok()?;
+    let candidates = [
+        format!("{}/.steam/steam", home),
+        format!("{}/.local/share/Steam", home),
+        format!("{}/.var/app/com.valvesoftware.Steam/.steam/steam", home),
+    ];
+    for path in &candidates {
+        if std::path::Path::new(path).exists() {
+            return Some(path.clone());
+        }
+    }
+    None
 }
 
 #[derive(serde::Serialize)]

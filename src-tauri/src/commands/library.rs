@@ -1,7 +1,9 @@
 use serde::{Serialize, Deserialize};
 use std::path::Path;
 use std::fs;
+#[cfg(windows)]
 use winreg::enums::*;
+#[cfg(windows)]
 use winreg::RegKey;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -265,6 +267,7 @@ async fn parse_epic_manifest(file_path: &Path) -> Result<InstalledGame, String> 
     })
 }
 
+#[cfg(windows)]
 /// FUTURE USE: Will be used for detecting GOG installed games
 #[allow(dead_code)]
 async fn get_gog_installed_games() -> Result<Vec<InstalledGame>, String> {
@@ -286,6 +289,7 @@ async fn get_gog_installed_games() -> Result<Vec<InstalledGame>, String> {
     Ok(games)
 }
 
+#[cfg(windows)]
 /// FUTURE USE: Helper function for parsing GOG registry entries
 #[allow(dead_code)]
 async fn parse_gog_registry_entry(game_key: &RegKey, game_id: &str) -> Result<InstalledGame, String> {
@@ -314,6 +318,7 @@ async fn parse_gog_registry_entry(game_key: &RegKey, game_id: &str) -> Result<In
     })
 }
 
+#[cfg(windows)]
 pub fn find_steam_path_from_registry() -> Option<String> {
     // Try 64-bit registry first
     if let Some(path) = find_steam_path_in_hive(HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam") {
@@ -326,11 +331,29 @@ pub fn find_steam_path_from_registry() -> Option<String> {
     None
 }
 
+#[cfg(windows)]
 fn find_steam_path_in_hive(hive: winreg::HKEY, subkey: &str) -> Option<String> {
     RegKey::predef(hive)
         .open_subkey(subkey)
         .and_then(|key| key.get_value::<String, _>("InstallPath"))
         .ok()
+}
+
+#[cfg(not(windows))]
+pub fn find_steam_path_from_registry() -> Option<String> {
+    // Linux: cerca Steam nei path standard
+    let home = std::env::var("HOME").ok()?;
+    let candidates = [
+        format!("{}/.steam/steam", home),
+        format!("{}/.local/share/Steam", home),
+        format!("{}/.var/app/com.valvesoftware.Steam/.steam/steam", home), // Flatpak
+    ];
+    for path in &candidates {
+        if Path::new(path).exists() {
+            return Some(path.clone());
+        }
+    }
+    None
 }
 
 async fn find_main_executable(game_path: &Path) -> Option<String> {

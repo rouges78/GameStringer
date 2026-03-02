@@ -3,7 +3,9 @@
 
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+#[cfg(windows)]
 use winreg::enums::*;
+#[cfg(windows)]
 use winreg::RegKey;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,25 +33,34 @@ fn detect_steam() -> StoreStatus {
         games_count: None,
     };
 
-    // Check registry
-    if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")
+    // Check registry (Windows only)
+    #[cfg(windows)]
     {
-        if let Ok(path) = hklm.get_value::<String, _>("InstallPath") {
-            if Path::new(&path).exists() {
-                status.installed = true;
-                status.path = Some(path);
+        if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(r"SOFTWARE\WOW6432Node\Valve\Steam")
+        {
+            if let Ok(path) = hklm.get_value::<String, _>("InstallPath") {
+                if Path::new(&path).exists() {
+                    status.installed = true;
+                    status.path = Some(path);
+                }
             }
         }
     }
 
     // Fallback: check common paths
     if !status.installed {
-        let common_paths = [
+        #[cfg(windows)]
+        let common_paths: &[&str] = &[
             r"C:\Program Files (x86)\Steam",
             r"C:\Program Files\Steam",
             r"D:\Steam",
             r"E:\Steam",
+        ];
+        #[cfg(not(windows))]
+        let common_paths: &[&str] = &[
+            &format!("{}/.steam/steam", std::env::var("HOME").unwrap_or_default()),
+            &format!("{}/.local/share/Steam", std::env::var("HOME").unwrap_or_default()),
         ];
         for p in common_paths {
             if Path::new(p).exists() {
@@ -73,23 +84,27 @@ fn detect_epic() -> StoreStatus {
         games_count: None,
     };
 
-    // Check registry
-    if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey(r"SOFTWARE\WOW6432Node\Epic Games\EpicGamesLauncher")
+    #[cfg(windows)]
     {
-        if let Ok(path) = hklm.get_value::<String, _>("AppDataPath") {
-            status.installed = true;
-            status.path = Some(path);
+        if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(r"SOFTWARE\WOW6432Node\Epic Games\EpicGamesLauncher")
+        {
+            if let Ok(path) = hklm.get_value::<String, _>("AppDataPath") {
+                status.installed = true;
+                status.path = Some(path);
+            }
         }
     }
 
-    // Fallback: check common paths
     if !status.installed {
-        let common_paths = [
+        #[cfg(windows)]
+        let common_paths: &[&str] = &[
             r"C:\Program Files\Epic Games",
             r"C:\Program Files (x86)\Epic Games",
             r"D:\Epic Games",
         ];
+        #[cfg(not(windows))]
+        let common_paths: &[&str] = &[];
         for p in common_paths {
             if Path::new(p).exists() {
                 status.installed = true;
@@ -112,24 +127,28 @@ fn detect_gog() -> StoreStatus {
         games_count: None,
     };
 
-    // Check registry
-    if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey(r"SOFTWARE\WOW6432Node\GOG.com\GalaxyClient\paths")
+    #[cfg(windows)]
     {
-        if let Ok(path) = hklm.get_value::<String, _>("client") {
-            if Path::new(&path).exists() {
-                status.installed = true;
-                status.path = Some(path);
+        if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(r"SOFTWARE\WOW6432Node\GOG.com\GalaxyClient\paths")
+        {
+            if let Ok(path) = hklm.get_value::<String, _>("client") {
+                if Path::new(&path).exists() {
+                    status.installed = true;
+                    status.path = Some(path);
+                }
             }
         }
     }
 
-    // Fallback
     if !status.installed {
-        let common_paths = [
+        #[cfg(windows)]
+        let common_paths: &[&str] = &[
             r"C:\Program Files (x86)\GOG Galaxy",
             r"C:\Program Files\GOG Galaxy",
         ];
+        #[cfg(not(windows))]
+        let common_paths: &[&str] = &[];
         for p in common_paths {
             if Path::new(p).exists() {
                 status.installed = true;
@@ -152,48 +171,34 @@ fn detect_origin() -> StoreStatus {
         games_count: None,
     };
 
-    // Check EA App first
-    if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey(r"SOFTWARE\Electronic Arts\EA Desktop")
+    #[cfg(windows)]
     {
-        if let Ok(path) = hklm.get_value::<String, _>("InstallLocation") {
-            if Path::new(&path).exists() {
-                status.installed = true;
-                status.path = Some(path);
-                status.name = "EA App".to_string();
-            }
-        }
-    }
-
-    // Fallback to Origin
-    if !status.installed {
         if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
-            .open_subkey(r"SOFTWARE\WOW6432Node\Origin")
+            .open_subkey(r"SOFTWARE\Electronic Arts\EA Desktop")
         {
-            if let Ok(path) = hklm.get_value::<String, _>("ClientPath") {
+            if let Ok(path) = hklm.get_value::<String, _>("InstallLocation") {
                 if Path::new(&path).exists() {
                     status.installed = true;
                     status.path = Some(path);
+                    status.name = "EA App".to_string();
+                }
+            }
+        }
+        if !status.installed {
+            if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
+                .open_subkey(r"SOFTWARE\WOW6432Node\Origin")
+            {
+                if let Ok(path) = hklm.get_value::<String, _>("ClientPath") {
+                    if Path::new(&path).exists() {
+                        status.installed = true;
+                        status.path = Some(path);
+                    }
                 }
             }
         }
     }
 
-    // Fallback paths
-    if !status.installed {
-        let common_paths = [
-            r"C:\Program Files\Electronic Arts\EA Desktop",
-            r"C:\Program Files (x86)\Origin",
-        ];
-        for p in common_paths {
-            if Path::new(p).exists() {
-                status.installed = true;
-                status.path = Some(p.to_string());
-                break;
-            }
-        }
-    }
-
+    // Not available on Linux (EA App is Windows-only)
     status
 }
 
@@ -207,33 +212,21 @@ fn detect_ubisoft() -> StoreStatus {
         games_count: None,
     };
 
-    // Check registry
-    if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey(r"SOFTWARE\WOW6432Node\Ubisoft\Launcher")
+    #[cfg(windows)]
     {
-        if let Ok(path) = hklm.get_value::<String, _>("InstallDir") {
-            if Path::new(&path).exists() {
-                status.installed = true;
-                status.path = Some(path);
+        if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(r"SOFTWARE\WOW6432Node\Ubisoft\Launcher")
+        {
+            if let Ok(path) = hklm.get_value::<String, _>("InstallDir") {
+                if Path::new(&path).exists() {
+                    status.installed = true;
+                    status.path = Some(path);
+                }
             }
         }
     }
 
-    // Fallback
-    if !status.installed {
-        let common_paths = [
-            r"C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher",
-            r"C:\Program Files\Ubisoft\Ubisoft Game Launcher",
-        ];
-        for p in common_paths {
-            if Path::new(p).exists() {
-                status.installed = true;
-                status.path = Some(p.to_string());
-                break;
-            }
-        }
-    }
-
+    // Not available on Linux (Ubisoft Connect is Windows-only)
     status
 }
 
@@ -247,33 +240,21 @@ fn detect_battlenet() -> StoreStatus {
         games_count: None,
     };
 
-    // Check registry
-    if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey(r"SOFTWARE\WOW6432Node\Blizzard Entertainment\Battle.net")
+    #[cfg(windows)]
     {
-        if let Ok(path) = hklm.get_value::<String, _>("InstallPath") {
-            if Path::new(&path).exists() {
-                status.installed = true;
-                status.path = Some(path);
+        if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(r"SOFTWARE\WOW6432Node\Blizzard Entertainment\Battle.net")
+        {
+            if let Ok(path) = hklm.get_value::<String, _>("InstallPath") {
+                if Path::new(&path).exists() {
+                    status.installed = true;
+                    status.path = Some(path);
+                }
             }
         }
     }
 
-    // Fallback
-    if !status.installed {
-        let common_paths = [
-            r"C:\Program Files (x86)\Battle.net",
-            r"C:\Program Files\Battle.net",
-        ];
-        for p in common_paths {
-            if Path::new(p).exists() {
-                status.installed = true;
-                status.path = Some(p.to_string());
-                break;
-            }
-        }
-    }
-
+    // Not available on Linux natively
     status
 }
 
@@ -287,12 +268,24 @@ fn detect_itchio() -> StoreStatus {
         games_count: None,
     };
 
-    // itch.io installs in AppData
-    if let Ok(appdata) = std::env::var("LOCALAPPDATA") {
-        let itch_path = format!(r"{}\itch", appdata);
-        if Path::new(&itch_path).exists() {
-            status.installed = true;
-            status.path = Some(itch_path);
+    #[cfg(windows)]
+    {
+        if let Ok(appdata) = std::env::var("LOCALAPPDATA") {
+            let itch_path = format!(r"{}\itch", appdata);
+            if Path::new(&itch_path).exists() {
+                status.installed = true;
+                status.path = Some(itch_path);
+            }
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        if let Ok(home) = std::env::var("HOME") {
+            let itch_path = format!("{}/.config/itch", home);
+            if Path::new(&itch_path).exists() {
+                status.installed = true;
+                status.path = Some(itch_path);
+            }
         }
     }
 
@@ -309,27 +302,21 @@ fn detect_rockstar() -> StoreStatus {
         games_count: None,
     };
 
-    // Check registry
-    if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
-        .open_subkey(r"SOFTWARE\WOW6432Node\Rockstar Games\Launcher")
+    #[cfg(windows)]
     {
-        if let Ok(path) = hklm.get_value::<String, _>("InstallFolder") {
-            if Path::new(&path).exists() {
-                status.installed = true;
-                status.path = Some(path);
+        if let Ok(hklm) = RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey(r"SOFTWARE\WOW6432Node\Rockstar Games\Launcher")
+        {
+            if let Ok(path) = hklm.get_value::<String, _>("InstallFolder") {
+                if Path::new(&path).exists() {
+                    status.installed = true;
+                    status.path = Some(path);
+                }
             }
         }
     }
 
-    // Fallback
-    if !status.installed {
-        let path = r"C:\Program Files\Rockstar Games\Launcher";
-        if Path::new(path).exists() {
-            status.installed = true;
-            status.path = Some(path.to_string());
-        }
-    }
-
+    // Not available on Linux natively
     status
 }
 

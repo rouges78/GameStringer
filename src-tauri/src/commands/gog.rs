@@ -530,6 +530,7 @@ async fn find_main_executable(game_path: &Path) -> Option<String> {
     None
 }
 
+#[cfg(windows)]
 async fn get_gog_games_from_registry() -> Result<Vec<InstalledGame>, String> {
     use winreg::enums::*;
     use winreg::RegKey;
@@ -659,6 +660,11 @@ async fn get_gog_games_from_registry() -> Result<Vec<InstalledGame>, String> {
     
     println!("[GOG] ✅ Totale {} giochi GOG trovati dal registro", games.len());
     Ok(games)
+}
+
+#[cfg(not(windows))]
+async fn get_gog_games_from_registry() -> Result<Vec<InstalledGame>, String> {
+    Ok(Vec::new())
 }
 
 /// Corregge URL GOG aggiungendo https: se necessario (GOG restituisce URL come //images-1.gog.com/...)

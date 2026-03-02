@@ -6,12 +6,16 @@
 mod models;
 mod commands;
 
+#[cfg(windows)]
 mod injekt;
+#[cfg(windows)]
 mod multi_process_injekt;
+#[cfg(windows)]
 mod anti_cheat;
 mod engine_detector;
 mod translation_bridge;
 mod activity_history;
+#[cfg(windows)]
 mod ue_translator;
 mod ocr_translator;
 
@@ -24,8 +28,8 @@ use profiles::settings_manager::ProfileSettingsManager;
 use commands::profiles::ProfileManagerState;
 use commands::profile_settings::ProfileSettingsManagerState;
 use commands::notifications::NotificationManagerState;
-// use tauri::Manager; // Non usato attualmente
 
+#[cfg(windows)]
 mod process_utils;
 
 #[tauri::command]
@@ -60,8 +64,13 @@ fn main() {
     let notif_db_path = if cfg!(debug_assertions) {
         std::path::PathBuf::from("../gamestringer_data/notifications.db")
     } else {
-        let local_app = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".to_string());
-        std::path::PathBuf::from(local_app).join("GameStringer").join("notifications.db")
+        #[cfg(windows)]
+        let base = std::env::var("LOCALAPPDATA").unwrap_or_else(|_| ".".to_string());
+        #[cfg(not(windows))]
+        let base = std::env::var("XDG_DATA_HOME")
+            .or_else(|_| std::env::var("HOME").map(|h| format!("{}/.local/share", h)))
+            .unwrap_or_else(|_| ".".to_string());
+        std::path::PathBuf::from(base).join("GameStringer").join("notifications.db")
     };
     // Crea directory parent se non esiste
     if let Some(parent) = notif_db_path.parent() {
@@ -88,7 +97,12 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
-        .manage(commands::anti_cheat::AntiCheatState::default())
+        .manage({
+            #[cfg(windows)]
+            { commands::anti_cheat::AntiCheatState::default() }
+            #[cfg(not(windows))]
+            { commands::anti_cheat::AntiCheatState }
+        })
 
         .manage(profile_state)
         .manage(settings_state)
@@ -308,95 +322,7 @@ fn main() {
             commands::anti_cheat::get_anti_cheat_cache_stats,
             commands::anti_cheat::clear_anti_cheat_cache,
             commands::anti_cheat::test_anti_cheat_detection,
-            // Performance Optimization - Sistema rimosso per cleanup warning
 
-            // Advanced OCR System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
-            // commands::advanced_ocr::process_image_ocr,
-            // commands::advanced_ocr::batch_process_images_ocr,
-            // commands::advanced_ocr::get_ocr_performance_metrics, // Sistema performance rimosso
-            // commands::advanced_ocr::get_supported_ocr_engines,
-            // commands::advanced_ocr::get_ocr_config,
-            // commands::advanced_ocr::update_ocr_config,
-            // commands::advanced_ocr::test_ocr_engines,
-            // commands::advanced_ocr::clear_ocr_cache,
-            // commands::advanced_ocr::get_ml_scoring_info,
-            // Translation Backends System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
-            // commands::translation_backends::initialize_translation_backends,
-            // commands::translation_backends::translate_text,
-            // commands::translation_backends::translate_batch,
-            // commands::translation_backends::get_translation_metrics,
-            // commands::translation_backends::get_backend_status,
-            // commands::translation_backends::get_supported_languages,
-            // commands::translation_backends::get_translation_config,
-            // commands::translation_backends::update_translation_config,
-            // commands::translation_backends::configure_backend_api_key,
-            // commands::translation_backends::toggle_backend,
-            // commands::translation_backends::test_all_backends,
-            // commands::translation_backends::test_translation_quality,
-            // commands::translation_backends::clear_translation_cache,
-            // commands::translation_backends::get_cost_estimation,
-            // commands::translation_backends::get_cost_optimization_recommendations,
-            // Offline Translation System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
-            // commands::offline_translation::initialize_offline_translation,
-            // commands::offline_translation::translate_offline,
-            // commands::offline_translation::translate_batch_offline,
-            // commands::offline_translation::is_language_pair_supported_offline,
-            // commands::offline_translation::get_available_offline_models,
-            // commands::offline_translation::download_offline_model,
-            // commands::offline_translation::remove_offline_model,
-            // commands::offline_translation::get_offline_translation_stats,
-            // commands::offline_translation::get_language_pair_support,
-            // commands::offline_translation::get_offline_translation_config,
-            // commands::offline_translation::update_offline_translation_config,
-            // commands::offline_translation::clear_offline_translation_cache,
-            // commands::offline_translation::cleanup_unused_offline_models,
-            // commands::offline_translation::preload_popular_offline_models,
-            // commands::offline_translation::test_offline_translation_quality,
-            // commands::offline_translation::get_offline_model_metrics,
-            // commands::offline_translation::get_offline_storage_recommendations,
-            // Translation Logger System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
-            // commands::translation_logger::initialize_translation_logger,
-            // commands::translation_logger::log_translation,
-            // commands::translation_logger::add_human_feedback,
-            // commands::translation_logger::add_translation_correction,
-            // commands::translation_logger::export_translation_logs,
-            // commands::translation_logger::get_logger_statistics,
-            // commands::translation_logger::get_translations_for_review,
-            // commands::translation_logger::generate_quality_report,
-            // commands::translation_logger::get_logger_config,
-            // commands::translation_logger::update_logger_config,
-            // commands::translation_logger::get_supported_export_formats,
-            // commands::translation_logger::search_translations,
-            // commands::translation_logger::get_translations_by_game,
-            // commands::translation_logger::get_translations_by_language_pair,
-            // commands::translation_logger::get_quality_stats_by_method,
-            // commands::translation_logger::get_quality_improvement_recommendations,
-            // commands::translation_logger::cleanup_old_logs,
-            // Low Latency Optimizer System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
-            // commands::low_latency_optimizer::initialize_low_latency_optimizer,
-            // commands::low_latency_optimizer::optimize_translation,
-            // commands::low_latency_optimizer::optimize_batch_translations,
-            // commands::low_latency_optimizer::get_latency_statistics,
-            // commands::low_latency_optimizer::auto_optimize_configuration,
-            // commands::low_latency_optimizer::optimize_memory_usage,
-            // commands::low_latency_optimizer::get_latency_optimizer_config,
-            // commands::low_latency_optimizer::update_latency_optimizer_config,
-            // commands::low_latency_optimizer::test_latency_performance, // Sistema performance rimosso
-            // commands::low_latency_optimizer::get_performance_recommendations, // Sistema performance rimosso
-            // commands::low_latency_optimizer::benchmark_optimizations,
-            // commands::low_latency_optimizer::reset_performance_stats, // Sistema performance rimosso
-            // Translation Pipeline System - TEMPORANEAMENTE DISABILITATO PER ERRORI COMPILAZIONE
-            // commands::translation_pipeline::initialize_translation_pipeline,
-            // commands::translation_pipeline::process_translation_pipeline,
-            // commands::translation_pipeline::process_batch_translation_pipeline,
-            // commands::translation_pipeline::get_pipeline_statistics,
-            // commands::translation_pipeline::auto_optimize_pipeline,
-            // commands::translation_pipeline::get_pipeline_config,
-            // commands::translation_pipeline::update_pipeline_config,
-            // commands::translation_pipeline::test_pipeline_performance, // Sistema performance rimosso
-            // commands::translation_pipeline::get_pipeline_recommendations,
-            // commands::translation_pipeline::benchmark_pipeline_vs_components,
-            // commands::translation_pipeline::reset_pipeline_statistics,
             // Unreal Localization Pipeline
             commands::unreal_localization::extract_unreal_localization,
             commands::unreal_localization::apply_unreal_translation,
@@ -412,15 +338,6 @@ fn main() {
             commands::ollama_manager::stop_ollama,
             commands::ollama_manager::pull_ollama_model,
             commands::ollama_manager::get_recommended_ollama_models,
-            // Cache Management
-
-            // Error Management
-
-            // Steam Enhanced Error Management
-
-            // Memory Audit System
-
-            // Intelligent Cache System - Sistema rimosso per cleanup warning
 
             // Profile Management System
             commands::profiles::list_profiles,
@@ -919,6 +836,17 @@ fn main() {
             commands::wolfrpg_patcher::get_wolftrans_info,
             commands::wolfrpg_patcher::export_for_translator_plus,
             commands::wolfrpg_patcher::import_from_translator_plus,
+
+            // Audio Patcher (In-Game Voice Replacement)
+            commands::audio_patcher::scan_game_audio_files,
+            commands::audio_patcher::replace_audio_file,
+            commands::audio_patcher::restore_audio_file,
+
+            // Offline Translation (Ollama-based local LLM)
+            commands::offline_translation::offline_translation_status,
+            commands::offline_translation::offline_translation_models,
+            commands::offline_translation::offline_translate_text,
+            commands::offline_translation::offline_translate_batch,
         ])
         .setup(|_app| {
             Ok(())

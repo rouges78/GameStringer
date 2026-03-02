@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs;
+#[cfg(windows)]
 use winreg::enums::*;
+#[cfg(windows)]
 use winreg::RegKey;
 use crate::commands::library::InstalledGame;
 use std::path::PathBuf;
@@ -89,6 +91,7 @@ pub async fn get_origin_installed_games() -> Result<Vec<InstalledGame>, String> 
 }
 
 /// Scansiona giochi Origin dal registro (versione legacy)
+#[cfg(windows)]
 async fn scan_origin_legacy() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
@@ -122,7 +125,13 @@ async fn scan_origin_legacy() -> Result<Vec<InstalledGame>, String> {
     Ok(games)
 }
 
+#[cfg(not(windows))]
+async fn scan_origin_legacy() -> Result<Vec<InstalledGame>, String> {
+    Ok(Vec::new())
+}
+
 /// Scansiona giochi EA App dal registro (nuova versione)
+#[cfg(windows)]
 async fn scan_ea_app() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
@@ -154,6 +163,11 @@ async fn scan_ea_app() -> Result<Vec<InstalledGame>, String> {
     }
     
     Ok(games)
+}
+
+#[cfg(not(windows))]
+async fn scan_ea_app() -> Result<Vec<InstalledGame>, String> {
+    Ok(Vec::new())
 }
 
 /// Scansiona cartelle di installazione comuni per Origin/EA App
@@ -286,6 +300,7 @@ pub async fn get_origin_covers_batch(game_ids: Vec<String>) -> Result<HashMap<St
 
 // Funzioni helper private
 
+#[cfg(windows)]
 async fn parse_origin_registry_entry(game_key: &RegKey, game_id: &str, platform: &str) -> Result<InstalledGame, String> {
     // Prova a leggere diversi campi possibili per Origin/EA
     let name = game_key.get_value::<String, _>("DisplayName")

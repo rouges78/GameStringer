@@ -237,6 +237,7 @@ async fn parse_epic_manifest_enhanced(manifest_path: &Path) -> Result<EpicGameEn
 }
 
 /// 🔍 Scansione registro Windows migliorata per Epic Games
+#[cfg(windows)]
 async fn scan_epic_registry_enhanced() -> Result<Vec<EpicGameEnhanced>, String> {
     use winreg::enums::*;
     use winreg::RegKey;
@@ -297,6 +298,11 @@ async fn scan_epic_registry_enhanced() -> Result<Vec<EpicGameEnhanced>, String> 
     }
     
     Ok(games)
+}
+
+#[cfg(not(windows))]
+async fn scan_epic_registry_enhanced() -> Result<Vec<EpicGameEnhanced>, String> {
+    Ok(Vec::new())
 }
 
 /// 🔍 Scansione directory installazione Epic Games

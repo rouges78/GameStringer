@@ -15,7 +15,9 @@ use std::collections::HashMap;
 use std::time::Duration;
 use reqwest::Client;
 use once_cell::sync::Lazy;
+#[cfg(windows)]
 use winreg::enums::*;
+#[cfg(windows)]
 use winreg::RegKey;
 use regex::Regex;
 use crate::models::GameInfo;
@@ -1345,6 +1347,7 @@ async fn search_epic_configs_by_account_id(account_id: &str) -> Result<Vec<Strin
 /// Cerca nel registro Windows per l'Account ID
 /// FUTURE USE: Will be used for Epic Games registry-based game discovery
 #[allow(dead_code)]
+#[cfg(windows)]
 async fn search_registry_by_account_id(account_id: &str) -> Result<Vec<String>, String> {
     let mut games = Vec::new();
     
@@ -1385,6 +1388,12 @@ async fn search_registry_by_account_id(account_id: &str) -> Result<Vec<String>, 
     } else {
         Ok(games)
     }
+}
+
+#[allow(dead_code)]
+#[cfg(not(windows))]
+async fn search_registry_by_account_id(_account_id: &str) -> Result<Vec<String>, String> {
+    Err("Registro Windows non disponibile su questa piattaforma".to_string())
 }
 
 /// Estrae nomi di giochi dal contenuto di un file (versione migliorata)
@@ -1688,6 +1697,7 @@ async fn try_parse_epic_config(config_path: &str) -> Result<Vec<String>, String>
 /// Legge giochi Epic dal registro Windows
 /// FUTURE USE: Will be used for reading Epic Games from Windows registry
 #[allow(dead_code)]
+#[cfg(windows)]
 async fn read_epic_registry_games() -> Result<Vec<String>, String> {
     
     let mut games = Vec::new();
@@ -1729,6 +1739,12 @@ async fn read_epic_registry_games() -> Result<Vec<String>, String> {
     }
     
     Ok(games)
+}
+
+#[allow(dead_code)]
+#[cfg(not(windows))]
+async fn read_epic_registry_games() -> Result<Vec<String>, String> {
+    Ok(Vec::new())
 }
 
 // Funzione helper per parsare i dati di un gioco Epic
@@ -1885,6 +1901,7 @@ async fn import_epic_launcher_token() -> Result<EpicAuthData, String> {
 }
 
 /// Estrae token di refresh dal registro Windows (metodo Legendary)
+#[cfg(windows)]
 async fn extract_epic_refresh_token_from_registry() -> Result<EpicAuthData, String> {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     
@@ -1919,6 +1936,11 @@ async fn extract_epic_refresh_token_from_registry() -> Result<EpicAuthData, Stri
     }
     
     Err("Nessun token Epic Games trovato nel registro".to_string())
+}
+
+#[cfg(not(windows))]
+async fn extract_epic_refresh_token_from_registry() -> Result<EpicAuthData, String> {
+    Err("Registro Windows non disponibile su questa piattaforma".to_string())
 }
 
 /// Estrae token da file di configurazione Epic Games
@@ -2210,6 +2232,7 @@ async fn search_epic_logs_advanced() -> Result<Vec<String>, String> {
 }
 
 /// Ricerca avanzata nel registro Windows per Epic Games (filtri specifici)
+#[cfg(windows)]
 async fn search_epic_registry_advanced() -> Result<Vec<String>, String> {
     let mut games = Vec::new();
     
@@ -2266,6 +2289,11 @@ async fn search_epic_registry_advanced() -> Result<Vec<String>, String> {
     
     println!("[EPIC] 📊 Registro avanzato: trovati {} giochi Epic validi", games.len());
     Ok(games)
+}
+
+#[cfg(not(windows))]
+async fn search_epic_registry_advanced() -> Result<Vec<String>, String> {
+    Ok(Vec::new())
 }
 
 /// Verifica se un nome è un gioco Epic Games valido usando whitelist robusta (versione migliorata)

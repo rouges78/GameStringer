@@ -1,6 +1,6 @@
+// === Store integrations (cross-platform with #[cfg(windows)] for registry) ===
 pub mod steam;
 pub mod steam_enhanced;
-
 pub mod epic;
 pub mod epic_enhanced;
 pub mod gog;
@@ -11,19 +11,18 @@ pub mod itchio;
 pub mod rockstar;
 pub mod amazon;
 pub mod library;
+pub mod store_detection;
+pub mod launcher;
+pub mod steam_workshop;
 
-// 🆕 Mod Management System (ispirato a Vortex)
+// === Core features (cross-platform) ===
 pub mod extensions;
 pub mod mod_profiles;
 pub mod load_order;
 pub mod games;
 pub mod utilities;
 pub mod patches;
-pub mod injekt;
-pub mod anti_cheat;
 pub mod dlc_manager;
-// pub mod hltb_manager; // Rimosso per eliminare dipendenza xml5ever
-pub mod launcher;
 pub mod profile_credentials;
 pub mod profiles;
 pub mod profile_settings;
@@ -36,10 +35,6 @@ pub mod export_formats;
 pub mod smart_glossary;
 pub mod context_injection;
 pub mod file_manager;
-pub mod unity_patcher;
-pub mod unity_injector;
-pub mod unreal_patcher;
-pub mod ue_translator;
 pub mod translation_bridge;
 pub mod translation_api;
 pub mod activity_history;
@@ -52,22 +47,56 @@ pub mod secure_delete;
 pub mod two_factor;
 pub mod security;
 pub mod global_hotkeys;
-pub mod store_detection;
-pub mod unity_bundle;
-pub mod universal_injector;
-pub mod unreal_localization;
-pub mod unreal_iostore;
-pub mod screen_capture;
 pub mod batch_processor;
 pub mod community_hub;
-pub mod danganronpa_patcher;
-pub mod rpgmaker_patcher;
-pub mod renpy_patcher;
-pub mod wolfrpg_patcher;
-pub mod steam_workshop;
-pub mod ollama_manager;
-pub mod notifications;
 pub mod project_export;
 pub mod translation_diff;
 pub mod translation_stats;
 pub mod audio_patcher;
+pub mod offline_translation;
+pub mod ollama_manager;
+#[allow(dead_code, unused_imports)]
+pub mod notifications;
+
+// === Game engine patchers (cross-platform, file-based) ===
+pub mod unity_patcher;
+pub mod unity_bundle;
+pub mod unreal_patcher;
+pub mod unreal_localization;
+pub mod unreal_iostore;
+pub mod danganronpa_patcher;
+pub mod rpgmaker_patcher;
+pub mod renpy_patcher;
+pub mod wolfrpg_patcher;
+
+// === Windows-only modules (memory injection, WinAPI OCR, screen capture) ===
+#[cfg(windows)]
+pub mod injekt;
+#[cfg(windows)]
+pub mod anti_cheat;
+#[cfg(windows)]
+pub mod unity_injector;
+#[cfg(windows)]
+pub mod ue_translator;
+#[cfg(windows)]
+pub mod screen_capture;
+#[cfg(windows)]
+pub mod universal_injector;
+
+// === Linux stubs for Windows-only modules ===
+#[cfg(not(windows))]
+pub mod injekt { pub use super::platform_stubs::*; }
+#[cfg(not(windows))]
+pub mod anti_cheat { pub use super::platform_stubs::*; }
+#[cfg(not(windows))]
+pub mod unity_injector { pub use super::platform_stubs::*; }
+#[cfg(not(windows))]
+pub mod ue_translator { pub use super::platform_stubs::*; }
+#[cfg(not(windows))]
+pub mod screen_capture { pub use super::platform_stubs::*; }
+#[cfg(not(windows))]
+pub mod universal_injector {}
+
+// === Shared stubs for non-Windows platforms ===
+#[cfg(not(windows))]
+pub mod platform_stubs;

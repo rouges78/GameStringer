@@ -28,25 +28,9 @@ tauri-plugin-process = "2"
 tauri-plugin-updater = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-winreg = "0.52"
 steamlocate = "2.0"
 tokio = { version = "1", features = ["full"] }
-winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "handleapi", "memoryapi", "tlhelp32", "psapi", "synchapi", "winnt"] }
 chrono = { version = "0.4", features = ["serde"] }
-windows = { version = "0.51", features = [
-    "Win32_Foundation", 
-    "Win32_System_Diagnostics_Debug", 
-    "Win32_System_Memory", 
-    "Win32_System_Threading", 
-    "Win32_UI_WindowsAndMessaging",
-    "Win32_System_WinRT",
-    "Media_Ocr",
-    "Graphics_Imaging",
-    "Storage_Streams",
-    "Foundation",
-    "Foundation_Collections"
-] }
-# Dipendenze per migrazione API
 reqwest = { version = "0.11", features = ["json", "stream"] }
 moka = { version = "0.12", features = ["future"] }
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite"] }
@@ -75,7 +59,6 @@ keyvalues-serde = "0.2.2"
 dirs = "6.0.0"
 new-vdf-parser = "0.2.0"
 zip = "0.6"
-shared_memory = "0.12.4"
 interprocess = "2.2.3"
 parking_lot = "0.12.5"
 tracing = "0.1.43"
@@ -84,6 +67,25 @@ lz4_flex = "0.11"
 byteorder = "1.5"
 image = "0.24"
 libloading = "0.8"
+
+# === Windows-only dependencies ===
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "handleapi", "memoryapi", "tlhelp32", "psapi", "synchapi", "winnt"] }
+windows = { version = "0.51", features = [
+    "Win32_Foundation", 
+    "Win32_System_Diagnostics_Debug", 
+    "Win32_System_Memory", 
+    "Win32_System_Threading", 
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_WinRT",
+    "Media_Ocr",
+    "Graphics_Imaging",
+    "Storage_Streams",
+    "Foundation",
+    "Foundation_Collections"
+] }
+shared_memory = "0.12.4"
 
 [dev-dependencies]
 tempfile = "3.8"

@@ -59,6 +59,14 @@ jobs:
             - **GameStringer_x.x.x_x64_en-US.msi** - MSI Installer
             - **GameStringer_x.x.x_x64-portable.zip** - Versione Portable (no installazione)
             
+            ### Linux
+            - **GameStringer_x.x.x_amd64.deb** - Debian/Ubuntu
+            - **GameStringer_x.x.x_amd64.AppImage** - AppImage (universale)
+            - **GameStringer_x.x.x_amd64.rpm** - Fedora/openSUSE
+            
+            > ⚠️ Linux: alcune funzionalità Windows-only (memory injection, WinRT OCR) non sono disponibili.
+            > Funziona tutto: traduzione, patching file, Unreal/Unity/RPGMaker patchers, glossari, TM.
+            
             ---
             
             📖 [Changelog completo](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
@@ -127,3 +135,57 @@ jobs:
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-linux:
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.version || github.ref }}
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libssl-dev \
+            libsoup-3.0-dev \
+            libjavascriptcoregtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Tauri App (Linux)
+        uses: tauri-apps/tauri-action@v0.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event.inputs.version }}
+          releaseName: 'GameStringer ${{ github.event.inputs.version }}'
+          releaseDraft: ${{ github.event.inputs.create_release }}
+          prerelease: false
+          includeDebug: false

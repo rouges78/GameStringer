@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use std::fs;
+#[cfg(windows)]
 use winreg::enums::*;
+#[cfg(windows)]
 use winreg::RegKey;
 use crate::commands::library::InstalledGame;
 use std::path::PathBuf;
@@ -91,6 +93,7 @@ pub async fn get_battlenet_installed_games() -> Result<Vec<InstalledGame>, Strin
 }
 
 /// Scansiona giochi Battle.net dal registro
+#[cfg(windows)]
 async fn scan_battlenet_registry() -> Result<Vec<InstalledGame>, String> {
     let mut games = Vec::new();
     
@@ -117,6 +120,11 @@ async fn scan_battlenet_registry() -> Result<Vec<InstalledGame>, String> {
     }
     
     Ok(games)
+}
+
+#[cfg(not(windows))]
+async fn scan_battlenet_registry() -> Result<Vec<InstalledGame>, String> {
+    Ok(Vec::new())
 }
 
 /// Scansiona cartelle di installazione comuni per Battle.net
@@ -305,6 +313,7 @@ pub async fn get_battlenet_covers_batch(game_ids: Vec<String>) -> Result<HashMap
 
 // Funzioni helper private
 
+#[cfg(windows)]
 async fn parse_battlenet_registry_entry(game_key: &RegKey, game_id: &str) -> Result<InstalledGame, String> {
     // Prova a leggere diversi campi possibili per Battle.net
     let name = game_key.get_value::<String, _>("DisplayName")
