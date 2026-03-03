@@ -338,6 +338,8 @@ fn main() {
             commands::ollama_manager::stop_ollama,
             commands::ollama_manager::pull_ollama_model,
             commands::ollama_manager::get_recommended_ollama_models,
+            // System Monitor
+            commands::system_monitor::get_system_stats,
 
             // Profile Management System
             commands::profiles::list_profiles,

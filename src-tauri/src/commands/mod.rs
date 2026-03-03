@@ -55,6 +55,7 @@ pub mod translation_stats;
 pub mod audio_patcher;
 pub mod offline_translation;
 pub mod ollama_manager;
+pub mod system_monitor;
 #[allow(dead_code, unused_imports)]
 pub mod notifications;
 

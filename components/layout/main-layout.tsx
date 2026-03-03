@@ -277,6 +277,7 @@ const getNavGroups = (t: (key: string) => string) => [
         icon: Settings,
         subItems: [
           { name: t('nav.settings'), href: '/settings', icon: Settings },
+          { name: 'System Monitor', href: '/system-monitor', icon: Monitor },
           { name: 'Info', href: '/info', icon: Info },
         ]
       },
