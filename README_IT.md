@@ -38,25 +38,51 @@
 - **Memoria di Traduzione**: Riutilizza traduzioni precedenti per coerenza
 - **Supporto Glossario**: Definisci termini personalizzati per il tuo progetto
 
-### � NUOVO: Community Hub (v1.0.7)
+### 👁 Vision LLM Translator (v1.4.2)
 
-- **GitHub Discussions** integrato per supporto community
-- **Condividi traduzioni** con altri utenti
-- **Sfoglia patch community** per giochi popolari
+- **Traduzione context-aware** usando screenshot del gioco
+- **3 provider**: Ollama (locale), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Upload o cattura** screenshot per contesto visivo
 
-### 🔔 NUOVO: Notifiche Aggiornamenti (v1.0.9)
+### 🧠 Strumenti AI Avanzati (v1.4.2)
 
-- **Header animati** con effetto respiro gradiente
-- **Notifiche smart** con avvisi sonori per aggiornamenti
-- **Aggiornamento one-click** dalla campanella notifiche
+- **Lore Assistant**: chat RAG per lore e dialoghi del gioco
+- **Auto-Hook Scanner**: scansione memoria processo con WinAPI
+- **System Monitor**: monitoraggio VRAM/RAM in tempo reale (backend Rust)
+- **Ollama Setup Wizard**: installazione guidata AI locale step-by-step
+- **Debug Console**: console di debug con intercettazione log
 
-### 🌏 NUOVO: Supporto Lingue Asiatiche (v1.0.6)
+### � Fix Provider Traduzione (v1.4.2)
+
+- **Ollama cooldown**: errori di rete → cooldown 30s invece di blocco permanente
+- **Lingva fix**: troncamento automatico testi >500 chars (evita URL 404)
+- **Auto-Translate Review**: pulsante "Traduci tutte le non tradotte" con barra progresso
+- **Tutorial fix**: SyntaxError querySelector con selettori `:contains()`
+
+### 🌍 i18n Completo — 11 Lingue (v1.4.1)
+
+- **UI completa** in: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL
+- **11 guide utente** tradotte e aggiornate
+- **Auto-detect** lingua browser/sistema
+
+### 🐧 Supporto Linux (v1.4.1)
+
+- **Build native**: .deb (Debian/Ubuntu), .AppImage (universale), .rpm (Fedora)
+- **CI/CD cross-platform**: GitHub Actions per Windows + Linux
+
+### 🌐 Community Hub & Discussions (v1.4.2)
+
+- **GitHub Discussions** integrato: Announcements, Q&A, Ideas, Show and tell, Polls
+- **REST API**: carica discussioni senza token GitHub
+- **Steam Workshop** browser per traduzioni community
+
+### 🌏 Supporto Lingue Asiatiche
 
 - **Qwen 3**: Provider dedicato per cinese/giapponese/coreano via Ollama
 - **NLLB-200**: Supporto 200 lingue incluse thai, vietnamita, hindi, arabo
 - **Ollama Generico**: Usa qualsiasi modello installato per traduzione
 
-### 🎤 NUOVO: Voice Clone Studio (v1.0.5)
+### 🎤 Voice Clone Studio
 
 - **Clonazione voce AI** con ElevenLabs e OpenAI TTS
 - **Text-to-speech** con voci multiple e preset

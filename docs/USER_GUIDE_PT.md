@@ -1005,16 +1005,35 @@ Each translated row now shows visual quality indicators:
 
 ## Novidades v1.4.2
 
+### Vision LLM Translator
+
+- **Tradução context-aware**: usa capturas de tela do jogo para contexto visual
+- **3 provedores suportados**: Ollama (local), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Upload ou captura**: carregue uma imagem ou capture a tela para contexto IA
+- **Página dedicada**: `/vision-translator` com sidebar integrada
+
+### Ferramentas IA Avançadas
+
+- **Lore Assistant**: chat RAG para explorar lore e diálogos do jogo
+- **Auto-Hook Scanner**: varredura de memória de processos com WinAPI
+- **System Monitor**: monitoramento VRAM/RAM em tempo real (backend Rust)
+- **Ollama Setup Wizard**: guia de instalação passo a passo de IA local
+- **Debug Console**: console de depuração com interceptação de logs
+- **Plugin System**: documento de design `PLUGIN_SYSTEM.md`
+
 ### Community Hub
 
 - **GitHub Discussions**: 12 discussões criadas nas categorias Announcements, General, Ideas, Q&A, Show and tell, Polls
 - **Fetch REST API pública**: o Community Hub agora carrega discussões sem exigir token GitHub
 - **Sidebar renomeada**: "Workshop" → "Steam Workshop" para maior clareza
 
-### Correção Update Bell
+### Correção de Provedores de Tradução
 
-- **Versão atual correta**: o fallback no sino de atualização agora mostra a versão real do app
-- **NotificationIndicator removido**: o sino de notificação duplicado foi removido permanentemente do header
+- **Ollama cooldown**: erros de rede agora usam cooldown de 30s em vez de bloqueio permanente
+- **Lingva 404**: truncamento automático de textos >500 caracteres para evitar URLs muito longos
+- **Auto-Translate Review**: novo botão "Traduzir todas as não traduzidas" com barra de progresso e stop
+- **Tutorial querySelector**: fix SyntaxError com seletores `:contains()` (não CSS padrão)
+- **Update Bell**: fix versão incorreta no popup (fallback hardcoded removido)
 
 ### CI/CD e Segurança
 

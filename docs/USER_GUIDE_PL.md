@@ -1005,16 +1005,35 @@ Each translated row now shows visual quality indicators:
 
 ## Nowości w v1.4.2
 
+### Vision LLM Translator
+
+- **Tłumaczenie kontekstowe**: wykorzystuje zrzuty ekranu z gry do kontekstu wizualnego
+- **3 obsługiwanych dostawców**: Ollama (lokalnie), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Przesyłanie lub przechwytywanie**: załaduj obraz lub przechwyć ekran dla kontekstu AI
+- **Dedykowana strona**: `/vision-translator` ze zintegrowanym paskiem bocznym
+
+### Zaawansowane narzędzia AI
+
+- **Lore Assistant**: czat RAG do eksploracji lore i dialogów gry
+- **Auto-Hook Scanner**: skanowanie pamięci procesów przez WinAPI
+- **System Monitor**: monitorowanie VRAM/RAM w czasie rzeczywistym (backend Rust)
+- **Ollama Setup Wizard**: przewodnik instalacji lokalnego AI krok po kroku
+- **Debug Console**: wbudowana konsola debugowania z przechwytywaniem logów
+- **Plugin System**: dokument projektowy `PLUGIN_SYSTEM.md`
+
 ### Community Hub
 
 - **GitHub Discussions**: 12 dyskusji utworzonych w kategoriach Announcements, General, Ideas, Q&A, Show and tell, Polls
 - **Publiczne REST API**: Community Hub ładuje teraz dyskusje bez tokena GitHub
 - **Pasek boczny przemianowany**: "Workshop" → "Steam Workshop"
 
-### Poprawka dzwonka aktualizacji
+### Poprawki dostawców tłumaczeń
 
-- **Prawidłowa bieżąca wersja**: wartość zastępcza w dzwonku aktualizacji pokazuje teraz rzeczywistą wersję aplikacji
-- **Usunięto NotificationIndicator**: duplikat dzwonka powiadomień został trwale usunięty z nagłówka
+- **Ollama cooldown**: błędy sieciowe używają teraz 30s cooldown zamiast trwałego blokowania
+- **Lingva 404**: automatyczne skracanie tekstów >500 znaków (zapobieganie zbyt długim URL)
+- **Auto-Translate Review**: nowy przycisk "Przetłumacz wszystkie nieprzetłumaczone" z paskiem postępu i stop
+- **Tutorial querySelector**: poprawka SyntaxError z selektorami `:contains()` (niestandardowe CSS)
+- **Update Bell**: poprawka błędnej wersji w popup (usunięto zakodowany na stałe fallback)
 
 ### CI/CD i bezpieczeństwo
 

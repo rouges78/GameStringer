@@ -1004,16 +1004,35 @@ Each translated row now shows visual quality indicators:
 
 ## v1.4.2 새로운 기능
 
+### Vision LLM 번역기
+
+- **컨텍스트 인식 번역**: 게임 스크린샷을 사용하여 시각적 컨텍스트로 번역
+- **3개 제공업체 지원**: Ollama(로컬), Gemini 2.0 Flash, OpenAI GPT-4o
+- **업로드 또는 캡처**: 이미지를 업로드하거나 화면을 캡처하여 AI 컨텍스트 제공
+- **전용 페이지**: `/vision-translator`(사이드바 통합)
+
+### 고급 AI 도구
+
+- **로어 어시스턴트**: 게임 로어와 대화를 탐색하는 RAG 채팅
+- **오토 훅 스캐너**: WinAPI를 사용한 프로세스 메모리 스캔
+- **시스템 모니터**: 실시간 VRAM/RAM 모니터링(Rust 백엔드)
+- **Ollama 설정 마법사**: 단계별 로컬 AI 설치 가이드
+- **디버그 콘솔**: 로그 인터셉트가 포함된 내장 디버그 콘솔
+- **플러그인 시스템**: `PLUGIN_SYSTEM.md` 설계 문서
+
 ### 커뮤니티 허브
 
 - **GitHub Discussions**: Announcements, General, Ideas, Q&A, Show and tell, Polls 카테고리에 12개 토론 생성
 - **공개 REST API 가져오기**: 커뮤니티 허브가 GitHub 토큰 없이 토론을 로드
 - **사이드바 이름 변경**: "Workshop" → "Steam Workshop"
 
-### 업데이트 벨 수정
+### 번역 제공업체 수정
 
-- **정확한 현재 버전**: 업데이트 벨 폴백이 앱의 실제 버전을 표시
-- **NotificationIndicator 제거**: 중복 알림 벨이 헤더에서 영구 제거됨
+- **Ollama 쿨다운**: 네트워크 오류가 영구 차단 대신 30초 쿨다운 사용
+- **Lingva 404**: 500자 이상 텍스트 자동 잘라내기(URL 오버플로 방지)
+- **자동 번역 검토**: "미번역 전체 번역" 버튼 추가(진행률 표시줄 및 중지 기능)
+- **튜토리얼 querySelector**: `:contains()` 선택자 SyntaxError 수정(비표준 CSS)
+- **업데이트 벨**: 팝업의 잘못된 버전 수정(하드코딩된 폴백 제거)
 
 ### CI/CD 및 보안
 

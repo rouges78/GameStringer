@@ -913,16 +913,35 @@ Chaque ligne traduite affiche désormais des indicateurs de qualité visuels :
 
 ## Nouveautés v1.4.2
 
+### Vision LLM Translator
+
+- **Traduction context-aware**: utilise des captures d'écran du jeu pour le contexte visuel
+- **3 fournisseurs supportés**: Ollama (local), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Upload ou capture**: chargez une image ou capturez l'écran pour le contexte IA
+- **Page dédiée**: `/vision-translator` avec sidebar intégrée
+
+### Outils IA Avancés
+
+- **Lore Assistant**: chat RAG pour explorer le lore et les dialogues du jeu
+- **Auto-Hook Scanner**: scan mémoire de processus avec WinAPI
+- **System Monitor**: monitoring VRAM/RAM en temps réel (backend Rust)
+- **Ollama Setup Wizard**: guide d'installation IA locale étape par étape
+- **Debug Console**: console de débogage avec interception des logs
+- **Plugin System**: document de conception `PLUGIN_SYSTEM.md`
+
 ### Community Hub
 
 - **GitHub Discussions**: 12 discussions créées dans les catégories Announcements, General, Ideas, Q&A, Show and tell, Polls
 - **Fetch REST API publique**: le Community Hub charge maintenant les discussions sans token GitHub
 - **Sidebar renommée**: "Workshop" → "Steam Workshop" pour plus de clarté
 
-### Correction Update Bell
+### Correction Fournisseurs de Traduction
 
-- **Version actuelle correcte**: le fallback dans la cloche de mise à jour affiche maintenant la version réelle
-- **NotificationIndicator supprimé**: la cloche de notification dupliquée a été supprimée définitivement du header
+- **Ollama cooldown**: les erreurs réseau utilisent maintenant un cooldown de 30s au lieu d'un blocage permanent
+- **Lingva 404**: troncature automatique des textes >500 caractères pour éviter les URL trop longues
+- **Auto-Translate Review**: nouveau bouton "Traduire toutes les non traduites" avec barre de progression et stop
+- **Tutorial querySelector**: fix SyntaxError avec sélecteurs `:contains()` (non CSS standard)
+- **Update Bell**: fix version incorrecte dans le popup (fallback hardcodé supprimé)
 
 ### CI/CD et Sécurité
 

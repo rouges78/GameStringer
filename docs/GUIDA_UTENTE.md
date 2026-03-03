@@ -27,6 +27,7 @@
 23. [Risoluzione Problemi](#risoluzione-problemi)
 24. [Novità v1.4.0](#novità-v140)
 25. [Novità v1.4.1](#novità-v141)
+26. [Novità v1.4.2](#novità-v142)
 
 ---
 
@@ -47,6 +48,7 @@ GameStringer è un sistema avanzato per la traduzione automatica e manuale di vi
 - **NUOVO v1.0.9**: Header animati, notifiche aggiornamenti, UI polish
 - **NUOVO v1.4.0**: Radix UI unificato, Quality Badge per-riga, supporto RTL, Ollama generico, pulizia TypeScript
 - **NUOVO v1.4.1**: GOG Galaxy completo, dashboard migliorata, tab Info gioco, fix provider AI, build cross-platform Linux
+- **NUOVO v1.4.2**: Vision LLM Translator, Lore Assistant, System Monitor, fix provider traduzione, pulsante "Traduci non tradotte"
 
 ---
 
@@ -910,16 +912,35 @@ Ogni riga tradotta ora mostra indicatori di qualità visivi:
 
 ## Novità v1.4.2
 
+### Vision LLM Translator
+
+- **Traduzione context-aware**: usa screenshot del gioco per contesto visivo durante la traduzione
+- **3 provider supportati**: Ollama (locale), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Upload o cattura schermo**: carica un'immagine o cattura lo schermo per dare contesto all'AI
+- **Pagina dedicata**: `/vision-translator` con sidebar integrata
+
+### Strumenti AI Avanzati
+
+- **Lore Assistant**: chat RAG per esplorare lore e dialoghi del gioco
+- **Auto-Hook Scanner**: scansione memoria processo con WinAPI (`winapi` crate)
+- **System Monitor**: monitoraggio VRAM/RAM in tempo reale (backend Rust)
+- **Ollama Setup Wizard**: installazione guidata AI locale step-by-step
+- **Debug Console**: console di debug con intercettazione log integrata
+- **Plugin System**: design doc `PLUGIN_SYSTEM.md` per estensioni future
+
 ### Community Hub
 
 - **GitHub Discussions**: 12 discussioni create nelle categorie Announcements, General, Ideas, Q&A, Show and tell, Polls
 - **Fetch REST API pubblica**: il Community Hub ora carica le discussioni senza richiedere token GitHub
 - **Sidebar rinominata**: "Workshop" → "Steam Workshop" per chiarezza
 
-### Update Bell Fix
+### Fix Provider Traduzione
 
-- **Versione corrente corretta**: il fallback nella campana aggiornamenti ora mostra la versione reale dell'app
-- **NotificationIndicator rimossa**: la campana notifiche duplicata è stata definitivamente rimossa dall'header
+- **Ollama cooldown**: errori di rete ora usano cooldown 30s invece di blocco permanente
+- **Lingva 404**: troncamento automatico testi >500 caratteri per evitare URL troppo lunghi
+- **Auto-Translate Review**: nuovo pulsante "Traduci tutte le non tradotte" con barra progresso e stop
+- **Tutorial querySelector**: fix SyntaxError con selettori `:contains()` (non CSS standard)
+- **Update Bell**: fix versione sbagliata nel popup (fallback hardcoded rimosso)
 
 ### CI/CD e Sicurezza
 

@@ -67,7 +67,28 @@
 - **Cover art & descriptions** via GOG API
 - **Merge** with installed games data
 
-### 🔒 Signed Updates (v1.4.2)
+### � Vision LLM Translator (v1.4.2)
+
+- **Context-aware translation** using in-game screenshots
+- **3 providers**: Ollama (local), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Upload or capture** screenshots for visual context
+
+### 🧠 Advanced AI Tools (v1.4.2)
+
+- **Lore Assistant**: RAG chat for game lore and dialogues
+- **Auto-Hook Scanner**: process memory scanning with WinAPI
+- **System Monitor**: real-time VRAM/RAM monitoring (Rust backend)
+- **Ollama Setup Wizard**: step-by-step local AI installation
+- **Debug Console**: built-in console with log interception
+
+### 🔧 Translation Provider Fix (v1.4.2)
+
+- **Ollama cooldown**: network errors use 30s cooldown instead of permanent block
+- **Lingva fix**: auto-truncation for texts >500 chars (prevents URL 404)
+- **Auto-Translate Review**: "Translate all untranslated" button with progress bar
+- **Tutorial fix**: querySelector SyntaxError with `:contains()` selectors
+
+### �🔒 Signed Updates (v1.4.2)
 
 - **Tauri Signing Key**: automatic signed `latest.json` generation
 - **Secure updater**: cryptographic signature verification

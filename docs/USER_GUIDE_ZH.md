@@ -897,16 +897,35 @@ UI库已从单独的 `@radix-ui/react-*` 包迁移到统一的 `radix-ui` 包：
 
 ## v1.4.2新功能
 
+### Vision LLM翻译器
+
+- **上下文感知翻译**: 使用游戏截图提供视觉上下文进行翻译
+- **支持3个提供商**: Ollama（本地）、Gemini 2.0 Flash、OpenAI GPT-4o
+- **上传或截图**: 上传图片或截取屏幕为AI提供上下文
+- **专用页面**: `/vision-translator`（集成侧边栏）
+
+### 高级AI工具
+
+- **传说助手**: 用于探索游戏传说和对话的RAG聊天
+- **自动钩子扫描器**: 使用WinAPI进行进程内存扫描
+- **系统监控**: 实时VRAM/RAM监控（Rust后端）
+- **Ollama安装向导**: 逐步本地AI安装指南
+- **调试控制台**: 带日志拦截的内置调试控制台
+- **插件系统**: `PLUGIN_SYSTEM.md`设计文档
+
 ### 社区中心
 
 - **GitHub Discussions**: 在Announcements、General、Ideas、Q&A、Show and tell、Polls类别中创建了12个讨论
 - **公共REST API获取**: 社区中心现在无需GitHub令牌即可加载讨论
 - **侧边栏重命名**: "Workshop" → "Steam Workshop"
 
-### 更新铃铛修复
+### 翻译提供商修复
 
-- **正确的当前版本**: 更新铃铛的回退值现在显示应用的实际版本
-- **移除NotificationIndicator**: 重复的通知铃铛已从标题栏永久移除
+- **Ollama冷却**: 网络错误现在使用30秒冷却而非永久阻止
+- **Lingva 404**: 自动截断超过500字符的文本（防止URL过长）
+- **自动翻译审查**: 新增"翻译所有未翻译"按钮（带进度条和停止功能）
+- **教程querySelector**: 修复`:contains()`选择器的SyntaxError（非标准CSS）
+- **更新铃铛**: 修复弹窗中的错误版本（移除硬编码回退值）
 
 ### CI/CD和安全
 

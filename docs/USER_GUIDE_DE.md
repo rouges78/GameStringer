@@ -915,16 +915,35 @@ Jede übersetzte Zeile zeigt nun visuelle Qualitätsindikatoren:
 
 ## Neuigkeiten v1.4.2
 
+### Vision LLM Translator
+
+- **Kontextbewusste Übersetzung**: verwendet In-Game-Screenshots für visuellen Kontext
+- **3 unterstützte Anbieter**: Ollama (lokal), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Upload oder Erfassung**: Bild hochladen oder Bildschirm erfassen für KI-Kontext
+- **Eigene Seite**: `/vision-translator` mit integrierter Sidebar
+
+### Erweiterte KI-Tools
+
+- **Lore Assistant**: RAG-Chat zum Erkunden von Game-Lore und Dialogen
+- **Auto-Hook Scanner**: Prozessspeicher-Scan mit WinAPI
+- **System Monitor**: Echtzeit-VRAM/RAM-Überwachung (Rust-Backend)
+- **Ollama Setup Wizard**: Schritt-für-Schritt lokale KI-Installation
+- **Debug Console**: Integrierte Debug-Konsole mit Log-Abfang
+- **Plugin System**: Design-Dokument `PLUGIN_SYSTEM.md`
+
 ### Community Hub
 
 - **GitHub Discussions**: 12 Diskussionen erstellt in den Kategorien Announcements, General, Ideas, Q&A, Show and tell, Polls
 - **Öffentliche REST API**: Community Hub lädt Diskussionen jetzt ohne GitHub-Token
 - **Sidebar umbenannt**: "Workshop" → "Steam Workshop" für mehr Klarheit
 
-### Update Bell Fix
+### Übersetzungs-Provider Fix
 
-- **Korrekte aktuelle Version**: Der Fallback in der Update-Glocke zeigt jetzt die tatsächliche App-Version
-- **NotificationIndicator entfernt**: Die doppelte Benachrichtigungsglocke wurde dauerhaft aus dem Header entfernt
+- **Ollama Cooldown**: Netzwerkfehler verwenden jetzt 30s Cooldown statt permanenter Blockierung
+- **Lingva 404**: Automatische Kürzung von Texten >500 Zeichen zur Vermeidung zu langer URLs
+- **Auto-Translate Review**: Neuer Button "Alle unübersetzten übersetzen" mit Fortschrittsbalken und Stop
+- **Tutorial querySelector**: Fix SyntaxError mit `:contains()`-Selektoren (kein Standard-CSS)
+- **Update Bell**: Fix falsche Version im Popup (hartcodierter Fallback entfernt)
 
 ### CI/CD und Sicherheit
 

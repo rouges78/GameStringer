@@ -914,16 +914,35 @@ Cada fila traducida ahora muestra indicadores de calidad visuales:
 
 ## Novedades v1.4.2
 
+### Vision LLM Translator
+
+- **Traducción context-aware**: usa capturas de pantalla del juego para contexto visual
+- **3 proveedores soportados**: Ollama (local), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Subir o capturar**: carga una imagen o captura la pantalla para dar contexto a la IA
+- **Página dedicada**: `/vision-translator` con sidebar integrada
+
+### Herramientas IA Avanzadas
+
+- **Lore Assistant**: chat RAG para explorar lore y diálogos del juego
+- **Auto-Hook Scanner**: escaneo de memoria de procesos con WinAPI
+- **System Monitor**: monitoreo VRAM/RAM en tiempo real (backend Rust)
+- **Ollama Setup Wizard**: guía de instalación paso a paso de IA local
+- **Debug Console**: consola de depuración con intercepción de logs
+- **Plugin System**: documento de diseño `PLUGIN_SYSTEM.md`
+
 ### Community Hub
 
 - **GitHub Discussions**: 12 discusiones creadas en las categorías Announcements, General, Ideas, Q&A, Show and tell, Polls
 - **Fetch REST API pública**: el Community Hub ahora carga discusiones sin requerir token GitHub
 - **Sidebar renombrada**: "Workshop" → "Steam Workshop" para mayor claridad
 
-### Corrección Update Bell
+### Corrección Proveedores de Traducción
 
-- **Versión actual correcta**: el fallback en la campana de actualizaciones ahora muestra la versión real de la app
-- **NotificationIndicator eliminado**: la campana de notificaciones duplicada ha sido eliminada permanentemente del header
+- **Ollama cooldown**: errores de red ahora usan cooldown de 30s en lugar de bloqueo permanente
+- **Lingva 404**: truncamiento automático de textos >500 caracteres para evitar URLs demasiado largos
+- **Auto-Translate Review**: nuevo botón "Traducir todas las no traducidas" con barra de progreso y stop
+- **Tutorial querySelector**: fix SyntaxError con selectores `:contains()` (no CSS estándar)
+- **Update Bell**: fix versión incorrecta en popup (fallback hardcoded eliminado)
 
 ### CI/CD y Seguridad
 
