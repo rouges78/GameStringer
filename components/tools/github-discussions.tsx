@@ -102,28 +102,75 @@ export function GitHubDiscussions() {
     setError(null);
     
     try {
-      // Chiamata diretta GitHub API (no API routes in Tauri)
-      const response = await fetch('https://api.github.com/repos/rouges78/GameStringer/discussions', {
-        headers: { 'Accept': 'application/vnd.github+json' }
+      // REST API pubblica (no token richiesto per repo pubblici)
+      const restResponse = await fetch('https://api.github.com/repos/rouges78/GameStringer/discussions?per_page=30', {
+        headers: { 
+          'Accept': 'application/vnd.github+json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('github_token') 
+            ? { 'Authorization': `Bearer ${localStorage.getItem('github_token')}` } 
+            : {})
+        }
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setDiscussions(data.map((d: any) => ({
-          id: d.number,
-          title: d.title,
-          author: d.user?.login || 'unknown',
-          body: d.body?.slice(0, 200) || '',
-          createdAt: d.created_at,
-          comments: d.comments || 0,
-          reactions: d.reactions?.total_count || 0,
-          labels: d.labels?.map((l: any) => l.name) || [],
-          url: d.html_url
-        })));
-      } else {
-        // Fallback: mostra link diretto a GitHub
-        setDiscussions([]);
+      if (restResponse.ok) {
+        const data = await restResponse.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setDiscussions(data.map((d: any) => ({
+            id: String(d.number),
+            number: d.number,
+            title: (d.title || '').replace(/^#\s*/, ''),
+            body: (d.body || '').replace(/[#*`\[\]]/g, '').replace(/\r?\n/g, ' ').trim().slice(0, 200),
+            author: { login: d.user?.login || 'unknown', avatarUrl: d.user?.avatar_url || '' },
+            category: { name: d.category?.name || 'General', emoji: d.category?.emoji || '💬' },
+            createdAt: d.created_at || new Date().toISOString(),
+            updatedAt: d.updated_at || new Date().toISOString(),
+            comments: { totalCount: d.comments || 0 },
+            upvoteCount: d.reactions?.total_count || 0,
+            answerChosenAt: d.answer_chosen_at || null,
+            url: d.html_url || `${DISCUSSIONS_URL}/${d.number}`
+          })));
+          return;
+        }
       }
+
+      // Fallback: GraphQL API (richiede token)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('github_token') : null;
+      if (token) {
+        const graphqlQuery = {
+          query: `query {
+            repository(owner: "rouges78", name: "GameStringer") {
+              discussions(first: 20, orderBy: {field: CREATED_AT, direction: DESC}) {
+                nodes {
+                  id number title body
+                  author { login avatarUrl }
+                  category { name emoji }
+                  createdAt updatedAt
+                  comments { totalCount }
+                  upvoteCount answerChosenAt url
+                }
+              }
+            }
+          }`
+        };
+        const gqlResponse = await fetch('https://api.github.com/graphql', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `bearer ${token}` },
+          body: JSON.stringify(graphqlQuery)
+        });
+        if (gqlResponse.ok) {
+          const result = await gqlResponse.json();
+          const nodes = result.data?.repository?.discussions?.nodes;
+          if (nodes && nodes.length > 0) {
+            setDiscussions(nodes.map((d: any) => ({
+              ...d,
+              body: (d.body || '').replace(/[#*`\[\]]/g, '').replace(/\r?\n/g, ' ').trim().slice(0, 200)
+            })));
+            return;
+          }
+        }
+      }
+
+      setDiscussions([]);
     } catch (err) {
       console.error('Error fetching discussions:', err);
       setDiscussions([]);
