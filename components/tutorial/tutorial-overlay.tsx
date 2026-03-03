@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useTutorial } from './tutorial-provider';
+import { useTutorial, safeFindElement } from './tutorial-provider';
 import { useTranslation } from '@/lib/i18n';
 
 export function TutorialOverlay() {
@@ -28,7 +28,7 @@ export function TutorialOverlay() {
       setHighlightRect(null);
       return;
     }
-    const el = document.querySelector(currentStepData.target);
+    const el = safeFindElement(currentStepData.target);
     if (el) {
       setHighlightRect(el.getBoundingClientRect());
     } else {

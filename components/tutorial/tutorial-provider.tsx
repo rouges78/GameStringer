@@ -3,6 +3,31 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { TutorialConfig, TutorialStep } from '@/lib/types/tutorial';
 
+/**
+ * querySelector sicuro: gestisce selettori con :contains() (non CSS standard)
+ * cercando manualmente tra gli elementi del DOM.
+ */
+export function safeFindElement(selector: string): Element | null {
+  // Gestisci selettori con :contains("...")
+  const containsMatch = selector.match(/^(.+?):contains\(["'](.+?)["']\)$/);
+  if (containsMatch) {
+    const [, tagSelector, text] = containsMatch;
+    try {
+      const candidates = document.querySelectorAll(tagSelector);
+      for (const el of candidates) {
+        if (el.textContent?.includes(text)) return el;
+      }
+    } catch { /* selettore tag invalido */ }
+    return null;
+  }
+  // Selettore CSS standard
+  try {
+    return document.querySelector(selector);
+  } catch {
+    return null;
+  }
+}
+
 interface TutorialContextType {
   isActive: boolean;
   currentStep: number;
@@ -70,7 +95,7 @@ export const TutorialProvider: React.FC<TutorialProviderProps> = ({ children }) 
     let next = currentStep + 1;
     // Salta step opzionali se l'elemento target non esiste
     while (next < steps.length && steps[next].optional) {
-      const el = document.querySelector(steps[next].target);
+      const el = safeFindElement(steps[next].target);
       if (el) break;
       next++;
     }
