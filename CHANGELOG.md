@@ -19,6 +19,37 @@
 
 ## 📅 Marzo 2026
 
+### v1.4.2 — Vision LLM, Advanced Tools & Community Fix 🚀🧠
+
+> **Data**: 2026-03-03
+
+#### 👁 Vision LLM Translator
+
+- **Vision LLM**: traduzione context-aware usando screenshot del gioco
+- **Provider supportati**: Ollama (locale), Gemini 2.0 Flash, OpenAI GPT-4o
+- **Upload/Cattura**: carica immagine o cattura schermo per contesto visivo
+- **Pagina dedicata**: `/vision-translator` con sidebar integrata
+
+#### 🔧 Advanced Tools
+
+- **Lore Assistant**: chat RAG per lore e dialoghi del gioco
+- **Auto-Hook Scanner**: scansione memoria processo con WinAPI (`winapi` crate)
+- **System Monitor**: monitoraggio VRAM/RAM in tempo reale (backend Rust)
+- **Ollama Setup Wizard**: installazione guidata AI locale step-by-step
+- **Debug Console**: console di debug con intercept console integrato
+- **Plugin System**: design doc `PLUGIN_SYSTEM.md`
+
+#### 🌐 Community & Fix
+
+- **GitHub Discussions**: 12 discussioni create (Announcements, General, Ideas, Q&A, Show and tell, Polls)
+- **Community Hub**: fix fetch discussions con REST API pubblica (no token richiesto)
+- **Sidebar**: rinominato Workshop in Steam Workshop
+- **Update Bell**: fix versione corrente mostrata (fallback aggiornato)
+- **CI/CD**: Tauri Signing Key configurata per release firmate
+- **Dynamic imports**: fix "Rendered more hooks" con `ssr: false` sulle nuove pagine
+
+---
+
 ### v1.4.1 — i18n 11 Lingue, Guide Complete & CI Fix 🌍📚
 
 > **Data**: 2026-03-02

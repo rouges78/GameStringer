@@ -13,13 +13,18 @@
       "date": "2026-03-03",
       "type": "patch",
       "changes": [
+        "Vision LLM Translator: traduzione context-aware con screenshot del gioco (Ollama, Gemini, OpenAI)",
+        "Lore Assistant: chat RAG per lore e dialoghi del gioco",
+        "Auto-Hook Scanner: scansione memoria processo con WinAPI",
+        "System Monitor: monitoraggio VRAM/RAM in tempo reale (backend Rust)",
+        "Ollama Setup Wizard: installazione guidata AI locale step-by-step",
+        "Debug Console: console di debug con intercept console integrato",
+        "Plugin System: design doc PLUGIN_SYSTEM.md",
         "GitHub Discussions: 12 discussioni create (Announcements, General, Ideas, Q&A, Show and tell, Polls)",
         "Community Hub: fix fetch discussions con REST API pubblica (no token richiesto)",
-        "Sidebar: rinominato Workshop in Steam Workshop",
-        "Update Bell: fix versione corrente mostrata (fallback aggiornato)",
-        "Tauri Signing Key: configurata per generazione automatica latest.json firmato",
-        "CI/CD: workflow release.yml aggiornato con TAURI_SIGNING_PRIVATE_KEY",
-        "Release v1.4.1 ricostruita e pubblicata con fix campana e NotificationIndicator rimossa"
+        "Sidebar: Vision LLM aggiunto, Workshop rinominato in Steam Workshop",
+        "Fix: Rendered more hooks — dynamic imports con ssr:false sulle nuove pagine",
+        "CI/CD: Tauri Signing Key per release firmate"
       ]
     },
     "1.4.1": {
