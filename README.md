@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.4.1-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.4.2-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri-2.0-24C8DB" alt="Tauri" />
@@ -43,25 +43,43 @@
 - **Translation Memory**: Reuse previous translations for consistency
 - **Glossary Support**: Define custom terms for your project
 
-### 🌐 NEW: Community Hub (v1.0.7)
+### � Full i18n — 11 Languages (v1.4.1)
 
-- **GitHub Discussions** integration for community support
-- **Share translations** with other users
-- **Browse community patches** for popular games
+- **Complete UI** in: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL
+- **11 user guides** fully translated and updated
+- **Auto-detect** browser/system language
 
-### 🔔 NEW: Update Notifications (v1.0.9)
+### 🐧 Linux Support (v1.4.1)
 
-- **Animated headers** with breathing gradient effect
-- **Smart notifications** with sound alerts for updates
+- **Native builds**: .deb (Debian/Ubuntu), .AppImage (universal), .rpm (Fedora)
+- **Cross-platform CI/CD**: GitHub Actions workflow for Windows + Linux
+- **Full feature parity** (except Windows-only DLL injection and OCR)
+
+### 🌐 Community Hub & Discussions (v1.4.2)
+
+- **GitHub Discussions** integrated: Announcements, Q&A, Ideas, Show and tell, Polls
+- **REST API fetch**: loads discussions without requiring GitHub token
+- **Steam Workshop** browser for community translations
+
+### 🏪 GOG Galaxy Integration (v1.4.1)
+
+- **GOG Galaxy 2.0**: read owned games from local SQLite database
+- **Cover art & descriptions** via GOG API
+- **Merge** with installed games data
+
+### 🔒 Signed Updates (v1.4.2)
+
+- **Tauri Signing Key**: automatic signed `latest.json` generation
+- **Secure updater**: cryptographic signature verification
 - **One-click update** from notification bell
 
-### 🌏 NEW: Asian Language Support (v1.0.6)
+### 🌏 Asian Language Support
 
 - **Qwen 3**: Dedicated provider for Chinese/Japanese/Korean via Ollama
 - **NLLB-200**: 200 languages support including Thai, Vietnamese, Hindi, Arabic
 - **Generic Ollama**: Use any installed model for translation
 
-### 🎤 NEW: Voice Clone Studio (v1.0.5)
+### 🎤 Voice Clone Studio
 
 - **AI voice cloning** with ElevenLabs and OpenAI TTS
 - **Text-to-speech** with multiple voices and presets
@@ -79,7 +97,7 @@
 - **Table file** (.TBL) parser/generator
 - **Font injection** for accented characters
 
-### 🔌 NEW: Public API v1 (v1.0.4)
+### 🔌 Public API v1
 
 - `POST /api/v1/translate` - Single translation
 - `POST /api/v1/batch` - Batch translation (max 100)
