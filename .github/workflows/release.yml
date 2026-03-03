@@ -11,7 +11,7 @@ on:
         description: 'Create GitHub Release'
         required: false
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: write
@@ -73,7 +73,7 @@ jobs:
             ---
             
             📖 [Changelog completo](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
-          releaseDraft: ${{ github.event.inputs.create_release }}
+          releaseDraft: false
           prerelease: false
           includeDebug: false
           args: --target x86_64-pc-windows-msvc
@@ -143,7 +143,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.version }}
           files: GameStringer_*_x64-portable.zip
-          draft: true
+          draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -200,7 +200,7 @@ jobs:
           updaterJsonKeepUniversal: true
           tagName: ${{ github.event.inputs.version }}
           releaseName: 'GameStringer ${{ github.event.inputs.version }}'
-          releaseDraft: ${{ github.event.inputs.create_release }}
+          releaseDraft: false
           prerelease: false
           includeDebug: false
           args: --bundles deb,appimage,rpm
