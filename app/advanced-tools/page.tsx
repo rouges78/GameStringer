@@ -1,9 +1,18 @@
 'use client';
 
-import { LoreAssistantChat } from '@/components/tools/lore-assistant';
-import { AutoHookScanner } from '@/components/tools/auto-hook-scanner';
+import dynamic from 'next/dynamic';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles } from 'lucide-react';
+
+const LoreAssistantChat = dynamic(
+  () => import('@/components/tools/lore-assistant').then(mod => mod.LoreAssistantChat),
+  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Caricamento...</div> }
+);
+
+const AutoHookScanner = dynamic(
+  () => import('@/components/tools/auto-hook-scanner').then(mod => mod.AutoHookScanner),
+  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Caricamento...</div> }
+);
 
 export default function AdvancedToolsPage() {
   return (

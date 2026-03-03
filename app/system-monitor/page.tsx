@@ -1,12 +1,18 @@
 'use client';
 
-import { SystemMonitor } from '@/components/tools/system-monitor';
-import { OllamaSetupWizard } from '@/components/tools/ollama-setup-wizard';
-import { useTranslation } from '@/lib/i18n';
+import dynamic from 'next/dynamic';
+
+const SystemMonitor = dynamic(
+  () => import('@/components/tools/system-monitor').then(mod => mod.SystemMonitor),
+  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Caricamento...</div> }
+);
+
+const OllamaSetupWizard = dynamic(
+  () => import('@/components/tools/ollama-setup-wizard').then(mod => mod.OllamaSetupWizard),
+  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Caricamento...</div> }
+);
 
 export default function SystemMonitorPage() {
-  const { t } = useTranslation();
-
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-2">

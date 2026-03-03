@@ -1,6 +1,11 @@
 'use client';
 
-import { VisionTranslator } from '@/components/tools/vision-translator';
+import dynamic from 'next/dynamic';
+
+const VisionTranslator = dynamic(
+  () => import('@/components/tools/vision-translator').then(mod => mod.VisionTranslator),
+  { ssr: false, loading: () => <div className="p-6 text-center text-slate-500 text-sm">Caricamento Vision LLM...</div> }
+);
 
 export default function VisionTranslatorPage() {
   return (
