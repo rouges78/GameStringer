@@ -1094,24 +1094,69 @@ export default function LibraryPage() {
 
   const renderContent = () => {
     if (isLoading) {
-      // Loader migliorato con progress
       return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">{lib.loadingTitle}</h3>
-            <p className="text-muted-foreground">{lib.loadingSubtitle}</p>
-            <p className="text-xs text-muted-foreground mt-1">{lib.loadingSlow}</p>
+        <div className="flex flex-col items-center justify-center min-h-[500px] space-y-6">
+          {/* Icona gamepad animata con glow */}
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-xl animate-pulse" />
+            <div className="relative p-5 rounded-2xl bg-gradient-to-br from-blue-600/20 via-indigo-600/20 to-purple-600/20 border border-white/10 backdrop-blur-sm">
+              <Gamepad2 className="h-10 w-10 text-blue-400 animate-bounce" style={{ animationDuration: '2s' }} />
+            </div>
           </div>
-          
-          {/* Scheletro griglia sotto il loader */}
-          <div className="w-full mt-8">
+
+          {/* Testo */}
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              {lib.loadingTitle}
+            </h3>
+            <p className="text-sm text-muted-foreground">{lib.loadingSubtitle}</p>
+            <p className="text-xs text-muted-foreground/60">{lib.loadingSlow}</p>
+          </div>
+
+          {/* Barra progresso animata */}
+          <div className="w-64 h-1.5 rounded-full bg-white/5 overflow-hidden">
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"
+              style={{ 
+                animation: 'loading-bar 2s ease-in-out infinite',
+                width: '40%',
+              }}
+            />
+          </div>
+
+          {/* Skeleton cards con wave staggered */}
+          <div className="w-full mt-4">
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1.5">
-              {Array.from({ length: 12 }).map((_, index) => (
-                <div key={index} className="bg-gray-800/50 rounded-lg aspect-[16/9] animate-pulse" />
+              {Array.from({ length: 21 }).map((_, index) => (
+                <div 
+                  key={index} 
+                  className="relative rounded-lg aspect-[16/9] overflow-hidden bg-gray-800/40 border border-white/5"
+                  style={{ animationDelay: `${index * 80}ms` }}
+                >
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
+                    style={{
+                      animation: 'shimmer 2s ease-in-out infinite',
+                      animationDelay: `${index * 80}ms`,
+                    }}
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-white/[0.02] to-transparent" />
+                </div>
               ))}
             </div>
           </div>
+
+          <style jsx>{`
+            @keyframes loading-bar {
+              0% { transform: translateX(-100%); }
+              50% { transform: translateX(150%); }
+              100% { transform: translateX(-100%); }
+            }
+            @keyframes shimmer {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(200%); }
+            }
+          `}</style>
         </div>
       );
     }
