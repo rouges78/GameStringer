@@ -163,7 +163,9 @@ export default function AutoTranslatePage() {
   const [stoppedByUser, setStoppedByUser] = useState(false)
 
   // Review state
-  const [reviewFilter, setReviewFilter] = useState<'all' | 'issues' | 'edited'>('issues')
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'issues' | 'edited' | 'untranslated'>('issues')
+  const [isRetranslating, setIsRetranslating] = useState(false)
+  const [retranslateProgress, setRetranslateProgress] = useState<{ done: number; total: number } | null>(null)
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [editingKey, setEditingKey] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -637,6 +639,7 @@ export default function AutoTranslatePage() {
   const filteredStrings = currentFileStrings.filter(s => {
     if (reviewFilter === 'issues') return !s.qaPassed || s.qaScore < 70
     if (reviewFilter === 'edited') return s.isEdited
+    if (reviewFilter === 'untranslated') return !s.translation
     return true
   })
 
@@ -660,10 +663,92 @@ export default function AutoTranslatePage() {
     setEditingKey(null); setEditValue('')
   }, [editingKey, selectedFile, editValue, sourceLang, targetLang])
 
+  // Traduci tutte le stringhe non tradotte in batch
+  const handleTranslateUntranslated = useCallback(async () => {
+    setIsRetranslating(true)
+    abortRef.current = false
+    const batchSize = 20
+    const updated = new Map(translatedStrings)
+    let totalUntranslated = 0
+    let doneCount = 0
+
+    // Conta totale non tradotte
+    for (const [, arr] of updated) {
+      totalUntranslated += arr.filter(s => !s.translation).length
+    }
+    setRetranslateProgress({ done: 0, total: totalUntranslated })
+
+    for (const [fileName, fileStrings] of updated) {
+      if (abortRef.current) break
+      const pending = fileStrings.filter(s => !s.translation)
+      if (pending.length === 0) continue
+
+      for (let i = 0; i < pending.length; i += batchSize) {
+        if (abortRef.current) break
+        const batch = pending.slice(i, i + batchSize)
+        const batchTexts = batch.map(s => s.original)
+
+        try {
+          let harvestedContext
+          if (useContextHarvest) {
+            try {
+              const inputs: HarvestInput[] = batch.map((s, idx) => ({
+                text: s.original, key: s.key, filename: fileName,
+                previousText: idx > 0 ? batch[idx - 1].original : undefined,
+                nextText: idx < batch.length - 1 ? batch[idx + 1].original : undefined,
+              }))
+              harvestedContext = harvestBatch(inputs)
+            } catch {}
+          }
+
+          const result = await translateSmart({
+            texts: batchTexts, sourceLanguage: sourceLang,
+            targetLanguage: targetLang, harvestedContext,
+            gameId: gameInfo?.gameId,
+          })
+
+          if (result.success) {
+            const arr = [...(updated.get(fileName) || [])]
+            for (let si = 0; si < batch.length; si++) {
+              const translation = result.translations[si] || ''
+              const wasTranslated = translation && translation !== batch[si].original
+              if (wasTranslated) {
+                const idx = arr.findIndex(s => s.key === batch[si].key)
+                if (idx >= 0) {
+                  let qaScore = 100, qaPassed = true
+                  try {
+                    const qaReport = runQualityGates({ sourceText: batch[si].original, translatedText: translation, targetLanguage: targetLang })
+                    qaScore = qaReport.overallScore; qaPassed = qaReport.passed
+                    arr[idx] = { ...arr[idx], translation, qaScore, qaPassed, qaReport }
+                  } catch {
+                    arr[idx] = { ...arr[idx], translation, qaScore, qaPassed }
+                  }
+                }
+              }
+            }
+            updated.set(fileName, arr)
+            setTranslatedStrings(new Map(updated))
+          }
+        } catch (err) {
+          console.warn(`[RetranslateUntranslated] Batch error:`, err)
+        }
+
+        doneCount += batch.length
+        setRetranslateProgress({ done: doneCount, total: totalUntranslated })
+      }
+    }
+
+    // Salva checkpoint
+    saveCheckpoint(updated)
+    setIsRetranslating(false)
+    setRetranslateProgress(null)
+  }, [translatedStrings, sourceLang, targetLang, useContextHarvest, gameInfo, saveCheckpoint])
+
   const allStrings = [...translatedStrings.values()].flat()
   const totalTranslated = allStrings.length
   const issueCount = allStrings.filter(s => !s.qaPassed || s.qaScore < 70).length
   const editedCount = allStrings.filter(s => s.isEdited).length
+  const untranslatedCount = allStrings.filter(s => !s.translation).length
   const avgScore = totalTranslated > 0 ? Math.round(allStrings.reduce((s, t) => s + t.qaScore, 0) / totalTranslated) : 0
 
   // ============================================================================
@@ -1456,11 +1541,29 @@ export default function AutoTranslatePage() {
         {/* ================================================================ */}
         {step === 'review' && (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Tradotte</div><div className="text-lg font-bold">{totalTranslated}</div></Card>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Tradotte</div><div className="text-lg font-bold">{totalTranslated - untranslatedCount}</div></Card>
               <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Score Medio</div><div className={cn("text-lg font-bold", avgScore >= 80 ? "text-emerald-400" : avgScore >= 60 ? "text-yellow-400" : "text-red-400")}>{avgScore}%</div></Card>
               <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Da Rivedere</div><div className="text-lg font-bold text-yellow-400">{issueCount}</div></Card>
               <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Modificate</div><div className="text-lg font-bold text-blue-400">{editedCount}</div></Card>
+              <Card className={cn("p-2.5", untranslatedCount > 0 ? "border-red-500/30 bg-red-500/5" : "")}>
+                <div className="text-[10px] text-muted-foreground">Non tradotte</div>
+                <div className="text-lg font-bold text-red-400">{untranslatedCount}</div>
+                {untranslatedCount > 0 && !isRetranslating && (
+                  <Button size="sm" className="w-full h-6 text-[9px] mt-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600" onClick={handleTranslateUntranslated}>
+                    <Zap className="h-2.5 w-2.5 mr-0.5" /> Traduci tutte
+                  </Button>
+                )}
+                {isRetranslating && retranslateProgress && (
+                  <div className="mt-1 space-y-0.5">
+                    <Progress value={(retranslateProgress.done / retranslateProgress.total) * 100} className="h-1.5" />
+                    <div className="text-[8px] text-muted-foreground text-center">{retranslateProgress.done}/{retranslateProgress.total}</div>
+                    <Button size="sm" variant="ghost" className="w-full h-5 text-[8px]" onClick={() => { abortRef.current = true }}>
+                      <XCircle className="h-2 w-2 mr-0.5" /> Stop
+                    </Button>
+                  </div>
+                )}
+              </Card>
               <Card className="p-2.5 flex items-center justify-center gap-1.5">
                 <Button onClick={handleGeneratePatch} className="h-8 text-xs flex-1 bg-gradient-to-r from-rose-500 to-fuchsia-500">
                   <Package className="h-3 w-3 mr-1" /> Crea Patch
@@ -1554,9 +1657,9 @@ export default function AutoTranslatePage() {
                   <Separator />
                   <div className="space-y-1">
                     <Label className="text-[10px] text-muted-foreground">Filtro</Label>
-                    {(['all', 'issues', 'edited'] as const).map(f => (
+                    {(['all', 'issues', 'untranslated', 'edited'] as const).map(f => (
                       <Button key={f} variant={reviewFilter === f ? "default" : "ghost"} size="sm" className="w-full h-6 text-[10px] justify-start" onClick={() => setReviewFilter(f)}>
-                        {f === 'all' ? '📋 Tutte' : f === 'issues' ? '⚠️ Da rivedere' : '✏️ Modificate'}
+                        {f === 'all' ? '📋 Tutte' : f === 'issues' ? '⚠️ Da rivedere' : f === 'untranslated' ? `🔴 Non tradotte (${untranslatedCount})` : '✏️ Modificate'}
                       </Button>
                     ))}
                   </div>
