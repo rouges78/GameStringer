@@ -672,9 +672,12 @@ async function translateWithTranslateGemma(
     const tagsData = await tagsRes.json();
     const available = (tagsData.models || []).map((m: any) => m.name);
     const hasModel = available.some((n: string) => n.startsWith('translategemma'));
-    if (!hasModel) throw new Error('TranslateGemma non installato. Esegui: ollama pull translategemma');
+    if (!hasModel) {
+      blockProvider('translategemma'); // Modello mancante → blocco permanente
+      throw new Error('TranslateGemma non installato. Esegui: ollama pull translategemma');
+    }
   } catch (err) {
-    blockProvider('translategemma');
+    blockProvider('translategemma', false); // Errore rete → cooldown 30s
     throw err;
   }
 
@@ -697,7 +700,7 @@ async function translateWithTranslateGemma(
     });
 
     if (!res.ok) {
-      blockProvider('translategemma');
+      blockProvider('translategemma', false); // HTTP error → cooldown 30s
       throw new Error(`TranslateGemma ${res.status}`);
     }
 
@@ -734,7 +737,7 @@ async function translateWithTranslateGemma(
 
     return results;
   } catch (err) {
-    blockProvider('translategemma');
+    blockProvider('translategemma', false); // Errore runtime → cooldown 30s
     throw err;
   }
 }
@@ -780,9 +783,12 @@ async function translateWithHYMT(
       const found = available.find(check);
       if (found) { modelName = found; break; }
     }
-    if (!modelName) throw new Error('HY-MT1.5 non installato. Vai in Settings → Ollama e premi Pull su HY-MT');
+    if (!modelName) {
+      blockProvider('hymt'); // Modello mancante → blocco permanente
+      throw new Error('HY-MT1.5 non installato. Vai in Settings → Ollama e premi Pull su HY-MT');
+    }
   } catch (err) {
-    blockProvider('hymt');
+    blockProvider('hymt', false); // Errore rete → cooldown 30s
     throw err;
   }
 
@@ -1071,8 +1077,11 @@ async function translateWithLingva(
   const tgtLang = opts.targetLanguage || 'it';
   const results: string[] = [];
   
+  // Lingva usa GET con testo nell'URL — troncare a 500 chars per evitare 404 su URL troppo lunghi
+  const MAX_TEXT_LEN = 500;
   for (const text of opts.texts) {
-    const url = `https://lingva.ml/api/v1/${srcLang}/${tgtLang}/${encodeURIComponent(text)}`;
+    const truncated = text.length > MAX_TEXT_LEN ? text.slice(0, MAX_TEXT_LEN) : text;
+    const url = `https://lingva.ml/api/v1/${srcLang}/${tgtLang}/${encodeURIComponent(truncated)}`;
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) {
@@ -1080,7 +1089,9 @@ async function translateWithLingva(
         throw new Error(`Lingva ${res.status}`);
       }
       const data = await res.json();
-      results.push(data?.translation || text);
+      const translated = data?.translation || truncated;
+      // Se troncato, appendi la parte rimanente non tradotta
+      results.push(text.length > MAX_TEXT_LEN ? translated + text.slice(MAX_TEXT_LEN) : translated);
     } catch (err) {
       blockProvider('lingva', false); // cooldown, non blocco permanente
       throw err;
