@@ -37,8 +37,10 @@ interface Game {
 }
 
 // Helper per generare URL pagina dettaglio game
+// Uses /games/?id=XXX query param format for Tauri static export compatibility
 const getGameDetailUrl = (game: Game): string => {
   const params = new URLSearchParams();
+  params.set('id', game.id || game.app_id || '');
   params.set('name', game.title || '');
   if (game.install_dir) params.set('installDir', game.install_dir);
   params.set('installed', String(game.is_installed || false));
@@ -48,7 +50,7 @@ const getGameDetailUrl = (game: Game): string => {
   const numericAppId = game.app_id || (game.id?.match(/\d+/)?.[0]);
   if (numericAppId) params.set('appId', String(numericAppId));
   
-  return `/games/${game.id || game.app_id}?${params.toString()}`;
+  return `/games/?${params.toString()}`;
 }
 
 // Module-level dedup per evitare doppi fetch SteamGridDB (sopravvive a StrictMode remount)

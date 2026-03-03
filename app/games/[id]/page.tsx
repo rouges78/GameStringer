@@ -1,4 +1,4 @@
-import GameDetailClient from './GameDetailClient';
+import GameDetailClient from '@/components/game-detail-client';
 
 // Required for static export - returns empty array for dynamic runtime
 export function generateStaticParams() {

@@ -325,7 +325,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Ultimo Gioco Aperto - SINISTRA */}
         {lastGame ? (
-          <Link href={`/games/${lastGame.id}?name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`}>
+          <Link href={`/games/?id=${lastGame.id}&name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`}>
             <Card className="border-indigo-500/30 bg-indigo-950/40 backdrop-blur-sm hover:border-indigo-400/50 transition-all cursor-pointer group h-full">
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">

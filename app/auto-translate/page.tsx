@@ -1227,7 +1227,7 @@ export default function AutoTranslatePage() {
           <div className="flex items-center gap-3">
             {gameInfo?.gameId && (
               <button
-                onClick={() => window.location.href = `/games/${gameInfo.gameId}?name=${encodeURIComponent(gameInfo.gameName || '')}&platform=${encodeURIComponent(gameInfo.platform || '')}&headerImage=${encodeURIComponent(gameInfo.gameImage || '')}`}
+                onClick={() => window.location.href = `/games/?id=${gameInfo.gameId}&name=${encodeURIComponent(gameInfo.gameName || '')}&platform=${encodeURIComponent(gameInfo.platform || '')}&headerImage=${encodeURIComponent(gameInfo.gameImage || '')}`}
                 className="p-2 rounded-lg bg-black/30 border border-white/10 hover:bg-white/10 transition-colors"
                 title="Torna alla pagina del gioco"
               >

@@ -63,8 +63,42 @@ try {
   process.env.TAURI_BUILD = 'true';
   execSync('npm run build', { cwd: PROJECT_ROOT, stdio: 'inherit' });
   log('Next.js build complete!');
+
+  // 3. Create catch-all fallback for dynamic routes
+  // Static export doesn't generate /games/[id]/ pages.
+  // Tauri serves files from out/ — when navigating to /games/steam_12345/
+  // it needs a file at that path. We copy the main index.html as a 
+  // catch-all __fallback.html and set up Tauri to use it.
+  // Simpler approach: copy out/index.html as out/games/__dynamic.html
+  // and configure Tauri's on_page_load to redirect unknown sub-routes.
+  //
+  // Best approach: create a minimal SPA shell that bootstraps Next.js
+  // client-side router for any /games/* and /translator/* path.
+  const outDir = path.join(PROJECT_ROOT, 'out');
+  const mainIndex = path.join(outDir, 'index.html');
+
+  if (fs.existsSync(mainIndex)) {
+    const mainHtml = fs.readFileSync(mainIndex, 'utf8');
+    const dynamicDirs = ['games', 'translator'];
+    
+    for (const dir of dynamicDirs) {
+      const dirPath = path.join(outDir, dir);
+      if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+      }
+      // Copy main index.html into the dynamic route directory
+      // This way /games/index.html exists and Tauri can serve it
+      // The GameDetailClient reads the ID from URL params
+      const targetIndex = path.join(dirPath, 'index.html');
+      if (!fs.existsSync(targetIndex)) {
+        fs.writeFileSync(targetIndex, mainHtml);
+        log(`Created fallback ${dir}/index.html`);
+      }
+    }
+    log('Dynamic route fallbacks created.');
+  }
 } finally {
-  // 3. Restore all folders
+  // 4. Restore all folders
   restore();
   delete process.env.TAURI_BUILD;
 }

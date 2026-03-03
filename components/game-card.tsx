@@ -163,7 +163,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl flex flex-col bg-card"
     >
-      <Link href={`/games/${game.id}`} className="block w-full aspect-[3/4] relative">
+      <Link href={`/games/?id=${game.id}`} className="block w-full aspect-[3/4] relative">
         {/* Badges sopra la cover */}
         <div className="absolute top-2 right-2 z-10 flex gap-2">
           {game.isVrSupported && (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useSession } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +32,9 @@ import GameCard from '@/components/game-card';
 import { prefetchHltb, getHltbFromCache } from '@/hooks/useHowLongToBeat';
 import type { SteamGame, LocalGame, HowLongToBeatData } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
+import dynamic from 'next/dynamic';
+
+const GameDetailClient = dynamic(() => import('@/components/game-detail-client'), { ssr: false });
 
 // Tipo unificato per la visualizzazione nell'interfaccia
 interface DisplayGame {
@@ -75,7 +79,19 @@ const StatCard = ({ title, value, icon: Icon, color }: { title: string, value: s
   </Card>
 );
 
+// Router: if ?id= is present, show game detail; otherwise show games list
 export default function GamesPage() {
+  const searchParams = useSearchParams();
+  const hasGameId = searchParams.get('id');
+  
+  if (hasGameId) {
+    return <GameDetailClient />;
+  }
+  
+  return <GamesListPage />;
+}
+
+function GamesListPage() {
   const { data: session, status } = useSession();
   const { t } = useTranslation();
   const [games, setGames] = useState<DisplayGame[]>([]);

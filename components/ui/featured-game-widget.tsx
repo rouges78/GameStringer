@@ -63,7 +63,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
 
   const handleGameClick = () => {
     if (game?.appid) {
-      router.push(`/games/steam_${game.appid}`);
+      router.push(`/games/?id=steam_${game.appid}`);
     }
   };
 
