@@ -20,7 +20,11 @@ import {
   Wand2,
   ChevronRight,
   Play,
-  Coffee
+  Coffee,
+  Eye,
+  Monitor,
+  Shield,
+  Wrench
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +72,27 @@ const FEATURES = [
     description: "Automatic BepInEx + XUnity AutoTranslator installation for Unity games",
     color: "text-pink-500",
     bg: "bg-pink-500/10"
+  },
+  {
+    icon: Eye,
+    title: "Vision LLM Translator",
+    description: "Use in-game screenshots for context-aware translations with Ollama, Gemini 2.0 Flash, or GPT-4o",
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10"
+  },
+  {
+    icon: Monitor,
+    title: "System Monitor & Debug",
+    description: "Real-time VRAM/RAM monitoring, debug console with log interception, and Ollama setup wizard",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10"
+  },
+  {
+    icon: Wrench,
+    title: "Auto-Translate Wizard",
+    description: "Batch translate all untranslated strings with progress bar, stop control, and provider cooldown",
+    color: "text-teal-500",
+    bg: "bg-teal-500/10"
   }
 ];
 
@@ -218,6 +243,92 @@ export default function LandingPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* What's New v1.4.2 */}
+      <section className="py-20 px-4 bg-slate-900/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-cyan-500/20 text-cyan-300 border-cyan-500/30">
+              <Sparkles className="w-3 h-3 mr-1" />
+              What&apos;s New in v1.4.2
+            </Badge>
+            <h2 className="text-4xl font-bold mb-4">Latest Release Highlights</h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Vision LLM Translator, Advanced AI Tools, and critical Translation Provider fixes.
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="bg-gradient-to-br from-cyan-900/30 to-slate-900 border-cyan-500/20 hover:border-cyan-500/40 transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                    <Eye className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Vision LLM Translator</h3>
+                </div>
+                <ul className="space-y-2 text-sm text-slate-400">
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />Context-aware translation using in-game screenshots</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />3 providers: Ollama (local), Gemini 2.0 Flash, OpenAI GPT-4o</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />Upload image or capture screen for AI visual context</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />Dedicated page at /vision-translator with sidebar integration</li>
+                </ul>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-violet-900/30 to-slate-900 border-violet-500/20 hover:border-violet-500/40 transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                    <Cpu className="w-5 h-5 text-violet-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Advanced AI Tools</h3>
+                </div>
+                <ul className="space-y-2 text-sm text-slate-400">
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />Lore Assistant: RAG chat to explore game lore and dialogues</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />Auto-Hook Scanner: process memory scan with WinAPI</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />System Monitor: real-time VRAM/RAM (Rust backend)</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-violet-400 mt-0.5 shrink-0" />Ollama Setup Wizard &amp; Debug Console</li>
+                </ul>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-emerald-900/30 to-slate-900 border-emerald-500/20 hover:border-emerald-500/40 transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <Wrench className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Translation Provider Fix</h3>
+                </div>
+                <ul className="space-y-2 text-sm text-slate-400">
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />Ollama: 30s cooldown instead of permanent block on network errors</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />Lingva: auto-truncate texts &gt;500 chars to avoid 404</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />Auto-Translate: new &quot;Translate all untranslated&quot; button</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />Tutorial &amp; Update Bell bug fixes</li>
+                </ul>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-amber-900/30 to-slate-900 border-amber-500/20 hover:border-amber-500/40 transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Community &amp; CI/CD</h3>
+                </div>
+                <ul className="space-y-2 text-sm text-slate-400">
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />Community Hub with GitHub Discussions integration</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />Tauri Signing Key for signed auto-updates</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />Release workflow for Windows + Linux</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />11 user guides updated across all languages</li>
+                </ul>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

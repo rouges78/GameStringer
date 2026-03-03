@@ -34,6 +34,7 @@
         <a href="#engines">Engines</a>
         <a href="#ai">AI Providers</a>
         <a href="#tools">Tools</a>
+        <a href="#whatsnew">What's New</a>
         <a href="#usecases">Use Cases</a>
         <a href="#faq">FAQ</a>
       </div>
@@ -42,10 +43,10 @@
     
     <!-- HERO -->
     <div class="hero">
-      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> v1.0.9 — Animated UI Headers, GitHub Discussions, Bug Fixes</span>
+      <span class="badge hero-badge"><span class="hero-badge-new">NEW</span> v1.4.2 — Vision LLM Translator, Advanced AI Tools, Translation Provider Fix</span>
       <h1>Translate <span class="hero-highlight">Any</span> Video Game<br>with Artificial Intelligence</h1>
       <p class="hero-subtitle">The ultimate open source suite for video game localization</p>
-      <p class="hero-desc">Supports <strong>10+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py...) and <strong>15+ AI providers</strong> (free Ollama, GPT-4, Claude, Gemini, DeepSeek...). Extract, translate and inject text automatically.</p>
+      <p class="hero-desc">Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren'Py, Danganronpa...) and <strong>20+ AI providers</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-row (0-100), Auto-glossary AI, Translation Memory, Interactive Tutorial. <strong>500 free strings</strong>, then free donation.</p>
       
       <div class="hero-buttons">
         <a href="https://github.com/rouges78/GameStringer/releases/latest" class="btn btn-primary btn-lg">⬇️ Free Download for Windows</a>
@@ -60,8 +61,8 @@
       </div>
       
       <div class="stats">
-        <div class="stat"><div class="stat-value">10+</div><div class="stat-label">Game Engines</div><div class="stat-detail">Unity, Unreal, Godot, RPG Maker...</div></div>
-        <div class="stat"><div class="stat-value">15+</div><div class="stat-label">AI Providers</div><div class="stat-detail">6 free, 5 local</div></div>
+        <div class="stat"><div class="stat-value">11+</div><div class="stat-label">Game Engines</div><div class="stat-detail">Unity, Unreal, Godot, RPG Maker, Danganronpa...</div></div>
+        <div class="stat"><div class="stat-value">20+</div><div class="stat-label">AI Providers</div><div class="stat-detail">10 free, 8 local, HY-MT optimized</div></div>
         <div class="stat"><div class="stat-value">7</div><div class="stat-label">Integrated Stores</div><div class="stat-detail">Steam, Epic, GOG, Origin...</div></div>
         <div class="stat"><div class="stat-value">∞</div><div class="stat-label">Translatable Games</div><div class="stat-detail">Indie, retro, AAA</div></div>
       </div>
@@ -319,6 +320,41 @@
   </div>
 </section>
 
+<!-- WHAT'S NEW v1.4.2 -->
+<section id="whatsnew">
+  <div class="container" style="text-align:center">
+    <span class="badge section-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#22d3ee">🆕 What's New in v1.4.2</span>
+    <h2 class="section-title">Latest Release Highlights</h2>
+    <p class="section-desc">Vision LLM Translator, Advanced AI Tools, and critical Translation Provider fixes.</p>
+    <div class="grid grid-2" style="margin-top:48px;text-align:left">
+      <div class="card feature-card" style="border-left:4px solid #06b6d4">
+        <div class="icon-box" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">👁️</div>
+        <h3 class="feature-title">Vision LLM Translator</h3>
+        <p class="feature-desc">Context-aware translation using in-game screenshots. Upload an image or capture your screen to give visual context to the AI.</p>
+        <div class="feature-tags"><span class="feature-tag">Ollama</span><span class="feature-tag">Gemini 2.0 Flash</span><span class="feature-tag">GPT-4o</span><span class="feature-tag">/vision-translator</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #8b5cf6">
+        <div class="icon-box" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">🧠</div>
+        <h3 class="feature-title">Advanced AI Tools</h3>
+        <p class="feature-desc">Lore Assistant (RAG chat), Auto-Hook Scanner (WinAPI), System Monitor VRAM/RAM (Rust), Ollama Setup Wizard, Debug Console, Plugin System.</p>
+        <div class="feature-tags"><span class="feature-tag">Lore RAG</span><span class="feature-tag">Memory Scan</span><span class="feature-tag">VRAM Monitor</span><span class="feature-tag">Debug Console</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #22c55e">
+        <div class="icon-box" style="background:linear-gradient(135deg,#22c55e,#16a34a)">🔧</div>
+        <h3 class="feature-title">Translation Provider Fix</h3>
+        <p class="feature-desc">Ollama: 30s cooldown instead of permanent block. Lingva: auto-truncate texts &gt;500 chars. New "Translate all untranslated" button with progress bar and stop.</p>
+        <div class="feature-tags"><span class="feature-tag">Ollama Cooldown</span><span class="feature-tag">Lingva Fix</span><span class="feature-tag">Auto-Translate Batch</span><span class="feature-tag">Tutorial Fix</span></div>
+      </div>
+      <div class="card feature-card" style="border-left:4px solid #f59e0b">
+        <div class="icon-box" style="background:linear-gradient(135deg,#f59e0b,#d97706)">👥</div>
+        <h3 class="feature-title">Community & CI/CD</h3>
+        <p class="feature-desc">Community Hub with GitHub Discussions. Tauri Signing Key for signed auto-updates. Release workflow for Windows + Linux. 11 user guides updated.</p>
+        <div class="feature-tags"><span class="feature-tag">Discussions</span><span class="feature-tag">Signed Updates</span><span class="feature-tag">Win + Linux</span><span class="feature-tag">11 Guides</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FAQ -->
 <section id="faq">
   <div class="container" style="text-align: center;">
@@ -442,7 +478,7 @@
     </div>
     <div class="footer-bottom">
       <p>© 2025-2026 GameStringer by <a href="https://github.com/rouges78" style="color: #7dd3fc;">rouges78</a>. Source-Available License.</p>
-      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹</p>
+      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.4.2</p>
     </div>
   </div>
 </footer>
