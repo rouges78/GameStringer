@@ -30,6 +30,22 @@ use rand::{RngCore, rngs::OsRng};
 use chrono;
 
 // ============================================================================
+// HELPER: Crea un Command senza finestra console su Windows
+// ============================================================================
+#[cfg(windows)]
+fn hidden_command(program: &str) -> std::process::Command {
+    use std::os::windows::process::CommandExt;
+    let mut cmd = std::process::Command::new(program);
+    cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW
+    cmd
+}
+
+#[cfg(not(windows))]
+fn hidden_command(program: &str) -> std::process::Command {
+    std::process::Command::new(program)
+}
+
+// ============================================================================
 // SEZIONE 1: STRUTTURE DATI
 // ============================================================================
 
@@ -390,7 +406,7 @@ pub async fn test_epic_connection() -> Result<serde_json::Value, String> {
     });
     
     // PRIMA: Controlla se Legendary è autenticato (metodo preferito)
-    match std::process::Command::new("legendary").args(&["status"]).output() {
+    match hidden_command("legendary").args(&["status"]).output() {
         Ok(output) => {
             let status_text = String::from_utf8_lossy(&output.stdout);
             if status_text.contains("Epic account:") && !status_text.contains("not logged in") {
@@ -534,7 +550,7 @@ async fn get_epic_owned_games() -> Result<Vec<GameInfo>, String> {
 /// Prova a usare Legendary per ottenere la libreria Epic Games
 async fn try_legendary_library(_username: &str) -> Result<Vec<GameInfo>, String> {
     // Prova a eseguire Legendary se installato
-    let output = std::process::Command::new("legendary")
+    let output = hidden_command("legendary")
         .args(&["list", "--json"])
         .output();
         
@@ -668,7 +684,7 @@ pub async fn get_epic_games_complete() -> Result<Vec<GameInfo>, String> {
 async fn try_legendary_library_direct() -> Result<Vec<GameInfo>, String> {
     println!("[EPIC] 🔄 Tentativo Legendary direct...");
     
-    let output = std::process::Command::new("legendary")
+    let output = hidden_command("legendary")
         .args(&["list", "--json"])
         .output()
         .map_err(|e| format!("Legendary non trovato: {}", e))?;
@@ -837,7 +853,7 @@ pub async fn check_legendary_status() -> Result<serde_json::Value, String> {
     });
     
     // Verifica se Legendary è installato
-    match std::process::Command::new("legendary").args(&["--version"]).output() {
+    match hidden_command("legendary").args(&["--version"]).output() {
         Ok(output) => {
             if output.status.success() {
                 let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -845,7 +861,7 @@ pub async fn check_legendary_status() -> Result<serde_json::Value, String> {
                 result["version"] = serde_json::Value::String(version.clone());
                 
                 // Verifica se è autenticato
-                match std::process::Command::new("legendary").args(&["status"]).output() {
+                match hidden_command("legendary").args(&["status"]).output() {
                     Ok(status_output) => {
                         let status_text = String::from_utf8_lossy(&status_output.stdout);
                         println!("[LEGENDARY] Status output: {}", status_text);
@@ -884,7 +900,7 @@ pub async fn install_legendary() -> Result<String, String> {
     println!("[EPIC] 🔧 Installazione automatica Legendary");
     
     // Prima verifica se pip è disponibile
-    match std::process::Command::new("pip").args(&["--version"]).output() {
+    match hidden_command("pip").args(&["--version"]).output() {
         Ok(output) => {
             if !output.status.success() {
                 return Err("pip non trovato. Assicurati che Python sia installato correttamente.".to_string());
@@ -909,7 +925,7 @@ pub async fn install_legendary() -> Result<String, String> {
             vec![pip_cmd, "install", "legendary-gl"]
         };
         
-        let mut command = std::process::Command::new(args[0]);
+        let mut command = hidden_command(args[0]);
         if args.len() > 1 {
             command.args(&args[1..]);
         }
@@ -939,7 +955,7 @@ pub async fn install_legendary() -> Result<String, String> {
     // Verifica che l'installazione sia riuscita
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
     
-    match std::process::Command::new("legendary").args(&["--version"]).output() {
+    match hidden_command("legendary").args(&["--version"]).output() {
         Ok(output) => {
             if output.status.success() {
                 let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -960,7 +976,7 @@ pub async fn authenticate_legendary() -> Result<String, String> {
     println!("[EPIC] 🔐 Autenticazione Legendary");
     
     // Prima verifica se Legendary è installato
-    match std::process::Command::new("legendary").args(&["--version"]).output() {
+    match hidden_command("legendary").args(&["--version"]).output() {
         Ok(output) => {
             if !output.status.success() {
                 return Err("Legendary non installato. Usa 'Installa Legendary' prima.".to_string());
@@ -973,7 +989,7 @@ pub async fn authenticate_legendary() -> Result<String, String> {
     
     // Prova prima con --import che importa la sessione dal browser/launcher Epic
     println!("[EPIC] 🔄 Tentativo import sessione da Epic Games Launcher...");
-    match std::process::Command::new("legendary").args(&["auth", "--import"]).output() {
+    match hidden_command("legendary").args(&["auth", "--import"]).output() {
         Ok(output) => {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
@@ -1000,7 +1016,7 @@ pub async fn authenticate_legendary() -> Result<String, String> {
     }
     
     // Avvia il processo di autenticazione in background
-    match std::process::Command::new("legendary").args(&["auth"]).spawn() {
+    match hidden_command("legendary").args(&["auth"]).spawn() {
         Ok(mut child) => {
             // Aspetta che il processo finisca (timeout 120 secondi)
             let timeout = std::time::Duration::from_secs(120);
@@ -1013,7 +1029,7 @@ pub async fn authenticate_legendary() -> Result<String, String> {
                             // Verifica l'autenticazione
                             tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                             
-                            match std::process::Command::new("legendary").args(&["status"]).output() {
+                            match hidden_command("legendary").args(&["status"]).output() {
                                 Ok(status_output) => {
                                     let status_text = String::from_utf8_lossy(&status_output.stdout);
                                     if status_text.contains("Epic Games account") && !status_text.contains("not logged in") {
