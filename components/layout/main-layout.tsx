@@ -259,7 +259,7 @@ const getNavGroups = (t: (key: string) => string) => [
         subItems: [
           { name: t('nav.community'), href: '/community-hub', icon: Users },
           { name: 'Stores', href: '/stores', icon: ShoppingBag },
-          { name: 'Workshop', href: '/workshop', icon: Globe },
+          { name: 'Steam Workshop', href: '/workshop', icon: Globe },
         ]
       },
       { 
