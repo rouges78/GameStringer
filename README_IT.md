@@ -190,6 +190,8 @@ GameStringer supporta multipli provider AI. Configura il tuo preferito nelle Imp
 
 **Consigliato per principianti**: Usa **Ollama** (gratuito, esegue localmente) o **Gemini** (tier gratuito).
 
+> 💡 **AI Locale e Performance**: Eseguire LLM localmente (Ollama, LM Studio) consuma VRAM e risorse CPU/GPU significative. Per le sessioni di gioco, considera di usare provider cloud (Gemini, DeepSeek, Groq) che scaricano il calcolo, oppure traduci i file **prima** di giocare. Le versioni future includeranno un indicatore di Carico Sistema e gestione automatica della VRAM.
+
 ---
 
 ## 🎯 Engine Supportati
@@ -202,6 +204,8 @@ GameStringer installa automaticamente BepInEx + XUnity.AutoTranslator:
 - Traduce con l'AI scelta
 - Crea file di traduzione
 - Nessun patching manuale richiesto
+
+> ⚠️ **Avviso Anti-Cheat**: L'iniezione DLL (BepInEx) può attivare sistemi anti-cheat come **EAC**, **BattlEye** o **Vanguard**. GameStringer include un modulo di rilevamento anti-cheat (`anti_cheat.rs`) che scansiona i processi noti prima dell'iniezione. **Usa l'iniezione DLL solo su giochi single-player o offline.** Giochi online/multiplayer con anti-cheat possono causare ban dell'account. GameStringer non è responsabile per eventuali ban.
 
 ### Unreal Engine
 
@@ -287,12 +291,17 @@ Se GameStringer ti ha aiutato a goderti i giochi nella tua lingua, considera di 
 
 ## 📜 Licenza
 
-GameStringer è rilasciato sotto una **Licenza Source-Available**.
+GameStringer è rilasciato sotto una **Licenza Source-Available** (non "Open Source" approvata OSI).
+
+Questo significa che il codice sorgente è pubblicamente visibile e puoi compilarlo tu stesso, ma **non** è "Open Source" secondo la definizione della [Open Source Initiative](https://opensource.org/osd). Nello specifico:
 
 - ✅ Gratuito per uso personale
+- ✅ Libero di ispezionare e compilare da sorgente
 - ✅ Gratuito per modifiche personali
-- ❌ Uso commerciale richiede permesso
-- ❌ Ridistribuzione di versioni modificate richiede permesso
+- ❌ Uso commerciale richiede permesso scritto
+- ❌ Ridistribuzione di versioni modificate richiede permesso scritto
+
+Abbiamo scelto questo modello per proteggere il progetto mantenendolo gratuito e trasparente per la community. Per domande sulla licenza, apri una [Discussione](https://github.com/rouges78/GameStringer/discussions).
 
 Vedi [LICENSE](LICENSE) per i dettagli completi.
 
