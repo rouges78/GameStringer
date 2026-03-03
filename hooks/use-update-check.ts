@@ -23,13 +23,15 @@ export const useUpdateCheck = () => {
     
     try {
       const info = await invoke<UpdateInfo>('check_for_updates');
-      if (info && info.update_available) {
+      if (info) {
         setUpdateInfo(info);
         
-        // Controlla se è già stato dismissato per questa versione
-        const lastDismissed = localStorage.getItem('update_dismissed_version');
-        if (lastDismissed === info.latest_version) {
-          setIsDismissed(true);
+        if (info.update_available) {
+          // Controlla se è già stato dismissato per questa versione
+          const lastDismissed = localStorage.getItem('update_dismissed_version');
+          if (lastDismissed === info.latest_version) {
+            setIsDismissed(true);
+          }
         }
       }
     } catch (error) {
