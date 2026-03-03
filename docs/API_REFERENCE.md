@@ -1,17 +1,19 @@
 # API Reference - GameStringer
 
-## 🌐 Panoramica
+## Panoramica
 
 GameStringer utilizza Next.js API Routes per gestire tutte le operazioni backend. Le API sono organizzate per dominio funzionale e seguono i principi RESTful.
 
-## 🔐 Autenticazione
+## Autenticazione
 
 ### Base URL
-```
+
+```text
 http://localhost:3000/api
 ```
 
 ### Headers Richiesti
+
 ```typescript
 {
   'Content-Type': 'application/json',
@@ -19,14 +21,16 @@ http://localhost:3000/api
 }
 ```
 
-## 📚 Endpoints
+## Endpoints
 
-### 🎮 Games API
+### Games API
 
 #### `GET /api/games`
+
 Recupera la lista dei giochi.
 
 **Response:**
+
 ```json
 [
   {
@@ -39,9 +43,11 @@ Recupera la lista dei giochi.
 ```
 
 #### `POST /api/games`
+
 Crea un nuovo gioco.
 
 **Request Body:**
+
 ```json
 {
   "title": "Game Title",
@@ -51,16 +57,19 @@ Crea un nuovo gioco.
 }
 ```
 
-### 🔧 Patches API
+### Patches API
 
 #### `GET /api/patches`
+
 Lista tutte le patch o una specifica.
 
 **Query Parameters:**
+
 - `id` (optional): ID patch specifica
 - `gameId` (optional): Filtra per gioco
 
 **Response:**
+
 ```json
 [
   {
@@ -80,9 +89,11 @@ Lista tutte le patch o una specifica.
 ```
 
 #### `POST /api/patches`
+
 Crea una nuova patch.
 
 **Request Body:**
+
 ```json
 {
   "gameId": "game-id",
@@ -95,9 +106,11 @@ Crea una nuova patch.
 ```
 
 #### `PUT /api/patches`
+
 Aggiorna una patch esistente.
 
 **Request Body:**
+
 ```json
 {
   "id": "patch-id",
@@ -108,15 +121,19 @@ Aggiorna una patch esistente.
 ```
 
 #### `DELETE /api/patches`
+
 Elimina una patch.
 
 **Query Parameters:**
+
 - `id` (required): ID della patch da eliminare
 
 #### `POST /api/patches/export`
+
 Esporta una patch come ZIP.
 
 **Request Body:**
+
 ```json
 {
   "patchId": "patch-id",
@@ -129,17 +146,20 @@ Esporta una patch come ZIP.
 
 **Response:** Binary ZIP file
 
-### 🌍 Translations API
+### Translations API
 
 #### `GET /api/translations`
+
 Recupera traduzioni con filtri.
 
 **Query Parameters:**
+
 - `gameId` (optional): Filtra per gioco
 - `status` (optional): pending | completed | reviewed | edited
 - `search` (optional): Ricerca testuale
 
 **Response:**
+
 ```json
 [
   {
@@ -166,9 +186,11 @@ Recupera traduzioni con filtri.
 ```
 
 #### `POST /api/translations`
+
 Crea una nuova traduzione.
 
 **Request Body:**
+
 ```json
 {
   "gameId": "game-id",
@@ -180,9 +202,11 @@ Crea una nuova traduzione.
 ```
 
 #### `PUT /api/translations`
+
 Aggiorna una traduzione.
 
 **Request Body:**
+
 ```json
 {
   "id": "translation-id",
@@ -193,15 +217,19 @@ Aggiorna una traduzione.
 ```
 
 #### `DELETE /api/translations`
+
 Elimina una traduzione.
 
 **Query Parameters:**
+
 - `id` (required): ID traduzione
 
 #### `POST /api/translations/suggestions`
+
 Genera suggerimenti AI per una traduzione.
 
 **Request Body:**
+
 ```json
 {
   "translationId": "translation-id",
@@ -211,6 +239,7 @@ Genera suggerimenti AI per una traduzione.
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -223,27 +252,33 @@ Genera suggerimenti AI per una traduzione.
 ```
 
 #### `POST /api/translations/import`
+
 Importa traduzioni da file.
 
 **Request Body (multipart/form-data):**
+
 - `file`: File da importare (JSON, CSV, PO)
 - `gameId`: ID del gioco
 - `language`: Lingua target
 
 #### `GET /api/translations/export`
+
 Esporta traduzioni.
 
 **Query Parameters:**
+
 - `gameId` (required): ID del gioco
 - `format` (required): json | csv | po
 - `status` (optional): Filtra per stato
 
-### 🏪 Stores API
+### Stores API
 
 #### `POST /api/stores/test-connection`
+
 Testa la connessione a uno store.
 
 **Request Body:**
+
 ```json
 {
   "provider": "steam-credentials"
@@ -251,6 +286,7 @@ Testa la connessione a uno store.
 ```
 
 **Response:**
+
 ```json
 {
   "connected": true,
@@ -258,12 +294,14 @@ Testa la connessione a uno store.
 }
 ```
 
-### 🔑 Auth API
+### Auth API
 
 #### `POST /api/auth/signin`
+
 Accedi con un provider.
 
 **Providers Supportati:**
+
 - `steam-credentials`
 - `epicgames`
 - `ubisoft-credentials`
@@ -273,12 +311,15 @@ Accedi con un provider.
 - `battlenet-credentials`
 
 #### `POST /api/auth/signout`
+
 Disconnetti l'utente corrente.
 
 #### `GET /api/auth/session`
+
 Recupera la sessione corrente.
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -295,12 +336,14 @@ Recupera la sessione corrente.
 }
 ```
 
-### 🛠️ Utilities API
+### Utilities API
 
 #### `POST /api/utilities/howlongtobeat`
+
 Cerca informazioni sui tempi di completamento.
 
 **Request Body:**
+
 ```json
 {
   "search": "The Witcher 3"
@@ -308,13 +351,14 @@ Cerca informazioni sui tempi di completamento.
 ```
 
 **Response:**
+
 ```json
 {
   "gameId": 10270,
   "name": "The Witcher 3: Wild Hunt",
   "imageUrl": "...",
   "timeLabels": [
-    ["Main Story", "51½ Hours"],
+    ["Main Story", "51.5 Hours"],
     ["Main + Extras", "103 Hours"],
     ["Completionist", "173 Hours"]
   ]
@@ -322,15 +366,19 @@ Cerca informazioni sui tempi di completamento.
 ```
 
 #### `GET /api/utilities/steamgriddb`
+
 Cerca artwork per giochi.
 
 **Query Parameters:**
+
 - `search` (required): Nome del gioco
 
 **Headers:**
+
 - `X-API-Key` (required): SteamGridDB API key
 
 **Response:**
+
 ```json
 [
   {
@@ -344,9 +392,11 @@ Cerca artwork per giochi.
 ```
 
 #### `POST /api/utilities/preferences`
+
 Salva preferenze utility.
 
 **Request Body:**
+
 ```json
 {
   "service": "steamgriddb",
@@ -356,17 +406,21 @@ Salva preferenze utility.
 ```
 
 #### `DELETE /api/utilities/preferences`
+
 Rimuove preferenze utility.
 
 **Query Parameters:**
+
 - `service` (required): Nome del servizio
 
-### 🚂 Steam API
+### Steam API
 
 #### `POST /api/steam/auto-detect-config`
+
 Rileva automaticamente la configurazione Steam.
 
 **Response:**
+
 ```json
 {
   "sharedAccounts": ["76561198000000001", "76561198000000002"],
@@ -374,7 +428,7 @@ Rileva automaticamente la configurazione Steam.
 }
 ```
 
-## 🔒 Gestione Errori
+## Gestione Errori
 
 Tutte le API seguono uno schema di errore standard:
 
@@ -394,14 +448,15 @@ Tutte le API seguono uno schema di errore standard:
 - `404` - Not Found: Risorsa non trovata
 - `500` - Internal Server Error: Errore del server
 
-## 📝 Rate Limiting
+## Rate Limiting
 
 - **Richieste per minuto**: 60 (autenticato), 30 (non autenticato)
 - **Header di risposta**: `X-RateLimit-Remaining`, `X-RateLimit-Reset`
 
-## 🧪 Testing
+## Testing
 
 ### Ambiente di Test
+
 ```bash
 # Imposta variabili d'ambiente
 cp .env.example .env.test
@@ -411,6 +466,7 @@ npm run test:api
 ```
 
 ### Esempio con cURL
+
 ```bash
 # Get games
 curl http://localhost:3000/api/games
@@ -422,18 +478,18 @@ curl -X POST http://localhost:3000/api/patches \
   -d '{"gameId":"1","name":"Test Patch"}'
 ```
 
-## 🔗 SDK TypeScript
+## SDK TypeScript
 
 ```typescript
 // Esempio di client TypeScript
 class GameStringerAPI {
   private baseURL = 'http://localhost:3000/api';
-  
+
   async getGames(): Promise<Game[]> {
     const res = await fetch(`${this.baseURL}/games`);
     return res.json();
   }
-  
+
   async createPatch(data: PatchData): Promise<Patch> {
     const res = await fetch(`${this.baseURL}/patches`, {
       method: 'POST',
@@ -447,4 +503,4 @@ class GameStringerAPI {
 
 ---
 
-**Ultimo aggiornamento**: 1 Luglio 2025
+**Ultimo aggiornamento**: 3 Marzo 2026

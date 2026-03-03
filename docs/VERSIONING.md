@@ -1,214 +1,190 @@
-# 🚀 GameStringer Version Management System
+# GameStringer Version Management System
 
 Sistema di versioning automatico per GameStringer che segue il **Semantic Versioning (SemVer)**.
 
-## 📋 Formato Versioni
+## Formato Versioni
 
+```text
+MAJOR.MINOR.PATCH
 ```
-MAJOR.MINOR.PATCH.BUILD
-  3  .  2  .  1  .  42
-```
 
-- **MAJOR**: Breaking changes, architettura completamente nuova
-- **MINOR**: Nuove funzionalità, miglioramenti significativi
-- **PATCH**: Bug fixes, piccole correzioni
-- **BUILD**: Auto-incrementato ad ogni commit
+- **MAJOR**: Cambiamenti incompatibili (es. 1.0.0 -> 2.0.0)
+- **MINOR**: Nuove funzionalita retrocompatibili (es. 1.3.0 -> 1.4.0)
+- **PATCH**: Bug fix e miglioramenti (es. 1.4.1 -> 1.4.2)
 
-## 🔧 Comandi Disponibili
+## Versione Corrente
+
+**v1.4.2** (Build 120) - 03/03/2026
+
+## File da Aggiornare per ogni Release
+
+| File | Campo | Esempio |
+|------|-------|---------|
+| `version.json` | version, major, minor, patch, buildNumber, buildDate, changelog | Versione UI |
+| `package.json` | version (in fondo al file) | `"version": "1.4.2"` |
+| `src-tauri/tauri.conf.json` | version | `"version": "1.4.2"` |
+| `src-tauri/Cargo.toml` | version | `version = "1.4.2"` |
+| `CHANGELOG.md` | Entry per la nuova versione | Changelog pubblico |
+| `components/layout/main-layout.tsx` | CHANGELOG_CONTENT | Changelog nel dialog UI |
+
+## Comandi NPM
 
 ### Status e Info
+
 ```bash
 npm run version:status    # Mostra stato corrente
-npm run version          # Alias per status
+npm run version           # Alias per status
 ```
 
 ### Increment Versioni
+
 ```bash
-npm run version:patch    # 3.2.1 → 3.2.2
-npm run version:minor    # 3.2.1 → 3.3.0  
-npm run version:major    # 3.2.1 → 4.0.0
+npm run version:patch    # 1.4.2 -> 1.4.3
+npm run version:minor    # 1.4.2 -> 1.5.0
+npm run version:major    # 1.4.2 -> 2.0.0
 npm run version:build    # Build +1 (auto)
 ```
 
 ### Changelog e Tags
+
 ```bash
 npm run version:changelog  # Genera CHANGELOG.md
-npm run version:tag       # Crea git tag
+npm run version:tag        # Crea git tag
 ```
 
 ### Release Complete
+
 ```bash
 npm run release:patch    # patch + tag + push
 npm run release:minor    # minor + tag + push
 npm run release:major    # major + tag + push
 ```
 
-## 🔄 Workflow Automatico
+## Workflow Release
 
-### 1. Sviluppo Normale
+### 1. Bug Fix (Patch)
+
 ```bash
+npm run version:patch "Fix hooks mismatch" "Fix rate limiting"
 git add .
-git commit -m "fix: corretti bug steam API"
-# → Build number auto-incrementato via pre-commit hook
+git commit -m "fix: hooks mismatch con dynamic imports"
+npm run version:tag
+git push --tags
 ```
 
-### 2. Nuova Feature
+### 2. Nuova Feature (Minor)
+
 ```bash
-npm run version:minor "Aggiunta traduzione automatica" "Nuovo UI per impostazioni"
+npm run version:minor "Vision LLM Translator" "Lore Assistant" "Auto-Hook Scanner"
 git add .
-git commit -m "feat: sistema traduzione automatica"
+git commit -m "feat: Vision LLM, Advanced Tools"
 npm run version:tag
 git push --tags
 ```
 
 ### 3. Release Completa
+
 ```bash
 npm run release:minor
 # Fa tutto automaticamente: version + tag + push
 ```
 
-## 📁 File del Sistema
+## File del Sistema
 
 ### Core Files
+
 - `version.json` - Database versioni centrale
 - `lib/version.ts` - React hooks e utilities
 - `scripts/version-manager.js` - CLI manager
 
-### Generated Files  
+### Generated Files
+
 - `CHANGELOG.md` - Changelog automatico
-- `package.json` - Sincronizzato automaticamente
 
-### Git Integration
-- `.githooks/pre-commit` - Auto-increment build
-- `scripts/setup-hooks.js` - Setup iniziale
-
-## 🎯 Esempi Pratici
+## Esempi di Uso
 
 ### Bug Fix
+
 ```bash
-npm run version:patch "Risolto crash nella libreria giochi"
+npm run version:patch "Fix rate limiting MyMemory"
 ```
 
 ### Nuova Feature
+
 ```bash
-npm run version:minor "Sistema debug integrato" "Collapsible sidebar"
+npm run version:minor "Vision LLM Translator" "System Monitor VRAM"
 ```
 
 ### Breaking Change
+
 ```bash
-npm run version:major "Nuova architettura Tauri v3" "API completamente rivista"
+npm run version:major "Nuova architettura plugin" "API v2"
 ```
 
-## 🔗 Integrazione UI
+## Integrazione UI
 
-Il sistema è integrato automaticamente in:
+La versione viene mostrata nella sidebar e nel dialog changelog.
 
 ### Sidebar Footer
+
 ```typescript
 import { useVersion } from '@/lib/version';
 
 const { version, buildInfo } = useVersion();
-// → v3.2.1.42 + git hash
+// -> v1.4.2 + git hash + build date
 ```
 
 ### Settings Page
+
 ```typescript
 const { version, buildInfo, formatDate } = useVersion();
-// → Informazioni complete sistema
+// -> Informazioni complete sistema
 ```
 
-### Build Process
+## Setup Iniziale
+
+1. **Verifica file esistano:**
+
 ```bash
-npm run build        # Auto-increment build
-npm run tauri:build  # Auto-increment build
+ls version.json lib/version.ts scripts/version-manager.js
 ```
 
-## ⚙️ Setup Iniziale
+1. **Verifica funzionamento:**
 
-1. **Attiva Git Hooks:**
-```bash
-node scripts/setup-hooks.js
-```
-
-2. **Verifica Funzionamento:**
 ```bash
 npm run version:status
 ```
 
-3. **Primo Release:**
+1. **Primo release:**
+
 ```bash
 npm run version:minor "Setup versioning automatico"
 npm run version:tag
 ```
 
-## 📊 Changelog Automatico
+## Changelog Automatico
 
-Il sistema genera automaticamente `CHANGELOG.md`:
+Il changelog viene generato automaticamente da `version.json` e mostrato nel dialog UI tramite la costante `CHANGELOG_CONTENT` in `main-layout.tsx`.
 
-```markdown
-# GameStringer Changelog
+## Troubleshooting
 
-## 🚀 v3.3.0 - 2025-01-07
-- Sistema debug integrato nelle impostazioni
-- Collapsible sidebar con animazioni
-- Steam API testing migliorato
+### version.json Corrotto
 
-## 🔧 v3.2.1 - 2025-01-06  
-- Risolto bug force refresh
-- UI miglioramenti dashboard
-```
-
-## 🎨 Customizzazione
-
-### Modifica Colori Versione
-```typescript
-// lib/version.ts - getVersionColor()
-if (major >= 4) return 'text-purple-400'; // Futuro
-if (major >= 3) return 'text-green-400';  // Corrente
-```
-
-### Aggiungi Nuovi Hook
-```bash
-# .githooks/pre-push
-# .githooks/commit-msg
-```
-
-### Personalizza Changelog
-```javascript
-// scripts/version-manager.js - generateChangelog()
-const typeIcon = {
-  major: '💥',
-  minor: '🚀', 
-  patch: '🔧'
-};
-```
-
-## 🚨 Best Practices
-
-1. **Commit Frequenti**: Build number auto-incrementa
-2. **Descrizioni Changelog**: Usa comandi con descrizioni
-3. **Tag Release**: Sempre fare tag per release
-4. **Branch Protection**: Main branch protetto
-5. **Semantic Commits**: Use conventional commits
-
-## 🔍 Troubleshooting
-
-### Git Hooks Non Funzionano
-```bash
-node scripts/setup-hooks.js
-git config core.hooksPath .githooks
-```
-
-### Version.json Corrotto
 ```bash
 git checkout HEAD -- version.json
 npm run version:status
 ```
 
 ### Build Number Bloccato
+
 ```bash
 npm run version:build
 ```
 
+### Mismatch tra file
+
+Verificare che tutti i 6 file elencati sopra abbiano la stessa versione.
+
 ---
-*Sistema di versioning GameStringer v3.2.1 - Automatico, Affidabile, Semplice*
+
+Sistema di versioning GameStringer v1.4.2 - Automatico, Affidabile, Semplice

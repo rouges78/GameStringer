@@ -485,13 +485,11 @@ Provider Meta AI con supporto per 200 lingue, incluse quelle rare.
 
 **Lingue speciali supportate**:
 
-
 - Thai, Vietnamese, Hindi, Arabic
 - Swahili, Indonesian, Turkish
 - Ukrainian, Bengali, Tamil
 
 **Configurazione**:
-
 
 1. Vai su **Settings → API Keys**
 2. Inserisci **HuggingFace API Key** (gratuito)
@@ -502,7 +500,6 @@ Provider Meta AI con supporto per 200 lingue, incluse quelle rare.
 Usa qualsiasi modello installato in Ollama per traduzioni.
 
 **Modelli consigliati**:
-
 
 - `llama3.2` - Buon bilanciamento qualità/velocità
 - `mistral` - Ottimo per lingue europee
@@ -564,7 +561,6 @@ La **campanella** nella navbar ora gestisce gli aggiornamenti:
 | 🔔 Verde + pulse | Aggiornamento disponibile! |
 
 **Funzionalità**:
-
 
 - **Suono**: Due toni melodici quando rileva update
 - **Badge verde**: Icona download animata
@@ -933,4 +929,4 @@ Ogni riga tradotta ora mostra indicatori di qualità visivi:
 
 ---
 
-*GameStringer v1.4.2 - Guida aggiornata al 03/03/2026*
+GameStringer v1.4.2 - Guida aggiornata al 03/03/2026
