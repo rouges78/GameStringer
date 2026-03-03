@@ -142,7 +142,7 @@ export default function LandingPage() {
         <div className="relative max-w-5xl mx-auto text-center">
           <Badge className="mb-6 bg-violet-500/20 text-violet-300 border-violet-500/30 px-4 py-1">
             <Sparkles className="w-3 h-3 mr-1" />
-            v1.4.1 Now Available — Windows & Linux
+            v1.4.2 Now Available — Windows & Linux
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-violet-200 to-fuchsia-200 bg-clip-text text-transparent">

@@ -1003,4 +1003,25 @@ Each translated row now shows visual quality indicators:
 
 ---
 
-*GameStringer v1.4.1 - Руководство обновлено 02.03.2026*
+## Новое в v1.4.2
+
+### Центр сообщества
+
+- **GitHub Discussions**: 12 обсуждений создано в категориях Announcements, General, Ideas, Q&A, Show and tell, Polls
+- **Публичный REST API**: Центр сообщества теперь загружает обсуждения без токена GitHub
+- **Боковая панель переименована**: "Workshop" → "Steam Workshop"
+
+### Исправление колокольчика обновлений
+
+- **Правильная текущая версия**: запасное значение в колокольчике обновлений теперь показывает реальную версию приложения
+- **NotificationIndicator удалён**: дублирующий колокольчик уведомлений окончательно удалён из заголовка
+
+### CI/CD и безопасность
+
+- **Tauri Signing Key**: настроена для автоматической генерации подписанного `latest.json`
+- **GitHub Secrets**: настроены `TAURI_SIGNING_PRIVATE_KEY` и `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+- **Workflow release.yml**: обновлён с переменными подписи для обоих заданий (Windows + Linux)
+
+---
+
+*GameStringer v1.4.2 - Руководство обновлено 03.03.2026*

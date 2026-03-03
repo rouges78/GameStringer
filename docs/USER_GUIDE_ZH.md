@@ -895,4 +895,25 @@ UI库已从单独的 `@radix-ui/react-*` 包迁移到统一的 `radix-ui` 包：
 
 ---
 
-*GameStringer v1.4.1 - 指南更新于 2026/03/02*
+## v1.4.2新功能
+
+### 社区中心
+
+- **GitHub Discussions**: 在Announcements、General、Ideas、Q&A、Show and tell、Polls类别中创建了12个讨论
+- **公共REST API获取**: 社区中心现在无需GitHub令牌即可加载讨论
+- **侧边栏重命名**: "Workshop" → "Steam Workshop"
+
+### 更新铃铛修复
+
+- **正确的当前版本**: 更新铃铛的回退值现在显示应用的实际版本
+- **移除NotificationIndicator**: 重复的通知铃铛已从标题栏永久移除
+
+### CI/CD和安全
+
+- **Tauri签名密钥**: 配置为在发布时自动生成签名的`latest.json`
+- **GitHub Secrets**: 已配置`TAURI_SIGNING_PRIVATE_KEY`和`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+- **工作流release.yml**: 更新了两个作业（Windows + Linux）的签名变量
+
+---
+
+*GameStringer v1.4.2 - 指南更新于 2026/03/03*

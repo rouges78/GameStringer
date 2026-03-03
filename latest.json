@@ -1,15 +1,15 @@
 {
-  "version": "1.4.1",
-  "notes": "v1.4.1 - GOG Galaxy, Dashboard, Cross-platform Linux build\n\n- Integrazione GOG Galaxy: copertine e descrizioni via GOG API\n- Dashboard potenziata: statistiche avanzate e grafici interattivi\n- Tab Info: requisiti di sistema, Metacritic, link store, lista DLC\n- Pipeline AI migliorata: retry logic, temperature adattiva, fallback robusto\n- Build cross-platform: supporto Linux (deb, AppImage, rpm)\n- Guide utente aggiornate in 11 lingue\n- Fix performance e stabilità",
-  "pub_date": "2026-03-02T20:58:57.000Z",
+  "version": "1.4.2",
+  "notes": "v1.4.2 - Community Hub, Discussions, Signing Key\n\n- GitHub Discussions: 12 discussioni nelle categorie community\n- Community Hub: fetch REST API pubblica (no token)\n- Sidebar: Workshop rinominato Steam Workshop\n- Update Bell: fix versione corrente mostrata\n- Tauri Signing Key: latest.json firmato automaticamente\n- CI/CD: workflow con TAURI_SIGNING_PRIVATE_KEY",
+  "pub_date": "2026-03-03T07:40:00.000Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "",
-      "url": "https://github.com/rouges78/GameStringer/releases/download/v1.4.1/GameStringer_1.4.1_x64-setup.exe"
+      "url": "https://github.com/rouges78/GameStringer/releases/download/v1.4.2/GameStringer_1.4.2_x64-setup.exe"
     },
     "linux-x86_64": {
       "signature": "",
-      "url": "https://github.com/rouges78/GameStringer/releases/download/v1.4.1/GameStringer_1.4.1_amd64.AppImage.tar.gz"
+      "url": "https://github.com/rouges78/GameStringer/releases/download/v1.4.2/GameStringer_1.4.2_amd64.AppImage.tar.gz"
     }
   }
 }

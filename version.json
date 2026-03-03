@@ -1,14 +1,27 @@
 {
-  "version": "1.4.1",
+  "version": "1.4.2",
   "major": 1,
   "minor": 4,
-  "patch": 1,
+  "patch": 2,
   "prerelease": null,
-  "buildNumber": 119,
-  "buildDate": "2026-03-02T15:59:38.627Z",
-  "gitHash": "5687414",
+  "buildNumber": 120,
+  "buildDate": "2026-03-03T07:40:00.000Z",
+  "gitHash": "0ea7513",
   "branch": "main",
   "changelog": {
+    "1.4.2": {
+      "date": "2026-03-03",
+      "type": "patch",
+      "changes": [
+        "GitHub Discussions: 12 discussioni create (Announcements, General, Ideas, Q&A, Show and tell, Polls)",
+        "Community Hub: fix fetch discussions con REST API pubblica (no token richiesto)",
+        "Sidebar: rinominato Workshop in Steam Workshop",
+        "Update Bell: fix versione corrente mostrata (fallback aggiornato)",
+        "Tauri Signing Key: configurata per generazione automatica latest.json firmato",
+        "CI/CD: workflow release.yml aggiornato con TAURI_SIGNING_PRIVATE_KEY",
+        "Release v1.4.1 ricostruita e pubblicata con fix campana e NotificationIndicator rimossa"
+      ]
+    },
     "1.4.1": {
       "date": "2026-03-02",
       "type": "feature",

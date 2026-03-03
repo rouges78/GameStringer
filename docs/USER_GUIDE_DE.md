@@ -913,4 +913,25 @@ Jede übersetzte Zeile zeigt nun visuelle Qualitätsindikatoren:
 
 ---
 
-*GameStringer v1.4.1 - Anleitung aktualisiert am 02.03.2026*
+## Neuigkeiten v1.4.2
+
+### Community Hub
+
+- **GitHub Discussions**: 12 Diskussionen erstellt in den Kategorien Announcements, General, Ideas, Q&A, Show and tell, Polls
+- **Öffentliche REST API**: Community Hub lädt Diskussionen jetzt ohne GitHub-Token
+- **Sidebar umbenannt**: "Workshop" → "Steam Workshop" für mehr Klarheit
+
+### Update Bell Fix
+
+- **Korrekte aktuelle Version**: Der Fallback in der Update-Glocke zeigt jetzt die tatsächliche App-Version
+- **NotificationIndicator entfernt**: Die doppelte Benachrichtigungsglocke wurde dauerhaft aus dem Header entfernt
+
+### CI/CD und Sicherheit
+
+- **Tauri Signing Key**: Konfiguriert für automatische signierte `latest.json`-Generierung
+- **GitHub Secrets**: `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` konfiguriert
+- **Workflow release.yml**: Aktualisiert mit Signaturvariablen für beide Jobs (Windows + Linux)
+
+---
+
+*GameStringer v1.4.2 - Anleitung aktualisiert 03.03.2026*

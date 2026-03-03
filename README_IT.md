@@ -312,6 +312,6 @@ Vedi [LICENSE](LICENSE) per i dettagli completi.
 </p>
 
 <p align="center">
-  <strong>GameStringer v1.4.1</strong><br>
+  <strong>GameStringer v1.4.2</strong><br>
   © 2025-2026 GameStringer Team
 </p>

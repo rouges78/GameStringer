@@ -1002,4 +1002,25 @@ Each translated row now shows visual quality indicators:
 
 ---
 
-*GameStringer v1.4.1 - 가이드 업데이트 2026/03/02*
+## v1.4.2 새로운 기능
+
+### 커뮤니티 허브
+
+- **GitHub Discussions**: Announcements, General, Ideas, Q&A, Show and tell, Polls 카테고리에 12개 토론 생성
+- **공개 REST API 가져오기**: 커뮤니티 허브가 GitHub 토큰 없이 토론을 로드
+- **사이드바 이름 변경**: "Workshop" → "Steam Workshop"
+
+### 업데이트 벨 수정
+
+- **정확한 현재 버전**: 업데이트 벨 폴백이 앱의 실제 버전을 표시
+- **NotificationIndicator 제거**: 중복 알림 벨이 헤더에서 영구 제거됨
+
+### CI/CD 및 보안
+
+- **Tauri 서명 키**: 릴리스에서 서명된 `latest.json` 자동 생성 구성
+- **GitHub Secrets**: `TAURI_SIGNING_PRIVATE_KEY` 및 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` 구성
+- **워크플로 release.yml**: Windows + Linux 양쪽 작업에 서명 변수 추가
+
+---
+
+*GameStringer v1.4.2 - 가이드 업데이트 2026/03/03*

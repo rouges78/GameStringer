@@ -908,4 +908,25 @@ UIライブラリが個別の `@radix-ui/react-*` パッケージから統合 `r
 
 ---
 
-*GameStringer v1.4.1 - ガイド更新日 2026/03/02*
+## v1.4.2の新機能
+
+### コミュニティハブ
+
+- **GitHub Discussions**: Announcements、General、Ideas、Q&A、Show and tell、Pollsの各カテゴリに12件のディスカッションを作成
+- **パブリックREST APIフェッチ**: コミュニティハブがGitHubトークン不要でディスカッションを読み込み
+- **サイドバー名称変更**: "Workshop" → "Steam Workshop"に変更
+
+### 更新ベル修正
+
+- **正しい現在バージョン**: 更新ベルのフォールバックがアプリの実際のバージョンを表示
+- **NotificationIndicator削除**: 重複する通知ベルをヘッダーから完全に削除
+
+### CI/CDとセキュリティ
+
+- **Tauri署名キー**: リリースで署名付き`latest.json`の自動生成を設定
+- **GitHubシークレット**: `TAURI_SIGNING_PRIVATE_KEY`と`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`を設定
+- **ワークフローrelease.yml**: 両ジョブ（Windows + Linux）の署名変数を追加
+
+---
+
+*GameStringer v1.4.2 - ガイド更新日 2026/03/03*
