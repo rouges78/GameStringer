@@ -33,15 +33,14 @@ export default function GameDetailPage() {
   const { t, language } = useTranslation();
   
   // Read gameId from path params (dev) or query params (Tauri static export)
-  const [gameId, setGameId] = useState<string>(params.id as string || '');
-  
-  useEffect(() => {
-    if (!gameId) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const qId = urlParams.get('id');
-      if (qId) setGameId(qId);
+  const [gameId, setGameId] = useState<string>(() => {
+    const pathId = params.id as string;
+    if (pathId) return pathId;
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('id') || '';
     }
-  }, [gameId]);
+    return '';
+  });
   
   const [game, setGame] = useState<any>(null);
   const [translations, setTranslations] = useState<any[]>([]);
