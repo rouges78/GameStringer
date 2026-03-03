@@ -48,6 +48,14 @@
 - **CI/CD**: Tauri Signing Key configurata per release firmate
 - **Dynamic imports**: fix "Rendered more hooks" con `ssr: false` sulle nuove pagine
 
+#### 🔧 Translation Provider Fix
+
+- **Ollama cooldown**: errori di rete ora usano cooldown 30s invece di blocco permanente
+- **Lingva 404**: troncamento automatico testi >500 chars per evitare URL troppo lunghi
+- **Auto-Translate Review**: pulsante "Traduci tutte le non tradotte" con progress bar e stop
+- **Tutorial querySelector**: fix SyntaxError con selettori `:contains()` (non CSS standard)
+- **Update Bell**: fix versione sbagliata nel popup (fallback hardcoded rimosso)
+
 ---
 
 ### v1.4.1 — i18n 11 Lingue, Guide Complete & CI Fix 🌍📚

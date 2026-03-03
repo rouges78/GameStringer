@@ -4,9 +4,9 @@
   "minor": 4,
   "patch": 2,
   "prerelease": null,
-  "buildNumber": 120,
-  "buildDate": "2026-03-03T07:40:00.000Z",
-  "gitHash": "0ea7513",
+  "buildNumber": 121,
+  "buildDate": "2026-03-03T18:15:00.000Z",
+  "gitHash": "af27346",
   "branch": "main",
   "changelog": {
     "1.4.2": {
@@ -24,7 +24,12 @@
         "Community Hub: fix fetch discussions con REST API pubblica (no token richiesto)",
         "Sidebar: Vision LLM aggiunto, Workshop rinominato in Steam Workshop",
         "Fix: Rendered more hooks — dynamic imports con ssr:false sulle nuove pagine",
-        "CI/CD: Tauri Signing Key per release firmate"
+        "CI/CD: Tauri Signing Key per release firmate",
+        "Fix: Ollama provider cooldown invece di blocco permanente per errori di rete",
+        "Fix: Lingva 404 per testi lunghi (troncamento URL automatico)",
+        "Fix: Tutorial querySelector SyntaxError con selettori :contains()",
+        "Fix: Update Bell mostrava versione sbagliata (fallback hardcoded rimosso)",
+        "Auto-Translate Review: pulsante 'Traduci tutte le non tradotte' con progress bar"
       ]
     },
     "1.4.1": {

@@ -344,8 +344,14 @@ const CHANGELOG_CONTENT = `
 - GitHub Discussions: 12 discussioni create
 - Community Hub: fix fetch REST API pubblica
 - Sidebar: rinominato Workshop in Steam Workshop
-- Update Bell: fix versione corrente mostrata
+- Update Bell: fix versione corrente nel popup
 - CI/CD: Tauri Signing Key per release firmate
+
+**Translation Provider Fix**
+- Ollama: cooldown 30s invece di blocco permanente per errori rete
+- Lingva: troncamento testi >500 chars (evita URL 404)
+- Auto-Translate: pulsante "Traduci tutte le non tradotte" con progress
+- Tutorial: fix querySelector SyntaxError con :contains()
 
 ---
 
