@@ -57,7 +57,8 @@ import {
   Wheat,
   Workflow,
   ScanEye,
-  Rocket
+  Rocket,
+  Crosshair
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -176,6 +177,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'AI Pipeline', href: '/ai-pipeline', icon: Workflow },
           { name: 'OCR Multi-Engine', href: '/ocr-engines', icon: ScanEye },
           { name: 'Translator Tools', href: '/translator/tools', icon: Sparkles },
+          { name: 'Advanced Tools', href: '/advanced-tools', icon: Crosshair },
         ]
       },
     ],

@@ -83,6 +83,8 @@ pub mod ue_translator;
 pub mod screen_capture;
 #[cfg(windows)]
 pub mod universal_injector;
+// Auto-Hook Scanner (cross-platform, con stubs per non-Windows)
+pub mod auto_hook;
 
 // === Linux stubs for Windows-only modules ===
 #[cfg(not(windows))]

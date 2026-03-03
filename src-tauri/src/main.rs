@@ -340,6 +340,8 @@ fn main() {
             commands::ollama_manager::get_recommended_ollama_models,
             // System Monitor
             commands::system_monitor::get_system_stats,
+            // Auto-Hook Scanner
+            commands::auto_hook::scan_for_text_hooks,
 
             // Profile Management System
             commands::profiles::list_profiles,
