@@ -845,27 +845,51 @@ pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, S
     }
     
     let translatable_extensions = [
-        "json", "xml", "txt", "csv", "po", "pot", "resx", "xliff", "xlf",
+        // Testo / dati strutturati
+        "json", "xml", "txt", "csv", "tsv", "po", "pot", "resx", "xliff", "xlf",
         "yaml", "yml", "ini", "cfg", "lang", "loc", "strings", "properties",
+        // Sottotitoli
         "srt", "vtt", "ass", "ssa", "sub",
+        // Script engine
         "lua", "rpy", "ks", "scn",
-        "langdb", "landb", "dlog",
-        "tres", "tscn", "translation"
+        // Database di localizzazione
+        "langdb", "landb", "dlog", "stringtable",
+        // Godot
+        "tres", "tscn", "translation",
+        // Unreal Engine
+        "locres", "locmeta", "int",
+        // Unity (I2 Localization, ecc.)
+        "bytes", "asset",
+        // GameMaker / altri
+        "gml",
+        // Web-based
+        "htm", "html",
+        // Archivi traducibili
+        "xlsm", "xlsx",
     ];
     
-    // Cartelle da escludere (runtime engine, vcs, cache, NO dati di traduzione)
+    // Nomi file specifici che indicano localizzazione (senza estensione)
+    let localization_filenames = [
+        "localization", "localisation", "translation", "translations",
+        "strings", "language", "languages", "text", "texts",
+        "i2languages", "i2localization", "dialogues", "dialog",
+        "stringtable", "messages",
+    ];
+    
+    // Cartelle da escludere (runtime engine, vcs, cache)
     let excluded_dirs = [
         "monobleedingedge", "__pycache__", "node_modules",
-        ".git", ".svn", ".hg",
+        ".git", ".svn", ".hg", "crashhandler",
     ];
     
     let mut found_files: Vec<String> = Vec::new();
+    let mut dir_count = 0;
+    let mut file_count = 0;
     
     for entry in WalkDir::new(path)
-        .max_depth(5)
+        .max_depth(8)
         .into_iter()
         .filter_entry(|e| {
-            // Escludi cartelle non pertinenti
             if e.file_type().is_dir() {
                 if let Some(name) = e.file_name().to_str() {
                     let name_lower = name.to_lowercase();
@@ -876,18 +900,67 @@ pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, S
         })
         .filter_map(|e| e.ok())
     {
+        if entry.file_type().is_dir() {
+            dir_count += 1;
+            continue;
+        }
+        
+        file_count += 1;
+        
         if entry.file_type().is_file() {
-            if let Some(ext) = entry.path().extension() {
+            let file_path = entry.path();
+            let mut is_translatable = false;
+            
+            // Check 1: estensione nota
+            if let Some(ext) = file_path.extension() {
                 let ext_lower = ext.to_string_lossy().to_lowercase();
                 if translatable_extensions.contains(&ext_lower.as_str()) {
-                    if let Some(path_str) = entry.path().to_str() {
-                        found_files.push(path_str.to_string());
+                    is_translatable = true;
+                }
+            }
+            
+            // Check 2: nome file indicativo di localizzazione
+            if !is_translatable {
+                if let Some(stem) = file_path.file_stem() {
+                    let stem_lower = stem.to_string_lossy().to_lowercase();
+                    if localization_filenames.iter().any(|n| stem_lower.contains(n)) {
+                        is_translatable = true;
                     }
+                }
+            }
+            
+            // Check 3: file in cartelle di localizzazione note
+            if !is_translatable {
+                let path_str_lower = file_path.to_string_lossy().to_lowercase();
+                let loc_dirs = [
+                    "localization", "localisation", "translation", "translations",
+                    "lang", "languages", "locale", "locales",
+                    "i2", "streamingassets", "text", "strings",
+                    "bepinex/translation", "bepinex\\translation",
+                    "www/data", "www\\data", "game/tl", "game\\tl",
+                ];
+                if loc_dirs.iter().any(|d| path_str_lower.contains(d)) {
+                    // In cartelle di localizzazione accetta anche file senza estensione nota
+                    if let Some(ext) = file_path.extension() {
+                        let ext_lower = ext.to_string_lossy().to_lowercase();
+                        // Accetta quasi tutto nelle cartelle di localizzazione
+                        let extra_exts = ["dat", "bin", "db", "sqlite", "pak"];
+                        if extra_exts.contains(&ext_lower.as_str()) || translatable_extensions.contains(&ext_lower.as_str()) {
+                            is_translatable = true;
+                        }
+                    }
+                }
+            }
+            
+            if is_translatable {
+                if let Some(path_str) = file_path.to_str() {
+                    found_files.push(path_str.to_string());
                 }
             }
         }
     }
     
+    log::info!("📊 Scansionati {} cartelle, {} file totali", dir_count, file_count);
     log::info!("✅ Trovati {} file traducibili", found_files.len());
     Ok(found_files)
 }

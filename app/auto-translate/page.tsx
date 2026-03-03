@@ -351,7 +351,26 @@ export default function AutoTranslatePage() {
         }
 
         if (allFiles.length === 0) {
-          setGameError('Nessun file traducibile trovato. Puoi caricare i file manualmente.')
+          // Suggerimento specifico per engine Unity
+          let isUnity = false
+          try {
+            isUnity = await invoke<boolean>('check_path_exists', { path: `${installPath}\\UnityPlayer.dll` })
+          } catch {}
+          if (!isUnity) {
+            // Cerca cartella *_Data (pattern Unity: NomeGioco_Data/)
+            try {
+              const files = await invoke<{path: string; name: string; size: number; extension: string}[]>(
+                'scan_localization_files', { path: installPath, extensions: ['dll'], maxDepth: 1 }
+              )
+              isUnity = (files || []).some(f => f.name === 'UnityPlayer.dll' || f.path.includes('_Data'))
+            } catch {}
+          }
+          
+          if (isUnity) {
+            setGameError('Nessun file traducibile trovato. Questo è un gioco Unity — i testi sono dentro gli asset compilati.\n\n💡 Suggerimento: Installa BepInEx + XUnity AutoTranslator per estrarre e tradurre automaticamente i testi del gioco.\n\nPuoi anche caricare i file manualmente.')
+          } else {
+            setGameError('Nessun file traducibile trovato. Puoi caricare i file manualmente.')
+          }
           setIsLoadingGame(false)
           return
         }
@@ -1374,7 +1393,7 @@ export default function AutoTranslatePage() {
                 <CardContent className="p-3 flex items-center gap-3">
                   <AlertTriangle className="h-5 w-5 text-yellow-400 shrink-0" />
                   <div className="flex-1">
-                    <p className="text-xs">{gameError}</p>
+                    <p className="text-xs whitespace-pre-line">{gameError}</p>
                   </div>
                   <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => fileInputRef.current?.click()}>
                     <Upload className="h-3 w-3 mr-1" /> Carica
