@@ -58,7 +58,8 @@ import {
   Workflow,
   ScanEye,
   Rocket,
-  Crosshair
+  Crosshair,
+  Eye
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -148,6 +149,7 @@ const getNavGroups = (t: (key: string) => string) => [
         icon: Scan,
         subItems: [
           { name: 'OCR Translator', href: '/ocr-translator', icon: Scan },
+          { name: 'Vision LLM', href: '/vision-translator', icon: Eye },
           { name: 'Live OCR', href: '/live-ocr', icon: Monitor },
           { name: t('nav.texture') || 'Texture', href: '/texture-translator', icon: Layers },
           { name: t('nav.manga') || 'Manga', href: '/manga-translator', icon: BookOpen },
@@ -177,7 +179,6 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'AI Pipeline', href: '/ai-pipeline', icon: Workflow },
           { name: 'OCR Multi-Engine', href: '/ocr-engines', icon: ScanEye },
           { name: 'Translator Tools', href: '/translator/tools', icon: Sparkles },
-          { name: 'Advanced Tools', href: '/advanced-tools', icon: Crosshair },
         ]
       },
     ],
@@ -238,6 +239,15 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'QA Check', href: '/qa-check', icon: ShieldCheck },
           { name: t('nav.qualityGates'), href: '/quality-gates', icon: ShieldCheck },
           { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
+        ]
+      },
+      { 
+        name: '🚀 Advanced Tools',
+        href: '/advanced-tools',
+        icon: Crosshair,
+        subItems: [
+          { name: 'Lore Assistant', href: '/advanced-tools#lore', icon: BookOpen },
+          { name: 'Auto-Hook Scanner', href: '/advanced-tools#hook', icon: Crosshair },
         ]
       },
     ],

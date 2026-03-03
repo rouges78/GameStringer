@@ -30,9 +30,14 @@ pub async fn scan_for_text_hooks(
     search_text: String,
 ) -> Result<HookScanResult, String> {
     use std::time::Instant;
-    use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_VM_READ, PROCESS_QUERY_INFORMATION};
-    use windows_sys::Win32::System::Diagnostics::Debug::ReadProcessMemory;
-    use windows_sys::Win32::System::Memory::{VirtualQueryEx, MEMORY_BASIC_INFORMATION, MEM_COMMIT, PAGE_READWRITE, PAGE_READONLY, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE};
+    use winapi::um::processthreadsapi::OpenProcess;
+    use winapi::um::memoryapi::{VirtualQueryEx, ReadProcessMemory};
+    use winapi::um::handleapi::CloseHandle;
+    use winapi::um::winnt::{
+        PROCESS_VM_READ, PROCESS_QUERY_INFORMATION,
+        MEMORY_BASIC_INFORMATION, MEM_COMMIT,
+        PAGE_READWRITE, PAGE_READONLY, PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE,
+    };
 
     let start = Instant::now();
     let mut candidates = Vec::new();
@@ -43,7 +48,7 @@ pub async fn scan_for_text_hooks(
 
     unsafe {
         let handle = OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, 0, process_id);
-        if handle == 0 {
+        if handle.is_null() {
             return Err(format!("Impossibile aprire il processo {} (errore accesso)", process_id));
         }
 
@@ -55,9 +60,8 @@ pub async fn scan_for_text_hooks(
         let mut address: usize = 0;
         let mut mbi: MEMORY_BASIC_INFORMATION = std::mem::zeroed();
         let mbi_size = std::mem::size_of::<MEMORY_BASIC_INFORMATION>();
-        let mut regions_scanned = 0u64;
 
-        while VirtualQueryEx(handle, address as *const _, &mut mbi as *mut _ as *mut _, mbi_size) == mbi_size {
+        while VirtualQueryEx(handle, address as *const _, &mut mbi, mbi_size) == mbi_size {
             let protect = mbi.Protect;
             let is_readable = protect == PAGE_READWRITE || protect == PAGE_READONLY 
                 || protect == PAGE_EXECUTE_READ || protect == PAGE_EXECUTE_READWRITE;
@@ -68,10 +72,10 @@ pub async fn scan_for_text_hooks(
                 
                 let read_ok = ReadProcessMemory(
                     handle,
-                    mbi.BaseAddress,
+                    mbi.BaseAddress as *const _,
                     buffer.as_mut_ptr() as *mut _,
                     mbi.RegionSize,
-                    &mut bytes_read as *mut _,
+                    &mut bytes_read,
                 );
 
                 if read_ok != 0 && bytes_read > 0 {
@@ -83,7 +87,7 @@ pub async fn scan_for_text_hooks(
                             let addr = mbi.BaseAddress as usize + i;
                             candidates.push(HookCandidate {
                                 address: format!("0x{:X}", addr),
-                                module_name: get_module_name(handle, addr),
+                                module_name: "unknown".to_string(),
                                 text_preview: extract_text_around(&buffer, i, 100),
                                 confidence: 0.85,
                                 hook_type: "UTF-8".to_string(),
@@ -98,7 +102,7 @@ pub async fn scan_for_text_hooks(
                                 let addr = mbi.BaseAddress as usize + i;
                                 candidates.push(HookCandidate {
                                     address: format!("0x{:X}", addr),
-                                    module_name: get_module_name(handle, addr),
+                                    module_name: "unknown".to_string(),
                                     text_preview: extract_utf16_around(&buffer, i, 100),
                                     confidence: 0.90,
                                     hook_type: "UTF-16LE".to_string(),
@@ -107,14 +111,13 @@ pub async fn scan_for_text_hooks(
                         }
                     }
                 }
-                regions_scanned += 1;
             }
 
             address = mbi.BaseAddress as usize + mbi.RegionSize;
-            if address < mbi.BaseAddress as usize { break; } // Overflow
+            if address < mbi.BaseAddress as usize { break; }
         }
 
-        windows_sys::Win32::Foundation::CloseHandle(handle);
+        CloseHandle(handle);
     }
 
     // Ordina per confidence
@@ -131,11 +134,6 @@ pub async fn scan_for_text_hooks(
         process_name: get_process_name(process_id),
         process_id,
     })
-}
-
-#[cfg(windows)]
-fn get_module_name(_handle: isize, _addr: usize) -> String {
-    "unknown".to_string()
 }
 
 #[cfg(windows)]
