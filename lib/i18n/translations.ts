@@ -36,6 +36,20 @@ export const translations = {
       qualityGates: 'Quality Gates',
       playerFeedback: 'Feedback',
       offlineTranslator: 'Traduttore Offline',
+      // Sidebar sub-categories
+      textCategory: 'Testo',
+      visualCategory: 'Visuale',
+      audioCategory: 'Audio',
+      utilityCategory: 'Utilità',
+      patcherCategory: 'Patcher',
+      gamesCategory: 'Giochi',
+      overlayCategory: 'Overlay',
+      qualityCategory: 'Qualità',
+      advancedCategory: 'Strumenti Avanzati',
+      communityCategory: 'Comunità',
+      managementCategory: 'Gestione',
+      systemCategory: 'Sistema',
+      glossary: 'Glossario',
     },
     // Settings
     settings: {

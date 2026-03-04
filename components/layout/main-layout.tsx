@@ -131,7 +131,7 @@ const getNavGroups = (t: (key: string) => string) => [
     collapsible: true,
     items: [
       { 
-        name: '📝 Testo',
+        name: t('nav.textCategory'),
         href: '/ai-translator',
         icon: Sparkles,
         subItems: [
@@ -144,7 +144,7 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '👁 Visuale',
+        name: t('nav.visualCategory'),
         href: '/ocr-translator',
         icon: Scan,
         subItems: [
@@ -156,7 +156,7 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '🎤 Audio',
+        name: t('nav.audioCategory'),
         href: '/voice-translator',
         icon: Mic,
         subItems: [
@@ -167,14 +167,14 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '⚙️ Utility',
+        name: t('nav.utilityCategory'),
         href: '/batch',
         icon: FolderTree,
         subItems: [
           { name: 'Auto-Translate', href: '/auto-translate', icon: Rocket },
           { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
           { name: t('nav.dictionary'), href: '/memory', icon: Database },
-          { name: 'Glossario', href: '/glossary', icon: BookOpen },
+          { name: t('nav.glossary'), href: '/glossary', icon: BookOpen },
           { name: 'Context Harvester', href: '/context-harvester', icon: Wheat },
           { name: 'AI Pipeline', href: '/ai-pipeline', icon: Workflow },
           { name: 'OCR Multi-Engine', href: '/ocr-engines', icon: ScanEye },
@@ -196,7 +196,7 @@ const getNavGroups = (t: (key: string) => string) => [
     collapsible: true,
     items: [
       { 
-        name: '🔧 Patcher',
+        name: t('nav.patcherCategory'),
         href: '/unity-patcher',
         icon: Wand2,
         subItems: [
@@ -212,7 +212,7 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '🎮 Giochi',
+        name: t('nav.gamesCategory'),
         href: '/retro',
         icon: Gamepad2,
         subItems: [
@@ -223,7 +223,7 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '📺 Overlay',
+        name: t('nav.overlayCategory'),
         href: '/overlay',
         icon: Subtitles,
         subItems: [
@@ -232,7 +232,7 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '✅ Qualità',
+        name: t('nav.qualityCategory'),
         href: '/qa-check',
         icon: ShieldCheck,
         subItems: [
@@ -242,7 +242,7 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '🚀 Advanced Tools',
+        name: t('nav.advancedCategory'),
         href: '/advanced-tools',
         icon: Crosshair,
         subItems: [
@@ -265,7 +265,7 @@ const getNavGroups = (t: (key: string) => string) => [
     collapsible: true,
     items: [
       { 
-        name: '👥 Community',
+        name: t('nav.communityCategory'),
         href: '/community-hub',
         icon: Users,
         subItems: [
@@ -275,7 +275,7 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '📁 Gestione',
+        name: t('nav.managementCategory'),
         href: '/project-manager',
         icon: FolderTree,
         subItems: [
@@ -284,7 +284,7 @@ const getNavGroups = (t: (key: string) => string) => [
         ]
       },
       { 
-        name: '⚙️ Sistema',
+        name: t('nav.systemCategory'),
         href: '/settings',
         icon: Settings,
         subItems: [
@@ -1312,6 +1312,30 @@ export function MainLayout({ children }: MainLayoutProps) {
                         <span className="text-[6px] text-yellow-400">★</span>
                       </span>
                     )}
+                    {language === 'ko' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
+                        <span className="w-2 h-2 rounded-full bg-red-600 border border-blue-800" />
+                      </span>
+                    )}
+                    {language === 'pt' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
+                        <span className="w-2/5 bg-green-600" />
+                        <span className="w-3/5 bg-yellow-400" />
+                      </span>
+                    )}
+                    {language === 'ru' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                        <span className="h-1/3 bg-white" />
+                        <span className="h-1/3 bg-blue-600" />
+                        <span className="h-1/3 bg-red-500" />
+                      </span>
+                    )}
+                    {language === 'pl' && (
+                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                        <span className="h-1/2 bg-white" />
+                        <span className="h-1/2 bg-red-500" />
+                      </span>
+                    )}
                     <span className="text-xs font-medium">{language.toUpperCase()}</span>
                     <ChevronDown className="h-3 w-3 text-muted-foreground" />
                   </Button>
@@ -1374,6 +1398,39 @@ export function MainLayout({ children }: MainLayoutProps) {
                     </span>
                     <span className="flex-1">中文</span>
                     {language === 'zh' && <Check className="h-4 w-4 text-blue-400" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('ko')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm bg-white flex items-center justify-center">
+                      <span className="w-3 h-3 rounded-full bg-red-600 border border-blue-800" />
+                    </span>
+                    <span className="flex-1">한국어</span>
+                    {language === 'ko' && <Check className="h-4 w-4 text-blue-400" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setLanguage('pt')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
+                      <span className="w-2/5 bg-green-600" />
+                      <span className="w-3/5 bg-yellow-400" />
+                    </span>
+                    <span className="flex-1">Português</span>
+                    {language === 'pt' && <Check className="h-4 w-4 text-blue-400" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('ru')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                      <span className="h-1/3 bg-white" />
+                      <span className="h-1/3 bg-blue-600" />
+                      <span className="h-1/3 bg-red-500" />
+                    </span>
+                    <span className="flex-1">Русский</span>
+                    {language === 'ru' && <Check className="h-4 w-4 text-blue-400" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('pl')} className="gap-3">
+                    <span className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                      <span className="h-1/2 bg-white" />
+                      <span className="h-1/2 bg-red-500" />
+                    </span>
+                    <span className="flex-1">Polski</span>
+                    {language === 'pl' && <Check className="h-4 w-4 text-blue-400" />}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

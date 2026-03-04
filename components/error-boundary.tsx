@@ -58,9 +58,9 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
                 <AlertTriangle className="h-6 w-6 text-destructive" />
               </div>
-              <CardTitle>Qualcosa è andato storto</CardTitle>
+              <CardTitle>Something went wrong</CardTitle>
               <CardDescription>
-                Si è verificato un errore imprevisto. Puoi provare a ricaricare la pagina.
+                An unexpected error occurred. Try reloading the page.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -85,7 +85,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </Button>
               <Button onClick={this.handleReset}>
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Riprova
+                Retry
               </Button>
             </CardFooter>
           </Card>
@@ -113,8 +113,8 @@ export function withErrorBoundary<P extends object>(
 
 // Componente per errori specifici delle pagine
 export function PageErrorFallback({ 
-  title = 'Errore nella pagina',
-  message = 'Impossibile caricare questa pagina.',
+  title = 'Page Error',
+  message = 'Unable to load this page.',
   onRetry 
 }: { 
   title?: string; 
@@ -129,12 +129,12 @@ export function PageErrorFallback({
       <div className="flex gap-3">
         <Button variant="outline" onClick={() => window.location.href = '/'}>
           <Home className="mr-2 h-4 w-4" />
-          Torna alla Home
+          Go Home
         </Button>
         {onRetry && (
           <Button onClick={onRetry}>
             <RefreshCw className="mr-2 h-4 w-4" />
-            Riprova
+            Retry
           </Button>
         )}
       </div>

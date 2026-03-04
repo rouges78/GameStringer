@@ -69,9 +69,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  // Apply document direction on initial load
+  // Apply document direction and html lang attribute when language changes
   useEffect(() => {
     applyDocumentDirection(language);
+    document.documentElement.lang = language;
   }, [language]);
 
   const setLanguage = useCallback((lang: Language) => {

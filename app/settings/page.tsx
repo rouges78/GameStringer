@@ -53,7 +53,7 @@ import { useVersion } from '@/lib/version';
 import { useTranslation } from '@/lib/i18n';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { OllamaManager } from '@/components/settings/ollama-manager';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@/lib/tauri-api';
 
 // Cache Stats Component
 function CacheStatsCard() {
