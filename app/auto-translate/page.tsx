@@ -184,6 +184,12 @@ export default function AutoTranslatePage() {
   // File upload fallback
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Unity auto-install BepInEx state
+  const [unityDetected, setUnityDetected] = useState(false)
+  const [bepinexStatus, setBepinexStatus] = useState<'idle' | 'installing' | 'installed' | 'error' | 'needs_relaunch'>('idle')
+  const [bepinexSteps, setBepinexSteps] = useState<string[]>([])
+  const [bepinexError, setBepinexError] = useState<string | null>(null)
+
   // Checkpoint/resume state
   const [savedCheckpoint, setSavedCheckpoint] = useState<{ translatedStrings: Map<string, TranslatedString[]>; translatedCount: number; totalCount: number; savedAt: number; targetLang: string } | null>(null)
 
@@ -351,25 +357,26 @@ export default function AutoTranslatePage() {
         }
 
         if (allFiles.length === 0) {
-          // Suggerimento specifico per engine Unity
+          // Rileva se è un gioco Unity
           let isUnity = false
           try {
             isUnity = await invoke<boolean>('check_path_exists', { path: `${installPath}\\UnityPlayer.dll` })
           } catch {}
           if (!isUnity) {
-            // Cerca cartella *_Data (pattern Unity: NomeGioco_Data/)
             try {
-              const files = await invoke<{path: string; name: string; size: number; extension: string}[]>(
+              const dlls = await invoke<{path: string; name: string; size: number; extension: string}[]>(
                 'scan_localization_files', { path: installPath, extensions: ['dll'], maxDepth: 1 }
               )
-              isUnity = (files || []).some(f => f.name === 'UnityPlayer.dll' || f.path.includes('_Data'))
+              isUnity = (dlls || []).some(f => f.name === 'UnityPlayer.dll' || f.path.includes('_Data'))
             } catch {}
           }
           
           if (isUnity) {
-            setGameError('Nessun file traducibile trovato. Questo è un gioco Unity — i testi sono dentro gli asset compilati.\n\n💡 Suggerimento: Installa BepInEx + XUnity AutoTranslator per estrarre e tradurre automaticamente i testi del gioco.\n\nPuoi anche caricare i file manualmente.')
+            // Gioco Unity rilevato → attiva flusso auto-install BepInEx
+            setUnityDetected(true)
+            setGameError(null)
           } else {
-            setGameError('Nessun file traducibile trovato. Puoi caricare i file manualmente.')
+            setGameError('Nessun file traducibile trovato per questo gioco.')
           }
           setIsLoadingGame(false)
           return
@@ -386,6 +393,87 @@ export default function AutoTranslatePage() {
       setIsLoadingGame(false)
     }
   }, [])
+
+  // ============================================================================
+  // AUTO-INSTALL BepInEx + XUnity AutoTranslator (per giochi Unity)
+  // ============================================================================
+
+  const installBepInEx = useCallback(async () => {
+    if (!gameInfo?.installPath) return
+    const installPath = gameInfo.installPath
+
+    setBepinexStatus('installing')
+    setBepinexSteps([])
+    setBepinexError(null)
+
+    try {
+      // 1. Trova l'exe del gioco nella cartella di installazione
+      setBepinexSteps(prev => [...prev, 'Ricerca eseguibile del gioco...'])
+      let gameExeName = ''
+
+      try {
+        const exeFiles = await invoke<{ path: string; name: string; size: number; extension: string }[]>(
+          'scan_localization_files', { path: installPath, extensions: ['exe'], maxDepth: 1 }
+        )
+        // Cerca l'exe principale (esclude UnityCrashHandler, installer, ecc.)
+        const excluded = ['unitycrashandler', 'ue4prereqsetup', 'uninstall', 'crashhandler', 'launcher']
+        const mainExe = (exeFiles || []).find(f => {
+          const name = f.name.toLowerCase()
+          return !excluded.some(ex => name.includes(ex))
+        })
+        if (mainExe) {
+          gameExeName = mainExe.name
+        }
+      } catch {}
+
+      if (!gameExeName) {
+        // Fallback: usa il nome del gioco + .exe
+        const gameName = gameInfo.gameName?.replace(/[^a-zA-Z0-9]/g, '') || 'Game'
+        gameExeName = `${gameName}.exe`
+        setBepinexSteps(prev => [...prev, `⚠ Exe non trovato, provo con: ${gameExeName}`])
+      } else {
+        setBepinexSteps(prev => [...prev, `✓ Trovato: ${gameExeName}`])
+      }
+
+      // 2. Chiama install_unity_autotranslator
+      setBepinexSteps(prev => [...prev, 'Installazione BepInEx + XUnity AutoTranslator...'])
+      
+      const result = await invoke<{ success: boolean; message: string; steps_completed: string[] }>(
+        'install_unity_autotranslator', {
+          gamePath: installPath,
+          gameExeName: gameExeName,
+          targetLang: targetLang,
+          translationMode: 'google',
+        }
+      )
+
+      if (result.steps_completed) {
+        setBepinexSteps(prev => [...prev, ...result.steps_completed])
+      }
+
+      if (result.success) {
+        setBepinexSteps(prev => [...prev, '', '🎉 Installazione completata!', '📌 Ora avvia il gioco UNA VOLTA per generare i file di traduzione.', '📌 Poi torna qui e clicca "Ri-Scansiona" per trovare i nuovi file.'])
+        setBepinexStatus('installed')
+      } else {
+        setBepinexError(result.message || 'Installazione fallita')
+        setBepinexStatus('error')
+      }
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err)
+      setBepinexError(errMsg)
+      setBepinexSteps(prev => [...prev, `❌ Errore: ${errMsg}`])
+      setBepinexStatus('error')
+    }
+  }, [gameInfo, targetLang])
+
+  const rescanAfterBepInEx = useCallback(async () => {
+    if (!gameInfo?.installPath) return
+    setUnityDetected(false)
+    setBepinexStatus('idle')
+    setBepinexSteps([])
+    setBepinexError(null)
+    await scanGameFiles(gameInfo.installPath)
+  }, [gameInfo, scanGameFiles])
 
   const loadFilesFromPaths = async (filePaths: string[], basePath: string) => {
     // Filtra solo file veramente inutili (Manifest UE engine, log, ecc.)
@@ -1219,6 +1307,7 @@ export default function AutoTranslatePage() {
   const handleReset = useCallback(() => {
     setStep('select_game'); setFiles([]); setTranslatedStrings(new Map()); setProgress(null)
     setPatchResult(null); setSelectedFile(null); setEditingKey(null); setGameInfo(null); setGameError(null)
+    setUnityDetected(false); setBepinexStatus('idle'); setBepinexSteps([]); setBepinexError(null)
   }, [])
 
   // ============================================================================
@@ -1387,18 +1476,96 @@ export default function AutoTranslatePage() {
               </Card>
             )}
 
-            {/* Errore scan */}
-            {gameError && (
+            {/* Errore scan (non-Unity) */}
+            {gameError && !unityDetected && (
               <Card className="border-yellow-500/30 bg-yellow-500/5">
                 <CardContent className="p-3 flex items-center gap-3">
                   <AlertTriangle className="h-5 w-5 text-yellow-400 shrink-0" />
                   <div className="flex-1">
                     <p className="text-xs whitespace-pre-line">{gameError}</p>
                   </div>
-                  <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="h-3 w-3 mr-1" /> Carica
-                  </Button>
-                  <input ref={fileInputRef} type="file" accept=".json,.csv,.po,.pot,.xlf,.xliff,.resx,.strings,.ini,.xml,.properties,.yaml,.yml,.txt" multiple onChange={handleManualUpload} className="hidden" />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Unity rilevato → Auto-install BepInEx + XUnity AutoTranslator */}
+            {unityDetected && (
+              <Card className="border-blue-500/30 bg-blue-500/5">
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-blue-400" />
+                    Gioco Unity rilevato
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    I testi di questo gioco sono dentro gli asset compilati. Per tradurlo serve installare 
+                    <strong> BepInEx + XUnity AutoTranslator</strong>, che estraggono automaticamente tutte le stringhe di testo.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-4 pb-4 space-y-3">
+                  {/* Steps log */}
+                  {bepinexSteps.length > 0 && (
+                    <ScrollArea className="h-[160px] rounded border border-white/5 bg-black/20 p-2">
+                      <div className="space-y-0.5 font-mono text-[11px]">
+                        {bepinexSteps.map((s, i) => (
+                          <p key={i} className={cn(
+                            s.startsWith('✓') ? 'text-green-400' :
+                            s.startsWith('❌') ? 'text-red-400' :
+                            s.startsWith('⚠') ? 'text-yellow-400' :
+                            s.startsWith('🎉') || s.startsWith('📌') ? 'text-blue-300 font-semibold' :
+                            'text-muted-foreground'
+                          )}>{s}</p>
+                        ))}
+                        {bepinexStatus === 'installing' && (
+                          <p className="text-blue-400 animate-pulse">⏳ Installazione in corso...</p>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  )}
+
+                  {/* Errore BepInEx */}
+                  {bepinexError && (
+                    <div className="p-2 rounded bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                      {bepinexError}
+                    </div>
+                  )}
+
+                  {/* Azioni */}
+                  <div className="flex items-center gap-2">
+                    {bepinexStatus === 'idle' && (
+                      <Button onClick={installBepInEx} size="sm" className="h-8 bg-blue-600 hover:bg-blue-700">
+                        <Download className="h-3.5 w-3.5 mr-1.5" />
+                        Installa BepInEx + XUnity AutoTranslator
+                      </Button>
+                    )}
+                    {bepinexStatus === 'installing' && (
+                      <Button disabled size="sm" className="h-8">
+                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        Installazione in corso...
+                      </Button>
+                    )}
+                    {(bepinexStatus === 'installed' || bepinexStatus === 'error') && (
+                      <Button onClick={rescanAfterBepInEx} variant="outline" size="sm" className="h-8">
+                        <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                        Ri-Scansiona file
+                      </Button>
+                    )}
+                    {bepinexStatus === 'error' && (
+                      <Button onClick={installBepInEx} variant="outline" size="sm" className="h-8">
+                        <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                        Riprova
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Credits */}
+                  <div className="pt-2 border-t border-white/5">
+                    <p className="text-[10px] text-muted-foreground/60">
+                      Powered by <a href="https://github.com/BepInEx/BepInEx" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">BepInEx</a> (BepInEx Team) 
+                      {' '}&amp;{' '}
+                      <a href="https://github.com/bbepis/XUnity.AutoTranslator" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">XUnity.AutoTranslator</a> (bbepis).
+                      {' '}Grazie agli autori originali per il loro incredibile lavoro open-source.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             )}
