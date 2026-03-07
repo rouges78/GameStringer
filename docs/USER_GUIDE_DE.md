@@ -25,13 +25,26 @@
 21. [Aktivitätsverlauf](#aktivitätsverlauf)
 22. [Wörterbücher](#wörterbücher)
 23. [Fehlerbehebung](#fehlerbehebung)
+24. [Glossar](#glossar)
+25. [Context Harvester](#context-harvester)
+26. [Übersetzungsspeicher](#übersetzungsspeicher)
+27. [OCR-Übersetzer](#ocr-übersetzer)
+28. [KI-Überprüfung](#ki-überprüfung)
+29. [KI-Pipeline](#ki-pipeline)
+30. [Emotions-Übersetzer](#emotions-übersetzer)
+31. [Kulturelle Anpassung](#kulturelle-anpassung)
+32. [Konfidenz-Heatmap](#konfidenz-heatmap)
+33. [Blog-Verwaltung](#blog-verwaltung)
+34. [Ren'Py Patcher](#renpy-patcher)
+35. [RPG Maker Patcher](#rpg-maker-patcher)
+36. [Wolf RPG Patcher](#wolf-rpg-patcher)
+37. [Danganronpa Patcher](#danganronpa-patcher)
 
 ---
 
 ## Übersicht
 
 GameStringer ist ein fortschrittliches System für automatische und manuelle Videospielübersetzungen. Es unterstützt:
-
 
 - **Spiel-Engines**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri und andere
 - **Dateiformate**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA und andere
@@ -53,7 +66,6 @@ GameStringer ist ein fortschrittliches System für automatische und manuelle Vid
 
 Beim ersten Start erfordert GameStringer die Erstellung eines Benutzerprofils:
 
-
 1. **Klicken Sie auf "Profil erstellen"** auf dem Startbildschirm
 2. **Geben Sie einen Namen** für das Profil ein (z.B. "MeinName")
 3. **Legen Sie ein Passwort fest** (mindestens 6 Zeichen)
@@ -62,7 +74,6 @@ Beim ersten Start erfordert GameStringer die Erstellung eines Benutzerprofils:
 ### Anmeldung
 
 Um auf ein bestehendes Profil zuzugreifen:
-
 
 1. **Wählen Sie das Profil** aus der Liste
 2. **Geben Sie das Passwort ein**
@@ -299,7 +310,7 @@ POST /api/v1/translate
   "target": "de",
   "provider": "gemini"
 }
-```
+```text
 
 ### Antwort-Beispiel
 
@@ -311,7 +322,7 @@ POST /api/v1/translate
   "provider": "gemini",
   "tokens": 12
 }
-```
+```text
 
 ### CI/CD-Nutzung
 
@@ -470,11 +481,10 @@ Optimierter Anbieter für Chinesisch, Japanisch und Koreanisch.
 | `qwen3:14b` | 14B | 16GB |
 | `qwen3:32b` | 32B | 32GB |
 
-
-
 ``bash
 ollama pull qwen3:14b
-```
+
+```text
 
 **Optimierte Sprachen**: 中文 (Chinesisch), 日本語 (Japanisch), 한국어 (Koreanisch)
 
@@ -652,7 +662,8 @@ Nach Abschluss einer Übersetzung können Sie ein verteilungsfertiges Paket expo
 
 Erstellt eine ZIP-Datei auf Ihrem **Desktop** mit:
 
-```
+```text
+
 📦 Spielname_de_patch.zip
 ├── 📁 translated/          # Übersetzte Dateien, einsatzbereit
 │   └── übersetzte_datei.csv
@@ -665,7 +676,8 @@ Erstellt eine ZIP-Datei auf Ihrem **Desktop** mit:
 │               └── _Translations.txt
 ├── 📄 README.txt            # Installationsanleitung
 └── 📄 metadata.json         # Übersetzungsinformationen
-```
+
+```text
 
 ### XUnity.AutoTranslator Format
 
@@ -741,14 +753,16 @@ Der Editor ermöglicht manuelle Übersetzungsbearbeitung.
 
 ### Hierarchische Struktur
 
-```
+```text
+
 📁 Spiele
 ├── 📁 Decarnation
 │   ├── 📄 dialoge.csv (897 Strings)
 │   └── 📄 items.csv (123 Strings)
 └── 📁 Anderes Spiel
     └── 📄 texte.json (456 Strings)
-```
+
+```text
 
 ### Funktionen (3)
 
@@ -772,12 +786,14 @@ Wörterbücher speichern Übersetzungen für jedes Spiel.
 
 ### Wörterbuch-Speicherort
 
-```
+```text
+
 %APPDATA%/GameStringer/dictionaries/
 ├── 1672310_decarnation.json
 ├── 123456_anderes_spiel.json
 └── ...
-```
+
+```text
 
 ---
 
@@ -826,6 +842,337 @@ Wörterbücher speichern Übersetzungen für jedes Spiel.
 - **GitHub**: [github.com/rouges78/GameStringer](https://github.com/rouges78/GameStringer)
 - **Issues**: Fehler melden oder Funktionen anfragen
 - **Wiki**: Detaillierte technische Dokumentation
+
+---
+
+## Glossar
+
+Das Glossar verwaltet benutzerdefinierte Terminologiewörterbücher für jedes Spiel und gewährleistet konsistente Übersetzungen.
+
+### Funktionen
+
+- **Term-Tiers**:
+  - 🔴 **Locked** — Begriff immer identisch übersetzt (Eigennamen, Zauber, Orte)
+  - 🟡 **Synced** — konsistente, kontextanpassbare Übersetzung
+  - 🟢 **Flexible** — freie Übersetzung
+- **Kategorien**: Charakter, Ort, Gegenstand, Fähigkeit, Quest, UI, System, Lore, Kreatur, Fraktion
+- **Auto-Extraktion**: KI-Analyse des Textes zur Term-Vorschlagsermittlung
+- **Konsistenzprüfung**: Sichert einheitliche Übersetzung in allen Dateien
+- **Import/Export**: CSV und JSON zum Teilen von Glossaren zwischen Spielen
+
+### Verwendung
+
+1. Gehe zu **Erweiterte Tools → Glossar**
+2. Wähle das Spiel aus der Liste
+3. Füge Begriffe manuell hinzu oder nutze **"Begriffe extrahieren"** für KI-Vorschläge
+4. Lege den Tier für jeden Begriff fest
+5. Das Glossar wird automatisch bei Übersetzungen angewendet
+
+---
+
+## Context Harvester
+
+Analysiert Textstrings, klassifiziert sie und reichert sie mit Kontext an, bevor sie an die KI-Übersetzung übergeben werden.
+
+### Funktionen
+
+- **Automatische Klassifizierung**: erkennt Bildschirmtyp (Menü, Dialog, Erzählung, Tutorial, System)
+- **Sprecher-Erkennung**: schließt auf Sprecher und Tonart (formell, umgangssprachlich, aggressiv)
+- **Kontext-Metadaten**: jeder String erhält Spielgenre, Inhaltstyp und Tonart
+- **Harvest-Speicherung**: extrahierte Kontexte werden gespeichert und wiederverwendet
+- **Batch-Verarbeitung**: analysiert ganze Dateien in einem Durchgang
+
+### Verwendung
+
+1. Gehe zu **Erweiterte Tools → Context Harvester**
+2. Füge Strings ein oder lade eine Datei
+3. Klicke **"Analysieren"** zur Klassifizierung
+4. Lade das JSON-Ergebnis als Eingabe für KI-Übersetzungen herunter
+
+---
+
+## Übersetzungsspeicher
+
+Persistente Datenbank aller abgeschlossenen Übersetzungen mit automatischer Wiederverwendung.
+
+### Funktionen
+
+- **Automatische Wiederverwendung**: bereits übersetzte Strings werden ohne neuen KI-Aufruf vorgeschlagen
+- **Suche**: nach Originaltext, Übersetzung oder Spielname
+- **Spiel-Filter**: zeigt nur Übersetzungen eines bestimmten Titels
+- **Statistiken**: Gesamteinheiten, Verteilung nach Spiel, letztes Änderungsdatum
+- **Export**: JSON, CSV, TMX für andere CAT-Tools
+- **Import**: importiert vorhandene Übersetzungen aus TMX oder CSV
+
+### Verwendung
+
+1. Gehe zu **Erweiterte Tools → Übersetzungsspeicher**
+2. Suche frühere Übersetzungen mit der Suchleiste
+3. Bearbeite oder lösche einzelne Einheiten bei Bedarf
+4. Der Speicher wird automatisch bei KI-Übersetzungen konsultiert
+
+---
+
+## OCR-Übersetzer
+
+Erfasst Text aus beliebigen Spielfenstern oder Screenshots in Echtzeit und übersetzt ihn sofort.
+
+### Funktionen
+
+- **Echtzeit-Erfassung**: analysiert den Bildschirm in konfigurierbaren Intervallen
+- **Quellsprachen**: Japanisch, Englisch, Vereinfachtes Chinesisch, Koreanisch
+- **Fensterauswahl**: direkt auf das Spielfenster zeigen
+- **Regionsauswahl**: bestimmten Bildschirmbereich zur Analyse definieren
+- **Konfidenz**: zeigt Zuverlässigkeit für jeden erkannten Text
+- **Globaler Hotkey**: Erfassung per Tastaturkürzel umschalten
+- **Übersetzungs-Cache**: wiederverwendet frühere Übersetzungen für identische Strings
+
+### Verwendung
+
+1. Gehe zu **OCR-Übersetzer** in der Seitenleiste
+2. Wähle die Quellsprache des Spiels
+3. Klicke **"Fenster auswählen"** und wähle das Spielfenster
+4. *(Optional)* Setze eine spezifische Region mit **"Region auswählen"**
+5. Drücke **"Starten"** für die automatische Erfassung und Übersetzung
+
+---
+
+## KI-Überprüfung
+
+Automatische Qualitätskontrolle von Übersetzungen mit Fehlererkennung und Korrekturvorschlägen.
+
+### Funktionen
+
+- **Einzelmodus**: Prüfung eines Original-/Übersetzungspaares
+- **Batch-Modus**: Massenprüfung im Format `Original|Übersetzung` pro Zeile
+- **Problemkategorien**: Genauigkeit, Flüssigkeit, Terminologie, Ton, Struktur
+- **Schweregrade**: kritisch, Warnung, Info
+- **Auto-Fix**: automatische Korrektur kleiner Probleme
+- **Statistiken**: Gesamtscore 0–100 für jeden Batch
+
+### Verwendung
+
+1. Gehe zu **Erweiterte Tools → KI-Überprüfung**
+2. Wähle **Einzel** oder **Batch**
+3. Füge Originaltext und Übersetzung ein
+4. Klicke **"Prüfen"** für den Report
+5. Nutze **"Auto-Fix"** für vorgeschlagene Korrekturen
+
+---
+
+## KI-Pipeline
+
+Automatisierter 6-Schritt-Workflow für maximale Übersetzungsqualität mit einem Klick.
+
+### Pipeline-Schritte
+
+1. **Harvest** — extrahiert und klassifiziert Kontext
+2. **Translate** — übersetzt mit dem konfigurierten KI-Anbieter
+3. **QA Check** — automatische Qualitätskontrolle
+4. **Auto-Fix** — korrigiert gefundene Probleme
+5. **Review** — abschließende KI-Überprüfung
+6. **Score** — berechnet Endpunktzahl 0–100
+
+### Verfügbare Voreinstellungen
+
+- **Quick** — wesentliche Schritte (Translate + QA Check)
+- **Max Quality** — alle 6 Schritte in Sequenz
+
+### Verwendung
+
+1. Gehe zu **Erweiterte Tools → KI-Pipeline**
+2. Füge die zu übersetzenden Strings ein
+3. Wähle Voreinstellung oder konfiguriere Schritte manuell
+4. Klicke **"Pipeline starten"**
+5. Lade den Abschlussbericht mit Punktzahlen herunter
+
+---
+
+## Emotions-Übersetzer
+
+Übersetzung mit Analyse und Beibehaltung der Emotionen im Originaldialog.
+
+### Funktionen
+
+- **Emotionsanalyse**: erkennt vorherrschende Emotion (Wut, Trauer, Angst, Freude, neutral, Überraschung, Ekel)
+- **Intensität**: misst emotionale Intensität (0–100)
+- **Ton-Beibehaltung**: leitet KI zur Wahrung der emotionalen Wirkung
+- **EmotionBadge**: visuelles Label für jeden String mit Emotion und Intensität
+- **Batch-Statistiken**: Emotionsverteilung über eine ganze Datei
+
+### Verwendung
+
+1. Gehe zu **Erweiterte Tools → Emotions-Übersetzer**
+2. Füge den zu übersetzenden Text ein
+3. Wähle die Zielsprache
+4. Klicke **"Analysieren & Übersetzen"**
+5. Das Ergebnis zeigt die Übersetzung mit identifizierten Emotionen
+
+---
+
+## Kulturelle Anpassung
+
+Analysiert übersetzten Text auf kulturell problematische Elemente und schlägt Anpassungen vor.
+
+### Funktionen
+
+- **Unterstützte Kulturen**: IT, EN, DE, FR, ES, JA, KO, ZH, PT, RU
+- **Analysierte Kategorien**: idiomatische Ausdrücke, Kulturreferenzen, Maße/Währungen, symbolische Farben, Höflichkeitsformen, Humor
+- **Spezifische Vorschläge**: für jedes Element eine kulturangepasste Alternative
+- **Anpassungsscore**: Prozentsatz des Text, der Überarbeitung benötigt
+
+### Verwendung
+
+1. Gehe zu **Erweiterte Tools → Kulturelle Anpassung**
+2. Füge den übersetzten Text ein
+3. Wähle Quell- und Zielkultur
+4. Klicke **"Analysieren"**
+5. Wende Vorschläge vor der Veröffentlichung an
+
+---
+
+## Konfidenz-Heatmap
+
+Visualisiert die Qualität jeder Übersetzung durch eine farbcodierte Karte und identifiziert sofort problematische Strings.
+
+### Funktionen
+
+- **8 analysierte Metriken**: fehlende Platzhalter, leere Strings, nicht übersetzte Strings, Satzzeichen, Großschreibung, HTML-Tags, Länge, Zahlen
+- **Farbcode**:
+  - 🟢 **Ausgezeichnet** (90–100%) — korrekte Übersetzung
+  - 🔵 **Gut** (75–89%) — kleine Stilprobleme
+  - 🟡 **Akzeptabel** (60–74%) — kleinere Probleme
+  - 🟠 **Überprüfen** (40–59%) — erhebliche Fehler
+  - 🔴 **Schlecht** (<40%) — kritische Fehler
+- **3 Eingabemodi**: integrierte Demo, Text einfügen (`Original|Übersetzung` pro Zeile), Datei hochladen (JSON/CSV/TXT)
+- **Bericht exportieren**: JSON mit Bewertungen und Problemen für jeden String herunterladen
+
+### Verwendung
+
+1. Gehe zu **Erweiterte Tools → Konfidenz-Heatmap**
+2. Wähle Modus: **Demo** für ein Beispiel, **Einfügen** für manuelle Eingabe, **Datei** zum Hochladen
+3. Klicke **"Analysieren"**
+4. Überprüfe den Farbbericht: rote/orange Strings brauchen vorrangige Überarbeitung
+5. Nutze **"Bericht exportieren"** zum Speichern als JSON
+
+---
+
+## Blog-Verwaltung
+
+Verwaltet einen Neuigkeiten- und Update-Blog für das Übersetzungsprojekt, sichtbar im Dashboard.
+
+### Funktionen
+
+- **Beiträge erstellen**: Titel, Datum, Kurzbeschreibung, Kategorie-Tag
+- **Verfügbare Tags**: Feature, UI, Fix, Security, AI, Update, News
+- **Anheften**: wichtige Beiträge oben in der Liste fixieren
+- **Inline-Bearbeitung**: jeden Beitrag ohne Seitenwechsel bearbeiten
+- **Beitrag löschen**: Entfernung mit Bestätigung
+- **Anzeige**: chronologische Liste mit stilisiertem Datum, farbigem Tag-Badge und Beschreibungsvorschau
+
+### Verwendung
+
+1. Gehe zu **Blog-Verwaltung** aus dem Hauptmenü
+2. Klicke **"Neuer Beitrag"**
+3. Fülle Datum (z.B. "24 Jan"), Titel (mit empfohlenen Emojis), Beschreibung und Tag aus
+4. Klicke **"Speichern"**
+5. Nutze das 📌-Symbol zum Anheften eines Beitrags
+
+---
+
+## Ren'Py Patcher
+
+Dedizierter Patcher für Visual Novels mit dem Ren'Py-Engine. Extrahiert Dialoge, Menüs und Erzählung aus `.rpy`-Dateien und generiert native Übersetzungsdateien.
+
+### Funktionen
+
+- **Auto-Erkennung**: identifiziert Titel, Version und Skriptdateien des Spiels
+- **String-Typen**: Dialoge, Menü, Erzählung
+- **Charaktererkennung**: zeigt welcher Charakter jede Zeile spricht
+- **Inline-Editor**: auf einen String klicken zum Bearbeiten
+- **Suche und Filter**: nach Text oder Charakter suchen, nach Typ filtern
+- **`.rpy`-Dateien generieren**: erstellt die `tl/<Sprache>/`-Struktur für Ren'Py
+- **JSON speichern/laden**: Fortschritt speichern und später fortsetzen
+- **Statistiken**: Fertigstellungsprozentsatz, Anzahl nach Typ
+
+### Verwendung
+
+1. Gehe zu **Ren'Py Patcher** in der Seitenleiste
+2. Klicke **"Durchsuchen"** und wähle den Ren'Py-Spielordner
+3. Klicke **"Strings extrahieren"**
+4. Übersetzungen im Editor bearbeiten (auf einen String klicken)
+5. Zielsprachname eingeben (z.B. `german`) und **"Generiere .rpy"** klicken
+6. Dateien werden im `tl/`-Ordner des Spiels gespeichert
+
+---
+
+## RPG Maker Patcher
+
+Dedizierter Patcher für RPG Maker-Spiele (MV, MZ, XP, VX, VX Ace). Liest `.json`- und `.rxdata`/`.rvdata`-Dateien des Projekts.
+
+### Funktionen
+
+- **Versionserkennung**: identifiziert automatisch MV/MZ/XP/VX/Ace
+- **Unterstützte Dateien**: Actors, Classes, Skills, Items, Weapons, Armors, Enemies, Troops, States, Maps, CommonEvents, System
+- **Statistiken pro Datei**: Übersetzungsfortschritt aufgeschlüsselt nach Datei
+- **Translator++-Integration**: Direktlink zum Translator++-Download
+- **Patch exportieren**: speichert Übersetzungen als JSON
+- **Editor**: Volltextsuche, Inline-Bearbeitung
+
+### Verwendung
+
+1. Gehe zu **RPG Maker Patcher** in der Seitenleiste
+2. RPG Maker-Projektordner auswählen
+3. Klicke **"Strings extrahieren"**
+4. Strings im Editor übersetzen
+5. **"Patch speichern"** klicken
+
+---
+
+## Wolf RPG Patcher
+
+Dedizierter Patcher für Wolf RPG Editor-Spiele. Verarbeitet binäre `.wolf`-Dateien und Spielkarten.
+
+### Funktionen
+
+- **Unterstützte Dateien**: Data/*.wolf (Datenbank), Map/*.mps (Karten)
+- **String-Typen**: Datenbank, Karte, Skript, Ereignis
+- **Verschlüsselungserkennung**: warnt bei verschlüsselten Dateien
+- **WolfTrans-Integration**: empfiehlt WolfTrans für verschlüsselte Dateien
+- **Fortschrittsbalken**: Fertigstellungsprozentsatz für das gesamte Projekt
+- **Speichern/Laden**: JSON zum Fortsetzen der Arbeit
+
+### Verwendung
+
+1. Gehe zu **Wolf RPG Patcher** in der Seitenleiste
+2. Wolf RPG-Spielordner auswählen
+3. Klicke **"Strings extrahieren"**
+4. Bei verschlüsselten Spielen WolfTrans-Anweisungen folgen
+5. Strings übersetzen und **"Speichern"** klicken
+
+---
+
+## Danganronpa Patcher
+
+Dedizierter Patcher für die Danganronpa-Spielserie. Verarbeitet `.pak`-Archive und `.po`-Lokalisierungsdateien.
+
+### Funktionen
+
+- **Spielerkennung**: identifiziert automatisch DR1, DR2, V3
+- **PAK-Archive**: extrahiert und listet Dateien in `.pak`-Archiven
+- **PO-Dateien**: native Unterstützung für `.po`/`.pot`-Dateien mit übersetzt/unübersetzt/fuzzy-Status
+- **Integrierte KI-Übersetzung**: Schaltfläche zum automatischen Übersetzen mit der konfigurierten KI
+- **PO-Statistiken**: Anzahl übersetzt, unübersetzt, fuzzy und Prozentsatz
+- **DRAT-Integration**: Link zum DRAT-Tool für erweiterte Archivoperationen
+- **Patch exportieren**: exportiert die geänderte `.po`-Datei
+
+### Verwendung
+
+1. Gehe zu **Danganronpa Patcher** in der Seitenleiste
+2. Danganronpa-Spielordner auswählen
+3. `.pak`-Archiv extrahieren oder direkt eine `.po`-Datei laden
+4. Strings im Editor bearbeiten oder **"Mit KI übersetzen"** nutzen
+5. Fertige `.po`-Datei exportieren und ins Spiel reimportieren
 
 ---
 
@@ -950,6 +1297,13 @@ Jede übersetzte Zeile zeigt nun visuelle Qualitätsindikatoren:
 - **Tauri Signing Key**: Konfiguriert für automatische signierte `latest.json`-Generierung
 - **GitHub Secrets**: `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` konfiguriert
 - **Workflow release.yml**: Aktualisiert mit Signaturvariablen für beide Jobs (Windows + Linux)
+
+### Unity: Automatische BepInEx + XUnity AutoTranslator Installation
+
+- **Automatische Unity-Erkennung**: wenn der Scanner keine übersetzbaren Dateien in einem Unity-Spiel findet, wird eine dedizierte Karte statt eines generischen Fehlers angezeigt
+- **Ein-Klick-Installation**: Schaltfläche "BepInEx + XUnity AutoTranslator installieren" erkennt automatisch die Spiel-EXE, installiert das Framework und das Übersetzungs-Plugin mit Echtzeit-Logs
+- **Geführter Ablauf**: nach der Installation wird empfohlen, das Spiel einmal zu starten und neu zu scannen — alle Texte werden übersetzbar
+- **Credits**: BepInEx Team und bbepis (XUnity AutoTranslator)
 
 ---
 

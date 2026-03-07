@@ -26,13 +26,26 @@
 22. [Activity History](#activity-history)
 23. [Dictionaries](#dictionaries)
 24. [Troubleshooting](#troubleshooting)
+25. [Glossary](#glossary)
+26. [Context Harvester](#context-harvester)
+27. [Translation Memory](#translation-memory)
+28. [OCR Translator](#ocr-translator)
+29. [AI Review](#ai-review)
+30. [AI Pipeline](#ai-pipeline)
+31. [Emotion Translator](#emotion-translator)
+32. [Cultural Adaptation](#cultural-adaptation)
+33. [Confidence Heatmap](#confidence-heatmap)
+34. [Blog Manager](#blog-manager)
+35. [Ren'Py Patcher](#renpy-patcher)
+36. [RPG Maker Patcher](#rpg-maker-patcher)
+37. [Wolf RPG Patcher](#wolf-rpg-patcher)
+38. [Danganronpa Patcher](#danganronpa-patcher)
 
 ---
 
 ## Overview
 
 GameStringer is an advanced system for automatic and manual video game translation. It supports:
-
 
 - **Game engines**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri and others
 - **File formats**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA and others
@@ -56,7 +69,6 @@ GameStringer is an advanced system for automatic and manual video game translati
 
 On first launch, GameStringer requires creating a user profile:
 
-
 1. **Click "Create Profile"** on the initial screen
 2. **Enter a name** for the profile (e.g., "MyName")
 3. **Set a password** (minimum 6 characters)
@@ -65,7 +77,6 @@ On first launch, GameStringer requires creating a user profile:
 ### Login
 
 To access an existing profile:
-
 
 1. **Select the profile** from the list
 2. **Enter the password**
@@ -302,7 +313,7 @@ POST /api/v1/translate
   "target": "it",
   "provider": "gemini"
 }
-```
+```text
 
 ### Response Example
 
@@ -314,7 +325,7 @@ POST /api/v1/translate
   "provider": "gemini",
   "tokens": 12
 }
-```
+```text
 
 ### CI/CD Usage
 
@@ -473,11 +484,10 @@ Provider optimized for Chinese, Japanese and Korean.
 | `qwen3:14b` | 14B | 16GB |
 | `qwen3:32b` | 32B | 32GB |
 
-
-
 ``bash
 ollama pull qwen3:14b
-```
+
+```text
 
 **Optimized languages**: 中文 (Chinese), 日本語 (Japanese), 한국어 (Korean)
 
@@ -641,13 +651,15 @@ The system automatically handles API rate limits:
 
 After translation, files are saved to:
 
-```
+```text
+
 [GamePath]/GameStringer_Translation/
 ├── originals.json      # Extracted original strings
 ├── translations.json   # Translated strings
 ├── dialogues.po        # Gettext format for DRAT
 └── translations.tsv    # Tab-separated for spreadsheets
-```
+
+```text
 
 ### Applying Translations
 
@@ -741,7 +753,8 @@ After completing a translation, you can export a package ready for distribution.
 
 Creates a ZIP file on your **Desktop** containing:
 
-```
+```text
+
 📦 GameName_en_patch.zip
 ├── 📁 translated/          # Translated files ready to use
 │   └── translated_file.csv
@@ -754,7 +767,8 @@ Creates a ZIP file on your **Desktop** containing:
 │               └── _Translations.txt
 ├── 📄 README.txt            # Installation instructions
 └── 📄 metadata.json         # Translation information
-```
+
+```text
 
 ### XUnity.AutoTranslator Format
 
@@ -830,14 +844,16 @@ The Editor allows manual translation editing.
 
 ### Hierarchical Structure
 
-```
+```text
+
 📁 Games
 ├── 📁 Decarnation
 │   ├── 📄 dialogues.csv (897 strings)
 │   └── 📄 items.csv (123 strings)
 └── 📁 Other Game
     └── 📄 texts.json (456 strings)
-```
+
+```text
 
 ### Features (3)
 
@@ -861,12 +877,14 @@ Dictionaries save translations for each game.
 
 ### Dictionary Location
 
-```
+```text
+
 %APPDATA%/GameStringer/dictionaries/
 ├── 1672310_decarnation.json
 ├── 123456_other_game.json
 └── ...
-```
+
+```text
 
 ---
 
@@ -915,6 +933,337 @@ Dictionaries save translations for each game.
 - **GitHub**: [github.com/rouges78/GameStringer](https://github.com/rouges78/GameStringer)
 - **Issues**: Report bugs or request features
 - **Wiki**: Detailed technical documentation
+
+---
+
+## Glossary
+
+The Glossary manages custom terminology dictionaries for each game, ensuring translation consistency.
+
+### Features
+
+- **Term tiers**:
+  - 🔴 **Locked** — term always translated identically (proper nouns, spells, locations)
+  - 🟡 **Synced** — consistent translation, adaptable to context
+  - 🟢 **Flexible** — free translation
+- **Categories**: character, location, item, skill, quest, UI, system, lore, creature, faction
+- **Auto-extraction**: AI analysis of text to suggest terms to add
+- **Consistency check**: verifies each term is translated uniformly across all files
+- **Import/Export**: CSV and JSON to share glossaries between games or teams
+
+### How to use
+
+1. Go to **Advanced Tools → Glossary**
+2. Select the game from the list
+3. Add terms manually or use **"Extract terms"** for an automatic AI suggestion
+4. Set the tier for each term
+5. The glossary is applied automatically during translations
+
+---
+
+## Context Harvester
+
+Analyzes text strings to classify them and enrich them with context before AI translation, improving quality.
+
+### Features
+
+- **Automatic classification**: identifies screen type (menu, dialogue, narrative, tutorial, system)
+- **Speaker recognition**: infers who is speaking and tone type (formal, casual, aggressive)
+- **Context metadata**: each string receives game genre, content type and tone
+- **Harvest saving**: extracted contexts are saved and reused in future sessions
+- **Batch processing**: analyzes entire files in a single operation
+
+### How to use
+
+1. Go to **Advanced Tools → Context Harvester**
+2. Paste strings or load a file
+3. Click **"Analyze"** to classify each string
+4. Download the JSON result to use as input for AI translations
+
+---
+
+## Translation Memory
+
+Persistent database of all completed translations, with automatic reuse in new sessions.
+
+### Features
+
+- **Automatic reuse**: already-translated strings are suggested without a new AI call
+- **Search**: search by original text, translation or game name
+- **Game filter**: view only translations for a specific title
+- **Statistics**: total units, distribution by game, last modified date
+- **Export**: JSON, CSV, TMX for use in other CAT tools
+- **Import**: import existing translations from TMX or CSV
+
+### How to use
+
+1. Go to **Advanced Tools → Translation Memory**
+2. Search previous translations with the search bar
+3. Edit or delete individual units as needed
+4. The memory is consulted automatically during AI translations
+
+---
+
+## OCR Translator
+
+Captures text from any game window or screenshot in real time and translates it instantly.
+
+### Features
+
+- **Real-time capture**: analyzes the screen at configurable intervals
+- **Source languages**: Japanese, English, Simplified Chinese, Korean
+- **Window selection**: point directly at the game window
+- **Region selection**: define a specific screen area to analyze
+- **Confidence**: shows reliability level for each detected text
+- **Global hotkey**: toggle capture on/off with a keyboard shortcut
+- **Translation cache**: reuses previous translations for identical strings
+
+### How to use
+
+1. Go to **OCR Translator** from the sidebar
+2. Select the game’s source language
+3. Click **"Select window"** and choose the game window
+4. *(Optional)* Set a specific region with **"Select region"**
+5. Press **"Start"** to begin automatic capture and translation
+
+---
+
+## AI Review
+
+Automatic quality review of translations with error detection and correction suggestions.
+
+### Features
+
+- **Single mode**: review one original/translation pair
+- **Batch mode**: mass review in `original|translation` format per line
+- **Problem categories**: accuracy, fluency, terminology, tone, structure
+- **Severity levels**: critical, warning, info
+- **Auto-fix**: automatic correction of minor issues
+- **Statistics**: global score 0–100 for each batch
+
+### How to use
+
+1. Go to **Advanced Tools → AI Review**
+2. Choose between **Single** or **Batch**
+3. Paste the original text and the translation
+4. Click **"Review"** to receive the report
+5. Use **"Auto-fix"** to apply suggested corrections
+
+---
+
+## AI Pipeline
+
+Automated 6-step workflow to achieve maximum quality translations with a single click.
+
+### Pipeline Steps
+
+1. **Harvest** — extracts and classifies context (Context Harvester)
+2. **Translate** — translates with the configured AI provider
+3. **QA Check** — automatic quality verification
+4. **Auto-Fix** — corrects found issues
+5. **Review** — final AI review
+6. **Score** — calculates final score 0–100
+
+### Available Presets
+
+- **Quick** — essential steps (Translate + QA Check)
+- **Max Quality** — all 6 steps in sequence
+
+### How to use
+
+1. Go to **Advanced Tools → AI Pipeline**
+2. Paste the strings to translate
+3. Choose a preset or configure steps manually
+4. Click **"Run Pipeline"**
+5. Download the final report with scores for each string
+
+---
+
+## Emotion Translator
+
+Translation that analyzes and preserves the emotions in the original dialogue.
+
+### Features
+
+- **Emotion analysis**: detects the predominant emotion (anger, sadness, fear, joy, neutral, surprise, disgust)
+- **Intensity**: measures emotional intensity level (0–100)
+- **Tone preservation**: guides the AI to maintain the same emotional impact in translation
+- **EmotionBadge**: visual label for each string with emotion and intensity
+- **Batch statistics**: emotion distribution across an entire file
+
+### How to use
+
+1. Go to **Advanced Tools → Emotion Translator**
+2. Paste the text to translate
+3. Select the target language
+4. Click **"Analyze & Translate"**
+5. The result shows the translation with identified emotions for each string
+
+---
+
+## Cultural Adaptation
+
+Analyzes translated text to identify culturally problematic elements and suggests adaptations for the target culture.
+
+### Features
+
+- **Supported cultures**: IT, EN, DE, FR, ES, JA, KO, ZH, PT, RU
+- **Analyzed categories**: idiomatic expressions, cultural references, measurements/currencies, symbolic colors, politeness formulas, humor
+- **Specific suggestions**: for each element, proposes a culture-appropriate alternative
+- **Adaptation score**: percentage of text requiring revision
+
+### How to use
+
+1. Go to **Advanced Tools → Cultural Adaptation**
+2. Paste the translated text
+3. Select source and target culture
+4. Click **"Analyze"**
+5. Apply suggestions before final publication
+
+---
+
+## Confidence Heatmap
+
+Visualizes the quality of each translation through a color-coded map, instantly identifying problematic strings.
+
+### Features
+
+- **8 metrics analyzed**: missing placeholders, empty strings, untranslated strings, punctuation, capitalization, HTML tags, length ratio, numbers
+- **Color code**:
+  - 🟢 **Excellent** (90–100%) — correct translation
+  - 🔵 **Good** (75–89%) — minor style issues
+  - 🟡 **Acceptable** (60–74%) — minor problems
+  - 🟠 **Needs Review** (40–59%) — significant errors
+  - 🔴 **Poor** (<40%) — critical errors
+- **3 input modes**: built-in demo, paste text (`original|translation` per line), upload file (JSON/CSV/TXT)
+- **Export report**: download JSON with scores and issues for each string
+
+### How to use
+
+1. Go to **Advanced Tools → Confidence Heatmap**
+2. Choose mode: **Demo** to see an example, **Paste** to enter manually, **File** to upload a CSV/JSON
+3. Click **"Analyze"**
+4. Review the color report: red/orange strings need priority revision
+5. Use **"Export Report"** to save the result as JSON
+
+---
+
+## Blog Manager
+
+Manages a news and updates blog for the translation project, visible on the dashboard.
+
+### Features
+
+- **Create posts**: title, date, short description, category tag
+- **Available tags**: Feature, UI, Fix, Security, AI, Update, News
+- **Pin**: pin important posts to the top of the list
+- **Inline editing**: edit any post without changing page
+- **Delete post**: removal with confirmation
+- **Display**: chronological list with styled date, colored tag badge and description preview
+
+### How to use
+
+1. Go to **Blog Manager** from the main menu
+2. Click **"New Post"**
+3. Fill in date (e.g. "24 Jan"), title (with emojis recommended), description and tag
+4. Click **"Save"**
+5. Use the 📌 icon to pin a post to the top
+
+---
+
+## Ren'Py Patcher
+
+Dedicated patcher for visual novels built with the Ren'Py engine. Extracts dialogues, menus and narration from `.rpy` files and generates native translation files.
+
+### Features
+
+- **Auto-detection**: identifies title, version and script files of the game
+- **String types**: Dialogue, Menu, Narration
+- **Character identification**: shows which character speaks each line
+- **Inline editor**: click any string to edit its translation
+- **Search and filter**: search by text or character, filter by type
+- **Generate `.rpy` files**: creates the `tl/<language>/` structure compatible with Ren'Py
+- **Save/Load JSON**: save progress and resume later
+- **Statistics**: completion percentage, count by type
+
+### How to use
+
+1. Go to **Ren'Py Patcher** from the sidebar
+2. Click **"Browse"** and select the Ren'Py game folder
+3. Click **"Extract Strings"** to load all dialogues
+4. Edit translations in the editor (click a string to edit it)
+5. Enter the target language name (e.g. `english`) and click **"Generate .rpy"**
+6. Files are saved in the game's `tl/` folder
+
+---
+
+## RPG Maker Patcher
+
+Dedicated patcher for RPG Maker games (MV, MZ, XP, VX, VX Ace). Reads the project's `.json` and `.rxdata`/`.rvdata` files and generates translatable patches.
+
+### Features
+
+- **Version detection**: automatically identifies MV/MZ/XP/VX/Ace
+- **Supported files**: Actors, Classes, Skills, Items, Weapons, Armors, Enemies, Troops, States, Maps, CommonEvents, System
+- **Per-file statistics**: translation progress broken down by each data file
+- **Translator++ integration**: direct download link to Translator++ for advanced workflows
+- **Export patch**: saves translations as JSON for re-import
+- **Editor**: full-text search, inline editing with textarea
+
+### How to use
+
+1. Go to **RPG Maker Patcher** from the sidebar
+2. Select the RPG Maker project folder
+3. Click **"Extract Strings"**
+4. Translate strings in the editor
+5. Click **"Save Patch"** to export the translation JSON
+
+---
+
+## Wolf RPG Patcher
+
+Dedicated patcher for Wolf RPG Editor games. Handles binary `.wolf` files and game maps.
+
+### Features
+
+- **Supported files**: Data/*.wolf (database), Map/*.mps (maps)
+- **String types**: Database, Map, Script, Event
+- **Encryption detection**: warns if the game uses encrypted files
+- **WolfTrans integration**: suggests WolfTrans for encrypted files
+- **Progress bar**: completion percentage for the entire project
+- **Save/Load**: JSON to resume work
+
+### How to use
+
+1. Go to **Wolf RPG Patcher** from the sidebar
+2. Select the Wolf RPG game folder
+3. Click **"Extract Strings"**
+4. If the game is encrypted, follow the WolfTrans instructions
+5. Translate strings and click **"Save"**
+
+---
+
+## Danganronpa Patcher
+
+Dedicated patcher for the Danganronpa game series. Handles `.pak` archives and `.po` localization files.
+
+### Features
+
+- **Game detection**: automatically identifies DR1, DR2, V3
+- **PAK archives**: extracts and lists files contained in `.pak` archives
+- **PO files**: native support for `.po`/`.pot` localization files with translated/untranslated/fuzzy status
+- **Built-in AI translation**: button to automatically translate strings with the configured AI
+- **PO statistics**: count of translated, untranslated, fuzzy and percentage
+- **DRAT integration**: link to the DRAT tool for advanced archive operations
+- **Export patch**: exports the modified `.po` file
+
+### How to use
+
+1. Go to **Danganronpa Patcher** from the sidebar
+2. Select the Danganronpa game folder
+3. Extract the `.pak` archive or directly load a `.po` file
+4. Edit strings in the editor or use **"Translate with AI"**
+5. Export the completed `.po` file to re-import into the game
 
 ---
 
@@ -1040,6 +1389,13 @@ Each translated row now shows visual quality indicators:
 - **Tauri Signing Key**: configured for automatic signed `latest.json` generation in releases
 - **GitHub Secrets**: `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` configured
 - **Workflow release.yml**: updated with signing variables for both jobs (Windows + Linux)
+
+### Unity: Auto-Install BepInEx + XUnity AutoTranslator
+
+- **Automatic Unity detection**: if the scanner finds no translatable files in a Unity game, shows a dedicated card instead of a generic error
+- **One-click install**: "Install BepInEx + XUnity AutoTranslator" button auto-detects the game exe, installs the framework and translation plugin with real-time logs
+- **Guided flow**: after install, prompts you to launch the game once and re-scan — all text becomes translatable
+- **Credits**: BepInEx Team and bbepis (XUnity AutoTranslator)
 
 ---
 

@@ -25,13 +25,26 @@
 21. [Historial de Actividad](#historial-de-actividad)
 22. [Diccionarios](#diccionarios)
 23. [Solución de Problemas](#solución-de-problemas)
+24. [Glosario](#glosario)
+25. [Context Harvester](#context-harvester)
+26. [Memoria de Traducción](#memoria-de-traducción)
+27. [Traductor OCR](#traductor-ocr)
+28. [Revisión IA](#revisión-ia)
+29. [Pipeline IA](#pipeline-ia)
+30. [Traductor de Emociones](#traductor-de-emociones)
+31. [Adaptación Cultural](#adaptación-cultural)
+32. [Mapa de Calor de Confianza](#mapa-de-calor-de-confianza)
+33. [Gestor de Blog](#gestor-de-blog)
+34. [Ren'Py Patcher](#renpy-patcher)
+35. [RPG Maker Patcher](#rpg-maker-patcher)
+36. [Wolf RPG Patcher](#wolf-rpg-patcher)
+37. [Danganronpa Patcher](#danganronpa-patcher)
 
 ---
 
 ## Descripción General
 
 GameStringer es un sistema avanzado para la traducción automática y manual de videojuegos. Soporta:
-
 
 - **Motores de juego**: Unity, Unreal Engine, RPG Maker, Ren'Py, Godot, Telltale, Wolf RPG, Kirikiri y otros
 - **Formatos de archivo**: CSV, JSON, XML, PO/POT, YAML, TXT, SRT, VTT, ASS/SSA y otros
@@ -53,7 +66,6 @@ GameStringer es un sistema avanzado para la traducción automática y manual de 
 
 En el primer inicio, GameStringer requiere crear un perfil de usuario:
 
-
 1. **Haz clic en "Crear Perfil"** en la pantalla inicial
 2. **Introduce un nombre** para el perfil (ej. "MiNombre")
 3. **Establece una contraseña** (mínimo 6 caracteres)
@@ -62,7 +74,6 @@ En el primer inicio, GameStringer requiere crear un perfil de usuario:
 ### Inicio de Sesión
 
 Para acceder a un perfil existente:
-
 
 1. **Selecciona el perfil** de la lista
 2. **Introduce la contraseña**
@@ -299,7 +310,7 @@ POST /api/v1/translate
   "target": "es",
   "provider": "gemini"
 }
-```
+```text
 
 ### Ejemplo de Respuesta
 
@@ -311,7 +322,7 @@ POST /api/v1/translate
   "provider": "gemini",
   "tokens": 12
 }
-```
+```text
 
 ### Uso CI/CD
 
@@ -470,11 +481,10 @@ Proveedor optimizado para chino, japonés y coreano.
 | `qwen3:14b` | 14B | 16GB |
 | `qwen3:32b` | 32B | 32GB |
 
-
-
 ``bash
 ollama pull qwen3:14b
-```
+
+```text
 
 **Idiomas optimizados**: 中文 (Chino), 日本語 (Japonés), 한국어 (Coreano)
 
@@ -652,7 +662,8 @@ Después de completar una traducción, puedes exportar un paquete listo para dis
 
 Crea un archivo ZIP en tu **Escritorio** conteniendo:
 
-```
+```text
+
 📦 NombreJuego_es_patch.zip
 ├── 📁 translated/          # Archivos traducidos listos para usar
 │   └── archivo_traducido.csv
@@ -665,7 +676,8 @@ Crea un archivo ZIP en tu **Escritorio** conteniendo:
 │               └── _Translations.txt
 ├── 📄 README.txt            # Instrucciones de instalación
 └── 📄 metadata.json         # Información de la traducción
-```
+
+```text
 
 ### Formato XUnity.AutoTranslator
 
@@ -741,14 +753,16 @@ El Editor permite modificar manualmente las traducciones.
 
 ### Estructura Jerárquica
 
-```
+```text
+
 📁 Juegos
 ├── 📁 Decarnation
 │   ├── 📄 dialogos.csv (897 cadenas)
 │   └── 📄 items.csv (123 cadenas)
 └── 📁 Otro Juego
     └── 📄 textos.json (456 cadenas)
-```
+
+```text
 
 ### Funcionalidades (3)
 
@@ -772,12 +786,14 @@ Los diccionarios guardan las traducciones para cada juego.
 
 ### Ubicación de los Diccionarios
 
-```
+```text
+
 %APPDATA%/GameStringer/dictionaries/
 ├── 1672310_decarnation.json
 ├── 123456_otro_juego.json
 └── ...
-```
+
+```text
 
 ---
 
@@ -826,6 +842,337 @@ Los diccionarios guardan las traducciones para cada juego.
 - **GitHub**: [github.com/rouges78/GameStringer](https://github.com/rouges78/GameStringer)
 - **Issues**: Reporta bugs o solicita funcionalidades
 - **Wiki**: Documentación técnica detallada
+
+---
+
+## Glosario
+
+El Glosario gestiona diccionarios de terminología personalizados para cada juego, garantizando consistencia.
+
+### Funciones
+
+- **Niveles de términos**:
+  - 🔴 **Locked** — término siempre traducido de forma idéntica (nombres propios, hechizos, lugares)
+  - 🟡 **Synced** — traducción consistente, adaptable al contexto
+  - 🟢 **Flexible** — traducción libre
+- **Categorías**: personaje, lugar, objeto, habilidad, quest, UI, sistema, lore, criatura, facción
+- **Extracción automática**: análisis IA para sugerir términos
+- **Verificación de consistencia**: comprueba que cada término se traduzca uniformemente
+- **Importar/Exportar**: CSV y JSON para compartir glosarios entre juegos
+
+### Cómo usarlo
+
+1. Ve a **Herramientas Avanzadas → Glosario**
+2. Selecciona el juego de la lista
+3. Añade términos manualmente o usa **"Extraer términos"** para sugerencias IA
+4. Establece el nivel para cada término
+5. El glosario se aplica automáticamente durante las traducciones
+
+---
+
+## Context Harvester
+
+Analiza strings de texto para clasificarlos y enriquecerlos con contexto antes de la traducción IA.
+
+### Funciones
+
+- **Clasificación automática**: identifica tipo de pantalla (menú, diálogo, narrativa, tutorial, sistema)
+- **Reconocimiento de hablante**: infiere quién habla y el tono (formal, coloquial, agresivo)
+- **Metadatos de contexto**: cada string recibe género de juego, tipo de contenido y tono
+- **Guardado de harvest**: contextos extraídos guardados y reutilizados en sesiones futuras
+- **Procesamiento por lotes**: analiza archivos enteros en una operación
+
+### Cómo usarlo
+
+1. Ve a **Herramientas Avanzadas → Context Harvester**
+2. Pega los strings o carga un archivo
+3. Haz clic en **"Analizar"** para clasificar cada string
+4. Descarga el resultado JSON como entrada para traducciones IA
+
+---
+
+## Memoria de Traducción
+
+Base de datos persistente de todas las traducciones realizadas, con reutilización automática.
+
+### Funciones
+
+- **Reutilización automática**: strings ya traducidos se sugieren sin nueva llamada IA
+- **Búsqueda**: por texto original, traducción o nombre de juego
+- **Filtro por juego**: muestra solo traducciones de un título específico
+- **Estadísticas**: unidades totales, distribución por juego, fecha de última modificación
+- **Exportar**: JSON, CSV, TMX para otros herramientas CAT
+- **Importar**: importa traducciones existentes desde TMX o CSV
+
+### Cómo usarlo
+
+1. Ve a **Herramientas Avanzadas → Memoria de Traducción**
+2. Busca traducciones anteriores con la barra de búsqueda
+3. Edita o elimina unidades individuales según necesidad
+4. La memoria se consulta automáticamente durante traducciones IA
+
+---
+
+## Traductor OCR
+
+Captura texto de cualquier ventana de juego o captura de pantalla en tiempo real y lo traduce instantáneamente.
+
+### Funciones
+
+- **Captura en tiempo real**: analiza la pantalla en intervalos configurables
+- **Idiomas de origen**: japonés, inglés, chino simplificado, coreano
+- **Selección de ventana**: apunta directamente a la ventana del juego
+- **Selección de región**: define un área específica de pantalla
+- **Confianza**: muestra nivel de fiabilidad para cada texto detectado
+- **Tecla rápida global**: activa/desactiva captura con atajo de teclado
+- **Caché de traducciones**: reutiliza traducciones anteriores para strings idénticos
+
+### Cómo usarlo
+
+1. Ve a **Traductor OCR** desde la barra lateral
+2. Selecciona el idioma de origen del juego
+3. Haz clic en **"Seleccionar ventana"** y elige la ventana del juego
+4. *(Opcional)* Establece una región específica con **"Seleccionar región"**
+5. Pulsa **"Iniciar"** para comenzar la captura y traducción automática
+
+---
+
+## Revisión IA
+
+Revisión automática de calidad de traducciones con detección de errores y sugerencias.
+
+### Funciones
+
+- **Modo singular**: revisión de un par original/traducción
+- **Modo lote**: revisión masiva en formato `original|traducción` por línea
+- **Categorías de problemas**: exactitud, fluidez, terminología, tono, estructura
+- **Niveles de gravedad**: crítico, advertencia, info
+- **Auto-fix**: corrección automática de problemas menores
+- **Estadísticas**: puntuación global 0–100 por lote
+
+### Cómo usarlo
+
+1. Ve a **Herramientas Avanzadas → Revisión IA**
+2. Elige entre **Singular** o **Lote**
+3. Pega el texto original y la traducción
+4. Haz clic en **"Revisar"** para recibir el informe
+5. Usa **"Auto-fix"** para aplicar las correcciones sugeridas
+
+---
+
+## Pipeline IA
+
+Flujo de trabajo automatizado de 6 pasos para obtener traducciones de máxima calidad con un clic.
+
+### Pasos del Pipeline
+
+1. **Harvest** — extrae y clasifica contexto
+2. **Translate** — traduce con el proveedor IA configurado
+3. **QA Check** — verificación automática de calidad
+4. **Auto-Fix** — corrige problemas encontrados
+5. **Review** — revisión IA final
+6. **Score** — calcula puntuación final 0–100
+
+### Preajustes disponibles
+
+- **Quick** — pasos esenciales (Translate + QA Check)
+- **Max Quality** — los 6 pasos en secuencia
+
+### Cómo usarlo
+
+1. Ve a **Herramientas Avanzadas → Pipeline IA**
+2. Pega los strings a traducir
+3. Elige un preajuste o configura los pasos manualmente
+4. Haz clic en **"Ejecutar Pipeline"**
+5. Descarga el informe final con puntuaciones por string
+
+---
+
+## Traductor de Emociones
+
+Traducción que analiza y preserva las emociones presentes en el diálogo original.
+
+### Funciones
+
+- **Análisis emocional**: detecta la emoción predominante (ira, tristeza, miedo, alegría, neutral, sorpresa, asco)
+- **Intensidad**: mide el nivel de intensidad emocional (0–100)
+- **Preservación del tono**: guía a la IA para mantener el mismo impacto emocional
+- **EmotionBadge**: etiqueta visual por string con emoción e intensidad
+- **Estadísticas por lotes**: distribución de emociones en un archivo completo
+
+### Cómo usarlo
+
+1. Ve a **Herramientas Avanzadas → Traductor de Emociones**
+2. Pega el texto a traducir
+3. Selecciona el idioma de destino
+4. Haz clic en **"Analizar y Traducir"**
+5. El resultado muestra la traducción con las emociones identificadas
+
+---
+
+## Adaptación Cultural
+
+Analiza texto traducido para identificar elementos culturalmente problemáticos y propone adaptaciones.
+
+### Funciones
+
+- **Culturas soportadas**: IT, EN, DE, FR, ES, JA, KO, ZH, PT, RU
+- **Categorías analizadas**: expresiones idiomáticas, referencias culturales, medidas/monedas, colores simbólicos, fórmulas de cortesía, humor
+- **Sugerencias específicas**: alternativa adaptada a la cultura objetivo
+- **Puntuación de adaptación**: porcentaje de texto que requiere revisión
+
+### Cómo usarlo
+
+1. Ve a **Herramientas Avanzadas → Adaptación Cultural**
+2. Pega el texto traducido
+3. Selecciona cultura de origen y destino
+4. Haz clic en **"Analizar"**
+5. Aplica las sugerencias antes de la publicación final
+
+---
+
+## Mapa de Calor de Confianza
+
+Visualiza la calidad de cada traducción mediante un mapa codificado por colores, identificando instantáneamente las cadenas problemáticas.
+
+### Funciones
+
+- **8 métricas analizadas**: marcadores de posición faltantes, cadenas vacías, sin traducir, puntuación, mayúsculas, etiquetas HTML, longitud, números
+- **Código de colores**:
+  - 🟢 **Excelente** (90–100%) — traducción correcta
+  - 🔵 **Buena** (75–89%) — pequeños problemas de estilo
+  - 🟡 **Aceptable** (60–74%) — problemas menores
+  - 🟠 **Revisar** (40–59%) — errores significativos
+  - 🔴 **Deficiente** (<40%) — errores críticos
+- **3 modos de entrada**: demo integrada, pegar texto (`original|traducción` por línea), cargar archivo (JSON/CSV/TXT)
+- **Exportar informe**: descarga JSON con puntuaciones y problemas para cada cadena
+
+### Cómo usarlo
+
+1. Ve a **Herramientas Avanzadas → Mapa de Calor de Confianza**
+2. Elige modo: **Demo** para ver un ejemplo, **Pegar** para entrada manual, **Archivo** para cargar
+3. Haz clic en **"Analizar"**
+4. Revisa el informe de colores: las cadenas rojas/naranjas necesitan revisión prioritaria
+5. Usa **"Exportar Informe"** para guardar el resultado en JSON
+
+---
+
+## Gestor de Blog
+
+Gestiona un blog de noticias y actualizaciones para el proyecto de traducción, visible en el panel de control.
+
+### Funciones
+
+- **Crear entradas**: título, fecha, descripción breve, etiqueta de categoría
+- **Etiquetas disponibles**: Feature, UI, Fix, Security, AI, Update, News
+- **Fijar**: ancla las entradas importantes en la parte superior de la lista
+- **Edición en línea**: edita cualquier entrada sin cambiar de página
+- **Eliminar entrada**: eliminación con confirmación
+- **Visualización**: lista cronológica con fecha estilizada, insignia de etiqueta de color y vista previa de descripción
+
+### Cómo usarlo
+
+1. Ve a **Gestor de Blog** desde el menú principal
+2. Haz clic en **"Nueva Entrada"**
+3. Rellena fecha (ej. "24 Ene"), título (con emojis recomendados), descripción y etiqueta
+4. Haz clic en **"Guardar"**
+5. Usa el icono 📌 para fijar una entrada en la parte superior
+
+---
+
+## Ren'Py Patcher
+
+Patcher dedicado para novelas visuales creadas con el motor Ren'Py. Extrae diálogos, menús y narración de archivos `.rpy` y genera los archivos de traducción nativos.
+
+### Funciones
+
+- **Detección automática**: identifica título, versión y archivos de script del juego
+- **Tipos de cadena**: Diálogo, Menú, Narración
+- **Identificación de personaje**: muestra qué personaje dice cada línea
+- **Editor en línea**: haz clic en cualquier cadena para editar su traducción
+- **Buscar y filtrar**: busca por texto o personaje, filtra por tipo
+- **Generar archivos `.rpy`**: crea la estructura `tl/<idioma>/` compatible con Ren'Py
+- **Guardar/Cargar JSON**: guarda el progreso y continúa más tarde
+- **Estadísticas**: porcentaje de completación, recuento por tipo
+
+### Cómo usarlo
+
+1. Ve a **Ren'Py Patcher** desde la barra lateral
+2. Haz clic en **"Examinar"** y selecciona la carpeta del juego Ren'Py
+3. Haz clic en **"Extraer Cadenas"**
+4. Edita traducciones en el editor (haz clic en una cadena para editarla)
+5. Introduce el nombre del idioma objetivo (ej. `spanish`) y haz clic en **"Generar .rpy"**
+6. Los archivos se guardan en la carpeta `tl/` del juego
+
+---
+
+## RPG Maker Patcher
+
+Patcher dedicado para juegos RPG Maker (MV, MZ, XP, VX, VX Ace). Lee los archivos `.json` y `.rxdata`/`.rvdata` del proyecto.
+
+### Funciones
+
+- **Detección de versión**: identifica automáticamente MV/MZ/XP/VX/Ace
+- **Archivos soportados**: Actors, Classes, Skills, Items, Weapons, Armors, Enemies, Troops, States, Maps, CommonEvents, System
+- **Estadísticas por archivo**: progreso de traducción desglosado por archivo
+- **Integración Translator++**: enlace directo de descarga de Translator++
+- **Exportar parche**: guarda traducciones como JSON
+- **Editor**: búsqueda de texto completo, edición en línea
+
+### Cómo usarlo
+
+1. Ve a **RPG Maker Patcher** desde la barra lateral
+2. Selecciona la carpeta del proyecto RPG Maker
+3. Haz clic en **"Extraer Cadenas"**
+4. Traduce cadenas en el editor
+5. Haz clic en **"Guardar Parche"**
+
+---
+
+## Wolf RPG Patcher
+
+Patcher dedicado para juegos Wolf RPG Editor. Maneja archivos binarios `.wolf` y mapas del juego.
+
+### Funciones
+
+- **Archivos soportados**: Data/*.wolf (base de datos), Map/*.mps (mapas)
+- **Tipos de cadena**: Base de datos, Mapa, Script, Evento
+- **Detección de cifrado**: avisa si el juego usa archivos cifrados
+- **Integración WolfTrans**: sugiere WolfTrans para archivos cifrados
+- **Barra de progreso**: porcentaje de completación para todo el proyecto
+- **Guardar/Cargar**: JSON para reanudar el trabajo
+
+### Cómo usarlo
+
+1. Ve a **Wolf RPG Patcher** desde la barra lateral
+2. Selecciona la carpeta del juego Wolf RPG
+3. Haz clic en **"Extraer Cadenas"**
+4. Si el juego está cifrado, sigue las instrucciones de WolfTrans
+5. Traduce cadenas y haz clic en **"Guardar"**
+
+---
+
+## Danganronpa Patcher
+
+Patcher dedicado para la serie de juegos Danganronpa. Maneja archivos `.pak` y archivos de localización `.po`.
+
+### Funciones
+
+- **Detección de juego**: identifica automáticamente DR1, DR2, V3
+- **Archivos PAK**: extrae y lista archivos en archivos `.pak`
+- **Archivos PO**: soporte nativo para `.po`/`.pot` con estado traducido/no traducido/difuso
+- **Traducción IA integrada**: botón para traducir automáticamente cadenas con la IA configurada
+- **Estadísticas PO**: recuento de traducido, no traducido, difuso y porcentaje
+- **Integración DRAT**: enlace a la herramienta DRAT para operaciones avanzadas
+- **Exportar parche**: exporta el archivo `.po` modificado
+
+### Cómo usarlo
+
+1. Ve a **Danganronpa Patcher** desde la barra lateral
+2. Selecciona la carpeta del juego Danganronpa
+3. Extrae el archivo `.pak` o carga directamente un archivo `.po`
+4. Edita cadenas en el editor o usa **"Traducir con IA"**
+5. Exporta el archivo `.po` completado para reimportarlo al juego
 
 ---
 
@@ -949,6 +1296,13 @@ Cada fila traducida ahora muestra indicadores de calidad visuales:
 - **Tauri Signing Key**: configurada para generación automática de `latest.json` firmado en las releases
 - **GitHub Secrets**: `TAURI_SIGNING_PRIVATE_KEY` y `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` configurados
 - **Workflow release.yml**: actualizado con variables de firma para ambos jobs (Windows + Linux)
+
+### Unity: Auto-Instalación de BepInEx + XUnity AutoTranslator
+
+- **Detección automática de Unity**: si el escáner no encuentra archivos traducibles en un juego Unity, muestra una tarjeta dedicada en lugar de un error genérico
+- **Instalación con un clic**: el botón "Instalar BepInEx + XUnity AutoTranslator" detecta automáticamente el exe del juego, instala el framework y el plugin de traducción con logs en tiempo real
+- **Flujo guiado**: tras la instalación, sugiere iniciar el juego una vez y volver a escanear — todos los textos se vuelven traducibles
+- **Créditos**: BepInEx Team y bbepis (XUnity AutoTranslator)
 
 ---
 
