@@ -4,9 +4,9 @@
   "version": "1.4.2",
   "identifier": "com.gamestringer.app",
   "build": {
-    "beforeDevCommand": "",
+    "beforeDevCommand": "npx next dev -p 3205",
     "beforeBuildCommand": "node scripts/build-tauri-cross.js",
-    "devUrl": "http://127.0.0.1:3204",
+    "devUrl": "http://127.0.0.1:3205",
     "frontendDist": "../out"
   },
   "app": {
@@ -20,6 +20,7 @@
         "minHeight": 768,
         "resizable": true,
         "fullscreen": false,
+        "maximized": true,
         "center": true,
         "visible": true,
         "decorations": true,

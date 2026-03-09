@@ -3,32 +3,38 @@
 ## Modifiche Implementate
 
 ### 1. Provider di Autenticazione Aggiunti
+
 - **GOG** (`gog-credentials`)
 - **EA App/Origin** (`origin-credentials`)
 - **Battle.net** (`battlenet-credentials`)
 
 ### 2. Miglioramenti Epic Games
+
 - Aggiornata configurazione OAuth con parametri corretti
 - Aggiunta gestione errori migliorata
 - Creato endpoint di callback dedicato
 
 ### 3. Miglioramenti Ubisoft
+
 - Aggiunto parametro userId per il linking corretto
 - Migliorata gestione errori
 - Salvato access_token per uso futuro
 
 ### 4. Funzionalità di Test
+
 - Creato endpoint `/api/stores/test-connection` per verificare le connessioni
 - Aggiunto pulsante di test nell'interfaccia per ogni store collegato
 - Feedback visivo immediato sullo stato della connessione
 
 ### 5. Interfaccia Utente Migliorata
+
 - Modal generici per GOG, Origin e Battle.net
 - Gestione errori più dettagliata
 - Toast notifications per tutti gli eventi
 - Indicatori visivi dello stato di connessione
 
 ### 6. Servizi Utility Aggiunti
+
 - **HowLongToBeat**:
   - API endpoint per recuperare tempi di completamento
   - Componente UI dedicato con progress tracking
@@ -43,19 +49,23 @@
 ## Stato Attuale
 
 ### ✅ Completamente Funzionanti
+
 - **Steam**: Login con SteamID, verifica tramite API
 - **itch.io**: Login con API key, verifica tramite API
 
 ### ⚠️ Funzionanti con Limitazioni
+
 - **Epic Games**: OAuth implementato (richiede credenziali valide)
 - **Ubisoft**: Login con credenziali (possibili problemi con 2FA)
 
 ### 📦 Solo Salvataggio Credenziali
+
 - **GOG**: Credenziali salvate per uso futuro
 - **EA App/Origin**: Credenziali salvate per uso futuro
 - **Battle.net**: Credenziali salvate per uso futuro
 
 ### ❌ Non Implementato
+
 - **Rockstar**: Ancora non supportato
 
 ## Come Usare
@@ -83,6 +93,7 @@
 ## Servizi Utility
 
 ### HowLongToBeat
+
 - **Endpoint**: `/api/utilities/howlongtobeat`
 - **Funzionalità**:
   - Ricerca singola per nome gioco
@@ -91,6 +102,7 @@
   - Progress tracking con tempo di gioco attuale
 
 ### SteamGridDB
+
 - **Endpoint**: `/api/utilities/steamgriddb`
 - **Funzionalità**:
   - Ricerca artwork per nome gioco

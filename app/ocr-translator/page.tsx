@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useOcrHotkey } from '@/hooks/use-global-hotkeys';
 import { useTranslation } from '@/lib/i18n';
 import { VlmTranslator } from '@/lib/vlm-translator';
+import { translateSingleSmart } from '@/lib/ai-translate-direct';
 import { rawPixelsToBase64 } from '@/lib/image-utils';
 
 interface DetectedText {
@@ -42,18 +43,23 @@ interface WindowInfo {
 }
 
 const SOURCE_LANGUAGES = [
-  { code: 'ja', name: 'Giapponese', flag: '🇯🇵' },
-  { code: 'en', name: 'Inglese', flag: '🇬🇧' },
-  { code: 'zh-Hans', name: 'Cinese', flag: '🇨🇳' },
-  { code: 'ko', name: 'Coreano', flag: '🇰🇷' },
+  { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'zh-Hans', name: '中文', flag: '🇨🇳' },
+  { code: 'ko', name: '한국어', flag: '🇰🇷' },
 ];
 
 const TARGET_LANGUAGES = [
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'en', name: 'Inglese', flag: '🇬🇧' },
-  { code: 'de', name: 'Tedesco', flag: '🇩🇪' },
-  { code: 'fr', name: 'Francese', flag: '🇫🇷' },
-  { code: 'es', name: 'Spagnolo', flag: '🇪🇸' },
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+  { code: 'es', name: 'Español', flag: '��' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' },
+  { code: 'pl', name: 'Polski', flag: '🇵🇱' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'ko', name: '한국어', flag: '��' },
 ];
 
 export default function OcrTranslatorPage() {
@@ -69,6 +75,18 @@ export default function OcrTranslatorPage() {
     target_window: null,
   });
   const [windows, setWindows] = useState<WindowInfo[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) {
+          setConfig(prev => ({ ...prev, target_language: s.translation.defaultTargetLang }));
+        }
+      } catch {}
+    }
+  }, []);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [translationError, setTranslationError] = useState<string | null>(null);
@@ -144,31 +162,18 @@ export default function OcrTranslatorPage() {
         return null;
       }
       
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text,
-          sourceLanguage: config.language,
-          targetLanguage: config.target_language,
-          provider: ocrProvider === 'gemini' ? 'gemini' : 'libre',
-          context: 'game_ui',
-          apiKey: geminiApiKey || undefined
-        })
-      });
+      const result = await translateSingleSmart(
+        text,
+        config.target_language,
+        config.language
+      );
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.translatedText) {
-          translationCache.set(text, data.translatedText);
-          setTranslationError(null);
-          return data.translatedText;
-        }
+      if (result?.translated) {
+        translationCache.set(text, result.translated);
+        setTranslationError(null);
+        return result.translated;
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('[OCR] error risposta API:', response.status, errorData);
-        const errorMsg = errorData.error || errorData.message || `error API: ${response.status}`;
-        setTranslationError(errorMsg);
+        setTranslationError('Translation failed — check API key or provider settings');
       }
     } catch (e) {
       console.error('[OCR] error traduzione:', e);

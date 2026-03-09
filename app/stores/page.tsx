@@ -43,6 +43,8 @@ const storesConfig = [
   { id: 'origin', name: 'EA App / Origin', logoUrl: '/logos/ea-app.png', descKey: 'originDesc' },
   { id: 'battlenet', name: 'Battle.net', logoUrl: '/logos/battlenet.png', descKey: 'battlenetDesc' },
   { id: 'rockstar', name: 'Rockstar', logoUrl: '/logos/rockstar.png', descKey: 'rockstarDesc' },
+  { id: 'xbox', name: 'Xbox Game Pass', logoUrl: '/logos/xbox.png', descKey: 'xboxDesc' },
+  { id: 'amazon', name: 'Amazon Games', logoUrl: '/logos/amazon.png', descKey: 'amazonDesc' },
 ];
 
 const utilityServicesConfig = [
@@ -53,6 +55,7 @@ const utilityServicesConfig = [
 ];
 
 const connectableProviders = ['steam', 'epic', 'ubisoft', 'itchio', 'gog', 'origin', 'battlenet'];
+const autoDetectProviders = ['xbox', 'amazon'];
 const connectableUtilities = ['howlongtobeat', 'steamgriddb', 'achievements', 'playtime'];
 
 export default function StoresPage() {
@@ -106,6 +109,17 @@ export default function StoresPage() {
   // Test connection state
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<{ [key: string]: any }>({});
+  const [xboxDetected, setXboxDetected] = useState<boolean | null>(null);
+  const [amazonDetected, setAmazonDetected] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    invoke<boolean>('is_xbox_installed').then(detected => {
+      setXboxDetected(detected);
+    }).catch(() => setXboxDetected(false));
+    invoke<boolean>('is_amazon_games_installed').then(detected => {
+      setAmazonDetected(detected);
+    }).catch(() => setAmazonDetected(false));
+  }, []);
   
   // Utility services state
   const [utilityPreferences, setUtilityPreferences] = useState<{ [key: string]: any }>({});
@@ -560,15 +574,39 @@ export default function StoresPage() {
       
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
         {storesConfig.map((store) => {
-          const connected = isConnected(store.id);
           const isConnectable = connectableProviders.includes(store.id);
+          const isAutoDetect = autoDetectProviders.includes(store.id);
           const currentLoading = loadingProvider === store.id;
+          const xboxActive = store.id === 'xbox' && xboxDetected === true;
+          const amazonActive = store.id === 'amazon' && amazonDetected === true;
+          const connected = store.id === 'xbox' ? xboxActive
+            : store.id === 'amazon' ? amazonActive
+            : isConnected(store.id);
+          const isDetecting = (store.id === 'xbox' && xboxDetected === null)
+            || (store.id === 'amazon' && amazonDetected === null);
+
+          const autoDetectStatus = store.id === 'xbox'
+            ? (xboxDetected === null ? 'Detecting...' : xboxDetected ? 'Xbox App / Game Pass detected' : 'Xbox App not found')
+            : store.id === 'amazon'
+            ? (amazonDetected === null ? 'Detecting...' : amazonDetected ? 'Amazon Games detected' : 'Amazon Games not found')
+            : null;
+
+          const autoDetectCommand = store.id === 'xbox' ? 'test_xbox_connection'
+            : store.id === 'amazon' ? 'test_amazon_connection'
+            : null;
 
           return (
-            <Card key={store.id} className="p-1.5 card-hover">
+            <Card key={store.id} className={`p-1.5 card-hover ${
+              store.id === 'xbox' ? 'border-[#107c10]/30' :
+              store.id === 'amazon' ? 'border-[#ff9900]/30' : ''
+            }`}>
               <div className="flex items-center gap-1.5 mb-0.5">
                 <div className="relative h-6 w-6 flex items-center justify-center flex-shrink-0">
-                  {store.logoUrl ? (
+                  {store.id === 'xbox' ? (
+                    <div className="h-6 w-6 rounded bg-[#107c10] flex items-center justify-center text-white text-[10px] font-bold">X</div>
+                  ) : store.id === 'amazon' ? (
+                    <div className="h-6 w-6 rounded bg-[#ff9900] flex items-center justify-center text-black text-[10px] font-bold">A</div>
+                  ) : store.logoUrl ? (
                     <Image
                       src={store.logoUrl}
                       alt={`${store.name} logo`}
@@ -583,11 +621,15 @@ export default function StoresPage() {
                     <span className="font-semibold text-xs truncate">{store.name}</span>
                     {connected ? (
                       <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                    ) : isDetecting ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground flex-shrink-0" />
                     ) : (
                       <XCircle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-[9px] text-muted-foreground line-clamp-1">{t(`stores.${store.descKey}`)}</p>
+                  <p className="text-[9px] text-muted-foreground line-clamp-1">
+                    {autoDetectStatus ?? t(`stores.${store.descKey}`)}
+                  </p>
                 </div>
               </div>
               <div className="flex gap-1">
@@ -682,6 +724,36 @@ export default function StoresPage() {
                     {t('stores.notAvailable')}
                   </Button>
                 )}
+              {isAutoDetect && autoDetectCommand ? (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-7 w-7"
+                  disabled={testingProvider === store.id}
+                  title={`Test ${store.name} detection`}
+                  onClick={async () => {
+                    setTestingProvider(store.id);
+                    try {
+                      const result = await invoke<string>(autoDetectCommand);
+                      setTestResults(prev => ({ ...prev, [store.id]: { connected: true, message: result } }));
+                      toast.success(result);
+                    } catch (e) {
+                      const msg = String(e);
+                      setTestResults(prev => ({ ...prev, [store.id]: { error: msg } }));
+                      toast.error(msg);
+                    }
+                    setTestingProvider(null);
+                  }}
+                >
+                  {testingProvider === store.id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : testResults[store.id]?.connected ? (
+                    <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <AlertCircle className="h-3 w-3" />
+                  )}
+                </Button>
+              ) : null}
               </div>
             </Card>
           );

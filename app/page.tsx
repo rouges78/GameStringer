@@ -102,6 +102,7 @@ export default function Dashboard() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [activityOrder, setActivityOrder] = useState<'newest' | 'oldest'>('newest');
   const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string } | null>(null);
+  const [activeTranslation, setActiveTranslation] = useState<{ percent: number; translated: number; total: number; lang: string } | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -253,6 +254,30 @@ export default function Dashboard() {
         }
       } catch {}
 
+      // Carica checkpoint traduzione attiva per il gioco corrente
+      try {
+        const saved = localStorage.getItem('gs_last_visited_game');
+        if (saved) {
+          const lg = JSON.parse(saved);
+          if (lg?.id) {
+            // Cerca checkpoint per qualsiasi lingua
+            const langs = ['it', 'en', 'fr', 'de', 'es', 'pt', 'ja', 'ko', 'zh', 'ru', 'pl'];
+            for (const lang of langs) {
+              const cp = await get(`gs_translation_checkpoint_${lg.id}_${lang}`);
+              if (cp?.translatedCount > 0 && cp?.totalCount > 0) {
+                setActiveTranslation({
+                  percent: Math.round((cp.translatedCount / cp.totalCount) * 100),
+                  translated: cp.translatedCount,
+                  total: cp.totalCount,
+                  lang: cp.targetLang || lang,
+                });
+                break;
+              }
+            }
+          }
+        }
+      } catch {}
+
       setStats({
         totalGames: games.length,
         installedGames: games.filter((g: any) => g.is_installed).length,
@@ -294,14 +319,14 @@ export default function Dashboard() {
       <AINetworkBackground />
       
       {/* Hero Header con bordo sfumato */}
-      <div className="relative overflow-hidden rounded-xl bg-card p-3 border-2 border-transparent" style={{ background: 'linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(135deg, #64748b, #475569, #334155) border-box' }}>
+      <div className="relative overflow-hidden rounded-xl bg-card p-2 border-2 border-transparent" style={{ background: 'linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(135deg, #64748b, #475569, #334155) border-box' }}>
         
         {/* Titolo centrato */}
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <div className="p-2.5 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg">
-            <Home className="h-6 w-6 text-white" />
+        <div className="flex items-center justify-center gap-2 mb-1.5">
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg">
+            <Home className="h-4 w-4 text-white" />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-lg font-bold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent">
             Dashboard Center
           </h1>
           <Button
@@ -354,10 +379,32 @@ export default function Dashboard() {
                       </span>
                     </div>
                   </div>
-                  <div className="text-indigo-400/30 group-hover:text-indigo-400/60 transition-colors">
-                    <ExternalLink className="h-4 w-4" />
-                  </div>
+                  {activeTranslation ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="relative h-11 w-11">
+                        <svg className="h-11 w-11 -rotate-90" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" className="text-indigo-500/15" strokeWidth="2.5" />
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#progressGrad)" strokeWidth="2.5"
+                            strokeDasharray={`${activeTranslation.percent} ${100 - activeTranslation.percent}`} strokeLinecap="round" />
+                          <defs><linearGradient id="progressGrad"><stop offset="0%" stopColor="#818cf8"/><stop offset="100%" stopColor="#6366f1"/></linearGradient></defs>
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-indigo-300">{activeTranslation.percent}%</span>
+                      </div>
+                      <span className="text-[8px] text-indigo-400/60 uppercase">{activeTranslation.lang}</span>
+                    </div>
+                  ) : (
+                    <div className="text-indigo-400/30 group-hover:text-indigo-400/60 transition-colors">
+                      <ExternalLink className="h-4 w-4" />
+                    </div>
+                  )}
                 </div>
+                {activeTranslation && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/auto-translate?gameId=${lastGame.id}&gameName=${encodeURIComponent(lastGame.title)}&installPath=&platform=${lastGame.platform}`; }}
+                    className="mt-1.5 flex items-center justify-center gap-1 text-[10px] font-medium text-indigo-300 hover:text-indigo-200 transition-colors bg-indigo-500/10 rounded px-2 py-1 w-full">
+                    <Zap className="h-3 w-3" /> Continue Translation ({activeTranslation.translated}/{activeTranslation.total})
+                  </button>
+                )}
               </CardContent>
             </Card>
           </Link>
@@ -508,8 +555,8 @@ export default function Dashboard() {
       {/* Progress Card */}
       {stats.translationStats.total > 0 && (
         <Card className="border-emerald-500/20 bg-emerald-500/5">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
+            <CardContent className="p-2.5">
+              <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-emerald-300 flex items-center gap-2">
                   <Languages className="h-4 w-4" />
                   {dash.translationProgress}
@@ -553,57 +600,53 @@ export default function Dashboard() {
       )}
 
       {/* Stats Footer */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-violet-500/20">
-              <Languages className="h-5 w-5 text-violet-400" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2">
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20 p-2.5 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-violet-500/20">
+              <Languages className="h-3.5 w-3.5 text-violet-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-violet-300">{(stats.translationStats.completed + stats.tmEntries).toLocaleString()}</div>
-              <div className="text-[10px] text-violet-400/70 uppercase tracking-wider">{dash.totalTranslations}</div>
+              <div className="text-lg font-bold text-violet-300">{(stats.translationStats.completed + stats.tmEntries).toLocaleString()}</div>
+              <div className="text-[9px] text-violet-400/70 uppercase tracking-wider">{dash.totalTranslations}</div>
             </div>
           </div>
-          <div className="absolute -bottom-2 -right-2 text-violet-500/10 text-6xl font-bold">📊</div>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-emerald-500/20">
-              <Gamepad2 className="h-5 w-5 text-emerald-400" />
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20 p-2.5 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-emerald-500/20">
+              <Gamepad2 className="h-3.5 w-3.5 text-emerald-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-emerald-300">{stats.patches}</div>
-              <div className="text-[10px] text-emerald-400/70 uppercase tracking-wider">{dash.gamesPatched}</div>
+              <div className="text-lg font-bold text-emerald-300">{stats.patches}</div>
+              <div className="text-[9px] text-emerald-400/70 uppercase tracking-wider">{dash.gamesPatched}</div>
             </div>
           </div>
-          <div className="absolute -bottom-2 -right-2 text-emerald-500/10 text-6xl font-bold">🎮</div>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/20">
-              <Clock className="h-5 w-5 text-amber-400" />
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 p-2.5 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-amber-500/20">
+              <Clock className="h-3.5 w-3.5 text-amber-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-amber-300">{stats.timeSavedMinutes >= 60 ? `${Math.round(stats.timeSavedMinutes / 60)}h` : `${stats.timeSavedMinutes}m`}</div>
-              <div className="text-[10px] text-amber-400/70 uppercase tracking-wider">{dash.timeSaved}</div>
+              <div className="text-lg font-bold text-amber-300">{stats.timeSavedMinutes >= 60 ? `${Math.round(stats.timeSavedMinutes / 60)}h` : `${stats.timeSavedMinutes}m`}</div>
+              <div className="text-[9px] text-amber-400/70 uppercase tracking-wider">{dash.timeSaved}</div>
             </div>
           </div>
-          <div className="absolute -bottom-2 -right-2 text-amber-500/10 text-6xl font-bold">⏱️</div>
         </div>
 
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-cyan-500/20">
-              <Database className="h-5 w-5 text-cyan-400" />
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 p-2.5 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-cyan-500/20">
+              <Database className="h-3.5 w-3.5 text-cyan-400" />
             </div>
             <div>
-              <div className="text-2xl font-bold text-cyan-300">{stats.tmEntries.toLocaleString()}</div>
-              <div className="text-[10px] text-cyan-400/70 uppercase tracking-wider">{dash.tmEntries}</div>
+              <div className="text-lg font-bold text-cyan-300">{stats.tmEntries.toLocaleString()}</div>
+              <div className="text-[9px] text-cyan-400/70 uppercase tracking-wider">{dash.tmEntries}</div>
             </div>
           </div>
-          <div className="absolute -bottom-2 -right-2 text-cyan-500/10 text-6xl font-bold">💾</div>
         </div>
       </div>
     </div>

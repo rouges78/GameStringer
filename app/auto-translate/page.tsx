@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useRef, useEffect } from "react"
+import { get, set, del } from 'idb-keyval'
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -45,6 +47,10 @@ import {
   ArrowLeft,
   RotateCcw,
   Check,
+  Activity,
+  TrendingUp,
+  Timer,
+  Globe,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { invoke } from "@/lib/tauri-api"
@@ -60,6 +66,7 @@ import {
   type PatchInput,
   type PatchResult,
 } from "@/lib/patch-generator"
+import { exportTMX, exportXLIFF, exportPO, type TranslatedFile, type PatchMetadata } from "@/lib/patch-exporter"
 
 // ============================================================================
 // TYPES
@@ -108,6 +115,73 @@ interface TranslationProgress {
 }
 
 // ============================================================================
+// DIFF VISUALE — evidenzia differenze parola per parola
+// ============================================================================
+
+function DiffHighlight({ original, translated }: { original: string; translated: string }) {
+  if (!translated || original === translated) return <span className="text-muted-foreground/40 italic">identical</span>
+  const origWords = original.split(/(\s+)/)
+  const transWords = translated.split(/(\s+)/)
+  // LCS semplificato per parole — evidenzia aggiunte/rimosse
+  const maxLen = Math.max(origWords.length, transWords.length)
+  const result: React.ReactNode[] = []
+  let oi = 0, ti = 0
+  while (oi < origWords.length || ti < transWords.length) {
+    if (oi < origWords.length && ti < transWords.length && origWords[oi] === transWords[ti]) {
+      result.push(<span key={`m${ti}`}>{transWords[ti]}</span>)
+      oi++; ti++
+    } else if (ti < transWords.length) {
+      // Cerca se la parola tradotta appare più avanti nell'originale
+      const ahead = origWords.indexOf(transWords[ti], oi)
+      if (ahead > oi && ahead - oi <= 3) {
+        // Le parole originali saltate sono "rimosse"
+        for (let k = oi; k < ahead; k++) {
+          result.push(<span key={`d${k}`} className="bg-red-500/20 text-red-400 line-through text-[9px] mx-0.5">{origWords[k]}</span>)
+        }
+        oi = ahead
+      } else {
+        result.push(<span key={`a${ti}`} className="bg-emerald-500/20 text-emerald-400 font-medium">{transWords[ti]}</span>)
+        ti++
+        if (oi < origWords.length && !transWords.includes(origWords[oi])) oi++
+        continue
+      }
+    } else {
+      result.push(<span key={`d${oi}`} className="bg-red-500/20 text-red-400 line-through text-[9px]">{origWords[oi]}</span>)
+      oi++
+    }
+  }
+  return <span>{result}</span>
+}
+
+// ============================================================================
+// FILTRO STRINGHE CODICE — non traducibili
+// ============================================================================
+
+function isCodeString(value: string): boolean {
+  const v = value.trim()
+  if (v.length <= 1) return true
+  // Solo numeri, punteggiatura, simboli
+  if (/^[\d\s.,;:!?%+\-*/=<>()[\]{}#@&|^~`]+$/.test(v)) return true
+  // Path di file / URL
+  if (/^(https?:\/\/|www\.|[a-zA-Z]:\\|\/[\w/]|\.\.?\/)/.test(v)) return true
+  // Variabili codice: $var, %var%, {var}, {{var}}, [var]
+  if (/^[\$%{[\[][\w.]+[\]}%\]]?$/.test(v)) return true
+  // Solo placeholder senza testo reale: {0} {name} %s %d
+  if (/^(\{[\w.]+\}|%[sd]|%\d+\$[sd]|\$\w+)$/.test(v)) return true
+  // Pattern codice: snake_case puro, camelCase puro senza spazi
+  if (/^[a-z][a-z0-9]*(_[a-z0-9]+){2,}$/i.test(v) && !v.includes(' ')) return true
+  // Estensioni file
+  if (/^\*?\.\w{1,5}$/.test(v)) return true
+  // Regex pattern
+  if (/^\^.*\$$/.test(v) || /^\/.*\/[gimsuy]*$/.test(v)) return true
+  // Codice puro: contiene => () {} ; senza parole leggibili
+  if (/[=>{};]/.test(v) && !/[a-zA-Z]{3,}\s+[a-zA-Z]{3,}/.test(v)) return true
+  // Hex color
+  if (/^#[0-9a-fA-F]{3,8}$/.test(v)) return true
+  return false
+}
+
+// ============================================================================
 // LANGUAGE OPTIONS
 // ============================================================================
 
@@ -152,6 +226,17 @@ export default function AutoTranslatePage() {
   const [sourceLang, setSourceLang] = useState('en')
   const [targetLang, setTargetLang] = useState('it')
   const [translator, setTranslator] = useState('')
+
+  // Carica lingua target dalle settings
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLang(s.translation.defaultTargetLang);
+      } catch {}
+    }
+  }, []);
   const [patchVersion, setPatchVersion] = useState('1.0')
   const [useContextHarvest, setUseContextHarvest] = useState(true)
 
@@ -161,6 +246,8 @@ export default function AutoTranslatePage() {
   const [isTranslating, setIsTranslating] = useState(false)
   const abortRef = useRef(false)
   const [stoppedByUser, setStoppedByUser] = useState(false)
+  const [lastTranslatedPair, setLastTranslatedPair] = useState<{ original: string; translation: string; provider?: string } | null>(null)
+  const [providerStats, setProviderStats] = useState<Record<string, { calls: number; success: number; totalMs: number }>>({})
 
   // Review state
   const [reviewFilter, setReviewFilter] = useState<'all' | 'issues' | 'edited' | 'untranslated'>('issues')
@@ -204,14 +291,14 @@ export default function AutoTranslatePage() {
     return `gs_translation_checkpoint_${gameInfo.gameId}_${targetLang}`
   }, [gameInfo?.gameId, targetLang])
 
-  const saveCheckpoint = useCallback((translated: Map<string, TranslatedString[]>) => {
+  const saveCheckpoint = useCallback(async (translated: Map<string, TranslatedString[]>) => {
     const key = getCheckpointKey()
     if (!key) return
     try {
       const data: Record<string, TranslatedString[]> = {}
       translated.forEach((v, k) => { data[k] = v })
       const totalDone = Object.values(data).reduce((s, arr) => s + arr.filter(t => t.translation).length, 0)
-      localStorage.setItem(key, JSON.stringify({
+      await set(key, {
         data,
         gameId: gameInfo?.gameId,
         gameName: gameInfo?.gameName,
@@ -220,20 +307,18 @@ export default function AutoTranslatePage() {
         totalCount: totalStrings,
         translatedCount: totalDone,
         savedAt: Date.now(),
-      }))
+      })
       console.log(`[Checkpoint] Salvato: ${totalDone} stringhe tradotte`)
     } catch (e) {
       console.warn('[Checkpoint] Errore salvataggio:', e)
     }
   }, [getCheckpointKey, gameInfo, targetLang, sourceLang, totalStrings])
 
-  const loadCheckpoint = useCallback((): Map<string, TranslatedString[]> | null => {
+  const loadCheckpoint = useCallback(async (): Promise<Map<string, TranslatedString[]> | null> => {
     const key = getCheckpointKey()
     if (!key) return null
     try {
-      const raw = localStorage.getItem(key)
-      if (!raw) return null
-      const saved = JSON.parse(raw)
+      const saved = await get(key)
       if (!saved?.data) return null
       const map = new Map<string, TranslatedString[]>()
       for (const [k, v] of Object.entries(saved.data)) {
@@ -243,9 +328,9 @@ export default function AutoTranslatePage() {
     } catch { return null }
   }, [getCheckpointKey])
 
-  const clearCheckpoint = useCallback(() => {
+  const clearCheckpoint = useCallback(async () => {
     const key = getCheckpointKey()
-    if (key) localStorage.removeItem(key)
+    if (key) await del(key)
     setSavedCheckpoint(null)
   }, [getCheckpointKey])
 
@@ -277,10 +362,9 @@ export default function AutoTranslatePage() {
   useEffect(() => {
     if (!gameInfo?.gameId) return
     const key = `gs_translation_checkpoint_${gameInfo.gameId}_${targetLang}`
-    try {
-      const raw = localStorage.getItem(key)
-      if (raw) {
-        const saved = JSON.parse(raw)
+    ;(async () => {
+      try {
+        const saved = await get(key)
         if (saved?.data && saved.translatedCount > 0) {
           const map = new Map<string, TranslatedString[]>()
           for (const [k, v] of Object.entries(saved.data)) map.set(k, v as TranslatedString[])
@@ -291,11 +375,11 @@ export default function AutoTranslatePage() {
             savedAt: saved.savedAt,
             targetLang: saved.targetLang,
           })
+        } else {
+          setSavedCheckpoint(null)
         }
-      } else {
-        setSavedCheckpoint(null)
-      }
-    } catch { setSavedCheckpoint(null) }
+      } catch { setSavedCheckpoint(null) }
+    })()
   }, [gameInfo?.gameId, targetLang])
 
   // Cleanup test monitor on unmount
@@ -304,6 +388,14 @@ export default function AutoTranslatePage() {
       if (testMonitorRef.current) { clearInterval(testMonitorRef.current); testMonitorRef.current = null }
     }
   }, [])
+
+  // Timer per aggiornare stats live (elapsed, str/min, ETA) ogni secondo durante la traduzione
+  const [, setTick] = useState(0)
+  useEffect(() => {
+    if (!isTranslating) return
+    const id = setInterval(() => setTick(t => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [isTranslating])
 
   // ============================================================================
   // SCAN FILE DAL PATH DEL GIOCO (via Tauri)
@@ -335,7 +427,7 @@ export default function AutoTranslatePage() {
       if (!locFiles || locFiles.length === 0) {
         // Step 2: fallback scan_localization_files
         console.log('[AutoTranslate] No files from scan_translatable_files, trying scan_localization_files...')
-        const fallbackExts = ['json', 'csv', 'po', 'pot', 'xlf', 'resx', 'strings', 'ini', 'xml', 'properties', 'yaml', 'yml', 'txt', 'lua', 'rpy', 'cfg', 'lang', 'loc']
+        const fallbackExts = ['json', 'csv', 'po', 'pot', 'xlf', 'resx', 'strings', 'ini', 'xml', 'properties', 'yaml', 'yml', 'txt', 'lua', 'rpy', 'cfg', 'lang', 'loc', 'langdb', 'landb', 'dlog', 'ttarch', 'ttarch2']
         let allFiles: string[] = []
         try {
           const scanned = await invoke<{ path: string; name: string; size: number; extension: string }[]>(
@@ -346,7 +438,7 @@ export default function AutoTranslatePage() {
         } catch (e3) {
           console.warn('[AutoTranslate] scan_localization_files failed:', e3)
           // Ultimo fallback: sottocartelle comuni
-          for (const subdir of ['localization', 'lang', 'languages', 'data', 'text', 'strings', 'www/data', 'game/tl']) {
+          for (const subdir of ['localization', 'lang', 'languages', 'data', 'text', 'strings', 'www/data', 'game/tl', 'Pack']) {
             try {
               const subScanned = await invoke<{ path: string; name: string; size: number; extension: string }[]>(
                 'scan_localization_files', { path: `${installPath}\\${subdir}`, extensions: fallbackExts, maxDepth: 3 }
@@ -376,7 +468,7 @@ export default function AutoTranslatePage() {
             setUnityDetected(true)
             setGameError(null)
           } else {
-            setGameError('Nessun file traducibile trovato per questo gioco.')
+            setGameError('No translatable files found for this game.')
           }
           setIsLoadingGame(false)
           return
@@ -388,7 +480,7 @@ export default function AutoTranslatePage() {
       }
     } catch (err) {
       console.error('[AutoTranslate] Scan TOTALMENTE fallito:', err)
-      setGameError(`Scansione automatica fallita: ${err instanceof Error ? err.message : String(err)}. Puoi caricare i file manualmente.`)
+      setGameError(`Automatic scan failed: ${err instanceof Error ? err.message : String(err)}. You can load files manually.`)
     } finally {
       setIsLoadingGame(false)
     }
@@ -484,46 +576,59 @@ export default function AutoTranslatePage() {
       /[/\\]monobleedingedge[/\\]/i,
       /[/\\]__pycache__[/\\]/i,
       /[/\\]node_modules[/\\]/i,
+      /[/\\]python-packages[/\\]/i,
+      /[/\\]dist-info[/\\]/i,
+      /[/\\]renpy[/\\]/i,
     ]
-    const filtered = filePaths.filter(fp => !excludedPatterns.some(rx => rx.test(fp)))
+    const binaryExts = /\.(ogg|mp3|wav|flac|aac|wma|png|jpg|jpeg|gif|bmp|webp|svg|tga|dds|ico|mp4|avi|mkv|webm|mov|exe|dll|so|dylib|pdb|zip|rar|7z|gz|tar|ttf|otf|woff|woff2|rpyc|pyc|pyo)$/i
+    // Ren'Py: .rpy in images/, audio/, screens/, displayables/, tl/ contengono definizioni risorse/UI o traduzioni esistenti
+    const renpyResourceDirs = /[/\\](images|audio|screens|displayables|tl)[/\\].*\.rpy$/i
+    const filtered = filePaths.filter(fp => !excludedPatterns.some(rx => rx.test(fp)) && !binaryExts.test(fp) && !renpyResourceDirs.test(fp))
     console.log(`[AutoTranslate] loadFilesFromPaths: ${filePaths.length} trovati, ${filtered.length} dopo filtro`)
     const loaded: LoadedFile[] = []
 
-    for (const filePath of filtered.slice(0, 50)) { // Max 50 file
+    // Lettura parallela con concurrency 10 (invece di sequenziale)
+    const toRead = filtered.slice(0, 50)
+    const CONCURRENCY = 10
+    const processFile = async (filePath: string): Promise<LoadedFile | null> => {
       try {
         const content = await invoke<string>('read_text_file', { path: filePath })
-        if (!content || content.length < 5) {
-          console.log(`[AutoTranslate] Skip (troppo corto): ${filePath}`)
-          continue
-        }
+        if (!content || content.length < 5) return null
 
         const fileName = filePath.replace(basePath, '').replace(/^[/\\]+/, '')
         const format = detectFormat(content, fileName)
         const parsed = parseFile(content, fileName)
-        console.log(`[AutoTranslate] File: ${fileName} | Format: ${format} | Stringhe: ${parsed.strings.length}`)
 
-        // Skip file config/cache con poche stringhe non traducibili
         const lowerName = fileName.toLowerCase()
         const isLikelyConfig = /[/\\](config|settings|chunk_map|preferences|\.config)\.json$/i.test(lowerName)
-        if (isLikelyConfig && parsed.strings.length < 20) {
-          console.log(`[AutoTranslate] Skip (config/cache): ${fileName}`)
-          continue
+        if (isLikelyConfig && parsed.strings.length < 20) return null
+
+        if (lowerName.endsWith('.rpy')) {
+          const lines = content.split('\n').filter((l: string) => l.trim() && !l.trim().startsWith('#'))
+          const resourceLines = lines.filter((l: string) => /^\s*(define\s+\w+\s*=\s*(im\.Scale|'audio|"audio)|image\s+\w+)/.test(l))
+          if (resourceLines.length > 0 && resourceLines.length >= lines.length * 0.6) return null
         }
 
         if (parsed.strings.length > 0) {
-          loaded.push({ name: fileName, content, format, parsed, size: content.length })
+          return { name: fileName, content, format, parsed, size: content.length }
         }
-      } catch (fileErr) {
-        console.warn(`[AutoTranslate] File non leggibile: ${filePath}`, fileErr)
-      }
+        return null
+      } catch { return null }
     }
+
+    for (let i = 0; i < toRead.length; i += CONCURRENCY) {
+      const chunk = toRead.slice(i, i + CONCURRENCY)
+      const results = await Promise.all(chunk.map(processFile))
+      for (const r of results) { if (r) loaded.push(r) }
+    }
+    console.log(`[AutoTranslate] ⚡ ${toRead.length} file letti in parallelo (batch ${CONCURRENCY})`)
 
     if (loaded.length > 0) {
       setFiles(loaded)
       console.log(`[AutoTranslate] ✅ Caricati ${loaded.length} file, ${loaded.reduce((s, f) => s + f.parsed.strings.length, 0)} stringhe totali`)
     } else {
       console.warn('[AutoTranslate] ⚠️ Nessun file con stringhe traducibili')
-      setGameError('Nessun file con stringhe traducibili trovato. Puoi caricare i file manualmente.')
+      setGameError('No files with translatable strings found. You can load files manually.')
     }
   }
 
@@ -573,6 +678,8 @@ export default function AutoTranslatePage() {
 
     abortRef.current = false
     setStoppedByUser(false)
+    setLastTranslatedPair(null)
+    setProviderStats({})
     setStep('translating')
     setIsTranslating(true)
     const startTime = Date.now()
@@ -585,7 +692,7 @@ export default function AutoTranslatePage() {
     let allTranslated: Map<string, TranslatedString[]>
     let existingKeys = new Set<string>()
     if (resumeFromCheckpoint) {
-      const loaded = loadCheckpoint()
+      const loaded = await loadCheckpoint()
       allTranslated = loaded || new Map()
       // Raccogli chiavi già tradotte
       allTranslated.forEach((arr) => {
@@ -595,7 +702,7 @@ export default function AutoTranslatePage() {
       console.log(`[Resume] Ripresa da checkpoint: ${existingKeys.size} stringhe già tradotte`)
     } else {
       allTranslated = new Map()
-      clearCheckpoint()
+      await clearCheckpoint()
     }
 
     for (let fi = 0; fi < files.length; fi++) {
@@ -611,11 +718,26 @@ export default function AutoTranslatePage() {
         continue
       }
 
-      const fileTranslations: TranslatedString[] = existingFile ? [...existingFile] : []
-      const alreadyDoneKeys = new Set(fileTranslations.filter(t => t.translation).map(t => t.key))
+      // Reset contatore fallimenti per ogni nuovo file
+      consecutiveFailedBatches = 0
+      // Rimuovi entry vuote (tentativi falliti precedenti) per evitare duplicati al resume
+      const fileTranslations: TranslatedString[] = existingFile ? existingFile.filter(t => t.translation) : []
+      const alreadyDoneMap = new Map(fileTranslations.map(t => [t.key, t]))
       const batchSize = 20
-      // Filtra solo stringhe non ancora tradotte
-      const pendingStrings = strings.filter(s => !alreadyDoneKeys.has(s.key))
+      // Traduzione incrementale: rileva stringhe nuove O modificate rispetto al checkpoint
+      const pendingStrings = strings.filter(s => {
+        if (!s.value || s.value.trim().length === 0 || isCodeString(s.value)) return false
+        const existing = alreadyDoneMap.get(s.key)
+        if (!existing) return true // nuova stringa
+        // Se il testo originale è cambiato (update del gioco), ri-traduci
+        if (existing.original !== s.value) {
+          // Rimuovi la vecchia traduzione obsoleta
+          const idx = fileTranslations.findIndex(t => t.key === s.key)
+          if (idx >= 0) fileTranslations.splice(idx, 1)
+          return true
+        }
+        return false // già tradotta e invariata
+      })
       if (pendingStrings.length === 0) {
         console.log(`[Resume] File ${file.name}: tutte le stringhe già tradotte`)
         continue
@@ -655,10 +777,19 @@ export default function AutoTranslatePage() {
             } catch {}
           }
 
+          const batchStart = Date.now()
           const result = await translateSmart({
             texts: batchTexts, sourceLanguage: sourceLang,
             targetLanguage: targetLang, harvestedContext,
             gameId: gameInfo?.gameId,
+          })
+          const batchMs = Date.now() - batchStart
+
+          // Aggiorna benchmark provider
+          setProviderStats(prev => {
+            const p = result.provider || 'unknown'
+            const old = prev[p] || { calls: 0, success: 0, totalMs: 0 }
+            return { ...prev, [p]: { calls: old.calls + 1, success: old.success + (result.success ? 1 : 0), totalMs: old.totalMs + batchMs } }
           })
 
           // Se il provider ha fallito completamente (success: false), auto-stop rapido
@@ -675,34 +806,41 @@ export default function AutoTranslatePage() {
               console.error('[AutoTranslate] Auto-stop: 3 batch consecutivi senza traduzioni')
             }
           } else {
-            let batchActuallyTranslated = 0
+            let batchHasOutput = 0
+            // Risposte spazzatura note da MyMemory e altri provider gratuiti
+            const garbageResponses = /^(NO QUERY SPECIFIED|PLEASE SELECT TWO LANGUAGES|QUERY LENGTH LIMIT|MYMEMORY WARNING|YOU USED ALL AVAILABLE FREE)/i
             for (let si = 0; si < batch.length; si++) {
               const original = batch[si].value
-              const translation = result.translations[si] || ''
-              const wasTranslated = translation && translation !== original
-              if (wasTranslated) batchActuallyTranslated++
+              const rawTranslation = result.translations[si] || ''
+              const translation = garbageResponses.test(rawTranslation) ? '' : rawTranslation
+              const hasOutput = !!translation // provider ha restituito qualcosa (anche se uguale all'originale: nomi, numeri)
+              const isChanged = translation && translation !== original
+              if (hasOutput) batchHasOutput++
               let qaReport: QualityReport | undefined
-              let qaScore = wasTranslated ? 100 : 0, qaPassed = !!wasTranslated
-              if (wasTranslated) {
+              let qaScore = hasOutput ? (isChanged ? 100 : 95) : 0, qaPassed = hasOutput
+              if (isChanged) {
                 try {
                   qaReport = runQualityGates({ sourceText: original, translatedText: translation, targetLanguage: targetLang })
                   qaScore = qaReport.overallScore; qaPassed = qaReport.passed
                 } catch {}
               }
-              fileTranslations.push({ key: batch[si].key, original, translation: wasTranslated ? translation : '', qaScore, qaPassed, qaReport, isEdited: false })
+              fileTranslations.push({ key: batch[si].key, original, translation: hasOutput ? translation : '', qaScore, qaPassed, qaReport, isEdited: false })
               globalTranslated++
             }
-            // Se nessuna stringa è stata effettivamente tradotta nonostante success:true, conta come fallito
-            if (batchActuallyTranslated === 0) {
+            // Auto-stop solo se il provider non restituisce NULLA (tutte le traduzioni vuote)
+            if (batchHasOutput === 0) {
               consecutiveFailedBatches++
-              console.warn(`[AutoTranslate] Batch con success:true ma 0 traduzioni effettive (${consecutiveFailedBatches}/3) — provider: ${result.provider}`)
-              if (consecutiveFailedBatches >= 3) {
+              console.warn(`[AutoTranslate] Batch con 0 output (${consecutiveFailedBatches}/5) — provider: ${result.provider}`)
+              if (consecutiveFailedBatches >= 5) {
                 errors.push('Tutti i provider di traduzione sono bloccati o non configurati. Traduzione fermata automaticamente.')
                 abortRef.current = true
-                console.error('[AutoTranslate] Auto-stop: 3 batch consecutivi senza traduzioni effettive')
+                console.error('[AutoTranslate] Auto-stop: 5 batch consecutivi senza output')
               }
             } else {
               consecutiveFailedBatches = 0
+              // Aggiorna preview ultima traduzione per UI demo
+              const lastGood = fileTranslations.filter(t => t.translation).slice(-1)[0]
+              if (lastGood) setLastTranslatedPair({ original: lastGood.original, translation: lastGood.translation, provider: result.provider })
             }
           }
         } catch (err) {
@@ -731,9 +869,20 @@ export default function AutoTranslatePage() {
     saveCheckpoint(allTranslated)
     const wasStopped = abortRef.current
     const actualTranslated = [...allTranslated.values()].flat().filter(t => t.translation).length
-    setProgress(prev => prev ? { ...prev, percent: wasStopped ? Math.round((actualTranslated / totalStrCount) * 100) : 100, currentStep: wasStopped ? `Fermato — ${actualTranslated} stringhe salvate` : 'Completato!' } : null)
+    setProgress(prev => prev ? { ...prev, percent: wasStopped ? Math.round((actualTranslated / totalStrCount) * 100) : 100, currentStep: wasStopped ? `Stopped — ${actualTranslated} strings saved` : 'Completed!' } : null)
     setIsTranslating(false)
     if (files.length > 0) setSelectedFile(files[0].name)
+    // Notifica OS traduzione completata/fermata
+    try {
+      await invoke('notify_background_operation_completed', {
+        operationType: 'translation',
+        operationId: gameInfo?.gameId || 'auto-translate',
+        success: !wasStopped,
+        details: wasStopped
+          ? `Translation paused: ${actualTranslated}/${totalStrCount} strings (${Math.round((actualTranslated / totalStrCount) * 100)}%)`
+          : `Translation completed: ${actualTranslated} strings translated for ${gameTitle}`,
+      })
+    } catch {}
     // Vai a review solo se ci sono traduzioni utili
     if (actualTranslated > 0) setStep('review')
   }, [files, sourceLang, targetLang, useContextHarvest, gameInfo, loadCheckpoint, clearCheckpoint, saveCheckpoint])
@@ -870,16 +1019,25 @@ export default function AutoTranslatePage() {
       const patchInputs: PatchInput[] = files.map(file => {
         const strings = translatedStrings.get(file.name) || []
         const translationMap = new Map<string, string>()
+        const isRenpy = file.format === 'rpy'
         for (const s of strings) {
           const final = s.isEdited ? (s.editedTranslation || s.translation) : s.translation
-          if (final) { translationMap.set(s.key, final); if (s.original !== s.key) translationMap.set(s.original, final) }
+          if (final) {
+            if (isRenpy) {
+              // Per Ren'Py: solo original→translated (per formato old/new nativo)
+              translationMap.set(s.original, final)
+            } else {
+              translationMap.set(s.key, final)
+              if (s.original !== s.key) translationMap.set(s.original, final)
+            }
+          }
         }
         return { filename: file.name, originalContent: file.content, translations: translationMap, format: file.format }
       })
       const result = generatePatch(patchInputs, {
         projectName: `${gameTitle} - ${targetLang.toUpperCase()}`, gameTitle: gameTitle || 'Game Translation',
         sourceLanguage: sourceLang, targetLanguage: targetLang, translator: translator || 'GameStringer User',
-        version: patchVersion, description: 'Traduzione automatica con GameStringer One-Click',
+        version: patchVersion, description: 'Automatic translation with GameStringer One-Click',
         qualityScore: avgScore, includeReadme: true, includeManifest: true,
       })
       setPatchResult(result)
@@ -1348,14 +1506,14 @@ export default function AutoTranslatePage() {
             <div>
               <h1 className="text-xl font-bold text-white">One-Click Translate & Patch</h1>
               <p className="text-white/70 text-sm">
-                {gameInfo ? `${gameInfo.gameName}` : 'Seleziona un gioco → Traduci → Patch pronta'}
+                {gameInfo ? `${gameInfo.gameName}` : 'Select a game → Translate → Patch ready'}
               </p>
             </div>
           </div>
           {step !== 'select_game' && (
             <Button variant="outline" size="sm" onClick={handleReset}
               className="h-7 text-xs bg-white/10 border-white/20 text-white hover:bg-white/20">
-              <RefreshCw className="h-3 w-3 mr-1" /> Ricomincia
+              <RefreshCw className="h-3 w-3 mr-1" /> Restart
             </Button>
           )}
         </div>
@@ -1403,22 +1561,22 @@ export default function AutoTranslatePage() {
                       <Save className="h-5 w-5 text-amber-400" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-amber-200">Traduzione in corso trovata!</h3>
+                      <h3 className="text-sm font-semibold text-amber-200">Translation in progress found!</h3>
                       <p className="text-xs text-amber-300/70 mt-0.5">
-                        {savedCheckpoint.translatedCount}/{savedCheckpoint.totalCount} stringhe già tradotte
+                        {savedCheckpoint.translatedCount}/{savedCheckpoint.totalCount} strings already translated
                         ({savedCheckpoint.targetLang.toUpperCase()})
-                        — salvata il {new Date(savedCheckpoint.savedAt).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        — saved on {new Date(savedCheckpoint.savedAt).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" className="h-8 text-xs bg-amber-600 hover:bg-amber-700" onClick={handleResumeTranslation}>
-                        <Eye className="h-3 w-3 mr-1" /> Rivedi
+                        <Eye className="h-3 w-3 mr-1" /> Review
                       </Button>
                       <Button size="sm" className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => handleStartTranslation(true)}>
-                        <Play className="h-3 w-3 mr-1" /> Continua
+                        <Play className="h-3 w-3 mr-1" /> Resume
                       </Button>
                       <Button size="sm" variant="outline" className="h-8 text-xs border-amber-500/30 text-amber-300 hover:bg-amber-500/20" onClick={clearCheckpoint}>
-                        <XCircle className="h-3 w-3 mr-1" /> Ricomincia
+                        <XCircle className="h-3 w-3 mr-1" /> Restart
                       </Button>
                     </div>
                   </div>
@@ -1428,27 +1586,35 @@ export default function AutoTranslatePage() {
 
             {/* Game Card (se selezionato) */}
             {gameInfo && (
-              <Card className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border-purple-500/30">
-                <CardContent className="p-4 flex items-center gap-4">
+              <Card className="bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-fuchsia-500/10 border-purple-500/30 overflow-hidden">
+                <CardContent className="p-5 flex items-center gap-5">
                   {gameInfo.gameImage && (
-                    <img src={gameInfo.gameImage} alt={gameInfo.gameName} className="w-24 h-14 object-cover rounded" />
+                    <img src={gameInfo.gameImage} alt={gameInfo.gameName} className="w-32 h-[72px] object-cover rounded-lg shadow-lg" />
                   )}
-                  <div className="flex-1">
-                    <h2 className="text-lg font-bold">{gameInfo.gameName}</h2>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                      {gameInfo.platform && <Badge variant="outline" className="text-[9px] h-4">{gameInfo.platform}</Badge>}
-                      <span className="font-mono text-[10px] truncate max-w-[300px]">{gameInfo.installPath}</span>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-bold tracking-tight">{gameInfo.gameName}</h2>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                      {gameInfo.platform && <Badge variant="outline" className="text-[10px] h-5 px-2">{gameInfo.platform}</Badge>}
+                      <span className="font-mono text-[10px] truncate max-w-[350px] opacity-60">{gameInfo.installPath}</span>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right shrink-0">
                     {isLoadingGame ? (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Scansione file...
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" /> Scanning files...
                       </div>
                     ) : files.length > 0 ? (
-                      <div>
-                        <div className="text-lg font-bold text-emerald-400">{files.length} file</div>
-                        <div className="text-xs text-muted-foreground">{totalStrings} stringhe trovate</div>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2 justify-end">
+                          <FileText className="h-4 w-4 text-emerald-400" />
+                          <span className="text-2xl font-black text-emerald-400">{files.length}</span>
+                          <span className="text-xs text-muted-foreground">files</span>
+                        </div>
+                        <div className="flex items-center gap-2 justify-end">
+                          <Languages className="h-4 w-4 text-fuchsia-400" />
+                          <span className="text-2xl font-black text-fuchsia-400">{totalStrings.toLocaleString()}</span>
+                          <span className="text-xs text-muted-foreground">strings</span>
+                        </div>
                       </div>
                     ) : null}
                   </div>
@@ -1461,15 +1627,14 @@ export default function AutoTranslatePage() {
               <Card>
                 <CardContent className="p-8 text-center">
                   <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <h2 className="text-lg font-bold">Seleziona un gioco dalla Libreria</h2>
+                  <h2 className="text-lg font-bold">Select a game from the Library</h2>
                   <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                    Vai nella <strong>Libreria</strong>, apri la scheda di un gioco e clicca <strong>&quot;Traduci Tutto&quot;</strong>.
-                    I file del gioco verranno caricati automaticamente.
+                    Go to the <strong>Library</strong>, open a game and click <strong>&quot;Translate All&quot;</strong>. Game files will be loaded automatically.
                   </p>
                   <Separator className="my-4" />
-                  <p className="text-xs text-muted-foreground">Oppure carica file manualmente:</p>
+                  <p className="text-xs text-muted-foreground">Or load files manually:</p>
                   <Button variant="outline" size="sm" className="mt-2 h-7 text-xs" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="h-3 w-3 mr-1" /> Carica File
+                    <Upload className="h-3 w-3 mr-1" /> Load Files
                   </Button>
                   <input ref={fileInputRef} type="file" accept=".json,.csv,.po,.pot,.xlf,.xliff,.resx,.strings,.ini,.xml,.properties,.yaml,.yml,.txt" multiple onChange={handleManualUpload} className="hidden" />
                 </CardContent>
@@ -1494,11 +1659,10 @@ export default function AutoTranslatePage() {
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Zap className="h-4 w-4 text-blue-400" />
-                    Gioco Unity rilevato
+                    Unity game detected
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    I testi di questo gioco sono dentro gli asset compilati. Per tradurlo serve installare 
-                    <strong> BepInEx + XUnity AutoTranslator</strong>, che estraggono automaticamente tutte le stringhe di testo.
+                    Texts in this game are inside compiled assets. To translate it, you need to install <strong> BepInEx + XUnity AutoTranslator</strong>, which automatically extract all text strings.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-4 pb-4 space-y-3">
@@ -1534,25 +1698,25 @@ export default function AutoTranslatePage() {
                     {bepinexStatus === 'idle' && (
                       <Button onClick={installBepInEx} size="sm" className="h-8 bg-blue-600 hover:bg-blue-700">
                         <Download className="h-3.5 w-3.5 mr-1.5" />
-                        Installa BepInEx + XUnity AutoTranslator
+                        Install BepInEx + XUnity AutoTranslator
                       </Button>
                     )}
                     {bepinexStatus === 'installing' && (
                       <Button disabled size="sm" className="h-8">
                         <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                        Installazione in corso...
+                        Installing...
                       </Button>
                     )}
                     {(bepinexStatus === 'installed' || bepinexStatus === 'error') && (
                       <Button onClick={rescanAfterBepInEx} variant="outline" size="sm" className="h-8">
                         <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                        Ri-Scansiona file
+                        Re-Scan files
                       </Button>
                     )}
                     {bepinexStatus === 'error' && (
                       <Button onClick={installBepInEx} variant="outline" size="sm" className="h-8">
                         <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                        Riprova
+                        Retry
                       </Button>
                     )}
                   </div>
@@ -1563,7 +1727,7 @@ export default function AutoTranslatePage() {
                       Powered by <a href="https://github.com/BepInEx/BepInEx" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">BepInEx</a> (BepInEx Team) 
                       {' '}&amp;{' '}
                       <a href="https://github.com/bbepis/XUnity.AutoTranslator" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">XUnity.AutoTranslator</a> (bbepis).
-                      {' '}Grazie agli autori originali per il loro incredibile lavoro open-source.
+                      {' '}Thanks to the original authors for their incredible open-source work.
                     </p>
                   </div>
                 </CardContent>
@@ -1575,21 +1739,30 @@ export default function AutoTranslatePage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
                 {/* File list */}
                 <Card className="lg:col-span-2">
-                  <CardHeader className="py-2 px-4">
-                    <CardTitle className="text-xs">{files.length} file trovati ({totalStrings} stringhe)</CardTitle>
+                  <CardHeader className="py-2.5 px-4">
+                    <CardTitle className="text-sm flex items-center justify-between">
+                      <span>{files.length} translatable files</span>
+                      <Badge className="bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30 text-xs">{totalStrings.toLocaleString()} strings</Badge>
+                    </CardTitle>
                   </CardHeader>
-                  <ScrollArea className="h-[200px]">
+                  <ScrollArea className="h-[220px]">
                     <CardContent className="px-4 pb-3 space-y-1">
-                      {files.map((f, i) => (
-                        <div key={i} className="flex items-center justify-between p-1.5 rounded bg-muted/30 text-xs">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-3 w-3 text-muted-foreground" />
-                            <span className="font-mono truncate max-w-[300px]">{f.name}</span>
-                            <Badge variant="outline" className="text-[9px] px-1 h-4">{f.format}</Badge>
+                      {files.map((f, i) => {
+                        const pct = totalStrings > 0 ? (f.parsed.strings.length / totalStrings) * 100 : 0
+                        const sizeKB = (f.size / 1024).toFixed(0)
+                        return (
+                          <div key={i} className="relative flex items-center justify-between p-2 rounded bg-muted/30 text-xs overflow-hidden">
+                            <div className="absolute inset-y-0 left-0 bg-primary/8 rounded" style={{ width: `${pct}%` }} />
+                            <div className="flex items-center gap-2 relative z-10">
+                              <FileText className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                              <span className="font-mono truncate max-w-[280px]">{f.name}</span>
+                              <Badge variant="outline" className="text-[9px] px-1.5 h-4">{f.format}</Badge>
+                              <span className="text-[10px] text-muted-foreground/50">{sizeKB} KB</span>
+                            </div>
+                            <span className="font-bold tabular-nums relative z-10">{f.parsed.strings.length.toLocaleString()}</span>
                           </div>
-                          <span className="text-muted-foreground">{f.parsed.strings.length}</span>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </CardContent>
                   </ScrollArea>
                 </Card>
@@ -1598,20 +1771,20 @@ export default function AutoTranslatePage() {
                 <Card>
                   <CardHeader className="py-2 px-4">
                     <CardTitle className="text-xs flex items-center gap-1.5">
-                      <Languages className="h-3.5 w-3.5" /> Lingua & Opzioni
+                      <Languages className="h-3.5 w-3.5" /> Language & Options
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-[10px]">Da</Label>
+                        <Label className="text-[10px]">From</Label>
                         <select value={sourceLang} onChange={(e) => setSourceLang(e.target.value)}
                           className="w-full h-7 text-xs bg-background border rounded px-2 mt-0.5">
                           {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
                         </select>
                       </div>
                       <div>
-                        <Label className="text-[10px]">A</Label>
+                        <Label className="text-[10px]">To</Label>
                         <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
                           className="w-full h-7 text-xs bg-background border rounded px-2 mt-0.5">
                           {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
@@ -1619,10 +1792,19 @@ export default function AutoTranslatePage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[10px]">Context Harvester</Label>
-                      <Switch checked={useContextHarvest} onCheckedChange={setUseContextHarvest} />
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-[10px] cursor-help">Context Harvester</Label>
+                            <Switch checked={useContextHarvest} onCheckedChange={setUseContextHarvest} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-[220px] text-xs">
+                          <p>Analizza automaticamente il contesto di ogni stringa (schermata, speaker, tono) per migliorare la qualità della traduzione AI.</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 
                     <Button
                       onClick={() => handleStartTranslation(false)}
@@ -1630,10 +1812,11 @@ export default function AutoTranslatePage() {
                       className="w-full h-10 text-sm font-bold bg-gradient-to-r from-rose-500 to-fuchsia-500 hover:from-rose-600 hover:to-fuchsia-600"
                     >
                       <Zap className="h-4 w-4 mr-2" />
-                      Traduci {totalStrings} stringhe
+                      Translate {totalStrings} strings
                     </Button>
                     <p className="text-[10px] text-muted-foreground text-center">
-                      Stima: ~{Math.ceil(totalStrings / 20 * 3)}s
+                      Estimation: ~{(() => { const s = Math.ceil(totalStrings / 20 * 3); return s >= 60 ? `${Math.floor(s/60)}m ${s%60}s` : `${s}s` })()}
+                      {' '}({Math.ceil(totalStrings / 20)} batches)
                     </p>
                   </CardContent>
                 </Card>
@@ -1645,42 +1828,170 @@ export default function AutoTranslatePage() {
         {/* ================================================================ */}
         {/* STEP 2: TRANSLATING */}
         {/* ================================================================ */}
-        {step === 'translating' && progress && (
-          <div className="max-w-2xl mx-auto space-y-4 py-8">
-            <Card>
-              <CardContent className="p-6 space-y-6">
-                <div className="text-center">
-                  <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-3" />
-                  <h2 className="text-lg font-bold">Traduzione in corso...</h2>
-                  <p className="text-sm text-muted-foreground mt-1">{progress.currentStep}</p>
+        {step === 'translating' && progress && (() => {
+          const elapsedSec = Math.max(1, (Date.now() - progress.startTime) / 1000)
+          const strPerMin = progress.translatedStrings > 0 ? Math.round(progress.translatedStrings / elapsedSec * 60) : 0
+          const remaining = strPerMin > 0 ? Math.max(0, Math.ceil((progress.totalStrings - progress.translatedStrings) / strPerMin)) : null
+          const elapsedMin = Math.floor(elapsedSec / 60)
+          const elapsedSecRem = Math.floor(elapsedSec % 60)
+          return (
+          <div className="max-w-3xl mx-auto space-y-4 py-6">
+            {/* Hero progress card */}
+            <Card className="overflow-hidden border-primary/20">
+              <div className="h-1.5 bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-rose-500 via-fuchsia-500 to-violet-500 transition-all duration-700 ease-out relative"
+                  style={{ width: `${progress.percent}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-pulse" />
                 </div>
-                <Progress value={progress.percent} className="h-2" />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                  <div><div className="text-xl font-bold text-primary">{progress.percent}%</div><div className="text-[10px] text-muted-foreground">Completato</div></div>
-                  <div><div className="text-xl font-bold">{progress.translatedStrings}/{progress.totalStrings}</div><div className="text-[10px] text-muted-foreground">Stringhe</div></div>
-                  <div><div className="text-xl font-bold">{progress.currentFile}/{progress.totalFiles}</div><div className="text-[10px] text-muted-foreground">File</div></div>
-                  <div><div className="text-xl font-bold">{Math.round((Date.now() - progress.startTime) / 1000)}s</div><div className="text-[10px] text-muted-foreground">Tempo</div></div>
+              </div>
+              <CardContent className="p-6 space-y-5">
+                {/* Header con percentuale grande */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <div className="h-16 w-16 rounded-full border-4 border-primary/20 flex items-center justify-center">
+                        <span className="text-2xl font-black bg-gradient-to-br from-rose-400 to-fuchsia-400 bg-clip-text text-transparent">
+                          {progress.percent}%
+                        </span>
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                        <Loader2 className="h-3 w-3 animate-spin text-primary-foreground" />
+                      </div>
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold tracking-tight">Translating...</h2>
+                      <p className="text-sm text-muted-foreground mt-0.5">{progress.currentStep}</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="h-9 px-5 text-xs font-semibold"
+                    onClick={handleStopTranslation}
+                    disabled={stoppedByUser}
+                  >
+                    {stoppedByUser ? (
+                      <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Stopping...</>
+                    ) : (
+                      <><XCircle className="h-3.5 w-3.5 mr-1.5" /> Stop & Save</>
+                    )}
+                  </Button>
                 </div>
+
+                {/* Stats grid — 5 colonne */}
+                <div className="grid grid-cols-5 gap-2">
+                  <div className="bg-muted/40 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums">{progress.translatedStrings.toLocaleString()}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
+                      <Languages className="h-3 w-3" /> of {progress.totalStrings.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="bg-muted/40 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums text-emerald-400">{strPerMin}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
+                      <Activity className="h-3 w-3" /> str/min
+                    </div>
+                  </div>
+                  <div className="bg-muted/40 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums">{progress.currentFile}/{progress.totalFiles}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
+                      <FileText className="h-3 w-3" /> Files
+                    </div>
+                  </div>
+                  <div className="bg-muted/40 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums">{elapsedMin > 0 ? `${elapsedMin}m${String(elapsedSecRem).padStart(2, '0')}s` : `${elapsedSecRem}s`}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
+                      <Timer className="h-3 w-3" /> Elapsed
+                    </div>
+                  </div>
+                  <div className="bg-muted/40 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold tabular-nums text-fuchsia-400">{remaining !== null ? `~${remaining}m` : '...'}</div>
+                    <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
+                      <TrendingUp className="h-3 w-3" /> ETA
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pipeline visuale */}
+                <div className="flex items-center justify-center gap-1.5 py-1">
+                  {[
+                    { icon: Sparkles, label: 'Context', active: useContextHarvest },
+                    { icon: Languages, label: 'AI Translate', active: true },
+                    { icon: Shield, label: 'QA Check', active: true },
+                  ].map((s, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <div className={cn(
+                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors",
+                        s.active ? "bg-primary/15 text-primary" : "bg-muted/50 text-muted-foreground"
+                      )}>
+                        <s.icon className="h-3 w-3" />
+                        <span>{s.label}</span>
+                      </div>
+                      {i < 2 && <ChevronRight className="h-3 w-3 text-muted-foreground/40" />}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Live preview ultima traduzione */}
+                {lastTranslatedPair && (
+                  <div className="bg-gradient-to-r from-muted/60 to-muted/30 rounded-lg p-3 space-y-1.5 border border-white/5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-medium text-muted-foreground">Live Preview</span>
+                      {lastTranslatedPair.provider && (
+                        <Badge variant="outline" className="text-[8px] h-4 px-1.5 border-primary/30 text-primary">{lastTranslatedPair.provider}</Badge>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{lastTranslatedPair.original}</div>
+                    <div className="text-sm font-medium truncate">{lastTranslatedPair.translation}</div>
+                  </div>
+                )}
+
+                {/* Provider Benchmark */}
+                {Object.keys(providerStats).length > 0 && (
+                  <div className="bg-muted/20 rounded-lg p-2.5 border border-white/5">
+                    <div className="text-[10px] font-medium text-muted-foreground mb-1.5 flex items-center gap-1"><Activity className="h-3 w-3" /> Provider Benchmark</div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5">
+                      {Object.entries(providerStats).sort((a, b) => b[1].calls - a[1].calls).map(([name, s]) => {
+                        const avgMs = s.calls > 0 ? Math.round(s.totalMs / s.calls) : 0
+                        const rate = s.calls > 0 ? Math.round((s.success / s.calls) * 100) : 0
+                        return (
+                          <div key={name} className="flex items-center justify-between bg-background/40 rounded px-2 py-1">
+                            <span className="text-[9px] font-mono truncate max-w-[80px]">{name}</span>
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="outline" className={cn("text-[8px] h-3.5 px-1", rate >= 90 ? "text-emerald-400 border-emerald-500/30" : rate >= 50 ? "text-yellow-400 border-yellow-500/30" : "text-red-400 border-red-500/30")}>{rate}%</Badge>
+                              <span className="text-[8px] text-muted-foreground tabular-nums">{avgMs}ms</span>
+                              <span className="text-[8px] text-muted-foreground/50">×{s.calls}</span>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Errori */}
                 {progress.errors.length > 0 && (
                   <div className="space-y-2">
-                    {progress.errors.some(e => e.includes('provider di traduzione sono bloccati')) ? (
+                    {progress.errors.some(e => e.includes('translation providers are blocked') || e.includes('provider di traduzione sono bloccati')) ? (
                       <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 space-y-2">
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-xs font-semibold text-amber-200">Provider di traduzione esauriti</p>
+                            <p className="text-xs font-semibold text-amber-200">Translation providers exhausted</p>
                             <p className="text-[10px] text-amber-300/70 mt-1">
-                              I servizi gratuiti (Lingva, MyMemory) hanno raggiunto il limite di richieste. 
-                              Le traduzioni completate fino ad ora sono state salvate.
+                              Free services (Lingva, MyMemory) have reached their request limit.
+                              Translations completed so far have been saved.
                             </p>
                           </div>
                         </div>
                         <div className="bg-black/20 rounded p-2 space-y-1">
-                          <p className="text-[10px] font-medium text-amber-200/80">Come procedere:</p>
+                          <p className="text-[10px] font-medium text-amber-200/80">How to proceed:</p>
                           <ul className="text-[10px] text-amber-300/60 space-y-0.5 list-disc list-inside">
-                            <li>Attendi 2-5 minuti e clicca <strong>Continua</strong> per riprendere</li>
-                            <li>Configura un provider AI (Gemini, DeepSeek, DeepL) in <strong>Impostazioni → API Keys</strong></li>
-                            <li>Installa <strong>Ollama</strong> per tradurre offline senza limiti</li>
+                            <li>Wait 2-5 minutes and click <strong>Resume</strong> to continue</li>
+                            <li>Configure an AI provider (Gemini, DeepSeek, DeepL) in <strong>Settings → API Keys</strong></li>
+                            <li>Install <strong>Ollama</strong> to translate offline without limits</li>
                           </ul>
                         </div>
                       </div>
@@ -1691,36 +2002,15 @@ export default function AutoTranslatePage() {
                     )}
                   </div>
                 )}
-                <div className="flex items-center justify-center gap-2 text-[10px]">
-                  {[{ icon: Sparkles, label: 'Context' }, { icon: ArrowRight, label: '' }, { icon: Languages, label: 'Traduzione' }, { icon: ArrowRight, label: '' }, { icon: Shield, label: 'QA' }].map((s, i) => (
-                    <div key={i} className="flex items-center gap-1 text-muted-foreground"><s.icon className="h-3 w-3" />{s.label && <span>{s.label}</span>}</div>
-                  ))}
-                </div>
 
-                <Separator />
-
-                <div className="flex items-center justify-center gap-3">
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    className="h-9 px-6 text-xs font-semibold"
-                    onClick={handleStopTranslation}
-                    disabled={stoppedByUser}
-                  >
-                    {stoppedByUser ? (
-                      <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Fermando...</>
-                    ) : (
-                      <><XCircle className="h-3.5 w-3.5 mr-1.5" /> Ferma e Salva</>
-                    )}
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground max-w-[200px]">
-                    Il progresso viene salvato automaticamente. Potrai riprendere in qualsiasi momento.
-                  </p>
-                </div>
+                <p className="text-[10px] text-muted-foreground text-center">
+                  Progress is saved automatically. You can resume at any time.
+                </p>
               </CardContent>
             </Card>
           </div>
-        )}
+          )
+        })()}
 
         {/* ================================================================ */}
         {/* STEP 3: REVIEW */}
@@ -1728,16 +2018,16 @@ export default function AutoTranslatePage() {
         {step === 'review' && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Tradotte</div><div className="text-lg font-bold">{totalTranslated - untranslatedCount}</div></Card>
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Score Medio</div><div className={cn("text-lg font-bold", avgScore >= 80 ? "text-emerald-400" : avgScore >= 60 ? "text-yellow-400" : "text-red-400")}>{avgScore}%</div></Card>
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Da Rivedere</div><div className="text-lg font-bold text-yellow-400">{issueCount}</div></Card>
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Modificate</div><div className="text-lg font-bold text-blue-400">{editedCount}</div></Card>
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Translated</div><div className="text-lg font-bold">{totalTranslated - untranslatedCount}</div></Card>
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Avg Score</div><div className={cn("text-lg font-bold", avgScore >= 80 ? "text-emerald-400" : avgScore >= 60 ? "text-yellow-400" : "text-red-400")}>{avgScore}%</div></Card>
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">To Review</div><div className="text-lg font-bold text-yellow-400">{issueCount}</div></Card>
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Edited</div><div className="text-lg font-bold text-blue-400">{editedCount}</div></Card>
               <Card className={cn("p-2.5", untranslatedCount > 0 ? "border-red-500/30 bg-red-500/5" : "")}>
-                <div className="text-[10px] text-muted-foreground">Non tradotte</div>
+                <div className="text-[10px] text-muted-foreground">Untranslated</div>
                 <div className="text-lg font-bold text-red-400">{untranslatedCount}</div>
                 {untranslatedCount > 0 && !isRetranslating && (
                   <Button size="sm" className="w-full h-6 text-[9px] mt-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600" onClick={handleTranslateUntranslated}>
-                    <Zap className="h-2.5 w-2.5 mr-0.5" /> Traduci tutte
+                    <Zap className="h-2.5 w-2.5 mr-0.5" /> Translate all
                   </Button>
                 )}
                 {isRetranslating && retranslateProgress && (
@@ -1750,20 +2040,21 @@ export default function AutoTranslatePage() {
                   </div>
                 )}
               </Card>
-              <Card className="p-2.5 flex items-center justify-center gap-1.5">
-                <Button onClick={handleGeneratePatch} className="h-8 text-xs flex-1 bg-gradient-to-r from-rose-500 to-fuchsia-500">
-                  <Package className="h-3 w-3 mr-1" /> Crea Patch
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button onClick={handleGeneratePatch} className="h-9 text-xs bg-gradient-to-r from-rose-500 to-fuchsia-500">
+                <Package className="h-3.5 w-3.5 mr-1.5" /> Create Patch
+              </Button>
+              {gameInfo?.installPath && isUnrealEngine(gameInfo.installPath) && (
+                <Button
+                  onClick={handleTestPatch}
+                  className="h-9 text-xs bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
+                  disabled={testPatchStatus !== 'idle' && testPatchStatus !== 'done' && testPatchStatus !== 'error'}
+                >
+                  <Play className="h-3.5 w-3.5 mr-1.5" /> Test Patch
                 </Button>
-                {gameInfo?.installPath && isUnrealEngine(gameInfo.installPath) && (
-                  <Button
-                    onClick={handleTestPatch}
-                    className="h-8 text-xs flex-1 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
-                    disabled={testPatchStatus !== 'idle' && testPatchStatus !== 'done' && testPatchStatus !== 'error'}
-                  >
-                    <Play className="h-3 w-3 mr-1" /> Prova Patch
-                  </Button>
-                )}
-              </Card>
+              )}
             </div>
 
             {/* Pannello Test Patch UE (visibile anche in review) */}
@@ -1777,7 +2068,7 @@ export default function AutoTranslatePage() {
                     {(testPatchStatus === 'backing_up' || testPatchStatus === 'applying' || testPatchStatus === 'launching' || testPatchStatus === 'restoring') && <Loader2 className="h-3 w-3 animate-spin text-violet-400" />}
                     <span>Test Patch</span>
                     <span className="text-muted-foreground font-normal">
-                      — {testPatchStatus === 'backing_up' ? 'Pulizia patch precedenti...' : testPatchStatus === 'applying' ? 'Applicazione traduzioni...' : testPatchStatus === 'launching' ? 'Avvio gioco...' : testPatchStatus === 'monitoring' ? 'In esecuzione — verifica in-game' : testPatchStatus === 'restoring' ? 'Ripristino originali...' : testPatchStatus === 'error' ? 'Errore' : 'Completato'}
+                      — {testPatchStatus === 'backing_up' ? 'Cleaning previous patches...' : testPatchStatus === 'applying' ? 'Applying translations...' : testPatchStatus === 'launching' ? 'Launching game...' : testPatchStatus === 'monitoring' ? 'Running — check in-game' : testPatchStatus === 'restoring' ? 'Restoring originals...' : testPatchStatus === 'error' ? 'Error' : 'Completed'}
                     </span>
                   </CardTitle>
                   {/* Step progress mini */}
@@ -1804,16 +2095,16 @@ export default function AutoTranslatePage() {
                     {testPatchApplied && (testPatchStatus === 'monitoring' || testPatchStatus === 'done') && (
                       <>
                         <Button size="sm" variant="destructive" className="h-7 text-[10px]" onClick={handleRestorePatch}>
-                          <RotateCcw className="h-2.5 w-2.5 mr-1" /> Ripristina Originali
+                          <RotateCcw className="h-2.5 w-2.5 mr-1" /> Restore Originals
                         </Button>
                         <Button size="sm" className="h-7 text-[10px] bg-emerald-600 hover:bg-emerald-700" onClick={handleKeepPatch}>
-                          <Check className="h-2.5 w-2.5 mr-1" /> Mantieni Patch
+                          <Check className="h-2.5 w-2.5 mr-1" /> Keep Patch
                         </Button>
                       </>
                     )}
                     {testPatchStatus === 'error' && (
                       <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={handleTestPatch}>
-                        <RotateCcw className="h-2.5 w-2.5 mr-1" /> Riprova
+                        <RotateCcw className="h-2.5 w-2.5 mr-1" /> Retry
                       </Button>
                     )}
                   </div>
@@ -1834,7 +2125,7 @@ export default function AutoTranslatePage() {
                           selectedFile === f.name ? "bg-primary/10 border border-primary/30" : "hover:bg-muted/50")}>
                         <div className="font-medium truncate">{f.name}</div>
                         <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
-                          <span>{fStrings.length} stringhe</span>
+                          <span>{fStrings.length} strings</span>
                           {fIssues > 0 && <Badge variant="destructive" className="text-[8px] h-3 px-1">{fIssues}</Badge>}
                         </div>
                       </div>
@@ -1842,10 +2133,10 @@ export default function AutoTranslatePage() {
                   })}
                   <Separator />
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-muted-foreground">Filtro</Label>
+                    <Label className="text-[10px] text-muted-foreground">Filter</Label>
                     {(['all', 'issues', 'untranslated', 'edited'] as const).map(f => (
                       <Button key={f} variant={reviewFilter === f ? "default" : "ghost"} size="sm" className="w-full h-6 text-[10px] justify-start" onClick={() => setReviewFilter(f)}>
-                        {f === 'all' ? '📋 Tutte' : f === 'issues' ? '⚠️ Da rivedere' : f === 'untranslated' ? `🔴 Non tradotte (${untranslatedCount})` : '✏️ Modificate'}
+                        {f === 'all' ? '📋 All' : f === 'issues' ? '⚠️ To review' : f === 'untranslated' ? `🔴 Untranslated (${untranslatedCount})` : '✏️ Edited'}
                       </Button>
                     ))}
                   </div>
@@ -1853,7 +2144,7 @@ export default function AutoTranslatePage() {
               </Card>
 
               <Card className="lg:col-span-3">
-                <CardHeader className="py-2 px-4"><CardTitle className="text-xs">{selectedFile || 'Seleziona un file'} ({filteredStrings.length})</CardTitle></CardHeader>
+                <CardHeader className="py-2 px-4"><CardTitle className="text-xs">{selectedFile || 'Select a file'} ({filteredStrings.length})</CardTitle></CardHeader>
                 <ScrollArea className="h-[500px]">
                   <div className="px-4 pb-3 space-y-1">
                     {filteredStrings.map((s, i) => {
@@ -1870,14 +2161,18 @@ export default function AutoTranslatePage() {
                                 <div className="mt-1 space-y-1">
                                   <Textarea value={editValue} onChange={(e) => setEditValue(e.target.value)} className="text-xs min-h-[60px]" autoFocus />
                                   <div className="flex gap-1">
-                                    <Button size="sm" className="h-6 text-[10px]" onClick={handleEditSave}><Save className="h-2.5 w-2.5 mr-0.5" /> Salva</Button>
-                                    <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={handleEditCancel}>Annulla</Button>
+                                    <Button size="sm" className="h-6 text-[10px]" onClick={handleEditSave}><Save className="h-2.5 w-2.5 mr-0.5" /> Save</Button>
+                                    <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={handleEditCancel}>Cancel</Button>
                                   </div>
                                 </div>
                               ) : (
                                 <div className="text-xs mt-0.5 flex items-start gap-1">
-                                  <span className={s.isEdited ? "text-blue-400" : ""}>{finalTranslation || <span className="text-red-400 italic">— non tradotto —</span>}</span>
-                                  {s.isEdited && <Badge className="text-[7px] h-3 px-1 bg-blue-500/20 text-blue-400">editata</Badge>}
+                                  {finalTranslation ? (
+                                    <span className={s.isEdited ? "text-blue-400" : ""}><DiffHighlight original={s.original} translated={finalTranslation} /></span>
+                                  ) : (
+                                    <span className="text-red-400 italic">— untranslated —</span>
+                                  )}
+                                  {s.isEdited && <Badge className="text-[7px] h-3 px-1 bg-blue-500/20 text-blue-400">edited</Badge>}
                                 </div>
                               )}
                             </div>
@@ -1895,8 +2190,8 @@ export default function AutoTranslatePage() {
                     {filteredStrings.length === 0 && (
                       <div className="text-center py-12 text-muted-foreground">
                         <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-400" />
-                        <p className="text-sm font-medium">Tutto a posto!</p>
-                        <p className="text-xs mt-1">Nessuna stringa da rivedere.</p>
+                        <p className="text-sm font-medium">All good!</p>
+                        <p className="text-xs mt-1">No strings to review.</p>
                       </div>
                     )}
                   </div>
@@ -1914,20 +2209,20 @@ export default function AutoTranslatePage() {
             {isGenerating ? (
               <Card className="p-8 text-center">
                 <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-3" />
-                <h2 className="text-lg font-bold">Generazione patch...</h2>
+                <h2 className="text-lg font-bold">Generating patch...</h2>
               </Card>
             ) : patchResult ? (
               <>
                 <Card className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30">
                   <CardContent className="p-6 text-center">
                     <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
-                    <h2 className="text-xl font-bold">Patch Pronta!</h2>
+                    <h2 className="text-xl font-bold">Patch Ready!</h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {patchResult.stats.translatedStrings}/{patchResult.stats.totalStrings} stringhe tradotte ({patchResult.stats.coveragePercent}%)
+                      {patchResult.stats.translatedStrings}/{patchResult.stats.totalStrings} strings translated ({patchResult.stats.coveragePercent}%)
                     </p>
                     <div className="flex flex-wrap justify-center gap-3 mt-4">
                       <Button onClick={handleDownloadZip} size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-500">
-                        <Download className="h-4 w-4 mr-2" /> Scarica ZIP
+                        <Download className="h-4 w-4 mr-2" /> Download ZIP
                       </Button>
                       <Button
                         onClick={handleTestPatch}
@@ -1935,28 +2230,56 @@ export default function AutoTranslatePage() {
                         className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600"
                         disabled={testPatchStatus !== 'idle' && testPatchStatus !== 'done' && testPatchStatus !== 'error'}
                       >
-                        <Play className="h-4 w-4 mr-2" /> Prova Patch
+                        <Play className="h-4 w-4 mr-2" /> Test Patch
                       </Button>
                       <Button variant="outline" onClick={() => setStep('review')}>
-                        <ChevronLeft className="h-4 w-4 mr-1" /> Torna alla Review
+                        <ChevronLeft className="h-4 w-4 mr-1" /> Back to Review
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.totalFiles}</div><div className="text-[10px] text-muted-foreground">File</div></Card>
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.translatedStrings}</div><div className="text-[10px] text-muted-foreground">Stringhe</div></Card>
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-emerald-400">{patchResult.stats.coveragePercent}%</div><div className="text-[10px] text-muted-foreground">Copertura</div></Card>
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-blue-400">{avgScore}%</div><div className="text-[10px] text-muted-foreground">Qualità</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.totalFiles}</div><div className="text-[10px] text-muted-foreground">Files</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.translatedStrings}</div><div className="text-[10px] text-muted-foreground">Strings</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-emerald-400">{patchResult.stats.coveragePercent}%</div><div className="text-[10px] text-muted-foreground">Coverage</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-blue-400">{avgScore}%</div><div className="text-[10px] text-muted-foreground">Quality</div></Card>
                 </div>
+                <Card className="border-dashed">
+                  <CardHeader className="py-2 px-4"><CardTitle className="text-xs flex items-center gap-2"><Globe className="h-3.5 w-3.5" /> Export As (standard formats)</CardTitle></CardHeader>
+                  <CardContent className="px-4 pb-3 flex flex-wrap gap-2">
+                    {(['TMX', 'XLIFF', 'PO'] as const).map(fmt => (
+                      <Button key={fmt} variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => {
+                        if (!patchResult) return
+                        const tFiles: TranslatedFile[] = patchResult.files.filter(f => f.type === 'translated').map(f => ({
+                          originalPath: f.path, relativePath: f.path, content: f.content,
+                          format: f.path.split('.').pop() || 'txt', stringCount: 0,
+                        }))
+                        const meta: PatchMetadata = {
+                          gameName: gameTitle || 'Game', sourceLanguage: sourceLang, targetLanguage: targetLang,
+                          translatedBy: translator || 'GameStringer', createdAt: new Date().toISOString(),
+                          version: patchVersion, totalStrings: patchResult.stats.translatedStrings,
+                          totalFiles: patchResult.stats.totalFiles, provider: 'GameStringer AI',
+                        }
+                        const content = fmt === 'TMX' ? exportTMX(tFiles, meta) : fmt === 'XLIFF' ? exportXLIFF(tFiles, meta) : exportPO(tFiles, meta)
+                        const ext = fmt === 'TMX' ? '.tmx' : fmt === 'XLIFF' ? '.xliff' : '.po'
+                        const blob = new Blob([content], { type: 'text/xml;charset=utf-8' })
+                        downloadBlob(blob, `${(gameTitle || 'translation').replace(/\s+/g, '_')}_${targetLang}${ext}`)
+                      }}>
+                        <Download className="h-2.5 w-2.5 mr-1" /> {fmt}
+                      </Button>
+                    ))}
+                    <span className="text-[9px] text-muted-foreground self-center ml-1">Compatible with Weblate, Crowdin, OmegaT, Trados</span>
+                  </CardContent>
+                </Card>
+
                 <Card>
-                  <CardHeader className="py-2 px-4"><CardTitle className="text-xs">File nella Patch ({patchResult.files.length})</CardTitle></CardHeader>
+                  <CardHeader className="py-2 px-4"><CardTitle className="text-xs">Files in Patch ({patchResult.files.length})</CardTitle></CardHeader>
                   <CardContent className="px-4 pb-3 space-y-1">
                     {patchResult.files.map((f, i) => (
                       <div key={i} className="flex items-center justify-between text-xs p-1.5 rounded hover:bg-muted/30">
                         <div className="flex items-center gap-2"><FileText className="h-3 w-3 text-muted-foreground" /><span className="font-mono">{f.path}</span></div>
                         <Badge variant="outline" className="text-[9px] h-4 px-1">
-                          {f.type === 'translated' ? '🎮 Tradotto' : f.type === 'readme' ? '📄 README' : f.type === 'manifest' ? '📋 Manifest' : f.type}
+                          {f.type === 'translated' ? '🎮 Translated' : f.type === 'readme' ? '📄 README' : f.type === 'manifest' ? '📋 Manifest' : f.type}
                         </Badge>
                       </div>
                     ))}

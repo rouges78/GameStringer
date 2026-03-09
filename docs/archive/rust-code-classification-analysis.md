@@ -3,6 +3,7 @@
 ## 📋 Panoramica
 
 Questo documento analizza il codice Rust per identificare:
+
 - **Codice sicuro da rimuovere** (completamente inutilizzato)
 - **Codice da mantenere** (future features, API pubbliche)
 - **Codice da marcare** con `#[allow(dead_code)]`
@@ -10,7 +11,9 @@ Questo documento analizza il codice Rust per identificare:
 ## 🗑️ CODICE SICURO DA RIMUOVERE
 
 ### Steam Commands (commands/steam.rs)
+
 **Funzioni completamente inutilizzate - RIMUOVERE:**
+
 - `make_rate_limited_request` - Funzione helper non utilizzata
 - `save_credentials_securely` - Implementazione legacy non utilizzata
 - `parse_shared_games_xml` - Parser XML non utilizzato
@@ -21,7 +24,9 @@ Questo documento analizza il codice Rust per identificare:
 **Motivo rimozione:** Funzioni helper e implementazioni legacy che non sono mai chiamate nel codebase attuale.
 
 ### Epic Commands (commands/epic.rs)
+
 **Funzioni completamente inutilizzate - RIMUOVERE:**
+
 - `search_epic_configs_by_account_id` - Ricerca config non utilizzata
 - `search_epic_web_cache` - Cache web non implementata
 - `search_registry_by_account_id` - Registry search non utilizzata
@@ -36,20 +41,26 @@ Questo documento analizza il codice Rust per identificare:
 **Motivo rimozione:** Implementazioni alternative e helper non utilizzati nel flusso principale.
 
 ### Library Commands (commands/library.rs)
+
 **Funzioni completamente inutilizzate - RIMUOVERE:**
+
 - `get_gog_installed_games` - GOG integration non implementata
 - `parse_gog_registry_entry` - GOG parser non utilizzato
 
 **Motivo rimozione:** Integrazione GOG non completata e non utilizzata.
 
 ### Patches Commands (commands/patches.rs)
+
 **Funzioni completamente inutilizzate - RIMUOVERE:**
+
 - `translate_text` - Funzione di traduzione non utilizzata
 
 **Motivo rimozione:** Implementazione alternativa di traduzione non utilizzata.
 
 ### Profile Credentials (commands/profile_credentials.rs)
+
 **Sistema completamente inutilizzato - RIMUOVERE TUTTO:**
+
 - `CredentialManagerState` - Struct non costruita
 - `SaveCredentialRequest` - Struct non utilizzata
 - `LoadCredentialRequest` - Struct non utilizzata
@@ -71,7 +82,9 @@ Questo documento analizza il codice Rust per identificare:
 ## 🛡️ CODICE DA MANTENERE CON #[allow(dead_code)]
 
 ### Injection System (injekt.rs)
+
 **Metodi di sicurezza e diagnostica - MANTENERE:**
+
 - `get_stats` - API per statistiche injection
 - `detect_anti_cheat` - Sistema di rilevamento anti-cheat
 - `get_process_modules` - Diagnostica processi
@@ -84,7 +97,9 @@ Questo documento analizza il codice Rust per identificare:
 **Motivo mantenimento:** Funzionalità di sicurezza e diagnostica essenziali per il sistema di injection, anche se non utilizzate attualmente.
 
 ### Hook System (injekt.rs)
+
 **Costanti e strutture di supporto - MANTENERE:**
+
 - `MAX_HOOK_RETRIES` - Configurazione retry
 - `HOOK_RETRY_DELAY` - Configurazione timing
 - `MEMORY_VALIDATION_SIZE` - Configurazione validazione
@@ -96,14 +111,18 @@ Questo documento analizza il codice Rust per identificare:
 **Motivo mantenimento:** Configurazioni e strutture dati per funzionalità avanzate del sistema di injection.
 
 ### Anti-Cheat System (anti_cheat.rs)
+
 **Sistema di protezione - MANTENERE:**
+
 - `AntiCheatState` fields - Campi per stato anti-cheat
 - `AntiCheatState::new` - Costruttore per stato
 
 **Motivo mantenimento:** Sistema di protezione anti-cheat essenziale per sicurezza.
 
 ### Multi-Process System (multi_process_injekt.rs)
+
 **Supporto multi-processo - MANTENERE:**
+
 - `ProcessInfo::pid` - Campo per ID processo
 
 **Motivo mantenimento:** Supporto per injection multi-processo.
@@ -111,7 +130,9 @@ Questo documento analizza il codice Rust per identificare:
 ## 🔄 CODICE LEGACY DA VALUTARE
 
 ### Platform-Specific Auth (commands/*.rs)
+
 **Funzioni di test auth - VALUTARE:**
+
 - `test_gog_auth`, `test_origin_auth`, `test_ubisoft_auth`, etc.
 - Tipi privati: `GogUser`, `OriginUser`, `UbisoftUser`, etc.
 
@@ -120,6 +141,7 @@ Questo documento analizza il codice Rust per identificare:
 ## 📊 STATISTICHE ANALISI
 
 ### Codice da Rimuovere
+
 - **Steam**: 6 funzioni
 - **Epic**: 10 funzioni  
 - **Library**: 2 funzioni
@@ -128,6 +150,7 @@ Questo documento analizza il codice Rust per identificare:
 - **Totale**: ~35 elementi da rimuovere
 
 ### Codice da Mantenere
+
 - **Injection System**: 8 metodi + costanti
 - **Anti-Cheat**: 2 elementi
 - **Multi-Process**: 1 campo
@@ -136,17 +159,20 @@ Questo documento analizza il codice Rust per identificare:
 ## 🎯 PIANO DI AZIONE
 
 ### Fase 1: Rimozione Sicura
+
 1. Rimuovere funzioni Steam non utilizzate
 2. Rimuovere funzioni Epic non utilizzate
 3. Rimuovere sistema Profile Credentials completo
 4. Rimuovere funzioni Library/Patches non utilizzate
 
 ### Fase 2: Protezione Codice Critico
+
 1. Aggiungere `#[allow(dead_code)]` a metodi injection
 2. Proteggere costanti e struct di supporto
 3. Documentare motivi mantenimento
 
 ### Fase 3: Validazione
+
 1. Test compilazione dopo rimozioni
 2. Verifica funzionalità core mantenute
 3. Controllo warning ridotti
@@ -160,19 +186,22 @@ Questo documento analizza il codice Rust per identificare:
 
 ## 🔍 CRITERI DECISIONE
 
-### Rimuovere se:
+### Rimuovere se
+
 - Funzione mai chiamata nel codebase
 - Implementazione alternativa non utilizzata
 - Helper function senza dipendenze
 - Sistema completo non integrato
 
-### Mantenere se:
+### Mantenere se
+
 - Funzionalità di sicurezza
 - API pubblica per future use
 - Sistema di diagnostica
 - Configurazione critica
 
-### Proteggere se:
+### Proteggere se
+
 - Codice di sicurezza essenziale
 - API per sviluppi futuri
 - Sistemi di recovery/fallback

@@ -1,7 +1,7 @@
 # GameStringer Changelog
 
 > Software professionale per la localizzazione di videogiochi.
-> 
+>
 > **Stack**: Tauri v2 (Rust) + Next.js 15 + TailwindCSS
 
 ---
@@ -692,19 +692,19 @@
 
 **Data**: 2026-01-02
 
-**Nuove Feature**
+#### Nuove Feature
 
 - Integrazione completa Epic Games Store via Legendary CLI
 - Filtro automatico asset/plugin Unreal Engine (solo giochi veri)
 - Badge piattaforma dinamico (Steam/Epic/GOG/Origin)
 - Versione cliccabile per visualizzare changelog
 
-**Miglioramenti**
+#### Miglioramenti
 
 - Placeholder per giochi senza immagine copertina
 - Rilevamento automatico piattaforma dal gameId
 
-**Fix**
+#### Fix
 
 - Rimossa card "Gestione Piattaforme" duplicata in Settings
 
@@ -714,12 +714,12 @@
 
 **Data**: 2026-01-01
 
-**Nuove Feature**
+#### Nuove Feature
 
 - Badge visivo stato traduzione (Argento / Bronzo)
 - Tracking patch installate in "Attività Recenti"
 
-**Fix**
+#### Fix
 
 - Layout Unity Patcher tagliato a destra
 - Warning dead_code per costanti BepInEx 6.x

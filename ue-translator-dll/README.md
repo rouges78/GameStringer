@@ -16,7 +16,7 @@ DLL per traduzione runtime di giochi Unreal Engine 4/5.
 mkdir external
 cd external
 git clone https://github.com/TsudaKageyu/minhook.git
-```
+```text
 
 ### 2. Configura con CMake
 
@@ -24,13 +24,13 @@ git clone https://github.com/TsudaKageyu/minhook.git
 mkdir build
 cd build
 cmake .. -G "Visual Studio 17 2022" -A x64
-```
+```text
 
 ### 3. Compila
 
 ```bash
 cmake --build . --config Release
-```
+```text
 
 La DLL verrà copiata automaticamente in `src-tauri/resources/ue-translator/`.
 
@@ -43,7 +43,7 @@ La DLL verrà copiata automaticamente in `src-tauri/resources/ue-translator/`.
 
 ## Struttura
 
-```
+```text
 ue-translator-dll/
 ├── src/
 │   ├── main.cpp       # Entry point e logica principale
@@ -52,7 +52,7 @@ ue-translator-dll/
 ├── external/
 │   └── minhook/       # Libreria MinHook
 └── CMakeLists.txt
-```
+```text
 
 ## Note Importanti
 
@@ -63,6 +63,7 @@ ue-translator-dll/
 ## Debug
 
 Per vedere i log della DLL, usa DebugView di Sysinternals:
+
 1. Scarica DebugView da Microsoft
 2. Avvia come amministratore
 3. Avvia il gioco con la DLL iniettata

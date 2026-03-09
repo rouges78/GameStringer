@@ -266,11 +266,12 @@
     --sidebar-bg: 222.2 84% 3%;
     --header-bg: 222.2 84% 6%;
   }
-}
-
-@layer base {
   * {
     @apply border-border;
+  }
+  html, body {
+    height: 100%;
+    overflow: hidden;
   }
   body {
     @apply bg-background text-foreground;
@@ -446,20 +447,16 @@ button,
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-button:hover,
-[role="button"]:hover {
-  transform: translateY(-1px);
-}
+button:hover,[role="button"]:hover {}
 
 button:active,
 [role="button"]:active {
-  transform: translateY(0) scale(0.98);
+  transform: scale(0.98);
 }
 
 /* Card - hover elegante */
 [class*="card"]:hover,
 [class*="Card"]:hover {
-  transform: translateY(-2px);
 }
 
 /* Input focus smooth */

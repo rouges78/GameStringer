@@ -40,6 +40,18 @@
 36. [RPG Maker Patcher](#rpg-maker-patcher)
 37. [Wolf RPG Patcher](#wolf-rpg-patcher)
 38. [Danganronpa Patcher](#danganronpa-patcher)
+39. [Comparação Multi-LLM](#comparação-multi-llm) *(NOVO)*
+40. [Pontuação de Qualidade ao Vivo](#pontuação-de-qualidade-ao-vivo) *(NOVO)*
+41. [Perfis de Voz de Personagem](#perfis-de-voz-de-personagem) *(NOVO)*
+42. [Pipeline de Tradução por Voz](#pipeline-de-tradução-por-voz) *(NOVO)*
+43. [OCR Multi-Motor](#ocr-multi-motor) *(NOVO)*
+44. [OCR Jogos Retro](#ocr-jogos-retro) *(NOVO)*
+45. [MT Adaptativa](#mt-adaptativa) *(NOVO)*
+46. [Tradutor Batch de Pastas](#tradutor-batch-de-pastas) *(NOVO)*
+47. [Tradutor Offline](#tradutor-offline) *(NOVO)*
+48. [Tradutor Manga/Quadrinhos](#tradutor-mangaquadrinhos) *(NOVO)*
+49. [Tradutor de Texturas](#tradutor-de-texturas) *(NOVO)*
+50. [Auto-Glossário](#auto-glossário) *(NOVO)*
 
 ---
 
@@ -1264,6 +1276,419 @@ Patcher dedicado para a série de jogos Danganronpa. Gere arquivos `.pak` e fich
 3. Extraia o arquivo `.pak` ou carregue diretamente um ficheiro `.po`
 4. Edite as strings no editor ou use **"Traduzir com IA"**
 5. Exporte o ficheiro `.po` completo para reimportar no jogo
+
+---
+
+## Comparação Multi-LLM
+
+A Comparação Multi-LLM envia o mesmo texto para múltiplos fornecedores de IA em paralelo e seleciona automaticamente a melhor tradução.
+
+### Fornecedores suportados
+
+- **OpenAI** (GPT-4o)
+- **Gemini** (Google)
+- **Claude** (Anthropic)
+- **DeepSeek**
+- **Mistral**
+- **DeepL**
+- **Libre Translate**
+
+### Funcionalidades
+
+- **Comparação paralela**: tradução simultânea com 2–7 fornecedores
+- **Seleção automática**: o sistema escolhe a tradução com maior pontuação
+- **Tradução de consenso**: quando vários modelos concordam, é gerada uma versão combinada
+- **Pontuação de qualidade**: cada tradução recebe uma pontuação em fluência, precisão, coerência e estilo
+- **Perfis de personagem**: aplique um perfil de voz para personalizar tom e vocabulário
+
+### Como usar
+
+1. Vá para **Translator → Compare** na barra lateral
+2. Insira o texto de origem e selecione o idioma de destino
+3. Escolha pelo menos 2 fornecedores na barra superior
+4. Clique em **"Comparar"** para lançar as traduções em paralelo
+5. Revise os resultados com pontuação e escolha a sua tradução preferida, ou use a selecionada automaticamente
+
+---
+
+## Pontuação de Qualidade ao Vivo
+
+O sistema de Pontuação de Qualidade ao Vivo avalia automaticamente cada tradução em múltiplas dimensões, atribuindo uma pontuação numérica e uma categoria.
+
+### Dimensões avaliadas
+
+| Dimensão | Descrição |
+|---|---|
+| **Fluência** | Naturalidade e legibilidade no idioma de destino |
+| **Precisão** | Fidelidade ao significado original |
+| **Coerência** | Consistência terminológica com o resto do projeto |
+| **Estilo** | Adequação do tom e registo ao contexto do jogo |
+
+### Categorias de pontuação
+
+- **Excelente** (90–100): tradução pronta para publicação
+- **Boa** (75–89): pequenas melhorias opcionais
+- **Aceitável** (60–74): revisão recomendada
+- **A rever** (40–59): correções necessárias
+- **Fraca** (0–39): retradução necessária
+
+### Controlos automáticos
+
+- Preservação de números e marcadores de posição (`{0}`, `%s`, etc.)
+- Coerência no comprimento em relação ao original
+- Deteção de palavras não traduzidas
+- Verificação de pontuação e formato
+
+---
+
+## Perfis de Voz de Personagem
+
+Os Perfis de Voz de Personagem permitem personalizar as traduções com base na personalidade de cada personagem do jogo.
+
+### Arquétipos disponíveis
+
+Hero, Villain, Mentor, Sidekick, Love Interest, Comic Relief, Mysterious Stranger, Noble, Pirate, Warrior, Wizard, Merchant, Child, Robot, Monster, Narrator — ou **Custom**.
+
+### Parâmetros configuráveis
+
+- **Personalidade**: arquétipo, traços de carácter, humor, idade, género
+- **Estilo de fala**: formalidade (muito formal → muito informal), vocabulário (arcaico, sofisticado, padrão, simples, gíria, técnico), comprimento de frases, pontuação
+- **Padrões**: frases recorrentes, palavras de preenchimento, sufixos finais, palavras a evitar, substituições preferidas
+- **Voz TTS** *(opcional)*: fornecedor (OpenAI, ElevenLabs, Azure), voz, tom, velocidade, emoção
+- **Exemplos de diálogo**: pares original/traduzido para guiar a IA
+
+### Como usar
+
+1. Abra o **Character Profile Manager** no painel de tradução
+2. Escolha um arquétipo predefinido ou crie um perfil personalizado
+3. Configure personalidade, estilo, padrões e vocabulário
+4. Adicione exemplos de diálogo para melhorar a coerência
+5. Guarde o perfil — será aplicado automaticamente em traduções futuras para esse personagem
+
+---
+
+## Pipeline de Tradução por Voz
+
+A Pipeline de Tradução por Voz transforma áudio falado em texto traduzido e sintetizado noutra língua, num único fluxo de ponta a ponta.
+
+### Etapas da pipeline
+
+1. **Gravação / Upload**: grave áudio do microfone ou carregue um ficheiro de áudio
+2. **Transcrição (Whisper)**: conversão de fala para texto via OpenAI Whisper
+3. **Tradução IA**: tradução do texto transcrito para o idioma de destino
+4. **Síntese de voz (TTS)**: geração do áudio traduzido com vozes sintéticas
+
+### Vozes disponíveis
+
+| Voz | Característica |
+|---|---|
+| **Nova** | Feminina, natural |
+| **Alloy** | Neutra, versátil |
+| **Echo** | Masculina, calorosa |
+| **Fable** | Narrativa, expressiva |
+| **Onyx** | Masculina, profunda |
+| **Shimmer** | Feminina, brilhante |
+
+### Como usar
+
+1. Vá para **Voice Translator** na barra lateral
+2. Grave áudio com o microfone ou carregue um ficheiro `.wav`/`.mp3`
+3. O sistema transcreve automaticamente o áudio com Whisper
+4. Selecione o idioma de destino e inicie a tradução
+5. Escolha uma voz TTS e gere o áudio traduzido
+6. Reproduza ou descarregue o resultado
+
+> **Nota**: Requer uma chave API OpenAI configurada para Whisper e TTS.
+
+---
+
+## OCR Multi-Motor
+
+O OCR Multi-Motor suporta 4 motores OCR com deteção automática e fallback inteligente para reconhecimento de texto a partir de capturas de ecrã de jogos.
+
+### Motores suportados
+
+| Motor | Descrição | Pontos fortes |
+|---|---|---|
+| **OneOCR** | Windows 11 AI nativo (porta 17231) | Fontes estilizadas, texto sobreposto, baixa resolução |
+| **PaddleOCR** | Baidu open-source (porta 8866) | CJK excelente, texto vertical, alta precisão |
+| **RapidOCR** | Wrapper leve ONNX (porta 9003) | Rápido, leve, fácil de instalar |
+| **Tesseract.js** | Integrado no browser | Sempre disponível, 100+ idiomas, sem configuração |
+
+### Funcionalidades
+
+- **Deteção automática**: sondagem dos motores disponíveis ao arranque
+- **Cadeia de fallback**: OneOCR → PaddleOCR → RapidOCR → Tesseract (CJK: PaddleOCR primeiro)
+- **Modo comparação**: executa todos os motores em paralelo e usa o melhor resultado
+- **Pré-processamento de imagem**: escala de cinzentos, contraste, limiar, ampliação para texto pequeno
+- **Motor preferido**: guarda a preferência para sessões futuras
+
+### Como usar
+
+1. Vá para **OCR Multi-Engine** na barra lateral
+2. Clique em **"Detetar Motores"** para verificar quais estão online
+3. Selecione o motor preferido clicando no cartão correspondente
+4. Carregue uma captura de ecrã ou cole uma imagem
+5. O sistema reconhece o texto com o motor escolhido (ou fallback automático)
+
+---
+
+## OCR Jogos Retro
+
+OCR Jogos Retro é um módulo especializado para reconhecimento de texto a partir de capturas de jogos retro com fontes pixeladas.
+
+### Presets disponíveis
+
+| Preset | Era | Otimização |
+|---|---|---|
+| **8-bit** | NES, Game Boy, MSX | Ampliação 4x, limiar alto, remoção de dithering |
+| **16-bit** | SNES, Mega Drive, PC Engine | Ampliação 3x, contraste médio, sharpen |
+| **DOS/PC** | DOS, EGA/VGA | Ampliação 2x, limiar médio, fonte monoespaçada |
+| **PC-98** | NEC PC-98 (japonês) | Ampliação 3x, limiar alto, otimizado CJK |
+| **Early Windows** | Windows 3.1/95/98 | Ampliação 2x, contraste leve |
+
+### Parâmetros configuráveis
+
+- **Ampliação**: fator de ampliação (nearest-neighbor para preservar pixels)
+- **Contraste**: aumento do contraste antes do reconhecimento
+- **Limiar binário**: conversão preto/branco com limiar configurável
+- **Remoção de dithering**: filtra padrões de dithering típicos de jogos retro
+- **Sharpen / Denoise**: nitidez e redução de ruído
+
+### Como usar
+
+1. Abra o painel **Retro-Game OCR** na secção OCR
+2. Escolha um preset de jogo ou configure os parâmetros manualmente
+3. Carregue a captura do jogo retro
+4. O sistema pré-processa a imagem e aplica reconhecimento otimizado
+5. Reveja e edite o texto reconhecido
+
+---
+
+## MT Adaptativa
+
+MT Adaptativa (Tradução Automática Adaptativa) é um sistema que aprende com as correções humanas para melhorar progressivamente a qualidade das traduções.
+
+### Como funciona
+
+1. **Guardar correções**: quando corrige uma tradução AI, o par (original → correção) é guardado
+2. **Similaridade fuzzy**: trigramas (coeficiente Dice) + similaridade de palavras (Jaccard) para encontrar correções relevantes
+3. **Few-shot learning**: as correções mais semelhantes ao texto atual são injetadas no prompt como exemplos
+4. **Feedback loop**: quanto mais correções guardar, melhores serão as traduções futuras
+
+### Funcionalidades
+
+- **Auto-deteção de tags**: tone_change, terminology, major_rewrite, length_change, punctuation, style
+- **Boost contextual**: prioridade a correções do mesmo jogo (1.3x), mesmo tipo de conteúdo (1.2x), correções recentes
+- **Aprovação**: marque correções como verificadas para maior fiabilidade
+- **Import/Export**: exporte e importe conjuntos de correções entre projetos
+- **Estatísticas**: número de correções por idioma, jogo, tipo, tag e utilização média
+
+### Configuração
+
+| Parâmetro | Padrão | Descrição |
+|---|---|---|
+| **Max examples** | 5 | Máximo de exemplos few-shot por prompt |
+| **Limiar similaridade** | 0.2 | Mínimo de similaridade para incluir um exemplo |
+| **Mesmo jogo** | Sim | Preferir correções do mesmo jogo |
+| **Só aprovadas** | Não | Usar apenas correções marcadas como aprovadas |
+
+---
+
+## Tradutor Batch de Pastas
+
+O Tradutor Batch de Pastas traduz pastas inteiras de ficheiros numa única operação, preservando a estrutura original.
+
+### Funcionalidades
+
+- **Verificação recursiva**: verifica automaticamente subpastas
+- **Multi-formato**: suporta CSV, JSON, XML, PO, YAML, TXT, SRT, VTT e mais
+- **Seleção inteligente**: filtra por tipo de ficheiro, tamanho ou padrão
+- **Saída flexível**: pasta de saída personalizável com estrutura preservada
+- **Tradução paralela**: até 3 batches simultâneos para máxima velocidade
+- **Translation Memory**: usa e alimenta a memória de tradução automaticamente
+- **Classificação de conteúdo**: classifica as strings por tipo (diálogo, UI, sistema) antes da tradução
+- **Controlo de qualidade**: QA automático com pontuação mínima configurável
+- **Pausa/Retomar**: pause e retome a tradução a qualquer momento
+
+### Parâmetros
+
+| Parâmetro | Padrão | Descrição |
+|---|---|---|
+| **Tamanho batch** | 40 | Strings por chamada API |
+| **Paralelos** | 3 | Batches simultâneos |
+| **Atraso** | 50ms | Pausa entre batches |
+| **Pontuação mín.** | 70 | Limiar mínimo de qualidade |
+| **Max tentativas** | 3 | Tentativas em caso de erro |
+
+### Como usar
+
+1. Vá para **Batch Translator** na barra lateral
+2. Selecione a pasta de origem com os ficheiros a traduzir
+3. Escolha idioma de origem, idioma de destino e fornecedor AI
+4. Configure as opções (TM, QA, classificação, pipeline)
+5. Clique em **"Iniciar"** para começar a tradução batch
+6. Monitorize o progresso em tempo real — pode pausar ou cancelar
+
+---
+
+## Tradutor Offline
+
+O Tradutor Offline permite traduzir textos sem conexão à internet, utilizando modelos AI locais via Ollama. Nenhum dado é enviado online.
+
+### Requisitos
+
+- **Ollama** instalado e em execução (`ollama serve`)
+- Pelo menos um modelo de tradução descarregado
+
+### Modelos recomendados
+
+| Modelo | Tamanho | Descrição |
+|---|---|---|
+| **huihui_ai/hy-mt1.5-abliterated:7b** | ~4.5 GB | Tencent HY-MT 1.5 — #1 WMT25, supera o Google Translate em 30/31 idiomas |
+| **huihui_ai/hy-mt1.5-abliterated:1.8b** | ~1.2 GB | Versão leve e ultra-rápida |
+| **translategemma:12b** | ~8.0 GB | Google TranslateGemma — 55 idiomas, alta qualidade |
+| **translategemma:2b** | ~1.5 GB | Google TranslateGemma — 55 idiomas, rápido e leve |
+| **qwen3:4b** | ~2.5 GB | Alibaba Qwen 3 — uso geral, bom para tradução |
+
+### Funcionalidades
+
+- **Modo individual**: traduza um texto de cada vez
+- **Modo batch**: traduza múltiplos textos (um por linha) numa única operação
+- **14 idiomas suportados**: IT, EN, FR, DE, ES, PT, RU, JA, KO, ZH, PL, NL, TR, CS
+- **Troca de idiomas**: inverta origem e destino com um clique
+- **Seleção de modelo**: escolha entre os modelos instalados no Ollama
+- **Histórico de resultados**: todos os resultados mostrados com tempo de tradução
+- **Copiar resultados**: copie tradução individual ou todas juntas
+- **Setup integrado**: inicie o Ollama e descarregue modelos diretamente da interface
+
+### Como usar
+
+1. Vá a **Tradutor Offline** na barra lateral
+2. Se o Ollama não estiver em execução, clique em **"Iniciar Ollama"** no painel de configuração
+3. Descarregue um modelo recomendado (ex. `hy-mt1.5-abliterated:7b`)
+4. Selecione idioma de origem e destino
+5. Introduza o texto e clique em **"Traduzir"** (ou Ctrl+Enter)
+6. Para batch: ative o modo batch e introduza múltiplas linhas
+
+---
+
+## Tradutor Manga/Quadrinhos
+
+O Tradutor Manga/Quadrinhos é uma ferramenta especializada para tradução de banda desenhada e manga, com deteção automática de balões, OCR, tradução e inpainting.
+
+### Funcionalidades
+
+- **Deteção de balões**: identifica automaticamente os balões de texto nas páginas
+- **OCR integrado**: reconhece o texto dentro dos balões (horizontal e vertical)
+- **Tradução automática**: traduz o texto reconhecido para o idioma de destino
+- **Inpainting**: remove o texto original e substitui pela tradução
+- **Estilos de fonte**: Manga Style, Comic Sans, Handwritten, Bold
+- **Multi-página**: gerencie múltiplas páginas simultaneamente
+- **Tradução batch**: processe todas as páginas em sequência
+- **Exportação**: exporte página individual ou todas as páginas traduzidas
+
+### Idiomas suportados
+
+JA (japonês), ZH (chinês), KO (coreano), EN (inglês), IT (italiano), ES (espanhol), FR (francês), DE (alemão)
+
+### Como usar
+
+1. Vá a **Manga Translator** na barra lateral
+2. Carregue as páginas do manga/quadrinho (arrastar e soltar ou seleção de ficheiros)
+3. Selecione idioma de origem e destino
+4. Clique em **"Detetar & Traduzir"** para analisar a página atual
+5. Revise os balões detetados e as traduções
+6. Clique em **"Inpainting"** para aplicar as traduções na imagem
+7. Exporte a página traduzida
+
+---
+
+## Tradutor de Texturas
+
+O Tradutor de Texturas traduz o texto presente nas texturas de videojogos (menus, HUD, botões, UI), preservando o estilo gráfico e a formatação.
+
+### Formatos suportados
+
+| Formato | Descrição |
+|---|---|
+| **DDS** | DirectDraw Surface (o mais comum em jogos) |
+| **PNG** | Portable Network Graphics |
+| **TGA** | Targa |
+| **BMP** | Bitmap |
+| **JPG** | JPEG |
+| **WebP** | WebP |
+
+### Funcionalidades
+
+- **Deteção de regiões**: escaneia a textura para encontrar áreas com texto
+- **OCR para texturas**: reconhece o texto nas regiões detetadas
+- **Tradução automática**: traduz o texto preservando o contexto visual
+- **Preservar estilo**: mantém cores de fundo, cor do texto, fonte e tamanho
+- **Auto-match de fonte**: seleciona automaticamente a fonte mais similar
+- **Pré-visualização**: mostra a pré-visualização da textura antes e depois da tradução
+- **Processamento batch**: processa todas as texturas em sequência
+- **Exportação**: exporte textura individual ou todas as texturas modificadas
+
+### Como usar
+
+1. Vá a **Texture Translator** na barra lateral
+2. Carregue as texturas (arrastar e soltar, seleção de ficheiros ou pasta inteira)
+3. Selecione idioma de origem e destino
+4. Clique em **"Escanear Textura"** para detetar as regiões de texto
+5. Revise e edite as traduções propostas
+6. Clique em **"Aplicar Traduções"** para gerar a textura traduzida
+7. Exporte as texturas modificadas
+
+---
+
+## Auto-Glossário
+
+O Auto-Glossário extrai automaticamente termos de jogo dos textos usando LLM, guarda-os num glossário por jogo e injeta-os nos prompts de tradução para garantir coerência terminológica.
+
+### Sistema de 3 níveis
+
+| Nível | Ícone | Comportamento |
+|---|---|---|
+| **Locked** | 🔒 | Tradução fixa, nunca modificada pela AI |
+| **Synced** | 🔄 | Tradução preferida, a AI pode sugerir alternativas |
+| **Flexible** | 🔓 | Tradução sugerida, a AI escolhe a melhor |
+
+### Categorias de termos
+
+👤 Personagem, 📍 Local, 🎒 Objeto, ⚔️ Habilidade, 📜 Missão, 🖥️ UI, ⚙️ Sistema, 📚 Lore, 🐉 Criatura, 🏰 Fação, 📌 Outro
+
+### Funcionalidades
+
+- **Extração automática**: analisa os textos do jogo com LLM e extrai os termos chave
+- **Termos padrão**: adiciona automaticamente termos gaming comuns (HP, XP, NPC, etc.)
+- **Pesquisa e filtro**: pesquise por texto, filtre por nível ou categoria
+- **Injeção nos prompts**: os termos são automaticamente injetados nos prompts de tradução
+- **Do Not Translate**: marque termos que não devem ser traduzidos
+- **Case-sensitive**: opção para termos sensíveis a maiúsculas (nomes próprios)
+- **Import/Export**: exporte e importe glossários em formato CSV ou JSON
+- **Controlo de coerência**: verifica que os termos são usados de forma coerente nas traduções
+- **Estatísticas**: número de termos por nível, categoria e origem (auto/manual)
+
+### Configuração
+
+| Parâmetro | Padrão | Descrição |
+|---|---|---|
+| **Ativado** | Sim | Ativa/desativa o glossário automático |
+| **Extrair no primeiro batch** | Sim | Extrai termos do primeiro batch traduzido |
+| **Max termos por extração** | 20 | Máximo de termos extraídos por vez |
+| **Confiança mínima** | 50 | Limiar mínimo de confiança (0–100) |
+| **Injetar nos prompts** | Sim | Injeta termos nos prompts de tradução |
+| **Max termos no prompt** | 30 | Máximo de termos por prompt (limita context window) |
+
+### Como usar
+
+1. Vá a **Glossário** na barra lateral
+2. Crie um novo glossário selecionando jogo, idioma de origem e destino
+3. Adicione termos manualmente ou clique em **"Extrair Termos"** para extração AI
+4. Configure o nível (Locked/Synced/Flexible) e a categoria para cada termo
+5. Os termos são automaticamente injetados nos prompts de tradução
+6. Use **"Verificar Coerência"** para verificar o uso uniforme dos termos
 
 ---
 

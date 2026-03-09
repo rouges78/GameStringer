@@ -17,9 +17,10 @@ rm src-tauri/src/cache_manager.rs                  # ~10 warning
 rm src-tauri/src/intelligent_cache.rs              # ~8 warning
 rm src-tauri/src/memory_audit.rs                   # ~8 warning
 rm src-tauri/src/error_manager.rs                  # ~5 warning
-```
+```text
 
-### 2. **Aggiornamenti main.rs** 
+### 2. **Aggiornamenti main.rs**
+
 Rimuovere riferimenti ai moduli eliminati:
 
 ```rust
@@ -50,7 +51,7 @@ intelligent_cache::get_cache_performance_stats,
 intelligent_cache::preload_popular_cache_items,
 intelligent_cache::cleanup_expired_cache,
 intelligent_cache::generate_cache_report,
-```
+```text
 
 ---
 
@@ -59,6 +60,7 @@ intelligent_cache::generate_cache_report,
 ### 3. **Steam Commands Cleanup** (~8 warning)
 
 In `src/commands/steam.rs`, rimuovere:
+
 ```rust
 // ❌ RIMUOVERE queste funzioni:
 async fn parse_shared_games_xml() -> Result<Vec<SteamGame>, String> { ... }
@@ -66,11 +68,12 @@ async fn enrich_game_details(app_id: u32) -> Result<GameDetails, String> { ... }
 async fn get_steam_games_internal(api_key: &str) -> Result<Vec<SteamGame>, String> { ... }
 fn save_credentials_securely(api_key: &str) -> Result<(), String> { ... }
 async fn get_decrypted_api_key_from_profile(profile_id: &str) -> Result<String, String> { ... }
-```
+```text
 
 ### 4. **Epic Commands Cleanup** (~5 warning)
 
 In `src/commands/epic.rs`, rimuovere:
+
 ```rust
 // ❌ RIMUOVERE queste funzioni:
 async fn search_epic_configs_by_account_id(account_id: &str) -> Result<Vec<EpicGame>, String> { ... }
@@ -78,24 +81,26 @@ fn decrypt_epic_credentials(username: &str, password: &str) -> Result<EpicCreden
 async fn get_epic_owned_games_legacy() -> Result<Vec<EpicGame>, String> { ... }
 fn is_valid_epic_game_name(name: &str) -> bool { ... }
 async fn get_decrypted_epic_credentials() -> Result<EpicCredentials, String> { ... }
-```
+```text
 
 ### 5. **Library Commands Cleanup** (~2 warning)
 
 In `src/commands/library.rs`, rimuovere:
+
 ```rust
 // ❌ RIMUOVERE queste funzioni:
 async fn get_gog_installed_games() -> Result<Vec<GogGame>, String> { ... }
 async fn parse_gog_registry_entry(game_id: &str) -> Result<GogGame, String> { ... }
-```
+```text
 
 ### 6. **Patches Commands Cleanup** (~1 warning)
 
 In `src/commands/patches.rs`, rimuovere:
+
 ```rust
 // ❌ RIMUOVERE questa funzione:
 pub async fn translate_text(text: String, from_lang: String, to_lang: String) -> Result<String, String> { ... }
-```
+```text
 
 ---
 
@@ -104,6 +109,7 @@ pub async fn translate_text(text: String, from_lang: String, to_lang: String) ->
 ### 7. **Profile System - Aggiungere #[allow(dead_code)]** (~15 warning)
 
 In `src/profiles/manager.rs`:
+
 ```rust
 /// Sistema di gestione profili utente completo.
 /// Metodi marcati con #[allow(dead_code)] fanno parte dell'API pubblica
@@ -124,11 +130,12 @@ impl ProfileManager {
     #[allow(dead_code)]
     pub async fn repair_profile(&self, profile_id: &str) -> Result<(), ProfileError> { ... }
 }
-```
+```text
 
 ### 8. **Injection System - Aggiungere #[allow(dead_code)]** (~8 warning)
 
 In `src/injekt.rs`:
+
 ```rust
 /// Sistema di injection per traduzione giochi.
 /// Metodi di sicurezza e anti-cheat mantenuti per protezione utenti.
@@ -145,11 +152,12 @@ impl InjektTranslator {
     #[allow(dead_code)]
     fn is_module_safe(&self, module_name: &str) -> bool { ... }
 }
-```
+```text
 
 ### 9. **Anti-Cheat System - Aggiungere #[allow(dead_code)]** (~5 warning)
 
 In `src/anti_cheat.rs`:
+
 ```rust
 /// Sistema di rilevamento anti-cheat per protezione utenti.
 /// Mantenuto per sicurezza anche se non utilizzato attualmente.
@@ -163,11 +171,12 @@ pub struct AntiCheatState {
 impl AntiCheatState {
     pub fn new() -> Self { ... }
 }
-```
+```text
 
 ### 10. **Security Systems - Aggiungere #[allow(dead_code)]** (~5 warning)
 
 In `src/profiles/encryption.rs`:
+
 ```rust
 /// Funzioni di crittografia per sicurezza profili.
 /// Mantenute per garantire sicurezza dati utente.
@@ -178,9 +187,10 @@ impl ProfileEncryption {
     #[allow(dead_code)]
     pub fn generate_secure_salt() -> [u8; 32] { ... }
 }
-```
+```text
 
 In `src/profiles/secure_memory.rs`:
+
 ```rust
 /// Gestione sicura della memoria per dati sensibili.
 /// Essenziale per sicurezza anche se non utilizzato attualmente.
@@ -192,19 +202,21 @@ impl<T: Default + Clone> SecureMemory<T> {
 
 #[allow(dead_code)]
 pub fn secure_clear_string(s: &mut String) { ... }
-```
+```text
 
 ---
 
 ## 📊 **RISULTATI ATTESI**
 
-### Warning Reduction:
+### Warning Reduction
+
 - **Prima del cleanup**: 105 warning
 - **Dopo rimozione file**: ~28 warning
 - **Dopo pulizia funzioni**: ~13 warning  
 - **Dopo #[allow(dead_code)]**: ~0 warning
 
-### File Impattati:
+### File Impattati
+
 - **File rimossi**: 7 file completi
 - **File modificati**: ~8 file per pulizia funzioni
 - **File protetti**: ~5 file con #[allow(dead_code)]
@@ -214,11 +226,13 @@ pub fn secure_clear_string(s: &mut String) { ... }
 ## ✅ **CHECKLIST ESECUZIONE**
 
 ### Fase 1: Backup e Preparazione
+
 - [ ] Commit stato attuale: `git commit -m "Pre-cleanup backup"`
 - [ ] Creare branch: `git checkout -b rust-warnings-cleanup`
 - [ ] Verificare build attuale: `cargo check`
 
 ### Fase 2: Rimozione File (77 warning)
+
 - [ ] Rimuovere `src/performance_optimizer.rs`
 - [ ] Rimuovere `src/profiles/compression.rs`
 - [ ] Rimuovere `src/profiles/cleanup.rs`
@@ -231,6 +245,7 @@ pub fn secure_clear_string(s: &mut String) { ... }
 - [ ] Test: `cargo check` (dovrebbe essere ~28 warning)
 
 ### Fase 3: Pulizia Funzioni (15 warning)
+
 - [ ] Pulire `src/commands/steam.rs`
 - [ ] Pulire `src/commands/epic.rs`
 - [ ] Pulire `src/commands/library.rs`
@@ -238,6 +253,7 @@ pub fn secure_clear_string(s: &mut String) { ... }
 - [ ] Test: `cargo check` (dovrebbe essere ~13 warning)
 
 ### Fase 4: Protezione Codice (13 warning)
+
 - [ ] Aggiungere #[allow(dead_code)] a Profile System
 - [ ] Aggiungere #[allow(dead_code)] a Injection System
 - [ ] Aggiungere #[allow(dead_code)] a Anti-Cheat System
@@ -245,6 +261,7 @@ pub fn secure_clear_string(s: &mut String) { ... }
 - [ ] Test: `cargo check` (dovrebbe essere ~0 warning)
 
 ### Fase 5: Validazione Finale
+
 - [ ] Verificare: `cargo check` = 0 warning
 - [ ] Verificare: `cargo build` funziona
 - [ ] Verificare: `npm run build` funziona
@@ -255,19 +272,22 @@ pub fn secure_clear_string(s: &mut String) { ... }
 
 ## 🔒 **GARANZIE DI SICUREZZA**
 
-### ✅ Codice Rimosso:
+### ✅ Codice Rimosso
+
 - Non utilizzato nel codebase attuale
 - Non critico per sicurezza
 - Non parte dell'API pubblica
 - Facilmente re-implementabile se necessario
 
-### 🛡️ Codice Mantenuto:
+### 🛡️ Codice Mantenuto
+
 - Sistemi di sicurezza critici
 - API pubblica completa
 - Funzionalità core dell'applicazione
 - Codice difficile da re-implementare
 
-### 📝 Documentazione:
+### 📝 Documentazione
+
 - Ogni sistema mantenuto ha documentazione chiara
 - Spiegazione del perché è mantenuto
 - Utilizzo futuro pianificato documentato
@@ -277,6 +297,7 @@ pub fn secure_clear_string(s: &mut String) { ... }
 ## 🎯 **OBIETTIVO FINALE**
 
 **Da 105 warning a 0 warning** mantenendo:
+
 - ✅ Tutte le funzionalità critiche
 - ✅ Sistemi di sicurezza completi
 - ✅ API pubblica per sviluppi futuri

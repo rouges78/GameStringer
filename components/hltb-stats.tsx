@@ -21,6 +21,9 @@ interface HltbStatsProps {
   className?: string;
 }
 
+// Cache HLTB globale per evitare doppi fetch (StrictMode + HMR)
+const _hltbCache = ((globalThis as any).__gsHltbCache ??= new Map<string, HltbData>());
+
 export function HltbStats({ gameName, className }: HltbStatsProps) {
   const [data, setData] = useState<HltbData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +35,15 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
       return;
     }
 
+    // Check cache globale
+    const cached = _hltbCache.get(gameName);
+    if (cached) {
+      setData(cached);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
     const fetchHltb = async () => {
       setLoading(true);
       setError(null);
@@ -40,16 +52,18 @@ export function HltbStats({ gameName, className }: HltbStatsProps) {
         console.log('[HLTB] Fetching for:', gameName);
         const result = await invoke<HltbData>('get_howlongtobeat_info', { gameName });
         console.log('[HLTB] Result:', JSON.stringify(result));
-        setData(result);
+        _hltbCache.set(gameName, result);
+        if (!cancelled) setData(result);
       } catch (e) {
         console.warn('[HLTB] Fetch failed:', e);
-        setError('Impossibile caricare i dati');
+        if (!cancelled) setError('Impossibile caricare i dati');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchHltb();
+    return () => { cancelled = true; };
   }, [gameName]);
 
   // Formatta ore (backend già ritorna ore, non secondi)

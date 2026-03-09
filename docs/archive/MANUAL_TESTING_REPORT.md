@@ -9,7 +9,8 @@
 Questo documento riporta i risultati dei test manuali eseguiti su GameStringer dopo la risoluzione dei problemi del database e l'avvio del server di sviluppo.
 
 ### Stato Server
-- **URL Base**: http://localhost:3001
+
+- **URL Base**: <http://localhost:3001>
 - **Porta Frontend**: 3001
 - **Porta API**: 3001 (stesso server Next.js)
 - **Database**: SQLite in `prisma/dev.db` ✅
@@ -19,12 +20,14 @@ Questo documento riporta i risultati dei test manuali eseguiti su GameStringer d
 ### 1. Pagine Principali
 
 #### Homepage (/)
+
 - [ ] La pagina si carica correttamente
 - [ ] Il layout è responsive
 - [ ] I link di navigazione funzionano
 - [ ] Non ci sono errori nella console
 
 #### Pagina Patches (/patches)
+
 - [ ] La pagina si carica senza errori
 - [ ] La lista delle patch viene visualizzata
 - [ ] Il pulsante "Crea Patch" è visibile
@@ -33,6 +36,7 @@ Questo documento riporta i risultati dei test manuali eseguiti su GameStringer d
 - [ ] L'importazione delle patch funziona
 
 #### Editor Traduzioni (/editor)
+
 - [ ] L'editor si carica correttamente
 - [ ] La ricerca traduzioni funziona
 - [ ] L'editing batch è disponibile
@@ -40,12 +44,14 @@ Questo documento riporta i risultati dei test manuali eseguiti su GameStringer d
 - [ ] L'anteprima delle traduzioni è corretta
 
 #### Pagina Store (/stores)
+
 - [ ] La pagina mostra tutti gli store supportati
 - [ ] I form di autenticazione sono presenti
 - [ ] La connessione test funziona per ogni store
 - [ ] Le credenziali vengono salvate correttamente
 
 #### Dashboard (/dashboard)
+
 - [ ] Le statistiche vengono visualizzate
 - [ ] I grafici si caricano correttamente
 - [ ] I widget sono interattivi
@@ -53,21 +59,25 @@ Questo documento riporta i risultati dei test manuali eseguiti su GameStringer d
 ### 2. Test API
 
 #### GET /api/games
+
 - [ ] Restituisce la lista dei giochi
 - [ ] Il formato JSON è corretto
 - [ ] Include tutti i campi necessari
 
 #### GET /api/patches
+
 - [ ] Restituisce la lista delle patch
 - [ ] Supporta i filtri per gioco
 - [ ] La paginazione funziona
 
 #### POST /api/patches
+
 - [ ] Crea nuove patch correttamente
 - [ ] Valida i dati in input
 - [ ] Restituisce la patch creata
 
 #### GET /api/translations
+
 - [ ] Restituisce le traduzioni
 - [ ] Supporta ricerca e filtri
 - [ ] Include metadati corretti
@@ -75,11 +85,13 @@ Questo documento riporta i risultati dei test manuali eseguiti su GameStringer d
 ### 3. Funzionalità Avanzate
 
 #### Sistema di Backup
+
 - [ ] I backup vengono creati automaticamente
 - [ ] Il ripristino funziona correttamente
 - [ ] La retention policy è rispettata
 
 #### Integrazione Multi-Store
+
 - [ ] Steam credentials funziona
 - [ ] GOG Galaxy si connette
 - [ ] Epic Games OAuth funziona
@@ -88,6 +100,7 @@ Questo documento riporta i risultati dei test manuali eseguiti su GameStringer d
 - [ ] Ubisoft Connect funziona
 
 #### Editor Avanzato
+
 - [ ] Syntax highlighting funziona
 - [ ] Auto-completamento attivo
 - [ ] Validazione in tempo reale
@@ -96,11 +109,13 @@ Questo documento riporta i risultati dei test manuali eseguiti su GameStringer d
 ## 🐛 Problemi Riscontrati
 
 ### Problemi Critici
+
 1. **Test automatici non funzionanti**: I test Node.js non riescono a connettersi al server Next.js (ECONNREFUSED)
    - **Impatto**: Medio - La validazione deve essere fatta manualmente
    - **Workaround**: Usare il browser per i test
 
 ### Problemi Minori
+
 1. **Permessi Prisma su Windows**: Errori durante la generazione del client
    - **Impatto**: Basso - Il database funziona comunque
    - **Soluzione**: Copiare manualmente il database nella posizione corretta

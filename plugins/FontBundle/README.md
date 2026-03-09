@@ -28,9 +28,9 @@ Un AssetBundle Unity contenente font open source completi che coprono tutti gli 
 ```powershell
 # Esegui lo script di download
 .\download-fonts.ps1
-```
+```text
 
-Oppure scarica manualmente da: https://fonts.google.com/noto
+Oppure scarica manualmente da: <https://fonts.google.com/noto>
 
 ### Step 2: Crea il Progetto Unity
 
@@ -72,7 +72,7 @@ public class BuildFontBundle
         );
     }
 }
-```
+```text
 
 ### Step 5: Distribuisci
 
@@ -80,7 +80,7 @@ Copia `gamestringer-fonts` nella cartella del plugin GameStringer.Satellite.
 
 ## Struttura File
 
-```
+```text
 FontBundle/
 ├── README.md
 ├── download-fonts.ps1      # Script download font
@@ -93,7 +93,7 @@ FontBundle/
     └── Assets/
         ├── Fonts/
         └── Editor/
-```
+```text
 
 ## Utilizzo nel Plugin
 
@@ -111,7 +111,7 @@ foreach (var text in FindObjectsOfType<TMP_Text>())
 {
     text.font = notoFont;
 }
-```
+```text
 
 ## Font Consigliati
 

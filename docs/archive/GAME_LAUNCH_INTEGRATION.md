@@ -9,36 +9,42 @@ Il sistema **Game Launch Integration** permette di avviare direttamente i giochi
 ## 🏗️ Architettura
 
 ### Backend (Rust)
+
 - **Modulo**: `src-tauri/src/commands/launcher.rs`
 - **Comandi Tauri**: 7 comandi registrati per avvio giochi
 - **Supporto Multi-Store**: Steam, Epic Games, GOG, Esecuzione Diretta
 - **Sistema Fallback**: Metodi alternativi se il principale fallisce
 
 ### Frontend (React/Next.js)
+
 - **Pagina Test**: `/launcher-test` per testing completo
 - **Integrazione UI**: Pronta per integrazione nella libreria principale
 
 ## 🎮 Store Supportati
 
 ### 1. Steam
+
 - **Metodo Primario**: Protocollo `steam://run/{appid}`
 - **Fallback**: Esecuzione diretta `steam.exe -applaunch {appid}`
 - **Rilevamento**: Registro Windows + percorsi comuni
 - **Validazione**: App ID numerici 1-9999999999
 
 ### 2. Epic Games
+
 - **Metodo Primario**: Protocollo `com.epicgames.launcher://apps/{appname}?action=launch&silent=true`
 - **Fallback**: Epic Games Launcher diretto `-openapp {appname}`
 - **Rilevamento**: Percorsi comuni Epic Games Launcher
 - **Validazione**: App Name non vuoto
 
 ### 3. GOG
+
 - **Metodo Primario**: Protocollo `goggalaxy://openGameView/{gameid}`
 - **Fallback**: GOG Galaxy diretto `/gameId={gameid}`
 - **Rilevamento**: Percorsi comuni GOG Galaxy
 - **Validazione**: Game ID non vuoto
 
 ### 4. Esecuzione Diretta
+
 - **Metodo**: Esecuzione diretta dell'eseguibile
 - **Opzioni**: Supporto parametri di lancio personalizzati
 - **Validazione**: Verifica esistenza file eseguibile
@@ -46,33 +52,38 @@ Il sistema **Game Launch Integration** permette di avviare direttamente i giochi
 ## 🔧 Comandi Tauri Implementati
 
 ### 1. `launch_steam_game(app_id: String)`
+
 ```rust
 // Avvia un gioco Steam usando App ID
 let result = invoke('launch_steam_game', { appId: '730' });
-```
+```text
 
 ### 2. `launch_epic_game(app_name: String)`
+
 ```rust
 // Avvia un gioco Epic Games usando App Name
 let result = invoke('launch_epic_game', { appName: 'Fortnite' });
-```
+```text
 
 ### 3. `launch_gog_game(game_id: String)`
+
 ```rust
 // Avvia un gioco GOG usando Game ID
 let result = invoke('launch_gog_game', { gameId: '1207658924' });
-```
+```text
 
 ### 4. `launch_game_direct(executable_path: String, launch_options: Option<String>)`
+
 ```rust
 // Avvia un gioco tramite esecuzione diretta
 let result = invoke('launch_game_direct', { 
     executablePath: 'C:\\Game\\game.exe',
     launchOptions: '-windowed -novid'
 });
-```
+```text
 
 ### 5. `launch_game_universal(request: LaunchRequest)`
+
 ```rust
 // Sistema universale che sceglie automaticamente il metodo migliore
 let request = {
@@ -83,24 +94,27 @@ let request = {
     launch_options: null
 };
 let result = invoke('launch_game_universal', { request });
-```
+```text
 
 ### 6. `get_installed_launchers()`
+
 ```rust
 // Rileva i launcher installati nel sistema
 let launchers = invoke('get_installed_launchers');
 // Ritorna: ["Steam", "Epic Games", "GOG"]
-```
+```text
 
 ### 7. `test_launcher_functionality(launcher: String)`
+
 ```rust
 // Testa la funzionalità di un launcher specifico
 let result = invoke('test_launcher_functionality', { launcher: 'Steam' });
-```
+```text
 
 ## 📊 Strutture Dati
 
 ### LaunchResult
+
 ```rust
 pub struct LaunchResult {
     pub success: bool,        // Successo operazione
@@ -109,9 +123,10 @@ pub struct LaunchResult {
     pub game_id: String,      // ID del gioco
     pub store: String,        // Store utilizzato
 }
-```
+```text
 
 ### LaunchRequest
+
 ```rust
 pub struct LaunchRequest {
     pub game_id: String,              // ID del gioco
@@ -120,11 +135,12 @@ pub struct LaunchRequest {
     pub executable_path: Option<String>, // Percorso eseguibile (opzionale)
     pub launch_options: Option<String>,  // Opzioni di lancio (opzionale)
 }
-```
+```text
 
 ## 🛡️ Sicurezza e Validazione
 
 ### Validazioni Implementate
+
 - **Steam App ID**: Validazione numerica 1-9999999999
 - **Epic App Name**: Controllo non vuoto
 - **GOG Game ID**: Controllo non vuoto
@@ -132,6 +148,7 @@ pub struct LaunchRequest {
 - **Parametri Lancio**: Sanitizzazione input
 
 ### Gestione Errori
+
 - **Logging Completo**: Tutti i tentativi di avvio loggati
 - **Fallback Automatico**: Metodi alternativi se primario fallisce
 - **Messaggi Descrittivi**: Errori dettagliati per debugging
@@ -140,12 +157,14 @@ pub struct LaunchRequest {
 ## 🧪 Testing
 
 ### Pagina Test Frontend
+
 - **URL**: `/launcher-test`
 - **Funzionalità**: Test completo tutti i comandi
 - **UI**: Interfaccia intuitiva per testing manuale
 - **Feedback**: Risultati dettagliati per ogni test
 
 ### Test Cases
+
 1. **Rilevamento Launcher**: Verifica launcher installati
 2. **Test Funzionalità**: Test apertura launcher
 3. **Avvio Steam**: Test con App ID reali
@@ -157,13 +176,16 @@ pub struct LaunchRequest {
 ## 🔄 Integrazione con Libreria Esistente
 
 ### Dati Giochi Disponibili
+
 Il sistema può utilizzare i dati già presenti:
+
 - **Steam**: App ID da `SteamGame.appid`
 - **Epic**: App Name da Epic Games scanner
 - **GOG**: Game ID da GOG scanner
 - **Altri Store**: Percorsi eseguibili da scanner locali
 
 ### Integrazione UI
+
 ```typescript
 // Esempio integrazione nella libreria giochi
 const launchGame = async (game: GameInfo) => {
@@ -183,45 +205,51 @@ const launchGame = async (game: GameInfo) => {
         showError(`Errore avvio ${game.name}: ${result.message}`);
     }
 };
-```
+```text
 
 ## 🚀 Esempi d'Uso
 
 ### Avvio Counter-Strike 2 (Steam)
+
 ```typescript
 const result = await invoke('launch_steam_game', { appId: '730' });
 // Risultato: steam://run/730 o steam.exe -applaunch 730
-```
+```text
 
 ### Avvio Fortnite (Epic Games)
+
 ```typescript
 const result = await invoke('launch_epic_game', { appName: 'Fortnite' });
 // Risultato: com.epicgames.launcher://apps/Fortnite?action=launch&silent=true
-```
+```text
 
 ### Avvio The Witcher 3 (GOG)
+
 ```typescript
 const result = await invoke('launch_gog_game', { gameId: '1207658924' });
 // Risultato: goggalaxy://openGameView/1207658924
-```
+```text
 
 ### Avvio Gioco Personalizzato
+
 ```typescript
 const result = await invoke('launch_game_direct', {
     executablePath: 'C:\\MyGame\\game.exe',
     launchOptions: '-windowed -resolution 1920x1080'
 });
-```
+```text
 
 ## 📈 Performance e Ottimizzazioni
 
 ### Caratteristiche Performance
+
 - **Avvio Asincrono**: Tutti i comandi non bloccanti
 - **Fallback Rapido**: Cambio metodo in <100ms se fallimento
 - **Cache Launcher**: Percorsi launcher cachati per performance
 - **Validazione Rapida**: Controlli input ottimizzati
 
 ### Ottimizzazioni Implementate
+
 - **Lazy Loading**: Rilevamento launcher solo quando necessario
 - **Caching Intelligente**: Percorsi launcher salvati in memoria
 - **Parallel Processing**: Rilevamento launcher in parallelo
@@ -230,6 +258,7 @@ const result = await invoke('launch_game_direct', {
 ## 🔮 Sviluppi Futuri
 
 ### Possibili Miglioramenti
+
 - **Più Store**: Supporto Microsoft Store, Amazon Games
 - **Statistiche Avvio**: Tracking giochi più avviati
 - **Configurazioni Personalizzate**: Opzioni lancio per gioco
@@ -237,6 +266,7 @@ const result = await invoke('launch_game_direct', {
 - **Shortcuts Desktop**: Creazione collegamenti desktop
 
 ### Roadmap Tecnica
+
 1. **Fase 1**: Integrazione UI principale libreria ✅
 2. **Fase 2**: Supporto store aggiuntivi
 3. **Fase 3**: Statistiche e analytics avvio

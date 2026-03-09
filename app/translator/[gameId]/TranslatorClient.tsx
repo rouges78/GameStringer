@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { translateSingleSmart } from '@/lib/ai-translate-direct';
 import type { Game } from '@prisma/client';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
@@ -43,6 +44,17 @@ export default function TranslatorPage({ params }: { params: { gameId: string } 
   const [translationResult, setTranslationResult] = useState<TranslationResult | null>(null);
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [editedTranslation, setEditedTranslation] = useState<string>('');
+  const [targetLanguage, setTargetLanguage] = useState<string>('it');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLanguage(s.translation.defaultTargetLang);
+      } catch {}
+    }
+  }, []);
 
   useEffect(() => {
     const fetchGameAndConfig = async () => {
@@ -110,21 +122,15 @@ export default function TranslatorPage({ params }: { params: { gameId: string } 
     setTranslationResult(null);
 
     try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: extractedStrings[selectedStringIndex].string,
-          targetLanguage: 'it',
-          provider: aiConfig.provider,
-          apiKey: aiConfig.apiKey,
-        }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Errore API traduzione.');
-      }
-      const data = await response.json();
+      const result = await translateSingleSmart(
+        extractedStrings[selectedStringIndex].string,
+        targetLanguage
+      );
+      const data = {
+        translatedText: result?.translated || '',
+        confidence: 0.9,
+        suggestions: []
+      };
       setTranslationResult(data);
       setEditedTranslation(data.translatedText);
     } catch (err) {

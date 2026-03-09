@@ -854,6 +854,8 @@ pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, S
         "lua", "rpy", "ks", "scn",
         // Database di localizzazione
         "langdb", "landb", "dlog", "stringtable",
+        // Telltale archives
+        "ttarch", "ttarch2",
         // Godot
         "tres", "tscn", "translation",
         // Unreal Engine
@@ -880,6 +882,7 @@ pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, S
     let excluded_dirs = [
         "monobleedingedge", "__pycache__", "node_modules",
         ".git", ".svn", ".hg", "crashhandler",
+        "python-packages", "dist-info", "renpy",
     ];
     
     let mut found_files: Vec<String> = Vec::new();
@@ -919,12 +922,26 @@ pub async fn scan_translatable_files(game_path: String) -> Result<Vec<String>, S
                 }
             }
             
-            // Check 2: nome file indicativo di localizzazione
+            // Check 2: nome file indicativo di localizzazione (solo file di testo, no binari/media)
             if !is_translatable {
-                if let Some(stem) = file_path.file_stem() {
-                    let stem_lower = stem.to_string_lossy().to_lowercase();
-                    if localization_filenames.iter().any(|n| stem_lower.contains(n)) {
-                        is_translatable = true;
+                if let Some(ext) = file_path.extension() {
+                    let ext_lower = ext.to_string_lossy().to_lowercase();
+                    let binary_exts = [
+                        "ogg", "mp3", "wav", "flac", "aac", "wma",
+                        "png", "jpg", "jpeg", "gif", "bmp", "webp", "svg", "tga", "dds", "ico",
+                        "mp4", "avi", "mkv", "webm", "mov",
+                        "exe", "dll", "so", "dylib", "pdb",
+                        "zip", "rar", "7z", "gz", "tar",
+                        "ttf", "otf", "woff", "woff2",
+                        "rpyc", "pyc", "pyo",
+                    ];
+                    if !binary_exts.contains(&ext_lower.as_str()) {
+                        if let Some(stem) = file_path.file_stem() {
+                            let stem_lower = stem.to_string_lossy().to_lowercase();
+                            if localization_filenames.iter().any(|n| stem_lower.contains(n)) {
+                                is_translatable = true;
+                            }
+                        }
                     }
                 }
             }

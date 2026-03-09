@@ -11,13 +11,15 @@
 Nonostante il report del 13 agosto 2025 dichiarasse il problema risolto, il bug persisteva ancora. Il vero problema era:
 
 ### **Doppio Aggiornamento di Stato**
+
 1. `authenticateProfile()` aggiornava lo stato del profilo corrente
-2. Subito dopo veniva chiamato `onSelect()` → `onProfileSelected()` 
+2. Subito dopo veniva chiamato `onSelect()` → `onProfileSelected()`
 3. Questo causava un secondo aggiornamento che triggera un refresh/riavvio dell'app
 4. Il conflitto tra i due aggiornamenti causava il crash/riavvio
 
 ### **Flusso Problematico:**
-```
+
+```text
 ProfileCard.handleAuthenticate()
   ↓
 authenticateProfile() [PRIMO UPDATE]
@@ -27,13 +29,14 @@ onSelect(profile) [IMMEDIATO]
 onProfileSelected() [SECONDO UPDATE]
   ↓
 ⚠️ CONFLITTO = RIAVVIO APP
-```
+```text
 
 ---
 
 ## 🛠️ SOLUZIONE IMPLEMENTATA [VERSIONE FINALE]
 
 ### 1. **ELIMINAZIONE COMPLETA di onSelect nel ProfileSelector**
+
 ```typescript
 // PRIMA (Problema)
 if (success) {
@@ -48,9 +51,10 @@ if (success) {
   console.log('🚫 NON chiamiamo onSelect per evitare riavvio app');
   // NON FARE NULLA - authenticateProfile ha già fatto tutto
 }
-```
+```text
 
 ### 2. **ELIMINAZIONE COMPLETA della logica in ProtectedRoute**
+
 ```typescript
 // PRIMA (Problema)
 const handleProfileSelected = async (profileId: string) => {
@@ -66,10 +70,12 @@ const handleProfileSelected = async (profileId: string) => {
   console.log('✅ Autenticazione già gestita da useProfiles');
   return; // NON FARE ASSOLUTAMENTE NULLA
 }
-```
+```text
 
 ### 3. **Debug Monitor per Intercettare Riavvii**
+
 Aggiunto `LoginDebugMonitor` che:
+
 - Intercetta e blocca `window.location` modifiche
 - Logga tutti i tentativi di reload/refresh
 - Previene riavvii non voluti durante il debug
@@ -79,12 +85,14 @@ Aggiunto `LoginDebugMonitor` che:
 ## 📊 RISULTATI
 
 ### ✅ **PRIMA DEL FIX**
+
 - ❌ Login causava chiusura/riavvio app
 - ❌ Doppio aggiornamento di stato in conflitto
 - ❌ Refresh forzato anche quando non necessario
 - ❌ Esperienza utente interrotta
 
 ### ✅ **DOPO IL FIX**
+
 - ✅ Login fluido senza riavvii
 - ✅ Singolo aggiornamento di stato con delay strategico
 - ✅ Skip refresh quando già autenticato
@@ -95,7 +103,8 @@ Aggiunto `LoginDebugMonitor` che:
 
 ## 🧪 COME TESTARE
 
-### Test Manuale Rapido:
+### Test Manuale Rapido
+
 1. Apri l'app
 2. Seleziona un profilo
 3. Inserisci la password
@@ -103,12 +112,15 @@ Aggiunto `LoginDebugMonitor` che:
 5. **VERIFICA:** L'app NON si deve riavviare/chiudere
 6. **VERIFICA:** Dovresti vedere il dashboard immediatamente
 
-### Test Console:
+### Test Console
+
 Apri la console del browser (F12) e verifica questi log:
+
 - `✅ Login completato, transizione fluida per: [nome]`
 - `✅ Già autenticato, skip refresh per evitare riavvio`
 
-### Test Switch Profilo:
+### Test Switch Profilo
+
 1. Una volta loggato, vai nelle impostazioni
 2. Cambia profilo
 3. **VERIFICA:** Transizione fluida senza riavvio
@@ -132,6 +144,7 @@ Apri la console del browser (F12) e verifica questi log:
 Il problema cronico del riavvio/chiusura durante il login è stato **DEFINITIVAMENTE RISOLTO**.
 
 La soluzione è minimale ma efficace:
+
 - **100ms di delay** per evitare conflitti di stato
 - **Skip refresh** quando non necessario
 - **Zero riavvii** durante login e switch profilo
@@ -143,13 +156,17 @@ Il sistema ora funziona perfettamente con transizioni fluide e immediate! 🚀
 ## 💡 NOTE TECNICHE
 
 ### Perché il delay di 100ms funziona?
+
 Il delay permette a React di completare il ciclo di render dopo `authenticateProfile()` prima di triggerare `onProfileSelected()`. Questo evita che i due aggiornamenti di stato si sovrappongano causando il riavvio.
 
 ### Perché skippiamo il refresh se autenticato?
+
 Quando `authenticateProfile()` ha successo, lo stato è già aggiornato. Non c'è bisogno di forzare un altro refresh che causerebbe solo problemi.
 
 ### È una soluzione definitiva?
+
 Sì. Il problema era strutturale nel flusso di autenticazione. Ora il flusso è:
+
 1. Autenticazione → Aggiorna stato
 2. Piccolo delay → Notifica componente padre
 3. Check se già autenticato → Skip azioni non necessarie

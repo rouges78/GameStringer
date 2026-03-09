@@ -4,12 +4,12 @@ Sistema di traduzione runtime per giochi Unreal Engine 4/5.
 
 ## Architettura
 
-```
+```text
 unreal-translator/
 ├── hook-dll/           # DLL C++ che hooka le funzioni UE
 ├── injector/           # Rust code per iniettare la DLL
 └── bridge/             # Comunicazione con GameStringer
-```
+```text
 
 ## Come Funziona
 
@@ -21,6 +21,7 @@ unreal-translator/
 ## Funzioni UE Hookate
 
 ### UE4/UE5 Text Rendering
+
 - `FText::ToString()` - Conversione FText a stringa
 - `UTextBlock::SetText()` - Widget UI testo
 - `STextBlock::SetText()` - Slate widget testo

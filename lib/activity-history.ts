@@ -152,14 +152,25 @@ export class ActivityHistoryClient {
   }
 
   /**
-   * Ottieni le ultime N attività
+   * Ottieni le ultime N attività (con cache globalThis 5s per evitare chiamate duplicate)
    */
+  private get _recentCache(): Map<number, { data: Activity[]; ts: number }> {
+    const g = globalThis as any;
+    if (!g.__gsActivityCache) g.__gsActivityCache = new Map();
+    return g.__gsActivityCache;
+  }
   async getRecent(limit: number = 10): Promise<Activity[]> {
+    const cached = this._recentCache.get(limit);
+    if (cached && Date.now() - cached.ts < 5000) {
+      return cached.data;
+    }
     try {
       const response = await invoke<ActivityResponse<Activity[]>>('activity_get_recent', {
         limit,
       });
-      return response.data ?? [];
+      const data = response.data ?? [];
+      this._recentCache.set(limit, { data, ts: Date.now() });
+      return data;
     } catch (error) {
       console.error('[ActivityHistory] Failed to get recent activities:', error);
       return [];

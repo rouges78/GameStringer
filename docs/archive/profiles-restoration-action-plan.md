@@ -6,6 +6,7 @@
 ## Priorità Critica - Azioni Immediate
 
 ### 1. Pulizia Ambiente di Sviluppo
+
 ```bash
 # Ferma tutti i processi attivi
 taskkill /F /IM node.exe /T
@@ -20,9 +21,10 @@ cd src-tauri && cargo clean && cd ..
 
 # Reinstalla dipendenze
 npm install
-```
+```text
 
 ### 2. Verifica e Reset Porte
+
 ```bash
 # Controlla porta 3077
 netstat -ano | findstr :3077
@@ -32,9 +34,10 @@ netstat -ano | findstr :3077
 
 # Verifica configurazione porte
 npm run dev:check
-```
+```text
 
 ### 3. Test Isolato Backend Rust
+
 ```bash
 # Test compilazione
 cd src-tauri
@@ -45,13 +48,14 @@ cargo test profiles:: --verbose
 
 # Test comandi Tauri
 cargo test commands::profiles:: --verbose
-```
+```text
 
 ## Priorità Alta - Riparazione Componenti
 
 ### 4. Test Comunicazione Tauri-React
 
 **Creare test isolato:**
+
 ```typescript
 // test-tauri-communication.ts
 import { invoke } from '@tauri-apps/api/core';
@@ -72,9 +76,10 @@ async function testProfilesAPI() {
     return false;
   }
 }
-```
+```text
 
 ### 5. Verifica Stato Database Profili
+
 ```bash
 # Controlla directory profili
 ls -la profiles/
@@ -84,11 +89,12 @@ node scripts/check-profiles-integrity.js
 
 # Reset se necessario
 node reset-profiles.js
-```
+```text
 
 ### 6. Test Componenti Frontend Isolati
 
 **Test ProfileWrapper:**
+
 ```typescript
 // Creare test-profile-wrapper.tsx
 import { ProfileWrapper } from '@/components/profiles/profile-wrapper';
@@ -103,11 +109,12 @@ export default function TestProfileWrapper() {
     </div>
   );
 }
-```
+```text
 
 ## Priorità Media - Ottimizzazione
 
 ### 7. Verifica Configurazione Tauri
+
 ```json
 // Verifica src-tauri/tauri.conf.json
 {
@@ -115,11 +122,12 @@ export default function TestProfileWrapper() {
     "devUrl": "http://127.0.0.1:3077"
   }
 }
-```
+```text
 
 ### 8. Debug Logging Avanzato
 
 **Attivare logging dettagliato:**
+
 ```rust
 // In main.rs
 use log::{info, debug, error};
@@ -130,9 +138,10 @@ fn main() {
     
     // ... resto del codice
 }
-```
+```text
 
 ### 9. Verifica Session Persistence
+
 ```typescript
 // Test session-persistence.ts
 import { sessionPersistence } from '@/lib/session-persistence';
@@ -145,11 +154,12 @@ async function testSessionPersistence() {
     console.error('Session persistence error:', error);
   }
 }
-```
+```text
 
 ## Priorità Bassa - Monitoraggio
 
 ### 10. Setup Monitoring Avanzato
+
 ```typescript
 // Aggiungere in ProfileWrapper
 useEffect(() => {
@@ -157,9 +167,10 @@ useEffect(() => {
   console.log('Current pathname:', pathname);
   console.log('Requires auth:', requireAuth);
 }, [pathname, requireAuth]);
-```
+```text
 
 ### 11. Verifica Performance
+
 ```bash
 # Analisi bundle size
 npm run build
@@ -167,11 +178,12 @@ npx @next/bundle-analyzer
 
 # Profiling Rust
 cargo build --release
-```
+```text
 
 ## Script di Automazione
 
 ### Script di Diagnosi Rapida
+
 ```bash
 #!/bin/bash
 # quick-diagnosis.sh
@@ -192,9 +204,10 @@ ls profiles/ 2>/dev/null && echo "✅ Profiles dir exists" || echo "⚠️ Profi
 
 echo "5. Testing Tauri build..."
 cd src-tauri && cargo build --quiet && echo "✅ Tauri build OK" || echo "❌ Tauri build FAIL"
-```
+```text
 
 ### Script di Reset Completo
+
 ```bash
 #!/bin/bash
 # full-reset.sh
@@ -220,23 +233,26 @@ echo "5. Testing setup..."
 npm run profiles:verify
 
 echo "✅ Reset completed"
-```
+```text
 
 ## Checklist di Verifica
 
 ### Pre-Riparazione
+
 - [ ] Backup dati profili esistenti
 - [ ] Documentazione errori specifici
 - [ ] Screenshot problemi UI
 - [ ] Log errori completi
 
 ### Durante Riparazione
+
 - [ ] Test ogni componente isolatamente
 - [ ] Verifica dopo ogni modifica
 - [ ] Logging dettagliato attivo
 - [ ] Monitoraggio performance
 
 ### Post-Riparazione
+
 - [ ] Test end-to-end completo
 - [ ] Verifica tutti i flussi utente
 - [ ] Test stress sistema
@@ -245,21 +261,25 @@ echo "✅ Reset completed"
 ## Metriche di Successo
 
 ### Backend Rust
+
 - ✅ Compilazione senza errori/warning
 - ✅ Tutti i test unitari passano
 - ✅ Comandi Tauri rispondono correttamente
 
 ### Frontend React
+
 - ✅ Build Next.js senza errori
 - ✅ Componenti renderizzano correttamente
 - ✅ Hooks funzionano senza errori
 
 ### Integrazione
+
 - ✅ Comunicazione Tauri-React fluida
 - ✅ Startup applicazione < 3 secondi
 - ✅ Cambio profilo < 1 secondo
 
 ### Funzionalità
+
 - ✅ Creazione profilo funzionante
 - ✅ Autenticazione profilo funzionante
 - ✅ Cambio profilo funzionante

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { translateSingleSmart } from "@/lib/ai-translate-direct";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,28 +78,26 @@ export default function UnityBundlePage() {
   const [result, setResult] = useState<AnalyzeFolderResult | null>(null);
   const [selectedBundle, setSelectedBundle] = useState<BundleInfo | null>(null);
   const [error, setError] = useState<string>("");
-  const [geminiApiKey, setGeminiApiKey] = useState<string>("");
+  const [apiKey, setApiKey] = useState<string>("");
+  const [provider, setProvider] = useState<string>("gemini");
+  const [targetLanguage, setTargetLanguage] = useState<string>("it");
   
-  // Carica API key Gemini dalle impostazioni (anche quando cambia)
+  // Carica impostazioni (API key, provider, lingua target) dal localStorage
   useEffect(() => {
-    const loadApiKey = () => {
+    const loadSettings = () => {
       const saved = localStorage.getItem('gameStringerSettings');
       if (saved) {
         try {
-          const settings = JSON.parse(saved);
-          if (settings.translation?.apiKey) {
-            console.log('[UNITY] API Key caricata:', settings.translation.apiKey.substring(0, 10) + '...');
-            setGeminiApiKey(settings.translation.apiKey);
-          }
+          const s = JSON.parse(saved);
+          if (s.translation?.apiKey) setApiKey(s.translation.apiKey);
+          if (s.translation?.provider) setProvider(s.translation.provider);
+          if (s.translation?.defaultTargetLang) setTargetLanguage(s.translation.defaultTargetLang);
         } catch {}
       }
     };
-    
-    loadApiKey();
-    
-    // Ricarica quando la finestra torna in focus (dopo aver salvato in Settings)
-    window.addEventListener('focus', loadApiKey);
-    return () => window.removeEventListener('focus', loadApiKey);
+    loadSettings();
+    window.addEventListener('focus', loadSettings);
+    return () => window.removeEventListener('focus', loadSettings);
   }, []);
   
   // Workflow state
@@ -198,23 +197,11 @@ export default function UnityBundlePage() {
         const entry = strings[i];
         
         try {
-          console.log('[TRANSLATE] Usando provider: deepl, API Key presente:', !!geminiApiKey);
-          const response = await fetch('/api/translate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              text: entry.value,
-              sourceLanguage: 'en',
-              targetLanguage: 'it',
-              provider: 'deepl',
-              apiKey: geminiApiKey || undefined,
-              context: 'Video game localization. Translate naturally and completely.'
-            })
-          });
+          console.log(`[TRANSLATE] Provider: ${provider}, targetLang: ${targetLanguage}`);
+          const result = await translateSingleSmart(entry.value, targetLanguage, 'en');
           
-          if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            console.warn(`Traduzione fallita per "${entry.value}":`, errData);
+          if (!result?.translated) {
+            console.warn(`Translation failed for "${entry.value}"`);
             consecutiveErrors++;
             
             // Se troppi errori consecutivi, ferma
@@ -225,10 +212,9 @@ export default function UnityBundlePage() {
             
             translatedStrings.push({ ...entry, translated: entry.value });
           } else {
-            const data = await response.json();
             translatedStrings.push({
               ...entry,
-              translated: data.translatedText || entry.value
+              translated: result.translated
             });
             consecutiveErrors = 0; // Reset errori
           }
@@ -278,7 +264,7 @@ export default function UnityBundlePage() {
       
       // Formato UABEA dump
       let dumpContent = "// UABEA StringTable Dump - Import with UABEA\n";
-      dumpContent += "// File: localization-string-tables-italian(it)\n\n";
+      dumpContent += `// File: localization-string-tables-${getLanguageName(targetLanguage)}(${targetLanguage})\n\n`;
       
       for (const entry of strings) {
         if (entry.translated) {
@@ -314,9 +300,18 @@ export default function UnityBundlePage() {
 
   const copyBundlePath = async () => {
     if (!selectedBundle) return;
-    const italianBundle = selectedBundle.bundle_path.replace('english(en)', 'italian(it)');
-    await navigator.clipboard.writeText(italianBundle);
+    const langSuffix = `${getLanguageName(targetLanguage)}(${targetLanguage})`;
+    const targetBundle = selectedBundle.bundle_path.replace(/english\(en\)/i, langSuffix);
+    await navigator.clipboard.writeText(targetBundle);
     setUabeaStep(3);
+  };
+
+  const getLanguageName = (code: string): string => {
+    const names: Record<string, string> = {
+      it: 'italian', en: 'english', es: 'spanish', fr: 'french', de: 'german',
+      pt: 'portuguese', pl: 'polish', ru: 'russian', zh: 'chinese', ja: 'japanese', ko: 'korean',
+    };
+    return names[code] || code;
   };
 
   const copyDumpPath = async () => {

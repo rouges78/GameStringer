@@ -1,16 +1,16 @@
 # API Reference - GameStringer
 
-## Panoramica
+## 🌐 Panoramica
 
 GameStringer utilizza Next.js API Routes per gestire tutte le operazioni backend. Le API sono organizzate per dominio funzionale e seguono i principi RESTful.
 
-## Autenticazione
+## 🔐 Autenticazione
 
 ### Base URL
 
 ```text
 http://localhost:3000/api
-```
+```text
 
 ### Headers Richiesti
 
@@ -19,11 +19,11 @@ http://localhost:3000/api
   'Content-Type': 'application/json',
   'Authorization': 'Bearer <session-token>' // Per endpoint protetti
 }
-```
+```text
 
-## Endpoints
+## 📚 Endpoints
 
-### Games API
+### 🎮 Games API
 
 #### `GET /api/games`
 
@@ -40,7 +40,7 @@ Recupera la lista dei giochi.
     "isInstalled": true
   }
 ]
-```
+```text
 
 #### `POST /api/games`
 
@@ -55,9 +55,9 @@ Crea un nuovo gioco.
   "platform": "steam",
   "isInstalled": true
 }
-```
+```text
 
-### Patches API
+### 🔧 Patches API
 
 #### `GET /api/patches`
 
@@ -86,7 +86,7 @@ Lista tutte le patch o una specifica.
     "updatedAt": "2025-07-01T12:00:00Z"
   }
 ]
-```
+```text
 
 #### `POST /api/patches`
 
@@ -103,7 +103,7 @@ Crea una nuova patch.
   "author": "Author Name",
   "language": "it"
 }
-```
+```text
 
 #### `PUT /api/patches`
 
@@ -118,7 +118,7 @@ Aggiorna una patch esistente.
   "description": "Updated Description",
   "version": "1.0.1"
 }
-```
+```text
 
 #### `DELETE /api/patches`
 
@@ -142,11 +142,11 @@ Esporta una patch come ZIP.
     "compress": true
   }
 }
-```
+```text
 
 **Response:** Binary ZIP file
 
-### Translations API
+### 🌍 Translations API
 
 #### `GET /api/translations`
 
@@ -183,7 +183,7 @@ Recupera traduzioni con filtri.
     "suggestions": []
   }
 ]
-```
+```text
 
 #### `POST /api/translations`
 
@@ -199,7 +199,7 @@ Crea una nuova traduzione.
   "targetLanguage": "it",
   "sourceLanguage": "en"
 }
-```
+```text
 
 #### `PUT /api/translations`
 
@@ -214,7 +214,7 @@ Aggiorna una traduzione.
   "status": "edited",
   "isManualEdit": true
 }
-```
+```text
 
 #### `DELETE /api/translations`
 
@@ -236,7 +236,7 @@ Genera suggerimenti AI per una traduzione.
   "originalText": "Text to translate",
   "targetLanguage": "it"
 }
-```
+```text
 
 **Response:**
 
@@ -249,7 +249,7 @@ Genera suggerimenti AI per una traduzione.
     "provider": "openai"
   }
 ]
-```
+```text
 
 #### `POST /api/translations/import`
 
@@ -271,7 +271,7 @@ Esporta traduzioni.
 - `format` (required): json | csv | po
 - `status` (optional): Filtra per stato
 
-### Stores API
+### 🏪 Stores API
 
 #### `POST /api/stores/test-connection`
 
@@ -283,7 +283,7 @@ Testa la connessione a uno store.
 {
   "provider": "steam-credentials"
 }
-```
+```text
 
 **Response:**
 
@@ -292,9 +292,9 @@ Testa la connessione a uno store.
   "connected": true,
   "error": null
 }
-```
+```text
 
-### Auth API
+### 🔑 Auth API
 
 #### `POST /api/auth/signin`
 
@@ -334,9 +334,9 @@ Recupera la sessione corrente.
     ]
   }
 }
-```
+```text
 
-### Utilities API
+### 🛠️ Utilities API
 
 #### `POST /api/utilities/howlongtobeat`
 
@@ -348,7 +348,7 @@ Cerca informazioni sui tempi di completamento.
 {
   "search": "The Witcher 3"
 }
-```
+```text
 
 **Response:**
 
@@ -358,12 +358,12 @@ Cerca informazioni sui tempi di completamento.
   "name": "The Witcher 3: Wild Hunt",
   "imageUrl": "...",
   "timeLabels": [
-    ["Main Story", "51.5 Hours"],
+    ["Main Story", "51½ Hours"],
     ["Main + Extras", "103 Hours"],
     ["Completionist", "173 Hours"]
   ]
 }
-```
+```text
 
 #### `GET /api/utilities/steamgriddb`
 
@@ -389,7 +389,7 @@ Cerca artwork per giochi.
     "height": 430
   }
 ]
-```
+```text
 
 #### `POST /api/utilities/preferences`
 
@@ -403,7 +403,7 @@ Salva preferenze utility.
   "enabled": true,
   "apiKey": "your-api-key"
 }
-```
+```text
 
 #### `DELETE /api/utilities/preferences`
 
@@ -413,7 +413,7 @@ Rimuove preferenze utility.
 
 - `service` (required): Nome del servizio
 
-### Steam API
+### 🚂 Steam API
 
 #### `POST /api/steam/auto-detect-config`
 
@@ -426,9 +426,9 @@ Rileva automaticamente la configurazione Steam.
   "sharedAccounts": ["76561198000000001", "76561198000000002"],
   "steamPath": "C:\\Program Files (x86)\\Steam"
 }
-```
+```text
 
-## Gestione Errori
+## 🔒 Gestione Errori
 
 Tutte le API seguono uno schema di errore standard:
 
@@ -438,7 +438,7 @@ Tutte le API seguono uno schema di errore standard:
   "code": "ERROR_CODE",
   "details": {}
 }
-```
+```text
 
 ### Codici di Errore Comuni
 
@@ -448,12 +448,12 @@ Tutte le API seguono uno schema di errore standard:
 - `404` - Not Found: Risorsa non trovata
 - `500` - Internal Server Error: Errore del server
 
-## Rate Limiting
+## 📝 Rate Limiting
 
 - **Richieste per minuto**: 60 (autenticato), 30 (non autenticato)
 - **Header di risposta**: `X-RateLimit-Remaining`, `X-RateLimit-Reset`
 
-## Testing
+## 🧪 Testing
 
 ### Ambiente di Test
 
@@ -463,7 +463,7 @@ cp .env.example .env.test
 
 # Esegui test API
 npm run test:api
-```
+```text
 
 ### Esempio con cURL
 
@@ -476,14 +476,14 @@ curl -X POST http://localhost:3000/api/patches \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{"gameId":"1","name":"Test Patch"}'
-```
+```text
 
-## SDK TypeScript
+## 🔗 SDK TypeScript
 
 ```typescript
 // Esempio di client TypeScript
 class GameStringerAPI {
-  private baseURL = 'http://localhost:3000/api';
+  private baseURL = "http://localhost:3000/api";
 
   async getGames(): Promise<Game[]> {
     const res = await fetch(`${this.baseURL}/games`);
@@ -492,15 +492,15 @@ class GameStringerAPI {
 
   async createPatch(data: PatchData): Promise<Patch> {
     const res = await fetch(`${this.baseURL}/patches`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
     });
     return res.json();
   }
 }
-```
+```text
 
 ---
 
-**Ultimo aggiornamento**: 3 Marzo 2026
+**Ultimo aggiornamento**: 1 Luglio 2025

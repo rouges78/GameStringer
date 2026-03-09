@@ -88,7 +88,7 @@ That's it. No command line, no manual file editing, no modding experience needed
 | **Kirikiri** | ✅ Full | .ks / .scn parsing |
 
 > **Unity games** get special treatment: if no translatable files are found, GameStringer detects it's a Unity game and offers to **automatically install BepInEx + XUnity.AutoTranslator** with one click. Just launch the game once after install, then re-scan — all text becomes translatable.
-
+>
 > ⚠️ **Anti-Cheat Warning**: BepInEx (DLL injection) can trigger anti-cheat systems (EAC, BattlEye, Vanguard). GameStringer includes anti-cheat detection and will warn you. **Only use on single-player / offline games.**
 
 ---
@@ -180,7 +180,7 @@ cd GameStringer
 npm install
 npm run dev          # development
 npm run tauri:build  # production build
-```
+```text
 
 ---
 

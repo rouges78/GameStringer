@@ -121,7 +121,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 🌐 Account GOG esistente
 📝 Username e Password del tuo account
 ⚠️ Nota: GOG ha API limitate
-```
+```text
 
 #### Ubisoft Connect
 
@@ -129,7 +129,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 🌐 Account Ubisoft esistente
 📝 Email e Password del tuo account
 🎮 Assicurati di avere Ubisoft Connect installato
-```
+```text
 
 #### Origin/EA
 
@@ -137,7 +137,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 🌐 Account EA/Origin esistente
 📝 Email e Password del tuo account
 🎮 Assicurati di avere EA App installato
-```
+```text
 
 #### Itch.io
 
@@ -145,7 +145,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
 🌐 Vai su: https://itch.io/user/settings/api-keys
 🔑 Genera una nuova API Key
 📋 Copia la API Key
-```
+```text
 
 ---
 
@@ -187,7 +187,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    2. Controlla che il profilo Steam sia pubblico
    3. Vai su Steam → Profilo → Modifica Profilo → Privacy
    4. Imposta "Dettagli Gioco" su "Pubblico"
-```
+```text
 
 #### Epic Games Non Funziona
 
@@ -197,7 +197,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    1. Verifica Client ID e Secret corretti
    2. Epic ha limitazioni API - normale avere meno giochi
    3. Riprova dopo qualche minuto
-```
+```text
 
 #### Altri Store
 
@@ -208,7 +208,7 @@ Questa guida ti accompagna dall'inizio alla fine per utilizzare GameStringer al 
    2. Assicurati che il client del store sia installato
    3. Controlla connessione internet
    4. Riprova più tardi
-```
+```text
 
 ---
 
@@ -582,7 +582,7 @@ La dashboard mostra dati reali dal backend:
 ```text
 1. 🎮 Scegli gioco → 2. 🤖 Traduzione automatica → 3. ✏️ Revisione manuale → 
 4. 💾 Applica → 5. 🎯 Testa → 6. 🔄 Migliora → 7. 🌍 Condividi
-```
+```text
 
 ---
 

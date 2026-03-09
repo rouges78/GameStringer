@@ -24,11 +24,12 @@ model Patch {
   
   game        Game     @relation(fields: [gameId], references: [id])
 }
-```
+```text
 
 ### API Endpoints
 
 #### `/api/patches`
+
 - **GET**: Lista tutte le patch o una specifica
   - Query params: `id`, `gameId`
 - **POST**: Crea una nuova patch
@@ -36,6 +37,7 @@ model Patch {
 - **DELETE**: Elimina una patch
 
 #### `/api/patches/export`
+
 - **POST**: Esporta una patch come file ZIP
   - Body: `{ patchId, options }`
   - Response: Binary ZIP file
@@ -43,6 +45,7 @@ model Patch {
 ## 🎯 Funzionalità Principali
 
 ### 1. Creazione Patch
+
 - Selezione gioco target
 - Nome e descrizione patch
 - Selezione lingua di traduzione
@@ -50,18 +53,21 @@ model Patch {
 - Versionamento semantico
 
 ### 2. Editor Patch
+
 - Aggiunta file da tradurre
 - Editor inline per modifiche
 - Anteprima modifiche
 - Validazione sintassi
 
 ### 3. Export/Import
+
 - Export in formato ZIP strutturato
 - Metadati patch in `patch.json`
 - File originali e modificati
 - Istruzioni installazione
 
 ### 4. Gestione Stati
+
 - **Active**: Patch attiva e utilizzabile
 - **Inactive**: Patch disabilitata
 - **Draft**: Patch in lavorazione
@@ -118,22 +124,26 @@ export default function PatchesPage() {
     </Tabs>
   )
 }
-```
+```text
 
 ## 🔧 Risoluzione Problemi
 
 ### Problema: File page.tsx corrotto
+
 **Sintomi**: Errore 500, "Unexpected token" nel browser
 **Causa**: Sovrapposizione di testo e tag JSX non chiusi
-**Soluzione**: 
+**Soluzione**:
+
 1. Backup del file corrotto
 2. Ricreazione completa con sintassi corretta
 3. Validazione JSX e TypeScript
 
 ### Problema: API Games incompatibile
+
 **Sintomi**: Dropdown giochi vuoto
 **Causa**: Struttura dati non corrispondente a `GameInfo`
 **Soluzione**: Mappatura campi in `/api/games/route.ts`:
+
 ```typescript
 const mappedGames = games.map(game => ({
   id: game.id,
@@ -141,20 +151,21 @@ const mappedGames = games.map(game => ({
   path: game.installPath,
   isInstalled: game.isInstalled
 }))
-```
+```text
 
 ## 📦 Formato Export Patch
 
-```
+```text
 patch-name.zip
 ├── patch.json          # Metadati patch
 ├── files/             # File modificati
 │   ├── original/      # File originali (backup)
 │   └── patched/       # File con modifiche
 └── README.txt         # Istruzioni installazione
-```
+```text
 
 ### Struttura patch.json
+
 ```json
 {
   "id": "patch-id",
@@ -175,7 +186,7 @@ patch-name.zip
     }
   ]
 }
-```
+```text
 
 ## 🚀 Best Practices
 

@@ -309,9 +309,9 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="px-5 pb-5 relative z-10"
+              className="px-5 pb-3 relative z-10"
             >
-              <div className="h-px w-full bg-slate-800/50 mb-4" />
+              <div className="h-px w-full bg-slate-800/50 mb-1.5" />
               
               {profile.is_locked ? (
                 <Alert className="border-red-500/20 bg-red-500/10 text-red-200">
@@ -321,10 +321,10 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                   </AlertDescription>
                 </Alert>
               ) : (
-                <form onSubmit={(e) => { e.preventDefault(); handleAuthenticate(); }} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); handleAuthenticate(); }} className="space-y-2">
                   <input type="text" name="username" value={profile.name} autoComplete="username" className="sr-only" tabIndex={-1} readOnly aria-hidden="true" />
-                  <div className="space-y-2">
-                    <Label htmlFor={`password-${profile.id}`} className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`password-${profile.id}`} className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
                       Password
                     </Label>
                     <div className="relative group/input">
@@ -335,7 +335,7 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                         onChange={(e) => setPassword(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
                         placeholder="Enter password"
-                        className="pr-10 bg-slate-950/50 border-slate-700/50 focus:border-indigo-500/50 focus:ring-indigo-500/20 text-slate-100 placeholder:text-slate-600 transition-all h-10"
+                        className="pr-10 bg-slate-950/50 border-slate-700/50 focus:border-indigo-500/50 focus:ring-indigo-500/20 text-slate-100 placeholder:text-slate-600 transition-all h-8 text-sm"
                         disabled={isAuthenticating}
                         autoFocus
                         autoComplete="current-password"
@@ -400,12 +400,12 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
                     </motion.div>
                   )}
 
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-2">
                     <Button 
                       type="submit"
                       onClick={(e) => e.stopPropagation()}
                       disabled={isAuthenticating || !password.trim()}
-                      className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white border-0 shadow-lg shadow-indigo-900/20 h-10"
+                      className="flex-1 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white border-0 shadow-lg shadow-indigo-900/20 h-8"
                     >
                       {isAuthenticating ? (
                         <>
@@ -565,7 +565,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
   }
 
     return (
-      <div className="h-screen w-full relative overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="h-full w-full relative overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <AlphabetBackground letterCount={80} />
         <div className="min-h-full w-full flex flex-col items-center justify-center p-4 relative z-10">
           <div className="w-full max-w-5xl flex flex-col items-center">
@@ -579,14 +579,28 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
               whileHover={{ scale: 1.02 }}
               className="mx-auto mb-4"
             >
-              <Image 
-                src="/logo.png" 
-                alt="GameStringer" 
-                width={180} 
-                height={180} 
-                className="drop-shadow-2xl mx-auto w-[180px] h-[180px]"
-                priority
-              />
+              <motion.div
+                animate={{
+                  filter: [
+                    'drop-shadow(0 0 20px rgba(59,130,246,0.5))',
+                    'drop-shadow(0 0 28px rgba(20,184,166,0.6))',
+                    'drop-shadow(0 0 24px rgba(16,185,129,0.55))',
+                    'drop-shadow(0 0 28px rgba(14,165,233,0.6))',
+                    'drop-shadow(0 0 20px rgba(59,130,246,0.5))',
+                  ],
+                  scale: [1, 1.015, 1, 1.015, 1],
+                }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Image 
+                  src="/logo.png" 
+                  alt="GameStringer" 
+                  width={160} 
+                  height={160} 
+                  className="mx-auto w-[160px] h-[160px]"
+                  priority
+                />
+              </motion.div>
               <p className="text-xs text-slate-500 mt-2 font-mono">v{version}</p>
             </motion.div>
             <p className="text-base text-slate-400">Select your profile to continue</p>

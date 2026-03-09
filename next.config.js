@@ -94,6 +94,12 @@ const nextConfig = {
       },
     ],
   },
+  // Turbopack config (equivalente del webpack externals per winreg)
+  turbopack: {
+    resolveAlias: {
+      winreg: { browser: './lib/winreg-stub.js' },
+    },
+  },
   webpack: (config, { isServer }) => {
     // Risolve l'errore 'Module not found: Can't resolve 'winreg''
     // Marcando 'winreg' come modulo esterno, diciamo a Webpack di non provare a includerlo nel bundle.

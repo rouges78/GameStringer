@@ -12,6 +12,7 @@ GameStringer è un **software desktop professionale** per la localizzazione di v
 ## 🏗️ Stack Tecnologico
 
 ### Frontend
+
 - **Framework**: Next.js + React
 - **Container**: Tauri (NON Electron!)
 - **Styling**: TailwindCSS + shadcn/ui
@@ -19,6 +20,7 @@ GameStringer è un **software desktop professionale** per la localizzazione di v
 - **State Management**: React Hooks + Context
 
 ### Backend
+
 - **Core**: Rust (via Tauri)
 - **System APIs**: WinAPI per memory manipulation
 - **Database**: SQLite locale
@@ -26,6 +28,7 @@ GameStringer è un **software desktop professionale** per la localizzazione di v
 - **Serialization**: Serde (JSON)
 
 ### Perché Tauri e non Electron?
+
 - **Performance**: Rust backend nativo vs Node.js
 - **Dimensioni**: ~10MB vs ~150MB
 - **Sicurezza**: Memory safety di Rust
@@ -38,6 +41,7 @@ GameStringer è un **software desktop professionale** per la localizzazione di v
 Tool professionale per localizzatori che lavorano su progetti di gioco.
 
 ### Funzionalità
+
 - **Import/Export** multi-formato:
   - JSON, PO (gettext), RESX, CSV, XLIFF, XML
 - **Translation Memory** (TM) locale
@@ -56,7 +60,8 @@ Tool professionale per localizzatori che lavorano su progetti di gioco.
   - Gestione errori e retry automatici
 
 ### Workflow Tipico
-```
+
+```text
 1. Importa file localizzazione (es. en.json)
 2. Carica Translation Memory esistente
 3. Pre-traduci con TM (match esatti)
@@ -64,7 +69,7 @@ Tool professionale per localizzatori che lavorano su progetti di gioco.
 5. Applica Quality Gates
 6. Revisione manuale
 7. Esporta file tradotto (es. it.json)
-```
+```text
 
 ---
 
@@ -74,7 +79,7 @@ Questa è la parte più interessante - traduzione runtime durante il gameplay!
 
 ### Architettura Generale
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    GameStringer UI (Next.js)                │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │
@@ -115,7 +120,7 @@ Questa è la parte più interessante - traduzione runtime durante il gameplay!
 │  │  • SetWindowTextW (window titles)                    │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
-```
+```text
 
 ---
 
@@ -142,9 +147,10 @@ async fn get_games_fast() {
     // Attendi tutti i risultati
     let results = join_all(handles).await;
 }
-```
+```text
 
 **Parsing .vdf di Steam**: ✅ Implementato
+
 - Legge `libraryfolders.vdf` per trovare percorsi librerie
 - Parsa `appmanifest_*.acf` per info giochi
 - Estrae: nome, ID, dimensione, ultimo avvio, ecc.
@@ -170,7 +176,7 @@ let process_handle = OpenProcess(
     FALSE,
     target_pid
 );
-```
+```text
 
 ### 3. Anti-Cheat Detection
 
@@ -200,7 +206,7 @@ pub enum BypassStrategy {
     SetWindowsHook,        // Hook Windows standard
     WaitForSafeWindow,     // Aspetta momento sicuro
 }
-```
+```text
 
 **Esempio**: Se rileva BattlEye → Risk: High → Strategy: Delayed + WaitForSafeWindow
 
@@ -230,9 +236,10 @@ unsafe {
         install_hook(module_base + function_offset);
     }
 }
-```
+```text
 
 **Hook Point Structure**:
+
 ```rust
 struct HookPoint {
     address: usize,              // 0x00401000
@@ -241,9 +248,10 @@ struct HookPoint {
     module_name: String,         // "game.exe", "user32.dll"
     retry_count: u32,            // Per gestione fallimenti
 }
-```
+```text
 
 **Installazione Hook** (semplificato):
+
 ```rust
 fn install_hook(address: usize) {
     // 1. Backup bytes originali
@@ -260,7 +268,7 @@ fn install_hook(address: usize) {
         // ...
     });
 }
-```
+```text
 
 ### 5. Text Interception
 
@@ -286,13 +294,13 @@ fn text_intercept_handler(text: *const u16) {
         TRANSLATION_CACHE.insert(original_text, translated);
     });
 }
-```
+```text
 
 ### 6. Translation Flow
 
 **Timing & Caching** (come hai intuito!):
 
-```
+```text
 Prima volta:
 ┌─────────────────────────────────────────────────────────┐
 │ Gioco chiama DrawTextW("New Game")                      │
@@ -326,7 +334,7 @@ Volte successive:
 ┌────────────▼────────────────────────────────────────────┐
 │ Inietta "Nuovo Gioco" ISTANTANEAMENTE                   │
 └─────────────────────────────────────────────────────────┘
-```
+```text
 
 **NO freeze del gioco!** La traduzione è completamente asincrona.
 
@@ -350,7 +358,7 @@ fn inject_translation(address: *mut u16, translated: &str) {
         );
     }
 }
-```
+```text
 
 ### 8. Translation Bridge
 
@@ -386,9 +394,10 @@ async fn handle_translate(text: String) -> Json<TranslationResponse> {
     // Cache miss - richiedi traduzione
     // ...
 }
-```
+```text
 
 **Statistiche Real-Time**:
+
 ```typescript
 interface BridgeStats {
   total_requests: number;
@@ -398,7 +407,7 @@ interface BridgeStats {
   avg_response_time_us: number;  // Microseconds!
   uptime_seconds: number;
 }
-```
+```text
 
 ---
 
@@ -424,9 +433,10 @@ pub enum InjectionStrategy {
     Selective(Vec),     // Inietta in processi specifici
     Cascade,            // Prima primario, poi secondari
 }
-```
+```text
 
 **Translation Sync**:
+
 - Cache condivisa tra processi
 - Quando processo A traduce "Health", processo B lo trova già in cache
 - Comunicazione via Translation Bridge
@@ -438,6 +448,7 @@ pub enum InjectionStrategy {
 ### Anti-Cheat Compatibility
 
 **Sistemi Rilevati**:
+
 - BattlEye (Risk: High)
 - Easy Anti-Cheat (Risk: High)
 - Vanguard (Risk: Critical)
@@ -447,6 +458,7 @@ pub enum InjectionStrategy {
 - nProtect GameGuard (Risk: Critical)
 
 **Strategie di Bypass**:
+
 1. **Delayed Injection**: Aspetta che anti-cheat finisca scan iniziale
 2. **Stealth Mode**: Nasconde hooks da scansioni memoria
 3. **Safe Window**: Inietta solo durante momenti sicuri (menu, pause)
@@ -479,7 +491,7 @@ fn monitor_hooks() {
         }
     }
 }
-```
+```text
 
 ### Memory Safety
 
@@ -498,7 +510,7 @@ unsafe {
         std::ptr::null_mut()
     );
 }
-```
+```text
 
 ---
 
@@ -515,11 +527,11 @@ let cache: HashMap<String, TranslationCache> = HashMap::new();
 // - Lookup: < 1µs
 // - Memory: ~2MB
 // - Cache hit rate: 95%+ dopo warmup
-```
+```text
 
 ### Translation Speed
 
-```
+```text
 Prima traduzione (cache miss):
 - LLM API call: 500-2000ms
 - Parsing: < 1ms
@@ -530,11 +542,11 @@ Traduzioni successive (cache hit):
 - Cache lookup: < 1µs
 - Memory injection: < 10µs
 - Total: < 100µs (impercettibile)
-```
+```text
 
 ### Memory Footprint
 
-```
+```text
 GameStringer app:
 - Base: ~50MB
 - Con cache 10k traduzioni: ~52MB
@@ -544,7 +556,7 @@ Confronto:
 - Electron app equivalente: ~200MB
 - Tauri (Rust): ~50MB
 - Risparmio: 75%
-```
+```text
 
 ---
 
@@ -555,6 +567,7 @@ Confronto:
 **Framework**: shadcn/ui (componenti React bellissimi)
 
 **Caratteristiche**:
+
 - Dark mode nativo
 - Animazioni fluide (Framer Motion)
 - Responsive design
@@ -607,7 +620,7 @@ async fn stop_injection(process_id: u32) -> Result<(), String>
 async fn get_injection_stats(
     process_id: Option<u32>
 ) -> Result<InjectionStats, String>
-```
+```text
 
 ### Translation Bridge Commands
 
@@ -629,7 +642,7 @@ async fn translation_bridge_load_translations(
 async fn translation_bridge_get_translation(
     text: String
 ) -> Result<Option<String>, String>
-```
+```text
 
 ### Game Library Commands
 
@@ -642,7 +655,7 @@ async fn get_games_fast() -> Result<Vec<Game>, String>
 
 #[tauri::command]
 async fn scan_all_platforms() -> Result<LibraryScanResult, String>
-```
+```text
 
 ---
 
@@ -708,13 +721,14 @@ const newTranslations = await translationBridge.exportToJson(
     'elden_ring_it_updated.json'
 );
 // Exported: 15,847 translations (+847 nuove)
-```
+```text
 
 ---
 
 ## 📈 Roadmap & Stato Attuale
 
 ### ✅ Implementato
+
 - ✅ Scan librerie multi-piattaforma
 - ✅ Process detection & attachment
 - ✅ Anti-cheat detection system
@@ -726,6 +740,7 @@ const newTranslations = await translationBridge.exportToJson(
 - ✅ Translation Memory offline
 
 ### 🚧 In Sviluppo
+
 - 🚧 Hook installation completa (alcuni TODO nel codice)
 - 🚧 Pattern matching automatico per giochi Unity
 - 🚧 Unreal Engine patcher avanzato
@@ -733,6 +748,7 @@ const newTranslations = await translationBridge.exportToJson(
 - 🚧 Machine learning per rilevamento stringhe UI
 
 ### 🔮 Pianificato
+
 - 🔮 Cloud sync traduzioni
 - 🔮 Community translation sharing
 - 🔮 OCR per testi renderizzati come texture
@@ -757,32 +773,36 @@ const newTranslations = await translationBridge.exportToJson(
 
 **NO!** Architettura completamente asincrona:
 
-```
+```text
 Thread 1 (Game):     [Render] → [Hook] → [Cache Hit] → [Inject] → [Continue]
                                     ↓ (miss)
 Thread 2 (Async):                [Translate] → [Cache Update]
-```
+```text
 
 Il gioco non aspetta mai la traduzione. Prima volta mostra originale, poi aggiorna.
 
 ### "Injection Unity vs altri engine?"
 
 **Unity**:
+
 - Injection runtime in `UnityEngine.UI.Text.set_text()`
 - Può anche modificare `Assembly-CSharp.dll` offline
 
 **Unreal**:
+
 - Injection in `FText` rendering
 - Patcher per `.pak` files (vedi `unreal_patcher.rs`)
 
 **Custom Engine**:
+
 - Fallback su API Windows standard
 - Pattern matching in memoria
 
 ### "È legale/sicuro?"
 
 **Legale**: Sì, per uso personale (single-player)
-**Sicuro**: 
+**Sicuro**:
+
 - ✅ Single-player: Sicuro
 - ⚠️ Multiplayer con anti-cheat: Rischio ban
 - ❌ Multiplayer competitivo: NON usare
@@ -796,11 +816,13 @@ Il sistema rileva anti-cheat e avvisa l'utente del rischio.
 Interessato a fare beta testing? Ecco cosa serve:
 
 ### Requisiti
+
 - Windows 10/11 (64-bit)
 - Almeno un gioco installato (Steam/Epic/GOG/ecc.)
 - Pazienza per bug e crash 😅
 
 ### Cosa testare
+
 1. **Library Scanning**: Tutti i giochi vengono rilevati?
 2. **Injection Stability**: L'app crasha? Il gioco crasha?
 3. **Translation Quality**: Le traduzioni hanno senso nel contesto?
@@ -808,6 +830,7 @@ Interessato a fare beta testing? Ecco cosa serve:
 5. **Anti-Cheat**: Quali giochi funzionano/non funzionano?
 
 ### Feedback Utile
+
 - Screenshot/video di bug
 - Log files (generati automaticamente)
 - Specifiche sistema (CPU, RAM, GPU)
@@ -818,6 +841,7 @@ Interessato a fare beta testing? Ecco cosa serve:
 ## 📚 Risorse
 
 ### Codice Chiave
+
 - `src-tauri/src/injekt.rs` - Core injection system
 - `src-tauri/src/multi_process_injekt.rs` - Multi-process support
 - `src-tauri/src/anti_cheat.rs` - Anti-cheat detection
@@ -825,15 +849,17 @@ Interessato a fare beta testing? Ecco cosa serve:
 - `lib/translation-bridge.ts` - Bridge client
 
 ### Documentazione
-- Tauri: https://tauri.app/
-- WinAPI: https://docs.microsoft.com/en-us/windows/win32/
-- Rust: https://www.rust-lang.org/
+
+- Tauri: <https://tauri.app/>
+- WinAPI: <https://docs.microsoft.com/en-us/windows/win32/>
+- Rust: <https://www.rust-lang.org/>
 
 ---
 
 ## 🎉 Conclusione
 
 GameStringer è un progetto **ambizioso** che combina:
+
 - **Performance** (Rust + WinAPI)
 - **Sicurezza** (Memory safety + Anti-cheat detection)
 - **UX** (Next.js + shadcn/ui)
@@ -842,6 +868,7 @@ GameStringer è un progetto **ambizioso** che combina:
 È sia un **tool professionale** per localizzatori che un **traduttore runtime** per giocatori.
 
 Il codice è pulito, ben strutturato, e mostra una profonda comprensione di:
+
 - System programming (WinAPI, memory manipulation)
 - Async/concurrency (Tokio, threading)
 - Frontend moderno (React, Next.js)

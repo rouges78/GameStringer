@@ -1,18 +1,22 @@
 # Piano Migrazione Next.js API Routes → Comandi Tauri (Rust)
+
 *Aggiornato: 3 Luglio 2025*
 
 ## 🎯 **Obiettivo Principale**
+
 Migrare tutte le Next.js Steam API routes in comandi Rust-based Tauri per creare un'applicazione desktop standalone Windows con frontend statico e backend Rust.
 
 ## ✅ **Traguardi Raggiunti**
 
 ### Migrazione Primo Comando (auto_detect_steam_config)
+
 - **✅ Backend Rust Implementato**: Comando `auto_detect_steam_config` con lettura registro Windows e parsing file VDF
 - **✅ Frontend Aggiornato**: Componente React modificato per usare `invoke` Tauri invece di `fetch`
 - **✅ Architettura Stabilita**: Moduli Rust (models, commands), struttura progetto corretta
 - **✅ Dipendenze Risolte**: winreg 0.52.0, steamy-vdf 0.2.0, @tauri-apps/api installate
 
 ### Problemi Tecnici Risolti
+
 - **✅ Errori Compilazione Rust**: HKEY import, iterazione VDF, build script standard
 - **✅ Problemi Next.js**: CLI reinstallata, React riparato, caniuse-lite installato
 - **✅ Configurazione Tauri**: Icone corrette, finestre configurate, script di build
@@ -78,7 +82,8 @@ Migrare tutte le Next.js Steam API routes in comandi Rust-based Tauri per creare
 ## 🔧 **Dettagli Tecnici Migrazione**
 
 ### Architettura Implementata
-```
+
+```text
 src-tauri/
 ├── src/
 │   ├── main.rs           # Entry point con registrazione comandi
@@ -90,24 +95,29 @@ src-tauri/
 ├── Cargo.toml             # Dipendenze Rust (winreg, steamy-vdf)
 ├── build.rs               # Script build standard Tauri
 └── tauri.conf.json        # Configurazione app (finestre, icone)
-```
+```text
 
 ### Comando Migrato: auto_detect_steam_config
+
 **Funzionalità**: Rileva automaticamente percorso Steam e utenti loggati
+
 - **Input**: Nessuno
 - **Output**: `SteamConfig { steam_path: Option<String>, logged_in_users: Vec<String> }`
-- **Implementazione**: 
+- **Implementazione**:
   - Lettura registro Windows (HKEY_LOCAL_MACHINE e HKEY_CURRENT_USER)
   - Parsing file `loginusers.vdf` con crate `steamy-vdf`
   - Gestione errori robusta con Result<T, String>
 
 ### Frontend Integration
+
 **File**: `components/steam-family-sharing.tsx`
+
 - **Prima**: `fetch('/api/steam/auto-detect-config')`
 - **Dopo**: `invoke('auto_detect_steam_config')`
 - **Dipendenza**: `@tauri-apps/api` per funzione `invoke`
 
 ### Dipendenze Chiave
+
 - **winreg 0.52.0**: Accesso registro Windows
 - **steamy-vdf 0.2.0**: Parsing file VDF di Steam
 - **@tauri-apps/api**: Comunicazione frontend-backend
@@ -117,6 +127,7 @@ src-tauri/
 ## 📝 **Note Implementative**
 
 ### Problemi Risolti
+
 1. **Errore HKEY**: Aggiunto `use winreg::HKEY;`
 2. **Iterazione VDF**: Cambiato `for (k,v) in users` → `for (k,v) in users.iter()`
 3. **Build Script**: Ripristinato `build.rs` standard con `tauri_build::build()`
@@ -124,6 +135,7 @@ src-tauri/
 5. **Next.js**: Reinstallato CLI, React, caniuse-lite
 
 ### Configurazione Finestra Tauri
+
 ```json
 {
   "title": "GameStringer",
@@ -131,9 +143,10 @@ src-tauri/
   "center": true, "visible": true,
   "decorations": true, "skipTaskbar": false
 }
-```
+```text
 
 ### Stato Compilazione
+
 - ✅ **cargo build**: Successo
 - ✅ **npm run tauri dev**: Compilazione completa
 - ❌ **Visualizzazione**: Problema runtime non risolto

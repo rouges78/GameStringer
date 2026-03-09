@@ -178,6 +178,7 @@ interface Settings {
     openrouterApiKey: string;
     cerebrasApiKey: string;
     deeplApiKey: string;
+    qwenApiKey: string;
     defaultTargetLang: string;
     temperature: number;
     maxTokens: number;
@@ -244,6 +245,7 @@ export default function SettingsPage() {
       openrouterApiKey: '',
       cerebrasApiKey: '',
       deeplApiKey: '',
+      qwenApiKey: '',
       defaultTargetLang: 'it',
       temperature: 0.3,
       maxTokens: 2000,
@@ -630,11 +632,21 @@ export default function SettingsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="it">🇮🇹 Italiano</SelectItem>
-                      <SelectItem value="es">🇪🇸 Spagnolo</SelectItem>
-                      <SelectItem value="fr">🇫🇷 Francese</SelectItem>
-                      <SelectItem value="de">🇩🇪 Tedesco</SelectItem>
-                      <SelectItem value="pt">🇵🇹 Portoghese</SelectItem>
-                      <SelectItem value="ja">🇯🇵 Giapponese</SelectItem>
+                      <SelectItem value="en">🇬🇧 English</SelectItem>
+                      <SelectItem value="es">🇪🇸 Español</SelectItem>
+                      <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                      <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                      <SelectItem value="pt">🇵🇹 Português</SelectItem>
+                      <SelectItem value="pl">🇵🇱 Polski</SelectItem>
+                      <SelectItem value="ru">🇷🇺 Русский</SelectItem>
+                      <SelectItem value="zh">🇨🇳 中文</SelectItem>
+                      <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                      <SelectItem value="ko">🇰🇷 한국어</SelectItem>
+                      <SelectItem value="ar">🇸🇦 العربية</SelectItem>
+                      <SelectItem value="tr">🇹🇷 Türkçe</SelectItem>
+                      <SelectItem value="nl">🇳🇱 Nederlands</SelectItem>
+                      <SelectItem value="sv">🇸🇪 Svenska</SelectItem>
+                      <SelectItem value="uk">🇺🇦 Українська</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -814,6 +826,14 @@ export default function SettingsPage() {
                       <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, deepl: !prev.deepl }))}>{showApiKeys.deepl ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
                     </div>
                     <p className="text-[10px] text-muted-foreground">500K chars/mese gratis — <a href="https://www.deepl.com/pro-api" target="_blank" rel="noopener" className="underline">Chiave</a></p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="qwen-api-key" className="text-xs">Qwen3 (Alibaba DashScope)</Label>
+                    <div className="flex space-x-1">
+                      <Input id="qwen-api-key" type={showApiKeys.qwen ? "text" : "password"} value={settings.translation.qwenApiKey} onChange={(e) => updateSetting('translation', 'qwenApiKey', e.target.value)} placeholder="sk-..." className="font-mono text-xs h-8" />
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, qwen: !prev.qwen }))}>{showApiKeys.qwen ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}</Button>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">1M token/mese gratis, top multilingue — <a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" rel="noopener" className="underline">Chiave</a></p>
                   </div>
                 </div>
               </details>

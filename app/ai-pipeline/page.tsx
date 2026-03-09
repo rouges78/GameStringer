@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -80,6 +80,16 @@ export default function AIPipelinePage() {
   const [isRunning, setIsRunning] = useState(false)
   const [inputText, setInputText] = useState(DEMO_TEXTS.join("\n"))
   const [targetLang, setTargetLang] = useState("it")
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLang(s.translation.defaultTargetLang);
+      } catch {}
+    }
+  }, []);
   const [sourceLang, setSourceLang] = useState("en")
   const [enableHarvest, setEnableHarvest] = useState(true)
   const [enableAutoFix, setEnableAutoFix] = useState(true)

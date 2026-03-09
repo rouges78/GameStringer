@@ -58,7 +58,7 @@ export function AlphabetBackground({
         vx: (Math.random() - 0.5) * 0.15,
         vy: (Math.random() - 0.5) * 0.15,
         size: 12 + Math.random() * 20,
-        opacity: 0.03 + Math.random() * 0.08,
+        opacity: 0.06 + Math.random() * 0.12,
         rotation: Math.random() * 360,
         rotationSpeed: (Math.random() - 0.5) * 0.5
       });

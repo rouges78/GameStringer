@@ -140,6 +140,8 @@ export function RssTicker({ className = '' }: RssTickerProps) {
 
   const currentItem = items[currentIndex];
 
+  if (!currentItem) return null;
+
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <button

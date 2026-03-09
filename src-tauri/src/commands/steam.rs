@@ -13,7 +13,7 @@
 //! - **Sezione 10**: Family Sharing (righe 3960-4181)
 
 use tauri::State;
-use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, GameDetails, LocalGameInfo, GameStatus, SteamLibraryFolder, FamilySharingConfig};
+use crate::models::{SteamConfig, SteamGame, SteamApiGenre, SteamApiCategory, SteamApiReleaseDate, SteamApiRequirements, GameInfo, LocalGameInfo, GameStatus, SteamLibraryFolder, FamilySharingConfig};
 #[cfg(windows)]
 use winreg::HKEY;
 use serde_json::Value;
@@ -3314,44 +3314,6 @@ pub async fn get_steam_games_fast() -> Result<Vec<GameInfo>, String> {
     Ok(games)
 }
 
-// 🔍 Funzione leggera per ottenere dati base da Steam API (per arricchire metodo veloce)
-async fn get_basic_steam_api_details(app_id: u32) -> Result<GameDetails, String> {
-    // Usa endpoint pubblico Steam Store API (nessuna key richiesta)
-    let url = format!("https://store.steampowered.com/api/appdetails?appids={}&l=italian", app_id);
-    
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(5)) // Timeout breve per non rallentare
-        .build()
-        .map_err(|e| format!("Errore client: {}", e))?;
-    
-    let response = client.get(&url).send().await
-        .map_err(|e| format!("Errore request: {}", e))?;
-    
-    let json: Value = response.json().await
-        .map_err(|e| format!("Errore parsing JSON: {}", e))?;
-    
-    if let Some(app_data) = json.get(&app_id.to_string()) {
-        if let Some(data) = app_data.get("data") {
-            let name = data.get("name")
-                .and_then(|v| v.as_str())
-                .unwrap_or(&format!("Steam Game {}", app_id))
-                .to_string();
-                
-            let supported_languages = data.get("supported_languages")
-                .and_then(|v| v.as_str())
-                .unwrap_or("English")
-                .to_string();
-                
-            return Ok(GameDetails {
-                name,
-                supported_languages,
-            });
-        }
-    }
-    
-    Err("Dati gioco non trovati".to_string())
-}
-
 // Legge TUTTI i giochi posseduti come Rai Pal
 async fn read_all_owned_games(steam_path: &str) -> Result<Vec<GameInfo>, String> {
     let mut games = Vec::new();
@@ -3364,60 +3326,27 @@ async fn read_all_owned_games(steam_path: &str) -> Result<Vec<GameInfo>, String>
     let owned_app_ids = read_owned_games_from_localconfig(steam_path, &user_id).await?;
     log::info!("📋 Trovati {} giochi posseduti", owned_app_ids.len());
     
-    // 3. Per ogni gioco posseduto, crea GameInfo
+    // 3. Per ogni gioco posseduto, crea GameInfo con solo dati locali (no HTTP)
+    // I nomi vengono arricchiti dal frontend tramite get_steam_games (API con cache)
     for app_id in owned_app_ids {
-        // 🚀 MIGLIORAMENTO: Prova ad arricchire con API Steam se disponibile
-        let game_info = match get_basic_steam_api_details(app_id).await {
-            Ok(api_details) => {
-                log::debug!("✅ Arricchito gioco {} con API Steam", app_id);
-                let game_name = api_details.name.clone();
-                GameInfo {
-                    id: format!("steam_{}", app_id),
-                    title: api_details.name,
-                    platform: "Steam".to_string(),
-                    install_path: None,
-                    executable_path: None,
-                    icon: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/icon.jpg", app_id)),
-                    image_url: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app_id)),
-                    header_image: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app_id)),
-                    is_installed: false,
-                    steam_app_id: Some(app_id),
-                    is_vr: crate::commands::games::is_vr_game(&game_name),
-                    engine: crate::commands::games::detect_game_engine(&game_name),
-                    last_played: None,
-                    is_shared: false,
-                    // 🎯 CORRETTO: Converte lingue da stringa a array
-                    supported_languages: if !api_details.supported_languages.is_empty() {
-                        Some(api_details.supported_languages.split(',').map(|s| s.trim().to_string()).collect())
-                    } else {
-                        Some(vec!["english".to_string()])
-                    },
-                    genres: Some(vec!["Game".to_string()]), // TODO: aggiungere generi API
-                    added_date: None,
-                }
-            }
-            Err(_) => {
-                // Fallback ai dati base se API non disponibile
-                GameInfo {
-                    id: format!("steam_{}", app_id),
-                    title: format!("Steam Game {}", app_id),
-                    platform: "Steam".to_string(),
-                    install_path: None,
-                    executable_path: None,
-                    icon: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/icon.jpg", app_id)),
-                    image_url: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app_id)),
-                    header_image: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app_id)),
-                    is_installed: false,
-                    steam_app_id: Some(app_id),
-                    is_vr: false,
-                    engine: None,
-                    last_played: None,
-                    is_shared: false,
-                    supported_languages: Some(vec!["english".to_string()]),
-                    genres: Some(vec!["Game".to_string()]),
-                    added_date: None,
-                }
-            }
+        let game_info = GameInfo {
+            id: format!("steam_{}", app_id),
+            title: format!("Steam Game {}", app_id),
+            platform: "Steam".to_string(),
+            install_path: None,
+            executable_path: None,
+            icon: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/icon.jpg", app_id)),
+            image_url: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app_id)),
+            header_image: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app_id)),
+            is_installed: false,
+            steam_app_id: Some(app_id),
+            is_vr: false,
+            engine: None,
+            last_played: None,
+            is_shared: false,
+            supported_languages: Some(vec!["english".to_string()]),
+            genres: Some(vec!["Game".to_string()]),
+            added_date: None,
         };
         games.push(game_info);
     }
@@ -4057,7 +3986,12 @@ fn parse_acf_file_custom(content: &str) -> Result<LocalGameInfo, String> {
     let name = name.unwrap_or_else(|| format!("Game {}", appid_value));
     
     let install_path = install_dir.as_ref()
-        .map(|dir| format!("C:\\Program Files (x86)\\Steam\\steamapps\\common\\{}", dir))
+        .map(|dir| {
+            // Usa STEAM_PATH dal registro se disponibile, fallback al path standard
+            let steam_root = std::env::var("STEAM_PATH")
+                .unwrap_or_else(|_| "C:\\Program Files (x86)\\Steam".to_string());
+            format!("{}\\steamapps\\common\\{}", steam_root, dir)
+        })
         .unwrap_or_else(|| "Unknown".to_string());
     
     // Rileva giochi condivisi tramite Family Sharing

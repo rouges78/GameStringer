@@ -178,6 +178,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'Context Harvester', href: '/context-harvester', icon: Wheat },
           { name: 'AI Pipeline', href: '/ai-pipeline', icon: Workflow },
           { name: 'OCR Multi-Engine', href: '/ocr-engines', icon: ScanEye },
+          { name: 'Ollama Manager', href: '/ollama-manager', icon: Package },
           { name: 'Translator Tools', href: '/translator/tools', icon: Sparkles },
         ]
       },
@@ -896,7 +897,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         text: 'ON' 
       };
 
-      // Controlla Steam API tramite test_steam_connection (stesso dello Stores Manager)
+      // Controlla Steam API tramite test_steam_connection (con cache globalThis per evitare doppia chiamata StrictMode)
       let steamApi: { status: 'connected' | 'disconnected' | 'error'; color: string; text: string } = { 
         status: 'disconnected', 
         color: 'bg-red-500', 
@@ -904,15 +905,23 @@ export function MainLayout({ children }: MainLayoutProps) {
       };
       
       try {
-        const { invoke } = await import('@/lib/tauri-api');
-        const result = await invoke('test_steam_connection');
-        // Se non lancia error, Steam è connected
-        if (result) {
-          steamApi = { 
-            status: 'connected', 
-            color: 'bg-green-500', 
-            text: 'ON' 
-          };
+        const _gc = globalThis as any;
+        const cached = _gc.__gsSteamConnCache;
+        // Cache 30s per evitare doppia chiamata StrictMode e navigazioni ravvicinate
+        if (cached && Date.now() - cached.ts < 30000) {
+          steamApi = cached.data;
+        } else {
+          const { invoke } = await import('@/lib/tauri-api');
+          const result = await invoke('test_steam_connection');
+          // Se non lancia error, Steam è connected
+          if (result) {
+            steamApi = { 
+              status: 'connected', 
+              color: 'bg-green-500', 
+              text: 'ON' 
+            };
+          }
+          _gc.__gsSteamConnCache = { data: steamApi, ts: Date.now() };
         }
       } catch {
         // Steam non connected - resta OFF
@@ -957,7 +966,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <TutorialProvider>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-full bg-background">
         {/* Sidebar */}
         <aside 
           data-tutorial="sidebar"
@@ -1012,11 +1021,10 @@ export function MainLayout({ children }: MainLayoutProps) {
             {navGroups.map((group, groupIndex) => {
               const isExpanded = expandedGroups.includes(group.label);
               const toggleGroup = () => {
-                setExpandedGroups(prev => 
-                  prev.includes(group.label) 
-                    ? [] // Chiudi se già aperto
-                    : [group.label] // Apri solo questo, chiudi gli altri
-                );
+                const wasOpen = expandedGroups.includes(group.label);
+                setExpandedGroups(wasOpen ? [] : [group.label]);
+                // Reset sottomenu quando cambi gruppo
+                if (!wasOpen) setExpandedSubMenus([]);
               };
               const GroupIcon = group.icon;
               
@@ -1081,8 +1089,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                                       onClick={() => {
                                         setExpandedSubMenus(prev => 
                                           prev.includes(item.href) 
-                                            ? prev.filter(h => h !== item.href)
-                                            : [...prev, item.href]
+                                            ? []
+                                            : [item.href]
                                         );
                                       }}
                                       className={cn(

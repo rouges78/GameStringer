@@ -2,12 +2,13 @@
 
 ## 📝 Reddit Post (English)
 
-### Title Options (pick one):
+### Title Options (pick one)
+
 1. `[FREE] GameStringer - AI-powered game translation tool for any engine (Unity, Unreal, Godot, RPG Maker...)`
 2. `I made a free desktop app to translate games using AI (Claude, GPT-4, Gemini, or local Ollama)`
 3. `Open source tool for game localization - translate entire projects with one click`
 
-### Post Body:
+### Post Body
 
 ---
 
@@ -53,9 +54,10 @@ I got frustrated with the existing localization tools - either too expensive, to
 
 [Add 2-3 screenshots here]
 
-## Feedback Welcome!
+## Feedback Welcome
 
 This is v1.0 and I'd love to hear:
+
 - What engines/formats should I prioritize?
 - Any bugs you encounter
 - Feature requests
@@ -71,6 +73,7 @@ If you find it useful, consider ⭐ starring the repo or buying me a coffee!
 ## 🌐 Community/Forum List for Marketing
 
 ### Reddit (High Priority)
+
 | Subreddit | Members | Best Time | Notes |
 |-----------|---------|-----------|-------|
 | r/gamedev | 1.4M | Tue-Thu | Main target. Use "Feedback Friday" thread |
@@ -89,6 +92,7 @@ If you find it useful, consider ⭐ starring the repo or buying me a coffee!
 | r/SideProject | 80K | Any | Showcase projects |
 
 ### Community Forums
+
 | Forum | Focus | How to Share |
 |-------|-------|--------------|
 | Godot Forum | Godot devs | Showcase category |
@@ -100,6 +104,7 @@ If you find it useful, consider ⭐ starring the repo or buying me a coffee!
 | ROMhacking.net | Retro | Utilities submission |
 
 ### Social Media
+
 | Platform | Strategy |
 |----------|----------|
 | Twitter/X | Post with #gamedev #indiedev #localization hashtags |
@@ -109,6 +114,7 @@ If you find it useful, consider ⭐ starring the repo or buying me a coffee!
 | LinkedIn | Professional localization groups |
 
 ### Localization-Specific
+
 | Community | Notes |
 |-----------|-------|
 | ProZ.com | Professional translators forum |
@@ -119,17 +125,20 @@ If you find it useful, consider ⭐ starring the repo or buying me a coffee!
 ## 📅 Launch Strategy
 
 ### Week 1: Soft Launch
+
 1. Post on r/gamedev (Feedback Friday)
 2. Post on r/IndieGaming
 3. Submit to itch.io
 4. Tweet announcement
 
 ### Week 2: Expand
+
 1. Post on engine-specific subreddits
-3. Submit to Product Hunt
-4. Post on Hacker News
+2. Submit to Product Hunt
+3. Post on Hacker News
 
 ### Week 3: Community
+
 1. Post on ROM hacking communities
 2. Reach out to YouTube game dev channels
 3. Submit to software directories
@@ -155,7 +164,7 @@ Would you be interested in checking it out or featuring it? Happy to provide any
 Best,
 [Your name]
 
-GitHub: https://github.com/rouges78/GameStringer
+GitHub: <https://github.com/rouges78/GameStringer>
 
 ---
 
@@ -184,4 +193,4 @@ GitHub: https://github.com/rouges78/GameStringer
 
 ---
 
-*Last updated: January 23, 2026*
+> Last updated: January 23, 2026

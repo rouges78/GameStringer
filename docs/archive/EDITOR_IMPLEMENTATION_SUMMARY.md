@@ -77,7 +77,7 @@ components/
 ├── translation-stats.tsx
 ├── translation-search.tsx
 └── translation-batch-editor.tsx
-```
+```text
 
 ## Note Tecniche
 

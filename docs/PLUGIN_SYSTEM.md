@@ -6,7 +6,7 @@ Il Plugin System permette alla community di aggiungere supporto per nuovi game e
 
 ## Architettura
 
-```
+```text
 plugins/
 ├── manifest.json              # Registro dei plugin installati
 ├── unity-advanced/
@@ -18,7 +18,7 @@ plugins/
 │   ├── extractor.js
 │   └── patcher.js
 └── ...
-```
+```text
 
 ## Plugin Manifest (`plugin.json`)
 
@@ -39,22 +39,24 @@ plugins/
   "filePatterns": ["*.custom", "*.dat"],
   "permissions": ["fs:read", "fs:write"]
 }
-```
+```text
 
 ## Plugin API
 
 I plugin hanno accesso a un'API sandboxed:
 
 ### Detect (detect.js)
+
 ```javascript
 // Riceve il path della cartella del gioco
 // Ritorna true se il plugin supporta questo gioco
 export function detect(gamePath) {
   return fs.existsSync(path.join(gamePath, 'CustomEngine.dll'));
 }
-```
+```text
 
 ### Extract (extractor.js)
+
 ```javascript
 // Estrae le stringhe traducibili dal gioco
 export async function extract(gamePath, options) {
@@ -73,9 +75,10 @@ export async function extract(gamePath, options) {
     }
   };
 }
-```
+```text
 
 ### Patch (patcher.js)
+
 ```javascript
 // Applica le traduzioni al gioco
 export async function patch(gamePath, translations, options) {
@@ -84,7 +87,7 @@ export async function patch(gamePath, translations, options) {
   }
   return { success: true, patchedCount: translations.length };
 }
-```
+```text
 
 ## Sicurezza
 

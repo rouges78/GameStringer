@@ -5,7 +5,7 @@ Modulo nativo per l'injection di traduzioni in tempo reale nei processi di gioco
 ## Requisiti
 
 - Windows 10/11
-- Node.js 16+ 
+- Node.js 16+
 - Python 3.x (per node-gyp)
 - Visual Studio Build Tools 2019+ o Visual Studio Community
 - Privilegi di amministratore per l'injection
@@ -13,21 +13,23 @@ Modulo nativo per l'injection di traduzioni in tempo reale nei processi di gioco
 ## Installazione
 
 1. Installa le dipendenze di build:
+
 ```bash
 npm install -g node-gyp
 npm install node-addon-api
-```
+```text
 
-2. Compila il modulo nativo:
+1. Compila il modulo nativo:
+
 ```bash
 npm run build:native
-```
+```text
 
 ## Utilizzo
 
 Il modulo viene automaticamente caricato dal servizio di injection (`lib/injection-service.ts`).
 
-### Funzioni disponibili:
+### Funzioni disponibili
 
 - `injectTranslations(processId, translations)` - Inietta traduzioni in un processo
 - `monitorProcess(processId)` - Monitora un processo per nuovi testi
@@ -53,10 +55,13 @@ Per testare il modulo reale:
 ## Troubleshooting
 
 ### Errore "Cannot find module"
+
 Assicurati di aver compilato il modulo con `npm run build:native`
 
 ### Errore "Access denied"
+
 Esegui GameStringer come amministratore
 
 ### Il gioco crasha dopo l'injection
+
 Alcuni giochi hanno protezioni anti-cheat. Usa solo con giochi single-player offline.

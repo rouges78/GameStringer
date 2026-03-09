@@ -5,7 +5,7 @@
     "dev": "node scripts/unified-dev-with-profiles.js",
     "dev:auto": "node scripts/simple-dev.js",
     "dev:advanced": "node scripts/unified-dev.js next",
-    "dev:simple": "next dev",
+    "dev:simple": "next dev --turbopack",
     "dev:profiles": "node scripts/unified-dev-with-profiles.js",
     "dev:sync": "npx start-server-and-test next-dev http://127.0.0.1:3002 tauri:dev",
     "dev:check": "node scripts/port-manager.js verify",

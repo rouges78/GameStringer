@@ -5,7 +5,8 @@
 ### Organizzazione Moduli Ottimizzata
 
 #### Prima del Cleanup
-```
+
+```text
 src-tauri/src/
 ├── main.rs (con moduli commentati)
 ├── commands/mod.rs (con moduli commentati)
@@ -20,10 +21,11 @@ src-tauri/src/
 ├── main_minimal.rs (alternativa non utilizzata)
 ├── main.rs.backup (backup)
 └── bin/ (directory vuota)
-```
+```text
 
 #### Dopo il Cleanup
-```
+
+```text
 src-tauri/src/
 ├── main.rs (pulito, senza commenti)
 ├── commands/mod.rs (struttura ottimizzata)
@@ -35,11 +37,12 @@ src-tauri/src/
 ├── profiles/ (modulo completo)
 ├── notifications/ (modulo completo)
 └── commands/ (solo moduli attivi)
-```
+```text
 
 ### API Pubbliche Standardizzate
 
 #### Game Store User Types
+
 Tutte le struct utente sono ora pubbliche e documentate:
 
 ```rust
@@ -70,11 +73,12 @@ pub struct ItchioApiGame { /* ... */ }
 
 /// Represents a Rockstar Games user account
 pub struct RockstarUser { /* ... */ }
-```
+```text
 
 ## 🔒 Gestione Codice Future-Use
 
 ### Profile Credentials System
+
 Sistema completo per gestione credenziali protetto per uso futuro:
 
 ```rust
@@ -92,9 +96,10 @@ pub async fn save_profile_credential(/* ... */) { /* ... */ }
 pub async fn load_profile_credential(/* ... */) { /* ... */ }
 
 // ... altri 9 comandi
-```
+```text
 
 ### Steam API Integration
+
 Funzioni avanzate per integrazione Steam:
 
 ```rust
@@ -109,9 +114,10 @@ fn save_credentials_securely(/* ... */) { /* ... */ }
 /// FUTURE USE: Will be used for profile-based Steam API key management
 #[allow(dead_code)]
 async fn get_decrypted_api_key_from_profile(/* ... */) { /* ... */ }
-```
+```text
 
 ### Epic Games Advanced Integration
+
 Sistema completo per Epic Games Store:
 
 ```rust
@@ -126,11 +132,12 @@ async fn search_registry_by_account_id(/* ... */) { /* ... */ }
 /// FUTURE USE: Will be used for decrypting stored Epic Games credentials
 #[allow(dead_code)]
 fn decrypt_epic_credentials(/* ... */) { /* ... */ }
-```
+```text
 
 ## 📚 Standard Documentazione
 
 ### Formato Documentazione Struct
+
 ```rust
 /// Brief description of the struct purpose
 /// 
@@ -148,9 +155,10 @@ pub struct ExampleStruct {
     pub field2: String,
     pub optional_field: Option<String>,
 }
-```
+```text
 
 ### Formato Documentazione Funzioni Future-Use
+
 ```rust
 /// Brief description of function purpose
 /// FUTURE USE: Explanation of when and how this will be used
@@ -158,23 +166,26 @@ pub struct ExampleStruct {
 async fn example_function(/* ... */) -> Result<T, E> {
     // Implementation
 }
-```
+```text
 
 ## 🔄 Flusso di Sviluppo Aggiornato
 
 ### Gestione Warning
+
 1. **Codice Attivo**: Deve essere warning-free
 2. **Codice Future-Use**: Marcato con `#[allow(dead_code)]` + commento esplicativo
 3. **API Pubbliche**: Completamente documentate
 4. **Moduli**: Solo moduli utilizzati inclusi
 
 ### Processo di Aggiunta Nuovo Codice
+
 1. Se il codice è utilizzato immediatamente → nessun attributo speciale
 2. Se il codice è per uso futuro → `#[allow(dead_code)]` + commento "FUTURE USE"
 3. Se è API pubblica → documentazione completa con esempi
 4. Se è modulo nuovo → aggiungere a mod.rs appropriato
 
 ### Monitoraggio Qualità
+
 - `cargo check` deve produrre ≤ 1 warning (solo nom v1.2.4)
 - `cargo build` deve completare con successo
 - `npm run build` deve completare con successo
@@ -183,18 +194,21 @@ async fn example_function(/* ... */) -> Result<T, E> {
 ## 🎯 Benefici Architetturali
 
 ### Manutenibilità
+
 - ✅ Codice pulito senza commenti obsoleti
 - ✅ Separazione chiara tra attivo e futuro
 - ✅ Documentazione consistente
 - ✅ Struttura moduli logica
 
 ### Sviluppo Futuro
+
 - ✅ API credenziali pronta per integrazione
 - ✅ Funzioni Steam avanzate disponibili
 - ✅ Sistema Epic Games completo
 - ✅ Interfacce standardizzate per tutti i game store
 
 ### Qualità Codice
+
 - ✅ 97.5% riduzione warning
 - ✅ Zero warning per codice attivo
 - ✅ Documentazione API completa
@@ -203,12 +217,14 @@ async fn example_function(/* ... */) -> Result<T, E> {
 ## 🚀 Roadmap Tecnica
 
 ### Prossimi Passi
+
 1. **Aggiornamento nom**: Migrazione da v1.2.4 a v7.x
 2. **Attivazione API**: Integrazione profile credentials quando necessario
 3. **Test Suite**: Aggiornamento test per nuove API signature
 4. **Monitoraggio**: Setup CI/CD per controllo warning automatico
 
 ### Integrazione Future
+
 - Profile credentials system → Attivazione quando profili completamente deployati
 - Steam API avanzate → Attivazione per ottimizzazioni performance
 - Epic Games integration → Attivazione per supporto completo Epic Store

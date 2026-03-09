@@ -361,7 +361,7 @@ Ogni profilo mantiene separatamente:
 ├── avatars/                     # Avatar personalizzati
 ├── backups/                     # Backup automatici
 └── logs/                        # Log per profilo
-```
+```text
 
 #### Variabili Ambiente
 

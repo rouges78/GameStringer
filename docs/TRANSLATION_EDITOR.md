@@ -7,18 +7,21 @@ L'Editor Traduzioni di GameStringer è un workspace collaborativo avanzato per l
 ## Funzionalità Principali
 
 ### 1. **Editor Side-by-Side**
+
 - Visualizzazione affiancata del testo originale e della traduzione
 - Modifica in tempo reale con salvataggio automatico
 - Indicatori di stato per ogni traduzione (pending, completed, reviewed, edited)
 - Supporto per contesto e note aggiuntive
 
 ### 2. **Suggerimenti AI**
+
 - Generazione automatica di suggerimenti di traduzione
 - Multiple varianti per ogni testo
 - Indicatore di confidenza per ogni suggerimento
 - Applicazione one-click dei suggerimenti
 
 ### 3. **Importazione/Esportazione**
+
 - **Formati supportati:**
   - JSON (formato nativo)
   - CSV (compatibile con Excel/Google Sheets)
@@ -27,6 +30,7 @@ L'Editor Traduzioni di GameStringer è un workspace collaborativo avanzato per l
 - Esportazione filtrata per stato o gioco
 
 ### 4. **Ricerca e Filtri**
+
 - Ricerca full-text in originale e traduzione
 - Filtri per:
   - Stato (pending, completed, reviewed, edited)
@@ -37,12 +41,14 @@ L'Editor Traduzioni di GameStringer è un workspace collaborativo avanzato per l
   - Livello di confidenza
 
 ### 5. **Editor Batch**
+
 - Selezione multipla di traduzioni
 - Copia/incolla bulk per workflow esterni
 - Generazione suggerimenti AI in batch
 - Salvataggio simultaneo di multiple traduzioni
 
 ### 6. **Dashboard Statistiche**
+
 - Panoramica del progresso generale
 - Statistiche per gioco e lingua
 - Tracking delle modifiche manuali
@@ -86,6 +92,7 @@ L'Editor Traduzioni di GameStringer è un workspace collaborativo avanzato per l
 ## Formato File
 
 ### JSON
+
 ```json
 {
   "translations": [
@@ -99,27 +106,31 @@ L'Editor Traduzioni di GameStringer è un workspace collaborativo avanzato per l
     }
   ]
 }
-```
+```text
 
 ### CSV
+
 ```csv
 File Path,Original Text,Translated Text,Target Language,Status,Context
 localization/text_en.csv,"Welcome to the game","Benvenuto nel gioco",it,completed,"Main menu greeting"
-```
+```text
 
 ## API Endpoints
 
 ### Traduzioni
+
 - `GET /api/translations` - Lista traduzioni con filtri
 - `POST /api/translations` - Crea nuova traduzione
 - `PUT /api/translations` - Aggiorna traduzione esistente
 - `DELETE /api/translations?id={id}` - Elimina traduzione
 
 ### Suggerimenti
+
 - `POST /api/translations/suggestions` - Genera suggerimenti AI
 - `DELETE /api/translations/suggestions?translationId={id}` - Elimina suggerimenti
 
 ### Import/Export
+
 - `POST /api/translations/import` - Importa traduzioni in batch
 - `GET /api/translations/export?gameId={id}&format={format}` - Esporta traduzioni
 
@@ -152,7 +163,7 @@ model AISuggestion {
   
   translation    Translation @relation(...)
 }
-```
+```text
 
 ## Integrazione AI
 

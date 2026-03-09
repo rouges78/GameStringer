@@ -5,6 +5,7 @@
 ### 🗑️ FASE 1: RIMOZIONE CODICE SICURO
 
 #### A. Steam Commands (commands/steam.rs)
+
 ```rust
 // RIMUOVERE queste funzioni:
 async fn make_rate_limited_request(...)  // Riga ~189
@@ -13,9 +14,10 @@ async fn parse_shared_games_xml(...)     // Riga ~2203
 async fn enrich_game_details(...)        // Riga ~2233
 async fn get_decrypted_api_key_from_profile(...) // Riga ~2542
 async fn get_steam_games_internal(...)   // Riga ~2566
-```
+```text
 
 #### B. Epic Commands (commands/epic.rs)
+
 ```rust
 // RIMUOVERE queste funzioni:
 async fn search_epic_configs_by_account_id(...)  // Riga ~1018
@@ -28,30 +30,34 @@ async fn read_epic_registry_games(...)           // Riga ~1440
 fn is_valid_epic_game_name(...)                  // Riga ~2021
 fn decrypt_epic_credentials(...)                 // Riga ~2313
 async fn get_decrypted_epic_credentials(...)     // Riga ~2470
-```
+```text
 
 #### C. Library Commands (commands/library.rs)
+
 ```rust
 // RIMUOVERE queste funzioni:
 async fn get_gog_installed_games(...)    // Riga ~244
 async fn parse_gog_registry_entry(...)   // Riga ~263
-```
+```text
 
 #### D. Patches Commands (commands/patches.rs)
+
 ```rust
 // RIMUOVERE questa funzione:
 pub async fn translate_text(...)         // Riga ~77
-```
+```text
 
 #### E. Profile Credentials (commands/profile_credentials.rs)
+
 ```rust
 // RIMUOVERE TUTTO IL FILE - Sistema non utilizzato
 // Oppure aggiungere #[allow(dead_code)] all'intero modulo se serve per future
-```
+```text
 
 ### 🛡️ FASE 2: PROTEZIONE CODICE CRITICO
 
 #### A. Injection System (injekt.rs)
+
 ```rust
 // AGGIUNGERE #[allow(dead_code)] a:
 impl InjektTranslator {
@@ -99,28 +105,31 @@ struct InjectionError { ... }
 
 #[allow(dead_code)]
 enum ErrorType { ... }
-```
+```text
 
 #### B. Anti-Cheat System (anti_cheat.rs)
+
 ```rust
 // AGGIUNGERE #[allow(dead_code)] a:
 impl AntiCheatState {
     #[allow(dead_code)]
     pub fn new() -> Self { ... }
 }
-```
+```text
 
 #### C. SafeHandle (injekt.rs)
+
 ```rust
 impl SafeHandle {
     #[allow(dead_code)]
     pub fn is_null(&self) -> bool { ... }
 }
-```
+```text
 
 ### 📝 FASE 3: DOCUMENTAZIONE
 
 #### A. Aggiungere commenti esplicativi
+
 ```rust
 /// Sistema di injection per traduzione giochi.
 /// Metodi di sicurezza e diagnostica mantenuti per protezione utenti.
@@ -129,18 +138,20 @@ impl SafeHandle {
 impl InjektTranslator {
     // ...
 }
-```
+```text
 
 #### B. Documentare rimozioni
+
 ```rust
 // Rimosso: make_rate_limited_request - funzione helper non utilizzata
 // Rimosso: save_credentials_securely - implementazione legacy
 // Rimosso: parse_shared_games_xml - parser XML non implementato
-```
+```text
 
 ## 🔧 COMANDI DI IMPLEMENTAZIONE
 
 ### Script di Rimozione Automatica
+
 ```bash
 # Rimuovere funzioni specifiche da file
 # Usare sed o script personalizzato per rimozione precisa
@@ -149,9 +160,10 @@ impl InjektTranslator {
 sed -i '/async fn make_rate_limited_request/,/^}/d' src/commands/steam.rs
 sed -i '/fn save_credentials_securely/,/^}/d' src/commands/steam.rs
 # ... altri comandi
-```
+```text
 
 ### Verifica Post-Rimozione
+
 ```bash
 # Test compilazione
 cargo check
@@ -161,35 +173,40 @@ cargo build
 
 # Conteggio warning
 cargo check 2>&1 | grep "warning:" | wc -l
-```
+```text
 
 ## 📊 METRICHE ATTESE
 
-### Prima dell'implementazione:
+### Prima dell'implementazione
+
 - Warning totali: ~54
 - Funzioni dead code: ~35
 - Struct/enum non utilizzati: ~5
 
-### Dopo l'implementazione:
+### Dopo l'implementazione
+
 - Warning totali: ~15-20 (riduzione 60-70%)
 - Funzioni rimosse: ~25-30
 - Elementi protetti: ~15
 
 ## ⚠️ PRECAUZIONI
 
-### Non Rimuovere:
+### Non Rimuovere
+
 - Funzioni pubbliche esportate
 - Sistemi di sicurezza (anti-cheat, injection)
 - API per testing (anche se non utilizzate ora)
 - Configurazioni critiche
 
-### Testare Dopo Rimozione:
+### Testare Dopo Rimozione
+
 - Compilazione completa
 - Funzionalità injection
 - Sistemi di traduzione
 - Caricamento profili
 
-### Backup:
+### Backup
+
 - Creare branch Git prima delle modifiche
 - Salvare lista funzioni rimosse
 - Documentare modifiche per rollback

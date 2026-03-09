@@ -52,6 +52,17 @@ export default function EnhancedTranslatorPage() {
   const [apiKey, setApiKey] = useState('');
   const [provider, setProvider] = useState('openai');
   const [targetLanguage, setTargetLanguage] = useState('it');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLanguage(s.translation.defaultTargetLang);
+        if (s.translation?.provider) setProvider(s.translation.provider);
+      } catch {}
+    }
+  }, []);
   
   // Stati per operazioni
   const [currentOperationId, setCurrentOperationId] = useState<string | null>(null);
@@ -334,16 +345,26 @@ export default function EnhancedTranslatorPage() {
             </div>
             
             <div>
-              <label className="text-sm font-medium mb-2 block">Lingua Target</label>
+              <label className="text-sm font-medium mb-2 block">Target Language</label>
               <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="it">Italiano</SelectItem>
-                  <SelectItem value="es">Spagnolo</SelectItem>
-                  <SelectItem value="fr">Francese</SelectItem>
-                  <SelectItem value="de">Tedesco</SelectItem>
+                  <SelectItem value="it">🇮🇹 Italiano</SelectItem>
+                  <SelectItem value="en">🇬🇧 English</SelectItem>
+                  <SelectItem value="es">🇪🇸 Español</SelectItem>
+                  <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                  <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                  <SelectItem value="pt">🇵🇹 Português</SelectItem>
+                  <SelectItem value="pl">🇵🇱 Polski</SelectItem>
+                  <SelectItem value="ru">🇷🇺 Русский</SelectItem>
+                  <SelectItem value="zh">🇨🇳 中文</SelectItem>
+                  <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                  <SelectItem value="ko">🇰🇷 한국어</SelectItem>
+                  <SelectItem value="ar">🇸🇦 العربية</SelectItem>
+                  <SelectItem value="tr">🇹🇷 Türkçe</SelectItem>
+                  <SelectItem value="nl">🇳🇱 Nederlands</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -351,12 +372,12 @@ export default function EnhancedTranslatorPage() {
         </CardContent>
       </Card>
 
-      {/* Loading...le */}
+      {/* Upload Files */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            Loading...le
+            Load Files
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -371,7 +392,7 @@ export default function EnhancedTranslatorPage() {
             
             {files.length > 0 && (
               <div className="space-y-2">
-                <h4 className="font-medium">File caricati ({files.length})</h4>
+                <h4 className="font-medium">Loaded files ({files.length})</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                   {files.map(file => (
                     <div

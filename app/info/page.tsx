@@ -126,6 +126,47 @@ export default function InfoPage() {
         </Card>
       </div>
 
+      {/* Changelog Timeline */}
+      {version?.allVersions && version.allVersions.length > 0 && (
+        <Card className="p-3">
+          <p className="text-xs font-semibold text-orange-400 mb-3 flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" />
+            What&apos;s New
+          </p>
+          <div className="relative space-y-0">
+            {/* Timeline line */}
+            <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-orange-500/50 via-amber-500/30 to-transparent" />
+            {version.allVersions.map((v: { version: string; date: string; type: string; changes: string[] }, i: number) => (
+              <div key={v.version} className="relative pl-6 pb-3">
+                {/* Timeline dot */}
+                <div className={`absolute left-0 top-1.5 h-3.5 w-3.5 rounded-full border-2 ${
+                  v.type === 'major' ? 'bg-orange-500 border-orange-400 shadow-lg shadow-orange-500/30' :
+                  v.type === 'minor' ? 'bg-amber-500 border-amber-400' :
+                  'bg-slate-500 border-slate-400'
+                }`} />
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-bold font-mono">{v.version}</span>
+                  <Badge variant="outline" className={`text-[8px] h-3.5 px-1 ${
+                    v.type === 'major' ? 'text-orange-400 border-orange-500/30' :
+                    v.type === 'minor' ? 'text-amber-400 border-amber-500/30' :
+                    'text-slate-400 border-slate-500/30'
+                  }`}>{v.type}</Badge>
+                  <span className="text-[9px] text-muted-foreground/50">{new Date(v.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                </div>
+                <ul className="space-y-0.5">
+                  {v.changes.map((c: string, ci: number) => (
+                    <li key={ci} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                      <span className="text-orange-400/60 mt-0.5">•</span>
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Special Thanks */}
       <Card className="p-3 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border-violet-500/20">
         <p className="text-xs font-semibold text-violet-400 mb-2 flex items-center gap-1.5">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { translateSingleSmart } from '@/lib/ai-translate-direct';
 import { invoke } from '@tauri-apps/api/core';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -165,6 +166,17 @@ export default function DanganronpaPatcherPage() {
   const [linViewMode, setLinViewMode] = useState<'full' | 'compact'>('full');
   const [linShowUntranslated, setLinShowUntranslated] = useState(false);
   const [pakFilter, setPakFilter] = useState<'all' | 'translatable'>('translatable');
+  const [targetLanguage, setTargetLanguage] = useState('it');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLanguage(s.translation.defaultTargetLang);
+      } catch {}
+    }
+  }, []);
 
   // Funzione per determinare se un PAK è traducibile
   const isTranslatablePak = (pakPath: string): boolean => {
@@ -435,20 +447,13 @@ export default function DanganronpaPatcherPage() {
         const translations = await Promise.all(
           batch.map(async (dialogue) => {
             try {
-              const response = await fetch('/api/translate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  text: dialogue.original,
-                  sourceLanguage: 'en',
-                  targetLanguage: 'it',
-                  context: `Videogioco Danganronpa. Personaggio: ${dialogue.speaker}. Mantieni il tono originale.`
-                })
-              });
-              
-              if (response.ok) {
-                const data = await response.json();
-                return { id: dialogue.id, translation: data.translatedText };
+              const result = await translateSingleSmart(
+                dialogue.original,
+                targetLanguage,
+                'en'
+              );
+              if (result?.translated) {
+                return { id: dialogue.id, translation: result.translated };
               }
               return null;
             } catch {

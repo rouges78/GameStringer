@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { translateSingleSmart } from '@/lib/ai-translate-direct';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +20,17 @@ export default function MTPEPage() {
   const [sourceLang, setSourceLang] = useState('en');
   const [targetLang, setTargetLang] = useState('it');
   const [provider, setProvider] = useState('gemini');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLang(s.translation.defaultTargetLang);
+        if (s.translation?.provider) setProvider(s.translation.provider);
+      } catch {}
+    }
+  }, []);
   const [translations, setTranslations] = useState<Array<{ source: string; translation: string }>>([]);
   const [results, setResults] = useState<any[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -34,62 +46,22 @@ export default function MTPEPage() {
 
     const translated: Array<{ source: string; translation: string }> = [];
 
-    // Traduci in batch
+    // Traduci riga per riga con translateSingleSmart
     try {
-      const response = await fetch('/api/translate/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          texts: lines,
-          targetLanguage: targetLang,
-          sourceLanguage: sourceLang,
-          provider
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        for (const t of data.translations) {
+      for (let i = 0; i < lines.length; i++) {
+        try {
+          const result = await translateSingleSmart(lines[i], targetLang, sourceLang);
           translated.push({
-            source: t.original,
-            translation: t.translated
+            source: lines[i],
+            translation: result?.translated || lines[i]
+          });
+        } catch {
+          translated.push({
+            source: lines[i],
+            translation: lines[i]
           });
         }
-      } else {
-        // Fallback: traduci singolarmente
-        for (let i = 0; i < lines.length; i++) {
-          try {
-            const res = await fetch('/api/translate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                text: lines[i],
-                targetLanguage: targetLang,
-                sourceLanguage: sourceLang,
-                provider
-              })
-            });
-            
-            if (res.ok) {
-              const data = await res.json();
-              translated.push({
-                source: lines[i],
-                translation: data.translatedText
-              });
-            } else {
-              translated.push({
-                source: lines[i],
-                translation: lines[i]
-              });
-            }
-          } catch {
-            translated.push({
-              source: lines[i],
-              translation: lines[i]
-            });
-          }
-          setProgress(Math.round(((i + 1) / lines.length) * 100));
-        }
+        setProgress(Math.round(((i + 1) / lines.length) * 100));
       }
     } catch (error) {
       console.error('Translation error:', error);
@@ -167,7 +139,7 @@ export default function MTPEPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Lingua origine</label>
+                  <label className="text-xs text-gray-500 mb-1 block">Source language</label>
                   <Select value={sourceLang} onValueChange={setSourceLang}>
                     <SelectTrigger className="bg-slate-800 border-slate-600">
                       <SelectValue />
@@ -185,7 +157,7 @@ export default function MTPEPage() {
                 </div>
                 
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Lingua destinazione</label>
+                  <label className="text-xs text-gray-500 mb-1 block">Target language</label>
                   <Select value={targetLang} onValueChange={setTargetLang}>
                     <SelectTrigger className="bg-slate-800 border-slate-600">
                       <SelectValue />
@@ -197,13 +169,17 @@ export default function MTPEPage() {
                       <SelectItem value="fr">🇫🇷 Français</SelectItem>
                       <SelectItem value="es">🇪🇸 Español</SelectItem>
                       <SelectItem value="pt">🇵🇹 Português</SelectItem>
+                      <SelectItem value="pl">🇵🇱 Polski</SelectItem>
                       <SelectItem value="ru">🇷🇺 Русский</SelectItem>
+                      <SelectItem value="zh">🇨🇳 中文</SelectItem>
+                      <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                      <SelectItem value="ko">🇰🇷 한국어</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Provider AI</label>
+                  <label className="text-xs text-gray-500 mb-1 block">AI Provider</label>
                   <Select value={provider} onValueChange={setProvider}>
                     <SelectTrigger className="bg-slate-800 border-slate-600">
                       <SelectValue />

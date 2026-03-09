@@ -52,6 +52,7 @@
 | `checksums-sha256.txt` | SHA256 checksums for verification |
 
 ### System Requirements
+
 - Windows 10/11 (64-bit)
 - 4GB RAM (8GB+ recommended for local AI)
 - 500MB disk space
@@ -61,12 +62,14 @@
 ## 🔧 Installation
 
 ### Setup (Recommended)
+
 1. Download `GameStringer-1.0.9-Setup.exe`
 2. Run the installer
 3. Follow the installation wizard
 4. Launch GameStringer from Start Menu
 
 ### Portable
+
 1. Download `GameStringer-1.0.9-Portable.zip`
 2. Extract to any folder
 3. Run `GameStringer.exe`
@@ -110,4 +113,4 @@ If GameStringer helped you enjoy games in your language:
 
 ---
 
-**Full Changelog**: https://github.com/rouges78/GameStringer/compare/v1.0.6...v1.0.9
+**Full Changelog**: <https://github.com/rouges78/GameStringer/compare/v1.0.6...v1.0.9>

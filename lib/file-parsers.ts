@@ -50,6 +50,7 @@ export type FileFormat =
   | 'xml'       // Generic XML
   | 'properties' // Java Properties
   | 'yaml'      // YAML
+  | 'rpy'       // Ren'Py script
   | 'unknown';
 
 // ============================================================================
@@ -76,6 +77,7 @@ export function detectFormat(content: string, filename?: string): FileFormat {
       case 'csv': return 'csv';
       case 'xml': return 'xml';
       case 'properties': return 'properties';
+      case 'rpy': return 'rpy' as FileFormat;
       case 'yaml':
       case 'yml': return 'yaml';
     }
@@ -1017,6 +1019,7 @@ export function getExtensionForFormat(format: FileFormat): string {
     xml: '.xml',
     properties: '.properties',
     yaml: '.yaml',
+    rpy: '.rpy',
     unknown: '.txt'
   };
   return extensions[format] || '.txt';
@@ -1044,5 +1047,6 @@ export const FORMAT_DESCRIPTIONS: Record<FileFormat, string> = {
   xml: 'Generic XML',
   properties: 'Java Properties',
   yaml: 'YAML',
+  rpy: "Ren'Py Script",
   unknown: 'Unknown Format'
 };

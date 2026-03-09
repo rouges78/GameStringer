@@ -18,6 +18,7 @@ import {
   Subtitles, Play, FileText,
 } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
+import { getGuideTranslations } from '@/lib/i18n/guide-translations';
 import {
   getToolsRegistry,
   categoryMeta,
@@ -87,6 +88,7 @@ export default function GuidePage() {
   const [activeTab, setActiveTab] = useState('quickstart');
 
   const guideTrans = (translations[language] as any)?.guidePage || (translations.it as any).guidePage;
+  const g = getGuideTranslations(language);
   const registry = useMemo(() => getToolsRegistry(), []);
 
   const groupedByCategory = useMemo(() => {
@@ -129,19 +131,19 @@ export default function GuidePage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid grid-cols-5 w-full h-9 shrink-0">
           <TabsTrigger value="quickstart" className="text-xs gap-1">
-            <Rocket className="h-3 w-3" /> Quick Start
+            <Rocket className="h-3 w-3" /> {g.tabQuickStart}
           </TabsTrigger>
           <TabsTrigger value="workflows" className="text-xs gap-1">
-            <Target className="h-3 w-3" /> Flussi di Lavoro
+            <Target className="h-3 w-3" /> {g.tabWorkflows}
           </TabsTrigger>
           <TabsTrigger value="tools" className="text-xs gap-1">
-            <Wrench className="h-3 w-3" /> Strumenti
+            <Wrench className="h-3 w-3" /> {g.tabTools}
           </TabsTrigger>
           <TabsTrigger value="shortcuts" className="text-xs gap-1">
-            <Keyboard className="h-3 w-3" /> Scorciatoie
+            <Keyboard className="h-3 w-3" /> {g.tabShortcuts}
           </TabsTrigger>
           <TabsTrigger value="faq" className="text-xs gap-1">
-            <HelpCircle className="h-3 w-3" /> FAQ
+            <HelpCircle className="h-3 w-3" /> {g.tabFaq}
           </TabsTrigger>
         </TabsList>
 
@@ -155,44 +157,44 @@ export default function GuidePage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base flex items-center gap-2 text-blue-400">
                     <Rocket className="h-5 w-5" />
-                    Primi Passi con GameStringer
+                    {g.qsTitle}
                   </CardTitle>
                   <CardDescription>
-                    Segui questi passaggi per iniziare a tradurre il tuo primo gioco in meno di 5 minuti.
+                    {g.qsSubtitle}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-0">
-                  <Step number={1} title="Configura il provider AI">
-                    <p>Vai in <NavLink href="/settings">Impostazioni</NavLink> → tab <strong>AI</strong>.</p>
-                    <p>Seleziona un provider (es. <strong>OpenAI</strong>, <strong>Gemini</strong>, <strong>DeepL</strong>) e incolla la tua API key.</p>
-                    <p>Clicca <strong>Salva</strong>. La chiave viene salvata in modo sicuro nel tuo profilo.</p>
-                    <Tip variant="info">Non hai una API key? Puoi usare <strong>Ollama</strong> per traduzioni gratuite e offline. Vai in Impostazioni → Ollama per configurarlo.</Tip>
+                  <Step number={1} title={g.qsStep1Title}>
+                    <p>{g.qsStep1Line1} <NavLink href="/settings">{t('nav.settings')}</NavLink> {g.qsStep1Line1b} <strong>AI</strong>.</p>
+                    <p>{g.qsStep1Line2}</p>
+                    <p>{g.qsStep1Line3} <strong>{g.btnSave}</strong>{g.qsStep1Line3b}</p>
+                    <Tip variant="info">{g.qsStep1Tip}</Tip>
                   </Step>
 
-                  <Step number={2} title="Collega i tuoi store di giochi">
-                    <p>Vai in <NavLink href="/stores">Stores</NavLink> e configura almeno uno store (Steam, Epic, GOG...).</p>
-                    <p>Per <strong>Steam</strong>: inserisci il tuo <strong>Steam ID</strong> e una <strong>API Key Steam</strong> (gratuita da <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">steamcommunity.com/dev/apikey</a>).</p>
-                    <p>GameStringer scaricherà automaticamente la tua libreria con tutte le info: engine, lingue supportate, percorso di installazione.</p>
+                  <Step number={2} title={g.qsStep2Title}>
+                    <p>{g.qsStep2Line1} <NavLink href="/stores">Stores</NavLink> {g.qsStep2Line1b}</p>
+                    <p>{g.qsStep2Line2}</p>
+                    <p>{g.qsStep2Line3}</p>
                   </Step>
 
-                  <Step number={3} title="Vai alla Libreria e scegli un gioco">
-                    <p>Apri la <NavLink href="/library">Libreria</NavLink>. Vedrai tutti i tuoi giochi con copertine, engine e stato installazione.</p>
-                    <p>Clicca su un gioco installato per vedere i dettagli: engine rilevato, file di localizzazione trovati, lingue supportate.</p>
-                    <p>Dal dettaglio gioco, clicca <strong>&quot;Traduci&quot;</strong> per avviare la traduzione.</p>
+                  <Step number={3} title={g.qsStep3Title}>
+                    <p>{g.qsStep3Line1} <NavLink href="/library">{t('nav.library')}</NavLink>{g.qsStep3Line1b}</p>
+                    <p>{g.qsStep3Line2}</p>
+                    <p>{g.qsStep3Line3a} <strong>&quot;{g.btnTranslate}&quot;</strong> {g.qsStep3Line3b}</p>
                   </Step>
 
-                  <Step number={4} title="Traduci automaticamente">
-                    <p>La pagina <NavLink href="/auto-translate">Auto-Translate</NavLink> scansiona automaticamente i file del gioco.</p>
-                    <p>Se trova file traducibili (JSON, CSV, PO, XML, ecc.), li carica e puoi tradurli con un click.</p>
-                    <p>Scegli lingua sorgente/destinazione, provider AI, e clicca <strong>&quot;Avvia Traduzione&quot;</strong>.</p>
-                    <p>La traduzione avviene in batch con barra di progresso, stima tempo, e salvataggio automatico.</p>
+                  <Step number={4} title={g.qsStep4Title}>
+                    <p>{g.qsStep4Line1} <NavLink href="/auto-translate">Auto-Translate</NavLink> {g.qsStep4Line1b}</p>
+                    <p>{g.qsStep4Line2}</p>
+                    <p>{g.qsStep4Line3a} <strong>&quot;{g.btnStartTranslation}&quot;</strong>.</p>
+                    <p>{g.qsStep4Line4}</p>
                   </Step>
 
-                  <Step number={5} title="Rivedi, esporta e applica la patch">
-                    <p>Dopo la traduzione, la fase di <strong>Review</strong> mostra ogni stringa con punteggio qualità.</p>
-                    <p>Puoi modificare manualmente qualsiasi traduzione cliccandoci sopra.</p>
-                    <p>Nella fase <strong>Patch</strong>, GameStringer genera un pacchetto ZIP con i file tradotti pronti da copiare nella cartella del gioco.</p>
-                    <Tip variant="success">Per giochi Unity, GameStringer può installare automaticamente <strong>BepInEx + XUnity AutoTranslator</strong> — non serve fare nulla a mano!</Tip>
+                  <Step number={5} title={g.qsStep5Title}>
+                    <p>{g.qsStep5Line1}</p>
+                    <p>{g.qsStep5Line2}</p>
+                    <p>{g.qsStep5Line3}</p>
+                    <Tip variant="success">{g.qsStep5Tip}</Tip>
                   </Step>
                 </CardContent>
               </Card>
@@ -202,22 +204,22 @@ export default function GuidePage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                    Cosa serve per iniziare
+                    {g.needTitle}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-                      <p className="text-xs font-semibold text-white mb-1">API Key AI (consigliata)</p>
-                      <p className="text-[11px] text-muted-foreground">OpenAI, Gemini, DeepL, Claude, DeepSeek, Mistral o OpenRouter. Oppure usa Ollama per tradurre gratis offline.</p>
+                      <p className="text-xs font-semibold text-white mb-1">{g.needApiTitle}</p>
+                      <p className="text-[11px] text-muted-foreground">{g.needApiDesc}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-                      <p className="text-xs font-semibold text-white mb-1">Giochi installati</p>
-                      <p className="text-[11px] text-muted-foreground">Almeno un gioco installato su Steam, Epic, GOG o altra piattaforma. GameStringer rileva automaticamente i file.</p>
+                      <p className="text-xs font-semibold text-white mb-1">{g.needGamesTitle}</p>
+                      <p className="text-[11px] text-muted-foreground">{g.needGamesDesc}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
-                      <p className="text-xs font-semibold text-white mb-1">Connessione internet</p>
-                      <p className="text-[11px] text-muted-foreground">Per i provider AI cloud. Non necessaria se usi Ollama o hai già i file tradotti.</p>
+                      <p className="text-xs font-semibold text-white mb-1">{g.needInternetTitle}</p>
+                      <p className="text-[11px] text-muted-foreground">{g.needInternetDesc}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -238,28 +240,28 @@ export default function GuidePage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2 text-emerald-400">
                     <Wand2 className="h-4 w-4" />
-                    Tradurre un gioco Unity
+                    {g.wfUnityTitle}
                   </CardTitle>
-                  <CardDescription>Il flusso più comune. GameStringer gestisce tutto automaticamente.</CardDescription>
+                  <CardDescription>{g.wfUnityDesc}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-0">
-                  <Step number={1} title="Seleziona il gioco dalla Libreria">
-                    <p>Apri <NavLink href="/library">Libreria</NavLink> → cerca il gioco → clicca su di esso.</p>
-                    <p>GameStringer rileva se è Unity dalla presenza di <code className="text-[10px] px-1 py-0.5 bg-slate-800 rounded">UnityPlayer.dll</code>.</p>
+                  <Step number={1} title={g.wfUnityStep1Title}>
+                    <p>{g.wfUnityStep1Line1} <NavLink href="/library">{t('nav.library')}</NavLink> {g.wfUnityStep1Line1b}</p>
+                    <p>{g.wfUnityStep1Line2}</p>
                   </Step>
-                  <Step number={2} title="Clicca 'Traduci' → Auto-Translate">
-                    <p>Se non trova file di localizzazione, GameStringer rileva che è Unity e propone di installare <strong>BepInEx + XUnity AutoTranslator</strong>.</p>
-                    <p>Clicca <strong>&quot;Installa&quot;</strong> — il processo è completamente automatico.</p>
+                  <Step number={2} title={g.wfUnityStep2Title}>
+                    <p>{g.wfUnityStep2Line1}</p>
+                    <p>{g.wfUnityStep2Line2a} <strong>&quot;{g.btnInstall}&quot;</strong> {g.wfUnityStep2Line2b}</p>
                   </Step>
-                  <Step number={3} title="Avvia il gioco una volta">
-                    <p>Dopo l&apos;installazione, avvia il gioco normalmente. BepInEx genera i file di traduzione alla prima esecuzione.</p>
-                    <p>Chiudi il gioco e torna su GameStringer.</p>
+                  <Step number={3} title={g.wfUnityStep3Title}>
+                    <p>{g.wfUnityStep3Line1}</p>
+                    <p>{g.wfUnityStep3Line2}</p>
                   </Step>
-                  <Step number={4} title="Ri-scansiona e traduci">
-                    <p>Clicca <strong>&quot;Ri-Scansiona&quot;</strong>. Ora GameStringer trova i file di traduzione generati da XUnity.</p>
-                    <p>Avvia la traduzione AI. I file tradotti verranno inseriti direttamente nella cartella di XUnity.</p>
+                  <Step number={4} title={g.wfUnityStep4Title}>
+                    <p>{g.wfUnityStep4Line1a} <strong>&quot;{g.btnRescan}&quot;</strong>{g.wfUnityStep4Line1b}</p>
+                    <p>{g.wfUnityStep4Line2}</p>
                   </Step>
-                  <Tip variant="info">In-game puoi premere <strong>ALT+T</strong> per aprire il menu di XUnity AutoTranslator e regolare le impostazioni.</Tip>
+                  <Tip variant="info">{g.wfUnityTip}</Tip>
                 </CardContent>
               </Card>
 
@@ -268,27 +270,27 @@ export default function GuidePage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2 text-blue-400">
                     <FileText className="h-4 w-4" />
-                    Tradurre un gioco con file di localizzazione
+                    {g.wfFilesTitle}
                   </CardTitle>
-                  <CardDescription>Per giochi che hanno già file JSON, CSV, PO, XML nella cartella di installazione.</CardDescription>
+                  <CardDescription>{g.wfFilesDesc}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-0">
-                  <Step number={1} title="Libreria → Traduci">
-                    <p>Seleziona il gioco dalla <NavLink href="/library">Libreria</NavLink> e clicca <strong>&quot;Traduci&quot;</strong>.</p>
-                    <p>GameStringer scansiona fino a 8 livelli di sotto-cartelle cercando file traducibili.</p>
+                  <Step number={1} title={g.wfFilesStep1Title}>
+                    <p>{g.wfFilesStep1Line1} <NavLink href="/library">{t('nav.library')}</NavLink> {g.wfFilesStep1Line1b} <strong>&quot;{g.btnTranslate}&quot;</strong>.</p>
+                    <p>{g.wfFilesStep1Line2}</p>
                   </Step>
-                  <Step number={2} title="Seleziona i file da tradurre">
-                    <p>Vengono caricati automaticamente i file trovati. Puoi deselezionare quelli che non ti servono.</p>
-                    <p>Formati supportati: <strong>JSON, CSV, PO/POT, XLIFF, RESX, XML, YAML, LUA, RPY, INI, TXT, LANG</strong>.</p>
+                  <Step number={2} title={g.wfFilesStep2Title}>
+                    <p>{g.wfFilesStep2Line1}</p>
+                    <p>{g.wfFilesStep2Line2}</p>
                   </Step>
-                  <Step number={3} title="Configura e avvia">
-                    <p>Scegli provider AI, lingua sorgente/destinazione, e clicca <strong>&quot;Avvia Traduzione&quot;</strong>.</p>
-                    <p>La traduzione procede in batch. Puoi <strong>mettere in pausa</strong> e <strong>riprendere</strong> in qualsiasi momento.</p>
-                    <p>Se chiudi l&apos;app, il checkpoint viene salvato automaticamente — puoi riprendere la prossima volta.</p>
+                  <Step number={3} title={g.wfFilesStep3Title}>
+                    <p>{g.wfFilesStep3Line1a} <strong>&quot;{g.btnStartTranslation}&quot;</strong>.</p>
+                    <p>{g.wfFilesStep3Line2}</p>
+                    <p>{g.wfFilesStep3Line3}</p>
                   </Step>
-                  <Step number={4} title="Rivedi e applica">
-                    <p>Nella fase Review, ogni stringa ha un <strong>punteggio qualità</strong> (0-100). Le stringhe sotto soglia sono evidenziate.</p>
-                    <p>Genera la patch ZIP e copia i file nella cartella del gioco.</p>
+                  <Step number={4} title={g.wfFilesStep4Title}>
+                    <p>{g.wfFilesStep4Line1}</p>
+                    <p>{g.wfFilesStep4Line2}</p>
                   </Step>
                 </CardContent>
               </Card>
@@ -298,24 +300,24 @@ export default function GuidePage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2 text-violet-400">
                     <Brain className="h-4 w-4" />
-                    Neural Translator Pro — traduzione avanzata
+                    {g.wfProTitle}
                   </CardTitle>
-                  <CardDescription>Per chi vuole controllo totale: scelta file, contesto, glossario, export.</CardDescription>
+                  <CardDescription>{g.wfProDesc}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-0">
-                  <Step number={1} title="Apri Neural Translator Pro">
-                    <p>Vai in <NavLink href="/translator/pro">Neural Translator Pro</NavLink>. Seleziona il gioco dal dropdown o dalla Libreria.</p>
+                  <Step number={1} title={g.wfProStep1Title}>
+                    <p>{g.wfProStep1Line1} <NavLink href="/translator/pro">Neural Translator Pro</NavLink>{g.wfProStep1Line1b}</p>
                   </Step>
-                  <Step number={2} title="Seleziona file e configura">
-                    <p>Puoi selezionare singoli file da tradurre. Configura: provider AI, lingua, glossario, Translation Memory.</p>
-                    <p>Il sistema usa la <strong>Translation Memory</strong> per riutilizzare traduzioni precedenti e risparmiare costi API.</p>
+                  <Step number={2} title={g.wfProStep2Title}>
+                    <p>{g.wfProStep2Line1}</p>
+                    <p>{g.wfProStep2Line2}</p>
                   </Step>
-                  <Step number={3} title="Traduci con preview in tempo reale">
-                    <p>Durante la traduzione vedi ogni stringa tradotta in tempo reale. Timer, progresso, errori — tutto visibile.</p>
+                  <Step number={3} title={g.wfProStep3Title}>
+                    <p>{g.wfProStep3Line1}</p>
                   </Step>
-                  <Step number={4} title="Applica al gioco o esporta">
-                    <p>Puoi applicare direttamente la patch al gioco (con backup automatico) oppure esportare come ZIP/file singoli.</p>
-                    <p>Per giochi Unreal Engine, GameStringer crea file <code className="text-[10px] px-1 py-0.5 bg-slate-800 rounded">.locres</code> e file <code className="text-[10px] px-1 py-0.5 bg-slate-800 rounded">.pak</code> pronti.</p>
+                  <Step number={4} title={g.wfProStep4Title}>
+                    <p>{g.wfProStep4Line1}</p>
+                    <p>{g.wfProStep4Line2}</p>
                   </Step>
                 </CardContent>
               </Card>
@@ -325,23 +327,23 @@ export default function GuidePage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2 text-amber-400">
                     <Scan className="h-4 w-4" />
-                    Traduzione OCR — cattura testo dallo schermo
+                    {g.wfOcrTitle}
                   </CardTitle>
-                  <CardDescription>Per giochi senza file di localizzazione accessibili. Cattura e traduci il testo visibile.</CardDescription>
+                  <CardDescription>{g.wfOcrDesc}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-0">
-                  <Step number={1} title="Apri OCR Translator">
-                    <p>Vai in <NavLink href="/ocr-translator">OCR Translator</NavLink> o premi <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-[10px] font-mono">Ctrl+Shift+T</kbd> da qualsiasi punto.</p>
+                  <Step number={1} title={g.wfOcrStep1Title}>
+                    <p>{g.wfOcrStep1Line1} <NavLink href="/ocr-translator">OCR Translator</NavLink> {g.wfOcrStep1Line1b} <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-[10px] font-mono">Ctrl+Shift+T</kbd> {g.wfOcrStep1Line1c}</p>
                   </Step>
-                  <Step number={2} title="Seleziona l'area dello schermo">
-                    <p>Cattura una porzione dello schermo dove appare il testo del gioco (dialoghi, menu, ecc.).</p>
-                    <p>L&apos;OCR estrae il testo automaticamente. Per giochi retro/pixel art, usa i preset di pre-processing (8-bit, 16-bit, DOS).</p>
+                  <Step number={2} title={g.wfOcrStep2Title}>
+                    <p>{g.wfOcrStep2Line1}</p>
+                    <p>{g.wfOcrStep2Line2}</p>
                   </Step>
-                  <Step number={3} title="Traduzione istantanea">
-                    <p>Il testo estratto viene tradotto istantaneamente con il provider AI configurato.</p>
-                    <p>Il risultato appare nell&apos;overlay o nel pannello laterale.</p>
+                  <Step number={3} title={g.wfOcrStep3Title}>
+                    <p>{g.wfOcrStep3Line1}</p>
+                    <p>{g.wfOcrStep3Line2}</p>
                   </Step>
-                  <Tip variant="info">Per traduzione continua senza click, usa <NavLink href="/live-ocr">Live OCR</NavLink> — cattura automatica a intervalli regolari.</Tip>
+                  <Tip variant="info">{g.wfOcrTip} <NavLink href="/live-ocr">Live OCR</NavLink> {g.wfOcrTipEnd}</Tip>
                 </CardContent>
               </Card>
 
@@ -350,21 +352,21 @@ export default function GuidePage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm flex items-center gap-2 text-pink-400">
                     <Mic className="h-4 w-4" />
-                    Traduzione vocale e voice clone
+                    {g.wfVoiceTitle}
                   </CardTitle>
-                  <CardDescription>Traduci dialoghi parlati e ricrea le voci nella lingua di destinazione.</CardDescription>
+                  <CardDescription>{g.wfVoiceDesc}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-0">
-                  <Step number={1} title="Carica o registra audio">
-                    <p>In <NavLink href="/voice-translator">Voice Translator</NavLink>, carica un file audio o registra direttamente.</p>
-                    <p>Whisper (OpenAI) trascrive automaticamente l&apos;audio in testo.</p>
+                  <Step number={1} title={g.wfVoiceStep1Title}>
+                    <p>{g.wfVoiceStep1Line1} <NavLink href="/voice-translator">Voice Translator</NavLink>{g.wfVoiceStep1Line1b}</p>
+                    <p>{g.wfVoiceStep1Line2}</p>
                   </Step>
-                  <Step number={2} title="Traduzione del testo">
-                    <p>Il testo trascritto viene tradotto con il provider AI selezionato.</p>
+                  <Step number={2} title={g.wfVoiceStep2Title}>
+                    <p>{g.wfVoiceStep2Line1}</p>
                   </Step>
-                  <Step number={3} title="Text-to-Speech nella lingua target">
-                    <p>La traduzione viene letta ad alta voce con voci AI (Nova, Alloy, Echo, Fable, Onyx, Shimmer).</p>
-                    <p>Per voci personalizzate, usa <NavLink href="/voice-clone">Voice Clone Studio</NavLink> con ElevenLabs.</p>
+                  <Step number={3} title={g.wfVoiceStep3Title}>
+                    <p>{g.wfVoiceStep3Line1}</p>
+                    <p>{g.wfVoiceStep3Line2} <NavLink href="/voice-clone">Voice Clone Studio</NavLink> {g.wfVoiceStep3Line2b}</p>
                   </Step>
                 </CardContent>
               </Card>
@@ -422,7 +424,7 @@ export default function GuidePage() {
                                         </li>
                                       ))}
                                       {tool.features.length > 3 && (
-                                        <li className="text-[10px] text-slate-600 pl-4">+{tool.features.length - 3} altre funzioni</li>
+                                        <li className="text-[10px] text-slate-600 pl-4">+{tool.features.length - 3} {g.otherFunctions}</li>
                                       )}
                                     </ul>
                                   </CardContent>
@@ -451,18 +453,18 @@ export default function GuidePage() {
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Keyboard className="w-4 h-4 text-blue-400" />
-                    Navigazione e interfaccia
+                    {g.scNavTitle}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {[
-                      { shortcut: 'Ctrl + K', desc: 'Command Palette — cerca qualsiasi pagina o azione' },
-                      { shortcut: 'Ctrl + F', desc: 'Ricerca globale nella pagina corrente' },
-                      { shortcut: 'Ctrl + ,', desc: 'Apri Impostazioni' },
-                      { shortcut: 'Ctrl + R', desc: 'Aggiorna dati libreria' },
-                      { shortcut: 'Esc', desc: 'Chiudi modale, pannello o dropdown aperto' },
-                      { shortcut: 'Shift + ?', desc: 'Mostra tutte le scorciatoie' },
+                      { shortcut: 'Ctrl + K', desc: g.scNavCmdPalette },
+                      { shortcut: 'Ctrl + F', desc: g.scNavSearch },
+                      { shortcut: 'Ctrl + ,', desc: g.scNavSettings },
+                      { shortcut: 'Ctrl + R', desc: g.scNavRefresh },
+                      { shortcut: 'Esc', desc: g.scNavClose },
+                      { shortcut: 'Shift + ?', desc: g.scNavShortcuts },
                     ].map((s, i) => (
                       <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
                         <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-[10px] font-mono text-blue-400 whitespace-nowrap">
@@ -480,16 +482,16 @@ export default function GuidePage() {
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Zap className="w-4 h-4 text-green-400" />
-                    Hotkey globali (attive anche con gioco in primo piano)
+                    {g.scGlobalTitle}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {[
-                      { shortcut: 'Ctrl + Shift + T', desc: 'Cattura OCR — seleziona area e traduci' },
-                      { shortcut: 'Ctrl + Shift + Q', desc: 'Traduzione rapida — traduci testo negli appunti' },
-                      { shortcut: 'Ctrl + Alt + O', desc: 'Toggle Overlay — mostra/nascondi overlay traduzione' },
-                      { shortcut: 'ALT + T', desc: 'Menu XUnity AutoTranslator (in-game, dopo installazione)' },
+                      { shortcut: 'Ctrl + Shift + T', desc: g.scGlobalOcr },
+                      { shortcut: 'Ctrl + Shift + Q', desc: g.scGlobalQuick },
+                      { shortcut: 'Ctrl + Alt + O', desc: g.scGlobalOverlay },
+                      { shortcut: 'ALT + T', desc: g.scGlobalXunity },
                     ].map((s, i) => (
                       <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
                         <kbd className="px-2 py-1 bg-slate-900 rounded border border-green-500/30 text-[10px] font-mono text-green-400 whitespace-nowrap">
@@ -499,7 +501,7 @@ export default function GuidePage() {
                       </div>
                     ))}
                   </div>
-                  <Tip variant="info">Le hotkey globali funzionano anche quando GameStringer è in background e il gioco è in primo piano.</Tip>
+                  <Tip variant="info">{g.scGlobalTip}</Tip>
                 </CardContent>
               </Card>
 
@@ -508,16 +510,16 @@ export default function GuidePage() {
                 <CardHeader className="py-2 px-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-violet-400" />
-                    Durante la traduzione
+                    {g.scTransTitle}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {[
-                      { shortcut: 'Spazio', desc: 'Pausa / Riprendi traduzione' },
-                      { shortcut: 'Tab', desc: 'Stringa successiva (in Review)' },
-                      { shortcut: 'Shift + Tab', desc: 'Stringa precedente (in Review)' },
-                      { shortcut: 'Enter', desc: 'Conferma modifica stringa' },
+                      { shortcut: 'Spazio', desc: g.scTransPause },
+                      { shortcut: 'Tab', desc: g.scTransNext },
+                      { shortcut: 'Shift + Tab', desc: g.scTransPrev },
+                      { shortcut: 'Enter', desc: g.scTransConfirm },
                     ].map((s, i) => (
                       <div key={i} className="flex items-center justify-between gap-3 p-2 rounded bg-slate-800/30">
                         <kbd className="px-2 py-1 bg-slate-900 rounded border border-slate-700 text-[10px] font-mono text-violet-400 whitespace-nowrap">
@@ -543,30 +545,15 @@ export default function GuidePage() {
               {/* FAQ — Generali */}
               <h2 className="text-sm font-bold text-white flex items-center gap-2 px-1">
                 <HelpCircle className="h-4 w-4 text-orange-400" />
-                Domande frequenti
+                {g.faqTitle}
               </h2>
 
               {[
-                {
-                  q: 'Quanto costa usare GameStringer?',
-                  a: 'GameStringer è gratuito e open source. Paghi solo le API dei provider AI che scegli di usare (OpenAI, Gemini, ecc.). Con Ollama puoi tradurre gratuitamente usando modelli AI locali sul tuo PC.',
-                },
-                {
-                  q: 'Quali provider AI posso usare?',
-                  a: 'OpenAI (GPT-4o, GPT-4), Google Gemini, Anthropic Claude, DeepSeek, Mistral, OpenRouter, DeepL, e Ollama per traduzione offline. Puoi anche usare Multi-LLM per confrontare i risultati di più provider.',
-                },
-                {
-                  q: 'Posso tradurre in qualsiasi lingua?',
-                  a: 'Sì. GameStringer supporta qualsiasi coppia di lingue supportata dal provider AI selezionato. Le lingue più comuni (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL) hanno supporto i18n completo nell\'interfaccia.',
-                },
-                {
-                  q: 'La traduzione modifica i file originali del gioco?',
-                  a: 'No. GameStringer genera sempre file separati o patch ZIP. Per l\'applicazione diretta (es. Unreal .pak), viene fatto un backup automatico dei file originali. Puoi sempre ripristinare.',
-                },
-                {
-                  q: 'Funziona con giochi multiplayer online?',
-                  a: 'Dipende dal gioco. La traduzione dei file di localizzazione è sicura e non modifica gli eseguibili. Per giochi con anti-cheat aggressivo (EAC, BattlEye), usa l\'Overlay o l\'OCR che non toccano i file di gioco.',
-                },
+                { q: g.faqCostQ, a: g.faqCostA },
+                { q: g.faqProvidersQ, a: g.faqProvidersA },
+                { q: g.faqLangsQ, a: g.faqLangsA },
+                { q: g.faqFilesQ, a: g.faqFilesA },
+                { q: g.faqMultiplayerQ, a: g.faqMultiplayerA },
               ].map((faq, i) => (
                 <Card key={i} className="border-slate-800/50 bg-slate-900/30">
                   <CardHeader className="py-2 px-3">
@@ -583,30 +570,15 @@ export default function GuidePage() {
               {/* Troubleshooting */}
               <h2 className="text-sm font-bold text-white flex items-center gap-2 px-1">
                 <AlertTriangle className="h-4 w-4 text-amber-400" />
-                Risoluzione problemi
+                {g.troubleTitle}
               </h2>
 
               {[
-                {
-                  q: '"Nessun file traducibile trovato" — come risolvo?',
-                  a: 'Alcuni giochi criptano o comprimono i file. Prova:\n• Per giochi Unity: usa il Unity Patcher che installa BepInEx automaticamente\n• Per giochi Unreal: usa l\'UE Translator per file .locres/.pak\n• Per altri engine: usa il Crawler per scansionare file in profondità, oppure carica manualmente i file dalla schermata Auto-Translate',
-                },
-                {
-                  q: 'La traduzione si blocca o dà errore API',
-                  a: '• Verifica che la API key sia valida in Impostazioni → AI\n• Controlla di avere credito sul provider (es. OpenAI)\n• Riduci il Batch Size in Impostazioni → Performance\n• Se usi Ollama, assicurati che il server sia avviato\n• La traduzione ha checkpoint automatico: se si blocca, puoi riprendere dallo stesso punto',
-                },
-                {
-                  q: 'BepInEx non funziona / il gioco crasha dopo installazione',
-                  a: '• Assicurati che il gioco sia chiuso prima di installare BepInEx\n• Per Unity < 5.6, GameStringer usa IPA invece di BepInEx (automatico)\n• Verifica che l\'antivirus non blocchi BepInEx (è un modding framework legittimo)\n• Prova a cancellare la cartella BepInEx e reinstallare',
-                },
-                {
-                  q: 'I caratteri speciali (giapponese, cinese, arabo) non appaiono correttamente',
-                  a: '• Usa il Fixer (Strumenti → Giochi → Fixer) per correggere encoding\n• Assicurati che il file sia salvato in UTF-8\n• Per giochi retro con font bitmap, potrebbe essere necessario un font mod separato',
-                },
-                {
-                  q: 'Come faccio backup delle mie traduzioni?',
-                  a: '• Vai in Impostazioni → Backup e attiva l\'Auto-Backup\n• Le traduzioni sono salvate anche nella Translation Memory (Dizionario) accessibile dalla sidebar\n• Puoi esportare qualsiasi progetto come ZIP dalla pagina Project Manager',
-                },
+                { q: g.troubleNoFilesQ, a: g.troubleNoFilesA },
+                { q: g.troubleApiQ, a: g.troubleApiA },
+                { q: g.troubleBepinexQ, a: g.troubleBepinexA },
+                { q: g.troubleCharsQ, a: g.troubleCharsA },
+                { q: g.troubleBackupQ, a: g.troubleBackupA },
               ].map((faq, i) => (
                 <Card key={i} className="border-amber-500/10 bg-slate-900/30">
                   <CardHeader className="py-2 px-3">
@@ -623,19 +595,19 @@ export default function GuidePage() {
               {/* Engine specifici */}
               <h2 className="text-sm font-bold text-white flex items-center gap-2 px-1">
                 <Gamepad2 className="h-4 w-4 text-emerald-400" />
-                Guida per engine di gioco
+                {g.engineGuideTitle}
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {[
-                  { engine: 'Unity', tool: 'Unity Patcher', href: '/unity-patcher', desc: 'BepInEx + XUnity AutoTranslator. Automatico.', color: 'emerald' },
-                  { engine: 'Unreal Engine 4/5', tool: 'UE Translator', href: '/unreal-translator', desc: 'Estrae .locres, traduce, crea .pak.', color: 'blue' },
-                  { engine: 'RPG Maker (MV/MZ/VX)', tool: 'RPG Maker Patcher', href: '/rpgmaker-patcher', desc: 'Estrae database e mappe automaticamente.', color: 'amber' },
-                  { engine: "Ren'Py", tool: "Ren'Py Patcher", href: '/renpy-patcher', desc: 'Gestisce script .rpy con variabili.', color: 'pink' },
-                  { engine: 'Wolf RPG', tool: 'Wolf RPG Patcher', href: '/wolfrpg-patcher', desc: 'Estrae e modifica dati proprietari.', color: 'orange' },
-                  { engine: 'Telltale', tool: 'Telltale Patcher', href: '/telltale-patcher', desc: 'File .langdb/.dlog per Walking Dead ecc.', color: 'violet' },
-                  { engine: 'Godot', tool: 'Crawler + Fixer', href: '/crawler', desc: 'Scansiona e traduci file .tres/.tscn.', color: 'cyan' },
-                  { engine: 'GameMaker', tool: 'Auto-Translate', href: '/auto-translate', desc: 'Cerca file data.win e stringhe interne.', color: 'yellow' },
+                  { engine: 'Unity', tool: 'Unity Patcher', href: '/unity-patcher', desc: g.engineUnity, color: 'emerald' },
+                  { engine: 'Unreal Engine 4/5', tool: 'UE Translator', href: '/unreal-translator', desc: g.engineUnreal, color: 'blue' },
+                  { engine: 'RPG Maker (MV/MZ/VX)', tool: 'RPG Maker Patcher', href: '/rpgmaker-patcher', desc: g.engineRpgMaker, color: 'amber' },
+                  { engine: "Ren'Py", tool: "Ren'Py Patcher", href: '/renpy-patcher', desc: g.engineRenpy, color: 'pink' },
+                  { engine: 'Wolf RPG', tool: 'Wolf RPG Patcher', href: '/wolfrpg-patcher', desc: g.engineWolfRpg, color: 'orange' },
+                  { engine: 'Telltale', tool: 'Telltale Patcher', href: '/telltale-patcher', desc: g.engineTelltale, color: 'violet' },
+                  { engine: 'Godot', tool: 'Crawler + Fixer', href: '/crawler', desc: g.engineGodot, color: 'cyan' },
+                  { engine: 'GameMaker', tool: 'Auto-Translate', href: '/auto-translate', desc: g.engineGameMaker, color: 'yellow' },
                 ].map((e, i) => (
                   <Link key={i} href={e.href}>
                     <Card className="border-slate-800/50 bg-slate-900/30 hover:bg-slate-800/40 transition-colors cursor-pointer h-full">

@@ -7,12 +7,15 @@ The GameStringer application experienced a critical authentication flow issue wh
 ## Root Cause Analysis
 
 ### Primary Issue
+
 The authentication logic in `ProfileAuthProvider` was overly complex, depending on multiple timing-sensitive conditions:
+
 - `currentProfile` presence
 - `isSessionExpired` state
 - `sessionTimeRemaining` value
 
 This created timing issues where:
+
 1. User would authenticate successfully (`currentProfile` set)
 2. Session management system would still be initializing
 3. `isSessionExpired` could be `true` temporarily
@@ -20,6 +23,7 @@ This created timing issues where:
 5. Dashboard would not render
 
 ### Secondary Issues
+
 - React state updates not triggering re-renders when `currentProfile` changed
 - Excessive debug logging making troubleshooting difficult
 - Complex session timing logic interfering with simple authentication flow
@@ -27,34 +31,40 @@ This created timing issues where:
 ## Solution Implemented
 
 ### 1. Simplified Authentication Logic
+
 **File:** `lib/profile-auth.tsx`
 
 **Before:**
+
 ```typescript
 const isAuthenticated = !!currentProfile && (!isSessionExpired || sessionTimeRemaining === null);
-```
+```text
 
 **After:**
+
 ```typescript
 const isAuthenticated = !!currentProfile;
-```
+```text
 
 **Rationale:** If a user has a `currentProfile`, they are authenticated. Session expiry is handled separately and doesn't affect basic authentication state.
 
 ### 2. Forced Re-render on Profile Change
+
 **File:** `lib/profile-auth.tsx`
 
 Added forced re-render mechanism:
+
 ```typescript
 const [renderKey, setRenderKey] = useState(0);
 useEffect(() => {
   setRenderKey(prev => prev + 1);
 }, [currentProfile]);
-```
+```text
 
 **Rationale:** Ensures React components update immediately when `currentProfile` changes, preventing stale authentication state.
 
 ### 3. Cleaned Up Debug Logging
+
 **Files:** `lib/profile-auth.tsx`, `components/auth/protected-route.tsx`
 
 - Removed excessive console.error and console.log statements
@@ -86,11 +96,13 @@ useEffect(() => {
 ## Key Files Modified
 
 ### `lib/profile-auth.tsx`
+
 - **Lines 25-31:** Removed debug logs, simplified initialization
 - **Lines 128-137:** Simplified authentication logic, cleaned up debug logs
 - **Lines 130-137:** Kept essential error logging for critical issues
 
 ### `components/auth/protected-route.tsx`
+
 - **Lines 34-45:** Removed excessive debug logging
 - **Lines 43-47:** Simplified profile selection handler
 - **Lines 55-66:** Cleaned up profile creation handler
@@ -99,6 +111,7 @@ useEffect(() => {
 ## Testing Verification
 
 The fix was verified with the following test case:
+
 - **Profile:** "rouges78"
 - **Password:** "123456"
 - **Expected Result:** Immediate dashboard display after login
@@ -106,17 +119,20 @@ The fix was verified with the following test case:
 
 ## Important Notes
 
-### Do NOT Revert These Changes:
+### Do NOT Revert These Changes
+
 1. **Never** add back complex authentication logic depending on session timing
 2. **Never** remove the forced re-render mechanism for `currentProfile` changes
 3. **Never** add back excessive debug logging in production code
 
-### Session Management:
+### Session Management
+
 - Session expiry is handled separately from basic authentication
 - Users with expired sessions see a renewal dialog
 - Session renewal/logout works independently of authentication state
 
-### Performance Impact:
+### Performance Impact
+
 - Forced re-render only triggers on actual `currentProfile` changes
 - Minimal performance impact
 - Significantly improved user experience

@@ -5,18 +5,21 @@ This directory contains comprehensive tests for the React notification component
 ## Test Structure
 
 ### Component Tests
+
 - `notification-toast.test.tsx` - Comprehensive tests for NotificationToast component
 - `notification-center.test.tsx` - Tests for NotificationCenter component  
 - `notification-indicator.test.tsx` - Tests for NotificationIndicator component
 - `notification-settings.test.tsx` - Tests for NotificationSettings component
 
 ### Hook Tests
+
 - `use-notifications.test.ts` - Comprehensive tests for useNotifications hook
 - `use-notifications-simple.test.ts` - Simplified hook tests
 
 ### Test Categories
 
 #### 1. Rendering Tests
+
 - Component renders correctly
 - Props are handled properly
 - Conditional rendering works
@@ -24,6 +27,7 @@ This directory contains comprehensive tests for the React notification component
 - Empty states
 
 #### 2. User Interaction Tests
+
 - Click handlers work correctly
 - Keyboard navigation
 - Form interactions
@@ -31,12 +35,14 @@ This directory contains comprehensive tests for the React notification component
 - Modal interactions
 
 #### 3. State Management Tests
+
 - Hook state updates
 - Local state changes
 - Props updates
 - Side effects
 
 #### 4. Accessibility Tests
+
 - ARIA attributes
 - Screen reader support
 - Keyboard navigation
@@ -44,6 +50,7 @@ This directory contains comprehensive tests for the React notification component
 - Semantic HTML
 
 #### 5. Integration Tests
+
 - Component interactions
 - Hook integrations
 - Event handling
@@ -52,6 +59,7 @@ This directory contains comprehensive tests for the React notification component
 ## Test Features Implemented
 
 ### NotificationToast Tests
+
 - ✅ Rendering with title and message
 - ✅ ARIA attributes for accessibility
 - ✅ Priority-based styling
@@ -63,6 +71,7 @@ This directory contains comprehensive tests for the React notification component
 - ✅ Screen reader announcements
 
 ### NotificationCenter Tests
+
 - ✅ Modal rendering and closing
 - ✅ Notification list display
 - ✅ Search and filtering
@@ -74,6 +83,7 @@ This directory contains comprehensive tests for the React notification component
 - ✅ Empty and loading states
 
 ### NotificationIndicator Tests
+
 - ✅ Badge display with count
 - ✅ Animation on new notifications
 - ✅ Click interactions
@@ -83,6 +93,7 @@ This directory contains comprehensive tests for the React notification component
 - ✅ Edge cases (negative counts, etc.)
 
 ### NotificationSettings Tests
+
 - ✅ Form rendering and validation
 - ✅ Global settings toggles
 - ✅ Per-type notification settings
@@ -93,6 +104,7 @@ This directory contains comprehensive tests for the React notification component
 - ✅ Responsive design
 
 ### useNotifications Hook Tests
+
 - ✅ Initialization states
 - ✅ CRUD operations
 - ✅ Batch operations
@@ -107,6 +119,7 @@ This directory contains comprehensive tests for the React notification component
 ## Test Setup
 
 ### Dependencies
+
 - Vitest - Modern test runner
 - @testing-library/react - React testing utilities
 - @testing-library/jest-dom - DOM matchers
@@ -114,10 +127,12 @@ This directory contains comprehensive tests for the React notification component
 - jsdom - DOM environment for tests
 
 ### Configuration
+
 - `vitest.config.ts` - Vitest configuration
 - `src/test/setup.ts` - Test setup and mocks
 
 ### Mocking Strategy
+
 - Tauri API mocked for cross-platform compatibility
 - localStorage mocked for consistent testing
 - Component dependencies mocked to isolate tests
@@ -140,19 +155,21 @@ npm run test:coverage
 
 # Run with UI
 npm run test:ui
-```
+```text
 
 ## Test Coverage
 
 The tests cover the following requirements from task 13.2:
 
 ### ✅ Implementare test per rendering componenti notifica
+
 - All notification components have comprehensive rendering tests
 - Props handling and conditional rendering
 - Loading, error, and empty states
 - Visual styling and theming
 
 ### ✅ Aggiungere test per interazioni utente  
+
 - Click handlers and button interactions
 - Keyboard navigation and shortcuts
 - Form interactions and validation
@@ -160,6 +177,7 @@ The tests cover the following requirements from task 13.2:
 - Drag and drop (where applicable)
 
 ### ✅ Creare test per hook e gestione stato
+
 - useNotifications hook with all methods
 - State updates and side effects
 - Real-time updates and event handling
@@ -167,6 +185,7 @@ The tests cover the following requirements from task 13.2:
 - Memory management and cleanup
 
 ### ✅ Requisiti: 1.4, 2.2, 2.3, 5.3
+
 - **1.4**: User interaction testing (click, keyboard, etc.)
 - **2.2**: Notification center functionality testing
 - **2.3**: Notification management operations testing  

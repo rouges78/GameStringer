@@ -79,6 +79,16 @@ export default function GlossaryPage() {
   const [createTargetLang, setCreateTargetLang] = useState('it');
 
   useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setCreateTargetLang(s.translation.defaultTargetLang);
+      } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
     const loaded = loadGlossaryConfig();
     setConfig(loaded);
     refreshGlossaries();
@@ -307,7 +317,7 @@ export default function GlossaryPage() {
             </Button>
             <Button size="sm" onClick={() => setShowCreateDialog(true)}>
               <Plus className="h-3.5 w-3.5 mr-1" />
-              Nuovo Glossario
+              New Glossary
             </Button>
           </div>
         </div>
@@ -315,15 +325,15 @@ export default function GlossaryPage() {
         {/* Glossary Selector */}
         {glossaries.length > 0 && (
           <div className="flex items-center gap-3">
-            <Label className="text-sm text-muted-foreground whitespace-nowrap">Gioco:</Label>
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">Game:</Label>
             <Select value={selectedGameId || ''} onValueChange={setSelectedGameId}>
               <SelectTrigger className="max-w-xs h-8 text-xs">
-                <SelectValue placeholder="Seleziona un gioco" />
+                <SelectValue placeholder="Select a game" />
               </SelectTrigger>
               <SelectContent>
                 {glossaries.map(g => (
                   <SelectItem key={g.gameId} value={g.gameId} className="text-xs">
-                    {g.gameName} ({g.entries.length} termini)
+                    {g.gameName} ({g.entries.length} terms)
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -354,13 +364,13 @@ export default function GlossaryPage() {
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <h3 className="text-lg font-semibold mb-1">Nessun glossario</h3>
+              <h3 className="text-lg font-semibold mb-1">No glossary yet</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Crea un glossario per un gioco per iniziare a gestire la terminologia
+                Create a glossary for a game to start managing terminology
               </p>
               <Button onClick={() => setShowCreateDialog(true)}>
                 <Plus className="h-4 w-4 mr-1" />
-                Crea Glossario
+                New Glossary
               </Button>
             </CardContent>
           </Card>
@@ -368,7 +378,7 @@ export default function GlossaryPage() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="h-8">
               <TabsTrigger value="terms" className="text-xs px-3 py-1">
-                Termini ({selectedGlossary.entries.length})
+                Terms ({selectedGlossary.entries.length})
               </TabsTrigger>
               <TabsTrigger value="extract" className="text-xs px-3 py-1">
                 Estrazione AI
@@ -387,7 +397,7 @@ export default function GlossaryPage() {
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cerca termini..."
+                    placeholder="Search terms..."
                     className="pl-8 h-8 text-xs"
                   />
                 </div>
@@ -438,7 +448,7 @@ export default function GlossaryPage() {
                 <div className="max-h-[500px] overflow-y-auto divide-y divide-border/50">
                   {filteredTerms.length === 0 ? (
                     <div className="text-center py-8 text-sm text-muted-foreground">
-                      {searchQuery ? 'Nessun termine trovato' : 'Glossario vuoto — aggiungi termini o usa l\'estrazione AI'}
+                      {searchQuery ? 'No terms found' : 'Empty glossary — add terms or use AI extraction'}
                     </div>
                   ) : (
                     filteredTerms.map(term => (
@@ -474,9 +484,9 @@ export default function GlossaryPage() {
               {/* Stats Bar */}
               {selectedGlossary && selectedGlossary.entries.length > 0 && (
                 <div className="flex items-center gap-4 text-[10px] text-muted-foreground px-1">
-                  <span>{selectedGlossary.entries.length} termini totali</span>
-                  <span>{selectedGlossary.stats.autoExtracted} auto-estratti</span>
-                  <span>{selectedGlossary.stats.manuallyAdded} manuali</span>
+                  <span>{selectedGlossary.entries.length} total terms</span>
+                  <span>{selectedGlossary.stats.autoExtracted} auto-extracted</span>
+                  <span>{selectedGlossary.stats.manuallyAdded} manual</span>
                   {Object.entries(selectedGlossary.stats.byCategory).slice(0, 4).map(([cat, count]) => (
                     <span key={cat}>{CATEGORY_EMOJI[cat as GlossaryCategory] || ''} {cat}: {count}</span>
                   ))}
@@ -490,7 +500,7 @@ export default function GlossaryPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-base">
                     <Sparkles className="h-5 w-5 text-purple-400" />
-                    Estrazione Automatica Termini
+                    Automatic Term Extraction
                     <Badge className="text-[10px] bg-purple-600/80 text-white border-0">AI</Badge>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
@@ -522,13 +532,13 @@ export default function GlossaryPage() {
                       ) : (
                         <>
                           <Sparkles className="h-4 w-4 mr-1.5" />
-                          Estrai Termini dal Gioco
+                          Extract Terms from Game
                         </>
                       )}
                     </Button>
                     <Button variant="outline" onClick={handleAddDefaults}>
                       <Wand2 className="h-4 w-4 mr-1.5" />
-                      Aggiungi Termini Default
+                      Add Default Terms
                     </Button>
                   </div>
 
@@ -752,22 +762,28 @@ export default function GlossaryPage() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Lingua target</Label>
+                  <Label className="text-xs">Target language</Label>
                   <Select value={createTargetLang} onValueChange={setCreateTargetLang}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="it">Italiano</SelectItem>
-                      <SelectItem value="es">Spagnolo</SelectItem>
-                      <SelectItem value="fr">Francese</SelectItem>
-                      <SelectItem value="de">Tedesco</SelectItem>
-                      <SelectItem value="pt">Portoghese</SelectItem>
+                      <SelectItem value="it">🇮🇹 Italiano</SelectItem>
+                      <SelectItem value="en">🇬🇧 English</SelectItem>
+                      <SelectItem value="es">🇪🇸 Español</SelectItem>
+                      <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                      <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                      <SelectItem value="pt">🇵🇹 Português</SelectItem>
+                      <SelectItem value="pl">🇵🇱 Polski</SelectItem>
+                      <SelectItem value="ru">🇷🇺 Русский</SelectItem>
+                      <SelectItem value="zh">🇨🇳 中文</SelectItem>
+                      <SelectItem value="ja">🇯🇵 日本語</SelectItem>
+                      <SelectItem value="ko">🇰🇷 한국어</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <Button className="w-full" onClick={handleCreateGlossary}>
                 <Plus className="h-4 w-4 mr-1" />
-                Crea Glossario
+                Create Glossary
               </Button>
             </div>
           </DialogContent>

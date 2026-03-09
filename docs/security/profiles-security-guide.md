@@ -11,6 +11,7 @@ Il Sistema Profili di GameStringer implementa sicurezza di livello enterprise pe
 ### Crittografia Dati
 
 #### AES-256-GCM
+
 - **Algoritmo**: Advanced Encryption Standard con Galois/Counter Mode
 - **Chiave**: 256-bit per massima sicurezza
 - **Autenticazione**: Verifica integrità integrata
@@ -26,9 +27,10 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
     let nonce = generate_random_nonce();
     cipher.encrypt(&nonce, data)
 }
-```
+```text
 
 #### Key Derivation (PBKDF2)
+
 - **Algoritmo**: Password-Based Key Derivation Function 2
 - **Hash**: SHA-256
 - **Iterazioni**: 100,000+ (configurabile)
@@ -37,12 +39,14 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 ### Gestione Password
 
 #### Requisiti Password
+
 - **Lunghezza Minima**: 4 caratteri (configurabile)
 - **Complessità**: Raccomandati caratteri misti
 - **Unicità**: Password diverse per ogni profilo
 - **Storage**: Mai salvate in chiaro
 
 #### Protezioni Implementate
+
 - **Rate Limiting**: Massimo 5 tentativi ogni 15 minuti
 - **Account Lockout**: Blocco temporaneo dopo tentativi falliti
 - **Audit Logging**: Log di tutti i tentativi di accesso
@@ -55,7 +59,8 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 ### Separazione Dati
 
 #### Filesystem Level
-```
+
+```text
 ~/.gamestringer/
 ├── profiles/
 │   ├── profile_abc123.json.enc  # Profilo 1 (crittografato)
@@ -63,15 +68,17 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 │   └── profiles.index           # Indice (non sensibile)
 ├── avatars/                     # Avatar (non sensibili)
 └── backups/                     # Backup (crittografati)
-```
+```text
 
 #### Memory Level
+
 - **Isolamento Completo**: Ogni profilo ha spazio memoria separato
 - **Cleanup Automatico**: Pulizia memoria al cambio profilo
 - **No Cross-Contamination**: Impossibile accesso dati altri profili
 - **Secure Deallocation**: Sovrascrittura memoria sensibile
 
 #### Process Level
+
 - **Single Profile Session**: Un solo profilo attivo per volta
 - **Session Timeout**: Scadenza automatica sessioni
 - **Clean Shutdown**: Pulizia completa alla chiusura
@@ -84,6 +91,7 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 ### Logging Sicurezza
 
 #### Eventi Loggati
+
 - **Login/Logout**: Tutti gli accessi ai profili
 - **Profile Operations**: Creazione, modifica, eliminazione
 - **Failed Attempts**: Tentativi di accesso falliti
@@ -91,6 +99,7 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 - **System Events**: Eventi di sistema rilevanti
 
 #### Formato Log
+
 ```json
 {
   "timestamp": "2025-08-07T10:30:00Z",
@@ -104,9 +113,10 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
     "session_id": "sess_xyz789"
   }
 }
-```
+```text
 
 #### Retention Policy
+
 - **Log Retention**: 90 giorni (configurabile)
 - **Rotation**: Rotazione automatica log
 - **Compression**: Compressione log vecchi
@@ -115,12 +125,14 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 ### Monitoring Attivo
 
 #### Rilevamento Anomalie
+
 - **Brute Force**: Rilevamento attacchi brute force
 - **Unusual Access**: Accessi inusuali o sospetti
 - **Data Exfiltration**: Tentativi di esportazione massiva
 - **System Tampering**: Modifiche non autorizzate
 
 #### Alerting
+
 - **Real-time Alerts**: Notifiche immediate per eventi critici
 - **Email Notifications**: Notifiche email per amministratori
 - **System Notifications**: Notifiche sistema per utenti
@@ -133,7 +145,8 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 ### Gestione Password
 
 #### Creazione Password Sicure
-```
+
+```text
 ✅ Buone Pratiche:
 - Usa password uniche per ogni profilo
 - Combina lettere, numeri e simboli
@@ -145,9 +158,10 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 - Stessa password per più profili
 - Informazioni personali (nome, data nascita)
 - Password condivise con altri
-```
+```text
 
 #### Gestione Sicura
+
 - **Non Condividere**: Mai condividere password profili
 - **Cambio Regolare**: Cambia password periodicamente
 - **Backup Sicuro**: Conserva backup password in luogo sicuro
@@ -156,12 +170,14 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 ### Uso Quotidiano
 
 #### Sessioni Sicure
+
 - **Logout Regolare**: Fai logout quando non usi l'app
 - **Computer Condivisi**: Sempre logout su computer condivisi
 - **Screen Lock**: Blocca schermo quando ti allontani
 - **Auto-Timeout**: Configura timeout automatico
 
 #### Backup e Recovery
+
 - **Backup Regolari**: Esporta profili regolarmente
 - **Storage Sicuro**: Conserva backup in luogo sicuro
 - **Test Recovery**: Testa periodicamente il ripristino
@@ -174,12 +190,14 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 ### Compromissione Sospetta
 
 #### Segnali di Allarme
+
 - **Accessi Non Autorizzati**: Login da posizioni inusuali
 - **Modifiche Inaspettate**: Cambiamenti non fatti da te
 - **Performance Anomale**: App più lenta del solito
 - **Errori Frequenti**: Errori di autenticazione ripetuti
 
 #### Azioni Immediate
+
 1. **Cambia Password**: Cambia immediatamente password profili
 2. **Logout Completo**: Disconnetti tutti i profili
 3. **Scan Sistema**: Scansiona sistema per malware
@@ -188,6 +206,7 @@ fn encrypt_profile_data(data: &[u8], password: &str) -> Result<Vec<u8>, Error> {
 ### Recovery Procedure
 
 #### Profilo Compromesso
+
 ```bash
 # 1. Backup dati correnti (se sicuri)
 cp -r ~/.gamestringer ~/.gamestringer-incident-backup
@@ -200,9 +219,10 @@ cp -r ~/.gamestringer ~/.gamestringer-incident-backup
 
 # 4. Cambia tutte le password
 # (tramite interfaccia GameStringer)
-```
+```text
 
 #### Sistema Compromesso
+
 1. **Isolamento**: Disconnetti sistema da rete
 2. **Analisi**: Analizza sistema per malware
 3. **Pulizia**: Rimuovi malware e vulnerabilità
@@ -216,24 +236,27 @@ cp -r ~/.gamestringer ~/.gamestringer-incident-backup
 ### Impostazioni Consigliate
 
 #### Timeout Sessione
+
 ```json
 {
   "session_timeout": 1800,        // 30 minuti
   "idle_timeout": 900,            // 15 minuti
   "max_session_duration": 28800   // 8 ore
 }
-```
+```text
 
 #### Rate Limiting
+
 ```json
 {
   "max_login_attempts": 5,
   "lockout_duration": 900,        // 15 minuti
   "rate_limit_window": 900        // 15 minuti
 }
-```
+```text
 
 #### Backup Settings
+
 ```json
 {
   "auto_backup": true,
@@ -241,19 +264,21 @@ cp -r ~/.gamestringer ~/.gamestringer-incident-backup
   "backup_retention": 2592000,    // 30 giorni
   "backup_encryption": true
 }
-```
+```text
 
 ### Hardening Sistema
 
 #### Filesystem Permissions
+
 ```bash
 # Imposta permessi corretti
 chmod 700 ~/.gamestringer/
 chmod 600 ~/.gamestringer/profiles/*
 chmod 600 ~/.gamestringer/backups/*
-```
+```text
 
 #### Network Security
+
 - **Firewall**: Configura firewall per bloccare accessi non autorizzati
 - **VPN**: Usa VPN su reti non fidate
 - **HTTPS**: Sempre HTTPS per comunicazioni remote
@@ -266,18 +291,21 @@ chmod 600 ~/.gamestringer/backups/*
 ### Standard Seguiti
 
 #### Crittografia
+
 - **FIPS 140-2**: Standard crittografia federale US
 - **AES**: Advanced Encryption Standard (NIST)
 - **PBKDF2**: RFC 2898 standard
 - **Random Generation**: NIST SP 800-90A
 
 #### Privacy
+
 - **GDPR**: General Data Protection Regulation
 - **CCPA**: California Consumer Privacy Act
 - **Data Minimization**: Raccolta dati minimi necessari
 - **Right to Deletion**: Diritto cancellazione dati
 
 #### Security
+
 - **OWASP**: Open Web Application Security Project guidelines
 - **CWE**: Common Weakness Enumeration mitigation
 - **CVE**: Common Vulnerabilities and Exposures tracking
@@ -286,6 +314,7 @@ chmod 600 ~/.gamestringer/backups/*
 ### Certificazioni
 
 #### Sicurezza
+
 - **Security Audit**: Audit esterno completato
 - **Penetration Testing**: Test penetrazione regolari
 - **Code Review**: Review codice sicurezza
@@ -298,12 +327,14 @@ chmod 600 ~/.gamestringer/backups/*
 ### Segnalazione Vulnerabilità
 
 #### Responsible Disclosure
-- **Email**: security@gamestringer.com
+
+- **Email**: <security@gamestringer.com>
 - **PGP Key**: [Link chiave PGP pubblica]
 - **Response Time**: 24-48 ore per acknowledgment
 - **Disclosure Timeline**: 90 giorni per fix
 
 #### Bug Bounty
+
 - **Scope**: Vulnerabilità sicurezza critiche
 - **Rewards**: Basati su severità e impatto
 - **Hall of Fame**: Riconoscimento ricercatori
@@ -312,12 +343,14 @@ chmod 600 ~/.gamestringer/backups/*
 ### Risorse Sicurezza
 
 #### Documentazione
+
 - **Security Architecture**: `docs/security/architecture.md`
 - **Threat Model**: `docs/security/threat-model.md`
 - **Incident Response**: `docs/security/incident-response.md`
 - **Security FAQ**: `docs/security/security-faq.md`
 
 #### Tools e Utilities
+
 - **Security Scanner**: Tool per scan configurazioni
 - **Backup Validator**: Validatore integrità backup
 - **Log Analyzer**: Analizzatore log sicurezza
@@ -330,18 +363,21 @@ chmod 600 ~/.gamestringer/backups/*
 ### KPI Sicurezza
 
 #### Availability
+
 - **Uptime**: 99.9% target
 - **Recovery Time**: < 1 ora per incidenti critici
 - **Backup Success**: 99.5% successo backup
 - **Data Integrity**: 100% integrità dati
 
 #### Security Incidents
+
 - **Mean Time to Detection**: < 5 minuti
 - **Mean Time to Response**: < 15 minuti
 - **Mean Time to Recovery**: < 1 ora
 - **False Positive Rate**: < 1%
 
 #### User Security
+
 - **Password Strength**: Score medio > 80/100
 - **2FA Adoption**: Target 50%+ utenti
 - **Security Training**: 90%+ completion rate
@@ -354,12 +390,14 @@ chmod 600 ~/.gamestringer/backups/*
 ### Prossime Implementazioni
 
 #### Q4 2025
+
 - **Two-Factor Authentication**: 2FA con TOTP/SMS
 - **Biometric Authentication**: Supporto impronte/Face ID
 - **Hardware Security**: Supporto hardware security keys
 - **Advanced Monitoring**: ML-based anomaly detection
 
 #### Q1 2026
+
 - **Zero-Trust Architecture**: Implementazione zero-trust
 - **End-to-End Encryption**: E2E per comunicazioni
 - **Secure Enclaves**: Uso secure enclaves hardware
@@ -368,6 +406,7 @@ chmod 600 ~/.gamestringer/backups/*
 ### Ricerca e Sviluppo
 
 #### Aree Focus
+
 - **Post-Quantum Cryptography**: Preparazione algoritmi quantum-safe
 - **Homomorphic Encryption**: Elaborazione dati crittografati
 - **Secure Multi-Party Computation**: Calcoli sicuri distribuiti
@@ -377,5 +416,5 @@ chmod 600 ~/.gamestringer/backups/*
 
 *Guida sicurezza aggiornata per GameStringer v3.2.2 - Sistema Profili*
 
-**Per segnalazioni sicurezza**: security@gamestringer.com  
-**Per supporto generale**: support@gamestringer.com
+**Per segnalazioni sicurezza**: <security@gamestringer.com>  
+**Per supporto generale**: <support@gamestringer.com>

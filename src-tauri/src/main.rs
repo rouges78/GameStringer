@@ -29,6 +29,12 @@ use commands::profiles::ProfileManagerState;
 use commands::profile_settings::ProfileSettingsManagerState;
 use commands::notifications::NotificationManagerState;
 
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    Manager,
+};
+
 #[cfg(windows)]
 mod process_utils;
 
@@ -719,6 +725,11 @@ fn main() {
             commands::amazon::is_amazon_games_installed,
             commands::amazon::test_amazon_connection,
             
+            // Xbox Game Pass / Microsoft Store
+            commands::xbox::get_xbox_installed_games,
+            commands::xbox::is_xbox_installed,
+            commands::xbox::test_xbox_connection,
+            
             // Extension System (Vortex-inspired)
             commands::extensions::init_extension_system,
             commands::extensions::get_installed_extensions,
@@ -852,7 +863,73 @@ fn main() {
             commands::offline_translation::offline_translate_text,
             commands::offline_translation::offline_translate_batch,
         ])
-        .setup(|_app| {
+        .setup(|app| {
+            // ═══════════════════════════════════════════════════
+            // SYSTEM TRAY — Mantiene l'app in memoria
+            // ═══════════════════════════════════════════════════
+            let show_item = MenuItem::with_id(app, "show", "🎮 Apri GameStringer", true, None::<&str>)?;
+            let hide_item = MenuItem::with_id(app, "hide", "⬇ Minimizza in Tray", true, None::<&str>)?;
+            let separator = MenuItem::with_id(app, "sep", "─────────────", false, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "✕ Esci", true, None::<&str>)?;
+
+            let menu = Menu::with_items(app, &[&show_item, &hide_item, &separator, &quit_item])?;
+
+            TrayIconBuilder::new()
+                .icon(app.default_window_icon().cloned().unwrap())
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .tooltip("GameStringer — AI Game Translation")
+                .on_menu_event(|app, event| {
+                    match event.id.as_ref() {
+                        "show" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        "hide" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.hide();
+                            }
+                        }
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .on_tray_icon_event(|tray, event| {
+                    // Doppio-click o click sinistro → riapri la finestra
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.unminimize();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
+            // Intercetta la chiusura della finestra main → minimizza in tray
+            if let Some(window) = app.get_webview_window("main") {
+                let window_clone = window.clone();
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                        // Previeni la chiusura, nascondi la finestra
+                        api.prevent_close();
+                        let _ = window_clone.hide();
+                    }
+                });
+            }
+
+            println!("[TRAY] ✅ System Tray attivo — GameStringer resta in memoria");
             Ok(())
         })
         .run(tauri::generate_context!())

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select"
 import { EmotionBadge, EmotionStats } from "@/components/translator/emotion-badge"
 import { analyzeEmotion, EMOTION_STYLES, EmotionType } from "@/lib/emotion-analyzer"
+import { translateSingleSmart } from "@/lib/ai-translate-direct"
 import { Sparkles, Languages, Zap, ArrowRight, Copy, Check, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/lib/i18n"
@@ -97,6 +98,16 @@ export default function EmotionTranslatorPage() {
   const [sourceLanguage, setSourceLanguage] = useState("en")
   const [targetLanguage, setTargetLanguage] = useState("it")
   const [isTranslating, setIsTranslating] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLanguage(s.translation.defaultTargetLang);
+      } catch {}
+    }
+  }, []);
   const [copied, setCopied] = useState(false)
   const [emotionAware, setEmotionAware] = useState(true)
   const [lastEmotion, setLastEmotion] = useState<any>(null)
@@ -110,25 +121,10 @@ export default function EmotionTranslatorPage() {
     setLastEmotion(null)
     
     try {
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: inputText,
-          targetLanguage,
-          sourceLanguage,
-          provider: 'libre', // Usa provider gratuito per demo
-          emotionAware
-        })
-      })
-      
-      const data = await response.json()
-      setTranslatedText(data.translatedText || 'Errore nella traduzione')
-      if (data.emotion) {
-        setLastEmotion(data.emotion)
-      }
+      const result = await translateSingleSmart(inputText, targetLanguage, sourceLanguage)
+      setTranslatedText(result?.translated || 'Translation error')
     } catch (error) {
-      setTranslatedText('Errore nella traduzione')
+      setTranslatedText('Translation error')
     } finally {
       setIsTranslating(false)
     }

@@ -1,6 +1,7 @@
 # GameStringer - Architettura del Progetto
 
 ## Visione
+
 Software desktop professionale per la localizzazione di videogiochi che analizza automaticamente i giochi installati e suggerisce il metodo di traduzione migliore.
 
 ---
@@ -8,6 +9,7 @@ Software desktop professionale per la localizzazione di videogiochi che analizza
 ## Struttura Moduli
 
 ### 1. STORES (Configurazione)
+
 **Scopo**: Configurare le sorgenti per la scansione dei giochi installati.
 
 - Steam (percorsi librerie, API key opzionale)
@@ -21,9 +23,11 @@ Software desktop professionale per la localizzazione di videogiochi che analizza
 ---
 
 ### 2. LIBRARY (Centro di Controllo)
+
 **Scopo**: Hub centrale che mostra tutti i giochi e guida l'utente alla traduzione.
 
-#### Per ogni gioco deve mostrare:
+#### Per ogni gioco deve mostrare
+
 1. **Info da Internet**
    - Copertina, descrizione, genere
    - Lingue supportate ufficialmente
@@ -39,7 +43,8 @@ Software desktop professionale per la localizzazione di videogiochi che analizza
    - Affidabilità stimata
    - AI consigliata per quel tipo di contenuto
 
-#### Opzioni di Traduzione (dalla Library):
+#### Opzioni di Traduzione (dalla Library)
+
 | Metodo | Descrizione | Quando usarlo |
 |--------|-------------|---------------|
 | **Traduzione al Volo** | BepInEx/XUnity (Unity), Overlay (altri) | Giochi senza file modificabili |
@@ -51,6 +56,7 @@ Software desktop professionale per la localizzazione di videogiochi che analizza
 ---
 
 ### 3. TRANSLATION MEMORY (TM)
+
 **Scopo**: Database unico condiviso da TUTTI i metodi di traduzione.
 
 - Salva ogni traduzione effettuata
@@ -65,18 +71,21 @@ Software desktop professionale per la localizzazione di videogiochi che analizza
 ### 4. METODI DI TRADUZIONE
 
 #### 4.1 Traduzione al Volo (Live)
+
 - **Unity**: BepInEx + XUnity.AutoTranslator
 - **Altri motori**: OCR Translator (overlay)
 - Usa Translation Memory per cache
 - Chiama AI per testi nuovi
 
 #### 4.2 Traduzione File (Batch)
+
 - Neural Translator Pro
 - Supporta vari formati (JSON, PO, RESX, CSV, XML)
 - Usa Translation Memory
 - Quality Gates per validazione
 
 #### 4.3 Creazione Patch
+
 - Genera pacchetto distribuibile
 - Include dizionario modificabile
 - L'utente può correggere/migliorare
@@ -87,6 +96,7 @@ Software desktop professionale per la localizzazione di videogiochi che analizza
 ---
 
 ### 5. AI PROVIDERS
+
 - Gemini (default)
 - OpenAI (GPT-4)
 - Claude (Anthropic)
@@ -102,7 +112,7 @@ Configurabili per profilo, con API key personali.
 
 ## Flusso Utente Ideale
 
-```
+```text
 1. STORES → Configura sorgenti giochi
            ↓
 2. LIBRARY → Vede tutti i giochi installati
@@ -118,33 +128,36 @@ Configurabili per profilo, con API key personali.
 5. Traduzione usa Translation Memory unica
            ↓
 6. Opzionale: Crea Patch distribuibile
-```
+```text
 
 ---
 
 ## Gap da Colmare
 
 ### Priorità Alta
+
 - [ ] Library: Integrare analisi motore + file nella vista gioco
 - [ ] Library: Aggiungere raccomandazione metodo traduzione
 - [ ] Library: Bottone "Traduci" che apre metodo giusto
 
 ### Priorità Media
+
 - [ ] Creazione Patch: Sistema per generare patch distribuibili
 - [ ] TM: Verificare che tutti i metodi la usino correttamente
 
 ### Priorità Bassa
+
 - [ ] Ricerca traduzioni fan esistenti online
 - [ ] Stima affidabilità traduzione
 
 ---
 
 ## Note Tecniche
+
 - Frontend: Next.js + React + TailwindCSS + shadcn/ui
 - Backend: Tauri (Rust)
 - Database: SQLite locale per TM
 - AI: API REST per vari provider
-
 
 Buongiorno.
 Ora che mi sono calmata, mi sembrava giusto scriverti ciò che penso, alla luce di quello che c’è stato tra di noi.

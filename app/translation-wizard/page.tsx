@@ -58,12 +58,15 @@ interface AnalysisResult {
 
 type WizardStep = 'select-game' | 'analyzing' | 'results' | 'translate' | 'complete';
 
-// Language display names
+// Language display names — native names, language-neutral
 const languageNames: Record<string, string> = {
-  en: 'Inglese', fr: 'Francese', de: 'Tedesco', es: 'Spagnolo',
-  pt: 'Portoghese', pl: 'Polacco', ru: 'Russo', zh: 'Cinese',
-  ja: 'Giapponese', ko: 'Coreano', it: 'Italiano', nl: 'Olandese',
-  tr: 'Turco', ar: 'Arabo', th: 'Tailandese', vi: 'Vietnamita'
+  en: 'English', fr: 'Français', de: 'Deutsch', es: 'Español',
+  pt: 'Português', pl: 'Polski', ru: 'Русский', zh: '中文',
+  ja: '日本語', ko: '한국어', it: 'Italiano', nl: 'Nederlands',
+  tr: 'Türkçe', ar: 'العربية', th: 'ภาษาไทย', vi: 'Tiếng Việt',
+  uk: 'Українська', sv: 'Svenska', da: 'Dansk', fi: 'Suomi',
+  nb: 'Norsk', cs: 'Čeština', sk: 'Slovenčina', hu: 'Magyar',
+  ro: 'Română', hr: 'Hrvatski', bg: 'Български', el: 'Ελληνικά',
 };
 
 export default function TranslationWizardPage() {
@@ -802,9 +805,9 @@ export default function TranslationWizardPage() {
                           {lang === 'it' && ' ✓'}
                         </Badge>
                       ))}
-                      {!analysisResult.hasItalian && (
+                      {!analysisResult.existingLanguages.includes(targetLanguage) && (
                         <Badge variant="outline" className="border-dashed border-purple-500/50 text-purple-400 text-[10px] px-1.5 h-5">
-                          + Italiano
+                          + {languageNames[targetLanguage] || targetLanguage.toUpperCase()}
                         </Badge>
                       )}
                     </div>

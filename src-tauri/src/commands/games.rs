@@ -1,4 +1,4 @@
-use crate::commands::{steam, epic, gog, origin, ubisoft, battlenet, itchio, rockstar, amazon, library};
+use crate::commands::{steam, epic, gog, origin, ubisoft, battlenet, itchio, rockstar, amazon, xbox, library};
 use crate::models::*;
 use log;
 use serde_json;
@@ -1466,6 +1466,7 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
     let battlenet_task = tokio::spawn(battlenet::get_battlenet_installed_games());
     let itchio_task = tokio::spawn(itchio::get_itchio_installed_games());
     let rockstar_task = tokio::spawn(rockstar::get_rockstar_installed_games());
+    let xbox_task = tokio::spawn(xbox::get_xbox_installed_games());
     
     // 1. Steam
     match steam_task.await {
@@ -1513,6 +1514,7 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
         ("Battle.net", battlenet_task.await),
         ("itch.io", itchio_task.await),
         ("Rockstar Games", rockstar_task.await),
+        ("Xbox Game Pass", xbox_task.await),
     ];
     
     for (store_name, result) in store_tasks {

@@ -61,7 +61,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   
   await onSubmit(email, password, twoFactorCode);
 };
-```
+```text
 
 ### Funzioni di Login Aggiornate
 
@@ -81,7 +81,7 @@ const handleGenericLogin = async (
     userId: session?.user.id,
   });
 };
-```
+```text
 
 ## 🚀 Prossimi Passi
 

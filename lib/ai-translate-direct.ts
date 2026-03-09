@@ -78,10 +78,11 @@ export function getApiKeys() {
       openrouter: settings?.translation?.openrouterApiKey || '',
       cerebras: settings?.translation?.cerebrasApiKey || '',
       deepl: settings?.translation?.deeplApiKey || '',
+      qwen: settings?.translation?.qwenApiKey || '',
       ollamaModel: settings?.translation?.ollamaModel || '',
     };
   } catch {
-    return { gemini: '', groq: '', openai: '', deepseek: '', anthropic: '', mistral: '', cohere: '', together: '', fireworks: '', openrouter: '', cerebras: '', deepl: '', ollamaModel: '' };
+    return { gemini: '', groq: '', openai: '', deepseek: '', anthropic: '', mistral: '', cohere: '', together: '', fireworks: '', openrouter: '', cerebras: '', deepl: '', qwen: '', ollamaModel: '' };
   }
 }
 
@@ -567,6 +568,15 @@ async function translateWithCerebras(apiKey: string, opts: TranslateOptions): Pr
     'https://api.cerebras.ai/v1/chat/completions',
     'llama-3.3-70b',
     'Cerebras',
+  );
+}
+
+/** Qwen3 (Alibaba) — via DashScope API, OpenAI-compatible, top multilingue, 1M token gratis/mese */
+async function translateWithQwen(apiKey: string, opts: TranslateOptions): Promise<string[]> {
+  return translateWithOpenAICompatible(apiKey, opts,
+    'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+    'qwen-plus',
+    'Qwen3',
   );
 }
 
@@ -1139,7 +1149,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$0.25',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'qwen', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'mymemory', 'lingva'],
   },
   {
     id: 'quality',
@@ -1148,7 +1158,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$0.50',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['deepl', 'anthropic', 'openai', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'mymemory'],
+    providers: ['deepl', 'anthropic', 'openai', 'qwen', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'mymemory'],
   },
   {
     id: 'max_quality',
@@ -1157,7 +1167,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$1.00+',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['deepl', 'anthropic', 'openai', 'translategemma', 'ollama', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
+    providers: ['deepl', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
   },
 ];
 
@@ -1195,6 +1205,7 @@ const PROVIDER_MAP: Record<string, {
   openrouter: { getKey: (k) => k.openrouter, fn: translateWithOpenRouter, isBlocked: () => isProviderBlocked('openrouter'), needsKey: true },
   cerebras: { getKey: (k) => k.cerebras, fn: translateWithCerebras, isBlocked: () => isProviderBlocked('cerebras'), needsKey: true },
   deepl: { getKey: (k) => k.deepl, fn: translateWithDeepL, isBlocked: () => isProviderBlocked('deepl'), needsKey: true },
+  qwen: { getKey: (k) => k.qwen, fn: translateWithQwen, isBlocked: () => isProviderBlocked('qwen'), needsKey: true },
   mymemory: { getKey: () => 'free', fn: translateWithMyMemory, isBlocked: () => isProviderBlocked('mymemory'), needsKey: false },
   lingva: { getKey: () => 'free', fn: translateWithLingva, isBlocked: () => isProviderBlocked('lingva'), needsKey: false },
   translategemma: { getKey: () => 'free', fn: translateWithTranslateGemma, isBlocked: () => isProviderBlocked('translategemma'), needsKey: false },
@@ -1230,6 +1241,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   openrouter: 'OpenRouter',
   cerebras: 'Cerebras',
   deepl: 'DeepL',
+  qwen: 'Qwen3 (Alibaba)',
   mymemory: 'MyMemory',
   lingva: 'Lingva Translate',
   ollama: 'Ollama (qualsiasi modello)',
@@ -1253,6 +1265,7 @@ const API_KEY_URLS: Record<string, string> = {
   openrouter: 'https://openrouter.ai/keys',
   cerebras: 'https://cloud.cerebras.ai/platform',
   deepl: 'https://www.deepl.com/pro-api',
+  qwen: 'https://dashscope.console.aliyun.com/apiKey',
 };
 
 /** Controlla requisiti mancanti per un preset chain */

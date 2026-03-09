@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStreamingTranslation } from '@/hooks/use-streaming-translation';
 import { StreamingTranslationBox } from '@/components/ui/streaming-text';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,16 @@ export default function StreamingTranslatorPage() {
   const { t } = useTranslation();
   const [text, setText] = useState('');
   const [targetLang, setTargetLang] = useState('it');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLang(s.translation.defaultTargetLang);
+      } catch {}
+    }
+  }, []);
   const [sourceLang, setSourceLang] = useState('en');
   const [provider, setProvider] = useState('openai');
   const [context, setContext] = useState('');
@@ -100,7 +110,7 @@ export default function StreamingTranslatorPage() {
               </div>
               
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Lingua Origine</label>
+                <label className="text-sm font-medium mb-1.5 block">Source language</label>
                 <Select value={sourceLang} onValueChange={setSourceLang}>
                   <SelectTrigger>
                     <SelectValue />
@@ -115,7 +125,7 @@ export default function StreamingTranslatorPage() {
               </div>
               
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Lingua Destinazione</label>
+                <label className="text-sm font-medium mb-1.5 block">Target language</label>
                 <Select value={targetLang} onValueChange={setTargetLang}>
                   <SelectTrigger>
                     <SelectValue />
@@ -132,7 +142,7 @@ export default function StreamingTranslatorPage() {
             {/* Context */}
             <div>
               <label className="text-sm font-medium mb-1.5 block">
-                Contesto (opzionale)
+                Context (optional)
               </label>
               <Textarea
                 placeholder="Es: Dialogo in un game horror, tono formale..."

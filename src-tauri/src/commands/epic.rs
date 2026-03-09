@@ -716,40 +716,65 @@ async fn try_legendary_library_direct() -> Result<Vec<GameInfo>, String> {
             if let (Some(title), Some(app_name)) = (title, app_name) {
                 // Salta DLC e contenuti non-gioco
                 let is_dlc = game_data["is_dlc"].as_bool().unwrap_or(false);
-                let item_type = game_data["metadata"]["itemType"].as_str().unwrap_or("");
-                if is_dlc || item_type == "AUDIENCE" {
+                if is_dlc {
                     continue;
                 }
-                
-                // Salta asset/plugin Unreal Engine (non sono giochi)
-                let title_lower = title.to_lowercase();
-                let is_ue_asset = title_lower.contains("plugin") 
-                    || title_lower.contains("pack vol")
-                    || title_lower.contains("texture")
-                    || title_lower.contains("material")
-                    || title_lower.contains("foliage")
-                    || title_lower.contains("mesh")
-                    || title_lower.contains("asset")
-                    || title_lower.contains("blueprint")
-                    || title_lower.contains("shader")
-                    || title_lower.contains("vfx")
-                    || title_lower.contains("sfx")
-                    || title_lower.contains("animation")
-                    || title_lower.contains("character ")
-                    || title_lower.contains("environment")
-                    || title_lower.contains("landscape")
-                    || title_lower.contains("modular")
-                    || title_lower.contains("stylized")
-                    || title_lower.contains("low poly")
-                    || title_lower.contains("pbr ")
-                    || title_lower.contains("4k ")
-                    || title_lower.contains("hq ")
-                    || app_name.contains("V1") || app_name.contains("V2") || app_name.contains("V3")
-                    || app_name.contains("V4") || app_name.contains("V5") || app_name.contains("V6")
-                    || app_name.contains("V7") || app_name.contains("V8") || app_name.contains("V9")
-                    || app_name.contains("V10") || app_name.contains("V11") || app_name.contains("V12");
-                
-                if is_ue_asset {
+
+                // Filtro primario: controlla categories Epic
+                // I giochi reali hanno path "games", gli asset UE hanno "assets", "plugins", "digitalextras", ecc.
+                let categories: Vec<String> = game_data["metadata"]["categories"]
+                    .as_array()
+                    .map(|arr| arr.iter()
+                        .filter_map(|c| c["path"].as_str().map(|s| s.to_lowercase()))
+                        .collect())
+                    .unwrap_or_default();
+
+                let has_categories = !categories.is_empty();
+                let is_real_game = categories.iter().any(|c| c == "games" || c == "applications");
+                let is_ue_content = categories.iter().any(|c|
+                    c.contains("assets") || c.contains("plugins") || c.contains("digitalextras")
+                    || c.contains("feature") || c.contains("addons")
+                );
+
+                // Se ha categorie, usa quelle come fonte di verità
+                if has_categories {
+                    if is_ue_content && !is_real_game {
+                        continue;
+                    }
+                    if !is_real_game {
+                        // Non è categorizzato come gioco — salta
+                        continue;
+                    }
+                } else {
+                    // Nessuna categoria: fallback al filtro per nome
+                    let title_lower = title.to_lowercase();
+                    let is_ue_asset = title_lower.contains("plugin")
+                        || title_lower.contains("pack vol")
+                        || title_lower.contains("texture")
+                        || title_lower.contains("material")
+                        || title_lower.contains("foliage")
+                        || title_lower.contains("mesh")
+                        || title_lower.contains("asset")
+                        || title_lower.contains("blueprint")
+                        || title_lower.contains("shader")
+                        || title_lower.contains("vfx")
+                        || title_lower.contains("sfx")
+                        || title_lower.contains("animation pack")
+                        || title_lower.contains("environment pack")
+                        || title_lower.contains("landscape")
+                        || title_lower.contains("modular kit")
+                        || title_lower.contains("stylized")
+                        || title_lower.contains("low poly")
+                        || title_lower.contains("pbr ")
+                        || title_lower.contains("4k ")
+                        || title_lower.contains(" hq ");
+                    if is_ue_asset {
+                        continue;
+                    }
+                }
+
+                let item_type = game_data["metadata"]["itemType"].as_str().unwrap_or("");
+                if item_type == "AUDIENCE" {
                     continue;
                 }
                 
@@ -788,6 +813,28 @@ async fn try_legendary_library_direct() -> Result<Vec<GameInfo>, String> {
     else if let Some(games_obj) = json.as_object() {
         println!("[EPIC] Parsing oggetto con {} chiavi", games_obj.len());
         for (app_name, game_data) in games_obj {
+            // Salta DLC
+            if game_data["is_dlc"].as_bool().unwrap_or(false) {
+                continue;
+            }
+            // Filtro categorie (stesso del caso 1)
+            let categories: Vec<String> = game_data["metadata"]["categories"]
+                .as_array()
+                .map(|arr| arr.iter()
+                    .filter_map(|c| c["path"].as_str().map(|s| s.to_lowercase()))
+                    .collect())
+                .unwrap_or_default();
+            if !categories.is_empty() {
+                let is_real_game = categories.iter().any(|c| c == "games" || c == "applications");
+                let is_ue_content = categories.iter().any(|c|
+                    c.contains("assets") || c.contains("plugins") || c.contains("digitalextras")
+                    || c.contains("feature") || c.contains("addons")
+                );
+                if (is_ue_content && !is_real_game) || !is_real_game {
+                    continue;
+                }
+            }
+
             if let Some(title) = game_data["title"].as_str()
                 .or_else(|| game_data["app_title"].as_str()) {
                 let is_installed = game_data["install_path"].as_str().is_some() 

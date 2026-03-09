@@ -48,6 +48,16 @@ export default function TranslationBridgePage() {
   const [dictStats, setDictStats] = useState<DictionaryStats | null>(null);
   const [sourceLang, setSourceLang] = useState('en');
   const [targetLang, setTargetLang] = useState('it');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('gameStringerSettings');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.translation?.defaultTargetLang) setTargetLang(s.translation.defaultTargetLang);
+      } catch {}
+    }
+  }, []);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -525,7 +535,7 @@ World=Mondo`}
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Lingua Target</Label>
+                    <Label>Target language</Label>
                     <Select value={targetLang} onValueChange={setTargetLang}>
                       <SelectTrigger>
                         <SelectValue />

@@ -29,7 +29,7 @@ GameStringer ora include una funzionalità rivoluzionaria che risolve completame
 ```rust
 #[tauri::command]
 pub async fn get_all_local_steam_games() -> Result<Vec<LocalGameInfo>, String>
-```
+```text
 
 ### Strutture Dati
 
@@ -143,7 +143,7 @@ async function getAllSteamGames() {
 const response = await fetch(`https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${apiKey}&steamid=${steamId}`);
 const data = await response.json();
 const games = data.response.games; // Incompleto!
-```
+```text
 
 ### Codice Nuovo (Locale)
 
@@ -151,7 +151,7 @@ const games = data.response.games; // Incompleto!
 // Nuovo approccio con file locali
 const games = await invoke('get_all_local_steam_games');
 // Completo e accurato!
-```
+```text
 
 ## 🧪 Testing
 
@@ -169,7 +169,7 @@ node test-steam-local.js
 
 # Test visuale
 open test-steam-local.html
-```
+```text
 
 ## 🔮 Sviluppi Futuri
 

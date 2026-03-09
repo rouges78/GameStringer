@@ -9,14 +9,16 @@ Questa guida ti aiuta a migrare da una versione precedente di GameStringer (senz
 ## ⚠️ Importante - Prima di Iniziare
 
 ### Backup Obbligatorio
+
 Prima di procedere con la migrazione, **fai sempre un backup completo**:
 
 ```bash
 # Copia l'intera cartella di configurazione
 cp -r ~/.gamestringer ~/.gamestringer-backup-$(date +%Y%m%d)
-```
+```text
 
 ### Versioni Supportate
+
 - **Da**: GameStringer 3.0.x - 3.2.1
 - **A**: GameStringer 3.2.2+
 - **Tipo**: Migrazione obbligatoria (sistema profili richiesto)
@@ -28,15 +30,18 @@ cp -r ~/.gamestringer ~/.gamestringer-backup-$(date +%Y%m%d)
 ### Scenario 1: Migrazione Automatica (Consigliata)
 
 #### Passo 1: Aggiornamento
+
 1. **Chiudi** completamente GameStringer
 2. **Aggiorna** alla versione 3.2.2+
 3. **Avvia** l'applicazione
 
 #### Passo 2: Wizard di Migrazione
+
 Al primo avvio, vedrai il **Wizard di Migrazione**:
 
 1. **Rilevamento Dati Esistenti**
-   ```
+
+   ```text
    ✅ Credenziali Steam trovate
    ✅ Impostazioni utente trovate  
    ✅ Traduzioni salvate trovate
@@ -49,7 +54,8 @@ Al primo avvio, vedrai il **Wizard di Migrazione**:
    - Seleziona un avatar/colore
 
 3. **Migrazione Automatica**
-   ```
+
+   ```text
    🔄 Migrazione credenziali Steam...
    🔄 Migrazione impostazioni utente...
    🔄 Migrazione traduzioni...
@@ -63,6 +69,7 @@ Al primo avvio, vedrai il **Wizard di Migrazione**:
    - Testa che le traduzioni siano disponibili
 
 #### Passo 3: Primo Accesso
+
 - Verrai automaticamente autenticato con il nuovo profilo
 - Controlla che tutto funzioni correttamente
 - Fai un backup del nuovo profilo
@@ -72,7 +79,9 @@ Al primo avvio, vedrai il **Wizard di Migrazione**:
 Se la migrazione automatica non funziona o preferisci il controllo manuale:
 
 #### Passo 1: Preparazione
+
 1. **Backup Dati Esistenti**
+
    ```bash
    # Salva configurazioni importanti
    cp ~/.gamestringer/config.json ~/backup-config.json
@@ -86,6 +95,7 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
    - Installa GameStringer 3.2.2+
 
 #### Passo 2: Configurazione Manuale
+
 1. **Avvia GameStringer**
    - Crea il primo profilo normalmente
 
@@ -119,24 +129,26 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 ### Struttura File Prima/Dopo
 
 #### Prima (Versione 3.2.1)
-```
+
+```text
 ~/.gamestringer/
 ├── config.json
 ├── credentials.json
 ├── translations/
 ├── cache/
 └── logs/
-```
+```text
 
 #### Dopo (Versione 3.2.2+)
-```
+
+```text
 ~/.gamestringer/
 ├── profiles/
 │   ├── profile_abc123.json.enc
 │   └── profiles.index
 ├── avatars/
 └── backups/
-```
+```text
 
 ---
 
@@ -147,7 +159,9 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 **Causa**: I file di configurazione precedenti non sono nella posizione attesa.
 
 **Soluzioni**:
+
 1. **Verifica Posizione File**
+
    ```bash
    # Controlla se i file esistono
    ls -la ~/.gamestringer/
@@ -165,7 +179,9 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 **Causa**: Errore durante il processo di migrazione automatica.
 
 **Soluzioni**:
+
 1. **Riprova Migrazione**
+
    ```bash
    # Elimina profili parziali
    rm -rf ~/.gamestringer/profiles/
@@ -184,7 +200,9 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 **Causa**: File credenziali corrotto o formato non riconosciuto.
 
 **Soluzioni**:
+
 1. **Verifica File Credenziali**
+
    ```bash
    # Controlla contenuto file
    cat ~/.gamestringer/credentials.json
@@ -203,7 +221,9 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 **Causa**: Cartella traduzioni non trovata o corrotta.
 
 **Soluzioni**:
+
 1. **Verifica Backup**
+
    ```bash
    # Controlla backup traduzioni
    ls -la ~/backup-translations/
@@ -222,6 +242,7 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 ## ✅ Checklist Post-Migrazione
 
 ### Verifica Immediata
+
 - [ ] **Profilo Creato**: Il profilo principale è stato creato correttamente
 - [ ] **Autenticazione**: Riesci ad accedere con la password impostata
 - [ ] **Credenziali Steam**: API Key e Steam ID sono presenti e funzionanti
@@ -230,6 +251,7 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 - [ ] **Traduzioni**: Le traduzioni precedenti sono disponibili
 
 ### Test Funzionalità
+
 - [ ] **Connessione Steam**: Testa la connessione alle API Steam
 - [ ] **Caricamento Giochi**: Verifica che la libreria giochi si carichi
 - [ ] **Traduzioni**: Testa che le traduzioni funzionino
@@ -237,6 +259,7 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 - [ ] **Riavvio**: Testa che tutto persista dopo riavvio
 
 ### Backup Post-Migrazione
+
 - [ ] **Esporta Profilo**: Crea un backup del nuovo profilo
 - [ ] **Salva Backup**: Conserva il backup in luogo sicuro
 - [ ] **Testa Ripristino**: Verifica che il backup funzioni
@@ -248,16 +271,20 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
 > ⚠️ **Attenzione**: Il rollback dovrebbe essere usato solo in caso di problemi gravi!
 
 ### Procedura Rollback
+
 1. **Disinstalla Versione 3.2.2+**
 2. **Ripristina Backup**
+
    ```bash
    rm -rf ~/.gamestringer/
    cp -r ~/.gamestringer-backup-YYYYMMDD ~/.gamestringer/
    ```
+
 3. **Reinstalla Versione Precedente**
 4. **Verifica Funzionamento**
 
 ### Limitazioni Rollback
+
 - Perderai tutte le modifiche fatte dopo la migrazione
 - Dovrai rifare la migrazione in futuro
 - Alcune funzionalità potrebbero non essere disponibili
@@ -280,18 +307,20 @@ Se la migrazione automatica non funziona o preferisci il controllo manuale:
    - Lista di cosa non funziona
 
 ### Contatti Supporto
-- **Email**: migration-support@gamestringer.com
+
+- **Email**: <migration-support@gamestringer.com>
 - **GitHub**: [Link repository] - apri un issue con tag "migration"
 
 ### Informazioni da Includere
-```
+
+```text
 Versione Precedente: 3.2.1
 Versione Corrente: 3.2.2
 Sistema Operativo: Windows 11 / macOS 13 / Ubuntu 22.04
 Tipo Migrazione: Automatica / Manuale
 Errore: [Descrizione dettagliata]
 Passi Riproduzione: [Lista passi]
-```
+```text
 
 ---
 

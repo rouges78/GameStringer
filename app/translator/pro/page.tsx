@@ -1264,13 +1264,13 @@ export default function TranslatorProPage() {
           const savedPath = await invoke<string>('apply_translation_file', {
             gamePath: currentGamePath,
             sourceContent: translatedContent,
-            targetLanguage: 'it-IT',
+            targetLanguage: targetLanguage || 'it',
           });
           
           setApplyStatus('done');
           toast({
-            title: '✅ Traduzione applicata!',
-            description: `File salvato in: ${savedPath.split(/[/\\]/).pop()}. Seleziona Italiano nelle opzioni del game!`,
+            title: '✅ Translation applied!',
+            description: `File saved: ${savedPath.split(/[/\\]/).pop()}. Select the translated language in the game options.`,
           });
         } catch (e) {
           throw new Error(`error salvataggio file: ${e}`);
@@ -1861,7 +1861,7 @@ export default function TranslatorProPage() {
                       className="h-7 text-xs text-destructive hover:text-destructive"
                     >
                       <AlertTriangle className="h-3 w-3 mr-1" />
-                      Rimuovi non selezionati
+                      Remove unselected
                     </Button>
                   </div>
                 </div>
@@ -2022,7 +2022,7 @@ export default function TranslatorProPage() {
                     {provider === recommendedProvider.provider && (
                       <p className="text-sm text-green-600 font-medium flex items-center gap-1">
                         <CheckCircle className="h-4 w-4" />
-                        Provider consigliato selezionato
+                        Recommended provider selected
                       </p>
                     )}
                   </div>
@@ -2117,17 +2117,17 @@ export default function TranslatorProPage() {
                     type="password"
                     value={apiKey}
                     onChange={(e) => handleApiKeyChange(e.target.value)}
-                    placeholder="Inserisci la tua API key (salvata automaticamente)"
+                    placeholder="Enter your API key (saved automatically)"
                     autoComplete="off"
                   />
                 </form>
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label>Lingua origine</Label>
+                    <Label>{t('common.sourceLanguage') || 'Source language'}</Label>
                     <Select value={sourceLanguage} onValueChange={setSourceLanguage}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleziona lingua" />
+                        <SelectValue placeholder="Select language" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="en"><span className="flex items-center gap-2">{getFlagEmoji('GB')} English</span></SelectItem>
@@ -2144,10 +2144,10 @@ export default function TranslatorProPage() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Lingua destinazione</Label>
+                    <Label>{t('common.targetLanguage') || 'Target language'}</Label>
                     <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleziona lingua" />
+                        <SelectValue placeholder="Select language" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="it"><span className="flex items-center gap-2">{getFlagEmoji('IT')} Italiano</span></SelectItem>
@@ -2215,7 +2215,7 @@ export default function TranslatorProPage() {
                   </label>
                   {showAllFiles && (
                     <p className="text-xs text-yellow-400/70">
-                      ⚠️ Bypassa il filtro intelligente. Riseleziona il game dopo aver attivato.
+                      ⚠️ Bypasses smart filter. Re-select the game after enabling.
                     </p>
                   )}
                 </div>
@@ -2225,7 +2225,7 @@ export default function TranslatorProPage() {
                   <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-fuchsia-500/10 border border-purple-500/20">
                     <h3 className="font-medium mb-3 flex items-center gap-2">
                       <Info className="h-4 w-4" />
-                      Stima
+                      Estimate
                     </h3>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="flex items-center gap-2">
@@ -2237,7 +2237,7 @@ export default function TranslatorProPage() {
                         <span>~${costEstimate.estimatedCost.toFixed(4)}</span>
                       </div>
                       <div className="col-span-2 text-xs text-muted-foreground">
-                        {costEstimate.breakdown.estimatedTmHits} da memoria, {costEstimate.breakdown.estimatedApiCalls} da API
+                        {costEstimate.breakdown.estimatedTmHits} from memory, {costEstimate.breakdown.estimatedApiCalls} from API
                       </div>
                     </div>
                   </div>
@@ -2340,17 +2340,17 @@ export default function TranslatorProPage() {
                         )} 
                       />
                       <div className="flex justify-between text-sm text-muted-foreground">
-                        <span>{progress.completed}/{progress.total} stringhe</span>
-                        <span>{progress.fromMemory} da memoria</span>
+                        <span>{progress.completed}/{progress.total} strings</span>
+                        <span>{progress.fromMemory} from memory</span>
                       </div>
                       {progress.startTime && (
                         <p className="text-xs text-muted-foreground">
-                          Tempo trascorso: {formatTimeRemaining(elapsedTime)}
+                          Elapsed: {formatTimeRemaining(elapsedTime)}
                         </p>
                       )}
                       {progress.estimatedTimeRemaining && (
                         <p className="text-sm text-muted-foreground">
-                          Tempo rimanente: ~{formatTimeRemaining(progress.estimatedTimeRemaining)}
+                          Remaining: ~{formatTimeRemaining(progress.estimatedTimeRemaining)}
                         </p>
                       )}
                       {progress.currentItem && !progress.isRateLimited && (
@@ -2565,7 +2565,7 @@ export default function TranslatorProPage() {
                 </div>
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-purple-400">{selectedGame.name}</h3>
-                  <p className="text-xs text-muted-foreground">Traduzione completata</p>
+                  <p className="text-xs text-muted-foreground">Translation completed</p>
                 </div>
               </div>
             )}
@@ -2574,34 +2574,34 @@ export default function TranslatorProPage() {
             <div className="grid grid-cols-4 gap-4">
               <div className="group p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center transition-all duration-300 hover:bg-green-500/15 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-[1.02]">
                 <p className="text-2xl font-bold text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">{currentJob.results.translatedItems}</p>
-                <p className="text-xs text-muted-foreground">Tradotte</p>
+                <p className="text-xs text-muted-foreground">Translated</p>
               </div>
               <div className="group p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center transition-all duration-300 hover:bg-blue-500/15 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-[1.02]">
                 <p className="text-2xl font-bold text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">{currentJob.results.fromMemoryItems}</p>
-                <p className="text-xs text-muted-foreground">Da memoria</p>
+                <p className="text-xs text-muted-foreground">From memory</p>
               </div>
               <div className="group p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center transition-all duration-300 hover:bg-purple-500/15 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:scale-[1.02]">
                 <p className="text-2xl font-bold text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">{currentJob.results.averageQualityScore}%</p>
-                <p className="text-xs text-muted-foreground">Qualità</p>
+                <p className="text-xs text-muted-foreground">Quality</p>
               </div>
               <div className="group p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center transition-all duration-300 hover:bg-amber-500/15 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02]">
                 <p className="text-2xl font-bold text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">${currentJob.results.estimatedCost.toFixed(4)}</p>
-                <p className="text-xs text-muted-foreground">Costo</p>
+                <p className="text-xs text-muted-foreground">Cost</p>
               </div>
             </div>
             
             {/* Files */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">File tradotti</h3>
+                <h3 className="font-medium">Translated files</h3>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={handleSaveAllFiles}>
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Salva tutti (con backup)
+                    Save all (with backup)
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleDownloadAll}>
                     <Download className="mr-2 h-4 w-4" />
-                    Scarica tutti
+                    Download all
                   </Button>
                   <Button variant="default" size="sm" onClick={handleExportPatch} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
                     <Package className="mr-2 h-4 w-4" />

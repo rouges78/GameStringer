@@ -161,7 +161,7 @@ const GameCard = ({ game, index }: { game: DisplayGame; index: number }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="group relative overflow-hidden rounded-lg shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl flex flex-col bg-card"
+      className="group relative overflow-hidden rounded-lg shadow-lg transition-shadow duration-300 ease-in-out hover:shadow-xl flex flex-col bg-card"
     >
       <Link href={`/games/?id=${game.id}`} className="block w-full aspect-[3/4] relative">
         {/* Badges sopra la cover */}

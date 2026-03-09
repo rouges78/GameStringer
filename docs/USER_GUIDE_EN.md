@@ -40,6 +40,18 @@
 36. [RPG Maker Patcher](#rpg-maker-patcher)
 37. [Wolf RPG Patcher](#wolf-rpg-patcher)
 38. [Danganronpa Patcher](#danganronpa-patcher)
+39. [Multi-LLM Comparison](#multi-llm-comparison) *(NEW)*
+40. [Live Quality Scoring](#live-quality-scoring) *(NEW)*
+41. [Character Voice Profiles](#character-voice-profiles) *(NEW)*
+42. [Voice Translation Pipeline](#voice-translation-pipeline) *(NEW)*
+43. [OCR Multi-Engine](#ocr-multi-engine) *(NEW)*
+44. [Retro-Game OCR](#retro-game-ocr) *(NEW)*
+45. [Adaptive MT](#adaptive-mt) *(NEW)*
+46. [Batch Folder Translator](#batch-folder-translator) *(NEW)*
+47. [Offline Translator](#offline-translator) *(NEW)*
+48. [Manga/Comic Translator](#mangacomic-translator) *(NEW)*
+49. [Texture Translator](#texture-translator) *(NEW)*
+50. [Auto-Glossary](#auto-glossary) *(NEW)*
 
 ---
 
@@ -1264,6 +1276,419 @@ Dedicated patcher for the Danganronpa game series. Handles `.pak` archives and `
 3. Extract the `.pak` archive or directly load a `.po` file
 4. Edit strings in the editor or use **"Translate with AI"**
 5. Export the completed `.po` file to re-import into the game
+
+---
+
+## Multi-LLM Comparison
+
+Multi-LLM Comparison sends the same text to multiple AI providers in parallel and automatically selects the best translation.
+
+### Supported providers
+
+- **OpenAI** (GPT-4o)
+- **Gemini** (Google)
+- **Claude** (Anthropic)
+- **DeepSeek**
+- **Mistral**
+- **DeepL**
+- **Libre Translate**
+
+### Features
+
+- **Parallel comparison**: simultaneous translation with 2–7 providers
+- **Automatic selection**: the system picks the translation with the highest score
+- **Consensus translation**: when multiple models agree, a combined version is generated
+- **Quality scoring**: each translation receives a score on fluency, accuracy, consistency and style
+- **Character profiles**: apply a voice profile to customize tone and vocabulary
+
+### How to use
+
+1. Go to **Translator → Compare** from the sidebar
+2. Enter the source text and select the target language
+3. Choose at least 2 providers from the top bar
+4. Click **"Compare"** to launch parallel translations
+5. Review the scored results and pick your preferred translation, or use the automatically selected one
+
+---
+
+## Live Quality Scoring
+
+The Live Quality Scoring system automatically evaluates each translation across multiple dimensions, assigning a numeric score and a category.
+
+### Evaluated dimensions
+
+| Dimension | Description |
+|---|---|
+| **Fluency** | Naturalness and readability in the target language |
+| **Accuracy** | Faithfulness to the original meaning |
+| **Consistency** | Terminological consistency with the rest of the project |
+| **Style** | Appropriateness of tone and register for the game context |
+
+### Score categories
+
+- **Excellent** (90–100): translation ready for publication
+- **Good** (75–89): minor optional improvements
+- **Acceptable** (60–74): review recommended
+- **Needs Review** (40–59): corrections required
+- **Poor** (0–39): retranslation needed
+
+### Automatic checks
+
+- Preservation of numbers and placeholders (`{0}`, `%s`, etc.)
+- Length consistency relative to the original
+- Detection of untranslated words
+- Punctuation and formatting verification
+
+---
+
+## Character Voice Profiles
+
+Character Voice Profiles let you customize translations based on each character's personality in the game.
+
+### Available archetypes
+
+Hero, Villain, Mentor, Sidekick, Love Interest, Comic Relief, Mysterious Stranger, Noble, Pirate, Warrior, Wizard, Merchant, Child, Robot, Monster, Narrator — or **Custom**.
+
+### Configurable parameters
+
+- **Personality**: archetype, character traits, mood, age, gender
+- **Speech style**: formality (very formal → very informal), vocabulary (archaic, sophisticated, standard, simple, slang, technical), sentence length, punctuation
+- **Patterns**: catchphrases, filler words, ending suffixes, words to avoid, preferred substitutions
+- **TTS voice** *(optional)*: provider (OpenAI, ElevenLabs, Azure), voice, pitch, speed, emotion
+- **Example dialogues**: original/translated pairs to guide the AI
+
+### How to use
+
+1. Open the **Character Profile Manager** from the translation panel
+2. Choose a preset archetype or create a custom profile
+3. Configure personality, style, patterns and vocabulary
+4. Add example dialogues to improve consistency
+5. Save the profile — it will be automatically applied in future translations for that character
+
+---
+
+## Voice Translation Pipeline
+
+The Voice Translation Pipeline transforms spoken audio into translated and synthesized text in another language, in a single end-to-end flow.
+
+### Pipeline stages
+
+1. **Record / Upload**: record audio from the microphone or upload an audio file
+2. **Transcription (Whisper)**: speech-to-text conversion via OpenAI Whisper
+3. **AI Translation**: translation of the transcribed text into the target language
+4. **Text-to-Speech (TTS)**: generation of translated audio with synthetic voices
+
+### Available voices
+
+| Voice | Characteristic |
+|---|---|
+| **Nova** | Female, natural |
+| **Alloy** | Neutral, versatile |
+| **Echo** | Male, warm |
+| **Fable** | Narrative, expressive |
+| **Onyx** | Male, deep |
+| **Shimmer** | Female, bright |
+
+### How to use
+
+1. Go to **Voice Translator** from the sidebar
+2. Record audio with the microphone or upload a `.wav`/`.mp3` file
+3. The system automatically transcribes the audio with Whisper
+4. Select the target language and start the translation
+5. Choose a TTS voice and generate the translated audio
+6. Play back or download the result
+
+> **Note**: Requires an OpenAI API key configured for Whisper and TTS.
+
+---
+
+## OCR Multi-Engine
+
+OCR Multi-Engine supports 4 OCR engines with automatic detection and intelligent fallback for text recognition from game screenshots.
+
+### Supported engines
+
+| Engine | Description | Strengths |
+|---|---|---|
+| **OneOCR** | Windows 11 native AI (port 17231) | Stylized fonts, overlaid text, low resolution |
+| **PaddleOCR** | Baidu open-source (port 8866) | Excellent CJK, vertical text, high accuracy |
+| **RapidOCR** | Lightweight ONNX wrapper (port 9003) | Fast, lightweight, easy to install |
+| **Tesseract.js** | Browser-integrated | Always available, 100+ languages, no setup |
+
+### Features
+
+- **Automatic detection**: probing of available engines at startup
+- **Fallback chain**: OneOCR → PaddleOCR → RapidOCR → Tesseract (CJK: PaddleOCR first)
+- **Compare mode**: run all engines in parallel and use the best result
+- **Image preprocessing**: grayscale, contrast, threshold, upscale for small text
+- **Preferred engine**: save your preference for future sessions
+
+### How to use
+
+1. Go to **OCR Multi-Engine** from the sidebar
+2. Click **"Detect Engines"** to check which engines are online
+3. Select your preferred engine by clicking the corresponding card
+4. Upload a screenshot or paste an image
+5. The system recognizes text with the chosen engine (or automatic fallback)
+
+---
+
+## Retro-Game OCR
+
+Retro-Game OCR is a specialized module for text recognition from retro game screenshots with pixelated fonts.
+
+### Available presets
+
+| Preset | Era | Optimization |
+|---|---|---|
+| **8-bit** | NES, Game Boy, MSX | 4x upscale, high threshold, dithering removal |
+| **16-bit** | SNES, Mega Drive, PC Engine | 3x upscale, medium contrast, sharpen |
+| **DOS/PC** | DOS, EGA/VGA | 2x upscale, medium threshold, monospace font |
+| **PC-98** | NEC PC-98 (Japanese) | 3x upscale, high threshold, CJK optimized |
+| **Early Windows** | Windows 3.1/95/98 | 2x upscale, light contrast |
+
+### Configurable parameters
+
+- **Upscale**: magnification factor (nearest-neighbor to preserve pixels)
+- **Contrast**: contrast boost before recognition
+- **Binary threshold**: black/white conversion with configurable threshold
+- **Dithering removal**: filters dithering patterns typical of retro games
+- **Sharpen / Denoise**: sharpening and noise reduction
+
+### How to use
+
+1. Open the **Retro-Game OCR** panel in the OCR section
+2. Choose a game preset or configure parameters manually
+3. Upload the retro game screenshot
+4. The system pre-processes the image and applies optimized recognition
+5. Review and edit the recognized text
+
+---
+
+## Adaptive MT
+
+Adaptive MT (Adaptive Machine Translation) is a system that learns from human corrections to progressively improve translation quality.
+
+### How it works
+
+1. **Save corrections**: when you correct an AI translation, the pair (original → correction) is saved
+2. **Fuzzy similarity**: trigrams (Dice coefficient) + word similarity (Jaccard) to find relevant corrections
+3. **Few-shot learning**: the most similar corrections to the current text are injected into the prompt as examples
+4. **Feedback loop**: the more corrections you save, the better future translations become
+
+### Features
+
+- **Auto-detect tags**: tone_change, terminology, major_rewrite, length_change, punctuation, style
+- **Contextual boost**: priority to corrections from the same game (1.3x), same content type (1.2x), recent corrections
+- **Approval**: mark corrections as verified for higher reliability
+- **Import/Export**: export and import correction sets between projects
+- **Statistics**: correction count by language, game, type, tag and average usage
+
+### Configuration
+
+| Parameter | Default | Description |
+|---|---|---|
+| **Max examples** | 5 | Maximum few-shot examples per prompt |
+| **Similarity threshold** | 0.2 | Minimum similarity to include an example |
+| **Same game** | Yes | Prefer corrections from the same game |
+| **Approved only** | No | Use only corrections marked as approved |
+
+---
+
+## Batch Folder Translator
+
+The Batch Folder Translator translates entire file folders in a single operation, preserving the original structure.
+
+### Features
+
+- **Recursive scanning**: automatically scans subfolders
+- **Multi-format**: supports CSV, JSON, XML, PO, YAML, TXT, SRT, VTT and more
+- **Smart selection**: filter by file type, size or pattern
+- **Flexible output**: customizable output folder with preserved structure
+- **Parallel translation**: up to 3 concurrent batches for maximum speed
+- **Translation Memory**: automatically uses and feeds translation memory
+- **Content classification**: classifies strings by type (dialogue, UI, system) before translation
+- **Quality control**: automatic QA with configurable minimum score
+- **Pause/Resume**: pause and resume translation at any time
+
+### Parameters
+
+| Parameter | Default | Description |
+|---|---|---|
+| **Batch size** | 40 | Strings per API call |
+| **Parallel** | 3 | Concurrent batches |
+| **Delay** | 50ms | Pause between batches |
+| **Min. score** | 70 | Minimum quality threshold |
+| **Max retries** | 3 | Retries on error |
+
+### How to use
+
+1. Go to **Batch Translator** from the sidebar
+2. Select the source folder containing the files to translate
+3. Choose source language, target language and AI provider
+4. Configure options (TM, QA, classification, pipeline)
+5. Click **"Start"** to begin batch translation
+6. Monitor progress in real time — you can pause or cancel
+
+---
+
+## Offline Translator
+
+The Offline Translator allows you to translate texts without an internet connection, using local AI models via Ollama. No data is sent online.
+
+### Requirements
+
+- **Ollama** installed and running (`ollama serve`)
+- At least one translation model downloaded
+
+### Recommended Models
+
+| Model | Size | Description |
+|---|---|---|
+| **huihui_ai/hy-mt1.5-abliterated:7b** | ~4.5 GB | Tencent HY-MT 1.5 — #1 WMT25, beats Google Translate in 30/31 languages |
+| **huihui_ai/hy-mt1.5-abliterated:1.8b** | ~1.2 GB | Lightweight and ultra-fast version |
+| **translategemma:12b** | ~8.0 GB | Google TranslateGemma — 55 languages, high quality |
+| **translategemma:2b** | ~1.5 GB | Google TranslateGemma — 55 languages, fast and lightweight |
+| **qwen3:4b** | ~2.5 GB | Alibaba Qwen 3 — general purpose, good for translation |
+
+### Features
+
+- **Single mode**: translate one text at a time
+- **Batch mode**: translate multiple texts (one per line) in a single operation
+- **14 languages supported**: IT, EN, FR, DE, ES, PT, RU, JA, KO, ZH, PL, NL, TR, CS
+- **Language swap**: swap source and target with one click
+- **Model selection**: choose from models installed on Ollama
+- **Result history**: all results shown with translation time
+- **Copy results**: copy single translation or all together
+- **Integrated setup**: start Ollama and download models directly from the interface
+
+### How to Use
+
+1. Go to **Offline Translator** in the sidebar
+2. If Ollama is not running, click **"Start Ollama"** in the setup panel
+3. Download a recommended model (e.g. `hy-mt1.5-abliterated:7b`)
+4. Select source and target language
+5. Enter text and click **"Translate"** (or Ctrl+Enter)
+6. For batch: enable batch mode and enter multiple lines
+
+---
+
+## Manga/Comic Translator
+
+The Manga/Comic Translator is a specialized tool for translating comics and manga, with automatic balloon detection, OCR, translation, and inpainting.
+
+### Features
+
+- **Balloon detection**: automatically identifies text balloons in pages
+- **Integrated OCR**: recognizes text inside balloons (horizontal and vertical)
+- **Automatic translation**: translates recognized text into the target language
+- **Inpainting**: removes original text and replaces it with the translation
+- **Font styles**: Manga Style, Comic Sans, Handwritten, Bold
+- **Multi-page**: manage multiple pages simultaneously
+- **Batch translation**: process all pages in sequence
+- **Export**: export single page or all translated pages
+
+### Supported Languages
+
+JA (Japanese), ZH (Chinese), KO (Korean), EN (English), IT (Italian), ES (Spanish), FR (French), DE (German)
+
+### How to Use
+
+1. Go to **Manga Translator** in the sidebar
+2. Upload manga/comic pages (drag & drop or file selection)
+3. Select source and target language
+4. Click **"Detect & Translate"** to analyze the current page
+5. Review detected balloons and translations
+6. Click **"Inpainting"** to apply translations to the image
+7. Export the translated page
+
+---
+
+## Texture Translator
+
+The Texture Translator translates text found in video game textures (menus, HUD, buttons, UI), preserving graphic style and formatting.
+
+### Supported Formats
+
+| Format | Description |
+|---|---|
+| **DDS** | DirectDraw Surface (most common in games) |
+| **PNG** | Portable Network Graphics |
+| **TGA** | Targa |
+| **BMP** | Bitmap |
+| **JPG** | JPEG |
+| **WebP** | WebP |
+
+### Features
+
+- **Region detection**: scans the texture to find areas with text
+- **Texture OCR**: recognizes text in detected regions
+- **Automatic translation**: translates text while preserving visual context
+- **Style preservation**: maintains background colors, text color, font and size
+- **Auto-match font**: automatically selects the closest matching font
+- **Preview**: shows texture preview before and after translation
+- **Batch processing**: processes all textures in sequence
+- **Export**: export single texture or all modified textures
+
+### How to Use
+
+1. Go to **Texture Translator** in the sidebar
+2. Upload textures (drag & drop, file selection or entire folder)
+3. Select source and target language
+4. Click **"Scan Texture"** to detect text regions
+5. Review and edit proposed translations
+6. Click **"Apply Translations"** to generate the translated texture
+7. Export the modified textures
+
+---
+
+## Auto-Glossary
+
+The Auto-Glossary automatically extracts game terms from texts using LLM, saves them in a per-game glossary, and injects them into translation prompts to ensure terminological consistency.
+
+### 3-Tier System
+
+| Tier | Icon | Behavior |
+|---|---|---|
+| **Locked** | 🔒 | Fixed translation, never modified by AI |
+| **Synced** | 🔄 | Preferred translation, AI may suggest alternatives |
+| **Flexible** | 🔓 | Suggested translation, AI chooses the best |
+
+### Term Categories
+
+👤 Character, 📍 Location, 🎒 Item, ⚔️ Skill, 📜 Quest, 🖥️ UI, ⚙️ System, 📚 Lore, 🐉 Creature, 🏰 Faction, 📌 Other
+
+### Features
+
+- **Automatic extraction**: analyzes game texts with LLM and extracts key terms
+- **Default terms**: automatically adds common gaming terms (HP, XP, NPC, etc.)
+- **Search and filter**: search by text, filter by tier or category
+- **Prompt injection**: terms are automatically injected into translation prompts
+- **Do Not Translate**: mark terms that should not be translated
+- **Case-sensitive**: option for case-sensitive terms (proper names)
+- **Import/Export**: export and import glossaries in CSV or JSON format
+- **Consistency check**: verifies that terms are used consistently in translations
+- **Statistics**: term count by tier, category and source (auto/manual)
+
+### Configuration
+
+| Parameter | Default | Description |
+|---|---|---|
+| **Enabled** | Yes | Enable/disable auto-glossary |
+| **Extract on first batch** | Yes | Extract terms from the first translated batch |
+| **Max terms per extraction** | 20 | Maximum terms extracted per run |
+| **Min confidence** | 50 | Minimum confidence threshold (0–100) |
+| **Inject in prompts** | Yes | Inject terms into translation prompts |
+| **Max terms in prompt** | 30 | Maximum terms per prompt (limits context window) |
+
+### How to Use
+
+1. Go to **Glossary** in the sidebar
+2. Create a new glossary selecting game, source and target language
+3. Add terms manually or click **"Extract Terms"** for AI extraction
+4. Configure tier (Locked/Synced/Flexible) and category for each term
+5. Terms are automatically injected into translation prompts
+6. Use **"Check Consistency"** to verify uniform term usage
 
 ---
 

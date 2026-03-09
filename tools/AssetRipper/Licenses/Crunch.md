@@ -1,6 +1,6 @@
 Original crunch/crnlib source code
 crunch/crnlib uses the ZLIB license:
-http://opensource.org/licenses/Zlib
+<http://opensource.org/licenses/Zlib>
 
 Copyright (c) 2010-2016 Richard Geldreich, Jr. and Binomial LLC
 

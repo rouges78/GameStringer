@@ -3,6 +3,7 @@
 ## 📋 Sommario Esecutivo
 
 Questo documento analizza lo stato attuale di GameStringer e identifica:
+
 1. **Cosa manca** per supportare tutti i tipi di giochi in commercio
 2. **Come ottimizzare** la traduzione in tempo reale per renderla istantanea
 
@@ -37,7 +38,7 @@ Questo documento analizza lo stato attuale di GameStringer e identifica:
 
 // Riga 171
 // TODO: Implementare scansione memoria reale
-```
+```text
 
 **Cosa serve implementare**:
 
@@ -51,6 +52,7 @@ Questo documento analizza lo stato attuale di GameStringer e identifica:
 | `get_process_info()` | Stub | 🟡 Alta |
 
 **Soluzione proposta**:
+
 ```rust
 // Implementazione reale di inject_translation
 pub async fn inject_translation(
@@ -86,7 +88,7 @@ pub async fn inject_translation(
         Ok(())
     }
 }
-```
+```text
 
 ---
 
@@ -103,11 +105,12 @@ let mut hook = HookPoint {
     module_name: "game_engine.dll".to_string(), // Nome FITTIZIO
     // ...
 };
-```
+```text
 
 **Cosa serve**:
 
 1. **Pattern Scanner** per trovare funzioni di rendering testo:
+
    ```rust
    // Cerca pattern per DrawTextW in user32.dll
    fn find_draw_text_pattern(module_base: usize) -> Option<usize> {
@@ -117,6 +120,7 @@ let mut hook = HookPoint {
    ```
 
 2. **Import Address Table (IAT) Hooking**:
+
    ```rust
    fn hook_iat(module: HMODULE, target_dll: &str, target_func: &str, hook_func: usize) {
        // Trova IAT entry e sostituisci puntatore
@@ -124,6 +128,7 @@ let mut hook = HookPoint {
    ```
 
 3. **Inline Hooking** (detour):
+
    ```rust
    fn install_detour(target_addr: usize, hook_func: usize) -> Vec<u8> {
        // Salva bytes originali
@@ -141,11 +146,11 @@ let mut hook = HookPoint {
 ```rust
 // src-tauri/src/commands/unreal_patcher.rs:149
 let dll_name = if game_info.is_ue5 { "gs_translator_x64.dll" } else { "gs_translator_x64.dll" };
-```
+```text
 
 **Cosa serve creare**:
 
-```
+```text
 GameStringer/
 ├── native/
 │   ├── gs_translator_x64.dll    ← DA CREARE
@@ -155,9 +160,10 @@ GameStringer/
 │       ├── hooks.cpp            ← Sistema di hooking
 │       ├── ipc.cpp              ← Comunicazione con Rust
 │       └── text_interceptor.cpp ← Intercettazione stringhe
-```
+```text
 
 **Contenuto minimo della DLL**:
+
 ```cpp
 // gs_translator/main.cpp
 #include <windows.h>
@@ -197,7 +203,7 @@ int WINAPI Hooked_DrawTextW(HDC hdc, LPCWSTR lpchText, int cchText, LPRECT lprc,
     }
     return Original_DrawTextW(hdc, lpchText, cchText, lprc, format);
 }
-```
+```text
 
 ---
 
@@ -209,20 +215,21 @@ int WINAPI Hooked_DrawTextW(HDC hdc, LPCWSTR lpchText, int cchText, LPRECT lprc,
 // src-tauri/src/translation_bridge/mod.rs:3-6
 //! Architettura "Cervello Esterno" per traduzione in-game Unity
 //! - Shared Memory IPC per comunicazione zero-copy con il plugin C#
-```
+```text
 
 **Cosa serve creare**:
 
-```
+```text
 GameStringer/
 ├── unity-plugin/
 │   ├── GameStringerPlugin.cs      ← DA CREARE
 │   ├── TranslationBridge.cs       ← DA CREARE
 │   ├── TextInterceptor.cs         ← DA CREARE
 │   └── SharedMemoryClient.cs      ← DA CREARE
-```
+```text
 
 **Implementazione minima**:
+
 ```csharp
 // GameStringerPlugin.cs
 using System;
@@ -264,7 +271,7 @@ public class GameStringerPlugin : MonoBehaviour
         // Ritorna traduzione o originale
     }
 }
-```
+```text
 
 ---
 
@@ -299,6 +306,7 @@ public class GameStringerPlugin : MonoBehaviour
 | **Fox Engine** | MGS V | 🟡 Media | Community tools esistono |
 
 **Implementazione suggerita per GameMaker**:
+
 ```rust
 // src-tauri/src/engine_detector.rs - AGGIUNTA
 fn is_gamemaker(path: &Path) -> bool {
@@ -320,7 +328,7 @@ fn is_gamemaker(path: &Path) -> bool {
     
     false
 }
-```
+```text
 
 ---
 
@@ -346,7 +354,7 @@ fn is_gamemaker(path: &Path) -> bool {
 
 ### 1.8 Riassunto Parte 1 - Roadmap Priorità
 
-```
+```text
 FASE 1 - Core Injection (2-3 mesi)
 ├── ✅ Struttura base (FATTO)
 ├── 🔴 Implementare comandi Tauri reali
@@ -372,7 +380,7 @@ FASE 4 - Altri Engine (3-6 mesi)
 ├── 🟢 Ren'Py (.rpy files)
 ├── 🟢 GameMaker (data.win)
 └── 🟢 Source Engine (.vpk)
-```
+```text
 
 ---
 
@@ -382,11 +390,11 @@ FASE 4 - Altri Engine (3-6 mesi)
 
 ### 2.1 Architettura Attuale
 
-```
+```text
 Gioco → Hook intercetta → Cerca in cache → [Miss] → Richiedi LLM → Attendi → Inietta
                               ↓
                            [Hit] → Inietta subito
-```
+```text
 
 **Problema**: La prima traduzione ha latenza 500-2000ms (chiamata LLM).
 
@@ -395,6 +403,7 @@ Gioco → Hook intercetta → Cerca in cache → [Miss] → Richiedi LLM → Att
 **Idea**: Traduci TUTTO prima che il gioco parta.
 
 **Implementazione**:
+
 ```rust
 // Nuovo comando: pre_translate_game
 #[tauri::command]
@@ -422,10 +431,11 @@ pub async fn pre_translate_game(game_id: String, target_lang: String) -> Result<
         ready_for_instant_play: true,
     })
 }
-```
+```text
 
 **UI suggerita**:
-```
+
+```text
 ┌─────────────────────────────────────────┐
 │ 🎮 The Witcher 3                        │
 │                                         │
@@ -440,7 +450,7 @@ pub async fn pre_translate_game(game_id: String, target_lang: String) -> Result<
 │                                         │
 │ [Avvia comunque]  [Attendi completamento]│
 └─────────────────────────────────────────┘
-```
+```text
 
 ---
 
@@ -487,7 +497,7 @@ impl PredictionEngine {
         }
     }
 }
-```
+```text
 
 ---
 
@@ -523,10 +533,11 @@ pub async fn download_game_dictionary(game_id: String, target_lang: String) -> R
         source: "community".to_string(),
     })
 }
-```
+```text
 
 **Database suggerito**:
-```
+
+```text
 gamestringer-dictionaries/
 ├── elden_ring/
 │   ├── it.json.gz (15,000 stringhe)
@@ -538,7 +549,7 @@ gamestringer-dictionaries/
 │   └── ...
 └── cyberpunk_2077/
     └── ...
-```
+```text
 
 ---
 
@@ -551,9 +562,10 @@ gamestringer-dictionaries/
 pub fn get_by_hash(&self, hash: u64) -> Option<&TranslationEntry> {
     self.translations_by_hash.get(&hash)  // O(1) lookup ✅
 }
-```
+```text
 
 **Ottimizzazione aggiuntiva - Bloom Filter**:
+
 ```rust
 use bloom::BloomFilter;
 
@@ -582,7 +594,7 @@ impl OptimizedDictionary {
         self.translations.get(&hash)  // ~500ns
     }
 }
-```
+```text
 
 ---
 
@@ -595,9 +607,10 @@ impl OptimizedDictionary {
 // Ring buffer da 4MB per comunicazione zero-copy
 pub const RING_BUFFER_SIZE: usize = 4 * 1024 * 1024;
 pub const MAX_SLOTS: usize = 1024;
-```
+```text
 
 **Completare implementazione**:
+
 ```rust
 // Nuovo: src-tauri/src/translation_bridge/ring_buffer.rs
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -648,7 +661,7 @@ impl RingBuffer {
         }
     }
 }
-```
+```text
 
 ---
 
@@ -678,9 +691,10 @@ fn intercept_text(original: &str) -> String {
         }
     }
 }
-```
+```text
 
 **Versione più elegante** (colore invece di emoji):
+
 ```cpp
 // Nella DLL C++
 int WINAPI Hooked_DrawTextW(HDC hdc, LPCWSTR text, int len, LPRECT rc, UINT fmt) {
@@ -695,7 +709,7 @@ int WINAPI Hooked_DrawTextW(HDC hdc, LPCWSTR text, int len, LPRECT rc, UINT fmt)
     // Disegna traduzione in colore normale
     return Original_DrawTextW(hdc, translation.text, -1, rc, fmt);
 }
-```
+```text
 
 ---
 
@@ -714,7 +728,7 @@ int WINAPI Hooked_DrawTextW(HDC hdc, LPCWSTR text, int len, LPRECT rc, UINT fmt)
 
 ### 2.9 Architettura Finale Ottimizzata
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                        GAMESTRINGER                             │
 ├─────────────────────────────────────────────────────────────────┤
@@ -750,7 +764,7 @@ int WINAPI Hooked_DrawTextW(HDC hdc, LPCWSTR text, int len, LPRECT rc, UINT fmt)
         │ Gioco     │   │ Gioco     │   │ Gioco     │
         │ Unity     │   │ UE4/UE5   │   │ Custom    │
         └───────────┘   └───────────┘   └───────────┘
-```
+```text
 
 ---
 
@@ -784,21 +798,25 @@ int WINAPI Hooked_DrawTextW(HDC hdc, LPCWSTR text, int len, LPRECT rc, UINT fmt)
 ## 🚀 Prossimi Passi Consigliati
 
 ### Sprint 1 (2 settimane)
+
 1. Implementare `inject_translation()` reale
 2. Implementare `scan_process_memory()` reale
 3. Test su Notepad.exe (ambiente controllato)
 
 ### Sprint 2 (2 settimane)
+
 1. Creare DLL injection base (C++)
 2. Implementare IAT hooking per DrawTextW
 3. Test su gioco indie semplice
 
 ### Sprint 3 (2 settimane)
+
 1. Plugin Unity C# base
 2. Shared memory IPC funzionante
 3. Test su gioco Unity
 
 ### Sprint 4 (2 settimane)
+
 1. Pre-caching engine
 2. Dictionary download system
 3. UI per gestione dizionari

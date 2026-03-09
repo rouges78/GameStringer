@@ -39,7 +39,7 @@ npm run dev:test               # Test completo sistema
 
 # Metodi legacy (ancora funzionanti)
 npm run dev:simple             # Next.js standard (no port sync)
-```
+```text
 
 ## Come Funziona
 
@@ -67,7 +67,7 @@ Se la porta configurata e occupata:
 
 ```bash
 npm run dev:check
-```
+```text
 
 Mostra:
 
@@ -82,7 +82,7 @@ Mostra:
 
 ```bash
 npm run dev
-```
+```text
 
 ```text
 PORT MANAGER - Sincronizzazione porte...
@@ -92,13 +92,13 @@ Next.js pronto su http://localhost:3000
 SISTEMA PRONTO
 Frontend: http://localhost:3000
 Store Manager: http://localhost:3000/store-manager
-```
+```text
 
 ### Cambio Porta
 
 ```bash
 npm run dev:sync 3002
-```
+```text
 
 ```text
 PORT MANAGER - Sincronizzazione porte...
@@ -106,13 +106,13 @@ Usando porta forzata: 3002
 Porta 3002 salvata in .port
 tauri.conf.json aggiornato: devUrl = http://127.0.0.1:3002
 PORT MANAGER - Sincronizzazione completata!
-```
+```text
 
 ### Test Completo Sistema
 
 ```bash
 npm run dev:test
-```
+```text
 
 ```text
 TEST PORT SYSTEM
@@ -125,7 +125,7 @@ RISULTATO TEST
 Porta configurata: 3000
 Porta disponibile: SI
 Sistema pronto per l'uso!
-```
+```text
 
 ## Troubleshooting
 
@@ -136,7 +136,7 @@ Sistema pronto per l'uso!
 ```bash
 npm run dev:sync    # Ri-sincronizza tutto
 npm run dev         # Riavvia con porte allineate
-```
+```text
 
 ### Problema: Internal Server Error su Tauri
 
@@ -145,7 +145,7 @@ npm run dev         # Riavvia con porte allineate
 ```bash
 npm run dev:check   # Verifica sincronizzazione
 npm run tauri:dev   # Avvia con sync automatico
-```
+```text
 
 ### Problema: Porta occupata
 
@@ -155,7 +155,7 @@ npm run tauri:dev   # Avvia con sync automatico
 npm run dev:sync 3010   # Forza porta specifica
 # oppure
 npm run dev             # Auto-detect porta libera
-```
+```text
 
 ### Problema: Configurazioni incasinate
 
@@ -165,7 +165,7 @@ npm run dev             # Auto-detect porta libera
 rm .port
 npm run dev:sync 3000   # Ricrea tutto da zero
 npm run dev:test        # Verifica
-```
+```text
 
 ## Debug Avanzato
 
@@ -173,21 +173,21 @@ npm run dev:test        # Verifica
 
 ```bash
 DEBUG=true npm run dev
-```
+```text
 
 ### Controllo manuale porte
 
 ```bash
 node scripts/port-manager.js find 3000    # Trova porta libera
 node scripts/port-manager.js check        # Testa porta corrente
-```
+```text
 
 ### Verifica configurazione Tauri
 
 ```bash
 cat src-tauri/tauri.conf.json | grep devUrl
 cat .port
-```
+```text
 
 ## Tips
 
@@ -211,4 +211,4 @@ Il sistema e ora **bullet-proof**. Non dovrai mai piu preoccuparti delle porte!
 
 ```bash
 npm run dev         # E sei pronto!
-```
+```text
