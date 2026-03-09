@@ -99,7 +99,7 @@ export default function AITranslatorPage() {
               Batch
             </Button>
           </Link>
-          <Link href="/projects">
+          <Link href="/project-manager">
             <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <FolderOpen className="h-3 w-3" />
               {ai.projects}

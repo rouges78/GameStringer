@@ -59,7 +59,10 @@ import {
   ScanEye,
   Rocket,
   Crosshair,
-  Eye
+  Eye,
+  BarChart3,
+  Newspaper,
+  Clock
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -141,6 +144,8 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'Emotion', href: '/emotion-translator', icon: Sparkles },
           { name: 'AI Review', href: '/ai-review', icon: Bot },
           { name: t('nav.offlineTranslator') || 'Offline Translator', href: '/offline-translator', icon: WifiOff },
+          { name: 'Translation Wizard', href: '/translation-wizard', icon: Wand2 },
+          { name: 'Translation Bridge', href: '/translation-bridge', icon: Workflow },
         ]
       },
       { 
@@ -153,6 +158,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'Live OCR', href: '/live-ocr', icon: Monitor },
           { name: t('nav.texture') || 'Texture', href: '/texture-translator', icon: Layers },
           { name: t('nav.manga') || 'Manga', href: '/manga-translator', icon: BookOpen },
+          { name: 'Visual Editor', href: '/visual-editor', icon: ImageIcon },
         ]
       },
       { 
@@ -173,6 +179,7 @@ const getNavGroups = (t: (key: string) => string) => [
         subItems: [
           { name: 'Auto-Translate', href: '/auto-translate', icon: Rocket },
           { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
+          { name: 'Batch Queue', href: '/batch-translation', icon: Layers },
           { name: t('nav.dictionary'), href: '/memory', icon: Database },
           { name: t('nav.glossary'), href: '/glossary', icon: BookOpen },
           { name: 'Context Harvester', href: '/context-harvester', icon: Wheat },
@@ -240,6 +247,8 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: 'QA Check', href: '/qa-check', icon: ShieldCheck },
           { name: t('nav.qualityGates'), href: '/quality-gates', icon: ShieldCheck },
           { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
+          { name: 'Cultural Adaptation', href: '/cultural-adaptation', icon: Globe },
+          { name: 'Confidence Heatmap', href: '/heatmap', icon: BarChart3 },
         ]
       },
       { 
@@ -273,6 +282,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: t('nav.community'), href: '/community-hub', icon: Users },
           { name: 'Stores', href: '/stores', icon: ShoppingBag },
           { name: 'Steam Workshop', href: '/workshop', icon: Globe },
+          { name: 'Blog', href: '/blog', icon: Newspaper },
         ]
       },
       { 
@@ -292,6 +302,9 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: t('nav.settings'), href: '/settings', icon: Settings },
           { name: 'System Monitor', href: '/system-monitor', icon: Monitor },
           { name: 'Info', href: '/info', icon: Info },
+          { name: 'Plugins', href: '/plugins', icon: Puzzle },
+          { name: 'Activity', href: '/activity', icon: Clock },
+          { name: 'Statistics', href: '/stats', icon: BarChart3 },
         ]
       },
     ],
