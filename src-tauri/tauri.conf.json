@@ -4,7 +4,7 @@
   "version": "1.4.2",
   "identifier": "com.gamestringer.app",
   "build": {
-    "beforeDevCommand": "npx next dev -p 3205",
+    "beforeDevCommand": "",
     "beforeBuildCommand": "node scripts/build-tauri-cross.js",
     "devUrl": "http://127.0.0.1:3206",
     "frontendDist": "../out"
@@ -41,18 +41,6 @@
         "skipTaskbar": true,
         "transparent": true,
         "url": "/ocr-overlay"
-      },
-      {
-        "label": "rss-feed",
-        "title": "GameStringer - RSS Feed",
-        "width": 600,
-        "height": 500,
-        "resizable": true,
-        "fullscreen": false,
-        "center": true,
-        "visible": false,
-        "decorations": true,
-        "url": "/rss-viewer"
       }
     ],
     "security": {
