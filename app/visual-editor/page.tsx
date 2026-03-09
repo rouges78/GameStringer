@@ -1,10 +1,14 @@
 'use client';
 
-import { VisualTranslationEditor } from '@/components/tools/visual-translation-editor';
-import { useTranslation } from '@/lib/i18n';
+import dynamic from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui/skeleton-loaders';
+
+const VisualTranslationEditor = dynamic(
+  () => import('@/components/tools/visual-translation-editor').then(m => m.VisualTranslationEditor),
+  { ssr: false, loading: () => <PageSkeleton /> }
+);
 
 export default function VisualEditorPage() {
-  const { t } = useTranslation();
   return (
     <div className="container mx-auto p-6">
       <VisualTranslationEditor />

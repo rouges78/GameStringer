@@ -58,6 +58,18 @@ const connectableProviders = ['steam', 'epic', 'ubisoft', 'itchio', 'gog', 'orig
 const autoDetectProviders = ['xbox', 'amazon'];
 const connectableUtilities = ['howlongtobeat', 'steamgriddb', 'achievements', 'playtime'];
 
+// Cache globale in-memory per evitare ri-detection ad ogni mount
+const _g = globalThis as any;
+if (!_g.__gsStoresCache) {
+  _g.__gsStoresCache = {
+    xboxDetected: null as boolean | null,
+    amazonDetected: null as boolean | null,
+    ubisoftConnected: false,
+    detectionDone: false,
+  };
+}
+const _storesCache = _g.__gsStoresCache;
+
 export default function StoresPage() {
   const { t } = useTranslation();
   // Gestione auth locale con persistenza
@@ -88,11 +100,8 @@ export default function StoresPage() {
 
   // State for UI elements and forms
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
-  const [ubisoftConnected, setUbisoftConnected] = useState(false);
+  const [ubisoftConnected, setUbisoftConnected] = useState(_storesCache.ubisoftConnected);
   
-  const [steamId, setSteamId] = useState('');
-  const [fixMessage, setFixMessage] = useState('');
-
   // State for Steam ID modal
   const [isSteamModalOpen, setIsSteamModalOpen] = useState(false);
 
@@ -109,21 +118,25 @@ export default function StoresPage() {
   // Test connection state
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<{ [key: string]: any }>({});
-  const [xboxDetected, setXboxDetected] = useState<boolean | null>(null);
-  const [amazonDetected, setAmazonDetected] = useState<boolean | null>(null);
+  const [xboxDetected, setXboxDetected] = useState<boolean | null>(_storesCache.xboxDetected);
+  const [amazonDetected, setAmazonDetected] = useState<boolean | null>(_storesCache.amazonDetected);
   
   useEffect(() => {
+    if (_storesCache.detectionDone) return;
+    _storesCache.detectionDone = true;
     invoke<boolean>('is_xbox_installed').then(detected => {
       setXboxDetected(detected);
-    }).catch(() => setXboxDetected(false));
+      _storesCache.xboxDetected = detected;
+    }).catch(() => { setXboxDetected(false); _storesCache.xboxDetected = false; });
     invoke<boolean>('is_amazon_games_installed').then(detected => {
       setAmazonDetected(detected);
-    }).catch(() => setAmazonDetected(false));
+      _storesCache.amazonDetected = detected;
+    }).catch(() => { setAmazonDetected(false); _storesCache.amazonDetected = false; });
   }, []);
   
   // Utility services state
   const [utilityPreferences, setUtilityPreferences] = useState<{ [key: string]: any }>({});
-  const [utilityExpanded, setUtilityExpanded] = useState(false);
+  const [utilityExpanded, setUtilityExpanded] = useState(true);
   
   // SteamGridDB modal state
   const [isSteamGridDBModalOpen, setIsSteamGridDBModalOpen] = useState(false);
@@ -168,29 +181,6 @@ export default function StoresPage() {
     return providerMap[frontendId] || frontendId;
   };
 
-  const handleFixSteamId = async () => {
-    if (!steamId.trim()) {
-      toast.error('Per favore, inserisci uno SteamID.');
-      return;
-    }
-    setLoadingProvider('steam-fix');
-    setFixMessage('Correzione in corso...');
-    const response = await fetch('/api/steam/fix-steamid', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ correctSteamId: steamId }),
-    });
-    const result = await response.json();
-    if (response.ok) {
-      toast.success('SteamID corretto con successo!');
-      setFixMessage('');
-      await update();
-    } else {
-      toast.error(`Error: ${result.error}`);
-      setFixMessage(`Error: ${result.error}`);
-    }
-    setLoadingProvider(null);
-  };
 
   // Load utility preferences from localStorage on mount
   useEffect(() => {
@@ -455,8 +445,6 @@ export default function StoresPage() {
   };
 
   const steamAccount = session?.user?.accounts?.find(acc => acc.provider === 'steam-credentials');
-  // Do not show l'avviso se Steam è collegato correttamente tramite il nuovo sistema auth
-  const isSteamIdInvalid = false; // Disabilitato: Steam funziona correttamente con il nuovo sistema auth
 
   const testConnectionUtility = async (utilityId: string) => {
     setTestingProvider(utilityId);
@@ -545,33 +533,33 @@ export default function StoresPage() {
         </div>
       </div>
 
-      {isSteamIdInvalid && (
-        <Card className="mb-8 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/10">
-          <CardHeader>
-            <CardTitle className="text-yellow-700 dark:text-yellow-400">Azione Richiesta: Correggi il tuo SteamID</CardTitle>
-            <CardDescription>
-              Abbiamo rilevato che il tuo SteamID potrebbe non essere corretto. Per risolvere il problema della scansione dei games, per favore inserisci il tuo <strong>SteamID numerico a 17 cifre</strong> qui sotto e clicca su "Correggi".
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Input
-                type="text"
-                placeholder="Es: 76561198..."
-                value={steamId}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSteamId(e.target.value)}
-                className="max-w-xs"
-              />
-              <Button onClick={handleFixSteamId} disabled={loadingProvider === 'steam-fix'}>
-                {loadingProvider === 'steam-fix' ? <Loader2 className="animate-spin mr-2" /> : null}
-                Correggi SteamID
-              </Button>
+      {/* Banner Riepilogo Connessioni */}
+      {(() => {
+        const connectedStores = storesConfig.filter(s => {
+          if (s.id === 'xbox') return xboxDetected === true;
+          if (s.id === 'amazon') return amazonDetected === true;
+          return isConnected(s.id);
+        }).length;
+        const activeUtilities = utilityServicesConfig.filter(s => isConnected(s.id)).length;
+        return (
+          <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="flex items-center gap-1.5">
+              <div className={`h-2 w-2 rounded-full ${connectedStores > 0 ? 'bg-green-500 animate-pulse' : 'bg-slate-600'}`} />
+              <span className="text-xs text-slate-300">
+                <span className="font-semibold text-white">{connectedStores}</span>/{storesConfig.length} store
+              </span>
             </div>
-            {fixMessage && <p className="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">{fixMessage}</p>}
-          </CardContent>
-        </Card>
-      )}
-      
+            <div className="h-3 w-px bg-slate-700" />
+            <div className="flex items-center gap-1.5">
+              <div className={`h-2 w-2 rounded-full ${activeUtilities > 0 ? 'bg-orange-500 animate-pulse' : 'bg-slate-600'}`} />
+              <span className="text-xs text-slate-300">
+                <span className="font-semibold text-white">{activeUtilities}</span>/{utilityServicesConfig.length} servizi
+              </span>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
         {storesConfig.map((store) => {
           const isConnectable = connectableProviders.includes(store.id);
@@ -915,59 +903,58 @@ export default function StoresPage() {
       )}
 
       {/* SteamGridDB API Key Modal */}
-      {isSteamGridDBModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-slate-900 border border-orange-500/50 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-white mb-2">SteamGridDB API Key</h3>
-            <p className="text-sm text-slate-400 mb-4">
-              Inserisci la tua API key di SteamGridDB per scaricare automaticamente le copertine dei giochi.
-            </p>
-            <a 
-              href="https://www.steamgriddb.com/profile/preferences/api" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm mb-4 underline"
+      <Dialog open={isSteamGridDBModalOpen} onOpenChange={(open) => { if (!open) { setIsSteamGridDBModalOpen(false); setSteamGridDBApiKey(''); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>SteamGridDB API Key</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Inserisci la tua API key di SteamGridDB per scaricare automaticamente le copertine dei giochi.
+          </p>
+          <a 
+            href="https://www.steamgriddb.com/profile/preferences/api" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 text-sm underline"
+          >
+            Ottieni la tua API Key qui →
+          </a>
+          <Input
+            placeholder="API Key"
+            value={steamGridDBApiKey}
+            onChange={(e) => setSteamGridDBApiKey(e.target.value)}
+            className="font-mono"
+          />
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsSteamGridDBModalOpen(false);
+                setSteamGridDBApiKey('');
+              }}
             >
-              Ottieni la tua API Key qui →
-            </a>
-            <Input
-              placeholder="API Key"
-              value={steamGridDBApiKey}
-              onChange={(e) => setSteamGridDBApiKey(e.target.value)}
-              className="bg-slate-800 border-slate-700 text-white mb-4"
-            />
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => {
+              Annulla
+            </Button>
+            <Button
+              onClick={() => {
+                if (steamGridDBApiKey.trim()) {
+                  const newPrefs = { ...utilityPreferences, steamgriddb: { enabled: true, apiKey: steamGridDBApiKey.trim() } };
+                  localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
+                  setUtilityPreferences(newPrefs);
+                  toast.success('SteamGridDB collegato con successo!');
                   setIsSteamGridDBModalOpen(false);
                   setSteamGridDBApiKey('');
-                }}
-                className="border-slate-600 text-slate-300"
-              >
-                Annulla
-              </Button>
-              <Button
-                onClick={() => {
-                  if (steamGridDBApiKey.trim()) {
-                    const newPrefs = { ...utilityPreferences, steamgriddb: { enabled: true, apiKey: steamGridDBApiKey.trim() } };
-                    localStorage.setItem('gamestringer_utility_prefs', JSON.stringify(newPrefs));
-                    setUtilityPreferences(newPrefs);
-                    toast.success('SteamGridDB collegato con successo!');
-                    setIsSteamGridDBModalOpen(false);
-                    setSteamGridDBApiKey('');
-                  } else {
-                    toast.error('Inserisci una API Key valida');
-                  }
-                }}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                Conferma
-              </Button>
-            </div>
+                } else {
+                  toast.error('Inserisci una API Key valida');
+                }
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              Conferma
+            </Button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

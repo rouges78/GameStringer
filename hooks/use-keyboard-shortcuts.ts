@@ -27,8 +27,13 @@ export function useKeyboardShortcuts() {
     
     // Quick actions
     { key: 'b', ctrl: true, action: () => router.push('/batch-translation'), description: 'Batch Translation' },
-    { key: 'j', ctrl: true, action: () => router.push('/projects'), description: 'Progetti' },
+    { key: 'j', ctrl: true, action: () => router.push('/project-manager'), description: 'Progetti' },
     { key: 'w', ctrl: true, action: () => router.push('/workshop'), description: 'Steam Workshop' },
+    { key: 'g', ctrl: true, action: () => router.push('/glossary'), description: 'Glossario' },
+    { key: 'm', ctrl: true, action: () => router.push('/memory'), description: 'Dizionario' },
+    { key: 'e', ctrl: true, action: () => router.push('/editor'), description: 'Editor' },
+    { key: 'o', ctrl: true, action: () => router.push('/ocr-translator'), description: 'OCR Translator' },
+    { key: 's', ctrl: true, shift: true, action: () => router.push('/stores'), description: 'Stores' },
     
     // Help
     { key: '/', ctrl: true, action: () => showShortcutsHelp(), description: 'Mostra shortcuts' },

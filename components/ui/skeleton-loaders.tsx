@@ -135,6 +135,19 @@ export function SkeletonDashboard() {
   );
 }
 
+export function PageSkeleton({ className }: SkeletonProps) {
+  return (
+    <div className={cn("p-6 space-y-4 animate-in fade-in duration-300", className)}>
+      <Skeleton className="h-12 w-full rounded-xl" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
+      </div>
+      <Skeleton className="h-48 w-full rounded-xl" />
+    </div>
+  );
+}
+
 export function SkeletonLibrary() {
   return (
     <div className="p-6 space-y-6 animate-in fade-in duration-300">

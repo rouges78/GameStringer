@@ -25,7 +25,14 @@ import {
   RefreshCw,
   Database,
   Brain,
-  Mic
+  Mic,
+  BookOpen,
+  Scan,
+  ShoppingBag,
+  Workflow,
+  ShieldCheck,
+  FileEdit,
+  Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
@@ -61,8 +68,16 @@ export function CommandPalette() {
     { id: 'community', title: t('nav.community'), description: t('commandPalette.communityDesc'), icon: <Globe className="h-4 w-4" />, action: () => router.push('/community-hub'), keywords: ['hub', 'share', 'comunità'], category: 'navigation' },
     { id: 'settings', title: t('nav.settings'), description: t('commandPalette.settingsDesc'), icon: <Settings className="h-4 w-4" />, action: () => router.push('/settings'), keywords: ['config', 'options', 'impostazioni'], category: 'navigation' },
     { id: 'batch', title: t('nav.batch'), description: t('commandPalette.batchDesc'), icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch'), keywords: ['queue', 'multiple', 'batch'], category: 'navigation' },
-    { id: 'projects', title: t('commandPalette.projects'), description: t('commandPalette.projectsDesc'), icon: <FolderOpen className="h-4 w-4" />, action: () => router.push('/projects'), keywords: ['project', 'save', 'progetti'], category: 'navigation' },
+    { id: 'projects', title: t('commandPalette.projects'), description: t('commandPalette.projectsDesc'), icon: <FolderOpen className="h-4 w-4" />, action: () => router.push('/project-manager'), keywords: ['project', 'save', 'progetti'], category: 'navigation' },
     { id: 'stats', title: t('commandPalette.stats'), description: t('commandPalette.statsDesc'), icon: <BarChart3 className="h-4 w-4" />, action: () => router.push('/stats'), keywords: ['analytics', 'progress', 'statistiche'], category: 'navigation' },
+    { id: 'glossary', title: 'Glossario', description: 'Gestione termini e glossari', icon: <BookOpen className="h-4 w-4" />, action: () => router.push('/glossary'), keywords: ['glossary', 'terms', 'glossario'], category: 'navigation' },
+    { id: 'editor', title: 'Editor', description: 'Editor traduzioni interattivo', icon: <FileText className="h-4 w-4" />, action: () => router.push('/editor'), keywords: ['edit', 'editor', 'modifica'], category: 'navigation' },
+    { id: 'ocr', title: 'OCR Translator', description: 'Traduci testo da immagini e schermo', icon: <Scan className="h-4 w-4" />, action: () => router.push('/ocr-translator'), keywords: ['ocr', 'screen', 'immagine', 'schermo'], category: 'navigation' },
+    { id: 'stores', title: 'Stores', description: 'Gestione store e connessioni', icon: <ShoppingBag className="h-4 w-4" />, action: () => router.push('/stores'), keywords: ['store', 'steam', 'epic', 'negozio'], category: 'navigation' },
+    { id: 'batch-queue', title: 'Batch Queue', description: 'Coda traduzioni batch', icon: <Layers className="h-4 w-4" />, action: () => router.push('/batch-translation'), keywords: ['queue', 'coda', 'batch'], category: 'navigation' },
+    { id: 'ai-pipeline', title: 'AI Pipeline', description: 'Pipeline traduzione multi-step', icon: <Workflow className="h-4 w-4" />, action: () => router.push('/ai-pipeline'), keywords: ['pipeline', 'workflow', 'qa'], category: 'navigation' },
+    { id: 'qa-check', title: 'QA Check', description: 'Controllo qualità traduzioni', icon: <ShieldCheck className="h-4 w-4" />, action: () => router.push('/qa-check'), keywords: ['quality', 'check', 'qualità'], category: 'navigation' },
+    { id: 'vision', title: 'Vision LLM', description: 'Traduzione visiva con AI', icon: <Eye className="h-4 w-4" />, action: () => router.push('/vision-translator'), keywords: ['vision', 'llm', 'visual', 'immagine'], category: 'navigation' },
     
     // Actions
     { id: 'scan', title: t('commandPalette.scanGames'), description: t('commandPalette.scanGamesDesc'), icon: <RefreshCw className="h-4 w-4" />, action: () => { window.dispatchEvent(new CustomEvent('scan-games')); }, keywords: ['refresh', 'find', 'scansiona'], category: 'action' },

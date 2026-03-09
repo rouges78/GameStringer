@@ -1505,7 +1505,9 @@ export function MainLayout({ children }: MainLayoutProps) {
 
           {/* Content */}
           <main className="flex-1 overflow-auto">
-            {children}
+            <div key={pathname} className="page-enter">
+              {children}
+            </div>
           </main>
         </div>
         

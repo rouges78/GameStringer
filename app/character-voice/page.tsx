@@ -1,6 +1,12 @@
 'use client';
 
-import { CharacterVoiceEditor } from '@/components/translator/character-voice-editor';
+import dynamic from 'next/dynamic';
+import { PageSkeleton } from '@/components/ui/skeleton-loaders';
+
+const CharacterVoiceEditor = dynamic(
+  () => import('@/components/translator/character-voice-editor').then(m => m.CharacterVoiceEditor),
+  { ssr: false, loading: () => <PageSkeleton /> }
+);
 
 export default function CharacterVoicePage() {
   return (
