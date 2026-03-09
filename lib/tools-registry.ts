@@ -665,25 +665,6 @@ export function getToolsRegistry(): ToolDefinition[] {
       ],
     },
 
-    // ── RISORSE › Gestione ────────────────────────────────
-    {
-      id: 'project-manager',
-      href: '/project-manager',
-      name: 'Project Manager',
-      nameKey: 'nav.projectManager',
-      icon: FolderTree,
-      color: 'orange',
-      category: 'resources',
-      subcategory: 'management',
-      features: [
-        'Gestione completa progetti di traduzione',
-        'Glossario integrato per terminologia consistente',
-        'Tracking progresso in tempo reale',
-        'Organizzazione multi-file (JSON, PO, CSV...)',
-        'Export/import progetti in formato .gsproj',
-      ],
-    },
-
     // ── RISORSE › Sistema ─────────────────────────────────
     {
       id: 'settings',

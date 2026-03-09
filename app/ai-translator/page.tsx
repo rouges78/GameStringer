@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Brain, Scan, Image as ImageIcon, Database, Sparkles, Zap, Bot, Layers, FolderOpen } from 'lucide-react';
+import { Brain, Scan, Image as ImageIcon, Database, Sparkles, Zap, Bot, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AITranslationAssistant } from '@/components/tools/ai-translation-assistant';
 import { useTranslation, translations } from '@/lib/i18n';
@@ -97,12 +97,6 @@ export default function AITranslatorPage() {
             <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
               <Layers className="h-3 w-3" />
               Batch
-            </Button>
-          </Link>
-          <Link href="/project-manager">
-            <Button variant="outline" size="sm" className="gap-1.5 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white">
-              <FolderOpen className="h-3 w-3" />
-              {ai.projects}
             </Button>
           </Link>
         </div>

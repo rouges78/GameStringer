@@ -287,10 +287,9 @@ const getNavGroups = (t: (key: string) => string) => [
       },
       { 
         name: t('nav.managementCategory'),
-        href: '/project-manager',
-        icon: FolderTree,
+        href: '/guide',
+        icon: BookOpen,
         subItems: [
-          { name: t('nav.projectManager'), href: '/project-manager', icon: FolderTree },
           { name: t('nav.guide'), href: '/guide', icon: BookOpen },
         ]
       },

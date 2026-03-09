@@ -27,7 +27,7 @@ export function useKeyboardShortcuts() {
     
     // Quick actions
     { key: 'b', ctrl: true, action: () => router.push('/batch-translation'), description: 'Batch Translation' },
-    { key: 'j', ctrl: true, action: () => router.push('/project-manager'), description: 'Progetti' },
+    { key: 'j', ctrl: true, action: () => router.push('/guide'), description: 'Guida' },
     { key: 'w', ctrl: true, action: () => router.push('/workshop'), description: 'Steam Workshop' },
     { key: 'g', ctrl: true, action: () => router.push('/glossary'), description: 'Glossario' },
     { key: 'm', ctrl: true, action: () => router.push('/memory'), description: 'Dizionario' },
