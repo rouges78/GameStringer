@@ -7,7 +7,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,7 +30,6 @@ import {
   Cpu,
   HardDrive,
   Globe,
-  Link2,
   BookOpen,
   Settings,
   Rss,
@@ -165,7 +163,6 @@ declare global {
 interface Settings {
   // Translation
   translation: {
-    provider: string;
     apiKey: string;
     groqApiKey: string;
     deepseekApiKey: string;
@@ -186,35 +183,15 @@ interface Settings {
   };
   
   // System
-  system: {
-    theme: string;
-    language: string;
-    autoBackup: boolean;
-    backupInterval: number;
-    cacheSize: number;
-    logLevel: string;
-  };
+  system: Record<string, never>;
   
   // Performance
   performance: {
     maxConcurrentTasks: number;
     apiTimeout: number;
     retryAttempts: number;
-    enableGpuAcceleration: boolean;
   };
   
-  // Notifications
-  notifications: {
-    gameAdded: boolean;
-    translationComplete: boolean;
-    errors: boolean;
-    updates: boolean;
-  };
-  
-  // Integrations
-  integrations: {
-    steamGridDbApiKey: string;
-  };
 
   // Display
   display: {
@@ -232,7 +209,6 @@ export default function SettingsPage() {
   const { t } = useTranslation();
   const [settings, setSettings] = useState<Settings>({
     translation: {
-      provider: 'openai',
       apiKey: '',
       groqApiKey: '',
       deepseekApiKey: '',
@@ -251,28 +227,11 @@ export default function SettingsPage() {
       maxTokens: 2000,
       batchSize: 50
     },
-    system: {
-      theme: 'dark',
-      language: 'it',
-      autoBackup: true,
-      backupInterval: 24,
-      cacheSize: 500,
-      logLevel: 'info'
-    },
+    system: {},
     performance: {
       maxConcurrentTasks: 5,
       apiTimeout: 30000,
-      retryAttempts: 3,
-      enableGpuAcceleration: true
-    },
-    notifications: {
-      gameAdded: true,
-      translationComplete: true,
-      errors: true,
-      updates: false
-    },
-    integrations: {
-      steamGridDbApiKey: ''
+      retryAttempts: 3
     },
     display: {
       uiScale: 100,
@@ -302,8 +261,6 @@ export default function SettingsPage() {
           translation: { ...prev.translation, ...(parsed.translation || {}) },
           system: { ...prev.system, ...(parsed.system || {}) },
           performance: { ...prev.performance, ...(parsed.performance || {}) },
-          notifications: { ...prev.notifications, ...(parsed.notifications || {}) },
-          integrations: { ...prev.integrations, ...(parsed.integrations || {}) },
           display: { ...prev.display, ...(parsed.display || {}) },
         }));
       } catch (error) {
@@ -453,26 +410,6 @@ export default function SettingsPage() {
     }
   };
 
-  const testTranslationAPI = async () => {
-    setIsDebugging(true);
-    try {
-      addDebugResult('🧠 Testing translation API...');
-      
-      if (!settings.translation.apiKey) {
-        addDebugResult('❌ Translation API Key missing');
-        return;
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 1800));
-      addDebugResult('✅ Translation API connected');
-      addDebugResult('🌍 Available models: GPT-4, Claude, Gemini');
-      addDebugResult('⚡ Response time: 1.2s');
-    } catch (error) {
-      addDebugResult(`❌ Error: ${error}`);
-    } finally {
-      setIsDebugging(false);
-    }
-  };
 
   return (
     <div className="p-4 space-y-4 max-w-7xl mx-auto">
@@ -572,10 +509,6 @@ export default function SettingsPage() {
             <Bell className="h-3.5 w-3.5" />
             <span>{t('settings.tabs.notifications')}</span>
           </TabsTrigger>
-          <TabsTrigger value="integrations" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
-            <Globe className="h-3.5 w-3.5" />
-            <span>{t('settings.tabs.integrations')}</span>
-          </TabsTrigger>
           <TabsTrigger value="rss" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Rss className="h-3.5 w-3.5" />
             <span>RSS</span>
@@ -603,24 +536,6 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>{t('settings.provider')}</Label>
-                  <Select 
-                    value={settings.translation.provider} 
-                    onValueChange={(value) => updateSetting('translation', 'provider', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="openai">OpenAI GPT</SelectItem>
-                      <SelectItem value="anthropic">Anthropic Claude</SelectItem>
-                      <SelectItem value="google">Google Gemini</SelectItem>
-                      <SelectItem value="deepl">DeepL</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <div className="space-y-2">
                   <Label>{t('settings.targetLang')}</Label>
                   <Select 
@@ -987,20 +902,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>{t('settings.gpuAcceleration')}</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {t('settings.gpuAccelerationDesc')}
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.performance.enableGpuAcceleration}
-                    onCheckedChange={(checked) => updateSetting('performance', 'enableGpuAcceleration', checked)}
-                  />
-                </div>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -1010,38 +911,6 @@ export default function SettingsPage() {
           <ProfileNotificationSettings />
         </TabsContent>
 
-        {/* Integrations Tab */}
-        <TabsContent value="integrations" className="space-y-3">
-          <Card className="p-3">
-            <p className="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-1.5">
-              <Link2 className="h-3.5 w-3.5" />
-              API Esterne
-            </p>
-            <div className="space-y-2 p-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
-              <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-cyan-400" />
-                <Label className="text-sm font-semibold">SteamGridDB</Label>
-                <Badge variant="outline" className="text-[10px]">Gratuito</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Copertine per giochi senza artwork.
-                <a href="https://www.steamgriddb.com/profile/preferences/api" target="_blank" className="text-cyan-400 hover:underline ml-1">API Key →</a>
-              </p>
-              <div className="flex gap-2">
-                <Input
-                  type={showApiKeys.steamgriddb ? "text" : "password"}
-                  value={settings.integrations.steamGridDbApiKey}
-                  onChange={(e) => updateSetting('integrations', 'steamGridDbApiKey', e.target.value)}
-                  placeholder="API Key..."
-                  className="font-mono h-8 text-xs"
-                />
-                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setShowApiKeys(prev => ({ ...prev, steamgriddb: !prev.steamgriddb }))}>
-                  {showApiKeys.steamgriddb ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
 
         {/* RSS Tab */}
         <TabsContent value="rss" className="space-y-3">
@@ -1272,14 +1141,10 @@ export default function SettingsPage() {
               {t('settings.debugTools')}
               <Badge variant="outline" className="text-[10px] ml-1">{t('settings.developers')}</Badge>
             </div>
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <Button onClick={testGameLibrary} disabled={isDebugging} variant="outline" size="sm" className="h-10 gap-1.5">
+            <div className="mb-3">
+              <Button onClick={testGameLibrary} disabled={isDebugging} variant="outline" size="sm" className="h-10 gap-1.5 w-full">
                 <Database className="h-3.5 w-3.5" />
                 <span className="text-xs">{t('settings.testLibrary')}</span>
-              </Button>
-              <Button onClick={testTranslationAPI} disabled={isDebugging} variant="outline" size="sm" className="h-10 gap-1.5">
-                <Brain className="h-3.5 w-3.5" />
-                <span className="text-xs">{t('settings.testTranslation')}</span>
               </Button>
             </div>
             <div className="flex justify-between items-center mb-2">
