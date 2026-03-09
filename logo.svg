@@ -1,11 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 50">
   <defs>
     <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0284c7"/>
-      <stop offset="100%" style="stop-color:#10b981"/>
+      <stop offset="0%">
+        <animate attributeName="stop-color" values="#0284c7;#7c3aed;#0ea5e9;#10b981;#0284c7" dur="6s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%">
+        <animate attributeName="stop-color" values="#10b981;#0ea5e9;#7c3aed;#0284c7;#10b981" dur="6s" repeatCount="indefinite"/>
+      </stop>
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%">
+        <animate attributeName="stop-color" values="#ffffff;#e0f2fe;#ede9fe;#d1fae5;#ffffff" dur="8s" repeatCount="indefinite"/>
+      </stop>
+      <stop offset="100%">
+        <animate attributeName="stop-color" values="#94a3b8;#bfdbfe;#c4b5fd;#6ee7b7;#94a3b8" dur="8s" repeatCount="indefinite"/>
+      </stop>
     </linearGradient>
   </defs>
-  <rect x="0" y="5" width="40" height="40" rx="10" fill="url(#logoGrad)"/>
+  <rect x="0" y="5" width="40" height="40" rx="10" fill="url(#logoGrad)">
+    <animate attributeName="rx" values="10;12;10" dur="3s" repeatCount="indefinite"/>
+  </rect>
   <text x="20" y="33" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">GS</text>
-  <text x="52" y="34" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" fill="white">GameStringer</text>
+  <text x="52" y="34" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" fill="url(#textGrad)">GameStringer</text>
 </svg>

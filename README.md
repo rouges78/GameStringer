@@ -46,7 +46,7 @@ sito/
 │   ├── screenshot-*.png    # Screenshot app
 │   └── og-image.svg        # Immagine per social media
 └── README.md           # Questo file
-```
+```text
 
 ## Utilizzo
 
@@ -88,7 +88,7 @@ Modifica le variabili CSS in `:root`:
   --teal-500: #14b8a6;     /* Colore secondario (Verde/Teal) */
   /* ... */
 }
-```
+```text
 
 ### Aggiungere screenshot reali
 
@@ -104,6 +104,7 @@ Cerca e sostituisci:
 ## SEO
 
 I meta tag sono già configurati in `<head>`:
+
 - `title` e `description`
 - Open Graph per Facebook/LinkedIn
 - Keywords per motori di ricerca
