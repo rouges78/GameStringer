@@ -76,7 +76,7 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
   const requireAuth = isProtectedRoute(pathname);
 
   // Route che non devono avere MainLayout (finestre secondarie)
-  const noLayoutRoutes = ['/rss-viewer', '/ocr-overlay'];
+  const noLayoutRoutes = ['/ocr-overlay'];
   const skipLayout = noLayoutRoutes.some(route => pathname?.startsWith(route));
 
   if (skipLayout) {
