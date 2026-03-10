@@ -1,11 +1,17 @@
 'use client';
 
 import { Globe } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { CommunityHub } from '@/components/tools/community-hub';
 import { useTranslation } from '@/lib/i18n';
 
 export default function CommunityHubPage() {
   const { t } = useTranslation();
+  const searchParams = useSearchParams();
+  const action = searchParams.get('action') || undefined;
+  const query = searchParams.get('query') || undefined;
+  const gameId = searchParams.get('gameId') || undefined;
+  const gameName = searchParams.get('gameName') ? decodeURIComponent(searchParams.get('gameName')!) : undefined;
   
   return (
     <div className="container mx-auto p-4 space-y-3">
@@ -31,7 +37,12 @@ export default function CommunityHubPage() {
         </div>
       </div>
       
-      <CommunityHub />
+      <CommunityHub
+        initialAction={action}
+        initialQuery={query}
+        initialGameId={gameId}
+        initialGameName={gameName}
+      />
     </div>
   );
 }

@@ -1,0 +1,3667 @@
+[
+  {
+    "offset": 3626765,
+    "len": 11,
+    "text": "Save & Quit"
+  },
+  {
+    "offset": 3637752,
+    "len": 11,
+    "text": "Orange Tree"
+  },
+  {
+    "offset": 3637781,
+    "len": 66,
+    "text": "Specializes in melee combat and blocking enemies from progressing."
+  },
+  {
+    "offset": 3637861,
+    "len": 49,
+    "text": "Archer ready to shoot at enemies from a distance."
+  },
+  {
+    "offset": 3637921,
+    "len": 26,
+    "text": "Can {g,heal} other Heroes,"
+  },
+  {
+    "offset": 3637948,
+    "len": 43,
+    "text": "can also attack using {b,Lightning} damage."
+  },
+  {
+    "offset": 3638006,
+    "len": 73,
+    "text": "Specializes in ranged combat using {r,Fire} and {B,Cold} spells that deal"
+  },
+  {
+    "offset": 3638080,
+    "len": 41,
+    "text": "{b,Magic Damage} which ignores {G,Armor}."
+  },
+  {
+    "offset": 3638163,
+    "len": 90,
+    "text": "Fragile tree that generates {o,Oranges} that are needed to summon Heroes and buy Upgrades."
+  },
+  {
+    "offset": 3638272,
+    "len": 75,
+    "text": "Tangy uses her magic and {o,Oranges} to summon little Heroes to defend her."
+  },
+  {
+    "offset": 3638367,
+    "len": 50,
+    "text": "Vile winged creatures that can fly past Defenders."
+  },
+  {
+    "offset": 3638442,
+    "len": 56,
+    "text": "Bloodthirsty creatures that heal by inflicting bleeding."
+  },
+  {
+    "offset": 3638522,
+    "len": 80,
+    "text": "Vile winged creatures that can fly past Defenders. Adapted to the cold, they are"
+  },
+  {
+    "offset": 3638603,
+    "len": 25,
+    "text": "{b,Immune to Cold Damage}"
+  },
+  {
+    "offset": 3638659,
+    "len": 90,
+    "text": "Aggressive winged creatures that can fly past Defenders and attack anything in their path."
+  },
+  {
+    "offset": 3638750,
+    "len": 25,
+    "text": "{b,Immune to Cold Damage}"
+  },
+  {
+    "offset": 3638806,
+    "len": 66,
+    "text": "Flying mischievous creatures that are very difficult to take down."
+  },
+  {
+    "offset": 3638873,
+    "len": 25,
+    "text": "{b,Immune to Cold Damage}"
+  },
+  {
+    "offset": 3638931,
+    "len": 61,
+    "text": "Giant flying tentacle monster that chills all nearby enemies."
+  },
+  {
+    "offset": 3638993,
+    "len": 25,
+    "text": "{b,Immune to Cold Damage}"
+  },
+  {
+    "offset": 3639088,
+    "len": 11,
+    "text": "Vicious Rat"
+  },
+  {
+    "offset": 3639158,
+    "len": 10,
+    "text": "Silver Rat"
+  },
+  {
+    "offset": 3639171,
+    "len": 62,
+    "text": "Much tougher than normal Rats. They drop Chests when defeated!"
+  },
+  {
+    "offset": 3639317,
+    "len": 10,
+    "text": "Undead Rat"
+  },
+  {
+    "offset": 3639330,
+    "len": 43,
+    "text": "Undead, poisonous rodents with sharp teeth."
+  },
+  {
+    "offset": 3639388,
+    "len": 127,
+    "text": "Fast, vicious creatures equiped with huge, sharp teeth that rip through skin. Their agility allows them to dodge melee attacks."
+  },
+  {
+    "offset": 3639547,
+    "len": 137,
+    "text": "Fast and tough, vicious creatures equiped with huge, sharp teeth that rip through skin. Their agility allows them to dodge melee attacks."
+  },
+  {
+    "offset": 3639726,
+    "len": 111,
+    "text": "With their frozen and razor sharp teeth, these beasts bring an ice cold death to even the toughest of warriors."
+  },
+  {
+    "offset": 3639860,
+    "len": 10,
+    "text": "Golden Rat"
+  },
+  {
+    "offset": 3639881,
+    "len": 56,
+    "text": "Tough evil humanoids that attack anything in their path."
+  },
+  {
+    "offset": 3639949,
+    "len": 13,
+    "text": "Silver Goblin"
+  },
+  {
+    "offset": 3639965,
+    "len": 75,
+    "text": "Very Tough and resilient evil humanoids that attack anything in their path."
+  },
+  {
+    "offset": 3640056,
+    "len": 13,
+    "text": "Goblin Archer"
+  },
+  {
+    "offset": 3640072,
+    "len": 58,
+    "text": "Evil humanoids equiped with a bow that focus weak targets."
+  },
+  {
+    "offset": 3640142,
+    "len": 13,
+    "text": "Goblin Wizard"
+  },
+  {
+    "offset": 3640158,
+    "len": 65,
+    "text": "Evil Shaman that heals nearby allies and shoots deadly Fireballs."
+  },
+  {
+    "offset": 3640237,
+    "len": 14,
+    "text": "Goblin Blocker"
+  },
+  {
+    "offset": 3640255,
+    "len": 44,
+    "text": "Tough evil humanoids that can block attacks."
+  },
+  {
+    "offset": 3640309,
+    "len": 13,
+    "text": "Goblin Knight"
+  },
+  {
+    "offset": 3640325,
+    "len": 89,
+    "text": "Tough knight that can't be stunned or pushed back. His heavy Hammer stuns briefly on hit."
+  },
+  {
+    "offset": 3640446,
+    "len": 84,
+    "text": "Long range siege weapon operated by evil humanoids. Very deadly to groups of heroes."
+  },
+  {
+    "offset": 3640548,
+    "len": 13,
+    "text": "Goblin Pirate"
+  },
+  {
+    "offset": 3640564,
+    "len": 37,
+    "text": "Goblins, but with a big saber, Yarrr!"
+  },
+  {
+    "offset": 3640609,
+    "len": 12,
+    "text": "Goblin Brute"
+  },
+  {
+    "offset": 3640624,
+    "len": 62,
+    "text": "Unchained meatball! Slams the ground, stunning nearby targets."
+  },
+  {
+    "offset": 3640699,
+    "len": 17,
+    "text": "Fat Goblin Pirate"
+  },
+  {
+    "offset": 3640720,
+    "len": 116,
+    "text": "The King of Goblins is a fierce warrior that cut's down nearby targets and shoots at distant heroes with his Cannon."
+  },
+  {
+    "offset": 3640864,
+    "len": 65,
+    "text": "Firece warrior that can widthstand even the strongest of attacks."
+  },
+  {
+    "offset": 3640950,
+    "len": 47,
+    "text": "Very tough warriors that can regenerate health."
+  },
+  {
+    "offset": 3641167,
+    "len": 16,
+    "text": "Skeleton Crawler"
+  },
+  {
+    "offset": 3641187,
+    "len": 81,
+    "text": "Mindless automatons that obey the orders of the Necro King, {r,Ignores Blockers}."
+  },
+  {
+    "offset": 3641295,
+    "len": 68,
+    "text": "Mindless humanoids, immune to {G,Physical Damage}. Revives on death."
+  },
+  {
+    "offset": 3641390,
+    "len": 96,
+    "text": "The Necromancer King, all Skeletons obey his command. Summons an army of bloodthirsty skeletons."
+  },
+  {
+    "offset": 3641513,
+    "len": 83,
+    "text": "Buried Monsters that only reveal themselves when attacking their unsuspecting prey."
+  },
+  {
+    "offset": 3641627,
+    "len": 94,
+    "text": "Very tough Buried Monsters that only reveal themselves when attacking their unsuspecting prey."
+  },
+  {
+    "offset": 3641741,
+    "len": 13,
+    "text": "Slime Monster"
+  },
+  {
+    "offset": 3641757,
+    "len": 156,
+    "text": "Very deadly Monsters with claws and sharp teeth that rip even through the toughest of armor. Buried underground, they only reveal themselves when attacking."
+  },
+  {
+    "offset": 3641945,
+    "len": 12,
+    "text": "Bush Monster"
+  },
+  {
+    "offset": 3641960,
+    "len": 56,
+    "text": "Very tough poisonous monster made out of wood and grass."
+  },
+  {
+    "offset": 3642028,
+    "len": 24,
+    "text": "Vicious Skeleton Crawler"
+  },
+  {
+    "offset": 3642058,
+    "len": 14,
+    "text": "Skeleton Boner"
+  },
+  {
+    "offset": 3642076,
+    "len": 15,
+    "text": "Skeleton Knight"
+  },
+  {
+    "offset": 3642095,
+    "len": 14,
+    "text": "Skeleton Giant"
+  },
+  {
+    "offset": 3642113,
+    "len": 15,
+    "text": "Skeleton Wizard"
+  },
+  {
+    "offset": 3642132,
+    "len": 14,
+    "text": "Skeleton Necro"
+  },
+  {
+    "offset": 3642150,
+    "len": 12,
+    "text": "Wizard Chain"
+  },
+  {
+    "offset": 3642330,
+    "len": 87,
+    "text": "Giant Golem of pure ice. Almost nothing can hurt this monstrosity, other than {r,Fire}."
+  },
+  {
+    "offset": 3642454,
+    "len": 41,
+    "text": "Icy creature that freezes nearby enemies."
+  },
+  {
+    "offset": 3642518,
+    "len": 48,
+    "text": "[h-2]{y,Converts all Damage to {b,Cold Damage}.}"
+  },
+  {
+    "offset": 3642576,
+    "len": 48,
+    "text": "[h-2]{y,Converts all Damage to {r,Fire Damage}.}"
+  },
+  {
+    "offset": 3642634,
+    "len": 53,
+    "text": "[h-2]{y,Converts all Damage to {b,Lightning Damage}.}"
+  },
+  {
+    "offset": 3642698,
+    "len": 50,
+    "text": "[h-2]{y,Converts all Damage to {g,Poison Damage}.}"
+  },
+  {
+    "offset": 3642759,
+    "len": 47,
+    "text": "[h-2]{y,Can attack translucent/buried enemies.}"
+  },
+  {
+    "offset": 3643070,
+    "len": 42,
+    "text": "[h-2]{y,Hits have a {w,1% chance to kill}."
+  },
+  {
+    "offset": 3643142,
+    "len": 76,
+    "text": "[h-2]{y,Whenever Tangy successfully lifts Heroes, she gains {w,+1% Damage}.}"
+  },
+  {
+    "offset": 3643234,
+    "len": 100,
+    "text": "[h-2]{y,Lifted Heroes gain {w,40% Range} and {w,10% Damage} and can {w,Attack} while being carried.}"
+  },
+  {
+    "offset": 3643355,
+    "len": 88,
+    "text": "[h-2]{y,Marks primary targets Tangy is attacking, making them take {w,30% more Damage}.}"
+  },
+  {
+    "offset": 3643461,
+    "len": 81,
+    "text": "[h-2]{y,The Unit ignores Obstacles like Trees etc. Projectiles fly through them.}"
+  },
+  {
+    "offset": 3643559,
+    "len": 51,
+    "text": "[h-2]{y,Bleeds infliced on enemies heal this unit.}"
+  },
+  {
+    "offset": 3643621,
+    "len": 43,
+    "text": "{y,Every third attack causes an explosion.}"
+  },
+  {
+    "offset": 3643673,
+    "len": 73,
+    "text": "{y,On Equip, place a banner that boosts nearby Heroes {w,Damge by +10%}.}"
+  },
+  {
+    "offset": 3643761,
+    "len": 79,
+    "text": "{y,On Equip, place a banner that boosts nearby Heroes {w,Health Regeneration}.}"
+  },
+  {
+    "offset": 3643857,
+    "len": 32,
+    "text": "{y,Heal a nearby wounded target."
+  },
+  {
+    "offset": 3643930,
+    "len": 71,
+    "text": "{y,Every 8th attack causes a burst of thorns, dealing {w,Area Damage}.}"
+  },
+  {
+    "offset": 3644016,
+    "len": 80,
+    "text": "{y,Creates a Projectile that pierces all enemies hit, causing a small Knockback."
+  },
+  {
+    "offset": 3644145,
+    "len": 82,
+    "text": "{y,Shields orbit around the unit, dealing damage to every Enemy they pass through."
+  },
+  {
+    "offset": 3644273,
+    "len": 53,
+    "text": "{y,Absorbs a portion of damage nearby allies receive."
+  },
+  {
+    "offset": 3644366,
+    "len": 70,
+    "text": "{y,Thrusts your weapon forward, applying {r,Bleed} to all enemies hit."
+  },
+  {
+    "offset": 3644482,
+    "len": 61,
+    "text": "{y,Every 6th attack leaves behind a pool for fire on impact.}"
+  },
+  {
+    "offset": 3644556,
+    "len": 78,
+    "text": "{y,Toss a bottle of poison that leaves behind a toxic pool of gas upon impact."
+  },
+  {
+    "offset": 3644682,
+    "len": 113,
+    "text": "{y,Every 6th attack expels a bolt of Lightning that chains through enemies, dealing less damage with each chain.}"
+  },
+  {
+    "offset": 3644818,
+    "len": 96,
+    "text": "{y,Expels a bolt of Lightning that chains through enemies, dealing less damage with each chain.}"
+  },
+  {
+    "offset": 3644964,
+    "len": 73,
+    "text": "{y,Creates a circle at the target Location healing friendly units inside."
+  },
+  {
+    "offset": 3645085,
+    "len": 34,
+    "text": "{y,Fire mulitple arrows in a cone."
+  },
+  {
+    "offset": 3645158,
+    "len": 73,
+    "text": "{y,Every 6th attack releases a burst of Ice behind the target on impact.}"
+  },
+  {
+    "offset": 3645246,
+    "len": 89,
+    "text": "{y,Shoots multiple arrows in the air towards a target location, arrows explode on impact."
+  },
+  {
+    "offset": 3645516,
+    "len": 80,
+    "text": "{y,Summons a bunch of leaves that slowly shoot towards the {y,Attack Direction}."
+  },
+  {
+    "offset": 3645645,
+    "len": 64,
+    "text": "{y,Throws weapons in a spiral outward, damaging all enemies hit."
+  },
+  {
+    "offset": 3645755,
+    "len": 45,
+    "text": "{y,Upon death, revive instead at full Health."
+  },
+  {
+    "offset": 3645843,
+    "len": 79,
+    "text": "{y,On Hit, summon a Totem near the target, decreasing their {w,Health by -20%}."
+  },
+  {
+    "offset": 3645972,
+    "len": 16,
+    "text": "Teleport Enemies"
+  },
+  {
+    "offset": 3645992,
+    "len": 59,
+    "text": "{y,On Hit, Teleports a group of enemies back down the path."
+  },
+  {
+    "offset": 3646097,
+    "len": 123,
+    "text": "{y,When standing still, summon a Campfire that increases the {w,Health Regen} of nearby Heroes and their {w,Attack Speed}.}"
+  },
+  {
+    "offset": 3646245,
+    "len": 68,
+    "text": "{y,When standing still, summon a Cross that protects nearby Heroes.}"
+  },
+  {
+    "offset": 3646327,
+    "len": 69,
+    "text": "{y,Hurl a ball of fire that explodes on contact, dealing Area Damage."
+  },
+  {
+    "offset": 3646443,
+    "len": 59,
+    "text": "{y,Shoot an arrow into the air, striking a target location."
+  },
+  {
+    "offset": 3646557,
+    "len": 54,
+    "text": "{y,Heals all nearby allies by a flat amount of health."
+  },
+  {
+    "offset": 3646655,
+    "len": 83,
+    "text": "{y,Shoots a big cannon ball towards a target location, dealing massive Area Damage."
+  },
+  {
+    "offset": 3646789,
+    "len": 76,
+    "text": "{y,Slams the ground, {y,Stunning} all nearby Enemies and knocking them back."
+  },
+  {
+    "offset": 3646915,
+    "len": 83,
+    "text": "{y,Upon contact with Enemies, the unit burst into an explosion dealing area damge.}"
+  },
+  {
+    "offset": 3647015,
+    "len": 87,
+    "text": "{y,Upon contact with Enemies, the unit burst into an icy explosion dealing area damge.}"
+  },
+  {
+    "offset": 3647120,
+    "len": 36,
+    "text": "{y,Shoots thorns in all directions.}"
+  },
+  {
+    "offset": 3647196,
+    "len": 85,
+    "text": "{y,Shoots a poisonous ball that explosed on impact, leaving behind a cloud of Poison."
+  },
+  {
+    "offset": 3647432,
+    "len": 51,
+    "text": "{y,Summons an army of undead to fight by your side."
+  },
+  {
+    "offset": 3647526,
+    "len": 79,
+    "text": "{y,Creates a Projectile that follows the Target, dealing area damage on impact."
+  },
+  {
+    "offset": 3647654,
+    "len": 58,
+    "text": "{y,On being hit, creates a barrier that protects the unit."
+  },
+  {
+    "offset": 3647758,
+    "len": 80,
+    "text": "{y,On being hit, creates a barrier that protects the unit and freezes attackers."
+  },
+  {
+    "offset": 3647888,
+    "len": 40,
+    "text": "{y,On being hit, drop some {o,Oranges}}."
+  },
+  {
+    "offset": 3647937,
+    "len": 104,
+    "text": "{y,On death, curses the killer and all units around him. Cursed units dieal less damage for a duration}."
+  },
+  {
+    "offset": 3648063,
+    "len": 75,
+    "text": "{y,On being hit, {y,Teleport} a great distance towards the next Tangy Tree."
+  },
+  {
+    "offset": 3648187,
+    "len": 43,
+    "text": "{y,Every Enemy in the area is {g,chilled}}."
+  },
+  {
+    "offset": 3648239,
+    "len": 63,
+    "text": "{y,Strikes a Target Location with a Meteor dealing area damage."
+  },
+  {
+    "offset": 3648349,
+    "len": 100,
+    "text": "{y,Blasts enemies within close proximity to you, dealing area damage and {b,freezing} them in place."
+  },
+  {
+    "offset": 3648502,
+    "len": 72,
+    "text": "{y,Roots all nearby enemies in place and applies a {g,poisonous} debuff."
+  },
+  {
+    "offset": 3648623,
+    "len": 76,
+    "text": "{y,Unleashes a series of Ice Spikes towards your target dealing area damage."
+  },
+  {
+    "offset": 3648747,
+    "len": 73,
+    "text": "{y,Attack an Enemy two times with the second hit {y,Stunning} the target."
+  },
+  {
+    "offset": 3648868,
+    "len": 19,
+    "text": "{y,Attack an Enemy."
+  },
+  {
+    "offset": 3648924,
+    "len": 59,
+    "text": "{y,Lightning strikes a target location dealing area damage."
+  },
+  {
+    "offset": 3649029,
+    "len": 68,
+    "text": "{y,Bash enemies with the Shield, causing {w,Stun} and {w,Knockback}."
+  },
+  {
+    "offset": 3649144,
+    "len": 79,
+    "text": "{y,Throws a Shield that deals damage and splits into multiple shards on impact."
+  },
+  {
+    "offset": 3649272,
+    "len": 64,
+    "text": "{y,User activated Ability. {g,Heals} all Heroes inside the area."
+  },
+  {
+    "offset": 3649383,
+    "len": 103,
+    "text": "{y,User activated Ability. Upon activation an Orange is dropped on the ground which explodes on impact."
+  },
+  {
+    "offset": 3649554,
+    "len": 31,
+    "text": "{y,Periodically spawns Oranges."
+  },
+  {
+    "offset": 3649624,
+    "len": 41,
+    "text": "{y,Shoots a stinger directly at an enemy."
+  },
+  {
+    "offset": 3649706,
+    "len": 70,
+    "text": "{y,Dash through a target dealing damage to every enemy along the path."
+  },
+  {
+    "offset": 3649824,
+    "len": 73,
+    "text": "{y,Spawns Ice Spikes in random locations that explode into deadly shards."
+  },
+  {
+    "offset": 3649946,
+    "len": 13,
+    "text": "START BATTLE!"
+  },
+  {
+    "offset": 3649962,
+    "len": 72,
+    "text": "Place a Defender to stop the Goblins from getting through to Tangy [%d]."
+  },
+  {
+    "offset": 3650049,
+    "len": 88,
+    "text": "By defeating Enemies, {y,Tangy} gains {g,Skillpoints}. Spend them to grow more powerful!"
+  },
+  {
+    "offset": 3650155,
+    "len": 39,
+    "text": "Good! Now open the shop to buy an item."
+  },
+  {
+    "offset": 3650203,
+    "len": 38,
+    "text": "Heroes use items to get more powerful."
+  },
+  {
+    "offset": 3650249,
+    "len": 40,
+    "text": "Combining the same item will upgrade it!"
+  },
+  {
+    "offset": 3650329,
+    "len": 68,
+    "text": "The Goblins have taken away our {g,Healer}! Defeat them to free her!"
+  },
+  {
+    "offset": 3650411,
+    "len": 48,
+    "text": "Look, Tangy woke up! You can move her with [%d]."
+  },
+  {
+    "offset": 3650950,
+    "len": 11,
+    "text": "Shop Price:"
+  },
+  {
+    "offset": 3651055,
+    "len": 39,
+    "text": "{r,Play missions to unlock more heroes}"
+  },
+  {
+    "offset": 3651103,
+    "len": 41,
+    "text": "{r,Play missions to unlock more upgrades}"
+  },
+  {
+    "offset": 3651287,
+    "len": 14,
+    "text": "Hero Selection"
+  },
+  {
+    "offset": 3651318,
+    "len": 23,
+    "text": "Choose a Hero to unlock"
+  },
+  {
+    "offset": 3651349,
+    "len": 11,
+    "text": "Level Stats"
+  },
+  {
+    "offset": 3651363,
+    "len": 10,
+    "text": "Load Level"
+  },
+  {
+    "offset": 3651376,
+    "len": 10,
+    "text": "Save Level"
+  },
+  {
+    "offset": 3651407,
+    "len": 11,
+    "text": "Unlock Hero"
+  },
+  {
+    "offset": 3651556,
+    "len": 90,
+    "text": "Climb the {y,leaderboard} by fighting through infinite waves to see how long you can last!"
+  },
+  {
+    "offset": 3651727,
+    "len": 16,
+    "text": "{g,Leave level?}"
+  },
+  {
+    "offset": 3652003,
+    "len": 44,
+    "text": "Do not let a single Hero die, not even once."
+  },
+  {
+    "offset": 3652077,
+    "len": 43,
+    "text": "Don't lose a single Live on the Tangy Tree."
+  },
+  {
+    "offset": 3652129,
+    "len": 33,
+    "text": "Are you sure you want to restart?"
+  },
+  {
+    "offset": 3652215,
+    "len": 17,
+    "text": "Auto Start Rounds"
+  },
+  {
+    "offset": 3652236,
+    "len": 38,
+    "text": "Always show all Nodes in the Skilltree"
+  },
+  {
+    "offset": 3652300,
+    "len": 19,
+    "text": "Show Damage Numbers"
+  },
+  {
+    "offset": 3652324,
+    "len": 27,
+    "text": "Show health bars on Enemies"
+  },
+  {
+    "offset": 3652357,
+    "len": 26,
+    "text": "Show health bars on Heroes"
+  },
+  {
+    "offset": 3652479,
+    "len": 12,
+    "text": "Music Volume"
+  },
+  {
+    "offset": 3652595,
+    "len": 18,
+    "text": "{r,Inventory Full}"
+  },
+  {
+    "offset": 3652811,
+    "len": 14,
+    "text": "Unlocked Hero!"
+  },
+  {
+    "offset": 3652829,
+    "len": 10,
+    "text": "Skill Tree"
+  },
+  {
+    "offset": 3652863,
+    "len": 11,
+    "text": "Shield Bash"
+  },
+  {
+    "offset": 3652884,
+    "len": 11,
+    "text": "Shield Orbs"
+  },
+  {
+    "offset": 3652911,
+    "len": 12,
+    "text": "Shield Throw"
+  },
+  {
+    "offset": 3652946,
+    "len": 26,
+    "text": "Click to Choose an Upgrade"
+  },
+  {
+    "offset": 3653003,
+    "len": 29,
+    "text": "Experience needed to level up"
+  },
+  {
+    "offset": 3653039,
+    "len": 14,
+    "text": "{g,NEXT LEVEL}"
+  },
+  {
+    "offset": 3653070,
+    "len": 13,
+    "text": "Items Dropped"
+  },
+  {
+    "offset": 3653163,
+    "len": 44,
+    "text": "Earn stars if each Tangy Tree survives with:"
+  },
+  {
+    "offset": 3653285,
+    "len": 14,
+    "text": "Complete level"
+  },
+  {
+    "offset": 3653321,
+    "len": 17,
+    "text": "Let no heroes die"
+  },
+  {
+    "offset": 3653430,
+    "len": 13,
+    "text": "Poison Bottle"
+  },
+  {
+    "offset": 3653446,
+    "len": 13,
+    "text": "Burning Arrow"
+  },
+  {
+    "offset": 3653474,
+    "len": 12,
+    "text": "Wooden Sword"
+  },
+  {
+    "offset": 3653489,
+    "len": 10,
+    "text": "Iron Sword"
+  },
+  {
+    "offset": 3653502,
+    "len": 11,
+    "text": "Short Sword"
+  },
+  {
+    "offset": 3653516,
+    "len": 11,
+    "text": "Steel Sword"
+  },
+  {
+    "offset": 3653546,
+    "len": 13,
+    "text": "Broken Shield"
+  },
+  {
+    "offset": 3653562,
+    "len": 13,
+    "text": "Wooden Shield"
+  },
+  {
+    "offset": 3653578,
+    "len": 13,
+    "text": "Spiked Shield"
+  },
+  {
+    "offset": 3653609,
+    "len": 13,
+    "text": "Burning Sword"
+  },
+  {
+    "offset": 3653645,
+    "len": 14,
+    "text": "Steel Crossbow"
+  },
+  {
+    "offset": 3653663,
+    "len": 13,
+    "text": "Thornwood Bow"
+  },
+  {
+    "offset": 3653679,
+    "len": 11,
+    "text": "Emerald Bow"
+  },
+  {
+    "offset": 3653701,
+    "len": 15,
+    "text": "Rusty Iron Ring"
+  },
+  {
+    "offset": 3653732,
+    "len": 10,
+    "text": "Steel Ring"
+  },
+  {
+    "offset": 3653769,
+    "len": 11,
+    "text": "Holy Shield"
+  },
+  {
+    "offset": 3653823,
+    "len": 12,
+    "text": "Compound Bow"
+  },
+  {
+    "offset": 3654026,
+    "len": 11,
+    "text": "Knight Helm"
+  },
+  {
+    "offset": 3654058,
+    "len": 12,
+    "text": "Magic Mantle"
+  },
+  {
+    "offset": 3654110,
+    "len": 17,
+    "text": "Millennium Shield"
+  },
+  {
+    "offset": 3654143,
+    "len": 11,
+    "text": "Rusty Sword"
+  },
+  {
+    "offset": 3654217,
+    "len": 14,
+    "text": "Knightly Sword"
+  },
+  {
+    "offset": 3654297,
+    "len": 12,
+    "text": "Wooden Staff"
+  },
+  {
+    "offset": 3654312,
+    "len": 10,
+    "text": "Ruby Staff"
+  },
+  {
+    "offset": 3654325,
+    "len": 13,
+    "text": "Emerald Staff"
+  },
+  {
+    "offset": 3654353,
+    "len": 10,
+    "text": "Fire Staff"
+  },
+  {
+    "offset": 3654366,
+    "len": 18,
+    "text": "Staff of Splitting"
+  },
+  {
+    "offset": 3654388,
+    "len": 12,
+    "text": "Emerald Ring"
+  },
+  {
+    "offset": 3654437,
+    "len": 15,
+    "text": "Wand of Healing"
+  },
+  {
+    "offset": 3654550,
+    "len": 10,
+    "text": "Wizard Hat"
+  },
+  {
+    "offset": 3654586,
+    "len": 13,
+    "text": "Health Banner"
+  },
+  {
+    "offset": 3654757,
+    "len": 12,
+    "text": "Magic Gloves"
+  },
+  {
+    "offset": 3654818,
+    "len": 22,
+    "text": "Max Health {%c, %+.0f}"
+  },
+  {
+    "offset": 3654845,
+    "len": 24,
+    "text": "Max Health {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3654888,
+    "len": 48,
+    "text": "The amount of {r,Health} regenerated per second."
+  },
+  {
+    "offset": 3654946,
+    "len": 20,
+    "text": "Health/s {%c, %+.1f}"
+  },
+  {
+    "offset": 3654971,
+    "len": 22,
+    "text": "Health/s {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3654998,
+    "len": 13,
+    "text": "Fire Immunity"
+  },
+  {
+    "offset": 3655014,
+    "len": 56,
+    "text": "The unit is immune to {r,Fire} and it's related effects."
+  },
+  {
+    "offset": 3655082,
+    "len": 24,
+    "text": "{g,Grants Fire Immunity}"
+  },
+  {
+    "offset": 3655112,
+    "len": 13,
+    "text": "Cold Immunity"
+  },
+  {
+    "offset": 3655128,
+    "len": 56,
+    "text": "The unit is immune to {b,Cold} and it's related effects."
+  },
+  {
+    "offset": 3655196,
+    "len": 24,
+    "text": "{g,Grants Cold Immunity}"
+  },
+  {
+    "offset": 3655226,
+    "len": 18,
+    "text": "Lightning Immunity"
+  },
+  {
+    "offset": 3655248,
+    "len": 61,
+    "text": "The unit is immune to {y,Lightning} and it's related effects."
+  },
+  {
+    "offset": 3655322,
+    "len": 29,
+    "text": "{g,Grants Lightning Immunity}"
+  },
+  {
+    "offset": 3655358,
+    "len": 15,
+    "text": "Poison Immunity"
+  },
+  {
+    "offset": 3655377,
+    "len": 58,
+    "text": "The unit is immune to {g,Poison} and it's related effects."
+  },
+  {
+    "offset": 3655447,
+    "len": 26,
+    "text": "{g,Grants Poison Immunity}"
+  },
+  {
+    "offset": 3655491,
+    "len": 49,
+    "text": "The amount in pixels an Enemy is {y,pushed} back."
+  },
+  {
+    "offset": 3655551,
+    "len": 21,
+    "text": "Knockback {%c, %+.0f}"
+  },
+  {
+    "offset": 3655577,
+    "len": 23,
+    "text": "Knockback {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3655611,
+    "len": 26,
+    "text": "The duration of {y,Stuns}."
+  },
+  {
+    "offset": 3655643,
+    "len": 26,
+    "text": "Stun Duration {%c, %+.1fs}"
+  },
+  {
+    "offset": 3655675,
+    "len": 27,
+    "text": "Stun Duration {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3655708,
+    "len": 14,
+    "text": "Movement Speed"
+  },
+  {
+    "offset": 3655726,
+    "len": 37,
+    "text": "The amount of speed in pixels/second."
+  },
+  {
+    "offset": 3655771,
+    "len": 26,
+    "text": "Movement Speed {%c, %+.0f}"
+  },
+  {
+    "offset": 3655803,
+    "len": 28,
+    "text": "Movement Speed {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3655845,
+    "len": 32,
+    "text": "Global multiplier to {y,Damage}."
+  },
+  {
+    "offset": 3655884,
+    "len": 20,
+    "text": "Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3655909,
+    "len": 15,
+    "text": "Physical Damage"
+  },
+  {
+    "offset": 3655928,
+    "len": 59,
+    "text": "The amount of {G,Physical Damage}, is reduced by {G,Armor}."
+  },
+  {
+    "offset": 3656000,
+    "len": 24,
+    "text": "Physical DMG {%c, %+.0f}"
+  },
+  {
+    "offset": 3656030,
+    "len": 26,
+    "text": "Physical DMG {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3656062,
+    "len": 12,
+    "text": "Bleed Chance"
+  },
+  {
+    "offset": 3656077,
+    "len": 69,
+    "text": "Chance to inflict {r,bleeding}, dealing 40% of {G,Physical Damage}/s."
+  },
+  {
+    "offset": 3656161,
+    "len": 26,
+    "text": "Bleed Chance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3656193,
+    "len": 12,
+    "text": "Bleed Damage"
+  },
+  {
+    "offset": 3656208,
+    "len": 69,
+    "text": "The amount of {r,Bleed Damage} per second. Not affected by {G,Armor}."
+  },
+  {
+    "offset": 3656292,
+    "len": 24,
+    "text": "Bleed Damage {%c, %+.0f}"
+  },
+  {
+    "offset": 3656322,
+    "len": 26,
+    "text": "Bleed Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3656354,
+    "len": 14,
+    "text": "Bleed Duration"
+  },
+  {
+    "offset": 3656372,
+    "len": 47,
+    "text": "The duration in seconds of {r,Bleed} inflicted."
+  },
+  {
+    "offset": 3656429,
+    "len": 27,
+    "text": "Bleed Duration {%c, %+.1fs}"
+  },
+  {
+    "offset": 3656462,
+    "len": 29,
+    "text": "Bleed Duration {%.c, %+.0f%%}"
+  },
+  {
+    "offset": 3656507,
+    "len": 27,
+    "text": "Damage Reflected {%c, %.0f}"
+  },
+  {
+    "offset": 3656540,
+    "len": 30,
+    "text": "Damage Reflected {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3656577,
+    "len": 12,
+    "text": "Attack Speed"
+  },
+  {
+    "offset": 3656592,
+    "len": 23,
+    "text": "{y,Attacks} per second."
+  },
+  {
+    "offset": 3656620,
+    "len": 24,
+    "text": "Attack Speed {%c, %+.0f}"
+  },
+  {
+    "offset": 3656650,
+    "len": 26,
+    "text": "Attack Speed {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3656689,
+    "len": 28,
+    "text": "Attack Radius in {y,Pixels}."
+  },
+  {
+    "offset": 3656723,
+    "len": 17,
+    "text": "Range {%c, %+.0f}"
+  },
+  {
+    "offset": 3656744,
+    "len": 19,
+    "text": "Range {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3656808,
+    "len": 14,
+    "text": "Area of Effect"
+  },
+  {
+    "offset": 3656922,
+    "len": 26,
+    "text": "Area of Effect {%c, %+.0f}"
+  },
+  {
+    "offset": 3656954,
+    "len": 28,
+    "text": "Area of Effect {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3656988,
+    "len": 12,
+    "text": "Block Chance"
+  },
+  {
+    "offset": 3657003,
+    "len": 92,
+    "text": "Chance to block incomming {y,Hits}. {y,Ground Effects} are usually not considered a {y,Hit}."
+  },
+  {
+    "offset": 3657114,
+    "len": 26,
+    "text": "Block Chance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3657153,
+    "len": 44,
+    "text": "Reduces amount of {G,Physical Damage} taken."
+  },
+  {
+    "offset": 3657207,
+    "len": 19,
+    "text": "Armor {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3657231,
+    "len": 12,
+    "text": "Armor Pierce"
+  },
+  {
+    "offset": 3657246,
+    "len": 27,
+    "text": "Reduces {G,Armor} directly."
+  },
+  {
+    "offset": 3657279,
+    "len": 26,
+    "text": "Armor Pierce {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3657379,
+    "len": 13,
+    "text": "Knockback Res"
+  },
+  {
+    "offset": 3657395,
+    "len": 27,
+    "text": "Knockback Res {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3657440,
+    "len": 55,
+    "text": "Cooldown reduces the time an {y,Ability} is recharging."
+  },
+  {
+    "offset": 3657546,
+    "len": 21,
+    "text": "Hero Cost {%c, %+.0f}"
+  },
+  {
+    "offset": 3657572,
+    "len": 23,
+    "text": "Hero Cost {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3657600,
+    "len": 13,
+    "text": "Healing Power"
+  },
+  {
+    "offset": 3657616,
+    "len": 126,
+    "text": "The base amount of {0,Healing} done with {y,Abilities}. Usually {y,Abilities} add their own base amount of {0,Healing} on top."
+  },
+  {
+    "offset": 3657768,
+    "len": 19,
+    "text": "Healing {%c, %+.0f}"
+  },
+  {
+    "offset": 3657792,
+    "len": 27,
+    "text": "Healing Power {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3657825,
+    "len": 12,
+    "text": "Magic Resist"
+  },
+  {
+    "offset": 3657840,
+    "len": 45,
+    "text": "Reduces the amount of {b,Magic Damage} taken."
+  },
+  {
+    "offset": 3657895,
+    "len": 25,
+    "text": "Magic Resist {%c, %.0f%%}"
+  },
+  {
+    "offset": 3657926,
+    "len": 23,
+    "text": "Ability Effect Duration"
+  },
+  {
+    "offset": 3657954,
+    "len": 160,
+    "text": "Affects the duration of {y,Abilities} and {y,Effects} such as {r,Burn}, {b,Chill, Freeze}, {g,Poison}, {y,Stun} etc. Everything that has a duration is affected."
+  },
+  {
+    "offset": 3658147,
+    "len": 29,
+    "text": "Ability Duration {%c, %+.1fs}"
+  },
+  {
+    "offset": 3658183,
+    "len": 30,
+    "text": "Ability Duration {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3658220,
+    "len": 11,
+    "text": "Fire Damage"
+  },
+  {
+    "offset": 3658234,
+    "len": 40,
+    "text": "The amount of {r,Fire Damage} inflicted."
+  },
+  {
+    "offset": 3658283,
+    "len": 23,
+    "text": "Fire Damage {%c, %+.0f}"
+  },
+  {
+    "offset": 3658311,
+    "len": 25,
+    "text": "Fire Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3658342,
+    "len": 11,
+    "text": "Burn Chance"
+  },
+  {
+    "offset": 3658356,
+    "len": 116,
+    "text": "{r,Fire Damage} has a chance to inflict {r,Burn}, dealing 40% of the initial hit as {r,Burn Damage} over a duration."
+  },
+  {
+    "offset": 3658496,
+    "len": 25,
+    "text": "Burn Chance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3658527,
+    "len": 13,
+    "text": "Burn Duration"
+  },
+  {
+    "offset": 3658543,
+    "len": 45,
+    "text": "The duration in seconds of {r,Burn} infliced."
+  },
+  {
+    "offset": 3658598,
+    "len": 26,
+    "text": "Burn Duration {%c, %+.0fs}"
+  },
+  {
+    "offset": 3658630,
+    "len": 27,
+    "text": "Burn Duration {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3658663,
+    "len": 11,
+    "text": "Burn Damage"
+  },
+  {
+    "offset": 3658677,
+    "len": 41,
+    "text": "The amount of {r,Burn Damage} per second."
+  },
+  {
+    "offset": 3658727,
+    "len": 23,
+    "text": "Burn Damage {%c, %+.0f}"
+  },
+  {
+    "offset": 3658755,
+    "len": 25,
+    "text": "Burn Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3658786,
+    "len": 18,
+    "text": "Fire Vulnerability"
+  },
+  {
+    "offset": 3658808,
+    "len": 38,
+    "text": "Target takes increased {r,Fire Damage}"
+  },
+  {
+    "offset": 3658847,
+    "len": 29,
+    "text": "Ignores {b,Magic Resistance}."
+  },
+  {
+    "offset": 3658890,
+    "len": 31,
+    "text": "Fire Damage taken {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3658947,
+    "len": 34,
+    "text": "Enemy Movement Speed {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3658989,
+    "len": 11,
+    "text": "Cold Damage"
+  },
+  {
+    "offset": 3659003,
+    "len": 75,
+    "text": "The amount of {B,Cold Damage} inflicted. {B,Cold Damage} inflics {B,Chill}."
+  },
+  {
+    "offset": 3659094,
+    "len": 23,
+    "text": "Cold Damage {%c, %+.0f}"
+  },
+  {
+    "offset": 3659122,
+    "len": 25,
+    "text": "Cold Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3659168,
+    "len": 53,
+    "text": "The percentage of {y,Slow} caused by {B,Chill Effect}"
+  },
+  {
+    "offset": 3659264,
+    "len": 14,
+    "text": "Chill Duration"
+  },
+  {
+    "offset": 3659282,
+    "len": 46,
+    "text": "The duration in seconds of {B,Chill} infliced."
+  },
+  {
+    "offset": 3659338,
+    "len": 27,
+    "text": "Chill Duration {%c, %+.1fs}"
+  },
+  {
+    "offset": 3659371,
+    "len": 28,
+    "text": "Chill Duration {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3659405,
+    "len": 15,
+    "text": "Freeze Duration"
+  },
+  {
+    "offset": 3659424,
+    "len": 47,
+    "text": "The duration in seconds of {B,Freeze} infliced."
+  },
+  {
+    "offset": 3659481,
+    "len": 28,
+    "text": "Freeze Duration {%c, %+.0fs}"
+  },
+  {
+    "offset": 3659515,
+    "len": 29,
+    "text": "Freeze Duration {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3659551,
+    "len": 13,
+    "text": "Freeze Chance"
+  },
+  {
+    "offset": 3659567,
+    "len": 56,
+    "text": "The chance to {B,Freeze} when inflicting {B,Cold Damage}"
+  },
+  {
+    "offset": 3659635,
+    "len": 27,
+    "text": "Freeze Chance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3659668,
+    "len": 17,
+    "text": "Freeze Chance Cap"
+  },
+  {
+    "offset": 3659689,
+    "len": 30,
+    "text": "Freeze Chance Cap {%c, %.0f%%}"
+  },
+  {
+    "offset": 3659726,
+    "len": 18,
+    "text": "Cold Vulnerability"
+  },
+  {
+    "offset": 3659748,
+    "len": 38,
+    "text": "Target takes increased {B,Cold Damage}"
+  },
+  {
+    "offset": 3659787,
+    "len": 29,
+    "text": "Ignores {b,Magic Resistance}."
+  },
+  {
+    "offset": 3659830,
+    "len": 31,
+    "text": "Cold Damage taken {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3659915,
+    "len": 13,
+    "text": "Lightning DMG"
+  },
+  {
+    "offset": 3659931,
+    "len": 45,
+    "text": "The amount of {y,Lightning Damage} inflicted."
+  },
+  {
+    "offset": 3659986,
+    "len": 25,
+    "text": "Lightning DMG {%c, %+.0f}"
+  },
+  {
+    "offset": 3660017,
+    "len": 27,
+    "text": "Lightning DMG {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3660065,
+    "len": 107,
+    "text": "Attacking shocked targets with {y,Lightning Damage} discharges them, dealing damage to surrounding targets."
+  },
+  {
+    "offset": 3660194,
+    "len": 24,
+    "text": "Shock Damage {%c, %+.0f}"
+  },
+  {
+    "offset": 3660224,
+    "len": 26,
+    "text": "Shock Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3660256,
+    "len": 12,
+    "text": "Shock Chance"
+  },
+  {
+    "offset": 3660271,
+    "len": 55,
+    "text": "{y,Lightning Damage} has a chance to inflict {y,Shock}."
+  },
+  {
+    "offset": 3660338,
+    "len": 26,
+    "text": "Shock Chance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3660370,
+    "len": 23,
+    "text": "Lightning Vulnerability"
+  },
+  {
+    "offset": 3660398,
+    "len": 43,
+    "text": "Target takes increased {y,Lightning Damage}"
+  },
+  {
+    "offset": 3660442,
+    "len": 29,
+    "text": "Ignores {b,Magic Resistance}."
+  },
+  {
+    "offset": 3660486,
+    "len": 36,
+    "text": "Lightning Damage taken {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3660530,
+    "len": 13,
+    "text": "Poison Damage"
+  },
+  {
+    "offset": 3660546,
+    "len": 42,
+    "text": "The amount of {g,Poison Damage} inflicted."
+  },
+  {
+    "offset": 3660597,
+    "len": 25,
+    "text": "Poison Damage {%c, %+.0f}"
+  },
+  {
+    "offset": 3660628,
+    "len": 27,
+    "text": "Poison Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3660661,
+    "len": 13,
+    "text": "Poison Chance"
+  },
+  {
+    "offset": 3660677,
+    "len": 133,
+    "text": "Hits with {g,Poison Damage} have a chance to inflict {g,Poison}, dealing 40% of the initial hit as {g,Poison Damage} over a duration."
+  },
+  {
+    "offset": 3660837,
+    "len": 27,
+    "text": "Poison Chance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3660870,
+    "len": 15,
+    "text": "Poison Duration"
+  },
+  {
+    "offset": 3660889,
+    "len": 47,
+    "text": "The duration in seconds of {g,Poison} infliced."
+  },
+  {
+    "offset": 3660946,
+    "len": 28,
+    "text": "Poison Duration {%c, %+.1fs}"
+  },
+  {
+    "offset": 3660980,
+    "len": 29,
+    "text": "Poison Duration {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3661016,
+    "len": 20,
+    "text": "Poison Vulnerability"
+  },
+  {
+    "offset": 3661041,
+    "len": 40,
+    "text": "Target takes increased {g,Poison Damage}"
+  },
+  {
+    "offset": 3661082,
+    "len": 29,
+    "text": "Ignores {b,Magic Resistance}."
+  },
+  {
+    "offset": 3661126,
+    "len": 33,
+    "text": "Poison Damage taken {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3661181,
+    "len": 98,
+    "text": "The number of {y,Targets} hit with {y,Area Attacks}. Sword swings are considered {y,Area Attacks}."
+  },
+  {
+    "offset": 3661361,
+    "len": 16,
+    "text": "Damage over Time"
+  },
+  {
+    "offset": 3661381,
+    "len": 138,
+    "text": "Global multiplier that is applied on top of {y,Damage over Time} effects such as, but not limited to, {r,Burn}, {g,Poison}, {r,Bleed} etc."
+  },
+  {
+    "offset": 3661547,
+    "len": 24,
+    "text": "DoT Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3661577,
+    "len": 15,
+    "text": "Debuff Duration"
+  },
+  {
+    "offset": 3661596,
+    "len": 28,
+    "text": "Debuff Duration {%c, %+.1fs}"
+  },
+  {
+    "offset": 3661630,
+    "len": 29,
+    "text": "Debuff Duration {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3661680,
+    "len": 36,
+    "text": "The amount of {y,Projectiles} fired."
+  },
+  {
+    "offset": 3661952,
+    "len": 182,
+    "text": "The number of times a {y,Projectile} can {y,Chain} a Target before it disapears. Each {y,Chain} reduces the {y,Damage} done by {y,40%}.{y,Chain} can only happen {r,after} {y,Pierce}."
+  },
+  {
+    "offset": 3662230,
+    "len": 12,
+    "text": "Chain Damage"
+  },
+  {
+    "offset": 3662245,
+    "len": 77,
+    "text": "The amount of {y,Damage Reduction} applied each time a {y,Projectile chains}."
+  },
+  {
+    "offset": 3662387,
+    "len": 153,
+    "text": "The number of times a {y,Projectile} can {y,Split}. Each {y,Split} reduces the {y,Damage} done by {y,40%}. {y,Split} can only happen {r,after} {y,Chain}."
+  },
+  {
+    "offset": 3662599,
+    "len": 12,
+    "text": "Split Damage"
+  },
+  {
+    "offset": 3662614,
+    "len": 72,
+    "text": "The amount of {y,Damage Reduction} applied when a {y,Projectile splits}."
+  },
+  {
+    "offset": 3662701,
+    "len": 26,
+    "text": "Split Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3662733,
+    "len": 16,
+    "text": "Projectile Speed"
+  },
+  {
+    "offset": 3662753,
+    "len": 56,
+    "text": "The {y,Speed in Pixels} at which a {y,Projectile} flies."
+  },
+  {
+    "offset": 3662821,
+    "len": 28,
+    "text": "Projectile Speed {%c, %+.0f}"
+  },
+  {
+    "offset": 3662855,
+    "len": 30,
+    "text": "Projectile Speed {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3662892,
+    "len": 14,
+    "text": "Chaining Range"
+  },
+  {
+    "offset": 3662910,
+    "len": 25,
+    "text": "Chain Range {%c, %+.0fpx}"
+  },
+  {
+    "offset": 3662941,
+    "len": 25,
+    "text": "Chain Range {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3663167,
+    "len": 33,
+    "text": "Heals all Heroes inside the area."
+  },
+  {
+    "offset": 3663207,
+    "len": 15,
+    "text": "Range Expansion"
+  },
+  {
+    "offset": 3663226,
+    "len": 29,
+    "text": "Increases the healing radius."
+  },
+  {
+    "offset": 3663262,
+    "len": 28,
+    "text": "Increases the amount healed."
+  },
+  {
+    "offset": 3663308,
+    "len": 63,
+    "text": "Heals two additional heroes, targets heroes with lowest health."
+  },
+  {
+    "offset": 3663405,
+    "len": 52,
+    "text": "Applies a barrier that prevents damage while active."
+  },
+  {
+    "offset": 3663468,
+    "len": 12,
+    "text": "Healing Mist"
+  },
+  {
+    "offset": 3663483,
+    "len": 85,
+    "text": "Weak {g,Healing Mists} form close to groups of heroes, healing them slowly over time."
+  },
+  {
+    "offset": 3663596,
+    "len": 36,
+    "text": "Lets you buy items to put on Heroes."
+  },
+  {
+    "offset": 3663653,
+    "len": 36,
+    "text": "Buying items in the shop costs less."
+  },
+  {
+    "offset": 3663706,
+    "len": 56,
+    "text": "The shop offers one free item at the start of the level."
+  },
+  {
+    "offset": 3663788,
+    "len": 55,
+    "text": "Once every new round, you can reroll the shop for free."
+  },
+  {
+    "offset": 3663871,
+    "len": 42,
+    "text": "The shop offers rare items more frequently"
+  },
+  {
+    "offset": 3663930,
+    "len": 40,
+    "text": "The shop now offers one additional item."
+  },
+  {
+    "offset": 3663993,
+    "len": 61,
+    "text": "Target an area to strike the ground with an exploding orange."
+  },
+  {
+    "offset": 3664081,
+    "len": 28,
+    "text": "Increases the damaging area."
+  },
+  {
+    "offset": 3664130,
+    "len": 79,
+    "text": "Leaves behind a sticky juice that slows enemies and adds and additional Orange."
+  },
+  {
+    "offset": 3664242,
+    "len": 54,
+    "text": "Explodes into smaller Oranges, covering a larger area."
+  },
+  {
+    "offset": 3664320,
+    "len": 65,
+    "text": "Oranges hit the ground much faster and adds an additional Orange."
+  },
+  {
+    "offset": 3664414,
+    "len": 84,
+    "text": "A much stronger juice is left behind that roots all enemies in place and burns them."
+  },
+  {
+    "offset": 3664516,
+    "len": 34,
+    "text": "Grows oranges if a Hero is nearby."
+  },
+  {
+    "offset": 3664572,
+    "len": 32,
+    "text": "Increases the oranges generated."
+  },
+  {
+    "offset": 3664631,
+    "len": 51,
+    "text": "The Orange Tree boosts the damage of nearby Heroes."
+  },
+  {
+    "offset": 3664693,
+    "len": 14,
+    "text": "Increased Area"
+  },
+  {
+    "offset": 3664711,
+    "len": 48,
+    "text": "Increases the influence area of the Orange Tree."
+  },
+  {
+    "offset": 3664791,
+    "len": 76,
+    "text": "Periodically roots nearby enemies in place, dealing poison damage over time."
+  },
+  {
+    "offset": 3664883,
+    "len": 12,
+    "text": "Poison Vines"
+  },
+  {
+    "offset": 3664898,
+    "len": 47,
+    "text": "Applies a more deadly poison to rooted enemies."
+  },
+  {
+    "offset": 3664992,
+    "len": 10,
+    "text": "Spawn Rate"
+  },
+  {
+    "offset": 3665005,
+    "len": 24,
+    "text": "Spawn Rate {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3665035,
+    "len": 14,
+    "text": "Golden Oranges"
+  },
+  {
+    "offset": 3665124,
+    "len": 11,
+    "text": "Lone Ranger"
+  },
+  {
+    "offset": 3665138,
+    "len": 29,
+    "text": "Damage if alone {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3665174,
+    "len": 11,
+    "text": "True Damage"
+  },
+  {
+    "offset": 3665188,
+    "len": 23,
+    "text": "True Damage {%c, %+.0f}"
+  },
+  {
+    "offset": 3665216,
+    "len": 25,
+    "text": "True Damage {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3665247,
+    "len": 17,
+    "text": "Shield Orbs Count"
+  },
+  {
+    "offset": 3665268,
+    "len": 29,
+    "text": "Shield Orbs Count {%c, %+.0f}"
+  },
+  {
+    "offset": 3665304,
+    "len": 31,
+    "text": "Shield Orbs Count {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3665392,
+    "len": 24,
+    "text": "Acceleration {%c, %+.0f}"
+  },
+  {
+    "offset": 3665611,
+    "len": 12,
+    "text": "Bleed Resist"
+  },
+  {
+    "offset": 3665626,
+    "len": 26,
+    "text": "Bleed Resist {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3665658,
+    "len": 16,
+    "text": "Tangy Experience"
+  },
+  {
+    "offset": 3665678,
+    "len": 41,
+    "text": "Increases the Experience gained by Tangy."
+  },
+  {
+    "offset": 3665728,
+    "len": 29,
+    "text": "Tangy Exp. gain {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3665764,
+    "len": 11,
+    "text": "Stun Resist"
+  },
+  {
+    "offset": 3665778,
+    "len": 103,
+    "text": "The higher the {y,Stun Resist}, the less likely stunning effects such as {y,Stun} and {b,Freeze} occur."
+  },
+  {
+    "offset": 3665902,
+    "len": 25,
+    "text": "Stun Resist {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3665933,
+    "len": 17,
+    "text": "Orange Generation"
+  },
+  {
+    "offset": 3665954,
+    "len": 51,
+    "text": "Oranges are used to {y,Buy} and {y,Upgrade} Heroes."
+  },
+  {
+    "offset": 3666016,
+    "len": 21,
+    "text": "Oranges {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3666169,
+    "len": 16,
+    "text": "Barrier Strength"
+  },
+  {
+    "offset": 3666189,
+    "len": 31,
+    "text": "Damage absorbed by the Barrier."
+  },
+  {
+    "offset": 3666227,
+    "len": 27,
+    "text": "Damage Absorbed {%c, %+.0f}"
+  },
+  {
+    "offset": 3666260,
+    "len": 29,
+    "text": "Damage Absorbed {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3666305,
+    "len": 43,
+    "text": "The amount of {r,Enemies} that are blocked."
+  },
+  {
+    "offset": 3666357,
+    "len": 27,
+    "text": "Enemies Blocked {%c, %+.0f}"
+  },
+  {
+    "offset": 3666390,
+    "len": 29,
+    "text": "Enemies Blocked {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3666426,
+    "len": 12,
+    "text": "Dodge Chance"
+  },
+  {
+    "offset": 3666441,
+    "len": 37,
+    "text": "Chance to fully negate melee attacks."
+  },
+  {
+    "offset": 3666486,
+    "len": 26,
+    "text": "Dodge Chance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3666532,
+    "len": 42,
+    "text": "Time it takes for fallen Heroes to revive."
+  },
+  {
+    "offset": 3666665,
+    "len": 41,
+    "text": "Time it takes Tangy to fully lift Heroes."
+  },
+  {
+    "offset": 3666778,
+    "len": 14,
+    "text": "Burning Wounds"
+  },
+  {
+    "offset": 3666796,
+    "len": 66,
+    "text": "{G,{r,Burns} stack and additional time but expire {y,50% faster}.}"
+  },
+  {
+    "offset": 3666876,
+    "len": 95,
+    "text": "{G,{r,Burns} deal {y,Double Damage}. Enemies affected by your {r,Burns} run {y,twice as fast}.}"
+  },
+  {
+    "offset": 3666991,
+    "len": 16,
+    "text": "Lingering Wounds"
+  },
+  {
+    "offset": 3667011,
+    "len": 65,
+    "text": "{G,Enemies take {y,50% more Damage} from Bleeding while walking.}"
+  },
+  {
+    "offset": 3667090,
+    "len": 81,
+    "text": "{G,All impact damage can now {b,Freeze}, {b,Freeze Chance} is capped at {y,10%}}."
+  },
+  {
+    "offset": 3667202,
+    "len": 60,
+    "text": "Upon killing an Enemy there is a chance to steal their item."
+  },
+  {
+    "offset": 3667300,
+    "len": 64,
+    "text": "{G,Defenders placed alone can {y,block two additional} enemies.}"
+  },
+  {
+    "offset": 3667388,
+    "len": 76,
+    "text": "All Defender Heroes can block an additional Enemy, but deal {y,-20% Damage}."
+  },
+  {
+    "offset": 3667480,
+    "len": 46,
+    "text": "{G,Rangers placed alone deal {y,+20% Damage}.}"
+  },
+  {
+    "offset": 3667557,
+    "len": 130,
+    "text": "{G,Projectiles have {y,-20% AOE} at the start of their movement, increasing up to {y,+50% AOE} as the projectile travels further.}"
+  },
+  {
+    "offset": 3667730,
+    "len": 133,
+    "text": "{G,Allows Rangers to be placed on Tree Stumps, increasing their {y,Range by +20%}. Projectiles also ingore collision with Obstacles.}"
+  },
+  {
+    "offset": 3667908,
+    "len": 82,
+    "text": "{G,Hits deal 50% less Damage, but Damage Over Time effects deal 100% more Damage.}"
+  },
+  {
+    "offset": 3668122,
+    "len": 92,
+    "text": "{G,Bleeding enemies that die explode, dealing 10% of their Maximum Life as {w,True Damage}.}"
+  },
+  {
+    "offset": 3668377,
+    "len": 14,
+    "text": "Healing Circle"
+  },
+  {
+    "offset": 3668395,
+    "len": 12,
+    "text": "Poison Cloud"
+  },
+  {
+    "offset": 3668434,
+    "len": 11,
+    "text": "Split Arrow"
+  },
+  {
+    "offset": 3668464,
+    "len": 15,
+    "text": "Explosive Arrow"
+  },
+  {
+    "offset": 3668483,
+    "len": 10,
+    "text": "Arrow Rain"
+  },
+  {
+    "offset": 3668516,
+    "len": 12,
+    "text": "Poison Arrow"
+  },
+  {
+    "offset": 3668540,
+    "len": 15,
+    "text": "Chain Lightning"
+  },
+  {
+    "offset": 3668559,
+    "len": 16,
+    "text": "Lightning Strike"
+  },
+  {
+    "offset": 3668622,
+    "len": 12,
+    "text": "Grow Oranges"
+  },
+  {
+    "offset": 3668650,
+    "len": 11,
+    "text": "Enemy Shoot"
+  },
+  {
+    "offset": 3668684,
+    "len": 16,
+    "text": "Summon Skeletons"
+  },
+  {
+    "offset": 3668732,
+    "len": 11,
+    "text": "Ice Barrier"
+  },
+  {
+    "offset": 3668746,
+    "len": 12,
+    "text": "Drop Oranges"
+  },
+  {
+    "offset": 3668792,
+    "len": 11,
+    "text": "Poison Ball"
+  },
+  {
+    "offset": 3668957,
+    "len": 66,
+    "text": "[h-2]{y,Enemies take 50% more Damage from Bleeding while walking.}"
+  },
+  {
+    "offset": 3669037,
+    "len": 97,
+    "text": "[h-2]{y.Bleeding enemies that die explode, dealing 10% of their Maximum Life as {w,True Damage}.}"
+  },
+  {
+    "offset": 3669154,
+    "len": 14,
+    "text": "Piercing Arrow"
+  },
+  {
+    "offset": 3669172,
+    "len": 19,
+    "text": "Skillpoints earned:"
+  },
+  {
+    "offset": 3669225,
+    "len": 12,
+    "text": "Golden Crown"
+  },
+  {
+    "offset": 3669336,
+    "len": 87,
+    "text": "[h-2]{y,Hits deal 50% less damage, but Damage Over Time effects deal 100% more damage.}"
+  },
+  {
+    "offset": 3669526,
+    "len": 93,
+    "text": "Spezialisiert sich im Nahkampf und im Blocken von Gegnern, um sie am Weiterlaufen zu hindern."
+  },
+  {
+    "offset": 3669718,
+    "len": 68,
+    "text": "Kann andere Helden {g,heilen}. Spezialisiert sich auf Blitzattacken."
+  },
+  {
+    "offset": 3669800,
+    "len": 78,
+    "text": "Speizalisiert sich auf {r,Feuer} und {b,Eis} Attacken, welche Armor ignorieren"
+  },
+  {
+    "offset": 3669894,
+    "len": 63,
+    "text": "Kleiner Baum der {o,Orangen} generiert, solange Heroes in der N"
+  },
+  {
+    "offset": 3669982,
+    "len": 84,
+    "text": "Tangy benutzt ihre Magie und {o,Orangen} um kleine Helden als Verteidigung zu beschw"
+  },
+  {
+    "offset": 3670786,
+    "len": 82,
+    "text": "Gigantisches fliegendes monster welches alles in unmittelbarer Umgebung einfriert."
+  },
+  {
+    "offset": 3670991,
+    "len": 14,
+    "text": "Schwarze Ratte"
+  },
+  {
+    "offset": 3671009,
+    "len": 67,
+    "text": "Viel schnellere und aggressivere Ratte, tritt gerne in Scharen auf."
+  },
+  {
+    "offset": 3671090,
+    "len": 14,
+    "text": "Silberne Ratte"
+  },
+  {
+    "offset": 3671108,
+    "len": 42,
+    "text": "Viel widerspenstiger als normale Ratten. L"
+  },
+  {
+    "offset": 3671152,
+    "len": 28,
+    "text": "sst Kisten mit Items fallen."
+  },
+  {
+    "offset": 3671195,
+    "len": 12,
+    "text": "Kranke Ratte"
+  },
+  {
+    "offset": 3671210,
+    "len": 78,
+    "text": "Infiziert mit der Schwarzen Pest, diese Ratten stehen nach dem Tod wieder auf."
+  },
+  {
+    "offset": 3671304,
+    "len": 12,
+    "text": "Untote Ratte"
+  },
+  {
+    "offset": 3671750,
+    "len": 87,
+    "text": "hnen bringen diese Bestien selbst gestandenen Verteidigern einen eiskalten Tod bringen."
+  },
+  {
+    "offset": 3671864,
+    "len": 13,
+    "text": "Goldene Ratte"
+  },
+  {
+    "offset": 3671967,
+    "len": 16,
+    "text": "Silberner Goblin"
+  },
+  {
+    "offset": 3671987,
+    "len": 43,
+    "text": "Viel widerspenstiger als normale Goblins. L"
+  },
+  {
+    "offset": 3672032,
+    "len": 28,
+    "text": "sst Kisten mit Items fallen."
+  },
+  {
+    "offset": 3672075,
+    "len": 15,
+    "text": "Goblin Bogensch"
+  },
+  {
+    "offset": 3672209,
+    "len": 13,
+    "text": "Goblin Magier"
+  },
+  {
+    "offset": 3672342,
+    "len": 18,
+    "text": "Goblin Verteidiger"
+  },
+  {
+    "offset": 3672364,
+    "len": 43,
+    "text": "Robuste Humanoide die Angriffe blockieren k"
+  },
+  {
+    "offset": 3672425,
+    "len": 13,
+    "text": "Goblin Ritter"
+  },
+  {
+    "offset": 3672624,
+    "len": 72,
+    "text": "Belagerungswaffe mit sehr hoher Reichweite, operiert von Goblins. Sehr t"
+  },
+  {
+    "offset": 3672750,
+    "len": 12,
+    "text": "Goblin Pirat"
+  },
+  {
+    "offset": 3672765,
+    "len": 25,
+    "text": "Goblins, aber mit nem gro"
+  },
+  {
+    "offset": 3672819,
+    "len": 15,
+    "text": "Brutaler Goblin"
+  },
+  {
+    "offset": 3672838,
+    "len": 19,
+    "text": "Fetter Goblin Pirat"
+  },
+  {
+    "offset": 3672869,
+    "len": 29,
+    "text": "nig der Goblins ist ein blutr"
+  },
+  {
+    "offset": 3673751,
+    "len": 82,
+    "text": "Vergrabene Monster die sich nur zeigen, wenn sie ihre ahnungslose Beute angreifen."
+  },
+  {
+    "offset": 3673873,
+    "len": 85,
+    "text": "he vergrabene Monster die sich nur zeigen, wenn sie ihre ahnungslose Beute angreifen."
+  },
+  {
+    "offset": 3674003,
+    "len": 40,
+    "text": "dliche Monster mit Klauen und scharfen Z"
+  },
+  {
+    "offset": 3674081,
+    "len": 20,
+    "text": "stung durchdringen k"
+  },
+  {
+    "offset": 3674184,
+    "len": 48,
+    "text": "hes giftiges Monster, besteht aus Holz und Gras."
+  },
+  {
+    "offset": 3675068,
+    "len": 64,
+    "text": "[h-2]{y,Projektile, welche Durchdringen, Verketten stattdessen.}"
+  },
+  {
+    "offset": 3675237,
+    "len": 45,
+    "text": "[h-2]{y,Angriffe haben eine {w,1% Chance zu T"
+  },
+  {
+    "offset": 3675325,
+    "len": 90,
+    "text": "[h-2]{y,Immer wenn Tangy erfolgreich einen Helden hochhebt, bekommmt sie {w,+1% Schaden}.}"
+  },
+  {
+    "offset": 3675584,
+    "len": 61,
+    "text": "re Ziel von Tangy, wodurch es {w,30% mehr Schaden} erleidet.}"
+  },
+  {
+    "offset": 3675844,
+    "len": 35,
+    "text": "{y,Jede dritte Attacke explodiert.}"
+  },
+  {
+    "offset": 3676055,
+    "len": 29,
+    "text": "he {w,Lebensregeneration} gew"
+  },
+  {
+    "offset": 3676205,
+    "len": 55,
+    "text": "{y,Jede 8te Attacke explodiert mit Dornen, welche {w,Fl"
+  },
+  {
+    "offset": 3676303,
+    "len": 69,
+    "text": "{y,Erstellt ein Projektil, welches alle Ziele durchdringt und sie zur"
+  },
+  {
+    "offset": 3676824,
+    "len": 27,
+    "text": "{y,Jede 6te Attacke hinterl"
+  },
+  {
+    "offset": 3677043,
+    "len": 25,
+    "text": "{y,Jede 6te Attacke schie"
+  },
+  {
+    "offset": 3677556,
+    "len": 66,
+    "text": "{y,Jede 6te Attacke verursacht eine Eisexplosion hinter dem Ziel.}"
+  },
+  {
+    "offset": 3678073,
+    "len": 68,
+    "text": "t Waffen in einer Spirale, die alle getroffenen Gegner durchdringen."
+  },
+  {
+    "offset": 3678466,
+    "len": 82,
+    "text": "{y,Beim Treffer werden alle Gegner innerhalb des Effektradius den Pfad entlang zur"
+  },
+  {
+    "offset": 3678625,
+    "len": 85,
+    "text": "{y,Solange Tangy still steht, erscheint ein Lagerfeuer, welches allen Helden in der N"
+  },
+  {
+    "offset": 3678712,
+    "len": 54,
+    "text": "he {w,Lebensregeneration} und {w,Angriffstempo} gibt.}"
+  },
+  {
+    "offset": 3678795,
+    "len": 97,
+    "text": "{y,Solange Tangy still steht, wird ein Kreuz beschworen, welches sporadisch allen Helden in der N"
+  },
+  {
+    "offset": 3679220,
+    "len": 37,
+    "text": "{y,Heilt alle Helden im Effektradius."
+  },
+  {
+    "offset": 3680418,
+    "len": 79,
+    "text": "{y,Beim erleiden eines Treffers wird eine Barriere erstellt, welche Schaden abf"
+  },
+  {
+    "offset": 3680559,
+    "len": 80,
+    "text": "{y,Beim erleiden eines Treffers wird eine Barriere erstellt, welches Schaden abf"
+  },
+  {
+    "offset": 3680730,
+    "len": 68,
+    "text": "{y,Beim erleiden eines Treffers werden {o,Orangen} fallen gelassen}."
+  },
+  {
+    "offset": 3680889,
+    "len": 18,
+    "text": "chsten Tangy Baum."
+  },
+  {
+    "offset": 3680965,
+    "len": 49,
+    "text": "{y,Jeder Gegner im Effektradius ist {g,chilled}}."
+  },
+  {
+    "offset": 3682129,
+    "len": 58,
+    "text": "higkeit. {g,Heilt} alle Helden innerhalb des Effektradius."
+  },
+  {
+    "offset": 3682256,
+    "len": 101,
+    "text": "higkeit. Bei Aktivierung wird eine Orange auf den Boden geschmissen, welche beim Aufprall explodiert."
+  },
+  {
+    "offset": 3682439,
+    "len": 22,
+    "text": "rt periodisch Orangen."
+  },
+  {
+    "offset": 3682858,
+    "len": 14,
+    "text": "KAMPF STARTEN!"
+  },
+  {
+    "offset": 3682876,
+    "len": 92,
+    "text": "Platziere einen Verteidiger, um die Goblins daran zu hindern, bis Tangy [%d] durchzudringen."
+  },
+  {
+    "offset": 3682987,
+    "len": 86,
+    "text": "{y,Tangy} gewinnt {g,Skillpunkte} durch das Besiegen von Gegnern. Benutze diese, um st"
+  },
+  {
+    "offset": 3683122,
+    "len": 33,
+    "text": "ffne den Shop und kaufe ein Item."
+  },
+  {
+    "offset": 3683165,
+    "len": 27,
+    "text": "Helden benutzen Items um st"
+  },
+  {
+    "offset": 3683219,
+    "len": 56,
+    "text": "Kombiniere das gleiche Item, um ein Upgrade zu erhalten!"
+  },
+  {
+    "offset": 3683315,
+    "len": 42,
+    "text": "Die Goblins haben unsere {g,Heilerin} entf"
+  },
+  {
+    "offset": 3683420,
+    "len": 60,
+    "text": "Schau! Tangy ist aufgewacht. Du kannst sie mit [%d] bewegen."
+  },
+  {
+    "offset": 3683623,
+    "len": 23,
+    "text": "{r,Nicht genug Orangen}"
+  },
+  {
+    "offset": 3683662,
+    "len": 46,
+    "text": "e Missionen ab, um mehr Heroes freizuschalten}"
+  },
+  {
+    "offset": 3683731,
+    "len": 47,
+    "text": "e Missionen ab um mehr Upgrades freizuschalten}"
+  },
+  {
+    "offset": 3683946,
+    "len": 17,
+    "text": "Level Statistiken"
+  },
+  {
+    "offset": 3684181,
+    "len": 20,
+    "text": "{g,Level verlassen?}"
+  },
+  {
+    "offset": 3684206,
+    "len": 69,
+    "text": "Bist du dir sicher, dass du das Level verlassen, und zum Skiltree zur"
+  },
+  {
+    "offset": 3684452,
+    "len": 34,
+    "text": "Verliere keine Leben am Tangybaum."
+  },
+  {
+    "offset": 3684534,
+    "len": 20,
+    "text": "Autostart jede Welle"
+  },
+  {
+    "offset": 3684559,
+    "len": 35,
+    "text": "Zeige immer alls Nodes im Skilltree"
+  },
+  {
+    "offset": 3685019,
+    "len": 28,
+    "text": "Klicke um ein Upgrade auszuw"
+  },
+  {
+    "offset": 3685139,
+    "len": 13,
+    "text": "CHSTES LEVEL}"
+  },
+  {
+    "offset": 3685179,
+    "len": 15,
+    "text": "Gefundene Items"
+  },
+  {
+    "offset": 3685283,
+    "len": 54,
+    "text": "Verdiene Sterne solange jeder Tangybaum mit folgendem "
+  },
+  {
+    "offset": 3685434,
+    "len": 19,
+    "text": "Level abgeschlossen"
+  },
+  {
+    "offset": 3685882,
+    "len": 13,
+    "text": "Rostiger Ring"
+  },
+  {
+    "offset": 3686431,
+    "len": 12,
+    "text": "Smaragd Ring"
+  },
+  {
+    "offset": 3688160,
+    "len": 73,
+    "text": "Anzahl an {G,Physischen Schadenspunkten}, wird durch {G,Armor} reduziert."
+  },
+  {
+    "offset": 3688342,
+    "len": 48,
+    "text": "Chance bei Angriffen {r,Blutung} zu verursachen."
+  },
+  {
+    "offset": 3688400,
+    "len": 28,
+    "text": "Blutungschance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3688453,
+    "len": 79,
+    "text": "Blutungsschaden pro Sekunde, ignoriert {G, Armor}. 40% des Physischen Schadens."
+  },
+  {
+    "offset": 3688881,
+    "len": 21,
+    "text": "Attacken pro Sekunde."
+  },
+  {
+    "offset": 3689233,
+    "len": 73,
+    "text": "Chance Attacken zu blockieren. {y,Bodeneffekte} sind keine Attacken und k"
+  },
+  {
+    "offset": 3689308,
+    "len": 28,
+    "text": "nnen nicht blockiert werden."
+  },
+  {
+    "offset": 3689357,
+    "len": 25,
+    "text": "Blockchance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3689458,
+    "len": 19,
+    "text": "stung {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3689515,
+    "len": 39,
+    "text": "stungsdurchdringung} redutiert den {G,R"
+  },
+  {
+    "offset": 3689556,
+    "len": 33,
+    "text": "stungswert}, nicht weniger als 0%"
+  },
+  {
+    "offset": 3689609,
+    "len": 33,
+    "text": "stungsdurchdringung {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3690606,
+    "len": 50,
+    "text": "{r,Feuerschaden} hat eine chance Gegner zu {r,entz"
+  },
+  {
+    "offset": 3690681,
+    "len": 26,
+    "text": "ndungschance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3691745,
+    "len": 55,
+    "text": "{B,Eisschaden} hat eine Chance Gegner {B,einzufrieren}."
+  },
+  {
+    "offset": 3691812,
+    "len": 25,
+    "text": "Frostchance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3691865,
+    "len": 31,
+    "text": "Frostchance Grenze {%c, %.0f%%}"
+  },
+  {
+    "offset": 3692067,
+    "len": 17,
+    "text": "Frostige Attacken"
+  },
+  {
+    "offset": 3692088,
+    "len": 29,
+    "text": "Frostige Attacken {%c, %+.0f}"
+  },
+  {
+    "offset": 3692467,
+    "len": 58,
+    "text": "{y,Blitzschaden} hat die Chance den Gegner zu {y,Shocken}."
+  },
+  {
+    "offset": 3692849,
+    "len": 55,
+    "text": "{g,Giftschaden} hat die Chance Gegner zu {g,Vergiften}."
+  },
+  {
+    "offset": 3692916,
+    "len": 31,
+    "text": "Vergiftungschance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3693328,
+    "len": 67,
+    "text": "chenattacken} getroffen werden. Attacken mit dem Schwert sind {y,Fl"
+  },
+  {
+    "offset": 3693868,
+    "len": 80,
+    "text": "Wie oft ein {y,Projektil} ein Ziel {y,Durchdringen} kann, bevor es verschwindet."
+  },
+  {
+    "offset": 3693965,
+    "len": 27,
+    "text": "Durchdringungen {%c, %+.0f}"
+  },
+  {
+    "offset": 3694011,
+    "len": 111,
+    "text": "Wie oft sich ein Projektil {y,Verketten} kann. {y,Verkettung} passiert nur, wenn keine {y,Durchdringung} mehr m"
+  },
+  {
+    "offset": 3694433,
+    "len": 136,
+    "text": "Anzahl an Scherben in dass sich ein Projektil beim Aufprall splittet. Split kann nur NACH {y,Durchdringen} und {y,Verkettung} passieren."
+  },
+  {
+    "offset": 3694846,
+    "len": 26,
+    "text": "Projektilspeed {%c, %+.0f}"
+  },
+  {
+    "offset": 3694878,
+    "len": 28,
+    "text": "Projektilspeed {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3695256,
+    "len": 19,
+    "text": "ert den Heilradius."
+  },
+  {
+    "offset": 3695426,
+    "len": 69,
+    "text": "Erzeugt eine Barriere, die Schaden absorbiert, solange sie aktiv ist."
+  },
+  {
+    "offset": 3695634,
+    "len": 61,
+    "text": "Erlaubt das Kaufen von Items, die von Helden getragen werden."
+  },
+  {
+    "offset": 3695708,
+    "len": 29,
+    "text": "Items im Shop kosten weniger."
+  },
+  {
+    "offset": 3695744,
+    "len": 37,
+    "text": "Das erste Item im Shop ist kostenlos."
+  },
+  {
+    "offset": 3695803,
+    "len": 51,
+    "text": "nnen neue Items im Shop kostenlos generiert werden."
+  },
+  {
+    "offset": 3695892,
+    "len": 35,
+    "text": "Der Shop bietet seltenere Items an."
+  },
+  {
+    "offset": 3695935,
+    "len": 36,
+    "text": "Der Shop verkauft ein weiteres Item."
+  },
+  {
+    "offset": 3695979,
+    "len": 82,
+    "text": "Ziele auf ein Gebiet, um den Boden mit einer explodierenden Orange zu bombadieren."
+  },
+  {
+    "offset": 3696100,
+    "len": 23,
+    "text": "ert den Schadensradius."
+  },
+  {
+    "offset": 3696250,
+    "len": 42,
+    "text": "Explodiert in kleinere Orangen, um eine gr"
+  },
+  {
+    "offset": 3696347,
+    "len": 36,
+    "text": "Orangen fallen viel schneller, schie"
+  },
+  {
+    "offset": 3696385,
+    "len": 15,
+    "text": "e mehr Orangen."
+  },
+  {
+    "offset": 3696522,
+    "len": 43,
+    "text": "Generiert Orangen, sofern ein Held in der N"
+  },
+  {
+    "offset": 3696600,
+    "len": 23,
+    "text": "Generiert mehr Orangen."
+  },
+  {
+    "offset": 3696653,
+    "len": 19,
+    "text": "Der Orangenbaum erh"
+  },
+  {
+    "offset": 3696747,
+    "len": 37,
+    "text": "ert den Effektradius vom Orangenbaum."
+  },
+  {
+    "offset": 3697078,
+    "len": 24,
+    "text": "Spawn-Rate {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3697108,
+    "len": 15,
+    "text": "Goldene Orangen"
+  },
+  {
+    "offset": 3697127,
+    "len": 24,
+    "text": "Startorangen {%c, %+.0f}"
+  },
+  {
+    "offset": 3697157,
+    "len": 26,
+    "text": "Startorangen {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3697189,
+    "len": 15,
+    "text": "Einsamer Ranger"
+  },
+  {
+    "offset": 3697511,
+    "len": 73,
+    "text": "Wie lange ein {y,Projektil} in der Luft verbringt, bevor es verschwindet."
+  },
+  {
+    "offset": 3697740,
+    "len": 15,
+    "text": "Tangy Erfahrung"
+  },
+  {
+    "offset": 3697759,
+    "len": 42,
+    "text": "Steuert, wie viel Erfahrung Tangy bekommt."
+  },
+  {
+    "offset": 3697810,
+    "len": 29,
+    "text": "Tangy Erfahrung {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3698021,
+    "len": 57,
+    "text": "Orangen werden benutzt um Helden und Items zu {y,kaufen}."
+  },
+  {
+    "offset": 3698090,
+    "len": 21,
+    "text": "Orangen {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3698235,
+    "len": 35,
+    "text": "Schadensabsorbierung von Barrieren."
+  },
+  {
+    "offset": 3698354,
+    "len": 47,
+    "text": "Die Anzahl an {r,Gegnern} die blockiert werden."
+  },
+  {
+    "offset": 3698411,
+    "len": 27,
+    "text": "Gegner blockert {%c, %+.0f}"
+  },
+  {
+    "offset": 3698444,
+    "len": 30,
+    "text": "Gegner blockiert {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3698499,
+    "len": 38,
+    "text": "Chance Nachkampfattacken auszuweichen."
+  },
+  {
+    "offset": 3698545,
+    "len": 28,
+    "text": "Ausweichchance {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3698742,
+    "len": 53,
+    "text": "Wie lange es dauert, bis Tangy einen Helden hochhebt."
+  },
+  {
+    "offset": 3699247,
+    "len": 15,
+    "text": "Eisige Attacken"
+  },
+  {
+    "offset": 3699266,
+    "len": 18,
+    "text": "{G,Alle Attacken k"
+  },
+  {
+    "offset": 3699286,
+    "len": 67,
+    "text": "nnen {b,einfrieren}. Die maximale {b, Einfrierchance} ist {y,10%}.}"
+  },
+  {
+    "offset": 3699385,
+    "len": 79,
+    "text": "{G,Beim besiegen von Gegnern gibt es eine kleine Chance deren Item zu stehlen.}"
+  },
+  {
+    "offset": 3699545,
+    "len": 38,
+    "text": "nnen {y,zwei weitere} Gegner blocken.}"
+  },
+  {
+    "offset": 3699636,
+    "len": 67,
+    "text": "nnnen einen weiteren Gegner blocken, machen aber {y,-20% Schaden}.}"
+  },
+  {
+    "offset": 3699722,
+    "len": 64,
+    "text": "{G,Rangers, die allein platziert sind, machen {y,+20% Schaden}.}"
+  },
+  {
+    "offset": 3699832,
+    "len": 113,
+    "text": "{G,Projektile haben {y,-20% AOE} beim start der Flugbahn und bis zu {y,+50% AOE} je weiter das Projektil fliegt.}"
+  },
+  {
+    "offset": 3699986,
+    "len": 32,
+    "text": "{G,Erlaubt es Rangern auf Baumst"
+  },
+  {
+    "offset": 3700284,
+    "len": 78,
+    "text": "{G,Projektile splitten jetzt jedes mal, auch beim Durchdringen und Verketten.}"
+  },
+  {
+    "offset": 3700577,
+    "len": 10,
+    "text": "Kein Skill"
+  },
+  {
+    "offset": 3700742,
+    "len": 21,
+    "text": "Durchdringender Pfeil"
+  },
+  {
+    "offset": 3700918,
+    "len": 14,
+    "text": "chtete Orangen"
+  },
+  {
+    "offset": 3701149,
+    "len": 83,
+    "text": "[h-2]{y,Projektile splitten jetzt jedes mal, auch beim Durchdringen und Verketten.}"
+  },
+  {
+    "offset": 3701482,
+    "len": 21,
+    "text": "Skillpunkte verdient:"
+  },
+  {
+    "offset": 3701542,
+    "len": 13,
+    "text": "Goldene Krone"
+  },
+  {
+    "offset": 3701859,
+    "len": 10,
+    "text": "rbol Tangy"
+  },
+  {
+    "offset": 3702451,
+    "len": 54,
+    "text": "Tangy usa su magia y {o,Naranjas} para invocar a peque"
+  },
+  {
+    "offset": 3703481,
+    "len": 12,
+    "text": "Rata Malvada"
+  },
+  {
+    "offset": 3703570,
+    "len": 13,
+    "text": "Rata Plateada"
+  },
+  {
+    "offset": 3703595,
+    "len": 38,
+    "text": "s resistentes que las ratas normales. "
+  },
+  {
+    "offset": 3703683,
+    "len": 12,
+    "text": "Rata Enferma"
+  },
+  {
+    "offset": 3703756,
+    "len": 14,
+    "text": "Rata No Muerta"
+  },
+  {
+    "offset": 3703857,
+    "len": 141,
+    "text": "pidas y feroces equipadas con enormes y afilados dientes que desgarran la piel. Su agilidad les permite esquivar los ataques cuerpo a cuerpo."
+  },
+  {
+    "offset": 3704401,
+    "len": 11,
+    "text": "Rata Dorada"
+  },
+  {
+    "offset": 3704650,
+    "len": 14,
+    "text": "Goblin Arquero"
+  },
+  {
+    "offset": 3704668,
+    "len": 75,
+    "text": "Humanoides malignos equipados con un arco que se centran en los objetivos d"
+  },
+  {
+    "offset": 3704768,
+    "len": 11,
+    "text": "Goblin Mago"
+  },
+  {
+    "offset": 3704878,
+    "len": 15,
+    "text": "Goblin Escudero"
+  },
+  {
+    "offset": 3704972,
+    "len": 16,
+    "text": "Goblin Caballero"
+  },
+  {
+    "offset": 3705271,
+    "len": 13,
+    "text": "Goblin Pirata"
+  },
+  {
+    "offset": 3705287,
+    "len": 35,
+    "text": "Goblins, pero con una gran espada, "
+  },
+  {
+    "offset": 3705339,
+    "len": 12,
+    "text": "Goblin Bruto"
+  },
+  {
+    "offset": 3705446,
+    "len": 19,
+    "text": "Goblin Pirata Gordo"
+  },
+  {
+    "offset": 3705470,
+    "len": 97,
+    "text": "El Rey de los Goblins es un feroz guerrero que derriba a los objetivos cercanos y dispara a los H"
+  },
+  {
+    "offset": 3708229,
+    "len": 39,
+    "text": "[h-2]{y,Cada vez que Tangy levanta con "
+  },
+  {
+    "offset": 3708481,
+    "len": 53,
+    "text": "[h-2]{y,Marca los objetivos principales que Tangy est"
+  },
+  {
+    "offset": 3708863,
+    "len": 56,
+    "text": "{y,Al Equipar, coloca un estandarte que potencia a los H"
+  },
+  {
+    "offset": 3708977,
+    "len": 65,
+    "text": "{y,Al Equipar, coloca un estandarte que potencia la {w,Regeneraci"
+  },
+  {
+    "offset": 3716248,
+    "len": 73,
+    "text": "Coloca un Defensor para impedir que los Goblins lleguen hasta Tangy [%d]."
+  },
+  {
+    "offset": 3716336,
+    "len": 68,
+    "text": "Al derrotar a los enemigos, {y,Tangy} gana {g,Puntos de Habilidad}. "
+  },
+  {
+    "offset": 3716961,
+    "len": 51,
+    "text": "Los Goblins se han llevado a nuestra {g,Sanadora}! "
+  },
+  {
+    "offset": 3717058,
+    "len": 49,
+    "text": "Si derrotas a todos los Goblins que la protegen, "
+  },
+  {
+    "offset": 3717146,
+    "len": 54,
+    "text": "Mira, Tangy se ha despertado! Puedes moverla con [%d]."
+  },
+  {
+    "offset": 3717350,
+    "len": 17,
+    "text": "Fichero original:"
+  },
+  {
+    "offset": 3717376,
+    "len": 19,
+    "text": "Fichero renombrado:"
+  },
+  {
+    "offset": 3717906,
+    "len": 27,
+    "text": "{g,Elige un objeto GRATIS.}"
+  },
+  {
+    "offset": 3718733,
+    "len": 16,
+    "text": "GRATIS una vez!}"
+  },
+  {
+    "offset": 3721191,
+    "len": 15,
+    "text": "Volumen de la M"
+  },
+  {
+    "offset": 3722052,
+    "len": 25,
+    "text": "rbol Tangy sobrevive con:"
+  },
+  {
+    "offset": 3727413,
+    "len": 14,
+    "text": "Poder Curativo"
+  },
+  {
+    "offset": 3727643,
+    "len": 28,
+    "text": "Poder Curativo {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3734767,
+    "len": 15,
+    "text": "Niebla Curativa"
+  },
+  {
+    "offset": 3734812,
+    "len": 38,
+    "text": "roes se forman {g,Nieblas Curativas} d"
+  },
+  {
+    "offset": 3734933,
+    "len": 47,
+    "text": "Te permite comprar objetos para equipar a los H"
+  },
+  {
+    "offset": 3735086,
+    "len": 56,
+    "text": "La tienda ofrece un objeto gratis al comienzo del nivel."
+  },
+  {
+    "offset": 3735168,
+    "len": 93,
+    "text": "Una vez por cada nueva ronda, puedes volver a tirar los dados de la tienda de forma gratuita."
+  },
+  {
+    "offset": 3736140,
+    "len": 24,
+    "text": "rbol Tangy aumenta el da"
+  },
+  {
+    "offset": 3736260,
+    "len": 11,
+    "text": "rbol Tangy."
+  },
+  {
+    "offset": 3737408,
+    "len": 20,
+    "text": "Experiencia de Tangy"
+  },
+  {
+    "offset": 3737433,
+    "len": 47,
+    "text": "Incrementada la experiencia obtenida por Tangy."
+  },
+  {
+    "offset": 3737490,
+    "len": 38,
+    "text": "Ganancia de EXP de Tangy {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3738776,
+    "len": 58,
+    "text": "Tiempo que tarda Tangy en levantar completamente a Heroes."
+  },
+  {
+    "offset": 3740998,
+    "len": 14,
+    "text": "rculo Curativo"
+  },
+  {
+    "offset": 3742421,
+    "len": 15,
+    "text": "Skeleton impact"
+  },
+  {
+    "offset": 3742440,
+    "len": 18,
+    "text": "Arrow Impact Short"
+  },
+  {
+    "offset": 3742462,
+    "len": 18,
+    "text": "Chain Lightning #2"
+  },
+  {
+    "offset": 3742484,
+    "len": 19,
+    "text": "Lightning Hit Short"
+  },
+  {
+    "offset": 3742527,
+    "len": 14,
+    "text": "Shield Orb Hit"
+  },
+  {
+    "offset": 3742545,
+    "len": 12,
+    "text": "Sword Impact"
+  },
+  {
+    "offset": 3742589,
+    "len": 18,
+    "text": "Tangy TD Main Menu"
+  },
+  {
+    "offset": 3742611,
+    "len": 10,
+    "text": "Tangy Home"
+  },
+  {
+    "offset": 3742661,
+    "len": 21,
+    "text": "Tangy TD Forest Theme"
+  },
+  {
+    "offset": 3742742,
+    "len": 11,
+    "text": "Barrier Hit"
+  },
+  {
+    "offset": 3742756,
+    "len": 11,
+    "text": "Water Spawn"
+  },
+  {
+    "offset": 3742795,
+    "len": 12,
+    "text": "Orange Spawn"
+  },
+  {
+    "offset": 3742810,
+    "len": 11,
+    "text": "Orange Drop"
+  },
+  {
+    "offset": 3742891,
+    "len": 17,
+    "text": "Flash Freeze Wind"
+  },
+  {
+    "offset": 3742965,
+    "len": 17,
+    "text": "Chest Open Gamble"
+  },
+  {
+    "offset": 3742986,
+    "len": 12,
+    "text": "Chest Reward"
+  },
+  {
+    "offset": 3743059,
+    "len": 21,
+    "text": "Tangy TD Winter Theme"
+  },
+  {
+    "offset": 3743085,
+    "len": 37,
+    "text": "Tangy TD Winter Theme #2 Experimental"
+  },
+  {
+    "offset": 3743130,
+    "len": 14,
+    "text": "Enemy AOE Heal"
+  },
+  {
+    "offset": 3743191,
+    "len": 13,
+    "text": "Victory Short"
+  },
+  {
+    "offset": 3743207,
+    "len": 12,
+    "text": "Bleed_Pop 01"
+  },
+  {
+    "offset": 3743222,
+    "len": 24,
+    "text": "Tangy TD Graveyard Theme"
+  },
+  {
+    "offset": 3763133,
+    "len": 19,
+    "text": "No START Stat Name!"
+  },
+  {
+    "offset": 3926128,
+    "len": 18,
+    "text": "invalid block type"
+  },
+  {
+    "offset": 3926152,
+    "len": 28,
+    "text": "invalid stored block lengths"
+  },
+  {
+    "offset": 3926304,
+    "len": 36,
+    "text": "invalid code -- missing end-of-block"
+  },
+  {
+    "offset": 3931944,
+    "len": 29,
+    "text": "`vector constructor iterator'"
+  },
+  {
+    "offset": 3931984,
+    "len": 28,
+    "text": "`vector destructor iterator'"
+  },
+  {
+    "offset": 3932024,
+    "len": 35,
+    "text": "`vector vbase constructor iterator'"
+  },
+  {
+    "offset": 3932104,
+    "len": 32,
+    "text": "`eh vector constructor iterator'"
+  },
+  {
+    "offset": 3932144,
+    "len": 31,
+    "text": "`eh vector destructor iterator'"
+  },
+  {
+    "offset": 3932184,
+    "len": 38,
+    "text": "`eh vector vbase constructor iterator'"
+  },
+  {
+    "offset": 3932488,
+    "len": 37,
+    "text": "`managed vector constructor iterator'"
+  },
+  {
+    "offset": 3932536,
+    "len": 36,
+    "text": "`managed vector destructor iterator'"
+  },
+  {
+    "offset": 3932584,
+    "len": 37,
+    "text": "`eh vector copy constructor iterator'"
+  },
+  {
+    "offset": 3932632,
+    "len": 43,
+    "text": "`eh vector vbase copy constructor iterator'"
+  },
+  {
+    "offset": 3932720,
+    "len": 32,
+    "text": "`dynamic atexit destructor for '"
+  },
+  {
+    "offset": 3932760,
+    "len": 34,
+    "text": "`vector copy constructor iterator'"
+  },
+  {
+    "offset": 3932808,
+    "len": 40,
+    "text": "`vector vbase copy constructor iterator'"
+  },
+  {
+    "offset": 3932864,
+    "len": 42,
+    "text": "`managed vector copy constructor iterator'"
+  },
+  {
+    "offset": 3932960,
+    "len": 12,
+    "text": "operator \"\" "
+  },
+  {
+    "offset": 3932976,
+    "len": 17,
+    "text": "operator co_await"
+  }
+]

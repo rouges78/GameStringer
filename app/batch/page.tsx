@@ -6,11 +6,14 @@ import {
   Languages, 
   Zap,
   FileText,
-  FolderTree
+  FolderTree,
+  Edit3,
+  BookOpen
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { BatchFolderTranslator } from "@/components/translator/batch-folder-translator";
 import { useTranslation } from "@/lib/i18n";
+import Link from "next/link";
 
 export default function BatchPage() {
   const { t } = useTranslation();
@@ -31,19 +34,28 @@ export default function BatchPage() {
             </div>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex gap-2">
             <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
               <FileText className="w-3.5 h-3.5" />
               <span className="text-xs font-medium">{t('batchTranslator.formats')}</span>
             </div>
             <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
-              <FolderOpen className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">{t('batchTranslator.preserved')}</span>
-            </div>
-            <div className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-1.5 shadow-lg shadow-black/40 border border-white/10">
               <Zap className="w-3.5 h-3.5" />
               <span className="text-xs font-medium">{t('batchTranslator.parallel')}</span>
             </div>
+            <div className="h-6 w-px bg-white/20" />
+            <Link href="/editor">
+              <div className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-1.5 border border-white/10 transition-all cursor-pointer">
+                <Edit3 className="w-3.5 h-3.5" />
+                <span className="text-xs font-medium">Editor</span>
+              </div>
+            </Link>
+            <Link href="/glossary">
+              <div className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-1.5 border border-white/10 transition-all cursor-pointer">
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="text-xs font-medium">Glossario</span>
+              </div>
+            </Link>
           </div>
         </div>
       </div>

@@ -17,8 +17,11 @@ import {
   Filter,
   Settings2,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Globe,
+  Edit3
 } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -423,6 +426,34 @@ export function BatchFolderTranslator() {
                     )}
                   </div>
                   <Progress value={overallProgress} className="h-2" />
+                </div>
+              )}
+
+              {/* Post-traduzione: CTA Agorà */}
+              {!isTranslating && completedCount > 0 && completedCount === selectedFiles.size && (
+                <div className="mt-4 p-3 rounded-lg bg-gradient-to-r from-green-950/40 to-emerald-950/40 border border-green-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-400" />
+                      <span className="text-sm font-medium text-green-300">
+                        {completedCount} file tradotti con successo!
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link href="/editor">
+                        <Button variant="outline" size="sm" className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10">
+                          <Edit3 className="h-3 w-3 mr-1" />
+                          Apri in Editor
+                        </Button>
+                      </Link>
+                      <Link href="/community-hub?action=publish">
+                        <Button size="sm" className="h-7 text-xs bg-purple-600 hover:bg-purple-500 text-white">
+                          <Globe className="h-3 w-3 mr-1" />
+                          Condividi
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>

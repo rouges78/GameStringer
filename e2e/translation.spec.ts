@@ -123,11 +123,6 @@ test.describe('Quality Tools', () => {
     expect(response?.status()).toBeLessThan(500);
   });
 
-  test('should load quality gates page', async ({ page }) => {
-    const response = await page.goto('/quality-gates');
-    expect(response?.status()).toBeLessThan(500);
-  });
-
   test('should load stats page', async ({ page }) => {
     const response = await page.goto('/stats');
     expect(response?.status()).toBeLessThan(500);

@@ -30,16 +30,28 @@ export interface TranslateResult {
 // Session-level flags: skip provider dopo errore fatale (permanente) o rate-limit (cooldown)
 const blockedProviders = new Set<string>();
 const cooldownProviders = new Map<string, number>(); // provider → timestamp sblocco
+const cooldownFailCount = new Map<string, number>(); // provider → contatore fallimenti consecutivi
+
+const FREE_PROVIDERS = new Set(['mymemory', 'lingva', 'gemini', 'hymt', 'translategemma', 'ollama']);
+
+// Provider che richiedono sourceLanguage corretto (web API con traduzione letterale)
+const LANG_SENSITIVE_PROVIDERS = new Set(['mymemory', 'lingva']);
 
 function blockProvider(name: string, permanent = true) {
   if (permanent) {
     blockedProviders.add(name);
     console.warn(`[Session] ${name} bloccato permanentemente (errore fatale)`);
   } else {
-    // Cooldown 30s per rate-limit — il provider verrà riprovato dopo
-    const unblockAt = Date.now() + 30000;
+    // Cooldown escalation: 5min → 15min → 1h dopo fallimenti ripetuti
+    const fails = (cooldownFailCount.get(name) || 0) + 1;
+    cooldownFailCount.set(name, fails);
+    const baseCooldown = FREE_PROVIDERS.has(name) ? 300000 : 30000;
+    const escalation = Math.min(fails, 3); // max 3 livelli: 1x, 3x, 12x
+    const multiplier = escalation === 1 ? 1 : escalation === 2 ? 3 : 12;
+    const cooldownMs = baseCooldown * multiplier;
+    const unblockAt = Date.now() + cooldownMs;
     cooldownProviders.set(name, unblockAt);
-    console.warn(`[Session] ${name} in cooldown 30s (rate-limit)`);
+    console.warn(`[Session] ${name} in cooldown ${Math.round(cooldownMs / 1000)}s (rate-limit, fail #${fails})`);
   }
 }
 
@@ -53,10 +65,33 @@ function isProviderBlocked(name: string): boolean {
   return false;
 }
 
+/**
+ * Rileva la lingua dominante di un batch di testi.
+ * Usato per saltare provider web (Lingva/MyMemory) quando la lingua
+ * dichiarata non corrisponde al testo effettivo (es. testo DE con srcLang=es).
+ */
+function detectBatchLanguage(texts: string[]): string | null {
+  const sample = texts.slice(0, 10).join(' ').toLowerCase();
+  if (sample.length < 20) return null;
+  
+  const deMarkers = (sample.match(/[äöüß]|\b(der|die|das|und|mit|von|für|ein|eine|ist|nicht|sich|auf|dem|den|des|werden|haben|kann|nach|über|oder|wenn|auch|nur|noch|bei|aus|wie|aber|alle|sehr|zum|zur|einem|einer|kein|keine)\b/gi) || []).length;
+  const esMarkers = (sample.match(/[áéíóúñ¿¡]|\b(el|la|los|las|del|por|para|una|que|con|más|como|este|esta|todo|puede|tiene|desde|pero|también|otro|otra|sobre|entre|sin)\b/gi) || []).length;
+  const enMarkers = (sample.match(/\b(the|and|for|that|with|this|from|are|was|have|has|but|not|you|all|can|her|one|will|each|make|how|them|then|more|some|when|what|your|been|into|only|other|than|its)\b/gi) || []).length;
+  const ptMarkers = (sample.match(/[ãõç]|\b(não|são|está|você|como|para|uma|mais|também|quando|muito|pode|isso|esse|essa|qual|pela|pelo|ainda|onde|depois|antes|aqui|outro|outra|entre|sobre|sem|desde|cada|todos|estas|estes|foram|será|suas|seus|nosso|nossa|dano|vida|inimigos|mostrar)\b/gi) || []).length;
+  
+  const max = Math.max(deMarkers, esMarkers, enMarkers, ptMarkers);
+  if (max < 3) return null;
+  if (deMarkers === max) return 'de';
+  if (ptMarkers === max) return 'pt';
+  if (esMarkers === max) return 'es';
+  return 'en';
+}
+
 /** Reset provider blocks (es. quando si cambia API key) */
 export function resetProviderBlocks() {
   blockedProviders.clear();
   cooldownProviders.clear();
+  cooldownFailCount.clear();
 }
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
@@ -340,23 +375,31 @@ async function translateWithOpenAI(
 ): Promise<string[]> {
   const prompt = buildTranslationPrompt(opts);
 
-  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+  // Usa proxy server-side per evitare CORS
+  const res = await fetch('/api/llm-proxy', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_tokens: 8192,
+      endpoint: 'https://api.openai.com/v1/chat/completions',
+      apiKey,
+      payload: {
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: 8192,
+      },
     }),
   });
 
   if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    const status = errData?.status || res.status;
+    if (status === 429) {
+      blockProvider('openai', false);
+      throw new Error('RateLimit');
+    }
     blockProvider('openai');
-    throw new Error(`OpenAI ${res.status}`);
+    throw new Error(`OpenAI ${status}: ${errData?.error || res.statusText}`);
   }
 
   const data = await res.json();
@@ -654,8 +697,8 @@ async function translateWithMyMemory(
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${srcLang}|${tgtLang}`;
     const res = await fetch(url);
     if (!res.ok) {
-      blockProvider('mymemory');
-      throw new Error(`MyMemory ${res.status}`);
+      blockProvider('mymemory', res.status === 429 ? false : true);
+      throw new Error(res.status === 429 ? 'RateLimit' : `MyMemory ${res.status}`);
     }
     const data = await res.json();
     if (data?.responseStatus === 429) {
@@ -1086,26 +1129,48 @@ async function translateWithLingva(
   const srcLang = opts.sourceLanguage || 'en';
   const tgtLang = opts.targetLanguage || 'it';
   const results: string[] = [];
+  let failures = 0;
   
-  // Lingva usa GET con testo nell'URL — troncare a 500 chars per evitare 404 su URL troppo lunghi
   const MAX_TEXT_LEN = 500;
   for (const text of opts.texts) {
+    // Lingva usa GET con testo nel path — skip stringhe con char problematici
+    if (/[{}|<>\/]/.test(text) || text.includes('://') || text.includes('%')) {
+      results.push(text); // usa originale per stringhe problematiche
+      continue;
+    }
     const truncated = text.length > MAX_TEXT_LEN ? text.slice(0, MAX_TEXT_LEN) : text;
     const url = `https://lingva.ml/api/v1/${srcLang}/${tgtLang}/${encodeURIComponent(truncated)}`;
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (!res.ok) {
-        blockProvider('lingva', false); // cooldown, non blocco permanente
-        throw new Error(`Lingva ${res.status}`);
+        if (res.status === 429) {
+          blockProvider('lingva', false);
+          throw new Error('RateLimit');
+        }
+        // 404 su singola stringa: usa originale, continua
+        results.push(text);
+        failures++;
+        continue;
       }
       const data = await res.json();
       const translated = data?.translation || truncated;
-      // Se troncato, appendi la parte rimanente non tradotta
       results.push(text.length > MAX_TEXT_LEN ? translated + text.slice(MAX_TEXT_LEN) : translated);
-    } catch (err) {
-      blockProvider('lingva', false); // cooldown, non blocco permanente
-      throw err;
+    } catch (err: any) {
+      if (err?.message === 'RateLimit') throw err;
+      // CORS o network error (es. 429 senza CORS headers) → rate limit
+      if (err?.message?.includes('CORS') || err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
+        blockProvider('lingva', false);
+        throw new Error('RateLimit');
+      }
+      // Timeout o errore singolo: usa originale
+      results.push(text);
+      failures++;
     }
+  }
+  // Se TUTTE falliscono, blocca provider
+  if (failures === opts.texts.length) {
+    blockProvider('lingva', false);
+    throw new Error('Lingva: tutte le stringhe fallite');
   }
   return results;
 }
@@ -1393,23 +1458,70 @@ export function hasAvailableProviders(): { available: boolean; providers: string
  * Default: balanced (Gemini → DeepSeek → Groq → OpenAI → MyMemory → Lingva)
  */
 export async function translateWithFallback(
-  opts: TranslateOptions
+  opts: TranslateOptions,
+  preferWebApis: boolean = false
 ): Promise<TranslateResult> {
   const keys = getApiKeys();
   const preset = CHAIN_PRESETS.find(p => p.id === activeChainPreset) || CHAIN_PRESETS[2]; // balanced default
   
   const providers: Array<{ name: string; key: string; fn: (key: string, opts: TranslateOptions) => Promise<string[]> }> = [];
+  const skipped: string[] = [];
 
-  console.log(`[translateWithFallback] Chain preset: ${preset.id}, providers nella catena: [${preset.providers.join(', ')}]`);
   for (const providerName of preset.providers) {
     const info = PROVIDER_MAP[providerName];
-    if (!info) { console.warn(`[translateWithFallback] ⏭️ ${providerName}: non trovato in PROVIDER_MAP`); continue; }
-    if (info.isBlocked()) { console.warn(`[translateWithFallback] ⏭️ ${providerName}: BLOCCATO`); continue; }
+    if (!info) { skipped.push(providerName); continue; }
+    if (info.isBlocked()) { skipped.push(providerName); continue; }
     const key = info.getKey(keys);
-    if (info.needsKey && !key) { console.warn(`[translateWithFallback] ⏭️ ${providerName}: API key mancante`); continue; }
+    if (info.needsKey && !key) { skipped.push(providerName); continue; }
     providers.push({ name: providerName, key, fn: info.fn });
   }
-  console.log(`[translateWithFallback] Provider disponibili: [${providers.map(p => p.name).join(', ')}] (${providers.length}/${preset.providers.length})`);
+
+  // Riordina: API web veloci prima dei modelli locali lenti
+  if (preferWebApis) {
+    const WEB_APIS = new Set(['mymemory', 'lingva']);
+    const LOCAL_SLOW = new Set(['hymt', 'translategemma', 'ollama']);
+    providers.sort((a, b) => {
+      const aWeb = WEB_APIS.has(a.name) ? 0 : LOCAL_SLOW.has(a.name) ? 2 : 1;
+      const bWeb = WEB_APIS.has(b.name) ? 0 : LOCAL_SLOW.has(b.name) ? 2 : 1;
+      return aWeb - bWeb;
+    });
+  }
+
+  // Rileva lingua effettiva del batch per saltare provider web con lingua sbagliata
+  const declaredLang = opts.sourceLanguage || 'en';
+  const detectedLang = detectBatchLanguage(opts.texts);
+  const langMismatch = detectedLang && detectedLang !== declaredLang;
+  if (langMismatch) {
+    // Rimuovi provider lang-sensitive (traduttori web che non auto-detectano)
+    const before = providers.length;
+    const removed: string[] = [];
+    const filtered = providers.filter(p => {
+      if (LANG_SENSITIVE_PROVIDERS.has(p.name)) { removed.push(p.name); return false; }
+      return true;
+    });
+    if (removed.length > 0 && filtered.length > 0) {
+      console.log(`[translateWithFallback] Lingua rilevata: ${detectedLang} (dichiarata: ${declaredLang}) → skip ${removed.join(', ')}`);
+      providers.length = 0;
+      providers.push(...filtered);
+    }
+  }
+
+  // Pre-flight: skip Lingva se il batch ha troppe stringhe con char problematici ({}, %, etc.)
+  // Lingva le skippa individualmente ma il batch risulta >70% invariate → spreco tempo
+  const LINGVA_PROBLEMATIC = /[{}|<>\/]|:\/\/|%/;
+  const problematicCount = opts.texts.filter(t => LINGVA_PROBLEMATIC.test(t)).length;
+  const problematicRatio = problematicCount / opts.texts.length;
+  if (problematicRatio > 0.5) {
+    const beforeLen = providers.length;
+    const filteredNoLingva = providers.filter(p => p.name !== 'lingva');
+    if (filteredNoLingva.length > 0 && filteredNoLingva.length < beforeLen) {
+      console.log(`[translateWithFallback] ${problematicCount}/${opts.texts.length} stringhe con placeholder → skip lingva`);
+      providers.length = 0;
+      providers.push(...filteredNoLingva);
+    }
+  }
+
+  console.log(`[translateWithFallback] ${preset.id}: [${providers.map(p => p.name).join(', ')}] (${providers.length}/${preset.providers.length})${skipped.length ? ` | skipped: ${skipped.length}` : ''}`);
 
   for (const provider of providers) {
     const MAX_RETRIES = 3;
@@ -1429,7 +1541,14 @@ export async function translateWithFallback(
               ...opts.texts.slice(translations.length),
             ];
           }
-          console.log(`[translateWithFallback] ✅ ${provider.name}: ${translations.length} traduzioni (es: "${opts.texts[0]?.substring(0, 40)}" → "${translations[0]?.substring(0, 40)}")`);
+          // Check: se la maggior parte delle traduzioni è identica all'input → provider non ha tradotto
+          const unchanged = translations.filter((t, i) => t.trim() === opts.texts[i]?.trim()).length;
+          const unchangedRatio = unchanged / translations.length;
+          if (unchangedRatio > 0.7 && providers.length > 1) {
+            console.warn(`[translateWithFallback] ⚠️ ${provider.name}: ${unchanged}/${translations.length} invariate (${Math.round(unchangedRatio * 100)}%) — provo prossimo provider`);
+            break; // esce dal retry loop, passa al prossimo provider
+          }
+          console.log(`[translateWithFallback] ✅ ${provider.name}: ${translations.length} traduzioni, ${translations.length - unchanged} modificate (es: "${opts.texts[0]?.substring(0, 40)}" → "${translations[0]?.substring(0, 40)}")`);
           return { translations, provider: provider.name, success: true };
         }
         break;
@@ -1438,6 +1557,13 @@ export async function translateWithFallback(
         const errMsg = err instanceof Error ? err.message : String(err);
         
         if (errMsg === 'RateLimit' && retries < MAX_RETRIES) {
+          const isFree = FREE_PROVIDERS.has(provider.name);
+          if (isFree) {
+            // Provider gratuiti: quota giornaliera, retry inutile → skip subito
+            console.warn(`[translateWithFallback] ${provider.name} rate-limited (free) → skip`);
+            blockProvider(provider.name, false);
+            break;
+          }
           const delay = Math.pow(2, retries) * 2000; // 2s, 4s, 8s
           console.warn(`[translateWithFallback] ${provider.name} rate-limited, retry ${retries + 1}/${MAX_RETRIES} in ${delay}ms`);
           await sleep(delay);
@@ -1446,7 +1572,7 @@ export async function translateWithFallback(
         }
         
         console.warn(`[translateWithFallback] ${provider.name} failed:`, err);
-        const isFreeProvider = !PROVIDER_MAP[provider.name]?.needsKey;
+        const isFreeProvider = FREE_PROVIDERS.has(provider.name);
         if (errMsg === 'RateLimit' || errMsg === 'ContentTooLarge' || isFreeProvider) {
           // Rate-limit/payload o provider gratuito: cooldown temporaneo (mai blocco permanente)
           blockProvider(provider.name, false);
@@ -1458,10 +1584,13 @@ export async function translateWithFallback(
       }
     }
     
-    // Se dopo tutti i retry è ancora RateLimit, cooldown (non permanente)
+    // Se dopo tutti i retry è ancora RateLimit, cooldown lungo (5 min) — quota chiaramente esaurita
     if (lastErr instanceof Error && lastErr.message === 'RateLimit' && retries >= MAX_RETRIES) {
-      console.warn(`[translateWithFallback] ${provider.name} in cooldown dopo ${MAX_RETRIES} retry`);
-      blockProvider(provider.name, false);
+      console.warn(`[translateWithFallback] ${provider.name} in cooldown lungo dopo ${MAX_RETRIES} retry`);
+      // Forza cooldown 5 min indipendentemente dal tipo di provider
+      const unblockAt = Date.now() + 300000;
+      cooldownProviders.set(provider.name, unblockAt);
+      console.warn(`[Session] ${provider.name} in cooldown 300s (retry esauriti)`);
     }
   }
 
@@ -1494,41 +1623,70 @@ export async function translateSingleWithFallback(
 /**
  * Traduzione con fallback + batching automatico.
  * Splitta testi in chunk di maxBatch per evitare 413/payload too large.
+ * Esegue fino a PARALLEL_BATCHES batch in parallelo per velocità.
  */
 export async function translateWithFallbackBatched(
   opts: TranslateOptions,
   maxBatch: number = 20,
-  onProgress?: (done: number, total: number) => void
+  onProgress?: (done: number, total: number) => void,
+  preferWebApis: boolean = false
 ): Promise<TranslateResult> {
   const { texts, ...rest } = opts;
   if (texts.length <= maxBatch) {
-    return translateWithFallback(opts);
+    return translateWithFallback(opts, preferWebApis);
   }
   
-  const allTranslations: string[] = [];
+  const PARALLEL_BATCHES = 3; // Batch concorrenti
+  const allTranslations: string[] = new Array(texts.length);
   let lastProvider = 'none';
   let anySuccess = false;
+  let doneCount = 0;
   
-  const totalBatches = Math.ceil(texts.length / maxBatch);
-  console.log(`[Batched] Inizio traduzione: ${texts.length} stringhe in ${totalBatches} batch da ${maxBatch}`);
-  
+  // Prepara tutti i chunk con il loro indice originale
+  const chunks: { index: number; start: number; texts: string[] }[] = [];
   for (let i = 0; i < texts.length; i += maxBatch) {
-    const batchNum = Math.floor(i / maxBatch) + 1;
-    const chunk = texts.slice(i, i + maxBatch);
-    const result = await translateWithFallback({ ...rest, texts: chunk });
-    allTranslations.push(...result.translations);
-    if (result.success) {
-      anySuccess = true;
-      lastProvider = result.provider;
-    } else {
-      console.warn(`[Batched] ⚠️ Batch ${batchNum}/${totalBatches} FALLITO — stringhe non tradotte`);
-    }
-    onProgress?.(Math.min(i + maxBatch, texts.length), texts.length);
+    chunks.push({ index: chunks.length, start: i, texts: texts.slice(i, i + maxBatch) });
+  }
+  
+  console.log(`[Batched] Inizio traduzione: ${texts.length} stringhe in ${chunks.length} batch da ${maxBatch} (${PARALLEL_BATCHES} paralleli)`);
+  
+  // Esegui batch in gruppi paralleli
+  for (let g = 0; g < chunks.length; g += PARALLEL_BATCHES) {
+    const group = chunks.slice(g, g + PARALLEL_BATCHES);
+    const groupResults = await Promise.all(
+      group.map(async (chunk, idx) => {
+        // Delay sfalsato tra batch nello stesso gruppo per evitare burst
+        if (idx > 0) await sleep(800 * idx);
+        return translateWithFallback({ ...rest, texts: chunk.texts }, preferWebApis);
+      })
+    );
     
-    // Delay tra batch per evitare rate-limit
-    if (i + maxBatch < texts.length) {
-      await sleep(2500);
+    // Inserisci risultati nella posizione corretta
+    for (let j = 0; j < group.length; j++) {
+      const chunk = group[j];
+      const result = groupResults[j];
+      for (let k = 0; k < result.translations.length; k++) {
+        allTranslations[chunk.start + k] = result.translations[k];
+      }
+      if (result.success) {
+        anySuccess = true;
+        lastProvider = result.provider;
+      } else {
+        console.warn(`[Batched] ⚠️ Batch ${chunk.index + 1}/${chunks.length} FALLITO — stringhe non tradotte`);
+      }
+      doneCount += chunk.texts.length;
     }
+    onProgress?.(Math.min(doneCount, texts.length), texts.length);
+    
+    // Delay tra gruppi paralleli per evitare rate-limit
+    if (g + PARALLEL_BATCHES < chunks.length) {
+      await sleep(1500);
+    }
+  }
+  
+  // Riempi eventuali buchi (safety net)
+  for (let i = 0; i < allTranslations.length; i++) {
+    if (allTranslations[i] === undefined) allTranslations[i] = texts[i];
   }
   
   return { translations: allTranslations, provider: lastProvider, success: anySuccess };

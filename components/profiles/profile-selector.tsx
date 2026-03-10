@@ -567,13 +567,13 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
     return (
       <div className="h-full w-full relative overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <AlphabetBackground letterCount={80} />
-        <div className="min-h-full w-full flex flex-col items-center justify-center p-4 relative z-10">
-          <div className="w-full max-w-5xl flex flex-col items-center">
+        <div className="w-full flex flex-col items-center px-4 py-6 relative z-10">
+          <div className="w-full max-w-5xl flex flex-col items-center my-auto">
             {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
+            className="text-center mb-4"
           >
             <motion.div 
               whileHover={{ scale: 1.02 }}
@@ -595,9 +595,9 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
                 <Image 
                   src="/logo.png" 
                   alt="GameStringer" 
-                  width={160} 
-                  height={160} 
-                  className="mx-auto w-[160px] h-[160px]"
+                  width={220} 
+                  height={220} 
+                  className="mx-auto w-[220px] h-[220px]"
                   priority
                 />
               </motion.div>
@@ -630,10 +630,10 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
           )}
 
           {/* Profiles Grid - Flex centered layout */}
-          <div className="flex flex-wrap justify-center gap-6 w-full mb-12">
+          <div className="flex flex-wrap justify-center gap-4 w-full mb-6">
             <AnimatePresence mode="popLayout">
               {profiles.map((profile) => (
-                <div key={profile.id} onClick={() => handleProfileSelect(profile)} className="w-full max-w-[350px] cursor-pointer">
+                <div key={profile.id} onClick={() => handleProfileSelect(profile)} className="w-full max-w-[280px] cursor-pointer">
                   <ProfileCard
                     profile={profile}
                     isSelected={selectedProfileId === profile.id}
@@ -649,7 +649,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 onClick={onCreateProfile}
-                className="w-full max-w-[350px] cursor-pointer group"
+                className="w-full max-w-[280px] cursor-pointer group"
               >
                  <div className="h-full min-h-[140px] rounded-xl border-2 border-dashed border-slate-700 hover:border-indigo-500/50 bg-slate-900/30 hover:bg-slate-800/50 transition-all duration-300 flex flex-col items-center justify-center p-6 text-slate-400 hover:text-indigo-300">
                     <div className="w-12 h-12 rounded-full bg-slate-800 group-hover:bg-indigo-500/20 flex items-center justify-center mb-3 transition-colors">
@@ -691,7 +691,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="fixed bottom-10 text-center text-slate-500 text-xs italic"
+            className="mt-2 pb-4 text-center text-slate-500 text-xs italic"
           >
             <p>"{t('profile.loginTagline')}"</p>
           </motion.div>

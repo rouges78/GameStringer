@@ -62,7 +62,9 @@ import {
   Eye,
   BarChart3,
   Newspaper,
-  Clock
+  Clock,
+  Edit3,
+  Binary
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -119,6 +121,7 @@ const getNavGroups = (t: (key: string) => string) => [
     items: [
       { name: t('nav.dashboard'), href: '/', icon: Home },
       { name: t('nav.library'), href: '/library', icon: Gamepad2 },
+      { name: 'Editor', href: '/editor', icon: Edit3 },
     ],
     colorClass: 'text-slate-400 hover:text-slate-200 hover:bg-slate-500/20',
     activeClass: 'bg-slate-500/20 backdrop-blur-md text-slate-200 border border-slate-500/30 shadow-lg shadow-slate-500/20',
@@ -138,14 +141,14 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/ai-translator',
         icon: Sparkles,
         subItems: [
+          { name: 'Translation Wizard', href: '/translation-wizard', icon: Wand2 },
+          { name: 'Auto-Translate', href: '/auto-translate', icon: Rocket },
           { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
           { name: 'Neural Translator Pro', href: '/translator/pro', icon: Brain },
+          { name: 'MTPE Workflow', href: '/translator/mtpe', icon: Edit3 },
           { name: t('nav.multiLlm'), href: '/translator/compare', icon: Brain },
-          { name: 'Emotion', href: '/emotion-translator', icon: Sparkles },
           { name: 'AI Review', href: '/ai-review', icon: Bot },
           { name: t('nav.offlineTranslator') || 'Offline Translator', href: '/offline-translator', icon: WifiOff },
-          { name: 'Translation Wizard', href: '/translation-wizard', icon: Wand2 },
-          { name: 'Translation Bridge', href: '/translation-bridge', icon: Workflow },
         ]
       },
       { 
@@ -177,13 +180,13 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/batch',
         icon: FolderTree,
         subItems: [
-          { name: 'Auto-Translate', href: '/auto-translate', icon: Rocket },
-          { name: t('nav.batch') || 'Batch', href: '/batch', icon: FolderTree },
-          { name: 'Batch Queue', href: '/batch-translation', icon: Layers },
+          { name: t('nav.batch') || 'Batch Folder', href: '/batch', icon: FolderTree },
+          { name: 'Coda Traduzioni', href: '/batch-translation', icon: Layers },
           { name: t('nav.dictionary'), href: '/memory', icon: Database },
           { name: t('nav.glossary'), href: '/glossary', icon: BookOpen },
           { name: 'Context Harvester', href: '/context-harvester', icon: Wheat },
           { name: 'AI Pipeline', href: '/ai-pipeline', icon: Workflow },
+          { name: 'Translation Bridge', href: '/translation-bridge', icon: Workflow },
           { name: 'OCR Multi-Engine', href: '/ocr-engines', icon: ScanEye },
           { name: 'Ollama Manager', href: '/ollama-manager', icon: Package },
           { name: 'Translator Tools', href: '/translator/tools', icon: Sparkles },
@@ -217,6 +220,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: "Ren'Py", href: '/renpy-patcher', icon: Heart },
           { name: 'Wolf RPG', href: '/wolfrpg-patcher', icon: Database },
           { name: 'Nexus Mods', href: '/nexus-mods', icon: Globe },
+          { name: 'Binary Patcher', href: '/binary-patcher', icon: Binary },
         ]
       },
       { 
@@ -226,7 +230,6 @@ const getNavGroups = (t: (key: string) => string) => [
         subItems: [
           { name: t('nav.retro') || 'Retro ROM', href: '/retro', icon: Gamepad2 },
           { name: t('nav.injector'), href: '/injector', icon: Cpu },
-          { name: t('nav.crawler'), href: '/crawler', icon: Scan },
           { name: t('nav.fixer'), href: '/fixer', icon: Wrench },
         ]
       },
@@ -245,9 +248,7 @@ const getNavGroups = (t: (key: string) => string) => [
         icon: ShieldCheck,
         subItems: [
           { name: 'QA Check', href: '/qa-check', icon: ShieldCheck },
-          { name: t('nav.qualityGates'), href: '/quality-gates', icon: ShieldCheck },
           { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
-          { name: 'Cultural Adaptation', href: '/cultural-adaptation', icon: Globe },
           { name: 'Confidence Heatmap', href: '/heatmap', icon: BarChart3 },
         ]
       },

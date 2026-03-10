@@ -1,0 +1,1507 @@
+[
+  {
+    "offset": 3701857,
+    "byteLen": 12,
+    "es": "Árbol Tangy"
+  },
+  {
+    "offset": 3702056,
+    "byteLen": 32,
+    "es": "Puede {g,curar} a otros Héroes,"
+  },
+  {
+    "offset": 3702089,
+    "byteLen": 47,
+    "es": "también puede atacar usando daño de {b,Rayo}."
+  },
+  {
+    "offset": 3702153,
+    "byteLen": 98,
+    "es": "Se especializa en el combate a distancia utilizando hechizos de {r,Fuego} y {B,Frío} que infligen"
+  },
+  {
+    "offset": 3702252,
+    "byteLen": 42,
+    "es": "{b,Daño Mágico} que ignora {G,Armadura}."
+  },
+  {
+    "offset": 3702343,
+    "byteLen": 89,
+    "es": "Árbol frágil que genera {o,Naranjas} necesarias para invocar Héroes y comprar mejoras."
+  },
+  {
+    "offset": 3702451,
+    "byteLen": 84,
+    "es": "Tangy usa su magia y {o,Naranjas} para invocar a pequeños Héroes que la defiendan."
+  },
+  {
+    "offset": 3702768,
+    "byteLen": 92,
+    "es": "Criaturas aladas repugnantes que pueden sobrevolar a los Defensores. Adaptadas al frío, son"
+  },
+  {
+    "offset": 3702861,
+    "byteLen": 30,
+    "es": "{b,inmunes al Daño de Frío}."
+  },
+  {
+    "offset": 3702916,
+    "byteLen": 20,
+    "es": "Murciélago de Hielo"
+  },
+  {
+    "offset": 3702941,
+    "byteLen": 150,
+    "es": "Criaturas aladas agresivas que pueden sobrevolar a los Defensores y atacar cualquier cosa que se interponga en su camino. {b,Inmune al Daño de Frío}"
+  },
+  {
+    "offset": 3703130,
+    "byteLen": 65,
+    "es": "Criaturas voladoras traviesas que son muy difíciles de derrotar."
+  },
+  {
+    "offset": 3703196,
+    "byteLen": 29,
+    "es": "{b,Inmunes al Daño de Frío}"
+  },
+  {
+    "offset": 3703270,
+    "byteLen": 91,
+    "es": "Colosal monstruo volador con tentáculos que aplica Escarcha a todos los enemigos cercanos."
+  },
+  {
+    "offset": 3703362,
+    "byteLen": 28,
+    "es": "{b,Inmune al Daño de Frío}"
+  },
+  {
+    "offset": 3703421,
+    "byteLen": 49,
+    "es": "Roedores rápidos y feroces con dientes afilados."
+  },
+  {
+    "offset": 3703496,
+    "byteLen": 61,
+    "es": "Roedores mucho más rápidos y feroces, con dientes afilados."
+  },
+  {
+    "offset": 3703586,
+    "byteLen": 80,
+    "es": "Mucho más resistentes que las ratas normales. ¡Al derrotarlas, sueltan cofres!"
+  },
+  {
+    "offset": 3703844,
+    "byteLen": 154,
+    "es": "Criaturas rápidas y feroces equipadas con enormes y afilados dientes que desgarran la piel. Su agilidad les permite esquivar los ataques cuerpo a cuerpo."
+  },
+  {
+    "offset": 3704030,
+    "byteLen": 169,
+    "es": "Criaturas rápidas y resistentes, despiadadas, dotadas de enormes y afilados dientes que desgarran la piel. Su agilidad les permite esquivar los ataques cuerpo a cuerpo."
+  },
+  {
+    "offset": 3704250,
+    "byteLen": 125,
+    "es": "Con sus dientes helados y afilados como cuchillas, estas bestias traen una muerte gélida incluso a los guerreros más duros."
+  },
+  {
+    "offset": 3704668,
+    "byteLen": 83,
+    "es": "Humanoides malignos equipados con un arco que se centran en los objetivos débiles."
+  },
+  {
+    "offset": 3704782,
+    "byteLen": 79,
+    "es": "Chamán malvado que cura a los aliados cercanos y lanza bolas de fuego letales."
+  },
+  {
+    "offset": 3704992,
+    "byteLen": 122,
+    "es": "Caballero resistente que no puede ser aturdido ni empujado hacia atrás. Su pesado martillo aturde brevemente al impactar."
+  },
+  {
+    "offset": 3705151,
+    "byteLen": 99,
+    "es": "Arma de asedio de largo alcance manejada por humanoides malvados. Muy letal para grupos de Héroes."
+  },
+  {
+    "offset": 3705287,
+    "byteLen": 43,
+    "es": "Goblins, pero con una gran espada, ¡Yarrr!"
+  },
+  {
+    "offset": 3705354,
+    "byteLen": 76,
+    "es": "¡Albóndiga desatada! Golpea el suelo, aturdiendo a los objetivos cercanos."
+  },
+  {
+    "offset": 3705470,
+    "byteLen": 127,
+    "es": "El Rey de los Goblins es un feroz guerrero que derriba a los objetivos cercanos y dispara a los Héroes lejanos con su cañón."
+  },
+  {
+    "offset": 3705629,
+    "byteLen": 66,
+    "es": "Feroz guerrero capaz de resistir incluso los ataques más fuertes."
+  },
+  {
+    "offset": 3705791,
+    "byteLen": 53,
+    "es": "Bombardero kamikaze muy rápido. Explota al impactar."
+  },
+  {
+    "offset": 3705875,
+    "byteLen": 80,
+    "es": "Bombardero kamikaze muy rápido. Explota al impactar creando una niebla gélida."
+  },
+  {
+    "offset": 3705994,
+    "byteLen": 91,
+    "es": "Autómatas sin mente que obedecen las órdenes del Rey Necro, {r,Ignoran a los Defensores}."
+  },
+  {
+    "offset": 3706116,
+    "byteLen": 69,
+    "es": "Humanoides sin mente, inmunes al {G,Daño Físico}. Reviven al morir."
+  },
+  {
+    "offset": 3706212,
+    "byteLen": 117,
+    "es": "El Rey Nigromante, todos los esqueletos obedecen sus órdenes. Invoca un ejército de esqueletos sedientos de sangre."
+  },
+  {
+    "offset": 3706611,
+    "byteLen": 157,
+    "es": "Monstruo muy letal con garras y dientes afilados que desgarran incluso las armaduras más resistentes. Enterrados bajo tierra, solo se revelan cuando atacan."
+  },
+  {
+    "offset": 3707060,
+    "byteLen": 50,
+    "es": "Seres translúcidos que son muy difíciles de ver."
+  },
+  {
+    "offset": 3707239,
+    "byteLen": 18,
+    "es": "Guardián de Hielo"
+  },
+  {
+    "offset": 3707261,
+    "byteLen": 104,
+    "es": "Gigantesco Golem de hielo puro. Casi nada puede dañar a esta monstruosidad, a excepción del {r,Fuego}."
+  },
+  {
+    "offset": 3707492,
+    "byteLen": 55,
+    "es": "[h-2]{y,Convierte todo el daño en {b,Daño de Frío}.}"
+  },
+  {
+    "offset": 3707559,
+    "byteLen": 55,
+    "es": "[h-2]{y,Convierte todo el daño en {r,Daño de Fuego}.}"
+  },
+  {
+    "offset": 3707626,
+    "byteLen": 54,
+    "es": "[h-2]{y,Convierte todo el daño en {b,Daño de Rayo}.}"
+  },
+  {
+    "offset": 3707692,
+    "byteLen": 56,
+    "es": "[h-2]{y,Convierte todo el daño en {g,Daño de Veneno}.}"
+  },
+  {
+    "offset": 3707760,
+    "byteLen": 58,
+    "es": "[h-2]{y,Puede atacar a enemigos translúcidos/enterrados.}"
+  },
+  {
+    "offset": 3707830,
+    "byteLen": 65,
+    "es": "[h-2]{y,Crea explosiones secundarias más pequeñas al impactar.}"
+  },
+  {
+    "offset": 3707909,
+    "byteLen": 44,
+    "es": "[h-2]{y,Los proyectiles regresan al Héroe.}"
+  },
+  {
+    "offset": 3708229,
+    "byteLen": 83,
+    "es": "[h-2]{y,Cada vez que Tangy levanta con éxito a Héroes, obtiene {w,+1% de Daño}.}"
+  },
+  {
+    "offset": 3708329,
+    "byteLen": 126,
+    "es": "[h-2]{y,Los Héroes levantados obtienen {w,40% de Alcance} y {w,10% de Daño} y pueden {w,Atacar} mientras son transportados.}"
+  },
+  {
+    "offset": 3708481,
+    "byteLen": 111,
+    "es": "[h-2]{y,Marca los objetivos principales que Tangy está atacando, haciendo que reciban {w, 30% más de Daño}.}"
+  },
+  {
+    "offset": 3708615,
+    "byteLen": 89,
+    "es": "[h-2]{y,La unidad ignora obstáculos como árboles, etc. Los proyectiles los atraviesan.}"
+  },
+  {
+    "offset": 3708807,
+    "byteLen": 46,
+    "es": "{y,Cada tercer ataque provoca una explosión.}"
+  },
+  {
+    "offset": 3708863,
+    "byteLen": 94,
+    "es": "{y,Al Equipar, coloca un estandarte que potencia a los Héroes cercanos un {w,+10% de Daño}.}"
+  },
+  {
+    "offset": 3708977,
+    "byteLen": 103,
+    "es": "{y,Al Equipar, coloca un estandarte que potencia la {w,Regeneración de Vida} de los Héroes cercanos.}"
+  },
+  {
+    "offset": 3709185,
+    "byteLen": 81,
+    "es": "{y,Cada 8 ataques, libera una ráfaga de espinas que inflige {w,Daño de Área}.}"
+  },
+  {
+    "offset": 3709283,
+    "byteLen": 108,
+    "es": "{y,Crea un proyectil que atraviesa a todos los enemigos a los que impacta, provocando un pequeño Retroceso."
+  },
+  {
+    "offset": 3709451,
+    "byteLen": 101,
+    "es": "{y,Los escudos orbitan alrededor de la unidad, infligiendo daño a todos los Enemigos que atraviesan."
+  },
+  {
+    "offset": 3709603,
+    "byteLen": 64,
+    "es": "{y,Absorbe una parte del daño que reciben los aliados cercanos."
+  },
+  {
+    "offset": 3709924,
+    "byteLen": 77,
+    "es": "{y,Lanza una botella de veneno que deja un charco tóxico de gas al impactar."
+  },
+  {
+    "offset": 3710054,
+    "byteLen": 109,
+    "es": "{y,Cada 6 ataques, lanza un rayo que atraviesa a los enemigos, causando menos daño con cada encadenamiento.}"
+  },
+  {
+    "offset": 3710186,
+    "byteLen": 125,
+    "es": "{y,Lanza un rayo que atraviesa a los enemigos, infligiendo menos daño con cada encadenamiento.}[h1]Enfriamiento Base: {w,6s}"
+  },
+  {
+    "offset": 3710337,
+    "byteLen": 107,
+    "es": "{y,Crea un círculo en la ubicación seleccionada que cura a las unidades aliadas que se encuentran dentro."
+  },
+  {
+    "offset": 3710595,
+    "byteLen": 81,
+    "es": "{y,Cada 6 ataques, libera una ráfaga de hielo detrás del objetivo al impactar.}"
+  },
+  {
+    "offset": 3710693,
+    "byteLen": 106,
+    "es": "{y,Dispara múltiples flechas al aire hacia una ubicación seleccionada, las flechas explotan al impactar."
+  },
+  {
+    "offset": 3710859,
+    "byteLen": 126,
+    "es": "{y,Coloca una trampa en la ubicación seleccionada. Al activarse, libera una explosión gélida.[h1]Enfriamiento Base: {w,4s}}"
+  },
+  {
+    "offset": 3711011,
+    "byteLen": 92,
+    "es": "{y,Invoca un montón de hojas que se disparan lentamente hacia la {y,Dirección del Ataque}."
+  },
+  {
+    "offset": 3711161,
+    "byteLen": 81,
+    "es": "{y,Lanza armas en espiral hacia afuera, dañando a todos los enemigos que golpea."
+  },
+  {
+    "offset": 3711297,
+    "byteLen": 42,
+    "es": "{y,Al morir, revivirás con toda tu salud."
+  },
+  {
+    "offset": 3711388,
+    "byteLen": 88,
+    "es": "{y,Al Impactar, invoca un tótem cerca del objetivo, lo que reduce su {w,Salud un -20%}."
+  },
+  {
+    "offset": 3711563,
+    "byteLen": 80,
+    "es": "{y,Al Impactar, teletransporta a un grupo de enemigos hacia atrás en el camino."
+  },
+  {
+    "offset": 3711698,
+    "byteLen": 139,
+    "es": "{y,Cuando estés quieto, invoca una fogata que aumenta la {w,Regeneración de Salud} de los Héroes cercanos y su {w,Velocidad de Ataque}.}"
+  },
+  {
+    "offset": 3711866,
+    "byteLen": 80,
+    "es": "{y,Cuando estés quieto, invoca una Cruz que protegerá a los Héroes cercanos.}"
+  },
+  {
+    "offset": 3711963,
+    "byteLen": 76,
+    "es": "{y,Lanza una bola de fuego que explota al contacto, causando Daño de Área."
+  },
+  {
+    "offset": 3712092,
+    "byteLen": 72,
+    "es": "{y,Dispara una flecha al aire que impacta en la ubicación seleccionada."
+  },
+  {
+    "offset": 3712353,
+    "byteLen": 105,
+    "es": "{y,Dispara una gran bala de cañón hacia una ubicación seleccionada, causando un Daño de Área masivo."
+  },
+  {
+    "offset": 3712647,
+    "byteLen": 86,
+    "es": "{y,Al entrar en contacto con los enemigos, la unidad estalla causando Daño de Área.}"
+  },
+  {
+    "offset": 3712751,
+    "byteLen": 109,
+    "es": "{y,Al entrar en contacto con los enemigos, la unidad provoca una explosión gélida causando Daño de Área.}"
+  },
+  {
+    "offset": 3712970,
+    "byteLen": 93,
+    "es": "{y,Dispara una bola venenosa que explota al impactar, dejando tras de sí una nube de Veneno."
+  },
+  {
+    "offset": 3713235,
+    "byteLen": 73,
+    "es": "{y,Convoca a un ejército de muertos vivientes para que luchen a tu lado."
+  },
+  {
+    "offset": 3713361,
+    "byteLen": 80,
+    "es": "{y,Crea un proyectil que sigue al objetivo e inflige Daño de Área al impactar."
+  },
+  {
+    "offset": 3713833,
+    "byteLen": 133,
+    "es": "{y,Al morir, maldice al asesino y a todas las unidades a su alrededor. Las unidades malditas reciben menos daño durante un tiempo.}."
+  },
+  {
+    "offset": 3714146,
+    "byteLen": 57,
+    "es": "{y,Aplica {g,Escarcha} a todos los enemigos en el área}."
+  },
+  {
+    "offset": 3714215,
+    "byteLen": 80,
+    "es": "{y,Golpea una ubicación seleccionada con un meteorito que causa Daño de Área."
+  },
+  {
+    "offset": 3714350,
+    "byteLen": 124,
+    "es": "{y,Detona una ráfaga que golpea a los enemigos a tu alrededor, infligiendo Daño de Área y {b,congelándolos} en el sitio."
+  },
+  {
+    "offset": 3714537,
+    "byteLen": 89,
+    "es": "{y,Inmoviliza a todos los enemigos cercanos y les aplica una debilitación de {g,veneno}."
+  },
+  {
+    "offset": 3714683,
+    "byteLen": 81,
+    "es": "{y,Lanza una serie de pinchos de hielo hacia tu objetivo, causando Daño de Área"
+  },
+  {
+    "offset": 3715009,
+    "byteLen": 73,
+    "es": "{y,Rayos impactan en una ubicación seleccionada y causan Daño de Área."
+  },
+  {
+    "offset": 3715136,
+    "byteLen": 86,
+    "es": "{y,Golpea a los enemigos con el Escudo, causándoles {w,Aturdimiento} y {w,Retroceso}."
+  },
+  {
+    "offset": 3715277,
+    "byteLen": 86,
+    "es": "{y,Lanza un Escudo que inflige daño y se divide en múltiples fragmentos al impactar."
+  },
+  {
+    "offset": 3715418,
+    "byteLen": 84,
+    "es": "{y,Habilidad activada por el usuario. {g,Cura} a todos los Héroes dentro del área."
+  },
+  {
+    "offset": 3715810,
+    "byteLen": 49,
+    "es": "{y,Dispara un aguijón directamente a un enemigo."
+  },
+  {
+    "offset": 3715907,
+    "byteLen": 112,
+    "es": "{y,Corre a toda velocidad a través de un objetivo infligiendo daño a todos los enemigos que haya en tu camino."
+  },
+  {
+    "offset": 3716336,
+    "byteLen": 107,
+    "es": "Al derrotar a los enemigos, {y,Tangy} gana {g,Puntos de Habilidad}. ¡Gástalos para hacerte más poderoso!"
+  },
+  {
+    "offset": 3716465,
+    "byteLen": 52,
+    "es": "¡Bien! Ahora abre la tienda para comprar un objeto."
+  },
+  {
+    "offset": 3716528,
+    "byteLen": 57,
+    "es": "Los Héroes utilizan objetos para hacerse más poderosos."
+  },
+  {
+    "offset": 3716597,
+    "byteLen": 40,
+    "es": "¡Combinar el mismo objeto lo mejorará!"
+  },
+  {
+    "offset": 3716673,
+    "byteLen": 123,
+    "es": "¡Los Héroes ganan experiencia al derrotar a los enemigos! Abre ahora el Árbol de Habilidades pulsando [%d] en un Héroe."
+  },
+  {
+    "offset": 3716821,
+    "byteLen": 114,
+    "es": "A medida que los Héroes suben de nivel, pueden gastar puntos de habilidad para aumentar permanentemente su poder."
+  },
+  {
+    "offset": 3716959,
+    "byteLen": 82,
+    "es": "¡Los Goblins se han llevado a nuestra {g,Sanadora}! ¡Derrótalos para liberarla!"
+  },
+  {
+    "offset": 3717058,
+    "byteLen": 71,
+    "es": "Si derrotas a todos los Goblins que la protegen, ¡ella quedará libre!"
+  },
+  {
+    "offset": 3717144,
+    "byteLen": 56,
+    "es": "¡Mira, Tangy se ha despertado! Puedes moverla con [%d]."
+  },
+  {
+    "offset": 3717561,
+    "byteLen": 25,
+    "es": "¡Disculpa las molestias!"
+  },
+  {
+    "offset": 3717662,
+    "byteLen": 59,
+    "es": "Conéctate a {B,Steam} para ver la tabla de clasificación."
+  },
+  {
+    "offset": 3718191,
+    "byteLen": 49,
+    "es": "{r,Juega misiones para desbloquear más Héroes.}"
+  },
+  {
+    "offset": 3718251,
+    "byteLen": 49,
+    "es": "{r,Juega misiones para desbloquear más mejoras.}"
+  },
+  {
+    "offset": 3718345,
+    "byteLen": 80,
+    "es": "{G,El objeto no se volverá a relanzar. Pulsa Mayús + Clic para desbloquearlo.}"
+  },
+  {
+    "offset": 3718462,
+    "byteLen": 74,
+    "es": "{G,El objeto se volverá a relanzar. Pulsa Mayús + Clic para bloquearlo.}"
+  },
+  {
+    "offset": 3718580,
+    "byteLen": 23,
+    "es": "Ronda más Alta: {o,%d}"
+  },
+  {
+    "offset": 3718665,
+    "byteLen": 32,
+    "es": "{r,¡No hay suficiente espacio!}"
+  },
+  {
+    "offset": 3718704,
+    "byteLen": 45,
+    "es": "{g,¡Acabo de encontrarlo! ¡GRATIS una vez!}"
+  },
+  {
+    "offset": 3718768,
+    "byteLen": 25,
+    "es": "Aún no se ha encontrado."
+  },
+  {
+    "offset": 3718816,
+    "byteLen": 20,
+    "es": "Selección de Héroe"
+  },
+  {
+    "offset": 3718879,
+    "byteLen": 35,
+    "es": "Elige un Héroe para desbloquearlo."
+  },
+  {
+    "offset": 3719077,
+    "byteLen": 18,
+    "es": "Desbloquear Héroe"
+  },
+  {
+    "offset": 3719230,
+    "byteLen": 108,
+    "es": "¡Escala en la {y,clasificación} luchando contra oleadas infinitas para ver cuánto tiempo puedes aguantar!"
+  },
+  {
+    "offset": 3719401,
+    "byteLen": 25,
+    "es": "{g,ÁRBOL DE HABILIDADES}"
+  },
+  {
+    "offset": 3719448,
+    "byteLen": 22,
+    "es": "{g,¿Abandonar nivel?}"
+  },
+  {
+    "offset": 3719475,
+    "byteLen": 84,
+    "es": "¿Estás seguro de que quieres abandonar el nivel y volver al árbol de habilidades?"
+  },
+  {
+    "offset": 3719623,
+    "byteLen": 117,
+    "es": "La cantidad de Puntos de Habilidad que tiene este Héroe. Todos los Héroes comparten el mismo árbol de habilidades."
+  },
+  {
+    "offset": 3719937,
+    "byteLen": 31,
+    "es": "{g,Abrir Árbol de Habilidades}"
+  },
+  {
+    "offset": 3720182,
+    "byteLen": 36,
+    "es": "- No dejes que muera ningún Héroe:"
+  },
+  {
+    "offset": 3720280,
+    "byteLen": 40,
+    "es": "Información Avanzada sobre Herramientas"
+  },
+  {
+    "offset": 3720417,
+    "byteLen": 70,
+    "es": "¿Estás seguro de que quieres abandonar la misión y volver a inicio?"
+  },
+  {
+    "offset": 3720502,
+    "byteLen": 41,
+    "es": "¿Estás seguro de que quieres reiniciar?"
+  },
+  {
+    "offset": 3720552,
+    "byteLen": 55,
+    "es": "{G,Desbloquea habilidades en el Árbol de Habilidades.}"
+  },
+  {
+    "offset": 3720812,
+    "byteLen": 28,
+    "es": "Inicio Automático de Rondas"
+  },
+  {
+    "offset": 3720846,
+    "byteLen": 58,
+    "es": "Mostrar siempre todos los nodos del Árbol de Habilidades."
+  },
+  {
+    "offset": 3720944,
+    "byteLen": 25,
+    "es": "Mostrar Números de Daño"
+  },
+  {
+    "offset": 3721023,
+    "byteLen": 38,
+    "es": "Mostrar barras de salud en los Héroes"
+  },
+  {
+    "offset": 3721571,
+    "byteLen": 22,
+    "es": "¡Héroe desbloqueado!"
+  },
+  {
+    "offset": 3721598,
+    "byteLen": 21,
+    "es": "Árbol de Habilidades"
+  },
+  {
+    "offset": 3722027,
+    "byteLen": 50,
+    "es": "Gana estrellas si cada Árbol Tangy sobrevive con:"
+  },
+  {
+    "offset": 3722217,
+    "byteLen": 32,
+    "es": "No dejes morir a ningún Héroe."
+  },
+  {
+    "offset": 3723480,
+    "byteLen": 16,
+    "es": "Bastón de Hielo"
+  },
+  {
+    "offset": 3723500,
+    "byteLen": 16,
+    "es": "Bastón de Fuego"
+  },
+  {
+    "offset": 3724443,
+    "byteLen": 59,
+    "es": "La unidad es inmune a {b,Frío} y sus efectos relacionados."
+  },
+  {
+    "offset": 3724822,
+    "byteLen": 68,
+    "es": "La cantidad en píxeles que un enemigo es {y,empujado} hacia atrás."
+  },
+  {
+    "offset": 3724973,
+    "byteLen": 38,
+    "es": "La duración de los {y,Aturdimientos}."
+  },
+  {
+    "offset": 3725019,
+    "byteLen": 39,
+    "es": "Duración del Aturdimiento {%c, %+.1fs}"
+  },
+  {
+    "offset": 3725067,
+    "byteLen": 40,
+    "es": "Duración del Aturdimiento {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3725144,
+    "byteLen": 33,
+    "es": "La velocidad en píxeles/segundo."
+  },
+  {
+    "offset": 3725279,
+    "byteLen": 36,
+    "es": "Multiplicador global para {y,Daño}."
+  },
+  {
+    "offset": 3725323,
+    "byteLen": 19,
+    "es": "Daño {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3725347,
+    "byteLen": 13,
+    "es": "Daño Físico"
+  },
+  {
+    "offset": 3725363,
+    "byteLen": 66,
+    "es": "La cantidad de {G,Daño Físico}, se ve reducido por {G,Armadura}."
+  },
+  {
+    "offset": 3725443,
+    "byteLen": 25,
+    "es": "Daño Físico {%c, %+.0f}"
+  },
+  {
+    "offset": 3725474,
+    "byteLen": 27,
+    "es": "Daño Físico {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3725537,
+    "byteLen": 78,
+    "es": "Probabilidad de infligir {r,Sangrado}, causando un 40% de {G,Daño Físico}/s."
+  },
+  {
+    "offset": 3725677,
+    "byteLen": 18,
+    "es": "Daño por Sangrado"
+  },
+  {
+    "offset": 3725699,
+    "byteLen": 86,
+    "es": "La cantidad de {r,Daño por Sangrado} por segundo. No se ve afectado por {G,Armadura}."
+  },
+  {
+    "offset": 3725803,
+    "byteLen": 30,
+    "es": "Daño por Sangrado {%c, %+.0f}"
+  },
+  {
+    "offset": 3725840,
+    "byteLen": 32,
+    "es": "Daño por Sangrado {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3725879,
+    "byteLen": 22,
+    "es": "Duración del Sangrado"
+  },
+  {
+    "offset": 3725906,
+    "byteLen": 51,
+    "es": "La duración en segundos de {r,Sangrado} infligido."
+  },
+  {
+    "offset": 3725968,
+    "byteLen": 35,
+    "es": "Duración del Sangrado {%c, %+.1fs}"
+  },
+  {
+    "offset": 3726011,
+    "byteLen": 37,
+    "es": "Duración del Sangrado {%.c, %+.0f%%}"
+  },
+  {
+    "offset": 3726065,
+    "byteLen": 26,
+    "es": "Daño Reflejado {%c, %.0f}"
+  },
+  {
+    "offset": 3726097,
+    "byteLen": 29,
+    "es": "Daño Reflejado {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3726272,
+    "byteLen": 32,
+    "es": "Radio de Ataque en {y,píxeles}."
+  },
+  {
+    "offset": 3726425,
+    "byteLen": 15,
+    "es": "Área de Efecto"
+  },
+  {
+    "offset": 3726444,
+    "byteLen": 80,
+    "es": "{y,Área de Efecto} se muestra como el {y,Radio} en píxeles del área cubierta."
+  },
+  {
+    "offset": 3726541,
+    "byteLen": 27,
+    "es": "Área de Efecto {%c, %+.0f}"
+  },
+  {
+    "offset": 3726574,
+    "byteLen": 29,
+    "es": "Área de Efecto {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3726820,
+    "byteLen": 49,
+    "es": "Reduce la cantidad de {G,Daño Físico} recibido."
+  },
+  {
+    "offset": 3726907,
+    "byteLen": 24,
+    "es": "Penetración de Armadura"
+  },
+  {
+    "offset": 3726977,
+    "byteLen": 38,
+    "es": "Penetración de Armadura {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3727023,
+    "byteLen": 30,
+    "es": "Daño Absorbido por Intervenir"
+  },
+  {
+    "offset": 3727060,
+    "byteLen": 44,
+    "es": "Daño Absorbido por Intervenir {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3727342,
+    "byteLen": 28,
+    "es": "Coste del Héroe {%c, %+.0f}"
+  },
+  {
+    "offset": 3727376,
+    "byteLen": 30,
+    "es": "Coste del Héroe {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3727431,
+    "byteLen": 154,
+    "es": "La cantidad base de {0,Curación} realizada con {y,Poderes}. Normalmente, los {y,Poderes} añaden su propia cantidad base de {0,Curación} adicionalmente."
+  },
+  {
+    "offset": 3727701,
+    "byteLen": 49,
+    "es": "Reduce la cantidad de {b,Daño Mágico} recibido."
+  },
+  {
+    "offset": 3727800,
+    "byteLen": 30,
+    "es": "Duración del Efecto del Poder"
+  },
+  {
+    "offset": 3727837,
+    "byteLen": 195,
+    "es": "Afecta a la duración de {y,Poderes} y {y,Efectos} tales como {r,Quemadura}, {b,Escarcha, Congelación}, {g,Envenenamiento}, {y,Aturdimiento}, etc. Todo lo que tenga una duración se ve afectado."
+  },
+  {
+    "offset": 3728072,
+    "byteLen": 32,
+    "es": "Duración del Poder {%c, %+.1fs}"
+  },
+  {
+    "offset": 3728111,
+    "byteLen": 33,
+    "es": "Duración del Poder {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3728151,
+    "byteLen": 14,
+    "es": "Daño de Fuego"
+  },
+  {
+    "offset": 3728169,
+    "byteLen": 44,
+    "es": "La cantidad de {r,Daño de Fuego} infligido."
+  },
+  {
+    "offset": 3728223,
+    "byteLen": 26,
+    "es": "Daño de Fuego {%c, %+.0f}"
+  },
+  {
+    "offset": 3728255,
+    "byteLen": 28,
+    "es": "Daño de Fuego {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3728319,
+    "byteLen": 155,
+    "es": "El {r,Daño de Fuego} tiene una probabilidad de infligir {r,Quemadura}, que inflige un 40% del daño inicial como {r,Daño de Quemadura} durante un tiempo."
+  },
+  {
+    "offset": 3728552,
+    "byteLen": 22,
+    "es": "Duración de Quemadura"
+  },
+  {
+    "offset": 3728579,
+    "byteLen": 52,
+    "es": "La duración en segundos de {r,Quemadura} infligida."
+  },
+  {
+    "offset": 3728642,
+    "byteLen": 35,
+    "es": "Duración de Quemadura {%c, %+.0fs}"
+  },
+  {
+    "offset": 3728685,
+    "byteLen": 36,
+    "es": "Duración de Quemadura {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3728729,
+    "byteLen": 18,
+    "es": "Daño de Quemadura"
+  },
+  {
+    "offset": 3728751,
+    "byteLen": 50,
+    "es": "La cantidad de {r,Daño de Quemadura} por segundo."
+  },
+  {
+    "offset": 3728812,
+    "byteLen": 30,
+    "es": "Daño de Quemadura {%c, %+.0f}"
+  },
+  {
+    "offset": 3728849,
+    "byteLen": 32,
+    "es": "Daño de Quemadura {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3728916,
+    "byteLen": 51,
+    "es": "El objetivo recibe un aumento de {r,Daño de Fuego}"
+  },
+  {
+    "offset": 3729016,
+    "byteLen": 37,
+    "es": "Daño de Fuego recibido {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3729141,
+    "byteLen": 14,
+    "es": "Daño de Frío"
+  },
+  {
+    "offset": 3729159,
+    "byteLen": 88,
+    "es": "La cantidad de {B,Daño de Frío} infligido. El {B,Daño de Frío} inflige {B,Escarcha}."
+  },
+  {
+    "offset": 3729265,
+    "byteLen": 26,
+    "es": "Daño de Frío {%c, %+.0f}"
+  },
+  {
+    "offset": 3729297,
+    "byteLen": 28,
+    "es": "Daño de Frío {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3729353,
+    "byteLen": 71,
+    "es": "El porcentaje de {y,Ralentización } causado por {B,Efecto de Escarcha}"
+  },
+  {
+    "offset": 3729504,
+    "byteLen": 51,
+    "es": "La duración en segundos de {B,Escarcha} infligida."
+  },
+  {
+    "offset": 3729651,
+    "byteLen": 25,
+    "es": "Duración de Congelación"
+  },
+  {
+    "offset": 3729682,
+    "byteLen": 55,
+    "es": "La duración en segundos de {B,Congelación} infligida."
+  },
+  {
+    "offset": 3729749,
+    "byteLen": 38,
+    "es": "Duración de Congelación {%c, %+.0fs}"
+  },
+  {
+    "offset": 3729795,
+    "byteLen": 39,
+    "es": "Duración de Congelación {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3729843,
+    "byteLen": 28,
+    "es": "Probabilidad de Congelación"
+  },
+  {
+    "offset": 3729877,
+    "byteLen": 62,
+    "es": "La posibilidad de {B,Congelar} al infligir {B,Daño de Frío}."
+  },
+  {
+    "offset": 3729952,
+    "byteLen": 42,
+    "es": "Probabilidad de Congelación {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3730003,
+    "byteLen": 39,
+    "es": "Límite de Probabilidad de Congelación"
+  },
+  {
+    "offset": 3730051,
+    "byteLen": 52,
+    "es": "Límite de Probabilidad de Congelación {%c, %.0f%%}"
+  },
+  {
+    "offset": 3730142,
+    "byteLen": 52,
+    "es": "El objetivo recibe un aumento de {B,Daño de Frío}."
+  },
+  {
+    "offset": 3730244,
+    "byteLen": 37,
+    "es": "Daño de Frío recibido {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3730289,
+    "byteLen": 22,
+    "es": "Golpes de Congelación"
+  },
+  {
+    "offset": 3730316,
+    "byteLen": 34,
+    "es": "Golpes de Congelación {%c, %+.0f}"
+  },
+  {
+    "offset": 3730358,
+    "byteLen": 13,
+    "es": "Daño de Rayo"
+  },
+  {
+    "offset": 3730374,
+    "byteLen": 43,
+    "es": "La cantidad de {y,Daño de Rayo} infligido."
+  },
+  {
+    "offset": 3730426,
+    "byteLen": 25,
+    "es": "Daño de Rayo {%c, %+.0f}"
+  },
+  {
+    "offset": 3730457,
+    "byteLen": 27,
+    "es": "Daño de Rayo {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3730490,
+    "byteLen": 20,
+    "es": "Efecto de Conmoción"
+  },
+  {
+    "offset": 3730515,
+    "byteLen": 112,
+    "es": "Atacar a objetivos aturdidos con {y,Daño de Rayo} los descarga, infligiendo daño a los objetivos circundantes."
+  },
+  {
+    "offset": 3730650,
+    "byteLen": 31,
+    "es": "Daño de Conmoción {%c, %+.0f}"
+  },
+  {
+    "offset": 3730688,
+    "byteLen": 33,
+    "es": "Daño de Conmoción {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3730728,
+    "byteLen": 26,
+    "es": "Probabilidad de Conmoción"
+  },
+  {
+    "offset": 3730760,
+    "byteLen": 70,
+    "es": "El {y,Daño de Rayo} tiene una probabilidad de infligir {y,Conmoción}"
+  },
+  {
+    "offset": 3730845,
+    "byteLen": 40,
+    "es": "Probabilidad de Conmoción {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3730921,
+    "byteLen": 51,
+    "es": "El objetivo recibe un aumento de {y,Daño de Rayo}."
+  },
+  {
+    "offset": 3731021,
+    "byteLen": 36,
+    "es": "Daño de Rayo recibido {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3731065,
+    "byteLen": 15,
+    "es": "Daño de Veneno"
+  },
+  {
+    "offset": 3731084,
+    "byteLen": 45,
+    "es": "La cantidad de {g,Daño de Veneno} infligida."
+  },
+  {
+    "offset": 3731139,
+    "byteLen": 27,
+    "es": "Daño de Veneno {%c, %+.0f}"
+  },
+  {
+    "offset": 3731172,
+    "byteLen": 29,
+    "es": "Daño de Veneno {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3731235,
+    "byteLen": 163,
+    "es": "Los golpes con {g,Daño de Veneno} tienen una probabilidad de infligir {g,Veneno}, que inflige un 40% del daño inicial como {g,Daño de Veneno} durante un tiempo."
+  },
+  {
+    "offset": 3731475,
+    "byteLen": 19,
+    "es": "Duración de Veneno"
+  },
+  {
+    "offset": 3731499,
+    "byteLen": 49,
+    "es": "La duración en segundos de {g,Veneno} infligido."
+  },
+  {
+    "offset": 3731559,
+    "byteLen": 32,
+    "es": "Duración de Veneno {%c, %+.1fs}"
+  },
+  {
+    "offset": 3731598,
+    "byteLen": 33,
+    "es": "Duración de Veneno {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3731668,
+    "byteLen": 53,
+    "es": "El objetivo recibe un aumento de {g,Daño de Veneno}."
+  },
+  {
+    "offset": 3731771,
+    "byteLen": 38,
+    "es": "Daño de Veneno recibido {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3731842,
+    "byteLen": 121,
+    "es": "El número de {y,Objetivos} alcanzados con {y,Ataques de Área}. Los golpes de espada se consideran {y,Ataques de Área}."
+  },
+  {
+    "offset": 3732069,
+    "byteLen": 16,
+    "es": "Daño Prolongado"
+  },
+  {
+    "offset": 3732089,
+    "byteLen": 159,
+    "es": "Multiplicador global que se aplica adicionalmente a los efectos de {y,Daño Prolongado}, tales como, entre otros, {r,Quemadura}, {g,Veneno}, {r,Sangrado}, etc."
+  },
+  {
+    "offset": 3732281,
+    "byteLen": 30,
+    "es": "Daño Prolongado {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3732512,
+    "byteLen": 34,
+    "es": "Número de Proyectiles {%c, %+.0f}"
+  },
+  {
+    "offset": 3732554,
+    "byteLen": 36,
+    "es": "Número de Proyectiles {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3732628,
+    "byteLen": 93,
+    "es": "El número de veces que un {y,Proyectil} puede {y,Perforar} un objetivo antes de desaparecer."
+  },
+  {
+    "offset": 3732815,
+    "byteLen": 237,
+    "es": "El número de veces que un {y,Proyectil} puede {y,Encadenar} un objetivo antes de desaparecer. Cada {y,Encadenamiento} reduce el {y,Daño} infligido en un {y,40%}. El {y,Encadenamiento} solo puede producirse {r,después} de {y,Perforar}."
+  },
+  {
+    "offset": 3733193,
+    "byteLen": 23,
+    "es": "Daño de Encadenamiento"
+  },
+  {
+    "offset": 3733221,
+    "byteLen": 92,
+    "es": "La cantidad de {y,Reducción de Daño} aplicada cada vez que un {y,Proyectil es Encadenado}."
+  },
+  {
+    "offset": 3733332,
+    "byteLen": 37,
+    "es": "Daño de Encadenamiento {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3733377,
+    "byteLen": 24,
+    "es": "División de Proyectiles"
+  },
+  {
+    "offset": 3733407,
+    "byteLen": 194,
+    "es": "El número de veces que un {y,Proyectil} puede {y,Dividirse}. Cada {y,División} reduce el {y,Daño} infligido en un {y,40%}. {y,Dividirse} solo puede ocurrir {r,después} de {y,Encadenamiento}."
+  },
+  {
+    "offset": 3733681,
+    "byteLen": 18,
+    "es": "Daño de División"
+  },
+  {
+    "offset": 3733703,
+    "byteLen": 82,
+    "es": "La cantidad de {y,Reducción de Daño} aplicada cuando un {y,Proyectil se Divide}."
+  },
+  {
+    "offset": 3733802,
+    "byteLen": 32,
+    "es": "Daño de División {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3733868,
+    "byteLen": 61,
+    "es": "La {y,Velocidad en Píxeles} a la que vuela un {y,Proyectil}."
+  },
+  {
+    "offset": 3734176,
+    "byteLen": 138,
+    "es": "Un {y,Proyectil} disparado hacia un {y,Objetivo} modificará su trayectoria de vuelo en función de la {y,Fuerza de Seguimiento} aplicada."
+  },
+  {
+    "offset": 3734407,
+    "byteLen": 42,
+    "es": "Cura a todos los Héroes dentro del área."
+  },
+  {
+    "offset": 3734458,
+    "byteLen": 23,
+    "es": "Ampliación del Alcance"
+  },
+  {
+    "offset": 3734486,
+    "byteLen": 30,
+    "es": "Aumenta el radio de curación."
+  },
+  {
+    "offset": 3734577,
+    "byteLen": 76,
+    "es": "Cura a dos Héroes adicionales, seleccionando a los Héroes con menos salud."
+  },
+  {
+    "offset": 3734691,
+    "byteLen": 63,
+    "es": "Aplica una barrera que previene el daño mientras está activa."
+  },
+  {
+    "offset": 3734786,
+    "byteLen": 111,
+    "es": "Cerca de los grupos de Héroes se forman {g,Nieblas Curativas} débiles que los curan lentamente con el tiempo."
+  },
+  {
+    "offset": 3734933,
+    "byteLen": 54,
+    "es": "Te permite comprar objetos para equipar a los Héroes."
+  },
+  {
+    "offset": 3735445,
+    "byteLen": 66,
+    "es": "Apunta a un área para golpear el suelo con una naranja explosiva."
+  },
+  {
+    "offset": 3735543,
+    "byteLen": 26,
+    "es": "Aumenta el área de daño."
+  },
+  {
+    "offset": 3735591,
+    "byteLen": 82,
+    "es": "Deja un jugo pegajoso que ralentiza a los enemigos y añade una Naranja adicional."
+  },
+  {
+    "offset": 3735710,
+    "byteLen": 67,
+    "es": "Explota en Naranjas más pequeñas, cubriendo un área más grande."
+  },
+  {
+    "offset": 3735805,
+    "byteLen": 80,
+    "es": "Las Naranjas caen al suelo mucho más rápido y se añade una Naranja adicional."
+  },
+  {
+    "offset": 3735916,
+    "byteLen": 80,
+    "es": "Queda un jugo mucho más fuerte que inmoviliza a todos los enemigos y los quema."
+  },
+  {
+    "offset": 3736013,
+    "byteLen": 40,
+    "es": "Cultiva naranjas si hay un Héroe cerca."
+  },
+  {
+    "offset": 3736135,
+    "byteLen": 57,
+    "es": "El Árbol Tangy aumenta el daño de los Héroes cercanos."
+  },
+  {
+    "offset": 3736204,
+    "byteLen": 15,
+    "es": "Área Aumentada"
+  },
+  {
+    "offset": 3736223,
+    "byteLen": 48,
+    "es": "Aumenta el área de influencia del Árbol Tangy."
+  },
+  {
+    "offset": 3736314,
+    "byteLen": 107,
+    "es": "Periódicamente inmoviliza a los enemigos cercanos, infligiéndoles Daño de Veneno con el paso del tiempo."
+  },
+  {
+    "offset": 3736469,
+    "byteLen": 57,
+    "es": "Aplica un veneno más letal a los enemigos inmovilizados."
+  },
+  {
+    "offset": 3736757,
+    "byteLen": 33,
+    "es": "Daño si está solo {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3736797,
+    "byteLen": 15,
+    "es": "Daño Verdadero"
+  },
+  {
+    "offset": 3736816,
+    "byteLen": 27,
+    "es": "Daño Verdadero {%c, %+.0f}"
+  },
+  {
+    "offset": 3736849,
+    "byteLen": 29,
+    "es": "Daño Verdadero {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3737102,
+    "byteLen": 24,
+    "es": "Vida Útil del Proyectil"
+  },
+  {
+    "offset": 3737225,
+    "byteLen": 37,
+    "es": "Vida Útil del Proyectil {%c, %+.0fs}"
+  },
+  {
+    "offset": 3737270,
+    "byteLen": 38,
+    "es": "Vida Útil del Proyectil {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3737569,
+    "byteLen": 161,
+    "es": "Cuanto mayor sea el valor de {y,Resistencia al Aturdimiento}, menos probable será que se produzcan efectos aturdidores como {y,Aturdimiento} y {b,Congelación}."
+  },
+  {
+    "offset": 3737841,
+    "byteLen": 64,
+    "es": "Las Naranjas se utilizan para {y,Comprar} y {y,Mejorar} Héroes."
+  },
+  {
+    "offset": 3738144,
+    "byteLen": 31,
+    "es": "Daño absorbido por la Barrera."
+  },
+  {
+    "offset": 3738182,
+    "byteLen": 27,
+    "es": "Daño Absorbido {%c, %+.0f}"
+  },
+  {
+    "offset": 3738215,
+    "byteLen": 29,
+    "es": "Daño Absorbido {%c, %+.0f%%}"
+  },
+  {
+    "offset": 3738264,
+    "byteLen": 50,
+    "es": "La cantidad de {r,Enemigos} que están bloqueados."
+  },
+  {
+    "offset": 3738583,
+    "byteLen": 49,
+    "es": "Tiempo que tardan en revivir los Héroes caídos."
+  },
+  {
+    "offset": 3738956,
+    "byteLen": 102,
+    "es": "{G,Las {r,Quemaduras} se acumulan y se añade tiempo adicional, pero caducan {y,un 50% más rápido}.}"
+  },
+  {
+    "offset": 3739079,
+    "byteLen": 126,
+    "es": "{G,Las {r,Quemaduras} infligen {y,Doble Daño}. Los enemigos afectados por tus {r,Quemaduras} corren {y,el doble de rápido}.}"
+  },
+  {
+    "offset": 3739256,
+    "byteLen": 80,
+    "es": "{G,Los enemigos reciben {y,un 50% más de Daño} por Sangrado mientras caminan.}"
+  },
+  {
+    "offset": 3739378,
+    "byteLen": 129,
+    "es": "{G,Ahora todo el daño por impacto puede {b,Congelar}, la {b,Probabilidad de Congelación} tiene un límite máximo del {y,10%}}."
+  },
+  {
+    "offset": 3739534,
+    "byteLen": 22,
+    "es": "El Ingenio del Ladrón"
+  },
+  {
+    "offset": 3739786,
+    "byteLen": 101,
+    "es": "Todos los Héroes Defensores pueden bloquear a un enemigo adicional, pero infligen {y,-20% de Daño}."
+  },
+  {
+    "offset": 3739908,
+    "byteLen": 61,
+    "es": "{G,Las Cazadoras colocadas solas infligen {y,+20% de Daño}.}"
+  },
+  {
+    "offset": 3740167,
+    "byteLen": 18,
+    "es": "Mirador del Tocón"
+  },
+  {
+    "offset": 3740189,
+    "byteLen": 158,
+    "es": "{G,Permite colocar Cazadoras en tocones de árboles, lo que aumenta su {y,Alcance en un +20%}. Los Proyectiles también ignoran la colisión con obstáculos.}"
+  },
+  {
+    "offset": 3740405,
+    "byteLen": 118,
+    "es": "{G, Los impactos infligen un 50% menos de Daño, pero los efectos de Daño Prolongado infligen un 100% más de Daño.}"
+  },
+  {
+    "offset": 3740560,
+    "byteLen": 80,
+    "es": "{G,Los Proyectiles ahora también se Dividen cada vez que Perforan o Encadenan.}"
+  },
+  {
+    "offset": 3740682,
+    "byteLen": 114,
+    "es": "{G,Los enemigos que mueren por Sangrado explotan, infligiendo un 10% de su Vida Máxima como {w,Daño Verdadero}.}"
+  },
+  {
+    "offset": 3741388,
+    "byteLen": 14,
+    "es": "Doble Pestaña"
+  },
+  {
+    "offset": 3741607,
+    "byteLen": 52,
+    "es": "[h-2]{y,Los Proyectiles rebotan en los obstáculos.}"
+  },
+  {
+    "offset": 3741670,
+    "byteLen": 85,
+    "es": "[h-2]{y,Los Proyectiles ahora también se Dividen cada vez que Perforan o Encadenan.}"
+  },
+  {
+    "offset": 3741773,
+    "byteLen": 81,
+    "es": "[h-2]{y,Los enemigos reciben un 50% más de daño por Sangrado mientras caminan.}"
+  },
+  {
+    "offset": 3741871,
+    "byteLen": 119,
+    "es": "[h-2]{y.Los enemigos que mueren por Sangrado explotan, infligiendo un 10% de su Vida Máxima como {w,Daño Verdadero}.}"
+  },
+  {
+    "offset": 3742246,
+    "byteLen": 113,
+    "es": "Los impactos infligen un 50% menos de daño, pero los efectos de Daño Prolongado infligen un 100% más de daño."
+  }
+]

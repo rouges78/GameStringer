@@ -541,3 +541,29 @@ pub async fn read_text_file(path: String, max_bytes: Option<u64>) -> Result<Stri
         Err(e) => Err(format!("Failed to get file metadata: {}", e))
     }
 }
+
+/// Legge un file binario e lo restituisce come stringa base64
+#[tauri::command(rename_all = "camelCase")]
+pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
+    use base64::{Engine as _, engine::general_purpose};
+    
+    println!("[RUST] read_binary_file_base64 called for path: {}", path);
+    
+    let file_path = Path::new(&path);
+    if !file_path.exists() {
+        return Err(format!("File not found: {}", path));
+    }
+    
+    let metadata = fs::metadata(&file_path)
+        .map_err(|e| format!("Failed to get file metadata: {}", e))?;
+    
+    // Limite 50MB per evitare OOM
+    if metadata.len() > 50_000_000 {
+        return Err(format!("File too large: {} bytes (max 50MB)", metadata.len()));
+    }
+    
+    let bytes = fs::read(&file_path)
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+    
+    Ok(general_purpose::STANDARD.encode(&bytes))
+}

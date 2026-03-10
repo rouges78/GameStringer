@@ -51,6 +51,7 @@ import {
   TrendingUp,
   Timer,
   Globe,
+  Binary,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { invoke } from "@/lib/tauri-api"
@@ -1641,16 +1642,37 @@ export default function AutoTranslatePage() {
               </Card>
             )}
 
-            {/* Errore scan (non-Unity) */}
+            {/* Errore scan (non-Unity) + suggerimento Binary Patcher */}
             {gameError && !unityDetected && (
-              <Card className="border-yellow-500/30 bg-yellow-500/5">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <AlertTriangle className="h-5 w-5 text-yellow-400 shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-xs whitespace-pre-line">{gameError}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="space-y-2">
+                <Card className="border-yellow-500/30 bg-yellow-500/5">
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <AlertTriangle className="h-5 w-5 text-yellow-400 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs whitespace-pre-line">{gameError}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                {/* Suggerimento Binary Patcher */}
+                <Card className="border-orange-500/30 bg-orange-500/5 hover:bg-orange-500/10 transition-colors cursor-pointer"
+                  onClick={() => {
+                    const p = new URLSearchParams();
+                    if (gameInfo?.gameName) p.set('game', gameInfo.gameName);
+                    if (gameInfo?.installPath) p.set('path', gameInfo.installPath);
+                    window.location.href = `/binary-patcher?${p.toString()}`;
+                  }}>
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="p-1.5 bg-orange-500/20 rounded-md">
+                      <Binary className="h-4 w-4 text-orange-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-orange-300">Prova il Binary Patcher</p>
+                      <p className="text-[10px] text-orange-300/60">Per giochi con engine custom, il testo potrebbe essere dentro il .exe o .dll. Il Binary Patcher lo estrae e traduce direttamente.</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-orange-400/60" />
+                  </CardContent>
+                </Card>
+              </div>
             )}
 
             {/* Unity rilevato → Auto-install BepInEx + XUnity AutoTranslator */}
@@ -1820,6 +1842,28 @@ export default function AutoTranslatePage() {
                     </p>
                   </CardContent>
                 </Card>
+
+                {/* Suggerimento Binary Patcher quando poche stringhe */}
+                {totalStrings > 0 && totalStrings < 30 && (
+                  <Card className="border-orange-500/30 bg-orange-500/5 hover:bg-orange-500/10 transition-colors cursor-pointer"
+                    onClick={() => {
+                      const p = new URLSearchParams();
+                      if (gameInfo?.gameName) p.set('game', gameInfo.gameName);
+                      if (gameInfo?.installPath) p.set('path', gameInfo.installPath);
+                      window.location.href = `/binary-patcher?${p.toString()}`;
+                    }}>
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="p-1.5 bg-orange-500/20 rounded-md flex-none">
+                        <Binary className="h-4 w-4 text-orange-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-orange-300">Poche stringhe? Prova il Binary Patcher</p>
+                        <p className="text-[10px] text-orange-300/60">Il testo di gioco potrebbe essere dentro il .exe o .dll. Il Binary Patcher lo estrae e traduce direttamente dal binario.</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-orange-400/60 flex-none" />
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
           </div>

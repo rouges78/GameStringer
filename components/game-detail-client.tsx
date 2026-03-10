@@ -4,6 +4,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useRouter } from 'next/navigation';
+import { invoke } from '@/lib/tauri-api';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -146,7 +148,6 @@ export default function GameDetailPage() {
     
     setIsDetectingEngine(true);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{
         engine: string;
         can_patch: boolean;
@@ -183,7 +184,6 @@ export default function GameDetailPage() {
     setPatchStatus(null);
     
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       
       // Trova il path di installazione se non presente
       let installPath = game.installPath;
@@ -265,7 +265,6 @@ export default function GameDetailPage() {
     
     setIsInstallingPatch(true);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{success: boolean, message: string}>('remove_unity_patch', {
         gamePath: game.installPath
       });
@@ -287,7 +286,6 @@ export default function GameDetailPage() {
   const loadUnrealPatchStatus = async () => {
     if (!game?.installPath) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       const status = await invoke<{
         installed: boolean;
         version: string;
@@ -308,7 +306,6 @@ export default function GameDetailPage() {
     setPatchStatus(null);
     
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<string>('install_unreal_patch', {
         gamePath: game.installPath,
         config: {
@@ -345,7 +342,6 @@ export default function GameDetailPage() {
     if (!confirm('Sei sicuro di voler rimuovere la patch di traduzione?')) return;
     
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<string>('uninstall_unreal_patch', {
         gamePath: game.installPath
       });
@@ -365,7 +361,6 @@ export default function GameDetailPage() {
     if (!game?.installPath) return;
     
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       
       // Trova l'eseguibile
       const gameInfo = await invoke<{ executable: string }>('detect_unreal_game', {
@@ -399,7 +394,6 @@ export default function GameDetailPage() {
     
     setIsLoadingTranslations(true);
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       const entries = await invoke<{original: string, translated: string, line_number: number}[]>(
         'read_xunity_translations', 
         { gamePath: game.installPath }
@@ -419,7 +413,6 @@ export default function GameDetailPage() {
     if (!game?.installPath) return;
     
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       await invoke('save_xunity_translation', {
         gamePath: game.installPath,
         original,
@@ -447,12 +440,22 @@ export default function GameDetailPage() {
     if (gameId) {
       if (gameDataLoadedRef.current) return;
       gameDataLoadedRef.current = true;
+      // Timeout wrapper: evita che una singola invoke blocchi tutto
+      const safeInvoke = async <T = any>(cmd: string, args?: any, timeoutMs = 8000): Promise<T | null> => {
+        try {
+          return await Promise.race([
+            invoke<T>(cmd, args),
+            new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`Timeout ${cmd} (${timeoutMs}ms)`)), timeoutMs))
+          ]);
+        } catch (e) {
+          console.warn(`[GameDetail] ${cmd}:`, e);
+          return null;
+        }
+      };
+
       const fetchGameData = async () => {
         setIsLoading(true);
         try {
-          // Import invoke per chiamate Tauri
-          const { invoke } = await import('@tauri-apps/api/core');
-          
           // Leggi parametri dalla URL (passati dalla libreria)
           const urlParams = new URLSearchParams(window.location.search);
           const urlName = urlParams.get('name') ? decodeURIComponent(urlParams.get('name')!) : null;
@@ -470,57 +473,50 @@ export default function GameDetailPage() {
           const urlPlatform = urlParams.get('platform');
           const urlHeaderImage = urlParams.get('headerImage');
           
-          // Estrai appId: può essere numerico, "steam_family_XXXX", "steam_shared_XXXX", o passato via URL
+          // Estrai appId
           let appId: number | null = null;
           if (!isNonSteamGame) {
             if (urlAppId && !isNaN(parseInt(urlAppId))) {
               appId = parseInt(urlAppId);
-              console.log('[GameDetail] AppId from URL param:', appId);
             } else if (gameId.startsWith('steam_shared_')) {
               appId = parseInt(gameId.replace('steam_shared_', ''));
-              console.log('[GameDetail] AppId from steam_shared_:', appId);
             } else if (gameId.startsWith('steam_family_')) {
               appId = parseInt(gameId.replace('steam_family_', ''));
-              console.log('[GameDetail] AppId from steam_family_:', appId);
             } else if (gameId.startsWith('steam_')) {
               appId = parseInt(gameId.replace('steam_', ''));
-              console.log('[GameDetail] AppId from steam_:', appId);
             } else {
               const parsed = parseInt(gameId);
-              if (!isNaN(parsed)) {
-                appId = parsed;
-                console.log('[GameDetail] AppId from direct parse:', appId);
-              }
+              if (!isNaN(parsed)) appId = parsed;
             }
             
-            // Fallback: cerca appId dal path del gioco usando il manifest Steam
+            // Fallback: cerca appId dal manifest Steam
             if (!appId && urlInstallDir) {
-              try {
-                const foundAppId = await invoke<number | null>('get_appid_from_install_path', { 
-                  installPath: urlInstallDir 
-                });
-                if (foundAppId && foundAppId > 0) {
-                  appId = foundAppId;
-                  console.log('[GameDetail] AppId from install path manifest:', appId);
-                }
-              } catch (e) {
-                console.warn('[GameDetail] Could not get appId from manifest:', e);
-              }
+              const foundAppId = await safeInvoke<number | null>('get_appid_from_install_path', { installPath: urlInstallDir }, 3000);
+              if (foundAppId && foundAppId > 0) appId = foundAppId;
             }
           }
-          console.log('[GameDetail] Final appId:', appId, 'gameId:', gameId);
+          console.log('[GameDetail] appId:', appId, 'gameId:', gameId);
           
-          // Carica dettagli estesi da Steam API tramite Tauri (bypass CORS)
-          // Solo per giochi Steam
-          let steamApiData = null;
-          if (!isNonSteamGame && appId && appId > 0) {
-            try {
-              steamApiData = await invoke('fetch_steam_game_details', { appId });
-              console.log('[GameDetail] Steam API data via Tauri:', steamApiData);
-            } catch (error) {
-              console.warn('Impossibile caricare dettagli Steam API:', error);
-            }
-          }
+          // === FASE 1: Carica Steam API + install path IN PARALLELO (max 8s) ===
+          const [steamApiData, installPathResult] = await Promise.all([
+            // Steam API details
+            (!isNonSteamGame && appId && appId > 0) 
+              ? safeInvoke('fetch_steam_game_details', { appId }, 8000) 
+              : Promise.resolve(null),
+            // Install path (prova installDir, poi appId)
+            (async () => {
+              if (urlInstallDir || urlInstalled) {
+                const path = await safeInvoke<string>('find_game_install_path', { installDir: urlInstallDir || urlName || '' }, 5000);
+                if (path) return path;
+              }
+              if (appId && appId > 0) {
+                return await safeInvoke<string>('find_game_path_by_appid', { appId }, 5000);
+              }
+              return null;
+            })(),
+          ]);
+          
+          const realInstallPath = installPathResult;
           
           // Determina la piattaforma
           let platform = 'Steam';
@@ -529,79 +525,38 @@ export default function GameDetailPage() {
           else if (isOriginGame) platform = 'Origin';
           else if (urlPlatform) platform = urlPlatform;
           
-          // Usa dati dalla URL o da Steam API
           const data = {
             appid: appId || 0,
             name: urlName || steamApiData?.name || decodeURIComponent(gameId),
             install_dir: urlInstallDir || null,
             is_installed: urlInstalled || false
           };
-          
-          // Debug: log dei dati
-          console.log('[GameDetail] Platform:', platform, 'isNonSteam:', isNonSteamGame);
-          console.log('[GameDetail] Steam API data:', steamApiData);
-          console.log('[GameDetail] Local data:', data);
-          
-          // Cerca il path di installazione reale
-          let realInstallPath: string | null = null;
-          
-          // Metodo 1: Cerca tramite install_dir passato dalla URL
-          if (data.is_installed || urlInstallDir) {
-            try {
-              realInstallPath = await invoke('find_game_install_path', { 
-                installDir: data.install_dir || data.name 
-              });
-              console.log('[GameDetail] Found install path via installDir:', realInstallPath);
-            } catch (e) {
-              // Silenzioso - fallback a appId
-            }
-          }
-          
-          // Metodo 2: Se non trovato, cerca tramite appId (per giochi Steam)
-          if (!realInstallPath && appId && appId > 0) {
-            try {
-              realInstallPath = await invoke('find_game_path_by_appid', { appId });
-              console.log('[GameDetail] Found install path via appId:', realInstallPath);
-            } catch (e) {
-              console.warn('[GameDetail] Could not find install path via appId:', e);
-            }
-          }
-          
-          // Rileva engine automaticamente se il gioco è installato
+
+          // Engine detection (non-bloccante, con timeout breve)
           let detectedEngine: string | null = null;
           if (realInstallPath) {
-            try {
-              const engineResult = await invoke('detect_engine_for_game', { 
-                gameName: data.name || 'Unknown',
-                installPath: realInstallPath 
-              });
-              if (engineResult && typeof engineResult === 'object') {
-                detectedEngine = (engineResult as any).engine || null;
-                console.log('[GameDetail] Engine rilevato:', detectedEngine);
-              }
-            } catch (e) {
-              console.warn('[GameDetail] Engine detection failed:', e);
-            }
+            const engineResult = await safeInvoke<any>('detect_engine_for_game', { 
+              gameName: data.name || 'Unknown', installPath: realInstallPath 
+            }, 5000);
+            if (engineResult?.engine) detectedEngine = engineResult.engine;
           }
+          // Fallback client-side se non rilevato via Tauri
+          if (!detectedEngine) detectedEngine = detectEngineByName(data.name);
           
-          // Combina dati base con dettagli Steam API (o dati base per altri store)
+          // Combina dati base con dettagli Steam API
           const enhancedGame = {
             ...data,
             ...(steamApiData || {}),
-            // Mantieni campi essenziali dal backend
             lastScanned: new Date().toISOString(),
             detectedFiles: [],
             installPath: realInstallPath,
             platform: platform,
             storeId: data.appid || gameId,
-            // Usa engine rilevato automaticamente
             engine: detectedEngine,
             title: steamApiData?.name || data.name,
             description: steamApiData?.short_description?.replace(/<[^>]*>?/gm, '') || (isNonSteamGame ? null : 'Nessuna descrizione disponibile.'),
             detailedDescription: steamApiData?.detailed_description?.replace(/<[^>]*>?/gm, '') || null,
             aboutGame: steamApiData?.about_the_game?.replace(/<[^>]*>?/gm, '') || null,
-            // Cover e header: usa Steam per giochi Steam, URL passato per altri store
-            // Solo genera URL Steam se abbiamo un appId valido (> 0)
             coverUrl: isNonSteamGame 
               ? (urlHeaderImage || null)
               : (data.appid > 0 ? `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/library_600x900.jpg` : null),
@@ -611,7 +566,6 @@ export default function GameDetailPage() {
             headerUrl: isNonSteamGame 
               ? (urlHeaderImage || null)
               : (steamApiData?.header_image || (data.appid > 0 ? `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/header.jpg` : null)),
-            // Descrizione breve per la trama
             shortDescription: steamApiData?.short_description || null,
             screenshots: steamApiData?.screenshots || [],
             movies: steamApiData?.movies || [],
@@ -621,7 +575,6 @@ export default function GameDetailPage() {
             website: steamApiData?.website || null,
             legal_notice: steamApiData?.legal_notice || null,
             recommendations: steamApiData?.recommendations || null,
-            // Campi espliciti da Steam API
             developers: steamApiData?.developers || [],
             publishers: steamApiData?.publishers || [],
             release_date: steamApiData?.release_date || null,
@@ -632,84 +585,46 @@ export default function GameDetailPage() {
             is_free: steamApiData?.is_free || false,
           };
 
-          console.log('[GameDetail] Screenshots:', steamApiData?.screenshots?.length || 0, steamApiData?.screenshots);
           console.log('[GameDetail] ===== GAME LOADED =====', enhancedGame.title);
           setGame(enhancedGame);
           setSteamDetails(steamApiData);
-          // Carica TUTTE le traduzioni da activity history (qualsiasi metodo GameStringer)
-          try {
-            const allActivities = await activityHistory.getRecent(100);
+          setIsLoading(false); // UI visibile SUBITO
+
+          // === FASE 2: Dati secondari in background (non bloccano la UI) ===
+          // Activity history
+          activityHistory.getRecent(100).then(allActivities => {
             const gameTranslations = allActivities
-              .filter((a: any) => 
-                a.activity_type === 'translation' && 
-                (a.game_id === gameId || a.game_name === enhancedGame.title)
-              )
-              .map((a: any) => ({
-                id: a.id,
-                gameId: a.game_id,
-                filePath: a.description || a.title,
-                status: 'completed',
-                confidence: 0.95,
-                timestamp: a.timestamp
-              }));
+              .filter((a: any) => a.activity_type === 'translation' && (a.game_id === gameId || a.game_name === enhancedGame.title))
+              .map((a: any) => ({ id: a.id, gameId: a.game_id, filePath: a.description || a.title, status: 'completed', confidence: 0.95, timestamp: a.timestamp }));
             setTranslations(gameTranslations);
-          } catch (e) {
-            console.warn('[GameDetail] Errore caricamento traduzioni:', e);
-            setTranslations([]);
-          }
+          }).catch(() => setTranslations([]));
           
-          // Carica HowLongToBeat
+          // HLTB (in background)
           setIsLoadingHltb(true);
-          console.log('[GameDetail] Cercando HLTB per:', enhancedGame.title);
-          try {
-            const hltbResult = await invoke<{found: boolean; main?: number; main_extra?: number; completionist?: number; url?: string}>('get_howlongtobeat_info', { gameName: enhancedGame.title });
-            console.log('[GameDetail] HLTB risultato:', hltbResult);
-            if (hltbResult) {
-              setHltbData(hltbResult);
-            }
-          } catch (hltbErr) {
-            console.error('[GameDetail] HLTB errore:', hltbErr);
-          } finally {
-            setIsLoadingHltb(false);
-          }
+          safeInvoke<{found: boolean; main?: number; main_extra?: number; completionist?: number; url?: string}>('get_howlongtobeat_info', { gameName: enhancedGame.title }, 10000)
+            .then(r => { if (r) setHltbData(r); })
+            .finally(() => setIsLoadingHltb(false));
           
-          // Traccia visualizzazione gioco
-          activityHistory.add({
-            activity_type: 'game_launched',
-            title: `Visualizzato: ${enhancedGame.title}`,
-            game_name: enhancedGame.title,
-            game_id: gameId,
-          });
+          // Traccia visualizzazione
+          activityHistory.add({ activity_type: 'game_launched', title: `Visualizzato: ${enhancedGame.title}`, game_name: enhancedGame.title, game_id: gameId });
           
-          // Salva ultimo gioco visitato su GameStringer (per dashboard)
+          // Salva ultimo gioco visitato
           try {
             localStorage.setItem('gs_last_visited_game', JSON.stringify({
-              id: gameId,
-              title: enhancedGame.title || enhancedGame.name,
+              id: gameId, title: enhancedGame.title || enhancedGame.name,
               image: enhancedGame.headerUrl || enhancedGame.coverUrl || null,
-              platform: enhancedGame.platform || 'Steam',
-              appId: String(enhancedGame.appid || ''),
-              installPath: enhancedGame.installPath || null,
-              visitedAt: Date.now(),
+              platform: enhancedGame.platform || 'Steam', appId: String(enhancedGame.appid || ''),
+              installPath: enhancedGame.installPath || null, visitedAt: Date.now(),
             }));
           } catch {}
 
-          
-          // Carica i DLC se presenti
+          // DLC in background
           if (steamApiData?.dlc && steamApiData.dlc.length > 0) {
-            const dlcPromises = steamApiData.dlc.slice(0, 5).map(async (dlcId: number) => {
-              try {
-                const dlcDetails = await invoke('fetch_steam_game_details', { appId: dlcId });
-                return dlcDetails;
-              } catch (e) {
-                console.error(`Errore caricamento DLC ${dlcId}:`, e);
-              }
-              return null;
-            });
-            
-            const dlcResults = await Promise.all(dlcPromises);
-            setDlcGames(dlcResults.filter((dlc: any) => dlc !== null));
+            Promise.all(steamApiData.dlc.slice(0, 5).map((dlcId: number) =>
+              safeInvoke('fetch_steam_game_details', { appId: dlcId }, 8000)
+            )).then(results => setDlcGames(results.filter(Boolean)));
           }
+          return; // isLoading già settato a false sopra
         } catch (error) {
           console.error('Errore:', error);
         } finally {
@@ -777,7 +692,6 @@ export default function GameDetailPage() {
   const fetchDescriptionFromGog = async () => {
     if (!game) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       // Estrai ID numerico GOG dal gameId URL (es: "gog_1803553877" -> "1803553877")
       // NON usare game.appid perché è 0 per giochi GOG
       const gogId = gameId.startsWith('gog_') ? gameId.replace('gog_', '') 
@@ -804,7 +718,6 @@ export default function GameDetailPage() {
   const fetchFallbackImage = async () => {
     if (!game) return;
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       // Leggi API key da localStorage (salvata dalle impostazioni)
       const savedSettings = localStorage.getItem('gameStringerSettings');
       let apiKey: string | null = null;
@@ -871,7 +784,6 @@ export default function GameDetailPage() {
   // Traduce la descrizione nella lingua dell'utente
   const translateDescription = async (text: string) => {
     try {
-      const { invoke } = await import('@tauri-apps/api/core');
       const result = await invoke<{ translated_text: string }>('translate_text_simple', {
         text,
         targetLang: language
@@ -934,7 +846,7 @@ export default function GameDetailPage() {
     return (
       <div className="p-6">
         <div className="flex items-center space-x-4 mb-6">
-          <Link href="/games">
+          <Link href="/library">
             <Button variant="outline" size="icon">
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -1276,8 +1188,7 @@ export default function GameDetailPage() {
                     const steamUrl = `steam://rungameid/${game.appid}`;
                     if (typeof window !== 'undefined' && (window as any).__TAURI__) {
                       try {
-                        const { invoke } = await import('@tauri-apps/api/core');
-                        await invoke('launch_steam_game', { appId: game.appid.toString() });
+                                          await invoke('launch_steam_game', { appId: game.appid.toString() });
                       } catch (e) {
                         window.location.href = steamUrl;
                       }
@@ -1286,8 +1197,7 @@ export default function GameDetailPage() {
                     }
                   } else if (game.installPath) {
                     try {
-                      const { invoke } = await import('@tauri-apps/api/core');
-                      const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
+                                      const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
                       if (exeList?.length > 0) {
                         await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
                       }

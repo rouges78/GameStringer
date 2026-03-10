@@ -37,6 +37,8 @@ import { useTranslation, translations } from '@/lib/i18n';
 import { blogService, BlogPost } from '@/lib/blog';
 import { storageManager } from '@/lib/storage-manager';
 import { get } from 'idb-keyval';
+import { communityHubService, type TranslationPack } from '@/lib/community-hub-service';
+import { Users, Star, TrendingUp, Award } from 'lucide-react';
 
 interface RecentActivityProps {
   color: string;
@@ -100,6 +102,7 @@ export default function Dashboard() {
   const [activities, setActivities] = useState<RecentActivityProps[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [communityPacks, setCommunityPacks] = useState<TranslationPack[]>([]);
   const [activityOrder, setActivityOrder] = useState<'newest' | 'oldest'>('newest');
   const [lastGame, setLastGame] = useState<{ id: string; title: string; image: string | null; platform: string; visitedAt: number; appId: string } | null>(null);
   const [activeTranslation, setActiveTranslation] = useState<{ percent: number; translated: number; total: number; lang: string } | null>(null);
@@ -107,6 +110,10 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboardData();
     setBlogPosts(blogService.getRecentPosts(5));
+    // Carica packs community per lo Spotlight
+    communityHubService.searchPacks({ sortBy: 'downloads' }).then(res => {
+      setCommunityPacks(res.packs.slice(0, 4));
+    }).catch(() => {});
     const interval = setInterval(fetchDashboardData, 120000);
     return () => clearInterval(interval);
   }, []);
@@ -318,31 +325,50 @@ export default function Dashboard() {
       {/* Sfondo AI Network */}
       <AINetworkBackground />
       
-      {/* Hero Header con bordo sfumato */}
-      <div className="relative overflow-hidden rounded-xl bg-card p-2 border-2 border-transparent" style={{ background: 'linear-gradient(var(--card), var(--card)) padding-box, linear-gradient(135deg, #64748b, #475569, #334155) border-box' }}>
-        
-        {/* Titolo centrato */}
-        <div className="flex items-center justify-center gap-2 mb-1.5">
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg">
-            <Home className="h-4 w-4 text-white" />
+      {/* Quick Actions Bar */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800/90 via-zinc-800/80 to-slate-900/90 p-3 shadow-lg border border-white/5">
+        <div className="relative">
+          {/* Quick Actions — 3 percorsi principali */}
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <Link href="/library">
+              <div className="group flex items-center gap-2.5 p-2.5 rounded-lg bg-black/25 hover:bg-black/40 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
+                <div className="p-1.5 rounded-md bg-emerald-500/20 group-hover:bg-emerald-500/30 transition-colors">
+                  <Sparkles className="h-4 w-4 text-emerald-300" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white">{language === 'it' ? 'Traduci un gioco' : 'Translate a game'}</p>
+                  <p className="text-[9px] text-white/40">{language === 'it' ? 'Scegli dalla libreria' : 'Pick from library'}</p>
+                </div>
+              </div>
+            </Link>
+            <Link href="/community-hub">
+              <div className="group flex items-center gap-2.5 p-2.5 rounded-lg bg-black/25 hover:bg-black/40 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
+                <div className="p-1.5 rounded-md bg-amber-500/20 group-hover:bg-amber-500/30 transition-colors">
+                  <Globe className="h-4 w-4 text-amber-300" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white">{language === 'it' ? 'Scarica traduzioni' : 'Browse translations'}</p>
+                  <p className="text-[9px] text-white/40">{language === 'it' ? 'Community Hub' : 'Community Hub'}</p>
+                </div>
+              </div>
+            </Link>
+            <Link href="/editor">
+              <div className="group flex items-center gap-2.5 p-2.5 rounded-lg bg-black/25 hover:bg-black/40 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
+                <div className="p-1.5 rounded-md bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
+                  <Layers className="h-4 w-4 text-blue-300" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white">{language === 'it' ? 'I miei progetti' : 'My projects'}</p>
+                  <p className="text-[9px] text-white/40">{language === 'it' ? 'Editor & revisione' : 'Editor & review'}</p>
+                </div>
+              </div>
+            </Link>
           </div>
-          <h1 className="text-lg font-bold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent">
-            Dashboard Center
-          </h1>
-          <Button
-            onClick={() => fetchDashboardData()}
-            disabled={loading}
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground ml-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-        </div>
 
-        {/* RSS Ticker */}
-        <div className="pt-1.5 border-t border-border/30">
-          <RssTicker />
+          {/* RSS Ticker */}
+          <div className="pt-2 border-t border-white/10">
+            <RssTicker />
+          </div>
         </div>
       </div>
 
@@ -350,7 +376,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Ultimo Gioco Aperto - SINISTRA */}
         {lastGame ? (
-          <Link href={`/games/?id=${lastGame.id}&name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`}>
+          <Link href={`/library/?id=${lastGame.id}&name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`}>
             <Card className="border-indigo-500/30 bg-indigo-950/40 backdrop-blur-sm hover:border-indigo-400/50 transition-all cursor-pointer group h-full">
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
@@ -454,6 +480,60 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Community Spotlight — Agorà */}
+      {communityPacks.length > 0 && (
+        <Card className="border-purple-500/20 bg-purple-950/30 backdrop-blur-sm">
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between mb-2.5">
+              <h3 className="text-sm font-semibold text-purple-300 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                {language === 'it' ? 'Traduzioni dalla community' : 'Community Translations'}
+              </h3>
+              <Link href="/community-hub" className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
+                {language === 'it' ? 'Esplora tutto' : 'Browse all'} <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+              {communityPacks.map(pack => (
+                <Link key={pack.id} href="/community-hub">
+                  <div className="group p-2.5 rounded-lg bg-purple-950/40 border border-purple-500/10 hover:border-purple-500/30 transition-all cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      {pack.coverImage ? (
+                        <img src={pack.coverImage} alt={pack.gameName} className="w-8 h-8 rounded object-cover" />
+                      ) : (
+                        <div className="w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center">
+                          <Gamepad2 className="h-4 w-4 text-purple-400/50" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-medium text-purple-100 truncate group-hover:text-white transition-colors">{pack.gameName}</p>
+                        <p className="text-[9px] text-purple-300/50">{pack.sourceLanguage.toUpperCase()} → {pack.targetLanguage.toUpperCase()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-3 w-3 text-amber-400" />
+                        <span className="text-[10px] text-amber-300">{pack.rating.toFixed(1)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[9px] text-purple-300/40">
+                        <span>{pack.downloads} ↓</span>
+                        <span>{pack.completionPercentage}%</span>
+                      </div>
+                    </div>
+                    {pack.status === 'verified' && (
+                      <div className="mt-1 flex items-center gap-0.5">
+                        <Award className="h-3 w-3 text-green-400" />
+                        <span className="text-[9px] text-green-400">Verified</span>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Grid: News (sinistra) + Attività Recenti (destra) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">

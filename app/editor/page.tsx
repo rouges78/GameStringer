@@ -28,6 +28,8 @@ import { activityHistory } from '@/lib/activity-history';
 import { useTranslation } from '@/lib/i18n';
 import { storageManager } from '@/lib/storage-manager';
 import { get, set } from 'idb-keyval';
+import { loadGlossary, searchTerms, type AutoGlossaryEntry } from '@/lib/auto-glossary';
+import { BookOpen, FolderTree, Globe } from 'lucide-react';
 
 // --- Types ---
 interface Game {
@@ -249,6 +251,8 @@ export default function EditorPage() {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saveTimeoutId, setSaveTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [glossaryTerms, setGlossaryTerms] = useState<AutoGlossaryEntry[]>([]);
+  const [showGlossaryPanel, setShowGlossaryPanel] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -271,6 +275,31 @@ export default function EditorPage() {
     const edited = filteredTranslations.filter(t => t.status === 'edited').length;
     return { total, completed, pending, edited };
   }, [filteredTranslations]);
+
+  // --- Glossary matching: carica termini quando cambia la stringa selezionata ---
+  useEffect(() => {
+    if (!selectedTranslation?.gameId) {
+      setGlossaryTerms([]);
+      return;
+    }
+    const gameId = selectedTranslation.gameId;
+    const sourceText = selectedLine?.originalText || selectedTranslation.originalText || '';
+    if (!sourceText) {
+      setGlossaryTerms([]);
+      return;
+    }
+    const glossary = loadGlossary(gameId);
+    if (!glossary || glossary.entries.length === 0) {
+      setGlossaryTerms([]);
+      return;
+    }
+    // Cerca termini che appaiono nel testo sorgente
+    const lowerSource = sourceText.toLowerCase();
+    const matching = glossary.entries.filter(entry =>
+      lowerSource.includes(entry.sourceTerm.toLowerCase())
+    );
+    setGlossaryTerms(matching);
+  }, [selectedTranslation?.gameId, selectedLine?.originalText, selectedTranslation?.originalText]);
 
   // --- Effects ---
   useEffect(() => {
@@ -1193,6 +1222,27 @@ export default function EditorPage() {
                     {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-blue-400" />}
                     AI
                   </Button>
+                  <Button
+                    variant="ghost" size="sm" className="h-8 text-xs"
+                    onClick={() => setShowGlossaryPanel(!showGlossaryPanel)}
+                  >
+                    <BookOpen className={cn("h-3.5 w-3.5 mr-1.5", glossaryTerms.length > 0 ? "text-amber-400" : "text-slate-400")} />
+                    {glossaryTerms.length > 0 ? `Glossario (${glossaryTerms.length})` : 'Glossario'}
+                  </Button>
+                  <Separator orientation="vertical" className="h-5 bg-slate-700" />
+                  {/* Cross-navigation */}
+                  <Link href={`/batch?game=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
+                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-blue-400">
+                      <FolderTree className="h-3.5 w-3.5 mr-1" />
+                      Batch
+                    </Button>
+                  </Link>
+                  <Link href={`/glossary?gameId=${selectedTranslation.gameId || ''}`}>
+                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-amber-400">
+                      <BookOpen className="h-3.5 w-3.5 mr-1" />
+                      Glossario
+                    </Button>
+                  </Link>
                   <Separator orientation="vertical" className="h-5 bg-slate-700" />
                   <Button 
                     size="sm" 
@@ -1203,6 +1253,12 @@ export default function EditorPage() {
                     {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
                     Salva
                   </Button>
+                  <Link href={`/community-hub?action=publish&gameId=${selectedTranslation.gameId || ''}&gameName=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
+                    <Button variant="ghost" size="sm" className="h-8 text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-500/10">
+                      <Globe className="h-3.5 w-3.5 mr-1" />
+                      Condividi
+                    </Button>
+                  </Link>
                 </div>
               </div>
               
@@ -1375,6 +1431,33 @@ export default function EditorPage() {
                         spellCheck={false}
                       />
                     </div>
+                    {/* Glossary Hints Panel */}
+                    {showGlossaryPanel && glossaryTerms.length > 0 && (
+                      <div className="border-t border-amber-500/20 bg-amber-950/20 px-4 py-2 max-h-[140px] overflow-y-auto">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <BookOpen className="h-3 w-3 text-amber-400" />
+                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Termini glossario trovati</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {glossaryTerms.map(term => (
+                            <button
+                              key={term.id}
+                              onClick={() => {
+                                navigator.clipboard.writeText(term.targetTerm);
+                                toast({ title: `Copiato: ${term.targetTerm}` });
+                              }}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all text-[11px] group"
+                              title={`${term.sourceTerm} → ${term.targetTerm}${term.context ? ` (${term.context})` : ''}`}
+                            >
+                              <span className="text-amber-300/70">{term.sourceTerm}</span>
+                              <span className="text-slate-500">→</span>
+                              <span className="text-amber-200 font-medium">{term.targetTerm}</span>
+                              {term.tier === 'locked' && <span className="text-red-400 text-[9px]">🔒</span>}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : selectedTranslation.parsedLines && selectedTranslation.parsedLines.length > 0 ? (
@@ -1401,6 +1484,33 @@ export default function EditorPage() {
                       spellCheck={false}
                     />
                   </div>
+                  {/* Glossary Hints Panel (full editor mode) */}
+                  {showGlossaryPanel && glossaryTerms.length > 0 && (
+                    <div className="border-t border-amber-500/20 bg-amber-950/20 px-4 py-2 max-h-[140px] overflow-y-auto">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <BookOpen className="h-3 w-3 text-amber-400" />
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Termini glossario trovati</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {glossaryTerms.map(term => (
+                          <button
+                            key={term.id}
+                            onClick={() => {
+                              navigator.clipboard.writeText(term.targetTerm);
+                              toast({ title: `Copiato: ${term.targetTerm}` });
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all text-[11px]"
+                            title={`${term.sourceTerm} → ${term.targetTerm}${term.context ? ` (${term.context})` : ''}`}
+                          >
+                            <span className="text-amber-300/70">{term.sourceTerm}</span>
+                            <span className="text-slate-500">→</span>
+                            <span className="text-amber-200 font-medium">{term.targetTerm}</span>
+                            {term.tier === 'locked' && <span className="text-red-400 text-[9px]">🔒</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

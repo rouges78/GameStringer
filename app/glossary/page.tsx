@@ -16,7 +16,9 @@ import {
   BookOpen, Plus, Search, Trash2, Edit, Download, Upload, Sparkles,
   Lock, RefreshCw, Unlock, Filter, X, Save, FileJson, FileSpreadsheet,
   Wand2, CheckCircle, AlertTriangle, Info, Settings, ChevronDown,
+  Edit3, FolderTree,
 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import {
   loadGlossary, saveGlossary, createGlossary, deleteGlossary, listGlossaries,
@@ -310,7 +312,20 @@ export default function GlossaryPage() {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <Link href="/editor">
+              <Button variant="outline" size="sm" className="text-slate-400 hover:text-blue-400">
+                <Edit3 className="h-3.5 w-3.5 mr-1" />
+                Editor
+              </Button>
+            </Link>
+            <Link href="/batch">
+              <Button variant="outline" size="sm" className="text-slate-400 hover:text-sky-400">
+                <FolderTree className="h-3.5 w-3.5 mr-1" />
+                Batch
+              </Button>
+            </Link>
+            <div className="h-5 w-px bg-slate-700" />
             <Button variant="outline" size="sm" onClick={() => setShowConfigDialog(true)}>
               <Settings className="h-3.5 w-3.5 mr-1" />
               Config

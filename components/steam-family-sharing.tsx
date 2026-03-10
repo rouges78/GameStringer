@@ -466,7 +466,7 @@ export function SteamFamilySharing() {
                   
                   <Button 
                     onClick={() => {
-                      window.open('/games', '_blank');
+                      window.open('/library', '_blank');
                     }}
                     size="sm"
                   >

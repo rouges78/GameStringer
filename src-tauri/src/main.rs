@@ -275,6 +275,7 @@ fn main() {
             commands::library::list_directory_files,
             commands::library::scan_localization_files,
             commands::library::read_text_file,
+            commands::library::read_binary_file_base64,
             commands::games::get_games,
             commands::games::get_games_fast,
             commands::games::force_refresh_all_games,

@@ -1,7 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+const GameDetailClient = dynamic(() => import('@/components/game-detail-client'), { ssr: false });
 import { invoke } from '@/lib/tauri-api';
 import { get, set } from 'idb-keyval';
 import { activityHistory } from '@/lib/activity-history';
@@ -15,7 +19,7 @@ import * as CountryFlags from 'country-flag-icons/react/3x2';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { loadLibraryFilters, saveLibraryFilters, fuzzyMatch, useDebouncedValue } from '@/lib/library-filters';
 import { enrichGameTitle } from '@/lib/game-names-db';
-import { Gamepad2, ImageIcon, Search, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, ChevronDown, ChevronUp, RefreshCw, Download } from 'lucide-react';
+import { Gamepad2, ImageIcon, Search, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, ChevronDown, ChevronUp, RefreshCw, Download, Languages, Sparkles, FolderOpen, Monitor, Wrench } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
 
@@ -55,7 +59,7 @@ interface Game {
 }
 
 // Helper per generare URL pagina dettaglio game
-// Uses /games/?id=XXX query param format for Tauri static export compatibility
+// Uses /library/?id=XXX query param format for Tauri static export compatibility
 const getGameDetailUrl = (game: Game): string => {
   const params = new URLSearchParams();
   params.set('id', game.id || game.app_id || '');
@@ -68,7 +72,7 @@ const getGameDetailUrl = (game: Game): string => {
   const numericAppId = game.app_id || (game.id?.match(/\d+/)?.[0]);
   if (numericAppId) params.set('appId', String(numericAppId));
   
-  return `/games/?${params.toString()}`;
+  return `/library/?${params.toString()}`;
 }
 
 // Dedup globale per fetch SteamGridDB (globalThis sopravvive a HMR)
@@ -390,6 +394,18 @@ const normalizeLanguage = (language: string): string => {
 };
 
 export default function LibraryPage() {
+  const searchParams = useSearchParams();
+  const detailId = searchParams.get('id');
+
+  // Se c'è un ?id=XXX, mostra il dettaglio gioco
+  if (detailId) {
+    return <GameDetailClient />;
+  }
+
+  return <LibraryListView />;
+}
+
+function LibraryListView() {
   const { language } = useTranslation();
   const lib = translations[language]?.library || translations.it.library;
   const [games, setGames] = useState<Game[]>(_libCache.games.loaded ? _libCache.games.data : []);
@@ -1134,14 +1150,40 @@ export default function LibraryPage() {
                 <span className="bg-purple-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">VR</span>
               )}
             </div>
-            {/* Bottone Cambia Cover */}
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverPickerGame(game); }}
-              className="absolute bottom-1 right-1 flex items-center gap-0.5 bg-black/70 hover:bg-blue-600 px-1.5 py-0.5 rounded text-[9px] font-medium text-white/80 hover:text-white transition-all z-10 opacity-0 group-hover:opacity-100"
-              title="Cambia cover"
-            >
-              <ImageIcon className="h-3 w-3" />
-            </button>
+            {/* Quick Actions Overlay su hover */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 flex items-end justify-center pb-2 gap-1">
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/ai-translator?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
+                className="flex items-center gap-0.5 bg-purple-600/90 hover:bg-purple-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all shadow-lg"
+                title="Traduci con AI"
+              >
+                <Sparkles className="h-3 w-3" />
+                Traduci
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/batch?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
+                className="flex items-center gap-0.5 bg-blue-600/90 hover:bg-blue-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all shadow-lg"
+                title="Batch translate"
+              >
+                <FolderOpen className="h-3 w-3" />
+                Batch
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/community-hub?query=${encodeURIComponent(game.title)}`; }}
+                className="flex items-center gap-0.5 bg-amber-600/90 hover:bg-amber-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all shadow-lg"
+                title="Cerca traduzione community"
+              >
+                <Languages className="h-3 w-3" />
+                Community
+              </button>
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverPickerGame(game); }}
+                className="flex items-center gap-0.5 bg-gray-600/90 hover:bg-gray-500 px-1.5 py-1 rounded text-[9px] font-medium text-white transition-all shadow-lg"
+                title="Cambia cover"
+              >
+                <ImageIcon className="h-3 w-3" />
+              </button>
+            </div>
           </div>
           
           {/* Info sotto l'immagine */}
@@ -1313,6 +1355,25 @@ export default function LibraryPage() {
                         <span className="text-[10px]" title="Family Sharing">🔗</span>
                       )}
                     </div>
+                    {/* Quick actions lista */}
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/ai-translator?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
+                        className="flex items-center gap-0.5 bg-purple-600/80 hover:bg-purple-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all"
+                        title="Traduci con AI"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        Traduci
+                      </button>
+                      <button
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/batch?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
+                        className="flex items-center gap-0.5 bg-blue-600/80 hover:bg-blue-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all"
+                        title="Batch translate"
+                      >
+                        <FolderOpen className="h-3 w-3" />
+                        Batch
+                      </button>
+                    </div>
                   </div>
                 </Link>
               </div>
@@ -1334,59 +1395,98 @@ export default function LibraryPage() {
     );
   };
 
+  // Stats computate
+  const statsInstalled = useMemo(() => safeGames.filter(g => g.is_installed).length, [safeGames]);
+  const statsPlatforms = useMemo(() => new Set(safeGames.map(g => g.platform)).size, [safeGames]);
+  const statsEngines = useMemo(() => new Set(safeGames.filter(g => g.engine && g.engine !== 'Unknown').map(g => g.engine)).size, [safeGames]);
+  const statsShared = useMemo(() => safeGames.filter(g => g.isShared).length, [safeGames]);
+
   return (
     <div className="w-full px-4 py-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-700 shadow-lg shadow-purple-600/25">
-            <Gamepad2 className="h-5 w-5 text-white" />
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 p-3 mb-4 shadow-xl shadow-purple-900/30">
+        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
+              <Gamepad2 className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{lib.title}</h1>
+                {games.length > 0 && (
+                  <span className="text-[10px] font-medium bg-white/15 text-white/90 border border-white/20 px-2 py-0.5 rounded-full">
+                    {filteredGames.length}/{games.length}
+                  </span>
+                )}
+              </div>
+              <p className="text-white/50 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                {games.length > 0 
+                  ? `${filteredGames.length} ${lib.gamesOf} ${games.length}`
+                  : lib.noGames}
+              </p>
+            </div>
           </div>
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl font-bold text-white">{lib.title}</h1>
-              {games.length > 0 && (
-                <span className="text-[10px] font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full">
-                  {filteredGames.length}/{games.length}
-                </span>
+
+          {/* Stats rapide */}
+          {games.length > 0 && (
+            <div className="hidden md:flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/25 border border-white/10">
+                <Monitor className="h-3.5 w-3.5 text-green-300" />
+                <span className="text-sm font-bold text-white">{statsInstalled}</span>
+                <span className="text-[10px] text-white/60">{lib.installed}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/25 border border-white/10">
+                <FolderOpen className="h-3.5 w-3.5 text-blue-300" />
+                <span className="text-sm font-bold text-white">{statsPlatforms}</span>
+                <span className="text-[10px] text-white/60">{lib.provider}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/25 border border-white/10">
+                <Wrench className="h-3.5 w-3.5 text-orange-300" />
+                <span className="text-sm font-bold text-white">{statsEngines}</span>
+                <span className="text-[10px] text-white/60">{lib.engine}</span>
+              </div>
+              {statsShared > 0 && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/25 border border-white/10">
+                  <Languages className="h-3.5 w-3.5 text-purple-300" />
+                  <span className="text-sm font-bold text-white">{statsShared}</span>
+                  <span className="text-[10px] text-white/60">{lib.shared}</span>
+                </div>
               )}
             </div>
-            <p className="text-[11px] text-gray-500 mt-0.5">
-              {games.length > 0 
-                ? `${filteredGames.length} ${lib.gamesOf} ${games.length}`
-                : lib.noGames}
-            </p>
+          )}
+
+          {/* Azioni rapide */}
+          <div className="flex items-center gap-1.5">
+            <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
+            <button 
+              onClick={testFamilySharing} 
+              className="text-[10px] px-2.5 py-1.5 bg-black/30 text-white/70 hover:bg-black/50 hover:text-white rounded-lg transition-all border border-white/10"
+              title="Scan Family Sharing"
+            >
+              <RefreshCw className="h-3 w-3 inline mr-1" />
+              {lib.shared}
+            </button>
+            <button 
+              onClick={async () => {
+                toast.info(lib.downloadingNames);
+                try {
+                  const result = await invoke('update_remote_game_database');
+                  const updatedGames = Object.values(result as any) as Game[];
+                  setGames(updatedGames);
+                  toast.success(`${lib.databaseUpdated} ${updatedGames.length} ${lib.games}`);
+                } catch (e) {
+                  toast.error(lib.updateError + ': ' + e);
+                }
+              }} 
+              className="text-[10px] px-2.5 py-1.5 bg-black/30 text-white/70 hover:bg-black/50 hover:text-white rounded-lg transition-all border border-white/10"
+              title="Update names DB"
+            >
+              <Download className="h-3 w-3 inline mr-1" />
+              {lib.updateDb}
+            </button>
           </div>
-        </div>
-        {/* Azioni rapide header */}
-        <div className="flex items-center gap-1.5">
-          <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
-          <button 
-            onClick={testFamilySharing} 
-            className="text-[10px] px-2.5 py-1.5 bg-gray-800/60 text-gray-400 hover:bg-gray-700 hover:text-gray-200 rounded-lg transition-all border border-gray-700/50"
-            title="Scan Family Sharing"
-          >
-            <RefreshCw className="h-3 w-3 inline mr-1" />
-            {lib.shared}
-          </button>
-          <button 
-            onClick={async () => {
-              toast.info(lib.downloadingNames);
-              try {
-                const result = await invoke('update_remote_game_database');
-                const updatedGames = Object.values(result as any) as Game[];
-                setGames(updatedGames);
-                toast.success(`${lib.databaseUpdated} ${updatedGames.length} ${lib.games}`);
-              } catch (e) {
-                toast.error(lib.updateError + ': ' + e);
-              }
-            }} 
-            className="text-[10px] px-2.5 py-1.5 bg-gray-800/60 text-gray-400 hover:bg-gray-700 hover:text-gray-200 rounded-lg transition-all border border-gray-700/50"
-            title="Update names DB"
-          >
-            <Download className="h-3 w-3 inline mr-1" />
-            {lib.updateDb}
-          </button>
         </div>
       </div>
 

@@ -32,7 +32,6 @@ test.describe('Navigation - Tool Pages', () => {
     '/live-ocr',
     '/character-voice',
     '/ai-review',
-    '/quality-gates',
     '/dictionaries',
     '/memory',
     '/stats',

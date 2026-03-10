@@ -72,7 +72,14 @@ const languages = [
   { code: 'zh', name: '中文', flag: '🇨🇳' },
 ];
 
-export function CommunityHub() {
+interface CommunityHubProps {
+  initialAction?: string;
+  initialQuery?: string;
+  initialGameId?: string;
+  initialGameName?: string;
+}
+
+export function CommunityHub({ initialAction, initialQuery, initialGameId, initialGameName }: CommunityHubProps) {
   const { t } = useTranslation();
   const [packs, setPacks] = useState<TranslationPack[]>([]);
   const [stats, setStats] = useState<HubStats | null>(null);
@@ -104,6 +111,17 @@ export function CommunityHub() {
 
   useEffect(() => {
     loadData();
+
+    // Handle URL params from Editor/Batch/Library
+    if (initialQuery) {
+      setFilters(f => ({ ...f, query: initialQuery }));
+    }
+    if (initialAction === 'publish') {
+      setShowUploadDialog(true);
+      if (initialGameName) {
+        setUploadData(d => ({ ...d, gameName: initialGameName, gameId: initialGameId || '' }));
+      }
+    }
   }, []);
 
   useEffect(() => {
