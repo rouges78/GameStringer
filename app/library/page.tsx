@@ -674,9 +674,19 @@ function LibraryListView() {
         
         if (cachedGames && Array.isArray(cachedGames) && cachedGames.length > 0 && cacheAge < CACHE_STALE_TTL_MS) {
           // Cache trovata! Mostra subito i giochi (UI istantanea)
-          console.log(`⚡ Libreria da cache IndexedDB: ${cachedGames.length} giochi (age: ${Math.round(cacheAge/1000)}s)`);
+          const epicCount = cachedGames.filter(g => g.platform === 'Epic Games').length;
+          const gogCount = cachedGames.filter(g => g.platform === 'GOG').length;
+          console.log(`⚡ Libreria da cache IndexedDB: ${cachedGames.length} giochi (Epic: ${epicCount}, GOG: ${gogCount}, age: ${Math.round(cacheAge/1000)}s)`);
           setGamesWithValidation(cachedGames);
           setIsLoading(false);
+          
+          // Se la cache manca di giochi non-Steam, forza revalidate (cache incompleta)
+          const hasNonSteamGames = cachedGames.some(g => g.platform !== 'Steam');
+          if (!hasNonSteamGames || epicCount <= 1) {
+            console.log(`⚠️ Cache incompleta (Epic: ${epicCount}, nonSteam: ${hasNonSteamGames}), forzo revalidate...`);
+            fetchGames();
+            return;
+          }
           
           if (cacheAge < CACHE_FRESH_TTL_MS) {
             // Cache fresca (<15min): nessun aggiornamento necessario
@@ -735,7 +745,11 @@ function LibraryListView() {
 
         const credsPromise = invoke('load_steam_credentials').catch(() => null) as Promise<{ api_key_encrypted?: string; steam_id?: string } | null>;
 
-        const otherStoresPromise = invoke('scan_games').catch(e => {
+        // Altri store (Epic, GOG, Origin, Ubisoft, etc.) — con timeout 15s
+        const otherStoresPromise = Promise.race([
+          invoke('scan_games'),
+          new Promise<any[]>((_, reject) => setTimeout(() => reject('timeout'), 15000))
+        ]).catch(e => {
           console.warn('⚠️ Other stores scan failed:', e);
           return [] as any[];
         }) as Promise<Array<{
@@ -1110,9 +1124,13 @@ function LibraryListView() {
     
     return (
       <Link key={game.id || `game-${index}`} href={getGameDetailUrl(game)}>
-        <div className="group overflow-hidden rounded-lg border border-transparent hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-purple-500/20 cursor-pointer bg-gray-900">
+        <div className="group relative overflow-hidden rounded-xl border border-slate-800/60 hover:border-indigo-500/50 bg-slate-900/40 hover:bg-slate-900/80 transition-all duration-500 shadow-lg hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] cursor-pointer h-full flex flex-col">
+          {/* Effetto bagliore interno hover */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-purple-500/5 to-indigo-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0" />
+          
           {/* Immagine */}
-          <div className="relative aspect-[16/9]">
+          <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-slate-800/50 z-10">
+            <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-transparent transition-colors duration-500 z-10 pointer-events-none" />
             <GameImageWithFallback 
               key={`img-${game.id}-${game.app_id}`}
               game={game} 
@@ -1121,8 +1139,8 @@ function LibraryListView() {
             />
             
             {/* Badge piattaforma in alto a destra */}
-            <div className="absolute top-1.5 right-1.5 flex flex-col gap-1 items-end">
-              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm ${
+            <div className="absolute top-2 right-2 flex flex-col gap-1 items-end z-20">
+              <span className={`text-[9px] font-bold px-2 py-0.5 rounded shadow-md backdrop-blur-md ${
                 game.platform === 'Steam' ? 'bg-[#171a21]/90 text-white border border-[#66c0f4]/30' :
                 game.platform === 'Epic Games' ? 'bg-[#2a2a2a]/90 text-white border border-white/20' :
                 game.platform === 'GOG' ? 'bg-[#5c2f82]/90 text-white border border-purple-400/30' :
@@ -1133,62 +1151,61 @@ function LibraryListView() {
                 {game.platform || 'Unknown'}
               </span>
               {game.isShared && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm bg-orange-500/90 text-white border border-orange-400/30">
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded shadow-md backdrop-blur-md bg-orange-500/90 text-white border border-orange-400/30">
                   Shared
                 </span>
               )}
             </div>
+
             {/* Badge Engine/VR/Installed in alto a sinistra */}
-            <div className="absolute top-1 left-1 flex flex-wrap gap-0.5">
+            <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
               {game.is_installed && (
-                <span className="bg-green-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">✓</span>
+                <span className="bg-emerald-500/90 text-emerald-50 text-[10px] w-5 h-5 flex items-center justify-center rounded shadow-md backdrop-blur-md border border-emerald-400/30 font-bold" title="Installato">✓</span>
               )}
               {game.engine && game.engine !== 'Unknown' && (
-                <span className="bg-blue-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">{game.engine}</span>
+                <span className="bg-sky-600/90 text-sky-50 text-[9px] px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-sky-400/30 font-semibold truncate max-w-[80px]" title={game.engine}>{game.engine}</span>
               )}
               {game.is_vr && (
-                <span className="bg-purple-600/90 text-white text-[9px] px-1 py-0.5 rounded font-medium">VR</span>
+                <span className="bg-fuchsia-600/90 text-fuchsia-50 text-[9px] px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-fuchsia-400/30 font-bold" title="VR Support">VR</span>
               )}
             </div>
+
             {/* Quick Actions Overlay su hover */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 flex items-end justify-center pb-2 gap-1">
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 flex items-end justify-center pb-3 gap-1.5 flex-wrap backdrop-blur-[2px]">
               <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/ai-translator?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
-                className="flex items-center gap-0.5 bg-purple-600/90 hover:bg-purple-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all shadow-lg"
-                title="Traduci con AI"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); sessionStorage.setItem('wizardAutoGame', JSON.stringify({ id: game.app_id || game.id, title: game.title, install_path: game.install_dir, steam_app_id: game.app_id, header_image: game.header_image })); window.location.href = '/translation-wizard'; }}
+                className="bg-indigo-600/90 hover:bg-indigo-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-indigo-500/50 hover:scale-110 border border-indigo-400/30"
+                title="Traduci"
               >
-                <Sparkles className="h-3 w-3" />
-                Traduci
+                <Sparkles className="h-4 w-4" />
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/batch?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
-                className="flex items-center gap-0.5 bg-blue-600/90 hover:bg-blue-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all shadow-lg"
-                title="Batch translate"
+                className="bg-sky-600/90 hover:bg-sky-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-sky-500/50 hover:scale-110 border border-sky-400/30"
+                title="Batch"
               >
-                <FolderOpen className="h-3 w-3" />
-                Batch
+                <FolderOpen className="h-4 w-4" />
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/community-hub?query=${encodeURIComponent(game.title)}`; }}
-                className="flex items-center gap-0.5 bg-amber-600/90 hover:bg-amber-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all shadow-lg"
-                title="Cerca traduzione community"
+                className="bg-fuchsia-600/90 hover:bg-fuchsia-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-fuchsia-500/50 hover:scale-110 border border-fuchsia-400/30"
+                title="Community"
               >
-                <Languages className="h-3 w-3" />
-                Community
+                <Languages className="h-4 w-4" />
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverPickerGame(game); }}
-                className="flex items-center gap-0.5 bg-gray-600/90 hover:bg-gray-500 px-1.5 py-1 rounded text-[9px] font-medium text-white transition-all shadow-lg"
+                className="bg-slate-700/90 hover:bg-slate-600 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-slate-500/50 hover:scale-110 border border-slate-500/30"
                 title="Cambia cover"
               >
-                <ImageIcon className="h-3 w-3" />
+                <ImageIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
           
           {/* Info sotto l'immagine */}
-          <div className="p-1.5">
-            <p className="text-xs font-medium truncate text-white" title={game.title ?? 'Unnamed game'}>
+          <div className="p-2.5 flex-1 flex flex-col z-10">
+            <p className="text-[13px] font-bold truncate text-slate-200 group-hover:text-indigo-300 transition-colors drop-shadow-sm mb-1" title={game.title ?? 'Unnamed game'}>
               {game.title ?? 'Unnamed game'}
             </p>
             {(() => {
@@ -1196,17 +1213,21 @@ function LibraryListView() {
               const gameKey = game.app_id || game.id;
               const cachedLangs = languagesCache[gameKey];
               const languages = cachedLangs && cachedLangs.length > 0 ? cachedLangs : game.supported_languages;
-              return languages && languages.length > 1 ? (
-                <div className="mt-1">
-                  <LanguageFlags supportedLanguages={languages} maxFlags={12} />
+              return (
+                <div className="mt-auto pt-1 h-4 flex items-center">
+                  {languages && languages.length > 1 ? (
+                    <LanguageFlags supportedLanguages={languages} maxFlags={8} />
+                  ) : (
+                    <span className="text-[10px] text-slate-600 font-medium">Nessuna lingua rilevata</span>
+                  )}
                 </div>
-              ) : null;
+              );
             })()}
           </div>
         </div>
       </Link>
     );
-  }, [filteredGames, coverCache, getGameDetailUrl]);
+  }, [filteredGames, coverCache, getGameDetailUrl, languagesCache]);
 
   const renderContent = () => {
     if (isLoading) {
@@ -1242,8 +1263,8 @@ function LibraryListView() {
 
           {/* Skeleton cards con wave staggered */}
           <div className="w-full mt-4">
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1.5">
-              {Array.from({ length: 21 }).map((_, index) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
+              {Array.from({ length: 15 }).map((_, index) => (
                 <div 
                   key={index} 
                   className="relative rounded-lg aspect-[16/9] overflow-hidden bg-gray-800/40 border border-white/5"
@@ -1317,61 +1338,75 @@ function LibraryListView() {
     if (viewMode === 'list') {
       return (
         <Virtuoso
-          style={{ height: 'calc(100vh - 280px)' }}
+          className="custom-scrollbar"
+          style={{ height: 'calc(100vh - 280px)', paddingRight: '4px' }}
           totalCount={filteredGames.length}
           overscan={20}
           itemContent={(index) => {
             const game = filteredGames[index];
             if (!game) return null;
             return (
-              <div className="pb-1">
+              <div className="pb-2">
                 <Link key={game.id || `list-game-${index}`} href={getGameDetailUrl(game)}>
-                  <div className="group flex items-center bg-gray-900/60 hover:bg-gray-800/80 rounded-lg px-3 py-2 border border-gray-800/50 hover:border-purple-500/50 transition-all duration-200 cursor-pointer">
-                    <div className="w-16 h-9 flex-shrink-0 rounded overflow-hidden bg-gray-800 mr-3 relative">
-                      <GameImageWithFallback key={`img-${game.id}-${game.app_id}`} game={game} sizes="64px" coverCache={coverCache} />
+                  <div className="group flex items-center bg-slate-900/40 hover:bg-slate-800/60 rounded-xl p-2 border border-slate-800/60 hover:border-indigo-500/40 hover:shadow-[0_0_15px_rgba(99,102,241,0.1)] transition-all duration-300 cursor-pointer">
+                    <div className="w-[100px] h-[56px] flex-shrink-0 rounded-lg overflow-hidden bg-slate-900 mr-4 relative border border-slate-800">
+                      <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-transparent transition-colors z-10 pointer-events-none" />
+                      <GameImageWithFallback key={`img-${game.id}-${game.app_id}`} game={game} sizes="100px" coverCache={coverCache} />
                     </div>
-                    <div className="flex-grow min-w-0 mr-3">
-                      <h3 className="text-sm font-medium text-white truncate group-hover:text-purple-300 transition-colors">{game.title}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-gray-500">{game.platform}</span>
+                    <div className="flex-grow min-w-0 mr-4">
+                      <h3 className="text-sm font-bold text-slate-200 truncate group-hover:text-indigo-300 transition-colors drop-shadow-sm">{game.title}</h3>
+                      <div className="flex items-center gap-2.5 mt-1">
+                        <span className="text-[10px] font-semibold text-slate-500 tracking-wide uppercase">{game.platform}</span>
                         {game.engine && game.engine.toLowerCase() !== 'unknown' && (
-                          <span className="text-[9px] bg-blue-600/80 text-blue-100 px-1.5 py-0.5 rounded">{game.engine}</span>
+                          <span className="text-[9px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.5 rounded">{game.engine}</span>
                         )}
                       </div>
                     </div>
-                    <div className="hidden md:flex items-center gap-1 mr-3">
-                      {game.genres && game.genres.filter(g => g && g.toLowerCase() !== 'unknown').slice(0, 2).map((genre, idx) => (
-                        <span key={`${game.id}-genre-${idx}`} className="text-[9px] bg-gray-700/80 text-gray-300 px-1.5 py-0.5 rounded">{genre}</span>
+                    <div className="hidden lg:flex items-center gap-1.5 mr-4">
+                      {game.genres && game.genres.filter(g => g && g.toLowerCase() !== 'unknown').slice(0, 3).map((genre, idx) => (
+                        <span key={`${game.id}-genre-${idx}`} className="text-[9px] font-medium bg-slate-800/80 text-slate-400 px-2 py-1 rounded-md border border-slate-700">{genre}</span>
                       ))}
                     </div>
-                    <div className="flex items-center gap-1.5 mr-3">
+                    {(() => {
+                      const gameKey = game.app_id || game.id;
+                      const cachedLangs = languagesCache[gameKey];
+                      const langs = cachedLangs && cachedLangs.length > 0 ? cachedLangs : game.supported_languages;
+                      return langs && langs.length > 1 ? (
+                        <div className="hidden md:flex items-center mr-4">
+                          <LanguageFlags supportedLanguages={langs} maxFlags={6} />
+                        </div>
+                      ) : null;
+                    })()}
+                    <div className="flex items-center gap-3 mr-4">
                       {game.is_installed && (
-                        <span className="w-2 h-2 bg-green-500 rounded-full" title="Installed"></span>
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                          Installed
+                        </span>
                       )}
                       {game.is_vr && (
-                        <span className="text-[10px]" title="VR">🥽</span>
+                        <span className="text-[10px] font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2 py-1 rounded-md border border-fuchsia-500/20">VR</span>
                       )}
                       {game.isShared && (
-                        <span className="text-[10px]" title="Family Sharing">🔗</span>
+                        <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20">Shared</span>
                       )}
                     </div>
                     {/* Quick actions lista */}
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity translate-x-2 group-hover:translate-x-0 duration-300 pr-2">
                       <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/ai-translator?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
-                        className="flex items-center gap-0.5 bg-purple-600/80 hover:bg-purple-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all"
-                        title="Traduci con AI"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); sessionStorage.setItem('wizardAutoGame', JSON.stringify({ id: game.app_id || game.id, title: game.title, install_path: game.install_dir, steam_app_id: game.app_id, header_image: game.header_image })); window.location.href = '/translation-wizard'; }}
+                        className="flex items-center gap-1 bg-indigo-600/90 hover:bg-indigo-500 px-3 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all shadow-md hover:shadow-indigo-500/30"
+                        title="Translation Wizard"
                       >
                         <Sparkles className="h-3 w-3" />
                         Traduci
                       </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/batch?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}
-                        className="flex items-center gap-0.5 bg-blue-600/80 hover:bg-blue-500 px-2 py-1 rounded text-[9px] font-medium text-white transition-all"
+                        className="flex items-center gap-1 bg-sky-600/90 hover:bg-sky-500 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-white transition-all shadow-md hover:shadow-sky-500/30"
                         title="Batch translate"
                       >
                         <FolderOpen className="h-3 w-3" />
-                        Batch
                       </button>
                     </div>
                   </div>
@@ -1385,11 +1420,12 @@ function LibraryListView() {
 
     return (
       <VirtuosoGrid
+        className="custom-scrollbar"
         style={{ height: 'calc(100vh - 280px)' }}
         totalCount={filteredGames.length}
         overscan={40}
-        listClassName="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-1.5"
-        itemClassName="min-h-[120px]"
+        listClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4 pr-2 pb-8"
+        itemClassName="min-h-[180px]"
         itemContent={renderGameCardMemoized}
       />
     );
@@ -1402,28 +1438,30 @@ function LibraryListView() {
   const statsShared = useMemo(() => safeGames.filter(g => g.isShared).length, [safeGames]);
 
   return (
-    <div className="w-full px-4 py-4">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-700 p-3 mb-4 shadow-xl shadow-purple-900/30">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
-              <Gamepad2 className="h-6 w-6 text-white" />
+    <div className="w-full px-4 py-4 relative z-10">
+      {/* Hero Header Premium */}
+      <div className="relative overflow-hidden rounded-xl bg-slate-950/60 border border-slate-800/50 p-4 mb-4 shadow-xl backdrop-blur-md group/header transition-all duration-500 hover:border-indigo-500/30 hover:bg-slate-950/80">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent opacity-50" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-fuchsia-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        
+        <div className="relative flex items-center justify-between z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-slate-900/80 rounded-xl shadow-inner border border-slate-700/50 group-hover/header:border-indigo-500/40 group-hover/header:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-all duration-300">
+              <Gamepad2 className="h-7 w-7 text-indigo-400 group-hover/header:text-indigo-300 transition-colors" />
             </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">{lib.title}</h1>
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-3">
+                <h1 className="text-xl font-extrabold text-white tracking-tight drop-shadow-sm">{lib.title}</h1>
                 {games.length > 0 && (
-                  <span className="text-[10px] font-medium bg-white/15 text-white/90 border border-white/20 px-2 py-0.5 rounded-full">
-                    {filteredGames.length}/{games.length}
+                  <span className="text-[11px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-md">
+                    {filteredGames.length} / {games.length}
                   </span>
                 )}
               </div>
-              <p className="text-white/50 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <p className="text-slate-400 text-xs font-medium mt-0.5">
                 {games.length > 0 
-                  ? `${filteredGames.length} ${lib.gamesOf} ${games.length}`
+                  ? `${filteredGames.length} ${lib.gamesOf} ${games.length} disponibili`
                   : lib.noGames}
               </p>
             </div>
@@ -1431,42 +1469,49 @@ function LibraryListView() {
 
           {/* Stats rapide */}
           {games.length > 0 && (
-            <div className="hidden md:flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/25 border border-white/10">
-                <Monitor className="h-3.5 w-3.5 text-green-300" />
-                <span className="text-sm font-bold text-white">{statsInstalled}</span>
-                <span className="text-[10px] text-white/60">{lib.installed}</span>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
+                <Monitor className="h-4 w-4 text-emerald-400" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-200 leading-none">{statsInstalled}</span>
+                  <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.installed}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/25 border border-white/10">
-                <FolderOpen className="h-3.5 w-3.5 text-blue-300" />
-                <span className="text-sm font-bold text-white">{statsPlatforms}</span>
-                <span className="text-[10px] text-white/60">{lib.provider}</span>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
+                <FolderOpen className="h-4 w-4 text-sky-400" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-200 leading-none">{statsPlatforms}</span>
+                  <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.provider}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/25 border border-white/10">
-                <Wrench className="h-3.5 w-3.5 text-orange-300" />
-                <span className="text-sm font-bold text-white">{statsEngines}</span>
-                <span className="text-[10px] text-white/60">{lib.engine}</span>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
+                <Wrench className="h-4 w-4 text-amber-400" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-200 leading-none">{statsEngines}</span>
+                  <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.engine}</span>
+                </div>
               </div>
               {statsShared > 0 && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/25 border border-white/10">
-                  <Languages className="h-3.5 w-3.5 text-purple-300" />
-                  <span className="text-sm font-bold text-white">{statsShared}</span>
-                  <span className="text-[10px] text-white/60">{lib.shared}</span>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
+                  <Languages className="h-4 w-4 text-fuchsia-400" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-200 leading-none">{statsShared}</span>
+                    <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.shared}</span>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
           {/* Azioni rapide */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
             <button 
               onClick={testFamilySharing} 
-              className="text-[10px] px-2.5 py-1.5 bg-black/30 text-white/70 hover:bg-black/50 hover:text-white rounded-lg transition-all border border-white/10"
+              className="group relative flex items-center justify-center h-10 w-10 bg-slate-900/80 text-slate-400 hover:text-indigo-300 hover:bg-slate-800/80 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/30"
               title="Scan Family Sharing"
             >
-              <RefreshCw className="h-3 w-3 inline mr-1" />
-              {lib.shared}
+              <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
             </button>
             <button 
               onClick={async () => {
@@ -1480,150 +1525,187 @@ function LibraryListView() {
                   toast.error(lib.updateError + ': ' + e);
                 }
               }} 
-              className="text-[10px] px-2.5 py-1.5 bg-black/30 text-white/70 hover:bg-black/50 hover:text-white rounded-lg transition-all border border-white/10"
-              title="Update names DB"
+              className="group flex items-center gap-2 px-4 py-2 bg-slate-900/80 text-slate-300 hover:text-white hover:bg-indigo-600/20 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/40"
+              title="Aggiorna nomi dal Database remoto"
             >
-              <Download className="h-3 w-3 inline mr-1" />
-              {lib.updateDb}
+              <Download className="h-4 w-4 text-slate-400 group-hover:text-indigo-300 transition-colors" />
+              <span className="text-[11px] font-semibold tracking-wide">Aggiorna DB</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Barra ricerca + controlli */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-5">
         {/* Ricerca con icona */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
           <input
             type="text"
             placeholder={lib.searchPlaceholder}
-            className="w-full pl-9 pr-3 py-2 bg-gray-800/60 border border-gray-700/60 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/50 transition-all"
+            className="w-full pl-11 pr-4 py-2.5 bg-slate-900/60 border border-slate-700/50 rounded-xl text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 transition-all shadow-inner backdrop-blur-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 text-xs">
-              ✕
+            <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1 rounded-full hover:bg-slate-800">
+              <span className="text-xs font-bold">✕</span>
             </button>
           )}
         </div>
         
-        {/* Ordinamento */}
-        <div className="relative">
-          <ArrowUpDown className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-500 pointer-events-none" />
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="appearance-none bg-gray-800/60 border border-gray-700/60 rounded-xl pl-7 pr-7 py-2 text-white text-xs focus:outline-none focus:ring-2 focus:ring-purple-500/40 cursor-pointer"
-          >
-            <option value="alphabetical">{lib.alphabetical}</option>
-            <option value="recentlyAdded">{lib.recent}</option>
-            <option value="lastPlayed">{lib.lastPlayed}</option>
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-500 pointer-events-none" />
-        </div>
-        
-        {/* Toggle Filtri con badge contatore */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl transition-all border ${
-            showFilters 
-              ? 'bg-purple-600/90 text-white border-purple-500 shadow-lg shadow-purple-600/20' 
-              : 'bg-gray-800/60 text-gray-300 border-gray-700/60 hover:bg-gray-700/80 hover:text-white'
-          }`}
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5" />
-          {lib.filters}
-          {(() => {
-            const activeCount = selectedStatus.length + selectedEngines.length + selectedTags.length + selectedPlatforms.length;
-            return activeCount > 0 ? (
-              <span className="ml-0.5 bg-purple-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {activeCount}
-              </span>
-            ) : (
-              showFilters ? <ChevronUp className="h-3 w-3 ml-0.5" /> : <ChevronDown className="h-3 w-3 ml-0.5" />
-            );
-          })()}
-        </button>
-        
-        {/* Vista Toggle */}
-        <div className="flex rounded-xl overflow-hidden border border-gray-700/60">
+        <div className="flex items-center gap-2">
+          {/* Ordinamento */}
+          <div className="relative group">
+            <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-hover:text-slate-300 transition-colors pointer-events-none" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="appearance-none bg-slate-900/60 border border-slate-700/50 rounded-xl pl-9 pr-9 py-2.5 text-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 hover:bg-slate-800/80 cursor-pointer shadow-sm transition-all"
+            >
+              <option value="alphabetical">{lib.alphabetical}</option>
+              <option value="recentlyAdded">{lib.recent}</option>
+              <option value="lastPlayed">{lib.lastPlayed}</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+          </div>
+          
+          {/* Toggle Filtri con badge contatore */}
           <button
-            onClick={() => setViewMode('grid')}
-            className={`p-2 transition-all ${viewMode === 'grid' ? 'bg-purple-600 text-white' : 'bg-gray-800/60 text-gray-400 hover:text-gray-200'}`}
-            title="Grid view"
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all border shadow-sm ${
+              showFilters 
+                ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.1)]' 
+                : 'bg-slate-900/60 text-slate-300 border-slate-700/50 hover:bg-slate-800/80 hover:text-white'
+            }`}
           >
-            <LayoutGrid className="h-3.5 w-3.5" />
+            <SlidersHorizontal className="h-4 w-4" />
+            {lib.filters}
+            {(() => {
+              const activeCount = selectedStatus.length + selectedEngines.length + selectedTags.length + selectedPlatforms.length;
+              return activeCount > 0 ? (
+                <span className="ml-1 bg-indigo-500 text-white text-[10px] font-bold w-5 h-5 rounded-md flex items-center justify-center">
+                  {activeCount}
+                </span>
+              ) : (
+                showFilters ? <ChevronUp className="h-4 w-4 ml-1 opacity-70" /> : <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
+              );
+            })()}
           </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`p-2 transition-all ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'bg-gray-800/60 text-gray-400 hover:text-gray-200'}`}
-            title="List view"
-          >
-            <List className="h-3.5 w-3.5" />
-          </button>
+          
+          {/* Vista Toggle */}
+          <div className="flex bg-slate-900/60 rounded-xl border border-slate-700/50 p-1 shadow-sm">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
+              title="Grid view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-indigo-500/20 text-indigo-400 shadow-sm' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'}`}
+              title="List view"
+            >
+              <List className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Pannello Filtri */}
+      {/* Pannello Filtri Elegante */}
       {showFilters && (
-        <div className="mb-3 p-3 bg-gray-900/60 border border-gray-700/50 rounded-xl backdrop-blur-sm animate-in slide-in-from-top-2 duration-200">
-          <div className="flex flex-wrap gap-x-8 gap-y-2.5">
+        <div className="mb-5 p-4 bg-slate-900/80 border border-indigo-500/20 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.4)] backdrop-blur-md animate-in slide-in-from-top-2 duration-300 relative overflow-hidden">
+          {/* Sfondo sottile per il pannello */}
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+          
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Status */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mr-1">{lib.status}</span>
-              {[{id: 'Installed', label: `✓ ${lib.installed}`}, {id: 'NotInstalled', label: `✗ ${lib.notInstalled}`}].map(s => (
-                <button key={s.id} onClick={() => toggleFilter(selectedStatus, setSelectedStatus, s.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${selectedStatus.includes(s.id) ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/60 hover:text-gray-300'}`}>
-                  {s.label}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                <Monitor className="h-3 w-3" /> {lib.status}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {[{id: 'Installed', label: `Installati`}, {id: 'NotInstalled', label: `Non Installati`}].map(s => (
+                  <button key={s.id} onClick={() => toggleFilter(selectedStatus, setSelectedStatus, s.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                      selectedStatus.includes(s.id) 
+                      ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40 shadow-[0_0_10px_rgba(99,102,241,0.15)]' 
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
+                    }`}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             </div>
             
             {/* Engine */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mr-1">{lib.engine}</span>
-              {['Unity', 'Unreal', 'Godot', 'RPG Maker', 'Unknown'].map(eng => (
-                <button key={eng} onClick={() => toggleFilter(selectedEngines, setSelectedEngines, eng)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${selectedEngines.includes(eng) ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/60 hover:text-gray-300'}`}>
-                  {eng}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                <Wrench className="h-3 w-3" /> {lib.engine}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {['Unity', 'Unreal', 'Godot', 'RPG Maker', 'Unknown'].map(eng => (
+                  <button key={eng} onClick={() => toggleFilter(selectedEngines, setSelectedEngines, eng)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                      selectedEngines.includes(eng) 
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-[0_0_10px_rgba(245,158,11,0.15)]' 
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
+                    }`}>
+                    {eng}
+                  </button>
+                ))}
+              </div>
             </div>
             
             {/* Tags */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mr-1">{lib.tag}</span>
-              {[{id: 'VR', label: `🥽 ${lib.vr}`}, {id: 'Shared', label: `🔗 ${lib.shared}`}, {id: 'Backlog', label: `📦 ${lib.backlog}`}].map(t => (
-                <button key={t.id} onClick={() => toggleFilter(selectedTags, setSelectedTags, t.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${selectedTags.includes(t.id) ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/60 hover:text-gray-300'}`}>
-                  {t.label}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                <Gamepad2 className="h-3 w-3" /> {lib.tag}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {[{id: 'VR', label: `🥽 VR`}, {id: 'Shared', label: `🔗 Condivisi`}, {id: 'Backlog', label: `📦 Backlog`}].map(t => (
+                  <button key={t.id} onClick={() => toggleFilter(selectedTags, setSelectedTags, t.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                      selectedTags.includes(t.id) 
+                      ? 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40 shadow-[0_0_10px_rgba(217,70,239,0.15)]' 
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
+                    }`}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             </div>
             
             {/* Provider */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mr-1">{lib.provider}</span>
-              {platforms.filter(p => p !== 'All').map(plat => (
-                <button key={plat} onClick={() => toggleFilter(selectedPlatforms, setSelectedPlatforms, plat)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all ${selectedPlatforms.includes(plat) ? 'bg-purple-500/25 text-purple-300 ring-1 ring-purple-500/40' : 'bg-gray-800/50 text-gray-400 hover:bg-gray-700/60 hover:text-gray-300'}`}>
-                  {plat}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                <FolderOpen className="h-3 w-3" /> {lib.provider}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {platforms.filter(p => p !== 'All').map(plat => (
+                  <button key={plat} onClick={() => toggleFilter(selectedPlatforms, setSelectedPlatforms, plat)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                      selectedPlatforms.includes(plat) 
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-[0_0_10px_rgba(14,165,233,0.15)]' 
+                      : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
+                    }`}>
+                    {plat}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
           
           {/* Clear all filters */}
           {(selectedStatus.length + selectedEngines.length + selectedTags.length + selectedPlatforms.length) > 0 && (
-            <div className="mt-2.5 pt-2 border-t border-gray-700/40">
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex justify-end">
               <button 
                 onClick={() => { setSelectedStatus([]); setSelectedEngines([]); setSelectedTags([]); setSelectedPlatforms([]); }}
-                className="text-[10px] text-gray-500 hover:text-purple-300 transition-colors"
+                className="text-xs font-semibold text-slate-400 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10"
               >
-                ✕ Clear all filters
+                ✕ Azzera tutti i filtri
               </button>
             </div>
           )}

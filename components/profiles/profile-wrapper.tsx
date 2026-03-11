@@ -39,6 +39,9 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
           // Clean up any expired sessions
           sessionPersistence.cleanup();
           
+          // Ripristina le connessioni store dal backend Rust
+          sessionPersistence.restoreStoreConnections().catch(() => {});
+          
           console.log('✅ ProfileWrapper: Session persistence riabilitato con successo');
         } catch (sessionError) {
           console.warn('⚠️ ProfileWrapper: Session persistence fallito, continuando senza:', sessionError);

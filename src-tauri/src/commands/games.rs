@@ -1182,106 +1182,77 @@ pub async fn get_games(
     // 🚀 NUOVO APPROCCIO: Usa metodo diretto come Rai Pal (veloce e affidabile)
     log::info!("🚀 Usando metodo diretto lettura Steam (come Rai Pal)...");
     
+    let mut all_games = Vec::new();
+    
     match steam::get_steam_games_fast().await {
         Ok(steam_games) => {
             log::info!("✅ Metodo Rai Pal: Trovati {} giochi Steam", steam_games.len());
-            // TODO: Aggiungere Epic Games dopo aver corretto il tipo di ritorno
-            return Ok(steam_games);
+            all_games.extend(steam_games);
         }
         Err(e) => {
             log::warn!("⚠️ Errore metodo Rai Pal: {}, fallback a sistema normale", e);
             // Fallback al sistema normale se il metodo veloce fallisce
-        }
-    }
-    
-    let mut all_games = Vec::new();
-    
-    // Prima prova a caricare giochi Steam con metadati completi
-    match steam::load_steam_credentials(profile_state.clone()).await {
-        Ok(credentials) => {
-            log::info!("🔑 Credenziali Steam trovate, recupero giochi con metadati completi...");
-            // 🔒 Decripta l'API key
-            let decrypted_api_key = steam::decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)
-                .map_err(|e| format!("Errore decryption API key: {}", e))?;
             
-            match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(false), profile_state.clone()).await {
-                Ok(steam_games) => {
-                    log::info!("✅ Trovati {} giochi Steam con metadati completi", steam_games.len());
+            // Prima prova a caricare giochi Steam con metadati completi
+            match steam::load_steam_credentials(profile_state.clone()).await {
+                Ok(credentials) => {
+                    log::info!("🔑 Credenziali Steam trovate, recupero giochi con metadati completi...");
+                    // 🔒 Decripta l'API key
+                    let decrypted_api_key = steam::decrypt_api_key(&credentials.api_key_encrypted, &credentials.nonce)
+                        .unwrap_or_default();
                     
-                    // Converti SteamGame in GameInfo con tutti i metadati
-                    log::info!("🔄 Convertendo {} giochi Steam in GameInfo...", steam_games.len());
-                    for steam_game in steam_games {
-                        // Log per giochi interessanti
-                        if steam_game.is_vr || steam_game.is_installed || steam_game.engine != "Unknown" {
-                            log::info!("🎯 Convertendo: {} - VR={} Installed={} Engine={} Languages={}",
-                                     steam_game.name, steam_game.is_vr, steam_game.is_installed, steam_game.engine, steam_game.supported_languages);
+                    if !decrypted_api_key.is_empty() {
+                        match steam::get_steam_games(decrypted_api_key, credentials.steam_id, Some(false), profile_state.clone()).await {
+                            Ok(steam_games) => {
+                                log::info!("✅ Trovati {} giochi Steam con metadati completi", steam_games.len());
+                                for steam_game in steam_games {
+                                    let game_info = GameInfo {
+                                        id: format!("steam_{}", steam_game.appid),
+                                        title: steam_game.name.clone(),
+                                        platform: "Steam".to_string(),
+                                        install_path: None,
+                                        executable_path: None,
+                                        icon: if !steam_game.img_icon_url.is_empty() {
+                                            Some(format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", steam_game.appid, steam_game.img_icon_url))
+                                        } else { None },
+                                        image_url: if !steam_game.img_icon_url.is_empty() {
+                                            Some(format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", steam_game.appid, steam_game.img_icon_url))
+                                        } else { None },
+                                        header_image: if !steam_game.header_image.is_empty() {
+                                            Some(steam_game.header_image.clone())
+                                        } else {
+                                            Some(format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg", steam_game.appid))
+                                        },
+                                        is_installed: steam_game.is_installed,
+                                        steam_app_id: Some(steam_game.appid),
+                                        is_vr: steam_game.is_vr,
+                                        engine: if !steam_game.engine.is_empty() && steam_game.engine != "Unknown" { Some(steam_game.engine.clone()) } else { None },
+                                        last_played: if steam_game.last_played > 0 { Some(steam_game.last_played) } else { None },
+                                        is_shared: steam_game.is_shared,
+                                        supported_languages: if !steam_game.supported_languages.is_empty() {
+                                            Some(steam_game.supported_languages.split(',').map(|s| s.trim().to_string()).collect())
+                                        } else { Some(vec!["english".to_string()]) },
+                                        genres: if !steam_game.genres.is_empty() {
+                                            Some(steam_game.genres.into_iter().map(|g| g.description).collect())
+                                        } else { None },
+                                        added_date: None,
+                                    };
+                                    all_games.push(game_info);
+                                }
+                            }
+                            Err(_) => {
+                                if let Ok(fallback_games) = load_steam_games_from_json().await {
+                                    all_games.extend(fallback_games);
+                                }
+                            }
                         }
-                        let game_info = GameInfo {
-                            id: format!("steam_{}", steam_game.appid),
-                            title: steam_game.name.clone(),
-                            platform: "Steam".to_string(),
-                            install_path: None,
-                            executable_path: None,
-                            icon: if !steam_game.img_icon_url.is_empty() {
-                                Some(format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", steam_game.appid, steam_game.img_icon_url))
-                            } else {
-                                None
-                            },
-                            image_url: if !steam_game.img_icon_url.is_empty() {
-                                Some(format!("https://media.steampowered.com/steamcommunity/public/images/apps/{}/{}.jpg", steam_game.appid, steam_game.img_icon_url))
-                            } else {
-                                None
-                            },
-                            header_image: if !steam_game.header_image.is_empty() {
-                                Some(steam_game.header_image.clone())
-                            } else {
-                                Some(format!("https://cdn.cloudflare.steamstatic.com/steam/apps/{}/header.jpg", steam_game.appid))
-                            },
-                            is_installed: steam_game.is_installed,
-                            steam_app_id: Some(steam_game.appid),
-                            // Usa i metadati reali di Steam API
-                            is_vr: steam_game.is_vr,
-                            engine: if !steam_game.engine.is_empty() && steam_game.engine != "Unknown" {
-                                Some(steam_game.engine.clone())
-                            } else {
-                                None
-                            },
-                            last_played: if steam_game.last_played > 0 {
-                                Some(steam_game.last_played)
-                            } else {
-                                None
-                            },
-                            is_shared: steam_game.is_shared,
-                            // Usa le lingue reali di Steam API
-                            supported_languages: if !steam_game.supported_languages.is_empty() {
-                                Some(steam_game.supported_languages.split(',').map(|s| s.trim().to_string()).collect())
-                            } else {
-                                Some(vec!["english".to_string()])
-                            },
-                            genres: if !steam_game.genres.is_empty() {
-                                Some(steam_game.genres.into_iter().map(|g| g.description).collect())
-                            } else {
-                                None
-                            },
-                            added_date: None,
-                        };
-                        all_games.push(game_info);
                     }
                 }
-                Err(e) => {
-                    log::warn!("⚠️ Errore recupero giochi Steam API: {}, fallback a file JSON", e);
-                    // Fallback al file JSON se Steam API fallisce
+                Err(_) => {
                     if let Ok(fallback_games) = load_steam_games_from_json().await {
                         all_games.extend(fallback_games);
                     }
                 }
-            }
-        }
-        Err(_) => {
-            log::info!("🔄 Nessuna credenziale Steam, carico da file JSON...");
-            // Fallback al file JSON se non ci sono credenziali
-            if let Ok(fallback_games) = load_steam_games_from_json().await {
-                all_games.extend(fallback_games);
             }
         }
     }
@@ -1471,7 +1442,7 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
     // 1. Steam
     match steam_task.await {
         Ok(Ok(mut steam_games)) => {
-            log::info!("✅ Trovati {} giochi Steam", steam_games.len());
+            log::info!("✅ scan_games: {} giochi Steam", steam_games.len());
             scan_results.append(&mut steam_games);
         }
         Ok(Err(e)) => log::error!("❌ Errore scansione Steam: {}", e),
@@ -1482,14 +1453,20 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
     match epic_task.await {
         Ok(Ok(epic_games)) => {
             let epic_scan_results: Vec<GameScanResult> = epic_games.into_iter().map(|game| {
+                // game.id arriva già come "epic_AppName" da try_legendary_library_direct
+                let final_id = if game.id.starts_with("epic_") {
+                    game.id.clone()
+                } else {
+                    format!("epic_{}", game.id)
+                };
                 GameScanResult {
                     title: game.title.clone(),
                     path: game.install_path.unwrap_or_else(|| "Unknown".to_string()),
                     executable_path: game.executable_path,
-                    app_id: Some(game.id.clone()),
+                    app_id: Some(final_id.clone()),
                     source: "Epic Games".to_string(),
                     is_installed: game.is_installed,
-                    id: format!("epic_{}", game.id),
+                    id: final_id,
                     platform: "Epic Games".to_string(),
                     header_image: game.header_image,
                     is_vr: is_vr_game(&game.title),
@@ -1499,7 +1476,10 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
                     last_played: game.last_played,
                 }
             }).collect();
-            log::info!("✅ Trovati {} giochi Epic Games", epic_scan_results.len());
+            log::info!("✅ scan_games: Trovati {} giochi Epic Games", epic_scan_results.len());
+            if !epic_scan_results.is_empty() {
+                log::info!("  📋 Primi 3 Epic: {:?}", epic_scan_results.iter().take(3).map(|g| (&g.id, &g.title)).collect::<Vec<_>>());
+            }
             scan_results.extend(epic_scan_results);
         }
         Ok(Err(e)) => log::error!("❌ Errore scansione Epic Games: {}", e),
@@ -1533,7 +1513,7 @@ pub async fn scan_games() -> Result<Vec<GameScanResult>, String> {
     }
     
     let elapsed = start_time.elapsed();
-    log::info!("🎯 Scansione completata: {} giochi totali in {:?}", scan_results.len(), elapsed);
+    log::info!("🎯 scan_games completata: {} giochi totali in {:?}", scan_results.len(), elapsed);
     Ok(scan_results)
 }
 

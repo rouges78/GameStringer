@@ -243,6 +243,76 @@ class SessionPersistence {
       this.clearSession();
     }
   }
+
+  // Ripristina le connessioni store dal backend Rust nel localStorage
+  // Chiamata al boot dell'app per garantire che le credenziali persistano tra i riavvii
+  async restoreStoreConnections(): Promise<void> {
+    // Evita esecuzioni multiple
+    if ((globalThis as any).__storeConnectionsRestored) return;
+    (globalThis as any).__storeConnectionsRestored = true;
+
+    try {
+      const ACCOUNTS_KEY = 'gameStringer_connectedAccounts';
+      const existing: any[] = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]');
+      let changed = false;
+      const has = (p: string) => existing.some((a: any) => a.provider === p);
+
+      // Steam
+      if (!has('steam-credentials')) {
+        try {
+          const creds = await invoke<any>('load_steam_credentials');
+          if (creds?.steam_id && creds.steam_id.length > 0) {
+            existing.push({ provider: 'steam-credentials', userId: creds.steam_id, steamId: creds.steam_id });
+            changed = true;
+            console.log('[BOOT] ✅ Steam credentials restored');
+          }
+        } catch { /* nessuna credenziale */ }
+      }
+
+      // Epic
+      if (!has('epicgames')) {
+        try {
+          const creds = await invoke<any>('load_epic_credentials');
+          if (creds?.username_encrypted) {
+            existing.push({ provider: 'epicgames', userId: 'epic-user' });
+            changed = true;
+            console.log('[BOOT] ✅ Epic credentials restored');
+          }
+        } catch { /* nessuna credenziale */ }
+      }
+
+      // GOG
+      if (!has('gog-credentials')) {
+        try {
+          const creds = await invoke<any>('load_gog_credentials');
+          if (creds?.email || creds?.username) {
+            existing.push({ provider: 'gog-credentials', userId: creds.username || 'gog-user' });
+            changed = true;
+            console.log('[BOOT] ✅ GOG credentials restored');
+          }
+        } catch { /* nessuna credenziale */ }
+      }
+
+      // Ubisoft
+      if (!has('ubisoft-credentials')) {
+        try {
+          const creds = await invoke<any>('load_ubisoft_credentials');
+          if (creds?.email) {
+            existing.push({ provider: 'ubisoft-credentials', userId: creds.email });
+            changed = true;
+            console.log('[BOOT] ✅ Ubisoft credentials restored');
+          }
+        } catch { /* nessuna credenziale */ }
+      }
+
+      if (changed) {
+        localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(existing));
+        console.log(`[BOOT] 🔄 Store connections restored: ${existing.length} providers`);
+      }
+    } catch (error) {
+      console.warn('[BOOT] Errore ripristino store connections:', error);
+    }
+  }
 }
 
 export const sessionPersistence = SessionPersistence.getInstance();

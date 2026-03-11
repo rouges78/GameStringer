@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
-  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe
+  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -26,6 +26,7 @@ import { TranslationRecommendation } from '@/components/translation-recommendati
 import { useTranslation } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
 import { HltbStats } from '@/components/hltb-stats';
+import { toast } from 'sonner';
 
 import AudioPatcher from '@/components/audio-patcher';
 
@@ -87,8 +88,8 @@ export default function GameDetailPage() {
   const [fallbackImage, setFallbackImage] = useState<string | null>(null);
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
   
-  // Ref guards per StrictMode
-  const gameDataLoadedRef = useRef(false);
+  // Ref guards per StrictMode — traccia quale gameId è stato caricato
+  const gameDataLoadedRef = useRef<string | null>(null);
   const sideEffectsRunRef = useRef<string | null>(null);
 
   // Unreal Engine Patcher
@@ -438,8 +439,8 @@ export default function GameDetailPage() {
 
   useEffect(() => {
     if (gameId) {
-      if (gameDataLoadedRef.current) return;
-      gameDataLoadedRef.current = true;
+      if (gameDataLoadedRef.current === gameId) return;
+      gameDataLoadedRef.current = gameId;
       // Timeout wrapper: evita che una singola invoke blocchi tutto
       const safeInvoke = async <T = any>(cmd: string, args?: any, timeoutMs = 8000): Promise<T | null> => {
         try {
@@ -833,10 +834,30 @@ export default function GameDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex justify-center items-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Caricamento dati del gioco...</p>
+      <div className="flex flex-col h-[calc(100vh-4rem)] bg-transparent overflow-hidden">
+        <div className="h-14 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex items-center px-4 shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-slate-800/50 animate-pulse" />
+          <div className="ml-3 w-48 h-4 rounded-md bg-slate-800/50 animate-pulse" />
+        </div>
+        <div className="flex-1 p-4">
+          <div className="max-w-[1400px] mx-auto space-y-4">
+            <div className="rounded-2xl border border-slate-800/30 bg-slate-900/30 overflow-hidden">
+              <div className="flex flex-col lg:flex-row">
+                <div className="lg:w-[380px] shrink-0 p-5">
+                  <div className="aspect-[3/4] w-full rounded-xl bg-slate-800/40 animate-pulse" />
+                </div>
+                <div className="flex-1 p-6 space-y-4">
+                  <div className="w-3/4 h-6 rounded-md bg-slate-800/40 animate-pulse" />
+                  <div className="w-full h-3 rounded bg-slate-800/30 animate-pulse" />
+                  <div className="w-5/6 h-3 rounded bg-slate-800/30 animate-pulse" />
+                  <div className="flex gap-2 mt-4">
+                    {[1,2,3].map(i => <div key={i} className="w-16 h-5 rounded-full bg-slate-800/30 animate-pulse" />)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="w-full h-14 rounded-xl bg-slate-800/30 animate-pulse" />
+          </div>
         </div>
       </div>
     );
@@ -844,17 +865,18 @@ export default function GameDetailPage() {
 
   if (!game) {
     return (
-      <div className="p-6">
-        <div className="flex items-center space-x-4 mb-6">
+      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center bg-transparent">
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-slate-900/60 border border-slate-800/50 flex items-center justify-center">
+            <Gamepad2 className="h-8 w-8 text-slate-600" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-300">Gioco non trovato</h1>
+          <p className="text-sm text-slate-500 max-w-sm">Il gioco richiesto non esiste nella tua libreria.</p>
           <Link href="/library">
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="h-4 w-4" />
+            <Button variant="outline" className="mt-2 h-10 px-5 bg-slate-900/50 border-slate-700/50 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl">
+              <ArrowLeft className="h-4 w-4 mr-2" /> Torna alla Libreria
             </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold">Gioco non trovato</h1>
-            <p className="text-muted-foreground">Il gioco richiesto non esiste.</p>
-          </div>
         </div>
       </div>
     );
@@ -930,516 +952,539 @@ export default function GameDetailPage() {
         borderLine: 'border-green-500/20'
       };
     }
-    // Default: blu neutro
+    // Default scuro elegante
     return {
       border: 'border-slate-500/20',
-      bg: 'bg-gradient-to-r from-slate-950/80 via-gray-950/60 to-zinc-950/80',
-      blur1: 'bg-slate-500/10',
-      blur2: 'bg-zinc-500/10',
-      text: 'from-slate-300 via-gray-300 to-zinc-300',
+      bg: 'bg-gradient-to-br from-slate-900/80 via-slate-950/40 to-slate-900/80',
+      blur1: 'bg-slate-500/5',
+      blur2: 'bg-gray-500/5',
+      text: 'from-slate-300 via-gray-300 to-slate-400',
       accent: 'text-slate-400',
       accent2: 'text-gray-400',
-      borderLine: 'border-slate-500/20'
+      borderLine: 'border-slate-500/20',
+      button: 'from-slate-700 to-slate-600 shadow-slate-500/20'
     };
   };
 
-  const colors = getGenreGradient();
+  const theme = getGenreGradient();
 
   return (
-    <div className="min-h-screen">
-      <div className="relative p-4 space-y-4">
-        {/* Header con Back + Titolo */}
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-transparent overflow-hidden">
+      
+      {/* Header Sticky Premium */}
+      <div className="h-14 border-b border-slate-800/40 bg-slate-950/90 backdrop-blur-2xl flex items-center justify-between px-5 sticky top-0 z-40 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
           <Link href="/library">
-            <Button variant="outline" size="icon" className="h-9 w-9 bg-black/30 border-white/10 hover:bg-white/10">
+            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-xl transition-all duration-200 border border-transparent hover:border-indigo-500/20">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <h1 className="text-xl font-bold text-white">{game.title}</h1>
-          {isDetectingEngine && (
-            <Badge className="text-xs px-2 py-0.5 bg-slate-700/80 text-slate-300 animate-pulse">
-              <Settings className="h-3 w-3 mr-1 animate-spin" />
-              Analisi engine...
-            </Badge>
-          )}
-          {!isDetectingEngine && (() => {
-            const eng = engineInfo?.engine || game.engine;
-            if (!eng || eng === 'Unknown' || eng === 'Sconosciuto') return null;
-            const engineColors: Record<string, string> = {
-              'Unity': 'bg-blue-600/80',
-              'Unreal Engine': 'bg-orange-600/80',
-              'RPG Maker': 'bg-green-600/80',
-              "Ren'Py": 'bg-pink-600/80',
-              'Spike Chunsoft Engine': 'bg-purple-600/80',
-              'Godot': 'bg-cyan-600/80',
-              'GameMaker': 'bg-yellow-600/80',
-              'Source Engine': 'bg-amber-700/80',
-              'Source 2': 'bg-amber-600/80',
-              'CryEngine': 'bg-red-600/80',
-              'Frostbite': 'bg-sky-600/80',
-              'REDengine': 'bg-red-700/80',
-              'Creation Engine': 'bg-emerald-700/80',
-              'id Tech': 'bg-red-800/80',
-              'RE Engine': 'bg-rose-600/80',
-              'MT Framework': 'bg-rose-700/80',
-              'RAGE Engine': 'bg-yellow-700/80',
-              'FromSoftware Engine': 'bg-stone-600/80',
-              'Platinum Engine': 'bg-indigo-600/80',
-              'Glacier Engine': 'bg-teal-700/80',
-              'FOX Engine': 'bg-orange-700/80',
-              'Anvil Engine': 'bg-slate-600/80',
-              'Decima': 'bg-blue-700/80',
-              'Snowdrop': 'bg-violet-600/80',
-              'IW Engine': 'bg-zinc-600/80',
-              'MonoGame/FNA': 'bg-fuchsia-600/80',
-              'Void Engine': 'bg-gray-700/80',
-              'Clausewitz': 'bg-amber-800/80',
-              'Luminous Engine': 'bg-yellow-500/80',
-              'Haxe/OpenFL': 'bg-lime-600/80',
-              'Telltale Tool': 'bg-teal-600/80',
-              'LÖVE': 'bg-pink-500/80',
-              'Construct': 'bg-emerald-600/80',
-              'Kirikiri': 'bg-fuchsia-700/80',
-              'Defold': 'bg-orange-500/80',
-              'Cocos2d': 'bg-blue-500/80',
-            };
-            const key = Object.keys(engineColors).find(k => eng.startsWith(k)) || '';
-            const bgColor = engineColors[key] || 'bg-gray-600/80';
-            return (
-              <Badge className={`text-xs px-2 py-0.5 text-white ${bgColor}`}>
-                <Settings className="h-3 w-3 mr-1" />
-                {eng}
-              </Badge>
-            );
-          })()}
+          
+          <div className="h-6 w-px bg-slate-800/60" />
+          
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Mini cover nell'header */}
+            {(game.headerUrl || fallbackImage) && (
+              <div className="w-7 h-7 rounded-lg overflow-hidden ring-1 ring-white/10 shrink-0">
+                <img src={game.headerUrl || fallbackImage || ''} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <h1 className="text-sm font-bold text-slate-100 tracking-wide truncate max-w-[280px]">{game.title || game.name}</h1>
+            
+            {isDetectingEngine && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/60 border border-slate-700/30 animate-pulse">
+                <Settings className="h-3 w-3 text-slate-500 animate-spin" />
+                <span className="text-[9px] font-medium text-slate-500">Analisi...</span>
+              </div>
+            )}
+            {!isDetectingEngine && (() => {
+              const eng = engineInfo?.engine || game.engine;
+              if (!eng || eng === 'Unknown' || eng === 'Sconosciuto') return null;
+              return (
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20">
+                  <Cpu className="h-3 w-3 text-sky-400" />
+                  <span className="text-[9px] font-bold text-sky-300 uppercase tracking-widest">{eng}</span>
+                </div>
+              );
+            })()}
+            {game.is_vr && (
+              <div className="px-2 py-0.5 rounded-md bg-fuchsia-500/10 border border-fuchsia-500/20">
+                <span className="text-[9px] font-bold text-fuchsia-400 uppercase tracking-widest">VR</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
           {game.metacritic && (
-            <div className={`ml-auto w-9 h-9 rounded flex items-center justify-center font-bold text-sm ${
-              game.metacritic.score >= 80 ? 'bg-green-600' : 
-              game.metacritic.score >= 60 ? 'bg-yellow-600' : 'bg-red-600'
-            }`}>
-              {game.metacritic.score}
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Metacritic</span>
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-lg ${
+                game.metacritic.score >= 80 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-emerald-500/30' : 
+                game.metacritic.score >= 60 ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-amber-500/30' : 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/30'
+              }`}>
+                {game.metacritic.score}
+              </div>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Steam-style Info Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#1b2838] via-[#1b2838] to-[#2a475e] border border-white/10"
-        >
-          <div className="flex flex-col md:flex-row">
-            {/* Header Image */}
-            <div className="relative w-full md:w-[350px] flex-shrink-0 overflow-hidden group" style={{ minHeight: '165px', maxHeight: '165px' }}>
-              {(game.headerUrl || game.heroUrl || game.coverUrl || fallbackImage) ? (
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 relative z-10">
+        <div className="max-w-[1400px] mx-auto space-y-4">
+          
+          {/* Main Hero Card - Premium Design */}
+          <motion.div 
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+            className={`relative overflow-hidden rounded-2xl border ${theme.border} shadow-2xl`}
+          >
+            {/* Background Hero Image (blurred) */}
+            {(game.heroUrl || game.headerUrl || fallbackImage) && (
+              <div className="absolute inset-0 z-0">
                 <img 
-                  src={game.headerUrl || game.heroUrl || fallbackImage || game.coverUrl}
-                  alt={game.title}
-                  className="w-full h-full object-cover object-center md:rounded-l-xl"
-                  style={{ aspectRatio: '460/215' }}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
+                  src={game.heroUrl || game.headerUrl || fallbackImage || ''} 
+                  alt="" 
+                  className="w-full h-full object-cover scale-110 blur-2xl opacity-20"
                 />
-              ) : null}
-              {/* Fallback gradiente con titolo (solo se non c'è immagine) */}
-              {!(game.headerUrl || game.heroUrl || game.coverUrl || fallbackImage) && (
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/80 via-indigo-900/80 to-slate-900/80 flex items-center justify-center md:rounded-l-xl">
-                  <span className="text-2xl font-bold text-white/30 text-center px-4">{game.title}</span>
-                </div>
-              )}
-              {/* Badge "In Libreria" */}
-              {game.is_installed && (
-                <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-[#4c6b22] px-2.5 py-1 rounded text-xs font-medium text-white shadow-lg z-10">
-                  <HardDrive className="h-3 w-3" />
-                  NELLA LIBRERIA
-                </div>
-              )}
-              {/* Bottone Cambia Cover */}
-              <button
-                onClick={() => setIsCoverPickerOpen(true)}
-                className="absolute bottom-2 right-2 flex items-center gap-1 bg-black/70 hover:bg-black/90 px-2 py-1 rounded text-[10px] font-medium text-white/80 hover:text-white transition-all z-10 opacity-0 group-hover:opacity-100"
-                title="Cambia cover da SteamGridDB"
-              >
-                <ImageIcon className="h-3 w-3" />
-                Cambia
-              </button>
-            </div>
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/95 to-slate-950/80" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/60" />
+              </div>
+            )}
+            {!game.heroUrl && !game.headerUrl && !fallbackImage && (
+              <div className={`absolute inset-0 ${theme.bg}`} />
+            )}
             
-            {/* Info Content */}
-            <div className="flex-1 p-4 flex flex-col justify-between">
-              {/* Description */}
-              <p className="text-[12px] text-[#c6d4df] leading-relaxed">
-                {translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description || 'Nessuna descrizione disponibile.'}
-              </p>
-              
-              {/* Tags */}
-              {game.genres && game.genres.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {game.genres.slice(0, 5).map((genre: any, index: number) => (
-                    <span 
-                      key={index}
-                      className="px-2.5 py-1 bg-[#3d6c8e]/40 hover:bg-[#67c1f5]/30 rounded text-[11px] text-[#67c1f5] cursor-default transition-colors"
-                    >
-                      {genre.description}
+            {/* Effetti luce */}
+            <div className={`absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 ${theme.blur1} pointer-events-none opacity-30`} />
+            <div className={`absolute bottom-0 left-0 w-80 h-80 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 ${theme.blur2} pointer-events-none opacity-30`} />
+            
+            <div className="flex flex-col lg:flex-row relative z-10">
+              {/* Cover Portrait */}
+              <div className="lg:w-[280px] shrink-0 p-5 flex flex-col items-center justify-center">
+                <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
+                  {game.coverUrl || game.headerUrl || fallbackImage ? (
+                    <img 
+                      src={game.coverUrl || game.headerUrl || fallbackImage || ''} 
+                      alt="Cover" 
+                      className="object-cover w-full h-full transform transition-transform duration-700 group-hover:scale-105"
+                      onError={() => setImageError(true)}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+                      <Gamepad2 className="h-12 w-12 text-slate-700" />
+                    </div>
+                  )}
+                  
+                  {/* Gradient overlay bottom */}
+                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                  
+                  {/* Status badge */}
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10">
+                    {game.isInstalled ? (
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+                    ) : (
+                      <span className="w-2 h-2 rounded-full bg-slate-400" />
+                    )}
+                    <span className="text-[9px] font-bold text-white/90 uppercase tracking-widest">
+                      {game.isInstalled ? 'Installato' : 'Libreria'}
                     </span>
-                  ))}
-                  {game.categories?.slice(0, 3).map((cat: any, index: number) => (
-                    <span 
-                      key={`cat-${index}`}
-                      className="px-2.5 py-1 bg-[#3d6c8e]/40 hover:bg-[#67c1f5]/30 rounded text-[11px] text-[#67c1f5] cursor-default transition-colors"
-                    >
-                      {cat.description}
-                    </span>
-                  ))}
+                  </div>
+                  
+                  {/* Cambia cover */}
+                  <button 
+                    className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/10 text-white/80 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
+                    onClick={() => setIsCoverPickerOpen(true)}
+                  >
+                    <ImageIcon className="h-3 w-3" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Cambia</span>
+                  </button>
                 </div>
-              )}
+              </div>
               
-              {/* Release Date + Platform */}
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/10">
-                {game.release_date?.date && (
-                  <span className="text-xs text-[#8f98a0] uppercase tracking-wide">
-                    {game.release_date.date}
-                  </span>
-                )}
-                {/* Platform Icon */}
-                <div className="flex items-center gap-1.5">
-                  {(game.platform === 'Steam' || !game.platform) && (
-                    <svg className="h-4 w-4 text-[#8f98a0]" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2a10 10 0 0 1 10 10c0 4.42-2.87 8.17-6.84 9.5l-4.24-1.77a2.5 2.5 0 0 1-1.42-1.42L7.73 13.5 2 11.73V12a10 10 0 0 1 10-10m0 2a8 8 0 0 0-8 8l4.24 1.73a2.5 2.5 0 0 1 2.5-1.23l2.15-3.5A3.5 3.5 0 0 1 12 6a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5 3.5 3.5 0 0 1-.69-.07l-2.3 3.77a2.5 2.5 0 0 1-.01 2.8l2.84 1.18A8 8 0 0 0 20 12a8 8 0 0 0-8-8m0 4a1.5 1.5 0 0 0-1.5 1.5A1.5 1.5 0 0 0 12 11a1.5 1.5 0 0 0 1.5-1.5A1.5 1.5 0 0 0 12 8Z"/>
-                    </svg>
+              {/* Info Panel */}
+              <div className="flex-1 p-6 flex flex-col justify-between min-w-0">
+                <div>
+                  {/* Titolo Grande */}
+                  <h2 className={`text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r ${theme.text} bg-clip-text text-transparent mb-1 leading-tight`}>
+                    {game.title || game.name}
+                  </h2>
+                  
+                  {/* Developer / Publisher sotto il titolo */}
+                  <div className="flex items-center gap-3 mb-4">
+                    {game.developers?.[0] && (
+                      <span className="text-xs font-semibold text-slate-400">{game.developers[0]}</span>
+                    )}
+                    {game.developers?.[0] && game.publishers?.[0] && game.developers[0] !== game.publishers[0] && (
+                      <>
+                        <span className="text-slate-700">•</span>
+                        <span className="text-xs text-slate-500">{game.publishers[0]}</span>
+                      </>
+                    )}
+                    {!game.developers?.[0] && game.publishers?.[0] && (
+                      <span className="text-xs text-slate-500">{game.publishers[0]}</span>
+                    )}
+                  </div>
+                  
+                  {/* Descrizione */}
+                  <div className="relative mb-5">
+                    <p className="text-[13px] text-slate-300/90 leading-relaxed line-clamp-4">
+                      {translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description || 'Nessuna descrizione disponibile.'}
+                    </p>
+                    {game.description && !translatedDescription && language !== 'en' && (
+                      <Button variant="link" size="sm" className="h-5 px-0 mt-1 text-[10px] text-indigo-400 hover:text-indigo-300" onClick={() => translateDescription(game.description)}>
+                        <Languages className="h-3 w-3 mr-1" /> Traduci in {language.toUpperCase()}
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Genre Pills */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {game.genres?.filter((g: any) => g && g.description).slice(0, 5).map((genre: any, i: number) => (
+                      <span key={i} className={`text-[10px] font-semibold px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] ${theme.accent} hover:bg-white/[0.08] hover:border-white/10 transition-colors cursor-default`}>
+                        {genre.description}
+                      </span>
+                    ))}
+                    {game.categories?.slice(0, 3).map((cat: any, index: number) => (
+                      <span key={`cat-${index}`} className="text-[10px] font-medium px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.05] text-slate-500 cursor-default">
+                        {cat.description}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Footer Info Bar */}
+                <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+                  {/* Platform */}
+                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
+                    game.platform === 'Steam' ? 'bg-blue-500/10 border border-blue-500/15' :
+                    game.platform === 'Epic Games' ? 'bg-slate-500/10 border border-slate-500/15' :
+                    game.platform === 'GOG' ? 'bg-violet-500/10 border border-violet-500/15' :
+                    'bg-slate-500/10 border border-slate-500/15'
+                  }`}>
+                    {(game.platform === 'Steam' || !game.platform) && (
+                      <svg className="h-3.5 w-3.5 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2a10 10 0 0 1 10 10c0 4.42-2.87 8.17-6.84 9.5l-4.24-1.77a2.5 2.5 0 0 1-1.42-1.42L7.73 13.5 2 11.73V12a10 10 0 0 1 10-10m0 2a8 8 0 0 0-8 8l4.24 1.73a2.5 2.5 0 0 1 2.5-1.23l2.15-3.5A3.5 3.5 0 0 1 12 6a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5 3.5 3.5 0 0 1-.69-.07l-2.3 3.77a2.5 2.5 0 0 1-.01 2.8l2.84 1.18A8 8 0 0 0 20 12a8 8 0 0 0-8-8m0 4a1.5 1.5 0 0 0-1.5 1.5A1.5 1.5 0 0 0 12 11a1.5 1.5 0 0 0 1.5-1.5A1.5 1.5 0 0 0 12 8Z"/>
+                      </svg>
+                    )}
+                    <span className={`text-[10px] font-bold uppercase tracking-widest ${
+                      game.platform === 'Steam' ? 'text-blue-400' :
+                      game.platform === 'Epic Games' ? 'text-slate-400' :
+                      game.platform === 'GOG' ? 'text-violet-400' : 'text-slate-400'
+                    }`}>
+                      {game.platform || 'Steam'}
+                    </span>
+                  </div>
+
+                  {/* Release Date */}
+                  {(game.release_date?.date || game.releaseDate) && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+                      <Clock className="h-3 w-3 text-slate-500" />
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        {game.release_date?.date || new Date(game.releaseDate * 1000).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
                   )}
-                  {game.platform === 'Epic Games' && (
-                    <span className="text-xs text-[#8f98a0]">Epic</span>
+                  
+                  {/* Recommendations */}
+                  {game.recommendations?.total > 0 && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+                      <span className="text-xs">👍</span>
+                      <span className="text-[10px] font-semibold text-emerald-400">{game.recommendations.total.toLocaleString()}</span>
+                    </div>
                   )}
-                  {game.platform === 'GOG' && (
-                    <span className="text-xs text-[#8f98a0]">GOG</span>
+                  
+                  {/* Website */}
+                  {game.website && (
+                    <a href={game.website} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] hover:border-white/10 transition-colors">
+                      <Globe className="h-3 w-3 text-slate-500" />
+                      <span className="text-[10px] font-semibold text-slate-400">Sito web</span>
+                    </a>
                   )}
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* One-Click Translate & Patch - CTA principale */}
-        <Button 
-          className="w-full h-12 text-base font-semibold bg-gradient-to-r from-rose-500 via-fuchsia-500 to-purple-500 hover:from-rose-600 hover:via-fuchsia-600 hover:to-purple-600 shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/40 transition-all"
-          onClick={() => router.push(`/auto-translate?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}&platform=${encodeURIComponent(game.platform || '')}`)}
-        >
-          <Zap className="h-5 w-5 mr-2" />
-          One-Click Translate &amp; Patch
-        </Button>
+          {/* One-Click Translate - Premium CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+          >
+            <Button 
+              className="w-full h-14 text-sm font-bold bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:via-indigo-400 hover:to-violet-400 text-white shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-300 rounded-xl relative overflow-hidden group border border-indigo-400/20"
+              onClick={() => router.push(`/auto-translate?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}&platform=${encodeURIComponent(game.platform || '')}`)}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(255,255,255,0.12),transparent_60%)]" />
+              <Zap className="h-5 w-5 mr-2.5 drop-shadow-sm" fill="currentColor" />
+              <span className="relative tracking-wide">ONE-CLICK TRANSLATE & PATCH</span>
+            </Button>
+          </motion.div>
 
-        {/* HowLongToBeat Stats - Stile Steam Deck */}
-        <HltbStats gameName={game.title || game.name || ''} className="mt-4" />
+          {/* HowLongToBeat Stats */}
+          <HltbStats gameName={game.title || game.name || ''} className="mt-4" />
 
-        {/* Screenshot Gallery - Solo se ci sono screenshot */}
-        {game.screenshots?.length > 0 && (
-          <Card className="bg-black/30 backdrop-blur-xl border-white/10">
-            <CardContent className="p-3">
-              <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                {game.screenshots.slice(0, 6).map((screenshot: any, index: number) => (
-                  <div 
-                    key={index} 
-                    className="relative aspect-video bg-slate-800 rounded overflow-hidden cursor-pointer hover:ring-2 ring-purple-500 transition-all"
-                    onClick={() => setSelectedScreenshotIndex(index)}
-                  >
-                    <img 
-                      src={screenshot.path_thumbnail || screenshot.path_full} 
-                      alt={`Screenshot ${index + 1}`} 
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Info rapida - nascosta se non c'è path */}
-        {game.installPath && (
-          <div className="flex flex-wrap items-center gap-3 text-[10px] text-gray-500">
-            <span><Folder className="h-3 w-3 inline mr-1" />{game.installPath}</span>
-            {dlcGames.length > 0 && <span className="text-cyan-400">{dlcGames.length} DLC</span>}
-          </div>
-        )}
-
-        {isScanning && (
-          <div className="flex items-center gap-2">
-            <Progress value={scanProgress} className="h-2 flex-1" />
-            <span className="text-sm text-purple-400">{scanProgress}%</span>
-          </div>
-        )}
-
-      {/* Layout 3:1 - Tabs + Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-        {/* Colonna Principale - Tabs */}
-        <div className="lg:col-span-3 space-y-2">
-
-          {/* Raccomandazione Traduzione - Sopra tabs */}
-          {(game.is_installed || game.installPath) && (
-            <TranslationRecommendation 
-              gamePath={game.installPath || ''} 
-              gameName={game.title || game.name || ''} 
-              onActionClick={async (route) => {
-                if (route === 'action:launch_game') {
-                  if (game.appid && game.appid > 0) {
-                    const steamUrl = `steam://rungameid/${game.appid}`;
-                    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-                      try {
-                                          await invoke('launch_steam_game', { appId: game.appid.toString() });
-                      } catch (e) {
-                        window.location.href = steamUrl;
-                      }
-                    } else {
-                      window.location.href = steamUrl;
-                    }
-                  } else if (game.installPath) {
-                    try {
-                                      const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
-                      if (exeList?.length > 0) {
-                        await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
-                      }
-                    } catch (e) {
-                      console.error('[GameDetail] Errore avvio:', e);
-                    }
-                  }
-                } else if (route === '/unity-patcher') {
-                  handleInstallUnityPatch();
-                } else {
-                  router.push(route);
-                }
-              }}
-            />
-          )}
-
-          {/* Tabs File/Traduzioni/Patch/Info/Audio */}
-          <Tabs defaultValue="files" className="space-y-3">
-            <TabsList className="h-8 bg-black/30 border-white/10 flex flex-wrap max-w-full">
-              <TabsTrigger value="files" className="text-xs data-[state=active]:bg-purple-600">📁 {t('gameDetails.tabFiles')}</TabsTrigger>
-              <TabsTrigger value="translations" className="text-xs data-[state=active]:bg-purple-600">🌍 {t('gameDetails.tabTranslations')}</TabsTrigger>
-              <TabsTrigger value="patches" className="text-xs data-[state=active]:bg-purple-600">⚡ {t('gameDetails.tabPatch')}</TabsTrigger>
-              <TabsTrigger value="audio" className="text-xs data-[state=active]:bg-purple-600">🎤 Audio Patcher</TabsTrigger>
-              <TabsTrigger value="info" className="text-xs data-[state=active]:bg-purple-600">🖥️ Info</TabsTrigger>
-            </TabsList>
-
-          <TabsContent value="files" className="space-y-2">
-            <Card className="bg-black/20 border-white/10">
-              <CardContent className="p-3">
-                {game.detectedFiles.length > 0 ? (
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs text-gray-400">{game.detectedFiles.length} {t('gameDetails.filesFound')}</span>
-                      <div className="flex gap-1">
-                        <Button size="sm" className="h-7 text-xs bg-purple-600" onClick={() => router.push(`/translator?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`)}>
-                          <Sparkles className="h-3 w-3 mr-1" />Neural Translator
-                        </Button>
+          {/* Screenshot Gallery */}
+          {game.screenshots?.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.2 }}
+              className="rounded-2xl bg-slate-900/30 backdrop-blur-md border border-slate-800/30 overflow-hidden mt-4"
+            >
+              <div className="p-3">
+                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                  {game.screenshots.slice(0, 6).map((screenshot: any, index: number) => (
+                    <div 
+                      key={index} 
+                      className="relative aspect-video bg-slate-950 rounded-xl overflow-hidden cursor-pointer ring-1 ring-white/[0.06] hover:ring-2 hover:ring-indigo-500/40 transition-all duration-300 group"
+                      onClick={() => setSelectedScreenshotIndex(index)}
+                    >
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300 z-10 pointer-events-none" />
+                      <img 
+                        src={screenshot.path_thumbnail || screenshot.path_full} 
+                        alt={`Screenshot ${index + 1}`} 
+                        className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                      {/* Play icon on hover */}
+                      <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                          <Search className="h-3.5 w-3.5 text-white" />
+                        </div>
                       </div>
                     </div>
-                    <div className="max-h-48 overflow-y-auto space-y-1">
-                      {game.detectedFiles.map((file: string, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-1.5 bg-muted/30 rounded text-xs hover:bg-muted/50">
-                          <span className="truncate flex-1"><FileText className="h-3 w-3 inline mr-1" />{file}</span>
-                          <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2" onClick={() => router.push(`/translator?gameId=${gameId}&file=${encodeURIComponent(file)}`)}>
-                            {t('gameDetails.translate')}
-                          </Button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Install Path + DLC info */}
+          {game.installPath && (
+            <div className="flex flex-wrap items-center gap-2 mt-2 px-1">
+              <span className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500 bg-slate-900/40 px-3 py-1.5 rounded-lg border border-slate-800/30 max-w-full truncate">
+                <Folder className="h-3 w-3 shrink-0 text-slate-600" />
+                <span className="truncate">{game.installPath}</span>
+              </span>
+              {dlcGames.length > 0 && (
+                <span className="flex items-center gap-1.5 text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/15 px-3 py-1.5 rounded-lg">
+                  <Sparkles className="h-3 w-3" />
+                  {dlcGames.length} DLC
+                </span>
+              )}
+            </div>
+          )}
+
+          {isScanning && (
+            <div className="flex items-center gap-3 mt-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800/30">
+              <Progress value={scanProgress} className="h-2 flex-1 bg-slate-800" />
+              <span className="text-xs font-bold text-indigo-400 tabular-nums">{scanProgress}%</span>
+            </div>
+          )}
+
+        {/* Layout 3:1 - Tabs + Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 mt-6">
+          {/* Colonna Principale - Tabs */}
+          <div className="lg:col-span-3 space-y-4">
+
+            {/* Raccomandazione Traduzione - Sopra tabs */}
+            {(game.is_installed || game.installPath) && (
+              <TranslationRecommendation 
+                gamePath={game.installPath || ''} 
+                gameName={game.title || game.name || ''} 
+                onActionClick={async (route) => {
+                  if (route === 'action:launch_game') {
+                    if (game.appid && game.appid > 0) {
+                      const steamUrl = `steam://rungameid/${game.appid}`;
+                      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+                        try {
+                                            await invoke('launch_steam_game', { appId: game.appid.toString() });
+                        } catch (e) {
+                          window.location.href = steamUrl;
+                        }
+                      } else {
+                        window.location.href = steamUrl;
+                      }
+                    } else if (game.installPath) {
+                      try {
+                                        const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
+                        if (exeList?.length > 0) {
+                          await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
+                        }
+                      } catch (e) {
+                        console.error('[GameDetail] Errore avvio:', e);
+                      }
+                    }
+                  } else if (route === '/unity-patcher') {
+                    handleInstallUnityPatch();
+                  } else {
+                    router.push(route);
+                  }
+                }}
+              />
+            )}
+
+            {/* Tabs File/Traduzioni/Patch/Info/Audio */}
+            <Tabs defaultValue="files" className="space-y-4">
+              <TabsList className="h-auto bg-slate-900/40 backdrop-blur-xl border border-white/[0.06] flex flex-wrap max-w-full rounded-xl p-1.5 gap-1 shadow-inner">
+                <TabsTrigger value="files" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
+                  <FileText className="h-3.5 w-3.5 mr-1.5" /> {t('gameDetails.tabFiles')}
+                </TabsTrigger>
+                <TabsTrigger value="translations" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
+                  <Languages className="h-3.5 w-3.5 mr-1.5" /> {t('gameDetails.tabTranslations')}
+                </TabsTrigger>
+                <TabsTrigger value="patches" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
+                  <Zap className="h-3.5 w-3.5 mr-1.5" /> {t('gameDetails.tabPatch')}
+                </TabsTrigger>
+                <TabsTrigger value="audio" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
+                  <Monitor className="h-3.5 w-3.5 mr-1.5" /> Audio
+                </TabsTrigger>
+                <TabsTrigger value="info" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
+                  <Info className="h-3.5 w-3.5 mr-1.5" /> Info
+                </TabsTrigger>
+              </TabsList>
+
+            <TabsContent value="files" className="space-y-2">
+              <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
+                <CardContent className="p-5">
+                  {game.detectedFiles.length > 0 ? (
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                            <FileText className="h-3.5 w-3.5 text-indigo-400" />
+                          </div>
+                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{game.detectedFiles.length} {t('gameDetails.filesFound')}</span>
+                        </div>
+                        <Button size="sm" className="h-8 text-xs font-semibold bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-lg shadow-sm shadow-indigo-500/10 border border-indigo-500/20" onClick={() => router.push(`/translator?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`)}>
+                          <Sparkles className="h-3.5 w-3.5 mr-1.5" />Neural Translator
+                        </Button>
+                      </div>
+                      <div className="max-h-[300px] overflow-y-auto space-y-1.5 custom-scrollbar pr-2">
+                        {game.detectedFiles.map((file: string, index: number) => (
+                          <div key={index} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-xs hover:bg-white/[0.05] hover:border-white/[0.08] transition-all duration-200 group">
+                            <span className="truncate flex-1 font-medium text-slate-300 flex items-center gap-2">
+                              <FileText className="h-3.5 w-3.5 text-slate-600 shrink-0" />{file}
+                            </span>
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold uppercase tracking-wider px-3 text-slate-500 group-hover:text-indigo-400 group-hover:bg-indigo-500/10 rounded-lg ml-2" onClick={() => router.push(`/translator?gameId=${gameId}&file=${encodeURIComponent(file)}`)}>
+                              {t('gameDetails.translate')}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-slate-800/40 border border-slate-700/30 flex items-center justify-center">
+                        <FileText className="h-6 w-6 text-slate-600" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-300 mb-1.5">{t('gameDetails.noFilesDetected')}</p>
+                      <p className="text-[11px] text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">{t('gameDetails.searchTranslatableFiles')}</p>
+                      <Button size="sm" className="h-10 px-5 text-xs font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/50" onClick={scanGameFiles} disabled={isScanning}>
+                        <Search className="h-4 w-4 mr-2 text-slate-400" />{t('gameDetails.scan')}
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="translations" className="space-y-2">
+              <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
+                <CardContent className="p-5">
+                  {translations.length > 0 ? (
+                    <div className="max-h-[300px] overflow-y-auto space-y-1.5 custom-scrollbar pr-2">
+                      {translations.map((translation) => (
+                        <div key={translation.id} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-xs hover:bg-white/[0.05] hover:border-white/[0.08] transition-all duration-200">
+                          <span className="truncate flex-1 font-medium text-slate-300">{translation.filePath}</span>
+                          <Badge variant="outline" className="text-[9px] mx-2 bg-white/[0.03] text-slate-400 border-white/[0.06]">{translation.status}</Badge>
+                          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/15">{Math.round((translation.confidence || 0) * 100)}%</span>
                         </div>
                       ))}
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-xs text-gray-400 mb-2">{t('gameDetails.noFilesDetected')}</p>
-                    <p className="text-[10px] text-gray-500 mb-3">{t('gameDetails.searchTranslatableFiles')}</p>
-                    <Button size="sm" className="h-7 text-xs" onClick={scanGameFiles} disabled={isScanning} title="Cerca file di localizzazione nella cartella del gioco">
-                      <FileText className="h-3 w-3 mr-1" />{t('gameDetails.scan')}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="translations" className="space-y-2">
-            <Card className="bg-black/20 border-white/10">
-              <CardContent className="p-3">
-                {translations.length > 0 ? (
-                  <div className="max-h-48 overflow-y-auto space-y-1">
-                    {translations.map((translation) => (
-                      <div key={translation.id} className="flex items-center justify-between p-1.5 bg-muted/30 rounded text-xs">
-                        <span className="truncate flex-1">{translation.filePath}</span>
-                        <Badge variant="outline" className="text-[10px] mx-1">{translation.status}</Badge>
-                        <span className="text-gray-500">{Math.round((translation.confidence || 0) * 100)}%</span>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-slate-800/40 border border-slate-700/30 flex items-center justify-center">
+                        <Languages className="h-6 w-6 text-slate-600" />
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <p className="text-xs text-gray-400 mb-2">{t('gameDetails.noActiveTranslations')}</p>
-                    <Link href={`/translator?gameId=${game.id}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`}>
-                      <Button size="sm" className="h-7 text-xs"><Languages className="h-3 w-3 mr-1" />{t('gameDetails.translate')}</Button>
-                    </Link>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="patches" className="space-y-2">
-            <Card className="bg-black/20 border-white/10">
-              <CardContent className="p-3 space-y-2">
-                {/* UNITY */}
-                {game.engine === 'Unity' && (
-                  <div className="flex items-center justify-between p-2 bg-blue-500/10 rounded">
-                    <span className="text-xs text-blue-100"><Zap className="h-3 w-3 inline mr-1" />Unity AutoTranslator</span>
-                    <div className="flex gap-1">
-                      <Button size="sm" className="h-6 text-[10px] bg-blue-600" onClick={handleInstallUnityPatch} disabled={isInstallingPatch || !game.is_installed}>
-                        {isInstallingPatch ? '...' : 'Installa'}
-                      </Button>
-                      <Button size="sm" variant="destructive" className="h-6 text-[10px]" onClick={handleUninstallUnityPatch} disabled={isInstallingPatch || !game.is_installed}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      <p className="text-sm font-semibold text-slate-300 mb-1.5">{t('gameDetails.noActiveTranslations')}</p>
+                      <Link href={`/translator?gameId=${game.id}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`}>
+                        <Button size="sm" className="h-10 px-5 text-xs font-bold bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-xl mt-4 shadow-sm shadow-indigo-500/10 border border-indigo-500/20">
+                          <Languages className="h-4 w-4 mr-2" />{t('gameDetails.translate')}
+                        </Button>
+                      </Link>
                     </div>
-                  </div>
-                )}
-                {/* UNREAL */}
-                {game.engine === 'Unreal Engine' && (
-                  <div className="flex items-center justify-between p-2 bg-orange-500/10 rounded">
-                    <span className="text-xs text-orange-100"><Zap className="h-3 w-3 inline mr-1" />Unreal Translator</span>
-                    <div className="flex gap-1">
-                      <Button size="sm" className="h-6 text-[10px] bg-orange-600" onClick={handleInstallUnrealPatch} disabled={isInstallingPatch || !game.is_installed}>
-                        {isInstallingPatch ? '...' : 'Installa'}
-                      </Button>
-                      <Button size="sm" variant="destructive" className="h-6 text-[10px]" onClick={handleUninstallUnrealPatch} disabled={isInstallingPatch || !game.is_installed}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                {/* RPG MAKER */}
-                {game.engine === 'RPG Maker' && (
-                  <div className="p-2 bg-green-500/10 rounded text-xs text-green-100">
-                    <Zap className="h-3 w-3 inline mr-1" />RPG Maker - Scansiona file JSON in www/data
-                  </div>
-                )}
-                {/* REN'PY */}
-                {game.engine === "Ren'Py" && (
-                  <div className="p-2 bg-pink-500/10 rounded text-xs text-pink-100">
-                    <Zap className="h-3 w-3 inline mr-1" />Ren'Py - Traduzioni in game/tl
-                  </div>
-                )}
-                
-                {/* Auto-Patch (Nuovo sistema) */}
-                {engineInfo?.can_patch && !game.engine?.match(/Unity|Unreal|RPG Maker|Ren'Py/i) && (
-                  <div className="flex items-center justify-between p-2 bg-purple-500/10 rounded">
-                    <div>
-                      <span className="text-xs text-purple-100 font-medium block"><Sparkles className="h-3 w-3 inline mr-1" />{engineInfo.patch_tool || 'Auto-Patcher'}</span>
-                      <span className="text-[10px] text-purple-200/70 block mt-0.5">{engineInfo.patch_description}</span>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      className="h-7 text-xs bg-purple-600 ml-2" 
-                      onClick={() => {
-                        if (engineInfo.engine.includes('Unity')) handleInstallUnityPatch();
-                        else if (engineInfo.engine.includes('Unreal')) handleInstallUnrealPatch();
-                        else {
-                          import('sonner').then(({ toast }) => {
-                            toast.info("In sviluppo", { description: `Il patcher per ${engineInfo.engine} sarà disponibile presto.`});
-                          });
-                        }
-                      }} 
-                      disabled={isInstallingPatch || !game.is_installed}
-                    >
-                      {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Installa Patch'}
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          <TabsContent value="audio" className="space-y-2">
-            <AudioPatcher gamePath={game?.installPath || ''} />
-          </TabsContent>
-
-          <TabsContent value="info" className="space-y-2">
-            <Card className="bg-black/20 border-white/10">
-              <CardContent className="p-3 space-y-2">
-                {/* Requisiti di sistema */}
-                {game.pc_requirements ? (
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
-                      <Monitor className="h-3.5 w-3.5" /> Requisiti di Sistema
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {game.pc_requirements.minimum && (
-                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
-                          <div className="text-[10px] font-semibold text-amber-400 mb-1.5 uppercase tracking-wide">Minimi</div>
-                          <p className="text-[10px] text-white/60 leading-relaxed whitespace-pre-wrap">
-                            {game.pc_requirements.minimum.replace(/<[^>]*>?/gm, '').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').trim()}
-                          </p>
+            <TabsContent value="patches" className="space-y-2">
+              <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
+                <CardContent className="p-5 space-y-3">
+                  {/* UNITY */}
+                  {game.engine === 'Unity' && (
+                    <div className="flex items-center justify-between p-4 bg-sky-500/[0.06] border border-sky-500/15 rounded-xl group hover:bg-sky-500/[0.1] transition-all duration-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/15">
+                          <Zap className="h-5 w-5 text-sky-400" />
                         </div>
-                      )}
-                      {game.pc_requirements.recommended && (
-                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
-                          <div className="text-[10px] font-semibold text-green-400 mb-1.5 uppercase tracking-wide">Raccomandati</div>
-                          <p className="text-[10px] text-white/60 leading-relaxed whitespace-pre-wrap">
-                            {game.pc_requirements.recommended.replace(/<[^>]*>?/gm, '').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').trim()}
-                          </p>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-sky-300">Unity AutoTranslator</span>
+                          <span className="text-[10px] text-sky-500/70 mt-0.5">Traduzione real-time in-game via BepInEx</span>
                         </div>
-                      )}
+                      </div>
+                      <Button size="sm" className="h-8 text-[10px] font-bold bg-sky-600/80 hover:bg-sky-500 text-white rounded-lg border border-sky-500/30" onClick={handleInstallUnityPatch} disabled={isInstallingPatch}>
+                        {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
+                        Installa
+                      </Button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-white/30">
-                    <Monitor className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs">Requisiti di sistema non disponibili</p>
-                    {!game.appid || game.appid === 0 ? (
-                      <p className="text-[10px] mt-1 opacity-60">Disponibili solo per giochi Steam</p>
-                    ) : null}
-                  </div>
-                )}
+                  )}
 
-                {/* Metacritic */}
-                {game.metacritic?.score && (
-                  <div className="flex items-center gap-3 pt-2 border-t border-white/10">
-                    <div className={`flex items-center justify-center w-10 h-10 rounded font-bold text-sm ${
-                      game.metacritic.score >= 75 ? 'bg-green-600 text-white' :
-                      game.metacritic.score >= 50 ? 'bg-amber-500 text-white' : 'bg-red-600 text-white'
-                    }`}>
-                      {game.metacritic.score}
+                  {/* UNREAL */}
+                  {game.engine === 'Unreal Engine' && (
+                    <div className="flex items-center justify-between p-4 bg-violet-500/[0.06] border border-violet-500/15 rounded-xl group hover:bg-violet-500/[0.1] transition-all duration-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/15">
+                          <Cpu className="h-5 w-5 text-violet-400" />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-violet-300">Unreal Engine Translator</span>
+                          <span className="text-[10px] text-violet-500/70 mt-0.5">Traduzione automatica per UE4/UE5</span>
+                        </div>
+                      </div>
+                      <Button size="sm" className="h-8 text-[10px] font-bold bg-violet-600/80 hover:bg-violet-500 text-white rounded-lg border border-violet-500/30" onClick={handleInstallUnrealPatch} disabled={isInstallingPatch}>
+                        {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
+                        Installa
+                      </Button>
                     </div>
-                    <div>
-                      <div className="text-xs font-medium text-white/80">Metacritic</div>
-                      {game.metacritic.url && (
-                        <a href={game.metacritic.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-400 hover:text-blue-300">
-                          Leggi recensioni →
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Recensioni Steam */}
-                {game.recommendations?.total > 0 && (
-                  <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-                    <span className="text-lg">👍</span>
-                    <div>
-                      <div className="text-xs text-white/80">{game.recommendations.total.toLocaleString()} recensioni Steam</div>
+                  {/* Nessun engine compatibile */}
+                  {game.engine !== 'Unity' && game.engine !== 'Unreal Engine' && (
+                    <div className="text-center py-10">
+                      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-slate-800/40 border border-slate-700/30 flex items-center justify-center">
+                        <Wrench className="h-6 w-6 text-slate-600" />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-300 mb-1.5">Nessuna patch automatica</p>
+                      <p className="text-[11px] text-slate-500 max-w-sm mx-auto leading-relaxed">
+                        {game.engine ? `Engine "${game.engine}" non supporta ancora patch automatiche.` : 'Engine non rilevato. Usa il pulsante "One-Click Translate" per tradurre manualmente.'}
+                      </p>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Website */}
-                {game.website && (
-                  <div className="pt-2 border-t border-white/10">
-                    <a href={game.website} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-[11px] text-blue-400 hover:text-blue-300 transition-colors">
-                      <Globe className="h-3 w-3" /> Sito ufficiale
-                    </a>
-                  </div>
-                )}
+                  {/* Patch Status */}
+                  {patchStatus && (
+                    <div className={`flex items-center gap-3 p-3 rounded-xl border ${patchStatus.success ? 'bg-emerald-500/[0.06] border-emerald-500/15' : 'bg-red-500/[0.06] border-red-500/15'}`}>
+                      {patchStatus.success ? <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" /> : <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />}
+                      <span className={`text-xs font-medium ${patchStatus.success ? 'text-emerald-300' : 'text-red-300'}`}>{patchStatus.message}</span>
+                    </div>
+                  )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1447,8 +1492,101 @@ export default function GameDetailPage() {
           </Tabs>
         </div>
 
-        {/* Sidebar Destra - Info e Azioni */}
+        {/* Sidebar Destra - Azioni & Quick Links */}
         <div className="space-y-4">
+          {/* Gestione Card */}
+          <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
+            <CardHeader className="p-4 pb-3">
+              <CardTitle className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] flex items-center gap-2">
+                <Settings2 className="h-3.5 w-3.5" /> Gestione
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 space-y-2">
+              {game.platform === 'Steam' && game.appid > 0 && (
+                <button 
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-slate-300 hover:bg-blue-500/[0.06] hover:border-blue-500/15 hover:text-blue-300 transition-all duration-200 group"
+                  onClick={() => window.open(`steam://nav/games/details/${game.appid}`)}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/15 transition-colors">
+                    <svg className="h-4 w-4 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2a10 10 0 0 1 10 10c0 4.42-2.87 8.17-6.84 9.5l-4.24-1.77a2.5 2.5 0 0 1-1.42-1.42L7.73 13.5 2 11.73V12a10 10 0 0 1 10-10"/>
+                    </svg>
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="text-xs font-semibold">Apri in Steam</span>
+                    <span className="text-[9px] text-slate-500">Visualizza nella libreria Steam</span>
+                  </div>
+                </button>
+              )}
+              {game.installPath && (
+                <button 
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-slate-300 hover:bg-amber-500/[0.06] hover:border-amber-500/15 hover:text-amber-300 transition-all duration-200 group"
+                  onClick={async () => {
+                    try {
+                      await invoke('open_folder_in_explorer', { folderPath: game.installPath });
+                    } catch (e) {
+                      toast.error('Impossibile aprire la cartella');
+                    }
+                  }}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/15 transition-colors">
+                    <FolderOpen className="h-4 w-4 text-amber-400" />
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="text-xs font-semibold">Sfoglia File</span>
+                    <span className="text-[9px] text-slate-500">Apri cartella gioco</span>
+                  </div>
+                </button>
+              )}
+              <button 
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-slate-400 hover:bg-red-500/[0.06] hover:border-red-500/15 hover:text-red-400 transition-all duration-200 group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-red-500/5 flex items-center justify-center group-hover:bg-red-500/10 transition-colors">
+                  <Trash2 className="h-4 w-4 text-red-400/60 group-hover:text-red-400" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-xs font-semibold">Nascondi</span>
+                  <span className="text-[9px] text-slate-500">Rimuovi dalla libreria</span>
+                </div>
+              </button>
+            </CardContent>
+          </Card>
+          
+          {/* Quick Actions Card */}
+          <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
+            <CardHeader className="p-4 pb-3">
+              <CardTitle className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5" /> Azioni Rapide
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 space-y-2">
+              <Button 
+                size="sm" 
+                className="w-full h-9 text-xs font-semibold justify-start bg-indigo-500/10 hover:bg-indigo-500/15 text-indigo-300 border border-indigo-500/15 rounded-xl"
+                onClick={() => router.push(`/translator?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`)}
+              >
+                <Languages className="h-3.5 w-3.5 mr-2" /> Traduci File
+              </Button>
+              <Button 
+                size="sm" 
+                className="w-full h-9 text-xs font-semibold justify-start bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-300 border border-emerald-500/15 rounded-xl"
+                onClick={scanGameFiles}
+                disabled={isScanning}
+              >
+                <Search className="h-3.5 w-3.5 mr-2" /> Scansiona File
+              </Button>
+              <Button 
+                size="sm" 
+                className="w-full h-9 text-xs font-semibold justify-start bg-slate-500/10 hover:bg-slate-500/15 text-slate-300 border border-slate-500/15 rounded-xl"
+                onClick={() => setIsCoverPickerOpen(true)}
+              >
+                <ImageIcon className="h-3.5 w-3.5 mr-2" /> Cambia Cover
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      
       {showTranslation && game && (
         <InlineTranslator
           gameId={game.appid.toString()}
@@ -1579,9 +1717,8 @@ export default function GameDetailPage() {
           }}
         />
       )}
-    </div>
-    </div>
-    </div>
+      </div>
+      </div>
     </div>
   );
 }
