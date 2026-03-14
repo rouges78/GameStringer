@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useVersion } from '@/lib/version';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   Home, 
   Gamepad2,
@@ -64,7 +65,11 @@ import {
   Newspaper,
   Clock,
   Edit3,
-  Binary
+  Binary,
+  ArrowRight,
+  Library,
+  Languages,
+  Shield
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -215,6 +220,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: t('nav.ueTranslator') || 'UE Translator', href: '/unreal-translator', icon: Cpu },
           { name: t('nav.telltalePatcher') || 'Telltale Patcher', href: '/telltale-patcher', icon: Gamepad2 },
           { name: 'Unity Bundle', href: '/unity-bundle', icon: FileArchive },
+          { name: 'Unity CSV Translator', href: '/unity-csv-translator', icon: Globe },
           { name: 'Visual Novel', href: '/danganronpa-patcher', icon: Package },
           { name: 'RPG Maker', href: '/rpgmaker-patcher', icon: Gamepad2 },
           { name: "Ren'Py", href: '/renpy-patcher', icon: Heart },
@@ -248,6 +254,7 @@ const getNavGroups = (t: (key: string) => string) => [
         icon: ShieldCheck,
         subItems: [
           { name: 'QA Check', href: '/qa-check', icon: ShieldCheck },
+          { name: 'Quality H/V/A', href: '/quality-scoring', icon: Shield },
           { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
           { name: 'Confidence Heatmap', href: '/heatmap', icon: BarChart3 },
         ]
@@ -283,6 +290,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: t('nav.community'), href: '/community-hub', icon: Users },
           { name: 'Stores', href: '/stores', icon: ShoppingBag },
           { name: 'Steam Workshop', href: '/workshop', icon: Globe },
+          { name: 'Workshop Export', href: '/workshop-export', icon: Package },
           { name: 'Blog', href: '/blog', icon: Newspaper },
         ]
       },
@@ -847,6 +855,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [expandedSubMenus, setExpandedSubMenus] = useState<string[]>([]);
   const [exitDialogOpen, setExitDialogOpen] = useState(false);
@@ -983,32 +993,37 @@ export function MainLayout({ children }: MainLayoutProps) {
         {/* Sidebar */}
         <aside 
           data-tutorial="sidebar"
-          className="fixed inset-y-0 left-0 z-50 bg-card border-r transform transition-all duration-300 ease-in-out flex flex-col"
-          style={{ width: sidebarOpen ? `${display.sidebarWidth}px` : '64px' }}
+          className="fixed inset-y-0 left-0 z-50 bg-slate-950/95 border-r border-slate-800/50 transform transition-all duration-300 ease-in-out flex flex-col shadow-xl backdrop-blur-xl"
+          style={{ width: sidebarOpen ? `${display.sidebarWidth}px` : '72px' }}
         >
           {/* Header con logo e toggle */}
-          <div className="relative flex items-center h-16 px-3 border-b">
+          <div className="relative flex items-center h-[72px] px-4 border-b border-slate-800/50 bg-slate-900/20">
             {sidebarOpen && (
-              <div className="flex items-center gap-2 flex-1">
-                <img 
-                  src="/logohires.png" 
-                  alt="GameStringer" 
-                  className="h-[55px] w-auto animate-logo-glow"
-                  style={{
-                    filter: 'drop-shadow(0 0 4px rgba(139, 92, 246, 0.3))',
-                    animation: 'logoGlow 4s ease-in-out infinite'
-                  }}
-                />
-                <span 
-                  className="text-lg font-bold bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage: 'linear-gradient(90deg, #8B5CF6, #6366F1, #38BDF8, #8B5CF6)',
-                    backgroundSize: '200% 100%',
-                    animation: 'gradientMove 3s ease-in-out infinite'
-                  }}
-                >
-                  GameStringer
-                </span>
+              <div className="flex items-center gap-3 flex-1">
+                <div className="relative flex items-center justify-center p-1.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)] group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all">
+                  <img 
+                    src="/logohires.png" 
+                    alt="GameStringer" 
+                    className="h-[38px] w-auto animate-logo-glow"
+                    style={{
+                      filter: 'drop-shadow(0 0 4px rgba(139, 92, 246, 0.4))',
+                      animation: 'logoGlow 4s ease-in-out infinite'
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span 
+                    className="text-lg font-extrabold tracking-tight bg-clip-text text-transparent"
+                    style={{
+                      backgroundImage: 'linear-gradient(90deg, #a78bfa, #818cf8, #38bdf8, #a78bfa)',
+                      backgroundSize: '200% 100%',
+                      animation: 'gradientMove 4s linear infinite'
+                    }}
+                  >
+                    GameStringer
+                  </span>
+                  <span className="text-[9px] font-medium text-slate-500 uppercase tracking-[0.2em] -mt-0.5">Studio</span>
+                </div>
               </div>
             )}
             
@@ -1017,20 +1032,23 @@ export function MainLayout({ children }: MainLayoutProps) {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-8 w-8 rounded-full transition-all duration-300 hover:bg-primary/10 hover:scale-110",
-                sidebarOpen ? "ml-auto" : "mx-auto"
+                "h-8 w-8 rounded-lg transition-all duration-300 border border-transparent hover:bg-slate-800 hover:border-slate-700/50 hover:shadow-md",
+                sidebarOpen ? "ml-auto" : "mx-auto w-10 h-10 bg-slate-900/50 border-slate-800/50 shadow-inner"
               )}
               onClick={toggleSidebar}
             >
               {sidebarOpen ? (
-                <ChevronLeft className="h-4 w-4 transition-transform duration-300" />
+                <ChevronLeft className="h-4 w-4 text-slate-400 hover:text-slate-200 transition-colors" />
               ) : (
-                <ChevronRight className="h-4 w-4 transition-transform duration-300 animate-pulse" />
+                <div className="relative">
+                  <ChevronRight className="h-5 w-5 text-indigo-400 transition-transform duration-300 group-hover:translate-x-0.5" />
+                  <div className="absolute inset-0 bg-indigo-400/20 rounded-full blur-md animate-pulse" />
+                </div>
               )}
             </Button>
           </div>
           
-          <nav className="flex-1 px-2 py-2 overflow-y-auto min-h-0">
+          <nav className="flex-1 px-3 py-4 overflow-y-auto min-h-0 custom-scrollbar space-y-1">
             {navGroups.map((group, groupIndex) => {
               const isExpanded = expandedGroups.includes(group.label);
               const toggleGroup = () => {
@@ -1045,7 +1063,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <div key={groupIndex}>
                   {/* Separatore lucido dopo Core (Dashboard/Library) */}
                   {groupIndex === 1 && (
-                    <div className="my-2 mx-2 h-px bg-gradient-to-r from-transparent via-slate-500/50 to-transparent" />
+                    <div className="my-3 mx-4 h-px bg-gradient-to-r from-transparent via-slate-600/30 to-transparent" />
                   )}
                   
                   {/* Gruppo collapsabile */}
@@ -1056,25 +1074,31 @@ export function MainLayout({ children }: MainLayoutProps) {
                         onClick={toggleGroup}
                         data-tutorial={`nav-${group.label.toLowerCase().includes('traduz') || group.label.toLowerCase().includes('trans') ? 'translator' : 'tools'}`}
                         className={cn(
-                          "w-full transition-all duration-200 ease-out group relative",
-                          sidebarOpen ? "justify-start space-x-3 px-3" : "justify-center px-0",
+                          "w-full transition-all duration-300 ease-out group relative",
+                          sidebarOpen ? "justify-start space-x-3 px-3 py-6 hover:bg-slate-800/40 rounded-xl" : "justify-center px-0 py-6 hover:bg-slate-800/40 rounded-xl",
                           group.colorClass
                         )}
                         title={!sidebarOpen ? group.label : undefined}
                       >
+                        {/* Glow effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 rounded-xl" />
+                        
                         {GroupIcon && (
                           <GroupIcon className={cn(
-                            "transition-colors duration-200",
-                            sidebarOpen ? "h-4 w-4" : "h-5 w-5",
-                            group.iconClass
+                            "transition-all duration-300",
+                            sidebarOpen ? "h-[18px] w-[18px]" : "h-5 w-5",
+                            isExpanded ? group.iconClass.replace('/70', '') : group.iconClass
                           )} />
                         )}
                         {sidebarOpen && (
                           <>
-                            <span className="text-sm flex-1 text-left">{group.label}</span>
+                            <span className={cn(
+                              "text-sm flex-1 text-left font-semibold tracking-wide transition-colors",
+                              isExpanded ? "text-slate-200" : "text-slate-400"
+                            )}>{group.label}</span>
                             <ChevronDown className={cn(
-                              "h-3 w-3 transition-transform duration-200",
-                              isExpanded ? "rotate-180" : ""
+                              "h-3.5 w-3.5 transition-transform duration-300 text-slate-500",
+                              isExpanded ? "rotate-180 text-slate-300" : ""
                             )} />
                           </>
                         )}
@@ -1082,10 +1106,13 @@ export function MainLayout({ children }: MainLayoutProps) {
                       
                       {/* Sottomenu espandibile */}
                       <div className={cn(
-                        "overflow-hidden transition-all duration-200",
-                        isExpanded && sidebarOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+                        "overflow-hidden transition-all duration-300 ease-in-out",
+                        isExpanded && sidebarOpen ? "max-h-[800px] opacity-100 mt-1 mb-2" : "max-h-0 opacity-0"
                       )}>
-                        <div className="pl-4 space-y-0.5 py-1">
+                        <div className="pl-3.5 relative space-y-0.5 py-1">
+                          {/* Linea verticale indicatore sottomenu */}
+                          <div className="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-slate-700/50 via-slate-700/20 to-transparent" />
+                          
                           {group.items.map((item: any) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
@@ -1093,7 +1120,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                             const isSubActive = hasSubItems && item.subItems.some((sub: any) => pathname === sub.href);
                             
                             return (
-                              <div key={item.href}>
+                              <div key={item.href} className="relative z-10 pl-4">
                                 {hasSubItems ? (
                                   <>
                                     {/* Item con subItems - Accordion */}
@@ -1107,8 +1134,10 @@ export function MainLayout({ children }: MainLayoutProps) {
                                         );
                                       }}
                                       className={cn(
-                                        "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8",
-                                        (isActive || isSubActive) ? group.activeClass : group.colorClass
+                                        "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8 rounded-lg",
+                                        (isActive || isSubActive) 
+                                          ? cn(group.activeClass, "shadow-sm") 
+                                          : cn(group.colorClass, "hover:bg-slate-800/40")
                                       )}
                                     >
                                       <Icon className={cn(
@@ -1132,55 +1161,61 @@ export function MainLayout({ children }: MainLayoutProps) {
                                         {item.subItems.map((subItem: any) => {
                                           const SubIcon = subItem.icon;
                                           const isSubItemActive = pathname === subItem.href;
+                                          
                                           return (
-                                            <Link key={subItem.href} href={subItem.href}>
-                                              <Button
-                                                variant="ghost"
-                                                className={cn(
-                                                  "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-7",
-                                                  isSubItemActive ? group.activeClass : group.colorClass
-                                                )}
-                                              >
-                                                <SubIcon className={cn(
-                                                  "h-3 w-3 transition-colors duration-200",
-                                                  isSubItemActive ? "" : cn(group.iconClass, group.hoverIconClass)
-                                                )} />
-                                                <span className="text-[10px] relative">
-                                                  {subItem.name}
-                                                  <span className={cn(
-                                                    "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
-                                                    group.underlineClass
-                                                  )} />
-                                                </span>
-                                              </Button>
-                                            </Link>
+                                            <Button
+                                              key={subItem.href}
+                                              variant="ghost"
+                                              asChild
+                                              className={cn(
+                                                "w-full transition-all duration-200 ease-out justify-start space-x-3 px-3 h-7",
+                                                isSubItemActive ? group.activeClass : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                                              )}
+                                            >
+                                              <Link href={subItem.href}>
+                                                {SubIcon && <SubIcon className="h-3 w-3 opacity-80" />}
+                                                <span className="text-[11px] font-medium">{subItem.label || subItem.name}</span>
+                                              </Link>
+                                            </Button>
                                           );
                                         })}
                                       </div>
                                     </div>
                                   </>
                                 ) : (
-                                  <Link href={item.href}>
-                                    <Button
-                                      variant="ghost"
-                                      className={cn(
-                                        "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8",
-                                        isActive ? group.activeClass : group.colorClass
+                                  <Button
+                                    variant="ghost"
+                                    asChild
+                                    className={cn(
+                                      "w-full transition-all duration-200 ease-out group relative justify-start space-x-3 px-3 h-8 rounded-lg",
+                                      isActive 
+                                        ? cn(group.activeClass, "shadow-sm") 
+                                        : cn(group.colorClass, "hover:bg-slate-800/40")
+                                    )}
+                                  >
+                                    <Link href={item.href}>
+                                      {/* Indicatore attivo laterale */}
+                                      {isActive && (
+                                        <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-current opacity-70" />
                                       )}
-                                    >
-                                      <Icon className={cn(
-                                        "h-3.5 w-3.5 transition-colors duration-200",
-                                        isActive ? "" : cn(group.iconClass, group.hoverIconClass)
-                                      )} />
-                                      <span className="text-xs relative">
+                                      {Icon && (
+                                        <Icon className={cn(
+                                          "h-3.5 w-3.5 transition-transform duration-200",
+                                          isActive ? "scale-110" : ""
+                                        )} />
+                                      )}
+                                      <span className={cn(
+                                        "text-[13px] relative",
+                                        isActive ? "font-semibold" : "font-medium"
+                                      )}>
                                         {item.name}
                                         <span className={cn(
                                           "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
                                           group.underlineClass
                                         )} />
                                       </span>
-                                    </Button>
-                                  </Link>
+                                    </Link>
+                                  </Button>
                                 )}
                               </div>
                             );
@@ -1247,11 +1282,11 @@ export function MainLayout({ children }: MainLayoutProps) {
           </nav>
 
           {/* Tutorial Help */}
-          <div className="shrink-0 px-2 py-1 flex items-center justify-center">
+          <div className="shrink-0 px-3 py-2 flex items-center justify-center bg-slate-900/30 border-t border-slate-800/50">
             {sidebarOpen ? (
-              <div className="w-full flex items-center gap-2 px-1">
+              <div className="w-full flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-800/50 transition-colors cursor-pointer group">
                 <TutorialMenu />
-                <span className="text-[10px] text-slate-600">Tutorial</span>
+                <span className="text-[10px] font-medium text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-widest">Tutorial & Guide</span>
               </div>
             ) : (
               <TutorialMenu />
@@ -1259,36 +1294,123 @@ export function MainLayout({ children }: MainLayoutProps) {
           </div>
 
           {/* Widget Gioco in Evidenza */}
-          <div className="shrink-0 border-t border-border/50 mb-4">
-            <FeaturedGameWidget collapsed={!sidebarOpen} />
+          <div className="shrink-0 border-t border-slate-800/50 bg-black/20 pb-2 pt-2">
+            <div className="px-2">
+              <FeaturedGameWidget collapsed={!sidebarOpen} />
+            </div>
           </div>
           
         </aside>
 
         {/* Main Content */}
         <div 
-          className="flex-1 flex flex-col min-w-0 transition-all duration-300"
-          style={{ marginLeft: sidebarOpen ? `${display.sidebarWidth}px` : '64px' }}
+          className="flex-1 flex flex-col min-w-0 transition-all duration-300 relative z-10"
+          style={{ marginLeft: sidebarOpen ? `${display.sidebarWidth}px` : '72px' }}
         >
           {/* Header */}
-          <header className="h-16 bg-card border-b flex items-center px-6">
-            {/* Ricerca a sinistra */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              title="Cerca (Ctrl+K)"
-              onClick={() => setSearchOpen(true)}
-            >
-              <Search className="h-4 w-4" />
-            </Button>
+          <header className="h-[72px] bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50 flex items-center px-6 sticky top-0 z-40 shadow-sm">
+            {/* Ricerca a sinistra - Campo compilabile */}
+            <div className="relative group w-80">
+              <div className="absolute inset-0 bg-indigo-500/10 blur-md rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="relative flex items-center">
+                <Search className="absolute left-3 h-4 w-4 text-slate-500 pointer-events-none" />
+                <Input
+                  type="text"
+                  placeholder="Cerca pagine, strumenti... (Ctrl+K)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      setSearchOpen(true);
+                    }
+                  }}
+                  className="h-10 pl-9 pr-3 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-slate-600/80 focus:bg-slate-800/50 focus:border-indigo-500/50 rounded-xl text-sm text-slate-300 placeholder:text-slate-500 transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Dropdown risultati ricerca */}
+              {searchFocused && searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <ScrollArea className="max-h-[300px]">
+                    {(() => {
+                      const navigationItems = [
+                        { id: 'dashboard', title: 'Dashboard', description: 'Panoramica generale', icon: Home, path: '/' },
+                        { id: 'library', title: 'Libreria', description: 'I tuoi giochi', icon: Library, path: '/library' },
+                        { id: 'translator', title: 'Traduci', description: 'AI Translator', icon: Languages, path: '/ai-translator' },
+                        { id: 'dictionary', title: 'Dizionario', description: 'Glossario termini', icon: Database, path: '/memory' },
+                        { id: 'multi-llm', title: 'Multi-LLM', description: 'Confronto modelli AI', icon: Brain, path: '/translator/compare' },
+                        { id: 'voice', title: 'Voce', description: 'Traduzione vocale', icon: Mic, path: '/voice-translator' },
+                        { id: 'patcher', title: 'Patcher', description: 'Unity/Unreal patcher', icon: Wrench, path: '/unity-patcher' },
+                        { id: 'injector', title: 'Injector', description: 'Iniezione mod universale', icon: Puzzle, path: '/injector' },
+                        { id: 'crawler', title: 'Crawler', description: 'Estrai contesto dai giochi', icon: Scan, path: '/crawler' },
+                        { id: 'fixer', title: 'Fixer', description: 'Ripara tag traduzione', icon: Wand2, path: '/fixer' },
+                        { id: 'overlay', title: 'Overlay', description: 'Sottotitoli in-game', icon: Subtitles, path: '/overlay' },
+                        { id: 'community', title: 'Community', description: 'Hub traduzioni community', icon: Users, path: '/community-hub' },
+                        { id: 'settings', title: 'Impostazioni', description: 'Configura GameStringer', icon: Settings, path: '/settings' },
+                      ];
+                      
+                      const filtered = navigationItems.filter(item => 
+                        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+                      );
+                      
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="py-6 text-center text-sm text-slate-500">
+                            Nessun risultato per "{searchQuery}"
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div className="p-2">
+                          {filtered.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <Link
+                                key={item.id}
+                                href={item.path}
+                                onClick={() => {
+                                  setSearchQuery('');
+                                  setSearchFocused(false);
+                                }}
+                                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800/50 transition-colors group"
+                              >
+                                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-800/50 group-hover:bg-indigo-500/20">
+                                  <Icon className="h-4 w-4 text-slate-400 group-hover:text-indigo-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-slate-200 truncate">{item.title}</p>
+                                  <p className="text-xs text-slate-500 truncate">{item.description}</p>
+                                </div>
+                                <ArrowRight className="h-4 w-4 text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </ScrollArea>
+                </div>
+              )}
+            </div>
             
             {/* Language Selector al centro */}
             <div className="flex-1 flex justify-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 gap-2 px-3">
-                    <Globe className="h-4 w-4" />
+                  <Button variant="outline" size="sm" className="h-9 gap-2.5 px-3.5 bg-slate-900/50 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600/80 hover:text-slate-100 text-slate-300 rounded-xl shadow-inner transition-all group">
+                    <Globe className="h-4 w-4 text-slate-400 group-hover:text-indigo-400 transition-colors" />
                     {/* Mini bandiera lingua corrente */}
                     {language === 'it' && (
                       <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex">
@@ -1345,20 +1467,20 @@ export function MainLayout({ children }: MainLayoutProps) {
                       </span>
                     )}
                     {language === 'ru' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                      <span className="w-5 h-3.5 rounded-[2px] overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
                         <span className="h-1/3 bg-white" />
                         <span className="h-1/3 bg-blue-600" />
                         <span className="h-1/3 bg-red-500" />
                       </span>
                     )}
                     {language === 'pl' && (
-                      <span className="w-5 h-3.5 rounded-sm overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
+                      <span className="w-5 h-3.5 rounded-[2px] overflow-hidden flex-shrink-0 border border-white/20 shadow-sm flex flex-col">
                         <span className="h-1/2 bg-white" />
                         <span className="h-1/2 bg-red-500" />
                       </span>
                     )}
-                    <span className="text-xs font-medium">{language.toUpperCase()}</span>
-                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-[11px] font-bold tracking-widest">{language.toUpperCase()}</span>
+                    <ChevronDown className="h-3.5 w-3.5 text-slate-500 group-hover:text-slate-300 transition-colors" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="w-40">
@@ -1458,43 +1580,50 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
             
             {/* Wifi/Versione/Sito + Supporta, Profilo, Notifica, Tema, Power - a destra */}
-            <div className="flex items-center gap-3">
-              {/* Link sito + versione */}
-              <a 
-                href="http://www.gamestringer.ai/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-blue-400 transition-colors"
-                title="Visita gamestringer.ai"
-              >
-                <Globe className="w-3 h-3" />
-                <span className="hidden sm:inline">gamestringer.ai</span>
-              </a>
-              <button 
-                onClick={() => setChangelogOpen(true)}
-                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-blue-400 transition-colors"
-                title="Changelog"
-              >
-                {isOnline ? (
-                  <Wifi className="w-3 h-3 text-green-500" />
-                ) : (
-                  <WifiOff className="w-3 h-3 text-red-500" />
-                )}
-                <span className="font-mono hidden sm:inline">v{version}</span>
-              </button>
-              <div className="w-px h-4 bg-border" />
+            <div className="flex items-center gap-2.5">
+              {/* Box Info (Versione + Sito) */}
+              <div className="flex items-center bg-slate-900/40 border border-slate-800/60 rounded-lg p-1 mr-2 hidden md:flex">
+                <a 
+                  href="http://www.gamestringer.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium text-slate-400 hover:text-indigo-400 hover:bg-slate-800/50 rounded-md transition-all"
+                  title="Visita gamestringer.ai"
+                >
+                  <Globe className="w-3 h-3" />
+                  <span>gamestringer.ai</span>
+                </a>
+                <div className="w-px h-3 bg-slate-800 mx-1" />
+                <button 
+                  onClick={() => setChangelogOpen(true)}
+                  className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-medium text-slate-400 hover:text-emerald-400 hover:bg-slate-800/50 rounded-md transition-all"
+                  title="Changelog"
+                >
+                  {isOnline ? (
+                    <Wifi className="w-3 h-3 text-emerald-500" />
+                  ) : (
+                    <WifiOff className="w-3 h-3 text-red-500" />
+                  )}
+                  <span className="font-mono">v{version}</span>
+                </button>
+              </div>
+
               <SupportButton />
+              
+              <div className="h-6 w-px bg-slate-800/60 mx-1" />
+              
               <ProfileHeader />
               <UpdateBell />
+              
               <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-              onClick={() => setExitDialogOpen(true)}
-              title={t('common.closeApp')}
-            >
-              <Power className="h-4 w-4" />
-            </Button>
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                onClick={() => setExitDialogOpen(true)}
+                title={t('common.closeApp')}
+              >
+                <Power className="h-4 w-4" />
+              </Button>
             </div>
           </header>
 

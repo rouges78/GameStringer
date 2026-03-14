@@ -63,6 +63,7 @@ pub mod notifications;
 // === Game engine patchers (cross-platform, file-based) ===
 pub mod unity_patcher;
 pub mod unity_bundle;
+pub mod unity_csv;
 pub mod unreal_patcher;
 pub mod unreal_localization;
 pub mod unreal_iostore;

@@ -180,6 +180,8 @@ interface Settings {
     temperature: number;
     maxTokens: number;
     batchSize: number;
+    lmStudioUrl: string;
+    lmStudioModel: string;
   };
   
   // System
@@ -225,7 +227,9 @@ export default function SettingsPage() {
       defaultTargetLang: 'it',
       temperature: 0.3,
       maxTokens: 2000,
-      batchSize: 50
+      batchSize: 50,
+      lmStudioUrl: 'http://localhost:1234',
+      lmStudioModel: ''
     },
     system: {},
     performance: {
@@ -527,6 +531,48 @@ export default function SettingsPage() {
         {/* Translation Tab */}
         <TabsContent value="translation" className="space-y-6">
           <OllamaManager />
+          
+          {/* LM Studio Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Monitor className="h-5 w-5 text-purple-500" />
+                <span>LM Studio (Locale)</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                LM Studio è un&apos;app desktop per eseguire LLM locali con API OpenAI-compatible. Gratuito, nessuna API key necessaria.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>URL Server</Label>
+                  <Input
+                    value={settings.translation?.lmStudioUrl || 'http://localhost:1234'}
+                    onChange={(e) => updateSetting('translation', 'lmStudioUrl', e.target.value)}
+                    placeholder="http://localhost:1234"
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Porta default: 1234</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Modello (opzionale)</Label>
+                  <Input
+                    value={settings.translation?.lmStudioModel || ''}
+                    onChange={(e) => updateSetting('translation', 'lmStudioModel', e.target.value)}
+                    placeholder="Auto-detect dal server"
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Lascia vuoto per usare il modello caricato</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Scarica LM Studio da <a href="https://lmstudio.ai" target="_blank" rel="noopener" className="underline">lmstudio.ai</a> — 
+                Carica un modello GGUF, avvia il server locale, e GameStringer lo userà automaticamente.
+              </p>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -558,10 +604,16 @@ export default function SettingsPage() {
                       <SelectItem value="ja">🇯🇵 日本語</SelectItem>
                       <SelectItem value="ko">🇰🇷 한국어</SelectItem>
                       <SelectItem value="ar">🇸🇦 العربية</SelectItem>
+                      <SelectItem value="hi">🇮🇳 हिन्दी</SelectItem>
                       <SelectItem value="tr">🇹🇷 Türkçe</SelectItem>
                       <SelectItem value="nl">🇳🇱 Nederlands</SelectItem>
                       <SelectItem value="sv">🇸🇪 Svenska</SelectItem>
                       <SelectItem value="uk">🇺🇦 Українська</SelectItem>
+                      <SelectItem value="th">🇹🇭 ไทย</SelectItem>
+                      <SelectItem value="vi">🇻🇳 Tiếng Việt</SelectItem>
+                      <SelectItem value="id">🇮🇩 Bahasa Indonesia</SelectItem>
+                      <SelectItem value="pt-BR">🇧🇷 Português (Brasil)</SelectItem>
+                      <SelectItem value="es-419">🇲🇽 Español (Latinoamérica)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

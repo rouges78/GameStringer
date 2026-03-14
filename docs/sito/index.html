@@ -16,7 +16,7 @@
   <script src="https://unpkg.com/scrollreveal"></script>
   <script src="site-i18n.js" defer></script>
   <style>
-    .lang-selector{position:relative;margin-left:16px}.lang-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:6px;transition:all .2s}.lang-btn:hover{background:rgba(255,255,255,.2)}.lang-menu{position:absolute;top:100%;right:0;margin-top:8px;background:rgba(15,23,42,.95);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px;min-width:160px;opacity:0;visibility:hidden;transform:translateY(-10px);transition:all .2s;backdrop-filter:blur(10px);z-index:1000}.lang-menu.open{opacity:1;visibility:visible;transform:translateY(0)}.lang-option{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;background:0 0;border:none;color:#94a3b8;cursor:pointer;border-radius:8px;font-size:14px;text-align:left;transition:all .2s}.lang-option:hover{background:rgba(255,255,255,.1);color:#fff}.lang-option.active{background:rgba(14,165,233,.2);color:#7dd3fc}
+    .lang-selector{position:relative;margin-left:16px}.lang-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#cbd5e1;padding:10px 16px;border-radius:12px;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .3s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(8px)}.lang-btn:hover{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(99,102,241,.5);transform:translateY(-2px)}.lang-menu{position:absolute;top:100%;right:0;margin-top:12px;background:rgba(15,23,42,.95);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:8px;min-width:180px;opacity:0;visibility:hidden;transform:translateY(-10px) scale(0.95);transition:all .3s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(16px);z-index:1000;box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 0 1px rgba(99,102,241,.1)}.lang-menu.open{opacity:1;visibility:visible;transform:translateY(0) scale(1)}.lang-option{display:flex;align-items:center;gap:12px;width:100%;padding:10px 16px;background:0 0;border:none;color:#94a3b8;cursor:pointer;border-radius:10px;font-size:14px;font-weight:500;text-align:left;transition:all .2s}.lang-option:hover{background:rgba(255,255,255,.05);color:#fff}.lang-option.active{background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.2)}
   </style>
 </head>
 <body>
@@ -81,18 +81,18 @@
 <!-- FEATURES -->
 <section id="features">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(14,165,233,.15);border-color:rgba(14,165,233,.3);color:#7dd3fc">✨ Features</span>
+    <span class="badge section-badge">✨ Features</span>
     <h2 class="section-title" data-i18n="features.title">Tutto il Necessario per Tradurre Videogiochi</h2>
     <p class="section-desc" data-i18n="features.desc">Un ecosistema completo di strumenti AI progettati specificamente per la localizzazione di videogiochi.</p>
     <div class="grid grid-3">
       <div class="card feature-card">
-        <div class="icon-box" style="background:linear-gradient(135deg,#06b6d4,#14b8a6)">🪄</div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#6366f1,#818cf8)">🪄</div>
         <h3 class="feature-title">One-Click Auto Patcher</h3>
         <p class="feature-desc">Un click: traduce, salva in TM, estrae glossario, crea file revisione e genera PAK/patch. Unity, Unreal, Godot, RPG Maker, Ren'Py.</p>
         <div class="feature-tags"><span class="feature-tag">TM + Glossario auto</span><span class="feature-tag">File revisione</span><span class="feature-tag">11 engine</span></div>
       </div>
       <div class="card feature-card">
-        <div class="icon-box" style="background:linear-gradient(135deg,#8b5cf6,#a855f7)">🏆</div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#d946ef,#f472b6)">🏆</div>
         <h3 class="feature-title">Quality Badges & Live Preview</h3>
         <p class="feature-desc">Punteggio qualità 0-100 per ogni riga tradotta. ContentTypeBadge (UI/Dialogo/Narrativa/Sistema). Anteprima qualità in tempo reale durante il batch.</p>
         <div class="feature-tags"><span class="feature-tag">Score 0-100</span><span class="feature-tag">Live Preview</span><span class="feature-tag">Content Type</span></div>
@@ -128,7 +128,7 @@
         <div class="feature-tags"><span class="feature-tag">Genre detection</span><span class="feature-tag">RTL</span><span class="feature-tag">Tag protect</span></div>
       </div>
       <div class="card feature-card">
-        <div class="icon-box" style="background:linear-gradient(135deg,#0ea5e9,#2dd4bf)">🎬</div>
+        <div class="icon-box" style="background:linear-gradient(135deg,#0ea5e9,#14b8a6)">🎬</div>
         <h3 class="feature-title">Subtitle Translator Pro</h3>
         <p class="feature-desc">Traduci sottotitoli SRT, VTT, ASS/SSA. Preview in tempo reale, validazione QA, overlay OBS per streaming.</p>
         <div class="feature-tags"><span class="feature-tag">SRT/VTT/ASS</span><span class="feature-tag">OBS Overlay</span><span class="feature-tag">QA</span></div>
@@ -164,7 +164,7 @@
 <!-- ENGINES -->
 <section id="engines" class="alt-bg">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.3);color:#4ade80">🎮 Compatibilità</span>
+    <span class="badge section-badge">🎮 Compatibilità</span>
     <h2 class="section-title" data-i18n="engines.title">11+ Engine di Gioco Supportati</h2>
     <p class="section-desc" data-i18n="engines.desc">Supporto nativo per i principali engine. GameStringer rileva automaticamente l'engine e configura il metodo ottimale.</p>
     <div class="grid grid-5">
@@ -196,7 +196,7 @@
 <!-- AI PROVIDERS -->
 <section id="ai">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.3);color:#60a5fa">🤖 AI Providers</span>
+    <span class="badge section-badge">🤖 AI Providers</span>
     <h2 class="section-title" data-i18n="ai.title">20+ Provider AI per Ogni Esigenza</h2>
     <p class="section-desc" data-i18n="ai.desc">Opzioni gratuite, locali per privacy totale, o cloud per massima qualità. Ogni provider è ottimizzato per traduzioni gaming.</p>
     <div class="grid grid-5">
@@ -218,8 +218,8 @@
       <div class="card ai-card"><div class="ai-header"><span class="ai-name">Cerebras</span><span class="ai-badge free">Free Tier</span></div><div class="ai-type">☁️ Cloud • Llama 70B in &lt;1s</div><div class="ai-features"><span class="ai-feature">Llama 3.3 70B</span><span class="ai-feature">Ultra fast</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Free tier generoso</div></div>
       <div class="card ai-card"><div class="ai-header"><span class="ai-name">MyMemory</span><span class="ai-badge free">Free</span></div><div class="ai-type">☁️ Cloud • TM database • No API key</div><div class="ai-features"><span class="ai-feature">Crowd TM</span><span class="ai-feature">No key</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Completamente gratuito</div></div>
       <div class="card ai-card"><div class="ai-header"><span class="ai-name">Lingva</span><span class="ai-badge free">Free</span></div><div class="ai-type">☁️ Cloud • Proxy GT • No API key</div><div class="ai-features"><span class="ai-feature">100+ lingue</span><span class="ai-feature">No key</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Completamente gratuito</div></div>
-      <div class="card ai-card recommended"><div class="ai-header"><span class="ai-name">Qwen 3</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Ottimizzato CJK • Ollama</div><div class="ai-features"><span class="ai-feature">中文/日本語/한국어</span><span class="ai-feature">32B</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span></div><div class="ai-cost">💚 Gratuito • Best for Asian</div></div>
-      <div class="card ai-card recommended"><div class="ai-header"><span class="ai-name">NLLB-200</span><span class="ai-badge free">Free Tier</span></div><div class="ai-type">☁️ Meta AI • 200 lingue</div><div class="ai-features"><span class="ai-feature">Thai/Hindi/Arabic</span><span class="ai-feature">HuggingFace</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Free tier • 200 languages</div></div>
+      <div class="card ai-card"><div class="ai-header"><span class="ai-name">Qwen 3</span><span class="ai-badge local">Locale</span></div><div class="ai-type">🖥️ Ottimizzato CJK • Ollama</div><div class="ai-features"><span class="ai-feature">中文/日本語/한국어</span><span class="ai-feature">32B</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span></div><div class="ai-cost">💚 Gratuito • Best for Asian</div></div>
+      <div class="card ai-card"><div class="ai-header"><span class="ai-name">NLLB-200</span><span class="ai-badge free">Free Tier</span></div><div class="ai-type">☁️ Meta AI • 200 lingue</div><div class="ai-features"><span class="ai-feature">Thai/Hindi/Arabic</span><span class="ai-feature">HuggingFace</span></div><div class="ai-rating"><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star">★</span><span class="ai-star empty">★</span></div><div class="ai-cost">💚 Free tier • 200 languages</div></div>
     </div>
     <div style="margin-top:40px;padding:24px;background:rgba(30,41,59,.5);border-radius:16px;border-left:4px solid #22c55e;text-align:left">
       <p style="color:#94a3b8"><strong style="color:#4ade80">💡 Consigliato per iniziare:</strong> <strong style="color:#fff">TranslateGemma</strong> via Ollama (gratuito, locale, 55 lingue) o <strong style="color:#fff">Gemini</strong> (free tier cloud). PC con poca RAM: <strong style="color:#fff">HY-MT1.5 1.8B</strong> (~1GB). Qualità pro: <strong style="color:#fff">DeepSeek V3</strong> (miglior rapporto qualità/prezzo).</p>
@@ -229,7 +229,7 @@
 <!-- TOOLS -->
 <section id="tools" class="alt-bg">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(14,165,233,.15);border-color:rgba(14,165,233,.3);color:#7dd3fc">🛠️ Professional Tools</span>
+    <span class="badge section-badge">🛠️ Professional Tools</span>
     <h2 class="section-title" data-i18n="tools.title">10+ Strumenti Professionali Inclusi</h2>
     <p class="section-desc" data-i18n="tools.desc">Ogni strumento necessario per tradurre qualsiasi tipo di gioco, dalla visual novel al AAA.</p>
     <div class="grid grid-5">
@@ -249,7 +249,7 @@
 <!-- USE CASES -->
 <section id="usecases">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#22d3ee">🎯 Use Cases</span>
+    <span class="badge section-badge">🎯 Use Cases</span>
     <h2 class="section-title" data-i18n="usecases.title">Chi Usa GameStringer?</h2>
     <p class="section-desc" data-i18n="usecases.desc">Progettato per diversi tipi di utenti con esigenze specifiche.</p>
     <div class="grid grid-3">
@@ -293,7 +293,7 @@
 <!-- HOW IT WORKS -->
 <section class="alt-bg">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#22d3ee">⚡ Come Funziona</span>
+    <span class="badge section-badge">⚡ Come Funziona</span>
     <h2 class="section-title" data-i18n="howitworks.title">3 Semplici Passi</h2>
     <div class="steps">
       <div class="step">
@@ -323,7 +323,7 @@
 <!-- WHAT'S NEW v1.4.2 -->
 <section id="whatsnew">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(6,182,212,.15);border-color:rgba(6,182,212,.3);color:#22d3ee">🆕 Novità v1.4.2</span>
+    <span class="badge section-badge">🆕 Novità v1.4.2</span>
     <h2 class="section-title" data-i18n="whatsnew.title">Novità nella Versione 1.4.2</h2>
     <p class="section-desc" data-i18n="whatsnew.desc">Vision LLM Translator, Strumenti AI Avanzati e fix critici per i provider di traduzione.</p>
     <div class="grid grid-2" style="margin-top:48px;text-align:left">
@@ -358,7 +358,7 @@
 <!-- PRICING -->
 <section id="pricing">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(234,179,8,.15);border-color:rgba(234,179,8,.3);color:#facc15">💰 Modello Gratuito</span>
+    <span class="badge section-badge">💰 Modello Gratuito</span>
     <h2 class="section-title" data-i18n="pricing.title">500 Stringhe Gratuite, Poi Donazione Libera</h2>
     <p class="section-desc" data-i18n="pricing.desc">Modello basato sulla fiducia: traduci gratis fino a 500 stringhe, poi donazione di qualsiasi importo per sbloccare traduzioni illimitate.</p>
     <div class="grid grid-3" style="margin-top:48px">
@@ -391,7 +391,7 @@
 <!-- FAQ -->
 <section id="faq">
   <div class="container" style="text-align:center">
-    <span class="badge section-badge" style="background:rgba(14,165,233,.15);border-color:rgba(14,165,233,.3);color:#7dd3fc">❓ FAQ</span>
+    <span class="badge section-badge">❓ FAQ</span>
     <h2 class="section-title" data-i18n="faq.title">Domande Frequenti</h2>
     <div class="faq-container" style="text-align:left;margin-top:48px;max-width:800px;margin-left:auto;margin-right:auto">
       <details class="faq-details">

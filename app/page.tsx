@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -25,13 +26,16 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Play
+  Play,
+  Settings2,
+  ChevronRight,
+  ArrowRight,
+  Download
 } from 'lucide-react';
 import Link from 'next/link';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { ScanButton } from '@/components/scan-button';
 import { AINetworkBackground } from '@/components/ui/ai-network-background';
-import { RssTicker } from '@/components/ui/rss-ticker';
 import { activityHistory, Activity, activityColors, activityIcons, ActivityType } from '@/lib/activity-history';
 import { useTranslation, translations } from '@/lib/i18n';
 import { blogService, BlogPost } from '@/lib/blog';
@@ -321,105 +325,110 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="relative p-4 pt-2 space-y-3 overflow-auto overflow-x-hidden">
+    <div className="relative p-4 pt-2 gap-2 overflow-hidden h-full flex flex-col">
       {/* Sfondo AI Network */}
       <AINetworkBackground />
       
       {/* Quick Actions Bar */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-800/90 via-zinc-800/80 to-slate-900/90 p-3 shadow-lg border border-white/5">
-        <div className="relative">
-          {/* Quick Actions — 3 percorsi principali */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <Link href="/library">
-              <div className="group flex items-center gap-2.5 p-2.5 rounded-lg bg-black/25 hover:bg-black/40 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
-                <div className="p-1.5 rounded-md bg-emerald-500/20 group-hover:bg-emerald-500/30 transition-colors">
-                  <Sparkles className="h-4 w-4 text-emerald-300" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-white">{language === 'it' ? 'Traduci un gioco' : 'Translate a game'}</p>
-                  <p className="text-[9px] text-white/40">{language === 'it' ? 'Scegli dalla libreria' : 'Pick from library'}</p>
-                </div>
+      <div className="shrink-0 relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-md p-2 shadow-lg border border-white/5">
+        <div className="grid grid-cols-3 gap-2">
+          {/* Action 1: Traduci un gioco */}
+          <Link href="/library" className="group relative overflow-hidden rounded-lg border border-white/10 hover:border-emerald-500/50 bg-gradient-to-b from-white/5 to-white/[0.02] hover:from-emerald-500/10 hover:to-emerald-500/5 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            <div className="relative p-2.5 flex items-center gap-3">
+              <div className="p-2 rounded-md bg-emerald-500/20 group-hover:bg-emerald-500/30 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all shadow-sm">
+                <Sparkles className="h-4 w-4 text-emerald-300" />
               </div>
-            </Link>
-            <Link href="/community-hub">
-              <div className="group flex items-center gap-2.5 p-2.5 rounded-lg bg-black/25 hover:bg-black/40 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
-                <div className="p-1.5 rounded-md bg-amber-500/20 group-hover:bg-amber-500/30 transition-colors">
-                  <Globe className="h-4 w-4 text-amber-300" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-white">{language === 'it' ? 'Scarica traduzioni' : 'Browse translations'}</p>
-                  <p className="text-[9px] text-white/40">{language === 'it' ? 'Community Hub' : 'Community Hub'}</p>
-                </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white group-hover:text-emerald-100 transition-colors drop-shadow-sm">{language === 'it' ? 'Traduci un gioco' : 'Translate a game'}</p>
+                <p className="text-[10px] text-white/50 group-hover:text-emerald-200/70 transition-colors">{language === 'it' ? 'Libreria o seleziona EXE' : 'Library or pick EXE'}</p>
               </div>
-            </Link>
-            <Link href="/editor">
-              <div className="group flex items-center gap-2.5 p-2.5 rounded-lg bg-black/25 hover:bg-black/40 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
-                <div className="p-1.5 rounded-md bg-blue-500/20 group-hover:bg-blue-500/30 transition-colors">
-                  <Layers className="h-4 w-4 text-blue-300" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-white">{language === 'it' ? 'I miei progetti' : 'My projects'}</p>
-                  <p className="text-[9px] text-white/40">{language === 'it' ? 'Editor & revisione' : 'Editor & review'}</p>
-                </div>
-              </div>
-            </Link>
-          </div>
+              <ChevronRight className="h-4 w-4 text-emerald-500/0 group-hover:text-emerald-400/80 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </div>
+          </Link>
 
-          {/* RSS Ticker */}
-          <div className="pt-2 border-t border-white/10">
-            <RssTicker />
-          </div>
+          {/* Action 2: Community Hub */}
+          <Link href="/community-hub" className="group relative overflow-hidden rounded-lg border border-white/10 hover:border-amber-500/50 bg-gradient-to-b from-white/5 to-white/[0.02] hover:from-amber-500/10 hover:to-amber-500/5 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            <div className="relative p-2.5 flex items-center gap-3">
+              <div className="p-2 rounded-md bg-amber-500/20 group-hover:bg-amber-500/30 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all shadow-sm">
+                <Globe className="h-4 w-4 text-amber-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white group-hover:text-amber-100 transition-colors drop-shadow-sm">{language === 'it' ? 'Scarica traduzioni' : 'Browse translations'}</p>
+                <p className="text-[10px] text-white/50 group-hover:text-amber-200/70 transition-colors">{language === 'it' ? 'Pacchetti della community' : 'Community packages'}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-amber-500/0 group-hover:text-amber-400/80 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </div>
+          </Link>
+
+          {/* Action 3: I Miei Progetti */}
+          <Link href="/editor" className="group relative overflow-hidden rounded-lg border border-white/10 hover:border-blue-500/50 bg-gradient-to-b from-white/5 to-white/[0.02] hover:from-blue-500/10 hover:to-blue-500/5 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+            <div className="relative p-2.5 flex items-center gap-3">
+              <div className="p-2 rounded-md bg-blue-500/20 group-hover:bg-blue-500/30 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all shadow-sm">
+                <Layers className="h-4 w-4 text-blue-300" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white group-hover:text-blue-100 transition-colors drop-shadow-sm">{language === 'it' ? 'I miei progetti' : 'My projects'}</p>
+                <p className="text-[10px] text-white/50 group-hover:text-blue-200/70 transition-colors">{language === 'it' ? 'Editor locale & revisione' : 'Local editor & review'}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-blue-500/0 group-hover:text-blue-400/80 -translate-x-2 group-hover:translate-x-0 transition-all" />
+            </div>
+          </Link>
         </div>
       </div>
 
       {/* Ultimo Gioco + Store Connessi affiancati */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="shrink-0 grid grid-cols-1 lg:grid-cols-2 gap-2">
         {/* Ultimo Gioco Aperto - SINISTRA */}
         {lastGame ? (
           <Link href={`/library/?id=${lastGame.id}&name=${encodeURIComponent(lastGame.title)}&platform=${lastGame.platform}${lastGame.appId ? `&appId=${lastGame.appId}` : ''}${lastGame.image ? `&headerImage=${encodeURIComponent(lastGame.image)}` : ''}`}>
-            <Card className="border-indigo-500/30 bg-indigo-950/40 backdrop-blur-sm hover:border-indigo-400/50 transition-all cursor-pointer group h-full">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-3">
+            <Card className="border-indigo-500/20 bg-gradient-to-br from-indigo-950/40 to-slate-950/60 backdrop-blur-md hover:border-indigo-400/40 hover:shadow-[0_0_15px_rgba(99,102,241,0.15)] transition-all duration-300 cursor-pointer group h-full">
+              <CardContent className="p-3 relative overflow-hidden">
+                {/* Effetto bagliore on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/0 via-indigo-500/5 to-indigo-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                
+                <div className="flex items-center gap-3 relative z-10">
                   {lastGame.image ? (
                     <img
                       src={lastGame.image}
                       alt={lastGame.title}
-                      className="w-28 h-14 rounded-lg object-cover border border-indigo-500/20 group-hover:border-indigo-400/40 transition-colors"
+                      className="w-[104px] h-[52px] rounded object-cover border border-indigo-500/20 group-hover:border-indigo-400/50 shadow-md transition-colors"
                     />
                   ) : (
-                    <div className="w-28 h-14 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                    <div className="w-[104px] h-[52px] rounded bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shadow-md">
                       <Gamepad2 className="h-6 w-6 text-indigo-400/50" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <Play className="h-3 w-3 text-indigo-400" />
-                      <span className="text-[10px] text-indigo-400/70 uppercase tracking-wider font-medium">{language === 'en' ? 'Last opened' : 'Ultimo gioco aperto'}</span>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Play className="h-3 w-3 text-indigo-400" fill="currentColor" />
+                      <span className="text-[9px] text-indigo-300/80 uppercase tracking-widest font-semibold">{language === 'en' ? 'Last opened' : 'Ultimo gioco'}</span>
                     </div>
-                    <p className="text-sm font-semibold text-indigo-100 truncate group-hover:text-white transition-colors">{lastGame.title}</p>
+                    <p className="text-sm font-bold text-slate-100 truncate group-hover:text-indigo-200 transition-colors drop-shadow-sm">{lastGame.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-indigo-300/50">{lastGame.platform}</span>
-                      <span className="text-[10px] text-indigo-300/30">•</span>
-                      <span className="text-[10px] text-indigo-300/50">
+                      <Badge variant="outline" className="text-[8px] h-4 px-1.5 bg-indigo-950/50 text-indigo-300/80 border-indigo-500/20">{lastGame.platform}</Badge>
+                      <span className="text-[9px] text-slate-500">
                         {new Date(lastGame.visitedAt).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   </div>
                   {activeTranslation ? (
-                    <div className="flex flex-col items-center gap-0.5">
-                      <div className="relative h-11 w-11">
-                        <svg className="h-11 w-11 -rotate-90" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" className="text-indigo-500/15" strokeWidth="2.5" />
-                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#progressGrad)" strokeWidth="2.5"
+                    <div className="flex flex-col items-center gap-1 bg-indigo-950/40 p-1.5 rounded-lg border border-indigo-500/10 shadow-inner">
+                      <div className="relative h-9 w-9">
+                        <svg className="h-9 w-9 -rotate-90" viewBox="0 0 36 36">
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="currentColor" className="text-indigo-950" strokeWidth="3" />
+                          <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#progressGrad)" strokeWidth="3"
                             strokeDasharray={`${activeTranslation.percent} ${100 - activeTranslation.percent}`} strokeLinecap="round" />
-                          <defs><linearGradient id="progressGrad"><stop offset="0%" stopColor="#818cf8"/><stop offset="100%" stopColor="#6366f1"/></linearGradient></defs>
+                          <defs><linearGradient id="progressGrad"><stop offset="0%" stopColor="#818cf8"/><stop offset="100%" stopColor="#c084fc"/></linearGradient></defs>
                         </svg>
-                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-indigo-300">{activeTranslation.percent}%</span>
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-indigo-100 drop-shadow-md">{activeTranslation.percent}%</span>
                       </div>
-                      <span className="text-[8px] text-indigo-400/60 uppercase">{activeTranslation.lang}</span>
+                      <span className="text-[8px] font-medium text-indigo-300 uppercase tracking-wider">{activeTranslation.lang}</span>
                     </div>
                   ) : (
-                    <div className="text-indigo-400/30 group-hover:text-indigo-400/60 transition-colors">
+                    <div className="h-8 w-8 rounded-full bg-indigo-500/5 flex items-center justify-center text-indigo-400/30 group-hover:text-indigo-300 group-hover:bg-indigo-500/20 transition-all">
                       <ExternalLink className="h-4 w-4" />
                     </div>
                   )}
@@ -427,8 +436,11 @@ export default function Dashboard() {
                 {activeTranslation && (
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/auto-translate?gameId=${lastGame.id}&gameName=${encodeURIComponent(lastGame.title)}&installPath=&platform=${lastGame.platform}`; }}
-                    className="mt-1.5 flex items-center justify-center gap-1 text-[10px] font-medium text-indigo-300 hover:text-indigo-200 transition-colors bg-indigo-500/10 rounded px-2 py-1 w-full">
-                    <Zap className="h-3 w-3" /> Continue Translation ({activeTranslation.translated}/{activeTranslation.total})
+                    className="mt-2.5 relative w-full overflow-hidden rounded group/btn border border-indigo-500/20">
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-purple-600/20 group-hover/btn:from-indigo-500/30 group-hover/btn:to-purple-500/30 transition-colors" />
+                    <div className="relative px-2 py-1.5 flex items-center justify-center gap-1.5 text-[10px] font-medium text-indigo-200">
+                      <Zap className="h-3 w-3 text-amber-400" fill="currentColor" /> {language === 'it' ? 'Continua Traduzione' : 'Continue Translation'} <span className="opacity-50">({activeTranslation.translated}/{activeTranslation.total})</span>
+                    </div>
                   </button>
                 )}
               </CardContent>
@@ -446,29 +458,32 @@ export default function Dashboard() {
         )}
 
         {/* Store Connessi - DESTRA */}
-        <Card className="border-slate-500/20 bg-slate-950/40 backdrop-blur-sm h-full">
+        <Card className="border-slate-700/30 bg-gradient-to-br from-slate-900/60 to-black/40 backdrop-blur-md h-full">
           <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Gamepad2 className="h-4 w-4 text-slate-400" />
-              <h3 className="text-sm font-semibold text-slate-300">{language === 'en' ? 'Connected Stores' : 'Store Connessi'}</h3>
-              <span className="ml-auto text-xs text-slate-500">
-                {Object.values(stats.storeStats).reduce((s, v) => s + v.games, 0)} {language === 'en' ? 'total games' : 'giochi'}
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1 rounded bg-slate-800/80 border border-slate-700/50">
+                <Gamepad2 className="h-3.5 w-3.5 text-slate-300" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-200 tracking-wide">{language === 'en' ? 'Connected Stores' : 'Store Connessi'}</h3>
+              <span className="ml-auto text-xs font-medium bg-slate-800/50 text-slate-400 px-2 py-0.5 rounded-full border border-slate-700/30">
+                {Object.values(stats.storeStats).reduce((s, v) => s + v.games, 0)} {language === 'en' ? 'games' : 'giochi'}
               </span>
             </div>
             {Object.values(stats.storeStats).some(s => s.games > 0) ? (
               <div className="flex flex-wrap gap-2">
                 {[
-                  { key: 'steam',     label: 'Steam',      color: 'text-blue-400',   bg: 'bg-blue-500/10 border-blue-500/20' },
-                  { key: 'gog',       label: 'GOG',        color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/20' },
-                  { key: 'epic',      label: 'Epic',       color: 'text-cyan-400',   bg: 'bg-cyan-500/10 border-cyan-500/20' },
-                  { key: 'ubisoft',   label: 'Ubisoft',    color: 'text-sky-400',    bg: 'bg-sky-500/10 border-sky-500/20' },
-                  { key: 'origin',    label: 'EA/Origin',  color: 'text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
-                  { key: 'battlenet', label: 'Battle.net', color: 'text-blue-300',   bg: 'bg-blue-500/10 border-blue-500/20' },
-                  { key: 'itchio',    label: 'itch.io',    color: 'text-rose-400',   bg: 'bg-rose-500/10 border-rose-500/20' },
+                  { key: 'steam',     label: 'Steam',      icon: <img src="https://upload.wikimedia.org/wikipedia/commons/8/83/Steam_icon_logo.svg" className="w-3 h-3 opacity-80" alt="Steam"/>, color: 'text-white', bg: 'bg-gradient-to-r from-[#171a21]/80 to-[#1b2838]/80 border-[#66c0f4]/30 hover:border-[#66c0f4]/60' },
+                  { key: 'epic',      label: 'Epic',       icon: <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center"><span className="text-[7px] text-black font-bold">E</span></div>, color: 'text-white', bg: 'bg-gradient-to-r from-[#2a2a2a]/80 to-[#121212]/80 border-white/20 hover:border-white/40' },
+                  { key: 'gog',       label: 'GOG',        icon: <div className="w-3 h-3 bg-purple-500 rounded-full"/>, color: 'text-white', bg: 'bg-gradient-to-r from-purple-900/50 to-purple-800/30 border-purple-500/30 hover:border-purple-400/50' },
+                  { key: 'ubisoft',   label: 'Ubisoft',    icon: <div className="w-3 h-3 bg-sky-500 rounded-full"/>, color: 'text-sky-100', bg: 'bg-gradient-to-r from-sky-900/50 to-sky-800/30 border-sky-500/30 hover:border-sky-400/50' },
+                  { key: 'origin',    label: 'EA/Origin',  icon: <div className="w-3 h-3 bg-orange-500 rounded-full"/>, color: 'text-orange-100', bg: 'bg-gradient-to-r from-orange-900/50 to-orange-800/30 border-orange-500/30 hover:border-orange-400/50' },
+                  { key: 'battlenet', label: 'Battle.net', icon: <div className="w-3 h-3 bg-blue-500 rounded-full"/>, color: 'text-blue-100', bg: 'bg-gradient-to-r from-blue-900/50 to-blue-800/30 border-blue-500/30 hover:border-blue-400/50' },
+                  { key: 'itchio',    label: 'itch.io',    icon: <div className="w-3 h-3 bg-rose-500 rounded-full"/>, color: 'text-rose-100', bg: 'bg-gradient-to-r from-rose-900/50 to-rose-800/30 border-rose-500/30 hover:border-rose-400/50' },
                 ].filter(s => stats.storeStats[s.key]?.games > 0).map(store => (
-                  <div key={store.key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs ${store.bg}`}>
-                    <span className={`font-semibold ${store.color}`}>{stats.storeStats[store.key].games}</span>
-                    <span className="text-slate-400">{store.label}</span>
+                  <div key={store.key} className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs shadow-sm transition-colors cursor-default ${store.bg}`}>
+                    {store.icon}
+                    <span className="text-[10px] font-medium text-slate-300">{store.label}</span>
+                    <span className={`font-bold ml-0.5 ${store.color}`}>{stats.storeStats[store.key].games}</span>
                   </div>
                 ))}
               </div>
@@ -483,7 +498,7 @@ export default function Dashboard() {
 
       {/* Community Spotlight — Agorà */}
       {communityPacks.length > 0 && (
-        <Card className="border-purple-500/20 bg-purple-950/30 backdrop-blur-sm">
+        <Card className="shrink-0 border-purple-500/20 bg-gradient-to-br from-purple-950/40 to-slate-950/60 backdrop-blur-sm">
           <CardContent className="p-3">
             <div className="flex items-center justify-between mb-2.5">
               <h3 className="text-sm font-semibold text-purple-300 flex items-center gap-2">
@@ -497,36 +512,34 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
               {communityPacks.map(pack => (
                 <Link key={pack.id} href="/community-hub">
-                  <div className="group p-2.5 rounded-lg bg-purple-950/40 border border-purple-500/10 hover:border-purple-500/30 transition-all cursor-pointer">
+                  <div className="group p-2.5 rounded-lg bg-gradient-to-b from-purple-900/30 to-purple-950/50 border border-purple-500/10 hover:border-purple-500/40 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all cursor-pointer">
                     <div className="flex items-center gap-2 mb-1.5">
                       {pack.coverImage ? (
-                        <img src={pack.coverImage} alt={pack.gameName} className="w-8 h-8 rounded object-cover" />
+                        <img src={pack.coverImage} alt={pack.gameName} className="w-8 h-8 rounded object-cover shadow-sm" />
                       ) : (
-                        <div className="w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded bg-purple-500/20 flex items-center justify-center shadow-sm">
                           <Gamepad2 className="h-4 w-4 text-purple-400/50" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium text-purple-100 truncate group-hover:text-white transition-colors">{pack.gameName}</p>
-                        <p className="text-[9px] text-purple-300/50">{pack.sourceLanguage.toUpperCase()} → {pack.targetLanguage.toUpperCase()}</p>
+                        <p className="text-[11px] font-bold text-purple-100/90 truncate group-hover:text-purple-50 transition-colors drop-shadow-sm">{pack.gameName}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-[8px] font-medium px-1 py-0.5 rounded bg-purple-500/20 text-purple-200/80">{pack.sourceLanguage.toUpperCase()}</span>
+                          <ArrowRight className="h-2 w-2 text-purple-500/50" />
+                          <span className="text-[8px] font-medium px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300/80">{pack.targetLanguage.toUpperCase()}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-purple-500/10">
                       <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-amber-400" />
-                        <span className="text-[10px] text-amber-300">{pack.rating.toFixed(1)}</span>
+                        <Star className="h-3 w-3 text-amber-400 fill-amber-400/30" />
+                        <span className="text-[10px] font-medium text-amber-300">{pack.rating.toFixed(1)}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-[9px] text-purple-300/40">
-                        <span>{pack.downloads} ↓</span>
-                        <span>{pack.completionPercentage}%</span>
+                      <div className="flex items-center gap-2 text-[9px] font-medium text-purple-300/60">
+                        <span className="flex items-center gap-0.5"><Download className="h-2.5 w-2.5" /> {pack.downloads}</span>
+                        <span className="text-emerald-400/80">{pack.completionPercentage}%</span>
                       </div>
                     </div>
-                    {pack.status === 'verified' && (
-                      <div className="mt-1 flex items-center gap-0.5">
-                        <Award className="h-3 w-3 text-green-400" />
-                        <span className="text-[9px] text-green-400">Verified</span>
-                      </div>
-                    )}
                   </div>
                 </Link>
               ))}
@@ -536,95 +549,132 @@ export default function Dashboard() {
       )}
 
       {/* Grid: News (sinistra) + Attività Recenti (destra) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 min-h-0 flex-1">
         {/* Mini Blog / News - SINISTRA */}
-        <Card className="border-rose-500/30 bg-rose-950/40 backdrop-blur-sm h-fit">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-rose-300 flex items-center gap-2">
+        <Card className="border-fuchsia-500/30 bg-fuchsia-950/20 backdrop-blur-sm overflow-hidden h-full flex flex-col">
+          <CardContent className="p-3 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-fuchsia-300 flex items-center gap-2">
                 <Newspaper className="h-4 w-4" />
                 {dash.newsUpdates}
               </h3>
-              <Link href="/blog" className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
+              <Link href="/blog" className="text-xs text-fuchsia-400 hover:text-fuchsia-300 flex items-center gap-1 transition-colors">
                 {dash.manage} <ExternalLink className="h-3 w-3" />
               </Link>
             </div>
             
-            <div className="space-y-2">
-              {blogPosts.length > 0 ? blogPosts.map((post) => (
-                <div key={post.id} className="flex items-start gap-3 p-2 rounded-lg bg-rose-950/30 border border-rose-500/10 hover:border-rose-500/30 transition-colors">
-                  <span className="text-[10px] text-rose-400/60 w-12 flex-shrink-0">{post.date}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-rose-100 truncate">{post.title}</p>
-                    <p className="text-[10px] text-rose-300/50 truncate">{post.description}</p>
-                  </div>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">{post.tag}</span>
+            <div className="space-y-1.5 flex-1 overflow-y-auto pr-1 custom-scrollbar">
+              {blogPosts.length > 0 ? blogPosts.slice(0, 4).map((post) => {
+                // Scegli icone/colori in base al tag
+                let icon = <Database className="h-3.5 w-3.5" />;
+                let colorClass = 'text-blue-400 bg-blue-500/10 border-blue-500/20';
+                
+                if (post.tag.toLowerCase().includes('ui') || post.tag.toLowerCase().includes('design')) {
+                  icon = <Layers className="h-3.5 w-3.5" />;
+                  colorClass = 'text-pink-400 bg-pink-500/10 border-pink-500/20';
+                } else if (post.tag.toLowerCase().includes('security') || post.tag.toLowerCase().includes('key')) {
+                  icon = <Settings2 className="h-3.5 w-3.5" />;
+                  colorClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+                } else if (post.tag.toLowerCase().includes('ai') || post.tag.toLowerCase().includes('model')) {
+                  icon = <Wand2 className="h-3.5 w-3.5" />;
+                  colorClass = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+                } else if (post.tag.toLowerCase().includes('feature') || post.tag.toLowerCase().includes('nuovo')) {
+                  icon = <Sparkles className="h-3.5 w-3.5" />;
+                  colorClass = 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20';
+                }
+
+                return (
+                  <Link href="/blog" key={post.id}>
+                    <div className="group flex items-center gap-3 p-2 rounded-lg bg-fuchsia-950/30 border border-fuchsia-500/10 hover:border-fuchsia-500/30 hover:bg-fuchsia-900/40 transition-all cursor-pointer">
+                      <div className={`p-1.5 rounded-md border flex-shrink-0 transition-colors ${colorClass}`}>
+                        {icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[10px] text-fuchsia-300/50">{post.date}</span>
+                          <span className={`text-[8px] px-1.5 py-0.5 rounded border ${colorClass}`}>{post.tag}</span>
+                        </div>
+                        <p className="text-[12px] font-medium text-fuchsia-100/90 truncate group-hover:text-white transition-colors">{post.title}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-fuchsia-500/30 group-hover:text-fuchsia-400/80 transition-colors flex-shrink-0" />
+                    </div>
+                  </Link>
+                );
+              }) : (
+                <div className="flex flex-col items-center justify-center h-full text-fuchsia-300/40 gap-2">
+                  <Newspaper className="h-8 w-8 opacity-20" />
+                  <p className="text-xs">Nessun aggiornamento recente.</p>
                 </div>
-              )) : (
-                <p className="text-xs text-rose-300/50 text-center py-4">Nessun post.</p>
               )}
-            </div>
-            
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-rose-500/20">
-              <MessageCircle className="h-3 w-3 text-rose-400/50" />
-              <span className="text-[10px] text-rose-300/50">{dash.suggestions}</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Recent Activity - DESTRA */}
-        <Card className="border-cyan-500/30 bg-cyan-950/40 backdrop-blur-sm h-fit">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between mb-2">
+        <Card className="border-cyan-500/20 bg-cyan-950/20 backdrop-blur-sm overflow-hidden h-full flex flex-col">
+          <CardContent className="p-3 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-cyan-300 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
+                <div className="relative">
+                  <Clock className="h-4 w-4 text-cyan-400" />
+                  <div className="absolute top-0 right-0 h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
+                </div>
                 {dash.recentActivity}
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
               </h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActivityOrder(activityOrder === 'newest' ? 'oldest' : 'newest')}
-                  className="flex items-center gap-1 text-xs text-cyan-300/50 hover:text-cyan-300 transition-colors"
+                  className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-cyan-300/60 hover:text-cyan-300 hover:bg-cyan-500/10 px-2 py-1 rounded transition-colors"
                   title={activityOrder === 'newest' ? 'Ordina: più recenti prima' : 'Ordina: più vecchi prima'}
                 >
-                  {activityOrder === 'newest' ? (
-                    <ArrowDown className="h-3 w-3" />
-                  ) : (
-                    <ArrowUp className="h-3 w-3" />
-                  )}
-                  <span>{activityOrder === 'newest' ? dash.latestActions : (dash.oldestFirst || 'Meno recenti')}</span>
+                  {activityOrder === 'newest' ? dash.latestActions : (dash.oldestFirst || 'Meno recenti')}
+                  {activityOrder === 'newest' ? <ArrowDown className="h-3 w-3" /> : <ArrowUp className="h-3 w-3" />}
                 </button>
               </div>
             </div>
             
             {loading ? (
-              <div className="flex items-center justify-center h-20">
-                <RefreshCw className="h-5 w-5 text-cyan-500 animate-spin" />
+              <div className="flex items-center justify-center flex-1">
+                <div className="relative flex items-center justify-center h-12 w-12 rounded-full bg-cyan-900/30 border border-cyan-500/20">
+                  <RefreshCw className="h-5 w-5 text-cyan-400 animate-spin" />
+                </div>
               </div>
             ) : activities.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-0 relative flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                {/* Linea verticale timeline */}
+                <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gradient-to-b from-cyan-500/50 via-cyan-500/10 to-transparent z-0" />
+                
                 {(activityOrder === 'oldest' ? [...activities].reverse() : activities)
                   .filter((activity, index, arr) => 
                     index === 0 || activity.text !== arr[index - 1].text
                   )
-                  .slice(0, 5)
+                  .slice(0, 4)
                   .map((activity, index) => (
-                    <div key={index} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-500/10 hover:border-cyan-500/30 transition-colors">
-                      <span className="text-base flex-shrink-0">{activity.icon || '📝'}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] text-cyan-100 truncate font-medium">{activity.text}</p>
-                        <p className="text-[9px] text-cyan-300/50">{activity.time}</p>
+                    <div key={index} className="relative z-10 flex items-start gap-3 py-1.5 group">
+                      {/* Nodo timeline */}
+                      <div className="flex-shrink-0 mt-0.5 relative flex items-center justify-center w-8 h-8 rounded-full bg-cyan-950 border-2 border-cyan-800 group-hover:border-cyan-500 group-hover:bg-cyan-900 transition-colors shadow-[0_0_10px_rgba(6,182,212,0.1)] group-hover:shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                        <span className="text-[14px]">{activity.icon || '📝'}</span>
                       </div>
-                      <div className={`h-2 w-2 rounded-full ${activity.color} flex-shrink-0`} />
+                      
+                      <div className="flex-1 min-w-0 bg-cyan-950/40 p-2 rounded-lg border border-cyan-500/10 group-hover:border-cyan-500/30 transition-colors">
+                        <div className="flex justify-between items-center mb-0.5 gap-2">
+                          <p className="text-xs text-cyan-50 truncate font-medium group-hover:text-white transition-colors">{activity.text}</p>
+                          <span className="text-[9px] font-medium text-cyan-400/60 whitespace-nowrap">{activity.time}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className={`h-1.5 w-1.5 rounded-full shadow-sm ${activity.color} shadow-${activity.color.replace('bg-', '')}/50`} />
+                          <span className="text-[9px] uppercase tracking-widest text-cyan-300/40 font-semibold">{activity.type}</span>
+                        </div>
+                      </div>
                     </div>
                   ))}
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-4 py-6 text-cyan-300/50">
-                <Clock className="h-8 w-8 opacity-30" />
-                <div>
-                  <span className="text-sm block">{dash.noRecentActivity}</span>
-                  <span className="text-xs opacity-70">{dash.actionsWillAppear}</span>
+              <div className="flex flex-col items-center justify-center flex-1 text-cyan-300/40 gap-2">
+                <Clock className="h-8 w-8 opacity-20" />
+                <div className="text-center">
+                  <span className="text-xs font-medium block text-cyan-300/60">{dash.noRecentActivity}</span>
+                  <span className="text-[10px] opacity-70">{dash.actionsWillAppear}</span>
                 </div>
               </div>
             )}
@@ -634,23 +684,23 @@ export default function Dashboard() {
 
       {/* Progress Card */}
       {stats.translationStats.total > 0 && (
-        <Card className="border-emerald-500/20 bg-emerald-500/5">
-            <CardContent className="p-2.5">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-emerald-300 flex items-center gap-2">
+        <Card className="shrink-0 border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 to-slate-950/60 backdrop-blur-md">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-emerald-300 flex items-center gap-2 tracking-wide">
                   <Languages className="h-4 w-4" />
                   {dash.translationProgress}
                 </h3>
-                <Link href="/ai-translator" className="text-xs text-emerald-400 hover:text-emerald-300">
-                  {dash.newTranslation} →
+                <Link href="/ai-translator" className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 group">
+                  {dash.newTranslation} <ChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
               
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 bg-emerald-950/30 p-3 rounded-xl border border-emerald-500/10 shadow-inner">
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-2">
-                    <span className="text-emerald-200/70">{dash.completion}</span>
-                    <span className="text-emerald-400 font-semibold">
+                    <span className="text-emerald-200/70 font-medium">{dash.completion}</span>
+                    <span className="text-emerald-300 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">
                       {stats.translationStats.total > 0 
                         ? Math.round((stats.translationStats.completed / stats.translationStats.total) * 100) 
                         : 0}%
@@ -660,18 +710,18 @@ export default function Dashboard() {
                     value={stats.translationStats.total > 0 
                       ? (stats.translationStats.completed / stats.translationStats.total) * 100 
                       : 0} 
-                    className="h-2"
+                    className="h-2.5 bg-emerald-950"
                   />
                 </div>
                 
-                <div className="flex gap-6">
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-green-400">{stats.translationStats.completed}</div>
-                    <div className="text-[10px] text-emerald-200/50">{dash.completed}</div>
+                <div className="flex gap-4">
+                  <div className="text-center px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                    <div className="text-xl font-bold text-emerald-400">{stats.translationStats.completed}</div>
+                    <div className="text-[9px] font-semibold text-emerald-200/60 uppercase tracking-widest">{dash.completed}</div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-yellow-400">{stats.translationStats.pending}</div>
-                    <div className="text-[10px] text-emerald-200/50">{dash.pending}</div>
+                  <div className="text-center px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                    <div className="text-xl font-bold text-amber-400">{stats.translationStats.pending}</div>
+                    <div className="text-[9px] font-semibold text-amber-200/60 uppercase tracking-widest">{dash.pending}</div>
                   </div>
                 </div>
               </div>
@@ -680,51 +730,51 @@ export default function Dashboard() {
       )}
 
       {/* Stats Footer */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mt-2">
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20 p-2.5 backdrop-blur-sm">
+      <div className="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-1.5">
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20 p-2 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-violet-500/20">
-              <Languages className="h-3.5 w-3.5 text-violet-400" />
+            <div className="p-1 rounded-md bg-violet-500/20">
+              <Languages className="h-3 w-3 text-violet-400" />
             </div>
             <div>
-              <div className="text-lg font-bold text-violet-300">{(stats.translationStats.completed + stats.tmEntries).toLocaleString()}</div>
-              <div className="text-[9px] text-violet-400/70 uppercase tracking-wider">{dash.totalTranslations}</div>
+              <div className="text-sm font-bold text-violet-300">{(stats.translationStats.completed + stats.tmEntries).toLocaleString()}</div>
+              <div className="text-[8px] text-violet-400/70 uppercase tracking-wider">{dash.totalTranslations}</div>
             </div>
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20 p-2.5 backdrop-blur-sm">
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20 p-2 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-emerald-500/20">
-              <Gamepad2 className="h-3.5 w-3.5 text-emerald-400" />
+            <div className="p-1 rounded-md bg-emerald-500/20">
+              <Gamepad2 className="h-3 w-3 text-emerald-400" />
             </div>
             <div>
-              <div className="text-lg font-bold text-emerald-300">{stats.patches}</div>
-              <div className="text-[9px] text-emerald-400/70 uppercase tracking-wider">{dash.gamesPatched}</div>
+              <div className="text-sm font-bold text-emerald-300">{stats.patches}</div>
+              <div className="text-[8px] text-emerald-400/70 uppercase tracking-wider">{dash.gamesPatched}</div>
             </div>
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 p-2.5 backdrop-blur-sm">
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20 p-2 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-amber-500/20">
-              <Clock className="h-3.5 w-3.5 text-amber-400" />
+            <div className="p-1 rounded-md bg-amber-500/20">
+              <Clock className="h-3 w-3 text-amber-400" />
             </div>
             <div>
-              <div className="text-lg font-bold text-amber-300">{stats.timeSavedMinutes >= 60 ? `${Math.round(stats.timeSavedMinutes / 60)}h` : `${stats.timeSavedMinutes}m`}</div>
-              <div className="text-[9px] text-amber-400/70 uppercase tracking-wider">{dash.timeSaved}</div>
+              <div className="text-sm font-bold text-amber-300">{stats.timeSavedMinutes >= 60 ? `${Math.round(stats.timeSavedMinutes / 60)}h` : `${stats.timeSavedMinutes}m`}</div>
+              <div className="text-[8px] text-amber-400/70 uppercase tracking-wider">{dash.timeSaved}</div>
             </div>
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 p-2.5 backdrop-blur-sm">
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-cyan-500/10 to-blue-500/5 border border-cyan-500/20 p-2 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-cyan-500/20">
-              <Database className="h-3.5 w-3.5 text-cyan-400" />
+            <div className="p-1 rounded-md bg-cyan-500/20">
+              <Database className="h-3 w-3 text-cyan-400" />
             </div>
             <div>
-              <div className="text-lg font-bold text-cyan-300">{stats.tmEntries.toLocaleString()}</div>
-              <div className="text-[9px] text-cyan-400/70 uppercase tracking-wider">{dash.tmEntries}</div>
+              <div className="text-sm font-bold text-cyan-300">{stats.tmEntries.toLocaleString()}</div>
+              <div className="text-[8px] text-cyan-400/70 uppercase tracking-wider">{dash.tmEntries}</div>
             </div>
           </div>
         </div>

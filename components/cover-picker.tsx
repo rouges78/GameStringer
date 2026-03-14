@@ -120,10 +120,19 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
     }
     setShowApiKeyInput(false);
 
+    // Validazione: se non abbiamo né appId né gameName, non possiamo cercare
+    if ((!appId || appId === 0) && (!gameName || gameName.trim() === '')) {
+      setError('Impossibile cercare cover: mancano appId e nome del gioco');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
+      // Assicurati che appId sia sempre un numero valido (non null/undefined)
+      const validAppId = appId && appId > 0 ? appId : 0;
+      
       const result = await invoke<{
         success: boolean;
         error?: string;
@@ -131,8 +140,8 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
         game_name?: string;
         total: number;
       }>('fetch_steamgriddb_covers', {
-        appId: appId ?? 0,
-        gameName: gameName,
+        appId: validAppId,
+        gameName: gameName || '',
         apiKey: apiKey,
         coverType: type
       });

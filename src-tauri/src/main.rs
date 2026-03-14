@@ -776,6 +776,9 @@ fn main() {
             commands::unity_bundle::save_uabea_dump,
             commands::unity_bundle::open_uabea,
             
+            // Unity CSV SimpleLocalization
+            commands::unity_csv::scan_unity_csv_tables,
+            
             // Screen Capture System
             commands::screen_capture::check_screen_capture_available,
             commands::screen_capture::get_monitors,

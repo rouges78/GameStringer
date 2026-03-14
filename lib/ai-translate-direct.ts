@@ -32,7 +32,7 @@ const blockedProviders = new Set<string>();
 const cooldownProviders = new Map<string, number>(); // provider → timestamp sblocco
 const cooldownFailCount = new Map<string, number>(); // provider → contatore fallimenti consecutivi
 
-const FREE_PROVIDERS = new Set(['mymemory', 'lingva', 'gemini', 'hymt', 'translategemma', 'ollama']);
+const FREE_PROVIDERS = new Set(['mymemory', 'lingva', 'gemini', 'hymt', 'translategemma', 'ollama', 'lmstudio']);
 
 // Provider che richiedono sourceLanguage corretto (web API con traduzione letterale)
 const LANG_SENSITIVE_PROVIDERS = new Set(['mymemory', 'lingva']);
@@ -963,6 +963,100 @@ Rules:
   return results;
 }
 
+/** LM Studio — server locale OpenAI-compatible, qualsiasi modello GGUF (http://localhost:1234) */
+async function translateWithLMStudio(
+  _apiKey: string,
+  opts: TranslateOptions
+): Promise<string[]> {
+  const lmStudioUrl = (() => {
+    try {
+      const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+      return settings?.translation?.lmStudioUrl || 'http://localhost:1234';
+    } catch { return 'http://localhost:1234'; }
+  })();
+  const lmStudioModel = (() => {
+    try {
+      const settings = JSON.parse(localStorage.getItem('gameStringerSettings') || '{}');
+      return settings?.translation?.lmStudioModel || '';
+    } catch { return ''; }
+  })();
+
+  const srcLang = opts.sourceLanguage || 'en';
+  const tgtLang = opts.targetLanguage || 'it';
+
+  // Verifica che LM Studio sia raggiungibile
+  let selectedModel = lmStudioModel;
+  try {
+    const modelsRes = await fetch(`${lmStudioUrl}/v1/models`, { signal: AbortSignal.timeout(3000) });
+    if (!modelsRes.ok) throw new Error('LM Studio non raggiungibile');
+    if (!selectedModel) {
+      const modelsData = await modelsRes.json();
+      const models = modelsData?.data || [];
+      if (models.length > 0) {
+        selectedModel = models[0].id;
+      } else {
+        throw new Error('Nessun modello caricato in LM Studio');
+      }
+    }
+  } catch (err) {
+    blockProvider('lmstudio', false);
+    throw err;
+  }
+
+  console.log(`[LM Studio] Usando modello: ${selectedModel} @ ${lmStudioUrl}`);
+
+  const systemPrompt = `You are an expert video game localizer. Translate from ${srcLang} to ${tgtLang}.
+Rules:
+- Output ONLY the translation. No explanations, no notes.
+- Maintain the original tone and context.
+- Keep UI terms concise.
+- PRESERVE ALL placeholders like {0}, %s, %d, [[T0]] EXACTLY.
+- PRESERVE ALL HTML/XML tags exactly as they appear.
+${opts.glossaryHint ? `\nGlossary:\n${opts.glossaryHint}` : ''}
+${opts.context ? `\nContext: ${opts.context}` : ''}`;
+
+  const results: string[] = [];
+  const BATCH_SIZE = 3;
+
+  for (let i = 0; i < opts.texts.length; i += BATCH_SIZE) {
+    const batch = opts.texts.slice(i, i + BATCH_SIZE);
+
+    const batchPromises = batch.map(async (text) => {
+      try {
+        const res = await fetch(`${lmStudioUrl}/v1/chat/completions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: selectedModel,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: text },
+            ],
+            temperature: 0.1,
+            max_tokens: Math.max(256, text.length * 3),
+            stream: false,
+          }),
+          signal: AbortSignal.timeout(60000),
+        });
+
+        if (!res.ok) throw new Error(`LM Studio ${res.status}`);
+        const data = await res.json();
+        let translated = data?.choices?.[0]?.message?.content?.trim() || text;
+        translated = translated.replace(/^(Translation|Traduzione|Output)\s*:\s*/i, '').replace(/^["']|["']$/g, '');
+        return translated;
+      } catch (err) {
+        console.warn(`[LM Studio] Errore traduzione:`, err);
+        return text;
+      }
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+  }
+
+  return results;
+}
+
 /** Ollama Generico — qualsiasi modello installato in Ollama (llama3, mistral, towerinstruct, qwen, ecc.) */
 async function translateWithOllamaGeneric(
   _apiKey: string,
@@ -1196,7 +1290,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '$0',
     quality: '⭐⭐⭐⭐',
     speed: '🏎 Media',
-    providers: ['hymt', 'translategemma', 'ollama', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'ollama', 'lmstudio', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
   },
   {
     id: 'economy',
@@ -1232,7 +1326,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$1.00+',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['deepl', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
+    providers: ['deepl', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'lmstudio', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
   },
 ];
 
@@ -1276,6 +1370,7 @@ const PROVIDER_MAP: Record<string, {
   translategemma: { getKey: () => 'free', fn: translateWithTranslateGemma, isBlocked: () => isProviderBlocked('translategemma'), needsKey: false },
   hymt: { getKey: () => 'free', fn: translateWithHYMT, isBlocked: () => isProviderBlocked('hymt'), needsKey: false },
   ollama: { getKey: () => 'free', fn: translateWithOllamaGeneric, isBlocked: () => isProviderBlocked('ollama'), needsKey: false },
+  lmstudio: { getKey: () => 'free', fn: translateWithLMStudio, isBlocked: () => isProviderBlocked('lmstudio'), needsKey: false },
 };
 
 /** Info requisito mancante per un provider */
@@ -1310,6 +1405,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   mymemory: 'MyMemory',
   lingva: 'Lingva Translate',
   ollama: 'Ollama (qualsiasi modello)',
+  lmstudio: 'LM Studio (locale, OpenAI-compatible)',
 };
 
 /** Provider che richiedono Ollama */

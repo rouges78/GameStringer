@@ -62,13 +62,18 @@ jobs:
             - **GameStringer_x.x.x_x64_en-US.msi** - MSI Installer
             - **GameStringer_x.x.x_x64-portable.zip** - Versione Portable (no installazione)
             
-            ### Linux
+            ### macOS (Beta)
+            - **GameStringer_x.x.x_aarch64.dmg** - Apple Silicon (M1/M2/M3/M4)
+            - **GameStringer_x.x.x_x64.dmg** - Intel
+            
+            ### Linux (Beta)
             - **GameStringer_x.x.x_amd64.deb** - Debian/Ubuntu
             - **GameStringer_x.x.x_amd64.AppImage** - AppImage (universale)
             - **GameStringer_x.x.x_amd64.rpm** - Fedora/openSUSE
             
-            > ⚠️ Linux: alcune funzionalità Windows-only (memory injection, WinRT OCR) non sono disponibili.
-            > Funziona tutto: traduzione, patching file, Unreal/Unity/RPGMaker patchers, glossari, TM.
+            > ⚠️ **macOS/Linux Beta:** funziona tutto (traduzione AI, patching file, Unreal/Unity, glossari, TM).
+            > Alcune funzionalità Windows-only (memory injection, WinRT OCR) non sono disponibili.
+            > Segnala bug su [GitHub Issues](https://github.com/${{ github.repository }}/issues).
             
             ---
             
@@ -204,3 +209,62 @@ jobs:
           prerelease: false
           includeDebug: false
           args: --bundles deb,appimage,rpm
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.version || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Tauri App (macOS Apple Silicon)
+        uses: tauri-apps/tauri-action@v0.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          updaterJsonKeepUniversal: true
+          tagName: ${{ github.event.inputs.version }}
+          releaseName: 'GameStringer ${{ github.event.inputs.version }}'
+          releaseDraft: false
+          prerelease: false
+          includeDebug: false
+          args: --target aarch64-apple-darwin
+
+      - name: Build Tauri App (macOS Intel)
+        uses: tauri-apps/tauri-action@v0.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          updaterJsonKeepUniversal: true
+          tagName: ${{ github.event.inputs.version }}
+          releaseName: 'GameStringer ${{ github.event.inputs.version }}'
+          releaseDraft: false
+          prerelease: false
+          includeDebug: false
+          args: --target x86_64-apple-darwin

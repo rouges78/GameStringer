@@ -81,21 +81,78 @@ export default function StoresPage() {
     update();
   }, []);
 
-  // Carica Credentials Ubisoft dal backend Tauri all'avvio
+  // Ripristina stato connessione store dal backend Tauri all'avvio
   useEffect(() => {
-    const loadUbisoftCredentials = async () => {
-      try {
-        const credentials = await invoke<any>('load_ubisoft_credentials');
-        if (credentials && credentials.email) {
-          console.log('[UBISOFT] Credentials loaded dal backend:', credentials.email);
-          setUbisoftConnected(true);
+    const restoreStoreConnections = async () => {
+      const existingAccounts = JSON.parse(localStorage.getItem('gameStringer_connectedAccounts') || '[]');
+      let changed = false;
+      const hasProvider = (p: string) => existingAccounts.some((a: any) => a.provider === p);
+
+      // Steam — credenziali salvate nel profilo attivo
+      if (!hasProvider('steam-credentials')) {
+        try {
+          const creds = await invoke<any>('load_steam_credentials');
+          if (creds && creds.steam_id && creds.steam_id.length > 0) {
+            existingAccounts.push({ provider: 'steam-credentials', userId: creds.steam_id, steamId: creds.steam_id });
+            changed = true;
+            console.log('[STORES] ✅ Steam credentials restored from backend:', creds.steam_id);
+          }
+        } catch { console.log('[STORES] Steam: nessuna credenziale salvata'); }
+      }
+
+      // Epic — credenziali in file standalone
+      if (!hasProvider('epicgames')) {
+        try {
+          const creds = await invoke<any>('load_epic_credentials');
+          if (creds && creds.username_encrypted) {
+            existingAccounts.push({ provider: 'epicgames', userId: 'epic-user' });
+            changed = true;
+            console.log('[STORES] ✅ Epic credentials restored from backend');
+          }
+        } catch { console.log('[STORES] Epic: nessuna credenziale salvata'); }
+      }
+
+      // GOG — credenziali in file standalone
+      if (!hasProvider('gog-credentials')) {
+        try {
+          const creds = await invoke<any>('load_gog_credentials');
+          if (creds && (creds.email || creds.username)) {
+            existingAccounts.push({ provider: 'gog-credentials', userId: creds.username || 'gog-user' });
+            changed = true;
+            console.log('[STORES] ✅ GOG credentials restored from backend:', creds.username);
+          }
+        } catch { console.log('[STORES] GOG: nessuna credenziale salvata'); }
+      }
+
+      // Ubisoft
+      if (!hasProvider('ubisoft-credentials')) {
+        try {
+          const creds = await invoke<any>('load_ubisoft_credentials');
+          if (creds && creds.email) {
+            existingAccounts.push({ provider: 'ubisoft-credentials', userId: creds.email });
+            setUbisoftConnected(true);
+            _storesCache.ubisoftConnected = true;
+            changed = true;
+            console.log('[STORES] ✅ Ubisoft credentials restored from backend:', creds.email);
+          }
+        } catch {
+          console.log('[STORES] Ubisoft: nessuna credenziale salvata');
+          setUbisoftConnected(false);
         }
-      } catch (error) {
-        console.log('[UBISOFT] Nessuna credenziale salvata');
-        setUbisoftConnected(false);
+      } else {
+        // Controlla anche Ubisoft se già nel localStorage
+        setUbisoftConnected(true);
+        _storesCache.ubisoftConnected = true;
+      }
+
+      if (changed) {
+        localStorage.setItem('gameStringer_connectedAccounts', JSON.stringify(existingAccounts));
+        console.log('[STORES] 🔄 connectedAccounts aggiornati:', existingAccounts.length, 'provider');
+        // Aggiorna la sessione auth per riflettere i nuovi account
+        await update();
       }
     };
-    loadUbisoftCredentials();
+    restoreStoreConnections();
   }, []);
 
   // State for UI elements and forms

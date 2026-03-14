@@ -1352,17 +1352,17 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
           {/* PULSANTE ONE-CLICK TRANSLATION */}
           {strategy && strategy.tools.length > 0 && strategyReliability >= 75 && !recommendation.anti_cheat_detected && (
             <button 
-              className="text-[10px] font-bold text-white bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 px-2.5 py-1 rounded flex items-center gap-1 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:scale-105"
+              className="text-[10px] font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 border border-emerald-500/30"
               onClick={() => setShowConfirmDialog(true)}
             >
-              <Wand2 className="h-3 w-3" />
+              <Wand2 className="h-3.5 w-3.5" />
               Traduci Tutto
             </button>
           )}
           
           {/* Bottone manuale */}
           <button 
-            className="text-[10px] font-medium text-violet-200 bg-violet-500/20 hover:bg-violet-500/30 px-2 py-1 rounded flex items-center gap-0.5 transition-colors"
+            className="text-[10px] font-medium text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
             onClick={() => handleAction(recommendation.action_route)}
           >
             {recommendation.action_label}

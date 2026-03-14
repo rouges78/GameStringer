@@ -119,6 +119,8 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
           return await translateWithNLLB(text, targetLanguage, sourceLanguage);
         case 'ollama':
           return await translateWithOllama(text, targetLanguage, sourceLanguage, context, userApiKey);
+        case 'lmstudio':
+          return await translateWithLMStudioAPI(text, targetLanguage, sourceLanguage, context);
         default:
           throw new ValidationError(`Unsupported translation provider: ${provider}`);
       }
@@ -1186,19 +1188,65 @@ async function translateWithOllama(
   }
 }
 
+// LM Studio — server locale OpenAI-compatible (http://localhost:1234)
+async function translateWithLMStudioAPI(
+  text: string,
+  targetLanguage: string,
+  sourceLanguage: string,
+  context?: string
+): Promise<TranslationResponse> {
+  const lmStudioUrl = process.env.LMSTUDIO_URL || 'http://localhost:1234';
+
+  try {
+    const modelsRes = await fetch(`${lmStudioUrl}/v1/models`, { signal: AbortSignal.timeout(3000) });
+    if (!modelsRes.ok) throw new Error('LM Studio non raggiungibile');
+    const modelsData = await modelsRes.json();
+    const models = modelsData?.data || [];
+    if (models.length === 0) throw new Error('Nessun modello caricato in LM Studio');
+    const selectedModel = models[0].id;
+
+    const systemPrompt = `Translate from ${sourceLanguage} to ${targetLanguage}. ${context || ''} Preserve variables. Respond ONLY with the translation.`;
+
+    const response = await fetch(`${lmStudioUrl}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: text }],
+        temperature: 0.3,
+        max_tokens: 500,
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+
+    if (!response.ok) throw new Error(`LM Studio error: ${response.status}`);
+    const data = await response.json();
+    const translatedText = data?.choices?.[0]?.message?.content?.trim() || '';
+    if (!translatedText) throw new Error('Nessuna traduzione');
+
+    return { translatedText, confidence: 0.85, suggestions: [], provider: 'lmstudio', sourceLanguage, targetLanguage, cached: false };
+
+  } catch (error) {
+    logger.error('LM Studio translation failed', 'TRANSLATE_API', { error });
+    throw new Error(`LM Studio failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
 export const GET = withRateLimit(withErrorHandler(async function(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action');
 
     if (action === 'providers') {
-      const providers = ['openai', 'gemini', 'deepl', 'libre', 'qwen3', 'nllb', 'ollama', 'mock'];
+      const providers = ['openai', 'gemini', 'deepl', 'libre', 'qwen3', 'nllb', 'ollama', 'lmstudio', 'mock'];
       const availableProviders = providers.map(provider => {
         let available = false, reason = '';
         switch (provider) {
           case 'openai': available = secretsManager.isAvailable('OPENAI_API_KEY'); reason = available ? 'Available' : 'API key not configured'; break;
           case 'gemini': available = secretsManager.isAvailable('GEMINI_API_KEY'); reason = available ? 'Available' : 'API key not configured'; break;
           case 'qwen3': case 'ollama': available = true; reason = 'Local via Ollama'; break;
+          case 'lmstudio': available = true; reason = 'Local via LM Studio (localhost:1234)'; break;
           case 'nllb': available = true; reason = '200 languages via HuggingFace'; break;
           case 'libre': available = true; reason = 'Free via MyMemory'; break;
           case 'mock': available = true; reason = 'Testing'; break;

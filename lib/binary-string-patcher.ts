@@ -63,6 +63,7 @@ export interface PatchResult {
   errors: string[];
   outputPath: string;
   backupPath?: string;
+  patchedBuffer?: Uint8Array;
 }
 
 // ============================================================
@@ -545,11 +546,12 @@ export function applyPatch(
   }
 
   return {
-    success: errors.length === 0,
+    success: patchedCount > 0,
     patchedCount,
     skippedCount,
     errors,
     outputPath: '',
+    patchedBuffer: output,
   };
 }
 

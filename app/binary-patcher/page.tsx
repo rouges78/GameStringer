@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import { set, get, del } from 'idb-keyval';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
 import { invoke } from '@/lib/tauri-api';
@@ -39,6 +40,7 @@ import {
   type TranslateOptions,
   type ChainPreset,
 } from '@/lib/ai-translate-direct';
+import { addCorrection } from '@/lib/adaptive-mt';
 
 type Step = 'load' | 'extract' | 'translate' | 'review' | 'patch';
 
@@ -99,6 +101,64 @@ export default function BinaryPatcherPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const projectInputRef = useRef<HTMLInputElement>(null);
   const autoLoadedRef = useRef(false);
+  const resumePendingRef = useRef(false);
+  const [savedCheckpoint, setSavedCheckpoint] = useState<{
+    project: PatchProject; translatedCount: number; totalCount: number;
+    savedAt: number; targetLang: string; fileName: string;
+  } | null>(null);
+
+  // ============================================================
+  // CHECKPOINT: SAVE / LOAD / CLEAR
+  // ============================================================
+  const getCheckpointKey = useCallback(() => {
+    const name = gameName || fileName;
+    if (!name) return null;
+    return `gs_binpatch_checkpoint_${name.replace(/[^a-zA-Z0-9]/g, '_')}_${targetLang}`;
+  }, [gameName, fileName, targetLang]);
+
+  const saveBinCheckpoint = useCallback(async (proj: PatchProject) => {
+    const key = getCheckpointKey();
+    if (!key) return;
+    try {
+      const translatedCount = proj.strings.filter(s => s.translated).length;
+      await set(key, {
+        project: proj,
+        fileName: proj.fileName,
+        gameName: proj.gameName,
+        targetLang: proj.targetLang,
+        totalCount: proj.strings.length,
+        translatedCount,
+        savedAt: Date.now(),
+      });
+      console.log(`[BinPatch Checkpoint] Salvato: ${translatedCount} stringhe tradotte`);
+    } catch (e) {
+      console.warn('[BinPatch Checkpoint] Errore salvataggio:', e);
+    }
+  }, [getCheckpointKey]);
+
+  const loadBinCheckpoint = useCallback(async () => {
+    const name = gameName || fileName;
+    if (!name) return;
+    // Cerca checkpoint per qualsiasi lingua target
+    const langs = ['it', 'en', 'es', 'de', 'fr', 'pt', 'ja', 'ko', 'zh', 'ru'];
+    for (const lang of langs) {
+      const key = `gs_binpatch_checkpoint_${name.replace(/[^a-zA-Z0-9]/g, '_')}_${lang}`;
+      try {
+        const saved = await get(key);
+        if (saved?.project?.strings?.length > 0 && saved.translatedCount > 0) {
+          setSavedCheckpoint(saved);
+          console.log(`[BinPatch Checkpoint] Trovato: ${saved.translatedCount}/${saved.totalCount} (${lang})`);
+          return;
+        }
+      } catch {}
+    }
+  }, [gameName, fileName]);
+
+  const clearBinCheckpoint = useCallback(async () => {
+    const key = getCheckpointKey();
+    if (key) await del(key);
+    setSavedCheckpoint(null);
+  }, [getCheckpointKey]);
 
   // ============================================================
   // Auto-detect dal URL params (?game=X&path=Y)
@@ -252,6 +312,21 @@ export default function BinaryPatcherPage() {
       autoLoadFromPath(path, game || 'Game');
     }
   }, [searchParams, autoLoadFromPath]);
+
+  // Carica checkpoint quando gameName/fileName cambia
+  useEffect(() => {
+    if (gameName || fileName) {
+      loadBinCheckpoint();
+    }
+  }, [gameName, fileName, loadBinCheckpoint]);
+
+  // Trigger traduzione dopo restore checkpoint (project cambia async)
+  useEffect(() => {
+    if (resumePendingRef.current && project && !isProcessing) {
+      resumePendingRef.current = false;
+      handleTranslate();
+    }
+  }, [project, isProcessing]);
 
   // ============================================================
   // File Loading
@@ -452,21 +527,30 @@ export default function BinaryPatcherPage() {
         setTranslationLog(prev => [...prev, `❌ Batch ${bi + 1} errore: ${err instanceof Error ? err.message : String(err)}`]);
       }
 
-      // Salva progresso intermedio nel project
-      setProject(prev => prev ? { ...prev, strings: [...updatedStrings], targetLang, updatedAt: new Date().toISOString() } : prev);
+      // Salva progresso intermedio nel project + checkpoint
+      const updatedProject = { ...project, strings: [...updatedStrings], targetLang, updatedAt: new Date().toISOString() };
+      setProject(updatedProject);
+      saveBinCheckpoint(updatedProject);
 
       if (bi < batches.length - 1) {
         await new Promise(r => setTimeout(r, 200));
       }
     }
 
+    const finalProject = { ...project, strings: [...updatedStrings], targetLang, updatedAt: new Date().toISOString() };
+    setProject(finalProject);
     if (!cancelTranslationRef.current) {
       setTranslationLog(prev => [...prev, `🏁 Completato: ${translated} tradotte, ${failed} fallite`]);
       setStep('review');
+      // Traduzione completata al 100% → salva checkpoint finale
+      saveBinCheckpoint(finalProject);
+    } else {
+      // Fermata dall'utente → salva checkpoint per resume
+      saveBinCheckpoint(finalProject);
+      setTranslationLog(prev => [...prev, `💾 Checkpoint salvato — riprendi quando vuoi`]);
     }
-    setProject(prev => prev ? { ...prev, strings: [...updatedStrings], targetLang, updatedAt: new Date().toISOString() } : prev);
     setIsProcessing(false);
-  }, [project, targetLang, translationMode, chainPreset, gameName]);
+  }, [project, targetLang, translationMode, chainPreset, gameName, saveBinCheckpoint]);
 
   const handleStopTranslation = useCallback(() => {
     cancelTranslationRef.current = true;
@@ -547,6 +631,18 @@ export default function BinaryPatcherPage() {
     const strings = [...project.strings];
     const s = strings[editingIdx];
     const fitted = fitToByteLength(editValue, s.byteLen);
+    // Adaptive MT: salva correzione se diversa dalla traduzione AI
+    if (s.translated && fitted !== s.translated && fitted !== s.original) {
+      addCorrection({
+        sourceText: s.original,
+        aiTranslation: s.translated,
+        humanCorrection: fitted,
+        sourceLanguage: project.sourceLang,
+        targetLanguage: targetLang,
+        gameId: gameName || project.gameName,
+        contentType: s.category,
+      });
+    }
     strings[editingIdx] = { ...s, translated: fitted, isTranslated: fitted !== s.original };
     setProject({ ...project, strings, updatedAt: new Date().toISOString() });
     setEditingIdx(null);
@@ -776,6 +872,48 @@ export default function BinaryPatcherPage() {
                 </Badge>
               ))}
             </div>
+
+            {/* Banner Riprendi Traduzione (checkpoint trovato) */}
+            {savedCheckpoint && (
+              <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/40 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/20">
+                    <Save className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-amber-200">Traduzione in corso trovata!</h3>
+                    <p className="text-xs text-amber-300/70 mt-0.5">
+                      {savedCheckpoint.translatedCount}/{savedCheckpoint.totalCount} stringhe tradotte
+                      ({savedCheckpoint.targetLang.toUpperCase()})
+                      — salvato il {new Date(savedCheckpoint.savedAt).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="h-8 text-xs bg-amber-600 hover:bg-amber-700" onClick={() => {
+                      setProject(savedCheckpoint.project);
+                      setTargetLang(savedCheckpoint.targetLang);
+                      setFileName(savedCheckpoint.fileName);
+                      setSavedCheckpoint(null);
+                      setStep('review');
+                    }}>
+                      <Eye className="h-3 w-3 mr-1" /> Review
+                    </Button>
+                    <Button size="sm" className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => {
+                      setProject(savedCheckpoint.project);
+                      setTargetLang(savedCheckpoint.targetLang);
+                      setFileName(savedCheckpoint.fileName);
+                      setSavedCheckpoint(null);
+                      resumePendingRef.current = true;
+                    }}>
+                      <Play className="h-3 w-3 mr-1" /> Riprendi
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-8 text-xs border-amber-500/30 text-amber-300 hover:bg-amber-500/20" onClick={clearBinCheckpoint}>
+                      <XCircle className="h-3 w-3 mr-1" /> Ricomincia
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Direzione traduzione */}
             <div className="p-3 rounded-lg bg-white/5 border border-white/10 mb-4 flex items-center gap-3">

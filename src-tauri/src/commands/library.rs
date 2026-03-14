@@ -341,12 +341,17 @@ fn find_steam_path_in_hive(hive: winreg::HKEY, subkey: &str) -> Option<String> {
 
 #[cfg(not(windows))]
 pub fn find_steam_path_from_registry() -> Option<String> {
-    // Linux: cerca Steam nei path standard
+    // macOS + Linux: cerca Steam nei path standard
     let home = std::env::var("HOME").ok()?;
     let candidates = [
+        // macOS
+        format!("{}/Library/Application Support/Steam", home),
+        // Linux
         format!("{}/.steam/steam", home),
         format!("{}/.local/share/Steam", home),
-        format!("{}/.var/app/com.valvesoftware.Steam/.steam/steam", home), // Flatpak
+        // Linux Flatpak
+        format!("{}/.var/app/com.valvesoftware.Steam/.steam/steam", home),
+        format!("{}/.var/app/com.valvesoftware.Steam/.local/share/Steam", home),
     ];
     for path in &candidates {
         if Path::new(path).exists() {

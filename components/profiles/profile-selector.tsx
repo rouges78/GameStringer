@@ -633,7 +633,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
           <div className="flex flex-wrap justify-center gap-4 w-full mb-6">
             <AnimatePresence mode="popLayout">
               {profiles.map((profile) => (
-                <div key={profile.id} onClick={() => handleProfileSelect(profile)} className="w-full max-w-[280px] cursor-pointer">
+                <div key={profile.id} onClick={() => handleProfileSelect(profile)} className="w-full max-w-[340px] cursor-pointer">
                   <ProfileCard
                     profile={profile}
                     isSelected={selectedProfileId === profile.id}
@@ -649,7 +649,7 @@ export function ProfileSelector({ onCreateProfile }: ProfileSelectorProps) {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 onClick={onCreateProfile}
-                className="w-full max-w-[280px] cursor-pointer group"
+                className="w-full max-w-[340px] cursor-pointer group"
               >
                  <div className="h-full min-h-[140px] rounded-xl border-2 border-dashed border-slate-700 hover:border-indigo-500/50 bg-slate-900/30 hover:bg-slate-800/50 transition-all duration-300 flex flex-col items-center justify-center p-6 text-slate-400 hover:text-indigo-300">
                     <div className="w-12 h-12 rounded-full bg-slate-800 group-hover:bg-indigo-500/20 flex items-center justify-center mb-3 transition-colors">

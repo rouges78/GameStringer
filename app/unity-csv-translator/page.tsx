@@ -1,0 +1,326 @@
+'use client';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { open as dialogOpen, save as dialogSave } from '@tauri-apps/plugin-dialog';
+import {
+  FileText, FolderOpen, Search, Loader2, CheckCircle2,
+  Database, Globe, ChevronDown, ChevronRight, Download, Upload,
+  Settings2, StopCircle, Wand2, Package, Cpu
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
+interface CsvEntry { id: string; english: string; translated: string; category: string; done: boolean; }
+interface CsvTable { name: string; offset: number; source: string; header: string[]; entries: CsvEntry[]; doneCount: number; }
+interface ScanRes { gamePath: string; gameName: string; unityVer: string; tables: CsvTable[]; total: number; done: number; }
+type Status = 'idle' | 'scanning' | 'translating' | 'done' | 'error';
+
+const catColor: Record<string, string> = {
+  ui: 'bg-blue-900/50 text-blue-300', dialogue: 'bg-purple-900/50 text-purple-300',
+  phrase: 'bg-amber-900/50 text-amber-300', name: 'bg-emerald-900/50 text-emerald-300',
+  other: 'bg-slate-700 text-slate-300', empty: 'bg-slate-800 text-slate-500',
+};
+
+function cat(s: string): string {
+  if (!s) return 'empty';
+  const l = s.toLowerCase();
+  const ui = ['start','quit','options','settings','play','continue','new game','load','save','exit','credits','volume'];
+  if (ui.some(k => l === k || l.includes(k))) return 'ui';
+  if (s.length > 40 && s.includes(' ') && /[.!?]/.test(s)) return 'dialogue';
+  if (s.includes(' ') && s.length > 10) return 'phrase';
+  if (s.length < 40 && s[0]?.toUpperCase() === s[0]) return 'name';
+  return 'other';
+}
+
+export default function UnityCsvTranslatorPage() {
+  const [status, setStatus] = useState<Status>('idle');
+  const [gamePath, setGamePath] = useState('');
+  const [gameName, setGameName] = useState('');
+  const [scan, setScan] = useState<ScanRes | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [prog, setProg] = useState({ cur: 0, tot: 0, tbl: '' });
+  const [logs, setLogs] = useState<string[]>([]);
+  const [showLogs, setShowLogs] = useState(false);
+  const [targetLang, setTargetLang] = useState('it');
+  const [model, setModel] = useState('huihui_ai/hy-mt1.5-abliterated:7b');
+  const [models, setModels] = useState<string[]>([]);
+  const [showCfg, setShowCfg] = useState(false);
+  const abort = useRef(false);
+  const logRef = useRef<HTMLDivElement>(null);
+
+  const log = useCallback((m: string) => {
+    setLogs(p => [...p.slice(-300), `[${new Date().toLocaleTimeString()}] ${m}`]);
+  }, []);
+
+  useEffect(() => { logRef.current?.scrollTo(0, logRef.current.scrollHeight); }, [logs]);
+
+  useEffect(() => {
+    fetch('http://localhost:11434/api/tags').then(r => r.json()).then((d: { models?: { name: string }[] }) => {
+      const m = (d.models || []).map((x: { name: string }) => x.name);
+      setModels(m);
+      if (m.length && !m.includes(model)) setModel(m[0]);
+    }).catch(() => {});
+  }, []); // eslint-disable-line
+
+  const browse = useCallback(async () => {
+    const sel = await dialogOpen({ directory: true, title: 'Seleziona cartella gioco Unity' });
+    if (sel && typeof sel === 'string') {
+      setGamePath(sel);
+      setGameName(sel.replace(/\\/g, '/').split('/').pop() || 'Unknown');
+      log(`Cartella: ${sel}`);
+    }
+  }, [log]);
+
+  const doScan = useCallback(async () => {
+    if (!gamePath) return;
+    setStatus('scanning'); setScan(null);
+    log(`🔍 Scansione: ${gamePath}`);
+    try {
+      const r = await invoke('scan_unity_csv_tables', { gamePath }) as { tables?: { name: string; offset: number; source: string; header?: string[]; entries?: { id: string; english: string }[] }[]; unity_version?: string; error?: string };
+      if (r.error) { log(`❌ ${r.error}`); setStatus('error'); return; }
+      const tables: CsvTable[] = (r.tables || []).map((t: { name: string; offset: number; source: string; header?: string[]; entries?: { id: string; english: string }[] }) => ({
+        name: t.name, offset: t.offset, source: t.source, header: t.header || [],
+        entries: (t.entries || []).map((e: { id: string; english: string }) => ({ id: e.id, english: e.english, translated: '', category: cat(e.english), done: false })),
+        doneCount: 0,
+      }));
+      const total = tables.reduce((s, t) => s + t.entries.filter(e => e.english).length, 0);
+      setScan({ gamePath, gameName, unityVer: r.unity_version || '?', tables, total, done: 0 });
+      setStatus('idle');
+      log(`✅ ${tables.length} tabelle, ${total} stringhe`);
+    } catch (e) { log(`❌ ${e}`); setStatus('error'); }
+  }, [gamePath, gameName, log]);
+
+  const doTranslate = useCallback(async () => {
+    if (!scan) return;
+    setStatus('translating'); abort.current = false;
+    const tot = scan.tables.reduce((s, t) => s + t.entries.filter(e => e.english && !e.done).length, 0);
+    let done = 0;
+    log(`🔄 Traduzione ${tot} stringhe con ${model}...`);
+    const langMap: Record<string, string> = { it:'Italian', de:'German', es:'Spanish', fr:'French', pt:'Portuguese', zh:'Chinese', ja:'Japanese', ko:'Korean', ru:'Russian' };
+    const ln = langMap[targetLang] || targetLang;
+
+    for (const t of scan.tables) {
+      if (abort.current) break;
+      for (const e of t.entries) {
+        if (abort.current) break;
+        if (!e.english || e.done || e.english === '...') continue;
+        setProg({ cur: done, tot, tbl: t.name });
+        try {
+          const resp = await fetch('http://localhost:11434/api/generate', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model, prompt: `Translate this RPG game text from English to ${ln}. Keep proper nouns. Maintain tone.\n\nEnglish: ${e.english}\n\n${ln}:`, stream: false, options: { temperature: 0.3, num_predict: 1024 } }),
+          });
+          if (resp.ok) {
+            let r = ((await resp.json()).response || '').trim();
+            r = r.replace(/^(Italian:|Traduzione:|Translation:|German:|French:|Spanish:)\s*/i, '');
+            if (r.startsWith('"') && r.endsWith('"')) r = r.slice(1, -1);
+            e.translated = r; e.done = true; t.doneCount++; done++;
+          }
+        } catch (err) { log(`⚠️ ${e.id}: ${err}`); }
+      }
+      log(`✅ ${t.name}: ${t.doneCount}/${t.entries.length}`);
+      setScan(p => p ? { ...p, done } : null);
+    }
+    setScan(p => p ? { ...p, done } : null);
+    setStatus(abort.current ? 'idle' : 'done');
+    log(abort.current ? '⏹ Interrotto' : `🎉 Completato: ${done}/${tot}`);
+  }, [scan, model, targetLang, log]);
+
+  const doExport = useCallback(async () => {
+    if (!scan) return;
+    const path = await dialogSave({ title: 'Esporta', filters: [{ name: 'JSON', extensions: ['json'] }], defaultPath: `${gameName}_translations.json` });
+    if (!path) return;
+    const data = scan.tables.flatMap(t => t.entries.filter(e => e.done).map(e => ({ table: t.name, id: e.id, english: e.english, translated: e.translated, category: e.category })));
+    await invoke('write_text_file', { path, content: JSON.stringify(data, null, 2) });
+    log(`📁 Esportate ${data.length} → ${path}`);
+  }, [scan, gameName, log]);
+
+  const doImport = useCallback(async () => {
+    if (!scan) return;
+    const path = await dialogOpen({ title: 'Importa', filters: [{ name: 'JSON', extensions: ['json'] }] });
+    if (!path || typeof path !== 'string') return;
+    const content: string = await invoke('read_text_file', { path });
+    const items = JSON.parse(content);
+    let c = 0;
+    for (const i of items) {
+      const t = scan.tables.find(x => x.name === i.table);
+      if (!t) continue;
+      const e = t.entries.find(x => x.id === i.id);
+      if (!e) continue;
+      e.translated = i.translated; e.done = true; t.doneCount++; c++;
+    }
+    setScan(p => p ? { ...p, done: c } : null);
+    log(`📥 Importate ${c}`);
+  }, [scan, log]);
+
+  const pct = prog.tot > 0 ? Math.round((prog.cur / prog.tot) * 100) : 0;
+
+  return (
+    <div className="container mx-auto p-4 space-y-4">
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-orange-700 via-amber-600 to-yellow-600 p-3">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg border border-white/10"><Globe className="h-6 w-6 text-white" /></div>
+            <div>
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Unity CSV Translator</h1>
+              <p className="text-white/70 text-[10px]">Estrai e traduci tabelle SimpleLocalization da giochi Unity</p>
+            </div>
+          </div>
+          <div className="hidden md:flex items-center gap-3">
+            {[{ v: scan?.tables.length || 0, l: 'Tabelle', I: Database }, { v: scan?.total || 0, l: 'Stringhe', I: FileText }, { v: scan?.done || 0, l: 'Tradotte', I: CheckCircle2 }].map((s, i) => (
+              <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10">
+                <s.I className="h-3.5 w-3.5 text-white" /><span className="text-sm font-bold text-white">{s.v}</span><span className="text-[10px] text-white/70">{s.l}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="relative flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/20">
+          <span className="text-[10px] text-white/50 mr-2 self-center">Altri:</span>
+          {[{ h: '/unity-patcher', i: Wand2, l: 'Unity Patcher' }, { h: '/unity-bundle', i: Package, l: 'Unity Bundle' }, { h: '/unreal-translator', i: Cpu, l: 'Unreal' }].map(x => (
+            <Link key={x.h} href={x.h}><Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white"><x.i className="h-3 w-3" />{x.l}</Button></Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 1: Select */}
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-full bg-orange-600 flex items-center justify-center text-white text-sm font-bold">1</div>
+          <h2 className="text-base font-bold text-white">Seleziona Gioco Unity</h2>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Button onClick={browse} variant="outline" className="gap-2"><FolderOpen className="h-4 w-4" />Sfoglia...</Button>
+          <div className="flex-1 px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700 text-sm text-slate-300 truncate">{gamePath || 'Nessuna cartella selezionata'}</div>
+          <Button onClick={doScan} disabled={!gamePath || status === 'scanning'} className="gap-2 bg-orange-600 hover:bg-orange-500">
+            {status === 'scanning' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}Scansiona
+          </Button>
+        </div>
+        {scan && <div className="mt-2 flex gap-4 text-xs text-slate-400">
+          <span><b className="text-slate-300">Gioco:</b> {gameName}</span>
+          <span><b className="text-slate-300">Unity:</b> {scan.unityVer}</span>
+          <span><b className="text-slate-300">Tabelle:</b> {scan.tables.length}</span>
+          <span><b className="text-slate-300">Stringhe:</b> {scan.total}</span>
+        </div>}
+      </div>
+
+      {/* Step 2: Tables */}
+      {scan && scan.tables.length > 0 && (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-full bg-amber-600 flex items-center justify-center text-white text-sm font-bold">2</div>
+            <h2 className="text-base font-bold text-white">Tabelle CSV ({scan.tables.length})</h2>
+            <div className="flex-1" />
+            <Button onClick={doImport} variant="outline" size="sm" className="gap-1 h-7 text-xs"><Upload className="h-3 w-3" />Importa</Button>
+            <Button onClick={doExport} variant="outline" size="sm" className="gap-1 h-7 text-xs" disabled={!scan.done}><Download className="h-3 w-3" />Esporta</Button>
+          </div>
+          <div className="space-y-1.5">
+            {scan.tables.map((t, ti) => {
+              const k = `${t.name}-${ti}`;
+              const isExp = expanded === k;
+              const wt = t.entries.filter(e => e.english).length;
+              return (
+                <div key={k} className="rounded-lg border border-slate-700/60 bg-slate-800/40">
+                  <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-700/30 text-left" onClick={() => setExpanded(isExp ? null : k)}>
+                    {isExp ? <ChevronDown className="h-3.5 w-3.5 text-slate-400" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-400" />}
+                    <Database className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="text-sm font-semibold text-white flex-1">{t.name}</span>
+                    <span className="text-[10px] text-slate-500">{t.source}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">{wt} str</span>
+                    {t.doneCount > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-300">{t.doneCount} ✓</span>}
+                  </button>
+                  {isExp && (
+                    <div className="px-3 pb-3 max-h-[350px] overflow-y-auto">
+                      <table className="w-full text-[11px]">
+                        <thead><tr className="text-slate-500 border-b border-slate-700/50">
+                          <th className="text-left py-1 w-24">ID</th><th className="text-left py-1 w-14">Cat</th>
+                          <th className="text-left py-1">English</th><th className="text-left py-1">Traduzione</th>
+                        </tr></thead>
+                        <tbody>{t.entries.slice(0, 100).map((e, ei) => (
+                          <tr key={ei} className="border-b border-slate-800/50 hover:bg-slate-700/20">
+                            <td className="py-1 text-slate-500 font-mono">{e.id}</td>
+                            <td className="py-1"><span className={`text-[10px] px-1 py-0.5 rounded ${catColor[e.category] || catColor.other}`}>{e.category}</span></td>
+                            <td className="py-1 text-slate-300 max-w-[280px] truncate">{e.english || '—'}</td>
+                            <td className="py-1 text-emerald-300 max-w-[280px] truncate">{e.translated || <span className="text-slate-600">—</span>}</td>
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                      {t.entries.length > 100 && <p className="text-[10px] text-slate-500 mt-2 text-center">100/{t.entries.length}</p>}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Step 3: Translate */}
+      {scan && scan.tables.length > 0 && (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-full bg-yellow-600 flex items-center justify-center text-white text-sm font-bold">3</div>
+            <h2 className="text-base font-bold text-white">Traduci con AI (Ollama)</h2>
+            <div className="flex-1" />
+            <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="sm" className="h-7 gap-1 text-xs text-slate-400"><Settings2 className="h-3 w-3" />Config</Button>
+          </div>
+          {showCfg && (
+            <div className="mb-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700/50 flex gap-4 items-center flex-wrap">
+              <div className="flex gap-2 items-center">
+                <label className="text-xs text-slate-400">Modello:</label>
+                <select value={model} onChange={e => setModel(e.target.value)} className="bg-slate-700 text-white text-xs rounded px-2 py-1 border border-slate-600">
+                  {models.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-2 items-center">
+                <label className="text-xs text-slate-400">Lingua:</label>
+                <select value={targetLang} onChange={e => setTargetLang(e.target.value)} className="bg-slate-700 text-white text-xs rounded px-2 py-1 border border-slate-600">
+                  {['it','de','es','fr','pt','zh','ja','ko','ru'].map(l => <option key={l} value={l}>{l.toUpperCase()}</option>)}
+                </select>
+              </div>
+              <span className="text-[10px] text-slate-500">Ollama: {models.length ? `${models.length} modelli` : '⚠️ non connesso'}</span>
+            </div>
+          )}
+          {status === 'translating' && (
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-400" />
+                <span className="text-xs text-slate-300">{prog.tbl}: {prog.cur}/{prog.tot} ({pct}%)</span>
+              </div>
+              <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-amber-500 to-yellow-400 transition-all" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          )}
+          <div className="flex gap-2">
+            {status !== 'translating' ? (
+              <Button onClick={doTranslate} disabled={!models.length || status === 'scanning'} className="gap-2 bg-amber-600 hover:bg-amber-500">
+                <Globe className="h-4 w-4" />Traduci Tutto
+              </Button>
+            ) : (
+              <Button onClick={() => { abort.current = true; }} variant="destructive" className="gap-2">
+                <StopCircle className="h-4 w-4" />Ferma
+              </Button>
+            )}
+            {status === 'done' && <span className="flex items-center gap-1 text-sm text-emerald-400"><CheckCircle2 className="h-4 w-4" />Traduzione completata!</span>}
+          </div>
+        </div>
+      )}
+
+      {/* Logs */}
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60">
+        <button onClick={() => setShowLogs(!showLogs)} className="w-full flex items-center gap-2 px-4 py-2 hover:bg-slate-800/40 text-left">
+          {showLogs ? <ChevronDown className="h-3.5 w-3.5 text-slate-400" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-400" />}
+          <span className="text-xs font-medium text-slate-400">Log ({logs.length})</span>
+        </button>
+        {showLogs && (
+          <div ref={logRef} className="px-4 pb-3 max-h-[200px] overflow-y-auto font-mono text-[10px] text-slate-500 space-y-0.5">
+            {logs.map((l, i) => <div key={i}>{l}</div>)}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

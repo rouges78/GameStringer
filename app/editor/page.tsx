@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/components/ui/use-toast';
 import { notifications } from '@/lib/notifications';
 import { offlineCache } from '@/lib/offline-cache';
@@ -918,106 +919,110 @@ export default function EditorPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-gradient-to-br from-slate-900 via-blue-900/5 to-slate-900 overflow-hidden">
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl mx-4 mt-4 mb-2 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-4">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-400/20 rounded-full blur-3xl" />
-        <div className="relative flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-black/30 rounded-lg shadow-lg shadow-black/40 border border-white/10">
-              <LayoutPanelLeft className="h-6 w-6 text-white" />
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-transparent overflow-hidden">
+      {/* Hero Header Premium */}
+      <div className="relative overflow-hidden rounded-xl mx-4 mt-4 mb-3 bg-slate-950/60 border border-slate-800/50 p-4 shadow-xl backdrop-blur-md group/header transition-all duration-500 hover:border-indigo-500/30 hover:bg-slate-950/80 shrink-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent opacity-50 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-fuchsia-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        
+        <div className="relative flex items-center justify-between z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-slate-900/80 rounded-xl shadow-inner border border-slate-700/50 group-hover/header:border-indigo-500/40 group-hover/header:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-all duration-300">
+              <LayoutPanelLeft className="h-7 w-7 text-indigo-400 group-hover/header:text-indigo-300 transition-colors" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">{t('editor.title') || 'Visual Editor'}</h1>
-              <p className="text-sm text-white/70">{t('editor.subtitle') || 'Modifica le traduzioni in modo visuale'}</p>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-extrabold text-white tracking-tight drop-shadow-sm">{t('editor.title') || 'Editor Traduzioni'}</h1>
+              <p className="text-slate-400 text-xs font-medium mt-0.5">{t('editor.subtitle') || 'Revisiona e gestisci le tue traduzioni'}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge className="bg-black/30 text-white border-white/20 px-3 py-1">
-              {gameProjects.length} {t('editor.projects')}
+          <div className="flex items-center gap-3">
+            <Badge className="bg-slate-900/60 text-slate-300 border-slate-700/50 px-3 py-1.5 shadow-sm rounded-lg text-xs font-medium tracking-wide">
+              <span className="text-indigo-400 font-bold mr-1.5">{gameProjects.length}</span>{t('editor.projects') || 'progetti'}
             </Badge>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button className="p-1.5 rounded-lg bg-black/20 hover:bg-black/40 transition-colors border border-white/10">
-                    <HelpCircle className="h-4 w-4 text-white/70" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-xs p-3 bg-slate-900 border-slate-700">
-                  <p className="font-semibold text-sm mb-1">{t('editor.helpTitle')}</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {t('editor.helpDescription')}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 transition-colors border border-slate-700/50 text-slate-400 hover:text-indigo-300 shadow-sm">
+                  <HelpCircle className="h-4 w-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="end" className="max-w-xs p-4 bg-slate-900/95 backdrop-blur-xl border-slate-700/50 shadow-2xl rounded-xl">
+                <p className="font-semibold text-sm mb-1.5 text-indigo-300">{t('editor.helpTitle') || 'A cosa serve l\'Editor?'}</p>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {t('editor.helpDescription') || 'Questa è la tua area di lavoro manuale. Qui finiscono tutti i file estratti e tradotti in automatico dal Neural Translator. Puoi revisionare i testi, correggere errori o creare nuovi progetti da zero esportandoli per la Community.'}
+                </p>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden mx-4 mb-4 rounded-xl border border-slate-800/50 shadow-2xl bg-slate-950/40 backdrop-blur-sm">
       {/* --- SIDEBAR: LIST & FILTERS --- */}
-      <div className="w-80 border-r border-border/40 bg-slate-900/50 flex flex-col">
+      <div className="w-[320px] border-r border-slate-800/50 bg-slate-900/40 flex flex-col z-10 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+        
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-border/40 space-y-3">
+        <div className="p-4 border-b border-slate-800/50 space-y-3 relative z-10">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold flex items-center gap-2 text-sm">
-              <FileText className="h-4 w-4 text-blue-400" />
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Explorer</span>
+            <h2 className="font-bold flex items-center gap-2 text-sm tracking-wide text-slate-200">
+              <div className="p-1 rounded bg-indigo-500/20 border border-indigo-500/30">
+                <FileText className="h-3.5 w-3.5 text-indigo-400" />
+              </div>
+              Explorer
             </h2>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowImportDialog(true)}>
-                      <Upload className="h-4 w-4" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10" onClick={() => setShowImportDialog(true)}>
+                      <Upload className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Importa file</TooltipContent>
+                  <TooltipContent className="bg-slate-800 border-slate-700 text-xs">Importa file</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Select onValueChange={(format) => exportTranslations(format as any)}>
-                      <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent">
-                        <Download className="h-4 w-4" />
+                      <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg flex items-center justify-center [&>svg]:hidden">
+                        <Download className="h-3.5 w-3.5" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="json">JSON</SelectItem>
-                        <SelectItem value="csv">CSV</SelectItem>
-                        <SelectItem value="po">PO (gettext)</SelectItem>
+                      <SelectContent className="bg-slate-900 border-slate-700">
+                        <SelectItem value="json">Esporta come JSON</SelectItem>
+                        <SelectItem value="csv">Esporta come CSV</SelectItem>
+                        <SelectItem value="po">Esporta come PO</SelectItem>
                       </SelectContent>
                     </Select>
                   </TooltipTrigger>
-                  <TooltipContent>Esporta</TooltipContent>
+                  <TooltipContent className="bg-slate-800 border-slate-700 text-xs">Esporta progetto</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
             <Input 
-              placeholder="Cerca..." 
+              placeholder="Cerca stringa o gioco..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-8 pl-8 text-xs bg-slate-800/50 border-slate-700"
+              className="h-8 pl-9 pr-8 text-xs bg-slate-950/60 border-slate-700/50 focus-visible:ring-indigo-500/30 rounded-lg shadow-inner text-slate-200 placeholder:text-slate-500"
             />
             {searchTerm && (
-              <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6" onClick={() => setSearchTerm('')}>
-                <X className="h-3 w-3" />
+              <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 hover:bg-slate-800 rounded-md" onClick={() => setSearchTerm('')}>
+                <X className="h-3 w-3 text-slate-400" />
               </Button>
             )}
           </div>
 
           <div className="flex gap-2">
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="h-7 text-xs flex-1 bg-slate-800/50 border-slate-700">
+              <SelectTrigger className="h-8 text-xs flex-1 bg-slate-950/60 border-slate-700/50 rounded-lg text-slate-300">
                 <SelectValue placeholder="Stato" />
               </SelectTrigger>
-              <SelectContent className="z-50">
+              <SelectContent className="bg-slate-900 border-slate-700 z-50">
                 <SelectItem value="all">Tutti gli stati</SelectItem>
                 <SelectItem value="pending">In attesa</SelectItem>
                 <SelectItem value="completed">Completati</SelectItem>
@@ -1025,11 +1030,11 @@ export default function EditorPage() {
               </SelectContent>
             </Select>
             <Select value={filterGame} onValueChange={setFilterGame}>
-              <SelectTrigger className="h-7 text-xs flex-1 bg-slate-800/50 border-slate-700">
-                <SelectValue placeholder="game" />
+              <SelectTrigger className="h-8 text-xs flex-1 bg-slate-950/60 border-slate-700/50 rounded-lg text-slate-300">
+                <SelectValue placeholder="Gioco" />
               </SelectTrigger>
-              <SelectContent className="z-50">
-                <SelectItem value="all">Tutti i games</SelectItem>
+              <SelectContent className="bg-slate-900 border-slate-700 z-50">
+                <SelectItem value="all">Tutti i giochi</SelectItem>
                 {games.map(g => (
                   <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
                 ))}
@@ -1037,31 +1042,36 @@ export default function EditorPage() {
             </Select>
           </div>
           
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
+          <div className="flex items-center justify-between text-[9px] font-semibold uppercase tracking-widest text-slate-500 px-1 pt-1">
             <span>{filteredTranslations.length} elementi</span>
-            <div className="flex gap-2">
-              <span className="text-green-400">{stats.completed} ✓</span>
-              <span className="text-yellow-400">{stats.pending} ⏳</span>
+            <div className="flex items-center gap-2">
+              <span className="text-emerald-400 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> {stats.completed}</span>
+              <span className="text-amber-400 flex items-center gap-1"><AlertCircle className="w-3 h-3"/> {stats.pending}</span>
             </div>
           </div>
         </div>
 
-        {/* Explorer List - Gerarchia games → File → Stringhe */}
-        <ScrollArea className="flex-1">
+        {/* Explorer List */}
+        <ScrollArea className="flex-1 relative z-10 custom-scrollbar">
           {isLoading ? (
-            <div className="flex justify-center p-8">
-              <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+            <div className="flex flex-col items-center justify-center p-12 text-slate-500">
+              <div className="p-3 bg-slate-800/50 rounded-full border border-slate-700/50 mb-3 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
+                <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
+              </div>
+              <span className="text-xs font-medium tracking-wide">Caricamento progetti...</span>
             </div>
           ) : explorerView === 'games' ? (
             // Vista games
             gameProjects.length === 0 ? (
-              <div className="text-center p-8 text-muted-foreground text-sm">
-                <Languages className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                <p>Nessun progetto</p>
-                <p className="text-xs mt-1 opacity-70">Traduci un game con Neural Translator</p>
+              <div className="flex flex-col items-center justify-center text-center p-10 h-full text-slate-500">
+                <div className="w-16 h-16 rounded-full bg-slate-800/30 flex items-center justify-center mb-4 border border-slate-800">
+                  <Languages className="h-8 w-8 opacity-40 text-slate-400" />
+                </div>
+                <p className="font-semibold text-slate-300">Nessun progetto</p>
+                <p className="text-[11px] mt-1.5 opacity-70 max-w-[200px] leading-relaxed">Traduci un gioco con Neural Translator per iniziare a popolarlo qui.</p>
               </div>
             ) : (
-              <div className="flex flex-col">
+              <div className="flex flex-col p-2 gap-1">
                 {gameProjects.map((project, index) => (
                   <motion.div
                     key={project.game.id}
@@ -1069,24 +1079,24 @@ export default function EditorPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.02 }}
                     onClick={() => { setSelectedProject(project); setExplorerView('files'); }}
-                    className="flex items-center gap-3 p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-all cursor-pointer group"
+                    className="flex items-center gap-3 p-2.5 rounded-lg border border-transparent hover:border-indigo-500/30 hover:bg-slate-800/50 transition-all cursor-pointer group"
                   >
-                    <div className="w-10 h-10 rounded bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
-                      <Languages className="h-5 w-5 text-blue-400" />
+                    <div className="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 shadow-inner flex items-center justify-center group-hover:border-indigo-500/50 group-hover:shadow-[0_0_10px_rgba(99,102,241,0.2)] transition-all">
+                      <Languages className="h-4 w-4 text-indigo-400/80 group-hover:text-indigo-400 transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate group-hover:text-blue-400 transition-colors">
+                      <p className="font-bold text-sm truncate text-slate-200 group-hover:text-indigo-300 transition-colors">
                         {project.game.title}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-[10px] text-slate-500 font-medium">
                         {project.files.length} file • {project.totalStrings} stringhe
                       </p>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-green-500/10 text-green-400 border-green-500/30">
+                    <div className="flex flex-col items-end gap-1.5 pr-1">
+                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
                         {Math.round((project.completedStrings / Math.max(project.totalStrings, 1)) * 100)}%
                       </Badge>
-                      <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-600 group-hover:text-indigo-400 transition-colors group-hover:translate-x-0.5" />
                     </div>
                   </motion.div>
                 ))}
@@ -1096,157 +1106,175 @@ export default function EditorPage() {
             // Vista File del game selezionato
             <div className="flex flex-col">
               {/* Header con back button */}
-              <div className="flex items-center gap-2 p-3 border-b border-slate-700 bg-slate-800/50 sticky top-0 z-10">
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setExplorerView('games'); setSelectedProject(null); }}>
-                  <ChevronRight className="h-4 w-4 rotate-180" />
+              <div className="flex items-center gap-2 p-2 border-b border-slate-800/50 bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 shadow-sm">
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800" onClick={() => { setExplorerView('games'); setSelectedProject(null); }}>
+                  <ChevronRight className="h-4 w-4 rotate-180 text-slate-400" />
                 </Button>
-                <span className="font-medium text-sm truncate">{selectedProject.game.title}</span>
+                <span className="font-bold text-xs text-slate-300 truncate tracking-wide">{selectedProject.game.title}</span>
               </div>
-              {selectedProject.files.length === 0 ? (
-                <div className="text-center p-8 text-muted-foreground text-sm">
-                  <FileText className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                  <p>Nessun file</p>
-                </div>
-              ) : (
-                selectedProject.files.map((file, index) => (
-                  <motion.div
-                    key={file.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.02 }}
-                    onClick={() => { setSelectedFile(file); setExplorerView('strings'); }}
-                    className={cn(
-                      "flex items-center gap-3 p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-all cursor-pointer group",
-                      selectedFile?.id === file.id && "bg-blue-500/10 border-l-2 border-l-blue-500"
-                    )}
-                  >
-                    <div className="p-2 rounded bg-blue-500/10">
-                      <FileText className="h-4 w-4 text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate group-hover:text-blue-400 transition-colors">
-                        {file.filename}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {file.stringCount} stringhe • {file.targetLanguage.toUpperCase()}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-green-500/10 text-green-400 border-green-500/30">
-                      {Math.round((file.completedCount / Math.max(file.stringCount, 1)) * 100)}%
-                    </Badge>
-                  </motion.div>
-                ))
-              )}
+              <div className="p-2 gap-1 flex flex-col">
+                {selectedProject.files.length === 0 ? (
+                  <div className="text-center p-8 text-slate-500 text-sm">
+                    <FileText className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                    <p>Nessun file</p>
+                  </div>
+                ) : (
+                  selectedProject.files.map((file, index) => (
+                    <motion.div
+                      key={file.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                      onClick={() => { setSelectedFile(file); setExplorerView('strings'); }}
+                      className={cn(
+                        "flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer group",
+                        selectedFile?.id === file.id 
+                          ? "bg-indigo-500/10 border-indigo-500/40 shadow-[0_0_10px_rgba(99,102,241,0.1)]" 
+                          : "border-transparent hover:border-slate-700/50 hover:bg-slate-800/40"
+                      )}
+                    >
+                      <div className={cn(
+                        "p-2 rounded-md", 
+                        selectedFile?.id === file.id ? "bg-indigo-500/20" : "bg-slate-800 group-hover:bg-slate-700"
+                      )}>
+                        <FileText className={cn(
+                          "h-4 w-4",
+                          selectedFile?.id === file.id ? "text-indigo-400" : "text-slate-400 group-hover:text-slate-300"
+                        )} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={cn(
+                          "font-semibold text-xs truncate transition-colors",
+                          selectedFile?.id === file.id ? "text-indigo-300" : "text-slate-300 group-hover:text-white"
+                        )}>
+                          {file.filename}
+                        </p>
+                        <p className="text-[10px] text-slate-500 font-medium">
+                          {file.stringCount} stringhe • <span className="uppercase text-slate-400">{file.targetLanguage}</span>
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-emerald-500/5 text-emerald-400/80 border-emerald-500/20 font-mono">
+                        {Math.round((file.completedCount / Math.max(file.stringCount, 1)) * 100)}%
+                      </Badge>
+                    </motion.div>
+                  ))
+                )}
+              </div>
             </div>
           ) : (
             // Vista Stringhe (fallback alla lista originale)
             <div className="flex flex-col">
               {/* Header con back button */}
-              <div className="flex items-center gap-2 p-3 border-b border-slate-700 bg-slate-800/50 sticky top-0 z-10">
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setExplorerView('files'); setSelectedFile(null); }}>
-                  <ChevronRight className="h-4 w-4 rotate-180" />
+              <div className="flex items-center gap-2 p-2 border-b border-slate-800/50 bg-slate-900/80 backdrop-blur-md sticky top-0 z-10 shadow-sm">
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800" onClick={() => { setExplorerView('files'); setSelectedFile(null); }}>
+                  <ChevronRight className="h-4 w-4 rotate-180 text-slate-400" />
                 </Button>
-                <span className="font-medium text-sm truncate">{selectedFile?.filename || 'Stringhe'}</span>
+                <span className="font-bold text-xs text-slate-300 truncate tracking-wide">{selectedFile?.filename || 'Stringhe'}</span>
               </div>
-              {filteredTranslations.length === 0 ? (
-                <div className="text-center p-8 text-muted-foreground text-sm">
-                  <Languages className="h-10 w-10 mx-auto mb-3 opacity-20" />
-                  <p>Nessuna stringa</p>
-                </div>
-              ) : (
-                filteredTranslations.map((t, index) => (
-                  <motion.div
-                    key={t.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.02 }}
-                    onClick={() => setSelectedTranslation(t)}
-                    className={cn(
-                      "flex flex-col items-start p-3 border-b border-slate-800/50 hover:bg-slate-800/30 transition-all text-left group relative cursor-pointer",
-                      selectedTranslation?.id === t.id && "bg-blue-500/10 border-l-2 border-l-blue-500"
-                    )}
-                  >
-                    <p className={cn(
-                      "text-sm line-clamp-1 w-full",
-                      selectedTranslation?.id === t.id ? "text-white" : "text-slate-300"
-                    )}>
-                      {t.originalText}
-                    </p>
-                    <p className="text-xs text-slate-500 line-clamp-1 mt-0.5 w-full">
-                      {t.translatedText || <span className="italic opacity-50">— non tradotto —</span>}
-                    </p>
-                    <Badge variant="outline" className={cn("text-[9px] h-4 px-1.5 gap-0.5 mt-1", getStatusColor(t.status))}>
-                      {getStatusIcon(t.status)}
-                      <span className="ml-0.5">{t.status}</span>
-                    </Badge>
-                  </motion.div>
-                ))
-              )}
+              
+              <div className="flex flex-col p-1.5">
+                {filteredTranslations.length === 0 ? (
+                  <div className="text-center p-8 text-slate-500 text-sm">
+                    <Languages className="h-8 w-8 mx-auto mb-3 opacity-30" />
+                    <p>Nessuna stringa</p>
+                  </div>
+                ) : (
+                  filteredTranslations.map((t, index) => (
+                    <motion.div
+                      key={t.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                      onClick={() => setSelectedTranslation(t)}
+                      className={cn(
+                        "flex flex-col items-start p-2.5 rounded-lg border transition-all text-left group relative cursor-pointer mb-1",
+                        selectedTranslation?.id === t.id 
+                          ? "bg-indigo-500/10 border-indigo-500/40 shadow-sm" 
+                          : "border-transparent hover:bg-slate-800/40 hover:border-slate-700/50"
+                      )}
+                    >
+                      <p className={cn(
+                        "text-[13px] font-medium line-clamp-1 w-full",
+                        selectedTranslation?.id === t.id ? "text-indigo-100" : "text-slate-300"
+                      )}>
+                        {t.originalText}
+                      </p>
+                      <p className="text-[11px] text-slate-500 line-clamp-1 mt-1 w-full">
+                        {t.translatedText || <span className="italic opacity-50">— non tradotto —</span>}
+                      </p>
+                      <Badge variant="outline" className={cn("text-[8px] uppercase tracking-wider font-bold h-4 px-1.5 gap-1 mt-2", getStatusColor(t.status))}>
+                        {getStatusIcon(t.status)}
+                        <span>{t.status}</span>
+                      </Badge>
+                    </motion.div>
+                  ))
+                )}
+              </div>
             </div>
           )}
         </ScrollArea>
       </div>
 
       {/* --- MAIN AREA: EDITOR --- */}
-      <div className="flex-1 flex flex-col bg-slate-950/50 relative overflow-hidden">
+      <div className="flex-1 flex flex-col bg-slate-950/20 relative overflow-hidden">
         {selectedTranslation ? (
           <>
             {/* Toolbar */}
-            <div className="h-auto min-h-12 border-b border-slate-800 flex flex-col gap-2 px-4 py-2 bg-slate-900/30">
+            <div className="h-auto min-h-12 border-b border-slate-800/60 flex flex-col gap-2 px-4 py-2.5 bg-slate-900/60 backdrop-blur-md z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="p-1.5 rounded-md bg-blue-500/20">
-                    <Languages className="h-4 w-4 text-blue-400" />
+                  <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 shadow-inner">
+                    <Languages className="h-4 w-4 text-indigo-400" />
                   </div>
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                      <span className="truncate max-w-[150px]">{selectedTranslation.game.title}</span>
-                      <ChevronRight className="h-3 w-3" />
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+                      <span className="truncate max-w-[150px] hover:text-white transition-colors cursor-default">{selectedTranslation.game.title}</span>
+                      <ChevronRight className="h-3 w-3 text-slate-600" />
                       <span className="truncate max-w-[150px] text-slate-500">{selectedTranslation.filePath.split('/').pop()}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mt-0.5">
                       {isMultiLangFile && (
-                        <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-green-500/30 text-green-400">
-                          Multi-lingua
+                        <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-emerald-500/30 text-emerald-400 uppercase tracking-widest font-bold">
+                          Multi-Lang
                         </Badge>
                       )}
                       {selectedTranslation.confidence > 0 && (
-                        <span className="text-[10px] text-green-400">{Math.round(selectedTranslation.confidence * 100)}%</span>
+                        <span className="text-[10px] font-mono text-emerald-500/80">CONF:{Math.round(selectedTranslation.confidence * 100)}%</span>
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={generateSuggestions} disabled={isGeneratingSuggestions}>
-                    {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-blue-400" />}
-                    AI
+                  <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold text-slate-300 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors" onClick={generateSuggestions} disabled={isGeneratingSuggestions}>
+                    {isGeneratingSuggestions ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5 text-indigo-400" />}
+                    Traduci AI
                   </Button>
                   <Button
-                    variant="ghost" size="sm" className="h-8 text-xs"
+                    variant="ghost" size="sm" className={cn("h-8 text-xs font-semibold rounded-lg transition-colors", glossaryTerms.length > 0 ? "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20" : "text-slate-300 hover:text-amber-300 hover:bg-amber-500/10")}
                     onClick={() => setShowGlossaryPanel(!showGlossaryPanel)}
                   >
-                    <BookOpen className={cn("h-3.5 w-3.5 mr-1.5", glossaryTerms.length > 0 ? "text-amber-400" : "text-slate-400")} />
+                    <BookOpen className="h-3.5 w-3.5 mr-1.5" />
                     {glossaryTerms.length > 0 ? `Glossario (${glossaryTerms.length})` : 'Glossario'}
                   </Button>
-                  <Separator orientation="vertical" className="h-5 bg-slate-700" />
+                  <Separator orientation="vertical" className="h-5 bg-slate-700/50 mx-1" />
                   {/* Cross-navigation */}
                   <Link href={`/batch?game=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-blue-400">
+                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 rounded-lg">
                       <FolderTree className="h-3.5 w-3.5 mr-1" />
                       Batch
                     </Button>
                   </Link>
                   <Link href={`/glossary?gameId=${selectedTranslation.gameId || ''}`}>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-amber-400">
+                    <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg hidden sm:flex">
                       <BookOpen className="h-3.5 w-3.5 mr-1" />
-                      Glossario
+                      Memoria
                     </Button>
                   </Link>
-                  <Separator orientation="vertical" className="h-5 bg-slate-700" />
+                  <Separator orientation="vertical" className="h-5 bg-slate-700/50 mx-1" />
                   <Button 
                     size="sm" 
-                    className={cn("h-8 text-xs", hasUnsavedChanges ? "bg-blue-600 hover:bg-blue-700" : "bg-slate-700")}
+                    className={cn("h-8 text-xs font-bold rounded-lg shadow-sm transition-all", hasUnsavedChanges ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/20" : "bg-slate-800 text-slate-400 hover:bg-slate-700")}
                     onClick={handleManualSave} 
                     disabled={!hasUnsavedChanges || isSaving}
                   >
@@ -1254,7 +1282,7 @@ export default function EditorPage() {
                     Salva
                   </Button>
                   <Link href={`/community-hub?action=publish&gameId=${selectedTranslation.gameId || ''}&gameName=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs text-purple-400 hover:text-purple-300 hover:bg-purple-500/10">
+                    <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-500/10 rounded-lg border border-fuchsia-500/20 hidden lg:flex">
                       <Globe className="h-3.5 w-3.5 mr-1" />
                       Condividi
                     </Button>
@@ -1264,154 +1292,192 @@ export default function EditorPage() {
               
               {/* Language Selector for multi-language files */}
               {isMultiLangFile && detectedLanguages.length > 0 && (
-                <div className="flex items-center gap-4 pt-1 border-t border-slate-800/50">
+                <div className="flex items-center gap-4 pt-2 mt-1 border-t border-slate-800/50">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-slate-500 uppercase">Traduci da:</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sorgente:</span>
                     <Select value={String(sourceLanguageIndex)} onValueChange={(v) => setSourceLanguageIndex(Number(v))}>
-                      <SelectTrigger className="h-7 w-[130px] text-xs bg-slate-800/50 border-slate-700">
+                      <SelectTrigger className="h-7 w-[140px] text-xs bg-slate-950/50 border-slate-700/50 rounded-md font-medium text-slate-300">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-slate-900 border-slate-700">
                         {detectedLanguages.map((lang, idx) => (
                           <SelectItem key={idx} value={String(idx)}>{lang}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <ArrowLeftRight className="h-3 w-3 text-slate-600" />
+                  <ArrowLeftRight className="h-3.5 w-3.5 text-slate-600" />
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-blue-400 uppercase font-bold">→ Italiano</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Destinazione:</span>
+                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Italiano</span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Split Editor */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex overflow-hidden bg-slate-950/20">
               {/* Strings List Panel (when parsed lines exist) */}
               {selectedTranslation.parsedLines && selectedTranslation.parsedLines.length > 0 ? (
-                <div className="w-[320px] flex flex-col border-r border-slate-800 bg-slate-900/30">
-                  <div className="px-3 py-2 bg-slate-900/50 border-b border-slate-800">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        Progresso
+                <div className="w-[340px] flex flex-col border-r border-slate-800/50 bg-slate-900/40 relative z-10 shadow-[5px_0_15px_-5px_rgba(0,0,0,0.3)]">
+                  <div className="px-4 py-3 bg-slate-900/60 border-b border-slate-800/50 backdrop-blur-md sticky top-0 z-20">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        Progresso File
                       </span>
-                      <span className="text-[10px] text-slate-400">
+                      <Badge variant="outline" className="text-[9px] h-4 bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
                         {Math.round((selectedTranslation.parsedLines.filter(l => l.translatedText).length / selectedTranslation.parsedLines.length) * 100)}%
-                      </span>
+                      </Badge>
                     </div>
-                    <div className="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
                       <div 
-                        className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-300"
+                        className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 transition-all duration-500 relative"
                         style={{ 
                           width: `${(selectedTranslation.parsedLines.filter(l => l.translatedText).length / selectedTranslation.parsedLines.length) * 100}%` 
                         }}
-                      />
+                      >
+                        <div className="absolute inset-0 bg-white/20 w-full h-full animate-[shimmer_2s_infinite]" />
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-green-400 text-xs font-medium">
-                        {selectedTranslation.parsedLines.filter(l => l.translatedText).length} tradotte
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-emerald-400 text-[10px] font-semibold flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        {selectedTranslation.parsedLines.filter(l => l.translatedText).length} fatte
                       </span>
-                      <span className="text-slate-500 text-xs">
-                        {selectedTranslation.parsedLines.length - selectedTranslation.parsedLines.filter(l => l.translatedText).length} rimanenti
+                      <span className="text-amber-400/80 text-[10px] font-semibold flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {selectedTranslation.parsedLines.length - selectedTranslation.parsedLines.filter(l => l.translatedText).length} da fare
                       </span>
                     </div>
                   </div>
-                  <ScrollArea className="flex-1">
-                    <div className="p-1">
-                      {selectedTranslation.parsedLines.map((line, idx) => (
-                        <button
-                          key={line.lineNumber}
-                          onClick={() => setSelectedLine(line)}
-                          className={cn(
-                            "w-full text-left p-2 rounded-md mb-0.5 transition-all border-l-2",
-                            "hover:bg-slate-800/50",
-                            selectedLine?.lineNumber === line.lineNumber 
-                              ? "bg-blue-500/20 border-l-blue-500" 
-                              : line.translatedText 
-                                ? "border-l-green-500/50 bg-green-500/5" 
-                                : "border-l-transparent"
-                          )}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={cn(
-                              "text-[9px] font-mono",
-                              line.translatedText ? "text-green-500" : "text-slate-600"
-                            )}>
-                              {line.translatedText ? "✓" : "○"} #{line.lineNumber}
-                            </span>
-                            {line.key && (
-                              <span className="text-[9px] text-blue-400 truncate max-w-[100px]">{line.key}</span>
+                  <ScrollArea className="flex-1 custom-scrollbar">
+                    <div className="p-2 space-y-1">
+                      {selectedTranslation.parsedLines.map((line, idx) => {
+                        const isSelected = selectedLine?.lineNumber === line.lineNumber;
+                        const isTranslated = !!line.translatedText;
+                        return (
+                          <button
+                            key={line.lineNumber}
+                            onClick={() => setSelectedLine(line)}
+                            className={cn(
+                              "w-full text-left p-2.5 rounded-xl transition-all relative overflow-hidden group border",
+                              isSelected 
+                                ? "bg-indigo-500/15 border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.15)]" 
+                                : isTranslated 
+                                  ? "bg-slate-800/30 border-transparent hover:bg-slate-800/60 hover:border-slate-700/50" 
+                                  : "bg-slate-900/40 border-transparent hover:bg-slate-800/60 hover:border-slate-700/50"
                             )}
-                          </div>
-                          <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
-                            {line.originalText}
-                          </p>
-                          {line.translatedText && (
-                            <p className="text-[10px] text-green-400/70 line-clamp-1 mt-1 italic">
-                              {line.translatedText}
-                            </p>
-                          )}
-                        </button>
-                      ))}
+                          >
+                            {/* Linea laterale indicatore status */}
+                            <div className={cn(
+                              "absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-all duration-300",
+                              isSelected ? "bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" : 
+                              isTranslated ? "bg-emerald-500/50" : "bg-transparent group-hover:bg-slate-700"
+                            )} />
+                            
+                            <div className="flex justify-between items-start mb-1.5 pl-2">
+                              <span className={cn(
+                                "text-[9px] font-bold tracking-wider uppercase flex items-center gap-1",
+                                isTranslated ? "text-emerald-400" : "text-amber-500/70"
+                              )}>
+                                {isTranslated ? <CheckCircle className="h-2.5 w-2.5" /> : <AlertCircle className="h-2.5 w-2.5" />}
+                                #{line.lineNumber}
+                              </span>
+                              {line.key && (
+                                <span className="text-[8px] font-mono text-slate-500 truncate max-w-[120px] bg-slate-950/50 px-1.5 py-0.5 rounded border border-slate-800/50">
+                                  {line.key}
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="pl-2 pr-1 space-y-1.5">
+                              <p className={cn(
+                                "text-xs line-clamp-2 leading-relaxed font-medium transition-colors",
+                                isSelected ? "text-indigo-100" : "text-slate-300"
+                              )}>
+                                {line.originalText}
+                              </p>
+                              {isTranslated && (
+                                <p className="text-[11px] text-emerald-300/80 line-clamp-1 italic bg-emerald-500/5 p-1 rounded border border-emerald-500/10">
+                                  {line.translatedText}
+                                </p>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </ScrollArea>
                 </div>
               ) : (
                 /* Original Panel (fallback for non-parsed content) */
-                <div className="flex-1 flex flex-col border-r border-slate-800 min-w-[300px]">
-                  <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Originale</span>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                <div className="flex-1 flex flex-col border-r border-slate-800/50 min-w-[300px] bg-slate-900/20">
+                  <div className="px-4 py-3 bg-slate-900/60 border-b border-slate-800/50 flex justify-between items-center backdrop-blur-md">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                      <FileText className="h-3.5 w-3.5" /> Testo Originale
+                    </span>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
                       navigator.clipboard.writeText(selectedTranslation.originalText);
                       toast({ title: 'Copiato negli appunti' });
                     }}>
-                      <Copy className="h-3 w-3 text-slate-500" />
+                      <Copy className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                  <ScrollArea className="flex-1 p-6">
-                    <p className="text-base leading-relaxed text-slate-300 whitespace-pre-wrap">
-                      {selectedTranslation.originalText}
-                    </p>
+                  <ScrollArea className="flex-1 p-6 custom-scrollbar">
+                    <div className="bg-slate-950/50 border border-slate-800/50 rounded-xl p-4 shadow-inner">
+                      <p className="text-[13px] leading-relaxed text-slate-300 whitespace-pre-wrap font-medium">
+                        {selectedTranslation.originalText}
+                      </p>
+                    </div>
                   </ScrollArea>
                 </div>
               )}
 
               {/* Selected String Editor */}
               {selectedTranslation.parsedLines && selectedTranslation.parsedLines.length > 0 && selectedLine ? (
-                <div className="flex-1 flex flex-col min-w-[400px]">
+                <div className="flex-1 flex flex-col min-w-[400px] relative z-0">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
+                  
                   {/* Original text of selected line */}
-                  <div className="border-b border-slate-800">
-                    <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Originale</span>
-                        <span className="text-[9px] text-slate-600">Riga {selectedLine.lineNumber}</span>
+                  <div className="border-b border-slate-800/50 bg-slate-900/20">
+                    <div className="px-4 py-3 bg-slate-900/60 border-b border-slate-800/50 flex justify-between items-center backdrop-blur-md">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5" /> Sorgente
+                        </span>
+                        <Badge variant="outline" className="text-[9px] h-4 bg-slate-800/50 text-slate-400 border-slate-700/50">Riga {selectedLine.lineNumber}</Badge>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
                         navigator.clipboard.writeText(selectedLine.originalText);
                         toast({ title: 'Copiato negli appunti' });
                       }}>
-                        <Copy className="h-3 w-3 text-slate-500" />
+                        <Copy className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                    <div className="p-4 max-h-[200px] overflow-y-auto no-scrollbar">
-                      <p className="text-sm leading-relaxed text-slate-300 whitespace-pre-wrap">
-                        {selectedLine.originalText}
-                      </p>
+                    <div className="p-5 max-h-[250px] overflow-y-auto custom-scrollbar">
+                      <div className="bg-slate-950/40 border border-slate-800/50 rounded-xl p-4 shadow-inner relative group/orig">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-slate-700/50 rounded-l-xl group-hover/orig:bg-indigo-500/50 transition-colors" />
+                        <p className="text-[14px] leading-relaxed text-slate-200 whitespace-pre-wrap font-medium pl-2">
+                          {selectedLine.originalText}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   
                   {/* Translation input */}
-                  <div className="flex-1 flex flex-col">
-                    <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Traduzione</span>
+                  <div className="flex-1 flex flex-col bg-slate-950/40">
+                    <div className="px-4 py-3 bg-indigo-950/30 border-b border-indigo-500/20 flex justify-between items-center backdrop-blur-md">
+                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Edit3 className="h-3.5 w-3.5" /> Traduzione
+                      </span>
                       {selectedLine.translatedText && (
-                        <Badge variant="outline" className="text-[9px] h-4 border-green-500/30 text-green-400">
-                          Tradotto
+                        <Badge variant="outline" className="text-[9px] h-4 bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-wider">
+                          <CheckCircle className="h-2.5 w-2.5 mr-1" /> Completato
                         </Badge>
                       )}
                     </div>
-                    <div className="flex-1 p-4">
+                    <div className="flex-1 p-5 relative">
+                      <div className="absolute inset-5 bg-indigo-500/5 rounded-xl blur-xl pointer-events-none" />
                       <Textarea
                         value={selectedLine.translatedText}
                         onChange={(e) => {
@@ -1426,19 +1492,22 @@ export default function EditorPage() {
                           }
                           setHasUnsavedChanges(true);
                         }}
-                        className="w-full h-full min-h-[150px] resize-none border-slate-700 bg-slate-800/30 text-sm leading-relaxed focus-visible:ring-blue-500/50 placeholder:text-slate-600"
+                        className="relative w-full h-full min-h-[150px] resize-none border-indigo-500/20 bg-slate-900/60 text-[14px] font-medium leading-relaxed focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500/50 placeholder:text-slate-600 rounded-xl shadow-inner p-4 transition-all hover:bg-slate-900/80 custom-scrollbar"
                         placeholder="Inserisci la traduzione per questa stringa..."
                         spellCheck={false}
                       />
                     </div>
                     {/* Glossary Hints Panel */}
                     {showGlossaryPanel && glossaryTerms.length > 0 && (
-                      <div className="border-t border-amber-500/20 bg-amber-950/20 px-4 py-2 max-h-[140px] overflow-y-auto">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <BookOpen className="h-3 w-3 text-amber-400" />
-                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Termini glossario trovati</span>
+                      <div className="border-t border-amber-500/20 bg-gradient-to-b from-amber-950/40 to-slate-950/80 px-5 py-3 max-h-[160px] overflow-y-auto custom-scrollbar">
+                        <div className="flex items-center gap-2 mb-2.5">
+                          <div className="p-1 rounded bg-amber-500/20 border border-amber-500/30">
+                            <BookOpen className="h-3 w-3 text-amber-400" />
+                          </div>
+                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Memoria di Traduzione</span>
+                          <span className="text-[9px] text-amber-500/60 ml-auto">{glossaryTerms.length} termini trovati</span>
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-wrap gap-2">
                           {glossaryTerms.map(term => (
                             <button
                               key={term.id}
@@ -1446,13 +1515,13 @@ export default function EditorPage() {
                                 navigator.clipboard.writeText(term.targetTerm);
                                 toast({ title: `Copiato: ${term.targetTerm}` });
                               }}
-                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all text-[11px] group"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all text-xs group shadow-sm"
                               title={`${term.sourceTerm} → ${term.targetTerm}${term.context ? ` (${term.context})` : ''}`}
                             >
-                              <span className="text-amber-300/70">{term.sourceTerm}</span>
-                              <span className="text-slate-500">→</span>
-                              <span className="text-amber-200 font-medium">{term.targetTerm}</span>
-                              {term.tier === 'locked' && <span className="text-red-400 text-[9px]">🔒</span>}
+                              <span className="text-amber-200/60 font-medium group-hover:text-amber-200 transition-colors">{term.sourceTerm}</span>
+                              <ChevronRight className="h-3 w-3 text-amber-500/40" />
+                              <span className="text-amber-300 font-bold group-hover:text-amber-100 transition-colors">{term.targetTerm}</span>
+                              {term.tier === 'locked' && <span className="text-red-400 text-[10px] ml-0.5" title="Termine bloccato (priorità alta)">🔒</span>}
                             </button>
                           ))}
                         </div>
@@ -1461,37 +1530,49 @@ export default function EditorPage() {
                   </div>
                 </div>
               ) : selectedTranslation.parsedLines && selectedTranslation.parsedLines.length > 0 ? (
-                <div className="flex-1 flex items-center justify-center text-slate-500">
-                  <p className="text-sm">Seleziona una stringa dalla lista</p>
+                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 bg-slate-950/20 relative">
+                  <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5 pointer-events-none" />
+                  <div className="p-4 rounded-2xl bg-slate-900/30 border border-slate-800/50 mb-4 shadow-inner">
+                    <LayoutPanelLeft className="h-10 w-10 text-slate-600 opacity-50" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-400 tracking-wide">Seleziona una stringa dalla lista</p>
+                  <p className="text-xs text-slate-600 mt-1">per iniziare a modificare la traduzione</p>
                 </div>
               ) : (
                 /* Original full editor for non-parsed content */
-                <div className="flex-1 flex flex-col min-w-[300px] bg-slate-900/20">
-                  <div className="px-4 py-2 bg-slate-900/50 border-b border-slate-800 flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Traduzione</span>
+                <div className="flex-1 flex flex-col min-w-[300px] bg-slate-950/20 relative z-0">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
+                  <div className="px-4 py-3 bg-indigo-950/30 border-b border-indigo-500/20 flex justify-between items-center backdrop-blur-md">
+                    <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <Edit3 className="h-3.5 w-3.5" /> Area di Traduzione
+                    </span>
                     {hasUnsavedChanges && (
-                      <Badge variant="outline" className="text-[9px] h-4 border-yellow-500/30 text-yellow-400 animate-pulse">
-                        Non salvato
+                      <Badge variant="outline" className="text-[9px] h-4 bg-amber-500/10 border-amber-500/30 text-amber-400 font-bold uppercase tracking-wider animate-pulse">
+                        <AlertCircle className="h-2.5 w-2.5 mr-1" /> Modificato
                       </Badge>
                     )}
                   </div>
-                  <div className="flex-1 p-4">
+                  <div className="flex-1 p-5 relative">
+                    <div className="absolute inset-5 bg-indigo-500/5 rounded-xl blur-xl pointer-events-none" />
                     <Textarea
                       value={selectedTranslation.translatedText}
                       onChange={(e) => handleTranslationChange(e.target.value)}
-                      className="w-full h-full min-h-[200px] resize-none border-slate-700 bg-slate-800/30 text-base leading-relaxed focus-visible:ring-blue-500/50 placeholder:text-slate-600"
+                      className="relative w-full h-full min-h-[200px] resize-none border-indigo-500/20 bg-slate-900/60 text-[14px] font-medium leading-relaxed focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500/50 placeholder:text-slate-600 rounded-xl shadow-inner p-4 transition-all hover:bg-slate-900/80 custom-scrollbar"
                       placeholder="Inserisci la traduzione..."
                       spellCheck={false}
                     />
                   </div>
                   {/* Glossary Hints Panel (full editor mode) */}
                   {showGlossaryPanel && glossaryTerms.length > 0 && (
-                    <div className="border-t border-amber-500/20 bg-amber-950/20 px-4 py-2 max-h-[140px] overflow-y-auto">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <BookOpen className="h-3 w-3 text-amber-400" />
-                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Termini glossario trovati</span>
+                    <div className="border-t border-amber-500/20 bg-gradient-to-b from-amber-950/40 to-slate-950/80 px-5 py-3 max-h-[160px] overflow-y-auto custom-scrollbar">
+                      <div className="flex items-center gap-2 mb-2.5">
+                        <div className="p-1 rounded bg-amber-500/20 border border-amber-500/30">
+                          <BookOpen className="h-3 w-3 text-amber-400" />
+                        </div>
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Memoria di Traduzione</span>
+                        <span className="text-[9px] text-amber-500/60 ml-auto">{glossaryTerms.length} termini trovati</span>
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-2">
                         {glossaryTerms.map(term => (
                           <button
                             key={term.id}
@@ -1499,13 +1580,13 @@ export default function EditorPage() {
                               navigator.clipboard.writeText(term.targetTerm);
                               toast({ title: `Copiato: ${term.targetTerm}` });
                             }}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all text-[11px]"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 hover:border-amber-500/40 transition-all text-xs group shadow-sm"
                             title={`${term.sourceTerm} → ${term.targetTerm}${term.context ? ` (${term.context})` : ''}`}
                           >
-                            <span className="text-amber-300/70">{term.sourceTerm}</span>
-                            <span className="text-slate-500">→</span>
-                            <span className="text-amber-200 font-medium">{term.targetTerm}</span>
-                            {term.tier === 'locked' && <span className="text-red-400 text-[9px]">🔒</span>}
+                            <span className="text-amber-200/60 font-medium group-hover:text-amber-200 transition-colors">{term.sourceTerm}</span>
+                            <ChevronRight className="h-3 w-3 text-amber-500/40" />
+                            <span className="text-amber-300 font-bold group-hover:text-amber-100 transition-colors">{term.targetTerm}</span>
+                            {term.tier === 'locked' && <span className="text-red-400 text-[10px] ml-0.5" title="Termine bloccato">🔒</span>}
                           </button>
                         ))}
                       </div>
