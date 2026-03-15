@@ -251,10 +251,12 @@ export default function UnityCsvTranslatorPage() {
     if (!scan) return;
     const path = await dialogSave({ title: 'Esporta', filters: [{ name: 'JSON', extensions: ['json'] }], defaultPath: `${gameName}_translations.json` });
     if (!path) return;
-    const data = scan.tables.flatMap(t => t.entries.filter(e => e.done).map(e => ({ table: t.name, id: e.id, english: e.english, translated: e.translated, category: e.category })));
-    await invoke('write_text_file', { path, content: JSON.stringify(data, null, 2) });
-    log(`📁 Esportate ${data.length} → ${path}`);
-  }, [scan, gameName, log]);
+    const csvData = scan.tables.flatMap(t => t.entries.filter(e => e.done).map(e => ({ type: 'csv', table: t.name, id: e.id, english: e.english, translated: e.translated, category: e.category })));
+    const inkData = inkStrings.filter(s => s.done).map(s => ({ type: 'ink', english: s.text, translated: s.translated, source_file: s.source_file }));
+    const all = [...csvData, ...inkData];
+    await invoke('write_text_file', { path, content: JSON.stringify(all, null, 2) });
+    log(`📁 Esportate ${csvData.length} CSV + ${inkData.length} Ink → ${path}`);
+  }, [scan, gameName, log, inkStrings]);
 
   const doImport = useCallback(async () => {
     if (!scan) return;
@@ -262,17 +264,23 @@ export default function UnityCsvTranslatorPage() {
     if (!path || typeof path !== 'string') return;
     const content: string = await invoke('read_text_file', { path });
     const items = JSON.parse(content);
-    let c = 0;
+    let csvCount = 0, inkCount = 0;
     for (const i of items) {
-      const t = scan.tables.find(x => x.name === i.table);
-      if (!t) continue;
-      const e = t.entries.find(x => x.id === i.id);
-      if (!e) continue;
-      e.translated = i.translated; e.done = true; t.doneCount++; c++;
+      if (i.type === 'ink' || (!i.type && !i.table)) {
+        const s = inkStrings.find(x => x.text === i.english);
+        if (s && i.translated) { s.translated = i.translated; s.done = true; inkCount++; }
+      } else {
+        const t = scan.tables.find(x => x.name === i.table);
+        if (!t) continue;
+        const e = t.entries.find(x => x.id === i.id);
+        if (!e) continue;
+        e.translated = i.translated; e.done = true; t.doneCount++; csvCount++;
+      }
     }
-    setScan(p => p ? { ...p, done: c } : null);
-    log(`📥 Importate ${c}`);
-  }, [scan, log]);
+    setScan(p => p ? { ...p, done: csvCount } : null);
+    if (inkCount > 0) setInkStrings([...inkStrings]);
+    log(`📥 Importate ${csvCount} CSV + ${inkCount} Ink`);
+  }, [scan, log, inkStrings]);
 
   const pct = prog.tot > 0 ? Math.round((prog.cur / prog.tot) * 100) : 0;
 
@@ -451,7 +459,7 @@ export default function UnityCsvTranslatorPage() {
           <div className="flex gap-2">
             {status !== 'translating' ? (
               <Button onClick={doTranslate} disabled={!models.length || status === 'scanning'} className="gap-2 bg-amber-600 hover:bg-amber-500">
-                <Globe className="h-4 w-4" />Traduci Tutto
+                <Globe className="h-4 w-4" />Traduci Tutto ({((scan?.total || 0) - (scan?.done || 0)) + inkStrings.filter(s => !s.done && s.text.length >= 3).length})
               </Button>
             ) : (
               <Button onClick={() => { abort.current = true; }} variant="destructive" className="gap-2">
