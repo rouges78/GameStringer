@@ -6,7 +6,7 @@ import { open as dialogOpen, save as dialogSave } from '@tauri-apps/plugin-dialo
 import {
   FileText, FolderOpen, Search, Loader2, CheckCircle2,
   Database, Globe, ChevronDown, ChevronRight, Download, Upload,
-  Settings2, StopCircle, Wand2, Package, Cpu
+  Settings2, StopCircle, Wand2, Package, Cpu, Zap, RotateCcw, AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -15,6 +15,16 @@ interface CsvEntry { id: string; english: string; translated: string; category: 
 interface CsvTable { name: string; offset: number; source: string; header: string[]; entries: CsvEntry[]; doneCount: number; }
 interface ScanRes { gamePath: string; gameName: string; unityVer: string; tables: CsvTable[]; total: number; done: number; }
 type Status = 'idle' | 'scanning' | 'translating' | 'done' | 'error';
+
+interface InjectResult {
+  success: boolean;
+  ink_replaced: number;
+  ink_files: number;
+  level_replaced: number;
+  level_files: number;
+  errors: string[];
+  output: string;
+}
 
 const catColor: Record<string, string> = {
   ui: 'bg-blue-900/50 text-blue-300', dialogue: 'bg-purple-900/50 text-purple-300',
@@ -48,12 +58,66 @@ export default function UnityCsvTranslatorPage() {
   const [showCfg, setShowCfg] = useState(false);
   const abort = useRef(false);
   const logRef = useRef<HTMLDivElement>(null);
+  const [injecting, setInjecting] = useState(false);
+  const [injectResult, setInjectResult] = useState<InjectResult | null>(null);
+  const [inkCsvPath, setInkCsvPath] = useState('');
+  const [csvExportDir, setCsvExportDir] = useState('');
+  // Ink state
+  const [inkStrings, setInkStrings] = useState<{ text: string; source_file: string; translated: string; done: boolean }[]>([]);
+  const [inkScanned, setInkScanned] = useState(false);
+  const [inkFilesCount, setInkFilesCount] = useState(0);
+  const [showInk, setShowInk] = useState(false);
 
   const log = useCallback((m: string) => {
     setLogs(p => [...p.slice(-300), `[${new Date().toLocaleTimeString()}] ${m}`]);
   }, []);
 
   useEffect(() => { logRef.current?.scrollTo(0, logRef.current.scrollHeight); }, [logs]);
+
+  // Auto-load game path from sessionStorage or URL params
+  const autoStartDone = useRef(false);
+  const pendingScan = useRef(false);
+  useEffect(() => {
+    if (autoStartDone.current) return;
+    let path = '';
+    let name = '';
+
+    // 1. unityCsvGamePath (set by auto-translate redirect)
+    const csvPath = sessionStorage.getItem('unityCsvGamePath');
+    if (csvPath) {
+      path = csvPath;
+      sessionStorage.removeItem('unityCsvGamePath');
+    }
+
+    // 2. wizardAutoGame (set by library/wizard)
+    if (!path) {
+      const wizardJson = sessionStorage.getItem('wizardAutoGame');
+      if (wizardJson) {
+        try {
+          const w = JSON.parse(wizardJson);
+          if (w.install_path) {
+            path = w.install_path;
+            name = w.title || '';
+          }
+        } catch {}
+      }
+    }
+
+    // 3. URL search params (?gamePath=...)
+    if (!path) {
+      const params = new URLSearchParams(window.location.search);
+      path = params.get('gamePath') || params.get('installPath') || '';
+      name = params.get('gameName') || params.get('name') || '';
+    }
+
+    if (path) {
+      autoStartDone.current = true;
+      pendingScan.current = true;
+      setGamePath(path);
+      setGameName(name || path.replace(/\\/g, '/').split('/').pop() || 'Unknown');
+      log(`📁 Auto-caricato: ${path}`);
+    }
+  }, []); // eslint-disable-line
 
   useEffect(() => {
     fetch('http://localhost:11434/api/tags').then(r => r.json()).then((d: { models?: { name: string }[] }) => {
@@ -86,10 +150,35 @@ export default function UnityCsvTranslatorPage() {
       }));
       const total = tables.reduce((s, t) => s + t.entries.filter(e => e.english).length, 0);
       setScan({ gamePath, gameName, unityVer: r.unity_version || '?', tables, total, done: 0 });
+      log(`✅ ${tables.length} tabelle, ${total} stringhe CSV`);
+
+      // Also scan for Ink strings
+      try {
+        const dataDir = gamePath.replace(/\\/g, '/').includes('_Data') ? gamePath : `${gamePath}/${gameName}_Data`;
+        log('🔍 Scansione Ink blobs...');
+        const ink = await invoke('scan_unity_ink_strings', { gameDir: dataDir }) as { strings: { text: string; source_file: string }[]; total: number; files_with_ink: number };
+        if (ink.total > 0) {
+          setInkStrings(ink.strings.map(s => ({ ...s, translated: '', done: false })));
+          setInkFilesCount(ink.files_with_ink);
+          setInkScanned(true);
+          log(`✅ ${ink.total} stringhe Ink in ${ink.files_with_ink} file`);
+        } else {
+          setInkScanned(true);
+          log('ℹ️ Nessun blob Ink trovato');
+        }
+      } catch (e) { log(`⚠️ Scan Ink: ${e}`); setInkScanned(true); }
+
       setStatus('idle');
-      log(`✅ ${tables.length} tabelle, ${total} stringhe`);
     } catch (e) { log(`❌ ${e}`); setStatus('error'); }
   }, [gamePath, gameName, log]);
+
+  // Auto-scan after doScan is ready (triggered by sessionStorage auto-load)
+  useEffect(() => {
+    if (pendingScan.current && gamePath && status === 'idle') {
+      pendingScan.current = false;
+      doScan();
+    }
+  }, [gamePath, doScan, status]);
 
   const doTranslate = useCallback(async () => {
     if (!scan) return;
@@ -123,9 +212,40 @@ export default function UnityCsvTranslatorPage() {
       setScan(p => p ? { ...p, done } : null);
     }
     setScan(p => p ? { ...p, done } : null);
+    
+    // Phase 2: Translate Ink strings
+    const inkTodo = inkStrings.filter(s => !s.done && s.text.length >= 3);
+    if (inkTodo.length > 0 && !abort.current) {
+      log(`🔄 Traduzione ${inkTodo.length} stringhe Ink...`);
+      let inkDone = 0;
+      for (const s of inkTodo) {
+        if (abort.current) break;
+        setProg({ cur: inkDone, tot: inkTodo.length, tbl: 'Ink' });
+        try {
+          const resp = await fetch('http://localhost:11434/api/generate', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model, prompt: `Translate this game dialogue from English to ${ln}. Keep proper nouns and tone.\n\nEnglish: ${s.text}\n\n${ln}:`, stream: false, options: { temperature: 0.3, num_predict: 1024 } }),
+          });
+          if (resp.ok) {
+            let r = ((await resp.json()).response || '').trim();
+            r = r.replace(/^(Italian:|Traduzione:|Translation:|German:|French:|Spanish:)\s*/i, '');
+            if (r.startsWith('"') && r.endsWith('"')) r = r.slice(1, -1);
+            s.translated = r; s.done = true; inkDone++;
+          }
+        } catch (err) { log(`⚠️ Ink: ${err}`); }
+        if (inkDone % 100 === 0 && inkDone > 0) {
+          log(`  Ink: ${inkDone}/${inkTodo.length}`);
+          setInkStrings([...inkStrings]);
+        }
+      }
+      setInkStrings([...inkStrings]);
+      log(`✅ Ink: ${inkDone}/${inkTodo.length}`);
+    }
+
     setStatus(abort.current ? 'idle' : 'done');
-    log(abort.current ? '⏹ Interrotto' : `🎉 Completato: ${done}/${tot}`);
-  }, [scan, model, targetLang, log]);
+    const totalAll = done + inkStrings.filter(s => s.done).length;
+    log(abort.current ? '⏹ Interrotto' : `🎉 Completato: ${totalAll} totali (${done} CSV + ${inkStrings.filter(s => s.done).length} Ink)`);
+  }, [scan, model, targetLang, log, inkStrings]);
 
   const doExport = useCallback(async () => {
     if (!scan) return;
@@ -170,7 +290,7 @@ export default function UnityCsvTranslatorPage() {
             </div>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            {[{ v: scan?.tables.length || 0, l: 'Tabelle', I: Database }, { v: scan?.total || 0, l: 'Stringhe', I: FileText }, { v: scan?.done || 0, l: 'Tradotte', I: CheckCircle2 }].map((s, i) => (
+            {[{ v: scan?.tables.length || 0, l: 'Tabelle', I: Database }, { v: (scan?.total || 0) + inkStrings.length, l: 'Stringhe', I: FileText }, { v: (scan?.done || 0) + inkStrings.filter(s => s.done).length, l: 'Tradotte', I: CheckCircle2 }].map((s, i) => (
               <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 border border-white/10">
                 <s.I className="h-3.5 w-3.5 text-white" /><span className="text-sm font-bold text-white">{s.v}</span><span className="text-[10px] text-white/70">{s.l}</span>
               </div>
@@ -257,6 +377,40 @@ export default function UnityCsvTranslatorPage() {
         </div>
       )}
 
+      {/* Step 2b: Ink Strings */}
+      {inkScanned && inkStrings.length > 0 && (
+        <div className="rounded-xl border border-purple-800/40 bg-purple-900/10 p-4">
+          <button className="w-full flex items-center gap-2" onClick={() => setShowInk(!showInk)}>
+            {showInk ? <ChevronDown className="h-3.5 w-3.5 text-purple-400" /> : <ChevronRight className="h-3.5 w-3.5 text-purple-400" />}
+            <div className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center text-white text-sm font-bold">✦</div>
+            <h2 className="text-base font-bold text-white">Ink Dialogues ({inkStrings.length.toLocaleString()})</h2>
+            <span className="text-[10px] text-purple-400">{inkFilesCount} file</span>
+            <div className="flex-1" />
+            {inkStrings.filter(s => s.done).length > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-300">{inkStrings.filter(s => s.done).length.toLocaleString()} ✓</span>}
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300">{inkStrings.length.toLocaleString()} str</span>
+          </button>
+          {showInk && (
+            <div className="mt-3 max-h-[400px] overflow-y-auto">
+              <table className="w-full text-[11px]">
+                <thead><tr className="text-slate-500 border-b border-slate-700/50">
+                  <th className="text-left py-1 w-28">File</th>
+                  <th className="text-left py-1">English</th>
+                  <th className="text-left py-1">Traduzione</th>
+                </tr></thead>
+                <tbody>{inkStrings.slice(0, 200).map((s, i) => (
+                  <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-700/20">
+                    <td className="py-1 text-purple-400/60 font-mono text-[9px]">{s.source_file.replace('sharedassets', 'sa')}</td>
+                    <td className="py-1 text-slate-300 max-w-[300px] truncate">{s.text}</td>
+                    <td className="py-1 text-emerald-300 max-w-[300px] truncate">{s.translated || <span className="text-slate-600">—</span>}</td>
+                  </tr>
+                ))}</tbody>
+              </table>
+              {inkStrings.length > 200 && <p className="text-[10px] text-slate-500 mt-2 text-center">Mostrate 200/{inkStrings.length.toLocaleString()}</p>}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Step 3: Translate */}
       {scan && scan.tables.length > 0 && (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
@@ -306,6 +460,98 @@ export default function UnityCsvTranslatorPage() {
             )}
             {status === 'done' && <span className="flex items-center gap-1 text-sm text-emerald-400"><CheckCircle2 className="h-4 w-4" />Traduzione completata!</span>}
           </div>
+        </div>
+      )}
+
+      {/* Step 4: Inject — Fully Automatic */}
+      {scan && (scan.done > 0 || inkStrings.some(s => s.done)) && (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">4</div>
+            <h2 className="text-base font-bold text-white">Inietta nel Gioco</h2>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-300 border border-emerald-700/30">Resize Injection</span>
+          </div>
+          <div className="mb-3 p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
+            <div className="flex items-center gap-4 text-xs text-slate-300">
+              <span><b className="text-white">{scan.done}</b> CSV pronte</span>
+              {inkStrings.filter(s => s.done).length > 0 && <span><b className="text-purple-300">{inkStrings.filter(s => s.done).length.toLocaleString()}</b> Ink pronte</span>}
+              <span><b className="text-emerald-300">{scan.done + inkStrings.filter(s => s.done).length}</b> totali</span>
+              <span className="text-slate-500">I file originali vengono salvati come .backup</span>
+            </div>
+          </div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <Button
+              onClick={async () => {
+                setInjecting(true); setInjectResult(null);
+                const translated = scan.tables.flatMap(t =>
+                  t.entries.filter(e => e.done && e.translated).map(e => ({
+                    id: e.id, english: e.english, translated: e.translated, table: t.name,
+                  }))
+                );
+                const inkDone = inkStrings.filter(s => s.done && s.translated).map(s => ({ english: s.text, translated: s.translated }));
+                log(`🚀 Injection automatica: ${translated.length} CSV + ${inkDone.length} Ink...`);
+                try {
+                  const dataDir = scan.gamePath.replace(/\\/g, '/').includes('_Data')
+                    ? scan.gamePath
+                    : `${scan.gamePath}/${gameName}_Data`;
+                  const r = await invoke('inject_unity_assets', {
+                    gameDir: dataDir,
+                    translations: translated,
+                    csvDir: csvExportDir || null,
+                    inkCsv: inkCsvPath || null,
+                    inkTranslations: inkDone.length > 0 ? inkDone : null,
+                    mode: 'all',
+                  }) as InjectResult;
+                  setInjectResult(r);
+                  const total = (r.ink_replaced || 0) + (r.level_replaced || 0);
+                  log(r.success ? `✅ Completato: ${total} iniettate (Ink: ${r.ink_replaced}, Level: ${r.level_replaced})` : `❌ ${r.errors?.join(', ')}`);
+                } catch (e) { log(`❌ ${e}`); setInjectResult({ success: false, ink_replaced: 0, ink_files: 0, level_replaced: 0, level_files: 0, errors: [String(e)], output: '' }); }
+                setInjecting(false);
+              }}
+              disabled={injecting}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-500"
+            >
+              {injecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+              {injecting ? 'Injection in corso...' : `Inietta ${scan.done} Traduzioni`}
+            </Button>
+            <Button
+              onClick={async () => {
+                log('🔄 Ripristino backup...');
+                try {
+                  const dataDir = scan.gamePath.replace(/\\/g, '/').includes('_Data')
+                    ? scan.gamePath
+                    : `${scan.gamePath}/${gameName}_Data`;
+                  const r = await invoke('restore_unity_assets', { gameDir: dataDir }) as string;
+                  log(`✅ ${r}`);
+                } catch (e) { log(`❌ ${e}`); }
+              }}
+              variant="outline" size="sm" className="gap-1 h-8 text-xs"
+            >
+              <RotateCcw className="h-3 w-3" />Ripristina Backup
+            </Button>
+            {!inkCsvPath && (
+              <Button onClick={async () => { const p = await dialogOpen({ title: 'CSV traduzioni Ink (opzionale)', filters: [{ name: 'CSV', extensions: ['csv'] }] }); if (p && typeof p === 'string') { setInkCsvPath(p); log(`📁 Ink CSV: ${p}`); } }} variant="ghost" size="sm" className="gap-1 h-8 text-xs text-slate-500 hover:text-slate-300">
+                <Upload className="h-3 w-3" />+ Ink CSV
+              </Button>
+            )}
+            {inkCsvPath && <span className="text-[10px] text-emerald-400">+ Ink: {inkCsvPath.split(/[\\/]/).pop()}</span>}
+          </div>
+          {injectResult && (
+            <div className={`mt-3 p-3 rounded-lg border ${injectResult.success ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-red-700/50 bg-red-900/20'}`}>
+              {injectResult.success ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-emerald-300"><CheckCircle2 className="h-4 w-4" />Injection completata!</div>
+                  <div className="flex gap-4 text-xs text-slate-400">
+                    {injectResult.ink_replaced > 0 && <span><b className="text-emerald-300">{injectResult.ink_replaced}</b> Ink ({injectResult.ink_files} file)</span>}
+                    {injectResult.level_replaced > 0 && <span><b className="text-emerald-300">{injectResult.level_replaced}</b> Level ({injectResult.level_files} file)</span>}
+                    <span><b className="text-white">{(injectResult.ink_replaced || 0) + (injectResult.level_replaced || 0)}</b> totali</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-red-300"><AlertTriangle className="h-4 w-4" />{injectResult.errors?.[0] || 'Errore sconosciuto'}</div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

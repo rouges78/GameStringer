@@ -183,7 +183,7 @@ export default function TranslationWizardPage() {
   useEffect(() => {
     if (step === 'results' && autoTranslateRef.current && analysisResult && strategy) {
       autoTranslateRef.current = false;
-      if (strategy.id === 'ocr' || strategy.id === 'telltale' || strategy.id === 'community-patch') {
+      if (strategy.id === 'ocr' || strategy.id === 'telltale' || strategy.id === 'community-patch' || !strategy.canDoInline) {
         console.log(`[Wizard] Auto-translate: strategia ${strategy.id} → mostro risultati (serve azione utente)`);
         return;
       }
@@ -841,7 +841,7 @@ export default function TranslationWizardPage() {
           if (file.type === 'json') newContent = applyJsonTranslations(content, translated);
           else if (file.type === 'csv') newContent = applyCsvTranslations(content, translated, targetLanguage);
           else newContent = applyGenericTranslations(content, translated);
-          try { await invoke('copy_file', { src: file.path, dest: file.path + '.bak' }); } catch {}
+          try { await invoke('save_file_with_backup', { filePath: file.path, content: content, createBackup: true }); } catch {}
           await invoke('write_text_file', { path: file.path, content: newContent });
           log(`  ✅ ${translated.size} stringhe tradotte e salvate`);
         } catch (e) { log(`  ❌ Errore salvataggio: ${e}`); }
@@ -2250,7 +2250,7 @@ export default function TranslationWizardPage() {
                     </SelectContent>
                   </Select>
                   
-                  {strategy?.id !== 'telltale' && strategy?.id !== 'ocr' && strategy?.id !== 'community-patch' && (
+                  {strategy?.id !== 'telltale' && strategy?.id !== 'ocr' && strategy?.id !== 'community-patch' && strategy?.canDoInline !== false && (
                     <Button 
                       onClick={() => startTranslation()}
                       className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"

@@ -11,6 +11,7 @@ import { findCommunityTranslation } from './community-translations';
 export type StrategyId = 
   | 'text-files'       // CSV, JSON, XML, PO, TXT — traduzione diretta file
   | 'unity-xunity'     // Unity — BepInEx + XUnity Autotranslator
+  | 'unity-csv'        // Unity — CSV Translator + Resize Injection
   | 'unity-assets'     // Unity — estrazione asset bundle
   | 'unreal-locres'    // Unreal Engine — file .locres
   | 'rpgmaker-json'    // RPG Maker MV/MZ — JSON data
@@ -126,6 +127,27 @@ const STRATEGIES: Record<StrategyId, TranslationStrategy> = {
     estimatedMinutes: 15,
     filePatterns: ['UnityPlayer.dll', '*_Data/', 'globalgamemanagers', 'Assembly-CSharp.dll'],
     dedicatedTool: { route: '/unity-patcher', name: 'Unity Patcher' },
+  },
+
+  'unity-csv': {
+    id: 'unity-csv',
+    name: 'Unity CSV Translator',
+    description: 'Scansiona le tabelle CSV SimpleLocalization e i dialoghi Ink nei file Unity, traduce con AI, e inietta con Resize Injection. Zero troncamento.',
+    icon: 'Globe',
+    color: 'orange',
+    difficulty: 'easy',
+    canDoInline: false,
+    redirectTo: '/unity-csv-translator',
+    steps: [
+      'Scansiona i file Unity per tabelle CSV e blob Ink',
+      'Traduce le stringhe con AI (Ollama locale)',
+      'Inietta le traduzioni con Resize Injection (nessun troncamento)',
+      'Crea backup automatici (.backup)',
+    ],
+    requirements: ['Python 3.x', 'Ollama (per traduzione AI locale)'],
+    estimatedMinutes: 10,
+    filePatterns: ['resources.assets', 'sharedassets*.assets', 'level*', 'globalgamemanagers'],
+    dedicatedTool: { route: '/unity-csv-translator', name: 'Unity CSV Translator' },
   },
 
   'unity-assets': {
@@ -478,15 +500,25 @@ export function detectStrategy(
     return STRATEGIES['unreal-locres'];
   }
 
-  // Unity — controlla se ci sono file di testo accessibili
-  if (engine === 'Unity') {
-    const hasTextFiles = files.some(f => 
-      ['csv', 'json', 'xml', 'txt', 'po'].includes(f.type) && f.size > 1000
-    );
-    if (hasTextFiles) {
+  // Unity — usa il nostro Unity CSV Translator (con Resize Injection)
+  if (engine === 'Unity' || engine?.includes('Unity')) {
+    // Se Rust raccomanda live_unity o non ha localizzazione standard, usa il nostro tool
+    if (rustRecommendation?.primary_method === 'live_unity' || rustRecommendation?.primary_method === 'unity_csv') {
+      return STRATEGIES['unity-csv'];
+    }
+    // Se ci sono file di testo VERI (non engine metadata), usa text-files
+    const hasRealTextFiles = files.some(f => {
+      const n = f.name.toLowerCase();
+      // Escludi file Unity di engine/metadata che contengono nomi DLL
+      if (n.includes('scriptingassemblies') || n.includes('runtimeinitialize') || 
+          n.includes('boot.config') || n.includes('globalgamemanagers')) return false;
+      return ['csv', 'json', 'xml', 'po'].includes(f.type) && f.size > 1000;
+    });
+    if (hasRealTextFiles) {
       return STRATEGIES['text-files'];
     }
-    return STRATEGIES['unity-xunity'];
+    // Default per Unity: il nostro tool CSV + Resize Injection
+    return STRATEGIES['unity-csv'];
   }
 
   // File di testo trovati (qualsiasi engine)
@@ -522,9 +554,14 @@ export function getAlternativeStrategies(
     alternatives.push(STRATEGIES['binary-patch']);
   }
 
-  // Se il primario è Unity XUnity, suggerisci anche asset extraction
+  // Se il primario è Unity XUnity, suggerisci anche asset extraction e CSV
   if (primary === 'unity-xunity') {
+    alternatives.push(STRATEGIES['unity-csv']);
     alternatives.push(STRATEGIES['unity-assets']);
+  }
+  // Se il primario è Unity CSV, suggerisci XUnity come alternativa
+  if (primary === 'unity-csv') {
+    alternatives.push(STRATEGIES['unity-xunity']);
   }
 
   // Se ci sono file di testo ma il primario non è text-files

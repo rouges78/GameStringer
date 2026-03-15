@@ -408,6 +408,25 @@ export default function AutoTranslatePage() {
     setFiles([])
 
     try {
+      // Step 0: Unity detection — redirect to Unity CSV Translator
+      let isUnityGame = false
+      try {
+        isUnityGame = await invoke<boolean>('check_path_exists', { path: `${installPath}\\UnityPlayer.dll` })
+      } catch {}
+      if (!isUnityGame) {
+        try {
+          isUnityGame = installPath.includes('_Data') || 
+            await invoke<boolean>('check_path_exists', { path: `${installPath}\\globalgamemanagers` })
+        } catch {}
+      }
+      if (isUnityGame) {
+        console.log('[AutoTranslate] Unity game detected → redirecting to Unity CSV Translator')
+        setIsLoadingGame(false)
+        setGameError(null)
+        setUnityDetected(true)
+        return
+      }
+
       // Step 1: scan_translatable_files (walkdir ricorsivo con estensioni note)
       console.log('[AutoTranslate] Scanning:', installPath)
       let locFiles: string[] = []
@@ -580,6 +599,15 @@ export default function AutoTranslatePage() {
       /[/\\]python-packages[/\\]/i,
       /[/\\]dist-info[/\\]/i,
       /[/\\]renpy[/\\]/i,
+      // Unity engine metadata — NOT translatable game text
+      /RuntimeInitializeOnLoads\.json$/i,
+      /ScriptingAssemblies\.json$/i,
+      /UnitySubsystems.*\.json$/i,
+      /boot\.config$/i,
+      /globalgamemanagers$/i,
+      /[/\\]Managed[/\\]/i,
+      /[/\\]Mono[/\\]/i,
+      /[/\\]Resources[/\\]unity_builtin/i,
     ]
     const binaryExts = /\.(ogg|mp3|wav|flac|aac|wma|png|jpg|jpeg|gif|bmp|webp|svg|tga|dds|ico|mp4|avi|mkv|webm|mov|exe|dll|so|dylib|pdb|zip|rar|7z|gz|tar|ttf|otf|woff|woff2|rpyc|pyc|pyo)$/i
     // Ren'Py: .rpy in images/, audio/, screens/, displayables/, tl/ contengono definizioni risorse/UI o traduzioni esistenti
@@ -1494,7 +1522,7 @@ export default function AutoTranslatePage() {
           <div className="flex items-center gap-3">
             {gameInfo?.gameId && (
               <button
-                onClick={() => window.location.href = `/games/?id=${gameInfo.gameId}&name=${encodeURIComponent(gameInfo.gameName || '')}&platform=${encodeURIComponent(gameInfo.platform || '')}&headerImage=${encodeURIComponent(gameInfo.gameImage || '')}`}
+                onClick={() => window.location.href = `/library/?id=${gameInfo.gameId}&name=${encodeURIComponent(gameInfo.gameName || '')}&platform=${encodeURIComponent(gameInfo.platform || '')}&headerImage=${encodeURIComponent(gameInfo.gameImage || '')}`}
                 className="p-2 rounded-lg bg-black/30 border border-white/10 hover:bg-white/10 transition-colors"
                 title="Torna alla pagina del gioco"
               >
@@ -1677,17 +1705,34 @@ export default function AutoTranslatePage() {
 
             {/* Unity rilevato → Auto-install BepInEx + XUnity AutoTranslator */}
             {unityDetected && (
-              <Card className="border-blue-500/30 bg-blue-500/5">
+              <Card className="border-orange-500/30 bg-orange-500/5">
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-blue-400" />
+                    <Zap className="h-4 w-4 text-orange-400" />
                     Unity game detected
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Texts in this game are inside compiled assets. To translate it, you need to install <strong> BepInEx + XUnity AutoTranslator</strong>, which automatically extract all text strings.
+                    I testi di questo gioco sono dentro gli asset binari Unity. Usa il <strong>Unity CSV Translator</strong> per scansionare, tradurre e iniettare le traduzioni con Resize Injection (zero troncamento).
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-4 pb-4 space-y-3">
+                  {/* Primary: Unity CSV Translator */}
+                  <Button 
+                    onClick={() => {
+                      if (gameInfo?.installPath) {
+                        sessionStorage.setItem('unityCsvGamePath', gameInfo.installPath)
+                      }
+                      window.location.href = '/unity-csv-translator'
+                    }} 
+                    size="sm" className="h-9 bg-orange-600 hover:bg-orange-500 gap-2"
+                  >
+                    <Globe className="h-4 w-4" />
+                    Apri Unity CSV Translator
+                  </Button>
+
+                  {/* Secondary: BepInEx option */}
+                  <div className="pt-2 border-t border-white/5">
+                    <p className="text-[10px] text-muted-foreground mb-2">Alternativa: installa BepInEx + XUnity per traduzione live</p>
                   {/* Steps log */}
                   {bepinexSteps.length > 0 && (
                     <ScrollArea className="h-[160px] rounded border border-white/5 bg-black/20 p-2">
@@ -1715,23 +1760,23 @@ export default function AutoTranslatePage() {
                     </div>
                   )}
 
-                  {/* Azioni */}
+                  {/* Azioni BepInEx */}
                   <div className="flex items-center gap-2">
                     {bepinexStatus === 'idle' && (
-                      <Button onClick={installBepInEx} size="sm" className="h-8 bg-blue-600 hover:bg-blue-700">
-                        <Download className="h-3.5 w-3.5 mr-1.5" />
-                        Install BepInEx + XUnity AutoTranslator
+                      <Button onClick={installBepInEx} variant="outline" size="sm" className="h-7 text-xs">
+                        <Download className="h-3 w-3 mr-1" />
+                        Install BepInEx + XUnity
                       </Button>
                     )}
                     {bepinexStatus === 'installing' && (
-                      <Button disabled size="sm" className="h-8">
-                        <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      <Button disabled size="sm" className="h-7 text-xs">
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
                         Installing...
                       </Button>
                     )}
                     {(bepinexStatus === 'installed' || bepinexStatus === 'error') && (
-                      <Button onClick={rescanAfterBepInEx} variant="outline" size="sm" className="h-8">
-                        <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                      <Button onClick={rescanAfterBepInEx} variant="outline" size="sm" className="h-7 text-xs">
+                        <RefreshCw className="h-3 w-3 mr-1" />
                         Re-Scan files
                       </Button>
                     )}
@@ -1751,6 +1796,7 @@ export default function AutoTranslatePage() {
                       <a href="https://github.com/bbepis/XUnity.AutoTranslator" target="_blank" rel="noopener" className="text-blue-400/70 hover:text-blue-400 underline">XUnity.AutoTranslator</a> (bbepis).
                       {' '}Thanks to the original authors for their incredible open-source work.
                     </p>
+                  </div>
                   </div>
                 </CardContent>
               </Card>

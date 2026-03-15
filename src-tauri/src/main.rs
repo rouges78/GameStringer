@@ -454,6 +454,11 @@ fn main() {
             commands::unity_patcher::read_xunity_translations,
             commands::unity_patcher::save_xunity_translation,
 
+            // Unity Asset Injection (resize-based, no BepInEx needed)
+            commands::unity_asset_injector::inject_unity_assets,
+            commands::unity_asset_injector::restore_unity_assets,
+            commands::unity_asset_injector::scan_unity_ink_strings,
+
             // Unity Direct Injection (bypassa BepInEx)
             commands::unity_injector::inject_unity_translator,
             commands::unity_injector::start_unity_translation_server,
