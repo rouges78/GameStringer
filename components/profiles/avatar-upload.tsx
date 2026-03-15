@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Camera, Upload, X, Check, User } from 'lucide-react';
+import { Camera, Upload, X, Check, User, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -111,36 +111,38 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-sm border-slate-800 bg-slate-950/95 backdrop-blur-xl p-4">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Camera className="h-5 w-5" />
+          <DialogTitle className="flex items-center gap-1.5 text-sm text-slate-100">
+            <Camera className="h-3.5 w-3.5 text-indigo-400" />
             Cambia Avatar
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex flex-col items-center gap-6 py-4">
+        <div className="flex flex-col items-center gap-3 py-2">
           {/* Preview */}
           <div className="relative">
-            <Avatar className="h-32 w-32 ring-4 ring-primary/20">
-              <AvatarImage src={displayAvatar || undefined} alt={userName} />
-              <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-3xl font-bold">
-                {getInitials(userName)}
-              </AvatarFallback>
-            </Avatar>
+            <div className="p-0.5 rounded-full bg-gradient-to-br from-indigo-500/40 via-cyan-500/30 to-blue-500/40">
+              <Avatar className="h-20 w-20 ring-2 ring-slate-950">
+                <AvatarImage src={displayAvatar || undefined} alt={userName} className="object-cover" />
+                <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-blue-700 text-white text-2xl font-bold">
+                  {getInitials(userName)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             
             {displayAvatar && (
               <button
                 onClick={() => setPreviewUrl(null)}
-                className="absolute -top-2 -right-2 p-1.5 bg-red-500 rounded-full text-white hover:bg-red-600 transition-colors"
+                className="absolute -top-1 -right-1 p-1 bg-red-500/90 rounded-full text-white hover:bg-red-500 transition-colors shadow-lg shadow-red-500/20"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </button>
             )}
           </div>
           
           {/* Upload Button */}
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-1.5 w-full">
             <input
               ref={fileInputRef}
               type="file"
@@ -151,72 +153,78 @@ export function AvatarUpload({ currentAvatar, userName, onAvatarChange, open, on
             
             <Button
               variant="outline"
+              size="sm"
               onClick={() => fileInputRef.current?.click()}
-              className="gap-2"
+              className="gap-1.5 h-8 text-xs border-slate-700 bg-slate-900/50 hover:bg-slate-800 hover:border-indigo-500/50 text-slate-200 transition-all"
             >
-              <Upload className="h-4 w-4" />
+              <ImagePlus className="h-3.5 w-3.5 text-indigo-400" />
               Carica Immagine
             </Button>
             
-            <p className="text-xs text-muted-foreground text-center">
-              JPG, PNG o GIF • Max 5MB<br />
-              L'immagine sarà ridimensionata a 256x256
+            <p className="text-[10px] text-slate-500 text-center">
+              JPG, PNG o GIF • Max 5MB
             </p>
           </div>
           
           {/* Preset Avatars */}
           <div className="w-full">
-            <p className="text-sm font-medium mb-3 text-center">Oppure scegli un preset:</p>
+            <p className="text-[10px] font-medium mb-2 text-center text-slate-500 uppercase tracking-wider">Preset</p>
             <div className="flex justify-center gap-2 flex-wrap">
-              {['🎮', '🎯', '🎲', '🎪', '🎨', '🎭', '🎸', '🎹'].map((emoji, i) => (
+              {[
+                { emoji: '🎮', from: '#3730a3', to: '#1e40af' },
+                { emoji: '🎯', from: '#164e63', to: '#155e75' },
+                { emoji: '🎲', from: '#1e3a5f', to: '#1e40af' },
+                { emoji: '�', from: '#312e81', to: '#4338ca' },
+                { emoji: '🎨', from: '#134e4a', to: '#0f766e' },
+                { emoji: '🎭', from: '#1e1b4b', to: '#3730a3' },
+                { emoji: '🎸', from: '#0c4a6e', to: '#0369a1' },
+                { emoji: '🎹', from: '#1a1a2e', to: '#16213e' },
+              ].map((preset, i) => (
                 <button
                   key={i}
                   onClick={() => {
-                    // Create emoji avatar
                     const canvas = document.createElement('canvas');
                     canvas.width = 256;
                     canvas.height = 256;
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
-                      // Gradient background
                       const gradient = ctx.createLinearGradient(0, 0, 256, 256);
-                      gradient.addColorStop(0, '#8B5CF6');
-                      gradient.addColorStop(1, '#EC4899');
+                      gradient.addColorStop(0, preset.from);
+                      gradient.addColorStop(1, preset.to);
                       ctx.fillStyle = gradient;
                       ctx.fillRect(0, 0, 256, 256);
-                      
-                      // Emoji
                       ctx.font = '120px serif';
                       ctx.textAlign = 'center';
                       ctx.textBaseline = 'middle';
-                      ctx.fillText(emoji, 128, 138);
-                      
+                      ctx.fillText(preset.emoji, 128, 138);
                       setPreviewUrl(canvas.toDataURL('image/png'));
                     }
                   }}
                   className={cn(
-                    "w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-2xl",
-                    "hover:scale-110 transition-transform hover:ring-2 ring-white/50"
+                    "w-9 h-9 rounded-full flex items-center justify-center text-base",
+                    "bg-slate-800/80 border border-slate-700/50",
+                    "hover:scale-110 hover:border-indigo-500/50",
+                    "transition-all duration-200"
                   )}
                 >
-                  {emoji}
+                  {preset.emoji}
                 </button>
               ))}
             </div>
           </div>
         </div>
         
-        <DialogFooter className="flex gap-2">
+        <DialogFooter className="flex gap-1.5 border-t border-slate-800/50 pt-3 mt-1">
           {currentAvatar && (
-            <Button variant="destructive" onClick={handleRemoveAvatar} className="mr-auto">
+            <Button variant="ghost" size="sm" onClick={handleRemoveAvatar} className="mr-auto text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 text-xs">
               Rimuovi
             </Button>
           )}
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="border-slate-700 bg-slate-900/50 hover:bg-slate-800 text-slate-300 h-8 text-xs">
             Annulla
           </Button>
-          <Button onClick={handleSave} disabled={!previewUrl || isLoading}>
-            <Check className="h-4 w-4 mr-2" />
+          <Button size="sm" onClick={handleSave} disabled={!previewUrl || isLoading} className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white border-0 h-8 text-xs">
+            <Check className="h-3.5 w-3.5 mr-1" />
             Salva
           </Button>
         </DialogFooter>

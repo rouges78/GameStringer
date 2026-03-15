@@ -221,9 +221,9 @@ export function ProfileHeader() {
           <Button variant="ghost" className="relative h-10 w-auto px-3 hover:bg-accent/50">
             <div className="flex items-center space-x-3">
               {/* Avatar */}
-              <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+              <Avatar className="h-8 w-8 ring-2 ring-indigo-500/20">
                 <AvatarImage src={avatarUrl || undefined} alt={currentProfile.name} />
-                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-sm font-semibold">
+                <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-blue-700 text-white text-sm font-semibold">
                   {getInitials(currentProfile.name)}
                 </AvatarFallback>
               </Avatar>
@@ -238,35 +238,35 @@ export function ProfileHeader() {
           </Button>
         </DropdownMenuTrigger>
         
-        <DropdownMenuContent className="w-80 z-[70]" align="end" forceMount>
+        <DropdownMenuContent className="w-72 z-[70] border-slate-800 bg-slate-950/95 backdrop-blur-xl" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
-            <div className="flex flex-col space-y-3">
+            <div className="flex flex-col space-y-2">
               {/* Profile Header */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2.5">
                 <button onClick={() => setShowAvatarUpload(true)} className="relative group">
-                  <Avatar className="h-12 w-12 ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
+                  <Avatar className="h-10 w-10 ring-2 ring-indigo-500/30 group-hover:ring-indigo-500/60 transition-all">
                     <AvatarImage src={avatarUrl || undefined} alt={currentProfile.name} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-blue-700 text-white font-semibold">
                       {getInitials(currentProfile.name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Camera className="h-4 w-4 text-white" />
+                    <Camera className="h-3 w-3 text-white" />
                   </div>
                 </button>
                 <div className="flex flex-col flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium leading-none">
+                    <p className="text-sm font-medium leading-none text-slate-100">
                       {currentProfile.name}
                     </p>
-                    <Badge variant="default" className="text-xs bg-green-500 hover:bg-green-600">
+                    <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30">
                       {t('profile.active')}
                     </Badge>
                   </div>
-                  <p className="text-xs leading-none text-muted-foreground mt-1">
+                  <p className="text-[11px] leading-none text-slate-500 mt-1 font-mono">
                     ID: {currentProfile.id.slice(0, 8)}...
                   </p>
-                  <p className="text-xs leading-none text-muted-foreground mt-1">
+                  <p className="text-[11px] leading-none text-slate-400 mt-1">
                     {t('profile.lastAccess')} {getLastAccessedText(currentProfile.last_accessed)}
                   </p>
                 </div>
@@ -274,16 +274,16 @@ export function ProfileHeader() {
               
               {/* Session Status */}
               <div className={cn(
-                "flex items-center justify-between p-2 rounded-lg border",
+                "flex items-center justify-between p-1.5 rounded-md border text-xs",
                 sessionStatus.bgColor,
                 sessionStatus.borderColor
               )}>
-                <div className="flex items-center space-x-2">
-                  <SessionIcon className={cn("w-4 h-4", sessionStatus.color)} />
-                  <span className="text-sm font-medium">{t('profile.session')}</span>
+                <div className="flex items-center space-x-1.5">
+                  <SessionIcon className={cn("w-3.5 h-3.5", sessionStatus.color)} />
+                  <span className="text-xs font-medium">{t('profile.session')}</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={cn("text-sm font-medium", sessionStatus.color)}>
+                <div className="flex items-center space-x-1.5">
+                  <span className={cn("text-xs font-medium", sessionStatus.color)}>
                     {sessionStatus.text}
                   </span>
                   {(isSessionExpired || (sessionTimeRemaining && sessionTimeRemaining < 10 * 60 * 1000)) && (
@@ -301,16 +301,16 @@ export function ProfileHeader() {
               </div>
               
               {/* Profile Stats */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex flex-col items-center p-2 bg-muted/50 rounded-lg cursor-help">
+                      <div className="flex flex-col items-center p-1.5 bg-slate-800/50 border border-slate-700/30 rounded-md cursor-help">
                         <div className="flex items-center gap-1">
-                          <span className="font-medium">{profiles.length}</span>
-                          <Info className="w-3 h-3 text-muted-foreground" />
+                          <span className="font-medium text-slate-200 text-xs">{profiles.length}</span>
+                          <Info className="w-2.5 h-2.5 text-slate-500" />
                         </div>
-                        <span className="text-muted-foreground">{t('profile.profilesCreated')}</span>
+                        <span className="text-slate-400 text-[9px] uppercase tracking-wider">{t('profile.profilesCreated')}</span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -320,7 +320,7 @@ export function ProfileHeader() {
                   </Tooltip>
                 </TooltipProvider>
                 <div 
-                  className="flex flex-col items-center p-2 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/80 transition-colors group"
+                  className="flex flex-col items-center p-1.5 bg-slate-800/50 border border-slate-700/30 rounded-md cursor-pointer hover:border-indigo-500/30 hover:bg-slate-800/80 transition-colors group"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -328,11 +328,11 @@ export function ProfileHeader() {
                     setTimeout(() => setShowThemeCustomizer(true), 100);
                   }}
                 >
-                  <span className="font-medium flex items-center gap-1">
-                    <Palette className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <span className="font-medium flex items-center gap-1 text-slate-200 text-xs">
+                    <Palette className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400" />
                     {settings?.theme || 'Auto'}
                   </span>
-                  <span className="text-muted-foreground">{t('profile.theme')}</span>
+                  <span className="text-slate-400 text-[9px] uppercase tracking-wider">{t('profile.theme')}</span>
                 </div>
               </div>
             </div>
@@ -385,7 +385,7 @@ export function ProfileHeader() {
           <DropdownMenuSeparator />
           
           {/* Logout */}
-          <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+          <DropdownMenuItem onClick={handleLogout} className="text-red-400 focus:text-red-400 hover:bg-red-500/10">
             <LogOut className="mr-2 h-4 w-4" />
             <span>{t('profile.logout')}</span>
           </DropdownMenuItem>
