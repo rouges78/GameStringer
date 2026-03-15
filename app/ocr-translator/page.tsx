@@ -431,7 +431,7 @@ export default function OcrTranslatorPage() {
                   </select>
                   {ocrProvider === 'vlm' && (
                     <div className="mt-2 text-[10px] text-amber-400 bg-amber-500/10 p-2 rounded">
-                      <strong>Nota VLM:</strong> L'immagine verrà inviata direttamente a Ollama. Assicurati di aver scaricato `llava`, `qwen2-vl` o `pixtral`. Questa modalità è lenta ma precisissima per il giapponese e lingue complesse.
+                      <strong>{t('ocrTranslatorPage.notaVlm')}</strong> L'immagine verrà inviata direttamente a Ollama. Assicurati di aver scaricato `llava`, `qwen2-vl` o `pixtral`. Questa modalità è lenta ma precisissima per il giapponese e lingue complesse.
                     </div>
                   )}
                 </div>
@@ -503,7 +503,7 @@ export default function OcrTranslatorPage() {
             </Button>
             <div className="flex items-center justify-between mt-2">
               <span className="text-[10px] text-muted-foreground">
-                {t('ocrTranslator.shortcut')}: <kbd className="px-1 py-0.5 rounded bg-muted text-[10px]">Ctrl+Shift+T</kbd>
+                {t('ocrTranslator.shortcut')}: <kbd className="px-1 py-0.5 rounded bg-muted text-[10px]">{t('ocrTranslatorPage.ctrlshiftt')}</kbd>
               </span>
               <Button 
                 onClick={async () => {

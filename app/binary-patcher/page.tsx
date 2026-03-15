@@ -955,7 +955,7 @@ export default function BinaryPatcherPage() {
                     <span className="text-sm font-medium text-white">{t('binaryPatcherPage.aiLlm')}</span>
                     <Sparkles className="h-3 w-3 text-purple-400" />
                   </div>
-                  <p className="text-[10px] text-white/50">Gemini, DeepSeek, OpenAI, Ollama, DeepL e altri — qualità superiore</p>
+                  <p className="text-[10px] text-white/50">{t('binaryPatcherPage.geminiDeepseekOpenaiOllamaDeep')}</p>
                 </div>
                 {/* Rule-based Mode */}
                 <div

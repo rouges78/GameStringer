@@ -809,7 +809,7 @@ export default function StoresPage() {
       <Dialog open={isFamilySharingOpen} onOpenChange={setIsFamilySharingOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Family Sharing</DialogTitle>
+            <DialogTitle>{t('storesPage.familySharing')}</DialogTitle>
           </DialogHeader>
           <SteamFamilySharing />
         </DialogContent>
@@ -963,7 +963,7 @@ export default function StoresPage() {
       <Dialog open={isSteamGridDBModalOpen} onOpenChange={(open) => { if (!open) { setIsSteamGridDBModalOpen(false); setSteamGridDBApiKey(''); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>SteamGridDB API Key</DialogTitle>
+            <DialogTitle>{t('storesPage.steamgriddbApiKey')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
             Inserisci la tua API key di SteamGridDB per scaricare automaticamente le copertine dei giochi.

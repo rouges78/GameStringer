@@ -220,7 +220,7 @@ export default function ActivityHistoryPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Filter by:</span>
+            <span className="text-sm text-muted-foreground">{t('activityPage.filterBy')}</span>
           </div>
           <Select value={filter} onValueChange={(v) => setFilter(v as ActivityType | 'all')}>
             <SelectTrigger className="w-48">
@@ -258,8 +258,8 @@ export default function ActivityHistoryPage() {
             {activities.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No activity recorded</p>
-                <p className="text-sm mt-1">Your actions will be tracked here</p>
+                <p>{t('activityPage.noActivityRecorded')}</p>
+                <p className="text-sm mt-1">{t('activityPage.yourActionsWillBeTrackedHere')}</p>
               </div>
             ) : (
               <ScrollArea className="h-[500px]">

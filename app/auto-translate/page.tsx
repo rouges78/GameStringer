@@ -1953,7 +1953,7 @@ export default function AutoTranslatePage() {
                       </div>
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold tracking-tight">Translating...</h2>
+                      <h2 className="text-xl font-bold tracking-tight">{t('autoTranslatePage.translating')}</h2>
                       <p className="text-sm text-muted-foreground mt-0.5">{progress.currentStep}</p>
                     </div>
                   </div>
@@ -2071,7 +2071,7 @@ export default function AutoTranslatePage() {
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-xs font-semibold text-amber-200">Translation providers exhausted</p>
+                            <p className="text-xs font-semibold text-amber-200">{t('autoTranslatePage.translationProvidersExhausted')}</p>
                             <p className="text-[10px] text-amber-300/70 mt-1">
                               Free services (Lingva, MyMemory) have reached their request limit.
                               Translations completed so far have been saved.
@@ -2081,9 +2081,9 @@ export default function AutoTranslatePage() {
                         <div className="bg-black/20 rounded p-2 space-y-1">
                           <p className="text-[10px] font-medium text-amber-200/80">{t('autoTranslatePage.howToProceed')}</p>
                           <ul className="text-[10px] text-amber-300/60 space-y-0.5 list-disc list-inside">
-                            <li>Wait 2-5 minutes and click <strong>{t('autoTranslatePage.resume')}</strong> to continue</li>
-                            <li>Configure an AI provider (Gemini, DeepSeek, DeepL) in <strong>{t('autoTranslatePage.settingsApiKeys')}</strong></li>
-                            <li>Install <strong>Ollama</strong> to translate offline without limits</li>
+                            <li>{t('autoTranslatePage.wait25MinutesAndClick')}<strong>{t('autoTranslatePage.resume')}</strong> to continue</li>
+                            <li>{t('autoTranslatePage.configureAnAiProviderGeminiDee')}<strong>{t('autoTranslatePage.settingsApiKeys')}</strong></li>
+                            <li>{t('autoTranslatePage.install')}<strong>Ollama</strong> to translate offline without limits</li>
                           </ul>
                         </div>
                       </div>

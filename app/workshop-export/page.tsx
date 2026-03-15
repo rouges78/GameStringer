@@ -207,7 +207,7 @@ export default function WorkshopExportPage() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Visibilit&agrave;</Label>
+                  <Label className="text-xs">{t('workshopExportPage.visibilitagrave')}</Label>
                   <Select value={config.visibility} onValueChange={(v: 'public' | 'friends_only' | 'private') => setConfig(prev => ({ ...prev, visibility: v }))}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>

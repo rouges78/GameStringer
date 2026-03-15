@@ -190,7 +190,7 @@ export default function OllamaManagerPage() {
                 <span className="text-xs font-semibold text-emerald-400">Modelli Installati ({installed.length})</span>
               </div>
               {installed.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nessun modello installato. Scarica uno dei consigliati qui sotto.</p>
+                <p className="text-xs text-muted-foreground">{t('ollamaManagerPage.nessunModelloInstallatoScarica')}</p>
               ) : (
                 <div className="space-y-1.5">
                   {installed.map(m => {

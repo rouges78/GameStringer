@@ -167,7 +167,7 @@ export default function AIPipelinePage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">{t('aiPipelinePage.title')}</h1>
-              <p className="text-white/70 text-sm">Multi-step: Harvest → Translate → QA → Auto-Fix → Review → Score</p>
+              <p className="text-white/70 text-sm">{t('aiPipelinePage.multistepHarvestTranslateQaAut')}</p>
             </div>
           </div>
           {result && (

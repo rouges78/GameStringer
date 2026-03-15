@@ -1936,8 +1936,8 @@ export default function TranslationWizardPage() {
                         {filteredGames.length === 0 && (
                           <div className="text-center py-12 text-slate-500">
                             <Search className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                            <p>No game trovato</p>
-                            <p className="text-sm mt-1">Prova a cercare con un altro termine</p>
+                            <p>{t('translationWizardPage.noGameTrovato')}</p>
+                            <p className="text-sm mt-1">{t('translationWizardPage.provaACercareConUnAltroTermine')}</p>
                           </div>
                         )}
                       </div>
@@ -2044,7 +2044,7 @@ export default function TranslationWizardPage() {
                     <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
                       <FileCode className="h-4 w-4 text-purple-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">{analysisResult.localizationFiles.length}</p>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">File</p>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">{t('translationWizardPage.file')}</p>
                     </div>
                     <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
                       <Database className="h-4 w-4 text-cyan-400 mx-auto mb-1.5" />
@@ -2137,7 +2137,7 @@ export default function TranslationWizardPage() {
                   {/* Alternative strategies */}
                   {altStrategies.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-[10px] text-slate-500 mb-1.5">Strategie alternative:</p>
+                      <p className="text-[10px] text-slate-500 mb-1.5">{t('translationWizardPage.strategieAlternative')}</p>
                       <div className="flex gap-2">
                         {altStrategies.map(alt => (
                           <button
@@ -2351,7 +2351,7 @@ export default function TranslationWizardPage() {
                       <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
                         <Download className="h-8 w-8 text-emerald-400" />
                       </div>
-                      <h2 className="text-xl font-bold text-white mb-2">Community Translation Available!</h2>
+                      <h2 className="text-xl font-bold text-white mb-2">{t('translationWizardPage.communityTranslationAvailable')}</h2>
                       <p className="text-slate-400 text-sm mb-6">
                         {strategy?.description}
                       </p>
@@ -2373,7 +2373,7 @@ export default function TranslationWizardPage() {
                       <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
                         <CheckCircle2 className="h-8 w-8 text-emerald-400" />
                       </div>
-                      <h2 className="text-xl font-bold text-white mb-2">Traduzione Completata!</h2>
+                      <h2 className="text-xl font-bold text-white mb-2">{t('translationWizardPage.traduzioneCompletata')}</h2>
                       <p className="text-slate-400 text-sm mb-6">
                         {selectedGame?.title} è stato tradotto in {languageNames[targetLanguage] || targetLanguage}.
                         {strategy?.dedicatedTool && ` Per opzioni avanzate usa ${strategy.dedicatedTool.name}.`}

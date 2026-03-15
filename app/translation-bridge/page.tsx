@@ -317,7 +317,7 @@ export default function TranslationBridgePage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats?.total_requests ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">Richieste</p>
+                  <p className="text-xs text-muted-foreground">{t('translationBridgePage.richieste')}</p>
                 </div>
               </div>
             </CardContent>
@@ -333,7 +333,7 @@ export default function TranslationBridgePage() {
                   <p className="text-2xl font-bold">
                     {stats ? `${translationBridge.getCacheHitRate(stats).toFixed(1)}%` : '0%'}
                   </p>
-                  <p className="text-xs text-muted-foreground">Cache Hit</p>
+                  <p className="text-xs text-muted-foreground">{t('translationBridgePage.cacheHit')}</p>
                 </div>
               </div>
             </CardContent>
@@ -349,7 +349,7 @@ export default function TranslationBridgePage() {
                   <p className="text-2xl font-bold">
                     {stats ? translationBridge.formatUptime(stats.uptime_seconds) : '0s'}
                   </p>
-                  <p className="text-xs text-muted-foreground">Uptime</p>
+                  <p className="text-xs text-muted-foreground">{t('translationBridgePage.uptime')}</p>
                 </div>
               </div>
             </CardContent>
@@ -457,7 +457,7 @@ World=Mondo`}
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Testo da cercare</Label>
+                    <Label>{t('translationBridgePage.testoDaCercare')}</Label>
                     <Input
                       value={testInput}
                       onChange={(e) => setTestInput(e.target.value)}
@@ -519,7 +519,7 @@ World=Mondo`}
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Target language</Label>
+                    <Label>{t('translationBridgePage.targetLanguage')}</Label>
                     <Select value={targetLang} onValueChange={setTargetLang}>
                       <SelectTrigger>
                         <SelectValue />
@@ -555,7 +555,7 @@ World=Mondo`}
                 {/* Current Languages */}
                 {dictStats && (
                   <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700">
-                    <p className="text-sm text-muted-foreground mb-2">Lingue attive:</p>
+                    <p className="text-sm text-muted-foreground mb-2">{t('translationBridgePage.lingueAttive')}</p>
                     <p className="text-lg font-medium">
                       {getFlagEmoji(dictStats.active_source === 'en' ? 'GB' : dictStats.active_source.toUpperCase())} {dictStats.active_source}
                       {' → '}
@@ -583,19 +583,19 @@ World=Mondo`}
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">Tempo medio risposta</p>
+                  <p className="text-muted-foreground">{t('translationBridgePage.tempoMedioRisposta')}</p>
                   <p className="font-mono">{translationBridge.formatResponseTime(stats.avg_response_time_us)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Cache Hits</p>
+                  <p className="text-muted-foreground">{t('translationBridgePage.cacheHits')}</p>
                   <p className="font-mono text-green-400">{stats.cache_hits}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Cache Misses</p>
+                  <p className="text-muted-foreground">{t('translationBridgePage.cacheMisses')}</p>
                   <p className="font-mono text-orange-400">{stats.cache_misses}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Errori</p>
+                  <p className="text-muted-foreground">{t('translationBridgePage.errori')}</p>
                   <p className="font-mono text-red-400">{stats.errors}</p>
                 </div>
               </div>

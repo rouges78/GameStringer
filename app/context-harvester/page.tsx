@@ -657,7 +657,7 @@ export default function ContextHarvesterPage() {
                     {/* Tags */}
                     {selectedCtx.tags.length > 0 && (
                       <div>
-                        <Label className="text-[10px] text-muted-foreground">Tag</Label>
+                        <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.tag')}</Label>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {selectedCtx.tags.map((tag, i) => (
                             <Badge key={i} variant="secondary" className="text-[9px] px-1.5 py-0">{tag}</Badge>

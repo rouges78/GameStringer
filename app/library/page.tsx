@@ -1218,7 +1218,7 @@ function LibraryListView() {
                   {languages && languages.length > 1 ? (
                     <LanguageFlags supportedLanguages={languages} maxFlags={8} />
                   ) : (
-                    <span className="text-[10px] text-slate-600 font-medium">Nessuna lingua rilevata</span>
+                    <span className="text-[10px] text-slate-600 font-medium">{t('libraryPage.nessunaLinguaRilevata')}</span>
                   )}
                 </div>
               );
@@ -1388,7 +1388,7 @@ function LibraryListView() {
                         <span className="text-[10px] font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2 py-1 rounded-md border border-fuchsia-500/20">VR</span>
                       )}
                       {game.isShared && (
-                        <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20">Shared</span>
+                        <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20">{t('libraryPage.shared')}</span>
                       )}
                     </div>
                     {/* Quick actions lista */}
@@ -1529,7 +1529,7 @@ function LibraryListView() {
               title="Aggiorna nomi dal Database remoto"
             >
               <Download className="h-4 w-4 text-slate-400 group-hover:text-indigo-300 transition-colors" />
-              <span className="text-[11px] font-semibold tracking-wide">Aggiorna DB</span>
+              <span className="text-[11px] font-semibold tracking-wide">{t('libraryPage.aggiornaDb')}</span>
             </button>
           </div>
         </div>

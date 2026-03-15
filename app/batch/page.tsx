@@ -47,13 +47,13 @@ export default function BatchPage() {
             <Link href="/editor">
               <div className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-1.5 border border-white/10 transition-all cursor-pointer">
                 <Edit3 className="w-3.5 h-3.5" />
-                <span className="text-xs font-medium">Editor</span>
+                <span className="text-xs font-medium">{t('batchPage.editor')}</span>
               </div>
             </Link>
             <Link href="/glossary">
               <div className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-1.5 border border-white/10 transition-all cursor-pointer">
                 <BookOpen className="w-3.5 h-3.5" />
-                <span className="text-xs font-medium">Glossario</span>
+                <span className="text-xs font-medium">{t('batchPage.glossario')}</span>
               </div>
             </Link>
           </div>

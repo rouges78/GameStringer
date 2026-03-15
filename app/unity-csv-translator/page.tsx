@@ -403,7 +403,7 @@ export default function UnityCsvTranslatorPage() {
             <div className="mt-3 max-h-[400px] overflow-y-auto">
               <table className="w-full text-[11px]">
                 <thead><tr className="text-slate-500 border-b border-slate-700/50">
-                  <th className="text-left py-1 w-28">File</th>
+                  <th className="text-left py-1 w-28">{t('unityCsvPage.file')}</th>
                   <th className="text-left py-1">{t('languages.en')}</th>
                   <th className="text-left py-1">{t('offlineTranslator.translation')}</th>
                 </tr></thead>

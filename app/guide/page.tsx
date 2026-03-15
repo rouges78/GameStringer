@@ -172,7 +172,7 @@ export default function GuidePage() {
                   </Step>
 
                   <Step number={2} title={g.qsStep2Title}>
-                    <p>{g.qsStep2Line1} <NavLink href="/stores">Stores</NavLink> {g.qsStep2Line1b}</p>
+                    <p>{g.qsStep2Line1} <NavLink href="/stores">{t('guidePage.stores')}</NavLink> {g.qsStep2Line1b}</p>
                     <p>{g.qsStep2Line2}</p>
                     <p>{g.qsStep2Line3}</p>
                   </Step>
@@ -184,7 +184,7 @@ export default function GuidePage() {
                   </Step>
 
                   <Step number={4} title={g.qsStep4Title}>
-                    <p>{g.qsStep4Line1} <NavLink href="/auto-translate">Auto-Translate</NavLink> {g.qsStep4Line1b}</p>
+                    <p>{g.qsStep4Line1} <NavLink href="/auto-translate">{t('guidePage.autotranslate')}</NavLink> {g.qsStep4Line1b}</p>
                     <p>{g.qsStep4Line2}</p>
                     <p>{g.qsStep4Line3a} <strong>&quot;{g.btnStartTranslation}&quot;</strong>.</p>
                     <p>{g.qsStep4Line4}</p>
@@ -306,7 +306,7 @@ export default function GuidePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   <Step number={1} title={g.wfProStep1Title}>
-                    <p>{g.wfProStep1Line1} <NavLink href="/translator/pro">Neural Translator Pro</NavLink>{g.wfProStep1Line1b}</p>
+                    <p>{g.wfProStep1Line1} <NavLink href="/translator/pro">{t('guidePage.neuralTranslator')}</NavLink>{g.wfProStep1Line1b}</p>
                   </Step>
                   <Step number={2} title={g.wfProStep2Title}>
                     <p>{g.wfProStep2Line1}</p>
@@ -333,7 +333,7 @@ export default function GuidePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   <Step number={1} title={g.wfOcrStep1Title}>
-                    <p>{g.wfOcrStep1Line1} <NavLink href="/ocr-translator">OCR Translator</NavLink> {g.wfOcrStep1Line1b} <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-[10px] font-mono">Ctrl+Shift+T</kbd> {g.wfOcrStep1Line1c}</p>
+                    <p>{g.wfOcrStep1Line1} <NavLink href="/ocr-translator">{t('guidePage.ocrTranslator')}</NavLink> {g.wfOcrStep1Line1b} <kbd className="px-1.5 py-0.5 bg-slate-800 rounded border border-slate-600 text-[10px] font-mono">{t('guidePage.ctrlshiftt')}</kbd> {g.wfOcrStep1Line1c}</p>
                   </Step>
                   <Step number={2} title={g.wfOcrStep2Title}>
                     <p>{g.wfOcrStep2Line1}</p>
@@ -343,7 +343,7 @@ export default function GuidePage() {
                     <p>{g.wfOcrStep3Line1}</p>
                     <p>{g.wfOcrStep3Line2}</p>
                   </Step>
-                  <Tip variant="info">{g.wfOcrTip} <NavLink href="/live-ocr">Live OCR</NavLink> {g.wfOcrTipEnd}</Tip>
+                  <Tip variant="info">{g.wfOcrTip} <NavLink href="/live-ocr">{t('guidePage.liveOcr')}</NavLink> {g.wfOcrTipEnd}</Tip>
                 </CardContent>
               </Card>
 
@@ -358,7 +358,7 @@ export default function GuidePage() {
                 </CardHeader>
                 <CardContent className="space-y-0">
                   <Step number={1} title={g.wfVoiceStep1Title}>
-                    <p>{g.wfVoiceStep1Line1} <NavLink href="/voice-translator">Voice Translator</NavLink>{g.wfVoiceStep1Line1b}</p>
+                    <p>{g.wfVoiceStep1Line1} <NavLink href="/voice-translator">{t('guidePage.voiceTranslator')}</NavLink>{g.wfVoiceStep1Line1b}</p>
                     <p>{g.wfVoiceStep1Line2}</p>
                   </Step>
                   <Step number={2} title={g.wfVoiceStep2Title}>
@@ -366,7 +366,7 @@ export default function GuidePage() {
                   </Step>
                   <Step number={3} title={g.wfVoiceStep3Title}>
                     <p>{g.wfVoiceStep3Line1}</p>
-                    <p>{g.wfVoiceStep3Line2} <NavLink href="/voice-clone">Voice Clone Studio</NavLink> {g.wfVoiceStep3Line2b}</p>
+                    <p>{g.wfVoiceStep3Line2} <NavLink href="/voice-clone">{t('guidePage.voiceCloneGuide')}</NavLink> {g.wfVoiceStep3Line2b}</p>
                   </Step>
                 </CardContent>
               </Card>

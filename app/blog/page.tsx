@@ -156,7 +156,7 @@ export default function BlogPage() {
                 />
               </div>
               <div>
-                <Label className="text-xs">Tag</Label>
+                <Label className="text-xs">{t('blogPage.tag')}</Label>
                 <select 
                   value={form.tag}
                   onChange={(e) => setForm(f => ({ ...f, tag: e.target.value }))}

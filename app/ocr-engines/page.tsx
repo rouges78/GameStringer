@@ -400,7 +400,7 @@ export default function OCREnginesPage() {
               ) : (
                 <div className="text-center py-12">
                   <ScanEye className="h-10 w-10 mx-auto text-muted-foreground/30 mb-2" />
-                  <p className="text-xs text-muted-foreground">Carica un&apos;immagine e avvia l&apos;OCR</p>
+                  <p className="text-xs text-muted-foreground">{t('ocrEnginesPage.caricaUnaposimmagineEAvviaLapo')}</p>
                 </div>
               )}
             </CardContent>

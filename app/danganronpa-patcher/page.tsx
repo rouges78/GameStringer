@@ -673,7 +673,7 @@ export default function DanganronpaPatcherPage() {
       case 'Script': return <Badge variant="secondary">{t('visualNovelPage.script')}</Badge>;
       case 'Font': return <Badge variant="outline">{t('visualNovelPage.font')}</Badge>;
       case 'Texture': return <Badge className="bg-purple-500">{t('textureTranslator.textures')}</Badge>;
-      default: return <Badge variant="outline">Unknown</Badge>;
+      default: return <Badge variant="outline">{t('visualNovelPage.unknown')}</Badge>;
     }
   };
 

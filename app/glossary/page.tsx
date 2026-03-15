@@ -760,9 +760,9 @@ export default function GlossaryPage() {
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">{t('languages.en')}</SelectItem>
-                      <SelectItem value="ja">Japanese</SelectItem>
-                      <SelectItem value="zh">Chinese</SelectItem>
-                      <SelectItem value="ko">Korean</SelectItem>
+                      <SelectItem value="ja">{t('glossaryPage.japanese')}</SelectItem>
+                      <SelectItem value="zh">{t('glossaryPage.chinese')}</SelectItem>
+                      <SelectItem value="ko">{t('glossaryPage.korean')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -799,7 +799,7 @@ export default function GlossaryPage() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>{t('glossaryPage.glossaryConfig')}</DialogTitle>
-              <DialogDescription>Impostazioni per l'estrazione automatica e l'iniezione nel prompt</DialogDescription>
+              <DialogDescription>{t('glossaryPage.impostazioniPerLestrazioneAuto')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex items-center justify-between">

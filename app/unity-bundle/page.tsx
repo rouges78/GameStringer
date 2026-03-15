@@ -349,7 +349,7 @@ export default function UnityBundlePage() {
           <div className="hidden md:flex items-center gap-3">
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
               <Zap className="h-3.5 w-3.5 text-white" />
-              <span className="text-sm font-bold text-white">Auto</span>
+              <span className="text-sm font-bold text-white">{t('unityBundlePage.auto')}</span>
               <span className="text-[10px] text-white/70">{t('unityBundle.autoExtraction').split(' ')[1]}</span>
             </div>
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
@@ -579,7 +579,7 @@ export default function UnityBundlePage() {
                   </Button>
                   {uabeaStep > 2 && <CheckCircle2 className="h-3 w-3 text-green-500 ml-auto" />}
                 </div>
-                <p className="text-[9px] text-muted-foreground pl-5">File → Open → Ctrl+V</p>
+                <p className="text-[9px] text-muted-foreground pl-5">{t('unityBundlePage.fileOpenCtrlv')}</p>
                 
                 <div className={`flex items-center gap-2 p-1.5 rounded text-xs ${uabeaStep > 3 ? 'bg-green-500/20' : uabeaStep >= 3 ? 'bg-emerald-500/20' : 'bg-slate-800/50'}`}>
                   <span className="font-bold">3.</span>
@@ -588,7 +588,7 @@ export default function UnityBundlePage() {
                   </Button>
                   {uabeaStep > 3 && <CheckCircle2 className="h-3 w-3 text-green-500 ml-auto" />}
                 </div>
-                <p className="text-[9px] text-muted-foreground pl-5">Import Dump → Ctrl+V</p>
+                <p className="text-[9px] text-muted-foreground pl-5">{t('unityBundlePage.importDumpCtrlv')}</p>
                 
                 {uabeaStep >= 4 && (
                   <div className="flex items-center gap-2 p-1.5 rounded bg-green-500/20 text-xs">

@@ -139,7 +139,7 @@ export default function MTPEPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Source language</label>
+                  <label className="text-xs text-gray-500 mb-1 block">{t('mtpePage.sourceLanguage')}</label>
                   <Select value={sourceLang} onValueChange={setSourceLang}>
                     <SelectTrigger className="bg-slate-800 border-slate-600">
                       <SelectValue />
@@ -157,7 +157,7 @@ export default function MTPEPage() {
                 </div>
                 
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Target language</label>
+                  <label className="text-xs text-gray-500 mb-1 block">{t('mtpePage.targetLanguage')}</label>
                   <Select value={targetLang} onValueChange={setTargetLang}>
                     <SelectTrigger className="bg-slate-800 border-slate-600">
                       <SelectValue />
@@ -179,19 +179,19 @@ export default function MTPEPage() {
                 </div>
                 
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">AI Provider</label>
+                  <label className="text-xs text-gray-500 mb-1 block">{t('mtpePage.aiProvider')}</label>
                   <Select value={provider} onValueChange={setProvider}>
                     <SelectTrigger className="bg-slate-800 border-slate-600">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="gemini">Gemini 2.0</SelectItem>
-                      <SelectItem value="claude">Claude Sonnet</SelectItem>
-                      <SelectItem value="openai">GPT-4o</SelectItem>
+                      <SelectItem value="gemini">{t('mtpePage.gemini20')}</SelectItem>
+                      <SelectItem value="claude">{t('mtpePage.claudeSonnet')}</SelectItem>
+                      <SelectItem value="openai">{t('mtpePage.gpt4o')}</SelectItem>
                       <SelectItem value="deepl">DeepL</SelectItem>
                       <SelectItem value="deepseek">DeepSeek</SelectItem>
-                      <SelectItem value="google">Google Translate</SelectItem>
-                      <SelectItem value="libre">LibreTranslate (Free)</SelectItem>
+                      <SelectItem value="google">{t('mtpePage.googleTranslate')}</SelectItem>
+                      <SelectItem value="libre">{t('mtpePage.libretranslateFree')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -266,7 +266,7 @@ export default function MTPEPage() {
           <Card className="bg-slate-900/50 border-slate-700">
             <CardContent className="p-8 text-center">
               <div className="text-5xl mb-4">✅</div>
-              <h2 className="text-xl font-medium mb-2">Workflow completato!</h2>
+              <h2 className="text-xl font-medium mb-2">{t('mtpePage.workflowCompletato')}</h2>
               <p className="text-gray-400 mb-4">
                 {results.filter(r => r.status === 'approved').length} approvate,{' '}
                 {results.filter(r => r.status === 'edited').length} modificate,{' '}

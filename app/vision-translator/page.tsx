@@ -5,7 +5,7 @@ import { useTranslation } from '@/lib/i18n';
 
 const VisionTranslator = dynamic(
   () => import('@/components/tools/vision-translator').then(mod => mod.VisionTranslator),
-  { ssr: false, loading: () => <div className="p-6 text-center text-slate-500 text-sm">Caricamento Vision LLM...</div> }
+  { ssr: false, loading: () => <div className="p-6 text-center text-slate-500 text-sm">Loading...</div> }
 );
 
 export default function VisionTranslatorPage() {

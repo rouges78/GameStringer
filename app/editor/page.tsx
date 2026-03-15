@@ -1068,7 +1068,7 @@ export default function EditorPage() {
                   <Languages className="h-8 w-8 opacity-40 text-slate-400" />
                 </div>
                 <p className="font-semibold text-slate-300">{t('projects.noProjects')}</p>
-                <p className="text-[11px] mt-1.5 opacity-70 max-w-[200px] leading-relaxed">Traduci un gioco con Neural Translator per iniziare a popolarlo qui.</p>
+                <p className="text-[11px] mt-1.5 opacity-70 max-w-[200px] leading-relaxed">{t('editorPage.traduciUnGiocoConNeuralTransla')}</p>
               </div>
             ) : (
               <div className="flex flex-col p-2 gap-1">

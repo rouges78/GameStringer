@@ -1968,12 +1968,12 @@ export default function TranslatorProPage() {
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
                 <FileText className="h-6 w-6 mx-auto text-purple-500 mb-2" />
                 <p className="text-2xl font-bold">{checkedFiles.length}</p>
-                <p className="text-xs text-muted-foreground">File</p>
+                <p className="text-xs text-muted-foreground">{t('translatorProPage.file')}</p>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
                 <Languages className="h-6 w-6 mx-auto text-blue-500 mb-2" />
                 <p className="text-2xl font-bold">{totalStrings}</p>
-                <p className="text-xs text-muted-foreground">Stringhe</p>
+                <p className="text-xs text-muted-foreground">{t('translatorProPage.stringhe')}</p>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
                 <Database className="h-6 w-6 mx-auto text-green-500 mb-2" />
@@ -2035,7 +2035,7 @@ export default function TranslatorProPage() {
               {/* Left Column */}
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Provider AI</Label>
+                  <Label>{t('translatorProPage.providerAi')}</Label>
                   <Select value={provider} onValueChange={(v: any) => setProvider(v)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -2045,21 +2045,21 @@ export default function TranslatorProPage() {
                       <SelectItem value="deepseek">
                         <div className="flex items-center gap-2">
                           <Cpu className="h-4 w-4 text-cyan-500" />
-                          <span>DeepSeek V3</span>
+                          <span>{t('translatorProPage.deepseekV3')}</span>
                           <Badge variant="outline" className="text-[9px] ml-1 text-green-400 border-green-500/30">CHEAPEST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="gemini">
                         <div className="flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-blue-500" />
-                          <span>Gemini 2.0 Flash</span>
+                          <span>{t('translatorProPage.gemini20Flash')}</span>
                           <Badge variant="outline" className="text-[9px] ml-1 text-blue-400 border-blue-500/30">FAST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="openai">
                         <div className="flex items-center gap-2">
                           <Zap className="h-4 w-4 text-green-500" />
-                          <span>GPT-4o Mini</span>
+                          <span>{t('translatorProPage.gpt4oMini')}</span>
                           <Badge variant="outline" className="text-[9px] ml-1 text-gray-400 border-gray-500/30">$0.15/1M</Badge>
                         </div>
                       </SelectItem>
@@ -2068,21 +2068,21 @@ export default function TranslatorProPage() {
                       <SelectItem value="claude">
                         <div className="flex items-center gap-2">
                           <Brain className="h-4 w-4 text-orange-500" />
-                          <span>Claude 3.5 Sonnet</span>
+                          <span>{t('translatorProPage.claude35Sonnet')}</span>
                           <Badge variant="outline" className="text-[9px] ml-1 text-orange-400 border-orange-500/30">BEST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="gpt5">
                         <div className="flex items-center gap-2">
                           <Zap className="h-4 w-4 text-emerald-500" />
-                          <span>GPT-4o</span>
+                          <span>{t('translatorProPage.gpt4o')}</span>
                           <Badge variant="outline" className="text-[9px] ml-1 text-emerald-400 border-emerald-500/30">RELIABLE</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="mistral">
                         <div className="flex items-center gap-2">
                           <Wind className="h-4 w-4 text-indigo-500" />
-                          <span>Mistral Large 2</span>
+                          <span>{t('translatorProPage.mistralLarge2')}</span>
                           <Badge variant="outline" className="text-[9px] ml-1 text-indigo-400 border-indigo-500/30">EU</Badge>
                         </div>
                       </SelectItem>
@@ -2098,13 +2098,13 @@ export default function TranslatorProPage() {
                       <SelectItem value="deepl">
                         <div className="flex items-center gap-2">
                           <Languages className="h-4 w-4 text-sky-500" />
-                          <span>DeepL Pro</span>
+                          <span>{t('translatorProPage.deeplPro')}</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="google">
                         <div className="flex items-center gap-2">
                           <Languages className="h-4 w-4 text-red-500" />
-                          <span>Google Translate</span>
+                          <span>{t('translatorProPage.googleTranslate')}</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -2112,7 +2112,7 @@ export default function TranslatorProPage() {
                 </div>
                 
                 <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
-                  <Label>API Key</Label>
+                  <Label>{t('translatorProPage.apiKey')}</Label>
                   <Input
                     type="password"
                     value={apiKey}
@@ -2178,7 +2178,7 @@ export default function TranslatorProPage() {
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-2">
                       <Database className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Usa Translation Memory</span>
+                      <span className="text-sm">{t('translatorProPage.usaTranslationMemory')}</span>
                     </div>
                     <input
                       type="checkbox"
@@ -2191,7 +2191,7 @@ export default function TranslatorProPage() {
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm">Quality Checks</span>
+                      <span className="text-sm">{t('translatorProPage.qualityChecks')}</span>
                     </div>
                     <input
                       type="checkbox"
@@ -2363,7 +2363,7 @@ export default function TranslatorProPage() {
                       {translatedItems.length > 0 && (
                         <div className="mt-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-semibold text-muted-foreground uppercase">Ultime traduzioni</span>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase">{t('translatorProPage.ultimeTraduzioni')}</span>
                             <span className="text-[10px] text-muted-foreground">{translatedItems.length} completate</span>
                           </div>
                           <div className="divide-y divide-border/30">
@@ -2565,7 +2565,7 @@ export default function TranslatorProPage() {
                 </div>
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-purple-400">{selectedGame.name}</h3>
-                  <p className="text-xs text-muted-foreground">Translation completed</p>
+                  <p className="text-xs text-muted-foreground">{t('translatorProPage.translationCompleted')}</p>
                 </div>
               </div>
             )}
@@ -2574,26 +2574,26 @@ export default function TranslatorProPage() {
             <div className="grid grid-cols-4 gap-4">
               <div className="group p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center transition-all duration-300 hover:bg-green-500/15 hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:scale-[1.02]">
                 <p className="text-2xl font-bold text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]">{currentJob.results.translatedItems}</p>
-                <p className="text-xs text-muted-foreground">Translated</p>
+                <p className="text-xs text-muted-foreground">{t('translatorProPage.translated')}</p>
               </div>
               <div className="group p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center transition-all duration-300 hover:bg-blue-500/15 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-[1.02]">
                 <p className="text-2xl font-bold text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">{currentJob.results.fromMemoryItems}</p>
-                <p className="text-xs text-muted-foreground">From memory</p>
+                <p className="text-xs text-muted-foreground">{t('translatorProPage.fromMemory')}</p>
               </div>
               <div className="group p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center transition-all duration-300 hover:bg-purple-500/15 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:scale-[1.02]">
                 <p className="text-2xl font-bold text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">{currentJob.results.averageQualityScore}%</p>
-                <p className="text-xs text-muted-foreground">Quality</p>
+                <p className="text-xs text-muted-foreground">{t('translatorProPage.quality')}</p>
               </div>
               <div className="group p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center transition-all duration-300 hover:bg-amber-500/15 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02]">
                 <p className="text-2xl font-bold text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">${currentJob.results.estimatedCost.toFixed(4)}</p>
-                <p className="text-xs text-muted-foreground">Cost</p>
+                <p className="text-xs text-muted-foreground">{t('translatorProPage.cost')}</p>
               </div>
             </div>
             
             {/* Files */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium">Translated files</h3>
+                <h3 className="font-medium">{t('translatorProPage.translatedFiles')}</h3>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={handleSaveAllFiles}>
                     <CheckCircle className="mr-2 h-4 w-4" />
@@ -2650,10 +2650,10 @@ export default function TranslatorProPage() {
                 </div>
                 <div className="border rounded-lg overflow-hidden">
                   <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_80px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase">
-                    <span>Originale</span>
-                    <span>Traduzione</span>
-                    <span>Tipo</span>
-                    <span className="text-right">Qualità</span>
+                    <span>{t('translatorProPage.original')}</span>
+                    <span>{t('translatorProPage.translation')}</span>
+                    <span>{t('translatorProPage.tipo')}</span>
+                    <span className="text-right">{t('translatorProPage.qualità')}</span>
                   </div>
                   <ScrollArea className="max-h-[400px]">
                     <div className="divide-y divide-border/50">
@@ -2771,17 +2771,17 @@ export default function TranslatorProPage() {
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="text-slate-300 space-y-3">
-                <p>Il pacchetto di traduzione è stato salvato sul tuo Desktop:</p>
+                <p>{t('translatorProPage.ilPacchettoDiTraduzioneÈStatoS')}</p>
                 <code className="block bg-muted p-3 rounded text-primary text-sm break-all">
                   {exportedFilePath}
                 </code>
                 <div className="mt-4 text-sm text-slate-400">
-                  <p className="font-semibold mb-2">Il pacchetto contiene:</p>
+                  <p className="font-semibold mb-2">{t('translatorProPage.ilPacchettoContiene')}</p>
                   <ul className="list-disc list-inside space-y-1">
                     <li>{t('translatorProPage.translatedFiles')}</li>
                     <li>{t('translatorProPage.backupOriginal')}</li>
-                    <li>Formato XUnity.AutoTranslator</li>
-                    <li>README con istruzioni</li>
+                    <li>{t('translatorProPage.formatoXunityautotranslator')}</li>
+                    <li>{t('translatorProPage.readmeConIstruzioni')}</li>
                   </ul>
                 </div>
               </div>

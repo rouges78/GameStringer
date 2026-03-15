@@ -69,7 +69,7 @@ export default function InfoPage() {
           {t('infoPage.information')}
         </p>
         <p className="text-sm text-muted-foreground">
-          <strong>GameStringer</strong> - {t('infoPage.description')}
+          <strong>{t('infoPage.title')}</strong> - {t('infoPage.description')}
           {t('infoPage.developedBy')} <strong>rouges78</strong>.
         </p>
       </Card>
@@ -101,10 +101,10 @@ export default function InfoPage() {
             {t('infoPage.version')}
           </p>
           <div className="grid grid-cols-2 gap-2 text-xs">
-            <div><span className="text-muted-foreground">Ver:</span> <span className="font-mono">{version?.version || '1.0.4'}</span></div>
-            <div><span className="text-muted-foreground">Build:</span> <span className="font-mono">{version?.buildInfo?.build || '---'}</span></div>
-            <div><span className="text-muted-foreground">Data:</span> <span className="font-mono">{version?.buildInfo?.date || '---'}</span></div>
-            <div><span className="text-muted-foreground">Framework:</span> <span className="font-mono">Tauri 2</span></div>
+            <div><span className="text-muted-foreground">{t('infoPage.ver')}</span> <span className="font-mono">{version?.version || '1.0.4'}</span></div>
+            <div><span className="text-muted-foreground">{t('infoPage.build')}</span> <span className="font-mono">{version?.buildInfo?.build || '---'}</span></div>
+            <div><span className="text-muted-foreground">{t('infoPage.data')}</span> <span className="font-mono">{version?.buildInfo?.date || '---'}</span></div>
+            <div><span className="text-muted-foreground">{t('infoPage.framework')}</span> <span className="font-mono">{t('infoPage.tauri2')}</span></div>
           </div>
         </Card>
 
@@ -192,10 +192,10 @@ export default function InfoPage() {
           <p className="text-sm">{t('infoPage.thanks')} 🎮</p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
-              <a href="https://ko-fi.com/gamestringer" target="_blank"><Coffee className="h-3.5 w-3.5 mr-1 text-yellow-500" />Ko-fi</a>
+              <a href="https://ko-fi.com/gamestringer" target="_blank"><Coffee className="h-3.5 w-3.5 mr-1 text-yellow-500" />{t('infoPage.kofi')}</a>
             </Button>
             <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
-              <a href="https://github.com/rouges78/GameStringer" target="_blank"><Github className="h-3.5 w-3.5 mr-1" />GitHub</a>
+              <a href="https://github.com/rouges78/GameStringer" target="_blank"><Github className="h-3.5 w-3.5 mr-1" />{t('infoPage.github')}</a>
             </Button>
           </div>
         </div>
