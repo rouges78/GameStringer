@@ -669,9 +669,9 @@ export default function DanganronpaPatcherPage() {
 
   const getPakTypeBadge = (type: string) => {
     switch (type) {
-      case 'Text': return <Badge variant="default">Testi</Badge>;
-      case 'Script': return <Badge variant="secondary">Script</Badge>;
-      case 'Font': return <Badge variant="outline">Font</Badge>;
+      case 'Text': return <Badge variant="default">{t('visualNovelPage.texts')}</Badge>;
+      case 'Script': return <Badge variant="secondary">{t('visualNovelPage.script')}</Badge>;
+      case 'Font': return <Badge variant="outline">{t('visualNovelPage.font')}</Badge>;
       case 'Texture': return <Badge className="bg-purple-500">{t('textureTranslator.textures')}</Badge>;
       default: return <Badge variant="outline">Unknown</Badge>;
     }
@@ -690,8 +690,8 @@ export default function DanganronpaPatcherPage() {
               <Package className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Visual Novel Patcher</h1>
-              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">Estrai e traduci file PAK/PO di visual novel</p>
+              <h1 className="text-sm font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('visualNovelPage.title')}</h1>
+              <p className="text-white/70 text-[10px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('visualNovelPage.subtitle')}</p>
             </div>
           </div>
           
@@ -723,7 +723,7 @@ export default function DanganronpaPatcherPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs flex items-center gap-1.5">
               <FolderOpen className="w-3 h-3 text-emerald-400" />{t('telltale.selectGame')}</CardTitle>
-            <span className="text-[10px] text-muted-foreground">Seleziona la cartella di installazione del gioco</span>
+            <span className="text-[10px] text-muted-foreground">{t('visualNovelPage.selectFolder')}</span>
           </div>
         </CardHeader>
         <CardContent className="px-3 pb-2">
@@ -883,7 +883,7 @@ export default function DanganronpaPatcherPage() {
                   ) : (
                     <div className="text-center py-4 text-muted-foreground">
                       <FileText className="w-8 h-8 mx-auto mb-1 opacity-50" />
-                      <p className="text-xs">Seleziona un file PAK</p>
+                      <p className="text-xs">{t('visualNovelPage.selectPak')}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -1035,8 +1035,8 @@ export default function DanganronpaPatcherPage() {
                 ) : (
                   <div className="text-center py-6 text-muted-foreground">
                     <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm font-medium">Nessun file PO caricato</p>
-                    <p className="text-xs mt-1">Apri un file PO per iniziare</p>
+                    <p className="text-sm font-medium">{t('visualNovelPage.noPoLoaded')}</p>
+                    <p className="text-xs mt-1">{t('visualNovelPage.openPoToStart')}</p>
                   </div>
                 )}
               </ScrollArea>
@@ -1124,7 +1124,7 @@ export default function DanganronpaPatcherPage() {
 
                 {selectedSteamGame && selectedSteamGame.wad_files.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">File WAD attuali:</p>
+                    <p className="text-xs text-muted-foreground">{t('visualNovelPage.currentWadFiles')}</p>
                     {selectedSteamGame.wad_files.map((wad, i) => (
                       <div key={i} className="flex items-center justify-between p-2 rounded bg-slate-950/50 border border-slate-800">
                         <span className="text-xs font-mono">{wad.name}</span>
@@ -1182,8 +1182,8 @@ export default function DanganronpaPatcherPage() {
                     </div>
                   ) : (
                     <div className="text-center py-3 text-muted-foreground">
-                      <p className="text-xs">Nessun backup</p>
-                      <p className="text-[10px] mt-0.5">Creati automaticamente</p>
+                      <p className="text-xs">{t('visualNovelPage.noBackup')}</p>
+                      <p className="text-[10px] mt-0.5">{t('visualNovelPage.autoCreated')}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -1197,7 +1197,7 @@ export default function DanganronpaPatcherPage() {
                   <CardTitle className="text-xs flex items-center gap-1.5">
                     <Globe className="w-3 h-3 text-emerald-400" />
                     {alliceInfo.team_name}
-                    <span className="text-[10px] font-normal text-muted-foreground ml-1">Team traduzione ufficiale</span>
+                    <span className="text-[10px] font-normal text-muted-foreground ml-1">{t('visualNovelPage.officialTeam')}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 pb-2 space-y-2">
@@ -1217,7 +1217,7 @@ export default function DanganronpaPatcherPage() {
                   </div>
                   
                   <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">Patch disponibili:</p>
+                    <p className="text-xs text-muted-foreground">{t('visualNovelPage.availablePatches')}</p>
                     {alliceInfo.patches.map((patch, i) => (
                       <div key={i} className="p-2 rounded bg-slate-950/50 border border-slate-800">
                         <div className="flex items-center justify-between">
@@ -1287,14 +1287,14 @@ export default function DanganronpaPatcherPage() {
                 <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 space-y-2">
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm font-medium text-emerald-300">ZIP creato con successo!</span>
+                    <span className="text-sm font-medium text-emerald-300">{t('visualNovelPage.zipCreated')}</span>
                   </div>
                   <div className="text-xs space-y-1">
                     <p className="text-muted-foreground truncate">
-                      <span className="text-emerald-400/70">Percorso:</span> {exportResult.zipPath}
+                      <span className="text-emerald-400/70">{t('visualNovelPage.path')}</span> {exportResult.zipPath}
                     </p>
                     <p className="text-muted-foreground">
-                      <span className="text-emerald-400/70">Dimensione:</span> {exportResult.zipSizeMb.toFixed(1)} MB
+                      <span className="text-emerald-400/70">{t('visualNovelPage.size')}</span> {exportResult.zipSizeMb.toFixed(1)} MB
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-1 mt-1">
@@ -1306,7 +1306,7 @@ export default function DanganronpaPatcherPage() {
               )}
 
               <div className="text-[10px] text-muted-foreground space-y-1 p-2 rounded bg-slate-950/50 border border-slate-800">
-                <p className="font-medium text-slate-400">Contenuto dello ZIP:</p>
+                <p className="font-medium text-slate-400">{t('visualNovelPage.zipContent')}</p>
                 <p>&#x2022; <span className="text-emerald-400/70">dr1_data_keyboard_us.wad</span> — WAD patchato italiano</p>
                 <p>&#x2022; <span className="text-emerald-400/70">install.bat</span> — Installer automatico Steam</p>
                 <p>&#x2022; <span className="text-emerald-400/70">LEGGIMI.txt</span> — Istruzioni installazione</p>
@@ -1407,7 +1407,7 @@ export default function DanganronpaPatcherPage() {
                       onChange={(e) => setLinSpeakerFilter(e.target.value)}
                       className="h-9 px-3 rounded-md border border-slate-700 bg-slate-900 text-sm"
                     >
-                      <option value="all">Tutti i personaggi</option>
+                      <option value="all">{t('visualNovelPage.allCharacters')}</option>
                       {linStats && Object.keys(linStats.by_speaker).map(speaker => (
                         <option key={speaker} value={speaker}>{speaker}</option>
                       ))}
@@ -1552,8 +1552,8 @@ export default function DanganronpaPatcherPage() {
                 ) : linDialogues.length === 0 ? (
                   <div className="text-center py-6 text-muted-foreground">
                     <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm font-medium">Nessun file LIN caricato</p>
-                    <p className="text-xs mt-1">Estrai i file .LIN dal WAD con DRAT</p>
+                    <p className="text-sm font-medium">{t('visualNovelPage.noLinLoaded')}</p>
+                    <p className="text-xs mt-1">{t('visualNovelPage.extractLinFromWad')}</p>
                   </div>
                 ) : (
                   <div className="text-center py-6 text-muted-foreground">

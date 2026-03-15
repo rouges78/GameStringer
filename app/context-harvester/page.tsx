@@ -295,7 +295,7 @@ export default function ContextHarvesterPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">{t('nav.contextHarvester')}</h1>
-              <p className="text-white/70 text-sm">Estrazione automatica contesto per traduzione AI</p>
+              <p className="text-white/70 text-sm">{t('contextHarvesterPage.subtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -403,7 +403,7 @@ export default function ContextHarvesterPage() {
               <Card className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <Monitor className="h-4 w-4 text-blue-400" />
-                  <span className="text-xs font-medium">Schermate</span>
+                  <span className="text-xs font-medium">{t('contextHarvesterPage.screenshots')}</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {Object.entries(result.stats.screens)
@@ -420,7 +420,7 @@ export default function ContextHarvesterPage() {
               <Card className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <User className="h-4 w-4 text-amber-400" />
-                  <span className="text-xs font-medium">Speaker</span>
+                  <span className="text-xs font-medium">{t('contextHarvesterPage.speaker')}</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {Object.entries(result.stats.speakers)
@@ -437,7 +437,7 @@ export default function ContextHarvesterPage() {
               <Card className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <AlertTriangle className="h-4 w-4 text-yellow-400" />
-                  <span className="text-xs font-medium">Vincoli</span>
+                  <span className="text-xs font-medium">{t('contextHarvesterPage.constraints')}</span>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-0.5">
                   <div>{result.stats.stringsWithPlaceholders} con placeholder</div>
@@ -449,7 +449,7 @@ export default function ContextHarvesterPage() {
               <Card className="p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <BarChart3 className="h-4 w-4 text-emerald-400" />
-                  <span className="text-xs font-medium">Toni</span>
+                  <span className="text-xs font-medium">{t('contextHarvesterPage.tones')}</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {Object.entries(result.stats.tones)
@@ -498,7 +498,7 @@ export default function ContextHarvesterPage() {
                 onChange={(e) => setFilterScreen(e.target.value as any)}
                 className="h-7 text-xs bg-background border rounded px-2"
               >
-                <option value="all">Tutte le schermate</option>
+                <option value="all">{t('contextHarvesterPage.allScreenshots')}</option>
                 {Object.keys(result.stats.screens).map(s => (
                   <option key={s} value={s}>{SCREEN_ICONS[s as ScreenType] || ""} {s} ({result.stats.screens[s as ScreenType]})</option>
                 ))}
@@ -508,7 +508,7 @@ export default function ContextHarvesterPage() {
                 onChange={(e) => setFilterSpeaker(e.target.value as any)}
                 className="h-7 text-xs bg-background border rounded px-2"
               >
-                <option value="all">Tutti gli speaker</option>
+                <option value="all">{t('contextHarvesterPage.allSpeakers')}</option>
                 {Object.keys(result.stats.speakers).map(s => (
                   <option key={s} value={s}>{s} ({result.stats.speakers[s as SpeakerType]})</option>
                 ))}
@@ -581,7 +581,7 @@ export default function ContextHarvesterPage() {
                   <CardContent className="px-4 pb-4 space-y-3">
                     {/* Screen */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Schermata</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.screen')}</Label>
                       <div className="flex items-center gap-2 mt-0.5">
                         <Badge className={cn("text-xs", SCREEN_COLORS[selectedCtx.screen])}>
                           {SCREEN_ICONS[selectedCtx.screen]} {selectedCtx.screen}
@@ -594,7 +594,7 @@ export default function ContextHarvesterPage() {
 
                     {/* Speaker */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Speaker</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.speaker')}</Label>
                       <div className="flex items-center gap-2 mt-0.5">
                         <Badge className={cn("text-xs", SPEAKER_COLORS[selectedCtx.speaker])}>
                           {selectedCtx.speakerName || selectedCtx.speaker}
@@ -610,7 +610,7 @@ export default function ContextHarvesterPage() {
 
                     {/* Tone */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Tono</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.tone')}</Label>
                       <div className="mt-0.5">
                         <Badge className={cn("text-xs", TONE_COLORS[selectedCtx.tone])}>
                           {selectedCtx.tone}
@@ -620,7 +620,7 @@ export default function ContextHarvesterPage() {
 
                     {/* Content Type */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Tipo Contenuto</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.contentType')}</Label>
                       <div className="mt-0.5">
                         <Badge variant="outline" className="text-xs">{selectedCtx.contentType}</Badge>
                       </div>
@@ -630,7 +630,7 @@ export default function ContextHarvesterPage() {
 
                     {/* Constraints */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Vincoli UI</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.uiConstraints')}</Label>
                       <div className="space-y-1 mt-1">
                         {selectedCtx.constraints.maxLength !== null && (
                           <div className="text-xs">📏 Max lunghezza: <span className="font-medium">{selectedCtx.constraints.maxLength}</span> chars</div>
@@ -647,7 +647,7 @@ export default function ContextHarvesterPage() {
                           <div className="text-xs">↔️ Riga singola</div>
                         )}
                         {!selectedCtx.constraints.maxLength && !selectedCtx.constraints.hasPlaceholders && !selectedCtx.constraints.isAllCaps && (
-                          <div className="text-xs text-muted-foreground">Nessun vincolo rilevato</div>
+                          <div className="text-xs text-muted-foreground">{t('contextHarvesterPage.noConstraints')}</div>
                         )}
                       </div>
                     </div>
@@ -668,7 +668,7 @@ export default function ContextHarvesterPage() {
 
                     {/* Prompt Hint */}
                     <div>
-                      <Label className="text-[10px] text-muted-foreground">Prompt Hint</Label>
+                      <Label className="text-[10px] text-muted-foreground">{t('contextHarvesterPage.promptHint')}</Label>
                       <pre className="text-[10px] font-mono bg-muted/50 rounded p-1.5 mt-1 whitespace-pre-wrap text-muted-foreground">
                         {selectedCtx.promptHint || "—"}
                       </pre>

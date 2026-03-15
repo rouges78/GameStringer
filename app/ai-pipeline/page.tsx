@@ -166,7 +166,7 @@ export default function AIPipelinePage() {
               <Workflow className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">AI Translation Pipeline</h1>
+              <h1 className="text-xl font-bold text-white">{t('aiPipelinePage.title')}</h1>
               <p className="text-white/70 text-sm">Multi-step: Harvest → Translate → QA → Auto-Fix → Review → Score</p>
             </div>
           </div>
@@ -183,8 +183,8 @@ export default function AIPipelinePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <Card className="lg:col-span-2">
             <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm">Input Stringhe</CardTitle>
-              <CardDescription className="text-xs">Una per riga. Usa la demo o incolla le tue.</CardDescription>
+              <CardTitle className="text-sm">{t('aiPipelinePage.inputStrings')}</CardTitle>
+              <CardDescription className="text-xs">{t('aiPipelinePage.inputDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-4">
               <Textarea
@@ -208,7 +208,7 @@ export default function AIPipelinePage() {
                   <Input value={sourceLang} onChange={(e) => setSourceLang(e.target.value)} className="h-7 text-xs mt-1" />
                 </div>
                 <div>
-                  <Label className="text-xs">Target</Label>
+                  <Label className="text-xs">{t('aiPipelinePage.target')}</Label>
                   <Input value={targetLang} onChange={(e) => setTargetLang(e.target.value)} className="h-7 text-xs mt-1" />
                 </div>
               </div>
@@ -216,7 +216,7 @@ export default function AIPipelinePage() {
               <Separator />
 
               <div>
-                <Label className="text-xs font-medium">Modalità Pipeline</Label>
+                <Label className="text-xs font-medium">{t('aiPipelinePage.pipelineMode')}</Label>
                 <div className="flex gap-1 mt-1">
                   {(["quick", "balanced", "max"] as const).map(mode => (
                     <Button
@@ -245,7 +245,7 @@ export default function AIPipelinePage() {
                       <Switch checked={enableAutoFix} onCheckedChange={setEnableAutoFix} />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs">Review AI</Label>
+                      <Label className="text-xs">{t('aiPipelinePage.aiReview')}</Label>
                       <Switch checked={enableReview} onCheckedChange={setEnableReview} />
                     </div>
                   </div>
@@ -264,7 +264,7 @@ export default function AIPipelinePage() {
         {steps.length > 0 && (
           <Card>
             <CardHeader className="py-2 px-4">
-              <CardTitle className="text-xs">Pipeline Steps</CardTitle>
+              <CardTitle className="text-xs">{t('aiPipelinePage.pipelineSteps')}</CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-3">
               <div className="flex items-center gap-1">
@@ -307,7 +307,7 @@ export default function AIPipelinePage() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">Score Medio</div>
+                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.avgScore')}</div>
                 <div className={cn("text-xl font-bold",
                   result.averageScore >= 80 ? "text-emerald-400" :
                   result.averageScore >= 60 ? "text-yellow-400" :
@@ -315,19 +315,19 @@ export default function AIPipelinePage() {
                 )}>{result.averageScore}%</div>
               </Card>
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">Passate 1° colpo</div>
+                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.firstShot')}</div>
                 <div className="text-xl font-bold text-emerald-400">{result.stats.passedFirstTime}/{result.stats.totalStrings}</div>
               </Card>
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">Auto-Fixate</div>
+                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.autoFixed')}</div>
                 <div className="text-xl font-bold text-blue-400">{result.stats.fixedByAutoFix}</div>
               </Card>
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">Migliorate da Review</div>
+                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.reviewImproved')}</div>
                 <div className="text-xl font-bold text-purple-400">{result.stats.improvedByReview}</div>
               </Card>
               <Card className="p-3">
-                <div className="text-[10px] text-muted-foreground">Tempo Totale</div>
+                <div className="text-[10px] text-muted-foreground">{t('aiPipelinePage.totalTime')}</div>
                 <div className="text-xl font-bold text-muted-foreground">{(result.totalDurationMs / 1000).toFixed(1)}s</div>
               </Card>
             </div>
@@ -443,7 +443,7 @@ export default function AIPipelinePage() {
                       <>
                         <Separator />
                         <div>
-                          <Label className="text-[10px] text-muted-foreground">Suggerimenti</Label>
+                          <Label className="text-[10px] text-muted-foreground">{t('aiPipelinePage.suggestions')}</Label>
                           {selectedReport.suggestions.map((s, si) => (
                             <div key={si} className="text-[11px] text-muted-foreground mt-0.5">• {s}</div>
                           ))}

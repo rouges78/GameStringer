@@ -979,7 +979,7 @@ export default function EditorPage() {
                       <Upload className="h-3.5 w-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-slate-800 border-slate-700 text-xs">Importa file</TooltipContent>
+                  <TooltipContent className="bg-slate-800 border-slate-700 text-xs">{t('editorPage.importFile')}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
               <TooltipProvider>
@@ -990,13 +990,13 @@ export default function EditorPage() {
                         <Download className="h-3.5 w-3.5" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-700">
-                        <SelectItem value="json">Esporta come JSON</SelectItem>
-                        <SelectItem value="csv">Esporta come CSV</SelectItem>
-                        <SelectItem value="po">Esporta come PO</SelectItem>
+                        <SelectItem value="json">{t('editorPage.exportJson')}</SelectItem>
+                        <SelectItem value="csv">{t('editorPage.exportCsv')}</SelectItem>
+                        <SelectItem value="po">{t('editorPage.exportPo')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </TooltipTrigger>
-                  <TooltipContent className="bg-slate-800 border-slate-700 text-xs">Esporta progetto</TooltipContent>
+                  <TooltipContent className="bg-slate-800 border-slate-700 text-xs">{t('editorPage.exportProject')}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -1023,10 +1023,10 @@ export default function EditorPage() {
                 <SelectValue placeholder={t('gameDetails.status')} />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700 z-50">
-                <SelectItem value="all">Tutti gli stati</SelectItem>
+                <SelectItem value="all">{t('editorPage.allStates')}</SelectItem>
                 <SelectItem value="pending">{t('batch.pending')}</SelectItem>
                 <SelectItem value="completed">{t('batch.completed')}</SelectItem>
-                <SelectItem value="edited">Modificati</SelectItem>
+                <SelectItem value="edited">{t('editorPage.modified')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterGame} onValueChange={setFilterGame}>
@@ -1058,7 +1058,7 @@ export default function EditorPage() {
               <div className="p-3 bg-slate-800/50 rounded-full border border-slate-700/50 mb-3 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
                 <Loader2 className="h-6 w-6 animate-spin text-indigo-400" />
               </div>
-              <span className="text-xs font-medium tracking-wide">Caricamento progetti...</span>
+              <span className="text-xs font-medium tracking-wide">{t('editorPage.loadingProjects')}</span>
             </div>
           ) : explorerView === 'games' ? (
             // Vista games
@@ -1116,7 +1116,7 @@ export default function EditorPage() {
                 {selectedProject.files.length === 0 ? (
                   <div className="text-center p-8 text-slate-500 text-sm">
                     <FileText className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                    <p>Nessun file</p>
+                    <p>{t('editorPage.noFile')}</p>
                   </div>
                 ) : (
                   selectedProject.files.map((file, index) => (
@@ -1176,7 +1176,7 @@ export default function EditorPage() {
                 {filteredTranslations.length === 0 ? (
                   <div className="text-center p-8 text-slate-500 text-sm">
                     <Languages className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                    <p>Nessuna stringa</p>
+                    <p>{t('editorPage.noStrings')}</p>
                   </div>
                 ) : (
                   filteredTranslations.map((t, index) => (
@@ -1290,7 +1290,7 @@ export default function EditorPage() {
               {isMultiLangFile && detectedLanguages.length > 0 && (
                 <div className="flex items-center gap-4 pt-2 mt-1 border-t border-slate-800/50">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Sorgente:</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('editorPage.sourceLabel')}</span>
                     <Select value={String(sourceLanguageIndex)} onValueChange={(v) => setSourceLanguageIndex(Number(v))}>
                       <SelectTrigger className="h-7 w-[140px] text-xs bg-slate-950/50 border-slate-700/50 rounded-md font-medium text-slate-300">
                         <SelectValue />
@@ -1304,7 +1304,7 @@ export default function EditorPage() {
                   </div>
                   <ArrowLeftRight className="h-3.5 w-3.5 text-slate-600" />
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Destinazione:</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('editorPage.destLabel')}</span>
                     <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{t('languages.it')}</span>
                   </div>
                 </div>
@@ -1496,7 +1496,7 @@ export default function EditorPage() {
                           <div className="p-1 rounded bg-amber-500/20 border border-amber-500/30">
                             <BookOpen className="h-3 w-3 text-amber-400" />
                           </div>
-                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Memoria di Traduzione</span>
+                          <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{t('editorPage.translationMemory')}</span>
                           <span className="text-[9px] text-amber-500/60 ml-auto">{glossaryTerms.length} termini trovati</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -1527,7 +1527,7 @@ export default function EditorPage() {
                   <div className="p-4 rounded-2xl bg-slate-900/30 border border-slate-800/50 mb-4 shadow-inner">
                     <LayoutPanelLeft className="h-10 w-10 text-slate-600 opacity-50" />
                   </div>
-                  <p className="text-sm font-semibold text-slate-400 tracking-wide">Seleziona una stringa dalla lista</p>
+                  <p className="text-sm font-semibold text-slate-400 tracking-wide">{t('editorPage.selectString')}</p>
                   <p className="text-xs text-slate-600 mt-1">per iniziare a modificare la traduzione</p>
                 </div>
               ) : (
@@ -1561,7 +1561,7 @@ export default function EditorPage() {
                         <div className="p-1 rounded bg-amber-500/20 border border-amber-500/30">
                           <BookOpen className="h-3 w-3 text-amber-400" />
                         </div>
-                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Memoria di Traduzione</span>
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{t('editorPage.translationMemory')}</span>
                         <span className="text-[9px] text-amber-500/60 ml-auto">{glossaryTerms.length} termini trovati</span>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -1593,7 +1593,7 @@ export default function EditorPage() {
             <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-6 border border-slate-700">
               <LayoutPanelLeft className="h-8 w-8 opacity-50" />
             </div>
-            <h3 className="text-lg font-semibold mb-2 text-slate-400">Nessuna selezione</h3>
+            <h3 className="text-lg font-semibold mb-2 text-slate-400">{t('editorPage.noSelection')}</h3>
             <p className="text-sm text-center max-w-xs opacity-70">
               Seleziona una stringa dalla lista per iniziare a modificare la traduzione
             </p>

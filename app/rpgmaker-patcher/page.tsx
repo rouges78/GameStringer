@@ -240,8 +240,8 @@ export default function RpgMakerPatcherPage() {
               <Gamepad2 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">RPG Maker Patcher</h1>
-              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">Estrai e traduci giochi RPG Maker MV/MZ</p>
+              <h1 className="text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('rpgmakerPatcherPage.title')}</h1>
+              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('rpgmakerPatcherPage.subtitle')}</p>
             </div>
           </div>
           
@@ -373,7 +373,7 @@ export default function RpgMakerPatcherPage() {
                 onChange={(e) => setFilterFile(e.target.value)}
                 className="h-8 px-3 rounded-md bg-slate-950/50 border border-slate-700 text-sm"
               >
-                <option value="all">Tutti i file</option>
+                <option value="all">{t('rpgmakerPatcherPage.allFiles')}</option>
                 {uniqueFiles.map(file => (
                   <option key={file} value={file}>{file}</option>
                 ))}
@@ -457,7 +457,7 @@ export default function RpgMakerPatcherPage() {
             ) : strings.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Gamepad2 className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">Nessuna stringa estratta</p>
+                <p className="text-lg font-medium">{t('rpgmakerPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
                   Seleziona un gioco RPG Maker e clicca "Estrai Stringhe"
                 </p>

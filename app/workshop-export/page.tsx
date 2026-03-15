@@ -135,7 +135,7 @@ export default function WorkshopExportPage() {
             <Package className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-white">Steam Workshop Export</h1>
+            <h1 className="text-base font-bold text-white">{t('workshopExportPage.title')}</h1>
             <p className="text-white/60 text-[10px]">
               Genera pacchetti di traduzione pronti per la pubblicazione su Steam Workshop
             </p>
@@ -153,7 +153,7 @@ export default function WorkshopExportPage() {
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Nome Gioco *</Label>
+                  <Label className="text-xs">{t('workshopExportPage.gameName')}</Label>
                   <Input
                     value={config.gameName}
                     onChange={(e) => setConfig(prev => ({ ...prev, gameName: e.target.value }))}
@@ -162,7 +162,7 @@ export default function WorkshopExportPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Steam App ID *</Label>
+                  <Label className="text-xs">{t('workshopExportPage.steamAppId')}</Label>
                   <Input
                     type="number"
                     value={config.gameAppId || ''}
@@ -174,7 +174,7 @@ export default function WorkshopExportPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">Titolo Workshop</Label>
+                <Label className="text-xs">{t('workshopExportPage.workshopTitle')}</Label>
                 <Input
                   value={config.title}
                   onChange={(e) => setConfig(prev => ({ ...prev, title: e.target.value }))}
@@ -185,7 +185,7 @@ export default function WorkshopExportPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Lingua Target *</Label>
+                  <Label className="text-xs">{t('workshopExportPage.targetLang')}</Label>
                   <Select value={config.targetLanguage} onValueChange={(v) => setConfig(prev => ({ ...prev, targetLanguage: v }))}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -200,9 +200,9 @@ export default function WorkshopExportPage() {
                   <Select value={config.engine} onValueChange={(v: 'unity' | 'unreal' | 'generic') => setConfig(prev => ({ ...prev, engine: v }))}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="unity">Unity</SelectItem>
-                      <SelectItem value="unreal">Unreal Engine</SelectItem>
-                      <SelectItem value="generic">Generico</SelectItem>
+                      <SelectItem value="unity">{t('workshopExportPage.unity')}</SelectItem>
+                      <SelectItem value="unreal">{t('workshopExportPage.unrealEngine')}</SelectItem>
+                      <SelectItem value="generic">{t('workshopExportPage.generic')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -211,9 +211,9 @@ export default function WorkshopExportPage() {
                   <Select value={config.visibility} onValueChange={(v: 'public' | 'friends_only' | 'private') => setConfig(prev => ({ ...prev, visibility: v }))}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="public">Pubblico</SelectItem>
-                      <SelectItem value="friends_only">Solo Amici</SelectItem>
-                      <SelectItem value="private">Privato</SelectItem>
+                      <SelectItem value="public">{t('workshopExportPage.public')}</SelectItem>
+                      <SelectItem value="friends_only">{t('workshopExportPage.friendsOnly')}</SelectItem>
+                      <SelectItem value="private">{t('workshopExportPage.private')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -221,7 +221,7 @@ export default function WorkshopExportPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Autore *</Label>
+                  <Label className="text-xs">{t('workshopExportPage.author')}</Label>
                   <Input
                     value={config.author}
                     onChange={(e) => setConfig(prev => ({ ...prev, author: e.target.value }))}
@@ -251,7 +251,7 @@ export default function WorkshopExportPage() {
 
               {/* Tags */}
               <div className="space-y-1">
-                <Label className="text-xs">Tags</Label>
+                <Label className="text-xs">{t('workshopExportPage.tags')}</Label>
                 <div className="flex items-center gap-1 flex-wrap">
                   {config.tags.map((tag, i) => (
                     <Badge key={i} variant="secondary" className="text-[10px] cursor-pointer" onClick={() => handleRemoveTag(i)}>
@@ -275,7 +275,7 @@ export default function WorkshopExportPage() {
           {/* Files */}
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">File Tradotti</CardTitle>
+              <CardTitle className="text-sm">{t('workshopExportPage.translatedFiles')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="border-2 border-dashed border-zinc-700 rounded-lg p-4 text-center">
@@ -288,8 +288,8 @@ export default function WorkshopExportPage() {
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <Package className="h-8 w-8 mx-auto text-zinc-500 mb-2" />
-                  <p className="text-xs text-zinc-400">Clicca per aggiungere file tradotti</p>
-                  <p className="text-[10px] text-zinc-600">JSON, CSV, PO, XML, YAML, .locres, .pak, ecc.</p>
+                  <p className="text-xs text-zinc-400">{t('workshopExportPage.clickToAdd')}</p>
+                  <p className="text-[10px] text-zinc-600">{t('workshopExportPage.supportedFormats')}</p>
                 </label>
               </div>
 
@@ -315,7 +315,7 @@ export default function WorkshopExportPage() {
           {/* Validation */}
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Validazione</CardTitle>
+              <CardTitle className="text-sm">{t('workshopExportPage.validation')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
               {validation.errors.map((err, i) => (

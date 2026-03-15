@@ -145,8 +145,8 @@ export default function OllamaManagerPage() {
               <Package className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Ollama Model Manager</h1>
-              <p className="text-white/70 text-xs">Gestisci, testa e confronta modelli locali per la traduzione</p>
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('ollamaManagerPage.title')}</h1>
+              <p className="text-white/70 text-xs">{t('ollamaManagerPage.subtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -245,7 +245,7 @@ export default function OllamaManagerPage() {
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
                 <Star className="h-4 w-4 text-teal-400" />
-                <span className="text-xs font-semibold text-teal-400">Consigliati per Traduzione</span>
+                <span className="text-xs font-semibold text-teal-400">{t('ollamaManagerPage.recommended')}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {RECOMMENDED_MODELS.map(rm => {
@@ -261,7 +261,7 @@ export default function OllamaManagerPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-0.5">
                             <span className="text-xs font-semibold">{rm.name}</span>
-                            {rm.recommended && <Badge className="text-[7px] h-3 px-1 bg-teal-500/20 text-teal-300 border-teal-500/30">Consigliato</Badge>}
+                            {rm.recommended && <Badge className="text-[7px] h-3 px-1 bg-teal-500/20 text-teal-300 border-teal-500/30">{t('ollamaManagerPage.recommendedBadge')}</Badge>}
                             {isInstalled && <CheckCircle2 className="h-3 w-3 text-emerald-400" />}
                           </div>
                           <p className="text-[10px] text-muted-foreground leading-tight">{rm.description}</p>
@@ -309,7 +309,7 @@ export default function OllamaManagerPage() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Zap className="h-4 w-4 text-cyan-400" />
-                    <span className="text-xs font-semibold text-cyan-400">Speed Test</span>
+                    <span className="text-xs font-semibold text-cyan-400">{t('ollamaManagerPage.speedTest')}</span>
                   </div>
                   <Button
                     variant="outline" size="sm" className="h-6 text-[10px] gap-1"
@@ -353,11 +353,11 @@ export default function OllamaManagerPage() {
               <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowLeftRight className="h-4 w-4 text-violet-400" />
-                  <span className="text-xs font-semibold text-violet-400">Confronto A/B</span>
+                  <span className="text-xs font-semibold text-violet-400">{t('ollamaManagerPage.abComparison')}</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                   <div className="space-y-1">
-                    <label className="text-[10px] text-muted-foreground">Modello A</label>
+                    <label className="text-[10px] text-muted-foreground">{t('ollamaManagerPage.modelA')}</label>
                     <select
                       value={compareModelA}
                       onChange={e => setCompareModelA(e.target.value)}
@@ -367,7 +367,7 @@ export default function OllamaManagerPage() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] text-muted-foreground">Modello B</label>
+                    <label className="text-[10px] text-muted-foreground">{t('ollamaManagerPage.modelB')}</label>
                     <select
                       value={compareModelB}
                       onChange={e => setCompareModelB(e.target.value)}
@@ -388,7 +388,7 @@ export default function OllamaManagerPage() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-muted-foreground">Testo di prova (EN → IT)</label>
+                  <label className="text-[10px] text-muted-foreground">{t('ollamaManagerPage.testText')}</label>
                   <Input
                     value={compareText}
                     onChange={e => setCompareText(e.target.value)}

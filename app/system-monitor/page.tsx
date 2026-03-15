@@ -26,11 +26,11 @@ export default function SystemMonitorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-slate-300">Risorse Sistema</h2>
+          <h2 className="text-lg font-semibold text-slate-300">{t('systemMonitorPage.systemResources')}</h2>
           <SystemMonitor />
         </div>
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-slate-300">Setup AI Locale</h2>
+          <h2 className="text-lg font-semibold text-slate-300">{t('systemMonitorPage.localAiSetup')}</h2>
           <OllamaSetupWizard onComplete={() => window.location.href = '/ai-translator'} />
         </div>
       </div>

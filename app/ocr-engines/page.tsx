@@ -151,7 +151,7 @@ export default function OCREnginesPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-white">{t('nav.ocrMultiEngine')}</h1>
-              <p className="text-white/70 text-sm">OneOCR · PaddleOCR · RapidOCR · Tesseract</p>
+              <p className="text-white/70 text-sm">{t('ocrEnginesPage.engines')}</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={handleProbe} disabled={isProbing}
@@ -247,8 +247,8 @@ export default function OCREnginesPage() {
                 ) : (
                   <div className="text-center p-6">
                     <Upload className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                    <p className="text-xs text-muted-foreground">Clicca o trascina uno screenshot</p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1">PNG, JPG, BMP, WebP</p>
+                    <p className="text-xs text-muted-foreground">{t('ocrEnginesPage.dropImage')}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">{t('ocrEnginesPage.formats')}</p>
                   </div>
                 )}
               </div>
@@ -262,7 +262,7 @@ export default function OCREnginesPage() {
 
               <div className="flex gap-2 items-end">
                 <div className="flex-1">
-                  <Label className="text-xs">Lingua Testo</Label>
+                  <Label className="text-xs">{t('ocrEnginesPage.textLanguage')}</Label>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value as OCRLanguage)}
@@ -275,7 +275,7 @@ export default function OCREnginesPage() {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Switch checked={compareAll} onCheckedChange={setCompareAll} />
-                  <Label className="text-xs">Confronta tutti</Label>
+                  <Label className="text-xs">{t('ocrEnginesPage.compareAll')}</Label>
                 </div>
               </div>
 
@@ -308,7 +308,7 @@ export default function OCREnginesPage() {
                   {/* Stats */}
                   <div className="flex gap-3 text-xs">
                     <div>
-                      <span className="text-muted-foreground">Confidenza: </span>
+                      <span className="text-muted-foreground">{t('ocrEnginesPage.confidence')}</span>
                       <span className={cn("font-medium",
                         ocrResult.confidence >= 80 ? "text-emerald-400" :
                         ocrResult.confidence >= 50 ? "text-yellow-400" :
@@ -316,15 +316,15 @@ export default function OCREnginesPage() {
                       )}>{Math.round(ocrResult.confidence)}%</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Parole: </span>
+                      <span className="text-muted-foreground">{t('ocrEnginesPage.words')}</span>
                       <span className="font-medium">{ocrResult.words.length}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Righe: </span>
+                      <span className="text-muted-foreground">{t('ocrEnginesPage.lines')}</span>
                       <span className="font-medium">{ocrResult.lines.length}</span>
                     </div>
                     <div>
-                      <span className="text-muted-foreground">Tempo: </span>
+                      <span className="text-muted-foreground">{t('ocrEnginesPage.time')}</span>
                       <span className="font-medium">{ocrResult.processingTime}ms</span>
                     </div>
                   </div>
@@ -411,7 +411,7 @@ export default function OCREnginesPage() {
         {engineInfos.length > 0 && (
           <Card>
             <CardHeader className="py-2 px-4">
-              <CardTitle className="text-xs">Dettagli Engine</CardTitle>
+              <CardTitle className="text-xs">{t('ocrEnginesPage.engineDetails')}</CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">

@@ -22,11 +22,9 @@ export default function AdvancedToolsPage() {
       <div className="flex items-center gap-3 mb-2">
         <Sparkles className="h-6 w-6 text-violet-400" />
         <h1 className="text-2xl font-bold text-slate-200">Advanced Tools</h1>
-        <Badge className="bg-violet-500/20 text-violet-300 text-[10px]">Next-Gen</Badge>
+        <Badge className="bg-violet-500/20 text-violet-300 text-[10px]">{t('advancedToolsPage.badge')}</Badge>
       </div>
-      <p className="text-sm text-slate-400 -mt-4">
-        Strumenti avanzati che rendono GameStringer unico: Lore Assistant, Auto-Hook Scanner, Vision LLM.
-      </p>
+      <p className="text-sm text-slate-400 -mt-4">{t('advancedToolsPage.subtitle')}</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">

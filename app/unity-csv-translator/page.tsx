@@ -296,7 +296,7 @@ export default function UnityCsvTranslatorPage() {
             <div className="p-2.5 bg-black/30 rounded-lg shadow-lg border border-white/10"><Globe className="h-6 w-6 text-white" /></div>
             <div>
               <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('nav.unityCsvTranslator')}</h1>
-              <p className="text-white/70 text-[10px]">Estrai e traduci tabelle SimpleLocalization da giochi Unity</p>
+              <p className="text-white/70 text-[10px]">{t('unityCsvPage.subtitle')}</p>
             </div>
           </div>
           <div className="hidden md:flex items-center gap-3">
@@ -308,7 +308,7 @@ export default function UnityCsvTranslatorPage() {
           </div>
         </div>
         <div className="relative flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/20">
-          <span className="text-[10px] text-white/50 mr-2 self-center">Altri:</span>
+          <span className="text-[10px] text-white/50 mr-2 self-center">{t('unityCsvPage.others')}</span>
           {[{ h: '/unity-patcher', i: Wand2, l: 'Unity Patcher' }, { h: '/unity-bundle', i: Package, l: 'Unity Bundle' }, { h: '/unreal-translator', i: Cpu, l: 'Unreal' }].map(x => (
             <Link key={x.h} href={x.h}><Button variant="outline" size="sm" className="gap-1 h-6 text-[10px] border-white/30 bg-white/10 hover:bg-white/20 text-white"><x.i className="h-3 w-3" />{x.l}</Button></Link>
           ))}
@@ -319,20 +319,20 @@ export default function UnityCsvTranslatorPage() {
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-7 h-7 rounded-full bg-orange-600 flex items-center justify-center text-white text-sm font-bold">1</div>
-          <h2 className="text-base font-bold text-white">Seleziona Gioco Unity</h2>
+          <h2 className="text-base font-bold text-white">{t('unityCsvPage.selectUnityGame')}</h2>
         </div>
         <div className="flex gap-2 items-center">
-          <Button onClick={browse} variant="outline" className="gap-2"><FolderOpen className="h-4 w-4" />Sfoglia...</Button>
+          <Button onClick={browse} variant="outline" className="gap-2"><FolderOpen className="h-4 w-4" />{t('unityCsvPage.browse')}</Button>
           <div className="flex-1 px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700 text-sm text-slate-300 truncate">{gamePath || 'Nessuna cartella selezionata'}</div>
           <Button onClick={doScan} disabled={!gamePath || status === 'scanning'} className="gap-2 bg-orange-600 hover:bg-orange-500">
             {status === 'scanning' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}Scansiona
           </Button>
         </div>
         {scan && <div className="mt-2 flex gap-4 text-xs text-slate-400">
-          <span><b className="text-slate-300">Gioco:</b> {gameName}</span>
-          <span><b className="text-slate-300">Unity:</b> {scan.unityVer}</span>
-          <span><b className="text-slate-300">Tabelle:</b> {scan.tables.length}</span>
-          <span><b className="text-slate-300">Stringhe:</b> {scan.total}</span>
+          <span><b className="text-slate-300">{t('unityCsvPage.gameLabel')}</b> {gameName}</span>
+          <span><b className="text-slate-300">{t('unityCsvPage.unityLabel')}</b> {scan.unityVer}</span>
+          <span><b className="text-slate-300">{t('unityCsvPage.tablesLabel')}</b> {scan.tables.length}</span>
+          <span><b className="text-slate-300">{t('unityCsvPage.stringsLabel')}</b> {scan.total}</span>
         </div>}
       </div>
 
@@ -426,9 +426,9 @@ export default function UnityCsvTranslatorPage() {
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 rounded-full bg-yellow-600 flex items-center justify-center text-white text-sm font-bold">3</div>
-            <h2 className="text-base font-bold text-white">Traduci con AI (Ollama)</h2>
+            <h2 className="text-base font-bold text-white">{t('unityCsvPage.translateWithAi')}</h2>
             <div className="flex-1" />
-            <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="sm" className="h-7 gap-1 text-xs text-slate-400"><Settings2 className="h-3 w-3" />Config</Button>
+            <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="sm" className="h-7 gap-1 text-xs text-slate-400"><Settings2 className="h-3 w-3" />{t('unityCsvPage.config')}</Button>
           </div>
           {showCfg && (
             <div className="mb-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700/50 flex gap-4 items-center flex-wrap">
@@ -439,7 +439,7 @@ export default function UnityCsvTranslatorPage() {
                 </select>
               </div>
               <div className="flex gap-2 items-center">
-                <label className="text-xs text-slate-400">Lingua:</label>
+                <label className="text-xs text-slate-400">{t('unityCsvPage.langLabel')}</label>
                 <select value={targetLang} onChange={e => setTargetLang(e.target.value)} className="bg-slate-700 text-white text-xs rounded px-2 py-1 border border-slate-600">
                   {['it','de','es','fr','pt','zh','ja','ko','ru'].map(l => <option key={l} value={l}>{l.toUpperCase()}</option>)}
                 </select>
@@ -467,7 +467,7 @@ export default function UnityCsvTranslatorPage() {
               <Button onClick={() => { abort.current = true; }} variant="destructive" className="gap-2">
                 <StopCircle className="h-4 w-4" />{t('subtitleOverlay.stop')}</Button>
             )}
-            {status === 'done' && <span className="flex items-center gap-1 text-sm text-emerald-400"><CheckCircle2 className="h-4 w-4" />Traduzione completata!</span>}
+            {status === 'done' && <span className="flex items-center gap-1 text-sm text-emerald-400"><CheckCircle2 className="h-4 w-4" />{t('unityCsvPage.translationComplete')}</span>}
           </div>
         </div>
       )}
@@ -477,15 +477,15 @@ export default function UnityCsvTranslatorPage() {
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">4</div>
-            <h2 className="text-base font-bold text-white">Inietta nel Gioco</h2>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-300 border border-emerald-700/30">Resize Injection</span>
+            <h2 className="text-base font-bold text-white">{t('unityCsvPage.injectInGame')}</h2>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-300 border border-emerald-700/30">{t('unityCsvPage.resizeInjection')}</span>
           </div>
           <div className="mb-3 p-3 rounded-lg bg-slate-800/40 border border-slate-700/30">
             <div className="flex items-center gap-4 text-xs text-slate-300">
               <span><b className="text-white">{scan.done}</b> CSV pronte</span>
               {inkStrings.filter(s => s.done).length > 0 && <span><b className="text-purple-300">{inkStrings.filter(s => s.done).length.toLocaleString()}</b> Ink pronte</span>}
               <span><b className="text-emerald-300">{scan.done + inkStrings.filter(s => s.done).length}</b> totali</span>
-              <span className="text-slate-500">I file originali vengono salvati come .backup</span>
+              <span className="text-slate-500">{t('unityCsvPage.backupInfo')}</span>
             </div>
           </div>
           <div className="flex gap-2 items-center flex-wrap">
@@ -548,7 +548,7 @@ export default function UnityCsvTranslatorPage() {
             <div className={`mt-3 p-3 rounded-lg border ${injectResult.success ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-red-700/50 bg-red-900/20'}`}>
               {injectResult.success ? (
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-emerald-300"><CheckCircle2 className="h-4 w-4" />Injection completata!</div>
+                  <div className="flex items-center gap-2 text-sm text-emerald-300"><CheckCircle2 className="h-4 w-4" />{t('unityCsvPage.injectionComplete')}</div>
                   <div className="flex gap-4 text-xs text-slate-400">
                     {injectResult.ink_replaced > 0 && <span><b className="text-emerald-300">{injectResult.ink_replaced}</b> Ink ({injectResult.ink_files} file)</span>}
                     {injectResult.level_replaced > 0 && <span><b className="text-emerald-300">{injectResult.level_replaced}</b> Level ({injectResult.level_files} file)</span>}

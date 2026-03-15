@@ -248,8 +248,8 @@ export default function RenpyPatcherPage() {
               <Heart className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Ren'Py Patcher</h1>
-              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">Estrai e traduci visual novel Ren'Py</p>
+              <h1 className="text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('renpyPatcherPage.title')}</h1>
+              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('renpyPatcherPage.subtitle')}</p>
             </div>
           </div>
           
@@ -355,7 +355,7 @@ export default function RenpyPatcherPage() {
             
             {/* Generate Translation */}
             <div className="flex items-center gap-3 mt-4 pt-4 border-t border-slate-800">
-              <span className="text-sm text-muted-foreground">Genera file tl/:</span>
+              <span className="text-sm text-muted-foreground">{t('renpyPatcherPage.generateTl')}</span>
               <Input
                 value={targetLanguage}
                 onChange={(e) => setTargetLanguage(e.target.value)}
@@ -405,10 +405,10 @@ export default function RenpyPatcherPage() {
                 onChange={(e) => setFilterType(e.target.value)}
                 className="h-8 px-3 rounded-md bg-slate-950/50 border border-slate-700 text-sm"
               >
-                <option value="all">Tutti i tipi</option>
-                <option value="Dialogue">Dialoghi</option>
-                <option value="Menu">Menu</option>
-                <option value="Narration">Narrazione</option>
+                <option value="all">{t('renpyPatcherPage.allTypes')}</option>
+                <option value="Dialogue">{t('renpyPatcherPage.dialogues')}</option>
+                <option value="Menu">{t('renpyPatcherPage.menus')}</option>
+                <option value="Narration">{t('renpyPatcherPage.narration')}</option>
               </select>
             </div>
           )}
@@ -498,7 +498,7 @@ export default function RenpyPatcherPage() {
             ) : strings.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Heart className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">Nessuna stringa estratta</p>
+                <p className="text-lg font-medium">{t('renpyPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
                   Seleziona un gioco Ren'Py e clicca "Estrai Stringhe"
                 </p>

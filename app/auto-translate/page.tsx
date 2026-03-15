@@ -1535,7 +1535,7 @@ export default function AutoTranslatePage() {
               <Rocket className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">One-Click Translate & Patch</h1>
+              <h1 className="text-xl font-bold text-white">{t('autoTranslatePage.heroTitle')}</h1>
               <p className="text-white/70 text-sm">
                 {gameInfo ? `${gameInfo.gameName}` : 'Select a game → Translate → Patch ready'}
               </p>
@@ -1696,7 +1696,7 @@ export default function AutoTranslatePage() {
                       <Binary className="h-4 w-4 text-orange-400" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-medium text-orange-300">Prova il Binary Patcher</p>
+                      <p className="text-xs font-medium text-orange-300">{t('autoTranslatePage.tryBinaryPatcher')}</p>
                       <p className="text-[10px] text-orange-300/60">Per giochi con engine custom, il testo potrebbe essere dentro il .exe o .dll. Il Binary Patcher lo estrae e traduce direttamente.</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-orange-400/60" />
@@ -1734,7 +1734,7 @@ export default function AutoTranslatePage() {
 
                   {/* Secondary: BepInEx option */}
                   <div className="pt-2 border-t border-white/5">
-                    <p className="text-[10px] text-muted-foreground mb-2">Alternativa: installa BepInEx + XUnity per traduzione live</p>
+                    <p className="text-[10px] text-muted-foreground mb-2">{t('autoTranslatePage.bepinexAlt')}</p>
                   {/* Steps log */}
                   {bepinexSteps.length > 0 && (
                     <ScrollArea className="h-[160px] rounded border border-white/5 bg-black/20 p-2">
@@ -1905,7 +1905,7 @@ export default function AutoTranslatePage() {
                         <Binary className="h-4 w-4 text-orange-400" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-xs font-medium text-orange-300">Poche stringhe? Prova il Binary Patcher</p>
+                        <p className="text-xs font-medium text-orange-300">{t('autoTranslatePage.fewStrings')}</p>
                         <p className="text-[10px] text-orange-300/60">Il testo di gioco potrebbe essere dentro il .exe o .dll. Il Binary Patcher lo estrae e traduce direttamente dal binario.</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-orange-400/60 flex-none" />
@@ -2206,7 +2206,7 @@ export default function AutoTranslatePage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
               <Card>
-                <CardHeader className="py-2 px-3"><CardTitle className="text-xs">File</CardTitle></CardHeader>
+                <CardHeader className="py-2 px-3"><CardTitle className="text-xs">{t('autoTranslatePage.file')}</CardTitle></CardHeader>
                 <CardContent className="px-3 pb-3 space-y-2">
                   {files.map(f => {
                     const fStrings = translatedStrings.get(f.name) || []

@@ -275,8 +275,8 @@ export default function WolfRpgPatcherPage() {
               <Database className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Wolf RPG Patcher</h1>
-              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">Estrai e traduci giochi Wolf RPG Editor</p>
+              <h1 className="text-xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('wolfrpgPatcherPage.title')}</h1>
+              <p className="text-white/70 text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{t('wolfrpgPatcherPage.subtitle')}</p>
             </div>
           </div>
           
@@ -534,7 +534,7 @@ export default function WolfRpgPatcherPage() {
             ) : strings.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Database className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">Nessuna stringa estratta</p>
+                <p className="text-lg font-medium">{t('wolfrpgPatcherPage.noStrings')}</p>
                 <p className="text-sm mt-1">
                   Seleziona un file .dat e clicca l'icona ✨ per estrarre
                 </p>

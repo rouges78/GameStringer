@@ -308,7 +308,7 @@ export default function GlossaryPage() {
           <div className="flex items-center gap-3">
             <BookOpen className="h-6 w-6 text-purple-400" />
             <div>
-              <h1 className="text-xl font-bold">Glossario Automatico</h1>
+              <h1 className="text-xl font-bold">{t('glossaryPage.autoGlossary')}</h1>
               <p className="text-xs text-muted-foreground">
                 Estrai e gestisci terminologia di gioco per traduzioni consistenti
               </p>
@@ -338,7 +338,7 @@ export default function GlossaryPage() {
         {/* Glossary Selector */}
         {glossaries.length > 0 && (
           <div className="flex items-center gap-3">
-            <Label className="text-sm text-muted-foreground whitespace-nowrap">Game:</Label>
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">{t('glossaryPage.game')}</Label>
             <Select value={selectedGameId || ''} onValueChange={setSelectedGameId}>
               <SelectTrigger className="max-w-xs h-8 text-xs">
                 <SelectValue placeholder="Select a game" />
@@ -416,13 +416,13 @@ export default function GlossaryPage() {
                 </div>
                 <Select value={tierFilter} onValueChange={(v) => setTierFilter(v as GlossaryTier | '')}>
                   <SelectTrigger className="w-28 h-8 text-xs">
-                    <SelectValue placeholder="Tier" />
+                    <SelectValue placeholder={t('glossaryPage.tier')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="" className="text-xs">Tutti i tier</SelectItem>
-                    <SelectItem value="locked" className="text-xs">Locked</SelectItem>
-                    <SelectItem value="synced" className="text-xs">Synced</SelectItem>
-                    <SelectItem value="flexible" className="text-xs">Flexible</SelectItem>
+                    <SelectItem value="" className="text-xs">{t('glossaryPage.allTiers')}</SelectItem>
+                    <SelectItem value="locked" className="text-xs">{t('glossaryPage.locked')}</SelectItem>
+                    <SelectItem value="synced" className="text-xs">{t('glossaryPage.synced')}</SelectItem>
+                    <SelectItem value="flexible" className="text-xs">{t('glossaryPage.flexible')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as GlossaryCategory | '')}>
@@ -451,9 +451,9 @@ export default function GlossaryPage() {
                 <div className="grid grid-cols-[1fr_1fr_80px_90px_40px_60px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase">
                   <span>{t('offlineTranslator.original')}</span>
                   <span>{t('offlineTranslator.translation')}</span>
-                  <span>Tier</span>
+                  <span>{t('glossaryPage.tier')}</span>
                   <span>{t('playerFeedback.category')}</span>
-                  <span>Score</span>
+                  <span>{t('glossaryPage.score')}</span>
                   <span className="text-right">{t('commandPalette.actions')}</span>
                 </div>
                 <div className="max-h-[500px] overflow-y-auto divide-y divide-border/50">
@@ -554,7 +554,7 @@ export default function GlossaryPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="text-xs font-semibold text-muted-foreground">Sistema 3-Tier (ispirato a miHoYo)</h4>
+                    <h4 className="text-xs font-semibold text-muted-foreground">{t('glossaryPage.thirdTierSystem')}</h4>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
                         <div className="flex items-center gap-1.5 mb-1">
@@ -632,7 +632,7 @@ export default function GlossaryPage() {
               <Card className="border-red-500/20">
                 <CardContent className="flex items-center justify-between py-4">
                   <div>
-                    <p className="text-sm font-medium text-red-400">Elimina glossario</p>
+                    <p className="text-sm font-medium text-red-400">{t('glossaryPage.deleteGlossary')}</p>
                     <p className="text-[10px] text-muted-foreground">
                       Rimuove il glossario e tutti i termini per questo gioco
                     </p>
@@ -667,7 +667,7 @@ export default function GlossaryPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={formDoNotTranslate} onCheckedChange={setFormDoNotTranslate} />
-                <Label className="text-xs">Non tradurre (mantieni originale)</Label>
+                <Label className="text-xs">{t('glossaryPage.doNotTranslate')}</Label>
               </div>
               {!formDoNotTranslate && (
                 <div className="space-y-1">
@@ -682,15 +682,15 @@ export default function GlossaryPage() {
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Tier</Label>
+                  <Label className="text-xs">{t('glossaryPage.tier')}</Label>
                   <Select value={formTier} onValueChange={(v) => setFormTier(v as GlossaryTier)}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="locked" className="text-xs">Locked (mai cambiare)</SelectItem>
-                      <SelectItem value="synced" className="text-xs">Synced (consistente)</SelectItem>
-                      <SelectItem value="flexible" className="text-xs">Flexible (adattabile)</SelectItem>
+                      <SelectItem value="locked" className="text-xs">{t('glossaryPage.lockedDesc')}</SelectItem>
+                      <SelectItem value="synced" className="text-xs">{t('glossaryPage.syncedDesc')}</SelectItem>
+                      <SelectItem value="flexible" className="text-xs">{t('glossaryPage.flexibleDesc')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -711,7 +711,7 @@ export default function GlossaryPage() {
                 </div>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Contesto (opzionale)</Label>
+                <Label className="text-xs">{t('glossaryPage.contextOptional')}</Label>
                 <Input
                   value={formContext}
                   onChange={(e) => setFormContext(e.target.value)}
@@ -731,12 +731,12 @@ export default function GlossaryPage() {
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Nuovo Glossario</DialogTitle>
-              <DialogDescription>Crea un glossario per un nuovo gioco</DialogDescription>
+              <DialogTitle>{t('glossaryPage.newGlossary')}</DialogTitle>
+              <DialogDescription>{t('glossaryPage.createForGame')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-xs">Game ID</Label>
+                <Label className="text-xs">{t('glossaryPage.gameId')}</Label>
                 <Input
                   value={createGameId}
                   onChange={(e) => setCreateGameId(e.target.value)}
@@ -767,7 +767,7 @@ export default function GlossaryPage() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Target language</Label>
+                  <Label className="text-xs">{t('glossaryPage.targetLanguage')}</Label>
                   <Select value={createTargetLang} onValueChange={setCreateTargetLang}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -798,30 +798,30 @@ export default function GlossaryPage() {
         <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Configurazione Glossario</DialogTitle>
+              <DialogTitle>{t('glossaryPage.glossaryConfig')}</DialogTitle>
               <DialogDescription>Impostazioni per l'estrazione automatica e l'iniezione nel prompt</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm">Glossario attivo</Label>
-                  <p className="text-[10px] text-muted-foreground">Abilita il sistema glossario automatico</p>
+                  <Label className="text-sm">{t('glossaryPage.activeGlossary')}</Label>
+                  <p className="text-[10px] text-muted-foreground">{t('glossaryPage.enableAutoGlossary')}</p>
                 </div>
                 <Switch checked={config.enabled} onCheckedChange={(enabled) => handleSaveConfig({ enabled })} />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm">Iniezione nel prompt</Label>
-                  <p className="text-[10px] text-muted-foreground">Aggiungi termini glossario ai prompt di traduzione</p>
+                  <Label className="text-sm">{t('glossaryPage.promptInjection')}</Label>
+                  <p className="text-[10px] text-muted-foreground">{t('glossaryPage.addToPrompt')}</p>
                 </div>
                 <Switch checked={config.injectInPrompt} onCheckedChange={(injectInPrompt) => handleSaveConfig({ injectInPrompt })} />
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm">Auto-estrai al primo batch</Label>
-                  <p className="text-[10px] text-muted-foreground">Estrai termini automaticamente dal primo batch tradotto</p>
+                  <Label className="text-sm">{t('glossaryPage.autoExtract')}</Label>
+                  <p className="text-[10px] text-muted-foreground">{t('glossaryPage.autoExtractDesc')}</p>
                 </div>
                 <Switch checked={config.autoExtractOnFirstBatch} onCheckedChange={(autoExtractOnFirstBatch) => handleSaveConfig({ autoExtractOnFirstBatch })} />
               </div>

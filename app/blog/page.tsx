@@ -119,8 +119,8 @@ export default function BlogPage() {
               <Newspaper className="h-5 w-5 text-black" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-black">Gestione Blog</h1>
-              <p className="text-black/60 text-[10px]">Aggiungi e modifica news</p>
+              <h1 className="text-base font-bold text-black">{t('blogPage.title')}</h1>
+              <p className="text-black/60 text-[10px]">{t('blogPage.subtitle')}</p>
             </div>
           </div>
           
@@ -147,7 +147,7 @@ export default function BlogPage() {
           <CardContent className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-xs">Data (es. "24 Gen")</Label>
+                <Label className="text-xs">{t('blogPage.dateHint')}</Label>
                 <Input 
                   value={form.date}
                   onChange={(e) => setForm(f => ({ ...f, date: e.target.value }))}
@@ -167,7 +167,7 @@ export default function BlogPage() {
               </div>
             </div>
             <div>
-              <Label className="text-xs">Titolo (usa emoji!)</Label>
+              <Label className="text-xs">{t('blogPage.titleHint')}</Label>
               <Input 
                 value={form.title}
                 onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
@@ -314,8 +314,8 @@ export default function BlogPage() {
             <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-rose-500/20 to-fuchsia-500/20 flex items-center justify-center mb-4">
               <Newspaper className="h-8 w-8 text-rose-400" />
             </div>
-            <p className="text-lg font-semibold text-white/80 mb-1">Nessun post ancora</p>
-            <p className="text-sm text-muted-foreground mb-4">Clicca "Nuovo Post" per creare il primo articolo</p>
+            <p className="text-lg font-semibold text-white/80 mb-1">{t('blogPage.noPosts')}</p>
+            <p className="text-sm text-muted-foreground mb-4">{t('blogPage.createFirst')}</p>
             <Button onClick={() => setIsAdding(true)} className="bg-gradient-to-r from-rose-500 to-fuchsia-500 hover:from-rose-400 hover:to-fuchsia-400">
               <Plus className="h-4 w-4 mr-1.5" />
               Crea il primo post

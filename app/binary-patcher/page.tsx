@@ -678,7 +678,7 @@ export default function BinaryPatcherPage() {
               <Binary className="h-5 w-5 text-orange-400" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white">Binary String Patcher</h1>
+              <h1 className="text-lg font-bold text-white">{t('binaryPatcherPage.title')}</h1>
               <p className="text-xs text-white/50">
                 {language === 'it' ? 'Traduci giochi con stringhe nel binario' : 'Translate games with strings in binary'}
               </p>
@@ -775,7 +775,7 @@ export default function BinaryPatcherPage() {
                   <div className="flex items-start gap-2">
                     <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 flex-none" />
                     <div className="text-xs text-amber-300/80">
-                      <p className="font-medium mb-1">Attenzione Anti-Cheat</p>
+                      <p className="font-medium mb-1">{t('binaryPatcherPage.antiCheatWarning')}</p>
                       <p>I giochi con protezioni anti-cheat (EAC, BattlEye, VAC) potrebbero non funzionare dopo il patch.</p>
                     </div>
                   </div>
@@ -802,7 +802,7 @@ export default function BinaryPatcherPage() {
                 <div className={`p-3 rounded-md mb-3 ${antiCheat.safe ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
                   <div className="flex items-center gap-2">
                     {antiCheat.safe ? (
-                      <><CheckCircle2 className="h-4 w-4 text-green-400" /><span className="text-sm text-green-400">Nessun anti-cheat rilevato</span></>
+                      <><CheckCircle2 className="h-4 w-4 text-green-400" /><span className="text-sm text-green-400">{t('binaryPatcherPage.noAntiCheat')}</span></>
                     ) : (
                       <><XCircle className="h-4 w-4 text-red-400" /><span className="text-sm text-red-400">Anti-cheat rilevato: {antiCheat.detected.join(', ')}</span></>
                     )}
@@ -817,7 +817,7 @@ export default function BinaryPatcherPage() {
 
               {/* Target language selector */}
               <div className="flex items-center gap-3 mb-4">
-                <label className="text-sm text-white/60">Lingua target:</label>
+                <label className="text-sm text-white/60">{t('binaryPatcherPage.targetLang')}</label>
                 <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
                   className="border border-white/10 rounded px-3 py-1.5 text-sm text-white" style={{backgroundColor: '#1a1a2e'}}>
                   <option value="it">🇮🇹 Italiano</option>
@@ -844,11 +844,11 @@ export default function BinaryPatcherPage() {
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-xs text-white/50">Stringhe trovate</p>
+                <p className="text-xs text-white/50">{t('binaryPatcherPage.stringsFound')}</p>
               </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="text-2xl font-bold text-orange-400">{Object.keys(stats.byLanguage).length}</p>
-                <p className="text-xs text-white/50">Lingue rilevate</p>
+                <p className="text-xs text-white/50">{t('binaryPatcherPage.detectedLanguages')}</p>
               </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="text-2xl font-bold text-blue-400">{Object.keys(stats.byCategory).length}</p>
@@ -879,7 +879,7 @@ export default function BinaryPatcherPage() {
                     <Save className="h-5 w-5 text-amber-400" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-amber-200">Traduzione in corso trovata!</h3>
+                    <h3 className="text-sm font-semibold text-amber-200">{t('binaryPatcherPage.progressFound')}</h3>
                     <p className="text-xs text-amber-300/70 mt-0.5">
                       {savedCheckpoint.translatedCount}/{savedCheckpoint.totalCount} stringhe tradotte
                       ({savedCheckpoint.targetLang.toUpperCase()})
@@ -952,7 +952,7 @@ export default function BinaryPatcherPage() {
                   }`}>
                   <div className="flex items-center gap-2 mb-1">
                     <Bot className="h-4 w-4 text-purple-400" />
-                    <span className="text-sm font-medium text-white">AI (LLM)</span>
+                    <span className="text-sm font-medium text-white">{t('binaryPatcherPage.aiLlm')}</span>
                     <Sparkles className="h-3 w-3 text-purple-400" />
                   </div>
                   <p className="text-[10px] text-white/50">Gemini, DeepSeek, OpenAI, Ollama, DeepL e altri — qualità superiore</p>
@@ -967,16 +967,16 @@ export default function BinaryPatcherPage() {
                   }`}>
                   <div className="flex items-center gap-2 mb-1">
                     <Zap className="h-4 w-4 text-orange-400" />
-                    <span className="text-sm font-medium text-white">Rule-Based</span>
+                    <span className="text-sm font-medium text-white">{t('binaryPatcherPage.ruleBased')}</span>
                   </div>
-                  <p className="text-[10px] text-white/50">Dizionario offline — veloce ma solo ES→IT, qualità base</p>
+                  <p className="text-[10px] text-white/50">{t('binaryPatcherPage.offlineDict')}</p>
                 </div>
               </div>
 
               {/* AI Chain Preset selector */}
               {translationMode === 'ai' && (
                 <div className="space-y-2">
-                  <label className="text-xs text-white/60">Preset AI:</label>
+                  <label className="text-xs text-white/60">{t('binaryPatcherPage.aiPreset')}</label>
                   <div className="grid grid-cols-1 gap-1.5">
                     {CHAIN_PRESETS.map(preset => (
                       <div
@@ -1086,7 +1086,7 @@ export default function BinaryPatcherPage() {
               </div>
               <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}
                 className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#1a1a2e'}}>
-                <option value="all" style={{backgroundColor: '#1a1a2e'}}>Tutte le categorie</option>
+                <option value="all" style={{backgroundColor: '#1a1a2e'}}>{t('binaryPatcherPage.allCategories')}</option>
                 {Object.entries(CATEGORY_NAMES).map(([k, v]) => (
                   <option key={k} value={k} style={{backgroundColor: '#1a1a2e'}}>{v}</option>
                 ))}
