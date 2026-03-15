@@ -113,29 +113,29 @@ function CacheStatsCard() {
           <div className="bg-slate-800/50 rounded-lg p-4 text-center">
             <HardDrive className="h-6 w-6 mx-auto mb-2 text-blue-400" />
             <p className="text-2xl font-bold">{stats?.app_data_size_mb.toFixed(1)}</p>
-            <p className="text-xs text-muted-foreground">MB Dati App</p>
+            <p className="text-xs text-muted-foreground">{t('settingsPage.appDataMb')}</p>
           </div>
           <div className="bg-slate-800/50 rounded-lg p-4 text-center">
             <Database className="h-6 w-6 mx-auto mb-2 text-purple-400" />
             <p className="text-2xl font-bold">{stats?.cache_size_mb.toFixed(1)}</p>
-            <p className="text-xs text-muted-foreground">MB Cache Cover</p>
+            <p className="text-xs text-muted-foreground">{t('settingsPage.coverCacheMb')}</p>
           </div>
           <div className="bg-slate-800/50 rounded-lg p-4 text-center">
             <Globe className="h-6 w-6 mx-auto mb-2 text-green-400" />
             <p className="text-2xl font-bold">{stats?.cover_count || 0}</p>
-            <p className="text-xs text-muted-foreground">Cover Salvate</p>
+            <p className="text-xs text-muted-foreground">{t('settingsPage.savedCovers')}</p>
           </div>
           <div className="bg-slate-800/50 rounded-lg p-4 text-center">
             <Cpu className="h-6 w-6 mx-auto mb-2 text-yellow-400" />
             <p className="text-2xl font-bold">{stats?.disk_free_gb.toFixed(0)}</p>
-            <p className="text-xs text-muted-foreground">GB Liberi Disco</p>
+            <p className="text-xs text-muted-foreground">{t('settingsPage.freeGbDisk')}</p>
           </div>
         </div>
 
         {/* Disk Usage Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Spazio Disco</span>
+            <span className="text-muted-foreground">{t('settingsPage.diskSpace')}</span>
             <span>{(stats?.disk_total_gb || 0).toFixed(0)} GB totali</span>
           </div>
           <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
@@ -517,7 +517,7 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="display" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Maximize2 className="h-3.5 w-3.5" />
-            <span>Display</span>
+            <span>{t('settingsPage.display')}</span>
           </TabsTrigger>
           <TabsTrigger value="debug" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Bug className="h-3.5 w-3.5" />
@@ -544,7 +544,7 @@ export default function SettingsPage() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>URL Server</Label>
+                  <Label>{t('settingsPage.serverUrl')}</Label>
                   <Input
                     value={settings.translation?.lmStudioUrl || 'http://localhost:1234'}
                     onChange={(e) => updateSetting('translation', 'lmStudioUrl', e.target.value)}
@@ -639,7 +639,7 @@ export default function SettingsPage() {
                       {showApiKeys.translation ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Free tier: 15 RPM / 1M TPM — <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" className="underline">Ottieni chiave</a></p>
+                  <p className="text-xs text-muted-foreground">Free tier: 15 RPM / 1M TPM — <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" className="underline">{t('settingsPage.getKey')}</a></p>
                 </div>
 
                 <div className="space-y-2">
@@ -661,7 +661,7 @@ export default function SettingsPage() {
                       {showApiKeys.groq ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Gratuito, velocissimo — <a href="https://console.groq.com/keys" target="_blank" rel="noopener" className="underline">Ottieni chiave</a></p>
+                  <p className="text-xs text-muted-foreground">Gratuito, velocissimo — <a href="https://console.groq.com/keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.getKey')}</a></p>
                 </div>
 
                 <div className="space-y-2">
@@ -683,7 +683,7 @@ export default function SettingsPage() {
                       {showApiKeys.deepseek ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">~$0.14/1M tokens, nessun rate limit aggressivo — <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener" className="underline">Ottieni chiave</a></p>
+                  <p className="text-xs text-muted-foreground">~$0.14/1M tokens, nessun rate limit aggressivo — <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.getKey')}</a></p>
                 </div>
 
                 <div className="space-y-2">
@@ -705,7 +705,7 @@ export default function SettingsPage() {
                       {showApiKeys.openai ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Pay-per-use, GPT-4o — <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" className="underline">Ottieni chiave</a></p>
+                  <p className="text-xs text-muted-foreground">Pay-per-use, GPT-4o — <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.getKey')}</a></p>
                 </div>
 
                 <div className="space-y-2">
@@ -727,7 +727,7 @@ export default function SettingsPage() {
                       {showApiKeys.anthropic ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Pay-per-use, Claude Sonnet — <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" className="underline">Ottieni chiave</a></p>
+                  <p className="text-xs text-muted-foreground">Pay-per-use, Claude Sonnet — <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" className="underline">{t('settingsPage.getKey')}</a></p>
                 </div>
               </div>
 
@@ -1040,14 +1040,14 @@ export default function SettingsPage() {
             <div className="bg-slate-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <Monitor className="h-3.5 w-3.5 text-blue-400" />
-                <span className="text-[10px] text-muted-foreground">Finestra</span>
+                <span className="text-[10px] text-muted-foreground">{t('settingsPage.window')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : '...'}</p>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-2 text-center">
               <div className="flex items-center justify-center gap-1.5 mb-0.5">
                 <Maximize2 className="h-3.5 w-3.5 text-purple-400" />
-                <span className="text-[10px] text-muted-foreground">Schermo</span>
+                <span className="text-[10px] text-muted-foreground">{t('settingsPage.screen')}</span>
               </div>
               <p className="text-sm font-bold">{typeof window !== 'undefined' ? `${window.screen.width}x${window.screen.height}` : '...'}</p>
             </div>
@@ -1073,7 +1073,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-semibold">Scala UI</Label>
+                    <Label className="text-xs font-semibold">{t('settingsPage.uiScale')}</Label>
                     <Badge variant="outline" className="font-mono text-[10px] h-5">{settings.display.uiScale}%</Badge>
                   </div>
                   <Slider
@@ -1088,7 +1088,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-semibold">Sidebar</Label>
+                    <Label className="text-xs font-semibold">{t('settingsPage.sidebar')}</Label>
                     <Badge variant="outline" className="font-mono text-[10px] h-5">{settings.display.sidebarWidth}px</Badge>
                   </div>
                   <Slider
@@ -1107,7 +1107,7 @@ export default function SettingsPage() {
 
               {/* Font Size — compatto inline */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Dimensione Testo</Label>
+                <Label className="text-xs font-semibold">{t('settingsPage.textSize')}</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {(['small', 'medium', 'large'] as const).map((size) => (
                     <button
@@ -1132,8 +1132,8 @@ export default function SettingsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30">
                   <div>
-                    <Label className="text-xs">Compatta</Label>
-                    <p className="text-[10px] text-muted-foreground">Meno padding</p>
+                    <Label className="text-xs">{t('settingsPage.compact')}</Label>
+                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.lessPadding')}</p>
                   </div>
                   <Switch
                     checked={settings.display.compactMode}
@@ -1142,8 +1142,8 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/30">
                   <div>
-                    <Label className="text-xs">Animazioni</Label>
-                    <p className="text-[10px] text-muted-foreground">Transizioni UI</p>
+                    <Label className="text-xs">{t('settingsPage.animations')}</Label>
+                    <p className="text-[10px] text-muted-foreground">{t('settingsPage.uiTransitions')}</p>
                   </div>
                   <Switch
                     checked={settings.display.animationsEnabled}
@@ -1156,7 +1156,7 @@ export default function SettingsPage() {
 
               {/* Preset Rapidi */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Preset Rapidi</Label>
+                <Label className="text-xs font-semibold">{t('settingsPage.quickPresets')}</Label>
                 <div className="grid grid-cols-4 gap-2">
                   {[
                     { label: 'Laptop', sub: '1366x768', icon: '\ud83d\udcbb', scale: 85, font: 'small' as const, compact: true, sw: 200 },

@@ -1439,7 +1439,7 @@ export default function TranslatorProPage() {
           <div className="w-16 h-16 border-4 border-primary/20 rounded-full" />
           <div className="absolute inset-0 w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
-        <p className="text-muted-foreground">Loading...</p>
+        <p className="text-muted-foreground">{t('translatorProPage.loading')}</p>
       </div>
     );
   }
@@ -1935,7 +1935,7 @@ export default function TranslatorProPage() {
                     ) : (
                       <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
                         <FileText className="h-10 w-10 mb-3 opacity-50" />
-                        <p className="text-sm">Clicca su un file per vedere l'anteprima</p>
+                        <p className="text-sm">{t('translatorProPage.clickFilePreview')}</p>
                       </div>
                     )}
                   </div>
@@ -1978,7 +1978,7 @@ export default function TranslatorProPage() {
               <div className="p-4 rounded-xl bg-muted/50 border text-center">
                 <Database className="h-6 w-6 mx-auto text-green-500 mb-2" />
                 <p className="text-2xl font-bold">{tmStats?.totalUnits || 0}</p>
-                <p className="text-xs text-muted-foreground">In memoria</p>
+                <p className="text-xs text-muted-foreground">{t('translatorProPage.fromMemory')}</p>
               </div>
             </div>
             
@@ -2204,7 +2204,7 @@ export default function TranslatorProPage() {
                   <label className="flex items-center justify-between cursor-pointer">
                     <div className="flex items-center gap-2">
                       <FolderOpen className="h-4 w-4 text-yellow-500" />
-                      <span className="text-sm">Mostra tutti i file</span>
+                      <span className="text-sm">{t('translatorProPage.showAllFiles')}</span>
                     </div>
                     <input
                       type="checkbox"
@@ -2531,7 +2531,7 @@ export default function TranslatorProPage() {
               ) : (
                 <>
                   <CheckCircle className="h-16 w-16 mx-auto text-green-500 mb-4" />
-                  <h2 className="text-xl font-semibold mb-2">Completato!</h2>
+                  <h2 className="text-xl font-semibold mb-2">{t('translatorProPage.completed')}</h2>
                   <Button onClick={() => setCurrentStep('results')}>
                     Vedi results
                     <ChevronRight className="ml-2 h-4 w-4" />
@@ -2778,8 +2778,8 @@ export default function TranslatorProPage() {
                 <div className="mt-4 text-sm text-slate-400">
                   <p className="font-semibold mb-2">Il pacchetto contiene:</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li>File tradotti pronti per l'uso</li>
-                    <li>Backup dei file originali</li>
+                    <li>{t('translatorProPage.translatedFiles')}</li>
+                    <li>{t('translatorProPage.backupOriginal')}</li>
                     <li>Formato XUnity.AutoTranslator</li>
                     <li>README con istruzioni</li>
                   </ul>
