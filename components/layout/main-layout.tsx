@@ -1316,7 +1316,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <Search className="absolute left-3 h-4 w-4 text-slate-500 pointer-events-none" />
                 <Input
                   type="text"
-                  placeholder="Cerca pagine, strumenti... (Ctrl+K)"
+                  placeholder={`${t('commandPalette.placeholder')} (Ctrl+K)`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
@@ -1344,19 +1344,19 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <ScrollArea className="max-h-[300px]">
                     {(() => {
                       const navigationItems = [
-                        { id: 'dashboard', title: 'Dashboard', description: 'Panoramica generale', icon: Home, path: '/' },
-                        { id: 'library', title: 'Libreria', description: 'I tuoi giochi', icon: Library, path: '/library' },
-                        { id: 'translator', title: 'Traduci', description: 'AI Translator', icon: Languages, path: '/ai-translator' },
-                        { id: 'dictionary', title: 'Dizionario', description: 'Glossario termini', icon: Database, path: '/memory' },
-                        { id: 'multi-llm', title: 'Multi-LLM', description: 'Confronto modelli AI', icon: Brain, path: '/translator/compare' },
-                        { id: 'voice', title: 'Voce', description: 'Traduzione vocale', icon: Mic, path: '/voice-translator' },
-                        { id: 'patcher', title: 'Patcher', description: 'Unity/Unreal patcher', icon: Wrench, path: '/unity-patcher' },
-                        { id: 'injector', title: 'Injector', description: 'Iniezione mod universale', icon: Puzzle, path: '/injector' },
-                        { id: 'crawler', title: 'Crawler', description: 'Estrai contesto dai giochi', icon: Scan, path: '/crawler' },
-                        { id: 'fixer', title: 'Fixer', description: 'Ripara tag traduzione', icon: Wand2, path: '/fixer' },
-                        { id: 'overlay', title: 'Overlay', description: 'Sottotitoli in-game', icon: Subtitles, path: '/overlay' },
-                        { id: 'community', title: 'Community', description: 'Hub traduzioni community', icon: Users, path: '/community-hub' },
-                        { id: 'settings', title: 'Impostazioni', description: 'Configura GameStringer', icon: Settings, path: '/settings' },
+                        { id: 'dashboard', title: t('nav.dashboard'), description: t('commandPalette.dashboardDesc'), icon: Home, path: '/' },
+                        { id: 'library', title: t('nav.library'), description: t('commandPalette.libraryDesc'), icon: Library, path: '/library' },
+                        { id: 'translator', title: t('nav.translate'), description: t('commandPalette.translateDesc'), icon: Languages, path: '/ai-translator' },
+                        { id: 'dictionary', title: t('nav.dictionary'), description: t('commandPalette.dictionaryDesc'), icon: Database, path: '/memory' },
+                        { id: 'multi-llm', title: t('nav.multiLlm'), description: t('commandPalette.multiLlmDesc'), icon: Brain, path: '/translator/compare' },
+                        { id: 'voice', title: t('nav.voice'), description: t('commandPalette.voiceDesc'), icon: Mic, path: '/voice-translator' },
+                        { id: 'patcher', title: t('nav.patcher'), description: t('commandPalette.patcherDesc'), icon: Wrench, path: '/unity-patcher' },
+                        { id: 'injector', title: t('nav.injector'), description: t('commandPalette.patcherDesc'), icon: Puzzle, path: '/injector' },
+                        { id: 'crawler', title: t('nav.contextHarvester'), description: t('commandPalette.scanGamesDesc'), icon: Scan, path: '/crawler' },
+                        { id: 'fixer', title: t('nav.fixer'), description: t('commandPalette.patcherDesc'), icon: Wand2, path: '/fixer' },
+                        { id: 'overlay', title: t('nav.overlay'), description: t('commandPalette.patcherDesc'), icon: Subtitles, path: '/overlay' },
+                        { id: 'community', title: t('nav.community'), description: t('commandPalette.communityDesc'), icon: Users, path: '/community-hub' },
+                        { id: 'settings', title: t('nav.settings'), description: t('commandPalette.settingsDesc'), icon: Settings, path: '/settings' },
                       ];
                       
                       const filtered = navigationItems.filter(item => 
@@ -1367,7 +1367,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       if (filtered.length === 0) {
                         return (
                           <div className="py-6 text-center text-sm text-slate-500">
-                            Nessun risultato per "{searchQuery}"
+                            {t('commandPalette.noResults')} "{searchQuery}"
                           </div>
                         );
                       }
