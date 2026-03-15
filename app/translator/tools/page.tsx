@@ -53,13 +53,13 @@ export default function TranslatorToolsPage() {
       <div className="grid grid-cols-2 gap-2">
         <Card className="bg-card/50 border-border/50">
           <CardHeader className="p-3 pb-2">
-            <CardTitle className="text-sm">Testo Originale</CardTitle>
+            <CardTitle className="text-sm">{t('qaCheck.originalText')}</CardTitle>
           </CardHeader>
           <CardContent className="p-3 pt-0">
             <Textarea
               value={originalText}
               onChange={(e) => setOriginalText(e.target.value)}
-              placeholder="Inserisci il testo originale..."
+              placeholder={t('qaCheck.enterOriginal')}
               className="bg-muted/50 border-border min-h-[80px] text-sm"
             />
           </CardContent>
@@ -73,7 +73,7 @@ export default function TranslatorToolsPage() {
             <Textarea
               value={translatedText}
               onChange={(e) => setTranslatedText(e.target.value)}
-              placeholder="Inserisci la traduzione..."
+              placeholder={t('qaCheck.enterTranslation')}
               className="bg-muted/50 border-border min-h-[80px] text-sm"
             />
           </CardContent>

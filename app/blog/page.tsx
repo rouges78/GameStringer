@@ -176,7 +176,7 @@ export default function BlogPage() {
               />
             </div>
             <div>
-              <Label className="text-xs">Descrizione</Label>
+              <Label className="text-xs">{t('plugins.description')}</Label>
               <Input 
                 value={form.description}
                 onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
@@ -186,13 +186,9 @@ export default function BlogPage() {
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleAdd}>
-                <Save className="h-3 w-3 mr-1" />
-                Salva
-              </Button>
+                <Save className="h-3 w-3 mr-1" />{t('glossaryManager.save')}</Button>
               <Button size="sm" variant="outline" onClick={() => setIsAdding(false)}>
-                <X className="h-3 w-3 mr-1" />
-                Annulla
-              </Button>
+                <X className="h-3 w-3 mr-1" />{t('workshop.unsubscribe')}</Button>
             </div>
           </CardContent>
         </Card>
@@ -247,24 +243,20 @@ export default function BlogPage() {
                   <Input 
                     value={form.title}
                     onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
-                    placeholder="Titolo"
+                    placeholder={t('retroRom.title_')}
                     className="h-8 text-xs bg-black/20"
                   />
                   <Input 
                     value={form.description}
                     onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
-                    placeholder="Descrizione"
+                    placeholder={t('plugins.description')}
                     className="h-8 text-xs bg-black/20"
                   />
                   <div className="flex gap-2">
                     <Button size="sm" className="h-7 text-xs bg-emerald-600 hover:bg-emerald-500" onClick={() => handleUpdate(post.id)}>
-                      <Save className="h-3 w-3 mr-1" />
-                      Salva
-                    </Button>
+                      <Save className="h-3 w-3 mr-1" />{t('glossaryManager.save')}</Button>
                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEditingId(null)}>
-                      <X className="h-3 w-3 mr-1" />
-                      Annulla
-                    </Button>
+                      <X className="h-3 w-3 mr-1" />{t('workshop.unsubscribe')}</Button>
                   </div>
                 </div>
               ) : (

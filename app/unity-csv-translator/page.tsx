@@ -295,7 +295,7 @@ export default function UnityCsvTranslatorPage() {
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-black/30 rounded-lg shadow-lg border border-white/10"><Globe className="h-6 w-6 text-white" /></div>
             <div>
-              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">Unity CSV Translator</h1>
+              <h1 className="text-lg font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.7)]">{t('nav.unityCsvTranslator')}</h1>
               <p className="text-white/70 text-[10px]">Estrai e traduci tabelle SimpleLocalization da giochi Unity</p>
             </div>
           </div>
@@ -343,8 +343,8 @@ export default function UnityCsvTranslatorPage() {
             <div className="w-7 h-7 rounded-full bg-amber-600 flex items-center justify-center text-white text-sm font-bold">2</div>
             <h2 className="text-base font-bold text-white">Tabelle CSV ({scan.tables.length})</h2>
             <div className="flex-1" />
-            <Button onClick={doImport} variant="outline" size="sm" className="gap-1 h-7 text-xs"><Upload className="h-3 w-3" />Importa</Button>
-            <Button onClick={doExport} variant="outline" size="sm" className="gap-1 h-7 text-xs" disabled={!scan.done}><Download className="h-3 w-3" />Esporta</Button>
+            <Button onClick={doImport} variant="outline" size="sm" className="gap-1 h-7 text-xs"><Upload className="h-3 w-3" />{t("common.import")}</Button>
+            <Button onClick={doExport} variant="outline" size="sm" className="gap-1 h-7 text-xs" disabled={!scan.done}><Download className="h-3 w-3" />{t("common.export")}</Button>
           </div>
           <div className="space-y-1.5">
             {scan.tables.map((t, ti) => {
@@ -404,8 +404,8 @@ export default function UnityCsvTranslatorPage() {
               <table className="w-full text-[11px]">
                 <thead><tr className="text-slate-500 border-b border-slate-700/50">
                   <th className="text-left py-1 w-28">File</th>
-                  <th className="text-left py-1">English</th>
-                  <th className="text-left py-1">Traduzione</th>
+                  <th className="text-left py-1">{t('languages.en')}</th>
+                  <th className="text-left py-1">{t('offlineTranslator.translation')}</th>
                 </tr></thead>
                 <tbody>{inkStrings.slice(0, 200).map((s, i) => (
                   <tr key={i} className="border-b border-slate-800/50 hover:bg-slate-700/20">
@@ -433,7 +433,7 @@ export default function UnityCsvTranslatorPage() {
           {showCfg && (
             <div className="mb-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700/50 flex gap-4 items-center flex-wrap">
               <div className="flex gap-2 items-center">
-                <label className="text-xs text-slate-400">Modello:</label>
+                <label className="text-xs text-slate-400">{t('aiTranslation.model')}</label>
                 <select value={model} onChange={e => setModel(e.target.value)} className="bg-slate-700 text-white text-xs rounded px-2 py-1 border border-slate-600">
                   {models.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>
@@ -465,8 +465,7 @@ export default function UnityCsvTranslatorPage() {
               </Button>
             ) : (
               <Button onClick={() => { abort.current = true; }} variant="destructive" className="gap-2">
-                <StopCircle className="h-4 w-4" />Ferma
-              </Button>
+                <StopCircle className="h-4 w-4" />{t('subtitleOverlay.stop')}</Button>
             )}
             {status === 'done' && <span className="flex items-center gap-1 text-sm text-emerald-400"><CheckCircle2 className="h-4 w-4" />Traduzione completata!</span>}
           </div>
@@ -537,8 +536,7 @@ export default function UnityCsvTranslatorPage() {
               }}
               variant="outline" size="sm" className="gap-1 h-8 text-xs"
             >
-              <RotateCcw className="h-3 w-3" />Ripristina Backup
-            </Button>
+              <RotateCcw className="h-3 w-3" />{t('settings.restoreBackup')}</Button>
             {!inkCsvPath && (
               <Button onClick={async () => { const p = await dialogOpen({ title: 'CSV traduzioni Ink (opzionale)', filters: [{ name: 'CSV', extensions: ['csv'] }] }); if (p && typeof p === 'string') { setInkCsvPath(p); log(`📁 Ink CSV: ${p}`); } }} variant="ghost" size="sm" className="gap-1 h-8 text-xs text-slate-500 hover:text-slate-300">
                 <Upload className="h-3 w-3" />+ Ink CSV

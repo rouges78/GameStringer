@@ -2039,7 +2039,7 @@ export default function TranslationWizardPage() {
                     <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
                       <Settings2 className="h-4 w-4 text-blue-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">{analysisResult.engine}</p>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">Engine</p>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">{t('gameDetails.engine')}</p>
                     </div>
                     <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
                       <FileCode className="h-4 w-4 text-purple-400 mx-auto mb-1.5" />
@@ -2049,7 +2049,7 @@ export default function TranslationWizardPage() {
                     <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
                       <Database className="h-4 w-4 text-cyan-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">~{analysisResult.estimatedStrings.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">Stringhe</p>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">{t('batchTranslator.stringsCol')}</p>
                     </div>
                   </div>
 
@@ -2313,9 +2313,7 @@ export default function TranslationWizardPage() {
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
-                    <Languages className="h-5 w-5 text-purple-400 animate-pulse" />
-                    Traduzione in corso...
-                  </CardTitle>
+                    <Languages className="h-5 w-5 text-purple-400 animate-pulse" />{t('offlineTranslator.translating')}</CardTitle>
                   <CardDescription>{selectedGame?.title} → {languageNames[targetLanguage] || targetLanguage}</CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -5,12 +5,12 @@ import { useTranslation } from '@/lib/i18n';
 
 const SystemMonitor = dynamic(
   () => import('@/components/tools/system-monitor').then(mod => mod.SystemMonitor),
-  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Caricamento...</div> }
+  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Loading...</div> }
 );
 
 const OllamaSetupWizard = dynamic(
   () => import('@/components/tools/ollama-setup-wizard').then(mod => mod.OllamaSetupWizard),
-  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Caricamento...</div> }
+  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Loading...</div> }
 );
 
 export default function SystemMonitorPage() {

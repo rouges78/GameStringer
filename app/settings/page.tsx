@@ -477,9 +477,7 @@ export default function SettingsPage() {
               </DialogContent>
             </Dialog>
             <Button variant="outline" size="sm" onClick={resetSettings} className="border-white/30 text-white hover:bg-white/10 h-8 text-xs">
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-              Reset
-            </Button>
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />{t('subtitleTranslator.reset')}</Button>
             <Button size="sm" onClick={saveSettings} disabled={isSaving} className="bg-blue-600 hover:bg-blue-500 h-8 text-xs">
               {isSaving ? (
                 <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />{t('settings.saving')}</>
@@ -992,9 +990,7 @@ export default function SettingsPage() {
                   className="flex-[2] h-9 text-sm"
                 />
                 <Button onClick={handleAddRssFeed} size="sm" className="h-9 gap-1">
-                  <Plus className="h-4 w-4" />
-                  Aggiungi
-                </Button>
+                  <Plus className="h-4 w-4" />{t('glossaryManager.add')}</Button>
               </div>
 
               {/* Feed list */}

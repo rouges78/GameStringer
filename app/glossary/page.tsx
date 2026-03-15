@@ -317,15 +317,11 @@ export default function GlossaryPage() {
           <div className="flex gap-2 items-center">
             <Link href="/editor">
               <Button variant="outline" size="sm" className="text-slate-400 hover:text-blue-400">
-                <Edit3 className="h-3.5 w-3.5 mr-1" />
-                Editor
-              </Button>
+                <Edit3 className="h-3.5 w-3.5 mr-1" />{t('subtitleTranslator.editor')}</Button>
             </Link>
             <Link href="/batch">
               <Button variant="outline" size="sm" className="text-slate-400 hover:text-sky-400">
-                <FolderTree className="h-3.5 w-3.5 mr-1" />
-                Batch
-              </Button>
+                <FolderTree className="h-3.5 w-3.5 mr-1" />{t('aiTranslator.batch')}</Button>
             </Link>
             <div className="h-5 w-px bg-slate-700" />
             <Button variant="outline" size="sm" onClick={() => setShowConfigDialog(true)}>
@@ -431,10 +427,10 @@ export default function GlossaryPage() {
                 </Select>
                 <Select value={categoryFilter} onValueChange={(v) => setCategoryFilter(v as GlossaryCategory | '')}>
                   <SelectTrigger className="w-32 h-8 text-xs">
-                    <SelectValue placeholder="Categoria" />
+                    <SelectValue placeholder={t('playerFeedback.category')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="" className="text-xs">Tutte</SelectItem>
+                    <SelectItem value="" className="text-xs">{t('activity.all')}</SelectItem>
                     {CATEGORIES.map(cat => (
                       <SelectItem key={cat} value={cat} className="text-xs">
                         {CATEGORY_EMOJI[cat]} {cat}
@@ -447,20 +443,18 @@ export default function GlossaryPage() {
                   Default
                 </Button>
                 <Button size="sm" className="h-8 text-xs" onClick={() => { resetForm(); setEditingTerm(null); setShowAddDialog(true); }}>
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  Aggiungi
-                </Button>
+                  <Plus className="h-3.5 w-3.5 mr-1" />{t('glossaryManager.add')}</Button>
               </div>
 
               {/* Term List */}
               <div className="border rounded-lg overflow-hidden">
                 <div className="grid grid-cols-[1fr_1fr_80px_90px_40px_60px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase">
-                  <span>Originale</span>
-                  <span>Traduzione</span>
+                  <span>{t('offlineTranslator.original')}</span>
+                  <span>{t('offlineTranslator.translation')}</span>
                   <span>Tier</span>
-                  <span>Categoria</span>
+                  <span>{t('playerFeedback.category')}</span>
                   <span>Score</span>
-                  <span className="text-right">Azioni</span>
+                  <span className="text-right">{t('commandPalette.actions')}</span>
                 </div>
                 <div className="max-h-[500px] overflow-y-auto divide-y divide-border/50">
                   {filteredTerms.length === 0 ? (
@@ -601,9 +595,7 @@ export default function GlossaryPage() {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-1.5">
-                      <Download className="h-4 w-4" />
-                      Esporta
-                    </CardTitle>
+                      <Download className="h-4 w-4" />{t('projects.export')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => handleExport('csv')}>
@@ -619,9 +611,7 @@ export default function GlossaryPage() {
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-1.5">
-                      <Upload className="h-4 w-4" />
-                      Importa
-                    </CardTitle>
+                      <Upload className="h-4 w-4" />{t('glossaryManager.import')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => handleImport('csv')}>
@@ -648,9 +638,7 @@ export default function GlossaryPage() {
                     </p>
                   </div>
                   <Button variant="destructive" size="sm" onClick={handleDeleteGlossary}>
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Elimina
-                  </Button>
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />{t('projects.delete')}</Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -668,7 +656,7 @@ export default function GlossaryPage() {
             </DialogHeader>
             <div className="space-y-3">
               <div className="space-y-1">
-                <Label className="text-xs">Termine originale</Label>
+                <Label className="text-xs">{t('glossaryManager.originalTerm')}</Label>
                 <Input
                   value={formSource}
                   onChange={(e) => setFormSource(e.target.value)}
@@ -683,7 +671,7 @@ export default function GlossaryPage() {
               </div>
               {!formDoNotTranslate && (
                 <div className="space-y-1">
-                  <Label className="text-xs">Traduzione</Label>
+                  <Label className="text-xs">{t('offlineTranslator.translation')}</Label>
                   <Input
                     value={formTarget}
                     onChange={(e) => setFormTarget(e.target.value)}
@@ -707,7 +695,7 @@ export default function GlossaryPage() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Categoria</Label>
+                  <Label className="text-xs">{t('playerFeedback.category')}</Label>
                   <Select value={formCategory} onValueChange={(v) => setFormCategory(v as GlossaryCategory)}>
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue />
@@ -757,7 +745,7 @@ export default function GlossaryPage() {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Nome Gioco</Label>
+                <Label className="text-xs">{t('communityHub.gameName')}</Label>
                 <Input
                   value={createGameName}
                   onChange={(e) => setCreateGameName(e.target.value)}
@@ -767,11 +755,11 @@ export default function GlossaryPage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">Lingua sorgente</Label>
+                  <Label className="text-xs">{t('aiTranslation.sourceLanguage')}</Label>
                   <Select value={createSourceLang} onValueChange={setCreateSourceLang}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="en">{t('languages.en')}</SelectItem>
                       <SelectItem value="ja">Japanese</SelectItem>
                       <SelectItem value="zh">Chinese</SelectItem>
                       <SelectItem value="ko">Korean</SelectItem>

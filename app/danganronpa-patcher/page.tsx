@@ -672,7 +672,7 @@ export default function DanganronpaPatcherPage() {
       case 'Text': return <Badge variant="default">Testi</Badge>;
       case 'Script': return <Badge variant="secondary">Script</Badge>;
       case 'Font': return <Badge variant="outline">Font</Badge>;
-      case 'Texture': return <Badge className="bg-purple-500">Texture</Badge>;
+      case 'Texture': return <Badge className="bg-purple-500">{t('textureTranslator.textures')}</Badge>;
       default: return <Badge variant="outline">Unknown</Badge>;
     }
   };
@@ -701,7 +701,7 @@ export default function DanganronpaPatcherPage() {
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
                   <Check className="h-3.5 w-3.5 text-emerald-300" />
                   <span className="text-sm font-bold text-white">DRAT</span>
-                  <span className="text-[10px] text-white/70">Installato</span>
+                  <span className="text-[10px] text-white/70">{t('workshop.installed')}</span>
                 </div>
               ) : (
                 <Button variant="outline" size="sm" className="bg-black/30 border-white/20 text-white hover:bg-black/50" asChild>
@@ -722,9 +722,7 @@ export default function DanganronpaPatcherPage() {
         <CardHeader className="py-1.5 px-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xs flex items-center gap-1.5">
-              <FolderOpen className="w-3 h-3 text-emerald-400" />
-              Seleziona Gioco
-            </CardTitle>
+              <FolderOpen className="w-3 h-3 text-emerald-400" />{t('telltale.selectGame')}</CardTitle>
             <span className="text-[10px] text-muted-foreground">Seleziona la cartella di installazione del gioco</span>
           </div>
         </CardHeader>
@@ -835,7 +833,7 @@ export default function DanganronpaPatcherPage() {
                   ) : (
                     <div className="text-center py-4 text-muted-foreground">
                       <Package className="w-8 h-8 mx-auto mb-1 opacity-50" />
-                      <p className="text-xs">Seleziona un gioco</p>
+                      <p className="text-xs">{t('gamePatcher.selectGame')}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -904,7 +902,7 @@ export default function DanganronpaPatcherPage() {
                   <div className="flex items-center gap-3">
                     <div>
                       <p className="text-lg font-bold">{poStats.percentage}%</p>
-                      <p className="text-[10px] text-muted-foreground">Completato</p>
+                      <p className="text-[10px] text-muted-foreground">{t('batchTranslator.done')}</p>
                     </div>
                     <div className="flex gap-3 text-xs">
                       <div className="flex items-center gap-1">
@@ -944,9 +942,7 @@ export default function DanganronpaPatcherPage() {
             <CardHeader className="py-1.5 px-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xs flex items-center gap-1.5">
-                  <Globe className="w-3 h-3 text-emerald-400" />
-                  Editor Traduzioni
-                </CardTitle>
+                  <Globe className="w-3 h-3 text-emerald-400" />{t('editor.title')}</CardTitle>
                 {!poFile && (
                   <Button onClick={openPoFile} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
                     <Upload className="w-3 h-3 mr-1" />
@@ -986,9 +982,7 @@ export default function DanganronpaPatcherPage() {
                         >
                           {/* Original */}
                           <div className="mb-3">
-                            <label className="text-xs font-medium text-muted-foreground uppercase">
-                              Originale
-                            </label>
+                            <label className="text-xs font-medium text-muted-foreground uppercase">{t('offlineTranslator.original')}</label>
                             <p className="text-sm mt-1 font-mono bg-slate-950/50 p-2 rounded border border-slate-800">
                               {entry.msgid}
                             </p>
@@ -996,9 +990,7 @@ export default function DanganronpaPatcherPage() {
                           
                           {/* Translation */}
                           <div>
-                            <label className="text-xs font-medium text-muted-foreground uppercase">
-                              Traduzione
-                            </label>
+                            <label className="text-xs font-medium text-muted-foreground uppercase">{t('offlineTranslator.translation')}</label>
                             {isEditing ? (
                               <div className="mt-1 space-y-2">
                                 <Textarea
@@ -1013,17 +1005,13 @@ export default function DanganronpaPatcherPage() {
                                     onClick={() => updateEntry(originalIndex, editedTranslation)}
                                     className="h-7 bg-emerald-600 hover:bg-emerald-500"
                                   >
-                                    <Check className="w-3 h-3 mr-1" />
-                                    Salva
-                                  </Button>
+                                    <Check className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                                   <Button
                                     size="sm"
                                     variant="outline"
                                     onClick={() => setEditingEntry(null)}
                                     className="h-7"
-                                  >
-                                    Annulla
-                                  </Button>
+                                  >{t('workshop.unsubscribe')}</Button>
                                 </div>
                               </div>
                             ) : (
@@ -1104,7 +1092,7 @@ export default function DanganronpaPatcherPage() {
                   ) : (
                     <div className="text-center py-4 text-muted-foreground">
                       <AlertCircle className="w-8 h-8 mx-auto mb-1 opacity-50" />
-                      <p className="text-xs">Nessun gioco trovato</p>
+                      <p className="text-xs">{t('emptyStates.noGames')}</p>
                     </div>
                   )}
                 </ScrollArea>
@@ -1188,9 +1176,7 @@ export default function DanganronpaPatcherPage() {
                             disabled={applyingPatch}
                             className="h-7 text-xs"
                           >
-                            <RefreshCw className="w-3 h-3 mr-1" />
-                            Ripristina
-                          </Button>
+                            <RefreshCw className="w-3 h-3 mr-1" />{t('telltale.restore')}</Button>
                         </div>
                       ))}
                     </div>
@@ -1340,7 +1326,7 @@ export default function DanganronpaPatcherPage() {
                   <div className="flex items-center gap-3">
                     <div>
                       <p className="text-lg font-bold text-emerald-400">{linStats.percentage}%</p>
-                      <p className="text-[10px] text-muted-foreground">Completato</p>
+                      <p className="text-[10px] text-muted-foreground">{t('batchTranslator.done')}</p>
                     </div>
                     <div className="flex gap-3 text-xs">
                       <div className="flex items-center gap-1">
@@ -1380,9 +1366,7 @@ export default function DanganronpaPatcherPage() {
                       Carica JSON
                     </Button>
                     <Button onClick={saveLinDialogues} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
-                      <Download className="w-3 h-3 mr-1" />
-                      Salva
-                    </Button>
+                      <Download className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                   </div>
                 </div>
                 <Progress value={linStats.percentage} className="h-2 bg-slate-800" />
@@ -1534,17 +1518,13 @@ export default function DanganronpaPatcherPage() {
                                   onClick={() => updateLinDialogue(dialogue.id, editedLinTranslation)}
                                   className="h-7 bg-emerald-600 hover:bg-emerald-500"
                                 >
-                                  <Check className="w-3 h-3 mr-1" />
-                                  Salva
-                                </Button>
+                                  <Check className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => setEditingLinId(null)}
                                   className="h-7"
-                                >
-                                  Annulla
-                                </Button>
+                                >{t('workshop.unsubscribe')}</Button>
                               </div>
                             </div>
                           ) : (
@@ -1578,7 +1558,7 @@ export default function DanganronpaPatcherPage() {
                 ) : (
                   <div className="text-center py-6 text-muted-foreground">
                     <Search className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Nessun risultato</p>
+                    <p className="text-sm">{t('workshop.noResults')}</p>
                   </div>
                 )}
               </ScrollArea>

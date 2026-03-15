@@ -7,12 +7,12 @@ import { useTranslation } from '@/lib/i18n';
 
 const LoreAssistantChat = dynamic(
   () => import('@/components/tools/lore-assistant').then(mod => mod.LoreAssistantChat),
-  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Caricamento...</div> }
+  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Loading...</div> }
 );
 
 const AutoHookScanner = dynamic(
   () => import('@/components/tools/auto-hook-scanner').then(mod => mod.AutoHookScanner),
-  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Caricamento...</div> }
+  { ssr: false, loading: () => <div className="p-4 text-center text-slate-500 text-sm">Loading...</div> }
 );
 
 export default function AdvancedToolsPage() {

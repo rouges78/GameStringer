@@ -294,7 +294,7 @@ export default function ContextHarvesterPage() {
               <Wheat className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Context Harvester</h1>
+              <h1 className="text-xl font-bold text-white">{t('nav.contextHarvester')}</h1>
               <p className="text-white/70 text-sm">Estrazione automatica contesto per traduzione AI</p>
             </div>
           </div>
@@ -327,9 +327,7 @@ export default function ContextHarvesterPage() {
                   Demo (30 stringhe)
                 </TabsTrigger>
                 <TabsTrigger value="paste" className="text-xs h-7">
-                  <MessageSquare className="h-3 w-3 mr-1" />
-                  Incolla
-                </TabsTrigger>
+                  <MessageSquare className="h-3 w-3 mr-1" />{t('heatmap.paste')}</TabsTrigger>
                 <TabsTrigger value="file" className="text-xs h-7">
                   <Upload className="h-3 w-3 mr-1" />
                   File
@@ -368,7 +366,7 @@ export default function ContextHarvesterPage() {
 
             <div className="flex gap-2 items-end">
               <div className="flex-1">
-                <Label className="text-xs">Nome Gioco</Label>
+                <Label className="text-xs">{t('communityHub.gameName')}</Label>
                 <Input
                   value={gameNameInput}
                   onChange={(e) => setGameNameInput(e.target.value)}
@@ -377,7 +375,7 @@ export default function ContextHarvesterPage() {
                 />
               </div>
               <div className="flex-1">
-                <Label className="text-xs">Genere</Label>
+                <Label className="text-xs">{t('library.genre')}</Label>
                 <Input
                   value={gameGenreInput}
                   onChange={(e) => setGameGenreInput(e.target.value)}
@@ -475,8 +473,7 @@ export default function ContextHarvesterPage() {
                     Prompt Hint Generato (iniettato automaticamente)
                   </CardTitle>
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleCopyPrompt}>
-                    <Copy className="h-3 w-3 mr-1" /> Copia
-                  </Button>
+                    <Copy className="h-3 w-3 mr-1" />{t('translationFixer.copy')}</Button>
                 </CardHeader>
                 <CardContent className="px-4 pb-3">
                   <pre className="text-xs font-mono bg-muted/50 rounded p-2 whitespace-pre-wrap text-muted-foreground">

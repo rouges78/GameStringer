@@ -150,7 +150,7 @@ export default function OCREnginesPage() {
               <ScanEye className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">OCR Multi-Engine</h1>
+              <h1 className="text-xl font-bold text-white">{t('nav.ocrMultiEngine')}</h1>
               <p className="text-white/70 text-sm">OneOCR · PaddleOCR · RapidOCR · Tesseract</p>
             </div>
           </div>
@@ -213,8 +213,7 @@ export default function OCREnginesPage() {
                     className="h-5 text-[9px] mt-1 px-1 text-muted-foreground"
                     onClick={(e) => { e.stopPropagation(); setShowSetup(showSetup === engineId ? null : engineId) }}
                   >
-                    <Settings className="h-2.5 w-2.5 mr-0.5" /> Setup
-                  </Button>
+                    <Settings className="h-2.5 w-2.5 mr-0.5" />{t('offlineTranslator.setup')}</Button>
                 )}
                 {showSetup === engineId && info && (
                   <div className="mt-2 p-2 rounded bg-muted/50 text-[10px] text-muted-foreground">
@@ -299,8 +298,7 @@ export default function OCREnginesPage() {
                     {ENGINE_ICONS[ocrResult.engine]} {ocrResult.engine}
                   </Badge>
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleCopyText}>
-                    <Copy className="h-3 w-3 mr-1" /> Copia
-                  </Button>
+                    <Copy className="h-3 w-3 mr-1" />{t('translationFixer.copy')}</Button>
                 </div>
               )}
             </CardHeader>
@@ -336,7 +334,7 @@ export default function OCREnginesPage() {
                   {/* Extracted Text */}
                   <ScrollArea className="h-[200px]">
                     <pre className="text-xs font-mono whitespace-pre-wrap p-2 bg-muted/30 rounded">
-                      {ocrResult.text || <span className="text-muted-foreground italic">Nessun testo rilevato</span>}
+                      {ocrResult.text || <span className="text-muted-foreground italic">{t('ocrTranslator.noTextsDetected')}</span>}
                     </pre>
                   </ScrollArea>
 

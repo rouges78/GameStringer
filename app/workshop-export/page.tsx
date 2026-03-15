@@ -148,7 +148,7 @@ export default function WorkshopExportPage() {
         <div className="lg:col-span-2 space-y-3">
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Configurazione</CardTitle>
+              <CardTitle className="text-sm">{t('ueTranslator.configuration')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
@@ -196,7 +196,7 @@ export default function WorkshopExportPage() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Engine</Label>
+                  <Label className="text-xs">{t('gameDetails.engine')}</Label>
                   <Select value={config.engine} onValueChange={(v: 'unity' | 'unreal' | 'generic') => setConfig(prev => ({ ...prev, engine: v }))}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -230,7 +230,7 @@ export default function WorkshopExportPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Versione</Label>
+                  <Label className="text-xs">{t('plugins.version')}</Label>
                   <Input
                     value={config.version}
                     onChange={(e) => setConfig(prev => ({ ...prev, version: e.target.value }))}
@@ -240,7 +240,7 @@ export default function WorkshopExportPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs">Descrizione</Label>
+                <Label className="text-xs">{t('plugins.description')}</Label>
                 <Textarea
                   value={config.description}
                   onChange={(e) => setConfig(prev => ({ ...prev, description: e.target.value }))}

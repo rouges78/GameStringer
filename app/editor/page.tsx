@@ -1020,21 +1020,21 @@ export default function EditorPage() {
           <div className="flex gap-2">
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="h-8 text-xs flex-1 bg-slate-950/60 border-slate-700/50 rounded-lg text-slate-300">
-                <SelectValue placeholder="Stato" />
+                <SelectValue placeholder={t('gameDetails.status')} />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700 z-50">
                 <SelectItem value="all">Tutti gli stati</SelectItem>
-                <SelectItem value="pending">In attesa</SelectItem>
-                <SelectItem value="completed">Completati</SelectItem>
+                <SelectItem value="pending">{t('batch.pending')}</SelectItem>
+                <SelectItem value="completed">{t('batch.completed')}</SelectItem>
                 <SelectItem value="edited">Modificati</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterGame} onValueChange={setFilterGame}>
               <SelectTrigger className="h-8 text-xs flex-1 bg-slate-950/60 border-slate-700/50 rounded-lg text-slate-300">
-                <SelectValue placeholder="Gioco" />
+                <SelectValue placeholder={t('projects.game')} />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700 z-50">
-                <SelectItem value="all">Tutti i giochi</SelectItem>
+                <SelectItem value="all">{t('dictionary.allGames')}</SelectItem>
                 {games.map(g => (
                   <SelectItem key={g.id} value={g.id}>{g.title}</SelectItem>
                 ))}
@@ -1067,7 +1067,7 @@ export default function EditorPage() {
                 <div className="w-16 h-16 rounded-full bg-slate-800/30 flex items-center justify-center mb-4 border border-slate-800">
                   <Languages className="h-8 w-8 opacity-40 text-slate-400" />
                 </div>
-                <p className="font-semibold text-slate-300">Nessun progetto</p>
+                <p className="font-semibold text-slate-300">{t('projects.noProjects')}</p>
                 <p className="text-[11px] mt-1.5 opacity-70 max-w-[200px] leading-relaxed">Traduci un gioco con Neural Translator per iniziare a popolarlo qui.</p>
               </div>
             ) : (
@@ -1261,15 +1261,11 @@ export default function EditorPage() {
                   {/* Cross-navigation */}
                   <Link href={`/batch?game=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
                     <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 rounded-lg">
-                      <FolderTree className="h-3.5 w-3.5 mr-1" />
-                      Batch
-                    </Button>
+                      <FolderTree className="h-3.5 w-3.5 mr-1" />{t('aiTranslator.batch')}</Button>
                   </Link>
                   <Link href={`/glossary?gameId=${selectedTranslation.gameId || ''}`}>
                     <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-lg hidden sm:flex">
-                      <BookOpen className="h-3.5 w-3.5 mr-1" />
-                      Memoria
-                    </Button>
+                      <BookOpen className="h-3.5 w-3.5 mr-1" />{t('nav.memory')}</Button>
                   </Link>
                   <Separator orientation="vertical" className="h-5 bg-slate-700/50 mx-1" />
                   <Button 
@@ -1309,7 +1305,7 @@ export default function EditorPage() {
                   <ArrowLeftRight className="h-3.5 w-3.5 text-slate-600" />
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Destinazione:</span>
-                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Italiano</span>
+                    <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">{t('languages.it')}</span>
                   </div>
                 </div>
               )}
@@ -1414,8 +1410,7 @@ export default function EditorPage() {
                 <div className="flex-1 flex flex-col border-r border-slate-800/50 min-w-[300px] bg-slate-900/20">
                   <div className="px-4 py-3 bg-slate-900/60 border-b border-slate-800/50 flex justify-between items-center backdrop-blur-md">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                      <FileText className="h-3.5 w-3.5" /> Testo Originale
-                    </span>
+                      <FileText className="h-3.5 w-3.5" />{t('qaCheck.originalText')}</span>
                     <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
                       navigator.clipboard.writeText(selectedTranslation.originalText);
                       toast({ title: 'Copiato negli appunti' });
@@ -1443,8 +1438,7 @@ export default function EditorPage() {
                     <div className="px-4 py-3 bg-slate-900/60 border-b border-slate-800/50 flex justify-between items-center backdrop-blur-md">
                       <div className="flex items-center gap-3">
                         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                          <FileText className="h-3.5 w-3.5" /> Sorgente
-                        </span>
+                          <FileText className="h-3.5 w-3.5" />{t('mangaTranslator.source')}</span>
                         <Badge variant="outline" className="text-[9px] h-4 bg-slate-800/50 text-slate-400 border-slate-700/50">Riga {selectedLine.lineNumber}</Badge>
                       </div>
                       <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-colors" onClick={() => {
@@ -1468,12 +1462,10 @@ export default function EditorPage() {
                   <div className="flex-1 flex flex-col bg-slate-950/40">
                     <div className="px-4 py-3 bg-indigo-950/30 border-b border-indigo-500/20 flex justify-between items-center backdrop-blur-md">
                       <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
-                        <Edit3 className="h-3.5 w-3.5" /> Traduzione
-                      </span>
+                        <Edit3 className="h-3.5 w-3.5" />{t('offlineTranslator.translation')}</span>
                       {selectedLine.translatedText && (
                         <Badge variant="outline" className="text-[9px] h-4 bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold uppercase tracking-wider">
-                          <CheckCircle className="h-2.5 w-2.5 mr-1" /> Completato
-                        </Badge>
+                          <CheckCircle className="h-2.5 w-2.5 mr-1" />{t('batchTranslator.done')}</Badge>
                       )}
                     </div>
                     <div className="flex-1 p-5 relative">
@@ -1558,7 +1550,7 @@ export default function EditorPage() {
                       value={selectedTranslation.translatedText}
                       onChange={(e) => handleTranslationChange(e.target.value)}
                       className="relative w-full h-full min-h-[200px] resize-none border-indigo-500/20 bg-slate-900/60 text-[14px] font-medium leading-relaxed focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500/50 placeholder:text-slate-600 rounded-xl shadow-inner p-4 transition-all hover:bg-slate-900/80 custom-scrollbar"
-                      placeholder="Inserisci la traduzione..."
+                      placeholder={t('qaCheck.enterTranslation')}
                       spellCheck={false}
                     />
                   </div>

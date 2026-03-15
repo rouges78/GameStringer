@@ -271,9 +271,7 @@ export default function RenpyPatcherPage() {
       <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm flex items-center gap-2">
-            <FolderOpen className="w-4 h-4 text-pink-400" />
-            Seleziona Gioco
-          </CardTitle>
+            <FolderOpen className="w-4 h-4 text-pink-400" />{t('telltale.selectGame')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="flex items-center gap-3">
@@ -324,7 +322,7 @@ export default function RenpyPatcherPage() {
               <div className="flex items-center gap-6">
                 <div>
                   <p className="text-2xl font-bold text-pink-400">{stats.percentage}%</p>
-                  <p className="text-xs text-muted-foreground">Completato</p>
+                  <p className="text-xs text-muted-foreground">{t('batchTranslator.done')}</p>
                 </div>
                 <div className="flex gap-4 text-sm">
                   <div className="flex items-center gap-1">
@@ -350,9 +348,7 @@ export default function RenpyPatcherPage() {
                   Carica
                 </Button>
                 <Button onClick={saveTranslations} size="sm" className="h-8 bg-pink-600 hover:bg-pink-500">
-                  <Save className="w-3 h-3 mr-1" />
-                  Salva
-                </Button>
+                  <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
               </div>
             </div>
             <Progress value={stats.percentage} className="h-2 bg-slate-800" />
@@ -467,17 +463,13 @@ export default function RenpyPatcherPage() {
                                 onClick={() => updateTranslation(entry.id, editedTranslation)}
                                 className="h-7 bg-pink-600 hover:bg-pink-500"
                               >
-                                <Check className="w-3 h-3 mr-1" />
-                                Salva
-                              </Button>
+                                <Check className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setEditingId(null)}
                                 className="h-7"
-                              >
-                                Annulla
-                              </Button>
+                              >{t('workshop.unsubscribe')}</Button>
                             </div>
                           </div>
                         ) : (
@@ -514,7 +506,7 @@ export default function RenpyPatcherPage() {
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">Nessun risultato</p>
+                <p className="text-lg font-medium">{t('workshop.noResults')}</p>
               </div>
             )}
           </ScrollArea>

@@ -199,12 +199,12 @@ export default function AIPipelinePage() {
 
           <Card>
             <CardHeader className="py-3 px-4">
-              <CardTitle className="text-sm">Configurazione</CardTitle>
+              <CardTitle className="text-sm">{t('ueTranslator.configuration')}</CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label className="text-xs">Sorgente</Label>
+                  <Label className="text-xs">{t('mangaTranslator.source')}</Label>
                   <Input value={sourceLang} onChange={(e) => setSourceLang(e.target.value)} className="h-7 text-xs mt-1" />
                 </div>
                 <div>
@@ -237,11 +237,11 @@ export default function AIPipelinePage() {
                   <Separator />
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs">Context Harvester</Label>
+                      <Label className="text-xs">{t('nav.contextHarvester')}</Label>
                       <Switch checked={enableHarvest} onCheckedChange={setEnableHarvest} />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-xs">Auto-Fix</Label>
+                      <Label className="text-xs">{t('aiReview.autoFix')}</Label>
                       <Switch checked={enableAutoFix} onCheckedChange={setEnableAutoFix} />
                     </div>
                     <div className="flex items-center justify-between">
@@ -338,8 +338,7 @@ export default function AIPipelinePage() {
                 <CardHeader className="py-2 px-4 flex flex-row items-center justify-between">
                   <CardTitle className="text-xs">Traduzioni ({result.translations.length})</CardTitle>
                   <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleExport}>
-                    <Download className="h-3 w-3 mr-1" /> Esporta
-                  </Button>
+                    <Download className="h-3 w-3 mr-1" />{t('projects.export')}</Button>
                 </CardHeader>
                 <ScrollArea className="h-[400px]">
                   <div className="px-4 pb-3 space-y-1">

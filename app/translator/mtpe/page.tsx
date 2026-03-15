@@ -226,7 +226,7 @@ export default function MTPEPage() {
           <Card className="bg-slate-900/50 border-slate-700">
             <CardContent className="p-8 text-center">
               <Sparkles className="h-12 w-12 text-sky-400 mx-auto mb-4 animate-pulse" />
-              <h2 className="text-xl font-medium mb-2">Traduzione in corso...</h2>
+              <h2 className="text-xl font-medium mb-2">{t('offlineTranslator.translating')}</h2>
               <p className="text-gray-400 mb-4">
                 Provider: {provider.toUpperCase()}
               </p>

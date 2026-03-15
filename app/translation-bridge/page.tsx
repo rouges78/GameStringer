@@ -245,9 +245,7 @@ export default function TranslationBridgePage() {
               <Gamepad2 className="h-8 w-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                Translation Bridge
-              </h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">{t('nav.translationBridge')}</h1>
               <p className="text-muted-foreground">
                 Sistema di traduzione in-game per Unity
               </p>
@@ -260,7 +258,7 @@ export default function TranslationBridgePage() {
               className={isRunning ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}
             >
               {isRunning ? (
-                <><CheckCircle className="h-3 w-3 mr-1" /> Attivo</>
+                <><CheckCircle className="h-3 w-3 mr-1" />{t('ocrTranslator.active')}</>
               ) : (
                 <><XCircle className="h-3 w-3 mr-1" /> Inattivo</>
               )}
@@ -273,7 +271,7 @@ export default function TranslationBridgePage() {
               className={!isRunning ? "bg-gradient-to-r from-blue-600 to-cyan-600" : ""}
             >
               {isRunning ? (
-                <><Square className="h-4 w-4 mr-2" /> Ferma</>
+                <><Square className="h-4 w-4 mr-2" />{t('subtitleOverlay.stop')}</>
               ) : (
                 <><Play className="h-4 w-4 mr-2" /> Avvia</>
               )}
@@ -305,7 +303,7 @@ export default function TranslationBridgePage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{dictStats?.total_entries ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">Traduzioni</p>
+                  <p className="text-xs text-muted-foreground">{t('activity.translations')}</p>
                 </div>
               </div>
             </CardContent>
@@ -362,17 +360,13 @@ export default function TranslationBridgePage() {
         <Tabs defaultValue="translations" className="space-y-4">
           <TabsList className="bg-slate-800/50">
             <TabsTrigger value="translations">
-              <Languages className="h-4 w-4 mr-2" />
-              Traduzioni
-            </TabsTrigger>
+              <Languages className="h-4 w-4 mr-2" />{t('activity.translations')}</TabsTrigger>
             <TabsTrigger value="test">
               <Zap className="h-4 w-4 mr-2" />
               Test
             </TabsTrigger>
             <TabsTrigger value="settings">
-              <Settings className="h-4 w-4 mr-2" />
-              Impostazioni
-            </TabsTrigger>
+              <Settings className="h-4 w-4 mr-2" />{t('plugins.settings')}</TabsTrigger>
           </TabsList>
 
           {/* Translations Tab */}
@@ -382,9 +376,7 @@ export default function TranslationBridgePage() {
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
-                    Aggiungi Traduzione
-                  </CardTitle>
+                    <Plus className="h-5 w-5" />{t('dictionaryManager.addTranslation')}</CardTitle>
                   <CardDescription>
                     Aggiungi una singola coppia originale/traduzione
                   </CardDescription>
@@ -411,9 +403,7 @@ export default function TranslationBridgePage() {
                     disabled={isLoading || !newOriginal || !newTranslated}
                     className="w-full"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Aggiungi
-                  </Button>
+                    <Plus className="h-4 w-4 mr-2" />{t('glossaryManager.add')}</Button>
                 </CardContent>
               </Card>
 
@@ -430,7 +420,7 @@ export default function TranslationBridgePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label>Traduzioni</Label>
+                    <Label>{t('activity.translations')}</Label>
                     <Textarea
                       value={bulkTranslations}
                       onChange={(e) => setBulkTranslations(e.target.value)}
@@ -448,9 +438,7 @@ World=Mondo`}
                     disabled={isLoading || !bulkTranslations}
                     className="w-full"
                   >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Carica Traduzioni
-                  </Button>
+                    <Upload className="h-4 w-4 mr-2" />{t('heatmap.loadTranslations')}</Button>
                 </CardContent>
               </Card>
             </div>
@@ -461,9 +449,7 @@ World=Mondo`}
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Zap className="h-5 w-5" />
-                  Test Traduzione
-                </CardTitle>
+                  <Zap className="h-5 w-5" />{t('settings.testTranslation')}</CardTitle>
                 <CardDescription>
                   Verifica se una stringa ha una traduzione nel dizionario
                 </CardDescription>
@@ -507,9 +493,7 @@ World=Mondo`}
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Configurazione
-                </CardTitle>
+                  <Settings className="h-5 w-5" />{t('ueTranslator.configuration')}</CardTitle>
                 <CardDescription>
                   Imposta la coppia di lingue attiva
                 </CardDescription>
@@ -517,7 +501,7 @@ World=Mondo`}
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Lingua Sorgente</Label>
+                    <Label>{t('ocrTranslator.sourceLanguage')}</Label>
                     <Select value={sourceLang} onValueChange={setSourceLang}>
                       <SelectTrigger>
                         <SelectValue />
@@ -594,9 +578,7 @@ World=Mondo`}
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Performance
-              </CardTitle>
+                <Activity className="h-5 w-5" />{t('settings.performance')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">

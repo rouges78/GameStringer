@@ -171,7 +171,7 @@ export default function OllamaManagerPage() {
           <CardContent className="p-3 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-amber-200">Ollama non è in esecuzione</p>
+              <p className="text-sm font-semibold text-amber-200">{t('offlineTranslator.ollamaNotRunning')}</p>
               <p className="text-xs text-amber-300/70 mt-0.5">
                 Installa e avvia Ollama da <a href="https://ollama.com" target="_blank" rel="noopener" className="underline">ollama.com</a> per usare modelli locali.
               </p>

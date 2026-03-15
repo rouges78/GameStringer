@@ -251,7 +251,7 @@ export default function RpgMakerPatcherPage() {
                 <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/30 shadow-lg shadow-black/40 border border-white/10">
                   <Check className="h-3.5 w-3.5 text-blue-300" />
                   <span className="text-sm font-bold text-white">T++</span>
-                  <span className="text-[10px] text-white/70">Installato</span>
+                  <span className="text-[10px] text-white/70">{t('workshop.installed')}</span>
                 </div>
               ) : (
                 <Button variant="outline" size="sm" className="bg-black/30 border-white/20 text-white hover:bg-black/50" asChild>
@@ -271,9 +271,7 @@ export default function RpgMakerPatcherPage() {
       <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm flex items-center gap-2">
-            <FolderOpen className="w-4 h-4 text-blue-400" />
-            Seleziona Gioco
-          </CardTitle>
+            <FolderOpen className="w-4 h-4 text-blue-400" />{t('telltale.selectGame')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="flex items-center gap-3">
@@ -319,7 +317,7 @@ export default function RpgMakerPatcherPage() {
               <div className="flex items-center gap-6">
                 <div>
                   <p className="text-2xl font-bold text-blue-400">{stats.percentage}%</p>
-                  <p className="text-xs text-muted-foreground">Completato</p>
+                  <p className="text-xs text-muted-foreground">{t('batchTranslator.done')}</p>
                 </div>
                 <div className="flex gap-4 text-sm">
                   <div className="flex items-center gap-1">
@@ -338,9 +336,7 @@ export default function RpgMakerPatcherPage() {
                   Carica
                 </Button>
                 <Button onClick={saveTranslations} size="sm" className="h-8 bg-blue-600 hover:bg-blue-500">
-                  <Save className="w-3 h-3 mr-1" />
-                  Salva
-                </Button>
+                  <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
               </div>
             </div>
             <Progress value={stats.percentage} className="h-2 bg-slate-800" />
@@ -404,14 +400,14 @@ export default function RpgMakerPatcherPage() {
                       </div>
                       
                       <div className="mb-2">
-                        <p className="text-xs text-muted-foreground uppercase mb-1">Originale</p>
+                        <p className="text-xs text-muted-foreground uppercase mb-1">{t('offlineTranslator.original')}</p>
                         <p className="text-sm font-mono bg-slate-950/50 p-2 rounded border border-slate-800">
                           {entry.original}
                         </p>
                       </div>
                       
                       <div>
-                        <p className="text-xs text-muted-foreground uppercase mb-1">Traduzione</p>
+                        <p className="text-xs text-muted-foreground uppercase mb-1">{t('offlineTranslator.translation')}</p>
                         {isEditing ? (
                           <div className="space-y-2">
                             <Textarea
@@ -426,17 +422,13 @@ export default function RpgMakerPatcherPage() {
                                 onClick={() => updateTranslation(entry.id, editedTranslation)}
                                 className="h-7 bg-blue-600 hover:bg-blue-500"
                               >
-                                <Check className="w-3 h-3 mr-1" />
-                                Salva
-                              </Button>
+                                <Check className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setEditingId(null)}
                                 className="h-7"
-                              >
-                                Annulla
-                              </Button>
+                              >{t('workshop.unsubscribe')}</Button>
                             </div>
                           </div>
                         ) : (
@@ -473,7 +465,7 @@ export default function RpgMakerPatcherPage() {
             ) : (
               <div className="text-center py-12 text-muted-foreground">
                 <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium">Nessun risultato</p>
+                <p className="text-lg font-medium">{t('workshop.noResults')}</p>
                 <p className="text-sm mt-1">
                   Prova con un altro termine di ricerca
                 </p>

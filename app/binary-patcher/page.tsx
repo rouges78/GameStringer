@@ -70,7 +70,7 @@ const CATEGORY_NAMES: Record<string, string> = {
 };
 
 export default function BinaryPatcherPage() {
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
   const searchParams = useSearchParams();
 
   // State
@@ -688,14 +688,12 @@ export default function BinaryPatcherPage() {
             {project && (
               <>
                 <Button variant="ghost" size="sm" onClick={handleExportProject} className="text-white/60 hover:text-white">
-                  <Download className="h-4 w-4 mr-1" /> Esporta
-                </Button>
+                  <Download className="h-4 w-4 mr-1" />{t('projects.export')}</Button>
               </>
             )}
             <input ref={projectInputRef} type="file" accept=".json" className="hidden" onChange={handleImportProject} />
             <Button variant="ghost" size="sm" onClick={() => projectInputRef.current?.click()} className="text-white/60 hover:text-white">
-              <Upload className="h-4 w-4 mr-1" /> Importa
-            </Button>
+              <Upload className="h-4 w-4 mr-1" />{t('glossaryManager.import')}</Button>
           </div>
         </div>
 
@@ -747,7 +745,7 @@ export default function BinaryPatcherPage() {
                   {isProcessing && (
                     <div className="flex items-center gap-2 mt-1">
                       <Loader2 className="h-3 w-3 animate-spin text-orange-400" />
-                      <span className="text-xs text-orange-400">Elaborazione...</span>
+                      <span className="text-xs text-orange-400">{t('mangaTranslator.processing')}</span>
                     </div>
                   )}
                 </div>
@@ -854,7 +852,7 @@ export default function BinaryPatcherPage() {
               </div>
               <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center">
                 <p className="text-2xl font-bold text-blue-400">{Object.keys(stats.byCategory).length}</p>
-                <p className="text-xs text-white/50">Categorie</p>
+                <p className="text-xs text-white/50">{t('culturalAdaptation.categories')}</p>
               </div>
             </div>
 
@@ -905,8 +903,7 @@ export default function BinaryPatcherPage() {
                       setSavedCheckpoint(null);
                       resumePendingRef.current = true;
                     }}>
-                      <Play className="h-3 w-3 mr-1" /> Riprendi
-                    </Button>
+                      <Play className="h-3 w-3 mr-1" />{t('ueTranslator.resumeTranslator')}</Button>
                     <Button size="sm" variant="outline" className="h-8 text-xs border-amber-500/30 text-amber-300 hover:bg-amber-500/20" onClick={clearBinCheckpoint}>
                       <XCircle className="h-3 w-3 mr-1" /> Ricomincia
                     </Button>
@@ -1015,7 +1012,7 @@ export default function BinaryPatcherPage() {
                 {isProcessing && (
                   <div className="flex items-center gap-2 mt-1">
                     <Loader2 className="h-3 w-3 animate-spin text-purple-400" />
-                    <span className="text-xs text-purple-400">Traduzione in corso...</span>
+                    <span className="text-xs text-purple-400">{t('offlineTranslator.translating')}</span>
                   </div>
                 )}
               </div>
@@ -1096,7 +1093,7 @@ export default function BinaryPatcherPage() {
               </select>
               <select value={filterLang} onChange={(e) => setFilterLang(e.target.value)}
                 className="h-8 border border-white/10 rounded px-2 text-xs text-white" style={{backgroundColor: '#1a1a2e'}}>
-                <option value="all" style={{backgroundColor: '#1a1a2e'}}>Tutte le lingue</option>
+                <option value="all" style={{backgroundColor: '#1a1a2e'}}>{t('communityHub.allLanguages')}</option>
                 {Object.entries(stats.byLanguage).map(([k]) => (
                   <option key={k} value={k}>{LANG_NAMES[k] || k}</option>
                 ))}

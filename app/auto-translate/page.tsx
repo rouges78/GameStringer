@@ -1714,7 +1714,7 @@ export default function AutoTranslatePage() {
                     Unity game detected
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    I testi di questo gioco sono dentro gli asset binari Unity. Usa il <strong>Unity CSV Translator</strong> per scansionare, tradurre e iniettare le traduzioni con Resize Injection (zero troncamento).
+                    I testi di questo gioco sono dentro gli asset binari Unity. Usa il <strong>{t('nav.unityCsvTranslator')}</strong> per scansionare, tradurre e iniettare le traduzioni con Resize Injection (zero troncamento).
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-4 pb-4 space-y-3">
@@ -1866,7 +1866,7 @@ export default function AutoTranslatePage() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex items-center justify-between">
-                            <Label className="text-[10px] cursor-help">Context Harvester</Label>
+                            <Label className="text-[10px] cursor-help">{t('nav.contextHarvester')}</Label>
                             <Switch checked={useContextHarvest} onCheckedChange={setUseContextHarvest} />
                           </div>
                         </TooltipTrigger>
@@ -2254,7 +2254,7 @@ export default function AutoTranslatePage() {
                                   <Textarea value={editValue} onChange={(e) => setEditValue(e.target.value)} className="text-xs min-h-[60px]" autoFocus />
                                   <div className="flex gap-1">
                                     <Button size="sm" className="h-6 text-[10px]" onClick={handleEditSave}><Save className="h-2.5 w-2.5 mr-0.5" /> Save</Button>
-                                    <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={handleEditCancel}>Cancel</Button>
+                                    <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={handleEditCancel}>{t("common.cancel")}</Button>
                                   </div>
                                 </div>
                               ) : (
@@ -2396,7 +2396,7 @@ export default function AutoTranslatePage() {
                           {testPatchStatus === 'monitoring' && <><Shield className="h-4 w-4 text-violet-400 animate-pulse" /> Monitoraggio attivo</>}
                           {testPatchStatus === 'restoring' && <><Loader2 className="h-4 w-4 animate-spin text-amber-400" /> Ripristino...</>}
                           {testPatchStatus === 'done' && <><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Test completato</>}
-                          {testPatchStatus === 'error' && <><XCircle className="h-4 w-4 text-red-400" /> Errore</>}
+                          {testPatchStatus === 'error' && <><XCircle className="h-4 w-4 text-red-400" />{t('qaCheck.error')}</>}
                         </CardTitle>
                         {testPatchApplied && (
                           <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-[9px]">
