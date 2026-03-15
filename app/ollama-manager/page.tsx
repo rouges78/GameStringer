@@ -409,7 +409,7 @@ export default function OllamaManagerPage() {
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] font-mono font-bold">{r.name}</span>
                           {r.timeMs <= Math.min(compareResult.modelA.timeMs, compareResult.modelB.timeMs) && (
-                            <Badge className="text-[7px] h-3 px-1 bg-emerald-500/20 text-emerald-300">Faster</Badge>
+                            <Badge className="text-[7px] h-3 px-1 bg-emerald-500/20 text-emerald-300">{t('ollamaManagerPage.faster')}</Badge>
                           )}
                         </div>
                         <p className="text-xs text-foreground leading-relaxed mb-1.5">{r.translation}</p>

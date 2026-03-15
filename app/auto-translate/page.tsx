@@ -1504,10 +1504,10 @@ export default function AutoTranslatePage() {
   // ============================================================================
 
   const wizardSteps: { id: WizardStep; label: string; icon: any }[] = [
-    { id: 'select_game', label: 'Gioco', icon: Gamepad2 },
-    { id: 'translating', label: 'Traduzione', icon: Sparkles },
-    { id: 'review', label: 'Revisione', icon: Eye },
-    { id: 'patch', label: 'Patch', icon: Package },
+    { id: 'select_game', label: t('autoTranslatePage.selectGame'), icon: Gamepad2 },
+    { id: 'translating', label: t('autoTranslatePage.translating'), icon: Sparkles },
+    { id: 'review', label: t('autoTranslatePage.toReview'), icon: Eye },
+    { id: 'patch', label: t('autoTranslatePage.patchReady'), icon: Package },
   ]
   const stepOrder: WizardStep[] = ['select_game', 'translating', 'review', 'patch']
   const currentStepIndex = stepOrder.indexOf(step)
@@ -1526,7 +1526,7 @@ export default function AutoTranslatePage() {
               <button
                 onClick={() => window.location.href = `/library/?id=${gameInfo.gameId}&name=${encodeURIComponent(gameInfo.gameName || '')}&platform=${encodeURIComponent(gameInfo.platform || '')}&headerImage=${encodeURIComponent(gameInfo.gameImage || '')}`}
                 className="p-2 rounded-lg bg-black/30 border border-white/10 hover:bg-white/10 transition-colors"
-                title="Torna alla pagina del gioco"
+                title={t('common.back')}
               >
                 <ArrowLeft className="h-5 w-5 text-white" />
               </button>
@@ -1537,7 +1537,7 @@ export default function AutoTranslatePage() {
             <div>
               <h1 className="text-xl font-bold text-white">{t('autoTranslatePage.heroTitle')}</h1>
               <p className="text-white/70 text-sm">
-                {gameInfo ? `${gameInfo.gameName}` : 'Select a game → Translate → Patch ready'}
+                {gameInfo ? `${gameInfo.gameName}` : t('autoTranslatePage.heroSubtitle')}
               </p>
             </div>
           </div>
@@ -1592,7 +1592,7 @@ export default function AutoTranslatePage() {
                       <Save className="h-5 w-5 text-amber-400" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-amber-200">Translation in progress found!</h3>
+                      <h3 className="text-sm font-semibold text-amber-200">{t('autoTranslatePage.progressFound')}</h3>
                       <p className="text-xs text-amber-300/70 mt-0.5">
                         {savedCheckpoint.translatedCount}/{savedCheckpoint.totalCount} strings already translated
                         ({savedCheckpoint.targetLang.toUpperCase()})
@@ -1658,12 +1658,12 @@ export default function AutoTranslatePage() {
               <Card>
                 <CardContent className="p-8 text-center">
                   <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-                  <h2 className="text-lg font-bold">Select a game from the Library</h2>
+                  <h2 className="text-lg font-bold">{t('autoTranslatePage.selectGame')}</h2>
                   <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                    Go to the <strong>Library</strong>, open a game and click <strong>&quot;Translate All&quot;</strong>. Game files will be loaded automatically.
+                    Go to the <strong>{t('nav.library')}</strong>, open a game and click <strong>&quot;Translate All&quot;</strong>. Game files will be loaded automatically.
                   </p>
                   <Separator className="my-4" />
-                  <p className="text-xs text-muted-foreground">Or load files manually:</p>
+                  <p className="text-xs text-muted-foreground">{t('autoTranslatePage.orLoadManually')}</p>
                   <Button variant="outline" size="sm" className="mt-2 h-7 text-xs" onClick={() => fileInputRef.current?.click()}>
                     <Upload className="h-3 w-3 mr-1" /> Load Files
                   </Button>
@@ -1847,7 +1847,7 @@ export default function AutoTranslatePage() {
                   <CardContent className="px-4 pb-4 space-y-3">
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <Label className="text-[10px]">From</Label>
+                        <Label className="text-[10px]">{t('autoTranslatePage.from')}</Label>
                         <select value={sourceLang} onChange={(e) => setSourceLang(e.target.value)}
                           className="w-full h-7 text-xs bg-background border rounded px-2 mt-0.5">
                           {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
@@ -2030,7 +2030,7 @@ export default function AutoTranslatePage() {
                 {lastTranslatedPair && (
                   <div className="bg-gradient-to-r from-muted/60 to-muted/30 rounded-lg p-3 space-y-1.5 border border-white/5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-medium text-muted-foreground">Live Preview</span>
+                      <span className="text-[10px] font-medium text-muted-foreground">{t('autoTranslatePage.livePreview')}</span>
                       {lastTranslatedPair.provider && (
                         <Badge variant="outline" className="text-[8px] h-4 px-1.5 border-primary/30 text-primary">{lastTranslatedPair.provider}</Badge>
                       )}
@@ -2079,10 +2079,10 @@ export default function AutoTranslatePage() {
                           </div>
                         </div>
                         <div className="bg-black/20 rounded p-2 space-y-1">
-                          <p className="text-[10px] font-medium text-amber-200/80">How to proceed:</p>
+                          <p className="text-[10px] font-medium text-amber-200/80">{t('autoTranslatePage.howToProceed')}</p>
                           <ul className="text-[10px] text-amber-300/60 space-y-0.5 list-disc list-inside">
-                            <li>Wait 2-5 minutes and click <strong>Resume</strong> to continue</li>
-                            <li>Configure an AI provider (Gemini, DeepSeek, DeepL) in <strong>Settings → API Keys</strong></li>
+                            <li>Wait 2-5 minutes and click <strong>{t('autoTranslatePage.resume')}</strong> to continue</li>
+                            <li>Configure an AI provider (Gemini, DeepSeek, DeepL) in <strong>{t('autoTranslatePage.settingsApiKeys')}</strong></li>
                             <li>Install <strong>Ollama</strong> to translate offline without limits</li>
                           </ul>
                         </div>
@@ -2110,12 +2110,12 @@ export default function AutoTranslatePage() {
         {step === 'review' && (
           <div className="space-y-3">
             <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Translated</div><div className="text-lg font-bold">{totalTranslated - untranslatedCount}</div></Card>
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Avg Score</div><div className={cn("text-lg font-bold", avgScore >= 80 ? "text-emerald-400" : avgScore >= 60 ? "text-yellow-400" : "text-red-400")}>{avgScore}%</div></Card>
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">To Review</div><div className="text-lg font-bold text-yellow-400">{issueCount}</div></Card>
-              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">Edited</div><div className="text-lg font-bold text-blue-400">{editedCount}</div></Card>
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.translated')}</div><div className="text-lg font-bold">{totalTranslated - untranslatedCount}</div></Card>
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.avgScore')}</div><div className={cn("text-lg font-bold", avgScore >= 80 ? "text-emerald-400" : avgScore >= 60 ? "text-yellow-400" : "text-red-400")}>{avgScore}%</div></Card>
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.toReview')}</div><div className="text-lg font-bold text-yellow-400">{issueCount}</div></Card>
+              <Card className="p-2.5"><div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.edited')}</div><div className="text-lg font-bold text-blue-400">{editedCount}</div></Card>
               <Card className={cn("p-2.5", untranslatedCount > 0 ? "border-red-500/30 bg-red-500/5" : "")}>
-                <div className="text-[10px] text-muted-foreground">Untranslated</div>
+                <div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.untranslated')}</div>
                 <div className="text-lg font-bold text-red-400">{untranslatedCount}</div>
                 {untranslatedCount > 0 && !isRetranslating && (
                   <Button size="sm" className="w-full h-6 text-[9px] mt-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600" onClick={handleTranslateUntranslated}>
@@ -2158,7 +2158,7 @@ export default function AutoTranslatePage() {
                     {testPatchStatus === 'error' && <span className="h-2 w-2 rounded-full bg-red-500" />}
                     {testPatchStatus === 'done' && <span className="h-2 w-2 rounded-full bg-emerald-500" />}
                     {(testPatchStatus === 'backing_up' || testPatchStatus === 'applying' || testPatchStatus === 'launching' || testPatchStatus === 'restoring') && <Loader2 className="h-3 w-3 animate-spin text-violet-400" />}
-                    <span>Test Patch</span>
+                    <span>{t('autoTranslatePage.testPatch')}</span>
                     <span className="text-muted-foreground font-normal">
                       — {testPatchStatus === 'backing_up' ? 'Cleaning previous patches...' : testPatchStatus === 'applying' ? 'Applying translations...' : testPatchStatus === 'launching' ? 'Launching game...' : testPatchStatus === 'monitoring' ? 'Running — check in-game' : testPatchStatus === 'restoring' ? 'Restoring originals...' : testPatchStatus === 'error' ? 'Error' : 'Completed'}
                     </span>
@@ -2225,7 +2225,7 @@ export default function AutoTranslatePage() {
                   })}
                   <Separator />
                   <div className="space-y-1">
-                    <Label className="text-[10px] text-muted-foreground">Filter</Label>
+                    <Label className="text-[10px] text-muted-foreground">{t('autoTranslatePage.filter')}</Label>
                     {(['all', 'issues', 'untranslated', 'edited'] as const).map(f => (
                       <Button key={f} variant={reviewFilter === f ? "default" : "ghost"} size="sm" className="w-full h-6 text-[10px] justify-start" onClick={() => setReviewFilter(f)}>
                         {f === 'all' ? '📋 All' : f === 'issues' ? '⚠️ To review' : f === 'untranslated' ? `🔴 Untranslated (${untranslatedCount})` : '✏️ Edited'}
@@ -2282,8 +2282,8 @@ export default function AutoTranslatePage() {
                     {filteredStrings.length === 0 && (
                       <div className="text-center py-12 text-muted-foreground">
                         <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-emerald-400" />
-                        <p className="text-sm font-medium">All good!</p>
-                        <p className="text-xs mt-1">No strings to review.</p>
+                        <p className="text-sm font-medium">{t('autoTranslatePage.allGood')}</p>
+                        <p className="text-xs mt-1">{t('autoTranslatePage.noStringsToReview')}</p>
                       </div>
                     )}
                   </div>
@@ -2301,14 +2301,14 @@ export default function AutoTranslatePage() {
             {isGenerating ? (
               <Card className="p-8 text-center">
                 <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-3" />
-                <h2 className="text-lg font-bold">Generating patch...</h2>
+                <h2 className="text-lg font-bold">{t('autoTranslatePage.generatingPatch')}</h2>
               </Card>
             ) : patchResult ? (
               <>
                 <Card className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/30">
                   <CardContent className="p-6 text-center">
                     <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto mb-3" />
-                    <h2 className="text-xl font-bold">Patch Ready!</h2>
+                    <h2 className="text-xl font-bold">{t('autoTranslatePage.patchReady')}</h2>
                     <p className="text-sm text-muted-foreground mt-1">
                       {patchResult.stats.translatedStrings}/{patchResult.stats.totalStrings} strings translated ({patchResult.stats.coveragePercent}%)
                     </p>
@@ -2331,10 +2331,10 @@ export default function AutoTranslatePage() {
                   </CardContent>
                 </Card>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.totalFiles}</div><div className="text-[10px] text-muted-foreground">Files</div></Card>
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.translatedStrings}</div><div className="text-[10px] text-muted-foreground">Strings</div></Card>
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-emerald-400">{patchResult.stats.coveragePercent}%</div><div className="text-[10px] text-muted-foreground">Coverage</div></Card>
-                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-blue-400">{avgScore}%</div><div className="text-[10px] text-muted-foreground">Quality</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.totalFiles}</div><div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.files')}</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold">{patchResult.stats.translatedStrings}</div><div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.strings')}</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-emerald-400">{patchResult.stats.coveragePercent}%</div><div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.coverage')}</div></Card>
+                  <Card className="p-3 text-center"><div className="text-2xl font-bold text-blue-400">{avgScore}%</div><div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.quality')}</div></Card>
                 </div>
                 <Card className="border-dashed">
                   <CardHeader className="py-2 px-4"><CardTitle className="text-xs flex items-center gap-2"><Globe className="h-3.5 w-3.5" /> Export As (standard formats)</CardTitle></CardHeader>
@@ -2360,7 +2360,7 @@ export default function AutoTranslatePage() {
                         <Download className="h-2.5 w-2.5 mr-1" /> {fmt}
                       </Button>
                     ))}
-                    <span className="text-[9px] text-muted-foreground self-center ml-1">Compatible with Weblate, Crowdin, OmegaT, Trados</span>
+                    <span className="text-[9px] text-muted-foreground self-center ml-1">{t('autoTranslatePage.compatibleWith')}</span>
                   </CardContent>
                 </Card>
 

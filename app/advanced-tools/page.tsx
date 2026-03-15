@@ -21,7 +21,7 @@ export default function AdvancedToolsPage() {
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-2">
         <Sparkles className="h-6 w-6 text-violet-400" />
-        <h1 className="text-2xl font-bold text-slate-200">Advanced Tools</h1>
+        <h1 className="text-2xl font-bold text-slate-200">{t('advancedToolsPage.title')}</h1>
         <Badge className="bg-violet-500/20 text-violet-300 text-[10px]">{t('advancedToolsPage.badge')}</Badge>
       </div>
       <p className="text-sm text-slate-400 -mt-4">{t('advancedToolsPage.subtitle')}</p>

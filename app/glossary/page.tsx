@@ -377,7 +377,7 @@ export default function GlossaryPage() {
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <h3 className="text-lg font-semibold mb-1">No glossary yet</h3>
+              <h3 className="text-lg font-semibold mb-1">{t('glossaryPage.noGlossaryYet')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Create a glossary for a game to start managing terminology
               </p>

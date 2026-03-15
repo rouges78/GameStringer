@@ -18,7 +18,7 @@ export default function SystemMonitorPage() {
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-2">
-        <h1 className="text-2xl font-bold text-slate-200">System Monitor & AI Setup</h1>
+        <h1 className="text-2xl font-bold text-slate-200">{t('systemMonitorPage.title')}</h1>
       </div>
       <p className="text-sm text-slate-400 -mt-4">
         Monitora le risorse del sistema (VRAM, RAM) e configura l'AI locale.
