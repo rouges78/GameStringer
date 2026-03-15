@@ -126,7 +126,7 @@ const getNavGroups = (t: (key: string) => string) => [
     items: [
       { name: t('nav.dashboard'), href: '/', icon: Home },
       { name: t('nav.library'), href: '/library', icon: Gamepad2 },
-      { name: 'Editor', href: '/editor', icon: Edit3 },
+      { name: t('nav.editor'), href: '/editor', icon: Edit3 },
     ],
     colorClass: 'text-slate-400 hover:text-slate-200 hover:bg-slate-500/20',
     activeClass: 'bg-slate-500/20 backdrop-blur-md text-slate-200 border border-slate-500/30 shadow-lg shadow-slate-500/20',
@@ -146,14 +146,14 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/ai-translator',
         icon: Sparkles,
         subItems: [
-          { name: 'Translation Wizard', href: '/translation-wizard', icon: Wand2 },
-          { name: 'Auto-Translate', href: '/auto-translate', icon: Rocket },
+          { name: t('nav.translationWizard'), href: '/translation-wizard', icon: Wand2 },
+          { name: t('nav.autoTranslate'), href: '/auto-translate', icon: Rocket },
           { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
-          { name: 'Neural Translator Pro', href: '/translator/pro', icon: Brain },
-          { name: 'MTPE Workflow', href: '/translator/mtpe', icon: Edit3 },
+          { name: t('nav.neuralTranslatorPro'), href: '/translator/pro', icon: Brain },
+          { name: t('nav.mtpeWorkflow'), href: '/translator/mtpe', icon: Edit3 },
           { name: t('nav.multiLlm'), href: '/translator/compare', icon: Brain },
-          { name: 'AI Review', href: '/ai-review', icon: Bot },
-          { name: t('nav.offlineTranslator') || 'Offline Translator', href: '/offline-translator', icon: WifiOff },
+          { name: t('nav.aiReview'), href: '/ai-review', icon: Bot },
+          { name: t('nav.offlineTranslator'), href: '/offline-translator', icon: WifiOff },
         ]
       },
       { 
@@ -161,12 +161,12 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/ocr-translator',
         icon: Scan,
         subItems: [
-          { name: 'OCR Translator', href: '/ocr-translator', icon: Scan },
-          { name: 'Vision LLM', href: '/vision-translator', icon: Eye },
-          { name: 'Live OCR', href: '/live-ocr', icon: Monitor },
-          { name: t('nav.texture') || 'Texture', href: '/texture-translator', icon: Layers },
-          { name: t('nav.manga') || 'Manga', href: '/manga-translator', icon: BookOpen },
-          { name: 'Visual Editor', href: '/visual-editor', icon: ImageIcon },
+          { name: t('nav.ocrTranslator'), href: '/ocr-translator', icon: Scan },
+          { name: t('nav.visionLlm'), href: '/vision-translator', icon: Eye },
+          { name: t('nav.liveOcr'), href: '/live-ocr', icon: Monitor },
+          { name: t('nav.texture'), href: '/texture-translator', icon: Layers },
+          { name: t('nav.manga'), href: '/manga-translator', icon: BookOpen },
+          { name: t('nav.visualEditor'), href: '/visual-editor', icon: ImageIcon },
         ]
       },
       { 
@@ -176,8 +176,8 @@ const getNavGroups = (t: (key: string) => string) => [
         subItems: [
           { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
           { name: t('nav.voiceClone'), href: '/voice-clone', icon: AudioLines },
-          { name: 'Character Voice AI', href: '/character-voice', icon: User },
-          { name: t('nav.subtitles') || 'Sottotitoli', href: '/subtitles', icon: Film },
+          { name: t('nav.characterVoiceAi'), href: '/character-voice', icon: User },
+          { name: t('nav.subtitles'), href: '/subtitles', icon: Film },
         ]
       },
       { 
@@ -185,16 +185,16 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/batch',
         icon: FolderTree,
         subItems: [
-          { name: t('nav.batch') || 'Batch Folder', href: '/batch', icon: FolderTree },
-          { name: 'Coda Traduzioni', href: '/batch-translation', icon: Layers },
+          { name: t('nav.batch'), href: '/batch', icon: FolderTree },
+          { name: t('nav.translationQueue'), href: '/batch-translation', icon: Layers },
           { name: t('nav.dictionary'), href: '/memory', icon: Database },
           { name: t('nav.glossary'), href: '/glossary', icon: BookOpen },
-          { name: 'Context Harvester', href: '/context-harvester', icon: Wheat },
-          { name: 'AI Pipeline', href: '/ai-pipeline', icon: Workflow },
-          { name: 'Translation Bridge', href: '/translation-bridge', icon: Workflow },
-          { name: 'OCR Multi-Engine', href: '/ocr-engines', icon: ScanEye },
-          { name: 'Ollama Manager', href: '/ollama-manager', icon: Package },
-          { name: 'Translator Tools', href: '/translator/tools', icon: Sparkles },
+          { name: t('nav.contextHarvester'), href: '/context-harvester', icon: Wheat },
+          { name: t('nav.aiPipeline'), href: '/ai-pipeline', icon: Workflow },
+          { name: t('nav.translationBridge'), href: '/translation-bridge', icon: Workflow },
+          { name: t('nav.ocrMultiEngine'), href: '/ocr-engines', icon: ScanEye },
+          { name: t('nav.ollamaManager'), href: '/ollama-manager', icon: Package },
+          { name: t('nav.translatorTools'), href: '/translator/tools', icon: Sparkles },
         ]
       },
     ],
@@ -216,17 +216,17 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/unity-patcher',
         icon: Wand2,
         subItems: [
-          { name: 'Unity Patcher', href: '/unity-patcher', icon: Wand2 },
-          { name: t('nav.ueTranslator') || 'UE Translator', href: '/unreal-translator', icon: Cpu },
-          { name: t('nav.telltalePatcher') || 'Telltale Patcher', href: '/telltale-patcher', icon: Gamepad2 },
-          { name: 'Unity Bundle', href: '/unity-bundle', icon: FileArchive },
-          { name: 'Unity CSV Translator', href: '/unity-csv-translator', icon: Globe },
-          { name: 'Visual Novel', href: '/danganronpa-patcher', icon: Package },
-          { name: 'RPG Maker', href: '/rpgmaker-patcher', icon: Gamepad2 },
-          { name: "Ren'Py", href: '/renpy-patcher', icon: Heart },
-          { name: 'Wolf RPG', href: '/wolfrpg-patcher', icon: Database },
-          { name: 'Nexus Mods', href: '/nexus-mods', icon: Globe },
-          { name: 'Binary Patcher', href: '/binary-patcher', icon: Binary },
+          { name: t('nav.unityPatcher'), href: '/unity-patcher', icon: Wand2 },
+          { name: t('nav.ueTranslator'), href: '/unreal-translator', icon: Cpu },
+          { name: t('nav.telltalePatcher'), href: '/telltale-patcher', icon: Gamepad2 },
+          { name: t('nav.unityBundle'), href: '/unity-bundle', icon: FileArchive },
+          { name: t('nav.unityCsvTranslator'), href: '/unity-csv-translator', icon: Globe },
+          { name: t('nav.visualNovel'), href: '/danganronpa-patcher', icon: Package },
+          { name: t('nav.rpgMaker'), href: '/rpgmaker-patcher', icon: Gamepad2 },
+          { name: t('nav.renpy'), href: '/renpy-patcher', icon: Heart },
+          { name: t('nav.wolfRpg'), href: '/wolfrpg-patcher', icon: Database },
+          { name: t('nav.nexusMods'), href: '/nexus-mods', icon: Globe },
+          { name: t('nav.binaryPatcher'), href: '/binary-patcher', icon: Binary },
         ]
       },
       { 
@@ -234,7 +234,7 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/retro',
         icon: Gamepad2,
         subItems: [
-          { name: t('nav.retro') || 'Retro ROM', href: '/retro', icon: Gamepad2 },
+          { name: t('nav.retro'), href: '/retro', icon: Gamepad2 },
           { name: t('nav.injector'), href: '/injector', icon: Cpu },
           { name: t('nav.fixer'), href: '/fixer', icon: Wrench },
         ]
@@ -253,10 +253,10 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/qa-check',
         icon: ShieldCheck,
         subItems: [
-          { name: 'QA Check', href: '/qa-check', icon: ShieldCheck },
-          { name: 'Quality H/V/A', href: '/quality-scoring', icon: Shield },
+          { name: t('nav.qaCheck'), href: '/qa-check', icon: ShieldCheck },
+          { name: t('nav.qualityScoring'), href: '/quality-scoring', icon: Shield },
           { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
-          { name: 'Confidence Heatmap', href: '/heatmap', icon: BarChart3 },
+          { name: t('nav.confidenceHeatmap'), href: '/heatmap', icon: BarChart3 },
         ]
       },
       { 
@@ -264,8 +264,8 @@ const getNavGroups = (t: (key: string) => string) => [
         href: '/advanced-tools',
         icon: Crosshair,
         subItems: [
-          { name: 'Lore Assistant', href: '/advanced-tools#lore', icon: BookOpen },
-          { name: 'Auto-Hook Scanner', href: '/advanced-tools#hook', icon: Crosshair },
+          { name: t('nav.loreAssistant'), href: '/advanced-tools#lore', icon: BookOpen },
+          { name: t('nav.autoHookScanner'), href: '/advanced-tools#hook', icon: Crosshair },
         ]
       },
     ],
@@ -288,10 +288,10 @@ const getNavGroups = (t: (key: string) => string) => [
         icon: Users,
         subItems: [
           { name: t('nav.community'), href: '/community-hub', icon: Users },
-          { name: 'Stores', href: '/stores', icon: ShoppingBag },
-          { name: 'Steam Workshop', href: '/workshop', icon: Globe },
-          { name: 'Workshop Export', href: '/workshop-export', icon: Package },
-          { name: 'Blog', href: '/blog', icon: Newspaper },
+          { name: t('nav.stores'), href: '/stores', icon: ShoppingBag },
+          { name: t('nav.steamWorkshop'), href: '/workshop', icon: Globe },
+          { name: t('nav.workshopExport'), href: '/workshop-export', icon: Package },
+          { name: t('nav.blog'), href: '/blog', icon: Newspaper },
         ]
       },
       { 
@@ -308,11 +308,11 @@ const getNavGroups = (t: (key: string) => string) => [
         icon: Settings,
         subItems: [
           { name: t('nav.settings'), href: '/settings', icon: Settings },
-          { name: 'System Monitor', href: '/system-monitor', icon: Monitor },
-          { name: 'Info', href: '/info', icon: Info },
-          { name: 'Plugins', href: '/plugins', icon: Puzzle },
-          { name: 'Activity', href: '/activity', icon: Clock },
-          { name: 'Statistics', href: '/stats', icon: BarChart3 },
+          { name: t('nav.systemMonitor'), href: '/system-monitor', icon: Monitor },
+          { name: t('nav.info'), href: '/info', icon: Info },
+          { name: t('nav.plugins'), href: '/plugins', icon: Puzzle },
+          { name: t('nav.activity'), href: '/activity', icon: Clock },
+          { name: t('nav.statistics'), href: '/stats', icon: BarChart3 },
         ]
       },
     ],
