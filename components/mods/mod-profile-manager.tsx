@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTranslation } from '@/lib/i18n';
 
 interface ModProfile {
   id: string;
@@ -60,6 +61,7 @@ interface ModProfileManagerProps {
 }
 
 export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) {
+  const { t } = useTranslation();
   const [profiles, setProfiles] = useState<ModProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [mods, setMods] = useState<InstalledMod[]>([]);
@@ -217,14 +219,14 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Clone Profile</DialogTitle>
+                <DialogTitle>{t('modProfileManagerComp.cloneProfile')}</DialogTitle>
                 <DialogDescription>
                   Create a copy of an existing profile
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Profile to clone</Label>
+                  <Label>{t('modProfileManagerComp.profileToClone')}</Label>
                   <Select value={cloneSourceId} onValueChange={setCloneSourceId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select profile" />
@@ -237,7 +239,7 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>New profile name</Label>
+                  <Label>{t('modProfileManagerComp.newProfileName')}</Label>
                   <Input
                     value={newProfileName}
                     onChange={(e) => setNewProfileName(e.target.value)}
@@ -249,7 +251,7 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
                 <Button variant="outline" onClick={() => setShowCloneDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={cloneProfile}>Clone</Button>
+                <Button onClick={cloneProfile}>{t('modProfileManagerComp.clone')}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -264,14 +266,14 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>New Mod Profile</DialogTitle>
+                <DialogTitle>{t('modProfileManagerComp.newModProfile')}</DialogTitle>
                 <DialogDescription>
                   Create a new profile to manage mods
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Name</Label>
+                  <Label>{t('modProfileManagerComp.name')}</Label>
                   <Input
                     value={newProfileName}
                     onChange={(e) => setNewProfileName(e.target.value)}
@@ -279,7 +281,7 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Description (optional)</Label>
+                  <Label>{t('modProfileManagerComp.descriptionOptional')}</Label>
                   <Input
                     value={newProfileDesc}
                     onChange={(e) => setNewProfileDesc(e.target.value)}
@@ -291,7 +293,7 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
                 <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                   Cancel
                 </Button>
-                <Button onClick={createProfile}>Create</Button>
+                <Button onClick={createProfile}>{t('modProfileManagerComp.create')}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -307,7 +309,7 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Layers className="h-10 w-10 text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No mod profiles configured</p>
+            <p className="text-muted-foreground">{t('modProfileManagerComp.noModProfilesConfigured')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -327,7 +329,7 @@ export function ModProfileManager({ gameId, gameName }: ModProfileManagerProps) 
                   <CardTitle className="text-base flex items-center gap-2">
                     {profile.name}
                     {profile.is_default && (
-                      <Badge variant="secondary" className="text-xs">Default</Badge>
+                      <Badge variant="secondary" className="text-xs">{t('modProfileManagerComp.default')}</Badge>
                     )}
                   </CardTitle>
                   {activeProfileId === profile.id && (

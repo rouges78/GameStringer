@@ -27,6 +27,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { CHARACTER_PRESETS, type CharacterProfile } from '@/lib/translation-quality';
+import { useTranslation } from '@/lib/i18n';
 
 const PRESET_ICONS: Record<string, React.ElementType> = {
   pirate: Swords,
@@ -58,10 +59,11 @@ interface CharacterProfileManagerProps {
   selectedProfileId?: string | null;
 }
 
-export function CharacterProfileManager({ 
+export function CharacterProfileManager({
   onSelectProfile, 
   selectedProfileId 
 }: CharacterProfileManagerProps) {
+  const { t } = useTranslation();
   const [customProfiles, setCustomProfiles] = useState<CharacterProfile[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<CharacterProfile | null>(null);
@@ -227,7 +229,7 @@ export function CharacterProfileManager({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-purple-500" />
-          <h3 className="font-semibold">Character Voice Profiles</h3>
+          <h3 className="font-semibold">{t('characterProfileManagerComp.characterVoiceProfiles')}</h3>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
           setIsCreateDialogOpen(open);
@@ -250,7 +252,7 @@ export function CharacterProfileManager({
                 {/* Basic Info */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium">Character Name</label>
+                    <label className="text-sm font-medium">{t('characterProfileManagerComp.characterName')}</label>
                     <Input
                       value={newProfile.name || ''}
                       onChange={(e) => setNewProfile(prev => ({ ...prev, name: e.target.value }))}
@@ -258,7 +260,7 @@ export function CharacterProfileManager({
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Vocabulary</label>
+                    <label className="text-sm font-medium">{t('characterProfileManagerComp.vocabulary')}</label>
                     <Select 
                       value={newProfile.vocabulary || 'moderno'} 
                       onValueChange={(v) => setNewProfile(prev => ({ ...prev, vocabulary: v as CharacterProfile['vocabulary'] }))}
@@ -282,7 +284,7 @@ export function CharacterProfileManager({
 
                 {/* Personality */}
                 <div>
-                  <label className="text-sm font-medium">Personality and Description</label>
+                  <label className="text-sm font-medium">{t('characterProfileManagerComp.personalityAndDescription')}</label>
                   <Textarea
                     value={newProfile.personality || ''}
                     onChange={(e) => setNewProfile(prev => ({ ...prev, personality: e.target.value }))}
@@ -293,7 +295,7 @@ export function CharacterProfileManager({
 
                 {/* Tone */}
                 <div>
-                  <label className="text-sm font-medium">Tone</label>
+                  <label className="text-sm font-medium">{t('characterProfileManagerComp.tone')}</label>
                   <div className="flex gap-2 mt-1">
                     {TONE_OPTIONS.map(opt => (
                       <Button
@@ -310,7 +312,7 @@ export function CharacterProfileManager({
 
                 {/* Speech Patterns */}
                 <div>
-                  <label className="text-sm font-medium">Speech Patterns (typical phrases)</label>
+                  <label className="text-sm font-medium">{t('characterProfileManagerComp.speechPatternsTypicalPhrases')}</label>
                   <div className="flex gap-2 mt-1">
                     <Input
                       value={newSpeechPattern}
@@ -336,7 +338,7 @@ export function CharacterProfileManager({
 
                 {/* Examples */}
                 <div>
-                  <label className="text-sm font-medium">Translation Examples (optional)</label>
+                  <label className="text-sm font-medium">{t('characterProfileManagerComp.translationExamplesOptional')}</label>
                   <p className="text-xs text-muted-foreground mb-2">
                     Add examples to help the AI understand the style
                   </p>
@@ -394,7 +396,7 @@ export function CharacterProfileManager({
 
       {/* Preset Profiles */}
       <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Preset Profiles</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">{t('characterProfileManagerComp.presetProfiles')}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {Object.entries(CHARACTER_PRESETS).map(([key, preset]) => {
             const Icon = PRESET_ICONS[key] || Users;
@@ -447,7 +449,7 @@ export function CharacterProfileManager({
       {/* Custom Profiles */}
       {customProfiles.length > 0 && (
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">I Tuoi Profili</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">{t('characterProfileManagerComp.iTuoiProfili')}</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {customProfiles.map(profile => {
               const isSelected = selectedProfileId === profile.id;

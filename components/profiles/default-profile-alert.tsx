@@ -5,8 +5,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Info, X, Eye, EyeOff } from 'lucide-react';
 import { useProfiles } from '@/hooks/use-profiles';
+import { useTranslation } from '@/lib/i18n';
 
 export function DefaultProfileAlert() {
+  const { t } = useTranslation();
   const { currentProfile } = useProfiles();
   const [isVisible, setIsVisible] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,9 +37,9 @@ export function DefaultProfileAlert() {
           <p className="text-blue-700 dark:text-blue-300 text-sm">
             You are using the automatically created default profile. 
             <br />
-            <strong>Username:</strong> Default
+            <strong>{t('defaultProfileAlertComp.username')}</strong> Default
             <br />
-            <strong>Password:</strong> 
+            <strong>{t('defaultProfileAlertComp.password')}</strong> 
             <span className="ml-1 font-mono">
               {showPassword ? 'password123' : '••••••••••'}
             </span>

@@ -21,6 +21,7 @@ import {
 import { invoke } from '@/lib/tauri-api';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationEntry {
   id: string;
@@ -74,6 +75,7 @@ export function ExportDialog({
   targetLang = 'it',
   defaultFileName = 'translations'
 }: ExportDialogProps) {
+  const { t } = useTranslation();
   const [formats, setFormats] = useState<FormatInfo[]>([]);
   const [selectedFormat, setSelectedFormat] = useState('csv');
   const [includeContext, setIncludeContext] = useState(true);
@@ -197,11 +199,11 @@ export function ExportDialog({
             <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
               <Check className="h-8 w-8 text-emerald-400" />
             </div>
-            <h3 className="text-lg font-semibold text-emerald-400 mb-2">Export Completato!</h3>
+            <h3 className="text-lg font-semibold text-emerald-400 mb-2">{t('exportDialogComp.exportCompletato')}</h3>
             <div className="space-y-1 text-sm text-slate-400">
-              <p><strong>Formato:</strong> {result.format}</p>
-              <p><strong>Traduzioni:</strong> {result.entriesCount}</p>
-              <p><strong>Dimensione:</strong> {formatSize(result.fileSize)}</p>
+              <p><strong>{t('exportDialogComp.formato')}</strong> {result.format}</p>
+              <p><strong>{t('exportDialogComp.traduzioni')}</strong> {result.entriesCount}</p>
+              <p><strong>{t('exportDialogComp.dimensione')}</strong> {formatSize(result.fileSize)}</p>
               <p className="text-xs mt-3 p-2 bg-slate-800/50 rounded truncate">
                 📁 {result.path}
               </p>
@@ -212,7 +214,7 @@ export function ExportDialog({
           <div className="space-y-6 py-4">
             {/* Format Selection */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Formato</Label>
+              <Label className="text-sm font-medium">{t('exportDialogComp.formato2')}</Label>
               <RadioGroup value={selectedFormat} onValueChange={setSelectedFormat}>
                 <div className="grid grid-cols-2 gap-2">
                   {formats.map((format) => (
@@ -245,7 +247,7 @@ export function ExportDialog({
 
             {/* Options */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium">Opzioni</Label>
+              <Label className="text-sm font-medium">{t('exportDialogComp.opzioni')}</Label>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="include-context" className="text-sm text-slate-400">

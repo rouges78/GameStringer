@@ -13,8 +13,10 @@ import {
 import { Download, X } from 'lucide-react';
 import { open } from '@tauri-apps/plugin-shell';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 export function UpdateBell() {
+  const { t } = useTranslation();
   const { updateInfo, hasUpdate, isChecking, checkForUpdates, dismissUpdate } = useUpdateCheck();
   const { 
     isDownloading, 
@@ -110,7 +112,7 @@ export function UpdateBell() {
             <div className="px-4 py-3">
               {updateInfo.release_notes && (
                 <div className="max-h-28 overflow-y-auto mb-3 pr-1 scrollbar-thin scrollbar-thumb-slate-700">
-                  <p className="text-slate-500 text-[10px] uppercase tracking-wider font-medium mb-1.5">Novità</p>
+                  <p className="text-slate-500 text-[10px] uppercase tracking-wider font-medium mb-1.5">{t('updateBellComp.novità')}</p>
                   <ul className="space-y-1">
                     {parseReleaseNotes(updateInfo.release_notes).map((item, i) => (
                       <li key={i} className="text-slate-300 text-[11px] flex items-start gap-2">
@@ -137,7 +139,7 @@ export function UpdateBell() {
               {isInstalling && (
                 <div className="mb-3 flex items-center gap-2 text-[11px] text-emerald-400 bg-emerald-500/10 rounded-lg px-3 py-2">
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Installazione in corso...</span>
+                  <span>{t('updateBellComp.installazioneInCorso')}</span>
                 </div>
               )}
 
@@ -170,7 +172,7 @@ export function UpdateBell() {
         ) : (
           <div className="p-4 text-center">
             <CheckCircle2 className="w-8 h-8 text-emerald-500/50 mx-auto mb-2" />
-            <p className="text-slate-300 text-xs font-medium">Tutto aggiornato!</p>
+            <p className="text-slate-300 text-xs font-medium">{t('updateBellComp.tuttoAggiornato')}</p>
             <p className="text-slate-500 text-[11px] mt-0.5">
               v{updateInfo?.current_version || '...'}
             </p>

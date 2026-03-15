@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
+import { useTranslation } from '@/lib/i18n';
 
 interface CustomTheme {
   id: string;
@@ -212,6 +213,7 @@ const PRESET_THEMES: CustomTheme[] = [
 const DEFAULT_COLORS: ThemeColors = PRESET_THEMES[0].colors;
 
 export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
+  const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('presets');
   const [selectedTheme, setSelectedTheme] = useState<CustomTheme | null>(null);
@@ -377,8 +379,8 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[75vh] overflow-hidden p-0">
         <DialogHeader className="sr-only">
-          <DialogTitle>Personalizza Tema</DialogTitle>
-          <DialogDescription>Scegli o crea il tuo tema personalizzato</DialogDescription>
+          <DialogTitle>{t('themeCustomizerComp.personalizzaTema')}</DialogTitle>
+          <DialogDescription>{t('themeCustomizerComp.scegliOCreaIlTuoTemaPersonaliz')}</DialogDescription>
         </DialogHeader>
         
         {/* Hero Header */}
@@ -498,7 +500,7 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
               {savedThemes.length > 0 && (
                 <>
                   <Separator className="my-6" />
-                  <h3 className="text-sm font-semibold mb-4">I tuoi temi salvati</h3>
+                  <h3 className="text-sm font-semibold mb-4">{t('themeCustomizerComp.iTuoiTemiSalvati')}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     {savedThemes.map((themeItem) => (
                       <ThemeCard 
@@ -574,7 +576,7 @@ export function ThemeCustomizer({ open, onOpenChange }: ThemeCustomizerProps) {
               {/* Preview Box */}
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Anteprima</CardTitle>
+                  <CardTitle className="text-sm">{t('themeCustomizerComp.anteprima')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div 

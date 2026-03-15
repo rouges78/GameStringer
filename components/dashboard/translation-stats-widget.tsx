@@ -17,6 +17,7 @@ import {
   Target
 } from 'lucide-react';
 import { activityHistory } from '@/lib/activity-history';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationStats {
   totalTranslations: number;
@@ -34,6 +35,7 @@ interface TranslationStats {
 }
 
 export function TranslationStatsWidget() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<TranslationStats>({
     totalTranslations: 0,
     totalStrings: 0,
@@ -185,7 +187,7 @@ export function TranslationStatsWidget() {
               <h2 className="text-xl font-bold bg-gradient-to-r from-blue-300 to-indigo-300 bg-clip-text text-transparent">
                 Statistiche Traduzione
               </h2>
-              <p className="text-sm text-blue-200/60">Panoramica delle tue attività</p>
+              <p className="text-sm text-blue-200/60">{t('translationStatsWidgetComp.panoramicaDelleTueAttività')}</p>
             </div>
           </div>
 
@@ -194,7 +196,7 @@ export function TranslationStatsWidget() {
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 text-blue-400 mb-1">
                 <FileText className="h-4 w-4" />
-                <span className="text-xs">Traduzioni</span>
+                <span className="text-xs">{t('translationStatsWidgetComp.traduzioni')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{stats.totalTranslations}</div>
               <div className="text-xs text-blue-200/50">totali</div>
@@ -203,7 +205,7 @@ export function TranslationStatsWidget() {
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 text-indigo-400 mb-1">
                 <Languages className="h-4 w-4" />
-                <span className="text-xs">Stringhe</span>
+                <span className="text-xs">{t('translationStatsWidgetComp.stringhe')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{formatNumber(stats.totalStrings)}</div>
               <div className="text-xs text-blue-200/50">tradotte</div>
@@ -212,7 +214,7 @@ export function TranslationStatsWidget() {
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 text-violet-400 mb-1">
                 <Zap className="h-4 w-4" />
-                <span className="text-xs">Parole</span>
+                <span className="text-xs">{t('translationStatsWidgetComp.parole')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{formatNumber(stats.totalWords)}</div>
               <div className="text-xs text-blue-200/50">elaborate</div>
@@ -221,7 +223,7 @@ export function TranslationStatsWidget() {
             <div className="bg-black/20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center gap-2 text-emerald-400 mb-1">
                 <Target className="h-4 w-4" />
-                <span className="text-xs">Progress</span>
+                <span className="text-xs">{t('translationStatsWidgetComp.progress')}</span>
               </div>
               <div className="text-2xl font-bold text-white">{stats.averageProgress}%</div>
               <div className="text-xs text-blue-200/50">medio</div>
@@ -258,15 +260,15 @@ export function TranslationStatsWidget() {
             <div className="flex justify-between mt-3 pt-3 border-t border-indigo-500/20">
               <div className="text-center">
                 <div className="text-lg font-bold text-indigo-400">{stats.todayTranslations}</div>
-                <div className="text-xs text-muted-foreground">Oggi</div>
+                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.oggi')}</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-indigo-400">{stats.weekTranslations}</div>
-                <div className="text-xs text-muted-foreground">Settimana</div>
+                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.settimana')}</div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-indigo-400">{stats.monthTranslations}</div>
-                <div className="text-xs text-muted-foreground">Mese</div>
+                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.mese')}</div>
               </div>
             </div>
           </CardContent>
@@ -284,17 +286,17 @@ export function TranslationStatsWidget() {
             <div className="flex justify-between items-center">
               <div>
                 <div className="text-3xl font-bold text-emerald-400">{stats.completedProjects}</div>
-                <div className="text-xs text-muted-foreground">Completati</div>
+                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.completati')}</div>
               </div>
               <div className="h-16 w-px bg-emerald-500/20" />
               <div>
                 <div className="text-3xl font-bold text-amber-400">{stats.activeProjects}</div>
-                <div className="text-xs text-muted-foreground">In corso</div>
+                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.inCorso')}</div>
               </div>
               <div className="h-16 w-px bg-emerald-500/20" />
               <div>
                 <div className="text-3xl font-bold text-blue-400">{stats.completedProjects + stats.activeProjects}</div>
-                <div className="text-xs text-muted-foreground">Totali</div>
+                <div className="text-xs text-muted-foreground">{t('translationStatsWidgetComp.totali')}</div>
               </div>
             </div>
             

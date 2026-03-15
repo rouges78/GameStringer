@@ -25,6 +25,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useLogging } from '@/hooks/useLogging';
+import { useTranslation } from '@/lib/i18n';
 
 interface LogEntry {
   timestamp: string;
@@ -47,6 +48,7 @@ interface LogStats {
 }
 
 export function LoggingDashboard() {
+  const { t } = useTranslation();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [stats, setStats] = useState<LogStats>({
     total: 0,
@@ -199,8 +201,8 @@ export function LoggingDashboard() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Logging Dashboard</h1>
-          <p className="text-muted-foreground">Monitor application logs and errors</p>
+          <h1 className="text-3xl font-bold">{t('loggingDashboardComp.loggingDashboard')}</h1>
+          <p className="text-muted-foreground">{t('loggingDashboardComp.monitorApplicationLogsAndError')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={fetchLogs} disabled={isLoading} variant="outline">
@@ -222,7 +224,7 @@ export function LoggingDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Logs</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('loggingDashboardComp.totalLogs')}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -232,7 +234,7 @@ export function LoggingDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recent Errors</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('loggingDashboardComp.recentErrors')}</CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
@@ -242,7 +244,7 @@ export function LoggingDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Components</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('loggingDashboardComp.components')}</CardTitle>
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -252,7 +254,7 @@ export function LoggingDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('loggingDashboardComp.activeUsers')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -264,7 +266,7 @@ export function LoggingDashboard() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>{t('loggingDashboardComp.filters')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -281,12 +283,12 @@ export function LoggingDashboard() {
                 <SelectValue placeholder="Level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="debug">Debug</SelectItem>
-                <SelectItem value="info">Info</SelectItem>
-                <SelectItem value="warn">Warn</SelectItem>
-                <SelectItem value="error">Error</SelectItem>
-                <SelectItem value="fatal">Fatal</SelectItem>
+                <SelectItem value="all">{t('loggingDashboardComp.allLevels')}</SelectItem>
+                <SelectItem value="debug">{t('loggingDashboardComp.debug')}</SelectItem>
+                <SelectItem value="info">{t('loggingDashboardComp.info')}</SelectItem>
+                <SelectItem value="warn">{t('loggingDashboardComp.warn')}</SelectItem>
+                <SelectItem value="error">{t('loggingDashboardComp.error')}</SelectItem>
+                <SelectItem value="fatal">{t('loggingDashboardComp.fatal')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={componentFilter} onValueChange={setComponentFilter}>
@@ -294,7 +296,7 @@ export function LoggingDashboard() {
                 <SelectValue placeholder="Component" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Components</SelectItem>
+                <SelectItem value="all">{t('loggingDashboardComp.allComponents')}</SelectItem>
                 {Object.keys(stats.byComponent).map(component => (
                   <SelectItem key={component} value={component}>
                     {component} ({stats.byComponent[component]})
@@ -309,8 +311,8 @@ export function LoggingDashboard() {
       {/* Log Tabs */}
       <Tabs defaultValue="logs" className="w-full">
         <TabsList>
-          <TabsTrigger value="logs">Logs</TabsTrigger>
-          <TabsTrigger value="stats">Statistics</TabsTrigger>
+          <TabsTrigger value="logs">{t('loggingDashboardComp.logs')}</TabsTrigger>
+          <TabsTrigger value="stats">{t('loggingDashboardComp.statistics')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="logs" className="space-y-4">
@@ -362,7 +364,7 @@ export function LoggingDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Logs by Level</CardTitle>
+                <CardTitle>{t('loggingDashboardComp.logsByLevel')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -378,7 +380,7 @@ export function LoggingDashboard() {
             
             <Card>
               <CardHeader>
-                <CardTitle>Logs by Component</CardTitle>
+                <CardTitle>{t('loggingDashboardComp.logsByComponent')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -413,26 +415,26 @@ export function LoggingDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-medium">Message</h4>
+                <h4 className="font-medium">{t('loggingDashboardComp.message')}</h4>
                 <p className="text-sm text-muted-foreground">{selectedLog.message}</p>
               </div>
               
               {selectedLog.component && (
                 <div>
-                  <h4 className="font-medium">Component</h4>
+                  <h4 className="font-medium">{t('loggingDashboardComp.component')}</h4>
                   <Badge variant="outline">{selectedLog.component}</Badge>
                 </div>
               )}
               
               {selectedLog.error && (
                 <div>
-                  <h4 className="font-medium">Error Details</h4>
+                  <h4 className="font-medium">{t('loggingDashboardComp.errorDetails')}</h4>
                   <div className="bg-muted p-3 rounded">
-                    <p className="text-sm"><strong>Name:</strong> {selectedLog.error.name}</p>
-                    <p className="text-sm"><strong>Message:</strong> {selectedLog.error.message}</p>
+                    <p className="text-sm"><strong>{t('loggingDashboardComp.name')}</strong> {selectedLog.error.name}</p>
+                    <p className="text-sm"><strong>{t('loggingDashboardComp.message2')}</strong> {selectedLog.error.message}</p>
                     {selectedLog.error.stack && (
                       <div className="mt-2">
-                        <p className="text-sm font-medium">Stack Trace:</p>
+                        <p className="text-sm font-medium">{t('loggingDashboardComp.stackTrace')}</p>
                         <Textarea
                           value={selectedLog.error.stack}
                           readOnly
@@ -446,7 +448,7 @@ export function LoggingDashboard() {
               
               {selectedLog.metadata && (
                 <div>
-                  <h4 className="font-medium">Metadata</h4>
+                  <h4 className="font-medium">{t('loggingDashboardComp.metadata')}</h4>
                   <Textarea
                     value={JSON.stringify(selectedLog.metadata, null, 2)}
                     readOnly
@@ -456,7 +458,7 @@ export function LoggingDashboard() {
               )}
               
               <div className="flex justify-end">
-                <Button onClick={() => setSelectedLog(null)}>Close</Button>
+                <Button onClick={() => setSelectedLog(null)}>{t('loggingDashboardComp.close')}</Button>
               </div>
             </CardContent>
           </Card>

@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Download
 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationStats {
   totalWordsTranslated: number;
@@ -33,6 +34,7 @@ interface DailyStats {
 }
 
 export function StatsDashboard() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<TranslationStats | null>(null);
   const [dailyStats, setDailyStats] = useState<DailyStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,7 +149,7 @@ export function StatsDashboard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Statistiche Traduzione</h2>
+          <h2 className="text-lg font-semibold">{t('statsDashboardComp.statisticheTraduzione')}</h2>
         </div>
         <Button variant="outline" size="sm" onClick={loadStats}>
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -178,16 +180,16 @@ export function StatsDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="border-border/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Lingue più usate</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('statsDashboardComp.linguePiùUsate')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Lingua sorgente:</span>
+                <span className="text-muted-foreground">{t('statsDashboardComp.linguaSorgente')}</span>
                 <span className="font-medium">{stats.mostUsedSourceLang}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Lingua target:</span>
+                <span className="text-muted-foreground">{t('statsDashboardComp.linguaTarget')}</span>
                 <span className="font-medium">{stats.mostUsedTargetLang}</span>
               </div>
             </div>
@@ -196,7 +198,7 @@ export function StatsDashboard() {
 
         <Card className="border-border/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Ultima traduzione</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('statsDashboardComp.ultimaTraduzione')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-lg font-medium">
@@ -218,7 +220,7 @@ export function StatsDashboard() {
       {dailyStats.length > 0 && (
         <Card className="border-border/50">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Activity last 7 days</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('statsDashboardComp.activityLast7Days')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-end gap-1 h-24">

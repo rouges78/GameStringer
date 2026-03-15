@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from '@/lib/i18n';
 
 interface ProfileSecurityDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ interface ProfileSecurityDialogProps {
 }
 
 export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDialogProps) {
+  const { t } = useTranslation();
   const { currentProfile, logout } = useProfileAuth();
   const { deleteProfile } = useProfiles();
   
@@ -124,7 +126,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto p-0">
         {/* Accessibilità - DialogTitle nascosto */}
         <VisuallyHidden.Root>
-          <DialogTitle>Profile Security</DialogTitle>
+          <DialogTitle>{t('profileSecurityDialogComp.profileSecurity')}</DialogTitle>
         </VisuallyHidden.Root>
         
         {/* Hero Header */}
@@ -150,11 +152,11 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
           <div className="relative flex gap-4 mt-4 pt-3 border-t border-cyan-500/20">
             <div className="flex items-center gap-1.5 text-xs text-cyan-300/80">
               <ShieldCheck className="h-3.5 w-3.5" />
-              <span>AES-256 Encryption</span>
+              <span>{t('profileSecurityDialogComp.aes256Encryption')}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-emerald-300/80">
               <Fingerprint className="h-3.5 w-3.5" />
-              <span>Password protected</span>
+              <span>{t('profileSecurityDialogComp.passwordProtected')}</span>
             </div>
           </div>
         </div>
@@ -174,7 +176,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
             <CardContent className="space-y-3">
               <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-3">
                 <div className="space-y-2">
-                  <Label className="text-sm">Password attuale</Label>
+                  <Label className="text-sm">{t('profileSecurityDialogComp.passwordAttuale')}</Label>
                   <div className="flex gap-2">
                     <Input
                       type={showCurrentPassword ? 'text' : 'password'}
@@ -196,7 +198,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm">Nuova password</Label>
+                  <Label className="text-sm">{t('profileSecurityDialogComp.nuovaPassword')}</Label>
                   <div className="flex gap-2">
                     <Input
                       type={showNewPassword ? 'text' : 'password'}
@@ -218,7 +220,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm">Confirm new password</Label>
+                  <Label className="text-sm">{t('profileSecurityDialogComp.confirmNewPassword')}</Label>
                   <Input
                     type="password"
                     value={confirmPassword}
@@ -231,12 +233,12 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
                       {newPassword === confirmPassword ? (
                         <>
                           <CheckCircle className="h-3 w-3 text-green-500" />
-                          <span className="text-green-500">Le password coincidono</span>
+                          <span className="text-green-500">{t('profileSecurityDialogComp.lePasswordCoincidono')}</span>
                         </>
                       ) : (
                         <>
                           <AlertTriangle className="h-3 w-3 text-red-500" />
-                          <span className="text-red-500">Le password non coincidono</span>
+                          <span className="text-red-500">{t('profileSecurityDialogComp.lePasswordNonCoincidono')}</span>
                         </>
                       )}
                     </div>
@@ -311,7 +313,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
                   </div>
                   
                   <div className="space-y-2">
-                    <Label className="text-sm">Password</Label>
+                    <Label className="text-sm">{t('profileSecurityDialogComp.password')}</Label>
                     <Input
                       type="password"
                       value={currentPassword}

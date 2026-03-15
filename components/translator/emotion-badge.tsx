@@ -23,6 +23,7 @@ import {
   analyzeEmotion 
 } from "@/lib/emotion-analyzer"
 import { Sparkles, ChevronDown, Zap } from "lucide-react"
+import { useTranslation } from '@/lib/i18n';
 
 interface EmotionBadgeProps {
   text: string
@@ -33,7 +34,7 @@ interface EmotionBadgeProps {
   onEmotionOverride?: (emotion: EmotionType) => void
 }
 
-export function EmotionBadge({ 
+export function EmotionBadge({
   text, 
   analysis: providedAnalysis,
   showDetails = false,
@@ -41,6 +42,7 @@ export function EmotionBadge({
   className,
   onEmotionOverride
 }: EmotionBadgeProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false)
   
   // Usa l'analisi fornita o analizza il testo
@@ -102,7 +104,7 @@ export function EmotionBadge({
               </p>
               {analysis.markers.length > 0 && (
                 <p className="text-xs">
-                  <span className="text-muted-foreground">Markers:</span>{' '}
+                  <span className="text-muted-foreground">{t('emotionBadgeComp.markers')}</span>{' '}
                   <span className="font-mono">{analysis.markers.join(', ')}</span>
                 </p>
               )}
@@ -133,7 +135,7 @@ export function EmotionBadge({
           {/* Header */}
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-purple-500" />
-            <h4 className="font-semibold">Emotion Analysis</h4>
+            <h4 className="font-semibold">{t('emotionBadgeComp.emotionAnalysis')}</h4>
           </div>
 
           {/* Primary Emotion */}
@@ -188,7 +190,7 @@ export function EmotionBadge({
 
           {/* Translation Guidelines */}
           <div className="space-y-1 p-2 rounded-md bg-muted/30">
-            <p className="text-xs font-medium">Linee guida traduzione:</p>
+            <p className="text-xs font-medium">{t('emotionBadgeComp.lineeGuidaTraduzione')}</p>
             <p className="text-xs text-muted-foreground">
               {style.translationGuidelines}
             </p>

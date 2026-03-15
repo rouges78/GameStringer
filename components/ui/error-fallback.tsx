@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslation } from '@/lib/i18n';
 
 interface ErrorFallbackProps {
   error: Error;
@@ -29,6 +30,7 @@ export function ErrorFallback({
   showReportButton = true,
   supportEmail = "support@gamestringer.com"
 }: ErrorFallbackProps) {
+  const { t } = useTranslation();
   const [showDetails, setShowDetails] = React.useState(false);
   const [reportCopied, setReportCopied] = React.useState(false);
 
@@ -127,7 +129,7 @@ Thank you for your assistance.
             <AlertDescription>
               <div className="flex items-center justify-between">
                 <div>
-                  <strong>Error ID:</strong> 
+                  <strong>{t('errorFallbackComp.errorId')}</strong> 
                   <code className="bg-muted px-2 py-1 rounded ml-2">{errorId}</code>
                 </div>
                 <Badge variant="destructive">
@@ -135,7 +137,7 @@ Thank you for your assistance.
                 </Badge>
               </div>
               <div className="mt-2">
-                <strong>Message:</strong> {error.message}
+                <strong>{t('errorFallbackComp.message')}</strong> {error.message}
               </div>
             </AlertDescription>
           </Alert>
@@ -175,7 +177,7 @@ Thank you for your assistance.
                   
                   {errorInfo?.componentStack && (
                     <div className="bg-muted p-4 rounded-lg">
-                      <h4 className="font-semibold mb-2">Component Stack:</h4>
+                      <h4 className="font-semibold mb-2">{t('errorFallbackComp.componentStack')}</h4>
                       <Textarea
                         value={errorInfo.componentStack}
                         readOnly
@@ -313,7 +315,7 @@ export function AuthErrorFallback({
           <Alert>
             <Bug className="h-4 w-4" />
             <AlertDescription>
-              <strong>Error ID:</strong> {props.errorId}
+              <strong>{t('errorFallbackComp.errorId')}</strong> {props.errorId}
             </AlertDescription>
           </Alert>
 

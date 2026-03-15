@@ -38,6 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTranslation } from '@/lib/i18n';
 
 interface Extension {
   id: string;
@@ -73,6 +74,7 @@ const getExtensionTypeBadge = (type: string) => {
 };
 
 export function ExtensionManager() {
+  const { t } = useTranslation();
   const [extensions, setExtensions] = useState<Extension[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -161,7 +163,7 @@ export function ExtensionManager() {
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Puzzle className="h-5 w-5 text-purple-400" />
-          <h2 className="text-lg font-bold">Extensions</h2>
+          <h2 className="text-lg font-bold">{t('extensionManagerComp.extensions')}</h2>
           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-400 border-purple-500/30">
             {extensions.length} installed
           </Badge>
@@ -180,14 +182,14 @@ export function ExtensionManager() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create New Extension</DialogTitle>
+                <DialogTitle>{t('extensionManagerComp.createNewExtension')}</DialogTitle>
                 <DialogDescription>
                   Create a template for a new GameStringer extension
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="ext-name">Name</Label>
+                  <Label htmlFor="ext-name">{t('extensionManagerComp.name')}</Label>
                   <Input
                     id="ext-name"
                     value={newExtension.name}
@@ -196,7 +198,7 @@ export function ExtensionManager() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ext-desc">Description</Label>
+                  <Label htmlFor="ext-desc">{t('extensionManagerComp.description')}</Label>
                   <Input
                     id="ext-desc"
                     value={newExtension.description}
@@ -205,7 +207,7 @@ export function ExtensionManager() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ext-author">Author</Label>
+                  <Label htmlFor="ext-author">{t('extensionManagerComp.author')}</Label>
                   <Input
                     id="ext-author"
                     value={newExtension.author}
@@ -214,7 +216,7 @@ export function ExtensionManager() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ext-type">Type</Label>
+                  <Label htmlFor="ext-type">{t('extensionManagerComp.type')}</Label>
                   <Select
                     value={newExtension.type}
                     onValueChange={(value) => setNewExtension(prev => ({ ...prev, type: value }))}
@@ -223,11 +225,11 @@ export function ExtensionManager() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="GameStore">Game Store</SelectItem>
-                      <SelectItem value="GameSupport">Game Support</SelectItem>
-                      <SelectItem value="TranslationTool">Translation Tool</SelectItem>
-                      <SelectItem value="Theme">Theme</SelectItem>
-                      <SelectItem value="Utility">Utility</SelectItem>
+                      <SelectItem value="GameStore">{t('extensionManagerComp.gameStore')}</SelectItem>
+                      <SelectItem value="GameSupport">{t('extensionManagerComp.gameSupport')}</SelectItem>
+                      <SelectItem value="TranslationTool">{t('extensionManagerComp.translationTool')}</SelectItem>
+                      <SelectItem value="Theme">{t('extensionManagerComp.theme')}</SelectItem>
+                      <SelectItem value="Utility">{t('extensionManagerComp.utility')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -254,7 +256,7 @@ export function ExtensionManager() {
         <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Puzzle className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium">No extensions installed</h3>
+            <h3 className="text-lg font-medium">{t('extensionManagerComp.noExtensionsInstalled')}</h3>
             <p className="text-muted-foreground text-sm mt-1">
               Create or install extensions to expand GameStringer functionality
             </p>

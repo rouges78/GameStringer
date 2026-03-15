@@ -27,6 +27,7 @@ import {
   formatDuration,
 } from '@/lib/translation-history';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationHistoryPanelProps {
   gameId?: string;
@@ -34,6 +35,7 @@ interface TranslationHistoryPanelProps {
 }
 
 export function TranslationHistoryPanel({ gameId, compact = false }: TranslationHistoryPanelProps) {
+  const { t } = useTranslation();
   const [records, setRecords] = useState<TranslationRecord[]>([]);
   const [stats, setStats] = useState<TranslationStats | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -101,7 +103,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <History className="h-4 w-4 text-red-400" />
-            <span className="text-sm font-medium">Cronologia</span>
+            <span className="text-sm font-medium">{t('translationHistoryPanelComp.cronologia')}</span>
             <Badge variant="outline" className="text-[10px]">{stats?.totalTranslations || 0}</Badge>
           </div>
         </div>
@@ -110,15 +112,15 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
           <div className="grid grid-cols-3 gap-2 text-[10px]">
             <div className="p-1.5 rounded bg-slate-800/30 text-center">
               <div className="font-bold text-red-400">{stats.totalWords.toLocaleString()}</div>
-              <div className="text-muted-foreground">Parole</div>
+              <div className="text-muted-foreground">{t('translationHistoryPanelComp.parole')}</div>
             </div>
             <div className="p-1.5 rounded bg-slate-800/30 text-center">
               <div className="font-bold text-green-400">{formatCost(stats.totalCost)}</div>
-              <div className="text-muted-foreground">Costo</div>
+              <div className="text-muted-foreground">{t('translationHistoryPanelComp.costo')}</div>
             </div>
             <div className="p-1.5 rounded bg-slate-800/30 text-center">
               <div className="font-bold text-blue-400">{formatDuration(stats.totalDuration)}</div>
-              <div className="text-muted-foreground">Tempo</div>
+              <div className="text-muted-foreground">{t('translationHistoryPanelComp.tempo')}</div>
             </div>
           </div>
         )}
@@ -152,8 +154,8 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
       <CardContent className="p-4 pt-0">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-2 w-full h-8 mb-3">
-            <TabsTrigger value="recent" className="text-xs">Recent</TabsTrigger>
-            <TabsTrigger value="stats" className="text-xs">Statistics</TabsTrigger>
+            <TabsTrigger value="recent" className="text-xs">{t('translationHistoryPanelComp.recent')}</TabsTrigger>
+            <TabsTrigger value="stats" className="text-xs">{t('translationHistoryPanelComp.statistics')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="recent" className="space-y-3">
@@ -225,28 +227,28 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                   <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
                     <Zap className="h-4 w-4 text-red-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-red-400">{stats.totalTranslations}</div>
-                    <div className="text-[10px] text-muted-foreground">Translations</div>
+                    <div className="text-[10px] text-muted-foreground">{t('translationHistoryPanelComp.translations')}</div>
                   </div>
                   <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-center">
                     <BarChart3 className="h-4 w-4 text-blue-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-blue-400">{stats.totalWords.toLocaleString()}</div>
-                    <div className="text-[10px] text-muted-foreground">Words</div>
+                    <div className="text-[10px] text-muted-foreground">{t('translationHistoryPanelComp.words')}</div>
                   </div>
                   <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20 text-center">
                     <DollarSign className="h-4 w-4 text-green-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-green-400">{formatCost(stats.totalCost)}</div>
-                    <div className="text-[10px] text-muted-foreground">Cost</div>
+                    <div className="text-[10px] text-muted-foreground">{t('translationHistoryPanelComp.cost')}</div>
                   </div>
                   <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-center">
                     <Clock className="h-4 w-4 text-orange-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-orange-400">{formatDuration(stats.totalDuration)}</div>
-                    <div className="text-[10px] text-muted-foreground">Time</div>
+                    <div className="text-[10px] text-muted-foreground">{t('translationHistoryPanelComp.time')}</div>
                   </div>
                 </div>
 
                 {/* By Tool */}
                 <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">Per Tool</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t('translationHistoryPanelComp.perTool')}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(stats.byTool).map(([tool, count]) => (
                       <Badge key={tool} variant="outline" className={`${toolColors[tool] || ''}`}>
@@ -258,7 +260,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
 
                 {/* By Provider */}
                 <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">Per Provider</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t('translationHistoryPanelComp.perProvider')}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(stats.byProvider).map(([provider, count]) => (
                       <Badge key={provider} variant="outline" className={`${providerColors[provider] || ''}`}>
@@ -270,7 +272,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
 
                 {/* By Language */}
                 <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">Per Lingua</div>
+                  <div className="text-xs font-medium text-muted-foreground">{t('translationHistoryPanelComp.perLingua')}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {Object.entries(stats.byLanguage).slice(0, 8).map(([pair, count]) => (
                       <Badge key={pair} variant="secondary" className="text-[10px]">
@@ -283,7 +285,7 @@ export function TranslationHistoryPanel({ gameId, compact = false }: Translation
                 {/* Cache Stats */}
                 <div className="p-2 rounded-lg bg-slate-800/30 border border-slate-800/50">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Cache Hit Rate</span>
+                    <span className="text-muted-foreground">{t('translationHistoryPanelComp.cacheHitRate')}</span>
                     <span className="font-mono text-green-400">
                       {stats.cacheHits + stats.cacheMisses > 0 
                         ? Math.round((stats.cacheHits / (stats.cacheHits + stats.cacheMisses)) * 100) 

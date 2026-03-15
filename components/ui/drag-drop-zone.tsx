@@ -4,6 +4,7 @@ import { useState, useCallback, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Upload, FileText, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 
 interface DragDropZoneProps {
   onFilesDropped: (files: File[]) => void;
@@ -24,6 +25,7 @@ export function DragDropZone({
   className,
   disabled = false,
 }: DragDropZoneProps) {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,7 +141,7 @@ export function DragDropZone({
               disabled={disabled}
             />
             <Button variant="outline" size="sm" asChild>
-              <span>Browse Files</span>
+              <span>{t('dragDropZoneComp.browseFiles')}</span>
             </Button>
           </label>
           
@@ -161,7 +163,7 @@ export function DragDropZone({
         <div className="absolute inset-0 flex items-center justify-center bg-primary/10 backdrop-blur-sm rounded-xl">
           <div className="flex flex-col items-center gap-2 text-primary">
             <Upload className="h-8 w-8 animate-bounce" />
-            <span className="font-medium">Drop to upload</span>
+            <span className="font-medium">{t('dragDropZoneComp.dropToUpload')}</span>
           </div>
         </div>
       )}

@@ -16,6 +16,7 @@ import {
   Zap
 } from 'lucide-react';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
+import { useTranslation } from '@/lib/i18n';
 
 interface HookCandidate {
   address: string;
@@ -33,6 +34,7 @@ interface HookScanResult {
 }
 
 export function AutoHookScanner() {
+  const { t } = useTranslation();
   const [processId, setProcessId] = useState('');
   const [searchText, setSearchText] = useState('');
   const [result, setResult] = useState<HookScanResult | null>(null);
@@ -70,7 +72,7 @@ export function AutoHookScanner() {
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2">
           <Crosshair className="h-5 w-5 text-rose-400" />
-          <CardTitle className="text-base">Auto-Hook Scanner</CardTitle>
+          <CardTitle className="text-base">{t('autoHookScannerComp.autohookScanner')}</CardTitle>
           <Badge variant="outline" className="text-[9px] px-1.5 border-rose-500/20 text-rose-400">
             Click-to-Hook
           </Badge>
@@ -84,7 +86,7 @@ export function AutoHookScanner() {
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="text-[10px] text-slate-500 mb-1 block">Process ID (PID)</label>
+            <label className="text-[10px] text-slate-500 mb-1 block">{t('autoHookScannerComp.processIdPid')}</label>
             <Input
               value={processId}
               onChange={e => setProcessId(e.target.value.replace(/\D/g, ''))}
@@ -93,7 +95,7 @@ export function AutoHookScanner() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-slate-500 mb-1 block">Testo da cercare</label>
+            <label className="text-[10px] text-slate-500 mb-1 block">{t('autoHookScannerComp.testoDaCercare')}</label>
             <Input
               value={searchText}
               onChange={e => setSearchText(e.target.value)}

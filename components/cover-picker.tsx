@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, Check, Image as ImageIcon, Grid3X3, Sparkles, Type, AlertCircle, ThumbsUp, User, RefreshCw, Key, ExternalLink, Link2, Search, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface Cover {
   id: number;
@@ -37,6 +38,7 @@ interface CoverPickerProps {
 }
 
 export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected, currentCover }: CoverPickerProps) {
+  const { t } = useTranslation();
   const [covers, setCovers] = useState<Cover[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -355,7 +357,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
           <div className="flex-1 flex flex-col">
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Incolla URL immagine</label>
+                <label className="text-sm font-medium mb-2 block">{t('coverPickerComp.incollaUrlImmagine')}</label>
                 <div className="flex gap-2">
                   <Input
                     type="url"
@@ -380,7 +382,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
               {/* Preview */}
               {customUrlPreview && (
                 <div className="border rounded-lg p-4 bg-slate-900/50">
-                  <p className="text-sm font-medium mb-2">Anteprima</p>
+                  <p className="text-sm font-medium mb-2">{t('coverPickerComp.anteprima')}</p>
                   <div className="aspect-[460/215] bg-slate-800 rounded overflow-hidden max-w-md">
                     <img 
                       src={customUrlPreview} 
@@ -409,7 +411,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
             {igdbLoading ? (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
-                <span className="ml-2 text-muted-foreground">Cercando su IGDB...</span>
+                <span className="ml-2 text-muted-foreground">{t('coverPickerComp.cercandoSuIgdb')}</span>
               </div>
             ) : igdbError ? (
               <div className="flex flex-col items-center justify-center h-64 text-center">
@@ -449,7 +451,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
             ) : (
               <div className="flex flex-col items-center justify-center h-64 text-center">
                 <Search className="h-12 w-12 text-gray-500 mb-3" />
-                <p className="text-muted-foreground">Nessuna cover trovata su IGDB</p>
+                <p className="text-muted-foreground">{t('coverPickerComp.nessunaCoverTrovataSuIgdb')}</p>
               </div>
             )}
           </div>
@@ -490,12 +492,12 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
-                <span className="ml-2 text-muted-foreground">Caricamento cover...</span>
+                <span className="ml-2 text-muted-foreground">{t('coverPickerComp.caricamentoCover')}</span>
               </div>
             ) : showApiKeyInput ? (
               <div className="flex flex-col items-center justify-center h-64 text-center px-4">
                 <Key className="h-12 w-12 text-blue-400 mb-3" />
-                <h3 className="text-lg font-semibold mb-2">API Key Richiesta</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('coverPickerComp.apiKeyRichiesta')}</h3>
                 <p className="text-sm text-muted-foreground mb-4 max-w-md">
                   Per cercare cover su SteamGridDB è necessaria una API Key gratuita.
                 </p>

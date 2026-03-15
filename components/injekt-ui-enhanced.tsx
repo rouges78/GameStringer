@@ -34,6 +34,7 @@ import { InjektRealtimeStats } from '@/components/injekt-realtime-stats';
 import { InjektOverlayConfig, OverlayConfig } from '@/components/injekt-overlay-config';
 import { TranslationProfileManager } from '@/components/translation-profile-manager';
 import { translationProfileManager, TranslationProfile } from '@/lib/game-translation-profiles';
+import { useTranslation } from '@/lib/i18n';
 
 interface Process {
   pid: number;
@@ -58,6 +59,7 @@ interface TranslationEntry {
 }
 
 export function InjektUIEnhanced() {
+  const { t } = useTranslation();
   const [processes, setProcesses] = useState<Process[]>([]);
   const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
   const [isInjecting, setIsInjecting] = useState(false);
@@ -322,7 +324,7 @@ export function InjektUIEnhanced() {
             <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-emerald-400 bg-clip-text text-transparent">
               {injectionStats?.memoryAddresses || 0}
             </div>
-            <p className="text-xs text-gray-400 mt-1">Saved positions</p>
+            <p className="text-xs text-gray-400 mt-1">{t('injektUiEnhancedComp.savedPositions')}</p>
           </CardContent>
         </Card>
 
@@ -468,7 +470,7 @@ export function InjektUIEnhanced() {
               <CardContent className="space-y-4 relative z-10">
                 <div>
                   <div className="flex justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-200">Injected Translations</span>
+                    <span className="text-sm font-medium text-gray-200">{t('injektUiEnhancedComp.injectedTranslations')}</span>
                     <span className="text-sm text-emerald-400">{injectionCount}</span>
                   </div>
                   <Progress value={Math.min((injectionCount / 100) * 100, 100)} className="bg-white/10" />

@@ -25,6 +25,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface SearchItem {
   id: string;
@@ -57,6 +58,7 @@ interface GlobalSearchProps {
 }
 
 export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
@@ -108,7 +110,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
       )}
       <DialogContent className="p-0 gap-0 max-w-lg overflow-hidden z-[70]">
         <VisuallyHidden.Root>
-          <DialogTitle>Global search</DialogTitle>
+          <DialogTitle>{t('globalSearchComp.globalSearch')}</DialogTitle>
         </VisuallyHidden.Root>
         <div className="flex items-center border-b px-3">
           <Search className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -166,15 +168,15 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
         <div className="flex items-center justify-between px-3 py-2 border-t text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">↑↓</kbd>
-            <span>Navigate</span>
+            <span>{t('globalSearchComp.navigate')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">Enter</kbd>
-            <span>Open</span>
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">{t('globalSearchComp.enter')}</kbd>
+            <span>{t('globalSearchComp.open')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">Ctrl+K</kbd>
-            <span>Search</span>
+            <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px]">{t('globalSearchComp.ctrlk')}</kbd>
+            <span>{t('globalSearchComp.search')}</span>
           </div>
         </div>
       </DialogContent>

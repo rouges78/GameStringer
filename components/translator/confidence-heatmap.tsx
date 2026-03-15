@@ -47,6 +47,7 @@ import {
   sortByConfidence,
   getHeatmapChartData
 } from "@/lib/translation-confidence"
+import { useTranslation } from '@/lib/i18n';
 
 interface ConfidenceHeatmapProps {
   data: HeatmapData
@@ -56,6 +57,7 @@ interface ConfidenceHeatmapProps {
 
 // Componente Badge per singolo livello di confidenza
 function ConfidenceBadge({ result, size = 'md' }: { result: ConfidenceResult; size?: 'sm' | 'md' | 'lg' }) {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: 'text-xs px-1.5 py-0.5',
     md: 'text-sm px-2 py-1',
@@ -91,6 +93,7 @@ function HeatmapRow({
   onClick: () => void
   showDetails: boolean
 }) {
+  const { t } = useTranslation();
   const issueIcon = useMemo(() => {
     if (result.issues.some(i => i.type === 'error')) {
       return <AlertCircle className="h-4 w-4 text-red-500" />
@@ -127,7 +130,7 @@ function HeatmapRow({
           {pair.original}
         </p>
         <p className="text-sm font-medium truncate">
-          {pair.translated || <span className="text-red-500 italic">Mancante</span>}
+          {pair.translated || <span className="text-red-500 italic">{t('confidenceHeatmapComp.mancante')}</span>}
         </p>
         
         {/* Issues inline */}
@@ -159,6 +162,7 @@ function HeatmapRow({
 
 // Componente Summary Card
 function SummaryCard({ data }: { data: HeatmapData }) {
+  const { t } = useTranslation();
   const chartData = getHeatmapChartData(data)
 
   return (
@@ -184,7 +188,7 @@ function SummaryCard({ data }: { data: HeatmapData }) {
           }}>
             {data.summary.averageScore}%
           </p>
-          <p className="text-sm text-muted-foreground">Punteggio Medio</p>
+          <p className="text-sm text-muted-foreground">{t('confidenceHeatmapComp.punteggioMedio')}</p>
         </div>
 
         {/* Distribution Bars */}
@@ -216,7 +220,7 @@ function SummaryCard({ data }: { data: HeatmapData }) {
         {/* Top Issues */}
         {data.summary.topIssues.length > 0 && (
           <div className="pt-2 border-t">
-            <p className="text-sm font-medium mb-2">Problemi Frequenti</p>
+            <p className="text-sm font-medium mb-2">{t('confidenceHeatmapComp.problemiFrequenti')}</p>
             <div className="space-y-1">
               {data.summary.topIssues.slice(0, 3).map((issue, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
@@ -234,11 +238,12 @@ function SummaryCard({ data }: { data: HeatmapData }) {
 
 // Componente Detail Panel
 function DetailPanel({ pair, result }: { pair: TranslationPair; result: ConfidenceResult }) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Dettaglio Traduzione</CardTitle>
+          <CardTitle className="text-lg">{t('confidenceHeatmapComp.dettaglioTraduzione')}</CardTitle>
           <ConfidenceBadge result={result} size="lg" />
         </div>
       </CardHeader>
@@ -246,12 +251,12 @@ function DetailPanel({ pair, result }: { pair: TranslationPair; result: Confiden
         {/* Texts */}
         <div className="space-y-3">
           <div className="p-3 bg-muted rounded-lg">
-            <p className="text-xs text-muted-foreground mb-1">Originale</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('confidenceHeatmapComp.originale')}</p>
             <p className="text-sm">{pair.original}</p>
           </div>
           <div className="p-3 rounded-lg" style={{ backgroundColor: result.bgColor }}>
-            <p className="text-xs text-muted-foreground mb-1">Traduzione</p>
-            <p className="text-sm">{pair.translated || <span className="italic text-red-500">Mancante</span>}</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('confidenceHeatmapComp.traduzione')}</p>
+            <p className="text-sm">{pair.translated || <span className="italic text-red-500">{t('confidenceHeatmapComp.mancante')}</span>}</p>
           </div>
         </div>
 
@@ -270,7 +275,7 @@ function DetailPanel({ pair, result }: { pair: TranslationPair; result: Confiden
         {/* Issues */}
         {result.issues.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Problemi Rilevati</p>
+            <p className="text-sm font-medium">{t('confidenceHeatmapComp.problemiRilevati')}</p>
             {result.issues.map((issue, i) => (
               <div
                 key={i}
@@ -293,7 +298,7 @@ function DetailPanel({ pair, result }: { pair: TranslationPair; result: Confiden
         {/* Suggestions */}
         {result.suggestions.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Suggerimenti</p>
+            <p className="text-sm font-medium">{t('confidenceHeatmapComp.suggerimenti')}</p>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
               {result.suggestions.map((s, i) => (
                 <li key={i}>{s}</li>
@@ -308,6 +313,7 @@ function DetailPanel({ pair, result }: { pair: TranslationPair; result: Confiden
 
 // Componente principale Heatmap
 export function ConfidenceHeatmap({ data, onSelectPair, className }: ConfidenceHeatmapProps) {
+  const { t } = useTranslation();
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [filterLevel, setFilterLevel] = useState<ConfidenceLevel | 'all'>('all')
@@ -352,7 +358,7 @@ export function ConfidenceHeatmap({ data, onSelectPair, className }: ConfidenceH
               <SelectValue placeholder="Filtra" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tutti</SelectItem>
+              <SelectItem value="all">{t('confidenceHeatmapComp.tutti')}</SelectItem>
               <SelectItem value="critical">
                 <span className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: CONFIDENCE_COLORS.critical.color }} />

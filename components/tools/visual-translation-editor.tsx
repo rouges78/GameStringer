@@ -56,6 +56,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface TextOverlay {
   id: string;
@@ -110,6 +111,7 @@ const gameStyleFonts = [
 ];
 
 export function VisualTranslationEditor() {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -491,7 +493,7 @@ export function VisualTranslationEditor() {
                       checked={showOriginal}
                       onCheckedChange={setShowOriginal}
                     />
-                    <Label className="text-sm">Originale</Label>
+                    <Label className="text-sm">{t('visualTranslationEditorComp.originale')}</Label>
                   </div>
                 </div>
               </div>
@@ -511,8 +513,8 @@ export function VisualTranslationEditor() {
                 ) : (
                   <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
                     <ImageIcon className="h-16 w-16 mb-4" />
-                    <p className="text-lg font-medium">Upload a screenshot</p>
-                    <p className="text-sm">Supports PNG, JPG, WebP</p>
+                    <p className="text-lg font-medium">{t('visualTranslationEditorComp.uploadAScreenshot')}</p>
+                    <p className="text-sm">{t('visualTranslationEditorComp.supportsPngJpgWebp')}</p>
                     <Button
                       variant="outline"
                       className="mt-4"
@@ -624,7 +626,7 @@ export function VisualTranslationEditor() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs">Testo Originale</Label>
+                  <Label className="text-xs">{t('visualTranslationEditorComp.testoOriginale')}</Label>
                   <Textarea
                     value={selectedOverlayData.originalText}
                     onChange={(e) => updateSelectedOverlay({ originalText: e.target.value })}
@@ -634,7 +636,7 @@ export function VisualTranslationEditor() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs">Traduzione</Label>
+                  <Label className="text-xs">{t('visualTranslationEditorComp.traduzione')}</Label>
                   <Textarea
                     value={selectedOverlayData.translatedText}
                     onChange={(e) => updateSelectedOverlay({ translatedText: e.target.value })}
@@ -647,7 +649,7 @@ export function VisualTranslationEditor() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs">Font Size</Label>
+                    <Label className="text-xs">{t('visualTranslationEditorComp.fontSize')}</Label>
                     <Input
                       type="number"
                       value={selectedOverlayData.fontSize}
@@ -656,7 +658,7 @@ export function VisualTranslationEditor() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Font</Label>
+                    <Label className="text-xs">{t('visualTranslationEditorComp.font')}</Label>
                     <Select
                       value={selectedOverlayData.fontFamily}
                       onValueChange={(v) => updateSelectedOverlay({ fontFamily: v })}
@@ -723,7 +725,7 @@ export function VisualTranslationEditor() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs">Colore Testo</Label>
+                    <Label className="text-xs">{t('visualTranslationEditorComp.coloreTesto')}</Label>
                     <div className="flex gap-1">
                       <input
                         type="color"
@@ -739,7 +741,7 @@ export function VisualTranslationEditor() {
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Sfondo</Label>
+                    <Label className="text-xs">{t('visualTranslationEditorComp.sfondo')}</Label>
                     <div className="flex gap-1">
                       <input
                         type="color"
@@ -768,7 +770,7 @@ export function VisualTranslationEditor() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs">Larghezza</Label>
+                    <Label className="text-xs">{t('visualTranslationEditorComp.larghezza')}</Label>
                     <Input
                       type="number"
                       value={selectedOverlayData.width}
@@ -777,7 +779,7 @@ export function VisualTranslationEditor() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Altezza</Label>
+                    <Label className="text-xs">{t('visualTranslationEditorComp.altezza')}</Label>
                     <Input
                       type="number"
                       value={selectedOverlayData.height}
@@ -829,7 +831,7 @@ export function VisualTranslationEditor() {
       <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Export Project</DialogTitle>
+            <DialogTitle>{t('visualTranslationEditorComp.exportProject')}</DialogTitle>
             <DialogDescription>
               Choose how to export your work
             </DialogDescription>
@@ -845,7 +847,7 @@ export function VisualTranslationEditor() {
             </Button>
             <Separator />
             <div>
-              <Label className="text-sm">Import Project</Label>
+              <Label className="text-sm">{t('visualTranslationEditorComp.importProject')}</Label>
               <input
                 type="file"
                 accept=".gsvte"

@@ -28,6 +28,7 @@ import {
   QualityScore 
 } from '@/lib/translation-quality';
 import { translationMemory } from '@/lib/translation-memory';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationItem {
   id: string;
@@ -57,6 +58,7 @@ export function MTPEWorkflow({
   context,
   onComplete
 }: MTPEWorkflowProps) {
+  const { t } = useTranslation();
   const [items, setItems] = useState<TranslationItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [editText, setEditText] = useState('');
@@ -284,7 +286,7 @@ export function MTPEWorkflow({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-purple-400" />
-              <span className="text-sm font-medium">Progresso MTPE</span>
+              <span className="text-sm font-medium">{t('mtpeWorkflowComp.progressoMtpe')}</span>
             </div>
             <span className="text-sm text-gray-400">
               {stats.approved + stats.edited + stats.rejected + stats.skipped} / {stats.total}
@@ -413,19 +415,19 @@ export function MTPEWorkflow({
             <div className="grid grid-cols-4 gap-2">
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-green-400">{currentItem.qualityScore.fluency}</div>
-                <div className="text-[10px] text-gray-500">Fluidità</div>
+                <div className="text-[10px] text-gray-500">{t('mtpeWorkflowComp.fluidità')}</div>
               </div>
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-blue-400">{currentItem.qualityScore.accuracy}</div>
-                <div className="text-[10px] text-gray-500">Accuratezza</div>
+                <div className="text-[10px] text-gray-500">{t('mtpeWorkflowComp.accuratezza')}</div>
               </div>
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-purple-400">{currentItem.qualityScore.consistency}</div>
-                <div className="text-[10px] text-gray-500">Coerenza</div>
+                <div className="text-[10px] text-gray-500">{t('mtpeWorkflowComp.coerenza')}</div>
               </div>
               <div className="p-2 bg-slate-800/30 rounded text-center">
                 <div className="text-lg font-bold text-amber-400">{currentItem.qualityScore.style}</div>
-                <div className="text-[10px] text-gray-500">Stile</div>
+                <div className="text-[10px] text-gray-500">{t('mtpeWorkflowComp.stile')}</div>
               </div>
             </div>
           )}
@@ -514,7 +516,7 @@ export function MTPEWorkflow({
         <Card className="bg-green-500/10 border-green-500/30">
           <CardContent className="p-4 text-center">
             <CheckCircle2 className="h-8 w-8 text-green-400 mx-auto mb-2" />
-            <div className="text-lg font-medium text-green-400">Revisione completata!</div>
+            <div className="text-lg font-medium text-green-400">{t('mtpeWorkflowComp.revisioneCompletata')}</div>
             <div className="text-sm text-gray-400 mt-1">
               {stats.approved} approvate, {stats.edited} modificate, {stats.rejected} rifiutate
             </div>

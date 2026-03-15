@@ -18,6 +18,7 @@ import {
   HardDrive
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface OllamaStatus {
   installed: boolean;
@@ -47,6 +48,7 @@ interface PullProgress {
 }
 
 export function OllamaManager() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -229,7 +231,7 @@ export function OllamaManager() {
       <Card>
         <CardContent className="flex items-center justify-center py-8">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">Verifica Ollama...</span>
+          <span className="ml-2 text-sm text-muted-foreground">{t('ollamaManagerComp.verificaOllama')}</span>
         </CardContent>
       </Card>
     );
@@ -241,7 +243,7 @@ export function OllamaManager() {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Server className="h-5 w-5 text-orange-500" />
-            <span>Ollama — AI Locale</span>
+            <span>{t('ollamaManagerComp.ollamaAiLocale')}</span>
           </div>
           <div className="flex items-center gap-2">
             {status?.installed ? (
@@ -375,7 +377,7 @@ export function OllamaManager() {
             Modelli consigliati per traduzione
           </h4>
           {!status?.running && (
-            <p className="text-[10px] text-amber-400/80">Avvia Ollama per installare i modelli</p>
+            <p className="text-[10px] text-amber-400/80">{t('ollamaManagerComp.avviaOllamaPerInstallareIModel')}</p>
           )}
           <div className="grid gap-2">
             {recommendedModels.map((model) => {

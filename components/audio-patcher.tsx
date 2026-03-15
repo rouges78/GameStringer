@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Loader2, Music, Undo2, PlayCircle, HardDrive } from 'lucide-react';
 import { toast } from 'sonner';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from '@/lib/i18n';
 
 interface AudioFile {
   name: string;
@@ -18,6 +19,7 @@ interface AudioPatcherProps {
 }
 
 export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
+  const { t } = useTranslation();
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [selectedFile, setSelectedFile] = useState<AudioFile | null>(null);
@@ -166,8 +168,8 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
             {!selectedFile ? (
               <div className="text-center text-white/30 space-y-2">
                 <HardDrive className="h-10 w-10 mx-auto opacity-20" />
-                <p className="text-sm">Seleziona un file audio dalla lista</p>
-                <p className="text-xs opacity-60">Potrai rimpiazzarlo con XTTS</p>
+                <p className="text-sm">{t('audioPatcherComp.selezionaUnFileAudioDallaLista')}</p>
+                <p className="text-xs opacity-60">{t('audioPatcherComp.potraiRimpiazzarloConXtts')}</p>
               </div>
             ) : (
               <div className="flex flex-col h-full">
@@ -189,7 +191,7 @@ export default function AudioPatcher({ gamePath }: AudioPatcherProps) {
                 </div>
 
                 <div className="flex-1 bg-black/40 rounded p-3 mb-4 border border-white/5 flex flex-col">
-                  <label className="text-xs font-semibold text-white/70 uppercase mb-2">Testo da Sintetizzare (XTTS)</label>
+                  <label className="text-xs font-semibold text-white/70 uppercase mb-2">{t('audioPatcherComp.testoDaSintetizzareXtts')}</label>
                   <textarea
                     value={xttsText}
                     onChange={(e) => setXttsText(e.target.value)}

@@ -5,6 +5,7 @@ import { X, Loader2, ExternalLink, CheckCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
+import { useTranslation } from '@/lib/i18n';
 
 interface SteamUser {
   steam_id: string;
@@ -22,6 +23,7 @@ interface SteamModalProps {
 }
 
 export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalProps) {
+  const { t } = useTranslation();
   const [error, setError] = useState('');
   const [authStep, setAuthStep] = useState<'idle' | 'waiting' | 'success'>('idle');
   const [verifying, setVerifying] = useState(false);
@@ -249,8 +251,8 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
             <img src="/logos/steam.png" alt="Steam" className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Connetti Steam</h2>
-            <p className="text-sm text-muted-foreground">Accedi con il tuo account Steam</p>
+            <h2 className="text-xl font-bold">{t('steamModalComp.connettiSteam')}</h2>
+            <p className="text-sm text-muted-foreground">{t('steamModalComp.accediConIlTuoAccountSteam')}</p>
           </div>
         </div>
 
@@ -264,7 +266,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-green-500" />
-                <span className="font-medium text-green-600">Account Steam collegato!</span>
+                <span className="font-medium text-green-600">{t('steamModalComp.accountSteamCollegato')}</span>
               </div>
             </div>
             
@@ -329,7 +331,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
                 disabled={loadingWishlist}
               >
                 {loadingWishlist ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Importando...</>
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{t('steamModalComp.importando')}</>
                 ) : (
                   <>📋 Importa Wishlist ({wishlist.length > 0 ? `${wishlist.length} giochi` : 'clicca per caricare'})</>
                 )}
@@ -363,7 +365,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
             <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
               <div className="flex items-center gap-3 mb-2">
                 <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-                <span className="font-medium">In attesa del login Steam...</span>
+                <span className="font-medium">{t('steamModalComp.inAttesaDelLoginSteam')}</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Completa il login nel browser. La connessione avverrà automaticamente.
@@ -403,8 +405,8 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
             </Button>
 
             <div className="text-xs text-muted-foreground text-center">
-              <p>Utilizziamo Steam OpenID per un'autenticazione sicura.</p>
-              <p>Non memorizziamo mai la tua password Steam.</p>
+              <p>{t('steamModalComp.utilizziamoSteamOpenidPerUnaut')}</p>
+              <p>{t('steamModalComp.nonMemorizziamoMaiLaTuaPasswor')}</p>
             </div>
 
             {error && (

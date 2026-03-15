@@ -34,6 +34,7 @@ import {
   Settings
 } from 'lucide-react';
 import { translationProfileManager, TranslationProfile, TranslationEntry } from '@/lib/game-translation-profiles';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationProfileManagerProps {
   processName?: string;
@@ -41,11 +42,12 @@ interface TranslationProfileManagerProps {
   selectedProfileId?: string;
 }
 
-export function TranslationProfileManager({ 
+export function TranslationProfileManager({
   processName, 
   onProfileSelect,
   selectedProfileId 
 }: TranslationProfileManagerProps) {
+  const { t } = useTranslation();
   const [profiles, setProfiles] = useState<TranslationProfile[]>([]);
   const [filteredProfiles, setFilteredProfiles] = useState<TranslationProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -359,14 +361,14 @@ export function TranslationProfileManager({
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
-                <DialogTitle>Create New Profile</DialogTitle>
+                <DialogTitle>{t('translationProfileManagerComp.createNewProfile')}</DialogTitle>
                 <DialogDescription>
                   Create a new translation profile for a game
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Game Name</Label>
+                  <Label>{t('translationProfileManagerComp.gameName')}</Label>
                   <Input
                     value={newProfile.gameName}
                     onChange={(e) => setNewProfile({ ...newProfile, gameName: e.target.value })}
@@ -374,7 +376,7 @@ export function TranslationProfileManager({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Process Name</Label>
+                  <Label>{t('translationProfileManagerComp.processName')}</Label>
                   <Input
                     value={newProfile.processName}
                     onChange={(e) => setNewProfile({ ...newProfile, processName: e.target.value })}
@@ -382,7 +384,7 @@ export function TranslationProfileManager({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Language</Label>
+                  <Label>{t('translationProfileManagerComp.language')}</Label>
                   <Select
                     value={newProfile.language}
                     onValueChange={(value) => setNewProfile({ ...newProfile, language: value })}
@@ -391,20 +393,20 @@ export function TranslationProfileManager({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="it">Italiano</SelectItem>
-                      <SelectItem value="es">Spagnolo</SelectItem>
-                      <SelectItem value="fr">Francese</SelectItem>
-                      <SelectItem value="de">Tedesco</SelectItem>
-                      <SelectItem value="pt">Portoghese</SelectItem>
-                      <SelectItem value="ru">Russo</SelectItem>
-                      <SelectItem value="ja">Giapponese</SelectItem>
-                      <SelectItem value="ko">Coreano</SelectItem>
-                      <SelectItem value="zh">Cinese</SelectItem>
+                      <SelectItem value="it">{t('translationProfileManagerComp.italiano')}</SelectItem>
+                      <SelectItem value="es">{t('translationProfileManagerComp.spagnolo')}</SelectItem>
+                      <SelectItem value="fr">{t('translationProfileManagerComp.francese')}</SelectItem>
+                      <SelectItem value="de">{t('translationProfileManagerComp.tedesco')}</SelectItem>
+                      <SelectItem value="pt">{t('translationProfileManagerComp.portoghese')}</SelectItem>
+                      <SelectItem value="ru">{t('translationProfileManagerComp.russo')}</SelectItem>
+                      <SelectItem value="ja">{t('translationProfileManagerComp.giapponese')}</SelectItem>
+                      <SelectItem value="ko">{t('translationProfileManagerComp.coreano')}</SelectItem>
+                      <SelectItem value="zh">{t('translationProfileManagerComp.cinese')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
+                  <Label>{t('translationProfileManagerComp.description')}</Label>
                   <Textarea
                     value={newProfile.description}
                     onChange={(e) => setNewProfile({ ...newProfile, description: e.target.value })}
@@ -413,7 +415,7 @@ export function TranslationProfileManager({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Tags (comma separated)</Label>
+                  <Label>{t('translationProfileManagerComp.tagsCommaSeparated')}</Label>
                   <Input
                     value={newProfile.tags}
                     onChange={(e) => setNewProfile({ ...newProfile, tags: e.target.value })}
@@ -453,7 +455,7 @@ export function TranslationProfileManager({
       {/* Lista profili */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Profili Disponibili</h3>
+          <h3 className="text-lg font-semibold">{t('translationProfileManagerComp.profiliDisponibili')}</h3>
           <ScrollArea className="h-[600px]">
             <div className="space-y-3 pr-4">
               {filteredProfiles.map((profile) => (
@@ -569,7 +571,7 @@ export function TranslationProfileManager({
 
         {/* Dettagli profilo selezionato */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Profile Details</h3>
+          <h3 className="text-lg font-semibold">{t('translationProfileManagerComp.profileDetails')}</h3>
           {selectedProfile ? (
             <Card>
               <CardHeader>
@@ -581,8 +583,8 @@ export function TranslationProfileManager({
               <CardContent>
                 <Tabs defaultValue="translations">
                   <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="translations">Translations</TabsTrigger>
-                    <TabsTrigger value="info">Information</TabsTrigger>
+                    <TabsTrigger value="translations">{t('translationProfileManagerComp.translations')}</TabsTrigger>
+                    <TabsTrigger value="info">{t('translationProfileManagerComp.information')}</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="translations" className="space-y-4">
@@ -631,34 +633,34 @@ export function TranslationProfileManager({
                   <TabsContent value="info" className="space-y-4">
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-sm">Process</Label>
+                        <Label className="text-sm">{t('translationProfileManagerComp.process')}</Label>
                         <p className="text-sm text-muted-foreground">{selectedProfile.processName}</p>
                       </div>
                       <div>
-                        <Label className="text-sm">Language</Label>
+                        <Label className="text-sm">{t('translationProfileManagerComp.language')}</Label>
                         <p className="text-sm text-muted-foreground">{selectedProfile.language.toUpperCase()}</p>
                       </div>
                       <div>
-                        <Label className="text-sm">Author</Label>
+                        <Label className="text-sm">{t('translationProfileManagerComp.author')}</Label>
                         <p className="text-sm text-muted-foreground">
                           {selectedProfile.metadata.author || 'Unknown'}
                         </p>
                       </div>
                       <div>
-                        <Label className="text-sm">Created</Label>
+                        <Label className="text-sm">{t('translationProfileManagerComp.created')}</Label>
                         <p className="text-sm text-muted-foreground">
                           {formatDate(selectedProfile.metadata.createdAt)}
                         </p>
                       </div>
                       <div>
-                        <Label className="text-sm">Last Updated</Label>
+                        <Label className="text-sm">{t('translationProfileManagerComp.lastUpdated')}</Label>
                         <p className="text-sm text-muted-foreground">
                           {formatDate(selectedProfile.metadata.updatedAt)}
                         </p>
                       </div>
                       {selectedProfile.metadata.tags && selectedProfile.metadata.tags.length > 0 && (
                         <div>
-                          <Label className="text-sm">Tags</Label>
+                          <Label className="text-sm">{t('translationProfileManagerComp.tags')}</Label>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {selectedProfile.metadata.tags.map((tag) => (
                               <Badge key={tag} variant="secondary" className="text-xs">
@@ -689,7 +691,7 @@ export function TranslationProfileManager({
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogTitle>{t('translationProfileManagerComp.editProfile')}</DialogTitle>
             <DialogDescription>
               Edit translations and profile settings
             </DialogDescription>
@@ -698,7 +700,7 @@ export function TranslationProfileManager({
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Game Name</Label>
+                  <Label>{t('translationProfileManagerComp.gameName')}</Label>
                   <Input
                     value={editingProfile.gameName}
                     onChange={(e) => setEditingProfile({
@@ -708,7 +710,7 @@ export function TranslationProfileManager({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Process</Label>
+                  <Label>{t('translationProfileManagerComp.process')}</Label>
                   <Input
                     value={editingProfile.processName}
                     onChange={(e) => setEditingProfile({
@@ -720,7 +722,7 @@ export function TranslationProfileManager({
               </div>
 
               <div className="space-y-2">
-                <Label>Description</Label>
+                <Label>{t('translationProfileManagerComp.description')}</Label>
                 <Textarea
                   value={editingProfile.metadata.description || ''}
                   onChange={(e) => setEditingProfile({

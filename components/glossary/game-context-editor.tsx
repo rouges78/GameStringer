@@ -42,6 +42,7 @@ import {
   GLOSSARY_TONES, 
   GAME_GENRES 
 } from '@/types/glossary';
+import { useTranslation } from '@/lib/i18n';
 
 // Ambientazioni predefinite
 const GAME_SETTINGS = [
@@ -68,6 +69,7 @@ export function GameContextEditor({
   onMetadataChange,
   disabled = false
 }: GameContextEditorProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [showCharacterDialog, setShowCharacterDialog] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<GameCharacter | null>(null);
@@ -199,7 +201,7 @@ export function GameContextEditor({
             {/* Genere, Tono, Ambientazione */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label className="text-xs">Genere</Label>
+                <Label className="text-xs">{t('gameContextEditorComp.genere')}</Label>
                 <Select
                   value={metadata.genre || ''}
                   onValueChange={(v) => handleMetadataChange('genre', v)}
@@ -217,7 +219,7 @@ export function GameContextEditor({
               </div>
               
               <div>
-                <Label className="text-xs">Tone</Label>
+                <Label className="text-xs">{t('gameContextEditorComp.tone')}</Label>
                 <Select
                   value={metadata.tone || ''}
                   onValueChange={(v) => handleMetadataChange('tone', v)}
@@ -235,7 +237,7 @@ export function GameContextEditor({
               </div>
               
               <div>
-                <Label className="text-xs">Ambientazione</Label>
+                <Label className="text-xs">{t('gameContextEditorComp.ambientazione')}</Label>
                 <Select
                   value={metadata.setting || ''}
                   onValueChange={(v) => handleMetadataChange('setting', v)}
@@ -284,11 +286,11 @@ export function GameContextEditor({
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Add Character</DialogTitle>
+                      <DialogTitle>{t('gameContextEditorComp.addCharacter')}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-3">
                       <div>
-                        <Label>Name *</Label>
+                        <Label>{t('gameContextEditorComp.name')}</Label>
                         <Input
                           value={characterForm.name}
                           onChange={(e) => setCharacterForm({...characterForm, name: e.target.value})}
@@ -296,7 +298,7 @@ export function GameContextEditor({
                         />
                       </div>
                       <div>
-                        <Label>Role</Label>
+                        <Label>{t('gameContextEditorComp.role')}</Label>
                         <Input
                           value={characterForm.role || ''}
                           onChange={(e) => setCharacterForm({...characterForm, role: e.target.value})}
@@ -304,7 +306,7 @@ export function GameContextEditor({
                         />
                       </div>
                       <div>
-                        <Label>Personality</Label>
+                        <Label>{t('gameContextEditorComp.personality')}</Label>
                         <Input
                           value={characterForm.personality || ''}
                           onChange={(e) => setCharacterForm({...characterForm, personality: e.target.value})}
@@ -312,7 +314,7 @@ export function GameContextEditor({
                         />
                       </div>
                       <div>
-                        <Label>Speech style</Label>
+                        <Label>{t('gameContextEditorComp.speechStyle')}</Label>
                         <Input
                           value={characterForm.speechStyle || ''}
                           onChange={(e) => setCharacterForm({...characterForm, speechStyle: e.target.value})}
@@ -320,7 +322,7 @@ export function GameContextEditor({
                         />
                       </div>
                       <div>
-                        <Label>Gender</Label>
+                        <Label>{t('gameContextEditorComp.gender')}</Label>
                         <Select
                           value={characterForm.gender}
                           onValueChange={(v: any) => setCharacterForm({...characterForm, gender: v})}
@@ -329,10 +331,10 @@ export function GameContextEditor({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="neutral">Neutral</SelectItem>
-                            <SelectItem value="unknown">Unspecified</SelectItem>
+                            <SelectItem value="male">{t('gameContextEditorComp.male')}</SelectItem>
+                            <SelectItem value="female">{t('gameContextEditorComp.female')}</SelectItem>
+                            <SelectItem value="neutral">{t('gameContextEditorComp.neutral')}</SelectItem>
+                            <SelectItem value="unknown">{t('gameContextEditorComp.unspecified')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

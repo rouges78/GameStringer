@@ -9,12 +9,14 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { sessionPersistence } from '@/lib/session-persistence';
 import { isProtectedRoute } from '@/lib/route-config';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface ProfileWrapperProps {
   children: React.ReactNode;
 }
 
 export function ProfileWrapper({ children }: ProfileWrapperProps) {
+  const { t } = useTranslation();
   const [isInitializing, setIsInitializing] = useState(true);
   const pathname = usePathname();
 
@@ -68,8 +70,8 @@ export function ProfileWrapper({ children }: ProfileWrapperProps) {
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
             <Loader2 className="w-8 h-8 text-white animate-spin" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">GameStringer</h1>
-          <p className="text-blue-200">Inizializzazione sistema di authentication...</p>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('profileWrapperComp.gamestringer')}</h1>
+          <p className="text-blue-200">{t('profileWrapperComp.inizializzazioneSistemaDiAuthe')}</p>
         </div>
       </div>
     );

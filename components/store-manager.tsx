@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CheckCircle, XCircle, Loader2, RefreshCw, Plug, Unplug } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { invoke } from '@/lib/tauri-api';
+import { useTranslation } from '@/lib/i18n';
 
 interface StoreStatus {
   id: string;
@@ -27,6 +28,7 @@ interface StoreManagerProps {
 }
 
 export function StoreManager({ stores }: StoreManagerProps) {
+  const { t } = useTranslation();
   const [storeStatuses, setStoreStatuses] = useState<Record<string, StoreStatus>>({});
   const [globalLoading, setGlobalLoading] = useState(false);
 
@@ -204,8 +206,8 @@ export function StoreManager({ stores }: StoreManagerProps) {
       {/* Header with global refresh button */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Store Management</h2>
-          <p className="text-gray-600">Manage connections to your game stores</p>
+          <h2 className="text-2xl font-bold">{t('storeManagerComp.storeManagement')}</h2>
+          <p className="text-gray-600">{t('storeManagerComp.manageConnectionsToYourGameSto')}</p>
         </div>
         <Button
           onClick={refreshAllStores}

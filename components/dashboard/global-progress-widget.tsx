@@ -16,6 +16,7 @@ import {
   Flame, Calendar, AlertTriangle, CheckCircle2, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface ProjectProgress {
   id: string;
@@ -34,6 +35,7 @@ interface GlobalProgressWidgetProps {
 }
 
 export function GlobalProgressWidget({ projects, className }: GlobalProgressWidgetProps) {
+  const { t } = useTranslation();
   const [selectedView, setSelectedView] = useState<'overview' | 'projects' | 'insights'>('overview');
 
   // Aggregate stats
@@ -124,7 +126,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
               <BarChart3 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-semibold">Progresso Globale</h3>
+              <h3 className="font-semibold">{t('globalProgressWidgetComp.progressoGlobale')}</h3>
               <p className="text-sm text-white/80">{stats.totalProjects} progetti attivi</p>
             </div>
           </div>
@@ -224,7 +226,7 @@ export function GlobalProgressWidget({ projects, className }: GlobalProgressWidg
               <div className="col-span-2 p-3 bg-muted/50 rounded-lg flex items-center gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Completamento stimato</p>
+                  <p className="text-xs text-muted-foreground">{t('globalProgressWidgetComp.completamentoStimato')}</p>
                   <p className="font-medium">
                     {estimatedCompletion.toLocaleDateString('it-IT', { 
                       day: 'numeric', 

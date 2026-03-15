@@ -5,6 +5,7 @@ import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useTranslation } from '@/lib/i18n';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -172,9 +173,9 @@ function DefaultErrorFallback({
           <Alert>
             <Bug className="h-4 w-4" />
             <AlertDescription>
-              <strong>Error ID:</strong> {errorId}
+              <strong>{t('errorBoundaryComp.errorId')}</strong> {errorId}
               <br />
-              <strong>Message:</strong> {error.message}
+              <strong>{t('errorBoundaryComp.message')}</strong> {error.message}
             </AlertDescription>
           </Alert>
 
@@ -192,14 +193,14 @@ function DefaultErrorFallback({
               {showDetails && (
                 <div className="space-y-2">
                   <div className="bg-muted p-4 rounded-lg">
-                    <h4 className="font-semibold mb-2">Stack Trace:</h4>
+                    <h4 className="font-semibold mb-2">{t('errorBoundaryComp.stackTrace')}</h4>
                     <pre className="text-xs overflow-x-auto whitespace-pre-wrap text-muted-foreground">
                       {error.stack}
                     </pre>
                   </div>
                   
                   <div className="bg-muted p-4 rounded-lg">
-                    <h4 className="font-semibold mb-2">Component Stack:</h4>
+                    <h4 className="font-semibold mb-2">{t('errorBoundaryComp.componentStack')}</h4>
                     <pre className="text-xs overflow-x-auto whitespace-pre-wrap text-muted-foreground">
                       {errorInfo.componentStack}
                     </pre>
@@ -238,6 +239,7 @@ function DefaultErrorFallback({
 
 // Hook per gestire errori in componenti funzionali
 export function useErrorHandler() {
+  const { t } = useTranslation();
   return React.useCallback((error: Error, errorInfo?: React.ErrorInfo) => {
     // Log error
     console.error('useErrorHandler:', error, errorInfo);

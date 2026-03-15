@@ -22,6 +22,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 // Voci disponibili per la Web Speech API
 const BROWSER_VOICES = [
@@ -67,6 +68,7 @@ export function TTSPreview({
   onPlay,
   onStop
 }: TTSPreviewProps) {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -325,7 +327,7 @@ export function TTSPreview({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Volume2 className="h-5 w-5 text-green-400" />
-            <CardTitle className="text-base">Text-to-Speech Preview</CardTitle>
+            <CardTitle className="text-base">{t('ttsPreviewComp.texttospeechPreview')}</CardTitle>
           </div>
           
           <Popover>
@@ -336,7 +338,7 @@ export function TTSPreview({
             </PopoverTrigger>
             <PopoverContent className="w-72">
               <div className="space-y-4">
-                <h4 className="font-medium text-sm">Impostazioni Voce</h4>
+                <h4 className="font-medium text-sm">{t('ttsPreviewComp.impostazioniVoce')}</h4>
 
                 {/* Provider Toggle */}
                 <div className="flex gap-2">
@@ -362,24 +364,24 @@ export function TTSPreview({
 
                 {useOpenAI ? (
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Voce OpenAI</label>
+                    <label className="text-xs text-gray-500 mb-1 block">{t('ttsPreviewComp.voceOpenai')}</label>
                     <Select value={openAIVoice} onValueChange={setOpenAIVoice}>
                       <SelectTrigger className="bg-muted/50 border-border">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="nova">Nova (femminile)</SelectItem>
-                        <SelectItem value="alloy">Alloy (neutro)</SelectItem>
-                        <SelectItem value="echo">Echo (maschile)</SelectItem>
-                        <SelectItem value="fable">Fable (narratore)</SelectItem>
-                        <SelectItem value="onyx">Onyx (profondo)</SelectItem>
-                        <SelectItem value="shimmer">Shimmer (soft)</SelectItem>
+                        <SelectItem value="nova">{t('ttsPreviewComp.novaFemminile')}</SelectItem>
+                        <SelectItem value="alloy">{t('ttsPreviewComp.alloyNeutro')}</SelectItem>
+                        <SelectItem value="echo">{t('ttsPreviewComp.echoMaschile')}</SelectItem>
+                        <SelectItem value="fable">{t('ttsPreviewComp.fableNarratore')}</SelectItem>
+                        <SelectItem value="onyx">{t('ttsPreviewComp.onyxProfondo')}</SelectItem>
+                        <SelectItem value="shimmer">{t('ttsPreviewComp.shimmerSoft')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 ) : (
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Lingua</label>
+                    <label className="text-xs text-gray-500 mb-1 block">{t('ttsPreviewComp.lingua')}</label>
                     <Select value={selectedVoice} onValueChange={setSelectedVoice}>
                       <SelectTrigger className="bg-muted/50 border-border">
                         <SelectValue />
@@ -462,7 +464,7 @@ export function TTSPreview({
         {/* Text Preview */}
         <div className="p-3 bg-muted/30 rounded-lg border border-border/50 mb-3 min-h-[60px]">
           <p className="text-sm text-gray-300 line-clamp-3">
-            {text || <span className="text-gray-500 italic">Nessun testo da riprodurre...</span>}
+            {text || <span className="text-gray-500 italic">{t('ttsPreviewComp.nessunTestoDaRiprodurre')}</span>}
           </p>
         </div>
 

@@ -38,6 +38,7 @@ import {
   ratePackage,
   type CommunityPackage
 } from '@/lib/community-hub';
+import { useTranslation } from '@/lib/i18n';
 
 const LANGUAGE_FLAGS: Record<string, string> = {
   'en': '🇬🇧',
@@ -53,6 +54,7 @@ const LANGUAGE_FLAGS: Record<string, string> = {
 };
 
 export function CommunityHub() {
+  const { t } = useTranslation();
   const [packages, setPackages] = useState<CommunityPackage[]>([]);
   const [trending, setTrending] = useState<CommunityPackage[]>([]);
   const [recent, setRecent] = useState<CommunityPackage[]>([]);
@@ -237,8 +239,8 @@ export function CommunityHub() {
               <Users className="h-4 w-4 text-white" />
             </div>
             <div className="bg-black/20 backdrop-blur-sm rounded-lg px-2 py-1">
-              <h2 className="text-lg font-bold text-white">Community Translation Hub</h2>
-              <p className="text-white/90 text-[10px]">Share and download Translation Memory</p>
+              <h2 className="text-lg font-bold text-white">{t('communityHubComp.communityTranslationHub')}</h2>
+              <p className="text-white/90 text-[10px]">{t('communityHubComp.shareAndDownloadTranslationMem')}</p>
             </div>
           </div>
           
@@ -255,28 +257,28 @@ export function CommunityHub() {
               <Package className="h-4 w-4 text-white/80" />
               <div>
                 <p className="text-lg font-bold text-white leading-none">{stats.totalPackages}</p>
-                <p className="text-[10px] text-white/60">Pacchetti</p>
+                <p className="text-[10px] text-white/60">{t('communityHubComp.pacchetti')}</p>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-white/20 flex items-center gap-2">
               <Download className="h-4 w-4 text-white/80" />
               <div>
                 <p className="text-lg font-bold text-white leading-none">{formatNumber(stats.totalDownloads)}</p>
-                <p className="text-[10px] text-white/60">Download</p>
+                <p className="text-[10px] text-white/60">{t('communityHubComp.download')}</p>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-white/20 flex items-center gap-2">
               <Globe className="h-4 w-4 text-white/80" />
               <div>
                 <p className="text-lg font-bold text-white leading-none">{formatNumber(stats.totalEntries)}</p>
-                <p className="text-[10px] text-white/60">Traduzioni</p>
+                <p className="text-[10px] text-white/60">{t('communityHubComp.traduzioni')}</p>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-white/20 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-white/80" />
               <div>
                 <p className="text-lg font-bold text-white leading-none">{stats.topLanguages[0]?.lang.toUpperCase() || 'IT'}</p>
-                <p className="text-[10px] text-white/60">Top Lingua</p>
+                <p className="text-[10px] text-white/60">{t('communityHubComp.topLingua')}</p>
               </div>
             </div>
           </div>
@@ -292,7 +294,7 @@ export function CommunityHub() {
                 <Package className="h-5 w-5 text-orange-500" />
                 <div>
                   <p className="text-2xl font-bold">{stats.totalPackages}</p>
-                  <p className="text-xs text-muted-foreground">Pacchetti</p>
+                  <p className="text-xs text-muted-foreground">{t('communityHubComp.pacchetti')}</p>
                 </div>
               </div>
             </CardContent>
@@ -303,7 +305,7 @@ export function CommunityHub() {
                 <Download className="h-5 w-5 text-blue-500" />
                 <div>
                   <p className="text-2xl font-bold">{formatNumber(stats.totalDownloads)}</p>
-                  <p className="text-xs text-muted-foreground">Download</p>
+                  <p className="text-xs text-muted-foreground">{t('communityHubComp.download')}</p>
                 </div>
               </div>
             </CardContent>
@@ -314,7 +316,7 @@ export function CommunityHub() {
                 <Globe className="h-5 w-5 text-green-500" />
                 <div>
                   <p className="text-2xl font-bold">{formatNumber(stats.totalEntries)}</p>
-                  <p className="text-xs text-muted-foreground">Traduzioni</p>
+                  <p className="text-xs text-muted-foreground">{t('communityHubComp.traduzioni')}</p>
                 </div>
               </div>
             </CardContent>
@@ -325,7 +327,7 @@ export function CommunityHub() {
                 <Sparkles className="h-5 w-5 text-purple-500" />
                 <div>
                   <p className="text-2xl font-bold">{stats.topLanguages[0]?.lang.toUpperCase() || 'IT'}</p>
-                  <p className="text-xs text-muted-foreground">Top Lingua</p>
+                  <p className="text-xs text-muted-foreground">{t('communityHubComp.topLingua')}</p>
                 </div>
               </div>
             </CardContent>
@@ -335,9 +337,9 @@ export function CommunityHub() {
 
       <Tabs defaultValue="browse" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="browse">Esplora</TabsTrigger>
-          <TabsTrigger value="trending">Trending</TabsTrigger>
-          <TabsTrigger value="upload">Condividi</TabsTrigger>
+          <TabsTrigger value="browse">{t('communityHubComp.esplora')}</TabsTrigger>
+          <TabsTrigger value="trending">{t('communityHubComp.trending')}</TabsTrigger>
+          <TabsTrigger value="upload">{t('communityHubComp.condividi')}</TabsTrigger>
         </TabsList>
 
         {/* Browse Tab */}
@@ -359,7 +361,7 @@ export function CommunityHub() {
                 onChange={(e) => setSelectedLanguage(e.target.value)}
                 className="h-10 px-3 rounded-md border bg-background text-sm"
               >
-                <option value="">All languages</option>
+                <option value="">{t('communityHubComp.allLanguages')}</option>
                 <option value="it">🇮🇹 Italiano</option>
                 <option value="en">🇬🇧 English</option>
                 <option value="de">🇩🇪 Deutsch</option>
@@ -372,9 +374,9 @@ export function CommunityHub() {
                 onChange={(e) => setSortBy(e.target.value as any)}
                 className="h-10 px-3 rounded-md border bg-background text-sm"
               >
-                <option value="downloads">Most downloaded</option>
-                <option value="rating">Top rated</option>
-                <option value="recent">Most recent</option>
+                <option value="downloads">{t('communityHubComp.mostDownloaded')}</option>
+                <option value="rating">{t('communityHubComp.topRated')}</option>
+                <option value="recent">{t('communityHubComp.mostRecent')}</option>
               </select>
             </div>
           </div>
@@ -388,7 +390,7 @@ export function CommunityHub() {
             <Card className="py-12">
               <CardContent className="text-center">
                 <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Nessun pacchetto trovato</p>
+                <p className="text-muted-foreground">{t('communityHubComp.nessunPacchettoTrovato')}</p>
               </CardContent>
             </Card>
           ) : (
@@ -551,7 +553,7 @@ export function CommunityHub() {
                 <div className="grid grid-cols-4 gap-4 text-center">
                   <div>
                     <p className="text-2xl font-bold">{formatNumber(selectedPackage.downloads)}</p>
-                    <p className="text-xs text-muted-foreground">Download</p>
+                    <p className="text-xs text-muted-foreground">{t('communityHubComp.download')}</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold flex items-center justify-center gap-1">
@@ -562,17 +564,17 @@ export function CommunityHub() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{formatNumber(selectedPackage.entryCount)}</p>
-                    <p className="text-xs text-muted-foreground">Traduzioni</p>
+                    <p className="text-xs text-muted-foreground">{t('communityHubComp.traduzioni')}</p>
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{formatSize(selectedPackage.size)}</p>
-                    <p className="text-xs text-muted-foreground">Dimensione</p>
+                    <p className="text-xs text-muted-foreground">{t('communityHubComp.dimensione')}</p>
                   </div>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <h4 className="font-medium mb-2">Descrizione</h4>
+                  <h4 className="font-medium mb-2">{t('communityHubComp.descrizione')}</h4>
                   <p className="text-sm text-muted-foreground">{selectedPackage.description}</p>
                 </div>
 
@@ -595,7 +597,7 @@ export function CommunityHub() {
 
                 {/* Rating */}
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground">Vota:</span>
+                  <span className="text-sm text-muted-foreground">{t('communityHubComp.vota')}</span>
                   <div className="flex gap-1">
                     {[1, 2, 3, 4, 5].map(star => (
                       <button

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/tooltip';
 import { HelpCircle, Info, AlertCircle, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface InfoTooltipProps {
   content: ReactNode;
@@ -58,6 +59,7 @@ export function InfoTooltip({
   className,
   iconSize = 'md',
 }: InfoTooltipProps) {
+  const { t } = useTranslation();
   const styles = variantStyles[variant];
   const Icon = styles.icon;
 
@@ -97,7 +99,7 @@ export function TranslationTooltip() {
       variant="info"
       content={
         <div className="space-y-1">
-          <p className="font-medium">How translation works</p>
+          <p className="font-medium">{t('infoTooltipComp.howTranslationWorks')}</p>
           <p className="text-xs text-muted-foreground">
             GameStringer uses local AI (Ollama) to translate texts. 
             Translations are saved in the dictionary for future reuse.
@@ -114,7 +116,7 @@ export function PatcherTooltip() {
       variant="tip"
       content={
         <div className="space-y-1">
-          <p className="font-medium">Unity Patcher</p>
+          <p className="font-medium">{t('infoTooltipComp.unityPatcher')}</p>
           <p className="text-xs text-muted-foreground">
             Automatically installs BepInEx and XUnity.AutoTranslator 
             to apply translations to Unity games.
@@ -131,7 +133,7 @@ export function BatchTooltip() {
       variant="info"
       content={
         <div className="space-y-1">
-          <p className="font-medium">Batch Translation</p>
+          <p className="font-medium">{t('infoTooltipComp.batchTranslation')}</p>
           <p className="text-xs text-muted-foreground">
             Add multiple files or games to the queue to translate them 
             automatically one after another.
@@ -148,7 +150,7 @@ export function ApiKeyTooltip() {
       variant="warning"
       content={
         <div className="space-y-1">
-          <p className="font-medium">API Key richiesta</p>
+          <p className="font-medium">{t('infoTooltipComp.apiKeyRichiesta')}</p>
           <p className="text-xs text-muted-foreground">
             Alcune funzionalità richiedono una API key di Steam. 
             Puoi ottenerla su steamcommunity.com/dev/apikey

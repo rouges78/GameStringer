@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { unlockSupporter, getTranslationCount, FREE_LIMIT } from '@/lib/donation-gate';
+import { useTranslation } from '@/lib/i18n';
 
 interface DonationDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface DonationDialogProps {
 const TIMER_SECONDS = 180; // 3 minuti
 
 export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: DonationDialogProps) {
+  const { t } = useTranslation();
   const [showThanks, setShowThanks] = useState(false);
   const [linkClicked, setLinkClicked] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(TIMER_SECONDS);
@@ -72,7 +74,7 @@ export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: Donat
         <DialogContent className="sm:max-w-md text-center">
           <div className="flex flex-col items-center gap-4 py-6">
             <Sparkles className="w-16 h-16 text-yellow-400 animate-pulse" />
-            <h2 className="text-2xl font-bold">Grazie! / Thank you!</h2>
+            <h2 className="text-2xl font-bold">{t('donationDialogComp.grazieThankYou')}</h2>
             <p className="text-muted-foreground">
               Traduzioni illimitate sbloccate!
             </p>
@@ -149,7 +151,7 @@ export function DonationDialog({ open: isOpen, onOpenChange, onUnlocked }: Donat
               <div className="flex flex-col items-center gap-1 py-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Timer className="w-4 h-4 animate-pulse" />
-                  <span>Completa la donazione...</span>
+                  <span>{t('donationDialogComp.completaLaDonazione')}</span>
                 </div>
                 <span className="text-xs text-muted-foreground/60">
                   Sblocco disponibile tra {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}

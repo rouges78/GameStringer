@@ -47,6 +47,7 @@ import {
   GAME_GENRES 
 } from '@/types/glossary';
 import { GameContextEditor } from './game-context-editor';
+import { useTranslation } from '@/lib/i18n';
 
 interface GlossaryManagerProps {
   gameId: string;
@@ -63,6 +64,7 @@ export function GlossaryManager({
   targetLanguage = 'it',
   onGlossaryChange
 }: GlossaryManagerProps) {
+  const { t } = useTranslation();
   const [glossary, setGlossary] = useState<GameGlossary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -320,7 +322,7 @@ export function GlossaryManager({
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Term</DialogTitle>
+                <DialogTitle>{t('glossaryManagerComp.addTerm')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -346,10 +348,10 @@ export function GlossaryManager({
                     checked={newEntry.caseSensitive}
                     onCheckedChange={(checked) => setNewEntry({ ...newEntry, caseSensitive: checked })}
                   />
-                  <Label>Case sensitive</Label>
+                  <Label>{t('glossaryManagerComp.caseSensitive')}</Label>
                 </div>
                 <div>
-                  <Label>Contesto</Label>
+                  <Label>{t('glossaryManagerComp.contesto')}</Label>
                   <Select
                     value={newEntry.context}
                     onValueChange={(value) => setNewEntry({ ...newEntry, context: value })}
@@ -365,7 +367,7 @@ export function GlossaryManager({
                   </Select>
                 </div>
                 <div>
-                  <Label>Note</Label>
+                  <Label>{t('glossaryManagerComp.note')}</Label>
                   <Textarea
                     value={newEntry.notes}
                     onChange={(e) => setNewEntry({ ...newEntry, notes: e.target.value })}
@@ -444,20 +446,20 @@ export function GlossaryManager({
       <Dialog open={!!editingEntry} onOpenChange={(open) => !open && setEditingEntry(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Term</DialogTitle>
+            <DialogTitle>{t('glossaryManagerComp.editTerm')}</DialogTitle>
           </DialogHeader>
           {editingEntry && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Original</Label>
+                  <Label>{t('glossaryManagerComp.original')}</Label>
                   <Input
                     value={editingEntry.original}
                     onChange={(e) => setEditingEntry({ ...editingEntry, original: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label>Translation</Label>
+                  <Label>{t('glossaryManagerComp.translation')}</Label>
                   <Input
                     value={editingEntry.translation}
                     onChange={(e) => setEditingEntry({ ...editingEntry, translation: e.target.value })}
@@ -469,7 +471,7 @@ export function GlossaryManager({
                   checked={editingEntry.caseSensitive}
                   onCheckedChange={(checked) => setEditingEntry({ ...editingEntry, caseSensitive: checked })}
                 />
-                <Label>Case sensitive</Label>
+                <Label>{t('glossaryManagerComp.caseSensitive')}</Label>
               </div>
               <Button onClick={updateEntry} className="w-full">
                 <Save className="mr-2 h-4 w-4" />

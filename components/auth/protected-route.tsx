@@ -6,6 +6,7 @@ import { ProfileSelector } from '@/components/profiles/profile-selector';
 import { CreateProfileDialog } from '@/components/profiles/create-profile-dialog';
 import { useProfileSettings } from '@/hooks/use-profile-settings';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,11 +14,12 @@ interface ProtectedRouteProps {
   requireAuth?: boolean;
 }
 
-export function ProtectedRoute({ 
+export function ProtectedRoute({
   children, 
   fallback,
   requireAuth = true 
 }: ProtectedRouteProps) {
+  const { t } = useTranslation();
   const { 
     isAuthenticated, 
     currentProfile, 
@@ -61,8 +63,8 @@ export function ProtectedRoute({
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 mx-auto">
             <Loader2 className="w-8 h-8 text-white animate-spin" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">GameStringer</h1>
-          <p className="text-blue-200">Loading authentication...</p>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('protectedRouteComp.gamestringer')}</h1>
+          <p className="text-blue-200">{t('protectedRouteComp.loadingAuthentication')}</p>
         </div>
       </div>
     );

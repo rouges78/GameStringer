@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useLogging } from '@/hooks/useLogging';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface SecretInfo {
   key: string;
@@ -49,6 +50,7 @@ interface SecretsData {
 }
 
 export function SecretsDashboard() {
+  const { t } = useTranslation();
   const [data, setData] = useState<SecretsData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSecret, setSelectedSecret] = useState<string | null>(null);
@@ -178,8 +180,8 @@ export function SecretsDashboard() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Secrets Management</h1>
-          <p className="text-muted-foreground">Manage API keys and secure configuration</p>
+          <h1 className="text-3xl font-bold">{t('secretsDashboardComp.secretsManagement')}</h1>
+          <p className="text-muted-foreground">{t('secretsDashboardComp.manageApiKeysAndSecureConfigur')}</p>
         </div>
         <Button onClick={fetchSecretsStatus} disabled={isLoading} variant="outline">
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -193,7 +195,7 @@ export function SecretsDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Secrets</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('secretsDashboardComp.totalSecrets')}</CardTitle>
                 <Key className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -206,7 +208,7 @@ export function SecretsDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Required</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('secretsDashboardComp.required')}</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
               </CardHeader>
               <CardContent>
@@ -219,7 +221,7 @@ export function SecretsDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Missing</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('secretsDashboardComp.missing')}</CardTitle>
                 <XCircle className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
@@ -232,7 +234,7 @@ export function SecretsDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Environment</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('secretsDashboardComp.environment')}</CardTitle>
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -251,7 +253,7 @@ export function SecretsDashboard() {
             <Alert className="border-red-200 bg-red-50">
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                <strong>Missing Required Secrets:</strong> {data.summary.missing.join(', ')}
+                <strong>{t('secretsDashboardComp.missingRequiredSecrets')}</strong> {data.summary.missing.join(', ')}
                 <br />
                 The application may not function properly without these secrets.
               </AlertDescription>
@@ -263,7 +265,7 @@ export function SecretsDashboard() {
             <Alert className="border-yellow-200 bg-yellow-50">
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
               <AlertDescription className="text-yellow-800">
-                <strong>Invalid Secrets:</strong> {data.summary.invalid.join(', ')}
+                <strong>{t('secretsDashboardComp.invalidSecrets')}</strong> {data.summary.invalid.join(', ')}
                 <br />
                 These secrets have invalid formats and should be updated.
               </AlertDescription>
@@ -273,15 +275,15 @@ export function SecretsDashboard() {
           {/* Tabs */}
           <Tabs defaultValue="overview" className="w-full">
             <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="validator">Validator</TabsTrigger>
-              <TabsTrigger value="generator">Generator</TabsTrigger>
+              <TabsTrigger value="overview">{t('secretsDashboardComp.overview')}</TabsTrigger>
+              <TabsTrigger value="validator">{t('secretsDashboardComp.validator')}</TabsTrigger>
+              <TabsTrigger value="generator">{t('secretsDashboardComp.generator')}</TabsTrigger>
             </TabsList>
             
             <TabsContent value="overview" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Secrets Configuration</CardTitle>
+                  <CardTitle>{t('secretsDashboardComp.secretsConfiguration')}</CardTitle>
                   <CardDescription>
                     Current status of all configured secrets
                   </CardDescription>
@@ -331,7 +333,7 @@ export function SecretsDashboard() {
             <TabsContent value="validator" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Secret Validator</CardTitle>
+                  <CardTitle>{t('secretsDashboardComp.secretValidator')}</CardTitle>
                   <CardDescription>
                     Validate secret formats before adding them to your environment
                   </CardDescription>
@@ -339,14 +341,14 @@ export function SecretsDashboard() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="secret-key">Secret Key</Label>
+                      <Label htmlFor="secret-key">{t('secretsDashboardComp.secretKey')}</Label>
                       <select
                         id="secret-key"
                         value={selectedSecret || ''}
                         onChange={(e) => setSelectedSecret(e.target.value)}
                         className="w-full p-2 border rounded-md"
                       >
-                        <option value="">Select a secret...</option>
+                        <option value="">{t('secretsDashboardComp.selectASecret')}</option>
                         {data.secrets.map((secret) => (
                           <option key={secret.key} value={secret.key}>
                             {secret.key} - {secret.description}
@@ -355,7 +357,7 @@ export function SecretsDashboard() {
                       </select>
                     </div>
                     <div>
-                      <Label htmlFor="secret-value">Secret Value</Label>
+                      <Label htmlFor="secret-value">{t('secretsDashboardComp.secretValue')}</Label>
                       <div className="relative">
                         <Input
                           id="secret-value"
@@ -410,7 +412,7 @@ export function SecretsDashboard() {
             <TabsContent value="generator" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Secret Generator</CardTitle>
+                  <CardTitle>{t('secretsDashboardComp.secretGenerator')}</CardTitle>
                   <CardDescription>
                     Generate secure random keys for your application
                   </CardDescription>
@@ -427,7 +429,7 @@ export function SecretsDashboard() {
                   
                   {generatedKey && (
                     <div className="space-y-2">
-                      <Label>Generated Key</Label>
+                      <Label>{t('secretsDashboardComp.generatedKey')}</Label>
                       <div className="flex items-center space-x-2">
                         <Input
                           value={generatedKey}

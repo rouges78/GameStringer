@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 import { ThemeSelector } from '@/components/ui/theme-toggle';
 import { DEFAULT_PROFILE_SETTINGS, type ProfileSettings } from '@/types/profiles';
+import { useTranslation } from '@/lib/i18n';
 
 interface ProfileSettingsDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ interface ProfileSettingsDialogProps {
 }
 
 export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDialogProps) {
+  const { t } = useTranslation();
   const { currentProfile } = useProfileAuth();
   const { settings, updateSettings } = useProfileSettings();
   
@@ -70,7 +72,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto p-0">
         {/* Accessibilità - DialogTitle nascosto */}
         <VisuallyHidden.Root>
-          <DialogTitle>Profile Settings</DialogTitle>
+          <DialogTitle>{t('profileSettingsDialogComp.profileSettings')}</DialogTitle>
         </VisuallyHidden.Root>
         
         {/* Hero Header */}
@@ -96,11 +98,11 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
           <div className="relative flex gap-4 mt-4 pt-3 border-t border-purple-500/20">
             <div className="flex items-center gap-1.5 text-xs text-purple-300/80">
               <Shield className="h-3.5 w-3.5" />
-              <span>Active session</span>
+              <span>{t('profileSettingsDialogComp.activeSession')}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-pink-300/80">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Custom theme</span>
+              <span>{t('profileSettingsDialogComp.customTheme')}</span>
             </div>
           </div>
         </div>
@@ -129,7 +131,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Notifiche desktop</Label>
+                <Label className="text-sm">{t('profileSettingsDialogComp.notificheDesktop')}</Label>
                 <Switch
                   checked={localSettings.notifications.desktop_enabled}
                   onCheckedChange={(checked) => 
@@ -141,7 +143,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Suoni</Label>
+                <Label className="text-sm">{t('profileSettingsDialogComp.suoni')}</Label>
                 <Switch
                   checked={localSettings.notifications.sound_enabled}
                   onCheckedChange={(checked) => 
@@ -153,7 +155,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Nuovi games</Label>
+                <Label className="text-sm">{t('profileSettingsDialogComp.nuoviGames')}</Label>
                 <Switch
                   checked={localSettings.notifications.new_games}
                   onCheckedChange={(checked) => 
@@ -165,7 +167,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Aggiornamenti</Label>
+                <Label className="text-sm">{t('profileSettingsDialogComp.aggiornamenti')}</Label>
                 <Switch
                   checked={localSettings.notifications.updates}
                   onCheckedChange={(checked) => 
@@ -177,7 +179,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Offerte</Label>
+                <Label className="text-sm">{t('profileSettingsDialogComp.offerte')}</Label>
                 <Switch
                   checked={localSettings.notifications.deals}
                   onCheckedChange={(checked) => 
@@ -201,7 +203,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
-                <Label className="text-sm">Vista predefinita</Label>
+                <Label className="text-sm">{t('profileSettingsDialogComp.vistaPredefinita')}</Label>
                 <Select
                   value={localSettings.game_library.default_view}
                   onValueChange={(value: 'grid' | 'list') => 
@@ -215,13 +217,13 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="grid">Griglia</SelectItem>
-                    <SelectItem value="list">Lista</SelectItem>
+                    <SelectItem value="grid">{t('profileSettingsDialogComp.griglia')}</SelectItem>
+                    <SelectItem value="list">{t('profileSettingsDialogComp.lista')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Mostra games nascosti</Label>
+                <Label className="text-sm">{t('profileSettingsDialogComp.mostraGamesNascosti')}</Label>
                 <Switch
                   checked={localSettings.game_library.show_hidden}
                   onCheckedChange={(checked) => 
@@ -274,7 +276,7 @@ export function ProfileSettingsDialog({ open, onOpenChange }: ProfileSettingsDia
                 />
               </div>
               <div className="flex items-center justify-between">
-                <Label className="text-sm">Login automatico</Label>
+                <Label className="text-sm">{t('profileSettingsDialogComp.loginAutomatico')}</Label>
                 <Switch
                   checked={localSettings.auto_login}
                   onCheckedChange={(checked) => 

@@ -22,6 +22,7 @@ import {
 import { classifyContent, type ContentClassification, type ContentType } from '@/lib/content-classifier';
 import { calculateQualityScore, getQualityCategory, type QualityScore } from '@/lib/translation-quality';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 // Icons per content type
 const CONTENT_TYPE_ICONS: Record<ContentType, React.ElementType> = {
@@ -68,6 +69,7 @@ interface ContentTypeBadgeProps {
 }
 
 export function ContentTypeBadge({ type, confidence, showConfidence = false, size = 'sm' }: ContentTypeBadgeProps) {
+  const { t } = useTranslation();
   const Icon = CONTENT_TYPE_ICONS[type];
   const colorClass = CONTENT_TYPE_COLORS[type];
   
@@ -168,7 +170,7 @@ export function QualityScoreBar({ score, showDetails = false }: QualityScoreBarP
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium">Quality Score</span>
+        <span className="text-xs font-medium">{t('translationInsightsComp.qualityScore')}</span>
         <QualityScoreBadge score={score.overall} size="md" />
       </div>
       
@@ -176,28 +178,28 @@ export function QualityScoreBar({ score, showDetails = false }: QualityScoreBarP
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
             <div className="flex justify-between mb-1">
-              <span className="text-muted-foreground">Fluency</span>
+              <span className="text-muted-foreground">{t('translationInsightsComp.fluency')}</span>
               <span>{score.fluency}</span>
             </div>
             <Progress value={score.fluency} className="h-1" />
           </div>
           <div>
             <div className="flex justify-between mb-1">
-              <span className="text-muted-foreground">Accuracy</span>
+              <span className="text-muted-foreground">{t('translationInsightsComp.accuracy')}</span>
               <span>{score.accuracy}</span>
             </div>
             <Progress value={score.accuracy} className="h-1" />
           </div>
           <div>
             <div className="flex justify-between mb-1">
-              <span className="text-muted-foreground">Consistency</span>
+              <span className="text-muted-foreground">{t('translationInsightsComp.consistency')}</span>
               <span>{score.consistency}</span>
             </div>
             <Progress value={score.consistency} className="h-1" />
           </div>
           <div>
             <div className="flex justify-between mb-1">
-              <span className="text-muted-foreground">Style</span>
+              <span className="text-muted-foreground">{t('translationInsightsComp.style')}</span>
               <span>{score.style}</span>
             </div>
             <Progress value={score.style} className="h-1" />
@@ -301,7 +303,7 @@ export function BatchInsightsSummary({ items, targetLanguage = 'it' }: BatchInsi
   return (
     <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-400">Content Analysis</span>
+        <span className="text-xs font-medium text-slate-400">{t('translationInsightsComp.contentAnalysis')}</span>
         <span className="text-xs text-slate-500">{items.length} items</span>
       </div>
       
@@ -316,7 +318,7 @@ export function BatchInsightsSummary({ items, targetLanguage = 'it' }: BatchInsi
       
       {avgScore !== null && (
         <div className="flex items-center justify-between pt-2 border-t border-slate-700">
-          <span className="text-xs text-slate-400">Avg Quality Score</span>
+          <span className="text-xs text-slate-400">{t('translationInsightsComp.avgQualityScore')}</span>
           <QualityScoreBadge score={avgScore} size="md" />
         </div>
       )}

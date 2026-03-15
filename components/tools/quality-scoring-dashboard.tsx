@@ -24,6 +24,7 @@ import {
   type QualityTag,
   type TranslationEntry
 } from '@/lib/quality-scoring';
+import { useTranslation } from '@/lib/i18n';
 
 // ─── Quality Bar Component ───────────────────────────────────
 
@@ -75,7 +76,7 @@ function StatsCards({ stats }: { stats: QualityStats }) {
       <Card className="bg-zinc-900/50 border-zinc-800">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold">{stats.total.toLocaleString()}</div>
-          <div className="text-[10px] text-zinc-400">Totale</div>
+          <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.totale')}</div>
         </CardContent>
       </Card>
       <Card className="bg-emerald-950/30 border-emerald-900/30">
@@ -297,7 +298,7 @@ function ProjectDetail({
       <Card className="bg-zinc-900/50 border-zinc-800">
         <CardContent className="p-2 max-h-[500px] overflow-y-auto space-y-0.5">
           {filteredEntries.length === 0 ? (
-            <div className="text-center text-zinc-500 py-8 text-sm">Nessuna stringa trovata</div>
+            <div className="text-center text-zinc-500 py-8 text-sm">{t('qualityScoringDashboardComp.nessunaStringaTrovata')}</div>
           ) : (
             filteredEntries.map(([key, entry]) => (
               <EntryRow
@@ -321,6 +322,7 @@ function ProjectDetail({
 // ─── Main Dashboard ──────────────────────────────────────────
 
 export function QualityScoringDashboard() {
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<TranslationProject[]>([]);
   const [selectedProject, setSelectedProject] = useState<TranslationProject | null>(null);
   const [importing, setImporting] = useState(false);
@@ -392,7 +394,7 @@ export function QualityScoringDashboard() {
             <BarChart3 className="h-5 w-5 text-violet-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.projects}</div>
-              <div className="text-[10px] text-zinc-400">Progetti</div>
+              <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.progetti')}</div>
             </div>
           </CardContent>
         </Card>
@@ -401,7 +403,7 @@ export function QualityScoringDashboard() {
             <FileText className="h-5 w-5 text-cyan-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.totalEntries.toLocaleString()}</div>
-              <div className="text-[10px] text-zinc-400">Stringhe totali</div>
+              <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.stringheTotali')}</div>
             </div>
           </CardContent>
         </Card>
@@ -410,7 +412,7 @@ export function QualityScoringDashboard() {
             <TrendingUp className="h-5 w-5 text-emerald-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.avgScore}/3</div>
-              <div className="text-[10px] text-zinc-400">Score medio</div>
+              <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.scoreMedio')}</div>
             </div>
           </CardContent>
         </Card>
@@ -419,7 +421,7 @@ export function QualityScoringDashboard() {
             <Shield className={`h-5 w-5 ${getQualityColor(globalStats.avgLabel)}`} />
             <div>
               <div className="text-lg font-bold">{globalStats.avgLabel}</div>
-              <div className="text-[10px] text-zinc-400">Qualità media</div>
+              <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.qualitàMedia')}</div>
             </div>
           </CardContent>
         </Card>
@@ -427,7 +429,7 @@ export function QualityScoringDashboard() {
 
       {/* Actions */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Progetti di Traduzione</h3>
+        <h3 className="text-sm font-semibold">{t('qualityScoringDashboardComp.progettiDiTraduzione')}</h3>
         <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleImport} disabled={importing}>
           <Upload className="h-3 w-3 mr-1" /> {importing ? 'Importando...' : 'Importa Progetto'}
         </Button>
@@ -438,7 +440,7 @@ export function QualityScoringDashboard() {
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardContent className="p-8 text-center">
             <Shield className="h-10 w-10 mx-auto text-zinc-600 mb-3" />
-            <p className="text-zinc-400 text-sm mb-1">Nessun progetto di traduzione</p>
+            <p className="text-zinc-400 text-sm mb-1">{t('qualityScoringDashboardComp.nessunProgettoDiTraduzione')}</p>
             <p className="text-zinc-600 text-xs">
               I progetti vengono creati automaticamente quando traduci un gioco con GameStringer.
               Puoi anche importare un file .gstranslation.json.

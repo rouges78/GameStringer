@@ -21,6 +21,7 @@ import {
   HardDrive
 } from 'lucide-react';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useTranslation } from '@/lib/i18n';
 
 interface RealtimeStats {
   processId: number;
@@ -58,6 +59,7 @@ interface InjektRealtimeStatsProps {
 }
 
 export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStatsProps) {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<RealtimeStats | null>(null);
   const [updateInterval, setUpdateInterval] = useState<NodeJS.Timeout | null>(null);
 
@@ -177,16 +179,16 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
       {/* Grafici e Dettagli */}
       <Tabs defaultValue="timeline" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="timeline">Timeline</TabsTrigger>
-          <TabsTrigger value="languages">Lingue</TabsTrigger>
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="recent">Recenti</TabsTrigger>
+          <TabsTrigger value="timeline">{t('injektRealtimeStatsComp.timeline')}</TabsTrigger>
+          <TabsTrigger value="languages">{t('injektRealtimeStatsComp.lingue')}</TabsTrigger>
+          <TabsTrigger value="performance">{t('injektRealtimeStatsComp.performance')}</TabsTrigger>
+          <TabsTrigger value="recent">{t('injektRealtimeStatsComp.recenti')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="timeline" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Traduzioni nel Tempo</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('injektRealtimeStatsComp.traduzioniNelTempo')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -211,7 +213,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
         <TabsContent value="languages" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Distribuzione Lingue</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('injektRealtimeStatsComp.distribuzioneLingue')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -297,7 +299,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
         <TabsContent value="recent" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Ultime Traduzioni</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('injektRealtimeStatsComp.ultimeTraduzioni')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[300px]">
@@ -305,7 +307,7 @@ export function InjektRealtimeStats({ processId, isActive }: InjektRealtimeStats
                   <div className="space-y-2">
                     <div className="p-3 rounded-lg bg-muted/50">
                       <div className="flex justify-between items-start mb-2">
-                        <Badge variant="secondary">Più recente</Badge>
+                        <Badge variant="secondary">{t('injektRealtimeStatsComp.piùRecente')}</Badge>
                         <span className="text-xs text-muted-foreground">
                           {new Date(stats.lastTranslation.timestamp).toLocaleTimeString()}
                         </span>

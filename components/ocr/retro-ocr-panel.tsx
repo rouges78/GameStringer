@@ -23,6 +23,7 @@ import {
   Save,
   Eye
 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface RetroOcrConfig {
   gameType: string;
@@ -149,6 +150,7 @@ interface RetroOcrPanelProps {
 }
 
 export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps) {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<RetroOcrConfig>(DEFAULT_CONFIGS.auto);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -186,15 +188,15 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
           <ScanLine className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">Retro-Game OCR</h2>
-          <p className="text-muted-foreground text-sm">OCR ottimizzato per font pixelati</p>
+          <h2 className="text-xl font-bold">{t('retroOcrPanelComp.retrogameOcr')}</h2>
+          <p className="text-muted-foreground text-sm">{t('retroOcrPanelComp.ocrOttimizzatoPerFontPixelati')}</p>
         </div>
       </div>
 
       <Tabs defaultValue="presets" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="presets">Preset games</TabsTrigger>
-          <TabsTrigger value="advanced">Impostazioni Avanzate</TabsTrigger>
+          <TabsTrigger value="presets">{t('retroOcrPanelComp.presetGames')}</TabsTrigger>
+          <TabsTrigger value="advanced">{t('retroOcrPanelComp.impostazioniAvanzate')}</TabsTrigger>
         </TabsList>
 
         {/* Presets Tab */}
@@ -225,7 +227,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
                       </div>
                     </div>
                     {isSelected && (
-                      <Badge className="mt-2 bg-green-500">Selezionato</Badge>
+                      <Badge className="mt-2 bg-green-500">{t('retroOcrPanelComp.selezionato')}</Badge>
                     )}
                   </CardContent>
                 </Card>
@@ -237,7 +239,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
           <Card className="bg-muted/50">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-sm">Configurazione Corrente</h4>
+                <h4 className="font-medium text-sm">{t('retroOcrPanelComp.configurazioneCorrente')}</h4>
                 <Button size="sm" variant="ghost" onClick={resetToDefault}>
                   <RotateCcw className="h-4 w-4 mr-1" />
                   Reset
@@ -353,7 +355,7 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
               {/* Denoise Level */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Denoise Level</label>
+                  <label className="text-sm font-medium">{t('retroOcrPanelComp.denoiseLevel')}</label>
                   <Badge variant="outline">{config.denoiseLevel}</Badge>
                 </div>
                 <Slider
@@ -369,21 +371,21 @@ export function RetroOcrPanel({ onConfigChange, onStartOcr }: RetroOcrPanelProps
               {/* Toggles */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Sharpen</label>
+                  <label className="text-sm font-medium">{t('retroOcrPanelComp.sharpen')}</label>
                   <Switch
                     checked={config.sharpen}
                     onCheckedChange={(checked) => updateConfig({ sharpen: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Remove Dithering</label>
+                  <label className="text-sm font-medium">{t('retroOcrPanelComp.removeDithering')}</label>
                   <Switch
                     checked={config.removeDithering}
                     onCheckedChange={(checked) => updateConfig({ removeDithering: checked })}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Inverti Colori</label>
+                  <label className="text-sm font-medium">{t('retroOcrPanelComp.invertiColori')}</label>
                   <Switch
                     checked={config.invertColors}
                     onCheckedChange={(checked) => updateConfig({ invertColors: checked })}

@@ -31,6 +31,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { useTranslation } from '@/lib/i18n';
 
 interface SecurityDialogProps {
   open: boolean;
@@ -57,6 +58,7 @@ interface SecuritySettings {
 }
 
 export function SecurityDialog({ open, onOpenChange, profileId, profileName }: SecurityDialogProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('password');
   
   // Password state
@@ -287,7 +289,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
               <CardContent className="space-y-4">
                 <form onSubmit={(e) => { e.preventDefault(); handleChangePassword(); }} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="current-password" className="text-xs">Current Password</Label>
+                    <Label htmlFor="current-password" className="text-xs">{t('securityDialogComp.currentPassword')}</Label>
                     <div className="relative">
                       <Input
                         id="current-password"
@@ -309,7 +311,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="new-password" className="text-xs">New Password</Label>
+                    <Label htmlFor="new-password" className="text-xs">{t('securityDialogComp.newPassword')}</Label>
                     <div className="relative">
                       <Input
                         id="new-password"
@@ -331,7 +333,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password" className="text-xs">Confirm Password</Label>
+                    <Label htmlFor="confirm-password" className="text-xs">{t('securityDialogComp.confirmPassword')}</Label>
                     <Input
                       id="confirm-password"
                       type="password"
@@ -384,7 +386,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-sm">Timeout Sessione</Label>
+                    <Label className="text-sm">{t('securityDialogComp.timeoutSessione')}</Label>
                     <p className="text-xs text-muted-foreground">
                       Disconnect after inactivity
                     </p>
@@ -398,13 +400,13 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                     <option value={30}>30 minutes</option>
                     <option value={60}>1 hour</option>
                     <option value={120}>2 hours</option>
-                    <option value={0}>Never</option>
+                    <option value={0}>{t('securityDialogComp.never')}</option>
                   </select>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-sm">Auto Lock</Label>
+                    <Label className="text-sm">{t('securityDialogComp.autoLock')}</Label>
                     <p className="text-xs text-muted-foreground">
                       Require password after inactivity
                     </p>
@@ -418,7 +420,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                 {settings.autoLockEnabled && (
                   <div className="flex items-center justify-between pl-4 border-l-2 border-primary/20">
                     <div className="space-y-0.5">
-                      <Label className="text-sm">Timeout Blocco</Label>
+                      <Label className="text-sm">{t('securityDialogComp.timeoutBlocco')}</Label>
                     </div>
                     <select
                       value={settings.autoLockTimeout}
@@ -435,7 +437,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-sm">Notifiche Login</Label>
+                    <Label className="text-sm">{t('securityDialogComp.notificheLogin')}</Label>
                     <p className="text-xs text-muted-foreground">
                       Avvisa per nuovi accessi
                     </p>
@@ -464,9 +466,9 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                   <Smartphone className="h-4 w-4" />
                   Two-Factor Authentication
                   {settings.twoFactorEnabled ? (
-                    <Badge className="bg-green-500 text-xs">Active</Badge>
+                    <Badge className="bg-green-500 text-xs">{t('securityDialogComp.active')}</Badge>
                   ) : (
-                    <Badge variant="secondary" className="text-xs">Inactive</Badge>
+                    <Badge variant="secondary" className="text-xs">{t('securityDialogComp.inactive')}</Badge>
                   )}
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -492,7 +494,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                 {!settings.twoFactorEnabled && isSettingUp2FA && (
                   <div className="space-y-4">
                     <div className="p-4 bg-muted rounded-lg text-center">
-                      <p className="text-xs text-muted-foreground mb-2">Your secret code:</p>
+                      <p className="text-xs text-muted-foreground mb-2">{t('securityDialogComp.yourSecretCode')}</p>
                       <p className="text-2xl font-mono font-bold tracking-wider">{twoFactorSecret}</p>
                       <p className="text-xs text-muted-foreground mt-2">
                         Save it in an authenticator app (Google Authenticator, Authy, etc.)
@@ -500,7 +502,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                     </div>
                     
                     <div className="space-y-2">
-                      <Label className="text-xs">Enter verification code</Label>
+                      <Label className="text-xs">{t('securityDialogComp.enterVerificationCode')}</Label>
                       <Input
                         type="text"
                         maxLength={6}
@@ -538,7 +540,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                     </div>
                     
                     <div className="space-y-2">
-                      <Label className="text-xs">Enter code to disable</Label>
+                      <Label className="text-xs">{t('securityDialogComp.enterCodeToDisable')}</Label>
                       <Input
                         type="text"
                         maxLength={6}
@@ -547,7 +549,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                         placeholder="000000"
                         className="text-center text-2xl tracking-widest font-mono"
                       />
-                      <p className="text-xs text-muted-foreground">Demo: usa 123456</p>
+                      <p className="text-xs text-muted-foreground">{t('securityDialogComp.demoUsa123456')}</p>
                     </div>
                     
                     <Button variant="destructive" onClick={handleSetup2FA} className="w-full">
@@ -584,7 +586,7 @@ export function SecurityDialog({ open, onOpenChange, profileId, profileName }: S
                   {activityLogs.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No activity recorded</p>
+                      <p className="text-sm">{t('securityDialogComp.noActivityRecorded')}</p>
                     </div>
                   ) : (
                     <div className="space-y-3">

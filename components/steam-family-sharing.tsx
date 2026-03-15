@@ -45,6 +45,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface SharedAccount {
   steamId: string;
@@ -53,6 +54,7 @@ interface SharedAccount {
 }
 
 export function SteamFamilySharing() {
+  const { t } = useTranslation();
   const [isDetecting, setIsDetecting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingSharedGames, setIsLoadingSharedGames] = useState(false);
@@ -239,7 +241,7 @@ export function SteamFamilySharing() {
       <CardHeader className="py-2 px-0">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-purple-500" />
-          <CardTitle className="text-white text-base">Gestione Family Sharing</CardTitle>
+          <CardTitle className="text-white text-base">{t('steamFamilySharingComp.gestioneFamilySharing')}</CardTitle>
         </div>
         <CardDescription className="text-slate-400 text-xs">
           Rileva account Steam che condividono la libreria con te
@@ -285,7 +287,7 @@ export function SteamFamilySharing() {
 
             {manualAccounts.length > 0 && (
               <div className="space-y-2">
-                <Label>Steam ID Aggiunti:</Label>
+                <Label>{t('steamFamilySharingComp.steamIdAggiunti')}</Label>
                 {manualAccounts.map((steamId) => (
                   <div key={steamId} className="flex items-center justify-between p-2 rounded border border-slate-700/50 bg-slate-900/50">
                     <span className="font-mono text-sm">{steamId}</span>
@@ -397,7 +399,7 @@ export function SteamFamilySharing() {
         {sharedAccounts.length > 0 && (
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Account Condivisi</h3>
+              <h3 className="text-sm font-semibold">{t('steamFamilySharingComp.accountCondivisi')}</h3>
               <Badge variant="secondary" className="text-xs">{sharedAccounts.length}</Badge>
             </div>
             
@@ -427,7 +429,7 @@ export function SteamFamilySharing() {
         {familySharingConfig && (
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Giochi Condivisi</h3>
+              <h3 className="text-sm font-semibold">{t('steamFamilySharingComp.giochiCondivisi')}</h3>
               <div className="flex gap-1">
                 <Badge variant="secondary" className="text-xs">{familySharingConfig.total_shared_games}</Badge>
                 <Badge variant="outline" className="text-xs">{familySharingConfig.authorized_users.length} utenti</Badge>

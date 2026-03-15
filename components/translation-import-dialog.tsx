@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Upload, FileText, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationImportDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ export function TranslationImportDialog({
   games,
   onImportComplete
 }: TranslationImportDialogProps) {
+  const { t } = useTranslation();
   const [selectedGame, setSelectedGame] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -153,7 +155,7 @@ export function TranslationImportDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Import Translations</DialogTitle>
+          <DialogTitle>{t('translationImportDialogComp.importTranslations')}</DialogTitle>
           <DialogDescription>
             Import translations from CSV or JSON file
           </DialogDescription>
@@ -161,7 +163,7 @@ export function TranslationImportDialog({
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="game">Game</Label>
+            <Label htmlFor="game">{t('translationImportDialogComp.game')}</Label>
             <Select value={selectedGame} onValueChange={setSelectedGame}>
               <SelectTrigger id="game">
                 <SelectValue placeholder="Select a game" />
@@ -177,7 +179,7 @@ export function TranslationImportDialog({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="file">Translation file</Label>
+            <Label htmlFor="file">{t('translationImportDialogComp.translationFile')}</Label>
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
@@ -202,7 +204,7 @@ export function TranslationImportDialog({
           
           {selectedFile && (
             <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm font-medium">Detected file format:</p>
+              <p className="text-sm font-medium">{t('translationImportDialogComp.detectedFileFormat')}</p>
               <p className="text-sm text-muted-foreground">
                 {selectedFile.name.endsWith('.csv') ? 'CSV' : 'JSON'}
               </p>

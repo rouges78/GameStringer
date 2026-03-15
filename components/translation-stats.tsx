@@ -11,6 +11,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from '@/lib/i18n';
 
 interface TranslationStats {
   total: number;
@@ -31,6 +32,7 @@ interface TranslationStatsProps {
 }
 
 export function TranslationStats({ translations }: TranslationStatsProps) {
+  const { t } = useTranslation();
   // Calcola le statistiche
   const stats: TranslationStats = {
     total: translations.length,
@@ -128,7 +130,7 @@ export function TranslationStats({ translations }: TranslationStatsProps) {
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center space-x-2">
               <TrendingUp className="h-5 w-5" />
-              <span>Progresso Generale</span>
+              <span>{t('translationStatsComp.progressoGenerale')}</span>
             </span>
             <span className="text-2xl font-bold">{completionRate}%</span>
           </CardTitle>
@@ -148,7 +150,7 @@ export function TranslationStats({ translations }: TranslationStatsProps) {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Languages className="h-5 w-5" />
-              <span>Per Lingua</span>
+              <span>{t('translationStatsComp.perLingua')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -171,7 +173,7 @@ export function TranslationStats({ translations }: TranslationStatsProps) {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <FileText className="h-5 w-5" />
-              <span>Per game</span>
+              <span>{t('translationStatsComp.perGame')}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">

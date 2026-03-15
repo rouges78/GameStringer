@@ -22,6 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { useTranslation } from '@/lib/i18n';
 
 // Font presets per vari stili di gioco
 const PIXEL_FONTS = [
@@ -63,6 +64,7 @@ export function PixelFontPreview({
   onOverflow,
   compact = false
 }: PixelFontPreviewProps) {
+  const { t } = useTranslation();
   const [selectedFont, setSelectedFont] = useState(PIXEL_FONTS[0]);
   const [selectedPreset, setSelectedPreset] = useState(TEXT_BOX_PRESETS[0]);
   const [fontSize, setFontSize] = useState(8);
@@ -191,7 +193,7 @@ export function PixelFontPreview({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Type className="h-5 w-5 text-sky-400" />
-            <CardTitle className="text-base">Pixel Font Preview</CardTitle>
+            <CardTitle className="text-base">{t('pixelFontPreviewComp.pixelFontPreview')}</CardTitle>
           </div>
           
           <Popover>
@@ -202,11 +204,11 @@ export function PixelFontPreview({
             </PopoverTrigger>
             <PopoverContent className="w-80">
               <div className="space-y-4">
-                <h4 className="font-medium text-sm">Impostazioni Preview</h4>
+                <h4 className="font-medium text-sm">{t('pixelFontPreviewComp.impostazioniPreview')}</h4>
                 
                 {/* Font Selection */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Font</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('pixelFontPreviewComp.font')}</label>
                   <Select 
                     value={selectedFont.name} 
                     onValueChange={(v) => setSelectedFont(PIXEL_FONTS.find(f => f.name === v) || PIXEL_FONTS[0])}
@@ -227,7 +229,7 @@ export function PixelFontPreview({
 
                 {/* Preset Selection */}
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Preset Box</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t('pixelFontPreviewComp.presetBox')}</label>
                   <Select 
                     value={selectedPreset.name} 
                     onValueChange={(v) => {
@@ -265,7 +267,7 @@ export function PixelFontPreview({
                 {/* Custom Dimensions */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Larghezza</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('pixelFontPreviewComp.larghezza')}</label>
                     <Input
                       type="number"
                       value={customWidth}
@@ -274,7 +276,7 @@ export function PixelFontPreview({
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Altezza</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('pixelFontPreviewComp.altezza')}</label>
                     <Input
                       type="number"
                       value={customHeight}
@@ -287,7 +289,7 @@ export function PixelFontPreview({
                 {/* Colors */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Sfondo</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('pixelFontPreviewComp.sfondo')}</label>
                     <input
                       type="color"
                       value={bgColor}
@@ -296,7 +298,7 @@ export function PixelFontPreview({
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Testo</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('pixelFontPreviewComp.testo')}</label>
                     <input
                       type="color"
                       value={textColor}
@@ -305,7 +307,7 @@ export function PixelFontPreview({
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Bordo</label>
+                    <label className="text-xs text-muted-foreground mb-1 block">{t('pixelFontPreviewComp.bordo')}</label>
                     <input
                       type="color"
                       value={borderColor}
@@ -389,7 +391,7 @@ export function PixelFontPreview({
         {/* Comparison with original */}
         {originalText && (
           <div className="mb-4 p-2 bg-muted/30 rounded border border-border/50">
-            <div className="text-[10px] text-muted-foreground mb-1">Originale:</div>
+            <div className="text-[10px] text-muted-foreground mb-1">{t('pixelFontPreviewComp.originale')}</div>
             <div 
               className="text-xs text-muted-foreground"
               style={{ fontFamily: selectedFont.family, fontSize: `${fontSize}px` }}

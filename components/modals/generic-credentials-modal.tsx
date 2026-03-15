@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, User, Info } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface GenericCredentialsModalProps {
   isOpen: boolean;
@@ -50,6 +51,7 @@ const providerInfo: Record<string, { title: string; description: string; helpTex
 };
 
 export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, isLoading = false }: GenericCredentialsModalProps) {
+  const { t } = useTranslation();
   const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [error, setError] = useState<string | null>(null);
 
@@ -112,7 +114,7 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('genericCredentialsModalComp.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -126,7 +128,7 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('genericCredentialsModalComp.password')}</Label>
               <Input
                 id="password"
                 type="password"

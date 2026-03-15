@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ExternalLink, Eye, EyeOff, AlertTriangle, Download, Terminal, CheckCircle } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface EpicModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface EpicModalProps {
 }
 
 export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalProps) {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -148,7 +150,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
           <Alert className="border-blue-600 bg-blue-900/20">
             <AlertTriangle className="h-4 w-4 text-blue-400" />
             <AlertDescription className="text-blue-200 text-sm">
-              Epic Games doesn't offer public APIs. Use <strong>Legendary</strong> to access your library.
+              Epic Games doesn't offer public APIs. Use <strong>{t('epicModalComp.legendary')}</strong> to access your library.
             </AlertDescription>
           </Alert>
 
@@ -156,7 +158,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
           {legendaryStatus && (
             <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-300">Legendary Status</span>
+                <span className="text-sm font-medium text-gray-300">{t('epicModalComp.legendaryStatus')}</span>
                 <div className="flex gap-2">
                   <span className={`px-2 py-1 rounded text-xs font-medium ${
                     legendaryStatus.installed 
@@ -229,13 +231,13 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
           {!legendaryStatus && (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-              <span className="ml-3 text-gray-400">Checking status...</span>
+              <span className="ml-3 text-gray-400">{t('epicModalComp.checkingStatus')}</span>
             </div>
           )}
 
           {/* Help Text */}
           <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-700">
-            <p><strong>What is Legendary?</strong></p>
+            <p><strong>{t('epicModalComp.whatIsLegendary')}</strong></p>
             <p>Legendary is an open-source client that allows you to access the Epic Games library without the official launcher.</p>
             <p className="pt-1">• Safe and open-source</p>
             <p>• Doesn't require Epic Games launcher</p>

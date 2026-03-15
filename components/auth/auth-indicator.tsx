@@ -4,6 +4,7 @@ import { useProfileAuth } from '@/lib/profile-auth';
 import { Badge } from '@/components/ui/badge';
 import { Shield, ShieldAlert, ShieldCheck, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface AuthIndicatorProps {
   showDetails?: boolean;
@@ -11,6 +12,7 @@ interface AuthIndicatorProps {
 }
 
 export function AuthIndicator({ showDetails = false, className }: AuthIndicatorProps) {
+  const { t } = useTranslation();
   const { 
     isAuthenticated, 
     currentProfile, 
@@ -22,7 +24,7 @@ export function AuthIndicator({ showDetails = false, className }: AuthIndicatorP
     return (
       <Badge variant="secondary" className={cn("gap-1", className)}>
         <ShieldAlert className="w-3 h-3 text-orange-500" />
-        <span>Not authenticated</span>
+        <span>{t('authIndicatorComp.notAuthenticated')}</span>
       </Badge>
     );
   }
@@ -31,7 +33,7 @@ export function AuthIndicator({ showDetails = false, className }: AuthIndicatorP
     return (
       <Badge variant="destructive" className={cn("gap-1", className)}>
         <ShieldAlert className="w-3 h-3" />
-        <span>Session expired</span>
+        <span>{t('authIndicatorComp.sessionExpired')}</span>
       </Badge>
     );
   }
@@ -40,7 +42,7 @@ export function AuthIndicator({ showDetails = false, className }: AuthIndicatorP
     return (
       <Badge variant="secondary" className={cn("gap-1", className)}>
         <Shield className="w-3 h-3 text-gray-500" />
-        <span>Not authenticated</span>
+        <span>{t('authIndicatorComp.notAuthenticated')}</span>
       </Badge>
     );
   }
@@ -74,7 +76,7 @@ export function AuthIndicator({ showDetails = false, className }: AuthIndicatorP
           "w-3 h-3",
           isExpiringSoon ? "text-orange-500" : "text-green-500"
         )} />
-        <span>Authenticated</span>
+        <span>{t('authIndicatorComp.authenticated')}</span>
       </Badge>
       
       {showDetails && sessionTimeRemaining && (

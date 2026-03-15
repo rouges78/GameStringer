@@ -3,6 +3,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface StreamingTextProps {
   text: string;
@@ -19,6 +20,7 @@ export function StreamingText({
   cursorClassName,
   showCursor = true
 }: StreamingTextProps) {
+  const { t } = useTranslation();
   return (
     <div className={cn('relative', className)}>
       <span className="whitespace-pre-wrap">{text}</span>
@@ -76,7 +78,7 @@ export function StreamingTranslationBox({
       <div className="p-4 space-y-4">
         {/* Original */}
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Originale</label>
+          <label className="text-xs text-muted-foreground mb-1 block">{t('streamingTextComp.originale')}</label>
           <div className="text-sm bg-muted/20 rounded p-2 max-h-24 overflow-y-auto">
             {originalText}
           </div>
@@ -84,7 +86,7 @@ export function StreamingTranslationBox({
         
         {/* Translation */}
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Traduzione</label>
+          <label className="text-xs text-muted-foreground mb-1 block">{t('streamingTextComp.traduzione')}</label>
           <div className="text-sm bg-primary/5 border border-primary/20 rounded p-2 min-h-[60px]">
             {error ? (
               <div className="text-red-500 flex items-center gap-2">

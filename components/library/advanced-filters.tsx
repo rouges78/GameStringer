@@ -24,6 +24,7 @@ import {
   Languages, Gamepad2, Store, Tag, RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 export interface GameFilter {
   search: string;
@@ -94,6 +95,7 @@ export function AdvancedFilters({
   totalGames,
   filteredGames,
 }: AdvancedFiltersProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const activeFilterCount = useMemo(() => {
@@ -149,11 +151,11 @@ export function AdvancedFilters({
           <SelectValue placeholder="Ordina per" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="name">Nome</SelectItem>
-          <SelectItem value="playtime">Tempo di gioco</SelectItem>
-          <SelectItem value="lastPlayed">Ultima sessione</SelectItem>
-          <SelectItem value="added">Data aggiunta</SelectItem>
-          <SelectItem value="progress">Progresso trad.</SelectItem>
+          <SelectItem value="name">{t('advancedFiltersComp.nome')}</SelectItem>
+          <SelectItem value="playtime">{t('advancedFiltersComp.tempoDiGioco')}</SelectItem>
+          <SelectItem value="lastPlayed">{t('advancedFiltersComp.ultimaSessione')}</SelectItem>
+          <SelectItem value="added">{t('advancedFiltersComp.dataAggiunta')}</SelectItem>
+          <SelectItem value="progress">{t('advancedFiltersComp.progressoTrad')}</SelectItem>
         </SelectContent>
       </Select>
 

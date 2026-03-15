@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Key, Info, ExternalLink } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 interface ItchioModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface ItchioModalProps {
 }
 
 export function ItchioModal({ isOpen, onClose, onSubmit, isLoading = false }: ItchioModalProps) {
+  const { t } = useTranslation();
   const [apiKey, setApiKey] = useState('');
   const [error, setError] = useState('');
 
@@ -50,7 +52,7 @@ export function ItchioModal({ isOpen, onClose, onSubmit, isLoading = false }: It
               <Key className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <DialogTitle>Connect itch.io Account</DialogTitle>
+              <DialogTitle>{t('itchioModalComp.connectItchioAccount')}</DialogTitle>
               <DialogDescription>
                 Enter your API key to access your game library
               </DialogDescription>
@@ -62,21 +64,21 @@ export function ItchioModal({ isOpen, onClose, onSubmit, isLoading = false }: It
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              <p className="mb-2">To get your API key:</p>
+              <p className="mb-2">{t('itchioModalComp.toGetYourApiKey')}</p>
               <ol className="list-decimal list-inside space-y-1 text-sm">
                 <li>Go to <a href="https://itch.io/user/settings/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
                   itch.io/user/settings/api-keys
                   <ExternalLink className="h-3 w-3" />
                 </a></li>
-                <li>Click on "Generate new API key"</li>
-                <li>Give the key a name (e.g. "GameStringer")</li>
-                <li>Copy the generated key</li>
+                <li>{t('itchioModalComp.clickOnGenerateNewApiKey')}</li>
+                <li>{t('itchioModalComp.giveTheKeyANameEgGamestringer')}</li>
+                <li>{t('itchioModalComp.copyTheGeneratedKey')}</li>
               </ol>
             </AlertDescription>
           </Alert>
 
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-2">
-            <Label htmlFor="api-key">API Key</Label>
+            <Label htmlFor="api-key">{t('itchioModalComp.apiKey')}</Label>
             <Input
               id="api-key"
               type="password"

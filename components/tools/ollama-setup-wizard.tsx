@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
 import { listen } from '@tauri-apps/api/event';
+import { useTranslation } from '@/lib/i18n';
 
 interface OllamaStatus {
   installed: boolean;
@@ -38,6 +39,7 @@ interface OllamaModelInfo {
 type WizardStep = 'check' | 'install' | 'start' | 'model' | 'done';
 
 export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<WizardStep>('check');
   const [status, setStatus] = useState<OllamaStatus | null>(null);
   const [models, setModels] = useState<OllamaModelInfo[]>([]);
@@ -175,8 +177,8 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
             <Wand2 className="h-5 w-5 text-violet-400" />
           </div>
           <div>
-            <CardTitle className="text-base">Setup Wizard AI</CardTitle>
-            <p className="text-xs text-slate-400 mt-0.5">Configura l'AI locale in pochi click</p>
+            <CardTitle className="text-base">{t('ollamaSetupWizardComp.setupWizardAi')}</CardTitle>
+            <p className="text-xs text-slate-400 mt-0.5">{t('ollamaSetupWizardComp.configuraLaiLocaleInPochiClick')}</p>
           </div>
         </div>
         {/* Step indicator */}
@@ -209,7 +211,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
         {step === 'check' && (
           <div className="text-center py-4">
             <Loader2 className="h-8 w-8 text-violet-400 animate-spin mx-auto mb-2" />
-            <p className="text-xs text-slate-400">Verifico se Ollama è installato...</p>
+            <p className="text-xs text-slate-400">{t('ollamaSetupWizardComp.verificoSeOllamaÈInstallato')}</p>
           </div>
         )}
 
@@ -258,7 +260,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
           <div className="space-y-3">
             <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-              <span className="text-xs text-emerald-300">Ollama in esecuzione</span>
+              <span className="text-xs text-emerald-300">{t('ollamaSetupWizardComp.ollamaInEsecuzione')}</span>
             </div>
             <p className="text-xs text-slate-400">Scegli un modello AI per la traduzione. I modelli più piccoli sono più veloci e usano meno VRAM.</p>
             
@@ -305,7 +307,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
               </div>
             </div>
             <div>
-              <p className="text-sm font-semibold text-emerald-300">AI Locale Configurata!</p>
+              <p className="text-sm font-semibold text-emerald-300">{t('ollamaSetupWizardComp.aiLocaleConfigurata')}</p>
               <p className="text-xs text-slate-400 mt-1">
                 {status?.models.length || 0} modello/i installato/i. Puoi iniziare a tradurre.
               </p>

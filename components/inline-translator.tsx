@@ -31,6 +31,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useTranslation } from '@/lib/i18n';
 
 interface InlineTranslatorProps {
   gameId: string;
@@ -47,6 +48,7 @@ interface FileHandle {
 }
 
 export default function InlineTranslator({ gameId, gameName, gamePath, onClose }: InlineTranslatorProps) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState<'scanning' | 'select-file' | 'translate-editor' | 'complete'>('scanning');
   const [scanProgress, setScanProgress] = useState(0);
   const [files, setFiles] = useState<FileHandle[]>([]);
@@ -200,7 +202,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
                   <CardTitle className="text-lg font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
                     Translation of {gameName}
                   </CardTitle>
-                  <p className="text-xs text-gray-400 mt-0.5">Neural Translator</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{t('inlineTranslatorComp.neuralTranslator')}</p>
                 </div>
               </div>
               <Button
@@ -255,7 +257,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
                     <FolderSearch className="h-16 w-16 text-muted-foreground animate-pulse" />
                   </div>
                   <div className="text-center">
-                    <h3 className="text-lg font-semibold mb-2">Scanning in progress...</h3>
+                    <h3 className="text-lg font-semibold mb-2">{t('inlineTranslatorComp.scanningInProgress')}</h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       Searching for translatable files in the game
                     </p>
@@ -273,7 +275,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
                   className="space-y-4"
                 >
                   <div>
-                    <Label className="text-sm text-gray-400 mb-3 block">Translatable files found</Label>
+                    <Label className="text-sm text-gray-400 mb-3 block">{t('inlineTranslatorComp.translatableFilesFound')}</Label>
                     <div className="grid gap-2 max-h-[300px] overflow-y-auto pr-1">
                       {files.map((file, index) => (
                         <motion.div
@@ -328,7 +330,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
 
                   <div className="flex justify-between items-center pt-4 border-t border-gray-800/50 mt-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-gray-400">Target language</Label>
+                      <Label className="text-xs text-gray-400">{t('inlineTranslatorComp.targetLanguage')}</Label>
                       <Select defaultValue="it">
                         <SelectTrigger className="w-[160px] bg-gray-800/50 border-gray-700/50 text-sm">
                           <SelectValue />
@@ -386,7 +388,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
                 >
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Original Text</Label>
+                      <Label>{t('inlineTranslatorComp.originalText')}</Label>
                       <Textarea
                         value={originalContent}
                         readOnly
@@ -395,7 +397,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Translation</Label>
+                      <Label>{t('inlineTranslatorComp.translation')}</Label>
                       <Textarea
                         value={translatedContent}
                         onChange={(e) => setTranslatedContent(e.target.value)}
@@ -414,25 +416,25 @@ MAIN_QUEST_01=Find the ancient artifact`;
                   )}
 
                   <div className="p-4 border rounded-lg bg-muted/50 space-y-4">
-                    <h4 className="font-semibold text-sm">AI Translation Configuration</h4>
+                    <h4 className="font-semibold text-sm">{t('inlineTranslatorComp.aiTranslationConfiguration')}</h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label>AI Service</Label>
+                        <Label>{t('inlineTranslatorComp.aiService')}</Label>
                         <Select value={provider} onValueChange={(value: 'openai' | 'deepl' | 'google') => setProvider(value)}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select provider" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="openai">OpenAI (GPT-4)</SelectItem>
+                            <SelectItem value="openai">{t('inlineTranslatorComp.openaiGpt4')}</SelectItem>
                             <SelectItem value="deepl">DeepL</SelectItem>
-                            <SelectItem value="google">Google Translate</SelectItem>
+                            <SelectItem value="google">{t('inlineTranslatorComp.googleTranslate')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       
                       <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
-                        <Label>API Key</Label>
+                        <Label>{t('inlineTranslatorComp.apiKey')}</Label>
                         <Input
                           type="password"
                           value={apiKey}
@@ -443,7 +445,7 @@ MAIN_QUEST_01=Find the ancient artifact`;
                       </form>
                       
                       <div className="space-y-2">
-                        <Label>Target Language</Label>
+                        <Label>{t('inlineTranslatorComp.targetLanguage2')}</Label>
                         <Select value={targetLanguage} onValueChange={setTargetLanguage}>
                           <SelectTrigger>
                             <SelectValue />
@@ -507,13 +509,13 @@ MAIN_QUEST_01=Find the ancient artifact`;
                   className="text-center py-8"
                 >
                   <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Translation Complete!</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('inlineTranslatorComp.translationComplete')}</h3>
                   <p className="text-sm text-muted-foreground mb-4">
                     File {selectedFile?.name} has been successfully translated
                   </p>
                   
                   <div className="max-w-2xl mx-auto mb-6">
-                    <Label className="text-sm mb-2 block">Translation Preview:</Label>
+                    <Label className="text-sm mb-2 block">{t('inlineTranslatorComp.translationPreview')}</Label>
                     <div className="bg-muted/50 p-4 rounded-lg max-h-40 overflow-y-auto">
                       <pre className="text-xs font-mono whitespace-pre-wrap">{translatedContent}</pre>
                     </div>

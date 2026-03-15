@@ -13,8 +13,10 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { offlineSupportService, type OfflineStatus } from '@/lib/offline-support';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 export function OfflineIndicator() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<OfflineStatus | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -63,12 +65,12 @@ export function OfflineIndicator() {
               {status.isOnline ? (
                 <>
                   <div className="w-2 h-2 bg-green-500 rounded-full" />
-                  <span className="font-medium">Online</span>
+                  <span className="font-medium">{t('offlineIndicatorComp.online')}</span>
                 </>
               ) : (
                 <>
                   <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-                  <span className="font-medium text-yellow-500">Offline</span>
+                  <span className="font-medium text-yellow-500">{t('offlineIndicatorComp.offline')}</span>
                 </>
               )}
             </div>
@@ -82,15 +84,15 @@ export function OfflineIndicator() {
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="p-2 bg-muted/50 rounded">
               <p className="text-lg font-bold">{status.cachedData.translations}</p>
-              <p className="text-xs text-muted-foreground">Translations</p>
+              <p className="text-xs text-muted-foreground">{t('offlineIndicatorComp.translations')}</p>
             </div>
             <div className="p-2 bg-muted/50 rounded">
               <p className="text-lg font-bold">{status.cachedData.games}</p>
-              <p className="text-xs text-muted-foreground">Games</p>
+              <p className="text-xs text-muted-foreground">{t('offlineIndicatorComp.games')}</p>
             </div>
             <div className="p-2 bg-muted/50 rounded">
               <p className="text-lg font-bold">{status.cachedData.packs}</p>
-              <p className="text-xs text-muted-foreground">Packs</p>
+              <p className="text-xs text-muted-foreground">{t('offlineIndicatorComp.packs')}</p>
             </div>
           </div>
 
@@ -99,7 +101,7 @@ export function OfflineIndicator() {
           {/* Offline Features */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Offline Features</span>
+              <span className="text-sm font-medium">{t('offlineIndicatorComp.offlineFeatures')}</span>
               <span className="text-xs text-muted-foreground">
                 {availableOffline}/{features.length} available
               </span>

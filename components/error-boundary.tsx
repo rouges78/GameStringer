@@ -4,6 +4,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTranslation } from '@/lib/i18n';
 
 interface Props {
   children: ReactNode;
@@ -58,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
                 <AlertTriangle className="h-6 w-6 text-destructive" />
               </div>
-              <CardTitle>Something went wrong</CardTitle>
+              <CardTitle>{t('errorBoundaryComp.somethingWentWrong')}</CardTitle>
               <CardDescription>
                 An unexpected error occurred. Try reloading the page.
               </CardDescription>
@@ -66,7 +67,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <CardContent>
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="mt-4 rounded-lg bg-muted p-3 text-xs">
-                  <summary className="cursor-pointer font-medium">Dettagli errore</summary>
+                  <summary className="cursor-pointer font-medium">{t('errorBoundaryComp.dettagliErrore')}</summary>
                   <pre className="mt-2 whitespace-pre-wrap text-destructive">
                     {this.state.error.message}
                   </pre>
@@ -102,6 +103,7 @@ export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   fallback?: ReactNode
 ) {
+  const { t } = useTranslation();
   return function WrappedComponent(props: P) {
     return (
       <ErrorBoundary fallback={fallback}>

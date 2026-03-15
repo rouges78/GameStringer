@@ -74,6 +74,7 @@ import {
 import { open } from '@tauri-apps/plugin-shell';
 import { TranslationMemoryManager } from '@/lib/translation-memory';
 import { extractTerms, loadGlossaryConfig } from '@/lib/auto-glossary';
+import { useTranslation } from '@/lib/i18n';
 
 interface AlternativeMethod {
   method: string;
@@ -163,6 +164,7 @@ const aiLabels: Record<string, string> = {
 };
 
 export function TranslationRecommendation({ gamePath, gameName, gameId, onActionClick }: TranslationRecommendationProps) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [recommendation, setRecommendation] = useState<TranslationRecommendation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -1203,7 +1205,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
       <div className="rounded-lg bg-violet-500/10 border border-violet-500/20 p-2.5 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <Loader2 className="h-3.5 w-3.5 animate-spin text-violet-400" />
-          <span className="text-[10px] text-violet-300/60">Analisi...</span>
+          <span className="text-[10px] text-violet-300/60">{t('translationRecommendationComp.analisi')}</span>
         </div>
       </div>
     );
@@ -1214,7 +1216,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
       <div className="rounded-lg bg-orange-500/10 border border-orange-500/20 p-2.5 backdrop-blur-md">
         <div className="flex items-center gap-1.5 text-orange-400">
           <AlertTriangle className="h-3.5 w-3.5" />
-          <span className="text-[10px]">Analisi non disponibile</span>
+          <span className="text-[10px]">{t('translationRecommendationComp.analisiNonDisponibile')}</span>
         </div>
       </div>
     );
@@ -1268,7 +1270,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             <Zap className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-[11px] font-semibold text-emerald-100">Strategia Ottimale</h3>
+            <h3 className="text-[11px] font-semibold text-emerald-100">{t('translationRecommendationComp.strategiaOttimale')}</h3>
             <p className="text-[9px] text-emerald-300/70 truncate">{strategy.description}</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -1544,7 +1546,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             {/* Progress globale */}
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-slate-400">
-                <span>Progresso totale</span>
+                <span>{t('translationRecommendationComp.progressoTotale')}</span>
                 <span>{Math.round((autoState.steps.filter(s => s.status === 'completed').length / autoState.steps.length) * 100)}%</span>
               </div>
               <Progress 
@@ -1603,7 +1605,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               <div className="flex items-center gap-2 p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
                 <FileCheck className="h-4 w-4 text-emerald-400 shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-emerald-300">File di traduzione creato con successo</p>
+                  <p className="text-[11px] font-medium text-emerald-300">{t('translationRecommendationComp.fileDiTraduzioneCreatoConSucce')}</p>
                   <p className="text-[10px] text-slate-400 truncate" title={`${gamePath}/GameStringer_Translation/translations.json`}>
                     📁 {gamePath}/GameStringer_Translation/translations.json
                   </p>
@@ -1620,21 +1622,21 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                   <div className="grid grid-cols-4 gap-2">
                     <div className="text-center p-1.5 bg-slate-900/50 rounded">
                       <p className="text-sm font-bold text-emerald-400">{translationStats.translatedStrings}</p>
-                      <p className="text-[9px] text-slate-500">Tradotte</p>
+                      <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.tradotte')}</p>
                     </div>
                     <div className="text-center p-1.5 bg-slate-900/50 rounded">
                       <p className="text-sm font-bold text-cyan-400">
                         {translationStats.endTime ? formatDuration(translationStats.endTime - translationStats.startTime) : '—'}
                       </p>
-                      <p className="text-[9px] text-slate-500">Durata</p>
+                      <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.durata')}</p>
                     </div>
                     <div className="text-center p-1.5 bg-slate-900/50 rounded">
                       <p className="text-sm font-bold text-amber-400">{formatCost(translationStats.estimatedCost)}</p>
-                      <p className="text-[9px] text-slate-500">Costo</p>
+                      <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.costo')}</p>
                     </div>
                     <div className="text-center p-1.5 bg-slate-900/50 rounded">
                       <p className="text-sm font-bold text-purple-400">{translationStats.avgSpeed.toFixed(1)}/s</p>
-                      <p className="text-[9px] text-slate-500">Velocità</p>
+                      <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.velocità')}</p>
                     </div>
                   </div>
                   {/* Provider breakdown */}
@@ -1688,7 +1690,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                       </div>
                     </details>
                   ) : (
-                    <p className="text-[10px] text-emerald-400/70">Nessun problema rilevato</p>
+                    <p className="text-[10px] text-emerald-400/70">{t('translationRecommendationComp.nessunProblemaRilevato')}</p>
                   )}
                 </div>
               )}
@@ -1741,7 +1743,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
               </div>
 
               {/* Azioni */}
-              <p className="text-[11px] text-slate-400 font-medium">Cosa vuoi fare ora?</p>
+              <p className="text-[11px] text-slate-400 font-medium">{t('translationRecommendationComp.cosaVuoiFareOra')}</p>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={async () => {
@@ -1755,8 +1757,8 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 >
                   <FolderOpen className="h-4 w-4 text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="text-[11px] font-medium text-slate-200">Apri cartella</p>
-                    <p className="text-[9px] text-slate-500">Vedi i file tradotti</p>
+                    <p className="text-[11px] font-medium text-slate-200">{t('translationRecommendationComp.apriCartella')}</p>
+                    <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.vediIFileTradotti')}</p>
                   </div>
                 </button>
 
@@ -1769,8 +1771,8 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 >
                   <ClipboardCheck className="h-4 w-4 text-purple-400 shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="text-[11px] font-medium text-slate-200">Revisiona</p>
-                    <p className="text-[9px] text-slate-500">Controlla qualità (MTPE)</p>
+                    <p className="text-[11px] font-medium text-slate-200">{t('translationRecommendationComp.revisiona')}</p>
+                    <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.controllaQualitàMtpe')}</p>
                   </div>
                 </button>
 
@@ -1783,8 +1785,8 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 >
                   <Library className="h-4 w-4 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="text-[11px] font-medium text-slate-200">Altro gioco</p>
-                    <p className="text-[9px] text-slate-500">Traduci un altro titolo</p>
+                    <p className="text-[11px] font-medium text-slate-200">{t('translationRecommendationComp.altroGioco')}</p>
+                    <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.traduciUnAltroTitolo')}</p>
                   </div>
                 </button>
 
@@ -1797,8 +1799,8 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
                 >
                   <ArrowRight className="h-4 w-4 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
-                    <p className="text-[11px] font-medium text-slate-200">Vai al Traduttore</p>
-                    <p className="text-[9px] text-slate-500">Modifica singole stringhe</p>
+                    <p className="text-[11px] font-medium text-slate-200">{t('translationRecommendationComp.vaiAlTraduttore')}</p>
+                    <p className="text-[9px] text-slate-500">{t('translationRecommendationComp.modificaSingoleStringhe')}</p>
                   </div>
                 </button>
               </div>

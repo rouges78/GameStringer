@@ -26,6 +26,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface WadTextEntry {
   original: string;
@@ -48,6 +49,7 @@ interface ExtractionStats {
 }
 
 export function WadExtractor() {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<WadTextEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'dialogue' | 'text'>('all');
@@ -271,7 +273,7 @@ export function WadExtractor() {
               <div className="flex items-center gap-4">
                 <div>
                   <p className="text-2xl font-bold text-emerald-400">{stats.percentage}%</p>
-                  <p className="text-sm text-muted-foreground">Tradotto</p>
+                  <p className="text-sm text-muted-foreground">{t('wadExtractorComp.tradotto')}</p>
                 </div>
                 <div className="flex gap-3 text-sm">
                   <div className="flex items-center gap-1">
@@ -351,7 +353,7 @@ export function WadExtractor() {
           <CardContent className="space-y-3">
             {/* WAD Path */}
             <div>
-              <label className="text-xs text-muted-foreground">Percorso WAD (opzionale)</label>
+              <label className="text-xs text-muted-foreground">{t('wadExtractorComp.percorsoWadOpzionale')}</label>
               <Input
                 placeholder="C:\...\dr1_data_us.wad"
                 value={wadPath}
@@ -363,7 +365,7 @@ export function WadExtractor() {
             {/* Extract Command */}
             <div className="p-2 rounded bg-slate-950/80 border border-slate-800">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-muted-foreground">Comando estrazione:</span>
+                <span className="text-[10px] text-muted-foreground">{t('wadExtractorComp.comandoEstrazione')}</span>
                 <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={copyExtractCommand}>
                   <Copy className="w-3 h-3" />
                 </Button>
@@ -375,7 +377,7 @@ export function WadExtractor() {
 
             {/* Workflow Steps */}
             <div className="space-y-2">
-              <p className="text-[10px] text-muted-foreground font-medium uppercase">Workflow</p>
+              <p className="text-[10px] text-muted-foreground font-medium uppercase">{t('wadExtractorComp.workflow')}</p>
               <div className="space-y-1.5">
                 <div className={`flex items-center gap-2 text-xs ${entries.length > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
@@ -624,7 +626,7 @@ export function WadExtractor() {
               ) : entries.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <Database className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Nessun testo WAD caricato</p>
+                  <p className="text-lg font-medium">{t('wadExtractorComp.nessunTestoWadCaricato')}</p>
                   <p className="text-sm mt-2 max-w-md mx-auto">
                     Esegui il comando di estrazione nel terminale, poi carica il JSON risultante.
                   </p>
@@ -641,8 +643,8 @@ export function WadExtractor() {
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg font-medium">Nessun risultato</p>
-                  <p className="text-sm mt-1">Modifica i filtri per vedere piu risultati</p>
+                  <p className="text-lg font-medium">{t('wadExtractorComp.nessunRisultato')}</p>
+                  <p className="text-sm mt-1">{t('wadExtractorComp.modificaIFiltriPerVederePiuRis')}</p>
                 </div>
               )}
             </ScrollArea>

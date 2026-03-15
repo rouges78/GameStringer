@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, X, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from '@/lib/i18n';
 
 interface SearchFilters {
   text: string;
@@ -27,6 +28,7 @@ interface TranslationSearchProps {
 }
 
 export function TranslationSearch({ games, onSearch, isCompact = false }: TranslationSearchProps) {
+  const { t } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     text: '',
@@ -80,11 +82,11 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="reviewed">Reviewed</SelectItem>
-              <SelectItem value="edited">Edited</SelectItem>
+              <SelectItem value="all">{t('translationSearchComp.allStatuses')}</SelectItem>
+              <SelectItem value="pending">{t('translationSearchComp.pending')}</SelectItem>
+              <SelectItem value="completed">{t('translationSearchComp.completed')}</SelectItem>
+              <SelectItem value="reviewed">{t('translationSearchComp.reviewed')}</SelectItem>
+              <SelectItem value="edited">{t('translationSearchComp.edited')}</SelectItem>
             </SelectContent>
           </Select>
           
@@ -93,7 +95,7 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All games</SelectItem>
+              <SelectItem value="all">{t('translationSearchComp.allGames')}</SelectItem>
               {games.map(game => (
                 <SelectItem key={game.id} value={game.id}>
                   {game.title}
@@ -112,7 +114,7 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
         <CardTitle className="flex items-center justify-between">
           <span className="flex items-center space-x-2">
             <Search className="h-5 w-5" />
-            <span>Advanced Search</span>
+            <span>{t('translationSearchComp.advancedSearch')}</span>
           </span>
           <Button
             variant="ghost"
@@ -127,7 +129,7 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
       <CardContent className="space-y-4">
         {/* Ricerca base */}
         <div className="space-y-2">
-          <Label htmlFor="search">Search in text</Label>
+          <Label htmlFor="search">{t('translationSearchComp.searchInText')}</Label>
           <div className="flex space-x-2">
             <Input
               id="search"
@@ -153,29 +155,29 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
             >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">{t('translationSearchComp.status')}</Label>
                   <Select value={filters.status} onValueChange={(value) => updateFilter('status', value)}>
                     <SelectTrigger id="status">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All statuses</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="reviewed">Reviewed</SelectItem>
-                      <SelectItem value="edited">Edited</SelectItem>
+                      <SelectItem value="all">{t('translationSearchComp.allStatuses')}</SelectItem>
+                      <SelectItem value="pending">{t('translationSearchComp.pending')}</SelectItem>
+                      <SelectItem value="completed">{t('translationSearchComp.completed')}</SelectItem>
+                      <SelectItem value="reviewed">{t('translationSearchComp.reviewed')}</SelectItem>
+                      <SelectItem value="edited">{t('translationSearchComp.edited')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="game">Game</Label>
+                  <Label htmlFor="game">{t('translationSearchComp.game')}</Label>
                   <Select value={filters.gameId} onValueChange={(value) => updateFilter('gameId', value)}>
                     <SelectTrigger id="game">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All games</SelectItem>
+                      <SelectItem value="all">{t('translationSearchComp.allGames')}</SelectItem>
                       {games.map(game => (
                         <SelectItem key={game.id} value={game.id}>
                           {game.title}
@@ -186,17 +188,17 @@ export function TranslationSearch({ games, onSearch, isCompact = false }: Transl
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="language">Lingua di destinazione</Label>
+                  <Label htmlFor="language">{t('translationSearchComp.linguaDiDestinazione')}</Label>
                   <Select value={filters.targetLanguage} onValueChange={(value) => updateFilter('targetLanguage', value)}>
                     <SelectTrigger id="language">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Tutte le lingue</SelectItem>
-                      <SelectItem value="it">Italiano</SelectItem>
-                      <SelectItem value="es">Spagnolo</SelectItem>
-                      <SelectItem value="fr">Francese</SelectItem>
-                      <SelectItem value="de">Tedesco</SelectItem>
+                      <SelectItem value="all">{t('translationSearchComp.tutteLeLingue')}</SelectItem>
+                      <SelectItem value="it">{t('translationSearchComp.italiano')}</SelectItem>
+                      <SelectItem value="es">{t('translationSearchComp.spagnolo')}</SelectItem>
+                      <SelectItem value="fr">{t('translationSearchComp.francese')}</SelectItem>
+                      <SelectItem value="de">{t('translationSearchComp.tedesco')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

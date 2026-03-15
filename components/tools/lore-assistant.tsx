@@ -19,6 +19,7 @@ import {
   Info
 } from 'lucide-react';
 import { loreAssistant, type LoreResponse, type DialogueEntry } from '@/lib/lore-assistant';
+import { useTranslation } from '@/lib/i18n';
 
 interface ChatMessage {
   id: string;
@@ -30,6 +31,7 @@ interface ChatMessage {
 }
 
 export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?: boolean }) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -94,7 +96,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
         className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-950/40 border border-amber-500/20 hover:border-amber-400/40 transition-all text-xs"
       >
         <BookOpen className="h-3.5 w-3.5 text-amber-400" />
-        <span className="text-amber-300">Lore Assistant</span>
+        <span className="text-amber-300">{t('loreAssistantComp.loreAssistant')}</span>
         {stats && stats.totalDialogues > 0 && (
           <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-amber-500/20 text-amber-400">
             {stats.totalDialogues} dialoghi
@@ -112,7 +114,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-amber-400" />
-            <span className="text-sm font-semibold text-amber-300">Lore Assistant</span>
+            <span className="text-sm font-semibold text-amber-300">{t('loreAssistantComp.loreAssistant')}</span>
             <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-amber-500/20 text-amber-400">
               {stats?.totalDialogues || 0} dialoghi
             </Badge>
@@ -134,11 +136,11 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
         {showStats && stats && (
           <div className="mb-2 p-2 rounded-lg bg-amber-950/30 border border-amber-500/10 text-xs space-y-1">
             <div className="flex justify-between">
-              <span className="text-amber-400/60">Dialoghi memorizzati:</span>
+              <span className="text-amber-400/60">{t('loreAssistantComp.dialoghiMemorizzati')}</span>
               <span className="text-amber-300">{stats.totalDialogues}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-amber-400/60">Personaggi rilevati:</span>
+              <span className="text-amber-400/60">{t('loreAssistantComp.personaggiRilevati')}</span>
               <span className="text-amber-300">{stats.uniqueSpeakers}</span>
             </div>
             {stats.speakers.length > 0 && (
@@ -158,7 +160,7 @@ export function LoreAssistantChat({ defaultExpanded = true }: { defaultExpanded?
           {messages.length === 0 ? (
             <div className="text-center py-6">
               <Sparkles className="h-8 w-8 text-amber-400/20 mx-auto mb-2" />
-              <p className="text-xs text-amber-400/40">Chiedi qualsiasi cosa sulla lore del gioco.</p>
+              <p className="text-xs text-amber-400/40">{t('loreAssistantComp.chiediQualsiasiCosaSullaLoreDe')}</p>
               <p className="text-[10px] text-amber-400/25 mt-1">"Chi è questo personaggio?" • "Cosa è successo prima?" • "Dove mi trovo?"</p>
             </div>
           ) : (

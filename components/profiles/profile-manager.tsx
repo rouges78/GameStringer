@@ -10,12 +10,14 @@ import { Label } from '@/components/ui/label';
 import { invoke } from '@tauri-apps/api/core';
 import { useProfiles } from '@/hooks/use-profiles';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/lib/i18n';
 
 interface ProfileManagerProps {
   onClose?: () => void;
 }
 
 export function ProfileManager({ onClose }: ProfileManagerProps) {
+  const { t } = useTranslation();
   const { currentProfile, updateProfileAvatar, getProfileAvatar } = useProfiles();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -182,7 +184,7 @@ export function ProfileManager({ onClose }: ProfileManagerProps) {
               </div>
               <div>
                 <h3 className="text-lg font-semibold">{currentProfile?.name || 'No profile'}</h3>
-                <p className="text-sm text-muted-foreground">Active profile</p>
+                <p className="text-sm text-muted-foreground">{t('profileManagerComp.activeProfile')}</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Click on avatar to change it
                 </p>
@@ -195,7 +197,7 @@ export function ProfileManager({ onClose }: ProfileManagerProps) {
 
       {onClose && (
         <div className="flex justify-end">
-          <Button onClick={onClose}>Chiudi</Button>
+          <Button onClick={onClose}>{t('profileManagerComp.chiudi')}</Button>
         </div>
       )}
     </div>
