@@ -28,6 +28,7 @@ import {
   List
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface RenpyGame {
   path: string;
@@ -71,6 +72,7 @@ interface RenpyStats {
 }
 
 export default function RenpyPatcherPage() {
+  const { t } = useTranslation();
   const [game, setGame] = useState<RenpyGame | null>(null);
   const [strings, setStrings] = useState<RenpyString[]>([]);
   const [stats, setStats] = useState<RenpyStats | null>(null);

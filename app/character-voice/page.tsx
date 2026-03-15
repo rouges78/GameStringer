@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui/skeleton-loaders';
+import { useTranslation } from '@/lib/i18n';
 
 const CharacterVoiceEditor = dynamic(
   () => import('@/components/translator/character-voice-editor').then(m => m.CharacterVoiceEditor),
@@ -9,6 +10,7 @@ const CharacterVoiceEditor = dynamic(
 );
 
 export default function CharacterVoicePage() {
+  const { t } = useTranslation();
   return (
     <div className="p-6">
       <CharacterVoiceEditor />

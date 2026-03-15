@@ -68,6 +68,7 @@ import {
   type PatchResult,
 } from "@/lib/patch-generator"
 import { exportTMX, exportXLIFF, exportPO, type TranslatedFile, type PatchMetadata } from "@/lib/patch-exporter"
+import { useTranslation } from '@/lib/i18n';
 
 // ============================================================================
 // TYPES
@@ -214,6 +215,7 @@ const LANGUAGES = [
 // ============================================================================
 
 export default function AutoTranslatePage() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams()
 
   // Game info (da URL params o selezione manuale)

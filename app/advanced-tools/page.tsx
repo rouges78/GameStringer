@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 const LoreAssistantChat = dynamic(
   () => import('@/components/tools/lore-assistant').then(mod => mod.LoreAssistantChat),
@@ -15,6 +16,7 @@ const AutoHookScanner = dynamic(
 );
 
 export default function AdvancedToolsPage() {
+  const { t } = useTranslation();
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-2">

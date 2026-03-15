@@ -44,6 +44,7 @@ import {
   type SpeakerType,
   type ToneType,
 } from "@/lib/context-harvester"
+import { useTranslation } from '@/lib/i18n';
 
 // ============================================================================
 // DEMO DATA
@@ -151,6 +152,7 @@ const SCREEN_ICONS: Partial<Record<ScreenType, string>> = {
 // ============================================================================
 
 export default function ContextHarvesterPage() {
+  const { t } = useTranslation();
   const [result, setResult] = useState<BatchHarvestResult | null>(null)
   const [inputMode, setInputMode] = useState<"demo" | "paste" | "file">("demo")
   const [pasteText, setPasteText] = useState("")

@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { TextureTranslator } from '@/components/tools/texture-translator';
+import { useTranslation } from '@/lib/i18n';
 
 export default function TextureTranslatorPage() {
+  const { t } = useTranslation();
   return <TextureTranslator />;
 }

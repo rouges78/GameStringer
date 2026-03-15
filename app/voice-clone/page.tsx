@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { PageSkeleton } from '@/components/ui/skeleton-loaders';
+import { useTranslation } from '@/lib/i18n';
 
 const VoiceCloneStudio = dynamic(
   () => import('@/components/tools/voice-clone-studio').then(m => m.VoiceCloneStudio),
@@ -9,6 +10,7 @@ const VoiceCloneStudio = dynamic(
 );
 
 export default function VoiceClonePage() {
+  const { t } = useTranslation();
   return (
     <div className="container mx-auto p-4">
       <VoiceCloneStudio />

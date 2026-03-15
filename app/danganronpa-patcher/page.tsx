@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { WadExtractor } from '@/components/tools/wad-extractor';
+import { useTranslation } from '@/lib/i18n';
 
 interface DanganronpaGame {
   path: string;
@@ -140,6 +141,7 @@ interface LinDialogueStats {
 }
 
 export default function DanganronpaPatcherPage() {
+  const { t } = useTranslation();
   const [game, setGame] = useState<DanganronpaGame | null>(null);
   const [selectedPak, setSelectedPak] = useState<PakArchive | null>(null);
   const [poFile, setPoFile] = useState<PoFile | null>(null);

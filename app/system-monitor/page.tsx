@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useTranslation } from '@/lib/i18n';
 
 const SystemMonitor = dynamic(
   () => import('@/components/tools/system-monitor').then(mod => mod.SystemMonitor),
@@ -13,6 +14,7 @@ const OllamaSetupWizard = dynamic(
 );
 
 export default function SystemMonitorPage() {
+  const { t } = useTranslation();
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-2">

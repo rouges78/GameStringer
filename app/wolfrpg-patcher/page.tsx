@@ -29,6 +29,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface WolfRpgGame {
   path: string;
@@ -84,6 +85,7 @@ interface WolfTransInfo {
 }
 
 export default function WolfRpgPatcherPage() {
+  const { t } = useTranslation();
   const [game, setGame] = useState<WolfRpgGame | null>(null);
   const [strings, setStrings] = useState<WolfRpgString[]>([]);
   const [stats, setStats] = useState<WolfRpgStats | null>(null);

@@ -22,8 +22,10 @@ import {
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { blogService, BlogPost } from '@/lib/blog';
+import { useTranslation } from '@/lib/i18n';
 
 export default function BlogPage() {
+  const { t } = useTranslation();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

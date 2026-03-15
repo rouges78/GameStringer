@@ -2,8 +2,10 @@
 
 import { Shield } from 'lucide-react';
 import { QualityScoringDashboard } from '@/components/tools/quality-scoring-dashboard';
+import { useTranslation } from '@/lib/i18n';
 
 export default function QualityScoringPage() {
+  const { t } = useTranslation();
   return (
     <div className="container mx-auto p-4 space-y-3">
       {/* Hero Header */}

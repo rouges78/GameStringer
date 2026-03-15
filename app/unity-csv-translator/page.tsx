@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/i18n';
 
 interface CsvEntry { id: string; english: string; translated: string; category: string; done: boolean; }
 interface CsvTable { name: string; offset: number; source: string; header: string[]; entries: CsvEntry[]; doneCount: number; }
@@ -44,6 +45,7 @@ function cat(s: string): string {
 }
 
 export default function UnityCsvTranslatorPage() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<Status>('idle');
   const [gamePath, setGamePath] = useState('');
   const [gameName, setGameName] = useState('');

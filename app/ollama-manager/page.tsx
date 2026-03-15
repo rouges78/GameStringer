@@ -38,8 +38,10 @@ import {
   type SpeedTestResult,
   type ABComparisonResult,
 } from '@/lib/ollama-manager';
+import { useTranslation } from '@/lib/i18n';
 
 export default function OllamaManagerPage() {
+  const { t } = useTranslation();
   const [ollamaOnline, setOllamaOnline] = useState<boolean | null>(null);
   const [installed, setInstalled] = useState<OllamaModel[]>([]);
   const [loading, setLoading] = useState(true);

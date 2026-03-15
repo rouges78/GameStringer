@@ -37,6 +37,7 @@ import {
   type EngineProbeResult,
 } from "@/lib/ocr-engines"
 import type { OCRLanguage } from "@/lib/ocr-service"
+import { useTranslation } from '@/lib/i18n';
 
 const LANGUAGE_OPTIONS: { code: OCRLanguage; name: string }[] = [
   { code: "eng", name: "English" },
@@ -67,6 +68,7 @@ const ENGINE_ICONS: Record<OCREngineId, string> = {
 }
 
 export default function OCREnginesPage() {
+  const { t } = useTranslation();
   const [probeResults, setProbeResults] = useState<EngineProbeResult[]>([])
   const [engineInfos, setEngineInfos] = useState<OCREngineInfo[]>([])
   const [isProbing, setIsProbing] = useState(false)

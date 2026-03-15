@@ -28,6 +28,7 @@ import {
   FileJson
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from '@/lib/i18n';
 
 interface RpgMakerGame {
   path: string;
@@ -75,6 +76,7 @@ interface TranslatorPlusInfo {
 }
 
 export default function RpgMakerPatcherPage() {
+  const { t } = useTranslation();
   const [game, setGame] = useState<RpgMakerGame | null>(null);
   const [strings, setStrings] = useState<RpgMakerString[]>([]);
   const [stats, setStats] = useState<RpgMakerStats | null>(null);

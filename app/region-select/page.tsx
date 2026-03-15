@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { useTranslation } from '@/lib/i18n';
 
 interface SelectionRect {
   startX: number;
@@ -11,6 +12,7 @@ interface SelectionRect {
 }
 
 export default function RegionSelectPage() {
+  const { t } = useTranslation();
   const [selection, setSelection] = useState<SelectionRect | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);

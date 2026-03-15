@@ -37,6 +37,7 @@ import {
   type PipelineStepId,
   type PipelineOptions,
 } from "@/lib/ai-pipeline"
+import { useTranslation } from '@/lib/i18n';
 
 const STEP_ICONS: Record<PipelineStepId, any> = {
   harvest: Sparkles,
@@ -75,6 +76,7 @@ const DEMO_TEXTS = [
 ]
 
 export default function AIPipelinePage() {
+  const { t } = useTranslation();
   const [result, setResult] = useState<PipelineResult | null>(null)
   const [steps, setSteps] = useState<PipelineStep[]>([])
   const [isRunning, setIsRunning] = useState(false)

@@ -16,6 +16,7 @@ import {
   type WorkshopExportConfig,
   type WorkshopTranslatedFile,
 } from '@/lib/workshop-exporter';
+import { useTranslation } from '@/lib/i18n';
 
 const LANGUAGES = [
   { code: 'it', name: 'Italiano', flag: '\u{1F1EE}\u{1F1F9}' },
@@ -36,6 +37,7 @@ const LANGUAGES = [
 ];
 
 export default function WorkshopExportPage() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<WorkshopExportConfig>({
     gameName: '',
     gameAppId: 0,

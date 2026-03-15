@@ -29,6 +29,7 @@ import {
   type AutoGlossary, type AutoGlossaryEntry, type GlossaryTier, type GlossaryCategory,
   type AutoGlossaryConfig,
 } from '@/lib/auto-glossary';
+import { useTranslation } from '@/lib/i18n';
 
 const TIER_COLORS: Record<GlossaryTier, string> = {
   locked: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -53,6 +54,7 @@ const CATEGORY_EMOJI: Record<GlossaryCategory, string> = {
 };
 
 export default function GlossaryPage() {
+  const { t } = useTranslation();
   const [glossaries, setGlossaries] = useState<AutoGlossary[]>([]);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');

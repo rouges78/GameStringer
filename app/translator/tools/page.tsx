@@ -10,8 +10,10 @@ import Link from 'next/link';
 import { SmartContextPanel } from '@/components/translator/smart-context-panel';
 import { PixelFontPreview } from '@/components/translator/pixel-font-preview';
 import { TTSPreview } from '@/components/translator/tts-preview';
+import { useTranslation } from '@/lib/i18n';
 
 export default function TranslatorToolsPage() {
+  const { t } = useTranslation();
   const [originalText, setOriginalText] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [selectedGame, setSelectedGame] = useState<{ id: string; name: string } | null>(null);
