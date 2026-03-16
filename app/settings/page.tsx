@@ -182,6 +182,8 @@ interface Settings {
     batchSize: number;
     lmStudioUrl: string;
     lmStudioModel: string;
+    modelwizApiKey: string;
+    modelwizUrl: string;
   };
   
   // System
@@ -229,7 +231,9 @@ export default function SettingsPage() {
       maxTokens: 2000,
       batchSize: 50,
       lmStudioUrl: 'http://localhost:1234',
-      lmStudioModel: ''
+      lmStudioModel: '',
+      modelwizApiKey: '',
+      modelwizUrl: 'http://localhost:8080'
     },
     system: {},
     performance: {
@@ -567,6 +571,48 @@ export default function SettingsPage() {
               <p className="text-[10px] text-muted-foreground">
                 Scarica LM Studio da <a href="https://lmstudio.ai" target="_blank" rel="noopener" className="underline">lmstudio.ai</a> — 
                 Carica un modello GGUF, avvia il server locale, e GameStringer lo userà automaticamente.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Alocai ModelWiz Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Globe className="h-5 w-5 text-teal-500" />
+                <span>Alocai ModelWiz</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                ModelWiz è un MT neurale specializzato per videogiochi di Alocai. Supporta on-premise (locale) o cloud con API key.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Endpoint URL</Label>
+                  <Input
+                    value={settings.translation?.modelwizUrl || 'http://localhost:8080'}
+                    onChange={(e) => updateSetting('translation', 'modelwizUrl', e.target.value)}
+                    placeholder="http://localhost:8080"
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground">URL del server ModelWiz (locale o cloud)</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>API Key (opzionale)</Label>
+                  <Input
+                    type="password"
+                    value={settings.translation?.modelwizApiKey || ''}
+                    onChange={(e) => updateSetting('translation', 'modelwizApiKey', e.target.value)}
+                    placeholder="Solo per cloud Alocai"
+                    className="font-mono text-xs"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Necessaria solo per endpoint cloud Alocai</p>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Scarica ModelWiz da <a href="https://www.alocai.com/download-modelwiz" target="_blank" rel="noopener" className="underline">alocai.com/download-modelwiz</a> — 
+                Avvia il server locale e GameStringer lo userà automaticamente nella catena di traduzione.
               </p>
             </CardContent>
           </Card>

@@ -115,10 +115,11 @@ export function getApiKeys() {
       cerebras: settings?.translation?.cerebrasApiKey || '',
       deepl: settings?.translation?.deeplApiKey || '',
       qwen: settings?.translation?.qwenApiKey || '',
+      modelwiz: settings?.translation?.modelwizApiKey || '',
       ollamaModel: settings?.translation?.ollamaModel || '',
     };
   } catch {
-    return { gemini: '', groq: '', openai: '', deepseek: '', anthropic: '', mistral: '', cohere: '', together: '', fireworks: '', openrouter: '', cerebras: '', deepl: '', qwen: '', ollamaModel: '' };
+    return { gemini: '', groq: '', openai: '', deepseek: '', anthropic: '', mistral: '', cohere: '', together: '', fireworks: '', openrouter: '', cerebras: '', deepl: '', qwen: '', modelwiz: '', ollamaModel: '' };
   }
 }
 
@@ -1063,6 +1064,116 @@ ${opts.context ? `\nContext: ${opts.context}` : ''}`;
   return results;
 }
 
+/** Alocai ModelWiz — MT specializzato per videogiochi (on-premise o cloud) */
+async function translateWithModelWiz(
+  apiKey: string,
+  opts: TranslateOptions
+): Promise<string[]> {
+  const settings = (() => {
+    try { return JSON.parse(localStorage.getItem('gameStringerSettings') || '{}'); }
+    catch { return {}; }
+  })();
+  const modelwizUrl = settings?.translation?.modelwizUrl || 'http://localhost:8080';
+  const modelwizKey = apiKey || settings?.translation?.modelwizApiKey || '';
+  const srcLang = opts.sourceLanguage || 'en';
+  const tgtLang = opts.targetLanguage || 'it';
+
+  // Verifica raggiungibilità
+  try {
+    const healthRes = await fetch(`${modelwizUrl}/api/health`, { signal: AbortSignal.timeout(3000) });
+    if (!healthRes.ok) throw new Error(`ModelWiz non raggiungibile (${healthRes.status})`);
+  } catch (err) {
+    // Fallback: prova endpoint root
+    try {
+      const rootRes = await fetch(modelwizUrl, { signal: AbortSignal.timeout(3000) });
+      if (!rootRes.ok) throw err;
+    } catch {
+      blockProvider('modelwiz', false);
+      throw new Error(`ModelWiz non raggiungibile su ${modelwizUrl}`);
+    }
+  }
+
+  console.log(`[ModelWiz] Traduzione ${opts.texts.length} testi ${srcLang}→${tgtLang} via ${modelwizUrl}`);
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (modelwizKey) {
+    headers['Authorization'] = `Bearer ${modelwizKey}`;
+  }
+
+  // ModelWiz supporta batch nativo — invio tutte le stringhe in una richiesta
+  const BATCH_SIZE = 50;
+  const allTranslations: string[] = [];
+
+  for (let i = 0; i < opts.texts.length; i += BATCH_SIZE) {
+    const batch = opts.texts.slice(i, i + BATCH_SIZE);
+
+    // Prova formato ModelWiz nativo (array di testi)
+    try {
+      const res = await fetch(`${modelwizUrl}/api/translate`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          texts: batch,
+          source: srcLang,
+          target: tgtLang,
+          domain: 'gaming',
+          ...(opts.glossaryHint ? { glossary: opts.glossaryHint } : {}),
+        }),
+        signal: AbortSignal.timeout(60000),
+      });
+
+      if (res.status === 429) {
+        blockProvider('modelwiz', false);
+        throw new Error('RateLimit');
+      }
+      if (!res.ok) throw new Error(`ModelWiz ${res.status}: ${await res.text().catch(() => '')}`);
+
+      const data = await res.json();
+
+      // Supporta formati di risposta comuni:
+      // { translations: ["..."] } oppure { results: [{text:"..."}] } oppure ["..."]
+      let translated: string[] = [];
+      if (Array.isArray(data.translations)) {
+        translated = data.translations;
+      } else if (Array.isArray(data.results)) {
+        translated = data.results.map((r: any) => typeof r === 'string' ? r : r.text || r.translation || '');
+      } else if (Array.isArray(data)) {
+        translated = data.map((r: any) => typeof r === 'string' ? r : r.text || r.translation || '');
+      } else if (data.translation) {
+        translated = [data.translation];
+      }
+
+      // Assicura che ogni testo abbia una traduzione
+      for (let j = 0; j < batch.length; j++) {
+        allTranslations.push(translated[j] || batch[j]);
+      }
+
+    } catch (err: any) {
+      // Fallback: prova formato LibreTranslate-compatibile (una stringa alla volta)
+      if (err.message?.includes('RateLimit')) throw err;
+
+      console.warn(`[ModelWiz] Batch fallito, provo singolarmente:`, err.message);
+      for (const text of batch) {
+        try {
+          const res = await fetch(`${modelwizUrl}/api/translate`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ q: text, source: srcLang, target: tgtLang }),
+            signal: AbortSignal.timeout(30000),
+          });
+          if (!res.ok) throw new Error(`ModelWiz ${res.status}`);
+          const data = await res.json();
+          allTranslations.push(data.translatedText || data.translation || data.text || text);
+        } catch {
+          allTranslations.push(text); // Fallback: testo originale
+        }
+      }
+    }
+  }
+
+  return allTranslations;
+}
+
 /** Ollama Generico — qualsiasi modello installato in Ollama (llama3, mistral, towerinstruct, qwen, ecc.) */
 async function translateWithOllamaGeneric(
   _apiKey: string,
@@ -1314,7 +1425,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$0.25',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'qwen', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'modelwiz', 'qwen', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'mymemory', 'lingva'],
   },
   {
     id: 'quality',
@@ -1323,7 +1434,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$0.50',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['deepl', 'anthropic', 'openai', 'qwen', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'mymemory'],
+    providers: ['deepl', 'modelwiz', 'anthropic', 'openai', 'qwen', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'mymemory'],
   },
   {
     id: 'max_quality',
@@ -1332,7 +1443,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$1.00+',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['deepl', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'lmstudio', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
+    providers: ['deepl', 'modelwiz', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'lmstudio', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
   },
 ];
 
@@ -1377,6 +1488,7 @@ const PROVIDER_MAP: Record<string, {
   hymt: { getKey: () => 'free', fn: translateWithHYMT, isBlocked: () => isProviderBlocked('hymt'), needsKey: false },
   ollama: { getKey: () => 'free', fn: translateWithOllamaGeneric, isBlocked: () => isProviderBlocked('ollama'), needsKey: false },
   lmstudio: { getKey: () => 'free', fn: translateWithLMStudio, isBlocked: () => isProviderBlocked('lmstudio'), needsKey: false },
+  modelwiz: { getKey: (k) => k.modelwiz || 'free', fn: translateWithModelWiz, isBlocked: () => isProviderBlocked('modelwiz'), needsKey: false },
 };
 
 /** Info requisito mancante per un provider */
@@ -1412,6 +1524,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   lingva: 'Lingva Translate',
   ollama: 'Ollama (qualsiasi modello)',
   lmstudio: 'LM Studio (locale, OpenAI-compatible)',
+  modelwiz: 'Alocai ModelWiz (MT gaming)',
 };
 
 /** Provider che richiedono Ollama */
@@ -1433,6 +1546,7 @@ const API_KEY_URLS: Record<string, string> = {
   cerebras: 'https://cloud.cerebras.ai/platform',
   deepl: 'https://www.deepl.com/pro-api',
   qwen: 'https://dashscope.console.aliyun.com/apiKey',
+  modelwiz: 'https://www.alocai.com/download-modelwiz',
 };
 
 /** Controlla requisiti mancanti per un preset chain */
