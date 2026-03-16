@@ -7,6 +7,33 @@
 
 import { invoke } from '@/lib/tauri-api';
 
+export type RetroPlatform =
+  | 'nes' | 'snes' | 'n64' | 'gb' | 'gbc' | 'gba' | 'nds' | '3ds'
+  | 'sega_md' | 'sega_saturn' | 'sega_dc'
+  | 'ps1' | 'ps2' | 'psp'
+  | 'pc_dos' | 'pc_win'
+  | 'other';
+
+export const RETRO_PLATFORMS: { id: RetroPlatform; name: string; icon: string }[] = [
+  { id: 'nes', name: 'NES / Famicom', icon: '🎮' },
+  { id: 'snes', name: 'SNES / Super Famicom', icon: '🕹️' },
+  { id: 'n64', name: 'Nintendo 64', icon: '🎮' },
+  { id: 'gb', name: 'Game Boy', icon: '🟩' },
+  { id: 'gbc', name: 'Game Boy Color', icon: '🟪' },
+  { id: 'gba', name: 'Game Boy Advance', icon: '🔵' },
+  { id: 'nds', name: 'Nintendo DS', icon: '📱' },
+  { id: '3ds', name: 'Nintendo 3DS', icon: '📱' },
+  { id: 'sega_md', name: 'Sega Mega Drive / Genesis', icon: '🎮' },
+  { id: 'sega_saturn', name: 'Sega Saturn', icon: '🪐' },
+  { id: 'sega_dc', name: 'Dreamcast', icon: '🌀' },
+  { id: 'ps1', name: 'PlayStation', icon: '🎮' },
+  { id: 'ps2', name: 'PlayStation 2', icon: '🎮' },
+  { id: 'psp', name: 'PlayStation Portable', icon: '🎮' },
+  { id: 'pc_dos', name: 'PC (DOS)', icon: '💾' },
+  { id: 'pc_win', name: 'PC (Windows)', icon: '🖥️' },
+  { id: 'other', name: 'Altra piattaforma', icon: '🎲' },
+];
+
 export interface TranslationPack {
   id: string;
   name: string;
@@ -14,6 +41,7 @@ export interface TranslationPack {
   gameName: string;
   gameAppId?: number;
   coverImage?: string;
+  platform?: RetroPlatform;
   sourceLanguage: string;
   targetLanguage: string;
   version: string;
@@ -34,6 +62,8 @@ export interface TranslationPack {
   files: PackFile[];
   status: 'draft' | 'published' | 'verified' | 'featured';
   compatibility: string[];
+  patchFormat?: 'ips' | 'bps' | 'xdelta' | 'none';
+  patchInstructions?: string;
 }
 
 export interface CommunityAuthor {
@@ -54,7 +84,7 @@ export interface PackChangelog {
 export interface PackFile {
   name: string;
   path: string;
-  type: 'json' | 'po' | 'csv' | 'resx' | 'xliff' | 'langdb';
+  type: 'json' | 'po' | 'csv' | 'resx' | 'xliff' | 'langdb' | 'ips' | 'bps' | 'xdelta';
   size: number;
   stringCount: number;
 }
@@ -75,12 +105,14 @@ export interface PackReview {
 export interface PackSearchFilters {
   query?: string;
   gameId?: string;
+  platform?: RetroPlatform | '';
   sourceLanguage?: string;
   targetLanguage?: string;
   minRating?: number;
   minCompletion?: number;
   status?: string[];
   tags?: string[];
+  patchFormat?: 'ips' | 'bps' | 'xdelta' | '';
   sortBy?: 'downloads' | 'rating' | 'updated' | 'completion';
   sortOrder?: 'asc' | 'desc';
   page?: number;
@@ -188,6 +220,14 @@ class CommunityHubService {
     
     if (filters.minCompletion) {
       results = results.filter(p => p.completionPercentage >= filters.minCompletion!);
+    }
+    
+    if (filters.platform) {
+      results = results.filter(p => p.platform === filters.platform);
+    }
+    
+    if (filters.patchFormat) {
+      results = results.filter(p => p.patchFormat === filters.patchFormat);
     }
     
     if (filters.status?.length) {
@@ -520,6 +560,9 @@ class CommunityHubService {
     if (filename.endsWith('.resx')) return 'resx';
     if (filename.endsWith('.xliff') || filename.endsWith('.xlf')) return 'xliff';
     if (filename.endsWith('.langdb')) return 'langdb';
+    if (filename.endsWith('.ips')) return 'ips';
+    if (filename.endsWith('.bps')) return 'bps';
+    if (filename.endsWith('.xdelta') || filename.endsWith('.xd') || filename.endsWith('.vcdiff')) return 'xdelta';
     return 'json';
   }
 

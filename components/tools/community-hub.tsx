@@ -22,7 +22,9 @@ import {
   RefreshCw,
   Plus,
   Eye,
-  Heart
+  Heart,
+  Gamepad2,
+  HardDrive
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -52,10 +54,12 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import {
   communityHubService,
+  RETRO_PLATFORMS,
   type TranslationPack,
   type PackReview,
   type HubStats,
-  type PackSearchFilters
+  type PackSearchFilters,
+  type RetroPlatform
 } from '@/lib/community-hub-service';
 import { GitHubDiscussions } from './github-discussions';
 
@@ -93,6 +97,8 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
   const [filters, setFilters] = useState<PackSearchFilters>({
     query: '',
     targetLanguage: '',
+    platform: '',
+    patchFormat: '',
     minRating: 0,
     sortBy: 'downloads',
     sortOrder: 'desc'
@@ -105,6 +111,8 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
     description: '',
     sourceLanguage: 'en',
     targetLanguage: 'it',
+    platform: '' as RetroPlatform | '',
+    patchFormat: '' as 'ips' | 'bps' | 'xdelta' | 'none' | '',
     tags: '',
     files: [] as File[]
   });
@@ -208,6 +216,8 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
         description: '',
         sourceLanguage: 'en',
         targetLanguage: 'it',
+        platform: '',
+        patchFormat: '',
         tags: '',
         files: []
       });
@@ -330,6 +340,20 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
           </SelectContent>
         </Select>
         <Select
+          value={filters.platform || 'all'}
+          onValueChange={(v) => setFilters(f => ({ ...f, platform: v === 'all' ? '' : v as RetroPlatform }))}
+        >
+          <SelectTrigger className="w-[160px] h-9">
+            <SelectValue placeholder="Piattaforma" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutte le piattaforme</SelectItem>
+            {RETRO_PLATFORMS.map(p => (
+              <SelectItem key={p.id} value={p.id}>{p.icon} {p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
           value={filters.sortBy}
           onValueChange={(v: any) => setFilters(f => ({ ...f, sortBy: v }))}
         >
@@ -349,6 +373,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       <Tabs defaultValue="browse">
         <TabsList className="h-8">
           <TabsTrigger value="browse" className="text-xs h-7">{t('communityHub.browsePacks')}</TabsTrigger>
+          <TabsTrigger value="retro" className="text-xs h-7">🎮 Retro Patches</TabsTrigger>
           <TabsTrigger value="featured" className="text-xs h-7">⭐ {t('communityHub.featured')}</TabsTrigger>
           <TabsTrigger value="activity" className="text-xs h-7">{t('communityHub.recentActivity')}</TabsTrigger>
           <TabsTrigger value="discussions" className="text-xs h-7">💬 {t('communityHub.discussions') || 'Discussions'}</TabsTrigger>
@@ -382,7 +407,12 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                           {getStatusBadge(pack.status)}
                         </div>
                         <h3 className="font-semibold text-sm truncate">{pack.name}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{pack.gameName}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {pack.platform && (
+                            <span className="mr-1">{RETRO_PLATFORMS.find(p => p.id === pack.platform)?.icon}</span>
+                          )}
+                          {pack.gameName}
+                        </p>
                       </div>
                       <div className="flex items-center gap-0.5 text-yellow-500 ml-2">
                         <Star className="h-3 w-3 fill-current" />
@@ -406,6 +436,9 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                         <FileText className="h-3 w-3" />
                         {(pack.translatedStrings / 1000).toFixed(1)}k
                       </span>
+                      {pack.patchFormat && pack.patchFormat !== 'none' && (
+                        <Badge variant="outline" className="text-[10px] h-4 px-1 uppercase">{pack.patchFormat}</Badge>
+                      )}
                       {pack.tags.length > 0 && (
                         <Badge variant="outline" className="text-[10px] h-4 px-1">{pack.tags[0]}</Badge>
                       )}
@@ -428,6 +461,138 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                           <><CheckCircle className="h-3 w-3 mr-1" />✓</>
                         ) : (
                           <><Download className="h-3 w-3 mr-1" />{t('communityHub.download')}</>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="retro" className="space-y-3 mt-3">
+          {/* Retro Patches - CDRomance alternative */}
+          <div className="rounded-lg bg-gradient-to-r from-purple-500/10 via-fuchsia-500/5 to-pink-500/10 border border-purple-500/20 p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Gamepad2 className="h-4 w-4 text-purple-400" />
+              <span className="text-sm font-bold text-purple-300">Retro Translation Patches</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground">Patch di traduzione per giochi retro (NES, SNES, GBA, PS1, DS...). Scarica e applica direttamente con il patcher IPS/BPS integrato.</p>
+          </div>
+
+          {/* Platform quick filters */}
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              variant={!filters.platform ? 'default' : 'outline'}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setFilters(f => ({ ...f, platform: '' }))}
+            >
+              Tutte
+            </Button>
+            {RETRO_PLATFORMS.filter(p => p.id !== 'other' && p.id !== 'pc_dos' && p.id !== 'pc_win').map(p => (
+              <Button
+                key={p.id}
+                variant={filters.platform === p.id ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setFilters(f => ({ ...f, platform: f.platform === p.id ? '' : p.id }))}
+              >
+                {p.icon} {p.name.split(' / ')[0].split(' (')[0]}
+              </Button>
+            ))}
+          </div>
+
+          {/* Patch format filters */}
+          <div className="flex gap-1.5">
+            <Badge
+              variant={!filters.patchFormat ? 'default' : 'outline'}
+              className="cursor-pointer text-xs"
+              onClick={() => setFilters(f => ({ ...f, patchFormat: '' }))}
+            >
+              Tutti i formati
+            </Badge>
+            <Badge
+              variant={filters.patchFormat === 'ips' ? 'default' : 'outline'}
+              className="cursor-pointer text-xs"
+              onClick={() => setFilters(f => ({ ...f, patchFormat: f.patchFormat === 'ips' ? '' : 'ips' }))}
+            >
+              <HardDrive className="h-3 w-3 mr-1" />IPS
+            </Badge>
+            <Badge
+              variant={filters.patchFormat === 'bps' ? 'default' : 'outline'}
+              className="cursor-pointer text-xs"
+              onClick={() => setFilters(f => ({ ...f, patchFormat: f.patchFormat === 'bps' ? '' : 'bps' }))}
+            >
+              <HardDrive className="h-3 w-3 mr-1" />BPS
+            </Badge>
+            <Badge
+              variant={filters.patchFormat === 'xdelta' ? 'default' : 'outline'}
+              className="cursor-pointer text-xs"
+              onClick={() => setFilters(f => ({ ...f, patchFormat: f.patchFormat === 'xdelta' ? '' : 'xdelta' }))}
+            >
+              <HardDrive className="h-3 w-3 mr-1" />xdelta
+            </Badge>
+          </div>
+
+          {/* Filtered pack list */}
+          {packs.filter(p => p.platform || p.patchFormat).length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center">
+                <Gamepad2 className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-sm font-medium">Nessuna patch retro trovata</p>
+                <p className="text-xs text-muted-foreground mt-1">Pubblica la tua traduzione retro con il pulsante Upload!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              {packs.filter(p => p.platform || p.patchFormat).map(pack => (
+                <Card key={pack.id} className="hover:border-purple-500/50 transition-colors">
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-sm">
+                            {RETRO_PLATFORMS.find(p => p.id === pack.platform)?.icon || '🎮'}
+                          </span>
+                          <Badge variant="outline" className="text-[10px] h-4">
+                            {RETRO_PLATFORMS.find(p => p.id === pack.platform)?.name.split(' / ')[0] || pack.platform}
+                          </Badge>
+                          {pack.patchFormat && pack.patchFormat !== 'none' && (
+                            <Badge className="text-[10px] h-4 bg-purple-500/80 uppercase">{pack.patchFormat}</Badge>
+                          )}
+                        </div>
+                        <h3 className="font-semibold text-sm truncate">{pack.name}</h3>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {getLanguageFlag(pack.sourceLanguage)} → {getLanguageFlag(pack.targetLanguage)} | {pack.gameName}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-0.5 text-yellow-500 ml-2">
+                        <Star className="h-3 w-3 fill-current" />
+                        <span className="text-xs font-medium">{pack.rating.toFixed(1)}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mb-2">
+                      <span className="flex items-center gap-0.5"><Download className="h-3 w-3" />{pack.downloads.toLocaleString()}</span>
+                      <span className="flex items-center gap-0.5"><FileText className="h-3 w-3" />{(pack.size / 1024).toFixed(0)} KB</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleViewPack(pack)}>
+                        {t('communityHub.details')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 h-7 text-xs bg-purple-500 hover:bg-purple-600"
+                        onClick={() => handleDownloadPack(pack.id)}
+                        disabled={isDownloading === pack.id || communityHubService.isPackInstalled(pack.id)}
+                      >
+                        {isDownloading === pack.id ? (
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                        ) : communityHubService.isPackInstalled(pack.id) ? (
+                          <><CheckCircle className="h-3 w-3 mr-1" />Installata</>
+                        ) : (
+                          <><Download className="h-3 w-3 mr-1" />Scarica</>
                         )}
                       </Button>
                     </div>
@@ -733,6 +898,43 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Piattaforma (retro)</Label>
+                <Select
+                  value={uploadData.platform || 'none'}
+                  onValueChange={(v) => setUploadData(d => ({ ...d, platform: v === 'none' ? '' : v as RetroPlatform }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Nessuna (gioco moderno)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nessuna (gioco moderno)</SelectItem>
+                    {RETRO_PLATFORMS.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.icon} {p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Formato patch</Label>
+                <Select
+                  value={uploadData.patchFormat || 'none'}
+                  onValueChange={(v) => setUploadData(d => ({ ...d, patchFormat: v as any }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nessuna patch (solo testo)</SelectItem>
+                    <SelectItem value="ips">IPS (classico, max 16MB)</SelectItem>
+                    <SelectItem value="bps">BPS (moderno, con checksum)</SelectItem>
+                    <SelectItem value="xdelta">xdelta / VCDIFF</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>{t('communityHub.tags')}</Label>
               <Input
@@ -748,10 +950,19 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                 <input
                   type="file"
                   multiple
-                  accept=".json,.po,.csv,.resx,.xliff,.xlf"
+                  accept=".json,.po,.csv,.resx,.xliff,.xlf,.ips,.bps,.xdelta,.xd,.vcdiff"
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
                     setUploadData(d => ({ ...d, files }));
+                    // Auto-detect patch format
+                    const patchFile = files.find(f => /\.(ips|bps|xdelta|xd|vcdiff)$/i.test(f.name));
+                    if (patchFile) {
+                      const ext = patchFile.name.split('.').pop()?.toLowerCase();
+                      const fmt = ext === 'ips' ? 'ips' : ext === 'bps' ? 'bps' : 'xdelta';
+                      setUploadData(d => ({ ...d, files, patchFormat: fmt as any }));
+                    } else {
+                      setUploadData(d => ({ ...d, files }));
+                    }
                   }}
                   className="hidden"
                   id="file-upload"
@@ -759,7 +970,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                 <label htmlFor="file-upload" className="cursor-pointer">
                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                   <p className="text-sm font-medium">{t('communityHub.clickToSelect')}</p>
-                  <p className="text-xs text-muted-foreground">JSON, PO, CSV, RESX, XLIFF</p>
+                  <p className="text-xs text-muted-foreground">JSON, PO, CSV, RESX, XLIFF, IPS, BPS, xdelta</p>
                 </label>
               </div>
               {uploadData.files.length > 0 && (
