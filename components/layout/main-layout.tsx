@@ -69,7 +69,8 @@ import {
   ArrowRight,
   Library,
   Languages,
-  Shield
+  Shield,
+  Disc
 } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
@@ -227,6 +228,7 @@ const getNavGroups = (t: (key: string) => string) => [
           { name: t('nav.wolfRpg'), href: '/wolfrpg-patcher', icon: Database },
           { name: t('nav.nexusMods'), href: '/nexus-mods', icon: Globe },
           { name: t('nav.binaryPatcher'), href: '/binary-patcher', icon: Binary },
+          { name: 'ROM Patcher', href: '/rom-patcher', icon: Disc },
         ]
       },
       { 
@@ -1355,6 +1357,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                         { id: 'crawler', title: t('nav.contextHarvester'), description: t('commandPalette.scanGamesDesc'), icon: Scan, path: '/crawler' },
                         { id: 'fixer', title: t('nav.fixer'), description: t('commandPalette.patcherDesc'), icon: Wand2, path: '/fixer' },
                         { id: 'overlay', title: t('nav.overlay'), description: t('commandPalette.patcherDesc'), icon: Subtitles, path: '/overlay' },
+                        { id: 'rom-patcher', title: 'ROM Patcher', description: 'Applica e crea patch IPS/BPS per traduzioni retro', icon: Disc, path: '/rom-patcher' },
                         { id: 'community', title: t('nav.community'), description: t('commandPalette.communityDesc'), icon: Users, path: '/community-hub' },
                         { id: 'settings', title: t('nav.settings'), description: t('commandPalette.settingsDesc'), icon: Settings, path: '/settings' },
                       ];
