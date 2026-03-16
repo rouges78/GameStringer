@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Gamepad2,
   Upload,
@@ -14,7 +15,9 @@ import {
   Info,
   RefreshCw,
   Copy,
-  Trash2
+  Trash2,
+  Share2,
+  ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -58,6 +61,8 @@ function downloadBlob(data: Uint8Array, filename: string) {
 }
 
 export function RomPatcherUI() {
+  const router = useRouter();
+
   // === APPLY TAB STATE ===
   const [applyRomFile, setApplyRomFile] = useState<{ name: string; data: Uint8Array } | null>(null);
   const [applyPatchFile, setApplyPatchFile] = useState<{ name: string; data: Uint8Array; info: PatchInfo } | null>(null);
@@ -127,6 +132,40 @@ export function RomPatcherUI() {
     const ext = applyRomFile.name.includes('.') ? applyRomFile.name.split('.').pop() : 'bin';
     const baseName = applyRomFile.name.replace(/\.[^.]+$/, '');
     downloadBlob(applyResult.output, `${baseName}_patched.${ext}`);
+  };
+
+  // === VERIFY ROUNDTRIP ===
+  const [verifyStatus, setVerifyStatus] = useState<'idle' | 'ok' | 'fail'>('idle');
+
+  const handleVerifyRoundtrip = async () => {
+    if (!createResult?.patch || !createOriginal || !createModified) return;
+    const { applyPatch: applyPatchFn } = await import('@/lib/rom-patcher');
+    const applied = applyPatchFn(createOriginal.data, createResult.patch);
+    if (!applied.success || !applied.output) {
+      setVerifyStatus('fail');
+      toast.error('Verifica fallita: la patch non si applica correttamente');
+      return;
+    }
+    if (applied.output.length !== createModified.data.length) {
+      setVerifyStatus('fail');
+      toast.error(`Dimensione diversa: ${applied.output.length} vs ${createModified.data.length}`);
+      return;
+    }
+    for (let i = 0; i < applied.output.length; i++) {
+      if (applied.output[i] !== createModified.data[i]) {
+        setVerifyStatus('fail');
+        toast.error(`Byte diverso all'offset 0x${i.toString(16)}`);
+        return;
+      }
+    }
+    setVerifyStatus('ok');
+    toast.success('Verifica OK: la patch riproduce perfettamente la ROM tradotta!');
+  };
+
+  const handlePublishToHub = () => {
+    const params = new URLSearchParams({ action: 'publish' });
+    if (createOriginal) params.set('gameName', createOriginal.name.replace(/\.[^.]+$/, ''));
+    router.push(`/community-hub?${params.toString()}`);
   };
 
   // === CREATE HANDLERS ===
@@ -433,15 +472,21 @@ export function RomPatcherUI() {
                         <span>Record: <strong>{createResult.records}</strong></span>
                         <span>Dimensione: <strong>{formatBytes(createResult.patchSize)}</strong></span>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={handleDownloadPatch}>
-                          <Download className="h-3 w-3 mr-1" />Scarica Patch .{createResult.format}
+                          <Download className="h-3 w-3 mr-1" />Scarica .{createResult.format}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={handleVerifyRoundtrip} disabled={verifyStatus === 'ok'}>
+                          <ShieldCheck className={`h-3 w-3 mr-1 ${verifyStatus === 'ok' ? 'text-green-500' : verifyStatus === 'fail' ? 'text-red-500' : ''}`} />
+                          {verifyStatus === 'ok' ? 'Verificata' : verifyStatus === 'fail' ? 'Fallita' : 'Verifica'}
+                        </Button>
+                        <Button size="sm" className="bg-purple-500 hover:bg-purple-600" onClick={handlePublishToHub}>
+                          <Share2 className="h-3 w-3 mr-1" />Pubblica nel Hub
                         </Button>
                       </div>
                       <div className="mt-2 p-2 rounded bg-muted/50">
                         <p className="text-[10px] text-muted-foreground">
-                          Puoi pubblicare questa patch nel Community Hub (tab Retro Patches) per condividerla con la community.
-                          La patch non contiene dati della ROM originale, solo le differenze — sicura da distribuire.
+                          La patch contiene solo le differenze tra le due ROM — sicura da distribuire, nessun dato protetto da copyright.
                         </p>
                       </div>
                     </div>

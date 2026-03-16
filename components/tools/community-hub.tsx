@@ -195,6 +195,8 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
         gameName: uploadData.gameName,
         sourceLanguage: uploadData.sourceLanguage,
         targetLanguage: uploadData.targetLanguage,
+        platform: uploadData.platform || undefined,
+        patchFormat: (uploadData.patchFormat || 'none') as any,
         description: uploadData.description,
         tags: uploadData.tags.split(',').map(t => t.trim()).filter(Boolean),
         files: uploadData.files,
