@@ -76,6 +76,41 @@ const languages = [
   { code: 'zh', name: '中文', flag: '🇨🇳' },
 ];
 
+// Sfondo tematico per card in base al gioco — gradiente sottile appena accennato
+function getGameCardStyle(gameName: string, gameId: string): React.CSSProperties {
+  const key = (gameName + ' ' + gameId).toLowerCase();
+  // Mapping giochi → gradiente tematico (colore dominante del gioco)
+  const themes: [string[], string][] = [
+    [['final fantasy vi', 'ff6'], 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.05) 50%, transparent 100%)'],     // viola — Terra/Esper
+    [['final fantasy vii', 'ff7'], 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(6,95,70,0.06) 50%, transparent 100%)'],        // verde materia/lifestream
+    [['chrono trigger', 'chrono'], 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.05) 50%, transparent 100%)'],      // blu/viola — portali temporali
+    [['mother 3', 'mother'], 'linear-gradient(135deg, rgba(251,146,60,0.08) 0%, rgba(234,88,12,0.05) 50%, transparent 100%)'],             // arancio sunflower
+    [['dragon quest', 'dq'], 'linear-gradient(135deg, rgba(234,179,8,0.08) 0%, rgba(161,98,7,0.05) 50%, transparent 100%)'],               // oro slime
+    [['fire emblem', 'fe'], 'linear-gradient(135deg, rgba(220,38,38,0.07) 0%, rgba(153,27,27,0.04) 50%, transparent 100%)'],               // rosso fuoco
+    [['mega man', 'megaman', 'rockman'], 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(29,78,216,0.05) 50%, transparent 100%)'],  // blu Mega Man
+    [['pokemon', 'poke'], 'linear-gradient(135deg, rgba(250,204,21,0.08) 0%, rgba(234,179,8,0.05) 50%, transparent 100%)'],                // giallo Pikachu
+    [['zelda', 'link'], 'linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(22,163,74,0.05) 50%, transparent 100%)'],                   // verde Link
+    [['metroid', 'samus'], 'linear-gradient(135deg, rgba(249,115,22,0.07) 0%, rgba(194,65,12,0.04) 50%, transparent 100%)'],               // arancio suit
+    [['castlevania', 'dracula'], 'linear-gradient(135deg, rgba(127,29,29,0.08) 0%, rgba(88,28,135,0.05) 50%, transparent 100%)'],          // rosso scuro gotico
+    [['sonic'], 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(59,130,246,0.05) 50%, transparent 100%)'],                          // blu Sonic
+    [['mario', 'super mario'], 'linear-gradient(135deg, rgba(220,38,38,0.07) 0%, rgba(234,179,8,0.04) 50%, transparent 100%)'],            // rosso/oro Mario
+    [['kirby'], 'linear-gradient(135deg, rgba(244,114,182,0.08) 0%, rgba(236,72,153,0.05) 50%, transparent 100%)'],                        // rosa Kirby
+    [['persona', 'shin megami'], 'linear-gradient(135deg, rgba(220,38,38,0.07) 0%, rgba(15,15,15,0.05) 50%, transparent 100%)'],           // rosso/nero Persona
+  ];
+
+  for (const [keywords, gradient] of themes) {
+    if (keywords.some(kw => key.includes(kw))) {
+      return { background: gradient };
+    }
+  }
+
+  // Fallback: genera un colore dal hash del nome per avere comunque un tocco di colore
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = key.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash) % 360;
+  return { background: `linear-gradient(135deg, hsla(${hue},60%,50%,0.06) 0%, transparent 100%)` };
+}
+
 interface CommunityHubProps {
   initialAction?: string;
   initialQuery?: string;
@@ -397,7 +432,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {packs.map(pack => (
-                <Card key={pack.id} className="hover:border-primary/50 transition-colors">
+                <Card key={pack.id} className="hover:border-primary/50 transition-colors" style={getGameCardStyle(pack.gameName, pack.gameId)}>
                   <CardContent className="p-3">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-2">
@@ -550,7 +585,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {packs.filter(p => p.platform || p.patchFormat).map(pack => (
-                <Card key={pack.id} className="hover:border-purple-500/50 transition-colors">
+                <Card key={pack.id} className="hover:border-purple-500/50 transition-colors" style={getGameCardStyle(pack.gameName, pack.gameId)}>
                   <CardContent className="p-3">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0">
