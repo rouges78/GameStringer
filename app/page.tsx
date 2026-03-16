@@ -30,7 +30,8 @@ import {
   Settings2,
   ChevronRight,
   ArrowRight,
-  Download
+  Download,
+  DollarSign
 } from 'lucide-react';
 import Link from 'next/link';
 import { safeInvoke as invoke } from '@/lib/tauri-wrapper';
@@ -76,6 +77,7 @@ interface DashboardStats {
   translationStats: TranslationStats;
   tmEntries: number;
   timeSavedMinutes: number;
+  estimatedSavings: number;
 }
 
 export default function Dashboard() {
@@ -100,7 +102,8 @@ export default function Dashboard() {
     platformStats: {},
     translationStats: { total: 0, completed: 0, pending: 0, edited: 0 },
     tmEntries: 0,
-    timeSavedMinutes: 0
+    timeSavedMinutes: 0,
+    estimatedSavings: 0
   });
   const [loading, setLoading] = useState(true);
   const [activities, setActivities] = useState<RecentActivityProps[]>([]);
@@ -230,6 +233,10 @@ export default function Dashboard() {
         t.status === 'completed' || t.title?.includes('completata')
       ).length || savedTranslations.length;
       
+      // Risparmio stimato vs localizzazione professionale
+      // ~$0.10/parola, ~8 parole/entry TM, ~$150 per file tradotto
+      const estimatedSavings = Math.round((tmEntries * 8 * 0.10) + (completedTranslations * 150));
+      
       const translationStats: TranslationStats = {
         total: savedTranslations.length,
         completed: completedTranslations,
@@ -296,6 +303,7 @@ export default function Dashboard() {
         patches: savedPatches.length,
         tmEntries,
         timeSavedMinutes,
+        estimatedSavings,
         lastScan,
         storeStats,
         engineStats,
@@ -730,7 +738,7 @@ export default function Dashboard() {
       )}
 
       {/* Stats Footer */}
-      <div className="shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-1.5">
+      <div className="shrink-0 grid grid-cols-2 lg:grid-cols-5 gap-1.5">
         <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-violet-500/10 to-purple-500/5 border border-violet-500/20 p-2 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <div className="p-1 rounded-md bg-violet-500/20">
@@ -775,6 +783,18 @@ export default function Dashboard() {
             <div>
               <div className="text-sm font-bold text-cyan-300">{stats.tmEntries.toLocaleString()}</div>
               <div className="text-[8px] text-cyan-400/70 uppercase tracking-wider">{dash.tmEntries}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-green-500/10 to-teal-500/5 border border-green-500/20 p-2 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-1 rounded-md bg-green-500/20">
+              <DollarSign className="h-3 w-3 text-green-400" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-green-300">{stats.estimatedSavings > 0 ? `$${stats.estimatedSavings.toLocaleString()}` : '$0'}</div>
+              <div className="text-[8px] text-green-400/70 uppercase tracking-wider">{dash.estimatedSavings}</div>
             </div>
           </div>
         </div>
