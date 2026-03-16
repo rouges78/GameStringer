@@ -602,6 +602,56 @@ export class TranslationMemoryManager {
       u.targetText.toLowerCase().includes(q)
     );
   }
+  /**
+   * RAG: Recupera traduzioni simili dalla TM come contesto per il prompt LLM.
+   * Cerca match fuzzy (70-94%) — quelli troppo alti (≥95%) vengono già riusati direttamente.
+   * Restituisce un blocco di testo da iniettare nel prompt.
+   */
+  getRelevantTMContext(texts: string[], options: { maxPerText?: number; maxTotal?: number; gameIdFilter?: string } = {}): string {
+    if (!this.memory || this.memory.units.length === 0 || texts.length === 0) return '';
+
+    const { maxPerText = 2, maxTotal = 10, gameIdFilter } = options;
+    const seen = new Set<string>();
+    const matches: Array<{ source: string; target: string; similarity: number; verified: boolean }> = [];
+
+    for (const text of texts) {
+      if (matches.length >= maxTotal) break;
+
+      const results = this.search(text, {
+        minSimilarity: 70,
+        maxResults: maxPerText,
+        preferVerified: true,
+        gameIdFilter
+      });
+
+      for (const r of results) {
+        // Solo fuzzy range (70-94%) — gli esatti vengono gestiti altrove
+        if (r.similarity >= 95) continue;
+        if (matches.length >= maxTotal) break;
+
+        const key = `${r.unit.sourceText}|||${r.unit.targetText}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        matches.push({
+          source: r.unit.sourceText,
+          target: r.unit.targetText,
+          similarity: r.similarity,
+          verified: r.unit.verified
+        });
+      }
+    }
+
+    if (matches.length === 0) return '';
+
+    let block = `\n--- TRANSLATION MEMORY REFERENCE ---\nThe following are similar previously translated strings. Use them as style and terminology reference, but adapt to the actual source text:\n`;
+    for (const m of matches) {
+      block += `- "${m.source}" → "${m.target}"${m.verified ? ' ✓' : ''}\n`;
+    }
+    block += `------------------------------------\n`;
+
+    return block;
+  }
 }
 
 // Singleton instance
@@ -672,10 +722,16 @@ export async function translateWithMemory(
     }
   }
 
+  // RAG: recupera traduzioni simili dalla TM come contesto per il prompt LLM
+  const tmContext = translationMemory.getRelevantTMContext([text], { gameIdFilter: gameId });
+  if (tmContext) {
+    console.log(`[TM-RAG] Iniettate traduzioni simili nel prompt per coerenza`);
+  }
+
   // Traduzione con fallback automatico (Gemini → DeepSeek → OpenAI)
-  console.log(`[TM] Nessun match, chiamo API con fallback`);
+  console.log(`[TM] Nessun match esatto, chiamo API con fallback`);
   
-  const result = await translateSingleWithFallback(text, targetLang, sourceLang, context);
+  const result = await translateSingleWithFallback(text, targetLang, sourceLang, context, tmContext || undefined);
   
   if (!result.translated || result.translated === text) {
     throw new Error('Traduzione fallita: nessun provider disponibile');

@@ -17,6 +17,7 @@ export interface TranslateOptions {
   gameId?: string; // Usato per caricare il RAG locale
   useAgenticPipeline?: boolean; // Se true, usa il QA multi-agente per la massima qualità
   styleInstruction?: string; // DeepL Custom Instructions — es. "Usa un tono informale e amichevole"
+  tmContext?: string; // RAG dalla Translation Memory — traduzioni simili come riferimento stile/terminologia
   harvestedContext?: BatchHarvestResult; // Contesto auto-estratto dal Context Harvester
   harvestInputs?: HarvestInput[]; // Input per auto-harvest (se harvestedContext non fornito)
 }
@@ -138,6 +139,11 @@ function buildTranslationPrompt(opts: TranslateOptions): string {
     } catch (e) {
       console.warn('[RAG] Fallimento estrazione dinamica glossario', e);
     }
+  }
+
+  // RAG Translation Memory: traduzioni simili come riferimento stile/terminologia
+  if (opts.tmContext) {
+    prompt += `\n${opts.tmContext}`;
   }
 
   // Glossario/Hint manuale passato da fuori
@@ -1557,6 +1563,25 @@ export async function translateWithFallback(
   opts: TranslateOptions,
   preferWebApis: boolean = false
 ): Promise<TranslateResult> {
+  // Auto-inject TM RAG context se non già presente (lazy import per evitare circular dep)
+  if (!opts.tmContext && opts.texts.length > 0 && opts.texts.length <= 50) {
+    try {
+      const { translationMemory } = await import('./translation-memory');
+      await translationMemory.initialize(opts.sourceLanguage || 'en', opts.targetLanguage);
+      const tmCtx = translationMemory.getRelevantTMContext(opts.texts, {
+        maxPerText: 2,
+        maxTotal: Math.min(10, opts.texts.length * 2),
+        gameIdFilter: opts.gameId
+      });
+      if (tmCtx) {
+        opts = { ...opts, tmContext: tmCtx };
+        console.log(`[TM-RAG] Auto-iniettate traduzioni simili nel prompt (${opts.texts.length} testi)`);
+      }
+    } catch (e) {
+      // TM non disponibile — procedi senza
+    }
+  }
+
   const keys = getApiKeys();
   const preset = CHAIN_PRESETS.find(p => p.id === activeChainPreset) || CHAIN_PRESETS[2]; // balanced default
   
@@ -1702,13 +1727,15 @@ export async function translateSingleWithFallback(
   text: string,
   targetLanguage: string,
   sourceLanguage?: string,
-  context?: string
+  context?: string,
+  tmContext?: string
 ): Promise<{ translated: string; provider: string }> {
   const result = await translateWithFallback({
     texts: [text],
     targetLanguage,
     sourceLanguage,
     context,
+    tmContext,
   });
   return {
     translated: result.translations[0] || text,
