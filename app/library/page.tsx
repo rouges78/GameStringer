@@ -406,7 +406,7 @@ export default function LibraryPage() {
 }
 
 function LibraryListView() {
-  const { language } = useTranslation();
+  const { t, language } = useTranslation();
   const lib = translations[language]?.library || translations.it.library;
   const [games, setGames] = useState<Game[]>(_libCache.games.loaded ? _libCache.games.data : []);
   const [isLoading, setIsLoading] = useState(!_libCache.games.loaded);
