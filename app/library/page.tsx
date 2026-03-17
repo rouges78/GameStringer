@@ -1455,13 +1455,15 @@ function LibraryListView() {
                 <h1 className="text-xl font-extrabold text-white tracking-tight drop-shadow-sm">{lib.title}</h1>
                 {games.length > 0 && (
                   <span className="text-[11px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-md">
-                    {filteredGames.length} / {games.length}
+                    {filteredGames.length === games.length ? games.length : `${filteredGames.length} / ${games.length}`}
                   </span>
                 )}
               </div>
               <p className="text-slate-400 text-xs font-medium mt-0.5">
                 {games.length > 0 
-                  ? `${filteredGames.length} ${lib.gamesOf} ${games.length} disponibili`
+                  ? filteredGames.length === games.length
+                    ? `${games.length} ${lib.gamesAvailable || 'giochi disponibili'}`
+                    : `${filteredGames.length} ${lib.gamesOf} ${games.length} ${lib.gamesAvailable || 'disponibili'}`
                   : lib.noGames}
               </p>
             </div>
