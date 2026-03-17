@@ -19,6 +19,7 @@ pub enum StoreType {
     Battlenet,
     Rockstar,
     Itchio,
+    Amazon,
 }
 
 impl StoreType {
@@ -32,6 +33,7 @@ impl StoreType {
             StoreType::Battlenet => "battlenet",
             StoreType::Rockstar => "rockstar",
             StoreType::Itchio => "itchio",
+            StoreType::Amazon => "amazon",
         }
     }
 
@@ -45,6 +47,7 @@ impl StoreType {
             "battlenet" => Some(StoreType::Battlenet),
             "rockstar" => Some(StoreType::Rockstar),
             "itchio" => Some(StoreType::Itchio),
+            "amazon" => Some(StoreType::Amazon),
             _ => None,
         }
     }

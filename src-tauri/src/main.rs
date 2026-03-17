@@ -260,6 +260,9 @@ fn main() {
             commands::rockstar::clear_rockstar_credentials,
             commands::rockstar::get_rockstar_game_info,
             commands::rockstar::get_rockstar_covers_batch,
+            // Generic store credentials (works for any store)
+            commands::profile_store_integration::save_store_credentials,
+            commands::profile_store_integration::load_store_credentials,
             // Game Launcher System
             commands::launcher::launch_steam_game,
             commands::launcher::launch_epic_game,
@@ -372,6 +375,7 @@ fn main() {
             commands::profiles::can_authenticate,
             commands::profiles::unlock_profile,
             commands::profiles::get_failed_attempts,
+            commands::profiles::change_profile_password,
 
             // Profile Settings Management System
             commands::profile_settings::load_profile_settings,
@@ -443,6 +447,9 @@ fn main() {
             commands::file_manager::save_binary_file,
             commands::file_manager::ensure_directory,
             commands::file_manager::write_text_file,
+            commands::file_manager::scan_directory_files,
+            commands::file_manager::read_app_data_file,
+            commands::file_manager::write_app_data_file,
 
             // Unity Patcher
             commands::unity_patcher::check_game_engine,

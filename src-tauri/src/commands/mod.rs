@@ -25,6 +25,7 @@ pub mod utilities;
 pub mod patches;
 pub mod dlc_manager;
 pub mod profile_credentials;
+pub mod profile_store_integration;
 pub mod profiles;
 pub mod profile_settings;
 pub mod migration;

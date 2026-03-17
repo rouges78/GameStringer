@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, User, Info } from 'lucide-react';
+import { Loader2, User, Info, ExternalLink } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n';
 
 interface GenericCredentialsModalProps {
@@ -17,36 +17,69 @@ interface GenericCredentialsModalProps {
   isLoading?: boolean;
 }
 
-const providerInfo: Record<string, { title: string; description: string; helpText?: string }> = {
+const providerInfo: Record<string, { title: string; description: string; helpText?: string; helpUrl?: string; helpLinkText?: string; resetUrl?: string; resetLinkText?: string }> = {
   gog: {
     title: 'GOG Galaxy',
     description: 'Accedi con le tue Credentials GOG',
-    helpText: 'Usa le stesse Credentials che usi per accedere a GOG.com'
+    helpText: 'Usa le stesse Credentials che usi per accedere a GOG.com',
+    helpUrl: 'https://login.gog.com/register',
+    helpLinkText: 'Crea account o recupera password su GOG.com',
+    resetUrl: 'https://login.gog.com/password/reset',
+    resetLinkText: 'Password dimenticata?'
   },
   origin: {
     title: 'EA App / Origin',
     description: 'Accedi con il tuo account EA',
-    helpText: 'Usa le Credentials del tuo account EA (ex Origin)'
+    helpText: 'Usa le Credentials del tuo account EA (ex Origin)',
+    helpUrl: 'https://myaccount.ea.com/cp-ui/aboutme/index',
+    helpLinkText: 'Gestisci il tuo account EA',
+    resetUrl: 'https://signin.ea.com/p/juno/resetPassword',
+    resetLinkText: 'Password dimenticata?'
   },
   battlenet: {
     title: 'Battle.net',
     description: 'Accedi con il tuo account Blizzard',
-    helpText: 'Usa le Credentials del tuo account Battle.net'
+    helpText: 'Usa le Credentials del tuo account Battle.net',
+    helpUrl: 'https://account.blizzard.com/overview',
+    helpLinkText: 'Gestisci il tuo account Blizzard',
+    resetUrl: 'https://account.blizzard.com/support/password-reset',
+    resetLinkText: 'Password dimenticata?'
   },
   ubisoft: {
     title: 'Ubisoft Connect',
     description: 'Accedi con il tuo account Ubisoft',
-    helpText: 'Usa le Credentials di Ubisoft Connect (ex Uplay)'
+    helpText: 'Usa le Credentials di Ubisoft Connect (ex Uplay)',
+    helpUrl: 'https://account.ubisoft.com/en-US/login',
+    helpLinkText: 'Gestisci il tuo account Ubisoft',
+    resetUrl: 'https://account.ubisoft.com/en-US/security-settings',
+    resetLinkText: 'Password dimenticata?'
   },
   itchio: {
     title: 'itch.io',
     description: 'Accedi con il tuo account itch.io',
-    helpText: 'Usa email e password del tuo account itch.io'
+    helpText: 'Usa email e password del tuo account itch.io',
+    helpUrl: 'https://itch.io/user/settings/api-keys',
+    helpLinkText: 'Ottieni la tua API Key su itch.io',
+    resetUrl: 'https://itch.io/user/forgot-password',
+    resetLinkText: 'Password dimenticata?'
   },
   rockstar: {
     title: 'Rockstar Games',
     description: 'Accedi con il tuo account Rockstar Social Club',
-    helpText: 'Usa le Credentials del tuo account Rockstar Social Club per accedere ai games come GTA V e Red Dead Redemption 2'
+    helpText: 'Usa le Credentials del tuo account Rockstar Social Club',
+    helpUrl: 'https://socialclub.rockstargames.com/settings',
+    helpLinkText: 'Gestisci il tuo account Rockstar',
+    resetUrl: 'https://signin.rockstargames.com/recover',
+    resetLinkText: 'Password dimenticata?'
+  },
+  amazon: {
+    title: 'Amazon Games',
+    description: 'Accedi con il tuo account Amazon',
+    helpText: 'Usa le Credentials del tuo account Amazon per accedere ai giochi Prime Gaming',
+    helpUrl: 'https://gaming.amazon.com/home',
+    helpLinkText: 'Apri Prime Gaming',
+    resetUrl: 'https://www.amazon.com/ap/forgotpassword',
+    resetLinkText: 'Password dimenticata?'
   }
 };
 
@@ -111,6 +144,32 @@ export function GenericCredentialsModal({ isOpen, onClose, onSubmit, provider, i
             </Alert>
           )}
 
+          {(info.helpUrl || info.resetUrl) && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              {info.helpUrl && (
+                <a
+                  href={info.helpUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 underline underline-offset-2"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {info.helpLinkText || 'Gestisci account'}
+                </a>
+              )}
+              {info.resetUrl && (
+                <a
+                  href={info.resetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 underline underline-offset-2"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {info.resetLinkText || 'Password dimenticata?'}
+                </a>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

@@ -61,7 +61,31 @@ export async function POST(request: NextRequest) {
           message: 'itch.io connesso correttamente',
           provider: 'itchio'
         });
-        
+
+      case 'rockstar-credentials':
+        // Test connessione Rockstar
+        return NextResponse.json({
+          connected: true,
+          message: 'Rockstar Social Club connesso correttamente',
+          provider: 'rockstar'
+        });
+
+      case 'amazon-credentials':
+        // Test connessione Amazon Games
+        return NextResponse.json({
+          connected: true,
+          message: 'Amazon Games connesso correttamente',
+          provider: 'amazon'
+        });
+
+      case 'epicgames':
+        // Test connessione Epic Games (provider ID effettivo)
+        return NextResponse.json({
+          connected: true,
+          message: 'Epic Games connesso correttamente',
+          provider: 'epic'
+        });
+
       default:
         return NextResponse.json({
           connected: false,

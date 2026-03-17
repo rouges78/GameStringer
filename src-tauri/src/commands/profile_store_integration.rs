@@ -160,10 +160,18 @@ pub async fn clear_all_credentials_for_profile(
         return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
     }
 
-    match manager.clear_all_credentials_for_active_profile().await {
-        Ok(_) => Ok(CredentialResponse::success(true)),
-        Err(err) => Ok(CredentialResponse::error(format!("Errore pulizia credenziali: {}", err))),
+    let all_stores = vec![
+        StoreType::Steam, StoreType::Epic, StoreType::Ubisoft, StoreType::Origin,
+        StoreType::Gog, StoreType::Battlenet, StoreType::Rockstar, StoreType::Itchio, StoreType::Amazon,
+    ];
+    let mut removed = 0;
+    for st in all_stores {
+        if let Ok(_) = manager.remove_credential_for_active_profile(st).await {
+            removed += 1;
+        }
     }
+    println!("[STORE CREDS] ✅ Rimosse {} credenziali", removed);
+    Ok(CredentialResponse::success(true))
 }
 
 /// Lista tutte le credenziali del profilo attivo
@@ -177,10 +185,17 @@ pub async fn list_credentials_for_profile(
         return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
     }
 
-    match manager.list_credentials_for_active_profile().await {
-        Ok(stores) => Ok(CredentialResponse::success(stores)),
-        Err(err) => Ok(CredentialResponse::error(format!("Errore lista credenziali: {}", err))),
+    let all_stores = vec![
+        StoreType::Steam, StoreType::Epic, StoreType::Ubisoft, StoreType::Origin,
+        StoreType::Gog, StoreType::Battlenet, StoreType::Rockstar, StoreType::Itchio, StoreType::Amazon,
+    ];
+    let mut found = Vec::new();
+    for st in all_stores {
+        if let Ok(Some(_)) = manager.load_credential_for_active_profile(st.clone()).await {
+            found.push(st.as_str().to_string());
+        }
     }
+    Ok(CredentialResponse::success(found))
 }
 
 /// Testa connessione per uno store specifico usando credenziali del profilo
@@ -387,6 +402,71 @@ pub async fn load_ubisoft_credentials_for_profile(
     }
 }
 
+/// Comando generico: salva credenziali per qualsiasi store
+#[command]
+pub async fn save_store_credentials(
+    store: String,
+    username: String,
+    password: String,
+    profile_state: State<'_, ProfileManagerState>,
+) -> Result<CredentialResponse<bool>, String> {
+    let mut manager = profile_state.manager.lock().await;
+
+    if !manager.is_profile_active() {
+        return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
+    }
+
+    let store_type = match StoreType::from_str(&store) {
+        Some(st) => st,
+        None => return Ok(CredentialResponse::error(format!("Store non supportato: {}", store))),
+    };
+
+    let credential = PlainCredential::new(store_type.clone(), username, password);
+
+    match manager.save_credential_for_active_profile(credential).await {
+        Ok(_) => {
+            println!("[STORE CREDS] ✅ Credenziali {} salvate nel profilo attivo", store);
+            Ok(CredentialResponse::success(true))
+        },
+        Err(err) => Ok(CredentialResponse::error(format!("Errore salvataggio credenziali {}: {}", store, err))),
+    }
+}
+
+/// Comando generico: carica credenziali per qualsiasi store
+#[command]
+pub async fn load_store_credentials(
+    store: String,
+    profile_state: State<'_, ProfileManagerState>,
+) -> Result<CredentialResponse<ProfileCredentials>, String> {
+    let manager = profile_state.manager.lock().await;
+
+    if !manager.is_profile_active() {
+        return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
+    }
+
+    let store_type = match StoreType::from_str(&store) {
+        Some(st) => st,
+        None => return Ok(CredentialResponse::error(format!("Store non supportato: {}", store))),
+    };
+
+    match manager.load_credential_for_active_profile(store_type).await {
+        Ok(Some(credential)) => {
+            let profile_creds = ProfileCredentials {
+                username: credential.username,
+                password: credential.password,
+                additional_data: credential.additional_data,
+                store: credential.store.as_str().to_string(),
+                created_at: credential.created_at.to_rfc3339(),
+                last_used: credential.last_used.to_rfc3339(),
+            };
+            println!("[STORE CREDS] ✅ Credenziali {} caricate dal profilo attivo", store);
+            Ok(CredentialResponse::success(profile_creds))
+        },
+        Ok(None) => Ok(CredentialResponse::error(format!("Credenziali {} non trovate per questo profilo", store))),
+        Err(err) => Ok(CredentialResponse::error(format!("Errore caricamento credenziali {}: {}", store, err))),
+    }
+}
+
 /// Elimina credenziali per uno store specifico
 #[command]
 pub async fn delete_store_credentials_for_profile(
@@ -404,7 +484,7 @@ pub async fn delete_store_credentials_for_profile(
         None => return Ok(CredentialResponse::error(format!("Store non supportato: {}", store))),
     };
 
-    match manager.delete_credential_for_active_profile(store_type).await {
+    match manager.remove_credential_for_active_profile(store_type).await {
         Ok(_) => Ok(CredentialResponse::success(true)),
         Err(err) => Ok(CredentialResponse::error(format!("Errore eliminazione credenziali {}: {}", store, err))),
     }
@@ -421,8 +501,16 @@ pub async fn export_profile_credentials(
         return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
     }
 
-    match manager.export_credentials_for_active_profile().await {
-        Ok(exported_data) => Ok(CredentialResponse::success(exported_data)),
-        Err(err) => Ok(CredentialResponse::error(format!("Errore esportazione credenziali: {}", err))),
+    // Raccogli info sugli store con credenziali salvate
+    let all_stores = vec![
+        StoreType::Steam, StoreType::Epic, StoreType::Ubisoft, StoreType::Origin,
+        StoreType::Gog, StoreType::Battlenet, StoreType::Rockstar, StoreType::Itchio, StoreType::Amazon,
+    ];
+    let mut export_list = Vec::new();
+    for st in all_stores {
+        if let Ok(Some(cred)) = manager.load_credential_for_active_profile(st.clone()).await {
+            export_list.push(format!("{}:{}", st.as_str(), cred.username));
+        }
     }
+    Ok(CredentialResponse::success(export_list.join(";")))
 }

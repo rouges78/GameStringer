@@ -54,8 +54,8 @@ const utilityServicesConfig = [
   { id: 'playtime', name: 'Playtime Stats', iconType: 'chart', descKey: 'playtimeDesc' },
 ];
 
-const connectableProviders = ['steam', 'epic', 'ubisoft', 'itchio', 'gog', 'origin', 'battlenet'];
-const autoDetectProviders = ['xbox', 'amazon'];
+const connectableProviders = ['steam', 'epic', 'ubisoft', 'itchio', 'gog', 'origin', 'battlenet', 'rockstar', 'amazon'];
+const autoDetectProviders = ['xbox'];
 const connectableUtilities = ['howlongtobeat', 'steamgriddb', 'achievements', 'playtime'];
 
 // Cache globale in-memory per evitare ri-detection ad ogni mount
@@ -145,6 +145,66 @@ export default function StoresPage() {
         _storesCache.ubisoftConnected = true;
       }
 
+      // Origin/EA — credenziali dal profilo Tauri
+      if (!hasProvider('origin-credentials')) {
+        try {
+          const res = await invoke<any>('load_store_credentials', { store: 'origin' });
+          if (res?.success && res?.data?.username) {
+            existingAccounts.push({ provider: 'origin-credentials', userId: res.data.username });
+            changed = true;
+            console.log('[STORES] ✅ Origin credentials restored from Tauri profile');
+          }
+        } catch { console.log('[STORES] Origin: nessuna credenziale salvata'); }
+      }
+
+      // Battle.net — credenziali dal profilo Tauri
+      if (!hasProvider('battlenet-credentials')) {
+        try {
+          const res = await invoke<any>('load_store_credentials', { store: 'battlenet' });
+          if (res?.success && res?.data?.username) {
+            existingAccounts.push({ provider: 'battlenet-credentials', userId: res.data.username });
+            changed = true;
+            console.log('[STORES] ✅ Battle.net credentials restored from Tauri profile');
+          }
+        } catch { console.log('[STORES] Battle.net: nessuna credenziale salvata'); }
+      }
+
+      // Rockstar — credenziali dal profilo Tauri
+      if (!hasProvider('rockstar-credentials')) {
+        try {
+          const res = await invoke<any>('load_store_credentials', { store: 'rockstar' });
+          if (res?.success && res?.data?.username) {
+            existingAccounts.push({ provider: 'rockstar-credentials', userId: res.data.username });
+            changed = true;
+            console.log('[STORES] ✅ Rockstar credentials restored from Tauri profile');
+          }
+        } catch { console.log('[STORES] Rockstar: nessuna credenziale salvata'); }
+      }
+
+      // Amazon — credenziali dal profilo Tauri
+      if (!hasProvider('amazon-credentials')) {
+        try {
+          const res = await invoke<any>('load_store_credentials', { store: 'amazon' });
+          if (res?.success && res?.data?.username) {
+            existingAccounts.push({ provider: 'amazon-credentials', userId: res.data.username });
+            changed = true;
+            console.log('[STORES] ✅ Amazon credentials restored from Tauri profile');
+          }
+        } catch { console.log('[STORES] Amazon: nessuna credenziale salvata'); }
+      }
+
+      // itch.io — credenziali dal profilo Tauri
+      if (!hasProvider('itchio-credentials')) {
+        try {
+          const res = await invoke<any>('load_store_credentials', { store: 'itchio' });
+          if (res?.success && res?.data?.username) {
+            existingAccounts.push({ provider: 'itchio-credentials', userId: res.data.username });
+            changed = true;
+            console.log('[STORES] ✅ itch.io credentials restored from Tauri profile');
+          }
+        } catch { console.log('[STORES] itch.io: nessuna credenziale salvata'); }
+      }
+
       if (changed) {
         localStorage.setItem('gameStringer_connectedAccounts', JSON.stringify(existingAccounts));
         console.log('[STORES] 🔄 connectedAccounts aggiornati:', existingAccounts.length, 'provider');
@@ -210,6 +270,8 @@ export default function StoresPage() {
     gog: 'gog-credentials',
     origin: 'origin-credentials',
     battlenet: 'battlenet-credentials',
+    rockstar: 'rockstar-credentials',
+    amazon: 'amazon-credentials',
   };
 
   const isConnected = (providerId: string): boolean => {
@@ -226,6 +288,11 @@ export default function StoresPage() {
     // Check Ubisoft connection con stato locale
     if (providerId === 'ubisoft') {
       return ubisoftConnected || isProviderConnected('ubisoft-credentials');
+    }
+
+    // Amazon: auto-detect O credenziali
+    if (providerId === 'amazon') {
+      return amazonDetected === true || isProviderConnected('amazon-credentials');
     }
     
     // Check for other store providers
@@ -328,7 +395,7 @@ export default function StoresPage() {
       return;
     }
 
-    if (['gog', 'origin', 'battlenet'].includes(providerId)) {
+    if (['gog', 'origin', 'battlenet', 'rockstar', 'amazon'].includes(providerId)) {
       setGenericModalProvider(providerId);
       setLoadingProvider(null);
       return;
@@ -354,6 +421,17 @@ export default function StoresPage() {
         await invoke('clear_ubisoft_credentials');
         setUbisoftConnected(false);
         console.log('[UBISOFT] Credentials cancellate dal backend');
+      }
+
+      // Cancella credenziali dal profilo Tauri per store generici
+      const tauriStores = ['origin', 'battlenet', 'rockstar', 'amazon', 'itchio', 'gog'];
+      if (tauriStores.includes(providerId)) {
+        try {
+          await invoke('save_store_credentials', { store: providerId, username: '', password: '' });
+          console.log(`[STORES] 🗑️ Credenziali ${providerId} cancellate dal profilo Tauri`);
+        } catch (e) {
+          console.warn(`[STORES] ⚠️ Impossibile cancellare ${providerId} da Tauri:`, e);
+        }
       }
       
       const response = await fetch('/api/auth/disconnect', {
@@ -429,6 +507,19 @@ export default function StoresPage() {
 
     setLoadingProvider(genericModalProvider);
     try {
+      // 1. Salva credenziali nel backend Tauri (persistenza criptata nel profilo)
+      try {
+        await invoke('save_store_credentials', {
+          store: genericModalProvider,
+          username: email,
+          password: password,
+        });
+        console.log(`[STORES] ✅ Credenziali ${genericModalProvider} salvate nel profilo Tauri`);
+      } catch (tauriErr) {
+        console.warn(`[STORES] ⚠️ Fallback: impossibile salvare ${genericModalProvider} in Tauri:`, tauriErr);
+      }
+
+      // 2. Salva anche in session/localStorage per il frontend
       const backendProviderId = providerMap[genericModalProvider] || `${genericModalProvider}-credentials`;
       const result = await signIn(backendProviderId, {
         redirect: false,
@@ -481,6 +572,18 @@ export default function StoresPage() {
   const handleItchioLogin = async (apiKey: string) => {
     setLoadingProvider('itchio');
     try {
+      // Salva credenziali nel backend Tauri (persistenza criptata)
+      try {
+        await invoke('save_store_credentials', {
+          store: 'itchio',
+          username: 'itchio-api-key',
+          password: apiKey,
+        });
+        console.log('[STORES] ✅ itch.io API key salvata nel profilo Tauri');
+      } catch (tauriErr) {
+        console.warn('[STORES] ⚠️ Fallback: impossibile salvare itch.io in Tauri:', tauriErr);
+      }
+
       const result = await signIn('itchio-credentials', {
         accessToken: apiKey,
         userId: session?.user?.id,
@@ -625,19 +728,16 @@ export default function StoresPage() {
           const xboxActive = store.id === 'xbox' && xboxDetected === true;
           const amazonActive = store.id === 'amazon' && amazonDetected === true;
           const connected = store.id === 'xbox' ? xboxActive
-            : store.id === 'amazon' ? amazonActive
             : isConnected(store.id);
-          const isDetecting = (store.id === 'xbox' && xboxDetected === null)
-            || (store.id === 'amazon' && amazonDetected === null);
+          const isDetecting = (store.id === 'xbox' && xboxDetected === null);
 
           const autoDetectStatus = store.id === 'xbox'
             ? (xboxDetected === null ? 'Detecting...' : xboxDetected ? 'Xbox App / Game Pass detected' : 'Xbox App not found')
-            : store.id === 'amazon'
-            ? (amazonDetected === null ? 'Detecting...' : amazonDetected ? 'Amazon Games detected' : 'Amazon Games not found')
+            : store.id === 'amazon' && amazonActive
+            ? 'Amazon Games detected'
             : null;
 
           const autoDetectCommand = store.id === 'xbox' ? 'test_xbox_connection'
-            : store.id === 'amazon' ? 'test_amazon_connection'
             : null;
 
           return (
