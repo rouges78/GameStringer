@@ -36,6 +36,7 @@ pub mod qa_check;
 pub mod export_formats;
 pub mod smart_glossary;
 pub mod context_injection;
+pub mod prediction_tool;
 pub mod file_manager;
 pub mod translation_bridge;
 pub mod translation_api;

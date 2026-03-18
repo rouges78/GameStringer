@@ -720,6 +720,8 @@ fn main() {
             commands::context_injection::detect_text_tone,
             commands::context_injection::get_cultural_hints,
             commands::context_injection::get_language_variants,
+            // P.T. — Prediction Tool
+            commands::prediction_tool::analyze_game_translation,
             // Global Hotkeys System
             commands::global_hotkeys::init_global_hotkeys,
             commands::global_hotkeys::register_global_hotkey,

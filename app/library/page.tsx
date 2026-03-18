@@ -19,7 +19,7 @@ import * as CountryFlags from 'country-flag-icons/react/3x2';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { loadLibraryFilters, saveLibraryFilters, fuzzyMatch, useDebouncedValue } from '@/lib/library-filters';
 import { enrichGameTitle } from '@/lib/game-names-db';
-import { Gamepad2, ImageIcon, Search, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, ChevronDown, ChevronUp, RefreshCw, Download, Languages, Sparkles, FolderOpen, Monitor, Wrench } from 'lucide-react';
+import { Gamepad2, ImageIcon, Search, LayoutGrid, List, SlidersHorizontal, ArrowUpDown, ChevronDown, ChevronUp, RefreshCw, Download, Languages, Sparkles, FolderOpen, Monitor, Wrench, Brain } from 'lucide-react';
 import { useTranslation, translations } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
 
@@ -1193,6 +1193,15 @@ function LibraryListView() {
               >
                 <Languages className="h-4 w-4" />
               </button>
+              {game.is_installed && game.install_dir && (
+                <button
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/prediction-tool?name=${encodeURIComponent(game.title)}&installDir=${encodeURIComponent(game.install_dir!)}&engine=${encodeURIComponent(game.engine || '')}&headerImage=${encodeURIComponent(game.header_image || '')}`; }}
+                  className="bg-purple-600/90 hover:bg-purple-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-purple-500/50 hover:scale-110 border border-purple-400/30"
+                  title="P.T. Prediction Tool"
+                >
+                  <Brain className="h-4 w-4" />
+                </button>
+              )}
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverPickerGame(game); }}
                 className="bg-slate-700/90 hover:bg-slate-600 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-slate-500/50 hover:scale-110 border border-slate-500/30"
