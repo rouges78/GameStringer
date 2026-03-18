@@ -238,3 +238,133 @@ pub struct BackupInfo {
     pub size: u64,
     pub created: u64,
 }
+
+#[derive(serde::Serialize)]
+pub struct ScannedFile {
+    pub path: String,
+    pub name: String,
+    pub content: String,
+}
+
+#[derive(serde::Serialize)]
+pub struct ScanDirectoryResult {
+    pub files: Vec<ScannedFile>,
+}
+
+/// Scansiona ricorsivamente una directory e restituisce i file con le estensioni richieste
+#[command]
+pub async fn scan_directory_files(
+    directory: String,
+    extensions: Vec<String>,
+    recursive: bool,
+) -> Result<ScanDirectoryResult, String> {
+    let dir_path = Path::new(&directory);
+    if !dir_path.exists() {
+        return Err(format!("Directory not found: {}", directory));
+    }
+
+    let ext_set: Vec<String> = extensions.iter().map(|e| e.to_lowercase()).collect();
+    let mut files = Vec::new();
+
+    fn walk_dir(
+        dir: &Path,
+        ext_set: &[String],
+        recursive: bool,
+        files: &mut Vec<ScannedFile>,
+        max_files: usize,
+    ) -> Result<(), String> {
+        let entries = fs::read_dir(dir)
+            .map_err(|e| format!("Cannot read directory {}: {}", dir.display(), e))?;
+
+        for entry in entries.flatten() {
+            if files.len() >= max_files {
+                break;
+            }
+            let path = entry.path();
+            if path.is_dir() && recursive {
+                // Skip hidden dirs and common non-useful dirs
+                let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                if dir_name.starts_with('.') || dir_name == "node_modules" || dir_name == "__pycache__" {
+                    continue;
+                }
+                let _ = walk_dir(&path, ext_set, recursive, files, max_files);
+            } else if path.is_file() {
+                let ext = path.extension()
+                    .and_then(|e| e.to_str())
+                    .map(|e| e.to_lowercase())
+                    .unwrap_or_default();
+
+                if ext_set.contains(&ext) {
+                    // Read file content (skip binary/large files >2MB)
+                    let metadata = fs::metadata(&path).ok();
+                    let size = metadata.map(|m| m.len()).unwrap_or(0);
+                    if size > 2 * 1024 * 1024 {
+                        continue;
+                    }
+                    match fs::read_to_string(&path) {
+                        Ok(content) => {
+                            let name = path.file_name()
+                                .and_then(|n| n.to_str())
+                                .unwrap_or("unknown")
+                                .to_string();
+                            files.push(ScannedFile {
+                                path: path.to_string_lossy().to_string(),
+                                name,
+                                content,
+                            });
+                        }
+                        Err(_) => {} // Skip files that can't be read as text
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    walk_dir(dir_path, &ext_set, recursive, &mut files, 500)?;
+
+    Ok(ScanDirectoryResult { files })
+}
+
+/// Legge un file dalla directory app data di GameStringer
+#[command]
+pub async fn read_app_data_file(
+    filename: String,
+) -> Result<String, String> {
+    let app_dir = dirs::data_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("GameStringer");
+    
+    if !app_dir.exists() {
+        fs::create_dir_all(&app_dir)
+            .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    }
+
+    let file_path = app_dir.join(&filename);
+    if !file_path.exists() {
+        return Err(format!("File not found: {}", filename));
+    }
+
+    fs::read_to_string(&file_path)
+        .map_err(|e| format!("Failed to read {}: {}", filename, e))
+}
+
+/// Scrive un file nella directory app data di GameStringer
+#[command]
+pub async fn write_app_data_file(
+    filename: String,
+    content: String,
+) -> Result<(), String> {
+    let app_dir = dirs::data_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("GameStringer");
+    
+    if !app_dir.exists() {
+        fs::create_dir_all(&app_dir)
+            .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    }
+
+    let file_path = app_dir.join(&filename);
+    fs::write(&file_path, &content)
+        .map_err(|e| format!("Failed to write {}: {}", filename, e))
+}

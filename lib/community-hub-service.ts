@@ -192,10 +192,21 @@ class CommunityHubService {
   }
 
   /**
-   * Cerca pack di traduzioni
+   * Cerca pack di traduzioni — usa backend Supabase se disponibile, altrimenti fallback locale
    */
   async searchPacks(filters: PackSearchFilters = {}): Promise<{ packs: TranslationPack[]; total: number }> {
-    let results = [...this.localPacks, ...this.getMockPacks()];
+    // Try Supabase backend first
+    try {
+      const { isBackendEnabled, fetchPacks } = await import('./community-hub-backend');
+      if (isBackendEnabled()) {
+        const result = await fetchPacks(filters);
+        return result;
+      }
+    } catch {
+      // Backend non disponibile, fallback locale
+    }
+
+    let results = [...this.localPacks];
     
     if (filters.query) {
       const query = filters.query.toLowerCase();
@@ -259,18 +270,29 @@ class CommunityHubService {
   }
 
   /**
-   * Ottieni dettagli pack
+   * Ottieni dettagli pack — backend Supabase o locale
    */
   async getPackDetails(packId: string): Promise<TranslationPack | null> {
-    const allPacks = [...this.localPacks, ...this.getMockPacks()];
-    return allPacks.find(p => p.id === packId) || null;
+    try {
+      const { isBackendEnabled, fetchPackById } = await import('./community-hub-backend');
+      if (isBackendEnabled()) {
+        return await fetchPackById(packId);
+      }
+    } catch {}
+    return this.localPacks.find(p => p.id === packId) || null;
   }
 
   /**
-   * Ottieni recensioni pack
+   * Ottieni recensioni pack — backend Supabase o vuoto
    */
   async getPackReviews(packId: string): Promise<PackReview[]> {
-    return this.getMockReviews(packId);
+    try {
+      const { isBackendEnabled, fetchReviews } = await import('./community-hub-backend');
+      if (isBackendEnabled()) {
+        return await fetchReviews(packId);
+      }
+    } catch {}
+    return [];
   }
 
   /**
@@ -282,8 +304,13 @@ class CommunityHubService {
       throw new Error('Pack non trovato');
     }
 
-    // Simula download (in futuro: fetch da server)
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Download da backend Supabase se disponibile
+    try {
+      const { isBackendEnabled, downloadPack: downloadFromBackend } = await import('./community-hub-backend');
+      if (isBackendEnabled()) {
+        await downloadFromBackend(packId);
+      }
+    } catch {}
 
     // Salva info installazione
     this.installedPacks.set(packId, {
@@ -451,7 +478,15 @@ class CommunityHubService {
    * Ottieni statistiche hub
    */
   async getHubStats(): Promise<HubStats> {
-    const allPacks = [...this.localPacks, ...this.getMockPacks()];
+    // Backend Supabase se disponibile
+    try {
+      const { isBackendEnabled, fetchHubStats } = await import('./community-hub-backend');
+      if (isBackendEnabled()) {
+        return await fetchHubStats();
+      }
+    } catch {}
+
+    const allPacks = [...this.localPacks];
     
     const languageMap = new Map<string, number>();
     const gameMap = new Map<string, { gameName: string; count: number }>();
@@ -485,7 +520,7 @@ class CommunityHubService {
         .map(([gameId, data]) => ({ gameId, gameName: data.gameName, packs: data.count }))
         .sort((a, b) => b.packs - a.packs)
         .slice(0, 5),
-      recentActivity: this.getMockActivity()
+      recentActivity: []
     };
   }
 
@@ -572,148 +607,6 @@ class CommunityHubService {
     return 'json';
   }
 
-  private getMockPacks(): TranslationPack[] {
-    const mockAuthor: CommunityAuthor = {
-      id: 'retro_team', username: 'RetroTranslations', avatar: undefined,
-      reputation: 950, totalContributions: 42, verifiedTranslator: true
-    };
-    const mockAuthor2: CommunityAuthor = {
-      id: 'fan_ita', username: 'ItaRomHacker', avatar: undefined,
-      reputation: 720, totalContributions: 18, verifiedTranslator: true
-    };
-    return [
-      {
-        id: 'mock_ff6_snes', name: 'Final Fantasy VI - Traduzione Italiana Completa',
-        gameId: 'ff6', gameName: 'Final Fantasy VI', platform: 'snes',
-        sourceLanguage: 'ja', targetLanguage: 'it', version: '2.1',
-        author: mockAuthor, contributors: [mockAuthor2],
-        description: 'Traduzione completa di Final Fantasy VI (SNES) dal giapponese all\'italiano. Include tutti i dialoghi, menu, oggetti e magie.',
-        totalStrings: 14200, translatedStrings: 14200, completionPercentage: 100,
-        rating: 4.8, ratingCount: 127, downloads: 8450, size: 285000,
-        tags: ['rpg', 'jrpg', 'completa', 'square'],
-        createdAt: '2025-06-15', updatedAt: '2025-12-01',
-        changelog: [{ version: '2.1', date: '2025-12-01', changes: ['Fix nomi magie', 'Correzioni typo'] }],
-        files: [{ name: 'ff6_ita.ips', path: 'ff6_ita.ips', type: 'ips', size: 285000, stringCount: 0 }],
-        status: 'featured', compatibility: ['SNES', 'bsnes', 'snes9x'],
-        patchFormat: 'ips', patchInstructions: 'Applicare alla ROM giapponese v1.0 (no header)'
-      },
-      {
-        id: 'mock_ct_snes', name: 'Chrono Trigger - Italiano v3.0',
-        gameId: 'chrono_trigger', gameName: 'Chrono Trigger', platform: 'snes',
-        sourceLanguage: 'en', targetLanguage: 'it', version: '3.0',
-        author: mockAuthor2, contributors: [],
-        description: 'Traduzione italiana di Chrono Trigger per SNES. Basata sulla versione USA.',
-        totalStrings: 11800, translatedStrings: 11800, completionPercentage: 100,
-        rating: 4.9, ratingCount: 203, downloads: 12300, size: 312000,
-        tags: ['rpg', 'jrpg', 'completa', 'square'],
-        createdAt: '2024-11-20', updatedAt: '2025-09-15',
-        changelog: [{ version: '3.0', date: '2025-09-15', changes: ['Revisione completa dialoghi', 'Fix encoding'] }],
-        files: [{ name: 'ct_ita_v3.bps', path: 'ct_ita_v3.bps', type: 'bps', size: 312000, stringCount: 0 }],
-        status: 'verified', compatibility: ['SNES', 'bsnes', 'snes9x', 'RetroArch'],
-        patchFormat: 'bps', patchInstructions: 'Applicare alla ROM USA (CRC32: 2D5B6954)'
-      },
-      {
-        id: 'mock_mother3_gba', name: 'Mother 3 - Fan Translation IT',
-        gameId: 'mother3', gameName: 'Mother 3', platform: 'gba',
-        sourceLanguage: 'ja', targetLanguage: 'it', version: '1.5',
-        author: mockAuthor, contributors: [mockAuthor2],
-        description: 'Traduzione italiana completa di Mother 3 per GBA, basata sulla fan translation inglese di Tomato.',
-        totalStrings: 18500, translatedStrings: 17200, completionPercentage: 93,
-        rating: 4.5, ratingCount: 89, downloads: 5600, size: 1240000,
-        tags: ['rpg', 'nintendo', 'earthbound'],
-        createdAt: '2025-03-10', updatedAt: '2025-11-22',
-        changelog: [{ version: '1.5', date: '2025-11-22', changes: ['Tradotti NPC secondari', 'Fix font'] }],
-        files: [{ name: 'mother3_ita.bps', path: 'mother3_ita.bps', type: 'bps', size: 1240000, stringCount: 0 }],
-        status: 'verified', compatibility: ['GBA', 'mGBA', 'VBA-M', 'RetroArch'],
-        patchFormat: 'bps'
-      },
-      {
-        id: 'mock_dq5_snes', name: 'Dragon Quest V - Italiano',
-        gameId: 'dq5', gameName: 'Dragon Quest V', platform: 'snes',
-        sourceLanguage: 'ja', targetLanguage: 'it', version: '1.0',
-        author: mockAuthor2, contributors: [],
-        description: 'Prima traduzione italiana di Dragon Quest V per Super Famicom.',
-        totalStrings: 9800, translatedStrings: 7200, completionPercentage: 73,
-        rating: 4.0, ratingCount: 34, downloads: 1890, size: 198000,
-        tags: ['rpg', 'jrpg', 'enix', 'wip'],
-        createdAt: '2025-08-01', updatedAt: '2026-01-10',
-        changelog: [{ version: '1.0', date: '2026-01-10', changes: ['Release iniziale - storia principale tradotta'] }],
-        files: [{ name: 'dq5_ita.ips', path: 'dq5_ita.ips', type: 'ips', size: 198000, stringCount: 0 }],
-        status: 'published', compatibility: ['SNES', 'bsnes', 'snes9x'],
-        patchFormat: 'ips'
-      },
-      {
-        id: 'mock_fe7_gba', name: 'Fire Emblem: Blazing Blade - ITA',
-        gameId: 'fe7', gameName: 'Fire Emblem: The Blazing Blade', platform: 'gba',
-        sourceLanguage: 'en', targetLanguage: 'it', version: '2.0',
-        author: mockAuthor, contributors: [],
-        description: 'Traduzione italiana di Fire Emblem 7 (Blazing Blade) per GBA. Tutti i dialoghi e menu tradotti.',
-        totalStrings: 22000, translatedStrings: 22000, completionPercentage: 100,
-        rating: 4.7, ratingCount: 156, downloads: 9200, size: 520000,
-        tags: ['srpg', 'nintendo', 'completa'],
-        createdAt: '2025-01-05', updatedAt: '2025-10-18',
-        changelog: [{ version: '2.0', date: '2025-10-18', changes: ['Revisione dialoghi supporto', 'Fix nomi armi'] }],
-        files: [{ name: 'fe7_ita_v2.bps', path: 'fe7_ita_v2.bps', type: 'bps', size: 520000, stringCount: 0 }],
-        status: 'featured', compatibility: ['GBA', 'mGBA', 'VBA-M'],
-        patchFormat: 'bps'
-      },
-      {
-        id: 'mock_megaman_nes', name: 'Mega Man 2 - Italiano',
-        gameId: 'megaman2', gameName: 'Mega Man 2', platform: 'nes',
-        sourceLanguage: 'en', targetLanguage: 'it', version: '1.0',
-        author: mockAuthor2, contributors: [],
-        description: 'Traduzione dei testi di Mega Man 2 per NES. Include schermate, menu e testi boss.',
-        totalStrings: 320, translatedStrings: 320, completionPercentage: 100,
-        rating: 4.2, ratingCount: 45, downloads: 3100, size: 8500,
-        tags: ['action', 'capcom', 'completa'],
-        createdAt: '2025-05-20', updatedAt: '2025-05-20',
-        changelog: [{ version: '1.0', date: '2025-05-20', changes: ['Release iniziale'] }],
-        files: [{ name: 'mm2_ita.ips', path: 'mm2_ita.ips', type: 'ips', size: 8500, stringCount: 0 }],
-        status: 'verified', compatibility: ['NES', 'Mesen', 'FCEUX', 'RetroArch'],
-        patchFormat: 'ips'
-      },
-      {
-        id: 'mock_pokegold_gbc', name: 'Pokemon Oro - Retraduzione Italiana',
-        gameId: 'pokemon_gold', gameName: 'Pokemon Gold', platform: 'gbc',
-        sourceLanguage: 'en', targetLanguage: 'it', version: '1.2',
-        author: mockAuthor, contributors: [mockAuthor2],
-        description: 'Retraduzione completa di Pokemon Oro per Game Boy Color, con nomi Pokemon aggiornati e dialoghi migliorati.',
-        totalStrings: 8900, translatedStrings: 8900, completionPercentage: 100,
-        rating: 4.6, ratingCount: 178, downloads: 11500, size: 145000,
-        tags: ['rpg', 'nintendo', 'pokemon', 'completa'],
-        createdAt: '2025-02-14', updatedAt: '2025-08-30',
-        changelog: [{ version: '1.2', date: '2025-08-30', changes: ['Fix nomi Pokemon Gen2', 'Correzioni testi palestra'] }],
-        files: [{ name: 'pokegold_ita.bps', path: 'pokegold_ita.bps', type: 'bps', size: 145000, stringCount: 0 }],
-        status: 'featured', compatibility: ['GBC', 'Gambatte', 'BGB', 'RetroArch'],
-        patchFormat: 'bps'
-      },
-      {
-        id: 'mock_ff7_ps1', name: 'Final Fantasy VII - Retraduzione ITA',
-        gameId: 'ff7', gameName: 'Final Fantasy VII', platform: 'ps1',
-        sourceLanguage: 'en', targetLanguage: 'it', version: '1.8',
-        author: mockAuthor, contributors: [],
-        description: 'Retraduzione completa di Final Fantasy VII PS1 con nomi corretti, dialoghi migliorati e fix encoding.',
-        totalStrings: 32000, translatedStrings: 31500, completionPercentage: 98,
-        rating: 4.9, ratingCount: 312, downloads: 18700, size: 2800000,
-        tags: ['rpg', 'jrpg', 'square', 'completa'],
-        createdAt: '2024-09-01', updatedAt: '2026-02-15',
-        changelog: [{ version: '1.8', date: '2026-02-15', changes: ['Fix dialoghi Disco 3', 'Nomi magie revisionati'] }],
-        files: [{ name: 'ff7_retrad_ita.bps', path: 'ff7_retrad_ita.bps', type: 'bps', size: 2800000, stringCount: 0 }],
-        status: 'featured', compatibility: ['PS1', 'DuckStation', 'ePSXe', 'RetroArch'],
-        patchFormat: 'bps', patchInstructions: 'Applicare al BIN del Disco 1 USA (SCUS-94163)'
-      },
-    ];
-  }
-
-  private getMockReviews(packId: string): PackReview[] {
-    // Dati mock rimossi
-    return [];
-  }
-
-  private getMockActivity(): ActivityItem[] {
-    // Dati mock rimossi
-    return [];
-  }
 }
 
 export const communityHubService = new CommunityHubService();

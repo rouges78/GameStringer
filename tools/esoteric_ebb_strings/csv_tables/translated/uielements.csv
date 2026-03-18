@@ -1,0 +1,21 @@
+ID,ENGLISH,ITALIAN
+UI_1,New Game,Inizia
+UI_2,Load,Apri
+UI_3,Options,Opzioni
+UI_4,Credits,Crediti
+UI_5,Exit,Esci
+UI_6,,
+UI_7,,
+UI_8,,
+Death_1_1,The Cleric is dead.,Il Chierico è morto.
+Death_1_2,"Alas, this String will be discarded.","Ahimè, questa Corda verrà recisa."
+Death_1_3,"But you can see another, can you not?","Ma puoi vederne un'altra, non è vero?"
+Death_2_1,The Cleric has ceased to be.,Il Chierico ha cessato di esistere.
+Death_2_2,That happens when you run out of 'health'.,Succede quando esaurisci la 'salute'.
+Death_2_3,"Try to stay intact next time, eh?","Cerca di restare intero la prossima volta, eh?"
+Death_3_1,The Cleric has passed away.,Il Chierico è trapassato.
+Death_3_2,This is very sad.,Questo è molto triste.
+Death_3_3,"Next, might I suggest avoiding danger?","La prossima volta, posso suggerire di evitare i pericoli?"
+Death_4_1,The Cleric is no more.,Il Chierico non è più.
+Death_4_2,But this feels... off.,Ma qualcosa... non torna.
+Death_4_3,Wouldn't you agree?,Non sei d'accordo?

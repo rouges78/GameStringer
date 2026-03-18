@@ -782,7 +782,7 @@ function LibraryListView() {
         // ═══════════════════════════════════════════════════════════
         const [scanResult, otherStoreGames] = await Promise.all([localScanPromise, otherStoresPromise]);
 
-        const localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null; last_played?: number | null; added_date?: number | null }> = new Map();
+        const localScanData: Map<string, { is_installed: boolean; is_shared: boolean; title: string; engine?: string | null; last_played?: number | null; added_date?: number | null; install_path?: string | null }> = new Map();
         const relevantGames = (scanResult || []).filter(g => g.is_installed || g.is_shared);
         console.log(`📂 Local scan: ${relevantGames.length} relevant games (of ${(scanResult || []).length} total)`);
 
@@ -795,6 +795,7 @@ function LibraryListView() {
             engine: g.engine || null,
             last_played: g.last_played || null,
             added_date: g.added_date || null,
+            install_path: g.install_path || null,
           });
         }
 
@@ -817,6 +818,7 @@ function LibraryListView() {
             supported_languages: [],
             last_played: localData.last_played || undefined,
             added_date: localData.added_date || undefined,
+            install_dir: localData.install_path || undefined,
           });
         }
 
@@ -1026,6 +1028,7 @@ function LibraryListView() {
       ...game,
       platform: game.platform || 'Steam',
       title: enrichGameTitle(game.app_id || game.id, game.title, game.platform),
+      install_dir: (game as any).install_path || game.install_dir || undefined,
     }));
     
     // Debug: conta giochi con nomi validi vs invalidi
@@ -1193,15 +1196,13 @@ function LibraryListView() {
               >
                 <Languages className="h-4 w-4" />
               </button>
-              {game.is_installed && game.install_dir && (
-                <button
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/prediction-tool?name=${encodeURIComponent(game.title)}&installDir=${encodeURIComponent(game.install_dir!)}&engine=${encodeURIComponent(game.engine || '')}&headerImage=${encodeURIComponent(game.header_image || '')}`; }}
-                  className="bg-purple-600/90 hover:bg-purple-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-purple-500/50 hover:scale-110 border border-purple-400/30"
-                  title="P.T. Prediction Tool"
-                >
-                  <Brain className="h-4 w-4" />
-                </button>
-              )}
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); const dir = game.install_dir || (game as any).install_path || ''; window.location.href = `/prediction-tool?name=${encodeURIComponent(game.title)}&installDir=${encodeURIComponent(dir)}&engine=${encodeURIComponent(game.engine || '')}&headerImage=${encodeURIComponent(game.header_image || '')}`; }}
+                className="bg-purple-600/90 hover:bg-purple-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-purple-500/50 hover:scale-110 border border-purple-400/30"
+                title="P.T. Prediction Tool"
+              >
+                <Brain className="h-4 w-4" />
+              </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverPickerGame(game); }}
                 className="bg-slate-700/90 hover:bg-slate-600 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-slate-500/50 hover:scale-110 border border-slate-500/30"
@@ -1519,10 +1520,19 @@ function LibraryListView() {
             <ForceRefreshButton onRefreshComplete={handleForceRefresh} />
             <button 
               onClick={testFamilySharing} 
-              className="group relative flex items-center justify-center h-10 w-10 bg-slate-900/80 text-slate-400 hover:text-indigo-300 hover:bg-slate-800/80 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/30"
-              title="Scan Family Sharing"
+              className="group flex items-center gap-2 px-3 py-2 bg-slate-900/80 text-slate-300 hover:text-indigo-300 hover:bg-slate-800/80 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/30"
+              title="Riscansiona tutti i giochi installati + Family Sharing"
             >
               <RefreshCw className="h-4 w-4 group-hover:rotate-180 transition-transform duration-500" />
+              <span className="text-[11px] font-semibold tracking-wide">Scan</span>
+            </button>
+            <button
+              onClick={() => { window.location.href = '/prediction-tool/ranking'; }}
+              className="group flex items-center gap-2 px-3 py-2 bg-purple-900/60 text-purple-300 hover:text-white hover:bg-purple-600/30 rounded-xl transition-all border border-purple-700/40 hover:border-purple-500/50"
+              title="Classifica P.T. — Scansiona tutti i giochi installati per difficoltà di traduzione"
+            >
+              <Brain className="h-4 w-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
+              <span className="text-[11px] font-semibold tracking-wide">P.T. Rank</span>
             </button>
             <button 
               onClick={async () => {
@@ -1536,11 +1546,11 @@ function LibraryListView() {
                   toast.error(lib.updateError + ': ' + e);
                 }
               }} 
-              className="group flex items-center gap-2 px-4 py-2 bg-slate-900/80 text-slate-300 hover:text-white hover:bg-indigo-600/20 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/40"
-              title="Aggiorna nomi dal Database remoto"
+              className="group flex items-center gap-2 px-3 py-2 bg-slate-900/80 text-slate-300 hover:text-white hover:bg-indigo-600/20 rounded-xl transition-all border border-slate-700/50 hover:border-indigo-500/40"
+              title="Scarica nomi corretti dei giochi dal Database remoto"
             >
               <Download className="h-4 w-4 text-slate-400 group-hover:text-indigo-300 transition-colors" />
-              <span className="text-[11px] font-semibold tracking-wide">{t('libraryPage.aggiornaDb')}</span>
+              <span className="text-[11px] font-semibold tracking-wide">Nomi DB</span>
             </button>
           </div>
         </div>

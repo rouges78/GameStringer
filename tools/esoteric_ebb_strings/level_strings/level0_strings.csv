@@ -1,0 +1,834 @@
+﻿PATH_ID,FIELD,LENGTH,TEXT
+9,m_Name,5,Arrow
+24,m_Name,5,COAST
+38,m_Name,5,PINJA
+73,m_Name,5,VIIRA
+78,m_Name,5,ALBUM
+81,m_Name,5,Image
+118,m_Name,5,Cloud
+126,m_Name,5,SNELL
+160,m_Name,5,MISKA
+179,m_Name,5,CHRIS
+180,m_Name,5,ALFOZ
+201,m_Name,5,Notes
+249,m_Name,5,Title
+277,m_Name,5,ROLLO
+281,m_Name,5,BORGO
+287,m_Name,5,OLZIS
+298,m_Name,5,Tower
+355,m_Name,5,ETTIR
+363,m_Name,5,Spike
+416,m_Name,5,WINDS
+441,m_Name,5,Sides
+450,m_Name,5,AKZEL
+478,m_Name,5,Quote
+497,m_Name,5,Names
+677,m_Name,5,Links
+695,m_Name,5,Level
+746,m_Name,5,FRONT
+764,m_Name,5,Label
+891,m_Name,5,Point
+1096,m_Name,5,Unity
+1306,m_Name,5,Ideas
+1880,m_Name,5,Speed
+2102,m_Name,5,Feats
+3804,m_Name,5,Fonts
+31,m_Name,6,Handle
+33,m_Name,6,Holder
+34,m_Name,6,circle
+68,m_Name,6,MenuBG
+75,m_Name,6,NEARLY
+92,m_Name,6,THANKS
+150,m_Name,6,DARROW
+224,m_Name,6,CLOUDS
+237,m_Name,6,Clouds
+265,m_Name,6,VISKEN
+268,m_Name,6,SNURRE
+279,m_Name,6,DemoUI
+315,m_Name,6,Slider
+319,m_Name,6,BGFade
+326,m_Name,6,KRAAID
+352,m_Name,6,NESSAN
+400,m_Name,6,Canvas
+492,m_Name,6,Notice
+495,m_Name,6,BGMask
+531,m_Name,6,Credit
+577,m_Name,6,Circle
+625,m_Name,6,STRtxt
+632,m_Name,6,HeadUI
+659,m_Name,6,CHAnum
+745,m_Name,6,Square
+920,m_Name,6,EFFECT
+1028,m_Name,6,INTspl
+1077,m_Name,6,modNum
+1088,m_Name,6,Trait1
+1092,m_Name,6,Traits
+1163,m_Name,6,CONnum
+1198,m_Name,6,BGDesc
+1233,m_Name,6,WISnum
+1353,m_Name,6,WISspl
+1360,m_Name,6,STRspl
+1377,m_Name,6,DEXspl
+1522,m_Name,6,CHAmod
+1713,m_Name,6,DotsBG
+1805,m_Name,6,RFIcon
+1842,m_Name,6,CHAspl
+1898,m_Name,6,INTnum
+1944,m_Name,6,CONspl
+1958,m_Name,6,Chimes
+1993,m_Name,6,INTmod
+2078,m_Name,6,LinkBG
+2221,m_Name,6,RFText
+2223,m_Name,6,Spinny
+2322,m_Name,6,Button
+2461,m_Name,6,CONmod
+2649,m_Name,6,DEXtxt
+2798,m_Name,6,DEXnum
+2943,m_Name,6,SCText
+2982,m_Name,6,BackAS
+3163,m_Name,6,WISmod
+3464,m_Name,6,DEXmod
+3468,m_Name,6,Delete
+3495,m_Name,6,AnyKey
+30,m_Name,7,message
+36,m_Name,7,CREDITS
+113,m_Name,7,Pattern
+153,m_Name,7,DISCORD
+168,m_Name,7,d20Text
+176,m_Name,7,FadeTop
+295,m_Name,7,Comment
+322,m_Name,7,d20DICE
+331,m_Name,7,TextBox
+335,m_Name,7,MODISSA
+364,m_Name,7,Credits
+405,m_Name,7,Blocker
+426,m_Name,7,Content
+432,m_Name,7,DRUMMER
+473,m_Name,7,SheetUI
+479,m_Name,7,Dot (2)
+500,m_Name,7,TopName
+524,m_Name,7,SPL (2)
+528,m_Name,7,txt (1)
+542,m_Name,7,SPL (1)
+549,m_Name,7,Weapons
+566,m_Name,7,Dot (1)
+572,m_Name,7,Row (1)
+586,m_Name,7,Divider
+589,m_Name,7,Dot (9)
+593,m_Name,7,SPL (4)
+596,m_Name,7,Dot (5)
+689,m_Name,7,Keybind
+850,m_Name,7,Dot (3)
+883,m_Name,7,Mod (1)
+958,m_Name,7,Journal
+1017,m_Name,7,Dot (7)
+1022,m_Name,7,PROFTXT
+1023,m_Name,7,Dot (4)
+1081,m_Name,7,InfoBox
+1106,m_Name,7,Outline
+1153,m_Name,7,MainBox
+1255,m_Name,7,Dot (6)
+1461,m_Name,7,CHALEFT
+1557,m_Name,7,Row (4)
+1631,m_Name,7,Row (2)
+1641,m_Name,7,StatBox
+1714,m_Name,7,Mod (2)
+1873,m_Name,7,Helmets
+1983,m_Name,7,Dot (8)
+2044,m_Name,7,Message
+2104,m_Name,7,AltText
+2380,m_Name,7,SPL (5)
+2390,m_Name,7,Mod (3)
+2412,m_Name,7,Row (3)
+2439,m_Name,7,Picture
+2581,m_Name,7,Quality
+2723,m_Name,7,DIVIDER
+2750,m_Name,7,SPL (3)
+2761,m_Name,7,Mod (4)
+2846,m_Name,7,ProfBox
+2955,m_Name,7,Mod (5)
+2966,m_Name,7,STRLeft
+2984,m_Name,7,IdeaObj
+3084,m_Name,7,INTLEFT
+3321,m_Name,7,SCText2
+3429,m_Name,7,SaveBox
+3618,m_Name,7,DEXLEFT
+3685,m_Name,7,WISLEFT
+3780,m_Name,7,CONLEFT
+1,m_Name,8,LinkIcon
+6,m_Name,8,Line (1)
+14,m_Name,8,EVERGLAD
+49,m_Name,8,New Game
+58,m_Name,8,Settings
+111,m_Name,8,WISHLIST
+114,m_Name,8,FEEDBACK
+132,m_Name,8,FADE (6)
+177,m_Name,8,Load (1)
+185,m_Name,8,MainMenu
+187,m_Name,8,CLOUDS 1
+213,m_Name,8,LeftCore
+261,m_Name,8,FADE (8)
+267,m_Name,8,CLOUDS 2
+297,m_Name,8,NEXTFEST
+307,m_Name,8,Continue
+318,m_Name,8,Viewport
+321,m_Name,8,FADE (4)
+338,m_Name,8,Exit (1)
+362,m_Name,8,FADE (5)
+370,m_Name,8,MOONGORE
+380,m_Name,8,FADE (2)
+390,m_Name,8,FADE (1)
+392,m_Name,8,Portrait
+446,m_Name,8,FADE (3)
+460,m_Name,8,FootNote
+467,m_Name,8,Fade (1)
+472,m_Name,8,Triangle
+493,m_Name,8,MarkOpen
+506,m_Name,8,MainText
+508,m_Name,8,Selected
+516,m_Name,8,Template
+583,m_Name,8,Link (2)
+658,m_Name,8,ASS_SGPP
+680,m_Name,8,Dot (12)
+699,m_Name,8,MemoryUI
+715,m_Name,8,STRRight
+720,m_Name,8,FontName
+769,m_Name,8,Dot (22)
+776,m_Name,8,Dot (19)
+804,m_Name,8,Animator
+811,m_Name,8,Dot (20)
+847,m_Name,8,ModImage
+903,m_Name,8,FontTips
+930,m_Name,8,Dots (1)
+1042,m_Name,8,Dot (18)
+1057,m_Name,8,DEXRIGHT
+1089,m_Name,8,Examples
+1109,m_Name,8,Link (1)
+1148,m_Name,8,Stat (5)
+1236,m_Name,8,CHARIGHT
+1442,m_Name,8,DialogUI
+1470,m_Name,8,Dot (10)
+1524,m_Name,8,Dot (21)
+1534,m_Name,8,Dot (15)
+1535,m_Name,8,Dot (17)
+1648,m_Name,8,Stat (2)
+1650,m_Name,8,MainDesc
+1743,m_Name,8,Dot (26)
+1748,m_Name,8,Dot (25)
+1779,m_Name,8,Dot (24)
+1867,m_Name,8,Dot (14)
+1896,m_Name,8,EGPP (1)
+1911,m_Name,8,Dot (11)
+1916,m_Name,8,DayIdeas
+2068,m_Name,8,Dot (23)
+2069,m_Name,8,Cantrips
+2087,m_Name,8,LINE (2)
+2257,m_Name,8,Mod2Text
+2298,m_Name,8,ProfText
+2405,m_Name,8,Dot (16)
+2443,m_Name,8,Dot (13)
+2456,m_Name,8,Mod1Text
+2473,m_Name,8,Stat (3)
+2539,m_Name,8,Stat (4)
+2596,m_Name,8,Name (1)
+2674,m_Name,8,Icon (1)
+2712,m_Name,8,LINE (1)
+2908,m_Name,8,Stat (1)
+2983,m_Name,8,SaveMenu
+3072,m_Name,8,SGPP (1)
+3081,m_Name,8,Level Up
+3150,m_Name,8,STARTGPP
+3184,m_Name,8,INTRIGHT
+3234,m_Name,8,DayTitle
+3454,m_Name,8,IdeasBox
+3516,m_Name,8,UISlider
+3572,m_Name,8,CONRIGHT
+3652,m_Name,8,WISRIGHT
+32,m_Name,9,Image (4)
+40,m_Name,9,Image (1)
+48,m_Name,9,Image (2)
+50,m_Name,9,Comment.1
+52,m_Name,9,Image (5)
+56,m_Name,9,Image (3)
+64,m_Name,9,Character
+77,m_Name,9,LeftArrow
+80,m_Name,9,Prebuild2
+83,m_Name,9,SidesMask
+95,m_Name,9,RightLine
+99,m_Name,9,Cloud (6)
+102,m_Name,9,MenuCheck
+104,m_Name,9,Cloud (5)
+120,m_Name,9,Image (8)
+125,m_Name,9,Cloud (7)
+164,m_Name,9,Cloud (9)
+166,m_Name,9,TowerSide
+173,m_Name,9,Prebuild5
+182,m_Name,9,Cloud (1)
+203,m_Name,9,Tower (1)
+204,m_Name,9,Cloud (4)
+214,m_Name,9,Fill Area
+234,m_Name,9,Cloud (8)
+236,m_Name,9,PreDemoUI
+248,m_Name,9,Prebuild3
+258,m_Name,9,Prebuild4
+286,m_Name,9,VIZITKORT
+334,m_Name,9,RightCore
+344,m_Name,9,AdsBanner
+354,m_Name,9,Prebuild1
+372,m_Name,9,Prebuild6
+387,m_Name,9,SFXButton
+398,m_Name,9,Cloud (3)
+404,m_Name,9,Image (6)
+409,m_Name,9,Title (1)
+418,m_Name,9,Image (7)
+438,m_Name,9,Cloud (2)
+469,m_Name,9,Highlight
+474,m_Name,9,Point (1)
+491,m_Name,9,Point (6)
+502,m_Name,9,Point (9)
+517,m_Name,9,Scrollbar
+539,m_Name,9,ExampleAS
+541,m_Name,9,Point (3)
+563,m_Name,9,SideColor
+582,m_Name,9,Point (8)
+587,m_Name,9,DEX Ideas
+599,m_Name,9,Point (7)
+774,m_Name,9,Point (4)
+808,m_Name,9,Point (2)
+822,m_Name,9,Drop Idea
+844,m_Name,9,Text Area
+856,m_Name,9,DeleteBox
+868,m_Name,9,Point (5)
+871,m_Name,9,StrModBox
+898,m_Name,9,Names (3)
+1034,m_Name,9,INT Ideas
+1114,m_Name,9,Names (1)
+1234,m_Name,9,Names (2)
+1662,m_Name,9,CON Ideas
+1751,m_Name,9,STR Ideas
+1907,m_Name,9,_STATLIST
+1952,m_Name,9,WIS Ideas
+2180,m_Name,9,Randomize
+2247,m_Name,9,Overwrite
+2430,m_Name,9,IdeasList
+2511,m_Name,9,CHA Ideas
+2778,m_Name,9,UnderLine
+2956,m_Name,9,PreBuilds
+3500,m_Name,9,Names (4)
+17,m_Name,10,PortraitBG
+18,m_Name,10,GOURGALASH
+23,m_Name,10,Text (TMP)
+88,m_Name,10,CornerFade
+96,m_Name,10,WaveSounds
+116,m_Name,10,MiddleCore
+137,m_Name,10,StopTarget
+138,m_Name,10,LoadingBar
+152,m_Name,10,CLOUDS (1)
+165,m_Name,10,Background
+184,m_Name,10,CircleAnim
+200,m_Name,10,TowerPiece
+221,m_Name,10,WhiteBlock
+254,m_Name,10,FadeBottom
+309,m_Name,10,RightArrow
+330,m_Name,10,Silhouette
+384,m_Name,10,CRANIUMANT
+413,m_Name,10,DEMOBANNER
+476,m_Name,10,NewSaveBox
+521,m_Name,10,Item Label
+562,m_Name,10,InfoButton
+580,m_Name,10,CastingReq
+679,m_Name,10,TopDivider
+795,m_Name,10,Point (12)
+839,m_Name,10,Point (10)
+876,m_Name,10,Pickpocket
+919,m_Name,10,Button (2)
+931,m_Name,10,ProfButton
+1067,m_Name,10,Circle (3)
+1083,m_Name,10,Trait1 (2)
+1090,m_Name,10,DEXInfoBox
+1094,m_Name,10,Trait1 (1)
+1097,m_Name,10,ChoicePart
+1154,m_Name,10,Spellbooks
+1346,m_Name,10,FontNumber
+1387,m_Name,10,CONInfoBox
+1766,m_Name,10,Screenshot
+1787,m_Name,10,Experience
+2002,m_Name,10,OldInfoBox
+2098,m_Name,10,Point (11)
+2106,m_Name,10,MarkClosed
+2193,m_Name,10,Circle (4)
+2455,m_Name,10,LegalLines
+2483,m_Name,10,Initiative
+2555,m_Name,10,Circle (5)
+2586,m_Name,10,Button (1)
+2616,m_Name,10,Circle (2)
+2714,m_Name,10,Circle (1)
+2874,m_Name,10,INTInfoBox
+3121,m_Name,10,CHAInfoBox
+3289,m_Name,10,WISInfoBox
+3527,m_Name,10,Exhaustion
+3593,m_Name,10,LoadingOBJ
+3660,m_Name,10,STRInfoBox
+55,m_Name,11,DIVIDER (9)
+67,m_Name,11,DIVIDER (2)
+85,m_Name,11,Scroll View
+90,m_Name,11,RELEASEDATE
+94,m_Name,11,Main Camera
+98,m_Name,11,LastSession
+122,m_Name,11,DIVIDER (5)
+174,m_Name,11,Pattern (1)
+183,m_Name,11,DIVIDER (7)
+191,m_Name,11,Credits (1)
+196,m_Name,11,DIVIDER (8)
+208,m_Name,11,PRENEXTFEST
+230,m_Name,11,SkipMessage
+283,m_Name,11,CloseButton
+296,m_Name,11,DIVIDER (4)
+332,m_Name,11,DIVIDER (1)
+340,m_Name,11,DIVIDER (6)
+353,m_Name,11,TowerMiddle
+371,m_Name,11,DIVIDER (3)
+375,m_Name,11,SidesColors
+406,m_Name,11,RELEASETEXT
+425,m_Name,11,LoadingText
+443,m_Name,11,WIP MESSAGE
+488,m_Name,11,Divider (2)
+532,m_Name,11,Divider (1)
+533,m_Name,11,LoadingSpin
+540,m_Name,11,Accessories
+573,m_Name,11,HighlightUI
+584,m_Name,11,SelectImage
+588,m_Name,11,NameofSpell
+754,m_Name,11,Keybind (1)
+818,m_Name,11,Resolutions
+848,m_Name,11,Divider (4)
+1147,m_Name,11,DiscordIcon
+1196,m_Name,11,SaveMessage
+1322,m_Name,11,StatBox (5)
+1570,m_Name,11,Dice Checks
+1710,m_Name,11,Placeholder
+1733,m_Name,11,ReturnArrow
+1765,m_Name,11,TextContent
+1792,m_Name,11,AlertCircle
+1806,m_Name,11,DiscordLink
+1822,m_Name,11,StatListOLD
+1834,m_Name,11,MusicSlider
+1951,m_Name,11,Divider (3)
+2547,m_Name,11,StatBox (2)
+2556,m_Name,11,Proficiency
+2565,m_Name,11,Spell Slots
+2633,m_Name,11,SaveManager
+2679,m_Name,11,StatBox (4)
+2701,m_Name,11,VoiceSlider
+2777,m_Name,11,StatBox (3)
+2836,m_Name,11,AltText (1)
+3252,m_Name,11,StatBox (1)
+4,m_Name,12,DIVIDER (41)
+7,m_Name,12,ContinueArea
+22,m_Name,12,INTROMESSAGE
+25,m_Name,12,DIVIDER (28)
+45,m_Name,12,DIVIDER (30)
+46,m_Name,12,FilledButton
+61,m_Name,12,DIVIDER (29)
+72,m_Name,12,Sliding Area
+74,m_Name,12,DIVIDER (16)
+79,m_Name,12,DIVIDER (45)
+100,m_Name,12,LeftCore (3)
+101,m_Name,12,DIVIDER (34)
+105,m_Name,12,CLOUDS 1 (1)
+106,m_Name,12,DIVIDER (31)
+110,m_Name,12,DIVIDER (54)
+119,m_Name,12,DIVIDER (12)
+124,m_Name,12,DIVIDER (18)
+134,m_Name,12,DIVIDER (22)
+141,m_Name,12,DIVIDER (50)
+144,m_Name,12,DIVIDER (17)
+148,m_Name,12,DIVIDER (40)
+149,m_Name,12,DIVIDER (42)
+154,m_Name,12,DIVIDER (36)
+155,m_Name,12,DIVIDER (26)
+159,m_Name,12,DIVIDER (57)
+163,m_Name,12,DIVIDER (20)
+171,m_Name,12,Settings (1)
+172,m_Name,12,ContinueText
+186,m_Name,12,TextViewPort
+188,m_Name,12,DIVIDER (49)
+190,m_Name,12,DIVIDER (47)
+194,m_Name,12,DIVIDER (23)
+195,m_Name,12,DIVIDER (39)
+211,m_Name,12,DIVIDER (21)
+215,m_Name,12,DIVIDER (35)
+225,m_Name,12,DIVIDER (53)
+228,m_Name,12,DIVIDER (27)
+229,m_Name,12,DIVIDER (43)
+238,m_Name,12,SettingsMenu
+252,m_Name,12,DIVIDER (55)
+259,m_Name,12,DIVIDER (44)
+266,m_Name,12,DIVIDER (37)
+274,m_Name,12,DIVIDER (51)
+275,m_Name,12,LeftCore (2)
+278,m_Name,12,DIVIDER (32)
+284,m_Name,12,DIVIDER (14)
+302,m_Name,12,FEEDBACKICon
+313,m_Name,12,DIVIDER (56)
+317,m_Name,12,FEEDBACKLink
+320,m_Name,12,DIVIDER (24)
+325,m_Name,12,LeftCore (1)
+328,m_Name,12,AnyButtonBox
+337,m_Name,12,DIVIDER (52)
+346,m_Name,12,DIVIDER (13)
+347,m_Name,12,ContinueTime
+359,m_Name,12,DIVIDER (11)
+366,m_Name,12,CLOUDS 2 (1)
+379,m_Name,12,CharacterArt
+394,m_Name,12,DIVIDER (48)
+396,m_Name,12,DIVIDER (19)
+397,m_Name,12,DIVIDER (15)
+407,m_Name,12,New Game (1)
+415,m_Name,12,AdsNavButton
+430,m_Name,12,DIVIDER (10)
+439,m_Name,12,DialogUI (1)
+452,m_Name,12,DIVIDER (33)
+489,m_Name,12,IdeaSlot (8)
+525,m_Name,12,IdeaSlot (7)
+551,m_Name,12,IdeaSlot (4)
+598,m_Name,12,FinishButton
+617,m_Name,12,Tab1 - Story
+647,m_Name,12,ASinfoBoxINT
+651,m_Name,12,Page3 - Role
+652,m_Name,12,HeadTraySlot
+667,m_Name,12,Page2 - Uses
+732,m_Name,12,PreBuildOpen
+755,m_Name,12,IdeaSlot (6)
+762,m_Name,12,Display Mode
+780,m_Name,12,IdeaSlot (9)
+789,m_Name,12,VolumeSlider
+814,m_Name,12,Page1 - Lore
+833,m_Name,12,ASinfoBoxWIS
+955,m_Name,12,DayTitle (2)
+996,m_Name,12,ASinfoBoxSTR
+1220,m_Name,12,IdeaSlot (5)
+1241,m_Name,12,LeftArrowCON
+1263,m_Name,12,LeftArrowSTR
+1287,m_Name,12,IdeaSlot (1)
+1295,m_Name,12,IdeaSlot (2)
+1373,m_Name,12,BEEFY CLERIC
+1432,m_Name,12,FootNote (1)
+1581,m_Name,12,IdeaSlot (3)
+1661,m_Name,12,ASinfoBoxCHA
+1821,m_Name,12,WishlistIcon
+1838,m_Name,12,UI Font Size
+1845,m_Name,12,Imprint Idea
+1921,m_Name,12,AudioManager
+1922,m_Name,12,LeftArrowINT
+2071,m_Name,12,ASinfoBoxCON
+2144,m_Name,12,SteamManager
+2295,m_Name,12,LeftArrowCHA
+2525,m_Name,12,ReturnButton
+2533,m_Name,12,LeftArrowWIS
+2534,m_Name,12,ASinfoBoxDEX
+2546,m_Name,12,ContinuePart
+2844,m_Name,12,DayIdeas (1)
+2915,m_Name,12,LeftArrowDEX
+3104,m_Name,12,FinishCircle
+3129,m_Name,12,Spell Levels
+3266,m_Name,12,ClickingAway
+3311,m_Name,12,DayTitle (1)
+3377,m_Name,12,Refresh Rate
+3402,m_Name,12,WishlistText
+3443,m_Name,12,EqupmentSlot
+3484,m_Name,12,Spellcasting
+3700,m_Name,12,Portrait (1)
+3753,m_Name,12,DayIdeas (2)
+3,m_Name,13,ContinueTitle
+37,m_Name,13,SeagullSounds
+41,m_Name,13,NEXTFESTIMAGE
+51,m_Name,13,COLLABORATORS
+87,m_Name,13,FinishComment
+157,m_Name,13,LoadingScreen
+216,m_Name,13,LeftColorBall
+231,m_Name,13,RightCore (2)
+240,m_Name,13,RightCore (1)
+288,m_Name,13,SnowParticles
+291,m_Name,13,LeftArrow (1)
+341,m_Name,13,PLAYTEST INFO
+345,m_Name,13,AnyButtonText
+377,m_Name,13,ContinueStats
+437,m_Name,13,DEMO Subtitle
+458,m_Name,13,RaycastTarget
+536,m_Name,13,IdeaSlot (14)
+545,m_Name,13,IdeasViewPort
+560,m_Name,13,IdeaSlot (17)
+631,m_Name,13,IdeaSlot (13)
+653,m_Name,13,IdeaSlot (18)
+665,m_Name,13,RightArrowWIS
+685,m_Name,13,BagSlotTarget
+686,m_Name,13,IdeaSlot (15)
+737,m_Name,13,AmbientSlider
+788,m_Name,13,IdeaSlot (19)
+805,m_Name,13,RightArrowCHA
+882,m_Name,13,IdeaSlot (20)
+916,m_Name,13,RightArrowINT
+1033,m_Name,13,IdeaSlot (11)
+1061,m_Name,13,VisualBlocker
+1138,m_Name,13,IdeaSlot (21)
+1226,m_Name,13,IdeaSlot (10)
+1237,m_Name,13,IdeaSlot (12)
+1283,m_Name,13,SideColor (1)
+1334,m_Name,13,RightArrowCON
+1370,m_Name,13,IdeaSlot (16)
+1438,m_Name,13,Locked Checks
+1894,m_Name,13,RightArrowDEX
+1930,m_Name,13,PRIMAL CLERIC
+2299,m_Name,13,Spell Scrolls
+2738,m_Name,13,RightArrowSTR
+3014,m_Name,13,Interact Idea
+3037,m_Name,13,RESETSETTINGS
+3569,m_Name,13,SpeakwithDead
+3729,m_Name,13,_CreditsStuff
+11,m_Name,14,Silhouette (5)
+53,m_Name,14,PRERELEASEDATE
+60,m_Name,14,TextScrollRect
+103,m_Name,14,Silhouette (6)
+108,m_Name,14,MiddleCore (2)
+109,m_Name,14,Text (TMP) (4)
+133,m_Name,14,Silhouette (8)
+140,m_Name,14,Silhouette (2)
+178,m_Name,14,Silhouette (9)
+197,m_Name,14,MiddleCore (3)
+199,m_Name,14,Text (TMP) (1)
+219,m_Name,14,TextBackground
+223,m_Name,14,IncreaseButton
+245,m_Name,14,Text (TMP) (3)
+255,m_Name,14,VERSION-NUMBER
+336,m_Name,14,MiddleCore (1)
+343,m_Name,14,Text (TMP) (2)
+350,m_Name,14,MenuBackground
+365,m_Name,14,RightColorBall
+373,m_Name,14,Silhouette (3)
+382,m_Name,14,Silhouette (7)
+383,m_Name,14,Silhouette (1)
+402,m_Name,14,Silhouette (4)
+423,m_Name,14,Background (2)
+433,m_Name,14,Background (1)
+445,m_Name,14,MenuController
+481,m_Name,14,ASSelector_CON
+523,m_Name,14,Item Checkmark
+872,m_Name,14,ASSelector_DEX
+1041,m_Name,14,Text (TMP) (7)
+1189,m_Name,14,Text (TMP) (9)
+1282,m_Name,14,Skill - Arcana
+1552,m_Name,14,FontSizeSlider
+1561,m_Name,14,IdeaTextButton
+1626,m_Name,14,ASSelector_INT
+1629,m_Name,14,LoadFileButton
+1644,m_Name,14,ProfButton (5)
+1793,m_Name,14,Text (TMP) (5)
+1928,m_Name,14,ASSelector_CHA
+1961,m_Name,14,ScreenshotMask
+2049,m_Name,14,ASSelector_WIS
+2067,m_Name,14,Text (TMP) (6)
+2074,m_Name,14,Skill - Nature
+2168,m_Name,14,BackgroundName
+2406,m_Name,14,SaveFileButton
+2814,m_Name,14,ProfButton (2)
+2925,m_Name,14,ProfButton (3)
+2989,m_Name,14,Dialog Choices
+3094,m_Name,14,ProfButton (4)
+3108,m_Name,14,SCHOLAR CLERIC
+3254,m_Name,14,Stats - Wisdom
+3357,m_Name,14,Ability Scores
+3415,m_Name,14,ASSelector_STR
+3578,m_Name,14,ProfButton (1)
+3623,m_Name,14,YouPart(Clone)
+3656,m_Name,14,Text (TMP) (8)
+5,m_Name,15,Silhouette (19)
+8,m_Name,15,Silhouette (20)
+13,m_Name,15,Silhouette (11)
+26,m_Name,15,Silhouette (26)
+27,m_Name,15,Silhouette (24)
+57,m_Name,15,Silhouette (21)
+62,m_Name,15,Silhouette (23)
+127,m_Name,15,MiddleColorBall
+130,m_Name,15,Silhouette (22)
+143,m_Name,15,BackgroundImage
+161,m_Name,15,Silhouette (18)
+189,m_Name,15,Silhouette (13)
+206,m_Name,15,Silhouette (29)
+210,m_Name,15,Silhouette (17)
+271,m_Name,15,Silhouette (12)
+280,m_Name,15,Silhouette (28)
+304,m_Name,15,Silhouette (15)
+378,m_Name,15,Silhouette (14)
+410,m_Name,15,Silhouette (16)
+421,m_Name,15,Silhouette (10)
+444,m_Name,15,Silhouette (25)
+448,m_Name,15,Silhouette (27)
+514,m_Name,15,Item Background
+527,m_Name,15,IdeasScrollRect
+688,m_Name,15,SCButtonFriends
+757,m_Name,15,Text (TMP) (11)
+829,m_Name,15,Colorblind Mode
+834,m_Name,15,TextPart(Clone)
+1013,m_Name,15,UNSTABLE CLERIC
+1275,m_Name,15,DiscordIcon (1)
+1598,m_Name,15,Text (TMP) (14)
+1691,m_Name,15,ModifiersHolder
+1728,m_Name,15,Text (TMP) (16)
+1744,m_Name,15,Skill - Insight
+1989,m_Name,15,Text (TMP) (13)
+2034,m_Name,15,Skill - History
+2317,m_Name,15,Text (TMP) (10)
+2356,m_Name,15,Social Cantrips
+2400,m_Name,15,Text (TMP) (17)
+2580,m_Name,15,Esoteric Events
+2592,m_Name,15,Cleric Subclass
+3132,m_Name,15,ExampleDialogUI
+3461,m_Name,15,Text (TMP) (15)
+3546,m_Name,15,Text (TMP) (12)
+3589,m_Name,15,Skill - Stealth
+461,m_Name,16,CreditBox (QA) 7
+490,m_Name,16,ExampleAS(Clone)
+570,m_Name,16,CreditBox (RF) 6
+603,m_Name,16,CreditBox (MG) 4
+613,m_Name,16,HeadTraySlot (1)
+624,m_Name,16,EqupmentSlot (1)
+630,m_Name,16,Tab2 - Mechanics
+641,m_Name,16,DropdownTemplate
+793,m_Name,16,CreditBox (PW) 4
+799,m_Name,16,EqupmentSlot (3)
+820,m_Name,16,TRICKSTER CLERIC
+890,m_Name,16,Preparing Spells
+944,m_Name,16,HeadTraySlot (4)
+975,m_Name,16,CreditBox (AB) 4
+1005,m_Name,16,HeadTraySlot (5)
+1076,m_Name,16,CreditBox (JH) 4
+1244,m_Name,16,CreditBox (AW) 4
+1253,m_Name,16,HeadTraySlot (7)
+1352,m_Name,16,CreditBox (PA) 4
+1412,m_Name,16,BackgroundPicker
+1447,m_Name,16,Skill - Medicine
+1652,m_Name,16,Stats - Strength
+1665,m_Name,16,HeadTraySlot (2)
+1672,m_Name,16,SaveCONFIRMATION
+1732,m_Name,16,CreditBox (EB) 4
+1749,m_Name,16,Stats - Charisma
+1854,m_Name,16,CreditBox (RF) 8
+2008,m_Name,16,CreditBox (RR) 4
+2028,m_Name,16,CreditBox (GN) 4
+2077,m_Name,16,HeadTraySlot (8)
+2182,m_Name,16,Skill - Religion
+2215,m_Name,16,HeadTraySlot (9)
+2240,m_Name,16,CreditBox (LB) 4
+2316,m_Name,16,CreditBox (SE) 4
+2801,m_Name,16,LoadCONFIRMATION
+2827,m_Name,16,CreditBox (MO) 4
+3089,m_Name,16,CreditBox (KP) 4
+3141,m_Name,16,CreditBox (PK) 4
+3145,m_Name,16,HeadTraySlot (3)
+3151,m_Name,16,CreditBox (OA) 4
+3210,m_Name,16,CreditBox (AC) 5
+3224,m_Name,16,CreditBox (RF) 4
+3410,m_Name,16,CreditBox (BB) 4
+3430,m_Name,16,CreditBox (JN) 4
+3492,m_Name,16,Skill - Survival
+3563,m_Name,16,InputField (TMP)
+3636,m_Name,16,CreditBox (VR) 4
+3708,m_Name,16,HeadTraySlot (6)
+3819,m_Name,16,WishlistIcon (1)
+391,m_Name,17,Directional Light
+470,m_Name,17,Handle Slide Area
+499,m_Name,17,Skill - Athletics
+578,m_Name,17,Skill - Deception
+775,m_Name,17,DeleteBoxPosition
+1140,m_Name,17,CreditBox (SD) 5 
+1156,m_Name,17,HeadTraySlot (10)
+1401,m_Name,17,CreditBox (TM) 4 
+1421,m_Name,17,HeadTraySlot (12)
+1529,m_Name,17,ChoicePart(Clone)
+2005,m_Name,17,ResetConfirmation
+2135,m_Name,17,CreditBox (MG) 4 
+2142,m_Name,17,VisualBlocker (1)
+2381,m_Name,17,CreditBox (LM) 4 
+2974,m_Name,17,Stats - Dexterity
+3041,m_Name,17,The Questing Tree
+3068,m_Name,17,HeadTraySlot (13)
+3080,m_Name,17,HeadTraySlot (14)
+3302,m_Name,17,CreditBox (SPP) 4
+3315,m_Name,17,EnvironmentSlider
+3469,m_Name,17,HeadTraySlot (16)
+3559,m_Name,17,HeadTraySlot (11)
+3675,m_Name,17,HeadTraySlot (15)
+11651,m_Name,17,Settings.lighting
+12,m_Name,18,IncreaseButton (4)
+28,m_Name,18,_SplashScreenINTRO
+47,m_Name,18,SUDDEN EXPLANATION
+198,m_Name,18,IncreaseButton (5)
+269,m_Name,18,Scrollbar Vertical
+361,m_Name,18,IncreaseButton (1)
+368,m_Name,18,IncreaseButton (3)
+455,m_Name,18,IncreaseButton (2)
+486,m_Name,18,CreditBox (ISAC) 7
+992,m_Name,18,KeyBoard and Mouse
+1032,m_Name,18,Skill - Persuasion
+1303,m_Name,18,CreditBox (PHIL) 7
+2355,m_Name,18,Skill - Acrobatics
+2392,m_Name,18,SettingsScrollView
+2711,m_Name,18,Situational Spells
+3040,m_Name,18,PrebuildButtonBASE
+3341,m_Name,18,CreditBox (VOs) 12
+3349,m_Name,18,SCButtonResistance
+3353,m_Name,18,Difficulty Classes
+3606,m_Name,18,DeleteCONFIRMATION
+82,m_Name,19,BackgroundImage (3)
+136,m_Name,19,BackgroundImage (5)
+217,m_Name,19,BIGANNOUNCEMENTTEXT
+312,m_Name,19,BackgroundImage (4)
+429,m_Name,19,BackgroundImage (2)
+576,m_Name,19,Skill - Performance
+692,m_Name,19,Tab3 - High and Low
+824,m_Name,19,Death Saving Throws
+1452,m_Name,19,Skill - Percerption
+1651,m_Name,19,CreditBox (CHRIS) 8
+2177,m_Name,19,__CharacterCreation
+2692,m_Name,19,SCButtonThaumaturgy
+2740,m_Name,19,CreditBox (MUSIC) 7
+3240,m_Name,19,NoFilesExistMessage
+3463,m_Name,19,Divine Intervention
+3473,m_Name,19,Easy Save 3 Manager
+3536,m_Name,19,Spell Concentration
+1195,m_Name,20,CreditBox (MASTER) 6
+1311,m_Name,20,CreditBox (GIBBET) 5
+1564,m_Name,20,Mechanic 1 - Numbers
+1623,m_Name,20,CloseInventoryButton
+1932,m_Name,20,Stats - Intelligence
+1979,m_Name,20,ColorYourTokenButton
+2973,m_Name,20,Stats - Constitution
+3003,m_Name,20,Skill - Intimidation
+3049,m_Name,20,CreditBox (MASTER) 5
+3147,m_Name,20,River Wind Loops (2)
+3361,m_Name,20,Selected Thought Pic
+792,m_Name,21,Mechanic 3 - Politics
+990,m_Name,21,Hidden Dialog Choices
+1047,m_Name,21,Selected Thought Name
+1289,m_Name,21,Selected Thought Info
+1823,m_Name,21,OverwriteCONFIRMATION
+2442,m_Name,21,Skill - Investigation
+2606,m_Name,21,CreditBox (EndInfo) 6
+615,m_Name,22,CreditBox (WESTBERG) 7
+797,m_Name,22,Mechanic 4 - Punchline
+1614,m_Name,22,CreditBox (SPELDOSA) 5
+2909,m_Name,22,CreditBox (EndInfo) 18
+509,m_Name,23,Mechanic 2 - Roll Types
+924,m_Name,23,ChoicePartHolder(Clone)
+2101,m_Name,23,CreditBox (MUSICIANS) 3
+2207,m_Name,23,Ability Score Modifiers
+2282,m_Name,23,Skill - Sleight of Hand
+3146,m_Name,23,River Wind Straight (3)
+3405,m_Name,23,Skill - Animal Handling
+2753,m_Name,25,GamepadControlsScrollView
+1659,m_Name,26,KeyBoardControlsScrollView
+3167,m_Name,26,Language (NOT IMPLEMENTED)
+2601,m_Name,27,TEMP - STATBAR FROM IN-GAME
+602,m_Name,28,CreditBox (Special Thanks) 6
+1055,m_Name,30,Voice Option (NOT IMPLEMENTED)

@@ -170,7 +170,8 @@ export default function PredictionToolPage() {
   const [expandedChain, setExpandedChain] = useState<string | null>(null);
 
   const analyze = async () => {
-    if (!installDir) {
+    const dir = installDir || result?.installPath || '';
+    if (!dir) {
       setError('Nessuna directory di installazione disponibile. Il gioco deve essere installato.');
       return;
     }
@@ -178,7 +179,7 @@ export default function PredictionToolPage() {
     setError(null);
     try {
       const res = await invoke<PredictionResult>('analyze_game_translation', {
-        installPath: installDir,
+        installPath: dir,
         gameTitle: gameTitle,
         engine: engineParam || null,
         sourceLang,
@@ -254,7 +255,7 @@ export default function PredictionToolPage() {
                 {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name} ({l.code})</option>)}
               </select>
             </div>
-            <button onClick={analyze} disabled={loading || !installDir}
+            <button onClick={analyze} disabled={loading || (!installDir && !result)}
               className="px-6 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold text-sm transition-all flex items-center gap-2">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {loading ? 'Analisi...' : 'Analizza'}

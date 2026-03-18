@@ -36,7 +36,7 @@ interface CreateProfileDialogProps {
 }
 
 import { AVATAR_GRADIENTS, getAvatarGradient, getInitials } from '@/lib/avatar-utils';
-import { IT, GB, ES, FR, DE, JP, CN } from 'country-flag-icons/react/3x2';
+import { IT, GB, ES, FR, DE, JP, CN, KR, PT, RU, PL } from 'country-flag-icons/react/3x2';
 
 const LANGUAGES: { code: Language; name: string; Flag: React.ComponentType<{ className?: string }> }[] = [
   { code: 'it', name: 'Italiano', Flag: IT },
@@ -46,6 +46,10 @@ const LANGUAGES: { code: Language; name: string; Flag: React.ComponentType<{ cla
   { code: 'de', name: 'Deutsch', Flag: DE },
   { code: 'ja', name: '日本語', Flag: JP },
   { code: 'zh', name: '中文', Flag: CN },
+  { code: 'ko', name: '한국어', Flag: KR },
+  { code: 'pt', name: 'Português', Flag: PT },
+  { code: 'ru', name: 'Русский', Flag: RU },
+  { code: 'pl', name: 'Polski', Flag: PL },
 ];
 
 export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: CreateProfileDialogProps) {
@@ -76,13 +80,13 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
     
     // Verifica tipo file
     if (!file.type.startsWith('image/')) {
-      setError('Select a valid image file');
+      setError(t('profile.selectValidImage'));
       return;
     }
     
     // Verifica dimensione (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setError('Image must be less than 2MB');
+      setError(t('profile.imageTooLarge'));
       return;
     }
     
@@ -109,27 +113,27 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
 
   const validateForm = (): string | null => {
     if (!formData.name.trim()) {
-      return 'Profile name is required';
+      return t('profile.nameRequired');
     }
 
     if (formData.name.length < 2) {
-      return 'Name must be at least 2 characters';
+      return t('profile.nameMinChars');
     }
 
     if (formData.name.length > 50) {
-      return 'Name cannot exceed 50 characters';
+      return t('profile.nameMaxChars');
     }
 
     if (!formData.password) {
-      return 'Password is required';
+      return t('profile.passwordRequired');
     }
 
     if (formData.password.length < 6) {
-      return 'Password must be at least 6 characters';
+      return t('profile.passwordMinCharsValidation');
     }
 
     if (formData.password !== formData.confirmPassword) {
-      return 'Passwords do not match';
+      return t('profile.passwordsDoNotMatch');
     }
 
     return null;
@@ -170,7 +174,7 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
       setShowRecoveryKey(true);
     } else {
       console.error('❌ Error during profile creation');
-      setError('Error creating profile');
+      setError(t('profile.errorCreatingProfile'));
     }
     
     setIsCreating(false);
@@ -318,31 +322,38 @@ export function CreateProfileDialog({ open, onOpenChange, onProfileCreated }: Cr
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.18 }}
-            className="flex items-center justify-between p-2 rounded-lg bg-slate-900/50 border border-slate-700/50">
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-slate-400" />
-              <span className="text-xs font-medium text-slate-300">{LANGUAGES.find(l => l.code === formData.language)?.name}</span>
+            className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700/50">
+            <div className="flex items-center gap-2 mb-2.5">
+              <Globe className="h-3.5 w-3.5 text-indigo-400" />
+              <span className="text-xs font-medium text-slate-300">{t('profile.interfaceLanguage')}</span>
+              <span className="text-xs text-indigo-400 font-semibold ml-auto">{LANGUAGES.find(l => l.code === formData.language)?.name}</span>
             </div>
-            <div className="flex gap-1">
-              {LANGUAGES.map((lang) => (
-                <button
-                  key={lang.code}
-                  type="button"
-                  onClick={() => {
-                    setFormData(prev => ({ ...prev, language: lang.code }));
-                    setLanguage(lang.code);
-                  }}
-                  disabled={isCreating}
-                  className={`p-1 rounded transition-all ${
-                    formData.language === lang.code
-                      ? 'ring-1 ring-slate-400 bg-slate-800'
-                      : 'opacity-50 hover:opacity-100'
-                  }`}
-                  title={lang.name}
-                >
-                  <lang.Flag className="w-5 h-3.5 rounded-sm" />
-                </button>
-              ))}
+            <div className="grid grid-cols-6 gap-1.5">
+              {LANGUAGES.map((lang) => {
+                const isSelected = formData.language === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, language: lang.code }));
+                      setLanguage(lang.code);
+                    }}
+                    disabled={isCreating}
+                    className={`flex flex-col items-center gap-0.5 p-1.5 rounded-lg transition-all ${
+                      isSelected
+                        ? 'ring-2 ring-indigo-500 bg-indigo-500/20 shadow-lg shadow-indigo-500/20'
+                        : 'opacity-60 hover:opacity-100 hover:bg-slate-800/50'
+                    }`}
+                    title={lang.name}
+                  >
+                    <lang.Flag className="w-6 h-4 rounded-[2px] shadow-sm" />
+                    <span className={`text-[9px] font-medium leading-none ${
+                      isSelected ? 'text-indigo-300' : 'text-slate-500'
+                    }`}>{lang.code.toUpperCase()}</span>
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
 

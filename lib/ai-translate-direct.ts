@@ -2,6 +2,7 @@ import { RagGlossary } from './rag-glossary';
 import { AgenticTranslator } from './agentic-translator';
 import { harvestBatch, batchContextToPromptHint, type BatchHarvestResult, type HarvestInput } from './context-harvester';
 import { buildFewShotBlock } from './adaptive-mt';
+import { buildGenrePromptBlock, type GameGenre } from './genre-prompts';
 
 /**
  * AI Translation - Chiamate dirette API (NO API routes Next.js)
@@ -20,6 +21,7 @@ export interface TranslateOptions {
   tmContext?: string; // RAG dalla Translation Memory — traduzioni simili come riferimento stile/terminologia
   harvestedContext?: BatchHarvestResult; // Contesto auto-estratto dal Context Harvester
   harvestInputs?: HarvestInput[]; // Input per auto-harvest (se harvestedContext non fornito)
+  gameGenre?: GameGenre; // Genere del gioco per prompt engineering avanzato
 }
 
 export interface TranslateResult {
@@ -126,7 +128,12 @@ export function getApiKeys() {
 /** Costruisce il prompt di traduzione con RAG/glossario opzionale */
 function buildTranslationPrompt(opts: TranslateOptions): string {
   const srcLang = opts.sourceLanguage || 'en';
-  let prompt = `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.`;
+  
+  // Genre-aware prompt: inietta istruzioni di stile specifiche per genere
+  const genreBlock = opts.gameGenre ? buildGenrePromptBlock(opts.gameGenre, opts.targetLanguage) : '';
+  let prompt = genreBlock
+    ? `${genreBlock}\n\nTranslate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.`
+    : `Translate the following texts from ${srcLang} to ${opts.targetLanguage}. Return ONLY a JSON array of translated strings, same order.`;
   
   // RAG Dinamico: Estrae i termini dal glossario e li inietta nel prompt SOLO se rilevanti per questo blocco di testo
   if (opts.gameId) {

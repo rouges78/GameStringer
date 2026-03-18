@@ -1,16 +1,20 @@
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { get, set, del } from 'idb-keyval';
 import { invoke } from '@tauri-apps/api/core';
 import { open as dialogOpen, save as dialogSave } from '@tauri-apps/plugin-dialog';
 import {
   FileText, FolderOpen, Search, Loader2, CheckCircle2,
   Database, Globe, ChevronDown, ChevronRight, Download, Upload,
-  Settings2, StopCircle, Wand2, Package, Cpu, Zap, RotateCcw, AlertTriangle
+  Settings2, StopCircle, Wand2, Package, Cpu, Zap, RotateCcw, AlertTriangle, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
+import { buildSingleTranslationPrompt, detectGenreFromText, getAllGenres, type GameGenre } from '@/lib/genre-prompts';
+import { suggestImprovement, type PostEditSuggestion } from '@/lib/ai-post-edit';
+import { saveSnapshot, loadSnapshot, calculateDiff, formatDiffSummary, type IncrementalDiff, type StringEntry } from '@/lib/incremental-translator';
 
 interface CsvEntry { id: string; english: string; translated: string; category: string; done: boolean; }
 interface CsvTable { name: string; offset: number; source: string; header: string[]; entries: CsvEntry[]; doneCount: number; }
@@ -58,6 +62,7 @@ export default function UnityCsvTranslatorPage() {
   const [model, setModel] = useState('huihui_ai/hy-mt1.5-abliterated:7b');
   const [models, setModels] = useState<string[]>([]);
   const [showCfg, setShowCfg] = useState(false);
+  const [genre, setGenre] = useState<GameGenre>('generic');
   const abort = useRef(false);
   const logRef = useRef<HTMLDivElement>(null);
   const [injecting, setInjecting] = useState(false);
@@ -69,10 +74,69 @@ export default function UnityCsvTranslatorPage() {
   const [inkScanned, setInkScanned] = useState(false);
   const [inkFilesCount, setInkFilesCount] = useState(0);
   const [showInk, setShowInk] = useState(false);
+  // Checkpoint state
+  const [hasCheckpoint, setHasCheckpoint] = useState(false);
+  const checkpointKeyRef = useRef('');
+  // Post-editing state
+  const [postEditId, setPostEditId] = useState<string | null>(null);
+  const [postEditLoading, setPostEditLoading] = useState(false);
+  const [postEditSuggestion, setPostEditSuggestion] = useState<PostEditSuggestion | null>(null);
+  // Incremental translation state
+  const [incrementalDiff, setIncrementalDiff] = useState<IncrementalDiff | null>(null);
+
+  const getCheckpointKey = useCallback((path: string) => `unity_csv_checkpoint_${path.replace(/[^a-zA-Z0-9]/g, '_')}`, []);
+
+  const saveCheckpoint = useCallback(async (csvTables: CsvTable[], inks: { text: string; source_file: string; translated: string; done: boolean }[]) => {
+    if (!checkpointKeyRef.current) return;
+    const csvData = csvTables.map(t => ({
+      name: t.name, entries: t.entries.filter(e => e.done).map(e => ({ id: e.id, english: e.english, translated: e.translated, category: e.category }))
+    }));
+    const inkData = inks.filter(s => s.done).map(s => ({ text: s.text, source_file: s.source_file, translated: s.translated }));
+    await set(checkpointKeyRef.current, { csv: csvData, ink: inkData, timestamp: Date.now() });
+  }, []);
+
+  const loadCheckpoint = useCallback(async (key: string): Promise<{ csv: { name: string; entries: { id: string; english: string; translated: string; category: string }[] }[]; ink: { text: string; source_file: string; translated: string }[]; timestamp: number } | null> => {
+    try { return await get(key) || null; } catch { return null; }
+  }, []);
+
+  const clearCheckpoint = useCallback(async () => {
+    if (checkpointKeyRef.current) await del(checkpointKeyRef.current);
+    setHasCheckpoint(false);
+  }, []);
 
   const log = useCallback((m: string) => {
     setLogs(p => [...p.slice(-300), `[${new Date().toLocaleTimeString()}] ${m}`]);
   }, []);
+
+  const handlePostEdit = useCallback(async (entryId: string, original: string, translation: string) => {
+    if (postEditLoading) return;
+    if (postEditId === entryId) { setPostEditId(null); setPostEditSuggestion(null); return; }
+    setPostEditId(entryId);
+    setPostEditLoading(true);
+    setPostEditSuggestion(null);
+    try {
+      const result = await suggestImprovement({ original, translation, targetLang, sourceLang: 'en', genre });
+      setPostEditSuggestion(result);
+    } catch (err) {
+      log(`⚠️ Post-edit: ${err}`);
+      setPostEditSuggestion(null);
+    }
+    setPostEditLoading(false);
+  }, [postEditLoading, postEditId, targetLang, genre, log]);
+
+  const applyPostEdit = useCallback((tableIdx: number, entryIdx: number, newTranslation: string) => {
+    if (!scan) return;
+    const table = scan.tables[tableIdx];
+    if (!table) return;
+    const entry = table.entries[entryIdx];
+    if (!entry) return;
+    entry.translated = newTranslation;
+    setScan({ ...scan });
+    setPostEditId(null);
+    setPostEditSuggestion(null);
+    if (scan) saveCheckpoint(scan.tables, inkStrings);
+    log(`✏️ Post-edit applicato: ${entry.id}`);
+  }, [scan, inkStrings, saveCheckpoint, log]);
 
   useEffect(() => { logRef.current?.scrollTo(0, logRef.current.scrollHeight); }, [logs]);
 
@@ -151,8 +215,79 @@ export default function UnityCsvTranslatorPage() {
         doneCount: 0,
       }));
       const total = tables.reduce((s, t) => s + t.entries.filter(e => e.english).length, 0);
-      setScan({ gamePath, gameName, unityVer: r.unity_version || '?', tables, total, done: 0 });
       log(`✅ ${tables.length} tabelle, ${total} stringhe CSV`);
+
+      // Auto-detect genre from scanned text samples
+      const sampleTexts = tables.flatMap(t => t.entries.map(e => e.english)).filter(Boolean).slice(0, 300);
+      const detected = detectGenreFromText(sampleTexts, gameName);
+      if (detected !== 'generic') {
+        setGenre(detected);
+        const allG = getAllGenres();
+        const info = allG.find(g => g.value === detected);
+        log(`🎭 Genere rilevato: ${info?.icon || ''} ${info?.label || detected}`);
+      }
+
+      // Check for existing checkpoint and restore
+      const cpKey = getCheckpointKey(gamePath);
+      checkpointKeyRef.current = cpKey;
+      const cp = await loadCheckpoint(cpKey);
+      if (cp) {
+        let restored = 0;
+        for (const cpTable of cp.csv) {
+          const tbl = tables.find(t => t.name === cpTable.name);
+          if (!tbl) continue;
+          for (const cpEntry of cpTable.entries) {
+            const entry = tbl.entries.find(e => e.id === cpEntry.id);
+            if (entry && cpEntry.translated) {
+              entry.translated = cpEntry.translated; entry.done = true; tbl.doneCount++; restored++;
+            }
+          }
+        }
+        const cpDone = tables.reduce((s, t) => s + t.doneCount, 0);
+        setScan({ gamePath, gameName, unityVer: r.unity_version || '?', tables, total, done: cpDone });
+        if (restored > 0) {
+          setHasCheckpoint(true);
+          log(`🔄 Checkpoint ripristinato: ${restored} stringhe CSV`);
+        }
+      } else {
+        setScan({ gamePath, gameName, unityVer: r.unity_version || '?', tables, total, done: 0 });
+      }
+
+      // Incremental translation: compare with previous snapshot
+      const gameId = gamePath.replace(/[^a-zA-Z0-9]/g, '_');
+      const prevSnapshot = loadSnapshot(gameId);
+      if (prevSnapshot) {
+        const currentStrings: StringEntry[] = tables.flatMap(t =>
+          t.entries.filter(e => e.english).map(e => ({ key: `${t.name}:${e.id}`, value: e.english, file: t.name }))
+        );
+        const diff = calculateDiff(currentStrings, prevSnapshot);
+        setIncrementalDiff(diff);
+        if (diff.stats.addedCount > 0 || diff.stats.modifiedCount > 0) {
+          log(`📊 Aggiornamento rilevato: ${formatDiffSummary(diff)}`);
+          // Apply old translations to unchanged strings (if no checkpoint)
+          if (!cp) {
+            let reusedCount = 0;
+            for (const unchanged of diff.unchanged) {
+              const [tName, eId] = unchanged.key.split(':');
+              const tbl = tables.find(t => t.name === tName);
+              const entry = tbl?.entries.find(e => e.id === eId);
+              const oldTrans = prevSnapshot.translations.get(unchanged.key);
+              if (entry && oldTrans && !entry.done) {
+                entry.translated = oldTrans; entry.done = true; if (tbl) tbl.doneCount++;
+                reusedCount++;
+              }
+            }
+            if (reusedCount > 0) {
+              const cpDone = tables.reduce((s, t) => s + t.doneCount, 0);
+              setScan(prev => prev ? { ...prev, tables, done: cpDone } : null);
+              log(`♻️ Riusate ${reusedCount} traduzioni precedenti per stringhe invariate`);
+            }
+          }
+        } else {
+          log(`✅ Nessuna modifica rilevata rispetto alla versione precedente`);
+          setIncrementalDiff(null);
+        }
+      }
 
       // Also scan for Ink strings
       try {
@@ -160,7 +295,21 @@ export default function UnityCsvTranslatorPage() {
         log('🔍 Scansione Ink blobs...');
         const ink = await invoke('scan_unity_ink_strings', { gameDir: dataDir }) as { strings: { text: string; source_file: string }[]; total: number; files_with_ink: number };
         if (ink.total > 0) {
-          setInkStrings(ink.strings.map(s => ({ ...s, translated: '', done: false })));
+          const inkArr = ink.strings.map(s => ({ ...s, translated: '', done: false }));
+          // Restore Ink from checkpoint
+          if (cp && cp.ink && cp.ink.length > 0) {
+            const inkMap = new Map(cp.ink.map(i => [i.text, i.translated]));
+            let inkRestored = 0;
+            for (const s of inkArr) {
+              const tr = inkMap.get(s.text);
+              if (tr) { s.translated = tr; s.done = true; inkRestored++; }
+            }
+            if (inkRestored > 0) {
+              setHasCheckpoint(true);
+              log(`🔄 Checkpoint Ink ripristinato: ${inkRestored} stringhe`);
+            }
+          }
+          setInkStrings(inkArr);
           setInkFilesCount(ink.files_with_ink);
           setInkScanned(true);
           log(`✅ ${ink.total} stringhe Ink in ${ink.files_with_ink} file`);
@@ -172,7 +321,7 @@ export default function UnityCsvTranslatorPage() {
 
       setStatus('idle');
     } catch (e) { log(`❌ ${e}`); setStatus('error'); }
-  }, [gamePath, gameName, log]);
+  }, [gamePath, gameName, log, getCheckpointKey, loadCheckpoint]);
 
   // Auto-scan after doScan is ready (triggered by sessionStorage auto-load)
   useEffect(() => {
@@ -187,9 +336,8 @@ export default function UnityCsvTranslatorPage() {
     setStatus('translating'); abort.current = false;
     const tot = scan.tables.reduce((s, t) => s + t.entries.filter(e => e.english && !e.done).length, 0);
     let done = 0;
-    log(`🔄 Traduzione ${tot} stringhe con ${model}...`);
-    const langMap: Record<string, string> = { it:'Italian', de:'German', es:'Spanish', fr:'French', pt:'Portuguese', zh:'Chinese', ja:'Japanese', ko:'Korean', ru:'Russian' };
-    const ln = langMap[targetLang] || targetLang;
+    const genreInfo = getAllGenres().find(g => g.value === genre);
+    log(`🔄 Traduzione ${tot} stringhe con ${model} — Genere: ${genreInfo?.icon || '🎮'} ${genreInfo?.label || 'Generico'}`);
 
     for (const t of scan.tables) {
       if (abort.current) break;
@@ -200,16 +348,20 @@ export default function UnityCsvTranslatorPage() {
         try {
           const resp = await fetch('http://localhost:11434/api/generate', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model, prompt: `Translate this RPG game text from English to ${ln}. Keep proper nouns. Maintain tone.\n\nEnglish: ${e.english}\n\n${ln}:`, stream: false, options: { temperature: 0.3, num_predict: 1024 } }),
+            body: JSON.stringify({ model, prompt: buildSingleTranslationPrompt(e.english, 'en', targetLang, genre), stream: false, options: { temperature: 0.4, num_predict: 1024 } }),
           });
           if (resp.ok) {
             let r = ((await resp.json()).response || '').trim();
             r = r.replace(/^(Italian:|Traduzione:|Translation:|German:|French:|Spanish:)\s*/i, '');
             if (r.startsWith('"') && r.endsWith('"')) r = r.slice(1, -1);
             e.translated = r; e.done = true; t.doneCount++; done++;
+            // Save checkpoint every 10 CSV strings
+            if (done % 10 === 0) await saveCheckpoint(scan.tables, inkStrings);
           }
         } catch (err) { log(`⚠️ ${e.id}: ${err}`); }
       }
+      // Save checkpoint after each table
+      await saveCheckpoint(scan.tables, inkStrings);
       log(`✅ ${t.name}: ${t.doneCount}/${t.entries.length}`);
       setScan(p => p ? { ...p, done } : null);
     }
@@ -226,7 +378,7 @@ export default function UnityCsvTranslatorPage() {
         try {
           const resp = await fetch('http://localhost:11434/api/generate', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ model, prompt: `Translate this game dialogue from English to ${ln}. Keep proper nouns and tone.\n\nEnglish: ${s.text}\n\n${ln}:`, stream: false, options: { temperature: 0.3, num_predict: 1024 } }),
+            body: JSON.stringify({ model, prompt: buildSingleTranslationPrompt(s.text, 'en', targetLang, genre), stream: false, options: { temperature: 0.4, num_predict: 1024 } }),
           });
           if (resp.ok) {
             let r = ((await resp.json()).response || '').trim();
@@ -238,16 +390,35 @@ export default function UnityCsvTranslatorPage() {
         if (inkDone % 100 === 0 && inkDone > 0) {
           log(`  Ink: ${inkDone}/${inkTodo.length}`);
           setInkStrings([...inkStrings]);
+          // Save checkpoint every 100 Ink strings
+          if (scan) await saveCheckpoint(scan.tables, inkStrings);
         }
       }
       setInkStrings([...inkStrings]);
       log(`✅ Ink: ${inkDone}/${inkTodo.length}`);
     }
 
+    // Final checkpoint save
+    if (scan) await saveCheckpoint(scan.tables, inkStrings);
+    // Save incremental snapshot for future diff detection
+    if (scan && !abort.current) {
+      const gameId = scan.gamePath.replace(/[^a-zA-Z0-9]/g, '_');
+      const allStrings: StringEntry[] = scan.tables.flatMap(t =>
+        t.entries.filter(e => e.english).map(e => ({ key: `${t.name}:${e.id}`, value: e.english, file: t.name }))
+      );
+      const translationMap = new Map<string, string>();
+      for (const t of scan.tables) {
+        for (const e of t.entries) {
+          if (e.done && e.translated) translationMap.set(`${t.name}:${e.id}`, e.translated);
+        }
+      }
+      saveSnapshot(gameId, gameName, allStrings, translationMap);
+      log(`💾 Snapshot incrementale salvato (${allStrings.length} stringhe, ${translationMap.size} traduzioni)`);
+    }
     setStatus(abort.current ? 'idle' : 'done');
     const totalAll = done + inkStrings.filter(s => s.done).length;
-    log(abort.current ? '⏹ Interrotto' : `🎉 Completato: ${totalAll} totali (${done} CSV + ${inkStrings.filter(s => s.done).length} Ink)`);
-  }, [scan, model, targetLang, log, inkStrings]);
+    log(abort.current ? `⏹ Interrotto — checkpoint salvato (${totalAll} stringhe)` : `🎉 Completato: ${totalAll} totali (${done} CSV + ${inkStrings.filter(s => s.done).length} Ink)`);
+  }, [scan, model, targetLang, log, inkStrings, saveCheckpoint, genre]);
 
   const doExport = useCallback(async () => {
     if (!scan) return;
@@ -367,15 +538,63 @@ export default function UnityCsvTranslatorPage() {
                         <thead><tr className="text-slate-500 border-b border-slate-700/50">
                           <th className="text-left py-1 w-24">ID</th><th className="text-left py-1 w-14">Cat</th>
                           <th className="text-left py-1">English</th><th className="text-left py-1">Traduzione</th>
+                          <th className="w-8"></th>
                         </tr></thead>
-                        <tbody>{t.entries.slice(0, 100).map((e, ei) => (
-                          <tr key={ei} className="border-b border-slate-800/50 hover:bg-slate-700/20">
+                        <tbody>{t.entries.slice(0, 100).map((e, ei) => {
+                          const peKey = `${t.name}-${e.id}`;
+                          const isPostEditing = postEditId === peKey;
+                          return (<React.Fragment key={ei}>
+                          <tr className="border-b border-slate-800/50 hover:bg-slate-700/20">
                             <td className="py-1 text-slate-500 font-mono">{e.id}</td>
                             <td className="py-1"><span className={`text-[10px] px-1 py-0.5 rounded ${catColor[e.category] || catColor.other}`}>{e.category}</span></td>
                             <td className="py-1 text-slate-300 max-w-[280px] truncate">{e.english || '—'}</td>
                             <td className="py-1 text-emerald-300 max-w-[280px] truncate">{e.translated || <span className="text-slate-600">—</span>}</td>
+                            <td className="py-1 text-center">
+                              {e.done && e.translated && (
+                                <button
+                                  onClick={() => handlePostEdit(peKey, e.english, e.translated)}
+                                  className="p-0.5 rounded hover:bg-amber-500/20 transition-colors"
+                                  title="Suggerisci miglioramento AI"
+                                >
+                                  {postEditLoading && isPostEditing
+                                    ? <Loader2 className="h-3 w-3 animate-spin text-amber-400" />
+                                    : <Sparkles className={`h-3 w-3 ${isPostEditing ? 'text-amber-400' : 'text-slate-600 hover:text-amber-400'}`} />}
+                                </button>
+                              )}
+                            </td>
                           </tr>
-                        ))}</tbody>
+                          {isPostEditing && postEditSuggestion && (
+                            <tr>
+                              <td colSpan={5} className="p-2">
+                                <div className="rounded-lg border border-amber-700/30 bg-amber-900/15 p-2.5 space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <Sparkles className="h-3 w-3 text-amber-400" />
+                                    <span className="text-[10px] font-semibold text-amber-300">Suggerimento AI</span>
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-800/40 text-amber-400">{postEditSuggestion.confidence}% sicurezza</span>
+                                  </div>
+                                  <div className="text-[11px] text-white bg-slate-800/60 rounded px-2 py-1.5">{postEditSuggestion.improved}</div>
+                                  {postEditSuggestion.reason && <div className="text-[10px] text-slate-400 italic">{postEditSuggestion.reason}</div>}
+                                  {postEditSuggestion.changes.length > 0 && (
+                                    <div className="flex gap-1 flex-wrap">
+                                      {postEditSuggestion.changes.map((c, ci) => (
+                                        <span key={ci} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-300">{c.type}: {c.description}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <div className="flex gap-1.5 pt-1">
+                                    <Button size="sm" className="h-5 text-[10px] px-2 bg-amber-600 hover:bg-amber-500" onClick={() => applyPostEdit(ti, ei, postEditSuggestion.improved)}>
+                                      <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Applica
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-5 text-[10px] px-2 text-slate-400" onClick={() => { setPostEditId(null); setPostEditSuggestion(null); }}>
+                                      Ignora
+                                    </Button>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          </React.Fragment>);
+                        })}</tbody>
                       </table>
                       {t.entries.length > 100 && <p className="text-[10px] text-slate-500 mt-2 text-center">100/{t.entries.length}</p>}
                     </div>
@@ -384,6 +603,44 @@ export default function UnityCsvTranslatorPage() {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {/* Incremental Diff Banner */}
+      {incrementalDiff && (incrementalDiff.stats.addedCount > 0 || incrementalDiff.stats.modifiedCount > 0) && (
+        <div className="rounded-xl border border-blue-800/40 bg-blue-900/15 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="h-4 w-4 text-blue-400" />
+            <h3 className="text-sm font-bold text-blue-300">Aggiornamento rilevato</h3>
+            <span className="text-[10px] text-blue-400/70">rispetto alla traduzione precedente</span>
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            {incrementalDiff.stats.addedCount > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-green-900/30 border border-green-700/30">
+                <span className="text-sm font-bold text-green-400">+{incrementalDiff.stats.addedCount}</span>
+                <span className="text-[10px] text-green-400/70">nuove</span>
+              </div>
+            )}
+            {incrementalDiff.stats.modifiedCount > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-900/30 border border-amber-700/30">
+                <span className="text-sm font-bold text-amber-400">~{incrementalDiff.stats.modifiedCount}</span>
+                <span className="text-[10px] text-amber-400/70">modificate</span>
+              </div>
+            )}
+            {incrementalDiff.stats.removedCount > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-900/30 border border-red-700/30">
+                <span className="text-sm font-bold text-red-400">-{incrementalDiff.stats.removedCount}</span>
+                <span className="text-[10px] text-red-400/70">rimosse</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700/30">
+              <span className="text-sm font-bold text-slate-300">={incrementalDiff.stats.unchangedCount}</span>
+              <span className="text-[10px] text-slate-400">invariate</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-blue-400/60 mt-2">
+            Solo le stringhe nuove e modificate verranno tradotte. Le {incrementalDiff.stats.unchangedCount} invariate mantengono la traduzione precedente.
+          </p>
         </div>
       )}
 
@@ -430,7 +687,7 @@ export default function UnityCsvTranslatorPage() {
             <div className="flex-1" />
             <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="sm" className="h-7 gap-1 text-xs text-slate-400"><Settings2 className="h-3 w-3" />{t('unityCsvPage.config')}</Button>
           </div>
-          {showCfg && (
+          {showCfg && (<>
             <div className="mb-3 p-3 rounded-lg bg-slate-800/60 border border-slate-700/50 flex gap-4 items-center flex-wrap">
               <div className="flex gap-2 items-center">
                 <label className="text-xs text-slate-400">{t('aiTranslation.model')}</label>
@@ -444,9 +701,20 @@ export default function UnityCsvTranslatorPage() {
                   {['it','de','es','fr','pt','zh','ja','ko','ru'].map(l => <option key={l} value={l}>{l.toUpperCase()}</option>)}
                 </select>
               </div>
+              <div className="flex gap-2 items-center">
+                <label className="text-xs text-slate-400">Genere</label>
+                <select value={genre} onChange={e => setGenre(e.target.value as GameGenre)} className="bg-slate-700 text-white text-xs rounded px-2 py-1 border border-slate-600">
+                  {getAllGenres().map(g => <option key={g.value} value={g.value}>{g.icon} {g.label}</option>)}
+                </select>
+              </div>
               <span className="text-[10px] text-slate-500">Ollama: {models.length ? `${models.length} modelli` : '⚠️ non connesso'}</span>
             </div>
-          )}
+            {genre !== 'generic' && (
+              <div className="mb-3 p-2 rounded bg-slate-800/40 border border-slate-700/30">
+                <span className="text-[10px] text-slate-400">{getAllGenres().find(g => g.value === genre)?.icon} <b className="text-slate-300">{getAllGenres().find(g => g.value === genre)?.label}</b> — {getAllGenres().find(g => g.value === genre)?.description}</span>
+              </div>
+            )}
+          </>)}
           {status === 'translating' && (
             <div className="mb-3">
               <div className="flex items-center gap-2 mb-1">
@@ -458,10 +726,19 @@ export default function UnityCsvTranslatorPage() {
               </div>
             </div>
           )}
+          {hasCheckpoint && status !== 'translating' && (
+            <div className="mb-3 p-3 rounded-lg bg-amber-900/20 border border-amber-700/30 flex items-center gap-3">
+              <CheckCircle2 className="h-4 w-4 text-amber-400 shrink-0" />
+              <span className="text-xs text-amber-300 flex-1">
+                Checkpoint trovato: <b className="text-white">{(scan?.done || 0) + inkStrings.filter(s => s.done).length}</b> stringhe già tradotte. Clicca <b>Traduci</b> per continuare da dove eri rimasto.
+              </span>
+              <Button onClick={clearCheckpoint} variant="ghost" size="sm" className="h-6 text-[10px] text-slate-500 hover:text-red-400">Cancella checkpoint</Button>
+            </div>
+          )}
           <div className="flex gap-2">
             {status !== 'translating' ? (
               <Button onClick={doTranslate} disabled={!models.length || status === 'scanning'} className="gap-2 bg-amber-600 hover:bg-amber-500">
-                <Globe className="h-4 w-4" />Traduci Tutto ({((scan?.total || 0) - (scan?.done || 0)) + inkStrings.filter(s => !s.done && s.text.length >= 3).length})
+                <Globe className="h-4 w-4" />{hasCheckpoint ? 'Continua' : 'Traduci Tutto'} ({((scan?.total || 0) - (scan?.done || 0)) + inkStrings.filter(s => !s.done && s.text.length >= 3).length})
               </Button>
             ) : (
               <Button onClick={() => { abort.current = true; }} variant="destructive" className="gap-2">

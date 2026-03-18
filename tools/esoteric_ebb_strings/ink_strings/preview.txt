@@ -1,0 +1,300 @@
+﻿...<b>They are the same.</b> Has your mind slipped into <i>dredge</i>?
+...<i>A</i> cleric?
+...<i>Feelings</i>.
+...<i>First</i>?
+...<i>Inside</i>?
+...<i>Snell</i>.
+...<i>Why</i>?
+...<shake>SCISSORS</shake>!
+...Alright.
+...Always...
+...and a deep love for crossbows - you rip the glorious artifact out of its owner's little claws.
+...And another.
+...and his breath smells funky.
+...And how would that work exactly?
+...And I'm not very serious, am I?
+...and it flies away.
+...and run.
+...And what's this got to do with loneliness?
+...And yes, this is different from the Godly Voice-thing.
+...But <i>how</i> exactly?
+...But what if they do?
+...BUT WHY?
+...Cool. Three Bonedust.
+...Do you really think that would work?
+...Don't say that out loud.
+...ERROR, no character found.
+...Ew. You make it sound so <i>Azgalian</i>.
+...Exactly.
+...feel very, very lonely.
+...From what you've heard.
+...Genitalia?
+...get a sudden sense of paranoia.
+...go...
+...Have I been calling myself an Arcanist? Or a wizard?
+...How long is the average life expectancy for cleric again?
+...How many, exactly?
+...I don't know.
+...it ends.
+...It IS?!
+...It's a-
+...Just don't trust it too much. Yeah.
+...Maybe not.
+...Maybe.
+...No really, what's going on?
+...Of Jor? (Think about that big light you saw in the darkness of the Vault.)
+...Oh yeah, that's going on too.
+...Oh!
+...Oh. Right. You're leaning into her biases!
+...okay!
+...Okay?
+...One capable of slaying a <b>damn troll</b>.
+...Probably.
+...Right?
+...Right.
+...ROCK!
+...Romance?
+...Shit, you can't think of anything. Can you?
+...Shut up.
+...so go with rock.
+...squeezes the trigger.
+...Statistically... speaking...
+...That's not halfways, then.
+...THIS WILL APPEAR IF TESTVAR is 0
+...THIS WILL APPEAR IF TESTVAR is 1
+...Up until you ripped the shoes off his feet, of course.
+...We are unsure.
+...We are. Yes.
+...We think.
+...We. We have enjoyed it.
+...What about the locals?
+...What else would he look at you with?
+...What?
+...What? Where is this thought coming from?
+...What...
+...What's going on here?
+...Which looks surprisingly funny with her whole feline-body thing going on.
+...Why does he keep calling it the <i>first</i>?
+...Why would he?
+...Wow.
+...Yeah, let's leave that for a post-election decision.
+...Yeah, maybe you actually would. But that's not a fucking compliment.
+...Yeah? What else would you say?
+...Yeah.
+...Yeah. Exactly.
+...Yes. You are not suicidal.
+...You...
+...You'd be surprised.
+...You're on the ground.
+.AGRARIAN+=1
+.AkzelIntro==1-It's Akzel.
+.AlfozIntro==1-It's Alfoz.
+.APOLITICAL+=1
+.APOLITICAL<=4-
+.APOLITICAL>=3
+.APOLITICAL>=5-
+.AR_CanPayOff==0-\
+.AR_CanPayOff==1-(Give him 500 crowns.)
+.AR_CanPayOff=1
+.AR_HiddenSafe==0-(Grab a piece of wood splinter off the ground.) \
+.AR_HiddenSafe=1
+.AR_IvcxLeave==0-
+.AR_IvcxLeave==1-
+.AR_KattegattIntro==0-
+.AR_KattegattIntro==1-
+.AR_KattegattIntro=1
+.AR_Knocked==0-
+.AR_Knocked==1-
+.AR_Meeting==1-
+.AR_MephitAnnoyed-You_annoyed_him.
+.AR_MephitAnnoyed=1
+.AR_MephitBurned-You_tried_it_once.
+.AR_MephitBurned=1
+.AR_MephitDead=1
+.AR_MephitHappy-You_lowered_yourself_before_him.
+.AR_MephitHappy=1
+.AR_MephitIntro==0-
+.AR_MephitIntro==1-
+.AR_MephitIntro=1
+.AR_MephitLookingAway==0
+.AR_MephitLookingAway==0-
+.AR_MephitLookingAway==0-\
+.AR_MephitLookingAway==1-
+.AR_MephitLookingAway=1
+.AR_MephitReallyAnnoyed-You_really_pissed_him_off.
+.AR_MephitReallyAnnoyed==0-(Keep staring. Closer.)
+.AR_MephitReallyAnnoyed=1
+.AR_Trading_Co.==1
+.AR_Trading_Co.==1-\
+.AR_Unlocked==1-
+.AR_Viira_BlueFlames-Viira_spoke_of_blue_flames.
+.ARCANIST+=1
+.ARCANIST>=3
+.ARCANIST>=3-Obviously.
+.ARCANIST>=5-
+.ArnCaughtStealing==0-
+.ArnCaughtStealing==1-
+.ArnCaughtStealing==1-\
+.ArnCaughtStealing=1
+.ArnIntro==0-
+.ArnIntro==0-\
+.ArnIntro==1-
+.ArnIntro==1-\
+.ArnIntro==1-It's Arn. He always looked suspicious.
+.ArnIntro=1
+.Askanii-Reeds_Seen==0-
+.ASSASSINATIONS>=1-\
+.AviknessIntro==1-It's Avikness, that weird dockworker guy.
+.AZGALIST+=1
+.AZGALIST>=3
+.AZGALIST>=5-
+.BagApple+=1
+.BagApple<=32
+.BagApple<=33-(Pick up an apple.)
+.BagApple>=34-...That's the... last apple?
+.BagofHoldingIntro==0-
+.BagofHoldingIntro==1-
+.BagofHoldingIntro=1
+.BARB_Choice+=1
+.BARB==0-
+.BARB==1-\
+.BARB>=1
+.BARB>=1-
+.BARB>=1-(Choose Askanii Barbarian.)
+.BARB>=1-\
+.BARB>=1-Tell me more about <b>Askanii Barbarian</b>.
+.BARD_Choice+=1
+.BARD==0-
+.BARD==1-\
+.BARD>=1
+.BARD>=1-
+.BARD>=1-(Choose Lore-Seeking Bard.)
+.BARD>=1-Tell me more about <b>Lore-Seeking Bard</b>.
+.BH_Darrow_15-Behold_success.
+.BH_Ever_10==1-\
+.BH_Ever_15-Behold_success.
+.BH_Ever_20-Further_behold_success.
+.BH_Miska_20==1-\
+.BH_Miska_30-Behold_success.
+.BH_Miska_30-She_just_loves_them.
+.BondIntro-You've_met_Bondevol.
+.BondIntro==0
+.BondIntro==1
+.BondIntro==1-It's Bondevol.
+.BondStrings==0-\
+.BondStrings==1-\
+.BorgoIntro==1-It's <i>The Duck</i>.
+.BraxoIntro==1
+.BraxoIntro==1-It's Braxo.
+.BrrIntro==1-It's Brrr.
+.BUCKET==1
+.Bucket==1-\
+.Can_Sleep==0-\
+.Can_Sleep==1-\
+.CAUGHT_STEALING_Arn==0-
+.CAUGHT_STEALING_Arn==1-
+.CAUGHT_STEALING_Miska==0-
+.CAUGHT_STEALING_Miska==1-
+.CAUGHT_STEALING_Olzis==0-
+.CAUGHT_STEALING_Olzis==1-
+.CAUGHT_STEALING_Ost==0-
+.CAUGHT_STEALING_Ost==1-
+.CAUGHT_STEALING_Ost=0
+.CAUGHT_STEALING_Razz==0-
+.CAUGHT_STEALING_Razz==1-
+.CAUGHT_STEALING_Rix==0-
+.CAUGHT_STEALING_Rix==1-
+.CAUGHT_STEALING_Seagull==0-
+.CAUGHT_STEALING_Seagull==1-
+.CAUGHT_STEALING_Thal==0-
+.CAUGHT_STEALING_Thal==1-
+.CAUGHT_STEALING_Tinn==0-
+.CAUGHT_STEALING_Tinn==1-
+.CB_AntAttack=1
+.CB_AntAttackBack==1
+.CB_AntAttackBack==1-My finger really hurts.
+.CB_AntAttackBack=1
+.CB_AntHive=1
+.CB_AntIndividual==1-
+.CB_AntIndividual=1
+.CB_AntKill=1
+.CB_AntSnellTalk==0
+.CB_AntSnellTalk==1
+.CB_AntSnellTalk=1
+.CB_AntStash=1
+.CB_PaperUnderstood==0-
+.CB_PaperUnderstood==1-
+.CB_PaperUnderstood=1
+.CB_RootsDoorShown=1
+.ChamarIntro==0-
+.ChamarIntro==1-
+.ChamarIntro==1-It's Lady Chamar.
+.ChamarIntro=1
+.CharismaFlashback-You_remember_that_time_you_danced_all_night.
+.CharismaFlashBack-Your_dance_was_magnificent.
+.CharismaFlashback==1-(Reveal a teenage trauma.) \
+.CharismaFlashBack=1
+.City_Below_Seen==0
+.City_Below_Seen==1
+.City_Below==1
+.City_Below==1-\
+.CLERIC+=1
+.CLERIC<=3-
+.CLERIC>=4
+.CLERIC>=4-
+.CLERIC>=4-(Choose The Cleric.)
+.CLERIC>=4-Tell me more about <b>The Cleric</b>.
+.CobblerIntro==0-\
+.CobblerIntro==1-\
+.ConstitutionFlashback==1-(Reveal a childhood trauma.) \
+.COOKING-Your_spoon_will_help_here._Somehow.
+.CoolDeath==1-\
+.CoolDeath=1
+.CrabIntro==0-
+.CrabIntro==1-
+.CrabIntro=1
+.CraniumAntIntro==0-
+.CraniumAntIntro==1-
+.CraniumAntIntro=1
+.CROWNS<=0-(Realize you actually don't have a crown, and you just slid forward some lint from your pouch.)
+.Crowns<=2000
+.Crowns<=49
+.CROWNS<=499-\
+.CROWNS>=1-(Slide back the crown.)
+.Crowns>=10
+.CROWNS>=10-(Clear your throat and hand him nine additional crowns.) \
+.Crowns>=100
+.Crowns>=1000
+.Crowns>=2001
+.Crowns>=50
+.CROWNS>=500
+.CROWNS>=500-\
+.Darrow_BossFight==0-\
+.Darrow_BossFight=1
+.Darrow's_Nest==1
+.Darrow's_Nest==1-\
+.DarrowFlinched-You_made_him_flinch.
+.DarrowFlinched=1
+.DarrowIntro==0
+.DarrowIntro==0-
+.DarrowIntro==0-\
+.DarrowIntro==1-
+.DarrowIntro==1-\
+.DarrowIntro=1
+.DarrowLaughed-You_made_him_laugh.
+.DarrowLaughed=1
+.DarrowOath=1
+.DarrowOathDemand==1-\
+.DarrowOathDemand=1
+.DarrowRefusedOath=1
+.DarrowRefusedOath=2
+.Day_Time==1-\
+.DAY<=0
+.Day<=1-
+.DAY==1
+.DAY==1-\
+.DAY==1-When's this meeting?
+.DAY==2
+.DAY==2-\
+.DAY==3
+.DAY==3-\

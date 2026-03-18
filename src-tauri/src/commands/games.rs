@@ -755,6 +755,28 @@ pub async fn force_refresh_all_games(
             }
         }
     }
+
+    // Merge install_path dai dati locali Steam (scan filesystem)
+    // L'API Steam non conosce i path locali, quindi li recuperiamo dallo scan
+    if let Ok(local_games) = crate::commands::steam_enhanced::scan_all_steam_games_fast().await {
+        let local_map: std::collections::HashMap<String, String> = local_games.iter()
+            .filter_map(|g| {
+                if let (Some(app_id), Some(path)) = (g.steam_app_id, g.install_path.as_ref()) {
+                    if !path.is_empty() {
+                        Some((format!("steam_{}", app_id), path.clone()))
+                    } else { None }
+                } else { None }
+            })
+            .collect();
+        for game in all_games.iter_mut() {
+            if game.install_path.is_none() {
+                if let Some(path) = local_map.get(&game.id) {
+                    game.install_path = Some(path.clone());
+                }
+            }
+        }
+        log::info!("🔗 Merge install_path: {} path locali applicati", local_map.len());
+    }
     
     // Aggiungi altri store (Epic, GOG, etc.) - questi vengono sempre refreshati
     // perché sono basati su scan del filesystem, non cache API

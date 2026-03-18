@@ -1,0 +1,2792 @@
+[
+  {
+    "ID": "FEAT_LONE_STR",
+    "ENGLISH": "Lone Cleric - At the start of your Short Rest, heal an additional amount equal to the levels of exhaustion you have.",
+    "ITALIAN": "Chierico Solitario - All'inizio del tuo Riposo Breve, cura un ammontare aggiuntivo pari ai livelli di sfinimento che possiedi."
+  },
+  {
+    "ID": "FEAT_MEMORIZER_INT",
+    "ENGLISH": "Master Memorizer - During your Short Rest, you restore two random spell slots instead of one.",
+    "ITALIAN": "Maestro Memorizzatore - Durante il tuo Riposo Breve, recuperi due slot incantesimo casuali invece di uno."
+  },
+  {
+    "ID": "FEAT_COMPANY_CHA",
+    "ENGLISH": "Friendly Company - During Short Rests, always roll Hit Die with advantage. Snell also gains an extra proficiency in his initiative rolls.",
+    "ITALIAN": "Compagnia Amichevole - Durante i Riposi Brevi, tira sempre i Dadi Vita con vantaggio. Anche Snell ottiene una competenza aggiuntiva nei tiri di iniziativa."
+  },
+  {
+    "ID": "FEAT_PARANOIA_DEX",
+    "ENGLISH": "Infectious Paranoia - Advantage on initiative rolls.",
+    "ITALIAN": "Paranoia Contagiosa - Vantaggio sui tiri di iniziativa."
+  },
+  {
+    "ID": "FEAT_SURVIVAL_CON",
+    "ENGLISH": "Survival of the Fittest - Advantage on Death Saving Throws.",
+    "ITALIAN": "Sopravvivenza del più Forte - Vantaggio sui Tiri Salvezza contro Morte."
+  },
+  {
+    "ID": "FEAT_EYE_CHA",
+    "ENGLISH": "Reading the Room - Advantage on behold checks.",
+    "ITALIAN": "Leggere la Stanza - Vantaggio sulle prove di osservazione."
+  },
+  {
+    "ID": "FEAT_LUCK_CHA",
+    "ENGLISH": "Luck of the Fool - Whenever you roll a natural 1, reroll the d20 and take 1d4 damage. If the new result is also a natural 1, repeat this processes. This damage cannot take you below 1 HP.",
+    "ITALIAN": "Fortuna dello Stolto - Ogni volta che ottieni un 1 naturale, ritira il d20 e subisci 1d4 danni. Se il nuovo risultato è anche un 1 naturale, ripeti il processo. Questi danni non possono portarti sotto 1 PF."
+  },
+  {
+    "ID": "FEAT_MUSH_DEX",
+    "ENGLISH": "Dungeoneering Reflexes - Whenever you roll 10 or below, add an extra proficiency to the roll.",
+    "ITALIAN": "Riflessi da Esploratore - Ogni volta che ottieni 10 o meno, aggiungi una competenza extra al tiro."
+  },
+  {
+    "ID": "FEAT_PROF_STR",
+    "ENGLISH": "Professional Cleric - You cannot critically fail. (When you roll a natural 1, it is not treated as an automatic failure.)",
+    "ITALIAN": "Chierico Professionista - Non puoi fallire criticamente. (Quando ottieni un 1 naturale, non viene trattato come un fallimento automatico.)"
+  },
+  {
+    "ID": "FEAT_BALANCE_INT",
+    "ENGLISH": "Curved, Yet Balanced Bell - Whenever any d20 is rolled, the Strings of Jor causes the outcome to lean towards 10. The chance of critical rolls are diminished.",
+    "ITALIAN": "Campana Curva ma Equilibrata - Ogni volta che viene tirato un d20, le Corde di Jor fanno tendere il risultato verso 10. Le probabilità di tiri critici sono ridotte."
+  },
+  {
+    "ID": "FEAT_BELLY_CON",
+    "ENGLISH": "Dark Belly of the Soul - Resistance to all damage when below 50% HP.",
+    "ITALIAN": "Ventre Oscuro dell'Anima - Resistenza a tutti i danni quando sei sotto il 50% dei PF."
+  },
+  {
+    "ID": "FEAT_HJARTA_WIS",
+    "ENGLISH": "Hjârtat Mitt - Each level of exhaustion grants +1 to each d20 roll instead of -1.",
+    "ITALIAN": "Hjârtat Mitt - Ogni livello di sfinimento conferisce +1 a ogni tiro di d20 invece di -1."
+  },
+  {
+    "ID": "FEAT_MAN_STR",
+    "ENGLISH": "A Good Man - Whenever you survive a death saving throw, you get back up with 1d20 HP.",
+    "ITALIAN": "Un Brav'Uomo - Ogni volta che sopravvivi a un tiro salvezza contro morte, ti rialzi con 1d20 PF."
+  },
+  {
+    "ID": "FEAT_FRAGILE_DEX",
+    "ENGLISH": "Fragile Immortality - Do not roll Death Saving Throws. Whenever you are above 1 HP and take damage that would take you to 0, you go to 1. If you take any damage at 1, you die.",
+    "ITALIAN": "Immortalità Fragile - Non tirare Tiri Salvezza contro Morte. Ogni volta che sei sopra 1 PF e subisci danni che ti porterebbero a 0, vai a 1. Se subisci qualsiasi danno a 1 PF, muori."
+  },
+  {
+    "ID": "FEAT_DREAM_INT",
+    "ENGLISH": "Imperial Dream - While speaking with someone with less intelligence than yourself, gain an extra proficiency on all d20 rolls.",
+    "ITALIAN": "Sogno Imperiale - Mentre parli con qualcuno con meno intelligenza di te, ottieni una competenza extra su tutti i tiri di d20."
+  },
+  {
+    "ID": "FEAT_LIE_CHA",
+    "ENGLISH": "Beautiful Lie - While you are at full health and 0 exhaustion, gain advantage on all Charisma d20 rolls.",
+    "ITALIAN": "Bella Bugia - Mentre sei a salute piena e 0 sfinimento, ottieni vantaggio su tutti i tiri di Carisma con d20."
+  },
+  {
+    "ID": "FEAT_NAT_STR",
+    "ENGLISH": "Nationalist - Extra proficiency in rolls when speaking with humans.",
+    "ITALIAN": "Nazionalista - Competenza extra nei tiri quando parli con umani."
+  },
+  {
+    "ID": "FEAT_FRE_DEX",
+    "ENGLISH": "Freestrider - Gain a 10% additional discount in all purchases.",
+    "ITALIAN": "Cavalcatore Libero - Ottieni uno sconto aggiuntivo del 10% su tutti gli acquisti."
+  },
+  {
+    "ID": "FEAT_AZG_WIS",
+    "ENGLISH": "Azgalist - Whenever you take damage, move one step forward on a secret three step counter. On step one, a 'thesis' d20 die is thrown. On step two, if the damage you took is higher than the 'thesis' die, an 'antithesis' d4 die is thrown. On step three, the damage you took is lowered either by 1, or by the 'antithesis' die if that die was rolled during step two. This is 'synthesis', somehow. The next time you take damage, return to step one.",
+    "ITALIAN": "Azgalista - Ogni volta che subisci danni, avanzi di un passo in un contatore segreto a tre passi. Al passo uno, viene tirato un d20 'tesi'. Al passo due, se i danni subiti sono superiori al dado 'tesi', viene tirato un d4 'antitesi'. Al passo tre, i danni subiti vengono ridotti di 1, o del dado 'antitesi' se è stato tirato durante il passo due. Questa è la 'sintesi', in qualche modo. La prossima volta che subisci danni, torni al passo uno."
+  },
+  {
+    "ID": "FEAT_ARC_INT",
+    "ENGLISH": "Arcanist - When you use up your last spell slot of any level, you roll a 1d100. If the result is lower than your natural intelligence, you regain that spell slot.",
+    "ITALIAN": "Arcanista - Quando esaurisci il tuo ultimo slot incantesimo di qualsiasi livello, tiri un 1d100. Se il risultato è inferiore alla tua intelligenza naturale, recuperi quello slot incantesimo."
+  },
+  {
+    "ID": "FEAT_AGR_CON",
+    "ENGLISH": "Agrarian - Whenever you pick up food, you roll 1d20. If you get 16 or higher, you get an additional food item.",
+    "ITALIAN": "Agrario - Ogni volta che raccogli cibo, tiri 1d20. Se ottieni 16 o più, ricevi un oggetto cibo aggiuntivo."
+  },
+  {
+    "ID": "FEAT_APO_CHA",
+    "ENGLISH": "Apolitical - Increases proficiency in rolls by 1. This amount is increased to 10 on any election day.",
+    "ITALIAN": "Apolitico - Aumenta la competenza nei tiri di 1. Questo ammontare aumenta a 10 in qualsiasi giorno di elezioni."
+  },
+  {
+    "ID": "FEAT_MONEY_DEX",
+    "ENGLISH": "Money Talks - Get 50% extra money on pickup.",
+    "ITALIAN": "Il Denaro Parla - Ottieni il 50% di denaro in più alla raccolta."
+  },
+  {
+    "ID": "FEAT_SPIRIT_WIS",
+    "ENGLISH": "Azgalian Spirit - Restore 1 Hit Point every hour that passes.",
+    "ITALIAN": "Spirito Azgaliano - Recupera 1 Punto Ferita ogni ora che passa."
+  },
+  {
+    "ID": "FEAT_FEMI_WIS",
+    "ENGLISH": "Lady Fair - Extra proficiency in rolls when speaking with feminine characters.",
+    "ITALIAN": "Bella Signora - Competenza extra nei tiri quando parli con personaggi femminili."
+  },
+  {
+    "ID": "FEAT_MASC_STR",
+    "ENGLISH": "Future Patriarch - Extra proficiency in rolls when speaking with masculine characters.",
+    "ITALIAN": "Futuro Patriarca - Competenza extra nei tiri quando parli con personaggi maschili."
+  },
+  {
+    "ID": "FEAT_PRINT_INT",
+    "ENGLISH": "Mass Media Propaganda - Alters ability score modifiers on equipped texts. Positive modifiers get +1 and negative modifiers get -1.",
+    "ITALIAN": "Propaganda Mediatica - Altera i modificatori di caratteristica sugli scritti equipaggiati. I modificatori positivi ottengono +1 e quelli negativi -1."
+  },
+  {
+    "ID": "FEAT_UNITY_WIS",
+    "ENGLISH": "Human-Dwarf Unity - While you are at full health, whenever you take damage, those dice are rolled with disadvantage.",
+    "ITALIAN": "Unità Umani-Nani - Mentre sei a salute piena, ogni volta che subisci danni, quei dadi vengono tirati con svantaggio."
+  },
+  {
+    "ID": "FEAT_ENDURE_CON",
+    "ENGLISH": "Azgalian Endurance - For every 3 hours spent being exhausted, you lose 1 level of exhaustion.",
+    "ITALIAN": "Resistenza Azgaliana - Per ogni 3 ore trascorse in stato di sfinimento, perdi 1 livello di sfinimento."
+  },
+  {
+    "ID": "FEAT_DEFEND_STR",
+    "ENGLISH": "Defend the City - Alters ability score modifiers on equipped helms. Positive modifiers get +1 and negative modifiers get -1.",
+    "ITALIAN": "Difendi la Città - Altera i modificatori di caratteristica sugli elmi equipaggiati. I modificatori positivi ottengono +1 e quelli negativi -1."
+  },
+  {
+    "ID": "FEAT_TRUE_DEX",
+    "ENGLISH": "True Norvikian - Roll initiative with Strength, if it is higher than your Dexterity.",
+    "ITALIAN": "Vero Norvikiano - Tira l'iniziativa con Forza, se è superiore alla tua Destrezza."
+  },
+  {
+    "ID": "FEAT_MIGHT_CON",
+    "ENGLISH": "Leviathan Apparatus - Enemies always roll initiative with disadvantage.",
+    "ITALIAN": "Apparato del Leviatano - I nemici tirano sempre l'iniziativa con svantaggio."
+  },
+  {
+    "ID": "FEAT_FORCE_STR",
+    "ENGLISH": "Unstoppable Force - Alters ability score modifiers on equipped weapons. Positive modifiers get +1 and negative modifiers get -1.",
+    "ITALIAN": "Forza Inarrestabile - Altera i modificatori di caratteristica sulle armi equipaggiate. I modificatori positivi ottengono +1 e quelli negativi -1."
+  },
+  {
+    "ID": "FEAT_HAND_DEX",
+    "ENGLISH": "Invisible Hand - Advantage on all trifle checks.",
+    "ITALIAN": "Mano Invisibile - Vantaggio su tutte le prove di destrezza minore."
+  },
+  {
+    "ID": "FEAT_OBJECT_CHA",
+    "ENGLISH": "Immovable Object - Your Dexterity modifier also adds to your haggle discount in shops, stacking with Charisma.",
+    "ITALIAN": "Oggetto Inamovibile - Il tuo modificatore di Destrezza si aggiunge anche allo sconto contrattazione nei negozi, sommandosi al Carisma."
+  },
+  {
+    "ID": "FEAT_VOICE_STR",
+    "ENGLISH": "Voice of God - Whenever you roll a d20, another hidden d20 is rolled. If that die is the same as your die, you critically succeed. If both are natural twenties, you regain all your hit points, you regain all your spent spell slots, you lose all levels of exhaustion, and you become genuinely happy for 1d4 seconds.",
+    "ITALIAN": "Voce di Dio - Ogni volta che tiri un d20, un altro d20 nascosto viene tirato. Se quel dado è uguale al tuo, ottieni un successo critico. Se entrambi sono venti naturali, recuperi tutti i punti ferita, tutti gli slot incantesimo spesi, perdi tutti i livelli di sfinimento e diventi genuinamente felice per 1d4 secondi."
+  },
+  {
+    "ID": "FEAT_STRING_INT",
+    "ENGLISH": "Stringmaster - For each level of spell slot you have, you gain one additional maximum spell slot.",
+    "ITALIAN": "Maestro delle Corde - Per ogni livello di slot incantesimo che possiedi, ottieni uno slot incantesimo massimo aggiuntivo."
+  },
+  {
+    "ID": "FEAT_PATRON_CHA",
+    "ENGLISH": "Communing Patron - If you take damage that would cause you to go to 0, a mysterious force protects you. If this happens, you take no damage, and lose one 1st level spellslot. If you do not have any 1st level spell slots, this does not happen.",
+    "ITALIAN": "Patrono Comunicante - Se subisci danni che ti porterebbero a 0, una forza misteriosa ti protegge. Se ciò accade, non subisci danni e perdi uno slot incantesimo di 1° livello. Se non hai slot di 1° livello, questo non si attiva."
+  },
+  {
+    "ID": "FEAT_LICH_INT",
+    "ENGLISH": "Almost Lichdom - Inspired by your favorite pale man, you no longer gain health from healing. You also become invulnerable to all forms of damage. Whenever you take damage of any kind, you always gain one level of exhaustion. Whenever you heal more than 6 HP from any one source, you lose one level of exhaustion.",
+    "ITALIAN": "Quasi Lichdom - Ispirato dal tuo pallido preferito, non guadagni più salute dalle cure. Diventi anche invulnerabile a tutte le forme di danno. Ogni volta che subisci danni di qualsiasi tipo, guadagni sempre un livello di sfinimento. Ogni volta che curi più di 6 PF da una singola fonte, perdi un livello di sfinimento."
+  },
+  {
+    "ID": "FEAT_NEURO_WIS",
+    "ENGLISH": "Esoteric Neuroticism - When you do not have any SHARDS OF JOR, you can spend hit points to unlock dialog options instead. The cost begins at 1 HP, and is doubled each time you use it. The cost resets on a long rest.",
+    "ITALIAN": "Nevrosi Esoterica - Quando non hai FRAMMENTI DI JOR, puoi spendere punti ferita per sbloccare opzioni di dialogo. Il costo inizia a 1 PF e raddoppia ogni volta che lo usi. Il costo si azzera con un riposo lungo."
+  },
+  {
+    "ID": "FEAT_BLOOD_CON",
+    "ENGLISH": "Blood Magic - When you run out of spell slots, you can cast spells with hit points instead. The cost begins at the spell slot level in HP and is multiplied by the amount of times you've activated this effect. The cost resets on a long rest.",
+    "ITALIAN": "Magia del Sangue - Quando esaurisci gli slot incantesimo, puoi lanciare incantesimi con i punti ferita. Il costo inizia al livello dello slot in PF e viene moltiplicato per il numero di volte che hai attivato questo effetto. Il costo si azzera con un riposo lungo."
+  },
+  {
+    "ID": "FEAT_CLERIC_STR",
+    "ENGLISH": "The Cleric - Your healing spells are increased by an extra proficiency. Your heals can also be increased by your Strength modifier instead of your Wisdom modifier, if it is higher.",
+    "ITALIAN": "Il Chierico - I tuoi incantesimi di cura sono aumentati di una competenza extra. Le tue cure possono anche essere aumentate dal modificatore di Forza invece che da quello di Saggezza, se è superiore."
+  },
+  {
+    "ID": "FEAT_ROGUE_DEX",
+    "ENGLISH": "Dick-Ass Rogue - The DC of trifle checks are lowered by an extra proficiency.",
+    "ITALIAN": "Ladro Farabutto - La CD delle prove di destrezza minore è ridotta di una competenza extra."
+  },
+  {
+    "ID": "FEAT_WIZARD_INT",
+    "ENGLISH": "God-Emperor Wizard - The amount of spells you can prepare is increased by an extra proficiency. Saving Throws made by targets are also rolled at disadvantage.",
+    "ITALIAN": "Mago Imperatore - Il numero di incantesimi che puoi preparare è aumentato di una competenza extra. I Tiri Salvezza effettuati dai bersagli vengono anche tirati con svantaggio."
+  },
+  {
+    "ID": "FEAT_BARB_CON",
+    "ENGLISH": "Askanii Barbarian - Whenever you are at or below 25% HP, add an extra proficiency on all rolls.",
+    "ITALIAN": "Barbaro Askanii - Ogni volta che sei al 25% o meno dei PF, aggiungi una competenza extra a tutti i tiri."
+  },
+  {
+    "ID": "FEAT_BARD_CHA",
+    "ENGLISH": "Lore-Seeking Bard - Your Behold Checks are rolled with an extra proficiency. Additionally, DCs on flirt rolls are lowered by your proficiency.",
+    "ITALIAN": "Bardo Cercatore di Sapere - Le tue Prove di Osservazione vengono tirate con una competenza extra. Inoltre, le CD sui tiri di seduzione sono ridotte dalla tua competenza."
+  },
+  {
+    "ID": "FEAT_DRUID_WIS",
+    "ENGLISH": "Friendly Local Druid - Extra proficiency in rolls when in natural habitats. This includes outside areas, overgrown areas, and caverns.",
+    "ITALIAN": "Druido Amichevole del Luogo - Competenza extra nei tiri quando ti trovi in habitat naturali. Questo include aree esterne, aree ricoperte di vegetazione e caverne."
+  },
+  {
+    "ID": "FEAT_LEYLINE_CHA",
+    "ENGLISH": "Leyline Hook - Alters ability score modifiers on TRINKETS. Positive modifiers get +1 and negative modifiers get -1.",
+    "ITALIAN": "Aggancio alla Linea Ley - Altera i modificatori di caratteristica sui CIONDOLI. I modificatori positivi ottengono +1 e quelli negativi -1."
+  },
+  {
+    "ID": "FEAT_MILL_CON",
+    "ENGLISH": "Millennia Guardian - The effects from Potions are doubled. For Ability Score increases, this only affects the first potion of a kind you've ingested.",
+    "ITALIAN": "Guardiano Millenario - Gli effetti delle Pozioni sono raddoppiati. Per gli aumenti di Caratteristica, questo influenza solo la prima pozione di quel tipo che hai ingerito."
+  },
+  {
+    "ID": "FEAT_TINGLE_WIS",
+    "ENGLISH": "Positive Tingle - Healing spells are rolled with twice the normal amount of dice.",
+    "ITALIAN": "Formicolio Positivo - Gli incantesimi di cura vengono tirati con il doppio dei dadi normali."
+  },
+  {
+    "ID": "FEAT_SCRIBBLE_INT",
+    "ENGLISH": "Scribble the Margins - Your cleric level is doubled when calculating the amount of spells you can prepare.",
+    "ITALIAN": "Scarabocchia i Margini - Il tuo livello da chierico è raddoppiato quando calcoli il numero di incantesimi che puoi preparare."
+  },
+  {
+    "ID": "FEAT_DEM_DEX",
+    "ENGLISH": "Democratic Herald - You regain 1d4 hit points each time you ask someone what they are voting in the election.",
+    "ITALIAN": "Araldo Democratico - Recuperi 1d4 punti ferita ogni volta che chiedi a qualcuno cosa voterà alle elezioni."
+  },
+  {
+    "ID": "Spell_1_1",
+    "ENGLISH": "SPELLNAME",
+    "ITALIAN": "SPELLNAME"
+  },
+  {
+    "ID": "Spell_1_2",
+    "ENGLISH": "SPELL DESC",
+    "ITALIAN": "SPELL DESC"
+  },
+  {
+    "ID": "Quest_1_1",
+    "ENGLISH": "The Tea Shop that Blew Up",
+    "ITALIAN": "The Negozio di Tè that Blew Up"
+  },
+  {
+    "ID": "Quest_1_2",
+    "ENGLISH": "Your purpose on Tolstad is to investigate an exploded tea shop. Locate this establishment and gain entry.",
+    "ITALIAN": "Your purpose on Tolstad is to investigate an exploded negozio di tè. Locate this establishment and gain entry."
+  },
+  {
+    "ID": "Quest_1_3",
+    "ENGLISH": "The entrance to the tea shop has been shut by Coinlord Darrow. If you want to enter legally, you need his blessing.",
+    "ITALIAN": "The entrance to the negozio di tè has been shut by Signore delle Monete Darrow. If you want to enter legally, you need his blessing."
+  },
+  {
+    "ID": "Quest_1_4",
+    "ENGLISH": "You've managed to get inside the Tea Shop. Time to investigate!",
+    "ITALIAN": "You've managed to get inside the Negozio di Tè. Time to investigate!"
+  },
+  {
+    "ID": "Quest_1_5",
+    "ENGLISH": "Clue: You found a magic metal brooch in the ruins. It was half-melted. No normal fire could ever harm a magic item, even a minor one like this.",
+    "ITALIAN": "Clue: You found a magic metal brooch in the ruins. It was half-melted. No normal fire could ever harm a magic item, even a minor one like this."
+  },
+  {
+    "ID": "Quest_1_6",
+    "ENGLISH": "Clue: You found Kargameshian tea left in the ruined tea press. The state of the machine makes it clear someone was brewing at the time of the explosion.",
+    "ITALIAN": "Clue: You found Kargameshian tea left in the ruined tea press. The state of the machine makes it clear someone was brewing at the time of the explosion."
+  },
+  {
+    "ID": "Quest_1_7",
+    "ENGLISH": "Clue: The iron door to the back office was blown open after its hinges melted. That means the explosion surely originated from the central chamber, and that it was extremely hot.",
+    "ITALIAN": "Clue: The iron door to the back office was blown open after its hinges melted. That means the explosion surely originated from the central chamber, and that it was extremely hot."
+  },
+  {
+    "ID": "Quest_1_8",
+    "ENGLISH": "Clue: You found a copy of The Undercommon, a magical magazine infamous for its indestructible paper.",
+    "ITALIAN": "Clue: You found a copy of L'Undercommon, a magical magazine infamous for its indestructible paper."
+  },
+  {
+    "ID": "Quest_1_9",
+    "ENGLISH": "You found a corpse underneath the rubble. The corpse of an elf. You need to report this to Lady Sageleaf.",
+    "ITALIAN": "You found a corpse underneath the rubble. The corpse of an elf. You need to report this to Lady Sageleaf."
+  },
+  {
+    "ID": "Quest_1_10",
+    "ENGLISH": "You convinced Lady Sageleaf that you're an idiot, thus allowing you to not contradict the city's official statement. On election day, you should speak with the Coinlord. He will be happy.",
+    "ITALIAN": "You convinced Lady Sageleaf that you're an idiot, thus allowing you to not contradict the city's official statement. On elezione day, you should speak with the Signore delle Monete. He will be happy."
+  },
+  {
+    "ID": "Quest_1_11",
+    "ENGLISH": "You gave Lady Sageleaf what she needed - evidence to contradict the city's official statement. You've picked a side. The HBT will surely be in your favor now.",
+    "ITALIAN": "You gave Lady Sageleaf what she needed - evidence to contradict the city's official statement. You've picked a side. The HBT will surely be in your favor now."
+  },
+  {
+    "ID": "Quest_1_12",
+    "ENGLISH": "Now for the crucial part: finding the responsible party. Who brought this Necklace of Fireballs to Norvik? Who used it? And why? You have until the election to figure it out.",
+    "ITALIAN": "Now for the crucial part: finding the responsible party. Who brought this Collana di Palle di Fuoco to Norvik? Who used it? And why? You have until the elezione to figure it out."
+  },
+  {
+    "ID": "Quest_2_1",
+    "ENGLISH": "Dragon of Tolstad",
+    "ITALIAN": "Dragon of Tolstad"
+  },
+  {
+    "ID": "Quest_2_2",
+    "ENGLISH": "You're here on request of Lady Sageleaf, a goblin chieftain in Tolstad. Go see her, right away. She's in the Goblin Garden, at the southern tip of Tolstad.",
+    "ITALIAN": "You're here on request of Lady Sageleaf, a goblin chieftain in Tolstad. Go see her, right away. She's in the Giardino dei Goblin, at the southern tip of Tolstad."
+  },
+  {
+    "ID": "Quest_2_3",
+    "ENGLISH": "You've spoken with Lady Miska Sageleaf and begun a joint operation with one of her pawns, a goblin named Snell. Let's hope he doesn't get in your way too much.",
+    "ITALIAN": "You've spoken with Lady Miska Sageleaf and begun a joint operation with one of her pawns, a goblin named Snell. Let's hope he doesn't get in your way too much."
+  },
+  {
+    "ID": "Quest_3_1",
+    "ENGLISH": "Coinlord's Meet",
+    "ITALIAN": "Signore delle Monete's Meet"
+  },
+  {
+    "ID": "Quest_3_2",
+    "ENGLISH": "You do not have permission to enter the Tea Shop. You need authorization from the Magistrate of Tolstad: Coinlord Darrow. You know his mansion can be found up the hill, on central Tolstad.",
+    "ITALIAN": "You do not have permission to enter the Negozio di Tè. You need authorization from the Magistrate of Tolstad: Signore delle Monete Darrow. You know his mansion can be found up the hill, on central Tolstad."
+  },
+  {
+    "ID": "Quest_3_3",
+    "ENGLISH": "The Magistrate wants to have a meet with you. But he is busy during the day. His doors will be open when it gets dark.",
+    "ITALIAN": "The Magistrate wants to have a meet with you. But he is busy during the day. His doors will be open when it gets dark."
+  },
+  {
+    "ID": "Quest_3_4",
+    "ENGLISH": "You swore an oath to Coinlord Nicholas Darrow, in exchange for access to the tea shop. You serve your master well.",
+    "ITALIAN": "You swore an oath to Signore delle Monete Nicholas Darrow, in exchange for access to the negozio di tè. You serve your master well."
+  },
+  {
+    "ID": "Quest_3_5",
+    "ENGLISH": "You refused to swear an oath to Coinlord Nicholas Darrow. He, in return, refused to give you access to the Tea Shop. You have to find another way in.",
+    "ITALIAN": "You refused to swear an oath to Signore delle Monete Nicholas Darrow. He, in return, refused to give you access to the Negozio di Tè. You have to find another way in."
+  },
+  {
+    "ID": "Quest_3_6",
+    "ENGLISH": "You managed to talk your way past the Coinlord, somehow. Now you've got access to the Tea Shop, and you didn't even have to agree to some sinister deal first. Nice!",
+    "ITALIAN": "You managed to talk your way past the Signore delle Monete, somehow. Now you've got access to the Negozio di Tè, and you didn't even have to agree to some sinister deal first. Nice!"
+  },
+  {
+    "ID": "Quest_3_7",
+    "ENGLISH": "You missed your meeting with the Coinlord. Instead, you were given a message by the angel, Ettir.",
+    "ITALIAN": "You missed your meeting with the Signore delle Monete. Instead, you were given a message by the angel, Ettir."
+  },
+  {
+    "ID": "Quest_4_1",
+    "ENGLISH": "Ruffled Feathers",
+    "ITALIAN": "Ruffled Feathers"
+  },
+  {
+    "ID": "Quest_4_2",
+    "ENGLISH": "The owner of the tea shop is unaccounted for. Locate this bird-man and find out what he knows.",
+    "ITALIAN": "The owner of the negozio di tè is unaccounted for. Locate this bird-man and find out what he knows."
+  },
+  {
+    "ID": "Quest_4_3",
+    "ENGLISH": "The owner left his tea shop right before the explosion. He was last seen heading below.",
+    "ITALIAN": "The owner left his negozio di tè right before the explosion. He was last seen heading below."
+  },
+  {
+    "ID": "Quest_4_4",
+    "ENGLISH": "The owner of the tea shop was once drunkenly heard bragging about his secret escape plan: shipping himself in a crate to Reeds. You should check the warehouse on Waterlane View.",
+    "ITALIAN": "The owner of the negozio di tè was once drunkenly heard bragging about his secret escape plan: shipping himself in a crate to Reeds. You should check the warehouse on Waterlane View."
+  },
+  {
+    "ID": "Quest_4_5",
+    "ENGLISH": "Drummer was hiding in a crate, set to be exported to Reeds. You found and interrogated him about his tea shop and his illegal smuggling operation. He told you there was a meeting planned between an information broker and a Freestrider right at the time of the explosion.",
+    "ITALIAN": "Drummer was hiding in a crate, set to be exported to Reeds. You found and interrogated him about his negozio di tè and his illegal smuggling operation. He told you there was a meeting planned between an information broker and a Cavalcatore Libero right at the time of the explosion."
+  },
+  {
+    "ID": "Quest_4_6",
+    "ENGLISH": "You let Drummer go, without taking his papers. Maybe he'll leave, or maybe he'll stay. Who knows?",
+    "ITALIAN": "You let Drummer go, without taking his papers. Maybe he'll leave, or maybe he'll stay. Who knows?"
+  },
+  {
+    "ID": "Quest_4_7",
+    "ENGLISH": "You took Drummer's papers, making sure he won't leave the city too easily. Maybe he'll slip away anyway, or maybe he'll stick around. Who knows?",
+    "ITALIAN": "You took Drummer's papers, making sure he won't leave the city too easily. Maybe he'll slip away anyway, or maybe he'll stick around. Who knows?"
+  },
+  {
+    "ID": "Quest_5_1",
+    "ENGLISH": "The Star Witness",
+    "ITALIAN": "The Star Witness"
+  },
+  {
+    "ID": "Quest_5_2",
+    "ENGLISH": "A 'Frank son of Frank' was seen on Pillar Road at the time of the explosion, but calmly walked downstairs afterwards. Locate and question this strange man dressed in yellow. Frank son of Frank is often used as a fake name by rich adventurers around the Coast.",
+    "ITALIAN": "A 'Frank son of Frank' was seen on Pillar Road at the time of the explosion, but calmly walked downstairs afterwards. Locate and question this strange man dressed in yellow. Frank son of Frank is often used as a fake name by rich adventurers around the Coast."
+  },
+  {
+    "ID": "Quest_5_3",
+    "ENGLISH": "A man dressed in yellow was seen by 'The Duck' in the City Below. This man passed by the entrance to the Crypt, heading into the Southern Caverns.",
+    "ITALIAN": "A man dressed in yellow was seen by 'The Duck' in the Città Sotterranea. This man passed by the entrance to the Crypt, heading into the Southern Caverns."
+  },
+  {
+    "ID": "Quest_5_4",
+    "ENGLISH": "Arn, the kiosk kid, says a man in yellow was seen leaving the scene. He was heading down below. Also, he was interested in Freestrider-stuff...",
+    "ITALIAN": "Arn, the kiosk kid, says a man in yellow was seen leaving the scene. He was heading down below. Also, he was interested in Cavalcatore Libero-stuff..."
+  },
+  {
+    "ID": "Quest_5_5",
+    "ENGLISH": "Moongore spotted a man in yellow heading through the City Below. He went through the South Caves.",
+    "ITALIAN": "Moongore spotted a man in yellow heading through the Città Sotterranea. He went through the South Caves."
+  },
+  {
+    "ID": "Quest_5_6",
+    "ENGLISH": "Kraaid had an encounter with a human in yellow, who was looking for a 'secret door' to 'further below'.",
+    "ITALIAN": "Kraaid had an encounter with a human in yellow, who was looking for a 'secret door' to 'further below'."
+  },
+  {
+    "ID": "Quest_5_7",
+    "ENGLISH": "Viira explained that a famous revolutionary, who is probably this man in yellow, is visiting Norvik during the election. She does not know where he is.",
+    "ITALIAN": "Viira explained that a famous revolutionary, who is probably this man in yellow, is visiting Norvik during the elezione. She does not know where he is."
+  },
+  {
+    "ID": "Quest_5_8",
+    "ENGLISH": "You found Meriadoc Moonwatch at the lowest point of Jor's Pillar, and rescued him from the horrific troll.",
+    "ITALIAN": "You found Meriadoc Moonwatch at the lowest point of Jor's Pillar, and rescued him from the horrific troll."
+  },
+  {
+    "ID": "Quest_5_9",
+    "ENGLISH": "Moments after the explosion, Meriadoc saw an invisible 'smoky man' rush across the Crossing and then 'enter' the Pillar of Jor. Due to his magical sight, he saw through the veil, and swears it must be a half-open Gate of Jor.",
+    "ITALIAN": "Moments after the explosion, Meriadoc saw an invisible 'smoky man' rush across the Crossing and then 'enter' il Pilastro of Jor. Due to his magical sight, he saw through the veil, and swears it must be a half-open Portale di Jor."
+  },
+  {
+    "ID": "Quest_6_1",
+    "ENGLISH": "Gate of Jor",
+    "ITALIAN": "Portale di Jor"
+  },
+  {
+    "ID": "Quest_6_2",
+    "ENGLISH": "An invisible, 'smoking' man was seen entering the Pillar of Jor, right after the explosion. Now you need to figure out a way to follow. Seek the aid of some ancient powerful being that can help you.",
+    "ITALIAN": "An invisible, 'smoking' man was seen entering il Pilastro of Jor, right after the explosion. Now you need to figure out a way to follow. Seek the aid of some ancient powerful being that can help you."
+  },
+  {
+    "ID": "Quest_6_3",
+    "ENGLISH": "According to Visken you need to locate an Astral Projection spell scroll. If you do, he will cast it on you in order for you to enter the Pillar.",
+    "ITALIAN": "According to Visken you need to locate an Astral Projection spell scroll. If you do, he will cast it on you in order for you to enter il Pilastro."
+  },
+  {
+    "ID": "Quest_6_4",
+    "ENGLISH": "You found a Scroll of Astral Projection and gave it to Visken. If you call for him, he will help you enter the Pillar when it is time.",
+    "ITALIAN": "You found a Scroll of Astral Projection and gave it to Visken. If you call for him, he will help you enter il Pilastro when it is time."
+  },
+  {
+    "ID": "Quest_6_5",
+    "ENGLISH": "Olzis suggested that you locate an emerald gemstone. If you do, she will turn it into a <i>Key of Jor</i>.",
+    "ITALIAN": "Olzis suggested that you locate an emerald gemstone. If you do, she will turn it into a <i>Key of Jor</i>."
+  },
+  {
+    "ID": "Quest_6_6",
+    "ENGLISH": "You gave the sphinx a gemstone, and she channeled some intense ancient magic into it. Now you have a Key of Jor that will allow you to enter the Pillar, alone or not.",
+    "ITALIAN": "You gave the sphinx a gemstone, and she channeled some intense ancient magic into it. Now you have a Key of Jor that will allow you to enter il Pilastro, alone or not."
+  },
+  {
+    "ID": "Quest_6_7",
+    "ENGLISH": "Ever-Glad offered to guide you into the Pillar, if you accept his job offer.",
+    "ITALIAN": "Ever-Glad offered to guide you into il Pilastro, if you accept his job offer."
+  },
+  {
+    "ID": "Quest_6_8",
+    "ENGLISH": "You accepted a job offer from the eldritch aberration, and in return he has given you a passphrase that will allow you to enter the Pillar, alone or not.",
+    "ITALIAN": "You accepted a job offer from the eldritch aberration, and in return he has given you a passphrase that will allow you to enter il Pilastro, alone or not."
+  },
+  {
+    "ID": "Quest_6_9",
+    "ENGLISH": "You entered the Pillar alone.",
+    "ITALIAN": "You entered il Pilastro alone."
+  },
+  {
+    "ID": "Quest_6_10",
+    "ENGLISH": "You entered the Pillar with Snell, but you seem to have lost him in the darkness.",
+    "ITALIAN": "You entered il Pilastro with Snell, but you seem to have lost him in the darkness."
+  },
+  {
+    "ID": "Quest_6_11",
+    "ENGLISH": "You entered the Pillar with Snell and Ettir, but you seem to have lost them in the darkness.",
+    "ITALIAN": "You entered il Pilastro with Snell and Ettir, but you seem to have lost them in the darkness."
+  },
+  {
+    "ID": "Quest_7_1",
+    "ENGLISH": "Elven Connection",
+    "ITALIAN": "Elven Connection"
+  },
+  {
+    "ID": "Quest_7_2",
+    "ENGLISH": "You found an elven corpse under the tea shop rubble. It's been moved to the Lichhouse for safekeeping.",
+    "ITALIAN": "You found an elven corpse under the negozio di tè rubble. It's been moved to the Lichhouse for safekeeping."
+  },
+  {
+    "ID": "Quest_7_3",
+    "ENGLISH": "You used Speak with Dead on the dead elf. Some interesting information was collected. Now it's time to follow other leads. And maybe ask around...",
+    "ITALIAN": "You used Speak with Dead on the dead elf. Some interesting information was collected. Now it's time to follow other leads. And maybe ask around..."
+  },
+  {
+    "ID": "Quest_7_4",
+    "ENGLISH": "Visken gave a post-mortem. The elf died from the fire, instantaneously.",
+    "ITALIAN": "Visken gave a post-mortem. The elf died from the fire, instantaneously."
+  },
+  {
+    "ID": "Quest_7_5",
+    "ENGLISH": "Alfoz told you about his deal with Pinja. He claims to be innocent.",
+    "ITALIAN": "Alfoz told you about his deal with Pinja. He claims to be innocent."
+  },
+  {
+    "ID": "Quest_7_6",
+    "ENGLISH": "Viira explained their deal with the elven broker. Lisa, a contractor, was sent to handle it.",
+    "ITALIAN": "Viira explained their deal with the elven broker. Lisa, a contractor, was sent to handle it."
+  },
+  {
+    "ID": "Quest_7_7",
+    "ENGLISH": "An Illym Warden appeared in the night. He explained how the dead elf was a traitor, and he 'apologized' for the inconvenience she caused. You should check on the corpse.",
+    "ITALIAN": "An Illym Warden appeared in the night. He explained how the dead elf was a traitor, and he 'apologized' for the inconvenience she caused. You should check on the corpse."
+  },
+  {
+    "ID": "Quest_7_8",
+    "ENGLISH": "According to Visken, the elf's corpse was taken by her kin. Whoever found out about her did not want anyone in Norvik to investigate further.",
+    "ITALIAN": "According to Visken, the elf's corpse was taken by her kin. Whoever found out about her did not want anyone in Norvik to investigate further."
+  },
+  {
+    "ID": "Quest_8_1",
+    "ENGLISH": "A Freelance Hag",
+    "ITALIAN": "A Freelance Hag"
+  },
+  {
+    "ID": "Quest_8_2",
+    "ENGLISH": "There was a meeting planned in the tea shop on the day of the explosion - a meeting with a <i>hag</i>. Locate her, and find out what she knows.",
+    "ITALIAN": "There was a meeting planned in the negozio di tè on the day of the explosion - a meeting with a <i>hag</i>. Locate her, and find out what she knows."
+  },
+  {
+    "ID": "Quest_8_3",
+    "ENGLISH": "The hag known as 'Lisa' is a freelance worker for the Freestriders on Waterlane. Viira claims she does not know her location.",
+    "ITALIAN": "The hag known as 'Lisa' is a freelance worker for the Cavalcatore Liberos on Waterlane. Viira claims she does not know her location."
+  },
+  {
+    "ID": "Quest_8_4",
+    "ENGLISH": "You convinced Rixbiter to give you the password to her magic well, where the hag is supposed to hang out. It leads down to the City Below...",
+    "ITALIAN": "You convinced Rixbiter to give you the password to her magic well, where the hag is supposed to hang out. It leads down to the Città Sotterranea..."
+  },
+  {
+    "ID": "Quest_8_5",
+    "ENGLISH": "You found Lisa in the City Below. She claims to be innocent.",
+    "ITALIAN": "You found Lisa in the Città Sotterranea. She claims to be innocent."
+  },
+  {
+    "ID": "Quest_8_6",
+    "ENGLISH": "Lisa didn't know too much about Drummer's operation. She does not believe he blew up his own tea shop. She does not know who did.",
+    "ITALIAN": "Lisa didn't know too much about Drummer's operation. She does not believe he blew up his own negozio di tè. She does not know who did."
+  },
+  {
+    "ID": "Quest_8_7",
+    "ENGLISH": "The hag was a former friend of Pinja'Athena, and was supposed to meet with her on the day of the explosion. She claims the explosion occurred before she arrived.",
+    "ITALIAN": "The hag was a former friend of Pinja'Athena, and was supposed to meet with her on the day of the explosion. She claims the explosion occurred before she arrived."
+  },
+  {
+    "ID": "Quest_8_8",
+    "ENGLISH": "The hag hid in the Below to avoid trouble after barely missing the explosion by accident. You can't arrest her either way, so it's time to look elsewhere.",
+    "ITALIAN": "The hag hid in the Below to avoid trouble after barely missing the explosion by accident. You can't arrest her either way, so it's time to look elsewhere."
+  },
+  {
+    "ID": "Quest_9_1",
+    "ENGLISH": "Safe & Secure",
+    "ITALIAN": "Safe & Secure"
+  },
+  {
+    "ID": "Quest_9_2",
+    "ENGLISH": "Drummer has a safe hidden in his office, in the back of the tea shop.",
+    "ITALIAN": "Drummer has a safe hidden in his office, in the back of the negozio di tè."
+  },
+  {
+    "ID": "Quest_9_3",
+    "ENGLISH": "You got Drummer's safe open. Great job.",
+    "ITALIAN": "You got Drummer's safe open. Great job."
+  },
+  {
+    "ID": "Quest_10_1",
+    "ENGLISH": "Strings of Divination",
+    "ITALIAN": "Strings of Divination"
+  },
+  {
+    "ID": "Quest_10_2",
+    "ENGLISH": "Lisa wants you to prove your natural ability for divination magic. If you get her a 'maw pie' then she'll teach you a trick that could make it easier...",
+    "ITALIAN": "Lisa wants you to prove your natural ability for divination magic. If you get her a 'maw pie' then she'll teach you a trick that could make it easier..."
+  },
+  {
+    "ID": "Quest_10_3",
+    "ENGLISH": "You managed to procure the rare 'maw pie'. This should make Lisa happy.",
+    "ITALIAN": "You managed to procure the rare 'maw pie'. This should make Lisa happy."
+  },
+  {
+    "ID": "Quest_10_4",
+    "ENGLISH": "You proved your natural talents for divination. The hag is somewhat impressed, and you got a nice spell out of it.",
+    "ITALIAN": "You proved your natural talents for divination. The hag is somewhat impressed, and you got a nice spell out of it."
+  },
+  {
+    "ID": "Quest_11_1",
+    "ENGLISH": "Finish the Quest",
+    "ITALIAN": "Finish the Quest"
+  },
+  {
+    "ID": "Quest_11_2",
+    "ENGLISH": "Talk with everyone you need to talk to. When you're done, head over to the ballot box with Snell. \n\nAfter so many Frays, isn't this a wonderful String to end on?",
+    "ITALIAN": "Talk with everyone you need to talk to. When you're done, head over to the ballot box with Snell. \n\nAfter so many Frays, isn't this a wonderful String to end on?"
+  },
+  {
+    "ID": "Quest_11_3",
+    "ENGLISH": "The coming days will be the most interesting days in the history of Norvik. Unfortunately for you, they'll be nothing but a flash. Depending on your choices you might end up in different positions here, at start of this ERA. But somehow, in your gut, you feel an ominous sense of reckoning. Will your EGO allow you to survive this new world?",
+    "ITALIAN": "The coming days will be the most interesting days in the history of Norvik. Unfortunately for you, they'll be nothing but a flash. Depending on your choices you might end up in different positions here, at start of this ERA. But somehow, in your gut, you feel an ominous sense of reckoning. Will your EGO allow you to survive this new world?"
+  },
+  {
+    "ID": "Quest_14_1",
+    "ENGLISH": "Election Week",
+    "ITALIAN": "Elezione Week"
+  },
+  {
+    "ID": "Quest_14_2",
+    "ENGLISH": "The first ever election in Norvikian history will take place in just a few days' time. What will you vote for?",
+    "ITALIAN": "The first ever elezione in Norvikian history will take place in just a few days' time. What will you vote for?"
+  },
+  {
+    "ID": "Quest_14_3",
+    "ENGLISH": "You've shown your preference for the Party of Norvik $NATIONALIST times in the last few days. A true Urthguard veteran!",
+    "ITALIAN": "You've shown your preference for the Party of Norvik $NATIONALIST times in the last few days. A true Urthguard veteran!"
+  },
+  {
+    "ID": "Quest_14_4",
+    "ENGLISH": "You've mentioned Freestrider talking points at least $FREESTRIDER times, as any modern man would.",
+    "ITALIAN": "You've mentioned Cavalcatore Libero talking points at least $FREESTRIDER times, as any modern man would."
+  },
+  {
+    "ID": "Quest_14_5",
+    "ENGLISH": "You've talked about positive opinions on Azgalism about $AZGALIST times ever since waking up in the Lichhouse. Really brings you back.",
+    "ITALIAN": "You've talked about positive opinions on Azgalism about $AZGALIST times ever since waking up in the Lichhouse. Really brings you back."
+  },
+  {
+    "ID": "Quest_14_6",
+    "ENGLISH": "Obviously, you're very clear about the fact that you should be the future god-wizard-king of Norvik. You've said so $ARCANIST times, in real conversations, with real people.",
+    "ITALIAN": "Obviously, you're very clear about the fact that you should be the future god-wizard-king of Norvik. You've said so $ARCANIST times, in real conversations, with real people."
+  },
+  {
+    "ID": "Quest_14_7",
+    "ENGLISH": "Politics isn't really for you. So you've said, $APOLITICAL times, whenever the topic comes up. Being apolitical sure is neat!",
+    "ITALIAN": "Politics isn't really for you. So you've said, $APOLITICAL times, whenever the topic comes up. Being apolitical sure is neat!"
+  },
+  {
+    "ID": "Quest_14_8",
+    "ENGLISH": "<i>Agrarian</i>.\n\nIt's in your blood. Dirt, mostly. You've expelled some of it during conversations $AGRARIAN times.",
+    "ITALIAN": "<i>Agrarian</i>.\n\nIt's in your blood. Dirt, mostly. You've expelled some of it during conversations $AGRARIAN times."
+  },
+  {
+    "ID": "Quest_14_9",
+    "ENGLISH": "Now you know. You're ready.\n\nReady for ELECTION DAY.",
+    "ITALIAN": "Now you know. You're ready.\n\nReady for ELECTION DAY."
+  },
+  {
+    "ID": "Quest_45_1",
+    "ENGLISH": "Democratization",
+    "ITALIAN": "Democratization"
+  },
+  {
+    "ID": "Quest_45_2",
+    "ENGLISH": "The city is changing. As are you. You have always been volatile in your political views, but now it's time to choose, for real.\n\nYou have unlocked the ability to ask people what they are voting for. A deep urge inside of you is calling: you need to ask. You MUST ask. Over and over again. At least twenty times. Okay, ten.\n\nYou have currently asked people $DEM times.",
+    "ITALIAN": "The city is changing. As are you. You have always been volatile in your political views, but now it's time to choose, for real.\n\nYou have unlocked the ability to ask people what they are voting for. A deep urge inside of you is calling: you need to ask. You MUST ask. Over and over again. At least twenty times. Okay, ten.\n\nYou have currently asked people $DEM times."
+  },
+  {
+    "ID": "Quest_45_3",
+    "ENGLISH": "You have successfully spread the IDEA of democracy, simply by asking people what they are voting for. Everyone is now better off, thanks to your extremely helpful behavior.\n\nYou are a real hero.",
+    "ITALIAN": "You have successfully spread the IDEA of democracy, simply by asking people what they are voting for. Everyone is now better off, thanks to your extremely helpful behavior.\n\nYou are a real hero."
+  },
+  {
+    "ID": "Quest_15_1",
+    "ENGLISH": "Circle Square Conflict",
+    "ITALIAN": "Circle Square Conflict"
+  },
+  {
+    "ID": "Quest_15_2",
+    "ENGLISH": "An orc and a bunch of dwarves are in a deadlock. The dwarves want to hold a rally and the orc is sent to stop them.",
+    "ITALIAN": "An orc and a bunch of dwarves are in a deadlock. The dwarves want to hold a rally and the orc is sent to stop them."
+  },
+  {
+    "ID": "Quest_15_3",
+    "ENGLISH": "Alfoz says they have legal right to hold their rally.",
+    "ITALIAN": "Alfoz says they have legal right to hold their rally."
+  },
+  {
+    "ID": "Quest_15_4",
+    "ENGLISH": "Viira claims the dwarves' legal documents are expired.",
+    "ITALIAN": "Viira claims the dwarves' legal documents are expired."
+  },
+  {
+    "ID": "Quest_15_5",
+    "ENGLISH": "Alfoz ended up punching you, after which the dwarves tactfully retreated. You should speak with Viira.",
+    "ITALIAN": "Alfoz ended up punching you, after which the dwarves tactfully retreated. You should speak with Viira."
+  },
+  {
+    "ID": "Quest_15_6",
+    "ENGLISH": "You convinced Alfoz to leave the (circle) square. You should speak with Viira.",
+    "ITALIAN": "You convinced Alfoz to leave the (circle) square. You should speak with Viira."
+  },
+  {
+    "ID": "Quest_15_7",
+    "ENGLISH": "You managed to get the Azgal dwarves to leave the Circle Square. But at what cost?",
+    "ITALIAN": "You managed to get the Azgal dwarves to leave the Circle Square. But at what cost?"
+  },
+  {
+    "ID": "Quest_16_1",
+    "ENGLISH": "Young & Dumb",
+    "ITALIAN": "Young & Dumb"
+  },
+  {
+    "ID": "Quest_16_2",
+    "ENGLISH": "You hear there's going to be trouble down on Waterlane this evening, on your first day on Tolstad. You should check it out.",
+    "ITALIAN": "You hear there's going to be trouble down on Waterlane this evening, on your first day on Tolstad. You should check it out."
+  },
+  {
+    "ID": "Quest_16_3",
+    "ENGLISH": "Some girl was delivering an Azgal magazine on Upper Tolstad. She seemed out of place, and talked about going down to Waterlane this evening.",
+    "ITALIAN": "Some girl was delivering an Azgal magazine on Upper Tolstad. She seemed out of place, and talked about going down to Waterlane this evening."
+  },
+  {
+    "ID": "Quest_16_4",
+    "ENGLISH": "You found a note about a 'Norvikian Resistance' meeting up on Waterlane this evening. Uh oh.",
+    "ITALIAN": "You found a note about a 'Norvikian Resistance' meeting up on Waterlane this evening. Uh oh."
+  },
+  {
+    "ID": "Quest_16_5",
+    "ENGLISH": "You sided with Modissa and the Azgal Youth. They have a right to deliver their paper.",
+    "ITALIAN": "You sided with Modissa and the Azgal Youth. They have a right to deliver their paper."
+  },
+  {
+    "ID": "Quest_16_6",
+    "ENGLISH": "You sided with Rollo and the Norvikian Resistance. They are serving their city's best interest.",
+    "ITALIAN": "You sided with Rollo and the Norvikian Resistance. They are serving their city's best interest."
+  },
+  {
+    "ID": "Quest_16_7",
+    "ENGLISH": "You managed to resolve the conflict between the Young Azgals and the Norvikian Resistance. Somewhat.",
+    "ITALIAN": "You managed to resolve the conflict between the Young Azgals and the Norvikian Resistance. Somewhat."
+  },
+  {
+    "ID": "Quest_17_1",
+    "ENGLISH": "Copper Press Fever",
+    "ITALIAN": "Copper Press Fever"
+  },
+  {
+    "ID": "Quest_17_2",
+    "ENGLISH": "An Azgalist newspaper is being printed on Tolstad. You should find the location of this copper press and the name of the secret editor.",
+    "ITALIAN": "An Azgalist newspaper is being printed on Tolstad. You should find the location of this copper press and the name of the secret editor."
+  },
+  {
+    "ID": "Quest_17_3",
+    "ENGLISH": "The paper is being printed in an apartment at Pillar Crossing. Highly illegal. You can either help them, or report them to the Freestriders.",
+    "ITALIAN": "The paper is being printed in an apartment at Pillar Crossing. Highly illegal. You can either help them, or report them to the Cavalcatore Liberos."
+  },
+  {
+    "ID": "Quest_17_4",
+    "ENGLISH": "Modissa needs more ink in order to print full coverage of their election issue. She asked you to find 'Quillwell Cartridges' inside the 'Guild Warehouse' on 'Waterlane'.",
+    "ITALIAN": "Modissa needs more ink in order to print full coverage of their elezione issue. She asked you to find 'Quillwell Cartridges' inside the 'Guild Warehouse' on 'Waterlane'."
+  },
+  {
+    "ID": "Quest_17_5",
+    "ENGLISH": "You entered the Guild Warehouse and collected a 'Quillwells' cartridge of ink. Time to get it back to Modissa.",
+    "ITALIAN": "You entered the Guild Warehouse and collected a 'Quillwells' cartridge of ink. Time to get it back to Modissa."
+  },
+  {
+    "ID": "Quest_17_6",
+    "ENGLISH": "You've convinced Modissa to tone down her article. The election issue will be a solid and normal Azgalist issue, focused on the election.",
+    "ITALIAN": "You've convinced Modissa to tone down her article. The elezione issue will be a solid and normal Azgalist issue, focused on the elezione."
+  },
+  {
+    "ID": "Quest_17_7",
+    "ENGLISH": "Modissa says she'll tone down her article. How she does it, and if, remains to be seen.",
+    "ITALIAN": "Modissa says she'll tone down her article. How she does it, and if, remains to be seen."
+  },
+  {
+    "ID": "Quest_17_8",
+    "ENGLISH": "You've convinced Alfoz to sanction Modissa's article. The election issue will make a splash throughout the city, for good and bad.",
+    "ITALIAN": "You've convinced Alfoz to sanction Modissa's article. The elezione issue will make a splash throughout the city, for good and bad."
+  },
+  {
+    "ID": "Quest_17_9",
+    "ENGLISH": "The ink you gave Modissa will help them print even more copies of The Chant. Now they should have full coverage on their election issue.",
+    "ITALIAN": "The ink you gave Modissa will help them print even more copies of The Chant. Now they should have full coverage on their elezione issue."
+  },
+  {
+    "ID": "Quest_17_10",
+    "ENGLISH": "You've reported the printer's location to Viira. They'll shut it down before the election issue can come out. Of course, the Azgalists won't know you're the one behind it...",
+    "ITALIAN": "You've reported the printer's location to Viira. They'll shut it down before the elezione issue can come out. Of course, the Azgalists won't know you're the one behind it..."
+  },
+  {
+    "ID": "Quest_18_1",
+    "ENGLISH": "Norvikian Resistance",
+    "ITALIAN": "Norvikian Resistance"
+  },
+  {
+    "ID": "Quest_18_2",
+    "ENGLISH": "You've heard of a secret society of 'pure' Nationalists who gather in the Rollermill. They must be very powerful.",
+    "ITALIAN": "You've heard of a secret society of 'pure' Nationalists who gather in the Rollermill. They must be very powerful."
+  },
+  {
+    "ID": "Quest_18_3",
+    "ENGLISH": "Rollo and his friends meet up in the Rollermill. They want you to steal a document from the Freestriders, on behalf of their secret contact within the Resistance.",
+    "ITALIAN": "Rollo and his friends meet up in the Rollermill. They want you to steal a document from the Cavalcatore Liberos, on behalf of their secret contact within the Resistance."
+  },
+  {
+    "ID": "Quest_18_4",
+    "ENGLISH": "The Askanii-Reeds Trade Co. has apparently signed a contract with the city for exclusive land rights of every port. Including the entirety of Waterlane. In exchange, the Freestriders have funded several of the Magistrate's personal businesses. If this came out, it would cause havoc.",
+    "ITALIAN": "The Askanii-Reeds Trade Co. has apparently signed a contract with the city for exclusive land rights of every port. Including the entirety of Waterlane. In exchange, the Cavalcatore Liberos have funded several of the Magistrate's personal businesses. If this came out, it would cause havoc."
+  },
+  {
+    "ID": "Quest_18_5",
+    "ENGLISH": "You gave the documents to Rollo. How this will impact the city is left undecided.",
+    "ITALIAN": "You gave the documents to Rollo. How this will impact the city is left undecided."
+  },
+  {
+    "ID": "Quest_18_6",
+    "ENGLISH": "You gave back the documents to the Agent Viira, letting her know about the plot against the Freestriders in the city.",
+    "ITALIAN": "You gave back the documents to the Agent Viira, letting her know about the plot against the Cavalcatore Liberos in the city."
+  },
+  {
+    "ID": "Quest_18_7",
+    "ENGLISH": "You made the boys leave the Rollermill. They won't be holding their meetings here any longer.",
+    "ITALIAN": "You made the boys leave the Rollermill. They won't be holding their meetings here any longer."
+  },
+  {
+    "ID": "Quest_19_1",
+    "ENGLISH": "Capital Dominion",
+    "ITALIAN": "Capital Dominion"
+  },
+  {
+    "ID": "Quest_19_2",
+    "ENGLISH": "Since you're a friend of the AR Trading Co., Viira offered you a gig: hand out AEFAs (Askanii Economic Freestrider Accord) to local entrepreneurs.",
+    "ITALIAN": "Since you're a friend of the AR Trading Co., Viira offered you a gig: hand out AEFAs (Askanii Economic Cavalcatore Libero Accord) to local entrepreneurs."
+  },
+  {
+    "ID": "Quest_19_3",
+    "ENGLISH": "You handed an AEFA to Visken.",
+    "ITALIAN": "You handed an AEFA to Visken."
+  },
+  {
+    "ID": "Quest_19_4",
+    "ENGLISH": "You handed an AEFA to the Potion Seller.",
+    "ITALIAN": "You handed an AEFA to the Potion Seller."
+  },
+  {
+    "ID": "Quest_19_5",
+    "ENGLISH": "You handed an AEFA to Rixbiter.",
+    "ITALIAN": "You handed an AEFA to Rixbiter."
+  },
+  {
+    "ID": "Quest_19_6",
+    "ENGLISH": "You handed an AEFA to the Book Binder.",
+    "ITALIAN": "You handed an AEFA to the Book Binder."
+  },
+  {
+    "ID": "Quest_19_7",
+    "ENGLISH": "You handed an AEFA to Thalassos.",
+    "ITALIAN": "You handed an AEFA to Thalassos."
+  },
+  {
+    "ID": "Quest_19_8",
+    "ENGLISH": "You handed an AEFA to Oyu.",
+    "ITALIAN": "You handed an AEFA to Oyu."
+  },
+  {
+    "ID": "Quest_19_9",
+    "ENGLISH": "You had a lovely talk with the horrifying visage of the Golden Horde, Ambassador Ivcx.",
+    "ITALIAN": "You had a lovely talk with the horrifying visage of the Golden Horde, Ambassador Ivcx."
+  },
+  {
+    "ID": "Quest_19_10",
+    "ENGLISH": "Viira was happy with your performance in that tense conversation, and offers you a future within the AR Trading Co.",
+    "ITALIAN": "Viira was happy with your performance in that tense conversation, and offers you a future within the AR Trading Co."
+  },
+  {
+    "ID": "Quest_19_11",
+    "ENGLISH": "Viira was furious with your behavior, and promised retaliation in the future. The Freestriders are not your friends anymore.",
+    "ITALIAN": "Viira was furious with your behavior, and promised retaliation in the future. The Cavalcatore Liberos are not your friends anymore."
+  },
+  {
+    "ID": "Quest_19_12",
+    "ENGLISH": "You stood up to Ivcx, while reinforcing the Freestriders claim on Norvik. Viira is extremely happy with your performance, and promises you a grand future within the Revolution.",
+    "ITALIAN": "You stood up to Ivcx, while reinforcing the Cavalcatore Liberos claim on Norvik. Viira is extremely happy with your performance, and promises you a grand future within the Revolution."
+  },
+  {
+    "ID": "Quest_21_1",
+    "ENGLISH": "Milkurious",
+    "ITALIAN": "Milkurious"
+  },
+  {
+    "ID": "Quest_21_2",
+    "ENGLISH": "Crown collection. Coin capture. Cash cidnapping. There are many ways to describe it.\n\n<b>Get rich. Or die trying.</b> The only way to do it is obviously to get this milk delivery gig. Try checking around Waterlane in the morning...",
+    "ITALIAN": "Crown collection. Coin capture. Cash cidnapping. There are many ways to describe it.\n\n<b>Get rich. Or die trying.</b> The only way to do it is obviously to get this milk delivery gig. Try checking around Waterlane in the morning..."
+  },
+  {
+    "ID": "Quest_21_3",
+    "ENGLISH": "Ost gave you five bottles of milk to sell to random people. After the election he expects you to return with 10,000 crowns- his recoup on this wonderful scheme. \n\nClearly, this is the only way for you to get rich.",
+    "ITALIAN": "Ost gave you five bottles of milk to sell to random people. After the elezione he expects you to return with 10,000 crowns- his recoup on this wonderful scheme. \n\nClearly, this is the only way for you to get rich."
+  },
+  {
+    "ID": "Quest_21_4",
+    "ENGLISH": "You refused to sell the milk. It was clearly a scam.",
+    "ITALIAN": "You refused to sell the milk. It was clearly a scam."
+  },
+  {
+    "ID": "Quest_21_5",
+    "ENGLISH": "You did not manage to sell the five bottles of rotten milk for twenty thousand crowns. Ost was not shocked.",
+    "ITALIAN": "You did not manage to sell the five bottles of rotten milk for twenty thousand crowns. Ost was not shocked."
+  },
+  {
+    "ID": "Quest_21_6",
+    "ENGLISH": "You gave Ost 10,000 crowns on election day. He was shocked.",
+    "ITALIAN": "You gave Ost 10,000 crowns on elezione day. He was shocked."
+  },
+  {
+    "ID": "Quest_22_1",
+    "ENGLISH": "Valkyrie",
+    "ITALIAN": "Valkyrie"
+  },
+  {
+    "ID": "Quest_22_2",
+    "ENGLISH": "Ettir, the angel working for Magistrate Darrow, is your roommate during this investigation. You find her elusive yet intriguing. Find out more by performing the most difficult of techniques: speaking with her.",
+    "ITALIAN": "Ettir, the angel working for Magistrate Darrow, is your roommate during this investigation. You find her elusive yet intriguing. Find out more by performing the most difficult of techniques: speaking with her."
+  },
+  {
+    "ID": "Quest_22_3",
+    "ENGLISH": "You successfully got Ettir to open up to you. She is clearly a strange creature, living alone in a city that has no real place for her. She has offered to help you in your investigation, once you reach far below the city...",
+    "ITALIAN": "You successfully got Ettir to open up to you. She is clearly a strange creature, living alone in a city that has no real place for her. She has offered to help you in your investigation, once you reach far below the city..."
+  },
+  {
+    "ID": "Quest_22_4",
+    "ENGLISH": "You met the angel in the City Below. Yet she will only join you once you've reached even further on your descent.",
+    "ITALIAN": "You met the angel in the Città Sotterranea. Yet she will only join you once you've reached even further on your descent."
+  },
+  {
+    "ID": "Quest_22_5",
+    "ENGLISH": "Ettir joins your party while you are exploring this lowest level beneath the city.",
+    "ITALIAN": "Ettir joins your party while you are exploring this lowest level beneath the city."
+  },
+  {
+    "ID": "Quest_23_1",
+    "ENGLISH": "A Missing Paladin",
+    "ITALIAN": "A Missing Paladin"
+  },
+  {
+    "ID": "Quest_23_2",
+    "ENGLISH": "Lord Gorm of Norvik has gone missing. The legendary paladin is said to have disappeared far below the city... \n\n<b>Locate the Missing Paladin. It will make you a hero.</b>",
+    "ITALIAN": "Lord Gorm of Norvik has gone missing. The legendary paladin is said to have disappeared far below the city... \n\n<b>Locate the Missing Paladin. It will make you a hero.</b>"
+  },
+  {
+    "ID": "Quest_23_3",
+    "ENGLISH": "You located an official Paladin Sigil in the City Below. It appears high-ranking enough that it must have been Lord Gorm's. While you have not found a body, he is most likely lost to the dungeon.",
+    "ITALIAN": "You located an official Paladin Sigil in the Città Sotterranea. It appears high-ranking enough that it must have been Lord Gorm's. While you have not found a body, he is most likely lost to the dungeon."
+  },
+  {
+    "ID": "Quest_23_4",
+    "ENGLISH": "You found Lord Gorm in the Beyond. But should you report this to Darrow? Only time will tell what the right choice is.",
+    "ITALIAN": "You found Lord Gorm in the Beyond. But should you report this to Darrow? Only time will tell what the right choice is."
+  },
+  {
+    "ID": "Quest_24_1",
+    "ENGLISH": "Golden Line",
+    "ITALIAN": "Golden Line"
+  },
+  {
+    "ID": "Quest_24_2",
+    "ENGLISH": "There's a geopolitical conflict going on in the Clanlands. The homeland of Askanii-native halflings has been cut in half - by the so-called <i>Golden Line</i>. Celestials hold the west. Maybe you should find out more?",
+    "ITALIAN": "There's a geopolitical conflict going on in the Clanlands. The homeland of Askanii-native halflings has been cut in half - by the so-called <i>Golden Line</i>. Celestials hold the west. Maybe you should find out more?"
+  },
+  {
+    "ID": "Quest_24_3",
+    "ENGLISH": "Jehanne has family fighting on the Golden Line. They are starving.",
+    "ITALIAN": "Jehanne has family fighting on the Golden Line. They are starving."
+  },
+  {
+    "ID": "Quest_24_4",
+    "ENGLISH": "Snurre is a member of the Harefoot Clan, and is distant cousin with Carrot.",
+    "ITALIAN": "Snurre is a member of the Harefoot Clan, and is distant cousin with Carrot."
+  },
+  {
+    "ID": "Quest_24_5",
+    "ENGLISH": "Oyu wants to support her kin in the Clanlands, as do many of Kargameshian descent.",
+    "ITALIAN": "Oyu wants to support her kin in the Clanlands, as do many of Kargameshian descent."
+  },
+  {
+    "ID": "Quest_24_6",
+    "ENGLISH": "Ivcx shared his knowledge of the Golden Line- how the truce will be upheld, and how the Horde is planning on taking over through more diplomatic means. But ultimately, the halflings will not be allowed autonomy.",
+    "ITALIAN": "Ivcx shared his knowledge of the Golden Line- how the truce will be upheld, and how the Horde is planning on taking over through more diplomatic means. But ultimately, the halflings will not be allowed autonomy."
+  },
+  {
+    "ID": "Quest_25_1",
+    "ENGLISH": "Hammer & Zeal",
+    "ITALIAN": "Hammer & Zeal"
+  },
+  {
+    "ID": "Quest_25_2",
+    "ENGLISH": "Rollo believes the information gathered from the Freestriders should be shared with the Azgals. He wants you to invite Modissa to a meeting.",
+    "ITALIAN": "Rollo believes the information gathered from the Cavalcatore Liberos should be shared with the Azgals. He wants you to invite Modissa to a meeting."
+  },
+  {
+    "ID": "Quest_25_3",
+    "ENGLISH": "Modissa has accepted the invitation, and will show up at the rollermill with her squad. Get ready for a mess.",
+    "ITALIAN": "Modissa has accepted the invitation, and will show up at the rollermill with her squad. Get ready for a mess."
+  },
+  {
+    "ID": "Quest_25_4",
+    "ENGLISH": "Modissa and Rollo had a chat about the Freestrider contract. She is going to print an exposé in the election day issue of the Chant, then the other papers will get copies of the documents.",
+    "ITALIAN": "Modissa and Rollo had a chat about the Cavalcatore Libero contract. She is going to print an exposé in the elezione day issue of the Chant, then the other papers will get copies of the documents."
+  },
+  {
+    "ID": "Quest_25_5",
+    "ENGLISH": "Modissa and Rollo had a chat about the Freestrider contract. Together they will send out copies of the documents to all the major newspapers in the city.",
+    "ITALIAN": "Modissa and Rollo had a chat about the Cavalcatore Libero contract. Together they will send out copies of the documents to all the major newspapers in the city."
+  },
+  {
+    "ID": "Quest_30_1",
+    "ENGLISH": "Esoteric Ebb",
+    "ITALIAN": "Esoteric Ebb"
+  },
+  {
+    "ID": "Quest_30_2",
+    "ENGLISH": "There's a rhythm to Jor's Realm, and you heard his voice. Find it at his closest Pillar. It reaches deep - investigate it on every level.",
+    "ITALIAN": "There's a rhythm to Jor's Realm, and you heard his voice. Find it at his closest Pillar. It reaches deep - investigate it on every level."
+  },
+  {
+    "ID": "Quest_30_3",
+    "ENGLISH": "You meditated with the Pillar of Jor, on Pillar Street.",
+    "ITALIAN": "You meditated with il Pilastro of Jor, on Pillar Street."
+  },
+  {
+    "ID": "Quest_30_4",
+    "ENGLISH": "You spoke with the whispers on Pillar Crossing. They are ominous to say the least.",
+    "ITALIAN": "You spoke with the whispers on Pillar Crossing. They are ominous to say the least."
+  },
+  {
+    "ID": "Quest_30_5",
+    "ENGLISH": "You felt a connection with the voices inside the Pillar, down in the City Below. You saw something that shook you.",
+    "ITALIAN": "You felt a connection with the voices inside il Pilastro, down in the Città Sotterranea. You saw something that shook you."
+  },
+  {
+    "ID": "Quest_30_6",
+    "ENGLISH": "You investigated the bottom of the Pillar of Jor, as it disappears into the lush mounds of the Undersea Path.",
+    "ITALIAN": "You investigated the bottom of il Pilastro of Jor, as it disappears into the lush mounds of the Undersea Path."
+  },
+  {
+    "ID": "Quest_30_7",
+    "ENGLISH": "Despite its dormant nature, this Pillar of Jor is highly active inside. The souls of the dead flow through it. You hear them. \n\nFor now, that is all you will learn.",
+    "ITALIAN": "Despite its dormant nature, this Pilastro di Jor is highly active inside. The souls of the dead flow through it. You hear them. \n\nFor now, that is all you will learn."
+  },
+  {
+    "ID": "Quest_31_1",
+    "ENGLISH": "River Take Ye",
+    "ITALIAN": "River Take Ye"
+  },
+  {
+    "ID": "Quest_31_2",
+    "ENGLISH": "You were brought to the lichhouse by some fishermen. But how did you survive your plunge into the river?",
+    "ITALIAN": "You were brought to the lichhouse by some fishermen. But how did you survive your plunge into the river?"
+  },
+  {
+    "ID": "Quest_31_3",
+    "ENGLISH": "The merman Thalassos was the one who rescued you from the river. But he says you were dead when he dropped you off at the Lichhouse.",
+    "ITALIAN": "The merman Thalassos was the one who rescued you from the river. But he says you were dead when he dropped you off at the Lichhouse."
+  },
+  {
+    "ID": "Quest_31_4",
+    "ENGLISH": "You found the exact spot you fell into the river. The bike rack! Someone must have pushed you in.",
+    "ITALIAN": "You found the exact spot you fell into the river. The bike rack! Someone must have pushed you in."
+  },
+  {
+    "ID": "Quest_31_5",
+    "ENGLISH": "Visken was the one who brought you back - on behalf of Lady Sageleaf. But why?",
+    "ITALIAN": "Visken was the one who brought you back - on behalf of Lady Sageleaf. But why?"
+  },
+  {
+    "ID": "Quest_31_6",
+    "ENGLISH": "Lady Sageleaf heard of your demise and hired Visken to bring you back. Only because she did not want to wait for another cleric. Wow.",
+    "ITALIAN": "Lady Sageleaf heard of your demise and hired Visken to bring you back. Only because she did not want to wait for another chierico. Wow."
+  },
+  {
+    "ID": "Quest_31_7",
+    "ENGLISH": "It was the teenage girl, Freydis. She killed you. And she found it very annoying that you came back from the dead. \n\nThe whole ordeal is honestly highly embarrassing.",
+    "ITALIAN": "It was the teenage girl, Freydis. She killed you. And she found it very annoying that you came back from the dead. \n\nThe whole ordeal is honestly highly embarrassing."
+  },
+  {
+    "ID": "Quest_32_1",
+    "ENGLISH": "Lichhouse Blues",
+    "ITALIAN": "Lichhouse Blues"
+  },
+  {
+    "ID": "Quest_32_2",
+    "ENGLISH": "The pale man called Visken is very suspicious. Find out what's going on in his lichhouse.",
+    "ITALIAN": "The pale man called Visken is very suspicious. Find out what's going on in his lichhouse."
+  },
+  {
+    "ID": "Quest_32_3",
+    "ENGLISH": "The kobold security guard does milk runs to earn extra cash. But why?",
+    "ITALIAN": "The kobold security guard does milk runs to earn extra cash. But why?"
+  },
+  {
+    "ID": "Quest_32_4",
+    "ENGLISH": "That dark knight appears to have some connection to Visken. He is very scary.",
+    "ITALIAN": "That dark knight appears to have some connection to Visken. He is very scary."
+  },
+  {
+    "ID": "Quest_32_5",
+    "ENGLISH": "The mercenary Razz clearly works for Visken. Somehow.",
+    "ITALIAN": "The mercenary Razz clearly works for Visken. Somehow."
+  },
+  {
+    "ID": "Quest_32_6",
+    "ENGLISH": "The horrific crocolisk Kraaid seems to be working for Visken in some capacity. The pale man must be a strange fellow to have such friends...",
+    "ITALIAN": "The horrific crocolisk Kraaid seems to be working for Visken in some capacity. The pale man must be a strange fellow to have such friends..."
+  },
+  {
+    "ID": "Quest_32_7",
+    "ENGLISH": "You found out Visken is a powerful undead sorcerer. A <i>LICH</i>. But what can you do about it?",
+    "ITALIAN": "You found out Visken is a powerful undead sorcerer. A <i>LICH</i>. But what can you do about it?"
+  },
+  {
+    "ID": "Quest_32_8",
+    "ENGLISH": "You've found several of Visken's 'Helpers' across Tolstad. And the pale man himself must be some type of evil mastermind. You must investigate further- and you have been given a hint: visit the lichhouse after midnight. <i>Alone</i>. It might end up rough, so make sure to prepare.",
+    "ITALIAN": "You've found several of Visken's 'Helpers' across Tolstad. And the pale man himself must be some type of evil mastermind. You must investigate further- and you have been given a hint: visit the lichhouse after midnight. <i>Alone</i>. It might end up rough, so make sure to prepare."
+  },
+  {
+    "ID": "Quest_32_9",
+    "ENGLISH": "You found Visken and his pawns having a little party at the lichhouse- and he offered you a dark bargain.",
+    "ITALIAN": "You found Visken and his pawns having a little party at the lichhouse- and he offered you a dark bargain."
+  },
+  {
+    "ID": "Quest_33_1",
+    "ENGLISH": "Cult Hit",
+    "ITALIAN": "Cult Hit"
+  },
+  {
+    "ID": "Quest_33_2",
+    "ENGLISH": "An assassin came for your life. You survived, but the attacker got away. With no clues to go on other than an esoteric mask, you must be ready for them to return at any time.",
+    "ITALIAN": "An assassin came for your life. You survived, but the attacker got away. With no clues to go on other than an esoteric mask, you must be ready for them to return at any time."
+  },
+  {
+    "ID": "Quest_33_3",
+    "ENGLISH": "Walking alone at night, a masked assassin came for you. Whoever it was, it sure looks culty. Since they were clearly waiting until you were alone, this is absolutely someone trying to kill you in particular.",
+    "ITALIAN": "Walking alone at night, a masked assassin came for you. Whoever it was, it sure looks culty. Since they were clearly waiting until you were alone, this is absolutely someone trying to kill you in particular."
+  },
+  {
+    "ID": "Quest_33_4",
+    "ENGLISH": "You ran into the assassin in the City Below. The masked attacker seems to have been guarding a specific secret path, leading far down...",
+    "ITALIAN": "You ran into the assassin in the Città Sotterranea. The masked attacker seems to have been guarding a specific secret path, leading far down..."
+  },
+  {
+    "ID": "Quest_33_5",
+    "ENGLISH": "You tracked down the assassin all the way to the Old Prison, far beneath the city. The attacker turned out to be Freydis, the daughter of Coinlord Darrow. So you had no choice but to let her go. Now to meet her patron...",
+    "ITALIAN": "You tracked down the assassin all the way to the Old Prison, far beneath the city. The attacker turned out to be Freydis, the daughter of Signore delle Monete Darrow. So you had no choice but to let her go. Now to meet her patron..."
+  },
+  {
+    "ID": "Quest_33_6",
+    "ENGLISH": "Delving ever deeper, you encountered a Trifler in his lair. You had a chat with him, and it appears he was the one behind the attacks- but that it's all water under the bridge now.\n\nWhat are you going to do? Arrest it?",
+    "ITALIAN": "Delving ever deeper, you encountered a Trifler in his lair. You had a chat with him, and it appears he was the one behind the attacks- but that it's all water under the bridge now.\n\nWhat are you going to do? Arrest it?"
+  },
+  {
+    "ID": "Quest_34_1",
+    "ENGLISH": "Class Conflict",
+    "ITALIAN": "Class Conflict"
+  },
+  {
+    "ID": "Quest_34_2",
+    "ENGLISH": "You're very opinionated. Now it's time to choose a path.\n\n<i>Cleric. Rogue. Wizard.</i> Or something else?",
+    "ITALIAN": "You're very opinionated. Now it's time to choose a path.\n\n<i>Chierico. Rogue. Wizard.</i> Or something else?"
+  },
+  {
+    "ID": "Quest_34_3",
+    "ENGLISH": "You've declared yourself <b>The Cleric</b> of Norvik $CLERIC times. It's a grand title, suitable for a true human cleric like yourself.",
+    "ITALIAN": "You've declared yourself <b>The Chierico</b> of Norvik $CLERIC times. It's a grand title, suitable for a true human chierico like yourself."
+  },
+  {
+    "ID": "Quest_34_4",
+    "ENGLISH": "You have made it clear $ROGUE times now - you're a dick-ass rogue! And nobody can stop you from being the coolest sneaker on Tolstad.",
+    "ITALIAN": "You have made it clear $ROGUE times now - you're a dick-ass rogue! And nobody can stop you from being the coolest sneaker on Tolstad."
+  },
+  {
+    "ID": "Quest_34_5",
+    "ENGLISH": "As of now, you have said, $WIZARD times, that you are a wizard. Which you are. Despite the getup, your true talent lies within the Arcane. Obviously.",
+    "ITALIAN": "As of now, you have said, $WIZARD times, that you are a wizard. Which you are. Despite the getup, your true talent lies within the Arcane. Obviously."
+  },
+  {
+    "ID": "Quest_34_6",
+    "ENGLISH": "After showing your Primal attunement, you're now ready to call yourself an aspiring Druid. Time will tell if this path is in any way interesting to you... by telling folk about it, $DRUID_Choice times.",
+    "ITALIAN": "After showing your Primal attunement, you're now ready to call yourself an aspiring Druid. Time will tell if this path is in any way interesting to you... by telling folk about it, $DRUID_Choice times."
+  },
+  {
+    "ID": "Quest_34_7",
+    "ENGLISH": "You've declared yourself to be a Bard. A dancing bard, supposedly. Considering your track record, you might just end up turning this into a legitimate side-thing. So far, you've told people $BARD_Choice times.",
+    "ITALIAN": "You've declared yourself to be a Bard. A dancing bard, supposedly. Considering your track record, you might just end up turning this into a legitimate side-thing. So far, you've told people $BARD_Choice times."
+  },
+  {
+    "ID": "Quest_34_8",
+    "ENGLISH": "You survived eating the Slogdog, thus learning the ways of the primal warrior. One filled with rage and unprocessed meats. Hence, you're basically already a Barbarian of Askanii. Congratulations. You've spread the word about it, $BARB_Choice times.",
+    "ITALIAN": "You survived eating the Slogdog, thus learning the ways of the primal warrior. One filled with rage and unprocessed meats. Hence, you're basically already a Barbarian of Askanii. Congratulations. You've spread the word about it, $BARB_Choice times."
+  },
+  {
+    "ID": "Quest_34_9",
+    "ENGLISH": "You have found yourself. Congratulations.",
+    "ITALIAN": "You have found yourself. Congratulations."
+  },
+  {
+    "ID": "Quest_35_1",
+    "ENGLISH": "Phoenix Folio",
+    "ITALIAN": "Phoenix Folio"
+  },
+  {
+    "ID": "Quest_35_2",
+    "ENGLISH": "After your river adventure, your old spellbook is ruined! Find a service provider who can rebind it for you.\n\n<b>Fix your ruined spellbook, damn it!</b>",
+    "ITALIAN": "After your river adventure, your old spellbook is ruined! Find a service provider who can rebind it for you.\n\n<b>Fix your ruined spellbook, damn it!</b>"
+  },
+  {
+    "ID": "Quest_35_3",
+    "ENGLISH": "You found a bookbinder on Waterlane View. He'll fix your prayer book, but you'll have to pay 250 crowns for the job. And it'll take him till the next morning. Or rather, afternoon, since he's an owl. They seem to be nocturnal. Or maybe it's a bookbinder thing. Don't be judgmental.",
+    "ITALIAN": "You found a bookbinder on Waterlane View. He'll fix your prayer book, but you'll have to pay 250 crowns for the job. And it'll take him till the next morning. Or rather, afternoon, since he's an owl. They seem to be nocturnal. Or maybe it's a bookbinder thing. Don't be judgmental."
+  },
+  {
+    "ID": "Quest_35_4",
+    "ENGLISH": "You managed to get back your prayer book - now rebound and in a shiny fresh condition. This should help a lot in memorizing spells!",
+    "ITALIAN": "You managed to get back your prayer book - now rebound and in a shiny fresh condition. This should help a lot in memorizing spells!"
+  },
+  {
+    "ID": "Quest_36_1",
+    "ENGLISH": "Primal Kin",
+    "ITALIAN": "Primal Kin"
+  },
+  {
+    "ID": "Quest_36_2",
+    "ENGLISH": "Convince Nessan to teach you primal magic. If you're so inclined.",
+    "ITALIAN": "Convince Nessan to teach you primal magic. If you're so inclined."
+  },
+  {
+    "ID": "Quest_36_3",
+    "ENGLISH": "You attuned to the primal Strings, proving yourself to Nessan. You are now a very newbie Druid - at least in her eyes.",
+    "ITALIAN": "You attuned to the primal Strings, proving yourself to Nessan. You are now a very newbie Druid - at least in her eyes."
+  },
+  {
+    "ID": "Quest_36_4",
+    "ENGLISH": "You've saved a fungal-man on the Undercoast Path. This must certainly put you in alignment with nature.",
+    "ITALIAN": "You've saved a fungal-man on the Undercoast Path. This must certainly put you in alignment with nature."
+  },
+  {
+    "ID": "Quest_36_5",
+    "ENGLISH": "Nessan has invited you to a recurring druidism meetup event. This is exactly what a 27 year old man needs to make more friends.",
+    "ITALIAN": "Nessan has invited you to a recurring druidism meetup event. This is exactly what a 27 year old man needs to make more friends."
+  },
+  {
+    "ID": "Quest_38_1",
+    "ENGLISH": "Crypt Keeper",
+    "ITALIAN": "Crypt Keeper"
+  },
+  {
+    "ID": "Quest_38_2",
+    "ENGLISH": "There is a powerful spellcaster named Bondevol hiding down in the crypts.\n\n<b>You must find him.</b>",
+    "ITALIAN": "There is a powerful spellcaster named Bondevol hiding down in the crypts.\n\n<b>You must find him.</b>"
+  },
+  {
+    "ID": "Quest_38_3",
+    "ENGLISH": "You had a lovely conversation with Bondevol, the demi-lich. He was only somewhat insane.",
+    "ITALIAN": "You had a lovely conversation with Bondevol, the demi-lich. He was only somewhat insane."
+  },
+  {
+    "ID": "Quest_39_1",
+    "ENGLISH": "Lost Mines of Toul'Amon",
+    "ITALIAN": "Lost Mines of Toul'Amon"
+  },
+  {
+    "ID": "Quest_39_2",
+    "ENGLISH": "A dwarf named Akzel is looking for a legendary lost mine, somewhere in the tunnel to the southwest. But the HWBT won't allow him passage. \n\nFind a symbol of the sun, or lack thereof 'the shrine', then report back to him to get a reward.",
+    "ITALIAN": "A dwarf named Akzel is looking for a legendary lost mine, somewhere in the tunnel to the southwest. But the HWBT won't allow him passage. \n\nFind a symbol of the sun, or lack thereof 'the shrine', then report back to him to get a reward."
+  },
+  {
+    "ID": "Quest_39_3",
+    "ENGLISH": "You found an ancient cat-themed shrine, which gave you a poem.",
+    "ITALIAN": "You found an ancient cat-themed shrine, which gave you a poem."
+  },
+  {
+    "ID": "Quest_39_4",
+    "ENGLISH": "Akzel realized he was looking in the wrong place. But the poem seemed to have given him a clue where to search next - he invites you to join him in a couple of months for a proper expedition.",
+    "ITALIAN": "Akzel realized he was looking in the wrong place. But the poem seemed to have given him a clue where to search next - he invites you to join him in a couple of months for a proper expedition."
+  },
+  {
+    "ID": "Quest_40_1",
+    "ENGLISH": "Philogynistic Agenda",
+    "ITALIAN": "Philogynistic Agenda"
+  },
+  {
+    "ID": "Quest_40_2",
+    "ENGLISH": "Women. They're <i>everywhere</i>. Your worth as a man is based only on the admiration you get from them. Your goal? Get a date. A real date. Good luck.",
+    "ITALIAN": "Women. They're <i>everywhere</i>. Your worth as a man is based only on the admiration you get from them. Your goal? Get a date. A real date. Good luck."
+  },
+  {
+    "ID": "Quest_40_3",
+    "ENGLISH": "You managed to secure a promised date with Agent Viira, the handsome orc Freestrider! However, not until after the election. So no need to worry about that now.",
+    "ITALIAN": "You managed to secure a promised date with Agent Viira, the handsome orc Cavalcatore Libero! However, not until after the elezione. So no need to worry about that now."
+  },
+  {
+    "ID": "Quest_40_4",
+    "ENGLISH": "Somehow, you managed to convince the celestial warrior Ettir to go on a date with you, in a couple of weeks or so. Or at least, you think that's what happened. Maybe. Great job!",
+    "ITALIAN": "Somehow, you managed to convince the celestial warrior Ettir to go on a date with you, in a couple of weeks or so. Or at least, you think that's what happened. Maybe. Great job!"
+  },
+  {
+    "ID": "Quest_40_5",
+    "ENGLISH": "Moongore, the HWBT gardener/guardian, was charmed by a man in yellow. You must avenge her honor to prove your worth...",
+    "ITALIAN": "Moongore, the HWBT gardener/guardian, was charmed by a man in yellow. You must avenge her honor to prove your worth..."
+  },
+  {
+    "ID": "Quest_40_6",
+    "ENGLISH": "You avenged Moongore's honor and gained her respect, as a man. She agreed to go on a 'sparring match' (basically a date?) after the election. Aren't you a lucky guy!",
+    "ITALIAN": "You avenged Moongore's honor and gained her respect, as a man. She agreed to go on a 'sparring match' (basically a date?) after the elezione. Aren't you a lucky guy!"
+  },
+  {
+    "ID": "Quest_41_1",
+    "ENGLISH": "Essence of Inflorescence",
+    "ITALIAN": "Essence of Inflorescence"
+  },
+  {
+    "ID": "Quest_41_2",
+    "ENGLISH": "Nearly the Minstrel is the owner of a glorious head-blossom. It must be yours.\n\n<b>Get your hands on the Flower Crown.</b>",
+    "ITALIAN": "Nearly the Minstrel is the owner of a glorious head-blossom. It must be yours.\n\n<b>Get your hands on the Flower Crown.</b>"
+  },
+  {
+    "ID": "Quest_41_3",
+    "ENGLISH": "Nearly asked you to help her get an extension on her rent- from Lady Sageleaf. Uh-oh.",
+    "ITALIAN": "Nearly asked you to help her get an extension on her rent- from Lady Sageleaf. Uh-oh."
+  },
+  {
+    "ID": "Quest_41_4",
+    "ENGLISH": "You got the flower crown. Now you can wear it and feel at peace with nature.",
+    "ITALIAN": "You got the flower crown. Now you can wear it and feel at peace with nature."
+  },
+  {
+    "ID": "Quest_41_5",
+    "ENGLISH": "You got the rent extension for Nearly. She was very happy. Now you can have your flower crown in wonderful and good conscience.",
+    "ITALIAN": "You got the rent extension for Nearly. She was very happy. Now you can have your flower crown in wonderful and good conscience."
+  },
+  {
+    "ID": "Quest_42_1",
+    "ENGLISH": "Three Hundred Pieces",
+    "ITALIAN": "Three Hundred Pieces"
+  },
+  {
+    "ID": "Quest_42_2",
+    "ENGLISH": "You encountered a corpse in the Lichhouse. It seems fresh and ready for Revivify. Though it'd cost quite a bit of money to bring him back- almost a month's rent!",
+    "ITALIAN": "You encountered a corpse in the Lichhouse. It seems fresh and ready for Revivify. Though it'd cost quite a bit of money to bring him back- almost a month's rent!"
+  },
+  {
+    "ID": "Quest_42_3",
+    "ENGLISH": "You managed to bring back the old man. He appeared mostly annoyed with you, then left without even giving you a thanks.",
+    "ITALIAN": "You managed to bring back the old man. He appeared mostly annoyed with you, then left without even giving you a thanks."
+  },
+  {
+    "ID": "Quest_42_4",
+    "ENGLISH": "Turns out, the man was Rollo and Arn's father. They were contacted by him, after his resurrection, but they broke off on their own.",
+    "ITALIAN": "Turns out, the man was Rollo and Arn's father. They were contacted by him, after his resurrection, but they broke off on their own."
+  },
+  {
+    "ID": "Quest_43_1",
+    "ENGLISH": "An Easy Riddle",
+    "ITALIAN": "An Easy Riddle"
+  },
+  {
+    "ID": "Quest_43_2",
+    "ENGLISH": "The drunk sphinx in the Drunk Sphinx has offered you another riddle: if you solve it, you will gain access to her vault. Are you up to the challenge?",
+    "ITALIAN": "The drunk sphinx in the Drunk Sphinx has offered you another riddle: if you solve it, you will gain access to her vault. Are you up to the challenge?"
+  },
+  {
+    "ID": "Quest_43_3",
+    "ENGLISH": "The sphinx hints that the only way to solve her riddle is to perform some type of action. Something beyond the scope of a simple <i>dialog</i>...",
+    "ITALIAN": "The sphinx hints that the only way to solve her riddle is to perform some type of action. Something beyond the scope of a simple <i>dialog</i>..."
+  },
+  {
+    "ID": "Quest_43_4",
+    "ENGLISH": "You unlocked the vault gate behind the sphinx. It was kind of easy, wasn't it? But now... what's inside?",
+    "ITALIAN": "You unlocked the vault gate behind the sphinx. It was kind of easy, wasn't it? But now... what's inside?"
+  },
+  {
+    "ID": "Quest_43_5",
+    "ENGLISH": "You received the Deck of Many Things inside the vault. Interesting, huh? Maybe you should draw a card or two. Or maybe not.",
+    "ITALIAN": "You received the Deck of Many Things inside the vault. Interesting, huh? Maybe you should draw a card or two. Or maybe not."
+  },
+  {
+    "ID": "Quest_44_1",
+    "ENGLISH": "The Lost 6th Edition",
+    "ITALIAN": "The Lost 6th Edition"
+  },
+  {
+    "ID": "Quest_44_2",
+    "ENGLISH": "Sch. Snurre Appledent has tasked you with retrieving a rare copy of Cividix's <i>Book of the Mind</i>, which is supposedly found somewhere in the dungeons in  the City Below.",
+    "ITALIAN": "Sch. Snurre Appledent has tasked you with retrieving a rare copy of Cividix's <i>Book of the Mind</i>, which is supposedly found somewhere in the dungeons in  the Città Sotterranea."
+  },
+  {
+    "ID": "Quest_44_3",
+    "ENGLISH": "You encountered the Living Library and retrieved this rare book from its shelves. It is a powerful magical tome- but Snurre will let you keep it. He just wants to copy the foreword.",
+    "ITALIAN": "You encountered the Living Library and retrieved this rare book from its shelves. It is a powerful magical tome- but Snurre will let you keep it. He just wants to copy the foreword."
+  },
+  {
+    "ID": "Quest_44_4",
+    "ENGLISH": "As Snurre attempted to copy the foreword, the esoterically summoned spirit of Cividix himself became near corporeal. But you handled it. You got a bit possessed, but you handled it, allowing him to both copy the foreword and gain great insight into the secrets of Cividix.",
+    "ITALIAN": "As Snurre attempted to copy the foreword, the esoterically summoned spirit of Cividix himself became near corporeal. But you handled it. You got a bit possessed, but you handled it, allowing him to both copy the foreword and gain great insight into the secrets of Cividix."
+  },
+  {
+    "ID": "Quest_44_5",
+    "ENGLISH": "As Snurre attempted to copy the foreword, the esoterically summoned spirit of Cividix himself became near corporeal, possessing Snurre in the process. He got exorcised in the end, and managed to both copy the foreword and gain great insight into the secrets of Cividix.",
+    "ITALIAN": "As Snurre attempted to copy the foreword, the esoterically summoned spirit of Cividix himself became near corporeal, possessing Snurre in the process. He got exorcised in the end, and managed to both copy the foreword and gain great insight into the secrets of Cividix."
+  },
+  {
+    "ID": "BG_AKZEL_5",
+    "ENGLISH": "Archeologist",
+    "ITALIAN": "Archeologist"
+  },
+  {
+    "ID": "BG_ALFOZ_3",
+    "ENGLISH": "Foreman",
+    "ITALIAN": "Foreman"
+  },
+  {
+    "ID": "BG_ARN_1",
+    "ENGLISH": "Child Worker",
+    "ITALIAN": "Child Worker"
+  },
+  {
+    "ID": "BG_AVIK_1",
+    "ENGLISH": "Proletariat",
+    "ITALIAN": "Proletariat"
+  },
+  {
+    "ID": "BG_BOND_15",
+    "ENGLISH": "Demi-Lich",
+    "ITALIAN": "Demi-Lich"
+  },
+  {
+    "ID": "BG_BORGO_13",
+    "ENGLISH": "Paladin",
+    "ITALIAN": "Paladin"
+  },
+  {
+    "ID": "BG_BRAXO_2",
+    "ENGLISH": "Scribe",
+    "ITALIAN": "Scribe"
+  },
+  {
+    "ID": "BG_BRR_4",
+    "ENGLISH": "Ranger",
+    "ITALIAN": "Ranger"
+  },
+  {
+    "ID": "BG_CHAMAR_2",
+    "ENGLISH": "Cleric",
+    "ITALIAN": "Chierico"
+  },
+  {
+    "ID": "BG_DARROW_3",
+    "ENGLISH": "Coinlord",
+    "ITALIAN": "Signore delle Monete"
+  },
+  {
+    "ID": "BG_DRUMMER_1",
+    "ENGLISH": "Entrepreneur",
+    "ITALIAN": "Entrepreneur"
+  },
+  {
+    "ID": "BG_ETTIR_10",
+    "ENGLISH": "Angel",
+    "ITALIAN": "Angel"
+  },
+  {
+    "ID": "BG_EVER_18",
+    "ENGLISH": "Trifler",
+    "ITALIAN": "Trifler"
+  },
+  {
+    "ID": "BG_FREY_5",
+    "ENGLISH": "Noble",
+    "ITALIAN": "Noble"
+  },
+  {
+    "ID": "BG_GORM_12",
+    "ENGLISH": "Paladin",
+    "ITALIAN": "Paladin"
+  },
+  {
+    "ID": "BG_GOUR_9",
+    "ENGLISH": "Frost Troll",
+    "ITALIAN": "Frost Troll"
+  },
+  {
+    "ID": "BG_ISK_16",
+    "ENGLISH": "Wizard",
+    "ITALIAN": "Wizard"
+  },
+  {
+    "ID": "BG_IVCX_15",
+    "ENGLISH": "Decayed Solar",
+    "ITALIAN": "Decayed Solar"
+  },
+  {
+    "ID": "BG_JEHANNE_1",
+    "ENGLISH": "Factory Worker",
+    "ITALIAN": "Factory Worker"
+  },
+  {
+    "ID": "BG_KRAAID_11",
+    "ENGLISH": "Barbarian",
+    "ITALIAN": "Barbarian"
+  },
+  {
+    "ID": "BG_KULL_7",
+    "ENGLISH": "Warden",
+    "ITALIAN": "Warden"
+  },
+  {
+    "ID": "BG_LISA_6",
+    "ENGLISH": "Hagling",
+    "ITALIAN": "Hagling"
+  },
+  {
+    "ID": "BG_MASKED_5",
+    "ENGLISH": "Assassin",
+    "ITALIAN": "Assassin"
+  },
+  {
+    "ID": "BG_MERI_6",
+    "ENGLISH": "Writer",
+    "ITALIAN": "Writer"
+  },
+  {
+    "ID": "BG_MISKA_17",
+    "ENGLISH": "Chieftain",
+    "ITALIAN": "Chieftain"
+  },
+  {
+    "ID": "BG_MODISSA_2",
+    "ENGLISH": "Writer",
+    "ITALIAN": "Writer"
+  },
+  {
+    "ID": "BG_MOONGORE_3",
+    "ENGLISH": "Fighter",
+    "ITALIAN": "Fighter"
+  },
+  {
+    "ID": "BG_NEARLY_1",
+    "ENGLISH": "Bard",
+    "ITALIAN": "Bard"
+  },
+  {
+    "ID": "BG_NESSAN_6",
+    "ENGLISH": "Druid",
+    "ITALIAN": "Druid"
+  },
+  {
+    "ID": "BG_OLZIS_14",
+    "ENGLISH": "Gynosphinx",
+    "ITALIAN": "Gynosphinx"
+  },
+  {
+    "ID": "BG_OST_9",
+    "ENGLISH": "Rogue",
+    "ITALIAN": "Rogue"
+  },
+  {
+    "ID": "BG_OYU_2",
+    "ENGLISH": "Entrepreneur",
+    "ITALIAN": "Entrepreneur"
+  },
+  {
+    "ID": "BG_PINJA_2",
+    "ENGLISH": "Sorcerer",
+    "ITALIAN": "Sorcerer"
+  },
+  {
+    "ID": "BG_RAZZ_8",
+    "ENGLISH": "Rogue",
+    "ITALIAN": "Rogue"
+  },
+  {
+    "ID": "BG_RIX_3",
+    "ENGLISH": "Entrepreneur",
+    "ITALIAN": "Entrepreneur"
+  },
+  {
+    "ID": "BG_ROLLO_1",
+    "ENGLISH": "Unemployed",
+    "ITALIAN": "Unemployed"
+  },
+  {
+    "ID": "BG_SHEN_1",
+    "ENGLISH": "Scholar",
+    "ITALIAN": "Scholar"
+  },
+  {
+    "ID": "BG_SIMII_2",
+    "ENGLISH": "Factory Worker",
+    "ITALIAN": "Factory Worker"
+  },
+  {
+    "ID": "BG_SMARTER_1",
+    "ENGLISH": "Rogue",
+    "ITALIAN": "Rogue"
+  },
+  {
+    "ID": "BG_SNELL_3",
+    "ENGLISH": "Rogue",
+    "ITALIAN": "Rogue"
+  },
+  {
+    "ID": "BG_SNURRE_4",
+    "ENGLISH": "Scholar",
+    "ITALIAN": "Scholar"
+  },
+  {
+    "ID": "BG_STEN_1",
+    "ENGLISH": "Unemployed",
+    "ITALIAN": "Unemployed"
+  },
+  {
+    "ID": "BG_THAL_3",
+    "ENGLISH": "Entrepreneur",
+    "ITALIAN": "Entrepreneur"
+  },
+  {
+    "ID": "BG_TOLI_1",
+    "ENGLISH": "Unemployed",
+    "ITALIAN": "Unemployed"
+  },
+  {
+    "ID": "BG_UNMASKED_5",
+    "ENGLISH": "Warlock",
+    "ITALIAN": "Warlock"
+  },
+  {
+    "ID": "BG_URTH_20",
+    "ENGLISH": "Cleric",
+    "ITALIAN": "Chierico"
+  },
+  {
+    "ID": "BG_NISSE_1",
+    "ENGLISH": "Unemployed",
+    "ITALIAN": "Unemployed"
+  },
+  {
+    "ID": "BG_VIIRA_4",
+    "ENGLISH": "Fighter",
+    "ITALIAN": "Fighter"
+  },
+  {
+    "ID": "BG_VISKEN_17",
+    "ENGLISH": "Entrepreneur",
+    "ITALIAN": "Entrepreneur"
+  },
+  {
+    "ID": "BG_XERBA_1",
+    "ENGLISH": "Service Worker",
+    "ITALIAN": "Service Worker"
+  },
+  {
+    "ID": "IP_AKZEL_5_DEX",
+    "ENGLISH": "This, right here, is the fourth pillar of the feudal system. A spelunking, delving, digging, roaming, true-blooded <i>ADVENTURER</i>.",
+    "ITALIAN": "This, right here, is the fourth pillar of the feudal system. A spelunking, delving, digging, roaming, true-blooded <i>ADVENTURER</i>."
+  },
+  {
+    "ID": "IP_AKZEL_10",
+    "ENGLISH": "Though he's seen a lot of shit in his days, Akzel still has his glowing eyes set on the next prize - the true reward of a live on the trail - a <i>hoard</i>.",
+    "ITALIAN": "Though he's seen a lot of shit in his days, Akzel still has his glowing eyes set on the next prize - the true reward of a live on the trail - a <i>hoard</i>."
+  },
+  {
+    "ID": "IP_AKZEL_15",
+    "ENGLISH": "He will find it, one day, some day. But not this day. Perhaps you will see him again? Who are you kidding, of course you will.",
+    "ITALIAN": "He will find it, one day, some day. But not this day. Perhaps you will see him again? Who are you kidding, of course you will."
+  },
+  {
+    "ID": "IP_AKZEL_20",
+    "ENGLISH": "His expertise in the City Below is not for nothing. You should keep him close. He'll be real useful if you ever wanna get into that freelance dungeoneering business. Seriously, there's a lot of money in that!",
+    "ITALIAN": "His expertise in the Città Sotterranea is not for nothing. You should keep him close. He'll be real useful if you ever wanna get into that freelance dungeoneering business. Seriously, there's a lot of money in that!"
+  },
+  {
+    "ID": "IP_ALFOZ_5_CON",
+    "ENGLISH": "He stands by his ideals with gut and little else.",
+    "ITALIAN": "He stands by his ideals with gut and little else."
+  },
+  {
+    "ID": "IP_ALFOZ_10",
+    "ENGLISH": "A push will earn his respect. That is his way.",
+    "ITALIAN": "A push will earn his respect. That is his way."
+  },
+  {
+    "ID": "IP_ALFOZ_15",
+    "ENGLISH": "Alfoz knows he is privileged. He hates it. His ideal clashes with his blood.",
+    "ITALIAN": "Alfoz knows he is privileged. He hates it. His ideal clashes with his blood."
+  },
+  {
+    "ID": "IP_ALFOZ_20",
+    "ENGLISH": "At his core he fights for glory. Empathy does not spark his heart. He wants to earn admiration and LEGEND.",
+    "ITALIAN": "At his core he fights for glory. Empathy does not spark his heart. He wants to earn admiration and LEGEND."
+  },
+  {
+    "ID": "IP_ARN_5_DEX",
+    "ENGLISH": "Kid's working his ass off. Getting that bread! He must be doing that optional weekend school.",
+    "ITALIAN": "Kid's working his ass off. Getting that bread! He must be doing that optional weekend school."
+  },
+  {
+    "ID": "IP_ARN_10",
+    "ENGLISH": "He'll go far in life with that attitude. But that fire under his ass must've been lit by something fierce.",
+    "ITALIAN": "He'll go far in life with that attitude. But that fire under his ass must've been lit by something fierce."
+  },
+  {
+    "ID": "IP_ARN_15",
+    "ENGLISH": "He's a jumpy fellow. A survivor. Type of kid that's used to making it on his own.",
+    "ITALIAN": "He's a jumpy fellow. A survivor. Type of kid that's used to making it on his own."
+  },
+  {
+    "ID": "IP_ARN_20",
+    "ENGLISH": "You relate to his fear. The kid doesn't want to end up like his old man - forgotten by time and space and the city.",
+    "ITALIAN": "You relate to his fear. The kid doesn't want to end up like his old man - forgotten by time and space and the city."
+  },
+  {
+    "ID": "IP_ARN_25",
+    "ENGLISH": "He's grieving. But he's keeping it together, for his brother. They both have ways of dealing with it. Arn will grow up to be a great capitalist.",
+    "ITALIAN": "He's grieving. But he's keeping it together, for his brother. They both have ways of dealing with it. Arn will grow up to be a great capitalist."
+  },
+  {
+    "ID": "IP_AVIK_5_CON",
+    "ENGLISH": "A guy. Dwarf. Average height. Collected. Down to earth. True to his feelings. Decently smart. Chill. <i>Cool</i>. Nice to animals. Not much else to it.",
+    "ITALIAN": "A guy. Dwarf. Average height. Collected. Down to earth. True to his feelings. Decently smart. Chill. <i>Cool</i>. Nice to animals. Not much else to it."
+  },
+  {
+    "ID": "IP_AVIK_12",
+    "ENGLISH": "Born from the Strings of Fates - the Fade Era remnant tyrants smile upon his step. For some very, very, very strange reason. This dwarf, if handed an object with a destiny set in stone, could automatically create <shake>FRAYS</shake>. Chaos. Madness. A new chance to roll the die.",
+    "ITALIAN": "Born from the Strings of Fates - the Fade Era remnant tyrants smile upon his step. For some very, very, very strange reason. This dwarf, if handed an object with a destiny set in stone, could automatically create <shake>FRAYS</shake>. Chaos. Madness. A new chance to roll the die."
+  },
+  {
+    "ID": "IP_AVIK_20",
+    "ENGLISH": "He <i>is</i> the working class. A good Azgalist footsoldier. A loyal workers. This is the type of man who deserve a raise, so his salary meets his level of productivity.",
+    "ITALIAN": "He <i>is</i> the working class. A good Azgalist footsoldier. A loyal workers. This is the type of man who deserve a raise, so his salary meets his level of productivity."
+  },
+  {
+    "ID": "IP_BOND_2",
+    "ENGLISH": "A demi-lich.",
+    "ITALIAN": "A demi-lich."
+  },
+  {
+    "ID": "IP_BOND_8_INT",
+    "ENGLISH": "An insane demi-lich. His mind having shattered many decades ago. However, his behavior (along with the simply fact that he exists down here in a relatively stable condition) suggests his madness has either not entirely set in, or that he is being shepherded. Perhaps by the pale man upstairs?",
+    "ITALIAN": "An insane demi-lich. His mind having shattered many decades ago. However, his behavior (along with the simply fact that he exists down here in a relatively stable condition) suggests his madness has either not entirely set in, or that he is being shepherded. Perhaps by the pale man upstairs?"
+  },
+  {
+    "ID": "IP_BOND_12",
+    "ENGLISH": "You understand how to please him. His EGO is almost as big as his physical body is tiny, and he craves the feeling of superiority. In effect, he's a fairly good teacher, if you can stand the belittlement.",
+    "ITALIAN": "You understand how to please him. His EGO is almost as big as his physical body is tiny, and he craves the feeling of superiority. In effect, he's a fairly good teacher, if you can stand the belittlement."
+  },
+  {
+    "ID": "IP_BOND_18",
+    "ENGLISH": "This skull has seen more esoteric events, historical battles, and shifts in global power than even the grandest of dragons of the Fade Era. Keep on his good side, and you'll have a great repository of knowledge in the future here.",
+    "ITALIAN": "This skull has seen more esoteric events, historical battles, and shifts in global power than even the grandest of dragons of the Fade Era. Keep on his good side, and you'll have a great repository of knowledge in the future here."
+  },
+  {
+    "ID": "IP_BORGO_2_STR",
+    "ENGLISH": "This is a true warrior.",
+    "ITALIAN": "This is a true warrior."
+  },
+  {
+    "ID": "IP_BORGO_9",
+    "ENGLISH": "He is off-duty. But whatever duty that is, it's everlasting.",
+    "ITALIAN": "He is off-duty. But whatever duty that is, it's everlasting."
+  },
+  {
+    "ID": "IP_BORGO_16",
+    "ENGLISH": "This dark knight can break you like a twig. Yet he will not. He is bound by an order - but why does it not affect you?",
+    "ITALIAN": "This dark knight can break you like a twig. Yet he will not. He is bound by an order - but why does it not affect you?"
+  },
+  {
+    "ID": "IP_BORGO_21",
+    "ENGLISH": "Not a man. Not even corporeal. This is a silent yet shrieking wraith forced into enslavement by the darkness of this realm. There is something indescribably manly about self-control in such circumstances.",
+    "ITALIAN": "Not a man. Not even corporeal. This is a silent yet shrieking wraith forced into enslavement by the darkness of this realm. There is something indescribably manly about self-control in such circumstances."
+  },
+  {
+    "ID": "IP_BRAXO_6_STR",
+    "ENGLISH": "Surprisingly content. Hard worker.",
+    "ITALIAN": "Surprisingly content. Hard worker."
+  },
+  {
+    "ID": "IP_BRAXO_10",
+    "ENGLISH": "Has a nested interest in the current regime. Devils used to be allowed into the city only on work visas, so he could have served for several decades.",
+    "ITALIAN": "Has a nested interest in the current regime. Devils used to be allowed into the city only on work visas, so he could have served for several decades."
+  },
+  {
+    "ID": "IP_BRAXO_15",
+    "ENGLISH": "Somehow you just know this devil would gladly organize a mass genocide against non-humans in this city.",
+    "ITALIAN": "Somehow you just know this devil would gladly organize a mass genocide against non-humans in this city."
+  },
+  {
+    "ID": "IP_BRAXO_18",
+    "ENGLISH": "This is no ordinary imp. His stature and position implies a former rank. A Greater Devil? What kind of game is he playing?",
+    "ITALIAN": "This is no ordinary imp. His stature and position implies a former rank. A Greater Devil? What kind of game is he playing?"
+  },
+  {
+    "ID": "IP_BRAXO_24",
+    "ENGLISH": "Braxo. He works for the upper city echelon, and knows more than you'll ever hear. The tiny form is a convenience. Keep him as your friend. He will be useful.",
+    "ITALIAN": "Braxo. He works for the upper city echelon, and knows more than you'll ever hear. The tiny form is a convenience. Keep him as your friend. He will be useful."
+  },
+  {
+    "ID": "IP_BRR_2_WIS",
+    "ENGLISH": "<i>Brrr.</i>",
+    "ITALIAN": "<i>Brrr.</i>"
+  },
+  {
+    "ID": "IP_BRR_4",
+    "ENGLISH": "The vibrations he gives off is his language. With magic, you could communicate better.",
+    "ITALIAN": "The vibrations he gives off is his language. With magic, you could communicate better."
+  },
+  {
+    "ID": "IP_BRR_12",
+    "ENGLISH": "This is a scout of the deeper crevices of the earth. A creature set to keep an eye on the horrors of the icy rage.",
+    "ITALIAN": "This is a scout of the deeper crevices of the earth. A creature set to keep an eye on the horrors of the icy rage."
+  },
+  {
+    "ID": "IP_BRR_14",
+    "ENGLISH": "<i>Brrr</i>.",
+    "ITALIAN": "<i>Brrr</i>."
+  },
+  {
+    "ID": "IP_BRR_17",
+    "ENGLISH": "Perhaps a future ambassador of his people. Treat him with respect.",
+    "ITALIAN": "Perhaps a future ambassador of his people. Treat him with respect."
+  },
+  {
+    "ID": "IP_CHAMAR_9_STR",
+    "ENGLISH": "A follower of the Holy Mountain. Of Divinii Torum.",
+    "ITALIAN": "A follower of the Holy Mountain. Of Divinii Torum."
+  },
+  {
+    "ID": "IP_CHAMAR_12",
+    "ENGLISH": "She hates you. Entirely due to your blood origin. Or maybe there's something else...",
+    "ITALIAN": "She hates you. Entirely due to your blood origin. Or maybe there's something else..."
+  },
+  {
+    "ID": "IP_CHAMAR_19",
+    "ENGLISH": "Ah. Of course. It is not you she hates. She hates herself. The human part of herself. The part which places her below her glorious golden celestial masters. If she could sever that humanity, she would do so in an instant, all for a slim chance to hear the choir.",
+    "ITALIAN": "Ah. Of course. It is not you she hates. She hates herself. The human part of herself. The part which places her below her glorious golden celestial masters. If she could sever that humanity, she would do so in an instant, all for a slim chance to hear the choir."
+  },
+  {
+    "ID": "IP_CHAMAR_23",
+    "ENGLISH": "Beyond the veil of a faithful servant, there is also a layer of scheming. Yes, this woman is not so much kneeling before power as much as she is intending to grasp as much from the hierarchy as she is able. What an interesting woman.",
+    "ITALIAN": "Beyond the veil of a faithful servant, there is also a layer of scheming. Yes, this woman is not so much kneeling before power as much as she is intending to grasp as much from the hierarchy as she is able. What an interesting woman."
+  },
+  {
+    "ID": "IP_DARROW_5_CHA",
+    "ENGLISH": "Here he is. The Coinlord of Norvik and Magistrate of Tolstad.",
+    "ITALIAN": "Here he is. The Signore delle Monete of Norvik and Magistrate of Tolstad."
+  },
+  {
+    "ID": "IP_DARROW_10",
+    "ENGLISH": "That smile of his is a facade, of course. An expression-simulacra, heavily trained over the course of twenty years on the job. He's an expert in his field, and his field is politics.",
+    "ITALIAN": "That smile of his is a facade, of course. An expression-simulacra, heavily trained over the course of twenty years on the job. He's an expert in his field, and his field is politics."
+  },
+  {
+    "ID": "IP_DARROW_15",
+    "ENGLISH": "He will respect you only if you serve him loyalty, like a hound, or... if you prove yourself competent and ruthless. He has no time for fools. But a man of his stature does not retain power if he does not recognize talent when it barks in his face.",
+    "ITALIAN": "He will respect you only if you serve him loyalty, like a hound, or... if you prove yourself competent and ruthless. He has no time for fools. But a man of his stature does not retain power if he does not recognize talent when it barks in his face."
+  },
+  {
+    "ID": "IP_DARROW_20",
+    "ENGLISH": "He inherited his position from his father at a young age. Nicholas has been doing this his entire life, and he's good at it. One of the best. The only problem being, if you're good at the role of a magister, then you're good at a number of nefarious, illegal activities by association.",
+    "ITALIAN": "He inherited his position from his father at a young age. Nicholas has been doing this his entire life, and he's good at it. One of the best. The only problem being, if you're good at the role of a magister, then you're good at a number of nefarious, illegal activities by association."
+  },
+  {
+    "ID": "IP_DRUMMER_2_DEX",
+    "ENGLISH": "It's just a crate, right? But what's the rythmic thumping noise?",
+    "ITALIAN": "It's just a crate, right? But what's the rythmic thumping noise?"
+  },
+  {
+    "ID": "IP_DRUMMER_6",
+    "ENGLISH": "You're kidding. The bird is actually- the tea shop owner is- he's... come on. Really?",
+    "ITALIAN": "You're kidding. The bird is actually- the negozio di tè owner is- he's... come on. Really?"
+  },
+  {
+    "ID": "IP_DRUMMER_12",
+    "ENGLISH": "This must be the silliest, most idiotic, and plain stupid plan you've ever seen enacted. Even if he is one of those bird-people who are able to survive without food or water for weeks.",
+    "ITALIAN": "This must be the silliest, most idiotic, and plain stupid plan you've ever seen enacted. Even if he is one of those bird-people who are able to survive without food or water for weeks."
+  },
+  {
+    "ID": "IP_DRUMMER_15",
+    "ENGLISH": "Okay, listen up. This bird is inside the create, and once you get it open, you'll be in for an interrogation. So be ready. He'll try to talk himself out of it, but don't worry about that. Just focus on getting him to tell you the actual truth. Be rough or smooth, doesn't matter.",
+    "ITALIAN": "Okay, listen up. This bird is inside the create, and once you get it open, you'll be in for an interrogation. So be ready. He'll try to talk himself out of it, but don't worry about that. Just focus on getting him to tell you the actual truth. Be rough or smooth, doesn't matter."
+  },
+  {
+    "ID": "IP_ETTIR_5_STR",
+    "ENGLISH": "Cold. Stern. Glorious.",
+    "ITALIAN": "Cold. Stern. Glorious."
+  },
+  {
+    "ID": "IP_ETTIR_10",
+    "ENGLISH": "She follows orders. The type of orders that grant eternal fulfillment.",
+    "ITALIAN": "She follows orders. The type of orders that grant eternal fulfillment."
+  },
+  {
+    "ID": "IP_ETTIR_15",
+    "ENGLISH": "There is a sadness in her existence. Broken wings, stuck among lesser beings. What does she seek?",
+    "ITALIAN": "There is a sadness in her existence. Broken wings, stuck among lesser beings. What does she seek?"
+  },
+  {
+    "ID": "IP_ETTIR_20",
+    "ENGLISH": "When an angel falls she ceases to exist. She is transformed. This creature does not seek redemption or emancipation. She seeks purpose.",
+    "ITALIAN": "When an angel falls she ceases to exist. She is transformed. This creature does not seek redemption or emancipation. She seeks purpose."
+  },
+  {
+    "ID": "IP_ETTIR_25",
+    "ENGLISH": "Ettir does not need to be here. Something binds her to earth. To Norvik. And it is not esoteric. Not in any sense of the word.\n\n\nIt must be a difficult being. To live between worlds like she does. Perhaps one day she will understand his words.",
+    "ITALIAN": "Ettir does not need to be here. Something binds her to earth. To Norvik. And it is not esoteric. Not in any sense of the word.\n\n\nIt must be a difficult being. To live between worlds like she does. Perhaps one day she will understand his words."
+  },
+  {
+    "ID": "IP_EVER_5_CHA",
+    "ENGLISH": "By the gods... it's a TRIFLER!",
+    "ITALIAN": "By the gods... it's a TRIFLER!"
+  },
+  {
+    "ID": "IP_EVER_10",
+    "ENGLISH": "He's real polite though. And he's genuinely not trying to kill you. You don't think it's really got a gender either, but it feels like a 'he' doesn't it? Don't ask him about his gender. Or maybe do?",
+    "ITALIAN": "He's real polite though. And he's genuinely not trying to kill you. You don't think it's really got a gender either, but it feels like a 'he' doesn't it? Don't ask him about his gender. Or maybe do?"
+  },
+  {
+    "ID": "IP_EVER_15",
+    "ENGLISH": "You get a sense for his motivation here. The aberration before you does not hold any grudge, and acts polite towards these ants running around him- all for the purpose of some greater, <i>esoteric</i> vision.",
+    "ITALIAN": "You get a sense for his motivation here. The aberration before you does not hold any grudge, and acts polite towards these ants running around him- all for the purpose of some greater, <i>esoteric</i> vision."
+  },
+  {
+    "ID": "IP_EVER_20",
+    "ENGLISH": "<i>Yunolotia Manathern</i>. Fate cannot sway.\n\nEver-Glad seeks the end of the facade. Ever-Glad seeks the beginning of another Era. All for the sake of avoiding the FREYS OF DOOM.",
+    "ITALIAN": "<i>Yunolotia Manathern</i>. Fate cannot sway.\n\nEver-Glad seeks the end of the facade. Ever-Glad seeks the beginning of another Era. All for the sake of avoiding the FREYS OF DOOM."
+  },
+  {
+    "ID": "IP_FREY_5_STR",
+    "ENGLISH": "She is dressed in a fine silken robe, like a noblewoman.",
+    "ITALIAN": "She is dressed in a fine silken robe, like a noblewoman."
+  },
+  {
+    "ID": "IP_FREY_10",
+    "ENGLISH": "Her hair is short and coarse. The rebellious kind, but Urthfolk nobility nonetheless.",
+    "ITALIAN": "Her hair is short and coarse. The rebellious kind, but Urthfolk nobility nonetheless."
+  },
+  {
+    "ID": "IP_FREY_15",
+    "ENGLISH": "Why is she down here? Not many of her kind seek the company of Waterlane workers and goblins.",
+    "ITALIAN": "Why is she down here? Not many of her kind seek the company of Waterlane workers and goblins."
+  },
+  {
+    "ID": "IP_FREY_20",
+    "ENGLISH": "Hold on. You recognize her. This is... *Freydis Darrow*! The daughter of the Coinlord!",
+    "ITALIAN": "Hold on. You recognize her. This is... *Freydis Darrow*! The daughter of the Signore delle Monete!"
+  },
+  {
+    "ID": "IP_GORM_9_STR",
+    "ENGLISH": "Alas, poor Gorm. His choices led him down this doomed path. Painfully relatable.",
+    "ITALIAN": "Alas, poor Gorm. His choices led him down this doomed path. Painfully relatable."
+  },
+  {
+    "ID": "IP_GORM_14",
+    "ENGLISH": "Here we have someone who is supposed to be the best of us. Human of good breed. Raised up by Urth himself. Educated, rich, seemingly healthy...\n\nIf he could not stay on the path, who could?",
+    "ITALIAN": "Here we have someone who is supposed to be the best of us. Human of good breed. Raised up by Urth himself. Educated, rich, seemingly healthy...\n\nIf he could not stay on the path, who could?"
+  },
+  {
+    "ID": "IP_GORM_18",
+    "ENGLISH": "You're nothing like him. You did not come from nobility. You were not given any special treatment, even with your latent talents. The only thing you have in common is your willingness to throw it all away - to throw yourselves against the meat grinder of TIME.\n\nBut you will not be minced. Your sinewy nature will grind it to a halt. The farm boy will live past Ragnarôk. The hero's bones will break upon the pavement.",
+    "ITALIAN": "You're nothing like him. You did not come from nobility. You were not given any special treatment, even with your latent talents. The only thing you have in common is your willingness to throw it all away - to throw yourselves against the meat grinder of TIME.\n\nBut you will not be minced. Your sinewy nature will grind it to a halt. The farm boy will live past Ragnarôk. The hero's bones will break upon the pavement."
+  },
+  {
+    "ID": "IP_GORM_20",
+    "ENGLISH": "Gorm also has a bad shoulder. Exploit that. (Also relatable.)",
+    "ITALIAN": "Gorm also has a bad shoulder. Exploit that. (Also relatable.)"
+  },
+  {
+    "ID": "IP_GOUR_5_STR",
+    "ENGLISH": "A great and mighty <i>frost troll</i>. Horrifying, even while asleep.",
+    "ITALIAN": "A great and mighty <i>frost troll</i>. Horrifying, even while asleep."
+  },
+  {
+    "ID": "IP_GOUR_10",
+    "ENGLISH": "You've got a few ways of approaching this. Killing a troll is not easy, and you need all the advantage you can get.\n\n1. Attack him right away, giving you a head start.\n2. Put up some kind of trap.\n3. Try to communicate first (weak).\n4. Walk away (also weak).",
+    "ITALIAN": "You've got a few ways of approaching this. Killing a troll is not easy, and you need all the vantaggio you can get.\n\n1. Attack him right away, giving you a head start.\n2. Put up some kind of trap.\n3. Try to communicate first (weak).\n4. Walk away (also weak)."
+  },
+  {
+    "ID": "IP_GOUR_15",
+    "ENGLISH": "Getting close enough to strike the sleeping monster would be difficult. However, it would allow you to strike a decisive blow.",
+    "ITALIAN": "Getting close enough to strike the sleeping monster would be difficult. However, it would allow you to strike a decisive blow."
+  },
+  {
+    "ID": "IP_GOUR_20",
+    "ENGLISH": "It is time to redeem yourself. Over twenty years have passed since that fateful day. Now... prove yourself. Show the world...\n\nYou have TROLLKILLER blood in your veins.",
+    "ITALIAN": "It is time to redeem yourself. Over twenty years have passed since that fateful day. Now... prove yourself. Show the world...\n\nYou have TROLLKILLER blood in your veins."
+  },
+  {
+    "ID": "IP_ISK_2_INT",
+    "ENGLISH": "This is an ancient snail, from another time.",
+    "ITALIAN": "This is an ancient snail, from another time."
+  },
+  {
+    "ID": "IP_ISK_8",
+    "ENGLISH": "An interesting fellow. An incredible knowledge, but held within a culture of the Beasts of Jor- complete barbarians. Fascinating. You must, in any case, study this creature.",
+    "ITALIAN": "An interesting fellow. An incredible knowledge, but held within a culture of the Beasts of Jor- complete barbarians. Fascinating. You must, in any case, study this creature."
+  },
+  {
+    "ID": "IP_ISK_15",
+    "ENGLISH": "The esoteric mastery at play here is beyond anything you have ever encountered. Keep in contact with this snail. It will be of great service in the future.",
+    "ITALIAN": "The esoteric mastery at play here is beyond anything you have ever encountered. Keep in contact with this snail. It will be of great service in the future."
+  },
+  {
+    "ID": "IP_ISK_20",
+    "ENGLISH": "His goal will be completed in time. However, before then you are certain he will break many taboos of the Era. This is the type of man, not too unlike the more sophisticated Arcanists, who will break reality and rewrite Jor's rules, all in an attempt to get the final say.",
+    "ITALIAN": "His goal will be completed in time. However, before then you are certain he will break many taboos of the Era. This is the type of man, not too unlike the more sophisticated Arcanists, who will break reality and rewrite Jor's rules, all in an attempt to get the final say."
+  },
+  {
+    "ID": "IP_IVCX_5_WIS",
+    "ENGLISH": "The light blinds you. Even among celestials, this creature is powerful.",
+    "ITALIAN": "The light blinds you. Even among celestials, this creature is powerful."
+  },
+  {
+    "ID": "IP_IVCX_10",
+    "ENGLISH": "It seems out of place. Why would an ambassador of the Golden Horde be here? Why would this creature, of such great and bright force, even be here?\n\nIt doesn't make any sense.",
+    "ITALIAN": "It seems out of place. Why would an ambassador of the Golden Horde be here? Why would this creature, of such great and bright force, even be here?\n\nIt doesn't make any sense."
+  },
+  {
+    "ID": "IP_IVCX_15",
+    "ENGLISH": "Antesepalian. A creature who was ancient before this world was created. What stands before you is no ambassador- this is a close servant of an outer Power. That is why your body recoils, even when the light appears to signal nothing but <i>BE NOT AFRAID</i> to your senses.",
+    "ITALIAN": "Antesepalian. A creature who was ancient before this world was created. What stands before you is no ambassador- this is a close servant of an outer Power. That is why your body recoils, even when the light appears to signal nothing but <i>BE NOT AFRAID</i> to your senses."
+  },
+  {
+    "ID": "IP_IVCX_20",
+    "ENGLISH": "In its prime, it held closer resemblance to our walking gods than any angel of the Horde. Why is it reduced to <i>your</i> material level, here in your city?\n\nWhat a strange world you live in, to get a chance to have a civil conversation with it.",
+    "ITALIAN": "In its prime, it held closer resemblance to our walking gods than any angel of the Horde. Why is it reduced to <i>your</i> material level, here in your city?\n\nWhat a strange world you live in, to get a chance to have a civil conversation with it."
+  },
+  {
+    "ID": "IP_JEHANNE_5_CHA",
+    "ENGLISH": "A halfling. One of many who lives in Norvik, especially after the Golden Line.",
+    "ITALIAN": "A halfling. One of many who lives in Norvik, especially after the Golden Line."
+  },
+  {
+    "ID": "IP_JEHANNE_10",
+    "ENGLISH": "She is a hard worker, one of few talents but much heartiness. Support her in her struggle against capital.",
+    "ITALIAN": "She is a hard worker, one of few talents but much heartiness. Support her in her struggle against capital."
+  },
+  {
+    "ID": "IP_JEHANNE_15",
+    "ENGLISH": "A boot. That is what she rages against. Not in the activist sense, but in the sense of an ever changing daily grueling toil. Our work never ends.",
+    "ITALIAN": "A boot. That is what she rages against. Not in the activist sense, but in the sense of an ever changing daily grueling toil. Our work never ends."
+  },
+  {
+    "ID": "IP_JEHANNE_20",
+    "ENGLISH": "She would prefer to not be engaged in all this messiness. Alas, how else will she keep her wage up? How else will she survive in a world where food gets more expensive while the point of Material Break comes closer by the hour?",
+    "ITALIAN": "She would prefer to not be engaged in all this messiness. Alas, how else will she keep her wage up? How else will she survive in a world where food gets more expensive while the point of Material Break comes closer by the hour?"
+  },
+  {
+    "ID": "IP_KRAAID_5_CON",
+    "ENGLISH": "A mad flesh-eating Beast of Jor from the swamps of Hae'Xi. Why he hasn't eaten you yet, you do not know.",
+    "ITALIAN": "A mad flesh-eating Beast of Jor from the swamps of Hae'Xi. Why he hasn't eaten you yet, you do not know."
+  },
+  {
+    "ID": "IP_KRAAID_10",
+    "ENGLISH": "A masterful chef. His passion is cooking. Fried, stewed, pickled, boiled. Kraaid knows all - and his palette is expansive. You included.",
+    "ITALIAN": "A masterful chef. His passion is cooking. Fried, stewed, pickled, boiled. Kraaid knows all - and his palette is expansive. You included."
+  },
+  {
+    "ID": "IP_KRAAID_15",
+    "ENGLISH": "His restrain is not from etiquette nor kindness. This is a monster, spawned from generations of hunters infected, inflicted, by the RED MIST of the Tree of the Spiral - HAGS. HAGS MADE HIM. HE IS BIRTHED FROM EVIL.",
+    "ITALIAN": "His restrain is not from etiquette nor kindness. This is a monster, spawned from generations of hunters infected, inflicted, by the RED MIST of the Tree of the Spiral - HAGS. HAGS MADE HIM. HE IS BIRTHED FROM EVIL."
+  },
+  {
+    "ID": "IP_KRAAID_20",
+    "ENGLISH": "Despite his nature, above all he follows his instinct. Currently, it speaks: FOLLOW THE WIZARD. IT WILL GRANT PASSAGE TO GREATER HUNTS. Those rumblings... they keep your flesh from being CONSUMED.",
+    "ITALIAN": "Despite his nature, above all he follows his instinct. Currently, it speaks: FOLLOW THE WIZARD. IT WILL GRANT PASSAGE TO GREATER HUNTS. Those rumblings... they keep your flesh from being CONSUMED."
+  },
+  {
+    "ID": "IP_KULL_5_CON",
+    "ENGLISH": "It is an elf.",
+    "ITALIAN": "It is an elf."
+  },
+  {
+    "ID": "IP_KULL_10",
+    "ENGLISH": "An elf of Illym. His eyes are dark with the knowledge of your doing.",
+    "ITALIAN": "An elf of Illym. His eyes are dark with the knowledge of your doing."
+  },
+  {
+    "ID": "IP_KULL_15",
+    "ENGLISH": "This Illym servant, this spy, this Warden of Outreach - he is but a tendril of his masters. But not so efficient nor successfully scheming as you might imagine. No, they are nowhere near the might of their peak. Illym is dead. This is an avatar of her decaying corpse.",
+    "ITALIAN": "This Illym servant, this spy, this Warden of Outreach - he is but a tendril of his masters. But not so efficient nor successfully scheming as you might imagine. No, they are nowhere near the might of their peak. Illym is dead. This is an avatar of her decaying corpse."
+  },
+  {
+    "ID": "IP_KULL_20",
+    "ENGLISH": "He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie.",
+    "ITALIAN": "He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie."
+  },
+  {
+    "ID": "IP_LISA_5_WIS",
+    "ENGLISH": "Birthed through the evil means of esoteric reproduction, this- this is a hag.",
+    "ITALIAN": "Birthed through the evil means of esoteric reproduction, this- this is a hag."
+  },
+  {
+    "ID": "IP_LISA_10",
+    "ENGLISH": "A hagling in fact. Not quite so horrible and foul as a true hag, but that is not always a betterment. If anything, they might even end up in more positions of power due to their nature not being so completely evil.",
+    "ITALIAN": "A hagling in fact. Not quite so horrible and foul as a true hag, but that is not always a betterment. If anything, they might even end up in more positions of power due to their nature not being so completely evil."
+  },
+  {
+    "ID": "IP_LISA_15",
+    "ENGLISH": "This one has lived a wild life. You can see it in her eyes- the years spent in service. The dream of a greater life. The bodies left in her wake. This hagling has nothing but a desperate love for life and freedom at this point. Let her have it.",
+    "ITALIAN": "This one has lived a wild life. You can see it in her eyes- the years spent in service. The dream of a greater life. The bodies left in her wake. This hagling has nothing but a desperate love for life and freedom at this point. Let her have it."
+  },
+  {
+    "ID": "IP_LISA_20",
+    "ENGLISH": "She is afraid. Deathly afraid- scared her new life is being ruined by circumstance. She hides it well, but you know it. She would destroy you if she had to. To protect her freelancing career.",
+    "ITALIAN": "She is afraid. Deathly afraid- scared her new life is being ruined by circumstance. She hides it well, but you know it. She would destroy you if she had to. To protect her freelancing career."
+  },
+  {
+    "ID": "IP_MASKED_5_CON",
+    "ENGLISH": "Uh oh.",
+    "ITALIAN": "Uh oh."
+  },
+  {
+    "ID": "IP_MASKED_10",
+    "ENGLISH": "Dread.",
+    "ITALIAN": "Dread."
+  },
+  {
+    "ID": "IP_MASKED_15",
+    "ENGLISH": "With death on the line, the dagger is meant for your heart.",
+    "ITALIAN": "With death on the line, the dagger is meant for your heart."
+  },
+  {
+    "ID": "IP_MASKED_20",
+    "ENGLISH": "What do you think she wants? The thing in the pipes is listening. The foolish thing. Its mistake will lead you down many frays. Care for your step.",
+    "ITALIAN": "What do you think she wants? The thing in the pipes is listening. The foolish thing. Its mistake will lead you down many frays. Care for your step."
+  },
+  {
+    "ID": "IP_MERI_5_DEX",
+    "ENGLISH": "A true Freestrider!",
+    "ITALIAN": "A true Cavalcatore Libero!"
+  },
+  {
+    "ID": "IP_MERI_10",
+    "ENGLISH": "He's famous. Known along any metropolitan square, mansion, and/or ballroom across the Coast. The type of guy who's leveraged the changing world, and its new popularized technology, to gain a hell of a lot of staying power.",
+    "ITALIAN": "He's famous. Known along any metropolitan square, mansion, and/or ballroom across the Coast. The type of guy who's leveraged the changing world, and its new popularized technology, to gain a hell of a lot of staying power."
+  },
+  {
+    "ID": "IP_MERI_15",
+    "ENGLISH": "But he's also old money. That certainly didn't hurt. So not as impressive as the scrappy underdog story would have you believe, but still pretty impressive. Honestly, for a blue-blood with Arcanist-ties to even survive the revolution is a feat of its own- but to flourish? That's true talent.",
+    "ITALIAN": "But he's also old money. That certainly didn't hurt. So not as impressive as the scrappy underdog story would have you believe, but still pretty impressive. Honestly, for a blue-blood with Arcanist-ties to even survive the revolution is a feat of its own- but to flourish? That's true talent."
+  },
+  {
+    "ID": "IP_MERI_20",
+    "ENGLISH": "His smile is wide. His mouth never stops its fellating of the new age. That is where his interest lies- his betting and investment of the Age of Crowds. But populism has its weakness. The main one being, you gotta stay close to the people. Meriadoc seems to keep that knowledge close to heart.",
+    "ITALIAN": "His smile is wide. His mouth never stops its fellating of the new age. That is where his interest lies- his betting and investment of the Age of Crowds. But populism has its weakness. The main one being, you gotta stay close to the people. Meriadoc seems to keep that knowledge close to heart."
+  },
+  {
+    "ID": "IP_MISKA_5_WIS",
+    "ENGLISH": "Something is very wrong.",
+    "ITALIAN": "Something is very wrong."
+  },
+  {
+    "ID": "IP_MISKA_10",
+    "ENGLISH": "Her eyes are striking. Striking your SOUL. Hold on to that feeling or you will be consumed.",
+    "ITALIAN": "Her eyes are striking. Striking your SOUL. Hold on to that feeling or you will be consumed."
+  },
+  {
+    "ID": "IP_MISKA_15",
+    "ENGLISH": "She wields power you could only dream of. Yet her actions betray her nature. Evil? Good? Is selfishness for one's own tribe the defining trait?",
+    "ITALIAN": "She wields power you could only dream of. Yet her actions betray her nature. Evil? Good? Is selfishness for one's own tribe the defining trait?"
+  },
+  {
+    "ID": "IP_MISKA_20",
+    "ENGLISH": "This creature is no goblin. Though her desire lies heavily invested within this tribe, she is far older, and far more dangerous than all these servants of hers combined.",
+    "ITALIAN": "This creature is no goblin. Though her desire lies heavily invested within this tribe, she is far older, and far more dangerous than all these servants of hers combined."
+  },
+  {
+    "ID": "IP_MISKA_25",
+    "ENGLISH": "She knows well the flames of Esuth. <i>Why is she here?</i>",
+    "ITALIAN": "She knows well the flames of Esuth. <i>Why is she here?</i>"
+  },
+  {
+    "ID": "IP_MISKA_30",
+    "ENGLISH": "You see through her. Her goals. Her scheme. Is it so simple? Does she simply... love them?",
+    "ITALIAN": "You see through her. Her goals. Her scheme. Is it so simple? Does she simply... love them?"
+  },
+  {
+    "ID": "IP_MODISSA_5_WIS",
+    "ENGLISH": "A girl on a mission. She's out to fight for the green, no matter the battle.",
+    "ITALIAN": "A girl on a mission. She's out to fight for the green, no matter the battle."
+  },
+  {
+    "ID": "IP_MODISSA_10",
+    "ENGLISH": "Her brash exterior is no fakery. It is her heart worn on each of her sleeves.",
+    "ITALIAN": "Her brash exterior is no fakery. It is her heart worn on each of her sleeves."
+  },
+  {
+    "ID": "IP_MODISSA_15",
+    "ENGLISH": "Responsibility. That is the weight she feels weighing upon her shoulders. Modissa does not see herself, her EGO, as having any greater meaning. Rather, that meaning has been transposed from others. Her mentor. Her friends. But most importantly, her ideology.",
+    "ITALIAN": "Responsibility. That is the weight she feels weighing upon her shoulders. Modissa does not see herself, her EGO, as having any greater meaning. Rather, that meaning has been transposed from others. Her mentor. Her friends. But most importantly, her ideology."
+  },
+  {
+    "ID": "IP_MODISSA_23",
+    "ENGLISH": "She does not believe in Azgalism. Not truly. For she happens to be one of those people who does not see any rules upon the urban sprawl and cultural battlefields as worthy of respect. She does not believe anything can be pinned down into an ideology. That belief itself, that is her true ideology. Even if she does not know it yet.",
+    "ITALIAN": "She does not believe in Azgalism. Not truly. For she happens to be one of those people who does not see any rules upon the urban sprawl and cultural battlefields as worthy of respect. She does not believe anything can be pinned down into an ideology. That belief itself, that is her true ideology. Even if she does not know it yet."
+  },
+  {
+    "ID": "IP_MOONGORE_5_STR",
+    "ENGLISH": "A brute, a beast, and a warrior. She could break you easily.",
+    "ITALIAN": "A brute, a beast, and a warrior. She could break you easily."
+  },
+  {
+    "ID": "IP_MOONGORE_10",
+    "ENGLISH": "Loyalty is a fickle thing. Hers lies with the Halfways, for sake of coin and shelter. But also something else, something more ethereal.",
+    "ITALIAN": "Loyalty is a fickle thing. Hers lies with the Halfways, for sake of coin and shelter. But also something else, something more ethereal."
+  },
+  {
+    "ID": "IP_MOONGORE_15",
+    "ENGLISH": "Ogres. Hobgoblins. Ettins. Trolls. The bugbear stands among them all as the chargers of the Askanii wilds. You have heard of their kind finding a place within civilized society, as mercenaries and guards. Moongore is a cliche.",
+    "ITALIAN": "Ogres. Hobgoblins. Ettins. Trolls. The bugbear stands among them all as the chargers of the Askanii wilds. You have heard of their kind finding a place within civilized society, as mercenaries and guards. Moongore is a cliche."
+  },
+  {
+    "ID": "IP_MOONGORE_20",
+    "ENGLISH": "What else is there to her? She loves violence. She loves power. She craves the thrill. This is a toxic woman through and through. \n\n...Perhaps you should get to know her better.",
+    "ITALIAN": "What else is there to her? She loves violence. She loves power. She craves the thrill. This is a toxic woman through and through. \n\n...Perhaps you should get to know her better."
+  },
+  {
+    "ID": "IP_NEARLY_5_WIS",
+    "ENGLISH": "Another goblin. This one is looking to escape.",
+    "ITALIAN": "Another goblin. This one is looking to escape."
+  },
+  {
+    "ID": "IP_NEARLY_10",
+    "ENGLISH": "She works hard. But only in ways that improve her craft, her passion.",
+    "ITALIAN": "She works hard. But only in ways that improve her craft, her passion."
+  },
+  {
+    "ID": "IP_NEARLY_15",
+    "ENGLISH": "She does not care for politics or the world at large. Yet she tries to uphold a sense of understanding in order to further her art.",
+    "ITALIAN": "She does not care for politics or the world at large. Yet she tries to uphold a sense of understanding in order to further her art."
+  },
+  {
+    "ID": "IP_NEARLY_20",
+    "ENGLISH": "The goblin plays for herself. She seeks not glory, only to support herself with her craft. It seems to not have gone too well so far.",
+    "ITALIAN": "The goblin plays for herself. She seeks not glory, only to support herself with her craft. It seems to not have gone too well so far."
+  },
+  {
+    "ID": "IP_NESSAN_5_WIS",
+    "ENGLISH": "Unbothered. Moisturized. Happy. In her lane.",
+    "ITALIAN": "Unbothered. Moisturized. Happy. In her lane."
+  },
+  {
+    "ID": "IP_NESSAN_10",
+    "ENGLISH": "She is focused on her work. But she does not seek strife. She will help you, if you do not pose a threat.",
+    "ITALIAN": "She is focused on her work. But she does not seek strife. She will help you, if you do not pose a threat."
+  },
+  {
+    "ID": "IP_NESSAN_15",
+    "ENGLISH": "Her knowledge goes deep, far below the city. Learn from her, and her loneliness.",
+    "ITALIAN": "Her knowledge goes deep, far below the city. Learn from her, and her loneliness."
+  },
+  {
+    "ID": "IP_NESSAN_20",
+    "ENGLISH": "This elf is seeking an escape. Why else be *here*, of all places? Her matriarch. Yes. This woman is in trouble. Just like you.",
+    "ITALIAN": "This elf is seeking an escape. Why else be *here*, of all places? Her matriarch. Yes. This woman is in trouble. Just like you."
+  },
+  {
+    "ID": "IP_OLZIS_5_WIS",
+    "ENGLISH": "Thousands of years, spent guarding a hole in reality. Remember: her perception is beyond your ability to conceive. For her, a day is a fleeting moment. Unless you make it memorable.",
+    "ITALIAN": "Thousands of years, spent guarding a hole in reality. Remember: her perception is beyond your ability to conceive. For her, a day is a fleeting moment. Unless you make it memorable."
+  },
+  {
+    "ID": "IP_OLZIS_10",
+    "ENGLISH": "A gynosphinx giving out riddles. A woman searching for something - anything - even remotely interesting about these scurrying mortals. Why else allow them into her lair like this?",
+    "ITALIAN": "A gynosphinx giving out riddles. A woman searching for something - anything - even remotely interesting about these scurrying mortals. Why else allow them into her lair like this?"
+  },
+  {
+    "ID": "IP_OLZIS_15",
+    "ENGLISH": "She is not being exploited. Whatever deal she struck with the tavernkeep, this Beast of Jor could break it at any moment. None of them hold any power over her. Yet she cannot leave.",
+    "ITALIAN": "She is not being exploited. Whatever deal she struck with the tavernkeep, this Beast of Jor could break it at any moment. None of them hold any power over her. Yet she cannot leave."
+  },
+  {
+    "ID": "IP_OLZIS_20",
+    "ENGLISH": "Resentment. Anyone sane, with even a sliver of mortal understanding, would feel resentment after being stuck in one spot for millennia. Olzis, this o-so powerful creature, feels a hint of resentment towards her masters. Perhaps that is why she entertains this fleeting moment.",
+    "ITALIAN": "Resentment. Anyone sane, with even a sliver of mortal understanding, would feel resentment after being stuck in one spot for millennia. Olzis, this o-so powerful creature, feels a hint of resentment towards her masters. Perhaps that is why she entertains this fleeting moment."
+  },
+  {
+    "ID": "IP_OST_5_DEX",
+    "ENGLISH": "This one is quite hostile. Stay on your feet!",
+    "ITALIAN": "This one is quite hostile. Stay on your feet!"
+  },
+  {
+    "ID": "IP_OST_10",
+    "ENGLISH": "His expressionless eyes seem to keep watch at all times. He's obviously determining where to strike for you to die as quickly as possible. How humane.",
+    "ITALIAN": "His expressionless eyes seem to keep watch at all times. He's obviously determining where to strike for you to die as quickly as possible. How humane."
+  },
+  {
+    "ID": "IP_OST_15",
+    "ENGLISH": "Usually kobolds are only dangerous in large numbers. This one appears extremely deadly on his own. Beware.",
+    "ITALIAN": "Usually kobolds are only dangerous in large numbers. This one appears extremely deadly on his own. Beware."
+  },
+  {
+    "ID": "IP_OST_20",
+    "ENGLISH": "There's something deeper in his connection to his master. This kobold holds the pale man as a 'highest possible value'. Literally his personal god.",
+    "ITALIAN": "There's something deeper in his connection to his master. This kobold holds the pale man as a 'highest possible value'. Literally his personal god."
+  },
+  {
+    "ID": "IP_OYU_5_DEX",
+    "ENGLISH": "A skilled merchant. Businesswoman. Halfling entrepreneur. Man, you could learn a shit-ton from someone like her.",
+    "ITALIAN": "A skilled merchant. Businesswoman. Halfling entrepreneur. Man, you could learn a shit-ton from someone like her."
+  },
+  {
+    "ID": "IP_OYU_10",
+    "ENGLISH": "Her goods are procured from all over the Coast. Her goal: the journey itself. And, of course, to herald the power of Capital. She's damn good at it.",
+    "ITALIAN": "Her goods are procured from all over the Coast. Her goal: the journey itself. And, of course, to herald the power of Capital. She's damn good at it."
+  },
+  {
+    "ID": "IP_OYU_15",
+    "ENGLISH": "Kargamesh is on the other side of the world. It's an opposite to Askani - a mirror. In their dry we have wet. In their warm we have cold. She'll gladly tell you all about it- on a surface level. She's not here to make friends, not really. Or at least not yet.",
+    "ITALIAN": "Kargamesh is on the other side of the world. It's an opposite to Askani - a mirror. In their dry we have wet. In their warm we have cold. She'll gladly tell you all about it- on a surface level. She's not here to make friends, not really. Or at least not yet."
+  },
+  {
+    "ID": "IP_OYU_20",
+    "ENGLISH": "Ah. She's not too happy about the current climate. Travel through Divinii Torum and Ym? Not feasible at the moment. Trade? Stiff and regulated. Airships? Few and far between. This decade has been a slow descent into a world of monopolies and corruption, if you ask her. \n\nShe might end up staying in this city of yours for longer than she ever imagined.",
+    "ITALIAN": "Ah. She's not too happy about the current climate. Travel through Divinii Torum and Ym? Not feasible at the moment. Trade? Stiff and regulated. Airships? Few and far between. This decade has been a slow descent into a world of monopolies and corruption, if you ask her. \n\nShe might end up staying in this city of yours for longer than she ever imagined."
+  },
+  {
+    "ID": "IP_PINJA_5_WIS",
+    "ENGLISH": "Strange, there's something not quite...",
+    "ITALIAN": "Strange, there's something not quite..."
+  },
+  {
+    "ID": "IP_PINJA_10",
+    "ENGLISH": "...right about this elf on the corner of the fortress. Her...",
+    "ITALIAN": "...right about this elf on the corner of the fortress. Her..."
+  },
+  {
+    "ID": "IP_PINJA_15",
+    "ENGLISH": "...presence appears not vivid enough for you to...",
+    "ITALIAN": "...presence appears not vivid enough for you to..."
+  },
+  {
+    "ID": "IP_PINJA_20",
+    "ENGLISH": "...even accept her as real. Elven magic? Feminine mystique? Or something else?",
+    "ITALIAN": "...even accept her as real. Elven magic? Feminine mystique? Or something else?"
+  },
+  {
+    "ID": "IP_PINJA_25",
+    "ENGLISH": "Ah. Of course. She's not really here. The thought sends a shiver down your spine.",
+    "ITALIAN": "Ah. Of course. She's not really here. The thought sends a shiver down your spine."
+  },
+  {
+    "ID": "IP_RAZZ_5_CHA",
+    "ENGLISH": "He wants to kill you.",
+    "ITALIAN": "He wants to kill you."
+  },
+  {
+    "ID": "IP_RAZZ_10",
+    "ENGLISH": "This is a massive, unregulated, confident, and highly problematic goblin supremacist. He will not debate you on it, he doesn't even see you as worthy of being alive.",
+    "ITALIAN": "This is a massive, unregulated, confident, and highly problematic goblin supremacist. He will not debate you on it, he doesn't even see you as worthy of being alive."
+  },
+  {
+    "ID": "IP_RAZZ_15",
+    "ENGLISH": "A focused killer. His body count must be in the hundreds. The type of man who wishes for nothing but the destruction of humanity- the Urthfolk especially, and the downfall of this invading species upon the shores of Askanii.",
+    "ITALIAN": "A focused killer. His body count must be in the hundreds. The type of man who wishes for nothing but the destruction of humanity- the Urthfolk especially, and the downfall of this invading species upon the shores of Askanii."
+  },
+  {
+    "ID": "IP_RAZZ_20",
+    "ENGLISH": "The more you stare into those deranged eyes of his, the more you understand- he is not full of hatred from some idealistic vision of the future. He does not view the future of Askanii as a goblin paradise. All he wants - entirely due to some personal vendetta fueled by sociopathy - is to erase humans from existence. <i>Gulp</i>.",
+    "ITALIAN": "The more you stare into those deranged eyes of his, the more you understand- he is not full of hatred from some idealistic vision of the future. He does not view the future of Askanii as a goblin paradise. All he wants - entirely due to some personal vendetta fueled by sociopathy - is to erase humans from existence. <i>Gulp</i>."
+  },
+  {
+    "ID": "IP_RIX_5_DEX",
+    "ENGLISH": "Money, money, money! This is what you get when the pragmatism of devilhood mixes with the dexterity of human-ish fingers. A mint-making, crown-conscientious, capital-creator of the highest class!",
+    "ITALIAN": "Money, money, money! This is what you get when the pragmatism of devilhood mixes with the dexterity of human-ish fingers. A mint-making, crown-conscientious, capital-creator of the highest class!"
+  },
+  {
+    "ID": "IP_RIX_10",
+    "ENGLISH": "Entrepreneurship is about disruption. It's about seeing through the common clay and figuring out the hacks of reality. It's like magic, really. Except it works on scale.",
+    "ITALIAN": "Entrepreneurship is about disruption. It's about seeing through the common clay and figuring out the hacks of reality. It's like magic, really. Except it works on scale."
+  },
+  {
+    "ID": "IP_RIX_15",
+    "ENGLISH": "This woman has found several holes in the city's purse. Over the years she's run factories, founded startups, dealt with city corporations, guild deals, and now she's a tavern proprietor. A highly accomplished woman, the type to flourish in the Freestrider future.",
+    "ITALIAN": "This woman has found several holes in the city's purse. Over the years she's run factories, founded startups, dealt with city corporations, guild deals, and now she's a tavern proprietor. A highly accomplished woman, the type to flourish in the Cavalcatore Libero future."
+  },
+  {
+    "ID": "IP_RIX_20",
+    "ENGLISH": "Her backstory aside, this tiefling finds meaning in the crowns. In capital. The power and respect she finds in this new world is everything she did not have as a child. Here, she is the boss, and in full control - until she isn't.",
+    "ITALIAN": "Her backstory aside, this tiefling finds meaning in the crowns. In capital. The power and respect she finds in this new world is everything she did not have as a child. Here, she is the boss, and in full control - until she isn't."
+  },
+  {
+    "ID": "IP_ROLLO_5_STR",
+    "ENGLISH": "The next generation! A late-stage teenager representing all young men among the Urthfolk.",
+    "ITALIAN": "The next generation! A late-stage teenager representing all young men among the Urthfolk."
+  },
+  {
+    "ID": "IP_ROLLO_10",
+    "ENGLISH": "Statistically, it could be worrying. If all young men today feel as lost (and unemployed) as this one, then everything must be going to shit. At least he's politically active!",
+    "ITALIAN": "Statistically, it could be worrying. If all young men today feel as lost (and unemployed) as this one, then everything must be going to shit. At least he's politically active!"
+  },
+  {
+    "ID": "IP_ROLLO_15",
+    "ENGLISH": "That might also be a worrying detail. Young men with little to lose and everything to gain are,  historically speaking, a common driving force behind world-changing conflicts. If the old guard Nationalists do not represent them- if Freestriderism does not support them- if Azgalism is way too... progressive- then what <i>frays</i> will these rumblings lead us along?",
+    "ITALIAN": "That might also be a worrying detail. Young men with little to lose and everything to gain are,  historically speaking, a common driving force behind world-changing conflicts. If the old guard Nationalists do not represent them- if Cavalcatore Liberoism does not support them- if Azgalism is way too... progressive- then what <i>frays</i> will these rumblings lead us along?"
+  },
+  {
+    "ID": "IP_ROLLO_20",
+    "ENGLISH": "As with all things, it is <i>ECONOMY</i> which steers the masses. The flow of CAPITAL, as you have read so much about. These boys might rage against the world if they wish, yet if they each held a role in society which paid them well and granted them satisfaction, then all that rage would subside.\n\nThey simply require a new ideology. One which supports their economic interests, and nothing else.",
+    "ITALIAN": "As with all things, it is <i>ECONOMY</i> which steers the masses. The flow of CAPITAL, as you have read so much about. These boys might rage against the world if they wish, yet if they each held a role in society which paid them well and granted them satisfaction, then all that rage would subside.\n\nThey simply require a new ideology. One which supports their economic interests, and nothing else."
+  },
+  {
+    "ID": "IP_SHEN_8_INT",
+    "ENGLISH": "An immigrant of Divinii Torum. An owlfolk. An expert on all things BOOK. He has brought his expertise to your city, and for this you should feel grateful. This is the perfect example of why this new Era is so very, very wonderful.",
+    "ITALIAN": "An immigrant of Divinii Torum. An owlfolk. An expert on all things BOOK. He has brought his expertise to your city, and for this you should feel grateful. This is the perfect example of why this new Era is so very, very wonderful."
+  },
+  {
+    "ID": "IP_SHEN_14",
+    "ENGLISH": "If you ever feel discontent about his behavior, remember: this is a person. He is not a representative of his entire people. Just as there are humans who are rude and boisterous and egotistical, there are owlfolk of the same cloth. All folk are different. All folk are the same.\n\nThis figure is a bit eccentric. Do not let that darken your vision of all other bewinged brother and sisters across the Coast.",
+    "ITALIAN": "If you ever feel discontent about his behavior, remember: this is a person. He is not a representative of his entire people. Just as there are humans who are rude and boisterous and egotistical, there are owlfolk of the same cloth. All folk are different. All folk are the same.\n\nThis figure is a bit eccentric. Do not let that darken your vision of all other bewinged brother and sisters across the Coast."
+  },
+  {
+    "ID": "IP_SIMII_5_CHA",
+    "ENGLISH": "A devoted Azgal. Gives everything he has to support the cause.",
+    "ITALIAN": "A devoted Azgal. Gives everything he has to support the cause."
+  },
+  {
+    "ID": "IP_SIMII_10",
+    "ENGLISH": "A second son kind of person. Lives in the shadows of greater men.",
+    "ITALIAN": "A second son kind of person. Lives in the shadows of greater men."
+  },
+  {
+    "ID": "IP_SIMII_15",
+    "ENGLISH": "Follows the Azgal way not due to choice, but due to indoctrination and tradition. He wants to live up to someone. His father? A patriarch?",
+    "ITALIAN": "Follows the Azgal way not due to choice, but due to indoctrination and tradition. He wants to live up to someone. His father? A patriarch?"
+  },
+  {
+    "ID": "IP_SIMII_20",
+    "ENGLISH": "Simii, the right hand man of Alfoz, wants to be his own man but simply cannot. Not just his own skin, but those who depend on him and his eternal devotion as well.\n\nIt's painfully difficult to dislike him.",
+    "ITALIAN": "Simii, the right hand man of Alfoz, wants to be his own man but simply cannot. Not just his own skin, but those who depend on him and his eternal devotion as well.\n\nIt's painfully difficult to dislike him."
+  },
+  {
+    "ID": "IP_SMARTER_5_INT",
+    "ENGLISH": "Not so much.",
+    "ITALIAN": "Not so much."
+  },
+  {
+    "ID": "IP_SMARTER_10",
+    "ENGLISH": "A crazed kleptomaniac of a goblin. He needs help. Professional help.",
+    "ITALIAN": "A crazed kleptomaniac of a goblin. He needs help. Professional help."
+  },
+  {
+    "ID": "IP_SMARTER_15",
+    "ENGLISH": "Be careful with him. This is not a typical example of a goblin. This is an extreme. A stereotype. A fable.",
+    "ITALIAN": "Be careful with him. This is not a typical example of a goblin. This is an extreme. A stereotype. A fable."
+  },
+  {
+    "ID": "IP_SMARTER_20",
+    "ENGLISH": "It's on a level where you seriously consider whether this foolish goblin is possessed by some spirit, some divine spark of a trickster god. But the kind of god that would trick his avatar into becoming the useless thief you could possibly imagine.\n\nStranger things have happened.",
+    "ITALIAN": "It's on a level where you seriously consider whether this foolish goblin is possessed by some spirit, some divine spark of a trickster god. But the kind of god that would trick his avatar into becoming the useless thief you could possibly imagine.\n\nStranger things have happened."
+  },
+  {
+    "ID": "IP_SNELL_5_DEX",
+    "ENGLISH": "This goblin gets shit done. No matter the odds.",
+    "ITALIAN": "This goblin gets shit done. No matter the odds."
+  },
+  {
+    "ID": "IP_SNELL_10",
+    "ENGLISH": "Highly competent, but with a craving of validation. Just look at the way he dresses himself!",
+    "ITALIAN": "Highly competent, but with a craving of validation. Just look at the way he dresses himself!"
+  },
+  {
+    "ID": "IP_SNELL_15",
+    "ENGLISH": "He doesn't work for himself, or any ideal. This goblin devotes his life for his 'lady', no different from a religious nut.",
+    "ITALIAN": "He doesn't work for himself, or any ideal. This goblin devotes his life for his 'lady', no different from a religious nut."
+  },
+  {
+    "ID": "IP_SNELL_20",
+    "ENGLISH": "A lone wolf. Cares too much, won't let anyone close. Old trauma? Got rejected? Family trouble? Who knows.",
+    "ITALIAN": "A lone wolf. Cares too much, won't let anyone close. Old trauma? Got rejected? Family trouble? Who knows."
+  },
+  {
+    "ID": "IP_SNELL_25",
+    "ENGLISH": "Huh. Alright, so- it's not really a tragic backstory, but you get it now. He's a <i>yearner</i>. The type to hopelessly throw himself into his work for the sake of some greater good. An idealist. A <i>romantic</i>. In the most goblin sense of the word.",
+    "ITALIAN": "Huh. Alright, so- it's not really a tragic backstory, but you get it now. He's a <i>yearner</i>. The type to hopelessly throw himself into his work for the sake of some greater good. An idealist. A <i>romantic</i>. In the most goblin sense of the word."
+  },
+  {
+    "ID": "IP_SNELL_30",
+    "ENGLISH": "Self-sacrificing. Dreaming. There's a twinkle in his eyes you catch sometimes. A String attached to a destiny, one with few frays. Maybe you could trust him. Maybe he could be a... you know.\n\n<i>A friend.</i>",
+    "ITALIAN": "Self-sacrificing. Dreaming. There's a twinkle in his eyes you catch sometimes. A String attached to a destiny, one with few frays. Maybe you could trust him. Maybe he could be a... you know.\n\n<i>A friend.</i>"
+  },
+  {
+    "ID": "IP_SNURRE_5_INT",
+    "ENGLISH": "A scholar of the Fordnip Commonwealth. A man working out of hole in the wall.",
+    "ITALIAN": "A scholar of the Fordnip Commonwealth. A man working out of hole in the wall."
+  },
+  {
+    "ID": "IP_SNURRE_10",
+    "ENGLISH": "This is the type of man who knows exactly where he is going, and is simply going there very slowly and deliberately. He knows his expertise. His moves are calculated. His journey long.",
+    "ITALIAN": "This is the type of man who knows exactly where he is going, and is simply going there very slowly and deliberately. He knows his expertise. His moves are calculated. His journey long."
+  },
+  {
+    "ID": "IP_SNURRE_15",
+    "ENGLISH": "The esoteric is closely tied with scholarly arts. In the old days no distinction between the two was made. But today, in this modern world, his side is all but winning.",
+    "ITALIAN": "The esoteric is closely tied with scholarly arts. In the old days no distinction between the two was made. But today, in this modern world, his side is all but winning."
+  },
+  {
+    "ID": "IP_SNURRE_20",
+    "ENGLISH": "You have spent quite some time reading up on his art. It is interesting. Research is the first step to grounded spellcasting after all. But beyond this facade as a dispenser of knowledge, this halfling is also searching for answers to his own questions - namely, what is the nature of power? Politics? The Golden Line?",
+    "ITALIAN": "You have spent quite some time reading up on his art. It is interesting. Research is the first step to grounded spellcasting after all. But beyond this facade as a dispenser of knowledge, this halfling is also searching for answers to his own questions - namely, what is the nature of power? Politics? The Golden Line?"
+  },
+  {
+    "ID": "IP_STEN_5_CON",
+    "ENGLISH": "A boy named after the dwarven word for 'rock'.",
+    "ITALIAN": "A boy named after the dwarven word for 'rock'."
+  },
+  {
+    "ID": "IP_STEN_10",
+    "ENGLISH": "He likes his friends. They're his only friends.",
+    "ITALIAN": "He likes his friends. They're his only friends."
+  },
+  {
+    "ID": "IP_STEN_15",
+    "ENGLISH": "He does have some semblance of opinions around life and love and this city. Yet they are not formulated, nor is he verbose enough to express them properly.",
+    "ITALIAN": "He does have some semblance of opinions around life and love and this city. Yet they are not formulated, nor is he verbose enough to express them properly."
+  },
+  {
+    "ID": "IP_STEN_20",
+    "ENGLISH": "He is happy to be here. Truly. This boy is probably the happiest man you have ever met in your entire life.",
+    "ITALIAN": "He is happy to be here. Truly. This boy is probably the happiest man you have ever met in your entire life."
+  },
+  {
+    "ID": "IP_THAL_5_WIS",
+    "ENGLISH": "Oppressive?",
+    "ITALIAN": "Oppressive?"
+  },
+  {
+    "ID": "IP_THAL_10",
+    "ENGLISH": "He is a good landlord. He takes care of his tenants. He makes sure there is a decent amount of service being done, maintenance, safety checkups. He is nowhere near the worst landlord in Tolstad alone.",
+    "ITALIAN": "He is a good landlord. He takes care of his tenants. He makes sure there is a decent amount of service being done, maintenance, safety checkups. He is nowhere near the worst landlord in Tolstad alone."
+  },
+  {
+    "ID": "IP_THAL_15",
+    "ENGLISH": "Yet he holds the key to shelter, one of the pillars in the hierarchy of needs. There is something inherently oppressive about playing into the system. To profit within it, to a senseless degree.\n\nIt is unearned wealth.",
+    "ITALIAN": "Yet he holds the key to shelter, one of the pillars in the hierarchy of needs. There is something inherently oppressive about playing into the system. To profit within it, to a senseless degree.\n\nIt is unearned wealth."
+  },
+  {
+    "ID": "IP_THAL_20",
+    "ENGLISH": "Yet he is but a person in the system. Should we limit a private citizen's ability to leverage his investments for profits? Should the free market dictate how and where folk get to live? Is this merman a bad person for playing his hand in a world built upon the whims of Capital? You do not know. But everyone has an opinion.",
+    "ITALIAN": "Yet he is but a person in the system. Should we limit a private citizen's ability to leverage his investments for profits? Should the free market dictate how and where folk get to live? Is this merman a bad person for playing his hand in a world built upon the whims of Capital? You do not know. But everyone has an opinion."
+  },
+  {
+    "ID": "IP_TOLI_5_CHA",
+    "ENGLISH": "He's the silent type.",
+    "ITALIAN": "He's the silent type."
+  },
+  {
+    "ID": "IP_TOLI_10",
+    "ENGLISH": "He thinks before he speaks. He also thinks he's very cool because of this behavior.",
+    "ITALIAN": "He thinks before he speaks. He also thinks he's very cool because of this behavior."
+  },
+  {
+    "ID": "IP_TOLI_15",
+    "ENGLISH": "There's an air of superiority in his body language, in his speech, in his <i>tone</i>. He thinks he's above it all. Even his friends. Hopefully he'll stop thinking such things before it bites him in the ass.",
+    "ITALIAN": "There's an air of superiority in his body language, in his speech, in his <i>tone</i>. He thinks he's above it all. Even his friends. Hopefully he'll stop thinking such things before it bites him in the ass."
+  },
+  {
+    "ID": "IP_TOLI_20",
+    "ENGLISH": "Hm. No, he won't. In the direst of times, this kid will be the first one to lean upon his brothers. He's learned to eat that EGO of his when he has to. That's good. A man is made by the toil of his peers. Nothing more, nothing less.",
+    "ITALIAN": "Hm. No, he won't. In the direst of times, this kid will be the first one to lean upon his brothers. He's learned to eat that EGO of his when he has to. That's good. A man is made by the toil of his peers. Nothing more, nothing less."
+  },
+  {
+    "ID": "IP_URTH_5_STR",
+    "ENGLISH": "A cobbler.",
+    "ITALIAN": "A cobbler."
+  },
+  {
+    "ID": "IP_URTH_10",
+    "ENGLISH": "There's a sadness in his voice. The type born from years of watching your children go astray.",
+    "ITALIAN": "There's a sadness in his voice. The type born from years of watching your children go astray."
+  },
+  {
+    "ID": "IP_URTH_15",
+    "ENGLISH": "You do not believe what he is showing you. Yet you do not wish to even entertain the thought of dismissing the image of his kind smile.",
+    "ITALIAN": "You do not believe what he is showing you. Yet you do not wish to even entertain the thought of dismissing the image of his kind smile."
+  },
+  {
+    "ID": "IP_URTH_20",
+    "ENGLISH": "You will serve him until the day you die.",
+    "ITALIAN": "You will serve him until the day you die."
+  },
+  {
+    "ID": "IP_NISSE_5_DEX",
+    "ENGLISH": "This is a shitty kid. But kind of fun, too.",
+    "ITALIAN": "This is a shitty kid. But kind of fun, too."
+  },
+  {
+    "ID": "IP_NISSE_10",
+    "ENGLISH": "If he was your peer growing up, he'd be one of those fucking bullies. That's not really a massive negative on his part- pretty much every well-adjusted kid bullied you.",
+    "ITALIAN": "If he was your peer growing up, he'd be one of those fucking bullies. That's not really a massive negative on his part- pretty much every well-adjusted kid bullied you."
+  },
+  {
+    "ID": "IP_NISSE_15",
+    "ENGLISH": "But he's got some conscience growing inside that skull of his. If he is surrounded by good men, he will turn out fine. If he is surrounded by evil, that is what his life will build.",
+    "ITALIAN": "But he's got some conscience growing inside that skull of his. If he is surrounded by good men, he will turn out fine. If he is surrounded by evil, that is what his life will build."
+  },
+  {
+    "ID": "IP_NISSE_20",
+    "ENGLISH": "He has talent. Not like yours, gods no, but talent nonetheless. You need to push him towards clericship. Or at the very least some type of path of wizardry. Without it, he will surely end up hurting someone. With it, he might still hurt people, but only in the name of the law.",
+    "ITALIAN": "He has talent. Not like yours, gods no, but talent nonetheless. You need to push him towards chiericoship. Or at the very least some type of path of wizardry. Without it, he will surely end up hurting someone. With it, he might still hurt people, but only in the name of the law."
+  },
+  {
+    "ID": "IP_VIIRA_5_STR",
+    "ENGLISH": "A traveller. She is not settled here.",
+    "ITALIAN": "A traveller. She is not settled here."
+  },
+  {
+    "ID": "IP_VIIRA_10",
+    "ENGLISH": "Her belief is weak. She does not use it. Her religion is power.",
+    "ITALIAN": "Her belief is weak. She does not use it. Her religion is power."
+  },
+  {
+    "ID": "IP_VIIRA_15",
+    "ENGLISH": "Is she evil? No. Perhaps an arbitrary arm of an institution, but no mere puppet.",
+    "ITALIAN": "Is she evil? No. Perhaps an arbitrary arm of an institution, but no mere puppet."
+  },
+  {
+    "ID": "IP_VIIRA_20",
+    "ENGLISH": "Nothing you can say will sway her. She will play you until the end.",
+    "ITALIAN": "Nothing you can say will sway her. She will play you until the end."
+  },
+  {
+    "ID": "IP_VISKEN_5_INT",
+    "ENGLISH": "The pale man handles corpses in a basement. A typical self-employed city contractor.",
+    "ITALIAN": "The pale man handles corpses in a basement. A typical self-employed city contractor."
+  },
+  {
+    "ID": "IP_VISKEN_10",
+    "ENGLISH": "You remember hearing about this man. He used to be a dentist and a surgeon.",
+    "ITALIAN": "You remember hearing about this man. He used to be a dentist and a surgeon."
+  },
+  {
+    "ID": "IP_VISKEN_15",
+    "ENGLISH": "His study into the magical realm is immense. Far beyond your capabilities. Some of these texts he surrounds himself with would suggest he can cast fifth or even sixth level spells. Couldn't be higher, could it?",
+    "ITALIAN": "His study into the magical realm is immense. Far beyond your capabilities. Some of these texts he surrounds himself with would suggest he can cast fifth or even sixth level spells. Couldn't be higher, could it?"
+  },
+  {
+    "ID": "IP_VISKEN_20",
+    "ENGLISH": "This is an ancient man. One forgotten. Misplaced in time. You may learn much from him, if you stay in his good graces.",
+    "ITALIAN": "This is an ancient man. One forgotten. Misplaced in time. You may learn much from him, if you stay in his good graces."
+  },
+  {
+    "ID": "IP_XERBA_5_CON",
+    "ENGLISH": "A girl born from an Azgalist wave, in an Azgal household, come from a fallen Azgal state.\n\nShe is an Azgalist.",
+    "ITALIAN": "A girl born from an Azgalist wave, in an Azgal household, come from a fallen Azgal state.\n\nShe is an Azgalist."
+  },
+  {
+    "ID": "IP_XERBA_10",
+    "ENGLISH": "Dangerously shy. She needs good friends and better mentors. That is not you, by the way.",
+    "ITALIAN": "Dangerously shy. She needs good friends and better mentors. That is not you, by the way."
+  },
+  {
+    "ID": "IP_XERBA_15",
+    "ENGLISH": "She has a bright future ahead of her, no matter the path she ends up pushed along into. Alas, her agency is nowhere to be found. Not that she is looking for it.",
+    "ITALIAN": "She has a bright future ahead of her, no matter the path she ends up pushed along into. Alas, her agency is nowhere to be found. Not that she is looking for it."
+  },
+  {
+    "ID": "IP_XERBA_20",
+    "ENGLISH": "This is what their movement needs. All movements. A shy and terrified witness who will, at each turn, ask everyone around her to rethink their rash decisions. \n\nExtremely annoying. But nonetheless... very, very good for society.",
+    "ITALIAN": "This is what their movement needs. All movements. A shy and terrified witness who will, at each turn, ask everyone around her to rethink their rash decisions. \n\nExtremely annoying. But nonetheless... very, very good for society."
+  },
+  {
+    "ID": "UI_1",
+    "ENGLISH": "New Game",
+    "ITALIAN": "Nuova Partita"
+  },
+  {
+    "ID": "UI_2",
+    "ENGLISH": "Load",
+    "ITALIAN": "Carica"
+  },
+  {
+    "ID": "UI_3",
+    "ENGLISH": "Options",
+    "ITALIAN": "Opzioni"
+  },
+  {
+    "ID": "UI_4",
+    "ENGLISH": "Credits",
+    "ITALIAN": "Riconoscimenti"
+  },
+  {
+    "ID": "UI_5",
+    "ENGLISH": "Exit",
+    "ITALIAN": "Esci"
+  },
+  {
+    "ID": "Death_1_1",
+    "ENGLISH": "The Cleric is dead.",
+    "ITALIAN": "Il Chierico è morto."
+  },
+  {
+    "ID": "Death_1_2",
+    "ENGLISH": "Alas, this String will be discarded.",
+    "ITALIAN": "Ahimè, questa Corda verrà recisa."
+  },
+  {
+    "ID": "Death_1_3",
+    "ENGLISH": "But you can see another, can you not?",
+    "ITALIAN": "Ma puoi vederne un'altra, non è vero?"
+  },
+  {
+    "ID": "Death_2_1",
+    "ENGLISH": "The Cleric has ceased to be.",
+    "ITALIAN": "Il Chierico ha cessato di esistere."
+  },
+  {
+    "ID": "Death_2_2",
+    "ENGLISH": "That happens when you run out of 'health'.",
+    "ITALIAN": "Succede quando esaurisci la 'salute'."
+  },
+  {
+    "ID": "Death_2_3",
+    "ENGLISH": "Try to stay intact next time, eh?",
+    "ITALIAN": "Cerca di restare intero la prossima volta, eh?"
+  },
+  {
+    "ID": "Death_3_1",
+    "ENGLISH": "The Cleric has passed away.",
+    "ITALIAN": "Il Chierico è trapassato."
+  },
+  {
+    "ID": "Death_3_2",
+    "ENGLISH": "This is very sad.",
+    "ITALIAN": "Questo è molto triste."
+  },
+  {
+    "ID": "Death_3_3",
+    "ENGLISH": "Next, might I suggest avoiding danger?",
+    "ITALIAN": "La prossima volta, posso suggerire di evitare i pericoli?"
+  },
+  {
+    "ID": "Death_4_1",
+    "ENGLISH": "The Cleric is no more.",
+    "ITALIAN": "Il Chierico non è più."
+  },
+  {
+    "ID": "Death_4_2",
+    "ENGLISH": "But this feels... off.",
+    "ITALIAN": "Ma qualcosa... non torna."
+  },
+  {
+    "ID": "Death_4_3",
+    "ENGLISH": "Wouldn't you agree?",
+    "ITALIAN": "Non sei d'accordo?"
+  }
+]

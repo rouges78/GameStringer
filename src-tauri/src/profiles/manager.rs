@@ -372,7 +372,6 @@ impl ProfileManager {
 
         // Invalida cache
         self.invalidate_cache();
-
         println!("[PROFILE MANAGER] ✅ Profilo '{}' eliminato", profile.name);
         Ok(())
     }

@@ -1,7 +1,10 @@
 /**
  * Player Feedback Loop - Sistema raccolta feedback traduzioni dai giocatori
  * Permette di raccogliere, analizzare e applicare feedback sulla qualità delle traduzioni
+ * Persistenza: Tauri filesystem (appdata/player_feedback.json) con fallback localStorage
  */
+
+import { invoke } from '@/lib/tauri-api';
 
 export interface FeedbackEntry {
   id: string;
@@ -79,23 +82,58 @@ export const FEEDBACK_CATEGORIES: Record<FeedbackCategory, { icon: string; color
 class PlayerFeedbackService {
   private feedbackEntries: FeedbackEntry[] = [];
   private readonly STORAGE_KEY = 'gamestringer_player_feedback';
+  private readonly FILENAME = 'player_feedback.json';
+  private _initialized = false;
 
   constructor() {
-    this.loadFromStorage();
+    this.loadFromLocalStorage();
   }
 
-  private loadFromStorage() {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        this.feedbackEntries = JSON.parse(stored);
+  async init(): Promise<void> {
+    if (this._initialized) return;
+    this._initialized = true;
+    try {
+      const content = await invoke<string>('read_app_data_file', { filename: this.FILENAME });
+      if (content) {
+        this.feedbackEntries = JSON.parse(content);
+        return;
       }
+    } catch {}
+    // Fallback: se ci sono dati in localStorage, migrali a Tauri
+    if (this.feedbackEntries.length > 0) {
+      this.persistToTauri();
+    }
+  }
+
+  private loadFromLocalStorage() {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) this.feedbackEntries = JSON.parse(stored);
+      } catch {}
+    }
+  }
+
+  private async persistToTauri(): Promise<boolean> {
+    try {
+      await invoke('write_app_data_file', {
+        filename: this.FILENAME,
+        content: JSON.stringify(this.feedbackEntries, null, 2)
+      });
+      return true;
+    } catch {
+      return false;
     }
   }
 
   private saveToStorage() {
+    // Write to Tauri (async, fire-and-forget)
+    this.persistToTauri();
+    // Also write to localStorage as immediate fallback
     if (typeof window !== 'undefined') {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.feedbackEntries));
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.feedbackEntries));
+      } catch {}
     }
   }
 

@@ -1,0 +1,4642 @@
+[
+  {
+    "id": "BG_AKZEL_5",
+    "english": "Archeologist",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_ALFOZ_3",
+    "english": "Foreman",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_ARN_1",
+    "english": "Child Worker",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_AVIK_1",
+    "english": "Proletariat",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_BOND_15",
+    "english": "Demi-Lich",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_BORGO_13",
+    "english": "Paladin",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_BRAXO_2",
+    "english": "Scribe",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_BRR_4",
+    "english": "Ranger",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_CHAMAR_2",
+    "english": "Cleric",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_DARROW_3",
+    "english": "Coinlord",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_DRUMMER_1",
+    "english": "Entrepreneur",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_ETTIR_10",
+    "english": "Angel",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_EVER_18",
+    "english": "Trifler",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_FREY_5",
+    "english": "Noble",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_GORM_12",
+    "english": "Paladin",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_GOUR_9",
+    "english": "Frost Troll",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_ISK_16",
+    "english": "Wizard",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_IVCX_15",
+    "english": "Decayed Solar",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_JEHANNE_1",
+    "english": "Factory Worker",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_KRAAID_11",
+    "english": "Barbarian",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_KULL_7",
+    "english": "Warden",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_LISA_6",
+    "english": "Hagling",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_MASKED_5",
+    "english": "Assassin",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_MERI_6",
+    "english": "Writer",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_MISKA_17",
+    "english": "Chieftain",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_MODISSA_2",
+    "english": "Writer",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_MOONGORE_3",
+    "english": "Fighter",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_NEARLY_1",
+    "english": "Bard",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_NESSAN_6",
+    "english": "Druid",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_OLZIS_14",
+    "english": "Gynosphinx",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_OST_9",
+    "english": "Rogue",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_OYU_2",
+    "english": "Entrepreneur",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_PINJA_2",
+    "english": "Sorcerer",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_RAZZ_8",
+    "english": "Rogue",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_RIX_3",
+    "english": "Entrepreneur",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_ROLLO_1",
+    "english": "Unemployed",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_SHEN_1",
+    "english": "Scholar",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_SIMII_2",
+    "english": "Factory Worker",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_SMARTER_1",
+    "english": "Rogue",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_SNELL_3",
+    "english": "Rogue",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_SNURRE_4",
+    "english": "Scholar",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_STEN_1",
+    "english": "Unemployed",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_THAL_3",
+    "english": "Entrepreneur",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_TOLI_1",
+    "english": "Unemployed",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_UNMASKED_5",
+    "english": "Warlock",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_URTH_20",
+    "english": "Cleric",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_NISSE_1",
+    "english": "Unemployed",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_VIIRA_4",
+    "english": "Fighter",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_VISKEN_17",
+    "english": "Entrepreneur",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "BG_XERBA_1",
+    "english": "Service Worker",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_AKZEL_5_DEX",
+    "english": "This, right here, is the fourth pillar of the feudal system. A spelunking, delving, digging, roaming, true-blooded <i>ADVENTURER</i>.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_AKZEL_10",
+    "english": "Though he's seen a lot of shit in his days, Akzel still has his glowing eyes set on the next prize - the true reward of a live on the trail - a <i>hoard</i>.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_AKZEL_15",
+    "english": "He will find it, one day, some day. But not this day. Perhaps you will see him again? Who are you kidding, of course you will.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_AKZEL_20",
+    "english": "His expertise in the City Below is not for nothing. You should keep him close. He'll be real useful if you ever wanna get into that freelance dungeoneering business. Seriously, there's a lot of money in that!",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ALFOZ_5_CON",
+    "english": "He stands by his ideals with gut and little else.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ALFOZ_10",
+    "english": "A push will earn his respect. That is his way.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ALFOZ_15",
+    "english": "Alfoz knows he is privileged. He hates it. His ideal clashes with his blood.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ALFOZ_20",
+    "english": "At his core he fights for glory. Empathy does not spark his heart. He wants to earn admiration and LEGEND.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ARN_5_DEX",
+    "english": "Kid's working his ass off. Getting that bread! He must be doing that optional weekend school.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ARN_10",
+    "english": "He'll go far in life with that attitude. But that fire under his ass must've been lit by something fierce.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ARN_15",
+    "english": "He's a jumpy fellow. A survivor. Type of kid that's used to making it on his own.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ARN_20",
+    "english": "You relate to his fear. The kid doesn't want to end up like his old man - forgotten by time and space and the city.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ARN_25",
+    "english": "He's grieving. But he's keeping it together, for his brother. They both have ways of dealing with it. Arn will grow up to be a great capitalist.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_AVIK_5_CON",
+    "english": "A guy. Dwarf. Average height. Collected. Down to earth. True to his feelings. Decently smart. Chill. <i>Cool</i>. Nice to animals. Not much else to it.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_AVIK_12",
+    "english": "Born from the Strings of Fates - the Fade Era remnant tyrants smile upon his step. For some very, very, very strange reason. This dwarf, if handed an object with a destiny set in stone, could automatically create <shake>FRAYS</shake>. Chaos. Madness. A new chance to roll the die.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_AVIK_20",
+    "english": "He <i>is</i> the working class. A good Azgalist footsoldier. A loyal workers. This is the type of man who deserve a raise, so his salary meets his level of productivity.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BOND_2",
+    "english": "A demi-lich.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BOND_8_INT",
+    "english": "An insane demi-lich. His mind having shattered many decades ago. However, his behavior (along with the simply fact that he exists down here in a relatively stable condition) suggests his madness has either not entirely set in, or that he is being shepherded. Perhaps by the pale man upstairs?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BOND_12",
+    "english": "You understand how to please him. His EGO is almost as big as his physical body is tiny, and he craves the feeling of superiority. In effect, he's a fairly good teacher, if you can stand the belittlement.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BOND_18",
+    "english": "This skull has seen more esoteric events, historical battles, and shifts in global power than even the grandest of dragons of the Fade Era. Keep on his good side, and you'll have a great repository of knowledge in the future here.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BORGO_2_STR",
+    "english": "This is a true warrior.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BORGO_9",
+    "english": "He is off-duty. But whatever duty that is, it's everlasting.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BORGO_16",
+    "english": "This dark knight can break you like a twig. Yet he will not. He is bound by an order - but why does it not affect you?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BORGO_21",
+    "english": "Not a man. Not even corporeal. This is a silent yet shrieking wraith forced into enslavement by the darkness of this realm. There is something indescribably manly about self-control in such circumstances.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRAXO_6_STR",
+    "english": "Surprisingly content. Hard worker.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRAXO_10",
+    "english": "Has a nested interest in the current regime. Devils used to be allowed into the city only on work visas, so he could have served for several decades.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRAXO_15",
+    "english": "Somehow you just know this devil would gladly organize a mass genocide against non-humans in this city.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRAXO_18",
+    "english": "This is no ordinary imp. His stature and position implies a former rank. A Greater Devil? What kind of game is he playing?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRAXO_24",
+    "english": "Braxo. He works for the upper city echelon, and knows more than you'll ever hear. The tiny form is a convenience. Keep him as your friend. He will be useful.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRR_2_WIS",
+    "english": "<i>Brrr.</i>",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRR_4",
+    "english": "The vibrations he gives off is his language. With magic, you could communicate better.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRR_12",
+    "english": "This is a scout of the deeper crevices of the earth. A creature set to keep an eye on the horrors of the icy rage.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRR_14",
+    "english": "<i>Brrr</i>.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_BRR_17",
+    "english": "Perhaps a future ambassador of his people. Treat him with respect.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_CHAMAR_9_STR",
+    "english": "A follower of the Holy Mountain. Of Divinii Torum.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_CHAMAR_12",
+    "english": "She hates you. Entirely due to your blood origin. Or maybe there's something else...",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_CHAMAR_19",
+    "english": "Ah. Of course. It is not you she hates. She hates herself. The human part of herself. The part which places her below her glorious golden celestial masters. If she could sever that humanity, she would do so in an instant, all for a slim chance to hear the choir.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_CHAMAR_23",
+    "english": "Beyond the veil of a faithful servant, there is also a layer of scheming. Yes, this woman is not so much kneeling before power as much as she is intending to grasp as much from the hierarchy as she is able. What an interesting woman.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_DARROW_5_CHA",
+    "english": "Here he is. The Coinlord of Norvik and Magistrate of Tolstad.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_DARROW_10",
+    "english": "That smile of his is a facade, of course. An expression-simulacra, heavily trained over the course of twenty years on the job. He's an expert in his field, and his field is politics.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_DARROW_15",
+    "english": "He will respect you only if you serve him loyalty, like a hound, or... if you prove yourself competent and ruthless. He has no time for fools. But a man of his stature does not retain power if he does not recognize talent when it barks in his face.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_DARROW_20",
+    "english": "He inherited his position from his father at a young age. Nicholas has been doing this his entire life, and he's good at it. One of the best. The only problem being, if you're good at the role of a magister, then you're good at a number of nefarious, illegal activities by association.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_DRUMMER_2_DEX",
+    "english": "It's just a crate, right? But what's the rythmic thumping noise?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_DRUMMER_6",
+    "english": "You're kidding. The bird is actually- the tea shop owner is- he's... come on. Really?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_DRUMMER_12",
+    "english": "This must be the silliest, most idiotic, and plain stupid plan you've ever seen enacted. Even if he is one of those bird-people who are able to survive without food or water for weeks.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_DRUMMER_15",
+    "english": "Okay, listen up. This bird is inside the create, and once you get it open, you'll be in for an interrogation. So be ready. He'll try to talk himself out of it, but don't worry about that. Just focus on getting him to tell you the actual truth. Be rough or smooth, doesn't matter.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ETTIR_5_STR",
+    "english": "Cold. Stern. Glorious.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ETTIR_10",
+    "english": "She follows orders. The type of orders that grant eternal fulfillment.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ETTIR_15",
+    "english": "There is a sadness in her existence. Broken wings, stuck among lesser beings. What does she seek?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ETTIR_20",
+    "english": "When an angel falls she ceases to exist. She is transformed. This creature does not seek redemption or emancipation. She seeks purpose.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ETTIR_25",
+    "english": "Ettir does not need to be here. Something binds her to earth. To Norvik. And it is not esoteric. Not in any sense of the word.\n\n\nIt must be a difficult being. To live between worlds like she does. Perhaps one day she will understand his words.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_EVER_5_CHA",
+    "english": "By the gods... it's a TRIFLER!",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_EVER_10",
+    "english": "He's real polite though. And he's genuinely not trying to kill you. You don't think it's really got a gender either, but it feels like a 'he' doesn't it? Don't ask him about his gender. Or maybe do?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_EVER_15",
+    "english": "You get a sense for his motivation here. The aberration before you does not hold any grudge, and acts polite towards these ants running around him- all for the purpose of some greater, <i>esoteric</i> vision.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_EVER_20",
+    "english": "<i>Yunolotia Manathern</i>. Fate cannot sway.\n\nEver-Glad seeks the end of the facade. Ever-Glad seeks the beginning of another Era. All for the sake of avoiding the FREYS OF DOOM.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_FREY_5_STR",
+    "english": "She is dressed in a fine silken robe, like a noblewoman.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_FREY_10",
+    "english": "Her hair is short and coarse. The rebellious kind, but Urthfolk nobility nonetheless.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_FREY_15",
+    "english": "Why is she down here? Not many of her kind seek the company of Waterlane workers and goblins.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_FREY_20",
+    "english": "Hold on. You recognize her. This is... *Freydis Darrow*! The daughter of the Coinlord!",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_GORM_9_STR",
+    "english": "Alas, poor Gorm. His choices led him down this doomed path. Painfully relatable.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_GORM_14",
+    "english": "Here we have someone who is supposed to be the best of us. Human of good breed. Raised up by Urth himself. Educated, rich, seemingly healthy...\n\nIf he could not stay on the path, who could?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_GORM_18",
+    "english": "You're nothing like him. You did not come from nobility. You were not given any special treatment, even with your latent talents. The only thing you have in common is your willingness to throw it all away - to throw yourselves against the meat grinder of TIME.\n\nBut you will not be minced. Your sinewy nature will grind it to a halt. The farm boy will live past Ragnarôk. The hero's bones will break upon the pavement.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_GORM_20",
+    "english": "Gorm also has a bad shoulder. Exploit that. (Also relatable.)",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_GOUR_5_STR",
+    "english": "A great and mighty <i>frost troll</i>. Horrifying, even while asleep.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_GOUR_10",
+    "english": "You've got a few ways of approaching this. Killing a troll is not easy, and you need all the advantage you can get.\n\n1. Attack him right away, giving you a head start.\n2. Put up some kind of trap.\n3. Try to communicate first (weak).\n4. Walk away (also weak).",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_GOUR_15",
+    "english": "Getting close enough to strike the sleeping monster would be difficult. However, it would allow you to strike a decisive blow.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_GOUR_20",
+    "english": "It is time to redeem yourself. Over twenty years have passed since that fateful day. Now... prove yourself. Show the world...\n\nYou have TROLLKILLER blood in your veins.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ISK_2_INT",
+    "english": "This is an ancient snail, from another time.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ISK_8",
+    "english": "An interesting fellow. An incredible knowledge, but held within a culture of the Beasts of Jor- complete barbarians. Fascinating. You must, in any case, study this creature.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ISK_15",
+    "english": "The esoteric mastery at play here is beyond anything you have ever encountered. Keep in contact with this snail. It will be of great service in the future.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ISK_20",
+    "english": "His goal will be completed in time. However, before then you are certain he will break many taboos of the Era. This is the type of man, not too unlike the more sophisticated Arcanists, who will break reality and rewrite Jor's rules, all in an attempt to get the final say.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_IVCX_5_WIS",
+    "english": "The light blinds you. Even among celestials, this creature is powerful.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_IVCX_10",
+    "english": "It seems out of place. Why would an ambassador of the Golden Horde be here? Why would this creature, of such great and bright force, even be here?\n\nIt doesn't make any sense.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_IVCX_15",
+    "english": "Antesepalian. A creature who was ancient before this world was created. What stands before you is no ambassador- this is a close servant of an outer Power. That is why your body recoils, even when the light appears to signal nothing but <i>BE NOT AFRAID</i> to your senses.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_IVCX_20",
+    "english": "In its prime, it held closer resemblance to our walking gods than any angel of the Horde. Why is it reduced to <i>your</i> material level, here in your city?\n\nWhat a strange world you live in, to get a chance to have a civil conversation with it.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_JEHANNE_5_CHA",
+    "english": "A halfling. One of many who lives in Norvik, especially after the Golden Line.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_JEHANNE_10",
+    "english": "She is a hard worker, one of few talents but much heartiness. Support her in her struggle against capital.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_JEHANNE_15",
+    "english": "A boot. That is what she rages against. Not in the activist sense, but in the sense of an ever changing daily grueling toil. Our work never ends.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_JEHANNE_20",
+    "english": "She would prefer to not be engaged in all this messiness. Alas, how else will she keep her wage up? How else will she survive in a world where food gets more expensive while the point of Material Break comes closer by the hour?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_KRAAID_5_CON",
+    "english": "A mad flesh-eating Beast of Jor from the swamps of Hae'Xi. Why he hasn't eaten you yet, you do not know.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_KRAAID_10",
+    "english": "A masterful chef. His passion is cooking. Fried, stewed, pickled, boiled. Kraaid knows all - and his palette is expansive. You included.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_KRAAID_15",
+    "english": "His restrain is not from etiquette nor kindness. This is a monster, spawned from generations of hunters infected, inflicted, by the RED MIST of the Tree of the Spiral - HAGS. HAGS MADE HIM. HE IS BIRTHED FROM EVIL.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_KRAAID_20",
+    "english": "Despite his nature, above all he follows his instinct. Currently, it speaks: FOLLOW THE WIZARD. IT WILL GRANT PASSAGE TO GREATER HUNTS. Those rumblings... they keep your flesh from being CONSUMED.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_KULL_5_CON",
+    "english": "It is an elf.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_KULL_10",
+    "english": "An elf of Illym. His eyes are dark with the knowledge of your doing.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_KULL_15",
+    "english": "This Illym servant, this spy, this Warden of Outreach - he is but a tendril of his masters. But not so efficient nor successfully scheming as you might imagine. No, they are nowhere near the might of their peak. Illym is dead. This is an avatar of her decaying corpse.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_KULL_20",
+    "english": "He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie. He will lie.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_LISA_5_WIS",
+    "english": "Birthed through the evil means of esoteric reproduction, this- this is a hag.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_LISA_10",
+    "english": "A hagling in fact. Not quite so horrible and foul as a true hag, but that is not always a betterment. If anything, they might even end up in more positions of power due to their nature not being so completely evil.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_LISA_15",
+    "english": "This one has lived a wild life. You can see it in her eyes- the years spent in service. The dream of a greater life. The bodies left in her wake. This hagling has nothing but a desperate love for life and freedom at this point. Let her have it.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_LISA_20",
+    "english": "She is afraid. Deathly afraid- scared her new life is being ruined by circumstance. She hides it well, but you know it. She would destroy you if she had to. To protect her freelancing career.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MASKED_5_CON",
+    "english": "Uh oh.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MASKED_10",
+    "english": "Dread.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MASKED_15",
+    "english": "With death on the line, the dagger is meant for your heart.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MASKED_20",
+    "english": "What do you think she wants? The thing in the pipes is listening. The foolish thing. Its mistake will lead you down many frays. Care for your step.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MERI_5_DEX",
+    "english": "A true Freestrider!",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MERI_10",
+    "english": "He's famous. Known along any metropolitan square, mansion, and/or ballroom across the Coast. The type of guy who's leveraged the changing world, and its new popularized technology, to gain a hell of a lot of staying power.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MERI_15",
+    "english": "But he's also old money. That certainly didn't hurt. So not as impressive as the scrappy underdog story would have you believe, but still pretty impressive. Honestly, for a blue-blood with Arcanist-ties to even survive the revolution is a feat of its own- but to flourish? That's true talent.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MERI_20",
+    "english": "His smile is wide. His mouth never stops its fellating of the new age. That is where his interest lies- his betting and investment of the Age of Crowds. But populism has its weakness. The main one being, you gotta stay close to the people. Meriadoc seems to keep that knowledge close to heart.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MISKA_5_WIS",
+    "english": "Something is very wrong.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MISKA_10",
+    "english": "Her eyes are striking. Striking your SOUL. Hold on to that feeling or you will be consumed.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MISKA_15",
+    "english": "She wields power you could only dream of. Yet her actions betray her nature. Evil? Good? Is selfishness for one's own tribe the defining trait?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MISKA_20",
+    "english": "This creature is no goblin. Though her desire lies heavily invested within this tribe, she is far older, and far more dangerous than all these servants of hers combined.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MISKA_25",
+    "english": "She knows well the flames of Esuth. <i>Why is she here?</i>",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MISKA_30",
+    "english": "You see through her. Her goals. Her scheme. Is it so simple? Does she simply... love them?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MODISSA_5_WIS",
+    "english": "A girl on a mission. She's out to fight for the green, no matter the battle.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MODISSA_10",
+    "english": "Her brash exterior is no fakery. It is her heart worn on each of her sleeves.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MODISSA_15",
+    "english": "Responsibility. That is the weight she feels weighing upon her shoulders. Modissa does not see herself, her EGO, as having any greater meaning. Rather, that meaning has been transposed from others. Her mentor. Her friends. But most importantly, her ideology.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MODISSA_23",
+    "english": "She does not believe in Azgalism. Not truly. For she happens to be one of those people who does not see any rules upon the urban sprawl and cultural battlefields as worthy of respect. She does not believe anything can be pinned down into an ideology. That belief itself, that is her true ideology. Even if she does not know it yet.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MOONGORE_5_STR",
+    "english": "A brute, a beast, and a warrior. She could break you easily.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MOONGORE_10",
+    "english": "Loyalty is a fickle thing. Hers lies with the Halfways, for sake of coin and shelter. But also something else, something more ethereal.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MOONGORE_15",
+    "english": "Ogres. Hobgoblins. Ettins. Trolls. The bugbear stands among them all as the chargers of the Askanii wilds. You have heard of their kind finding a place within civilized society, as mercenaries and guards. Moongore is a cliche.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_MOONGORE_20",
+    "english": "What else is there to her? She loves violence. She loves power. She craves the thrill. This is a toxic woman through and through. \n\n...Perhaps you should get to know her better.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NEARLY_5_WIS",
+    "english": "Another goblin. This one is looking to escape.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NEARLY_10",
+    "english": "She works hard. But only in ways that improve her craft, her passion.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NEARLY_15",
+    "english": "She does not care for politics or the world at large. Yet she tries to uphold a sense of understanding in order to further her art.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NEARLY_20",
+    "english": "The goblin plays for herself. She seeks not glory, only to support herself with her craft. It seems to not have gone too well so far.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NESSAN_5_WIS",
+    "english": "Unbothered. Moisturized. Happy. In her lane.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NESSAN_10",
+    "english": "She is focused on her work. But she does not seek strife. She will help you, if you do not pose a threat.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NESSAN_15",
+    "english": "Her knowledge goes deep, far below the city. Learn from her, and her loneliness.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NESSAN_20",
+    "english": "This elf is seeking an escape. Why else be *here*, of all places? Her matriarch. Yes. This woman is in trouble. Just like you.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OLZIS_5_WIS",
+    "english": "Thousands of years, spent guarding a hole in reality. Remember: her perception is beyond your ability to conceive. For her, a day is a fleeting moment. Unless you make it memorable.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OLZIS_10",
+    "english": "A gynosphinx giving out riddles. A woman searching for something - anything - even remotely interesting about these scurrying mortals. Why else allow them into her lair like this?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OLZIS_15",
+    "english": "She is not being exploited. Whatever deal she struck with the tavernkeep, this Beast of Jor could break it at any moment. None of them hold any power over her. Yet she cannot leave.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OLZIS_20",
+    "english": "Resentment. Anyone sane, with even a sliver of mortal understanding, would feel resentment after being stuck in one spot for millennia. Olzis, this o-so powerful creature, feels a hint of resentment towards her masters. Perhaps that is why she entertains this fleeting moment.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OST_5_DEX",
+    "english": "This one is quite hostile. Stay on your feet!",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OST_10",
+    "english": "His expressionless eyes seem to keep watch at all times. He's obviously determining where to strike for you to die as quickly as possible. How humane.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OST_15",
+    "english": "Usually kobolds are only dangerous in large numbers. This one appears extremely deadly on his own. Beware.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OST_20",
+    "english": "There's something deeper in his connection to his master. This kobold holds the pale man as a 'highest possible value'. Literally his personal god.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OYU_5_DEX",
+    "english": "A skilled merchant. Businesswoman. Halfling entrepreneur. Man, you could learn a shit-ton from someone like her.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OYU_10",
+    "english": "Her goods are procured from all over the Coast. Her goal: the journey itself. And, of course, to herald the power of Capital. She's damn good at it.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OYU_15",
+    "english": "Kargamesh is on the other side of the world. It's an opposite to Askani - a mirror. In their dry we have wet. In their warm we have cold. She'll gladly tell you all about it- on a surface level. She's not here to make friends, not really. Or at least not yet.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_OYU_20",
+    "english": "Ah. She's not too happy about the current climate. Travel through Divinii Torum and Ym? Not feasible at the moment. Trade? Stiff and regulated. Airships? Few and far between. This decade has been a slow descent into a world of monopolies and corruption, if you ask her. \n\nShe might end up staying in this city of yours for longer than she ever imagined.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_PINJA_5_WIS",
+    "english": "Strange, there's something not quite...",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_PINJA_10",
+    "english": "...right about this elf on the corner of the fortress. Her...",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_PINJA_15",
+    "english": "...presence appears not vivid enough for you to...",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_PINJA_20",
+    "english": "...even accept her as real. Elven magic? Feminine mystique? Or something else?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_PINJA_25",
+    "english": "Ah. Of course. She's not really here. The thought sends a shiver down your spine.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_RAZZ_5_CHA",
+    "english": "He wants to kill you.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_RAZZ_10",
+    "english": "This is a massive, unregulated, confident, and highly problematic goblin supremacist. He will not debate you on it, he doesn't even see you as worthy of being alive.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_RAZZ_15",
+    "english": "A focused killer. His body count must be in the hundreds. The type of man who wishes for nothing but the destruction of humanity- the Urthfolk especially, and the downfall of this invading species upon the shores of Askanii.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_RAZZ_20",
+    "english": "The more you stare into those deranged eyes of his, the more you understand- he is not full of hatred from some idealistic vision of the future. He does not view the future of Askanii as a goblin paradise. All he wants - entirely due to some personal vendetta fueled by sociopathy - is to erase humans from existence. <i>Gulp</i>.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_RIX_5_DEX",
+    "english": "Money, money, money! This is what you get when the pragmatism of devilhood mixes with the dexterity of human-ish fingers. A mint-making, crown-conscientious, capital-creator of the highest class!",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_RIX_10",
+    "english": "Entrepreneurship is about disruption. It's about seeing through the common clay and figuring out the hacks of reality. It's like magic, really. Except it works on scale.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_RIX_15",
+    "english": "This woman has found several holes in the city's purse. Over the years she's run factories, founded startups, dealt with city corporations, guild deals, and now she's a tavern proprietor. A highly accomplished woman, the type to flourish in the Freestrider future.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_RIX_20",
+    "english": "Her backstory aside, this tiefling finds meaning in the crowns. In capital. The power and respect she finds in this new world is everything she did not have as a child. Here, she is the boss, and in full control - until she isn't.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ROLLO_5_STR",
+    "english": "The next generation! A late-stage teenager representing all young men among the Urthfolk.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ROLLO_10",
+    "english": "Statistically, it could be worrying. If all young men today feel as lost (and unemployed) as this one, then everything must be going to shit. At least he's politically active!",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ROLLO_15",
+    "english": "That might also be a worrying detail. Young men with little to lose and everything to gain are,  historically speaking, a common driving force behind world-changing conflicts. If the old guard Nationalists do not represent them- if Freestriderism does not support them- if Azgalism is way too... progressive- then what <i>frays</i> will these rumblings lead us along?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_ROLLO_20",
+    "english": "As with all things, it is <i>ECONOMY</i> which steers the masses. The flow of CAPITAL, as you have read so much about. These boys might rage against the world if they wish, yet if they each held a role in society which paid them well and granted them satisfaction, then all that rage would subside.\n\nThey simply require a new ideology. One which supports their economic interests, and nothing else.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SHEN_8_INT",
+    "english": "An immigrant of Divinii Torum. An owlfolk. An expert on all things BOOK. He has brought his expertise to your city, and for this you should feel grateful. This is the perfect example of why this new Era is so very, very wonderful.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SHEN_14",
+    "english": "If you ever feel discontent about his behavior, remember: this is a person. He is not a representative of his entire people. Just as there are humans who are rude and boisterous and egotistical, there are owlfolk of the same cloth. All folk are different. All folk are the same.\n\nThis figure is a bit eccentric. Do not let that darken your vision of all other bewinged brother and sisters across the Coast.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SIMII_5_CHA",
+    "english": "A devoted Azgal. Gives everything he has to support the cause.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SIMII_10",
+    "english": "A second son kind of person. Lives in the shadows of greater men.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SIMII_15",
+    "english": "Follows the Azgal way not due to choice, but due to indoctrination and tradition. He wants to live up to someone. His father? A patriarch?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SIMII_20",
+    "english": "Simii, the right hand man of Alfoz, wants to be his own man but simply cannot. Not just his own skin, but those who depend on him and his eternal devotion as well.\n\nIt's painfully difficult to dislike him.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SMARTER_5_INT",
+    "english": "Not so much.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SMARTER_10",
+    "english": "A crazed kleptomaniac of a goblin. He needs help. Professional help.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SMARTER_15",
+    "english": "Be careful with him. This is not a typical example of a goblin. This is an extreme. A stereotype. A fable.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SMARTER_20",
+    "english": "It's on a level where you seriously consider whether this foolish goblin is possessed by some spirit, some divine spark of a trickster god. But the kind of god that would trick his avatar into becoming the useless thief you could possibly imagine.\n\nStranger things have happened.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNELL_5_DEX",
+    "english": "This goblin gets shit done. No matter the odds.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNELL_10",
+    "english": "Highly competent, but with a craving of validation. Just look at the way he dresses himself!",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNELL_15",
+    "english": "He doesn't work for himself, or any ideal. This goblin devotes his life for his 'lady', no different from a religious nut.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNELL_20",
+    "english": "A lone wolf. Cares too much, won't let anyone close. Old trauma? Got rejected? Family trouble? Who knows.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNELL_25",
+    "english": "Huh. Alright, so- it's not really a tragic backstory, but you get it now. He's a <i>yearner</i>. The type to hopelessly throw himself into his work for the sake of some greater good. An idealist. A <i>romantic</i>. In the most goblin sense of the word.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNELL_30",
+    "english": "Self-sacrificing. Dreaming. There's a twinkle in his eyes you catch sometimes. A String attached to a destiny, one with few frays. Maybe you could trust him. Maybe he could be a... you know.\n\n<i>A friend.</i>",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNURRE_5_INT",
+    "english": "A scholar of the Fordnip Commonwealth. A man working out of hole in the wall.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNURRE_10",
+    "english": "This is the type of man who knows exactly where he is going, and is simply going there very slowly and deliberately. He knows his expertise. His moves are calculated. His journey long.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNURRE_15",
+    "english": "The esoteric is closely tied with scholarly arts. In the old days no distinction between the two was made. But today, in this modern world, his side is all but winning.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_SNURRE_20",
+    "english": "You have spent quite some time reading up on his art. It is interesting. Research is the first step to grounded spellcasting after all. But beyond this facade as a dispenser of knowledge, this halfling is also searching for answers to his own questions - namely, what is the nature of power? Politics? The Golden Line?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_STEN_5_CON",
+    "english": "A boy named after the dwarven word for 'rock'.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_STEN_10",
+    "english": "He likes his friends. They're his only friends.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_STEN_15",
+    "english": "He does have some semblance of opinions around life and love and this city. Yet they are not formulated, nor is he verbose enough to express them properly.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_STEN_20",
+    "english": "He is happy to be here. Truly. This boy is probably the happiest man you have ever met in your entire life.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_THAL_5_WIS",
+    "english": "Oppressive?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_THAL_10",
+    "english": "He is a good landlord. He takes care of his tenants. He makes sure there is a decent amount of service being done, maintenance, safety checkups. He is nowhere near the worst landlord in Tolstad alone.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_THAL_15",
+    "english": "Yet he holds the key to shelter, one of the pillars in the hierarchy of needs. There is something inherently oppressive about playing into the system. To profit within it, to a senseless degree.\n\nIt is unearned wealth.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_THAL_20",
+    "english": "Yet he is but a person in the system. Should we limit a private citizen's ability to leverage his investments for profits? Should the free market dictate how and where folk get to live? Is this merman a bad person for playing his hand in a world built upon the whims of Capital? You do not know. But everyone has an opinion.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_TOLI_5_CHA",
+    "english": "He's the silent type.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_TOLI_10",
+    "english": "He thinks before he speaks. He also thinks he's very cool because of this behavior.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_TOLI_15",
+    "english": "There's an air of superiority in his body language, in his speech, in his <i>tone</i>. He thinks he's above it all. Even his friends. Hopefully he'll stop thinking such things before it bites him in the ass.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_TOLI_20",
+    "english": "Hm. No, he won't. In the direst of times, this kid will be the first one to lean upon his brothers. He's learned to eat that EGO of his when he has to. That's good. A man is made by the toil of his peers. Nothing more, nothing less.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_URTH_5_STR",
+    "english": "A cobbler.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_URTH_10",
+    "english": "There's a sadness in his voice. The type born from years of watching your children go astray.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_URTH_15",
+    "english": "You do not believe what he is showing you. Yet you do not wish to even entertain the thought of dismissing the image of his kind smile.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_URTH_20",
+    "english": "You will serve him until the day you die.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NISSE_5_DEX",
+    "english": "This is a shitty kid. But kind of fun, too.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NISSE_10",
+    "english": "If he was your peer growing up, he'd be one of those fucking bullies. That's not really a massive negative on his part- pretty much every well-adjusted kid bullied you.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NISSE_15",
+    "english": "But he's got some conscience growing inside that skull of his. If he is surrounded by good men, he will turn out fine. If he is surrounded by evil, that is what his life will build.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_NISSE_20",
+    "english": "He has talent. Not like yours, gods no, but talent nonetheless. You need to push him towards clericship. Or at the very least some type of path of wizardry. Without it, he will surely end up hurting someone. With it, he might still hurt people, but only in the name of the law.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_VIIRA_5_STR",
+    "english": "A traveller. She is not settled here.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_VIIRA_10",
+    "english": "Her belief is weak. She does not use it. Her religion is power.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_VIIRA_15",
+    "english": "Is she evil? No. Perhaps an arbitrary arm of an institution, but no mere puppet.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_VIIRA_20",
+    "english": "Nothing you can say will sway her. She will play you until the end.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_VISKEN_5_INT",
+    "english": "The pale man handles corpses in a basement. A typical self-employed city contractor.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_VISKEN_10",
+    "english": "You remember hearing about this man. He used to be a dentist and a surgeon.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_VISKEN_15",
+    "english": "His study into the magical realm is immense. Far beyond your capabilities. Some of these texts he surrounds himself with would suggest he can cast fifth or even sixth level spells. Couldn't be higher, could it?",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_VISKEN_20",
+    "english": "This is an ancient man. One forgotten. Misplaced in time. You may learn much from him, if you stay in his good graces.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_XERBA_5_CON",
+    "english": "A girl born from an Azgalist wave, in an Azgal household, come from a fallen Azgal state.\n\nShe is an Azgalist.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_XERBA_10",
+    "english": "Dangerously shy. She needs good friends and better mentors. That is not you, by the way.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_XERBA_15",
+    "english": "She has a bright future ahead of her, no matter the path she ends up pushed along into. Alas, her agency is nowhere to be found. Not that she is looking for it.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "IP_XERBA_20",
+    "english": "This is what their movement needs. All movements. A shy and terrified witness who will, at each turn, ask everyone around her to rethink their rash decisions. \n\nExtremely annoying. But nonetheless... very, very good for society.",
+    "german": "",
+    "table": "table_0",
+    "source": "resources.assets",
+    "csv_offset": 3015412
+  },
+  {
+    "id": "JOURNAL_1",
+    "english": "...",
+    "german": "",
+    "table": "journaltexts",
+    "source": "resources.assets",
+    "csv_offset": 3180596
+  },
+  {
+    "id": "JOURNAL_2",
+    "english": "...",
+    "german": "",
+    "table": "journaltexts",
+    "source": "resources.assets",
+    "csv_offset": 3180596
+  },
+  {
+    "id": "LL_1",
+    "english": "Lower Lair",
+    "german": "Popup text here.",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_2",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_3",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_4",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_5",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_6",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_7",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_8",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_9",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_10",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "LL_11",
+    "english": "Lower Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "VL_1",
+    "english": "Visken's Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "VL_2",
+    "english": "Visken's Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "VL_3",
+    "english": "Visken's Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "VL_4",
+    "english": "Visken's Lair",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3180672
+  },
+  {
+    "id": "UI_1",
+    "english": "New Game",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "UI_2",
+    "english": "Load",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "UI_3",
+    "english": "Options",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "UI_4",
+    "english": "Credits",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "UI_5",
+    "english": "Exit",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "UI_6",
+    "english": "",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "UI_7",
+    "english": "",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "UI_8",
+    "english": "",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_1_1",
+    "english": "The Cleric is dead.",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_1_2",
+    "english": "Alas, this String will be discarded.",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_1_3",
+    "english": "But you can see another, can you not?",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_2_1",
+    "english": "The Cleric has ceased to be.",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_2_2",
+    "english": "That happens when you run out of 'health'.",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_2_3",
+    "english": "Try to stay intact next time, eh?",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_3_1",
+    "english": "The Cleric has passed away.",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_3_2",
+    "english": "This is very sad.",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_3_3",
+    "english": "Next, might I suggest avoiding danger?",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_4_1",
+    "english": "The Cleric is no more.",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_4_2",
+    "english": "But this feels... off.",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Death_4_3",
+    "english": "Wouldn't you agree?",
+    "german": "",
+    "table": "uielements",
+    "source": "resources.assets",
+    "csv_offset": 3184964
+  },
+  {
+    "id": "Spell_1_1",
+    "english": "SPELLNAME",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3185620
+  },
+  {
+    "id": "Spell_1_2",
+    "english": "SPELL DESC",
+    "german": "",
+    "table": "popups",
+    "source": "resources.assets",
+    "csv_offset": 3185620
+  },
+  {
+    "id": "Item_1_1",
+    "english": "ItemName",
+    "german": "",
+    "table": "itemtexts",
+    "source": "resources.assets",
+    "csv_offset": 3185780
+  },
+  {
+    "id": "Item_1_2",
+    "english": "Item descriptions here.",
+    "german": "",
+    "table": "itemtexts",
+    "source": "resources.assets",
+    "csv_offset": 3185780
+  },
+  {
+    "id": "FEAT_LONE_STR",
+    "english": "Lone Cleric - At the start of your Short Rest, heal an additional amount equal to the levels of exhaustion you have.",
+    "german": "...",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_MEMORIZER_INT",
+    "english": "Master Memorizer - During your Short Rest, you restore two random spell slots instead of one.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_COMPANY_CHA",
+    "english": "Friendly Company - During Short Rests, always roll Hit Die with advantage. Snell also gains an extra proficiency in his initiative rolls.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_PARANOIA_DEX",
+    "english": "Infectious Paranoia - Advantage on initiative rolls.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_SURVIVAL_CON",
+    "english": "Survival of the Fittest - Advantage on Death Saving Throws.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_EYE_CHA",
+    "english": "Reading the Room - Advantage on behold checks.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_LUCK_CHA",
+    "english": "Luck of the Fool - Whenever you roll a natural 1, reroll the d20 and take 1d4 damage. If the new result is also a natural 1, repeat this processes. This damage cannot take you below 1 HP.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_MUSH_DEX",
+    "english": "Dungeoneering Reflexes - Whenever you roll 10 or below, add an extra proficiency to the roll.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_PROF_STR",
+    "english": "Professional Cleric - You cannot critically fail. (When you roll a natural 1, it is not treated as an automatic failure.)",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_BALANCE_INT",
+    "english": "Curved, Yet Balanced Bell - Whenever any d20 is rolled, the Strings of Jor causes the outcome to lean towards 10. The chance of critical rolls are diminished.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_BELLY_CON",
+    "english": "Dark Belly of the Soul - Resistance to all damage when below 50% HP.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_HJARTA_WIS",
+    "english": "Hjârtat Mitt - Each level of exhaustion grants +1 to each d20 roll instead of -1.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_MAN_STR",
+    "english": "A Good Man - Whenever you survive a death saving throw, you get back up with 1d20 HP.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_FRAGILE_DEX",
+    "english": "Fragile Immortality - Do not roll Death Saving Throws. Whenever you are above 1 HP and take damage that would take you to 0, you go to 1. If you take any damage at 1, you die.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_DREAM_INT",
+    "english": "Imperial Dream - While speaking with someone with less intelligence than yourself, gain an extra proficiency on all d20 rolls.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_LIE_CHA",
+    "english": "Beautiful Lie - While you are at full health and 0 exhaustion, gain advantage on all Charisma d20 rolls.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_NAT_STR",
+    "english": "Nationalist - Extra proficiency in rolls when speaking with humans.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_FRE_DEX",
+    "english": "Freestrider - Gain a 10% additional discount in all purchases.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_AZG_WIS",
+    "english": "Azgalist - Whenever you take damage, move one step forward on a secret three step counter. On step one, a 'thesis' d20 die is thrown. On step two, if the damage you took is higher than the 'thesis' die, an 'antithesis' d4 die is thrown. On step three, the damage you took is lowered either by 1, or by the 'antithesis' die if that die was rolled during step two. This is 'synthesis', somehow. The next time you take damage, return to step one.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_ARC_INT",
+    "english": "Arcanist - When you use up your last spell slot of any level, you roll a 1d100. If the result is lower than your natural intelligence, you regain that spell slot.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_AGR_CON",
+    "english": "Agrarian - Whenever you pick up food, you roll 1d20. If you get 16 or higher, you get an additional food item.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_APO_CHA",
+    "english": "Apolitical - Increases proficiency in rolls by 1. This amount is increased to 10 on any election day.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_MONEY_DEX",
+    "english": "Money Talks - Get 50% extra money on pickup.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_SPIRIT_WIS",
+    "english": "Azgalian Spirit - Restore 1 Hit Point every hour that passes.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_FEMI_WIS",
+    "english": "Lady Fair - Extra proficiency in rolls when speaking with feminine characters.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_MASC_STR",
+    "english": "Future Patriarch - Extra proficiency in rolls when speaking with masculine characters.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_PRINT_INT",
+    "english": "Mass Media Propaganda - Alters ability score modifiers on equipped texts. Positive modifiers get +1 and negative modifiers get -1.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_UNITY_WIS",
+    "english": "Human-Dwarf Unity - While you are at full health, whenever you take damage, those dice are rolled with disadvantage.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_ENDURE_CON",
+    "english": "Azgalian Endurance - For every 3 hours spent being exhausted, you lose 1 level of exhaustion.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_DEFEND_STR",
+    "english": "Defend the City - Alters ability score modifiers on equipped helms. Positive modifiers get +1 and negative modifiers get -1.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_TRUE_DEX",
+    "english": "True Norvikian - Roll initiative with Strength, if it is higher than your Dexterity.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_MIGHT_CON",
+    "english": "Leviathan Apparatus - Enemies always roll initiative with disadvantage.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_FORCE_STR",
+    "english": "Unstoppable Force - Alters ability score modifiers on equipped weapons. Positive modifiers get +1 and negative modifiers get -1.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_HAND_DEX",
+    "english": "Invisible Hand - Advantage on all trifle checks.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_OBJECT_CHA",
+    "english": "Immovable Object - Your Dexterity modifier also adds to your haggle discount in shops, stacking with Charisma.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_VOICE_STR",
+    "english": "Voice of God - Whenever you roll a d20, another hidden d20 is rolled. If that die is the same as your die, you critically succeed. If both are natural twenties, you regain all your hit points, you regain all your spent spell slots, you lose all levels of exhaustion, and you become genuinely happy for 1d4 seconds.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_STRING_INT",
+    "english": "Stringmaster - For each level of spell slot you have, you gain one additional maximum spell slot.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_PATRON_CHA",
+    "english": "Communing Patron - If you take damage that would cause you to go to 0, a mysterious force protects you. If this happens, you take no damage, and lose one 1st level spellslot. If you do not have any 1st level spell slots, this does not happen.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_LICH_INT",
+    "english": "Almost Lichdom - Inspired by your favorite pale man, you no longer gain health from healing. You also become invulnerable to all forms of damage. Whenever you take damage of any kind, you always gain one level of exhaustion. Whenever you heal more than 6 HP from any one source, you lose one level of exhaustion.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_NEURO_WIS",
+    "english": "Esoteric Neuroticism - When you do not have any SHARDS OF JOR, you can spend hit points to unlock dialog options instead. The cost begins at 1 HP, and is doubled each time you use it. The cost resets on a long rest.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_BLOOD_CON",
+    "english": "Blood Magic - When you run out of spell slots, you can cast spells with hit points instead. The cost begins at the spell slot level in HP and is multiplied by the amount of times you've activated this effect. The cost resets on a long rest.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_CLERIC_STR",
+    "english": "The Cleric - Your healing spells are increased by an extra proficiency. Your heals can also be increased by your Strength modifier instead of your Wisdom modifier, if it is higher.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_ROGUE_DEX",
+    "english": "Dick-Ass Rogue - The DC of trifle checks are lowered by an extra proficiency.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_WIZARD_INT",
+    "english": "God-Emperor Wizard - The amount of spells you can prepare is increased by an extra proficiency. Saving Throws made by targets are also rolled at disadvantage.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_BARB_CON",
+    "english": "Askanii Barbarian - Whenever you are at or below 25% HP, add an extra proficiency on all rolls.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_BARD_CHA",
+    "english": "Lore-Seeking Bard - Your Behold Checks are rolled with an extra proficiency. Additionally, DCs on flirt rolls are lowered by your proficiency.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_DRUID_WIS",
+    "english": "Friendly Local Druid - Extra proficiency in rolls when in natural habitats. This includes outside areas, overgrown areas, and caverns.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_LEYLINE_CHA",
+    "english": "Leyline Hook - Alters ability score modifiers on TRINKETS. Positive modifiers get +1 and negative modifiers get -1.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_MILL_CON",
+    "english": "Millennia Guardian - The effects from Potions are doubled. For Ability Score increases, this only affects the first potion of a kind you've ingested.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_TINGLE_WIS",
+    "english": "Positive Tingle - Healing spells are rolled with twice the normal amount of dice.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_SCRIBBLE_INT",
+    "english": "Scribble the Margins - Your cleric level is doubled when calculating the amount of spells you can prepare.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "FEAT_DEM_DEX",
+    "english": "Democratic Herald - You regain 1d4 hit points each time you ask someone what they are voting in the election.",
+    "german": "",
+    "table": "feats",
+    "source": "resources.assets",
+    "csv_offset": 3186192
+  },
+  {
+    "id": "Quest_1_1",
+    "english": "The Tea Shop that Blew Up",
+    "german": "...",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_2",
+    "english": "Your purpose on Tolstad is to investigate an exploded tea shop. Locate this establishment and gain entry.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_3",
+    "english": "The entrance to the tea shop has been shut by Coinlord Darrow. If you want to enter legally, you need his blessing.",
+    "german": "...",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_4",
+    "english": "You've managed to get inside the Tea Shop. Time to investigate!",
+    "german": "...",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_5",
+    "english": "Clue: You found a magic metal brooch in the ruins. It was half-melted. No normal fire could ever harm a magic item, even a minor one like this.",
+    "german": "...",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_6",
+    "english": "Clue: You found Kargameshian tea left in the ruined tea press. The state of the machine makes it clear someone was brewing at the time of the explosion.",
+    "german": "...",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_7",
+    "english": "Clue: The iron door to the back office was blown open after its hinges melted. That means the explosion surely originated from the central chamber, and that it was extremely hot.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_8",
+    "english": "Clue: You found a copy of The Undercommon, a magical magazine infamous for its indestructible paper.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_9",
+    "english": "You found a corpse underneath the rubble. The corpse of an elf. You need to report this to Lady Sageleaf.",
+    "german": "...",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_10",
+    "english": "You convinced Lady Sageleaf that you're an idiot, thus allowing you to not contradict the city's official statement. On election day, you should speak with the Coinlord. He will be happy.",
+    "german": "...",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_11",
+    "english": "You gave Lady Sageleaf what she needed - evidence to contradict the city's official statement. You've picked a side. The HBT will surely be in your favor now.",
+    "german": "...",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_1_12",
+    "english": "Now for the crucial part: finding the responsible party. Who brought this Necklace of Fireballs to Norvik? Who used it? And why? You have until the election to figure it out.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_2_1",
+    "english": "Dragon of Tolstad",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_2_2",
+    "english": "You're here on request of Lady Sageleaf, a goblin chieftain in Tolstad. Go see her, right away. She's in the Goblin Garden, at the southern tip of Tolstad.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_2_3",
+    "english": "You've spoken with Lady Miska Sageleaf and begun a joint operation with one of her pawns, a goblin named Snell. Let's hope he doesn't get in your way too much.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_3_1",
+    "english": "Coinlord's Meet",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_3_2",
+    "english": "You do not have permission to enter the Tea Shop. You need authorization from the Magistrate of Tolstad: Coinlord Darrow. You know his mansion can be found up the hill, on central Tolstad.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_3_3",
+    "english": "The Magistrate wants to have a meet with you. But he is busy during the day. His doors will be open when it gets dark.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_3_4",
+    "english": "You swore an oath to Coinlord Nicholas Darrow, in exchange for access to the tea shop. You serve your master well.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_3_5",
+    "english": "You refused to swear an oath to Coinlord Nicholas Darrow. He, in return, refused to give you access to the Tea Shop. You have to find another way in.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_3_6",
+    "english": "You managed to talk your way past the Coinlord, somehow. Now you've got access to the Tea Shop, and you didn't even have to agree to some sinister deal first. Nice!",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_3_7",
+    "english": "You missed your meeting with the Coinlord. Instead, you were given a message by the angel, Ettir.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_4_1",
+    "english": "Ruffled Feathers",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_4_2",
+    "english": "The owner of the tea shop is unaccounted for. Locate this bird-man and find out what he knows.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_4_3",
+    "english": "The owner left his tea shop right before the explosion. He was last seen heading below.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_4_4",
+    "english": "The owner of the tea shop was once drunkenly heard bragging about his secret escape plan: shipping himself in a crate to Reeds. You should check the warehouse on Waterlane View.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_4_5",
+    "english": "Drummer was hiding in a crate, set to be exported to Reeds. You found and interrogated him about his tea shop and his illegal smuggling operation. He told you there was a meeting planned between an information broker and a Freestrider right at the time of the explosion.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_4_6",
+    "english": "You let Drummer go, without taking his papers. Maybe he'll leave, or maybe he'll stay. Who knows?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_4_7",
+    "english": "You took Drummer's papers, making sure he won't leave the city too easily. Maybe he'll slip away anyway, or maybe he'll stick around. Who knows?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_1",
+    "english": "The Star Witness",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_2",
+    "english": "A 'Frank son of Frank' was seen on Pillar Road at the time of the explosion, but calmly walked downstairs afterwards. Locate and question this strange man dressed in yellow. Frank son of Frank is often used as a fake name by rich adventurers around the Coast.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_3",
+    "english": "A man dressed in yellow was seen by 'The Duck' in the City Below. This man passed by the entrance to the Crypt, heading into the Southern Caverns.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_4",
+    "english": "Arn, the kiosk kid, says a man in yellow was seen leaving the scene. He was heading down below. Also, he was interested in Freestrider-stuff...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_5",
+    "english": "Moongore spotted a man in yellow heading through the City Below. He went through the South Caves.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_6",
+    "english": "Kraaid had an encounter with a human in yellow, who was looking for a 'secret door' to 'further below'.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_7",
+    "english": "Viira explained that a famous revolutionary, who is probably this man in yellow, is visiting Norvik during the election. She does not know where he is.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_8",
+    "english": "You found Meriadoc Moonwatch at the lowest point of Jor's Pillar, and rescued him from the horrific troll.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_5_9",
+    "english": "Moments after the explosion, Meriadoc saw an invisible 'smoky man' rush across the Crossing and then 'enter' the Pillar of Jor. Due to his magical sight, he saw through the veil, and swears it must be a half-open Gate of Jor.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_1",
+    "english": "Gate of Jor",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_2",
+    "english": "An invisible, 'smoking' man was seen entering the Pillar of Jor, right after the explosion. Now you need to figure out a way to follow. Seek the aid of some ancient powerful being that can help you.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_3",
+    "english": "According to Visken you need to locate an Astral Projection spell scroll. If you do, he will cast it on you in order for you to enter the Pillar.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_4",
+    "english": "You found a Scroll of Astral Projection and gave it to Visken. If you call for him, he will help you enter the Pillar when it is time.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_5",
+    "english": "Olzis suggested that you locate an emerald gemstone. If you do, she will turn it into a <i>Key of Jor</i>.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_6",
+    "english": "You gave the sphinx a gemstone, and she channeled some intense ancient magic into it. Now you have a Key of Jor that will allow you to enter the Pillar, alone or not.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_7",
+    "english": "Ever-Glad offered to guide you into the Pillar, if you accept his job offer.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_8",
+    "english": "You accepted a job offer from the eldritch aberration, and in return he has given you a passphrase that will allow you to enter the Pillar, alone or not.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_9",
+    "english": "You entered the Pillar alone.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_10",
+    "english": "You entered the Pillar with Snell, but you seem to have lost him in the darkness.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_6_11",
+    "english": "You entered the Pillar with Snell and Ettir, but you seem to have lost them in the darkness.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_7_1",
+    "english": "Elven Connection",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_7_2",
+    "english": "You found an elven corpse under the tea shop rubble. It's been moved to the Lichhouse for safekeeping.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_7_3",
+    "english": "You used Speak with Dead on the dead elf. Some interesting information was collected. Now it's time to follow other leads. And maybe ask around...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_7_4",
+    "english": "Visken gave a post-mortem. The elf died from the fire, instantaneously.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_7_5",
+    "english": "Alfoz told you about his deal with Pinja. He claims to be innocent.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_7_6",
+    "english": "Viira explained their deal with the elven broker. Lisa, a contractor, was sent to handle it.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_7_7",
+    "english": "An Illym Warden appeared in the night. He explained how the dead elf was a traitor, and he 'apologized' for the inconvenience she caused. You should check on the corpse.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_7_8",
+    "english": "According to Visken, the elf's corpse was taken by her kin. Whoever found out about her did not want anyone in Norvik to investigate further.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_8_1",
+    "english": "A Freelance Hag",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_8_2",
+    "english": "There was a meeting planned in the tea shop on the day of the explosion - a meeting with a <i>hag</i>. Locate her, and find out what she knows.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_8_3",
+    "english": "The hag known as 'Lisa' is a freelance worker for the Freestriders on Waterlane. Viira claims she does not know her location.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_8_4",
+    "english": "You convinced Rixbiter to give you the password to her magic well, where the hag is supposed to hang out. It leads down to the City Below...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_8_5",
+    "english": "You found Lisa in the City Below. She claims to be innocent.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_8_6",
+    "english": "Lisa didn't know too much about Drummer's operation. She does not believe he blew up his own tea shop. She does not know who did.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_8_7",
+    "english": "The hag was a former friend of Pinja'Athena, and was supposed to meet with her on the day of the explosion. She claims the explosion occurred before she arrived.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_8_8",
+    "english": "The hag hid in the Below to avoid trouble after barely missing the explosion by accident. You can't arrest her either way, so it's time to look elsewhere.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_9_1",
+    "english": "Safe & Secure",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_9_2",
+    "english": "Drummer has a safe hidden in his office, in the back of the tea shop.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_9_3",
+    "english": "You got Drummer's safe open. Great job.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_10_1",
+    "english": "Strings of Divination",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_10_2",
+    "english": "Lisa wants you to prove your natural ability for divination magic. If you get her a 'maw pie' then she'll teach you a trick that could make it easier...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_10_3",
+    "english": "You managed to procure the rare 'maw pie'. This should make Lisa happy.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_10_4",
+    "english": "You proved your natural talents for divination. The hag is somewhat impressed, and you got a nice spell out of it.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_11_1",
+    "english": "Finish the Quest",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_11_2",
+    "english": "Talk with everyone you need to talk to. When you're done, head over to the ballot box with Snell. \n\nAfter so many Frays, isn't this a wonderful String to end on?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_11_3",
+    "english": "The coming days will be the most interesting days in the history of Norvik. Unfortunately for you, they'll be nothing but a flash. Depending on your choices you might end up in different positions here, at start of this ERA. But somehow, in your gut, you feel an ominous sense of reckoning. Will your EGO allow you to survive this new world?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_1",
+    "english": "Election Week",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_2",
+    "english": "The first ever election in Norvikian history will take place in just a few days' time. What will you vote for?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_3",
+    "english": "You've shown your preference for the Party of Norvik $NATIONALIST times in the last few days. A true Urthguard veteran!",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_4",
+    "english": "You've mentioned Freestrider talking points at least $FREESTRIDER times, as any modern man would.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_5",
+    "english": "You've talked about positive opinions on Azgalism about $AZGALIST times ever since waking up in the Lichhouse. Really brings you back.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_6",
+    "english": "Obviously, you're very clear about the fact that you should be the future god-wizard-king of Norvik. You've said so $ARCANIST times, in real conversations, with real people.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_7",
+    "english": "Politics isn't really for you. So you've said, $APOLITICAL times, whenever the topic comes up. Being apolitical sure is neat!",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_8",
+    "english": "<i>Agrarian</i>.\n\nIt's in your blood. Dirt, mostly. You've expelled some of it during conversations $AGRARIAN times.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_14_9",
+    "english": "Now you know. You're ready.\n\nReady for ELECTION DAY.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_45_1",
+    "english": "Democratization",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_45_2",
+    "english": "The city is changing. As are you. You have always been volatile in your political views, but now it's time to choose, for real.\n\nYou have unlocked the ability to ask people what they are voting for. A deep urge inside of you is calling: you need to ask. You MUST ask. Over and over again. At least twenty times. Okay, ten.\n\nYou have currently asked people $DEM times.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_45_3",
+    "english": "You have successfully spread the IDEA of democracy, simply by asking people what they are voting for. Everyone is now better off, thanks to your extremely helpful behavior.\n\nYou are a real hero.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_15_1",
+    "english": "Circle Square Conflict",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_15_2",
+    "english": "An orc and a bunch of dwarves are in a deadlock. The dwarves want to hold a rally and the orc is sent to stop them.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_15_3",
+    "english": "Alfoz says they have legal right to hold their rally.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_15_4",
+    "english": "Viira claims the dwarves' legal documents are expired.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_15_5",
+    "english": "Alfoz ended up punching you, after which the dwarves tactfully retreated. You should speak with Viira.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_15_6",
+    "english": "You convinced Alfoz to leave the (circle) square. You should speak with Viira.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_15_7",
+    "english": "You managed to get the Azgal dwarves to leave the Circle Square. But at what cost?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_16_1",
+    "english": "Young & Dumb",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_16_2",
+    "english": "You hear there's going to be trouble down on Waterlane this evening, on your first day on Tolstad. You should check it out.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_16_3",
+    "english": "Some girl was delivering an Azgal magazine on Upper Tolstad. She seemed out of place, and talked about going down to Waterlane this evening.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_16_4",
+    "english": "You found a note about a 'Norvikian Resistance' meeting up on Waterlane this evening. Uh oh.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_16_5",
+    "english": "You sided with Modissa and the Azgal Youth. They have a right to deliver their paper.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_16_6",
+    "english": "You sided with Rollo and the Norvikian Resistance. They are serving their city's best interest.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_16_7",
+    "english": "You managed to resolve the conflict between the Young Azgals and the Norvikian Resistance. Somewhat.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_1",
+    "english": "Copper Press Fever",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_2",
+    "english": "An Azgalist newspaper is being printed on Tolstad. You should find the location of this copper press and the name of the secret editor.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_3",
+    "english": "The paper is being printed in an apartment at Pillar Crossing. Highly illegal. You can either help them, or report them to the Freestriders.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_4",
+    "english": "Modissa needs more ink in order to print full coverage of their election issue. She asked you to find 'Quillwell Cartridges' inside the 'Guild Warehouse' on 'Waterlane'.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_5",
+    "english": "You entered the Guild Warehouse and collected a 'Quillwells' cartridge of ink. Time to get it back to Modissa.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_6",
+    "english": "You've convinced Modissa to tone down her article. The election issue will be a solid and normal Azgalist issue, focused on the election.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_7",
+    "english": "Modissa says she'll tone down her article. How she does it, and if, remains to be seen.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_8",
+    "english": "You've convinced Alfoz to sanction Modissa's article. The election issue will make a splash throughout the city, for good and bad.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_9",
+    "english": "The ink you gave Modissa will help them print even more copies of The Chant. Now they should have full coverage on their election issue.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_17_10",
+    "english": "You've reported the printer's location to Viira. They'll shut it down before the election issue can come out. Of course, the Azgalists won't know you're the one behind it...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_18_1",
+    "english": "Norvikian Resistance",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_18_2",
+    "english": "You've heard of a secret society of 'pure' Nationalists who gather in the Rollermill. They must be very powerful.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_18_3",
+    "english": "Rollo and his friends meet up in the Rollermill. They want you to steal a document from the Freestriders, on behalf of their secret contact within the Resistance.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_18_4",
+    "english": "The Askanii-Reeds Trade Co. has apparently signed a contract with the city for exclusive land rights of every port. Including the entirety of Waterlane. In exchange, the Freestriders have funded several of the Magistrate's personal businesses. If this came out, it would cause havoc.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_18_5",
+    "english": "You gave the documents to Rollo. How this will impact the city is left undecided.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_18_6",
+    "english": "You gave back the documents to the Agent Viira, letting her know about the plot against the Freestriders in the city.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_18_7",
+    "english": "You made the boys leave the Rollermill. They won't be holding their meetings here any longer.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_1",
+    "english": "Capital Dominion",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_2",
+    "english": "Since you're a friend of the AR Trading Co., Viira offered you a gig: hand out AEFAs (Askanii Economic Freestrider Accord) to local entrepreneurs.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_3",
+    "english": "You handed an AEFA to Visken.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_4",
+    "english": "You handed an AEFA to the Potion Seller.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_5",
+    "english": "You handed an AEFA to Rixbiter.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_6",
+    "english": "You handed an AEFA to the Book Binder.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_7",
+    "english": "You handed an AEFA to Thalassos.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_8",
+    "english": "You handed an AEFA to Oyu.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_9",
+    "english": "You had a lovely talk with the horrifying visage of the Golden Horde, Ambassador Ivcx.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_10",
+    "english": "Viira was happy with your performance in that tense conversation, and offers you a future within the AR Trading Co.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_11",
+    "english": "Viira was furious with your behavior, and promised retaliation in the future. The Freestriders are not your friends anymore.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_19_12",
+    "english": "You stood up to Ivcx, while reinforcing the Freestriders claim on Norvik. Viira is extremely happy with your performance, and promises you a grand future within the Revolution.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_21_1",
+    "english": "Milkurious",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_21_2",
+    "english": "Crown collection. Coin capture. Cash cidnapping. There are many ways to describe it.\n\n<b>Get rich. Or die trying.</b> The only way to do it is obviously to get this milk delivery gig. Try checking around Waterlane in the morning...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_21_3",
+    "english": "Ost gave you five bottles of milk to sell to random people. After the election he expects you to return with 10,000 crowns- his recoup on this wonderful scheme. \n\nClearly, this is the only way for you to get rich.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_21_4",
+    "english": "You refused to sell the milk. It was clearly a scam.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_21_5",
+    "english": "You did not manage to sell the five bottles of rotten milk for twenty thousand crowns. Ost was not shocked.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_21_6",
+    "english": "You gave Ost 10,000 crowns on election day. He was shocked.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_22_1",
+    "english": "Valkyrie",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_22_2",
+    "english": "Ettir, the angel working for Magistrate Darrow, is your roommate during this investigation. You find her elusive yet intriguing. Find out more by performing the most difficult of techniques: speaking with her.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_22_3",
+    "english": "You successfully got Ettir to open up to you. She is clearly a strange creature, living alone in a city that has no real place for her. She has offered to help you in your investigation, once you reach far below the city...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_22_4",
+    "english": "You met the angel in the City Below. Yet she will only join you once you've reached even further on your descent.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_22_5",
+    "english": "Ettir joins your party while you are exploring this lowest level beneath the city.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_23_1",
+    "english": "A Missing Paladin",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_23_2",
+    "english": "Lord Gorm of Norvik has gone missing. The legendary paladin is said to have disappeared far below the city... \n\n<b>Locate the Missing Paladin. It will make you a hero.</b>",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_23_3",
+    "english": "You located an official Paladin Sigil in the City Below. It appears high-ranking enough that it must have been Lord Gorm's. While you have not found a body, he is most likely lost to the dungeon.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_23_4",
+    "english": "You found Lord Gorm in the Beyond. But should you report this to Darrow? Only time will tell what the right choice is.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_24_1",
+    "english": "Golden Line",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_24_2",
+    "english": "There's a geopolitical conflict going on in the Clanlands. The homeland of Askanii-native halflings has been cut in half - by the so-called <i>Golden Line</i>. Celestials hold the west. Maybe you should find out more?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_24_3",
+    "english": "Jehanne has family fighting on the Golden Line. They are starving.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_24_4",
+    "english": "Snurre is a member of the Harefoot Clan, and is distant cousin with Carrot.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_24_5",
+    "english": "Oyu wants to support her kin in the Clanlands, as do many of Kargameshian descent.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_24_6",
+    "english": "Ivcx shared his knowledge of the Golden Line- how the truce will be upheld, and how the Horde is planning on taking over through more diplomatic means. But ultimately, the halflings will not be allowed autonomy.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_25_1",
+    "english": "Hammer & Zeal",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_25_2",
+    "english": "Rollo believes the information gathered from the Freestriders should be shared with the Azgals. He wants you to invite Modissa to a meeting.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_25_3",
+    "english": "Modissa has accepted the invitation, and will show up at the rollermill with her squad. Get ready for a mess.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_25_4",
+    "english": "Modissa and Rollo had a chat about the Freestrider contract. She is going to print an exposé in the election day issue of the Chant, then the other papers will get copies of the documents.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_25_5",
+    "english": "Modissa and Rollo had a chat about the Freestrider contract. Together they will send out copies of the documents to all the major newspapers in the city.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_30_1",
+    "english": "Esoteric Ebb",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_30_2",
+    "english": "There's a rhythm to Jor's Realm, and you heard his voice. Find it at his closest Pillar. It reaches deep - investigate it on every level.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_30_3",
+    "english": "You meditated with the Pillar of Jor, on Pillar Street.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_30_4",
+    "english": "You spoke with the whispers on Pillar Crossing. They are ominous to say the least.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_30_5",
+    "english": "You felt a connection with the voices inside the Pillar, down in the City Below. You saw something that shook you.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_30_6",
+    "english": "You investigated the bottom of the Pillar of Jor, as it disappears into the lush mounds of the Undersea Path.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_30_7",
+    "english": "Despite its dormant nature, this Pillar of Jor is highly active inside. The souls of the dead flow through it. You hear them. \n\nFor now, that is all you will learn.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_31_1",
+    "english": "River Take Ye",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_31_2",
+    "english": "You were brought to the lichhouse by some fishermen. But how did you survive your plunge into the river?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_31_3",
+    "english": "The merman Thalassos was the one who rescued you from the river. But he says you were dead when he dropped you off at the Lichhouse.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_31_4",
+    "english": "You found the exact spot you fell into the river. The bike rack! Someone must have pushed you in.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_31_5",
+    "english": "Visken was the one who brought you back - on behalf of Lady Sageleaf. But why?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_31_6",
+    "english": "Lady Sageleaf heard of your demise and hired Visken to bring you back. Only because she did not want to wait for another cleric. Wow.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_31_7",
+    "english": "It was the teenage girl, Freydis. She killed you. And she found it very annoying that you came back from the dead. \n\nThe whole ordeal is honestly highly embarrassing.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_1",
+    "english": "Lichhouse Blues",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_2",
+    "english": "The pale man called Visken is very suspicious. Find out what's going on in his lichhouse.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_3",
+    "english": "The kobold security guard does milk runs to earn extra cash. But why?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_4",
+    "english": "That dark knight appears to have some connection to Visken. He is very scary.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_5",
+    "english": "The mercenary Razz clearly works for Visken. Somehow.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_6",
+    "english": "The horrific crocolisk Kraaid seems to be working for Visken in some capacity. The pale man must be a strange fellow to have such friends...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_7",
+    "english": "You found out Visken is a powerful undead sorcerer. A <i>LICH</i>. But what can you do about it?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_8",
+    "english": "You've found several of Visken's 'Helpers' across Tolstad. And the pale man himself must be some type of evil mastermind. You must investigate further- and you have been given a hint: visit the lichhouse after midnight. <i>Alone</i>. It might end up rough, so make sure to prepare.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_32_9",
+    "english": "You found Visken and his pawns having a little party at the lichhouse- and he offered you a dark bargain.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_33_1",
+    "english": "Cult Hit",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_33_2",
+    "english": "An assassin came for your life. You survived, but the attacker got away. With no clues to go on other than an esoteric mask, you must be ready for them to return at any time.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_33_3",
+    "english": "Walking alone at night, a masked assassin came for you. Whoever it was, it sure looks culty. Since they were clearly waiting until you were alone, this is absolutely someone trying to kill you in particular.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_33_4",
+    "english": "You ran into the assassin in the City Below. The masked attacker seems to have been guarding a specific secret path, leading far down...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_33_5",
+    "english": "You tracked down the assassin all the way to the Old Prison, far beneath the city. The attacker turned out to be Freydis, the daughter of Coinlord Darrow. So you had no choice but to let her go. Now to meet her patron...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_33_6",
+    "english": "Delving ever deeper, you encountered a Trifler in his lair. You had a chat with him, and it appears he was the one behind the attacks- but that it's all water under the bridge now.\n\nWhat are you going to do? Arrest it?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_1",
+    "english": "Class Conflict",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_2",
+    "english": "You're very opinionated. Now it's time to choose a path.\n\n<i>Cleric. Rogue. Wizard.</i> Or something else?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_3",
+    "english": "You've declared yourself <b>The Cleric</b> of Norvik $CLERIC times. It's a grand title, suitable for a true human cleric like yourself.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_4",
+    "english": "You have made it clear $ROGUE times now - you're a dick-ass rogue! And nobody can stop you from being the coolest sneaker on Tolstad.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_5",
+    "english": "As of now, you have said, $WIZARD times, that you are a wizard. Which you are. Despite the getup, your true talent lies within the Arcane. Obviously.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_6",
+    "english": "After showing your Primal attunement, you're now ready to call yourself an aspiring Druid. Time will tell if this path is in any way interesting to you... by telling folk about it, $DRUID_Choice times.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_7",
+    "english": "You've declared yourself to be a Bard. A dancing bard, supposedly. Considering your track record, you might just end up turning this into a legitimate side-thing. So far, you've told people $BARD_Choice times.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_8",
+    "english": "You survived eating the Slogdog, thus learning the ways of the primal warrior. One filled with rage and unprocessed meats. Hence, you're basically already a Barbarian of Askanii. Congratulations. You've spread the word about it, $BARB_Choice times.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_34_9",
+    "english": "You have found yourself. Congratulations.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_35_1",
+    "english": "Phoenix Folio",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_35_2",
+    "english": "After your river adventure, your old spellbook is ruined! Find a service provider who can rebind it for you.\n\n<b>Fix your ruined spellbook, damn it!</b>",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_35_3",
+    "english": "You found a bookbinder on Waterlane View. He'll fix your prayer book, but you'll have to pay 250 crowns for the job. And it'll take him till the next morning. Or rather, afternoon, since he's an owl. They seem to be nocturnal. Or maybe it's a bookbinder thing. Don't be judgmental.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_35_4",
+    "english": "You managed to get back your prayer book - now rebound and in a shiny fresh condition. This should help a lot in memorizing spells!",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_36_1",
+    "english": "Primal Kin",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_36_2",
+    "english": "Convince Nessan to teach you primal magic. If you're so inclined.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_36_3",
+    "english": "You attuned to the primal Strings, proving yourself to Nessan. You are now a very newbie Druid - at least in her eyes.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_36_4",
+    "english": "You've saved a fungal-man on the Undercoast Path. This must certainly put you in alignment with nature.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_36_5",
+    "english": "Nessan has invited you to a recurring druidism meetup event. This is exactly what a 27 year old man needs to make more friends.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_38_1",
+    "english": "Crypt Keeper",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_38_2",
+    "english": "There is a powerful spellcaster named Bondevol hiding down in the crypts.\n\n<b>You must find him.</b>",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_38_3",
+    "english": "You had a lovely conversation with Bondevol, the demi-lich. He was only somewhat insane.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_39_1",
+    "english": "Lost Mines of Toul'Amon",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_39_2",
+    "english": "A dwarf named Akzel is looking for a legendary lost mine, somewhere in the tunnel to the southwest. But the HWBT won't allow him passage. \n\nFind a symbol of the sun, or lack thereof 'the shrine', then report back to him to get a reward.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_39_3",
+    "english": "You found an ancient cat-themed shrine, which gave you a poem.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_39_4",
+    "english": "Akzel realized he was looking in the wrong place. But the poem seemed to have given him a clue where to search next - he invites you to join him in a couple of months for a proper expedition.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_40_1",
+    "english": "Philogynistic Agenda",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_40_2",
+    "english": "Women. They're <i>everywhere</i>. Your worth as a man is based only on the admiration you get from them. Your goal? Get a date. A real date. Good luck.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_40_3",
+    "english": "You managed to secure a promised date with Agent Viira, the handsome orc Freestrider! However, not until after the election. So no need to worry about that now.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_40_4",
+    "english": "Somehow, you managed to convince the celestial warrior Ettir to go on a date with you, in a couple of weeks or so. Or at least, you think that's what happened. Maybe. Great job!",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_40_5",
+    "english": "Moongore, the HWBT gardener/guardian, was charmed by a man in yellow. You must avenge her honor to prove your worth...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_40_6",
+    "english": "You avenged Moongore's honor and gained her respect, as a man. She agreed to go on a 'sparring match' (basically a date?) after the election. Aren't you a lucky guy!",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_41_1",
+    "english": "Essence of Inflorescence",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_41_2",
+    "english": "Nearly the Minstrel is the owner of a glorious head-blossom. It must be yours.\n\n<b>Get your hands on the Flower Crown.</b>",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_41_3",
+    "english": "Nearly asked you to help her get an extension on her rent- from Lady Sageleaf. Uh-oh.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_41_4",
+    "english": "You got the flower crown. Now you can wear it and feel at peace with nature.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_41_5",
+    "english": "You got the rent extension for Nearly. She was very happy. Now you can have your flower crown in wonderful and good conscience.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_42_1",
+    "english": "Three Hundred Pieces",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_42_2",
+    "english": "You encountered a corpse in the Lichhouse. It seems fresh and ready for Revivify. Though it'd cost quite a bit of money to bring him back- almost a month's rent!",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_42_3",
+    "english": "You managed to bring back the old man. He appeared mostly annoyed with you, then left without even giving you a thanks.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_42_4",
+    "english": "Turns out, the man was Rollo and Arn's father. They were contacted by him, after his resurrection, but they broke off on their own.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_43_1",
+    "english": "An Easy Riddle",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_43_2",
+    "english": "The drunk sphinx in the Drunk Sphinx has offered you another riddle: if you solve it, you will gain access to her vault. Are you up to the challenge?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_43_3",
+    "english": "The sphinx hints that the only way to solve her riddle is to perform some type of action. Something beyond the scope of a simple <i>dialog</i>...",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_43_4",
+    "english": "You unlocked the vault gate behind the sphinx. It was kind of easy, wasn't it? But now... what's inside?",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_43_5",
+    "english": "You received the Deck of Many Things inside the vault. Interesting, huh? Maybe you should draw a card or two. Or maybe not.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_44_1",
+    "english": "The Lost 6th Edition",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_44_2",
+    "english": "Sch. Snurre Appledent has tasked you with retrieving a rare copy of Cividix's <i>Book of the Mind</i>, which is supposedly found somewhere in the dungeons in  the City Below.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_44_3",
+    "english": "You encountered the Living Library and retrieved this rare book from its shelves. It is a powerful magical tome- but Snurre will let you keep it. He just wants to copy the foreword.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_44_4",
+    "english": "As Snurre attempted to copy the foreword, the esoterically summoned spirit of Cividix himself became near corporeal. But you handled it. You got a bit possessed, but you handled it, allowing him to both copy the foreword and gain great insight into the secrets of Cividix.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  },
+  {
+    "id": "Quest_44_5",
+    "english": "As Snurre attempted to copy the foreword, the esoterically summoned spirit of Cividix himself became near corporeal, possessing Snurre in the process. He got exorcised in the end, and managed to both copy the foreword and gain great insight into the secrets of Cividix.",
+    "german": "",
+    "table": "questpoints",
+    "source": "resources.assets",
+    "csv_offset": 3194532
+  }
+]

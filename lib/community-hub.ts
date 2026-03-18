@@ -138,8 +138,8 @@ export async function getCommunityPackages(filters?: {
     return backendPackages.map(toFrontendPackage);
   } catch (error) {
     console.error('Failed to load packages from backend:', error);
-    // Fallback to sample data
-    return getSamplePackages();
+    // Nessun backend disponibile — ritorna vuoto
+    return [];
   }
 }
 
@@ -190,8 +190,8 @@ export async function downloadPackageEntries(packageId: string): Promise<Transla
     return entries;
   } catch (error) {
     console.error('Failed to download entries:', error);
-    // Fallback to sample entries
-    return getSampleEntries(packageId);
+    // Nessun backend disponibile — ritorna vuoto
+    return [];
   }
 }
 
@@ -271,141 +271,6 @@ export function exportToCommunitFormat(
       verified: false
     }))
   };
-}
-
-// Sample data for demo
-function getSamplePackages(): CommunityPackage[] {
-  return [
-    {
-      id: 'sample_1',
-      name: 'Hollow Knight - Traduzione Completa',
-      gameId: 'steam_367520',
-      gameName: 'Hollow Knight',
-      sourceLanguage: 'en',
-      targetLanguage: 'it',
-      entryCount: 4500,
-      author: 'TranslatorPro',
-      authorId: 'user_1',
-      description: 'Traduzione italiana completa di Hollow Knight, inclusi tutti i DLC. Revisionata dalla community.',
-      version: '2.1.0',
-      downloads: 15420,
-      rating: 4.8,
-      ratingCount: 234,
-      tags: ['metroidvania', 'completo', 'revisionato', 'dlc'],
-      createdAt: '2024-06-15T10:00:00Z',
-      updatedAt: '2025-01-10T14:30:00Z',
-      verified: true,
-      size: 450000
-    },
-    {
-      id: 'sample_2',
-      name: 'Stardew Valley - Mod Italiano',
-      gameId: 'steam_413150',
-      gameName: 'Stardew Valley',
-      sourceLanguage: 'en',
-      targetLanguage: 'it',
-      entryCount: 8200,
-      author: 'FarmTranslations',
-      authorId: 'user_2',
-      description: 'Traduzione italiana per Stardew Valley 1.6+. Include dialoghi, oggetti e quest.',
-      version: '1.6.2',
-      downloads: 28750,
-      rating: 4.9,
-      ratingCount: 512,
-      tags: ['simulazione', 'farming', 'completo', '1.6'],
-      createdAt: '2024-03-20T08:00:00Z',
-      updatedAt: '2025-01-15T09:00:00Z',
-      verified: true,
-      size: 820000
-    },
-    {
-      id: 'sample_3',
-      name: 'Celeste - UI e Dialoghi',
-      gameId: 'steam_504230',
-      gameName: 'Celeste',
-      sourceLanguage: 'en',
-      targetLanguage: 'it',
-      entryCount: 1200,
-      author: 'PixelWords',
-      authorId: 'user_3',
-      description: 'Traduzione completa dell\'UI e tutti i dialoghi di Celeste.',
-      version: '1.0.0',
-      downloads: 5680,
-      rating: 4.6,
-      ratingCount: 89,
-      tags: ['platformer', 'indie', 'dialoghi'],
-      createdAt: '2024-09-01T12:00:00Z',
-      updatedAt: '2024-12-20T16:00:00Z',
-      verified: false,
-      size: 120000
-    },
-    {
-      id: 'sample_4',
-      name: 'Undertale - Traduzione Fan',
-      gameId: 'steam_391540',
-      gameName: 'Undertale',
-      sourceLanguage: 'en',
-      targetLanguage: 'it',
-      entryCount: 3800,
-      author: 'DeterminedTeam',
-      authorId: 'user_4',
-      description: 'Traduzione italiana di Undertale realizzata con amore dalla community. Include tutte le route.',
-      version: '3.0.0',
-      downloads: 42000,
-      rating: 4.7,
-      ratingCount: 876,
-      tags: ['rpg', 'indie', 'cult', 'completo'],
-      createdAt: '2023-11-10T10:00:00Z',
-      updatedAt: '2024-08-15T11:00:00Z',
-      verified: true,
-      size: 380000
-    },
-    {
-      id: 'sample_5',
-      name: 'Hades - Glossario Gaming',
-      gameId: 'steam_1145360',
-      gameName: 'Hades',
-      sourceLanguage: 'en',
-      targetLanguage: 'it',
-      entryCount: 6500,
-      author: 'OlympusTranslators',
-      authorId: 'user_5',
-      description: 'Traduzione di Hades con terminologia gaming italiana accurata. Dialoghi e descrizioni.',
-      version: '1.2.0',
-      downloads: 18900,
-      rating: 4.5,
-      ratingCount: 203,
-      tags: ['roguelike', 'action', 'mitologia'],
-      createdAt: '2024-01-25T14:00:00Z',
-      updatedAt: '2024-11-30T10:00:00Z',
-      verified: false,
-      size: 650000
-    }
-  ];
-}
-
-function getSampleEntries(packageId: string): TranslationEntry[] {
-  // Return sample entries based on package ID
-  const samples: Record<string, TranslationEntry[]> = {
-    'sample_1': [
-      { source: 'Hollow Knight', target: 'Cavaliere Vuoto', context: 'title' },
-      { source: 'Soul', target: 'Anima', context: 'resource' },
-      { source: 'Geo', target: 'Geo', context: 'currency' },
-      { source: 'Bench', target: 'Panchina', context: 'save_point' },
-      { source: 'Nail', target: 'Chiodo', context: 'weapon' }
-    ],
-    'sample_2': [
-      { source: 'Farm', target: 'Fattoria', context: 'location' },
-      { source: 'Seeds', target: 'Semi', context: 'item' },
-      { source: 'Harvest', target: 'Raccolto', context: 'action' },
-      { source: 'Friendship', target: 'Amicizia', context: 'mechanic' },
-      { source: 'Season', target: 'Stagione', context: 'time' }
-    ]
-  };
-  
-  return samples[packageId] || [
-    { source: 'Example', target: 'Esempio', context: 'demo' }
-  ];
 }
 
 /**

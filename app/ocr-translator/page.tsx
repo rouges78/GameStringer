@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Play, Square, Scan, Monitor, ArrowRight, Loader2, RefreshCw, Settings2, ChevronDown, ChevronUp, Layers, Image as ImageIcon } from 'lucide-react';
+import { Play, Square, Scan, Monitor, ArrowRight, Loader2, RefreshCw, Settings2, ChevronDown, ChevronUp, Layers, Image as ImageIcon, Upload, Clipboard, X, Copy } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 import { toast } from 'sonner';
 import { useOcrHotkey } from '@/hooks/use-global-hotkeys';
@@ -94,6 +94,12 @@ export default function OcrTranslatorPage() {
   const [ocrProvider, setOcrProvider] = useState<'libre' | 'ollama' | 'vlm' | 'gemini'>('libre');
   const [lastTranslationTime, setLastTranslationTime] = useState(0);
   const [overlayOpen, setOverlayOpen] = useState(false);
+  // Screenshot static mode
+  const [mode, setMode] = useState<'live' | 'screenshot'>('live');
+  const [screenshotSrc, setScreenshotSrc] = useState<string | null>(null);
+  const [screenshotTexts, setScreenshotTexts] = useState<{ original: string; translated: string }[]>([]);
+  const [screenshotProcessing, setScreenshotProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleHotkeyCapture = useCallback(async () => {
     if (!isRunning) {
@@ -300,6 +306,91 @@ export default function OcrTranslatorPage() {
     }
   };
 
+  // ─── Screenshot Static Mode Handlers ─────────────────────────
+  const processScreenshot = useCallback(async (imageDataUrl: string) => {
+    setScreenshotSrc(imageDataUrl);
+    setScreenshotTexts([]);
+    setScreenshotProcessing(true);
+    try {
+      // Import Tesseract OCR
+      const { recognizeText } = await import('@/lib/ocr-service');
+      const ocrLangMap: Record<string, any> = { ja: 'jpn', en: 'eng', 'zh-Hans': 'chi_sim', ko: 'kor' };
+      const ocrLang = ocrLangMap[config.language] || 'eng';
+      const ocrResult = await recognizeText(imageDataUrl, ocrLang);
+      
+      if (!ocrResult.lines || ocrResult.lines.length === 0) {
+        toast.error('Nessun testo rilevato nello screenshot');
+        setScreenshotProcessing(false);
+        return;
+      }
+
+      // Filter lines with decent confidence
+      const lines = ocrResult.lines
+        .filter(l => l.text.trim().length > 1 && l.confidence > 40)
+        .map(l => l.text.trim());
+
+      // Translate each line
+      const results: { original: string; translated: string }[] = [];
+      for (const line of lines) {
+        try {
+          const tr = await translateSingleSmart(line, config.target_language, config.language);
+          results.push({ original: line, translated: tr?.translated || '...' });
+        } catch {
+          results.push({ original: line, translated: '(errore traduzione)' });
+        }
+      }
+      setScreenshotTexts(results);
+      toast.success(`${results.length} righe estratte e tradotte`);
+    } catch (e) {
+      toast.error(`OCR errore: ${e}`);
+    }
+    setScreenshotProcessing(false);
+  }, [config.language, config.target_language]);
+
+  const handleFileDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => processScreenshot(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  }, [processScreenshot]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = () => processScreenshot(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  }, [processScreenshot]);
+
+  const handlePaste = useCallback(async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imageType = item.types.find(t => t.startsWith('image/'));
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          const reader = new FileReader();
+          reader.onload = () => processScreenshot(reader.result as string);
+          reader.readAsDataURL(blob);
+          return;
+        }
+      }
+      toast.error('Nessuna immagine negli appunti');
+    } catch {
+      toast.error('Impossibile leggere gli appunti — usa il pulsante Upload');
+    }
+  }, [processScreenshot]);
+
+  const copyAllTranslations = useCallback(() => {
+    const text = screenshotTexts.map(t => t.translated).join('\n');
+    navigator.clipboard.writeText(text);
+    toast.success('Traduzioni copiate!');
+  }, [screenshotTexts]);
+
   const srcLang = SOURCE_LANGUAGES.find(l => l.code === config.language);
   const tgtLang = TARGET_LANGUAGES.find(l => l.code === config.target_language);
   const selectedWindow = windows.find(w => w.hwnd === config.target_window);
@@ -334,7 +425,115 @@ export default function OcrTranslatorPage() {
         </div>
       </div>
 
-      {/* Setup Card - Semplificato */}
+      {/* Mode Tabs */}
+      <div className="flex gap-1 p-1 rounded-lg bg-slate-800/50 border border-slate-700/50">
+        <button onClick={() => setMode('live')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'live' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+          <Monitor className="h-4 w-4" />Cattura Live
+        </button>
+        <button onClick={() => setMode('screenshot')} className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${mode === 'screenshot' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+          <ImageIcon className="h-4 w-4" />Screenshot
+        </button>
+      </div>
+
+      {/* Screenshot Static Mode */}
+      {mode === 'screenshot' && (
+        <div className="space-y-3">
+          {/* Language selectors for screenshot mode */}
+          <Card className="border border-dashed border-muted-foreground/20">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-md">1</span>
+                Lingue
+              </div>
+              <div className="flex items-center gap-2 pl-8">
+                <select className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm" value={config.language} onChange={(e) => setConfig({...config, language: e.target.value})}>
+                  {SOURCE_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
+                </select>
+                <ArrowRight className="h-4 w-4 text-blue-400" />
+                <select className="flex-1 h-9 px-3 rounded-lg border bg-background text-sm" value={config.target_language} onChange={(e) => setConfig({...config, target_language: e.target.value})}>
+                  {TARGET_LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Drop zone */}
+          <div
+            className={`rounded-xl border-2 border-dashed p-8 text-center transition-all ${screenshotSrc ? 'border-blue-500/40 bg-blue-900/10' : 'border-slate-600/40 hover:border-blue-500/40 hover:bg-blue-900/5'}`}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleFileDrop}
+          >
+            {screenshotProcessing ? (
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-400" />
+                <p className="text-sm text-blue-300">Analisi OCR e traduzione in corso...</p>
+              </div>
+            ) : screenshotSrc ? (
+              <div className="space-y-3">
+                <div className="relative inline-block">
+                  <img src={screenshotSrc} alt="Screenshot" className="max-h-[300px] rounded-lg border border-slate-700 mx-auto" />
+                  <button onClick={() => { setScreenshotSrc(null); setScreenshotTexts([]); }} className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white hover:bg-red-400">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500">Trascina un altro screenshot per sostituire</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <ImageIcon className="h-12 w-12 text-slate-500 mx-auto" />
+                <p className="text-sm text-slate-300">Trascina uno screenshot qui</p>
+                <p className="text-[10px] text-slate-500">oppure</p>
+                <div className="flex items-center justify-center gap-2">
+                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-3.5 w-3.5" />Upload
+                  </Button>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handlePaste}>
+                    <Clipboard className="h-3.5 w-3.5" />Incolla (Ctrl+V)
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Screenshot results */}
+          {screenshotTexts.length > 0 && (
+            <Card className="border border-blue-800/30">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Scan className="h-4 w-4 text-blue-400" />
+                    <span className="text-sm font-medium text-white">{screenshotTexts.length} righe estratte</span>
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={copyAllTranslations}>
+                    <Copy className="h-3 w-3" />Copia tutto
+                  </Button>
+                </div>
+                <ScrollArea className="max-h-[400px]">
+                  <div className="space-y-1.5">
+                    {screenshotTexts.map((t, i) => (
+                      <div key={i} className="flex gap-3 p-2.5 rounded-lg bg-slate-800/40 border border-slate-700/30 hover:bg-slate-800/60 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-slate-500 mb-0.5">Originale</p>
+                          <p className="text-xs text-slate-300">{t.original}</p>
+                        </div>
+                        <ArrowRight className="h-3 w-3 text-blue-400 mt-4 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-emerald-500 mb-0.5">Traduzione</p>
+                          <p className="text-xs text-emerald-300">{t.translated}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Setup Card - Semplificato (Live mode only) */}
+      {mode === 'live' && (<>
       <Card className="border border-dashed border-muted-foreground/20">
         <CardContent className="p-4 space-y-4">
           {/* Step 1: Lingue */}
@@ -575,6 +774,7 @@ export default function OcrTranslatorPage() {
           </CardContent>
         </Card>
       )}
+      </>)}
 
       {/* Info */}
       <p className="text-center text-[10px] text-muted-foreground">

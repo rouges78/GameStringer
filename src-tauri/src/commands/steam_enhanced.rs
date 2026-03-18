@@ -200,8 +200,8 @@ fn convert_steam_app_to_game_info(app: &steamlocate::App, library_path: &str) ->
         install_path: Some(library_path.to_string()),
         executable_path: None,
         icon: None,
-        image_url: None,
-        header_image: None,
+        image_url: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app.app_id)),
+        header_image: Some(format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app.app_id)),
         is_installed: true,
         steam_app_id: Some(app.app_id),
         is_vr: false, // Default, da implementare rilevamento

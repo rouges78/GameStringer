@@ -596,6 +596,68 @@ fn estimate_chains(estimated_strings: u64, estimated_words: u64) -> Vec<ChainEst
     ]
 }
 
+// ── Binary String Estimation ─────────────────────────────────────────
+
+/// Stima il numero di stringhe traducibili basandosi sulla dimensione dei file binari
+/// e sul tipo di motore. Questa è un'euristica per giochi dove il testo è dentro
+/// archivi compressi (.pak, .assets, .bundle, etc.)
+fn estimate_strings_from_binary(engine: &str, formats: &[FileFormatInfo]) -> u64 {
+    let pak_size_mb: f64 = formats.iter()
+        .filter(|f| f.extension == "pak")
+        .map(|f| f.total_size_kb as f64 / 1024.0)
+        .sum();
+    let assets_size_mb: f64 = formats.iter()
+        .filter(|f| f.extension == "assets" || f.extension == "resources" || f.extension == "resource")
+        .map(|f| f.total_size_kb as f64 / 1024.0)
+        .sum();
+    let bundle_size_mb: f64 = formats.iter()
+        .filter(|f| f.extension == "bundle")
+        .map(|f| f.total_size_kb as f64 / 1024.0)
+        .sum();
+    let total_binary_mb = pak_size_mb + assets_size_mb + bundle_size_mb;
+
+    if total_binary_mb < 1.0 {
+        return 0;
+    }
+
+    // Euristica: la percentuale di testo nei file binari varia per motore
+    // Testo = tipicamente ~0.1-2% del totale per giochi action, ~2-8% per RPG/VN
+    // Stringhe stimate = testo_byte_stimati / 50 (media 50 byte per stringa)
+    let text_ratio = match engine {
+        "Unreal Engine" => {
+            // Unreal: .pak contiene asset misti, testo ~0.5-1.5% del totale
+            if total_binary_mb > 5000.0 { 0.003 } // AAA con tanti asset grafici
+            else if total_binary_mb > 1000.0 { 0.005 }
+            else if total_binary_mb > 100.0 { 0.01 }
+            else { 0.02 } // Indie piccolo
+        }
+        "Unity" => {
+            // Unity: .assets contiene testo serializzato, ~1-3%
+            if total_binary_mb > 1000.0 { 0.008 }
+            else if total_binary_mb > 100.0 { 0.015 }
+            else { 0.025 }
+        }
+        "Source Engine" | "Source 2" => 0.01,
+        "Frostbite" => 0.002, // EA games, molto compressi
+        "RE Engine" | "MT Framework" => 0.005,
+        "RAGE Engine" => 0.003,
+        "FromSoftware Engine" => 0.008,
+        "Godot" => 0.02,
+        _ => 0.01, // Default conservativo
+    };
+
+    let estimated_text_bytes = total_binary_mb * 1024.0 * 1024.0 * text_ratio;
+    let estimated_strings = (estimated_text_bytes / 50.0) as u64;
+
+    // Minimo realistico: un gioco indie ha almeno ~500 stringhe, un AAA ~5000+
+    let minimum = if total_binary_mb > 1000.0 { 5000 }
+        else if total_binary_mb > 100.0 { 2000 }
+        else if total_binary_mb > 10.0 { 500 }
+        else { 200 };
+
+    estimated_strings.max(minimum)
+}
+
 // ── GS Support Check ─────────────────────────────────────────────────
 
 fn check_gs_support(engine: &str) -> (bool, String) {
@@ -670,7 +732,131 @@ fn get_format_info(ext: &str) -> (bool, &'static str) {
     }
 }
 
-// ── Main Command ─────────────────────────────────────────────────────
+// ── Quick Summary Struct (for batch ranking) ─────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameQuickSummary {
+    pub game_title: String,
+    pub engine: String,
+    pub install_path: String,
+    pub difficulty_score: u32,
+    pub difficulty_label: String,
+    pub estimated_strings: u64,
+    pub estimated_hours_local: f64,
+    pub estimated_hours_cloud: f64,
+    pub estimated_cost_cloud: f64,
+    pub gs_supported: bool,
+    pub recommended_method: String,
+    pub lang_count: usize,
+    pub has_italian: bool,
+    pub warnings_count: usize,
+    pub header_image: String,
+    pub is_demo: bool,
+    pub size_gb: f64,
+}
+
+// ── Batch Scan Command ───────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn analyze_all_installed_games() -> Result<Vec<GameQuickSummary>, String> {
+    info!("🔮 P.T. Batch: Scanning all installed games...");
+
+    // Get all installed Steam games
+    let local_games = crate::commands::steam_enhanced::scan_all_steam_games_fast()
+        .await
+        .map_err(|e| format!("Scan failed: {}", e))?;
+
+    let installed: Vec<_> = local_games.iter()
+        .filter(|g| g.is_installed && g.install_path.is_some())
+        .collect();
+
+    info!("🔮 P.T. Batch: Found {} installed games to analyze", installed.len());
+
+    let mut summaries: Vec<GameQuickSummary> = Vec::new();
+
+    for game in &installed {
+        let path_str = game.install_path.as_ref().unwrap();
+        let game_path = PathBuf::from(path_str);
+        if !game_path.exists() { continue; }
+
+        let engine_str = game.engine.clone().unwrap_or_else(|| {
+            let detected = crate::engine_detector::detect_engine(&game_path);
+            detected.as_str().to_string()
+        });
+
+        // Quick scan (lighter than full analyze)
+        let languages = detect_languages_deep(&game_path);
+        let mut text_stats = analyze_text_content(&game_path);
+        let file_formats = analyze_file_formats(&game_path);
+
+        if text_stats.estimated_strings < 100 {
+            let binary_est = estimate_strings_from_binary(&engine_str, &file_formats);
+            if binary_est > text_stats.estimated_strings {
+                text_stats.estimated_strings = binary_est;
+                text_stats.estimated_words = binary_est * 8;
+            }
+        }
+
+        let (difficulty_score, difficulty_label, warnings) =
+            calculate_difficulty(&engine_str, &languages, &text_stats, &file_formats);
+
+        let s = text_stats.estimated_strings as f64;
+        let hours_local = s / 60.0 / 60.0; // hy-mt1.5 speed
+        let hours_cloud = s / 150.0 / 60.0; // DeepL speed
+        let cost_cloud = (text_stats.estimated_words as f64 / 1_000_000.0) * 20.0; // DeepL ~$20/M chars
+
+        let has_italian = languages.iter().any(|l| l.code == "it");
+        let (gs_supported, recommended_method) = check_gs_support(&engine_str);
+
+        let header = game.header_image.clone().unwrap_or_else(|| {
+            let app_id = game.steam_app_id.map(|id| id.to_string()).unwrap_or_default();
+            if !app_id.is_empty() {
+                format!("https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg", app_id)
+            } else {
+                String::new()
+            }
+        });
+
+        // Rileva demo: titolo contiene "Demo" E dimensione < 5GB
+        // Giochi grandi (>5GB) non sono mai demo anche se il nome contiene "Demo"
+        let title_lower = game.title.to_lowercase();
+        // Calcola dimensione totale dalla scansione formati
+        let total_size_mb: f64 = file_formats.iter()
+            .map(|f| f.total_size_kb as f64 / 1024.0)
+            .sum();
+        let size_gb = total_size_mb / 1024.0;
+        let is_demo = title_lower.contains("demo") && size_gb < 5.0;
+
+        summaries.push(GameQuickSummary {
+            game_title: game.title.clone(),
+            engine: engine_str,
+            install_path: path_str.clone(),
+            difficulty_score,
+            difficulty_label,
+            estimated_strings: text_stats.estimated_strings,
+            estimated_hours_local: (hours_local * 10.0).round() / 10.0,
+            estimated_hours_cloud: (hours_cloud * 10.0).round() / 10.0,
+            estimated_cost_cloud: (cost_cloud * 100.0).round() / 100.0,
+            gs_supported,
+            recommended_method,
+            lang_count: languages.len(),
+            has_italian,
+            warnings_count: warnings.len(),
+            header_image: header,
+            is_demo,
+            size_gb: (size_gb * 100.0).round() / 100.0,
+        });
+    }
+
+    // Ordina per difficoltà decrescente
+    summaries.sort_by(|a, b| b.difficulty_score.cmp(&a.difficulty_score));
+
+    info!("🔮 P.T. Batch: Analyzed {} games", summaries.len());
+    Ok(summaries)
+}
+
+// ── Main Command (single game) ───────────────────────────────────────
 
 #[tauri::command]
 pub async fn analyze_game_translation(
@@ -695,8 +881,19 @@ pub async fn analyze_game_translation(
 
     // Deep scan
     let languages = detect_languages_deep(&game_path);
-    let text_stats = analyze_text_content(&game_path);
+    let mut text_stats = analyze_text_content(&game_path);
     let file_formats = analyze_file_formats(&game_path);
+
+    // Se non ci sono file di testo ma ci sono file binari (pak, assets, etc.),
+    // stima il contenuto testuale basandosi sulla dimensione dei binari e sul motore
+    if text_stats.estimated_strings < 100 {
+        let binary_text_estimate = estimate_strings_from_binary(&engine_str, &file_formats);
+        if binary_text_estimate > text_stats.estimated_strings {
+            text_stats.estimated_strings = binary_text_estimate;
+            text_stats.estimated_words = binary_text_estimate * 8;
+            text_stats.estimated_characters = binary_text_estimate * 45;
+        }
+    }
 
     // Difficulty
     let (difficulty_score, difficulty_label, warnings) =

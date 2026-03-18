@@ -1,4 +1,7 @@
-// Mini Blog System per GameStringer
+// Mini Blog / Devlog System per GameStringer
+// Persistenza: Tauri filesystem (appdata/blog.json) con fallback localStorage
+
+import { invoke } from '@/lib/tauri-api';
 
 export interface BlogPost {
   id: string;
@@ -11,60 +14,83 @@ export interface BlogPost {
 }
 
 const BLOG_STORAGE_KEY = 'gamestringer_blog_posts';
+const BLOG_FILENAME = 'blog.json';
 
-// Post di default
-const defaultPosts: BlogPost[] = [
-  { 
-    id: '1', 
-    date: '24 Gen', 
-    title: '🎮 Steam OpenID automatico', 
-    description: 'Login Steam con callback locale come Fanatical', 
-    tag: 'Feature',
-    pinned: true,
-    createdAt: Date.now() 
-  },
-  { 
-    id: '2', 
-    date: '23 Gen', 
-    title: '🌍 Community Hub rinnovato', 
-    description: 'Nuova UI arancione, card compatte', 
-    tag: 'UI',
-    createdAt: Date.now() - 86400000 
-  },
-  { 
-    id: '3', 
-    date: '22 Gen', 
-    title: '🔐 Recovery Key System', 
-    description: '12 parole mnemoniche per recupero password', 
-    tag: 'Security',
-    createdAt: Date.now() - 172800000 
-  },
-  { 
-    id: '4', 
-    date: '21 Gen', 
-    title: '🧠 Neural Translator Pro', 
-    description: 'Traduzione AI con emotion-aware', 
-    tag: 'AI',
-    createdAt: Date.now() - 259200000 
-  },
-];
+let _cachedPosts: BlogPost[] | null = null;
+
+async function readFromTauri(): Promise<BlogPost[] | null> {
+  try {
+    const content = await invoke<string>('read_app_data_file', { filename: BLOG_FILENAME });
+    if (content) return JSON.parse(content);
+  } catch {}
+  return null;
+}
+
+async function writeToTauri(posts: BlogPost[]): Promise<boolean> {
+  try {
+    await invoke('write_app_data_file', { filename: BLOG_FILENAME, content: JSON.stringify(posts, null, 2) });
+    return true;
+  } catch {}
+  return false;
+}
+
+function readFromLocalStorage(): BlogPost[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem(BLOG_STORAGE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return [];
+}
+
+function writeToLocalStorage(posts: BlogPost[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
+  } catch {}
+}
+
+async function loadPosts(): Promise<BlogPost[]> {
+  if (_cachedPosts) return _cachedPosts;
+
+  // Try Tauri first
+  const tauriPosts = await readFromTauri();
+  if (tauriPosts) {
+    _cachedPosts = tauriPosts;
+    return tauriPosts;
+  }
+
+  // Fallback to localStorage
+  const localPosts = readFromLocalStorage();
+  _cachedPosts = localPosts;
+
+  // Migrate localStorage to Tauri if posts exist
+  if (localPosts.length > 0) {
+    writeToTauri(localPosts).catch(() => {});
+  }
+
+  return localPosts;
+}
+
+async function savePosts(posts: BlogPost[]): Promise<void> {
+  _cachedPosts = posts;
+  const saved = await writeToTauri(posts);
+  if (!saved) {
+    writeToLocalStorage(posts);
+  }
+}
 
 export const blogService = {
   getPosts(): BlogPost[] {
-    if (typeof window === 'undefined') return defaultPosts;
-    
-    const stored = localStorage.getItem(BLOG_STORAGE_KEY);
-    if (!stored) {
-      // Inizializza con post di default
-      localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(defaultPosts));
-      return defaultPosts;
-    }
-    
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return defaultPosts;
-    }
+    // Sincrono — usa cache o localStorage
+    if (_cachedPosts) return _cachedPosts;
+    const local = readFromLocalStorage();
+    _cachedPosts = local;
+    return local;
+  },
+
+  async getPostsAsync(): Promise<BlogPost[]> {
+    return loadPosts();
   },
 
   addPost(post: Omit<BlogPost, 'id' | 'createdAt'>): BlogPost {
@@ -75,7 +101,7 @@ export const blogService = {
       createdAt: Date.now(),
     };
     posts.unshift(newPost);
-    localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
+    savePosts(posts);
     return newPost;
   },
 
@@ -85,7 +111,7 @@ export const blogService = {
     if (index === -1) return false;
     
     posts[index] = { ...posts[index], ...updates };
-    localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
+    savePosts(posts);
     return true;
   },
 
@@ -94,7 +120,7 @@ export const blogService = {
     const filtered = posts.filter(p => p.id !== id);
     if (filtered.length === posts.length) return false;
     
-    localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(filtered));
+    savePosts(filtered);
     return true;
   },
 
@@ -108,5 +134,9 @@ export const blogService = {
         return b.createdAt - a.createdAt;
       })
       .slice(0, limit);
+  },
+
+  async init(): Promise<void> {
+    await loadPosts();
   }
 };
