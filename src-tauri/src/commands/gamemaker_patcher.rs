@@ -29,6 +29,8 @@ pub struct GmDataInfo {
     pub total_strings: usize,
     pub translatable_strings: usize,
     pub chunks: Vec<String>,
+    pub is_yyc: bool,         // true if game is compiled with YYC (text in EXE, not data.win)
+    pub exe_path: Option<String>, // path to game executable (for YYC games)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -236,6 +238,108 @@ fn extract_strings(data: &[u8], strg_offset: u64, _strg_size: u32) -> Vec<GmStri
     strings
 }
 
+// ── YYC EXE string extraction ──
+
+/// Find the game executable in game directory
+fn find_game_exe(game_path: &str) -> Option<PathBuf> {
+    let dir = Path::new(game_path);
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.is_file() {
+                if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
+                    if ext.eq_ignore_ascii_case("exe") {
+                        // Skip common non-game executables
+                        if let Some(name) = p.file_stem().and_then(|n| n.to_str()) {
+                            let lower = name.to_lowercase();
+                            if lower.contains("unins") || lower.contains("setup") 
+                               || lower.contains("crash") || lower.contains("redist")
+                               || lower.contains("vcredist") || lower.contains("dxsetup") {
+                                continue;
+                            }
+                        }
+                        return Some(p);
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Heuristic: is this EXE string translatable game text?
+fn is_translatable_exe_string(s: &str) -> bool {
+    let s = s.trim();
+    if s.len() < 5 { return false; }
+    // Must contain a space (real text, not identifiers)
+    if !s.contains(' ') { return false; }
+    // Must have letters
+    if !s.chars().any(|c| c.is_alphabetic()) { return false; }
+    
+    let lower = s.to_lowercase();
+    
+    // Skip code/system strings
+    if lower.contains("#define") || lower.contains("#include") || lower.contains("#version") { return false; }
+    if lower.contains("precision ") && lower.contains("float") { return false; }
+    if lower.contains("sampler2d") || lower.contains("uniform ") { return false; }
+    if lower.contains("microsoft") && lower.contains("compiler") { return false; }
+    if lower.contains(".dll") || lower.contains(".exe") || lower.contains(".sys") { return false; }
+    if lower.contains("kernel32") || lower.contains("ntdll") || lower.contains("advapi") { return false; }
+    if lower.contains("global.") || lower.contains("self.") { return false; }
+    if lower.contains("var ") && lower.contains(";") { return false; }
+    if lower.contains("function(") || lower.contains("if (") { return false; }
+    if lower.contains("&&") || lower.contains("||") { return false; }
+    if lower.contains("vec4 ") || lower.contains("vec3 ") || lower.contains("float ") { return false; }
+    if lower.starts_with("//") { return false; } // comments in code
+    if lower.contains("matrix") && lower.contains("view") { return false; }
+    if lower.contains("register(") { return false; }
+    if lower.contains("gml_") || lower.contains("obj_") || lower.contains("scr_") { return false; }
+    
+    // Skip strings that are mostly non-ASCII printable (binary data matched by accident)
+    let printable = s.chars().filter(|c| c.is_alphanumeric() || " .,!?'-:;()[]#\r\n\t/".contains(*c)).count();
+    if (printable as f64 / s.len() as f64) < 0.8 { return false; }
+    
+    true
+}
+
+/// Extract readable text strings from a YYC-compiled EXE binary
+fn extract_exe_strings(data: &[u8], min_len: usize) -> Vec<GmString> {
+    let mut strings = Vec::new();
+    let mut i = 0;
+    let mut index = 0;
+    
+    while i < data.len() {
+        // Find start of a readable ASCII sequence
+        if data[i] >= 0x20 && data[i] <= 0x7e || data[i] == b'\r' || data[i] == b'\n' || data[i] == b'\t' {
+            let start = i;
+            while i < data.len() && (data[i] >= 0x20 && data[i] <= 0x7e || data[i] == b'\r' || data[i] == b'\n' || data[i] == b'\t') {
+                i += 1;
+            }
+            let len = i - start;
+            if len >= min_len {
+                if let Ok(text) = std::str::from_utf8(&data[start..i]) {
+                    let text = text.trim();
+                    if text.len() >= min_len {
+                        let translatable = is_translatable_exe_string(text);
+                        strings.push(GmString {
+                            index,
+                            offset: start as u64,
+                            data_offset: start as u64,
+                            original: text.to_string(),
+                            translated: None,
+                            length: len,
+                            is_translatable: translatable,
+                        });
+                        index += 1;
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    strings
+}
+
 // ── Tauri Commands ──
 
 /// Find data.win in game directory
@@ -280,9 +384,9 @@ pub async fn gm_scan_data_win(game_path: String) -> Result<GmDataInfo, String> {
     let chunk_names: Vec<String> = chunks.iter().map(|(name, _, _)| name.clone()).collect();
     let version = detect_version(&chunk_names);
     
-    // Find STRG chunk
+    // Find STRG chunk and count translatable strings
     let strg = chunks.iter().find(|(name, _, _)| name == "STRG");
-    let (total, translatable) = if let Some((_, size, offset)) = strg {
+    let (strg_total, strg_translatable) = if let Some((_, size, offset)) = strg {
         let strings = extract_strings(&data, *offset, *size);
         let t = strings.iter().filter(|s| s.is_translatable).count();
         (strings.len(), t)
@@ -290,17 +394,48 @@ pub async fn gm_scan_data_win(game_path: String) -> Result<GmDataInfo, String> {
         (0, 0)
     };
     
+    // Detect YYC: if data.win has very few translatable strings (< 5% or < 50),
+    // the game is likely compiled with YYC and text is in the EXE
+    let yyc_threshold = (strg_total as f64 * 0.05) as usize;
+    let is_yyc = strg_translatable < 50.min(yyc_threshold.max(50));
+    
+    let (total, translatable, exe_path) = if is_yyc {
+        // Try to extract strings from EXE
+        if let Some(exe) = find_game_exe(&game_path) {
+            println!("[GM] YYC detected — scanning EXE: {}", exe.display());
+            match fs::read(&exe) {
+                Ok(exe_data) => {
+                    let exe_strings = extract_exe_strings(&exe_data, 15);
+                    let t = exe_strings.iter().filter(|s| s.is_translatable).count();
+                    println!("[GM] EXE: {} total strings, {} translatable", exe_strings.len(), t);
+                    (exe_strings.len(), t, Some(exe.to_string_lossy().to_string()))
+                }
+                Err(e) => {
+                    println!("[GM] Failed to read EXE: {}", e);
+                    (strg_total, strg_translatable, None)
+                }
+            }
+        } else {
+            println!("[GM] YYC detected but no EXE found — using data.win STRG");
+            (strg_total, strg_translatable, None)
+        }
+    } else {
+        (strg_total, strg_translatable, None)
+    };
+    
     let info = GmDataInfo {
         file_path: data_win_path.to_string_lossy().to_string(),
         file_size: data.len() as u64,
-        gm_version: version,
+        gm_version: if is_yyc { format!("{} (YYC)", version) } else { version },
         total_strings: total,
         translatable_strings: translatable,
         chunks: chunk_names,
+        is_yyc,
+        exe_path,
     };
     
-    println!("[GM] Found {} strings ({} translatable) in {} ({})", 
-             total, translatable, data_win_path.display(), info.gm_version);
+    println!("[GM] Found {} strings ({} translatable) — YYC={} in {}", 
+             total, translatable, is_yyc, data_win_path.display());
     
     Ok(info)
 }
@@ -314,6 +449,7 @@ pub async fn gm_extract_strings(
 ) -> Result<Vec<GmString>, String> {
     println!("[GM] Extracting strings from: {}", game_path);
     
+    // First check data.win STRG
     let data_win_path = find_data_win(&game_path)
         .ok_or_else(|| "data.win non trovato".to_string())?;
     
@@ -324,7 +460,24 @@ pub async fn gm_extract_strings(
     let strg = chunks.iter().find(|(name, _, _)| name == "STRG")
         .ok_or_else(|| "Chunk STRG non trovato in data.win".to_string())?;
     
-    let mut strings = extract_strings(&data, strg.2, strg.1);
+    let strg_strings = extract_strings(&data, strg.2, strg.1);
+    let strg_translatable = strg_strings.iter().filter(|s| s.is_translatable).count();
+    
+    // Detect YYC: few translatable STRG strings → extract from EXE
+    let is_yyc = strg_translatable < 50;
+    
+    let mut strings = if is_yyc {
+        if let Some(exe_path) = find_game_exe(&game_path) {
+            println!("[GM] YYC mode — extracting from EXE: {}", exe_path.display());
+            let exe_data = fs::read(&exe_path)
+                .map_err(|e| format!("Errore lettura EXE: {}", e))?;
+            extract_exe_strings(&exe_data, 15)
+        } else {
+            strg_strings
+        }
+    } else {
+        strg_strings
+    };
     
     if only_translatable.unwrap_or(true) {
         strings.retain(|s| s.is_translatable);
@@ -332,7 +485,7 @@ pub async fn gm_extract_strings(
     
     // Pagination
     let start = offset.unwrap_or(0);
-    let count = limit.unwrap_or(500);
+    let count = limit.unwrap_or(100);
     let end = (start + count).min(strings.len());
     
     if start < strings.len() {
@@ -341,7 +494,7 @@ pub async fn gm_extract_strings(
         strings = Vec::new();
     }
     
-    println!("[GM] Returning {} strings (offset={}, limit={})", strings.len(), start, count);
+    println!("[GM] Returning {} strings (offset={}, limit={}, yyc={})", strings.len(), start, count, is_yyc);
     Ok(strings)
 }
 
@@ -355,166 +508,131 @@ pub async fn gm_patch_strings(
     let data_win_path = find_data_win(&game_path)
         .ok_or_else(|| "data.win non trovato".to_string())?;
     
-    // Read original
+    // Check if YYC
     let data = fs::read(&data_win_path)
-        .map_err(|e| format!("Errore lettura: {}", e))?;
-    
-    // Backup
-    let backup_path = data_win_path.with_extension("win.bak");
-    if !backup_path.exists() {
-        fs::copy(&data_win_path, &backup_path)
-            .map_err(|e| format!("Errore backup: {}", e))?;
-        println!("[GM] Backup creato: {}", backup_path.display());
-    }
+        .map_err(|e| format!("Errore lettura data.win: {}", e))?;
     
     let chunks = parse_chunks(&data);
     let strg = chunks.iter().find(|(name, _, _)| name == "STRG")
         .ok_or_else(|| "Chunk STRG non trovato".to_string())?;
     
-    let all_strings = extract_strings(&data, strg.2, strg.1);
+    let strg_strings = extract_strings(&data, strg.2, strg.1);
+    let strg_translatable = strg_strings.iter().filter(|s| s.is_translatable).count();
+    let is_yyc = strg_translatable < 50;
     
-    // Strategy: rebuild the STRG chunk with modified strings.
-    // GameMaker STRG format:
-    //   u32 count
-    //   u32[count] pointers (absolute offsets to string data)
-    //   String data: for each string: u32 length, chars[length], null byte
-    //
-    // When we change a string length, all subsequent pointers shift.
-    // We rebuild the entire STRG chunk and adjust the FORM size.
+    if is_yyc {
+        // ── YYC MODE: patch EXE directly ──
+        patch_exe(&game_path, &translations)
+    } else {
+        // ── Standard MODE: patch data.win STRG ──
+        patch_data_win(&data, &data_win_path, strg, &strg_strings, &translations)
+    }
+}
+
+/// Patch a YYC-compiled EXE by replacing strings at their exact byte offsets
+fn patch_exe(
+    game_path: &str,
+    translations: &HashMap<usize, String>,
+) -> Result<GmPatchResult, String> {
+    let exe_path = find_game_exe(game_path)
+        .ok_or_else(|| "EXE del gioco non trovato".to_string())?;
     
-    let strg_chunk_header_offset = strg.2 as usize - 8; // "STRG" magic + size
-    let strg_data_offset = strg.2 as usize;
-    let old_strg_size = strg.1 as usize;
+    println!("[GM-YYC] Patching EXE: {}", exe_path.display());
     
-    // Build new string data
-    let count = all_strings.len();
-    let table_size = 4 + count * 4; // count + pointers
+    // Backup EXE
+    let backup_path = exe_path.with_extension("exe.bak");
+    if !backup_path.exists() {
+        fs::copy(&exe_path, &backup_path)
+            .map_err(|e| format!("Errore backup EXE: {}", e))?;
+        println!("[GM-YYC] Backup EXE creato: {}", backup_path.display());
+    }
     
-    // First pass: collect all final strings
-    let _final_strings: Vec<&str> = Vec::with_capacity(count);
+    // Read EXE
+    let mut exe_data = fs::read(&exe_path)
+        .map_err(|e| format!("Errore lettura EXE: {}", e))?;
+    
+    // Re-extract strings to get offsets
+    let all_strings = extract_exe_strings(&exe_data, 15);
+    
     let mut patched_count = 0;
     
-    // We need owned strings for translated versions
-    let mut owned_translations: Vec<Option<String>> = vec![None; count];
-    for s in &all_strings {
-        if let Some(translated) = translations.get(&s.index) {
-            owned_translations[s.index] = Some(translated.clone());
+    for (idx, translated) in translations.iter() {
+        // Find the string by index
+        if let Some(s) = all_strings.iter().find(|s| s.index == *idx) {
+            let offset = s.data_offset as usize;
+            let original_len = s.length; // byte length in EXE
+            let trans_bytes = translated.as_bytes();
+            
+            // Same-length replacement: pad with spaces or truncate
+            let end = offset + original_len;
+            if end > exe_data.len() { continue; }
+            
+            // Write translated bytes (truncate if longer)
+            let write_len = trans_bytes.len().min(original_len);
+            exe_data[offset..offset + write_len].copy_from_slice(&trans_bytes[..write_len]);
+            
+            // Pad remaining with spaces (0x20) to keep same length
+            if write_len < original_len {
+                for b in &mut exe_data[offset + write_len..end] {
+                    *b = 0x20; // space padding
+                }
+            }
+            
             patched_count += 1;
         }
     }
     
-    // Calculate new string data section
-    // After the pointer table, strings are: u32 len + chars + \0
-    let mut string_data_buf: Vec<u8> = Vec::new();
-    let mut new_pointers: Vec<u32> = Vec::with_capacity(count);
+    // Write patched EXE
+    fs::write(&exe_path, &exe_data)
+        .map_err(|e| format!("Errore scrittura EXE: {}", e))?;
     
-    // The absolute offset where string data starts (after the pointer table)
-    // We'll calculate the actual absolute offset after we know where STRG lands
-    // For now, use placeholder and fix later
-    
-    for (i, s) in all_strings.iter().enumerate() {
-        let text = if let Some(ref t) = owned_translations[i] {
-            t.as_str()
-        } else {
-            s.original.as_str()
-        };
-        let text_bytes = text.as_bytes();
-        let text_len = text_bytes.len() as u32;
-        
-        // Record where this string data will be (relative to string_data_buf start)
-        new_pointers.push(string_data_buf.len() as u32);
-        
-        // Write: u32 length + chars + null
-        string_data_buf.extend_from_slice(&text_len.to_le_bytes());
-        string_data_buf.extend_from_slice(text_bytes);
-        string_data_buf.push(0); // null terminator
-        
-        // Align to 4 bytes (some GM versions need this)
-        // Actually, let's check: padding between strings
-        // GM usually packs strings tightly without alignment
-    }
-    
-    // Build new STRG chunk data
-    let new_strg_data_size = table_size + string_data_buf.len();
-    let mut new_strg_data: Vec<u8> = Vec::with_capacity(new_strg_data_size);
-    
-    // Write count
-    new_strg_data.extend_from_slice(&(count as u32).to_le_bytes());
-    
-    // Calculate absolute base for string data
-    // The pointers table lives at: strg_data_offset + 4 + (i * 4)
-    // String data starts at: strg_data_offset + 4 + count * 4
-    let string_data_abs_base = (strg_data_offset + 4 + count * 4) as u32;
-    
-    // Write pointers (absolute offsets adjusted for new positions)
-    for ptr in &new_pointers {
-        let abs_ptr = string_data_abs_base + ptr;
-        new_strg_data.extend_from_slice(&abs_ptr.to_le_bytes());
-    }
-    
-    // Write string data
-    new_strg_data.extend_from_slice(&string_data_buf);
-    
-    // Now rebuild the file
-    // Parts: [before STRG chunk] [new STRG header + data] [after old STRG chunk]
-    let before_strg = &data[..strg_chunk_header_offset];
-    let after_strg_offset = strg_chunk_header_offset + 8 + old_strg_size;
-    let after_strg = if after_strg_offset < data.len() {
-        &data[after_strg_offset..]
-    } else {
-        &[]
-    };
-    
-    let mut new_file: Vec<u8> = Vec::with_capacity(data.len());
-    new_file.extend_from_slice(before_strg);
-    
-    // Write STRG chunk header
-    new_file.extend_from_slice(b"STRG");
-    new_file.extend_from_slice(&(new_strg_data.len() as u32).to_le_bytes());
-    new_file.extend_from_slice(&new_strg_data);
-    
-    // If the STRG chunk size changed, we need to adjust all absolute offsets
-    // in chunks AFTER STRG. This is complex — for now, if sizes differ,
-    // we need to adjust pointers in other chunks too.
-    let size_delta = new_strg_data.len() as i64 - old_strg_size as i64;
-    
-    if size_delta != 0 {
-        // For chunks after STRG that contain absolute offsets, we'd need to 
-        // adjust them. This is a simplified approach: we only support same-size
-        // or we rebuild properly.
-        // 
-        // Better approach: pad shorter translations to original length,
-        // or use a "full rebuild" mode.
-        //
-        // For safety, let's pad/truncate strings to keep STRG same size:
-        if size_delta != 0 {
-            // Rebuild with padding to maintain original size
-            return rebuild_same_size(
-                &data, &all_strings, &owned_translations, 
-                strg_chunk_header_offset, strg_data_offset, old_strg_size,
-                &data_win_path, &backup_path
-            );
-        }
-    }
-    
-    new_file.extend_from_slice(after_strg);
-    
-    // Update FORM size
-    let new_form_size = (new_file.len() - 8) as u32;
-    write_u32_le(&mut new_file, 4, new_form_size);
-    
-    // Write patched file
-    fs::write(&data_win_path, &new_file)
-        .map_err(|e| format!("Errore scrittura data.win: {}", e))?;
-    
-    println!("[GM] Patch completata: {} stringhe modificate", patched_count);
+    println!("[GM-YYC] Patch EXE completata: {} stringhe", patched_count);
     
     Ok(GmPatchResult {
         success: true,
         patched_count,
         backup_path: backup_path.to_string_lossy().to_string(),
-        message: format!("{} stringhe tradotte e salvate in data.win", patched_count),
+        message: format!("{} stringhe tradotte nell'EXE (same-length)", patched_count),
     })
+}
+
+/// Patch data.win STRG chunk (standard non-YYC games)
+fn patch_data_win(
+    data: &[u8],
+    data_win_path: &Path,
+    strg: &(String, u32, u64),
+    all_strings: &[GmString],
+    translations: &HashMap<usize, String>,
+) -> Result<GmPatchResult, String> {
+    // Backup
+    let backup_path = data_win_path.with_extension("win.bak");
+    if !backup_path.exists() {
+        fs::copy(data_win_path, &backup_path)
+            .map_err(|e| format!("Errore backup: {}", e))?;
+        println!("[GM] Backup creato: {}", backup_path.display());
+    }
+    
+    let strg_chunk_header_offset = strg.2 as usize - 8;
+    let strg_data_offset = strg.2 as usize;
+    let old_strg_size = strg.1 as usize;
+    let count = all_strings.len();
+    
+    // Build owned translations array
+    let mut owned_translations: Vec<Option<String>> = vec![None; count];
+    for s in all_strings {
+        if let Some(translated) = translations.get(&s.index) {
+            if s.index < count {
+                owned_translations[s.index] = Some(translated.clone());
+            }
+        }
+    }
+    
+    // Always use same-size rebuild for safety
+    rebuild_same_size(
+        data, all_strings, &owned_translations,
+        strg_chunk_header_offset, strg_data_offset, old_strg_size,
+        data_win_path, &backup_path
+    )
 }
 
 /// Rebuild STRG chunk keeping the same total size by padding/truncating strings
@@ -633,19 +751,35 @@ fn rebuild_same_size(
 
 #[tauri::command(rename_all = "camelCase")]
 pub async fn gm_restore_backup(game_path: String) -> Result<String, String> {
-    let data_win_path = find_data_win(&game_path)
-        .ok_or_else(|| "data.win non trovato".to_string())?;
+    let mut restored = Vec::new();
     
-    let backup_path = data_win_path.with_extension("win.bak");
-    if !backup_path.exists() {
-        return Err("Nessun backup trovato (data.win.bak)".to_string());
+    // Try restoring data.win backup
+    if let Some(data_win_path) = find_data_win(&game_path) {
+        let backup_path = data_win_path.with_extension("win.bak");
+        if backup_path.exists() {
+            fs::copy(&backup_path, &data_win_path)
+                .map_err(|e| format!("Errore ripristino data.win: {}", e))?;
+            println!("[GM] data.win backup ripristinato: {}", data_win_path.display());
+            restored.push("data.win");
+        }
     }
     
-    fs::copy(&backup_path, &data_win_path)
-        .map_err(|e| format!("Errore ripristino: {}", e))?;
+    // Try restoring EXE backup (YYC games)
+    if let Some(exe_path) = find_game_exe(&game_path) {
+        let backup_path = exe_path.with_extension("exe.bak");
+        if backup_path.exists() {
+            fs::copy(&backup_path, &exe_path)
+                .map_err(|e| format!("Errore ripristino EXE: {}", e))?;
+            println!("[GM] EXE backup ripristinato: {}", exe_path.display());
+            restored.push("EXE");
+        }
+    }
     
-    println!("[GM] Backup ripristinato: {}", data_win_path.display());
-    Ok("Backup ripristinato con successo".to_string())
+    if restored.is_empty() {
+        return Err("Nessun backup trovato".to_string());
+    }
+    
+    Ok(format!("Backup ripristinato: {}", restored.join(" + ")))
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -664,7 +798,22 @@ pub async fn gm_search_strings(
     let strg = chunks.iter().find(|(name, _, _)| name == "STRG")
         .ok_or_else(|| "Chunk STRG non trovato".to_string())?;
     
-    let strings = extract_strings(&data, strg.2, strg.1);
+    let strg_strings = extract_strings(&data, strg.2, strg.1);
+    let strg_translatable = strg_strings.iter().filter(|s| s.is_translatable).count();
+    
+    // YYC fallback
+    let strings = if strg_translatable < 50 {
+        if let Some(exe_path) = find_game_exe(&game_path) {
+            let exe_data = fs::read(&exe_path)
+                .map_err(|e| format!("Errore lettura EXE: {}", e))?;
+            extract_exe_strings(&exe_data, 15)
+        } else {
+            strg_strings
+        }
+    } else {
+        strg_strings
+    };
+    
     let query_lower = query.to_lowercase();
     
     let results: Vec<GmString> = strings.into_iter()

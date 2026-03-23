@@ -32,6 +32,8 @@ interface GmDataInfo {
   total_strings: number;
   translatable_strings: number;
   chunks: string[];
+  is_yyc: boolean;
+  exe_path: string | null;
 }
 
 interface GameMakerTranslatorProps {
@@ -69,7 +71,9 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       const info = await invoke<GmDataInfo>('gm_scan_data_win', { gamePath });
       setDataInfo(info);
       setTotalTranslatable(info.translatable_strings);
-      toast.success(`data.win trovato: ${info.translatable_strings} stringhe traducibili`);
+      toast.success(info.is_yyc 
+        ? `YYC: ${info.translatable_strings} stringhe traducibili trovate nell'EXE` 
+        : `data.win: ${info.translatable_strings} stringhe traducibili`);
     } catch (e: any) {
       toast.error(e?.toString() || 'data.win non trovato');
     } finally {
@@ -361,9 +365,16 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
           <Database className="h-5 w-5 text-amber-400" />
           <h3 className="text-base font-bold text-white">GameMaker Translator</h3>
           {dataInfo && (
-            <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400">
-              {dataInfo.gm_version}
-            </Badge>
+            <>
+              <Badge variant="outline" className="text-[10px] border-amber-500/30 text-amber-400">
+                {dataInfo.gm_version}
+              </Badge>
+              {dataInfo.is_yyc && (
+                <Badge variant="outline" className="text-[10px] border-purple-500/30 text-purple-400">
+                  EXE Strings
+                </Badge>
+              )}
+            </>
           )}
         </div>
         <div className="flex items-center gap-1.5">
@@ -385,7 +396,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       {isScanning ? (
         <div className="flex items-center gap-2 py-8 justify-center text-slate-400">
           <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm">Analisi data.win in corso...</span>
+          <span className="text-sm">Analisi in corso...</span>
         </div>
       ) : dataInfo ? (
         <>
