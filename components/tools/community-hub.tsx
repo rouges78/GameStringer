@@ -24,7 +24,20 @@ import {
   Eye,
   Heart,
   Gamepad2,
-  HardDrive
+  HardDrive,
+  Bell,
+  Bookmark,
+  BookmarkCheck,
+  Trophy,
+  UserPlus,
+  UserMinus,
+  Send,
+  ThumbsUp,
+  Edit3,
+  Trash2,
+  Crown,
+  Medal,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -61,6 +74,32 @@ import {
   type PackSearchFilters,
   type RetroPlatform
 } from '@/lib/community-hub-service';
+import {
+  type PackComment,
+  type LeaderboardEntry,
+  type BadgeAward,
+  type HubNotification,
+  type HubUser,
+  fetchComments,
+  postComment,
+  editComment as editCommentApi,
+  deleteComment as deleteCommentApi,
+  toggleCommentLike,
+  fetchLeaderboard,
+  toggleFavorite,
+  getFavorites,
+  isFavorite,
+  fetchNotifications,
+  getUnreadCount,
+  markAllNotificationsRead,
+  followUser,
+  unfollowUser,
+  isFollowing,
+  getFullProfile,
+  getUserBadges,
+  checkBadges,
+  isBackendEnabled,
+} from '@/lib/community-hub-backend';
 import { GitHubDiscussions } from './github-discussions';
 
 const languages = [
@@ -129,6 +168,20 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
+  // New community features state
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [comments, setComments] = useState<PackComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [favoritePacks, setFavoritePacks] = useState<TranslationPack[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [notifications, setNotifications] = useState<HubNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [activeTab, setActiveTab] = useState('browse');
+  const [backendAvailable, setBackendAvailable] = useState(false);
+
   const [filters, setFilters] = useState<PackSearchFilters>({
     query: '',
     targetLanguage: '',
@@ -154,6 +207,14 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
 
   useEffect(() => {
     loadData();
+    setBackendAvailable(isBackendEnabled());
+
+    // Load community features if backend is available
+    if (isBackendEnabled()) {
+      loadLeaderboard();
+      loadNotifications();
+      loadFavorites();
+    }
 
     // Handle URL params from Editor/Batch/Library
     if (initialQuery) {
@@ -197,11 +258,93 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
     }
   };
 
+  const loadLeaderboard = async () => {
+    try {
+      const data = await fetchLeaderboard(20);
+      setLeaderboard(data);
+    } catch (e) { console.error('Leaderboard error:', e); }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const [notifs, count] = await Promise.all([fetchNotifications(20), getUnreadCount()]);
+      setNotifications(notifs);
+      setUnreadCount(count);
+    } catch (e) { console.error('Notifications error:', e); }
+  };
+
+  const loadFavorites = async () => {
+    try {
+      const favs = await getFavorites();
+      setFavoritePacks(favs);
+      setFavoriteIds(new Set(favs.map(p => p.id)));
+    } catch (e) { console.error('Favorites error:', e); }
+  };
+
+  const handleToggleFavorite = async (packId: string) => {
+    try {
+      const nowFav = await toggleFavorite(packId);
+      setFavoriteIds(prev => {
+        const next = new Set(prev);
+        nowFav ? next.add(packId) : next.delete(packId);
+        return next;
+      });
+      toast.success(nowFav ? 'Aggiunto ai preferiti' : 'Rimosso dai preferiti');
+      if (activeTab === 'favorites') loadFavorites();
+    } catch (e: any) { toast.error(e.message || 'Errore preferiti'); }
+  };
+
+  const loadComments = async (packId: string) => {
+    try {
+      const data = await fetchComments(packId);
+      setComments(data);
+    } catch (e) { console.error('Comments error:', e); }
+  };
+
+  const handlePostComment = async (packId: string, parentId?: string) => {
+    const content = parentId ? replyContent : newComment;
+    if (!content.trim()) return;
+    try {
+      await postComment(packId, content.trim(), parentId);
+      setNewComment('');
+      setReplyContent('');
+      setReplyTo(null);
+      await loadComments(packId);
+      toast.success('Commento pubblicato');
+    } catch (e: any) { toast.error(e.message || 'Errore commento'); }
+  };
+
+  const handleDeleteComment = async (commentId: string, packId: string) => {
+    try {
+      await deleteCommentApi(commentId);
+      await loadComments(packId);
+      toast.success('Commento eliminato');
+    } catch (e: any) { toast.error(e.message || 'Errore eliminazione'); }
+  };
+
+  const handleToggleCommentLike = async (commentId: string, packId: string) => {
+    try {
+      await toggleCommentLike(commentId);
+      await loadComments(packId);
+    } catch (e: any) { toast.error(e.message || 'Errore like'); }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await markAllNotificationsRead();
+      setUnreadCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (e) { console.error(e); }
+  };
+
   const handleViewPack = async (pack: TranslationPack) => {
     setSelectedPack(pack);
     const reviews = await communityHubService.getPackReviews(pack.id);
     setPackReviews(reviews);
     setShowPackDetails(true);
+    if (backendAvailable) {
+      loadComments(pack.id);
+    }
   };
 
   const handleDownloadPack = async (packId: string) => {
@@ -285,6 +428,61 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
     <div className="space-y-4">
       {/* Action buttons */}
       <div className="flex items-center justify-end gap-2">
+        {backendAvailable && (
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setShowNotifications(!showNotifications); if (!showNotifications) loadNotifications(); }}
+            >
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Button>
+            {showNotifications && (
+              <div className="absolute right-0 top-10 z-50 w-80 bg-background border rounded-lg shadow-xl max-h-96 overflow-y-auto">
+                <div className="flex items-center justify-between p-3 border-b">
+                  <span className="text-sm font-semibold">Notifiche</span>
+                  {unreadCount > 0 && (
+                    <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={handleMarkAllRead}>
+                      Segna tutte lette
+                    </Button>
+                  )}
+                </div>
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">Nessuna notifica</div>
+                ) : (
+                  notifications.map(n => (
+                    <div key={n.id} className={`p-3 border-b last:border-0 text-sm ${!n.read ? 'bg-primary/5' : ''}`}>
+                      <div className="flex items-start gap-2">
+                        <div className={`mt-0.5 p-1 rounded-full ${
+                          n.type === 'badge_earned' ? 'bg-yellow-500/10 text-yellow-500' :
+                          n.type === 'new_follower' ? 'bg-blue-500/10 text-blue-500' :
+                          n.type === 'pack_comment' ? 'bg-green-500/10 text-green-500' :
+                          'bg-orange-500/10 text-orange-500'
+                        }`}>
+                          {n.type === 'badge_earned' && <Award className="h-3 w-3" />}
+                          {n.type === 'new_follower' && <UserPlus className="h-3 w-3" />}
+                          {n.type === 'pack_comment' && <MessageSquare className="h-3 w-3" />}
+                          {n.type === 'pack_review' && <Star className="h-3 w-3" />}
+                          {!['badge_earned','new_follower','pack_comment','pack_review'].includes(n.type) && <Bell className="h-3 w-3" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-xs">{n.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{n.message}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{new Date(n.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <Button 
           variant="outline" 
           size="sm"
@@ -407,11 +605,15 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="browse">
-        <TabsList className="h-8">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="h-8 flex-wrap">
           <TabsTrigger value="browse" className="text-xs h-7">{t('communityHub.browsePacks')}</TabsTrigger>
           <TabsTrigger value="retro" className="text-xs h-7">🎮 Retro Patches</TabsTrigger>
           <TabsTrigger value="featured" className="text-xs h-7">⭐ {t('communityHub.featured')}</TabsTrigger>
+          <TabsTrigger value="leaderboard" className="text-xs h-7"><Trophy className="h-3 w-3 mr-1" />Classifica</TabsTrigger>
+          {backendAvailable && (
+            <TabsTrigger value="favorites" className="text-xs h-7"><Bookmark className="h-3 w-3 mr-1" />Preferiti</TabsTrigger>
+          )}
           <TabsTrigger value="activity" className="text-xs h-7">{t('communityHub.recentActivity')}</TabsTrigger>
           <TabsTrigger value="discussions" className="text-xs h-7">💬 {t('communityHub.discussions') || 'Discussions'}</TabsTrigger>
         </TabsList>
@@ -483,6 +685,20 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
 
                     {/* Actions */}
                     <div className="flex gap-2">
+                      {backendAvailable && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={(e) => { e.stopPropagation(); handleToggleFavorite(pack.id); }}
+                        >
+                          {favoriteIds.has(pack.id) ? (
+                            <BookmarkCheck className="h-3.5 w-3.5 text-orange-500" />
+                          ) : (
+                            <Bookmark className="h-3.5 w-3.5 text-muted-foreground" />
+                          )}
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleViewPack(pack)}>
                         {t('communityHub.details')}
                       </Button>
@@ -704,6 +920,141 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
           </Card>
         </TabsContent>
 
+        {/* Leaderboard Tab */}
+        <TabsContent value="leaderboard" className="mt-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-yellow-500" />
+                <CardTitle className="text-base">Classifica Traduttori</CardTitle>
+              </div>
+              <CardDescription>I migliori traduttori della community, ordinati per punteggio</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {leaderboard.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Trophy className="h-10 w-10 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">{backendAvailable ? 'Classifica vuota' : 'Configura Supabase nelle impostazioni per abilitare la classifica'}</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {leaderboard.map((entry, i) => (
+                    <div key={entry.id} className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors ${
+                      i === 0 ? 'bg-yellow-500/10 border border-yellow-500/20' :
+                      i === 1 ? 'bg-slate-300/10 border border-slate-400/20' :
+                      i === 2 ? 'bg-amber-700/10 border border-amber-700/20' :
+                      'hover:bg-muted/50'
+                    }`}>
+                      {/* Rank */}
+                      <div className="w-8 text-center">
+                        {i === 0 ? <Crown className="h-5 w-5 text-yellow-500 mx-auto" /> :
+                         i === 1 ? <Medal className="h-5 w-5 text-slate-400 mx-auto" /> :
+                         i === 2 ? <Medal className="h-5 w-5 text-amber-700 mx-auto" /> :
+                         <span className="text-sm font-bold text-muted-foreground">#{i + 1}</span>}
+                      </div>
+                      {/* Avatar */}
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={entry.avatar} />
+                        <AvatarFallback className="text-xs">{entry.username[0]?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-sm truncate">{entry.username}</span>
+                          {entry.verifiedTranslator && <Shield className="h-3 w-3 text-blue-500" />}
+                          {entry.country && <span className="text-xs">{entry.country}</span>}
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                          <span>{entry.publishedPacks} pack</span>
+                          <span>{entry.totalDownloads.toLocaleString()} dl</span>
+                          {entry.avgRating > 0 && <span>★ {entry.avgRating.toFixed(1)}</span>}
+                          {entry.badgeCount > 0 && <span>{entry.badgeCount} badge</span>}
+                        </div>
+                      </div>
+                      {/* Score */}
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-orange-500">{entry.score.toLocaleString()}</p>
+                        <p className="text-[10px] text-muted-foreground">punti</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Favorites Tab */}
+        {backendAvailable && (
+          <TabsContent value="favorites" className="space-y-3 mt-3">
+            {favoritePacks.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-lg font-medium">Nessun preferito</p>
+                  <p className="text-muted-foreground text-sm">Usa il pulsante segnalibro sulle card per aggiungere pack ai preferiti</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {favoritePacks.map(pack => (
+                  <Card key={pack.id} className="hover:border-primary/50 transition-colors" style={getGameCardStyle(pack.gameName, pack.gameId)}>
+                    <CardContent className="p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-sm">{getLanguageFlag(pack.sourceLanguage)}→{getLanguageFlag(pack.targetLanguage)}</span>
+                            {getStatusBadge(pack.status)}
+                          </div>
+                          <h3 className="font-semibold text-sm truncate">{pack.name}</h3>
+                          <p className="text-xs text-muted-foreground truncate">{pack.gameName}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => handleToggleFavorite(pack.id)}
+                          >
+                            <BookmarkCheck className="h-3.5 w-3.5 text-orange-500" />
+                          </Button>
+                          <div className="flex items-center gap-0.5 text-yellow-500">
+                            <Star className="h-3 w-3 fill-current" />
+                            <span className="text-xs font-medium">{pack.rating.toFixed(1)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Progress value={pack.completionPercentage} className="h-1.5 flex-1" />
+                        <span className="text-[10px] text-muted-foreground w-8">{pack.completionPercentage}%</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="flex-1 h-7 text-xs" onClick={() => handleViewPack(pack)}>
+                          {t('communityHub.details')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 h-7 text-xs bg-orange-500 hover:bg-orange-600"
+                          onClick={() => handleDownloadPack(pack.id)}
+                          disabled={isDownloading === pack.id || communityHubService.isPackInstalled(pack.id)}
+                        >
+                          {isDownloading === pack.id ? (
+                            <RefreshCw className="h-3 w-3 animate-spin" />
+                          ) : communityHubService.isPackInstalled(pack.id) ? (
+                            <><CheckCircle className="h-3 w-3 mr-1" />✓</>
+                          ) : (
+                            <><Download className="h-3 w-3 mr-1" />{t('communityHub.download')}</>
+                          )}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        )}
+
         <TabsContent value="discussions" className="mt-4">
           <GitHubDiscussions />
         </TabsContent>
@@ -829,9 +1180,132 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                     </div>
                   </div>
                 )}
+
+                {/* Comments Section */}
+                {backendAvailable && (
+                  <div>
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Commenti ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)})
+                    </h4>
+
+                    {/* New comment input */}
+                    <div className="flex gap-2 mb-4">
+                      <Input
+                        placeholder="Scrivi un commento..."
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePostComment(selectedPack.id); } }}
+                        className="flex-1 h-9"
+                      />
+                      <Button
+                        size="sm"
+                        className="h-9"
+                        onClick={() => handlePostComment(selectedPack.id)}
+                        disabled={!newComment.trim()}
+                      >
+                        <Send className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+
+                    {/* Comment list */}
+                    <div className="space-y-3">
+                      {comments.map(comment => (
+                        <div key={comment.id} className="space-y-2">
+                          {/* Root comment */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium">{comment.author.username}</span>
+                                {comment.author.verifiedTranslator && <Shield className="h-3 w-3 text-blue-500" />}
+                                {comment.edited && <span className="text-[10px] text-muted-foreground">(modificato)</span>}
+                              </div>
+                              <span className="text-[10px] text-muted-foreground">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-sm mb-2">{comment.content}</p>
+                            <div className="flex items-center gap-3">
+                              <button
+                                className={`flex items-center gap-1 text-[11px] ${comment.likedByMe ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-500 transition-colors`}
+                                onClick={() => handleToggleCommentLike(comment.id, selectedPack.id)}
+                              >
+                                <ThumbsUp className="h-3 w-3" /> {comment.likes > 0 ? comment.likes : ''}
+                              </button>
+                              <button
+                                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                                onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
+                              >
+                                Rispondi
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Replies */}
+                          {comment.replies && comment.replies.length > 0 && (
+                            <div className="ml-6 space-y-2">
+                              {comment.replies.map(reply => (
+                                <div key={reply.id} className="p-2.5 bg-muted/20 rounded-lg border-l-2 border-muted">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-medium">{reply.author.username}</span>
+                                      {reply.author.verifiedTranslator && <Shield className="h-2.5 w-2.5 text-blue-500" />}
+                                    </div>
+                                    <span className="text-[10px] text-muted-foreground">{new Date(reply.createdAt).toLocaleDateString()}</span>
+                                  </div>
+                                  <p className="text-xs">{reply.content}</p>
+                                  <button
+                                    className={`flex items-center gap-1 text-[10px] mt-1 ${reply.likedByMe ? 'text-blue-500' : 'text-muted-foreground'} hover:text-blue-500`}
+                                    onClick={() => handleToggleCommentLike(reply.id, selectedPack.id)}
+                                  >
+                                    <ThumbsUp className="h-2.5 w-2.5" /> {reply.likes > 0 ? reply.likes : ''}
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Reply input */}
+                          {replyTo === comment.id && (
+                            <div className="ml-6 flex gap-2">
+                              <Input
+                                placeholder="Rispondi..."
+                                value={replyContent}
+                                onChange={(e) => setReplyContent(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePostComment(selectedPack.id, comment.id); } }}
+                                className="flex-1 h-8 text-xs"
+                                autoFocus
+                              />
+                              <Button size="sm" className="h-8" onClick={() => handlePostComment(selectedPack.id, comment.id)} disabled={!replyContent.trim()}>
+                                <Send className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8" onClick={() => { setReplyTo(null); setReplyContent(''); }}>
+                                ✕
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {comments.length === 0 && (
+                        <p className="text-center text-sm text-muted-foreground py-4">Nessun commento ancora. Sii il primo!</p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <DialogFooter>
+                {backendAvailable && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleToggleFavorite(selectedPack.id)}
+                  >
+                    {favoriteIds.has(selectedPack.id) ? (
+                      <><BookmarkCheck className="h-4 w-4 mr-2 text-orange-500" />Preferito</>
+                    ) : (
+                      <><Bookmark className="h-4 w-4 mr-2" />Aggiungi ai preferiti</>
+                    )}
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => setShowPackDetails(false)}>
                   {t('communityHub.close')}
                 </Button>
