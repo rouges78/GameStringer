@@ -375,6 +375,12 @@ fn is_translatable_exe_string(s: &str) -> bool {
     if lower.contains("save file") && lower.contains("for ") { return false; }
     if lower.contains("[debug]") || lower.contains("[error]") || lower.contains("[warning]") { return false; }
     if lower.contains("[load]") || lower.contains("[save]") { return false; }
+    // Dev log messages: "something loaded:", "something not found!", "something failed:"
+    if lower.ends_with(':') && s.len() < 40 { return false; }
+    if lower.contains("not found") && s.len() < 50 { return false; }
+    if lower.contains("loaded:") || lower.contains("loading:") || lower.contains("failed:") { return false; }
+    if lower.contains("folder not found") || lower.contains("file not found") { return false; }
+    if lower.contains("initialized") && s.len() < 50 { return false; }
     
     true
 }
