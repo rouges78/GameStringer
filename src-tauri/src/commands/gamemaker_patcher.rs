@@ -278,15 +278,53 @@ fn is_translatable_exe_string(s: &str) -> bool {
     
     let lower = s.to_lowercase();
     
-    // ── Binary garbage / non-printable ──
-    // Skip strings with backslash-escaped chars (binary artifacts like \$ UVWATAU...)
-    if s.starts_with("\\$") || s.starts_with("\\x") || s.starts_with("\\0") { return false; }
-    // Skip strings that start with non-letter non-common punctuation
-    let first_char = s.chars().next().unwrap_or(' ');
-    if !first_char.is_alphanumeric() && !"([\"'<{#-+*!".contains(first_char) && first_char != '\t' && first_char != '\r' { return false; }
-    // Skip strings with too many non-printable or unusual chars
-    let clean_chars = s.chars().filter(|c| c.is_alphanumeric() || " .,!?'-:;()[]#\r\n\t/\"<>{}=+*@&%$~^_\\".contains(*c)).count();
-    if (clean_chars as f64 / s.len() as f64) < 0.85 { return false; }
+    // ── Structural text quality checks ──
+    // x86 machine code decoded as ASCII produces strings like "L$ UVWATAUAVAWH",
+    // "D$(9D$ }\HcD$ H", "uVfE9E uOfE9E0". These pass naive word-count checks
+    // because they contain letter sequences. We need deeper structural analysis.
+    
+    // Split into "tokens" separated by non-alphanumeric chars
+    let tokens: Vec<&str> = s.split(|c: char| !c.is_alphanumeric()).filter(|t| !t.is_empty()).collect();
+    
+    // Count tokens that look like real words:
+    // - 3+ chars
+    // - Contains at least one vowel AND one consonant (not all-consonant gibberish)
+    // - Not a mix of digits and letters (like "9r", "E9Z", "D24")
+    let vowels = "aeiouAEIOU";
+    let mut real_word_count = 0usize;
+    let mut letter_count = 0usize;
+    
+    for token in &tokens {
+        let has_digit = token.chars().any(|c| c.is_ascii_digit());
+        let has_letter = token.chars().any(|c| c.is_alphabetic());
+        let letter_chars: String = token.chars().filter(|c| c.is_alphabetic()).collect();
+        
+        // Count letters globally
+        letter_count += token.chars().filter(|c| c.is_alphabetic()).count();
+        
+        // Skip tokens that mix digits and letters (x86 artifact: "9r", "E9Z", "H0u")
+        if has_digit && has_letter { continue; }
+        
+        // Only consider letter-only tokens of 3+ chars
+        if letter_chars.len() < 3 { continue; }
+        
+        let has_vowel = letter_chars.chars().any(|c| vowels.contains(c));
+        let has_consonant = letter_chars.chars().any(|c| c.is_alphabetic() && !vowels.contains(c));
+        
+        // Real words have vowels AND consonants
+        if has_vowel && has_consonant {
+            real_word_count += 1;
+        }
+    }
+    
+    // Must have at least 2 real words
+    if real_word_count < 2 { return false; }
+    // Letters must be at least 40% of total
+    let letter_ratio = letter_count as f64 / s.len() as f64;
+    if letter_ratio < 0.40 { return false; }
+    
+    // ── Known non-game patterns ──
+    if lower.contains("dos mode") || lower.contains("this program") { return false; }
     
     // ── C format strings / GM runtime error messages ──
     // These contain %d, %s, %f, %i, %u patterns (printf-style)
