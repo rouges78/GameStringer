@@ -792,10 +792,13 @@ fn patch_language_files(
         
         // Read from backup (original) to avoid re-patching already patched files
         let backup_file = backup_dir.join(&filename);
-        let source_path = if backup_file.exists() { &backup_file } else { path };
-        
-        let content = fs::read_to_string(source_path)
-            .map_err(|e| format!("Errore lettura {}: {}", filename, e))?;
+        let content = if backup_file.exists() {
+            fs::read_to_string(&backup_file)
+                .map_err(|e| format!("Errore lettura backup {}: {}", filename, e))?
+        } else {
+            fs::read_to_string(path)
+                .map_err(|e| format!("Errore lettura {}: {}", filename, e))?
+        };
         
         let mut output_lines = Vec::new();
         
@@ -835,8 +838,8 @@ fn patch_language_files(
             global_index += 1;
         }
         
-        // Overwrite engLanguage/ file directly
-        fs::write(path, output_lines.join("\n"))
+        // Overwrite engLanguage/ file directly (CRLF line endings to match original)
+        fs::write(path, output_lines.join("\r\n"))
             .map_err(|e| format!("Errore scrittura {}: {}", filename, e))?;
     }
     
