@@ -54,7 +54,7 @@ fn read_u32_le(data: &[u8], pos: usize) -> u32 {
     u32::from_le_bytes([data[pos], data[pos+1], data[pos+2], data[pos+3]])
 }
 
-fn write_u32_le(data: &mut [u8], pos: usize, val: u32) {
+fn _write_u32_le(data: &mut [u8], pos: usize, val: u32) {
     let bytes = val.to_le_bytes();
     data[pos..pos+4].copy_from_slice(&bytes);
 }
@@ -514,7 +514,7 @@ fn extract_jn_strings(eng_dir: &Path) -> Vec<GmString> {
         
         for path in paths {
             if path.extension().map_or(true, |ext| ext != "jn") { continue; }
-            let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+            let _filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
             
             if let Ok(content) = fs::read_to_string(&path) {
                 for (line_num, line) in content.lines().enumerate() {
