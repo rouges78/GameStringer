@@ -270,7 +270,7 @@ fn find_game_exe(game_path: &str) -> Option<PathBuf> {
 /// Heuristic: is this EXE string translatable game text?
 fn is_translatable_exe_string(s: &str) -> bool {
     let s = s.trim();
-    if s.len() < 5 { return false; }
+    if s.len() < 8 { return false; }
     // Must contain a space (real text, not identifiers)
     if !s.contains(' ') { return false; }
     // Must have letters
@@ -278,26 +278,65 @@ fn is_translatable_exe_string(s: &str) -> bool {
     
     let lower = s.to_lowercase();
     
-    // Skip code/system strings
+    // ── Binary garbage / non-printable ──
+    // Skip strings with backslash-escaped chars (binary artifacts like \$ UVWATAU...)
+    if s.starts_with("\\$") || s.starts_with("\\x") || s.starts_with("\\0") { return false; }
+    // Skip strings that start with non-letter non-common punctuation
+    let first_char = s.chars().next().unwrap_or(' ');
+    if !first_char.is_alphanumeric() && !"([\"'<{#-+*!".contains(first_char) && first_char != '\t' && first_char != '\r' { return false; }
+    // Skip strings with too many non-printable or unusual chars
+    let clean_chars = s.chars().filter(|c| c.is_alphanumeric() || " .,!?'-:;()[]#\r\n\t/\"<>{}=+*@&%$~^_\\".contains(*c)).count();
+    if (clean_chars as f64 / s.len() as f64) < 0.85 { return false; }
+    
+    // ── C format strings / GM runtime error messages ──
+    // These contain %d, %s, %f, %i, %u patterns (printf-style)
+    if s.contains("%d") || s.contains("%s") || s.contains("%f") || s.contains("%i") || s.contains("%u") || s.contains("%x") || s.contains("%p") {
+        return false;
+    }
+    // GM runtime/engine error messages
+    if lower.contains("index out of bounds") { return false; }
+    if lower.contains("not an array") || lower.contains("not a number") { return false; }
+    if lower.contains("unable to") && (lower.contains("convert") || lower.contains("add") || lower.contains("find") || lower.contains("allocate")) { return false; }
+    if lower.contains("invalid type") || lower.contains("invalid argument") { return false; }
+    if lower.contains("stack overflow") || lower.contains("out of memory") { return false; }
+    if lower.contains("trying to") && (lower.contains("index") || lower.contains("access") || lower.contains("read") || lower.contains("write")) { return false; }
+    if lower.contains("variable") && (lower.contains("not set") || lower.contains("not found") || lower.contains("uninitialized")) { return false; }
+    if lower.contains("array") && (lower.contains("expected") || lower.contains("bounds") || lower.contains("dimension")) { return false; }
+    if lower.contains("argument count") || lower.contains("wrong number") { return false; }
+    if lower.contains("division by zero") || lower.contains("negative value") { return false; }
+    if lower.contains("ds_") && lower.contains("does not exist") { return false; }
+    if lower.contains("instance") && lower.contains("does not exist") { return false; }
+    if lower.contains("fatal error") || lower.contains("unhandled exception") { return false; }
+    if lower.contains("assertion") || lower.contains("debug_break") { return false; }
+    
+    // ── Shader / GPU code ──
     if lower.contains("#define") || lower.contains("#include") || lower.contains("#version") { return false; }
     if lower.contains("precision ") && lower.contains("float") { return false; }
     if lower.contains("sampler2d") || lower.contains("uniform ") { return false; }
-    if lower.contains("microsoft") && lower.contains("compiler") { return false; }
-    if lower.contains(".dll") || lower.contains(".exe") || lower.contains(".sys") { return false; }
-    if lower.contains("kernel32") || lower.contains("ntdll") || lower.contains("advapi") { return false; }
-    if lower.contains("global.") || lower.contains("self.") { return false; }
-    if lower.contains("var ") && lower.contains(";") { return false; }
-    if lower.contains("function(") || lower.contains("if (") { return false; }
-    if lower.contains("&&") || lower.contains("||") { return false; }
     if lower.contains("vec4 ") || lower.contains("vec3 ") || lower.contains("float ") { return false; }
-    if lower.starts_with("//") { return false; } // comments in code
+    if lower.starts_with("//") { return false; }
     if lower.contains("matrix") && lower.contains("view") { return false; }
     if lower.contains("register(") { return false; }
-    if lower.contains("gml_") || lower.contains("obj_") || lower.contains("scr_") { return false; }
+    if lower.contains("microsoft") && (lower.contains("compiler") || lower.contains("shader")) { return false; }
     
-    // Skip strings that are mostly non-ASCII printable (binary data matched by accident)
-    let printable = s.chars().filter(|c| c.is_alphanumeric() || " .,!?'-:;()[]#\r\n\t/".contains(*c)).count();
-    if (printable as f64 / s.len() as f64) < 0.8 { return false; }
+    // ── OS / System strings ──
+    if lower.contains(".dll") || lower.contains(".exe") || lower.contains(".sys") { return false; }
+    if lower.contains("kernel32") || lower.contains("ntdll") || lower.contains("advapi") || lower.contains("user32") { return false; }
+    if lower.contains("hresult") || lower.contains("win32") || lower.contains("directx") { return false; }
+    if lower.contains("copyright") && lower.contains("microsoft") { return false; }
+    
+    // ── GML code patterns ──
+    if lower.contains("global.") || lower.contains("self.") || lower.contains("other.") { return false; }
+    if lower.contains("var ") && lower.contains(";") { return false; }
+    if lower.contains("function(") || lower.contains("if (") || lower.contains("while (") { return false; }
+    if lower.contains("&&") || lower.contains("||") || lower.contains("!=") { return false; }
+    if lower.contains("gml_") || lower.contains("obj_") || lower.contains("scr_") { return false; }
+    if lower.contains("ds_map") || lower.contains("ds_list") || lower.contains("ds_grid") { return false; }
+    
+    // ── Save file / config / debug strings ──
+    if lower.contains("save file") && lower.contains("for ") { return false; }
+    if lower.contains("[debug]") || lower.contains("[error]") || lower.contains("[warning]") { return false; }
+    if lower.contains("[load]") || lower.contains("[save]") { return false; }
     
     true
 }
