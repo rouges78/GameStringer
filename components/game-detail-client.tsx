@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { invoke } from '@/lib/tauri-api';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,10 +30,12 @@ import { toast } from 'sonner';
 import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dialog';
 
 import AudioPatcher from '@/components/audio-patcher';
+import { GameMakerTranslator } from '@/components/gamemaker-translator';
 
 export default function GameDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t, language } = useTranslation();
   
   // Read gameId from path params (dev) or query params (Tauri static export)
@@ -45,6 +47,17 @@ export default function GameDetailPage() {
     }
     return '';
   });
+
+  // Sync gameId when searchParams change (client-side navigation)
+  useEffect(() => {
+    const newId = searchParams.get('id') || (params.id as string) || '';
+    if (newId && newId !== gameId) {
+      setGameId(newId);
+      setGame(null);
+      setIsLoading(true);
+      gameDataLoadedRef.current = null; // allow re-fetch
+    }
+  }, [searchParams, params.id]);
   
   const [game, setGame] = useState<any>(null);
   const [translations, setTranslations] = useState<any[]>([]);
@@ -645,9 +658,25 @@ export default function GameDetailPage() {
   );
 
   useEffect(() => {
-    if (gameId) {
-      if (gameDataLoadedRef.current === gameId) return;
-      gameDataLoadedRef.current = gameId;
+    console.log('[GameDetail] useEffect triggered — gameId:', gameId, 'ref:', gameDataLoadedRef.current, 'url:', window.location.search);
+    if (!gameId) {
+      console.warn('[GameDetail] gameId è vuoto — stop loading');
+      setIsLoading(false);
+      return;
+    }
+    if (gameDataLoadedRef.current === gameId) {
+      console.log('[GameDetail] Skipping fetch — already loaded for gameId:', gameId);
+      return;
+    }
+    gameDataLoadedRef.current = gameId;
+
+    // Safety timeout: se dopo 25s isLoading è ancora true, forza false
+    const safetyTimer = setTimeout(() => {
+      console.warn('[GameDetail] Safety timeout raggiunto — forzo isLoading=false');
+      setIsLoading(false);
+    }, 25000);
+
+    {
       // Timeout wrapper: evita che una singola invoke blocchi tutto
       const safeInvoke = async <T = any>(cmd: string, args?: any, timeoutMs = 8000): Promise<T | null> => {
         try {
@@ -836,12 +865,15 @@ export default function GameDetailPage() {
         } catch (error) {
           console.error('Errore:', error);
         } finally {
+          clearTimeout(safetyTimer);
           setIsLoading(false);
         }
       };
       
       fetchGameData();
     }
+
+    return () => clearTimeout(safetyTimer);
   }, [gameId]);
 
   // Rileva motore automaticamente quando il gioco è caricato
@@ -1235,7 +1267,7 @@ export default function GameDetailPage() {
             updateStep(3, 'running', `${language === 'it' ? 'Traduzione' : 'Translating'} ${i + 1}/${Math.min(textFiles.length, 5)}: ${textFiles[i].split(/[/\\]/).pop()}`);
             try {
               const filePath = `${game.installPath}\\${textFiles[i]}`;
-              const content = await invoke<string>('read_text_file', { filePath });
+              const content = await invoke<string>('read_text_file', { path: filePath });
               if (content && content.length > 10) translatedCount++;
             } catch { /* skip */ }
           }
@@ -2283,6 +2315,13 @@ export default function GameDetailPage() {
                     </p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── ROW: GameMaker Translator (solo giochi GameMaker) ── */}
+            {(game.engine?.toLowerCase().includes('gamemaker') || game.engine?.toLowerCase().includes('game maker') || engineInfo?.engine?.toLowerCase().includes('gamemaker')) && game.installPath && (
+              <div className="rounded-xl bg-[#1b2838]/60 border border-amber-500/20 p-3.5">
+                <GameMakerTranslator gamePath={game.installPath} gameName={game.title || game.name} />
               </div>
             )}
           </motion.div>

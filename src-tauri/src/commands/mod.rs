@@ -104,6 +104,8 @@ pub mod repak_wrapper;
 pub mod rss_proxy;
 // Godot Engine PCK patcher
 pub mod godot_patcher;
+// GameMaker data.win string extractor & patcher
+pub mod gamemaker_patcher;
 
 // === Linux stubs for Windows-only modules ===
 #[cfg(not(windows))]

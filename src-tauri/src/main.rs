@@ -487,6 +487,13 @@ fn main() {
             commands::godot_patcher::create_godot_translation_pck,
             commands::godot_patcher::remove_godot_translation,
 
+            // GameMaker data.win patcher
+            commands::gamemaker_patcher::gm_scan_data_win,
+            commands::gamemaker_patcher::gm_extract_strings,
+            commands::gamemaker_patcher::gm_patch_strings,
+            commands::gamemaker_patcher::gm_restore_backup,
+            commands::gamemaker_patcher::gm_search_strings,
+
             // repak wrapper
             commands::repak_wrapper::download_repak_tool,
             commands::repak_wrapper::check_repak_installed,

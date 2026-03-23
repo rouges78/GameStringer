@@ -393,7 +393,7 @@ const normalizeLanguage = (language: string): string => {
   return languageMap[language] || language;
 };
 
-export default function LibraryPage() {
+function LibraryPageInner() {
   const searchParams = useSearchParams();
   const detailId = searchParams.get('id');
 
@@ -403,6 +403,18 @@ export default function LibraryPage() {
   }
 
   return <LibraryListView />;
+}
+
+export default function LibraryPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-full py-24">
+        <div className="animate-spin h-8 w-8 border-2 border-indigo-500 border-t-transparent rounded-full" />
+      </div>
+    }>
+      <LibraryPageInner />
+    </Suspense>
+  );
 }
 
 function LibraryListView() {
