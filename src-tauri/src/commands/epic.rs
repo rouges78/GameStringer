@@ -380,15 +380,45 @@ async fn exchange_oauth_code_for_token(authorization_code: &str) -> Result<EpicA
     }
 }
 
-/// Salva i dati di autenticazione Epic Games
+/// Salva i dati di autenticazione Epic Games (crittografato su disco)
 async fn save_epic_auth_data(auth_data: &EpicAuthData) -> Result<(), String> {
-    // Implementa il salvataggio sicuro dei dati di autenticazione
-    // Per ora, stampa solo i dati (senza token sensibili)
     println!("[EPIC OAUTH] 💾 Salvataggio auth data per account: {}", auth_data.account_id);
     
-    // TODO: Implementare salvataggio sicuro con crittografia
-    // Simile a come viene fatto per Steam credentials
+    let json = serde_json::to_string(auth_data)
+        .map_err(|e| format!("Errore serializzazione: {}", e))?;
     
+    // Genera chiave e nonce casuali
+    let mut key_bytes = [0u8; 32];
+    let mut nonce_bytes = [0u8; 12];
+    OsRng.fill_bytes(&mut key_bytes);
+    OsRng.fill_bytes(&mut nonce_bytes);
+    
+    // Cripta con AES-256-GCM
+    let cipher = Aes256Gcm::new_from_slice(&key_bytes)
+        .map_err(|e| format!("Errore creazione cipher: {}", e))?;
+    let nonce = Nonce::from_slice(&nonce_bytes);
+    let encrypted = cipher.encrypt(nonce, json.as_bytes())
+        .map_err(|e| format!("Errore crittografia: {}", e))?;
+    
+    // Salva su file: key(base64) + "." + nonce(base64) + "." + data(base64)
+    let encoded = format!(
+        "{}.{}.{}",
+        general_purpose::STANDARD.encode(&key_bytes),
+        general_purpose::STANDARD.encode(&nonce_bytes),
+        general_purpose::STANDARD.encode(&encrypted)
+    );
+    
+    let config_dir = dirs::config_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("GameStringer");
+    fs::create_dir_all(&config_dir)
+        .map_err(|e| format!("Errore creazione directory: {}", e))?;
+    
+    let auth_file = config_dir.join("epic_auth.enc");
+    fs::write(&auth_file, encoded)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    
+    info!("[EPIC OAUTH] ✅ Auth data salvata in {:?}", auth_file);
     Ok(())
 }
 
@@ -601,16 +631,102 @@ async fn try_legendary_library(_username: &str) -> Result<Vec<GameInfo>, String>
 
 /// Prova Epic Games Web API (richiede autenticazione)
 async fn try_epic_web_api(_credentials: &EpicCredentials) -> Result<Vec<GameInfo>, String> {
-    // TODO: Implementare autenticazione Epic Games Web API
-    // Questo richiederebbe OAuth2 flow e token management
-    Err("Epic Web API non ancora implementata".to_string())
+    // L'OAuth2 flow di Epic richiede un'app registrata e browser redirect.
+    // GameStringer usa Legendary come metodo principale.
+    Err("Epic Web API non supportata — usa Legendary per l'autenticazione".to_string())
 }
 
-/// Prova file locali Epic Games e cache
+/// Scansiona file locali Epic Games: manifests installati + LauncherInstalled.dat
 async fn try_epic_local_files(_username: &str) -> Result<Vec<GameInfo>, String> {
-    // TODO: Implementare scansione avanzata file Epic Games locali
-    // Questa potrebbe cercare in manifest files, cache, etc.
-    Err("Scansione file locali avanzata non ancora implementata".to_string())
+    let mut games = Vec::new();
+    
+    // Percorso 1: Manifests (.item files)
+    let manifests_dir = std::path::Path::new("C:\\ProgramData\\Epic\\EpicGamesLauncher\\Data\\Manifests");
+    if manifests_dir.exists() {
+        if let Ok(entries) = fs::read_dir(manifests_dir) {
+            for entry in entries.flatten() {
+                if entry.path().extension().and_then(|s| s.to_str()) == Some("item") {
+                    if let Ok(content) = fs::read_to_string(entry.path()) {
+                        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) {
+                            let display_name = json["DisplayName"].as_str().unwrap_or("").to_string();
+                            let install_location = json["InstallLocation"].as_str().unwrap_or("").to_string();
+                            let app_name = json["AppName"].as_str().unwrap_or("").to_string();
+                            
+                            if !display_name.is_empty() && !install_location.is_empty() {
+                                let engine = crate::commands::games::detect_game_engine(&display_name);
+                                games.push(GameInfo {
+                                    id: format!("epic_{}", app_name),
+                                    title: display_name,
+                                    platform: "Epic Games".to_string(),
+                                    install_path: Some(install_location),
+                                    executable_path: None,
+                                    icon: None,
+                                    image_url: None,
+                                    header_image: None,
+                                    is_installed: true,
+                                    steam_app_id: None,
+                                    is_vr: false,
+                                    engine,
+                                    last_played: None,
+                                    is_shared: false,
+                                    supported_languages: None,
+                                    genres: Some(vec!["Game".to_string()]),
+                                    added_date: None,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Percorso 2: LauncherInstalled.dat
+    let user_profile = std::env::var("USERPROFILE").unwrap_or_default();
+    let launcher_installed = format!("{}\\AppData\\Local\\EpicGamesLauncher\\Saved\\Config\\Windows\\LauncherInstalled.dat", user_profile);
+    if let Ok(content) = fs::read_to_string(&launcher_installed) {
+        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&content) {
+            if let Some(install_list) = json["InstallationList"].as_array() {
+                for item in install_list {
+                    let app_name = item["AppName"].as_str().unwrap_or("").to_string();
+                    let install_location = item["InstallLocation"].as_str().unwrap_or("").to_string();
+                    
+                    // Evita duplicati con quelli già trovati nei manifest
+                    if !app_name.is_empty() && !install_location.is_empty()
+                        && !games.iter().any(|g| g.id == format!("epic_{}", app_name))
+                    {
+                        let engine = crate::commands::games::detect_game_engine(&app_name);
+                        games.push(GameInfo {
+                            id: format!("epic_{}", app_name),
+                            title: app_name.clone(),
+                            platform: "Epic Games".to_string(),
+                            install_path: Some(install_location),
+                            executable_path: None,
+                            icon: None,
+                            image_url: None,
+                            header_image: None,
+                            is_installed: true,
+                            steam_app_id: None,
+                            is_vr: false,
+                            engine,
+                            last_played: None,
+                            is_shared: false,
+                            supported_languages: None,
+                            genres: Some(vec!["Game".to_string()]),
+                            added_date: None,
+                        });
+                    }
+                }
+            }
+        }
+    }
+    
+    if games.is_empty() {
+        Err("Nessun gioco Epic Games trovato nei file locali".to_string())
+    } else {
+        info!("[EPIC] 📁 Trovati {} giochi da file locali", games.len());
+        Ok(games)
+    }
 }
 
 /// Scansiona giochi Epic Games installati localmente

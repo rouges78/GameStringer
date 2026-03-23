@@ -530,12 +530,12 @@ pub async fn detect_engine_for_game(
         ),
         "Godot" => (
             true,
-            Some("Godot RE Tools (gdsdecomp)".to_string()),
-            Some("Estrai i file .pck con gdsdecomp per accedere ai testi.".to_string()),
+            Some("GameStringer Godot Patcher".to_string()),
+            Some("Estrai e traduci i file dal .pck Godot direttamente con GameStringer.".to_string()),
             vec![
-                "🔧 Scarica gdsdecomp da GitHub".to_string(),
-                "📁 Estrai il file .pck".to_string(),
-                "💡 Cerca file .csv o .tres per i testi".to_string(),
+                "✅ Godot supportato! Patcher PCK integrato".to_string(),
+                "� Scansione automatica file .pck per testi traducibili".to_string(),
+                "💡 Crea un PCK override leggero (non serve rimpacchettare tutto)".to_string(),
             ]
         ),
         "GameMaker" | "GameMaker Studio" | "GameMaker Studio 2" => (

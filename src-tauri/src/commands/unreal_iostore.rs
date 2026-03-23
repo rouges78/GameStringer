@@ -223,46 +223,88 @@ impl OodleLib {
     }
 }
 
-/// Cerca oo2core DLL in varie posizioni
-fn find_oodle_dll() -> Vec<PathBuf> {
+/// Cerca oo2core DLL in varie posizioni, inclusa la cartella del gioco
+pub fn find_oodle_dll_with_game(game_path: Option<&Path>) -> Vec<PathBuf> {
     let mut paths = Vec::new();
-    
-    // Cerca in UE installate
-    let ue_bases = vec![
-        "C:\\UE_5.7", "C:\\UE_5.5", "C:\\UE_5.4", "C:\\UE_5.3",
+
+    // 1. Cache GameStringer (%APPDATA%/GameStringer/tools/)
+    if let Some(gs_tools) = dirs::data_dir().map(|d| d.join("GameStringer").join("tools")) {
+        for ver in &["9", "8", "7"] {
+            let p = gs_tools.join(format!("oo2core_{}_win64.dll", ver));
+            if p.exists() { paths.push(p); }
+        }
+    }
+
+    // 2. Nella cartella del gioco stesso e Binaries/Win64/
+    // Molti giochi UE shippano la DLL accanto all'eseguibile
+    if let Some(gp) = game_path {
+        let scan_roots = vec![
+            gp.to_path_buf(),
+            gp.join("Binaries").join("Win64"),
+            gp.join("Binaries").join("WinGDK"),
+        ];
+        // Anche una cartella nidificata: <Gioco>/<NomeProgetto>/Binaries/Win64/
+        if let Ok(entries) = std::fs::read_dir(gp) {
+            for entry in entries.flatten() {
+                let sub = entry.path().join("Binaries").join("Win64");
+                if sub.is_dir() {
+                    let _ = scan_roots.iter(); // solo per non aver warning
+                    for ver in &["9", "8", "7"] {
+                        let p = sub.join(format!("oo2core_{}_win64.dll", ver));
+                        if p.exists() { paths.push(p.clone()); }
+                    }
+                }
+            }
+        }
+        for root in &scan_roots {
+            for ver in &["9", "8", "7"] {
+                let p = root.join(format!("oo2core_{}_win64.dll", ver));
+                if p.exists() { paths.push(p.clone()); }
+            }
+        }
+    }
+
+    // 3. Installazioni UE (tutte le versioni comuni)
+    let ue_bases = [
+        "C:\\UE_5.7", "C:\\UE_5.6", "C:\\UE_5.5", "C:\\UE_5.4", "C:\\UE_5.3",
+        "C:\\UE_5.2", "C:\\UE_5.1", "C:\\UE_5.0", "C:\\UE_4.27",
         "C:\\Program Files\\Epic Games\\UE_5.7",
         "C:\\Program Files\\Epic Games\\UE_5.5",
         "C:\\Program Files\\Epic Games\\UE_5.4",
+        "C:\\Program Files\\Epic Games\\UE_4.27",
     ];
-    
     for base in &ue_bases {
-        let p = PathBuf::from(base)
-            .join("Engine").join("Binaries").join("Win64").join("oo2core_9_win64.dll");
-        if p.exists() { paths.push(p.clone()); }
-        
-        // Anche in DotNET subdirs
-        let p2 = PathBuf::from(base)
-            .join("Engine").join("Binaries").join("DotNET")
-            .join("UnrealBuildTool").join("oo2core_9_win64.dll");
-        if p2.exists() { paths.push(p2); }
-        
-        let p3 = PathBuf::from(base)
-            .join("Engine").join("Binaries").join("DotNET")
-            .join("AutomationTool").join("oo2core_9_win64.dll");
-        if p3.exists() { paths.push(p3); }
+        let b = PathBuf::from(base);
+        for ver in &["9", "8", "7"] {
+            let dll = format!("oo2core_{}_win64.dll", ver);
+            for subpath in &[
+                vec!["Engine", "Binaries", "Win64"],
+                vec!["Engine", "Binaries", "DotNET", "AutomationTool"],
+                vec!["Engine", "Binaries", "DotNET", "UnrealBuildTool"],
+            ] {
+                let mut p = b.clone();
+                for s in subpath { p = p.join(s); }
+                p = p.join(&dll);
+                if p.exists() { paths.push(p); }
+            }
+        }
     }
-    
-    // Cerca nella directory di GameStringer
-    let exe_dir = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|d| d.to_path_buf()));
-    
-    if let Some(dir) = exe_dir {
-        let p = dir.join("oo2core_9_win64.dll");
-        if p.exists() { paths.push(p); }
+
+    // 4. Accanto all'exe di GameStringer
+    if let Some(dir) = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf())) {
+        for ver in &["9", "8", "7"] {
+            let p = dir.join(format!("oo2core_{}_win64.dll", ver));
+            if p.exists() { paths.push(p); }
+        }
     }
-    
+
+    paths.dedup();
     paths
+}
+
+/// Compatibilità: cerca senza game path
+fn find_oodle_dll() -> Vec<PathBuf> {
+    find_oodle_dll_with_game(None)
 }
 
 // ═══════════════════════════════════════════════════════════════════

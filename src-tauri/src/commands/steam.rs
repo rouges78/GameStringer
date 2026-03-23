@@ -4185,12 +4185,57 @@ fn parse_owned_games(steam_path: &str) -> Result<Vec<u32>, String> {
     Ok(owned_games)
 }
 
-/// Parsa localconfig.vdf per trovare giochi
-fn parse_localconfig_for_games(_localconfig_path: &Path) -> Result<Vec<u32>, String> {
-    // TODO: Implementare parser VDF alternativo dopo rimozione steamy_vdf
-    debug!("[RUST] parse_localconfig_for_games temporaneamente disabilitata");
-    Ok(Vec::new())
-
+/// Parsa localconfig.vdf per trovare giochi (estrae app ID dalla sezione "apps")
+fn parse_localconfig_for_games(localconfig_path: &Path) -> Result<Vec<u32>, String> {
+    let content = fs::read_to_string(localconfig_path)
+        .map_err(|e| format!("Errore lettura {}: {}", localconfig_path.display(), e))?;
+    
+    let mut app_ids = Vec::new();
+    let mut in_apps_section = false;
+    let mut brace_depth = 0i32;
+    let mut apps_depth = 0i32;
+    
+    for line in content.lines() {
+        let trimmed = line.trim();
+        
+        // Traccia le parentesi graffe
+        if trimmed == "{" {
+            brace_depth += 1;
+            if in_apps_section && apps_depth == 0 {
+                apps_depth = brace_depth;
+            }
+        } else if trimmed == "}" {
+            if in_apps_section && brace_depth == apps_depth {
+                in_apps_section = false;
+                apps_depth = 0;
+            }
+            brace_depth -= 1;
+        }
+        
+        // Cerca la sezione "apps" o "Apps"
+        let lower = trimmed.to_lowercase();
+        if lower.contains("\"apps\"") || lower.contains("\"software\"") {
+            // La sezione "apps" si trova sotto UserLocalConfigStore > Software > Valve > Steam > apps
+        }
+        if lower == "\"apps\"" {
+            in_apps_section = true;
+            continue;
+        }
+        
+        // Dentro la sezione apps, le chiavi numeriche sono app ID
+        if in_apps_section && brace_depth == apps_depth + 1 {
+            // Le righe tipo:  "12345"  sono app ID
+            let stripped = trimmed.trim_matches('"');
+            if let Ok(app_id) = stripped.parse::<u32>() {
+                if app_id > 0 && app_id < 10_000_000 {
+                    app_ids.push(app_id);
+                }
+            }
+        }
+    }
+    
+    debug!("[RUST] parse_localconfig_for_games: trovati {} app IDs in {}", app_ids.len(), localconfig_path.display());
+    Ok(app_ids)
 }
 
 /// Parsa shortcuts.vdf per trovare giochi non-Steam

@@ -220,7 +220,7 @@ export default function RenpyPatcherPage() {
 
   const getTypeBadgeColor = (type: string) => {
     switch (type) {
-      case 'Dialogue': return 'bg-pink-500';
+      case 'Dialogue': return 'bg-emerald-500';
       case 'Menu': return 'bg-purple-500';
       case 'Narration': return 'bg-blue-500';
       default: return 'bg-gray-500';
@@ -238,7 +238,7 @@ export default function RenpyPatcherPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] px-4 gap-4 overflow-y-auto">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-pink-600 via-rose-500 to-red-600 p-4 shrink-0">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 p-4 shrink-0">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         
@@ -271,11 +271,11 @@ export default function RenpyPatcherPage() {
       <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm flex items-center gap-2">
-            <FolderOpen className="w-4 h-4 text-pink-400" />{t('telltale.selectGame')}</CardTitle>
+            <FolderOpen className="w-4 h-4 text-emerald-400" />{t('telltale.selectGame')}</CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
           <div className="flex items-center gap-3">
-            <Button onClick={selectGameFolder} disabled={loading} size="sm" className="h-8 bg-pink-600 hover:bg-pink-500">
+            <Button onClick={selectGameFolder} disabled={loading} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
               {loading ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <FolderOpen className="w-3 h-3 mr-2" />}
               Sfoglia
             </Button>
@@ -285,7 +285,7 @@ export default function RenpyPatcherPage() {
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{game.title}</span>
                   {game.version && <Badge variant="outline" className="text-xs">v{game.version}</Badge>}
-                  <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">{game.script_files.length} script</Badge>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{game.script_files.length} script</Badge>
                   {game.has_translations && (
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                       {game.available_languages.length} lingue
@@ -297,7 +297,7 @@ export default function RenpyPatcherPage() {
                   onClick={extractAllStrings} 
                   disabled={extracting}
                   size="sm" 
-                  className="h-8 bg-rose-600 hover:bg-rose-500 ml-auto"
+                  className="h-8 bg-emerald-600 hover:bg-emerald-500 ml-auto"
                 >
                   {extracting ? <Loader2 className="w-3 h-3 mr-2 animate-spin" /> : <Sparkles className="w-3 h-3 mr-2" />}
                   Estrai Stringhe
@@ -321,7 +321,7 @@ export default function RenpyPatcherPage() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-6">
                 <div>
-                  <p className="text-2xl font-bold text-pink-400">{stats.percentage}%</p>
+                  <p className="text-2xl font-bold text-emerald-400">{stats.percentage}%</p>
                   <p className="text-xs text-muted-foreground">{t('batchTranslator.done')}</p>
                 </div>
                 <div className="flex gap-4 text-sm">
@@ -347,7 +347,7 @@ export default function RenpyPatcherPage() {
                   <Upload className="w-3 h-3 mr-1" />
                   Carica
                 </Button>
-                <Button onClick={saveTranslations} size="sm" className="h-8 bg-pink-600 hover:bg-pink-500">
+                <Button onClick={saveTranslations} size="sm" className="h-8 bg-emerald-600 hover:bg-emerald-500">
                   <Save className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
               </div>
             </div>
@@ -381,7 +381,7 @@ export default function RenpyPatcherPage() {
         <CardHeader className="py-3 px-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-pink-400" />
+              <MessageSquare className="w-4 h-4 text-emerald-400" />
               Editor Traduzioni
               {strings.length > 0 && (
                 <Badge variant="outline" className="ml-2">{filteredStrings.length} / {strings.length}</Badge>
@@ -461,7 +461,7 @@ export default function RenpyPatcherPage() {
                               <Button
                                 size="sm"
                                 onClick={() => updateTranslation(entry.id, editedTranslation)}
-                                className="h-7 bg-pink-600 hover:bg-pink-500"
+                                className="h-7 bg-emerald-600 hover:bg-emerald-500"
                               >
                                 <Check className="w-3 h-3 mr-1" />{t('glossaryManager.save')}</Button>
                               <Button

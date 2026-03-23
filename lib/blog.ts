@@ -11,6 +11,8 @@ export interface BlogPost {
   tag: string;
   pinned?: boolean;
   createdAt: number;
+  image?: string;
+  gameName?: string;
 }
 
 const BLOG_STORAGE_KEY = 'gamestringer_blog_posts';

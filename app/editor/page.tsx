@@ -924,7 +924,7 @@ export default function EditorPage() {
       <div className="relative overflow-hidden rounded-xl mx-4 mt-4 mb-3 bg-slate-950/60 border border-slate-800/50 p-4 shadow-xl backdrop-blur-md group/header transition-all duration-500 hover:border-indigo-500/30 hover:bg-slate-950/80 shrink-0">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent opacity-50 pointer-events-none" />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-fuchsia-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4 pointer-events-none" />
         
         <div className="relative flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
@@ -1278,7 +1278,7 @@ export default function EditorPage() {
                     Salva
                   </Button>
                   <Link href={`/community-hub?action=publish&gameId=${selectedTranslation.gameId || ''}&gameName=${encodeURIComponent(selectedTranslation.game?.title || '')}`}>
-                    <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold text-fuchsia-400 hover:text-fuchsia-300 hover:bg-fuchsia-500/10 rounded-lg border border-fuchsia-500/20 hidden lg:flex">
+                    <Button variant="ghost" size="sm" className="h-8 text-xs font-semibold text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg border border-blue-500/20 hidden lg:flex">
                       <Globe className="h-3.5 w-3.5 mr-1" />
                       Condividi
                     </Button>

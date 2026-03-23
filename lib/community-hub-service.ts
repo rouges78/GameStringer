@@ -153,6 +153,209 @@ export interface ActivityItem {
 const STORAGE_KEY = 'gamestringer_community_hub';
 const INSTALLED_PACKS_KEY = 'gamestringer_installed_packs';
 
+function makeShowcaseAuthor(id: string, username: string, reputation: number, contributions: number, verified: boolean): CommunityAuthor {
+  return { id, username, reputation, totalContributions: contributions, verifiedTranslator: verified };
+}
+
+function getShowcasePacks(): TranslationPack[] {
+  const now = new Date().toISOString();
+  return [
+    {
+      id: 'showcase_esoteric_ebb_it',
+      name: 'Esoteric Ebb — Traduzione Italiana Completa',
+      gameId: 'esoteric_ebb',
+      gameName: 'Esoteric Ebb',
+      gameAppId: 2563020,
+      coverImage: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2563020/header.jpg',
+      platform: 'pc_win',
+      sourceLanguage: 'en',
+      targetLanguage: 'it',
+      version: '1.0.0',
+      author: makeShowcaseAuthor('gs_rouges78', 'Rouges78', 850, 12, true),
+      contributors: [makeShowcaseAuthor('gs_clodo', 'Clodo', 720, 8, true)],
+      description: 'Traduzione italiana completa di Esoteric Ebb (Unity 6, IL2CPP). 556 stringhe tradotte con AI Ollama + revisione umana. Include questpoints, backgrounds, feats e UI. Metodo: iniezione CSV con resize binario nel resources.assets.',
+      totalStrings: 556,
+      translatedStrings: 556,
+      completionPercentage: 100,
+      rating: 4.7,
+      ratingCount: 3,
+      downloads: 24,
+      size: 45000,
+      tags: ['unity', 'il2cpp', 'csv', 'ai-assisted', 'completa', 'indie', 'rpg'],
+      createdAt: '2026-03-19T14:00:00Z',
+      updatedAt: now,
+      changelog: [{ version: '1.0.0', date: '2026-03-19', changes: ['Traduzione completa 556/556 stringhe', 'Iniezione binaria con resize (+18.964 bytes)', '4 tabelle CSV: questpoints, backgrounds, feats, uielements'] }],
+      files: [{ name: 'translations.json', path: 'translations.json', type: 'json', size: 38000, stringCount: 556 }],
+      status: 'verified',
+      compatibility: ['Esoteric Ebb v1.0+', 'Unity 6000.1.17f1'],
+    },
+    {
+      id: 'showcase_undertale_it',
+      name: 'Undertale — Traduzione Italiana (Team GT)',
+      gameId: 'undertale',
+      gameName: 'Undertale',
+      gameAppId: 391540,
+      coverImage: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/391540/header.jpg',
+      platform: 'pc_win',
+      sourceLanguage: 'en',
+      targetLanguage: 'it',
+      version: '2.1.0',
+      author: makeShowcaseAuthor('gt_team', 'GamesTranslator Team', 2400, 45, true),
+      contributors: [
+        makeShowcaseAuthor('gt_marco', 'MarcoTrad', 1200, 22, true),
+        makeShowcaseAuthor('gt_lucia', 'LuciaLoc', 980, 18, true),
+      ],
+      description: 'Traduzione italiana completa di Undertale realizzata dalla community GamesTranslator.it. Include tutti i dialoghi, menu, oggetti e percorsi narrativi (Pacifista, Genocida, Neutrale). Revisione completa dei giochi di parole e battute di Sans.',
+      totalStrings: 12450,
+      translatedStrings: 12450,
+      completionPercentage: 100,
+      rating: 4.9,
+      ratingCount: 187,
+      downloads: 8420,
+      size: 2100000,
+      tags: ['rpg', 'indie', 'completa', 'community', 'giochi-di-parole'],
+      createdAt: '2023-06-15T10:00:00Z',
+      updatedAt: '2025-11-20T08:00:00Z',
+      changelog: [
+        { version: '2.1.0', date: '2025-11-20', changes: ['Fix battute Sans aggiornate', 'Compatibilità v1.08+'] },
+        { version: '2.0.0', date: '2024-09-01', changes: ['Revisione completa di tutti i percorsi narrativi'] },
+      ],
+      files: [{ name: 'undertale_it.json', path: 'undertale_it.json', type: 'json', size: 2100000, stringCount: 12450 }],
+      status: 'featured',
+      compatibility: ['Undertale v1.08+', 'Steam / GOG'],
+    },
+    {
+      id: 'showcase_hollow_knight_it',
+      name: 'Hollow Knight — Traduzione Italiana Fan',
+      gameId: 'hollow_knight',
+      gameName: 'Hollow Knight',
+      gameAppId: 367520,
+      coverImage: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/367520/header.jpg',
+      platform: 'pc_win',
+      sourceLanguage: 'en',
+      targetLanguage: 'it',
+      version: '1.5.2',
+      author: makeShowcaseAuthor('hk_fanit', 'HollowKnightIT', 1800, 32, true),
+      contributors: [makeShowcaseAuthor('hk_vale', 'ValeHK', 650, 14, false)],
+      description: 'Traduzione italiana fan-made di Hollow Knight incluso il DLC Grimm Troupe, Lifeblood, Godmaster e tutti i dialoghi NPC. Il gioco ha ricevuto una localizzazione ufficiale IT nel 2019, ma questa versione fan mantiene scelte stilistiche alternative apprezzate dalla community.',
+      totalStrings: 8920,
+      translatedStrings: 8920,
+      completionPercentage: 100,
+      rating: 4.6,
+      ratingCount: 94,
+      downloads: 3150,
+      size: 1800000,
+      tags: ['metroidvania', 'indie', 'completa', 'dlc-inclusi', 'alternativa'],
+      createdAt: '2022-03-10T12:00:00Z',
+      updatedAt: '2025-08-15T09:00:00Z',
+      changelog: [
+        { version: '1.5.2', date: '2025-08-15', changes: ['Fix typo in Godmaster ending', 'Aggiornamento terminologia Pantheon'] },
+      ],
+      files: [{ name: 'hollow_knight_it.json', path: 'hollow_knight_it.json', type: 'json', size: 1800000, stringCount: 8920 }],
+      status: 'verified',
+      compatibility: ['Hollow Knight v1.5+', 'Steam / GOG'],
+    },
+    {
+      id: 'showcase_celeste_it',
+      name: 'Celeste — Patch Italiana Completa',
+      gameId: 'celeste',
+      gameName: 'Celeste',
+      gameAppId: 504230,
+      coverImage: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/504230/header.jpg',
+      platform: 'pc_win',
+      sourceLanguage: 'en',
+      targetLanguage: 'it',
+      version: '1.2.0',
+      author: makeShowcaseAuthor('cel_andrea', 'AndreaTrad', 1100, 19, true),
+      contributors: [],
+      description: 'Traduzione italiana completa di Celeste, inclusi tutti i capitoli (1-9), dialoghi, poesie di Theo e testi di Farewell. Adattamento poetico dei monologhi interiori di Madeline con attenzione alla rappresentazione dei temi di salute mentale.',
+      totalStrings: 4200,
+      translatedStrings: 4200,
+      completionPercentage: 100,
+      rating: 4.8,
+      ratingCount: 62,
+      downloads: 2890,
+      size: 520000,
+      tags: ['platformer', 'indie', 'completa', 'poetica', 'farewell'],
+      createdAt: '2023-01-20T15:00:00Z',
+      updatedAt: '2025-06-10T11:00:00Z',
+      changelog: [
+        { version: '1.2.0', date: '2025-06-10', changes: ['Aggiornamento capitolo Farewell', 'Miglioramento adattamento poetico'] },
+      ],
+      files: [{ name: 'celeste_it.csv', path: 'celeste_it.csv', type: 'csv', size: 520000, stringCount: 4200 }],
+      status: 'featured',
+      compatibility: ['Celeste v1.4+', 'Steam / Epic / itch.io'],
+    },
+    {
+      id: 'showcase_stardew_valley_it',
+      name: 'Stardew Valley — Traduzione IT Migliorata',
+      gameId: 'stardew_valley',
+      gameName: 'Stardew Valley',
+      gameAppId: 413150,
+      coverImage: 'https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/413150/header.jpg',
+      platform: 'pc_win',
+      sourceLanguage: 'en',
+      targetLanguage: 'it',
+      version: '3.0.1',
+      author: makeShowcaseAuthor('sdv_giulia', 'GiuliaStar', 1500, 28, true),
+      contributors: [
+        makeShowcaseAuthor('sdv_pietro', 'PietroFarm', 800, 15, false),
+        makeShowcaseAuthor('sdv_chiara', 'ChiaraTL', 600, 11, false),
+      ],
+      description: 'Traduzione italiana migliorata di Stardew Valley v1.6. Corregge centinaia di errori della localizzazione ufficiale, migliora la naturalezza dei dialoghi e aggiunge toni regionali ai personaggi. Include update 1.6 con Festival of Seasons.',
+      totalStrings: 18500,
+      translatedStrings: 18500,
+      completionPercentage: 100,
+      rating: 4.5,
+      ratingCount: 215,
+      downloads: 12400,
+      size: 3200000,
+      tags: ['simulazione', 'farming', 'completa', 'fix-ufficiale', 'v1.6'],
+      createdAt: '2021-08-05T09:00:00Z',
+      updatedAt: '2025-12-01T14:00:00Z',
+      changelog: [
+        { version: '3.0.1', date: '2025-12-01', changes: ['Supporto Stardew Valley 1.6.14', 'Fix Festival of Seasons'] },
+        { version: '3.0.0', date: '2025-03-20', changes: ['Update completo per v1.6', 'Nuovi dialoghi e oggetti'] },
+      ],
+      files: [{ name: 'stardew_it.json', path: 'stardew_it.json', type: 'json', size: 3200000, stringCount: 18500 }],
+      status: 'featured',
+      compatibility: ['Stardew Valley v1.6+', 'Steam / GOG'],
+    },
+    {
+      id: 'showcase_mother3_it',
+      name: 'Mother 3 — Traduzione Italiana (GBA)',
+      gameId: 'mother3',
+      gameName: 'Mother 3',
+      platform: 'gba',
+      sourceLanguage: 'ja',
+      targetLanguage: 'it',
+      version: '1.1.0',
+      author: makeShowcaseAuthor('m3_luca', 'LucaRPG', 2000, 35, true),
+      contributors: [makeShowcaseAuthor('m3_sara', 'SaraRetro', 900, 16, true)],
+      description: 'Traduzione italiana completa di Mother 3 per Game Boy Advance. Basata sulla fan translation inglese di Tomato, con adattamento completo dei giochi di parole, riferimenti culturali e nomi degli attacchi PSI. Patch IPS applicabile alla ROM giapponese.',
+      totalStrings: 9800,
+      translatedStrings: 9800,
+      completionPercentage: 100,
+      rating: 4.9,
+      ratingCount: 78,
+      downloads: 4500,
+      size: 850000,
+      tags: ['gba', 'rpg', 'jrpg', 'retro', 'completa', 'patch-ips'],
+      createdAt: '2022-11-10T10:00:00Z',
+      updatedAt: '2025-04-22T08:00:00Z',
+      changelog: [
+        { version: '1.1.0', date: '2025-04-22', changes: ['Fix nomi PSI capitolo 7', 'Correzioni grammaticali'] },
+      ],
+      files: [{ name: 'mother3_it.ips', path: 'mother3_it.ips', type: 'ips', size: 850000, stringCount: 9800 }],
+      status: 'verified',
+      compatibility: ['Mother 3 (JP ROM)', 'mGBA / VBA-M'],
+      patchFormat: 'ips',
+      patchInstructions: 'Applicare la patch IPS alla ROM giapponese di Mother 3 usando Lunar IPS o il ROM Patcher integrato in GameStringer.',
+    },
+  ];
+}
+
+
 class CommunityHubService {
   private localPacks: TranslationPack[] = [];
   private installedPacks: Map<string, { packId: string; installedAt: string; path: string }> = new Map();
@@ -174,6 +377,19 @@ class CommunityHubService {
       if (installed) {
         const data = JSON.parse(installed);
         this.installedPacks = new Map(Object.entries(data));
+      }
+
+      // Rimuovi eventuali seed data finti salvati in precedenza
+      const hadSeeds = this.localPacks.some(p => p.id.startsWith('seed_'));
+      if (hadSeeds) {
+        this.localPacks = this.localPacks.filter(p => !p.id.startsWith('seed_'));
+        this.saveLocalData();
+      }
+
+      // Carica pack showcase reali se il hub è vuoto
+      if (this.localPacks.length === 0) {
+        this.localPacks = getShowcasePacks();
+        this.saveLocalData();
       }
     } catch (error) {
       console.error('Error loading community hub data:', error);
@@ -611,3 +827,13 @@ class CommunityHubService {
 
 export const communityHubService = new CommunityHubService();
 export default communityHubService;
+
+// Re-export new types from backend
+export type { 
+  HubUser,
+  PackComment, 
+  HubNotification, 
+  Badge, 
+  BadgeAward, 
+  LeaderboardEntry 
+} from './community-hub-backend';

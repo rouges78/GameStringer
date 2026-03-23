@@ -126,7 +126,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
       'from-purple-900/80 to-blue-900/80',
       'from-red-900/80 to-orange-900/80',
       'from-green-900/80 to-teal-900/80',
-      'from-pink-900/80 to-purple-900/80',
+      'from-violet-900/80 to-indigo-900/80',
       'from-yellow-900/80 to-red-900/80',
       'from-cyan-900/80 to-blue-900/80',
     ];
@@ -1169,7 +1169,7 @@ function LibraryListView() {
                 <span className="bg-sky-600/90 text-sky-50 text-[9px] px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-sky-400/30 font-semibold truncate max-w-[80px]" title={game.engine}>{game.engine}</span>
               )}
               {game.is_vr && (
-                <span className="bg-fuchsia-600/90 text-fuchsia-50 text-[9px] px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-fuchsia-400/30 font-bold" title="VR Support">VR</span>
+                <span className="bg-violet-600/90 text-violet-50 text-[9px] px-1.5 py-0.5 flex items-center rounded shadow-md backdrop-blur-md border border-violet-400/30 font-bold" title="VR Support">VR</span>
               )}
             </div>
 
@@ -1191,7 +1191,7 @@ function LibraryListView() {
               </button>
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/community-hub?query=${encodeURIComponent(game.title)}`; }}
-                className="bg-fuchsia-600/90 hover:bg-fuchsia-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-fuchsia-500/50 hover:scale-110 border border-fuchsia-400/30"
+                className="bg-violet-600/90 hover:bg-violet-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-violet-500/50 hover:scale-110 border border-violet-400/30"
                 title="Community"
               >
                 <Languages className="h-4 w-4" />
@@ -1395,7 +1395,7 @@ function LibraryListView() {
                         </span>
                       )}
                       {game.is_vr && (
-                        <span className="text-[10px] font-bold text-fuchsia-400 bg-fuchsia-500/10 px-2 py-1 rounded-md border border-fuchsia-500/20">VR</span>
+                        <span className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-1 rounded-md border border-violet-500/20">VR</span>
                       )}
                       {game.isShared && (
                         <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md border border-orange-500/20">{t('libraryPage.shared')}</span>
@@ -1453,7 +1453,7 @@ function LibraryListView() {
       <div className="relative overflow-hidden rounded-xl bg-slate-950/60 border border-slate-800/50 p-4 mb-4 shadow-xl backdrop-blur-md group/header transition-all duration-500 hover:border-indigo-500/30 hover:bg-slate-950/80">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent opacity-50" />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-fuchsia-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent translate-y-1/2 -translate-x-1/4 pointer-events-none" />
         
         <div className="relative flex items-center justify-between z-10">
           <div className="flex items-center gap-4">
@@ -1505,7 +1505,7 @@ function LibraryListView() {
               </div>
               {statsShared > 0 && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/60 border border-slate-700/50 shadow-sm transition-all hover:bg-slate-800/80">
-                  <Languages className="h-4 w-4 text-fuchsia-400" />
+                  <Languages className="h-4 w-4 text-violet-400" />
                   <div className="flex flex-col">
                     <span className="text-xs font-bold text-slate-200 leading-none">{statsShared}</span>
                     <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5">{lib.shared}</span>
@@ -1690,7 +1690,7 @@ function LibraryListView() {
                   <button key={t.id} onClick={() => toggleFilter(selectedTags, setSelectedTags, t.id)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                       selectedTags.includes(t.id) 
-                      ? 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40 shadow-[0_0_10px_rgba(217,70,239,0.15)]' 
+                      ? 'bg-violet-500/20 text-violet-300 border-violet-500/40 shadow-[0_0_10px_rgba(139,92,246,0.15)]' 
                       : 'bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-700 hover:text-slate-200'
                     }`}>
                     {t.label}

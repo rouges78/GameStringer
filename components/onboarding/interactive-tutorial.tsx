@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   X, ChevronRight, ChevronLeft, Gamepad2, Languages, 
-  Settings, Wrench, Library, Home, Sparkles, CheckCircle, FolderTree,
-  Brain, Users, Cpu, Mic, Globe, Rocket, Zap, Download
+  Settings, Wrench, Library, Home, Sparkles, CheckCircle,
+  Brain, Users, Cpu, Globe, Rocket, Zap, Download,
+  ScanEye, Workflow, FileText, Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,7 +14,7 @@ import { useTranslation } from '@/lib/i18n';
 import Image from 'next/image';
 
 const TUTORIAL_KEY = 'gamestringer-tutorial-completed';
-const TUTORIAL_VERSION = '4'; // Versione 4: miglior posizionamento finestra
+const TUTORIAL_VERSION = '5'; // Versione 5: aggiornati step con feature attuali
 
 interface TutorialStep {
   id: string;
@@ -34,7 +35,7 @@ const tutorialSteps: TutorialStep[] = [
     showLogo: true,
     features: [
       { icon: <Brain className="h-4 w-4" />, text: 'AI Translation', color: 'text-violet-400' },
-      { icon: <Gamepad2 className="h-4 w-4" />, text: '7+ Store', color: 'text-teal-400' },
+      { icon: <Gamepad2 className="h-4 w-4" />, text: '9+ Store', color: 'text-teal-400' },
       { icon: <Globe className="h-4 w-4" />, text: '20+ Lingue', color: 'text-blue-400' },
     ]
   },
@@ -45,15 +46,15 @@ const tutorialSteps: TutorialStep[] = [
     position: 'center',
     features: [
       { icon: <Zap className="h-4 w-4" />, text: 'Ollama (Gratuito)', color: 'text-green-400' },
-      { icon: <Cpu className="h-4 w-4" />, text: 'OpenAI / Claude', color: 'text-blue-400' },
-      { icon: <Mic className="h-4 w-4" />, text: 'Voice Clone', color: 'text-pink-400' },
+      { icon: <Cpu className="h-4 w-4" />, text: 'OpenAI / Claude / Gemini', color: 'text-blue-400' },
+      { icon: <Workflow className="h-4 w-4" />, text: 'AI Pipeline', color: 'text-pink-400' },
     ]
   },
   {
     id: 'dashboard',
     icon: <Home className="h-6 w-6" />,
     iconColor: 'text-cyan-400',
-    selector: '[data-tutorial^="nav-"]', // Prima voce della sidebar
+    selector: '[data-tutorial^="nav-"]',
     position: 'sidebar'
   },
   {
@@ -71,11 +72,22 @@ const tutorialSteps: TutorialStep[] = [
     position: 'sidebar'
   },
   {
-    id: 'tools',
+    id: 'patcher',
     icon: <Wrench className="h-6 w-6" />,
     iconColor: 'text-emerald-400',
     selector: '[data-tutorial="nav-unity-patcher"]',
     position: 'sidebar'
+  },
+  {
+    id: 'advancedTools',
+    icon: <Layers className="h-6 w-6" />,
+    iconColor: 'text-cyan-400',
+    position: 'center',
+    features: [
+      { icon: <FileText className="h-4 w-4" />, text: 'Unity CSV Translator', color: 'text-green-400' },
+      { icon: <ScanEye className="h-4 w-4" />, text: 'OCR Multi-Engine', color: 'text-cyan-400' },
+      { icon: <Workflow className="h-4 w-4" />, text: 'Batch & Offline', color: 'text-amber-400' },
+    ]
   },
   {
     id: 'community',
@@ -124,6 +136,19 @@ export function InteractiveTutorial({ onComplete, forceShow = false }: Interacti
       // Mostra tutorial se non è stato completato
       if (tutorialCompleted === TUTORIAL_VERSION) {
         return;
+      }
+
+      // Non mostrare se i Terms of Use non sono ancora stati accettati
+      const tosAccepted = localStorage.getItem('gamestringer_tos_accepted');
+      if (!tosAccepted) {
+        // Riprova dopo un po' (l'utente potrebbe accettare i TOS)
+        const retryInterval = setInterval(() => {
+          if (localStorage.getItem('gamestringer_tos_accepted')) {
+            clearInterval(retryInterval);
+            setTimeout(() => setIsVisible(true), 500);
+          }
+        }, 500);
+        return () => clearInterval(retryInterval);
       }
       
       // Avvia automaticamente dopo un breve delay per permettere il rendering della sidebar

@@ -348,9 +348,9 @@ export default function GuidePage() {
               </Card>
 
               {/* Workflow 5: Voce */}
-              <Card className="border-pink-500/20 bg-pink-950/10">
+              <Card className="border-orange-500/20 bg-orange-950/10">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2 text-pink-400">
+                  <CardTitle className="text-sm flex items-center gap-2 text-orange-400">
                     <Mic className="h-4 w-4" />
                     {g.wfVoiceTitle}
                   </CardTitle>
@@ -603,7 +603,7 @@ export default function GuidePage() {
                   { engine: 'Unity', tool: 'Unity Patcher', href: '/unity-patcher', desc: g.engineUnity, color: 'emerald' },
                   { engine: 'Unreal Engine 4/5', tool: 'UE Translator', href: '/unreal-translator', desc: g.engineUnreal, color: 'blue' },
                   { engine: 'RPG Maker (MV/MZ/VX)', tool: 'RPG Maker Patcher', href: '/rpgmaker-patcher', desc: g.engineRpgMaker, color: 'amber' },
-                  { engine: "Ren'Py", tool: "Ren'Py Patcher", href: '/renpy-patcher', desc: g.engineRenpy, color: 'pink' },
+                  { engine: "Ren'Py", tool: "Ren'Py Patcher", href: '/renpy-patcher', desc: g.engineRenpy, color: 'teal' },
                   { engine: 'Wolf RPG', tool: 'Wolf RPG Patcher', href: '/wolfrpg-patcher', desc: g.engineWolfRpg, color: 'orange' },
                   { engine: 'Telltale', tool: 'Telltale Patcher', href: '/telltale-patcher', desc: g.engineTelltale, color: 'violet' },
                   { engine: 'Godot', tool: 'Crawler + Fixer', href: '/crawler', desc: g.engineGodot, color: 'cyan' },

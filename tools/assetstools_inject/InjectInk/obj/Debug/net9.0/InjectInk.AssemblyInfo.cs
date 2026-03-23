@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InjectInk")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce61731be388d2679668ea69d62e4d2f838ad72b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ee8611fc8ce4436d3cc44e07e8cf08284ee563d6")]
 [assembly: System.Reflection.AssemblyProductAttribute("InjectInk")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InjectInk")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

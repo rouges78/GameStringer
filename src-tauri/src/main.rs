@@ -350,6 +350,11 @@ fn main() {
             commands::ollama_manager::get_recommended_ollama_models,
             // System Monitor
             commands::system_monitor::get_system_stats,
+            // GsPack Export/Import
+            commands::gspack::save_gspack,
+            commands::gspack::load_gspack,
+            commands::gspack::list_gspacks,
+            commands::gspack::delete_gspack,
             // Auto-Hook Scanner
             commands::auto_hook::scan_for_text_hooks,
 
@@ -460,6 +465,56 @@ fn main() {
             commands::unity_patcher::get_translation_recommendation,
             commands::unity_patcher::read_xunity_translations,
             commands::unity_patcher::save_xunity_translation,
+            commands::unity_patcher::read_captured_translations,
+            commands::unity_patcher::write_translation_file,
+            commands::unity_patcher::get_translation_status,
+
+            // Unity .assets file manager (UABEA integration)
+            commands::unity_assets::find_unity_assets_files,
+            commands::unity_assets::check_uabea_installed,
+            commands::unity_assets::download_uabea,
+            commands::unity_assets::open_assets_with_uabea,
+            commands::unity_assets::scan_assets_for_text,
+            commands::unity_assets::prepare_assets_for_translation,
+
+            // RSS proxy (bypass CORS)
+            commands::rss_proxy::fetch_rss_feed,
+
+            // Godot Engine PCK patcher
+            commands::godot_patcher::detect_godot_engine,
+            commands::godot_patcher::scan_godot_pck,
+            commands::godot_patcher::extract_godot_file,
+            commands::godot_patcher::create_godot_translation_pck,
+            commands::godot_patcher::remove_godot_translation,
+
+            // repak wrapper
+            commands::repak_wrapper::download_repak_tool,
+            commands::repak_wrapper::check_repak_installed,
+
+            // GameTranslator.it community integration
+            commands::gamestranslator_integration::search_gamestranslator,
+            commands::gamestranslator_integration::get_gamestranslator_file,
+            commands::gamestranslator_integration::install_translation_from_zip,
+            commands::gamestranslator_integration::open_gamestranslator_page,
+
+            // Game Update Tracker (Steam buildid + patch integrity)
+            commands::game_update_tracker::check_game_update,
+            commands::game_update_tracker::acknowledge_game_update,
+            commands::game_update_tracker::verify_patch_integrity,
+            commands::game_update_tracker::get_all_tracked_games,
+
+            // Unreal Engine Localization Pipeline (.locres + .pak)
+            commands::unreal_localization::extract_unreal_localization,
+            commands::unreal_localization::apply_unreal_translation,
+            commands::unreal_localization::auto_translate_unreal,
+            commands::unreal_localization::get_unreal_localization_status,
+            commands::unreal_localization::remove_unreal_translation,
+            commands::unreal_localization::parse_locres_file,
+            commands::unreal_localization::create_translation_pak,
+            commands::unreal_patcher::detect_unreal_game,
+            commands::unreal_patcher::install_unreal_patch,
+            commands::unreal_patcher::uninstall_unreal_patch,
+            commands::unreal_patcher::get_unreal_patch_status,
 
             // Unity Asset Injection (resize-based, no BepInEx needed)
             commands::unity_asset_injector::inject_unity_assets,

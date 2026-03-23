@@ -106,12 +106,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { InteractiveTutorial } from '@/components/onboarding/interactive-tutorial';
+import { TermsOfUse } from '@/components/onboarding/terms-of-use';
 import { TutorialProvider } from '@/components/tutorial/tutorial-provider';
 import { TutorialOverlay } from '@/components/tutorial/tutorial-overlay';
 import { TutorialMenu } from '@/components/tutorial/tutorial-menu';
 import { OfflineIndicator } from '@/components/ui/offline-indicator';
 import { CommandPalette } from '@/components/ui/command-palette';
 import { GlobalSearch } from '@/components/layout/global-search';
+import { SystemOverlay } from '@/components/system-overlay';
 import { useTranslation } from '@/lib/i18n';
 import { useScreen } from '@/components/providers/screen-provider';
 
@@ -119,15 +121,18 @@ interface MainLayoutProps {
   children: React.ReactNode;
 }
 
-// Funzione per generare gruppi di navigazione tradotti
+// ═══════════════════════════════════════════════════════════════════
+// SIDEBAR NAVIGATION — Pulita e minimale
+// Solo voci essenziali. Tutto il resto via Ctrl+K (Global Search).
+// ═══════════════════════════════════════════════════════════════════
 const getNavGroups = (t: (key: string) => string) => [
-  // CORE
+  // ── CORE ────────────────────────────────────────────────────────
   {
     label: t('nav.core'),
     items: [
       { name: t('nav.dashboard'), href: '/', icon: Home },
       { name: t('nav.library'), href: '/library', icon: Gamepad2 },
-      { name: t('nav.editor'), href: '/editor', icon: Edit3 },
+      { name: 'Traduci Gioco', href: '/auto-translate', icon: Rocket, highlight: true },
     ],
     colorClass: 'text-slate-400 hover:text-slate-200 hover:bg-slate-500/20',
     activeClass: 'bg-slate-500/20 backdrop-blur-md text-slate-200 border border-slate-500/30 shadow-lg shadow-slate-500/20',
@@ -136,68 +141,19 @@ const getNavGroups = (t: (key: string) => string) => [
     underlineClass: 'bg-slate-400',
     labelColor: 'text-slate-400/60',
   },
-  // TRADUZIONE - Collapsabile con sottocategorie
+  // ── TRADUZIONE ──────────────────────────────────────────────────
   {
     label: t('nav.translation'),
     icon: Sparkles,
     collapsible: true,
+    defaultCollapsed: true,
     items: [
-      { 
-        name: t('nav.textCategory'),
-        href: '/ai-translator',
-        icon: Sparkles,
-        subItems: [
-          { name: t('nav.translationWizard'), href: '/translation-wizard', icon: Wand2 },
-          { name: t('nav.autoTranslate'), href: '/auto-translate', icon: Rocket },
-          { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
-          { name: t('nav.neuralTranslatorPro'), href: '/translator/pro', icon: Brain },
-          { name: t('nav.mtpeWorkflow'), href: '/translator/mtpe', icon: Edit3 },
-          { name: t('nav.multiLlm'), href: '/translator/compare', icon: Brain },
-          { name: t('nav.aiReview'), href: '/ai-review', icon: Bot },
-          { name: t('nav.offlineTranslator'), href: '/offline-translator', icon: WifiOff },
-        ]
-      },
-      { 
-        name: t('nav.visualCategory'),
-        href: '/ocr-translator',
-        icon: Scan,
-        subItems: [
-          { name: t('nav.ocrTranslator'), href: '/ocr-translator', icon: Scan },
-          { name: t('nav.visionLlm'), href: '/vision-translator', icon: Eye },
-          { name: t('nav.liveOcr'), href: '/live-ocr', icon: Monitor },
-          { name: t('nav.texture'), href: '/texture-translator', icon: Layers },
-          { name: t('nav.manga'), href: '/manga-translator', icon: BookOpen },
-          { name: t('nav.visualEditor'), href: '/visual-editor', icon: ImageIcon },
-        ]
-      },
-      { 
-        name: t('nav.audioCategory'),
-        href: '/voice-translator',
-        icon: Mic,
-        subItems: [
-          { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
-          { name: t('nav.voiceClone'), href: '/voice-clone', icon: AudioLines },
-          { name: t('nav.characterVoiceAi'), href: '/character-voice', icon: User },
-          { name: t('nav.subtitles'), href: '/subtitles', icon: Film },
-        ]
-      },
-      { 
-        name: t('nav.utilityCategory'),
-        href: '/batch',
-        icon: FolderTree,
-        subItems: [
-          { name: t('nav.batch'), href: '/batch', icon: FolderTree },
-          { name: t('nav.translationQueue'), href: '/batch-translation', icon: Layers },
-          { name: t('nav.dictionary'), href: '/memory', icon: Database },
-          { name: t('nav.glossary'), href: '/glossary', icon: BookOpen },
-          { name: t('nav.contextHarvester'), href: '/context-harvester', icon: Wheat },
-          { name: t('nav.aiPipeline'), href: '/ai-pipeline', icon: Workflow },
-          { name: t('nav.translationBridge'), href: '/translation-bridge', icon: Workflow },
-          { name: t('nav.ocrMultiEngine'), href: '/ocr-engines', icon: ScanEye },
-          { name: t('nav.ollamaManager'), href: '/ollama-manager', icon: Package },
-          { name: t('nav.translatorTools'), href: '/translator/tools', icon: Sparkles },
-        ]
-      },
+      { name: t('nav.translate'), href: '/ai-translator', icon: Sparkles },
+      { name: t('nav.ocrTranslator'), href: '/ocr-translator', icon: Scan },
+      { name: t('nav.voice'), href: '/voice-translator', icon: Mic },
+      { name: t('nav.batch'), href: '/batch', icon: FolderTree },
+      { name: t('nav.offlineTranslator'), href: '/offline-translator', icon: WifiOff },
+      { name: t('nav.editor'), href: '/editor', icon: Edit3 },
     ],
     colorClass: 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/20',
     activeClass: 'bg-blue-500/20 backdrop-blur-md text-blue-400 border border-blue-500/30 shadow-lg shadow-blue-500/20',
@@ -206,73 +162,25 @@ const getNavGroups = (t: (key: string) => string) => [
     underlineClass: 'bg-blue-400',
     labelColor: 'text-blue-400/60',
   },
-  // STRUMENTI - Collapsabile con sottocategorie
+  // ── PATCHER ─────────────────────────────────────────────────────
   {
-    label: t('nav.tools'),
-    icon: Wrench,
+    label: 'Patcher',
+    icon: Wand2,
     collapsible: true,
     items: [
       { 
-        name: t('nav.patcherCategory'),
-        href: '/unity-patcher',
+        name: 'Patcher Engine', 
+        href: '/unity-patcher', 
         icon: Wand2,
         subItems: [
-          { name: t('nav.unityPatcher'), href: '/unity-patcher', icon: Wand2 },
-          { name: t('nav.ueTranslator'), href: '/unreal-translator', icon: Cpu },
-          { name: t('nav.telltalePatcher'), href: '/telltale-patcher', icon: Gamepad2 },
-          { name: t('nav.unityBundle'), href: '/unity-bundle', icon: FileArchive },
-          { name: t('nav.unityCsvTranslator'), href: '/unity-csv-translator', icon: Globe },
-          { name: 'Godot Translator', href: '/godot-translator', icon: Globe },
-          { name: 'RPG Maker Translator', href: '/rpgmaker-translator', icon: Globe },
-          { name: 'Emulator Translator', href: '/emulator-translator', icon: Gamepad2 },
-          { name: t('nav.visualNovel'), href: '/danganronpa-patcher', icon: Package },
-          { name: t('nav.rpgMaker'), href: '/rpgmaker-patcher', icon: Gamepad2 },
-          { name: t('nav.renpy'), href: '/renpy-patcher', icon: Heart },
-          { name: t('nav.wolfRpg'), href: '/wolfrpg-patcher', icon: Database },
-          { name: t('nav.nexusMods'), href: '/nexus-mods', icon: Globe },
-          { name: t('nav.binaryPatcher'), href: '/binary-patcher', icon: Binary },
-          { name: 'ROM Patcher', href: '/rom-patcher', icon: Disc },
-        ]
+          { name: 'Unity', href: '/unity-patcher', icon: Wand2 },
+          { name: 'Unreal Engine', href: '/unreal-translator', icon: Cpu },
+          { name: 'Godot', href: '/godot-translator', icon: Globe },
+          { name: 'RPG Maker', href: '/rpgmaker-patcher', icon: Gamepad2 },
+          { name: "Ren'Py", href: '/renpy-patcher', icon: Heart },
+        ],
       },
-      { 
-        name: t('nav.gamesCategory'),
-        href: '/retro',
-        icon: Gamepad2,
-        subItems: [
-          { name: t('nav.retro'), href: '/retro', icon: Gamepad2 },
-          { name: t('nav.injector'), href: '/injector', icon: Cpu },
-          { name: t('nav.fixer'), href: '/fixer', icon: Wrench },
-        ]
-      },
-      { 
-        name: t('nav.overlayCategory'),
-        href: '/overlay',
-        icon: Subtitles,
-        subItems: [
-          { name: t('nav.overlay'), href: '/overlay', icon: Subtitles },
-          { name: t('nav.vrOverlay'), href: '/vr-overlay', icon: Glasses },
-        ]
-      },
-      { 
-        name: t('nav.qualityCategory'),
-        href: '/qa-check',
-        icon: ShieldCheck,
-        subItems: [
-          { name: t('nav.qaCheck'), href: '/qa-check', icon: ShieldCheck },
-          { name: t('nav.qualityScoring'), href: '/quality-scoring', icon: Shield },
-          { name: t('nav.playerFeedback'), href: '/player-feedback', icon: MessageSquare },
-          { name: t('nav.confidenceHeatmap'), href: '/heatmap', icon: BarChart3 },
-        ]
-      },
-      { 
-        name: t('nav.advancedCategory'),
-        href: '/advanced-tools',
-        icon: Crosshair,
-        subItems: [
-          { name: t('nav.loreAssistant'), href: '/advanced-tools#lore', icon: BookOpen },
-          { name: t('nav.autoHookScanner'), href: '/advanced-tools#hook', icon: Crosshair },
-        ]
-      },
+      { name: t('nav.overlay'), href: '/overlay', icon: Subtitles },
     ],
     colorClass: 'text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20',
     activeClass: 'bg-emerald-500/20 backdrop-blur-md text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/20',
@@ -281,48 +189,19 @@ const getNavGroups = (t: (key: string) => string) => [
     underlineClass: 'bg-emerald-400',
     labelColor: 'text-emerald-400/60',
   },
-  // RISORSE - Collapsabile con sottocategorie
+  // ── RISORSE ─────────────────────────────────────────────────────
   {
     label: t('nav.resources'),
     icon: FolderOpen,
     collapsible: true,
     items: [
-      { 
-        name: t('nav.communityCategory'),
-        href: '/community-hub',
-        icon: Users,
-        subItems: [
-          { name: t('nav.community'), href: '/community-hub', icon: Users },
-          { name: t('nav.stores'), href: '/stores', icon: ShoppingBag },
-          { name: t('nav.steamWorkshop'), href: '/workshop', icon: Globe },
-          { name: t('nav.workshopExport'), href: '/workshop-export', icon: Package },
-          { name: t('nav.blog'), href: '/blog', icon: Newspaper },
-        ]
-      },
-      { 
-        name: t('nav.managementCategory'),
-        href: '/guide',
-        icon: BookOpen,
-        subItems: [
-          { name: t('nav.guide'), href: '/guide', icon: BookOpen },
-        ]
-      },
-      { 
-        name: t('nav.systemCategory'),
-        href: '/settings',
-        icon: Settings,
-        subItems: [
-          { name: t('nav.settings'), href: '/settings', icon: Settings },
-          { name: t('nav.systemMonitor'), href: '/system-monitor', icon: Monitor },
-          { name: t('nav.info'), href: '/info', icon: Info },
-          { name: t('nav.plugins'), href: '/plugins', icon: Puzzle },
-          { name: t('nav.activity'), href: '/activity', icon: Clock },
-          { name: t('nav.statistics'), href: '/stats', icon: BarChart3 },
-        ]
-      },
+      { name: t('nav.community'), href: '/community-hub', icon: Users },
+      { name: 'Ollama / AI', href: '/ollama-manager', icon: Package, ollamaIndicator: true },
+      { name: t('nav.settings'), href: '/settings', icon: Settings },
+      { name: t('nav.guide'), href: '/guide', icon: BookOpen },
     ],
     colorClass: 'text-orange-400 hover:text-orange-300 hover:bg-orange-500/20',
-    activeClass: 'bg-orange-500/20 backdrop-blur-md text-orange-400 border border-orange-500/30 shadow-lg shadow-orange-500/20',
+    activeClass: 'bg-orange-400/20 backdrop-blur-md text-orange-400 border border-orange-500/30 shadow-lg shadow-orange-500/20',
     iconClass: 'text-orange-400',
     hoverIconClass: 'group-hover:text-orange-300',
     underlineClass: 'bg-orange-400',
@@ -865,6 +744,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [expandedSubMenus, setExpandedSubMenus] = useState<string[]>([]);
   const [exitDialogOpen, setExitDialogOpen] = useState(false);
+  const [ollamaOnline, setOllamaOnline] = useState<boolean | null>(null);
   
   // Global keyboard shortcuts for notifications
   useNotificationShortcuts(
@@ -914,6 +794,45 @@ export function MainLayout({ children }: MainLayoutProps) {
     
     // Aggiorna status del sistema solo all'avvio (no polling continuo)
     updateSystemStatus();
+  }, []);
+
+  // Auto-expand gruppo sidebar in base alla pagina corrente
+  useEffect(() => {
+    if (!pathname) return;
+    for (const group of navGroups) {
+      if (!group.collapsible) continue;
+      const match = group.items.some((item: any) => {
+        if (pathname === item.href) return true;
+        if (item.subItems) return item.subItems.some((sub: any) => pathname === sub.href);
+        return false;
+      });
+      if (match) {
+        setExpandedGroups(prev => prev.includes(group.label) ? prev : [group.label]);
+        // Auto-expand subItems se è un patcher engine
+        const subMatch = group.items.find((item: any) => 
+          item.subItems?.some((sub: any) => pathname === sub.href)
+        );
+        if (subMatch) {
+          setExpandedSubMenus(prev => prev.includes(subMatch.href) ? prev : [subMatch.href]);
+        }
+        break;
+      }
+    }
+  }, [pathname]);
+
+  // Ollama status polling per indicatore sidebar
+  useEffect(() => {
+    const checkOllama = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:11434/api/tags', { signal: AbortSignal.timeout(3000) });
+        setOllamaOnline(res.ok);
+      } catch {
+        setOllamaOnline(false);
+      }
+    };
+    checkOllama();
+    const interval = setInterval(checkOllama, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const updateSystemStatus = async () => {
@@ -1005,7 +924,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="relative flex items-center h-[72px] px-4 border-b border-slate-800/50 bg-slate-900/20">
             {sidebarOpen && (
               <div className="flex items-center gap-3 flex-1">
-                <div className="relative flex items-center justify-center p-1.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)] group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all">
+                <div className="relative flex items-center justify-center">
                   <img 
                     src="/logohires.png" 
                     alt="GameStringer" 
@@ -1118,14 +1037,14 @@ export function MainLayout({ children }: MainLayoutProps) {
                           {/* Linea verticale indicatore sottomenu */}
                           <div className="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-slate-700/50 via-slate-700/20 to-transparent" />
                           
-                          {group.items.map((item: any) => {
+                          {group.items.map((item: any, itemIdx: number) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
                             const hasSubItems = item.subItems && item.subItems.length > 0;
                             const isSubActive = hasSubItems && item.subItems.some((sub: any) => pathname === sub.href);
                             
                             return (
-                              <div key={item.href} className="relative z-10 pl-4">
+                              <div key={`${item.href}-${itemIdx}`} className="relative z-10 pl-4">
                                 {hasSubItems ? (
                                   <>
                                     {/* Item con subItems - Accordion */}
@@ -1160,9 +1079,9 @@ export function MainLayout({ children }: MainLayoutProps) {
                                     {/* Sub-items accordion */}
                                     <div className={cn(
                                       "overflow-hidden transition-all duration-200",
-                                      expandedSubMenus.includes(item.href) ? "max-h-[200px] opacity-100" : "max-h-0 opacity-0"
+                                      expandedSubMenus.includes(item.href) ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
                                     )}>
-                                      <div className="pl-4 space-y-0.5 py-0.5">
+                                      <div className="pl-4 space-y-0.5 py-0.5 max-h-[280px] overflow-y-auto custom-scrollbar">
                                         {item.subItems.map((subItem: any) => {
                                           const SubIcon = subItem.icon;
                                           const isSubItemActive = pathname === subItem.href;
@@ -1210,10 +1129,16 @@ export function MainLayout({ children }: MainLayoutProps) {
                                         )} />
                                       )}
                                       <span className={cn(
-                                        "text-[13px] relative",
+                                        "text-[13px] relative flex items-center gap-1.5",
                                         isActive ? "font-semibold" : "font-medium"
                                       )}>
                                         {item.name}
+                                        {item.ollamaIndicator && ollamaOnline !== null && (
+                                          <span className={cn(
+                                            "h-1.5 w-1.5 rounded-full shrink-0 transition-colors",
+                                            ollamaOnline ? "bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.5)]" : "bg-red-400"
+                                          )} title={ollamaOnline ? 'Ollama online' : 'Ollama offline'} />
+                                        )}
                                         <span className={cn(
                                           "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
                                           group.underlineClass
@@ -1240,9 +1165,10 @@ export function MainLayout({ children }: MainLayoutProps) {
                       )}
                       
                       <div className="space-y-0.5">
-                        {group.items.map((item) => {
+                        {group.items.map((item: any) => {
                           const Icon = item.icon;
                           const isActive = pathname === item.href;
+                          const isHighlight = item.highlight === true;
                           
                           return (
                             <Link key={item.href} href={item.href}>
@@ -1254,23 +1180,28 @@ export function MainLayout({ children }: MainLayoutProps) {
                                   sidebarOpen 
                                     ? "justify-start space-x-3 px-3" 
                                     : "justify-center px-0",
-                                  isActive 
-                                    ? group.activeClass 
-                                    : group.colorClass
+                                  isHighlight && !isActive
+                                    ? "bg-gradient-to-r from-violet-600/20 to-indigo-600/20 text-violet-300 hover:from-violet-600/30 hover:to-indigo-600/30 hover:text-violet-200 border border-violet-500/30 rounded-lg shadow-[0_0_12px_rgba(139,92,246,0.15)] hover:shadow-[0_0_18px_rgba(139,92,246,0.25)]"
+                                    : isActive 
+                                      ? group.activeClass 
+                                      : group.colorClass
                                 )}
                                 title={!sidebarOpen ? item.name : undefined}
                               >
                                 <Icon className={cn(
                                   "transition-colors duration-200",
                                   sidebarOpen ? "h-4 w-4" : "h-5 w-5",
-                                  isActive ? "" : cn(group.iconClass, group.hoverIconClass)
+                                  isHighlight && !isActive ? "text-violet-400" : isActive ? "" : cn(group.iconClass, group.hoverIconClass)
                                 )} />
                                 {sidebarOpen && (
-                                  <span className="text-sm relative">
+                                  <span className={cn(
+                                    "text-sm relative",
+                                    isHighlight ? "font-semibold" : ""
+                                  )}>
                                     {item.name}
                                     <span className={cn(
                                       "absolute left-0 -bottom-0.5 h-[2px] w-0 group-hover:w-full transition-all duration-300 ease-out rounded-full",
-                                      group.underlineClass
+                                      isHighlight ? "bg-violet-400" : group.underlineClass
                                     )} />
                                   </span>
                                 )}
@@ -1309,11 +1240,11 @@ export function MainLayout({ children }: MainLayoutProps) {
 
         {/* Main Content */}
         <div 
-          className="flex-1 flex flex-col min-w-0 transition-all duration-300 relative z-10"
+          className="flex-1 flex flex-col min-w-0 min-h-0 transition-all duration-300 relative z-10 h-full"
           style={{ marginLeft: sidebarOpen ? `${display.sidebarWidth}px` : '72px' }}
         >
           {/* Header */}
-          <header className="h-[72px] bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50 flex items-center px-6 sticky top-0 z-40 shadow-sm">
+          <header className="h-[72px] shrink-0 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50 flex items-center px-6 z-40 shadow-sm">
             {/* Ricerca a sinistra - Campo compilabile */}
             <div className="relative group w-80">
               <div className="absolute inset-0 bg-indigo-500/10 blur-md rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -1633,14 +1564,10 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
 
-          {/* Default Profile Alert */}
-          <div className="px-6 pt-4">
-            <DefaultProfileAlert />
-          </div>
-
           {/* Content */}
-          <main className="flex-1 overflow-auto">
-            <div key={pathname} className="page-enter">
+          <main className="flex-1 overflow-hidden flex flex-col min-h-0">
+            <DefaultProfileAlert />
+            <div key={pathname} className="flex-1 overflow-auto min-h-0">
               {children}
             </div>
           </main>
@@ -1648,6 +1575,9 @@ export function MainLayout({ children }: MainLayoutProps) {
         
         {/* Profile Notifications */}
         <ProfileNotifications />
+        
+        {/* System Monitor Overlay */}
+        <SystemOverlay position="bottom-right" compact />
         
         {/* Notification Center */}
         <NotificationCenter 
@@ -1725,6 +1655,9 @@ export function MainLayout({ children }: MainLayoutProps) {
             </ScrollArea>
           </DialogContent>
         </Dialog>
+
+        {/* Terms of Use (DEVE apparire PRIMA del tutorial) */}
+        <TermsOfUse />
 
         {/* Tutorial Interattivo (onboarding prima visita) */}
         <InteractiveTutorial />

@@ -44,6 +44,25 @@ if (File.Exists(levelCsv)) {
     Console.WriteLine($"Level translations added: {added}");
 }
 
+// Also load UI translations (menu, stats, settings labels)
+var uiCsv = @"C:\dev\GameStringer\tools\esoteric_ebb_strings\level_strings\translated\ui_translations.csv";
+if (File.Exists(uiCsv)) {
+    var uiLines = File.ReadAllLines(uiCsv, Encoding.UTF8);
+    int added = 0;
+    for (int i = 1; i < uiLines.Length; i++) {
+        var parts = ParseCsvLine(uiLines[i]);
+        if (parts.Length >= 2 && !string.IsNullOrEmpty(parts[0]) && !string.IsNullOrEmpty(parts[1])) {
+            var key = parts[0].Trim();
+            var val = parts[1].Trim();
+            if (!translations.ContainsKey(key)) {
+                translations[key] = val;
+                added++;
+            }
+        }
+    }
+    Console.WriteLine($"UI translations added: {added}");
+}
+
 Console.WriteLine($"Total translations: {translations.Count}");
 
 if (translations.Count == 0) {
@@ -51,11 +70,12 @@ if (translations.Count == 0) {
     return;
 }
 
-// Find all target files: level0-level24 + sharedassets1.assets
+// Find all target files: level0-level24 + ALL sharedassets*.assets
 var targetFiles = new List<string>();
 for (int lvl = 0; lvl <= 24; lvl++)
     targetFiles.Add(Path.Combine(assetsDir, $"level{lvl}"));
-targetFiles.Add(Path.Combine(assetsDir, "sharedassets1.assets"));
+for (int sa = 0; sa <= 24; sa++)
+    targetFiles.Add(Path.Combine(assetsDir, $"sharedassets{sa}.assets"));
 
 // Filter to files that exist
 targetFiles = targetFiles.Where(File.Exists).ToList();

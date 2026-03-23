@@ -25,6 +25,9 @@
 *.exe
 !scripts/*.exe
 
+# Temp/study files (large binaries)
+/public/tmpdastudiare/
+
 # Local environment files
 .env
 .env*.local

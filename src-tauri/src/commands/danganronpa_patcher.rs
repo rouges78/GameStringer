@@ -759,16 +759,33 @@ fn escape_po_string(s: &str) -> String {
      .replace('\t', "\\t")
 }
 
-/// Traduci automaticamente entry PO non tradotte
+/// Traduci automaticamente entry PO non tradotte usando Ollama
 #[command]
 pub async fn translate_po_entries(
     po_path: String,
-    _source_lang: String,
-    _target_lang: String,
+    source_lang: String,
+    target_lang: String,
 ) -> Result<u32, String> {
     let mut po_file = read_po_file(po_path.clone())?;
     
+    // Verifica che Ollama sia attivo e trova un modello
+    let status = super::offline_translation::offline_translation_status().await
+        .map_err(|e| format!("Ollama non disponibile: {}", e))?;
+    
+    if !status.ollama_running {
+        return Err("Ollama non è in esecuzione. Avvialo dalla sezione Ollama Manager.".to_string());
+    }
+    if status.recommended_model.is_empty() {
+        return Err("Nessun modello Ollama installato. Scarica un modello dalla sezione Ollama Manager.".to_string());
+    }
+    
+    let model = status.recommended_model;
     let mut translated = 0u32;
+    let total_to_translate = po_file.entries.iter()
+        .filter(|e| !e.msgid.is_empty() && e.msgstr.is_empty())
+        .count();
+    
+    log::info!("🌐 Inizio traduzione PO: {} entry da tradurre con {}", total_to_translate, model);
     
     for entry in &mut po_file.entries {
         // Salta header e già tradotti
@@ -776,15 +793,31 @@ pub async fn translate_po_entries(
             continue;
         }
         
-        // Qui si potrebbe integrare con il sistema di traduzione AI
-        // Per ora segniamo solo come da tradurre
-        entry.msgstr = format!("[TODO] {}", entry.msgid);
-        translated += 1;
+        // Traduci con Ollama
+        match super::offline_translation::offline_translate_text(
+            entry.msgid.clone(),
+            source_lang.clone(),
+            target_lang.clone(),
+            Some(model.clone()),
+        ).await {
+            Ok(result) => {
+                entry.msgstr = result.translated;
+                translated += 1;
+                if translated % 10 == 0 {
+                    log::info!("🌐 Progresso PO: {}/{} tradotte", translated, total_to_translate);
+                }
+            }
+            Err(e) => {
+                log::warn!("⚠️ Errore traduzione entry '{}': {}", 
+                    &entry.msgid.chars().take(40).collect::<String>(), e);
+                // Continua con le altre entry
+            }
+        }
     }
     
     write_po_file(po_path.clone(), po_file.entries)?;
     
-    log::info!("🌐 Tradotte {} entry in {}", translated, po_path);
+    log::info!("🌐 Traduzione PO completata: {}/{} entry in {}", translated, total_to_translate, po_path);
     
     Ok(translated)
 }
@@ -2858,22 +2891,21 @@ fn extract_strings_from_binary(data: &[u8]) -> Vec<String> {
     strings
 }
 
-/// Batch translation usando sistema interno
+/// Batch translation usando Ollama
 async fn translate_batch_internal(
     texts: &[String],
-    _source_lang: &str,
-    _target_lang: &str,
+    source_lang: &str,
+    target_lang: &str,
     _ai_provider: &str,
 ) -> Result<Vec<String>, String> {
-    // TODO: Integrare con API traduzione reali
-    // Per ora placeholder che marca i testi
+    let results = super::offline_translation::offline_translate_batch(
+        texts.to_vec(),
+        source_lang.to_string(),
+        target_lang.to_string(),
+        None,
+    ).await?;
     
-    let translations: Vec<String> = texts
-        .iter()
-        .map(|text| format!("[TRANSLATE] {}", text))
-        .collect();
-    
-    Ok(translations)
+    Ok(results.into_iter().map(|r| r.translated).collect())
 }
 
 /// Genera file PO da dialoghi tradotti

@@ -32,10 +32,20 @@ import {
   runPipeline,
   runQuickPipeline,
   runMaxQualityPipeline,
+  loadMultiAgentConfig,
+  saveMultiAgentConfig,
+  AGENT_PRESETS,
+  resolvePreset,
+  saveBenchmarkEntry,
+  loadBenchmarkHistory,
+  buildBenchmarkEntry,
   type PipelineResult,
   type PipelineStep,
   type PipelineStepId,
   type PipelineOptions,
+  type MultiAgentConfig,
+  type AgentModelConfig,
+  type BenchmarkEntry,
 } from "@/lib/ai-pipeline"
 import { useTranslation } from '@/lib/i18n';
 
@@ -99,6 +109,49 @@ export default function AIPipelinePage() {
   const [pipelineMode, setPipelineMode] = useState<"quick" | "balanced" | "max">("balanced")
   const [selectedString, setSelectedString] = useState<number | null>(null)
 
+  // Multi-Agent state
+  const [ollamaModels, setOllamaModels] = useState<string[]>([])
+  const [agentConfig, setAgentConfig] = useState<MultiAgentConfig>({})
+  const [showAgents, setShowAgents] = useState(false)
+  const [activePresetId, setActivePresetId] = useState('default')
+  const [benchmarkHistory, setBenchmarkHistory] = useState<BenchmarkEntry[]>([])
+  const [showBenchmark, setShowBenchmark] = useState(false)
+
+  useEffect(() => {
+    // Load saved agent config
+    setAgentConfig(loadMultiAgentConfig());
+    setBenchmarkHistory(loadBenchmarkHistory());
+    // Fetch available Ollama models
+    fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(3000) })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.models) {
+          setOllamaModels(data.models.map((m: any) => m.name as string).sort());
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const applyPreset = useCallback((presetId: string) => {
+    const preset = AGENT_PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+    setActivePresetId(presetId);
+    const resolved = resolvePreset(preset, ollamaModels);
+    setAgentConfig(resolved);
+    saveMultiAgentConfig(resolved);
+  }, [ollamaModels]);
+
+  const updateAgent = useCallback((role: keyof MultiAgentConfig, model: string) => {
+    const newConfig = { ...agentConfig };
+    if (!model) {
+      delete newConfig[role];
+    } else {
+      newConfig[role] = { model, label: model.split(':')[0] };
+    }
+    setAgentConfig(newConfig);
+    saveMultiAgentConfig(newConfig);
+  }, [agentConfig]);
+
   const handleRun = useCallback(async () => {
     const texts = inputText.split("\n").map(l => l.trim()).filter(l => l.length > 0)
     if (texts.length === 0) return
@@ -130,18 +183,25 @@ export default function AIPipelinePage() {
             enableHarvest,
             enableAutoFix,
             enableReview,
+            agents: agentConfig,
             onStepChange,
           })
       }
 
       setResult(pipelineResult)
       setSteps(pipelineResult.steps)
+
+      // Salva benchmark
+      const presetName = AGENT_PRESETS.find(p => p.id === activePresetId)?.name || 'Custom';
+      const entry = buildBenchmarkEntry(pipelineResult, agentConfig, activePresetId, presetName, sourceLang, targetLang);
+      saveBenchmarkEntry(entry);
+      setBenchmarkHistory(loadBenchmarkHistory());
     } catch (e) {
       console.error("[Pipeline] Error:", e)
     } finally {
       setIsRunning(false)
     }
-  }, [inputText, targetLang, sourceLang, enableHarvest, enableAutoFix, enableReview, pipelineMode])
+  }, [inputText, targetLang, sourceLang, enableHarvest, enableAutoFix, enableReview, pipelineMode, agentConfig, activePresetId])
 
   const handleExport = useCallback(() => {
     if (!result) return
@@ -251,6 +311,70 @@ export default function AIPipelinePage() {
                   </div>
                 </>
               )}
+
+              <Separator />
+
+              {/* Multi-Agent Toggle */}
+              <div>
+                <button
+                  onClick={() => setShowAgents(!showAgents)}
+                  className="flex items-center justify-between w-full text-xs font-medium hover:text-foreground transition-colors"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span>🤖</span> Multi-Agent
+                    {(agentConfig.translate || agentConfig.autoFix || agentConfig.review) && (
+                      <Badge variant="outline" className="text-[8px] px-1 py-0 h-3.5 bg-violet-500/10 text-violet-400 border-violet-500/30">ON</Badge>
+                    )}
+                  </span>
+                  <ChevronRight className={cn("h-3 w-3 transition-transform", showAgents && "rotate-90")} />
+                </button>
+
+                {showAgents && (
+                  <div className="mt-2 space-y-2 p-2 rounded-md bg-muted/30 border border-border/50">
+                    {/* Preset Buttons */}
+                    <div className="grid grid-cols-4 gap-1">
+                      {AGENT_PRESETS.map(preset => (
+                        <button
+                          key={preset.id}
+                          onClick={() => applyPreset(preset.id)}
+                          title={preset.description}
+                          className={cn(
+                            "text-[9px] px-1.5 py-1.5 rounded border transition-colors text-center truncate",
+                            activePresetId === preset.id
+                              ? "bg-violet-500/15 border-violet-500/40 text-violet-300"
+                              : "bg-background/50 border-border/50 hover:border-border text-muted-foreground"
+                          )}
+                        >
+                          <span className="font-medium">{preset.icon} {preset.name}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {ollamaModels.length === 0 ? (
+                      <p className="text-[10px] text-muted-foreground">Ollama offline o nessun modello installato</p>
+                    ) : (
+                      <>
+                        <p className="text-[9px] text-muted-foreground">Assegna modelli diversi a ogni step. Vuoto = usa provider chain di default.</p>
+                        {([['translate', '🔤 Traduzione', agentConfig.translate], ['autoFix', '🔧 Auto-Fix', agentConfig.autoFix], ['review', '👁 Review', agentConfig.review]] as [keyof MultiAgentConfig, string, AgentModelConfig | undefined][]).map(([role, label, current]) => (
+                          <div key={role}>
+                            <Label className="text-[10px] text-muted-foreground">{label}</Label>
+                            <select
+                              value={current?.model || ''}
+                              onChange={(e) => { updateAgent(role, e.target.value); setActivePresetId('custom'); }}
+                              className="w-full h-6 text-[10px] bg-background border border-border rounded px-1.5 mt-0.5 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
+                            >
+                              <option value="">Default (provider chain)</option>
+                              {ollamaModels.map(m => (
+                                <option key={m} value={m}>{m}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <Button onClick={handleRun} disabled={isRunning} className="w-full h-8 text-xs">
                 {isRunning ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Play className="h-3 w-3 mr-1" />}
@@ -462,6 +586,58 @@ export default function AIPipelinePage() {
             </div>
           </>
         )}
+
+        {/* Benchmark History */}
+        <div>
+          <button
+            onClick={() => setShowBenchmark(!showBenchmark)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-2"
+          >
+            <BarChart3 className="h-3 w-3" />
+            <span>Benchmark History ({benchmarkHistory.length})</span>
+            <ChevronRight className={cn("h-3 w-3 transition-transform", showBenchmark && "rotate-90")} />
+          </button>
+
+          {showBenchmark && benchmarkHistory.length > 0 && (
+            <Card>
+              <CardContent className="px-4 py-3">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[10px]">
+                    <thead>
+                      <tr className="border-b border-border/50 text-muted-foreground">
+                        <th className="text-left py-1 pr-2">Data</th>
+                        <th className="text-left py-1 pr-2">Preset</th>
+                        <th className="text-right py-1 pr-2">Score</th>
+                        <th className="text-right py-1 pr-2">1st Pass</th>
+                        <th className="text-right py-1 pr-2">Fixed</th>
+                        <th className="text-right py-1 pr-2">Improved</th>
+                        <th className="text-right py-1 pr-2">ms/str</th>
+                        <th className="text-right py-1">Totale</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...benchmarkHistory].reverse().slice(0, 20).map((entry, i) => (
+                        <tr key={i} className="border-b border-border/20 hover:bg-muted/20">
+                          <td className="py-1 pr-2 text-muted-foreground">{new Date(entry.timestamp).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                          <td className="py-1 pr-2 font-medium">{entry.presetName}</td>
+                          <td className={cn("py-1 pr-2 text-right font-bold",
+                            entry.averageScore >= 80 ? "text-emerald-400" :
+                            entry.averageScore >= 60 ? "text-yellow-400" : "text-red-400"
+                          )}>{entry.averageScore}%</td>
+                          <td className="py-1 pr-2 text-right text-emerald-400">{entry.passedFirstTime}/{entry.totalStrings}</td>
+                          <td className="py-1 pr-2 text-right text-blue-400">{entry.fixedByAutoFix}</td>
+                          <td className="py-1 pr-2 text-right text-purple-400">{entry.improvedByReview}</td>
+                          <td className="py-1 pr-2 text-right text-muted-foreground">{entry.msPerString}ms</td>
+                          <td className="py-1 text-right text-muted-foreground">{(entry.totalDurationMs / 1000).toFixed(1)}s</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   )

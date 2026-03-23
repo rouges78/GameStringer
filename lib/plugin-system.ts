@@ -5,7 +5,7 @@ const PLUGINS_KEY = 'installed_plugins';
 /**
  * Tipi di plugin supportati
  */
-export type PluginType = 'format' | 'translator' | 'exporter' | 'importer';
+export type PluginType = 'format' | 'translator' | 'exporter' | 'importer' | 'engine';
 
 /**
  * Definizione di un plugin
@@ -30,6 +30,38 @@ export interface FormatPlugin extends PluginDefinition {
   parse: (content: string) => ParsedContent;
   serialize: (content: ParsedContent) => string;
   validate?: (content: string) => ValidationResult;
+}
+
+/**
+ * Plugin per engine di gioco
+ */
+export interface EnginePlugin extends PluginDefinition {
+  type: 'engine';
+  engineName: string;
+  supportedExtensions: string[];
+  detectEngine: (files: string[]) => boolean;
+  extractStrings: (filePath: string, content: string) => ParsedContent;
+  injectStrings: (filePath: string, original: string, translated: ParsedContent) => string;
+  icon?: string;
+  website?: string;
+}
+
+/**
+ * Manifest di un plugin esterno (.gsplugin)
+ */
+export interface PluginManifest {
+  id: string;
+  name: string;
+  version: string;
+  type: PluginType;
+  description: string;
+  author: string;
+  minAppVersion?: string;
+  homepage?: string;
+  repository?: string;
+  license?: string;
+  entrypoint: string;
+  config?: Record<string, { type: string; default: any; label: string }>;
 }
 
 /**
@@ -67,10 +99,22 @@ export interface ValidationResult {
 class PluginRegistry {
   private plugins: Map<string, PluginDefinition> = new Map();
   private formatParsers: Map<string, FormatPlugin> = new Map();
+  private enginePlugins: Map<string, EnginePlugin> = new Map();
+  private listeners: Array<(event: string, plugin: PluginDefinition) => void> = [];
   
   constructor() {
     this.loadInstalledPlugins();
     this.registerBuiltinPlugins();
+  }
+
+  /** Subscribe to plugin events */
+  onPluginEvent(listener: (event: string, plugin: PluginDefinition) => void): () => void {
+    this.listeners.push(listener);
+    return () => { this.listeners = this.listeners.filter(l => l !== listener); };
+  }
+
+  private emit(event: string, plugin: PluginDefinition) {
+    this.listeners.forEach(l => l(event, plugin));
   }
   
   /**
@@ -258,13 +302,136 @@ class PluginRegistry {
    */
   registerFormatPlugin(plugin: FormatPlugin): void {
     this.plugins.set(plugin.id, plugin);
-    
-    // Registra per ogni estensione
     plugin.extensions.forEach(ext => {
       this.formatParsers.set(ext.toLowerCase(), plugin);
     });
-    
     this.savePlugins();
+    this.emit('registered', plugin);
+  }
+
+  /** Registra un engine plugin */
+  registerEnginePlugin(plugin: EnginePlugin): void {
+    this.plugins.set(plugin.id, plugin);
+    this.enginePlugins.set(plugin.engineName.toLowerCase(), plugin);
+    plugin.supportedExtensions.forEach(ext => {
+      if (!this.formatParsers.has(ext.toLowerCase())) {
+        this.formatParsers.set(ext.toLowerCase(), {
+          id: `engine-fmt-${plugin.id}`,
+          name: `${plugin.engineName} Format`,
+          version: plugin.version,
+          type: 'format',
+          description: `Auto-generated format parser from ${plugin.engineName} engine plugin`,
+          author: plugin.author,
+          enabled: true,
+          extensions: [ext],
+          parse: (content: string) => plugin.extractStrings('', content),
+          serialize: (content: ParsedContent) => plugin.injectStrings('', '', content),
+        });
+      }
+    });
+    this.savePlugins();
+    this.emit('registered', plugin);
+  }
+
+  /** Ottiene engine plugin per nome */
+  getEnginePlugin(engineName: string): EnginePlugin | null {
+    return this.enginePlugins.get(engineName.toLowerCase()) || null;
+  }
+
+  /** Rileva engine dai file di un gioco */
+  detectEngineFromFiles(files: string[]): EnginePlugin | null {
+    for (const plugin of this.enginePlugins.values()) {
+      if (plugin.enabled && plugin.detectEngine(files)) {
+        return plugin;
+      }
+    }
+    return null;
+  }
+
+  /** Lista engine plugins */
+  listEnginePlugins(): EnginePlugin[] {
+    return Array.from(this.enginePlugins.values());
+  }
+
+  /**
+   * Carica un plugin esterno da manifest JSON
+   * Il manifest contiene le definizioni, l'entrypoint è un modulo JS inline
+   */
+  async loadExternalPlugin(manifestJson: string): Promise<{ success: boolean; pluginId?: string; error?: string }> {
+    try {
+      const manifest: PluginManifest = JSON.parse(manifestJson);
+      
+      if (!manifest.id || !manifest.name || !manifest.type || !manifest.entrypoint) {
+        return { success: false, error: 'Manifest incompleto: servono id, name, type, entrypoint' };
+      }
+
+      if (this.plugins.has(manifest.id)) {
+        return { success: false, error: `Plugin '${manifest.id}' già installato` };
+      }
+
+      // Esegui l'entrypoint in sandbox limitata
+      const pluginModule = this.evaluatePluginCode(manifest.entrypoint);
+      if (!pluginModule) {
+        return { success: false, error: 'Errore nel codice del plugin' };
+      }
+
+      if (manifest.type === 'engine' && pluginModule.detectEngine && pluginModule.extractStrings) {
+        const enginePlugin: EnginePlugin = {
+          id: manifest.id,
+          name: manifest.name,
+          version: manifest.version,
+          type: 'engine',
+          description: manifest.description,
+          author: manifest.author,
+          enabled: true,
+          engineName: pluginModule.engineName || manifest.name,
+          supportedExtensions: pluginModule.supportedExtensions || [],
+          detectEngine: pluginModule.detectEngine,
+          extractStrings: pluginModule.extractStrings,
+          injectStrings: pluginModule.injectStrings || (() => ''),
+          icon: pluginModule.icon,
+          website: manifest.homepage,
+          config: manifest.config,
+        };
+        this.registerEnginePlugin(enginePlugin);
+        return { success: true, pluginId: manifest.id };
+      }
+
+      if (manifest.type === 'format' && pluginModule.parse && pluginModule.serialize) {
+        const formatPlugin: FormatPlugin = {
+          id: manifest.id,
+          name: manifest.name,
+          version: manifest.version,
+          type: 'format',
+          description: manifest.description,
+          author: manifest.author,
+          enabled: true,
+          extensions: pluginModule.extensions || [],
+          parse: pluginModule.parse,
+          serialize: pluginModule.serialize,
+          validate: pluginModule.validate,
+        };
+        this.registerFormatPlugin(formatPlugin);
+        return { success: true, pluginId: manifest.id };
+      }
+
+      return { success: false, error: `Tipo plugin '${manifest.type}' non supportato o modulo incompleto` };
+    } catch (e: any) {
+      return { success: false, error: e.message };
+    }
+  }
+
+  /** Valuta codice plugin in modo sicuro (sandbox limitata) */
+  private evaluatePluginCode(code: string): any {
+    try {
+      const fn = new Function('exports', code);
+      const exports: any = {};
+      fn(exports);
+      return exports;
+    } catch (e) {
+      console.error('[PluginSystem] Errore valutazione plugin:', e);
+      return null;
+    }
   }
   
   /**

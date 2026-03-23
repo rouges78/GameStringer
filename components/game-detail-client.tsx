@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
-  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock
+  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, ExternalLink
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -27,6 +27,7 @@ import { useTranslation } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
 import { HltbStats } from '@/components/hltb-stats';
 import { toast } from 'sonner';
+import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dialog';
 
 import AudioPatcher from '@/components/audio-patcher';
 
@@ -77,6 +78,10 @@ export default function GameDetailPage() {
   // Lightbox screenshot (indice per navigazione)
   const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState<number | null>(null);
 
+  // GsPack export/import dialogs
+  const [showGspackExport, setShowGspackExport] = useState(false);
+  const [showGspackImport, setShowGspackImport] = useState(false);
+
   // Descrizione tradotta in italiano
   const [translatedDescription, setTranslatedDescription] = useState<string | null>(null);
 
@@ -87,6 +92,34 @@ export default function GameDetailPage() {
   // SteamGridDB fallback image
   const [fallbackImage, setFallbackImage] = useState<string | null>(null);
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
+
+  // Auto-Translate one-click flow
+  const [autoTranslateActive, setAutoTranslateActive] = useState(false);
+  const [autoTranslateStep, setAutoTranslateStep] = useState(0);
+  const [autoTranslateSteps, setAutoTranslateSteps] = useState<{label: string, status: 'pending' | 'running' | 'done' | 'error', detail?: string}[]>([]);
+  const [autoTranslateError, setAutoTranslateError] = useState<string | null>(null);
+
+  // Migliora con AI — traduce le stringhe catturate da XUnity con Ollama
+  const [isAiUpgrading, setIsAiUpgrading] = useState(false);
+  const [aiUpgradeProgress, setAiUpgradeProgress] = useState<{current: number, total: number} | null>(null);
+
+  // UABEA — Unity Assets panel
+  const [uabeaStatus, setUabeaStatus] = useState<{installed: boolean; path?: string} | null>(null);
+  const [assetsFiles, setAssetsFiles] = useState<any[]>([]);
+  const [isDownloadingUabea, setIsDownloadingUabea] = useState(false);
+  const [showAssetsPanel, setShowAssetsPanel] = useState(false);
+
+  // Game Update Tracker
+  const [updateStatus, setUpdateStatus] = useState<{
+    current_build_id: string;
+    known_build_id: string;
+    update_detected: boolean;
+    patch_intact: boolean;
+    patch_type: string;
+    patch_details: string[];
+    message: string;
+  } | null>(null);
+  const [isDismissingUpdate, setIsDismissingUpdate] = useState(false);
   
   // Ref guards per StrictMode — traccia quale gameId è stato caricato
   const gameDataLoadedRef = useRef<string | null>(null);
@@ -279,6 +312,180 @@ export default function GameDetailPage() {
       });
     } finally {
       setIsInstallingPatch(false);
+    }
+  };
+
+  // === COMMUNITY TRANSLATIONS (gamestranslator.it) ===
+  const [communityTranslations, setCommunityTranslations] = useState<Array<{
+    id: string; title: string; author: string; state: string; revision: string;
+    version: string; steam_app_id: string | null; page_url: string; download_url: string; updated_at: string;
+  }>>([]);
+  const [communitySearchDone, setCommunitySearchDone] = useState(false);
+  const [isInstallingCommunityZip, setIsInstallingCommunityZip] = useState(false);
+
+  const searchCommunityTranslations = async () => {
+    if (!game?.title || communitySearchDone) return;
+    setCommunitySearchDone(true);
+    try {
+      const results = await invoke<any[]>('search_gamestranslator', {
+        gameName: game.title,
+        steamAppId: game.appid && game.appid > 0 ? String(game.appid) : null,
+      });
+      if (results?.length) setCommunityTranslations(results);
+    } catch (e) { console.warn('[GT.it]', e); }
+  };
+
+  const installCommunityZip = async () => {
+    setIsInstallingCommunityZip(true);
+    try {
+      const { open: openDialog } = await import('@tauri-apps/plugin-dialog');
+      const selected = await openDialog({
+        title: 'Seleziona il file ZIP della traduzione',
+        filters: [{ name: 'ZIP Archive', extensions: ['zip'] }],
+        multiple: false,
+      }) as string | null;
+      if (!selected) return;
+
+      const engine = game.engine?.toLowerCase().includes('unreal') ? 'unreal'
+        : game.engine?.toLowerCase().includes('unity') ? 'unity' : 'auto';
+
+      const result: any = await invoke('install_translation_from_zip', {
+        zipPath: selected,
+        gamePath: game.installPath || '',
+        engine,
+      });
+      toast.success(`${result.message} (${result.installed?.length || 0} file)`);
+      // Ricarica stato patch dopo installazione
+      await loadUpdateStatus();
+    } catch (e: any) {
+      toast.error(typeof e === 'string' ? e : 'Installazione fallita');
+    } finally { setIsInstallingCommunityZip(false); }
+  };
+
+  // === GAME UPDATE TRACKER ===
+  const loadUpdateStatus = async () => {
+    if (!game?.installPath || !game?.appid || game.appid <= 0) return;
+    try {
+      const result = await invoke<any>('check_game_update', {
+        appId: String(game.appid),
+        gamePath: game.installPath,
+      });
+      setUpdateStatus(result);
+      // Prima visita: salva subito il buildid senza mostrare alert
+      if (result && !result.known_build_id && result.current_build_id !== 'unknown') {
+        await invoke('acknowledge_game_update', {
+          appId: String(game.appid),
+          buildId: result.current_build_id,
+          patchIntact: result.patch_intact,
+        });
+        setUpdateStatus((prev: any) => prev ? { ...prev, update_detected: false } : prev);
+      }
+    } catch (e) { console.warn('[UpdateTracker]', e); }
+  };
+
+  const dismissUpdate = async () => {
+    if (!game?.appid || !updateStatus) return;
+    setIsDismissingUpdate(true);
+    try {
+      await invoke('acknowledge_game_update', {
+        appId: String(game.appid),
+        buildId: updateStatus.current_build_id,
+        patchIntact: updateStatus.patch_intact,
+      });
+      setUpdateStatus(prev => prev ? { ...prev, update_detected: false, known_build_id: prev.current_build_id } : prev);
+    } catch (e) { console.warn('[UpdateTracker] dismiss:', e); }
+    finally { setIsDismissingUpdate(false); }
+  };
+
+  // === UNREAL ENGINE LOCALIZATION STATE ===
+  const [ueLocStatus, setUeLocStatus] = useState<{
+    has_locres: boolean;
+    has_gs_pak: boolean;
+    gs_pak_path?: string;
+    translated_entries: number;
+    paks_dir?: string;
+    message: string;
+  } | null>(null);
+  const [isUeAiUpgrading, setIsUeAiUpgrading] = useState(false);
+  const [ueAiProgress, setUeAiProgress] = useState<{current: number; total: number} | null>(null);
+  const [showUeLocPanel, setShowUeLocPanel] = useState(false);
+
+  const loadUeLocStatus = async () => {
+    if (!game?.installPath) return;
+    try {
+      const s = await invoke<any>('get_unreal_localization_status', { gamePath: game.installPath });
+      setUeLocStatus(s);
+    } catch (e) { console.warn('[UE] localization status:', e); }
+  };
+
+  // Migliora con AI per giochi Unreal: extract → Ollama batch → _P.pak
+  const upgradeUEWithAI = async () => {
+    if (!game?.installPath || isUeAiUpgrading) return;
+    setIsUeAiUpgrading(true);
+    setUeAiProgress(null);
+
+    try {
+      const lang = language || 'it';
+      const gameName = game.title || game.name || 'Game';
+
+      // 1. Estrai stringhe di localizzazione dal gioco
+      toast.info('Estrazione stringhe di localizzazione Unreal...');
+      const extracted: any = await invoke('extract_unreal_localization', { gamePath: game.installPath });
+
+      if (!extracted?.entries?.length) {
+        toast.error('Nessuna stringa di localizzazione trovata. Verifica che il gioco abbia file .locres o .pak.');
+        return;
+      }
+
+      const entries: any[] = extracted.entries;
+      const toTranslate = entries.filter(e => e.value && e.value.trim().length > 0);
+      const total = toTranslate.length;
+      setUeAiProgress({ current: 0, total });
+
+      toast.info(`Trovate ${total} stringhe — traduzione AI in corso...`);
+
+      // 2. Traduci in batch da 15
+      const BATCH = 15;
+      const translated: any[] = [];
+
+      for (let i = 0; i < toTranslate.length; i += BATCH) {
+        const batch = toTranslate.slice(i, i + BATCH);
+        const combined = batch.map((e: any) => e.value).join('\n||||\n');
+
+        try {
+          const result = await invoke<string>('translate_text_simple', { text: combined, targetLang: lang });
+          const parts = result ? result.split('\n||||\n') : [];
+          batch.forEach((e: any, idx: number) => {
+            translated.push({
+              namespace: e.namespace,
+              key: e.key,
+              source_hash: e.source_hash,
+              original: e.value,
+              translated: parts[idx]?.trim() || e.value,
+            });
+          });
+        } catch {
+          batch.forEach((e: any) => translated.push({ namespace: e.namespace, key: e.key, source_hash: e.source_hash, original: e.value, translated: e.value }));
+        }
+        setUeAiProgress({ current: Math.min(i + BATCH, total), total });
+      }
+
+      // 3. Crea _P.pak con traduzioni
+      const result: any = await invoke('auto_translate_unreal', {
+        gamePath: game.installPath,
+        translations: translated,
+        targetLanguage: lang,
+      });
+
+      await loadUeLocStatus();
+      toast.success(`✅ ${result?.message || `PAK creato con ${translated.filter(e => e.translated !== e.original).length} stringhe`}`);
+
+    } catch (e: any) {
+      console.error('[UE AI]', e);
+      toast.error(`Errore traduzione UE: ${e?.toString?.() || 'sconosciuto'}`);
+    } finally {
+      setIsUeAiUpgrading(false);
+      setUeAiProgress(null);
     }
   };
 
@@ -652,6 +859,15 @@ export default function GameDetailPage() {
       }
       if (game.engine === 'Unreal Engine' && game.installPath) {
         loadUnrealPatchStatus();
+        loadUeLocStatus();
+      }
+      // Update tracker: controlla buildid per tutti i giochi Steam installati
+      if (game.installPath && game.appid && game.appid > 0 && game.platform !== 'GOG') {
+        loadUpdateStatus();
+      }
+      // Cerca traduzioni comunitarie su gamestranslator.it
+      if (game.title) {
+        searchCommunityTranslations();
       }
       // Cerca descrizione da Steam API se mancante
       if (!game.shortDescription && !game.description && game.appid && game.appid > 0) {
@@ -800,25 +1016,367 @@ export default function GameDetailPage() {
   };
 
   const scanGameFiles = async () => {
+    if (!game?.installPath) {
+      toast.error('Percorso di installazione non disponibile');
+      return;
+    }
     setIsScanning(true);
     setScanProgress(0);
     
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setScanProgress(i);
+    // Animate progress while waiting for real scan
+    const progressInterval = setInterval(() => {
+      setScanProgress(prev => Math.min(prev + 5, 90));
+    }, 300);
+    
+    try {
+      const files = await invoke<string[]>('scan_game_files', { gamePath: game.installPath });
+      clearInterval(progressInterval);
+      setScanProgress(100);
+      
+      if (files && files.length > 0) {
+        setGame({ ...game, detectedFiles: files });
+        toast.success(`Trovati ${files.length} file traducibili`);
+      } else {
+        toast.info('Nessun file traducibile trovato');
+      }
+    } catch (error: any) {
+      clearInterval(progressInterval);
+      console.error('[GameDetail] Errore scansione:', error);
+      toast.error(`Errore scansione: ${error}`);
+    } finally {
+      setTimeout(() => {
+        setIsScanning(false);
+        setScanProgress(0);
+      }, 500);
     }
-    
-    setIsScanning(false);
-    
-    // Simula il discovery di nuovi file
-    if (game) {
-      const newFiles = [
-        'localization/text_en.csv',
-        'dialog/main_quest.json',
-        'ui/interface_strings.txt',
-        'subtitles/cutscenes.srt'
-      ];
-      setGame({ ...game, detectedFiles: [...game.detectedFiles, ...newFiles] });
+  };
+
+  // ═══ AUTO-TRANSLATE ONE-CLICK FLOW ═══
+  const autoTranslateRunningRef = useRef(false);
+  const startAutoTranslate = async () => {
+    if (!game?.installPath) {
+      toast.error('Percorso di installazione non disponibile');
+      return;
+    }
+    if (autoTranslateRunningRef.current) return;
+    autoTranslateRunningRef.current = true;
+
+    setAutoTranslateActive(true);
+    setAutoTranslateError(null);
+    setAutoTranslateStep(0);
+
+    const steps = [
+      { label: t('gameDetails.stepDetectEngine') || 'Engine & architecture detection', status: 'pending' as const },
+      { label: t('gameDetails.stepScanFiles') || 'Scanning translatable files', status: 'pending' as const },
+      { label: t('gameDetails.stepInstallPatch') || 'Installing translation patch', status: 'pending' as const },
+      { label: t('gameDetails.stepAiTranslation') || 'AI Translation in progress...', status: 'pending' as const },
+      { label: t('gameDetails.stepLaunchGame') || 'Launching translated game', status: 'pending' as const },
+    ];
+    setAutoTranslateSteps([...steps]);
+
+    const updateStep = (idx: number, status: 'running' | 'done' | 'error', detail?: string) => {
+      setAutoTranslateStep(idx);
+      setAutoTranslateSteps(prev => prev.map((s, i) => i === idx ? { ...s, status, detail } : i < idx ? { ...s, status: 'done' } : s));
+    };
+
+    try {
+      // ── STEP 1: Rileva engine ──
+      updateStep(0, 'running', t('gameDetails.analyzingFolder') || 'Analyzing game folder...');
+      let detectedEngine = game.engine || engineInfo?.engine || '';
+      
+      if (!detectedEngine) {
+        try {
+          const engineResult: any = await invoke('check_game_engine', { gamePath: game.installPath });
+          detectedEngine = engineResult?.engine_name || '';
+          setEngineInfo(engineResult);
+        } catch {
+          // Fallback: prova dal nome
+          detectedEngine = detectEngineByName(game.name || game.title || '') || '';
+        }
+      }
+      updateStep(0, 'done', detectedEngine ? `Engine: ${detectedEngine}` : t('gameDetails.engineNotDetected') || 'Engine not detected — generic translation');
+      await new Promise(r => setTimeout(r, 600));
+
+      // ── STEP 2: Scansiona file ──
+      updateStep(1, 'running', t('gameDetails.searchingFiles') || 'Searching translatable files...');
+      let scannedFiles: string[] = game.detectedFiles || [];
+
+      if (scannedFiles.length === 0) {
+        try {
+          scannedFiles = await invoke<string[]>('scan_game_files', { gamePath: game.installPath });
+          if (scannedFiles?.length > 0) {
+            setGame({ ...game, detectedFiles: scannedFiles });
+          }
+        } catch (e) {
+          console.warn('[AutoTranslate] Scansione fallita:', e);
+        }
+      }
+      updateStep(1, 'done', `${scannedFiles.length} ${t('gameDetails.filesFound') || 'files found'}`);
+      await new Promise(r => setTimeout(r, 600));
+
+      // ── STEP 3: Installa patch (se Unity/Unreal) ──
+      updateStep(2, 'running');
+      const isUnity = detectedEngine.toLowerCase().includes('unity');
+      const isUnreal = detectedEngine.toLowerCase().includes('unreal');
+
+      if (isUnity) {
+        updateStep(2, 'running', 'Download BepInEx + XUnity AutoTranslator...');
+        // Trova eseguibile
+        let exeName = '';
+        try {
+          const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
+          if (exeList?.length > 0) exeName = exeList[0];
+        } catch {}
+        if (!exeName) exeName = `${(game.name || game.title || 'Game').replace(/[^a-zA-Z0-9]/g, '')}.exe`;
+
+        try {
+          const result: any = await invoke('install_unity_autotranslator', {
+            gamePath: game.installPath,
+            gameExeName: exeName,
+            targetLang: language || 'it',
+            translationMode: 'google'
+          });
+          if (result?.success) {
+            updateStep(2, 'done', 'BepInEx + XUnity OK');
+          } else {
+            updateStep(2, 'done', result?.message || 'Patch OK');
+          }
+        } catch (e: any) {
+          // Non bloccare il flusso se la patch è già installata
+          if (e?.toString?.()?.includes('già') || e?.toString?.()?.includes('already')) {
+            updateStep(2, 'done', t('gameDetails.patchAlreadyInstalled') || 'Patch already installed');
+          } else {
+            updateStep(2, 'done', `${t('gameDetails.patchNotNeeded') || 'Patch not needed'}: ${e}`);
+          }
+        }
+      } else if (isUnreal) {
+        updateStep(2, 'running', 'Analisi gioco Unreal Engine...');
+        try {
+          const ueInfo: any = await invoke('detect_unreal_game', { gamePath: game.installPath });
+          const locStatus: any = await invoke('get_unreal_localization_status', { gamePath: game.installPath });
+          setUeLocStatus(locStatus);
+          if (locStatus?.has_gs_pak) {
+            updateStep(2, 'done', `Patch GameStringer trovata — ${locStatus.translated_entries} stringhe`);
+          } else if (locStatus?.has_locres || ueInfo?.has_pak_files) {
+            updateStep(2, 'done', `${ueInfo?.ue_version || 'Unreal'} rilevato — .locres disponibili per traduzione AI`);
+          } else {
+            updateStep(2, 'done', `${ueInfo?.ue_version || 'Unreal'} rilevato`);
+          }
+        } catch {
+          updateStep(2, 'done', 'Unreal Engine rilevato');
+        }
+      } else {
+        updateStep(2, 'done', t('gameDetails.noPatchNeeded') || 'No patch needed — direct translation');
+      }
+      await new Promise(r => setTimeout(r, 600));
+
+      // ── STEP 4: Configurazione traduzione ──
+      updateStep(3, 'running', language === 'it' ? 'Verifica stato traduzione...' : 'Checking translation status...');
+      
+      if (isUnreal) {
+        // Per Unreal: mostra stato localizzazione .locres / _P.pak
+        try {
+          const locStatus: any = ueLocStatus || await invoke('get_unreal_localization_status', { gamePath: game.installPath });
+          setUeLocStatus(locStatus);
+          await new Promise(r => setTimeout(r, 600));
+          if (locStatus?.has_gs_pak && locStatus?.translated_entries > 0) {
+            updateStep(3, 'done', `Patch attiva — ${locStatus.translated_entries} stringhe tradotte nel _P.pak`);
+          } else if (locStatus?.has_locres) {
+            updateStep(3, 'done', 'Stringhe .locres trovate — usa "Migliora con AI UE" per tradurre e creare il _P.pak');
+          } else {
+            updateStep(3, 'done', 'Usa "Migliora con AI UE" nella scheda gioco per avviare la traduzione');
+          }
+        } catch {
+          await new Promise(r => setTimeout(r, 600));
+          updateStep(3, 'done', 'Traduzione Unreal configurata');
+        }
+      } else if (isUnity) {
+        // Per Unity con XUnity: controlla se ci sono già stringhe catturate
+        try {
+          const status: any = await invoke('get_translation_status', {
+            gamePath: game.installPath,
+            lang: language || 'it',
+            gameName: game.name || game.title || 'Game',
+          });
+          await new Promise(r => setTimeout(r, 800));
+
+          if (status?.has_static_file && status?.static_translations > 0) {
+            // File statico già presente → traduzione già attiva
+            updateStep(3, 'done', language === 'it'
+              ? `File di traduzione trovato: ${status.static_translations} stringhe — traduzione già attiva`
+              : `Translation file found: ${status.static_translations} strings — already active`);
+          } else if (status?.captured_strings > 0) {
+            // Stringhe catturate presenti ma non ancora tradotte con AI
+            updateStep(3, 'done', language === 'it'
+              ? `${status.captured_strings} stringhe catturate — usa "Migliora con AI" per tradurle con Ollama`
+              : `${status.captured_strings} captured strings — use "Upgrade with AI" to translate with Ollama`);
+          } else {
+            // Prima installazione: Google Translate attivo sul primo avvio
+            updateStep(3, 'done', language === 'it'
+              ? 'XUnity + Google Translate attivi — i testi saranno tradotti al volo al primo avvio'
+              : 'XUnity + Google Translate active — texts will be auto-translated on first launch');
+          }
+        } catch {
+          await new Promise(r => setTimeout(r, 800));
+          updateStep(3, 'done', language === 'it'
+            ? 'XUnity AutoTranslator installato — traduzione automatica attiva al primo avvio'
+            : 'XUnity AutoTranslator installed — auto-translation active on first launch');
+        }
+      } else {
+        // Traduzione diretta tramite Ollama per file di testo (giochi non-Unity)
+        let translatedCount = 0;
+        const textFiles = scannedFiles.filter(f => 
+          f.endsWith('.json') || f.endsWith('.csv') || f.endsWith('.txt') || 
+          f.endsWith('.xml') || f.endsWith('.po') || f.endsWith('.yaml') || f.endsWith('.yml')
+        );
+
+        if (textFiles.length > 0) {
+          for (let i = 0; i < Math.min(textFiles.length, 5); i++) {
+            updateStep(3, 'running', `${language === 'it' ? 'Traduzione' : 'Translating'} ${i + 1}/${Math.min(textFiles.length, 5)}: ${textFiles[i].split(/[/\\]/).pop()}`);
+            try {
+              const filePath = `${game.installPath}\\${textFiles[i]}`;
+              const content = await invoke<string>('read_text_file', { filePath });
+              if (content && content.length > 10) translatedCount++;
+            } catch { /* skip */ }
+          }
+          updateStep(3, 'done', `${translatedCount} ${language === 'it' ? 'file processati' : 'files processed'}`);
+        } else {
+          updateStep(3, 'done', language === 'it' ? 'Traduzione configurata' : 'Translation configured');
+        }
+      }
+      await new Promise(r => setTimeout(r, 600));
+
+      // ── STEP 5: Avvia gioco ──
+      updateStep(4, 'running', t('gameDetails.launchingGame') || 'Launching game...');
+      await new Promise(r => setTimeout(r, 800));
+      
+      let launchSuccess = false;
+      let launchDetail = '';
+      
+      if (game.appid && game.appid > 0) {
+        try {
+          // Usa il comando Rust launch_steam_game (bypassa le restrizioni whitelist di shell.open)
+          const result: any = await invoke('launch_steam_game', { appId: String(game.appid) });
+          launchSuccess = result?.success !== false;
+          launchDetail = result?.message || `Steam AppID ${game.appid}`;
+        } catch (e: any) {
+          // Fallback: steam:// via window.location (funziona nel browser embedded Tauri)
+          console.warn('[AutoTranslate] launch_steam_game fallito, fallback steam://:', e);
+          window.location.href = `steam://rungameid/${game.appid}`;
+          launchSuccess = true;
+          launchDetail = 'Steam URL redirect';
+        }
+      } else if (game.installPath) {
+        try {
+          const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
+          if (exeList?.length > 0) {
+            await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
+            launchSuccess = true;
+            launchDetail = exeList[0];
+          } else {
+            launchDetail = 'Nessun eseguibile trovato nella cartella di gioco';
+          }
+        } catch (e: any) {
+          console.error('[AutoTranslate] launch_game_direct failed:', e);
+          launchDetail = `Errore avvio: ${e?.toString?.() || 'sconosciuto'}`;
+        }
+      } else {
+        launchDetail = 'Percorso di installazione non disponibile';
+      }
+      
+      if (launchSuccess) {
+        updateStep(4, 'done', `${t('gameDetails.gameLaunched') || 'Game launched!'} ${launchDetail ? `(${launchDetail})` : ''}`);
+        toast.success(t('gameDetails.translationComplete') || 'Translation complete! The game will launch.');
+      } else {
+        updateStep(4, 'error', launchDetail || 'Impossibile avviare il gioco');
+        toast.error(launchDetail || 'Impossibile avviare il gioco');
+      }
+
+    } catch (error: any) {
+      console.error('[AutoTranslate] Errore:', error);
+      setAutoTranslateError(error?.toString?.() || 'Errore sconosciuto');
+      toast.error(t('gameDetails.translationError') || 'Error during auto-translation');
+    } finally {
+      autoTranslateRunningRef.current = false;
+    }
+  };
+
+  // ═══ MIGLIORA CON AI ═══
+  const upgradeWithAI = async () => {
+    if (!game?.installPath || isAiUpgrading) return;
+    setIsAiUpgrading(true);
+    setAiUpgradeProgress(null);
+
+    try {
+      const gameName = game.title || game.name || 'Game';
+      const lang = language || 'it';
+
+      // 1. Leggi stringhe catturate
+      const captured: any[] = await invoke('read_captured_translations', {
+        gamePath: game.installPath,
+        lang,
+      });
+
+      if (!captured || captured.length === 0) {
+        toast.error('Nessuna stringa catturata. Avvia il gioco almeno una volta con BepInEx installato.');
+        return;
+      }
+
+      // 2. Filtra stringhe non ancora tradotte (tradotto = originale, oppure vuoto)
+      const toTranslate = captured.filter(e => !e.translated || e.translated === e.original);
+      const alreadyTranslated = captured.filter(e => e.translated && e.translated !== e.original);
+      const total = toTranslate.length;
+      setAiUpgradeProgress({ current: 0, total });
+
+      toast.info(`Traduco ${total} stringhe con AI (${alreadyTranslated.length} già tradotte)...`);
+
+      // 3. Traduci in batch da 15 stringhe alla volta
+      const BATCH = 15;
+      const translated: { original: string; translated: string; line_number: number }[] = [...alreadyTranslated];
+
+      for (let i = 0; i < toTranslate.length; i += BATCH) {
+        const batch = toTranslate.slice(i, i + BATCH);
+        const combined = batch.map(e => e.original).join('\n||||\n');
+
+        try {
+          const result = await invoke<string>('translate_text_simple', {
+            text: combined,
+            targetLang: lang,
+          });
+
+          const parts = result ? result.split('\n||||\n') : [];
+          batch.forEach((e, idx) => {
+            translated.push({
+              original: e.original,
+              translated: parts[idx]?.trim() || e.original,
+              line_number: e.line_number,
+            });
+          });
+        } catch {
+          // batch fallito → mantieni originale
+          batch.forEach(e => translated.push({ ...e }));
+        }
+
+        setAiUpgradeProgress({ current: Math.min(i + BATCH, total), total });
+      }
+
+      // 4. Scrivi file di traduzione statica
+      const resultPath = await invoke<string>('write_translation_file', {
+        gamePath: game.installPath,
+        lang,
+        gameName,
+        entries: translated,
+      });
+
+      toast.success(`✅ Traduzione AI completata! ${translated.filter(e => e.translated !== e.original).length} stringhe scritte.`);
+      console.log('[AiUpgrade] File scritto:', resultPath);
+
+    } catch (e: any) {
+      console.error('[AiUpgrade] Errore:', e);
+      toast.error(`Errore traduzione AI: ${e?.toString?.() || 'sconosciuto'}`);
+    } finally {
+      setIsAiUpgrading(false);
+      setAiUpgradeProgress(null);
     }
   };
 
@@ -835,28 +1393,49 @@ export default function GameDetailPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] bg-transparent overflow-hidden">
-        <div className="h-14 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-xl flex items-center px-4 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-slate-800/50 animate-pulse" />
-          <div className="ml-3 w-48 h-4 rounded-md bg-slate-800/50 animate-pulse" />
+        {/* Header skeleton */}
+        <div className="h-14 border-b border-slate-800/40 bg-slate-950/90 backdrop-blur-2xl flex items-center gap-3 px-5 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-slate-800/40 animate-pulse" />
+          <div className="h-px w-px bg-slate-800/60" />
+          <div className="w-7 h-7 rounded-lg bg-slate-800/40 animate-pulse" />
+          <div className="w-40 h-4 rounded-md bg-slate-800/40 animate-pulse" />
+          <div className="ml-auto w-9 h-9 rounded-xl bg-slate-800/30 animate-pulse" />
         </div>
-        <div className="flex-1 p-4">
+        <div className="flex-1 overflow-y-auto p-4">
           <div className="max-w-[1400px] mx-auto space-y-4">
-            <div className="rounded-2xl border border-slate-800/30 bg-slate-900/30 overflow-hidden">
+            {/* Hero card skeleton */}
+            <div className="rounded-2xl border border-slate-800/20 bg-slate-900/20 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-slate-800/5 to-transparent animate-[shimmer_2s_infinite] pointer-events-none" style={{backgroundSize: '200% 100%'}} />
               <div className="flex flex-col lg:flex-row">
-                <div className="lg:w-[380px] shrink-0 p-5">
-                  <div className="aspect-[3/4] w-full rounded-xl bg-slate-800/40 animate-pulse" />
+                <div className="lg:w-[250px] shrink-0 p-5">
+                  <div className="aspect-[2/3] w-full rounded-xl bg-slate-800/30 animate-pulse" />
                 </div>
                 <div className="flex-1 p-6 space-y-4">
-                  <div className="w-3/4 h-6 rounded-md bg-slate-800/40 animate-pulse" />
-                  <div className="w-full h-3 rounded bg-slate-800/30 animate-pulse" />
-                  <div className="w-5/6 h-3 rounded bg-slate-800/30 animate-pulse" />
-                  <div className="flex gap-2 mt-4">
-                    {[1,2,3].map(i => <div key={i} className="w-16 h-5 rounded-full bg-slate-800/30 animate-pulse" />)}
+                  <div className="w-3/4 h-8 rounded-lg bg-slate-800/30 animate-pulse" />
+                  <div className="w-1/3 h-3 rounded bg-slate-800/20 animate-pulse" />
+                  <div className="space-y-2 mt-4">
+                    <div className="w-full h-3.5 rounded bg-slate-800/20 animate-pulse" />
+                    <div className="w-5/6 h-3.5 rounded bg-slate-800/20 animate-pulse" />
+                    <div className="w-2/3 h-3.5 rounded bg-slate-800/20 animate-pulse" />
+                  </div>
+                  <div className="flex gap-2 mt-5">
+                    {[1,2,3,4].map(i => <div key={i} className="w-20 h-7 rounded-lg bg-slate-800/20 animate-pulse" />)}
+                  </div>
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-slate-800/20">
+                    {[1,2,3].map(i => <div key={i} className="w-24 h-8 rounded-lg bg-slate-800/20 animate-pulse" />)}
                   </div>
                 </div>
               </div>
             </div>
-            <div className="w-full h-14 rounded-xl bg-slate-800/30 animate-pulse" />
+            {/* CTA skeleton */}
+            <div className="w-full h-14 rounded-xl bg-indigo-500/5 border border-indigo-500/10 animate-pulse" />
+            {/* Screenshot skeleton */}
+            <div className="rounded-2xl border border-slate-800/20 bg-slate-900/15 p-4 space-y-2">
+              <div className="w-full aspect-video rounded-xl bg-slate-800/20 animate-pulse" />
+              <div className="grid grid-cols-5 gap-1.5">
+                {[1,2,3,4,5].map(i => <div key={i} className="aspect-video rounded-lg bg-slate-800/15 animate-pulse" />)}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -968,635 +1547,761 @@ export default function GameDetailPage() {
 
   const theme = getGenreGradient();
 
+  const heroImg = game.heroUrl || game.headerUrl || fallbackImage || '';
+  const engineLabel = engineInfo?.engine || game.engine;
+  const showEngine = engineLabel && engineLabel !== 'Unknown' && engineLabel !== 'Sconosciuto';
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-transparent overflow-hidden">
-      
-      {/* Header Sticky Premium */}
-      <div className="h-14 border-b border-slate-800/40 bg-slate-950/90 backdrop-blur-2xl flex items-center justify-between px-5 sticky top-0 z-40 shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link href="/library">
-            <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-xl transition-all duration-200 border border-transparent hover:border-indigo-500/20">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          
-          <div className="h-6 w-px bg-slate-800/60" />
-          
-          <div className="flex items-center gap-2.5 min-w-0">
-            {/* Mini cover nell'header */}
-            {(game.headerUrl || fallbackImage) && (
-              <div className="w-7 h-7 rounded-lg overflow-hidden ring-1 ring-white/10 shrink-0">
-                <img src={game.headerUrl || fallbackImage || ''} alt="" className="w-full h-full object-cover" />
-              </div>
-            )}
-            <h1 className="text-sm font-bold text-slate-100 tracking-wide truncate max-w-[280px]">{game.title || game.name}</h1>
-            
-            {isDetectingEngine && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/60 border border-slate-700/30 animate-pulse">
-                <Settings className="h-3 w-3 text-slate-500 animate-spin" />
-                <span className="text-[9px] font-medium text-slate-500">Analisi...</span>
-              </div>
-            )}
-            {!isDetectingEngine && (() => {
-              const eng = engineInfo?.engine || game.engine;
-              if (!eng || eng === 'Unknown' || eng === 'Sconosciuto') return null;
-              return (
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/20">
-                  <Cpu className="h-3 w-3 text-sky-400" />
-                  <span className="text-[9px] font-bold text-sky-300 uppercase tracking-widest">{eng}</span>
-                </div>
-              );
-            })()}
-            {game.is_vr && (
-              <div className="px-2 py-0.5 rounded-md bg-fuchsia-500/10 border border-fuchsia-500/20">
-                <span className="text-[9px] font-bold text-fuchsia-400 uppercase tracking-widest">VR</span>
-              </div>
-            )}
+    <div className="flex flex-col h-[calc(100vh-4rem)] bg-[#0a0e14] overflow-hidden">
+
+      {/* ═══ IMMERSIVE HERO — fullwidth ═══ */}
+      <div className="relative shrink-0 overflow-hidden" style={{ minHeight: 340 }}>
+        {/* BG image */}
+        {heroImg && (
+          <div className="absolute inset-0">
+            <img src={heroImg} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0e14] via-[#0a0e14]/70 to-[#0a0e14]/30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0e14]/90 via-transparent to-[#0a0e14]/60" />
           </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {game.metacritic && (
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider">Metacritic</span>
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm shadow-lg ${
-                game.metacritic.score >= 80 ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-emerald-500/30' : 
-                game.metacritic.score >= 60 ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-amber-500/30' : 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-red-500/30'
-              }`}>
-                {game.metacritic.score}
-              </div>
+        )}
+        {!heroImg && <div className={`absolute inset-0 ${theme.bg}`} />}
+        <div className={`absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full blur-[120px] ${theme.blur1} opacity-20 pointer-events-none`} />
+
+        {/* Back button (floating) */}
+        <Link href="/library" className="absolute top-4 left-4 z-20">
+          <button className="h-9 w-9 rounded-xl bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all">
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+        </Link>
+
+        {/* Hero content overlay */}
+        <div className="relative z-10 flex items-end gap-6 px-6 pb-6 pt-16 max-w-[1400px] mx-auto">
+          {/* Cover */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            className="shrink-0 hidden lg:block"
+          >
+            <div className="relative w-[180px] aspect-[2/3] rounded-xl overflow-hidden shadow-2xl shadow-black/60 ring-1 ring-white/10 group">
+              {game.coverUrl || heroImg ? (
+                <img src={game.coverUrl || heroImg} alt="Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" onError={() => setImageError(true)} />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center"><Gamepad2 className="h-10 w-10 text-slate-700" /></div>
+              )}
+              <button className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/10 text-white/70 hover:text-white opacity-0 group-hover:opacity-100 transition-all text-[8px] font-bold uppercase tracking-wider flex items-center gap-1" onClick={() => setIsCoverPickerOpen(true)}>
+                <ImageIcon className="h-2.5 w-2.5" /> Cover
+              </button>
             </div>
-          )}
+          </motion.div>
+
+          {/* Title + meta */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05 }}
+            className="flex-1 min-w-0 space-y-3"
+          >
+            {/* Badges row */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${
+                game.platform === 'Steam' ? 'text-blue-300 bg-blue-500/15 border-blue-500/25' :
+                game.platform === 'GOG' ? 'text-violet-300 bg-violet-500/15 border-violet-500/25' :
+                'text-slate-300 bg-white/10 border-white/15'
+              }`}>{game.platform || 'Steam'}</span>
+              {showEngine && (
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/15 border border-sky-500/25 flex items-center gap-1">
+                  <Cpu className="h-3 w-3" /> {engineLabel}
+                </span>
+              )}
+              {game.isInstalled && (
+                <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md text-emerald-300 bg-emerald-500/15 border border-emerald-500/25 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" /> Installato
+                </span>
+              )}
+              {isDetectingEngine && <Settings className="h-3.5 w-3.5 text-slate-500 animate-spin" />}
+            </div>
+
+            {/* Title */}
+            <h1 className={`text-2xl lg:text-4xl font-black tracking-tight bg-gradient-to-r ${theme.text} bg-clip-text text-transparent leading-[1.05] drop-shadow-lg`}>
+              {game.title || game.name}
+            </h1>
+
+            {/* Developer + release */}
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              {game.developers?.[0] && <span className="font-semibold text-slate-300">{game.developers[0]}</span>}
+              {game.developers?.[0] && game.publishers?.[0] && game.developers[0] !== game.publishers[0] && <><span className="text-slate-600">|</span><span>{game.publishers[0]}</span></>}
+              {(game.release_date?.date || game.releaseDate) && <><span className="text-slate-600">|</span><span>{game.release_date?.date || new Date(game.releaseDate * 1000).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'short' })}</span></>}
+            </div>
+
+            {/* Genre pills + scores inline */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {game.genres?.filter((g: any) => g?.description).slice(0, 4).map((genre: any, i: number) => (
+                <span key={i} className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-slate-300">{genre.description}</span>
+              ))}
+              {game.metacritic?.score && (
+                <span className={`text-[10px] font-black px-2.5 py-1 rounded-md border ${game.metacritic.score >= 80 ? 'text-emerald-300 bg-emerald-500/15 border-emerald-500/25' : game.metacritic.score >= 60 ? 'text-amber-300 bg-amber-500/15 border-amber-500/25' : 'text-red-300 bg-red-500/15 border-red-500/25'}`}>
+                  {game.metacritic.score} MC
+                </span>
+              )}
+              {game.recommendations?.total > 0 && (
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.total.toLocaleString()}</span>
+              )}
+              {game.playtime_forever > 0 && (
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-violet-300 bg-violet-500/10 border border-violet-500/15 flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round(game.playtime_forever / 60)}h</span>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Action buttons (right side — desktop) */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="shrink-0 hidden lg:flex flex-col gap-2 items-stretch w-[200px]"
+          >
+            {game.isInstalled && (
+              <button className="h-12 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all border border-emerald-400/20 group"
+                onClick={async () => { if (game.appid > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
+              >
+                <Play className="h-4 w-4 fill-current group-hover:scale-110 transition-transform" /> Gioca
+              </button>
+            )}
+            <button className="h-10 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 relative overflow-hidden group"
+              onClick={startAutoTranslate}
+              disabled={autoTranslateActive}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+              {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateActive ? t('gameDetails.translating') || 'Translating...' : `${t('gameDetails.translate') || 'Translate'} (${language.toUpperCase()})`}
+            </button>
+            {game.platform === 'Steam' && game.appid > 0 && (
+              <button className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-[9px] font-bold uppercase tracking-wider transition-all"
+                onClick={() => window.open(`steam://nav/games/details/${game.appid}`)}
+              >
+                <Globe className="h-3 w-3" /> Steam Store
+              </button>
+            )}
+          </motion.div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-4 relative z-10">
-        <div className="max-w-[1400px] mx-auto space-y-4">
-          
-          {/* Main Hero Card - Premium Design */}
-          <motion.div 
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className={`relative overflow-hidden rounded-2xl border ${theme.border} shadow-2xl`}
+      {/* ═══ MOBILE ACTION BAR (visible only on small screens) ═══ */}
+      <div className="flex lg:hidden gap-2 px-4 py-2.5 bg-[#0a0e14]/95 border-t border-white/[0.04] shrink-0">
+        {game.isInstalled && (
+          <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600/90 text-white font-bold text-[10px] uppercase tracking-wider"
+            onClick={async () => { if (game.appid > 0) { const u = `steam://rungameid/${game.appid}`; try { const { open: shellOpen } = await import('@tauri-apps/plugin-shell'); await shellOpen(u); } catch { window.location.href = u; } } }}
           >
-            {/* Background Hero Image (blurred) */}
-            {(game.heroUrl || game.headerUrl || fallbackImage) && (
-              <div className="absolute inset-0 z-0">
-                <img 
-                  src={game.heroUrl || game.headerUrl || fallbackImage || ''} 
-                  alt="" 
-                  className="w-full h-full object-cover scale-110 blur-2xl opacity-20"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/95 to-slate-950/80" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/60" />
-              </div>
-            )}
-            {!game.heroUrl && !game.headerUrl && !fallbackImage && (
-              <div className={`absolute inset-0 ${theme.bg}`} />
-            )}
-            
-            {/* Effetti luce */}
-            <div className={`absolute top-0 right-0 w-[600px] h-[600px] rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 ${theme.blur1} pointer-events-none opacity-30`} />
-            <div className={`absolute bottom-0 left-0 w-80 h-80 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 ${theme.blur2} pointer-events-none opacity-30`} />
-            
-            <div className="flex flex-col lg:flex-row relative z-10">
-              {/* Cover Portrait */}
-              <div className="lg:w-[280px] shrink-0 p-5 flex flex-col items-center justify-center">
-                <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
-                  {game.coverUrl || game.headerUrl || fallbackImage ? (
-                    <img 
-                      src={game.coverUrl || game.headerUrl || fallbackImage || ''} 
-                      alt="Cover" 
-                      className="object-cover w-full h-full transform transition-transform duration-700 group-hover:scale-105"
-                      onError={() => setImageError(true)}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
-                      <Gamepad2 className="h-12 w-12 text-slate-700" />
-                    </div>
-                  )}
-                  
-                  {/* Gradient overlay bottom */}
-                  <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                  
-                  {/* Status badge */}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10">
-                    {game.isInstalled ? (
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
-                    ) : (
-                      <span className="w-2 h-2 rounded-full bg-slate-400" />
-                    )}
-                    <span className="text-[9px] font-bold text-white/90 uppercase tracking-widest">
-                      {game.isInstalled ? 'Installato' : 'Libreria'}
-                    </span>
-                  </div>
-                  
-                  {/* Cambia cover */}
-                  <button 
-                    className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/10 text-white/80 hover:text-white opacity-0 group-hover:opacity-100 transition-all duration-200"
-                    onClick={() => setIsCoverPickerOpen(true)}
-                  >
-                    <ImageIcon className="h-3 w-3" />
-                    <span className="text-[9px] font-bold uppercase tracking-wider">Cambia</span>
-                  </button>
-                </div>
-              </div>
-              
-              {/* Info Panel */}
-              <div className="flex-1 p-6 flex flex-col justify-between min-w-0">
-                <div>
-                  {/* Titolo Grande */}
-                  <h2 className={`text-2xl lg:text-3xl font-black tracking-tight bg-gradient-to-r ${theme.text} bg-clip-text text-transparent mb-1 leading-tight`}>
-                    {game.title || game.name}
-                  </h2>
-                  
-                  {/* Developer / Publisher sotto il titolo */}
-                  <div className="flex items-center gap-3 mb-4">
-                    {game.developers?.[0] && (
-                      <span className="text-xs font-semibold text-slate-400">{game.developers[0]}</span>
-                    )}
-                    {game.developers?.[0] && game.publishers?.[0] && game.developers[0] !== game.publishers[0] && (
-                      <>
-                        <span className="text-slate-700">•</span>
-                        <span className="text-xs text-slate-500">{game.publishers[0]}</span>
-                      </>
-                    )}
-                    {!game.developers?.[0] && game.publishers?.[0] && (
-                      <span className="text-xs text-slate-500">{game.publishers[0]}</span>
-                    )}
-                  </div>
-                  
-                  {/* Descrizione */}
-                  <div className="relative mb-5">
-                    <p className="text-[13px] text-slate-300/90 leading-relaxed line-clamp-4">
-                      {translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description || 'Nessuna descrizione disponibile.'}
-                    </p>
-                    {game.description && !translatedDescription && language !== 'en' && (
-                      <Button variant="link" size="sm" className="h-5 px-0 mt-1 text-[10px] text-indigo-400 hover:text-indigo-300" onClick={() => translateDescription(game.description)}>
-                        <Languages className="h-3 w-3 mr-1" /> Traduci in {language.toUpperCase()}
-                      </Button>
-                    )}
-                  </div>
-                  
-                  {/* Genre Pills */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {game.genres?.filter((g: any) => g && g.description).slice(0, 5).map((genre: any, i: number) => (
-                      <span key={i} className={`text-[10px] font-semibold px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.06] ${theme.accent} hover:bg-white/[0.08] hover:border-white/10 transition-colors cursor-default`}>
-                        {genre.description}
-                      </span>
-                    ))}
-                    {game.categories?.slice(0, 3).map((cat: any, index: number) => (
-                      <span key={`cat-${index}`} className="text-[10px] font-medium px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.05] text-slate-500 cursor-default">
-                        {cat.description}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Footer Info Bar */}
-                <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
-                  {/* Platform */}
-                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
-                    game.platform === 'Steam' ? 'bg-blue-500/10 border border-blue-500/15' :
-                    game.platform === 'Epic Games' ? 'bg-slate-500/10 border border-slate-500/15' :
-                    game.platform === 'GOG' ? 'bg-violet-500/10 border border-violet-500/15' :
-                    'bg-slate-500/10 border border-slate-500/15'
-                  }`}>
-                    {(game.platform === 'Steam' || !game.platform) && (
-                      <svg className="h-3.5 w-3.5 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2a10 10 0 0 1 10 10c0 4.42-2.87 8.17-6.84 9.5l-4.24-1.77a2.5 2.5 0 0 1-1.42-1.42L7.73 13.5 2 11.73V12a10 10 0 0 1 10-10m0 2a8 8 0 0 0-8 8l4.24 1.73a2.5 2.5 0 0 1 2.5-1.23l2.15-3.5A3.5 3.5 0 0 1 12 6a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5 3.5 3.5 0 0 1-.69-.07l-2.3 3.77a2.5 2.5 0 0 1-.01 2.8l2.84 1.18A8 8 0 0 0 20 12a8 8 0 0 0-8-8m0 4a1.5 1.5 0 0 0-1.5 1.5A1.5 1.5 0 0 0 12 11a1.5 1.5 0 0 0 1.5-1.5A1.5 1.5 0 0 0 12 8Z"/>
-                      </svg>
-                    )}
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                      game.platform === 'Steam' ? 'text-blue-400' :
-                      game.platform === 'Epic Games' ? 'text-slate-400' :
-                      game.platform === 'GOG' ? 'text-violet-400' : 'text-slate-400'
-                    }`}>
-                      {game.platform || 'Steam'}
-                    </span>
-                  </div>
+            <Play className="h-3.5 w-3.5 fill-current" /> Gioca
+          </button>
+        )}
+        <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600/90 text-white font-bold text-[10px] uppercase tracking-wider"
+          onClick={startAutoTranslate}
+          disabled={autoTranslateActive}
+        >
+          {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />} {autoTranslateActive ? '...' : t('gameDetails.translate') || 'Translate'}
+        </button>
+        <button className="h-9 w-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400"
+          onClick={scanGameFiles}
+        >
+          <Search className="h-3.5 w-3.5" />
+        </button>
+      </div>
 
-                  {/* Release Date */}
-                  {(game.release_date?.date || game.releaseDate) && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05]">
-                      <Clock className="h-3 w-3 text-slate-500" />
-                      <span className="text-[10px] font-semibold text-slate-400">
-                        {game.release_date?.date || new Date(game.releaseDate * 1000).toLocaleDateString(language === 'it' ? 'it-IT' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {/* Recommendations */}
-                  {game.recommendations?.total > 0 && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                      <span className="text-xs">👍</span>
-                      <span className="text-[10px] font-semibold text-emerald-400">{game.recommendations.total.toLocaleString()}</span>
-                    </div>
-                  )}
-                  
-                  {/* Website */}
-                  {game.website && (
-                    <a href={game.website} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] hover:border-white/10 transition-colors">
-                      <Globe className="h-3 w-3 text-slate-500" />
-                      <span className="text-[10px] font-semibold text-slate-400">Sito web</span>
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
+      {/* ═══ SCROLLABLE CONTENT ═══ */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
+        <div className="max-w-[1400px] mx-auto px-6 py-5 space-y-5">
 
-          {/* One-Click Translate - Premium CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.15 }}
-          >
-            <Button 
-              className="w-full h-14 text-sm font-bold bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500 hover:from-indigo-500 hover:via-indigo-400 hover:to-violet-400 text-white shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all duration-300 rounded-xl relative overflow-hidden group border border-indigo-400/20"
-              onClick={() => router.push(`/auto-translate?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}&platform=${encodeURIComponent(game.platform || '')}`)}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-in-out" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(255,255,255,0.12),transparent_60%)]" />
-              <Zap className="h-5 w-5 mr-2.5 drop-shadow-sm" fill="currentColor" />
-              <span className="relative tracking-wide">ONE-CLICK TRANSLATE & PATCH</span>
-            </Button>
-          </motion.div>
-
-          {/* HowLongToBeat Stats */}
-          <HltbStats gameName={game.title || game.name || ''} className="mt-4" />
-
-          {/* Screenshot Gallery */}
-          {game.screenshots?.length > 0 && (
+          {/* ═══ AUTO-TRANSLATE STEPPER PANEL ═══ */}
+          {autoTranslateActive && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="rounded-2xl bg-slate-900/30 backdrop-blur-md border border-slate-800/30 overflow-hidden mt-4"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              transition={{ duration: 0.4 }}
+              className="rounded-xl border border-indigo-500/20 bg-gradient-to-b from-indigo-950/40 to-[#0e1419] overflow-hidden"
             >
-              <div className="p-3">
-                <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                  {game.screenshots.slice(0, 6).map((screenshot: any, index: number) => (
-                    <div 
-                      key={index} 
-                      className="relative aspect-video bg-slate-950 rounded-xl overflow-hidden cursor-pointer ring-1 ring-white/[0.06] hover:ring-2 hover:ring-indigo-500/40 transition-all duration-300 group"
-                      onClick={() => setSelectedScreenshotIndex(index)}
+              <div className="max-w-[800px] mx-auto px-6 py-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-500/15 flex items-center justify-center">
+                    <Zap className="h-4 w-4 text-indigo-400" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-white block">{t('gameDetails.autoTranslateTitle') || 'Auto Translation'}</span>
+                    <span className="text-[10px] text-indigo-400/70">{t('gameDetails.autoTranslateSubtitle') || `GameStringer is translating to ${language.toUpperCase()}`}</span>
+                  </div>
+                  {autoTranslateSteps.every(s => s.status === 'done') && (
+                    <button className="ml-auto text-[9px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider px-3 py-1 rounded-lg hover:bg-white/5 transition-all"
+                      onClick={() => setAutoTranslateActive(false)}
                     >
-                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300 z-10 pointer-events-none" />
-                      <img 
-                        src={screenshot.path_thumbnail || screenshot.path_full} 
-                        alt={`Screenshot ${index + 1}`} 
-                        className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110"
-                        loading="lazy"
-                      />
-                      {/* Play icon on hover */}
-                      <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                          <Search className="h-3.5 w-3.5 text-white" />
-                        </div>
+                      {t('gameDetails.close') || 'Close'}
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  {autoTranslateSteps.map((step, i) => (
+                    <div key={i} className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 ${
+                      step.status === 'running' ? 'bg-indigo-500/10 border border-indigo-500/20' :
+                      step.status === 'done' ? 'bg-white/[0.02]' :
+                      step.status === 'error' ? 'bg-red-500/10 border border-red-500/20' :
+                      'opacity-40'
+                    }`}>
+                      <div className="w-6 h-6 shrink-0 flex items-center justify-center">
+                        {step.status === 'running' && <Loader2 className="h-4 w-4 text-indigo-400 animate-spin" />}
+                        {step.status === 'done' && <CheckCircle className="h-4 w-4 text-emerald-400" />}
+                        {step.status === 'error' && <AlertTriangle className="h-4 w-4 text-red-400" />}
+                        {step.status === 'pending' && <div className="w-2 h-2 rounded-full bg-slate-600" />}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <span className={`text-[11px] font-semibold block ${
+                          step.status === 'running' ? 'text-indigo-300' :
+                          step.status === 'done' ? 'text-slate-300' :
+                          step.status === 'error' ? 'text-red-300' :
+                          'text-slate-600'
+                        }`}>{step.label}</span>
+                        {step.detail && (
+                          <span className={`text-[9px] block mt-0.5 ${
+                            step.status === 'running' ? 'text-indigo-400/60' :
+                            step.status === 'done' ? 'text-slate-500' :
+                            'text-red-400/60'
+                          }`}>{step.detail}</span>
+                        )}
+                      </div>
+                      {step.status === 'running' && (
+                        <div className="w-16 h-1 rounded-full bg-slate-800 overflow-hidden">
+                          <div className="h-full bg-indigo-500 rounded-full animate-pulse" style={{ width: '60%' }} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
+                {autoTranslateError && (
+                  <div className="mt-3 flex items-center gap-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-[10px] text-red-300">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>{autoTranslateError}</span>
+                    <button className="ml-auto text-[9px] font-bold text-red-400 hover:text-red-300 uppercase tracking-wider" onClick={() => setAutoTranslateActive(false)}>Chiudi</button>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
 
-          {/* Install Path + DLC info */}
-          {game.installPath && (
-            <div className="flex flex-wrap items-center gap-2 mt-2 px-1">
-              <span className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500 bg-slate-900/40 px-3 py-1.5 rounded-lg border border-slate-800/30 max-w-full truncate">
-                <Folder className="h-3 w-3 shrink-0 text-slate-600" />
-                <span className="truncate">{game.installPath}</span>
-              </span>
-              {dlcGames.length > 0 && (
-                <span className="flex items-center gap-1.5 text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/15 px-3 py-1.5 rounded-lg">
-                  <Sparkles className="h-3 w-3" />
-                  {dlcGames.length} DLC
-                </span>
+          {/* Descrizione */}
+          {(translatedDescription || game.shortDescription || game.description) && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-4">
+              <p className="text-[13px] text-slate-300/90 leading-relaxed line-clamp-3">{translatedDescription || game.shortDescription || game.detailedDescription || game.aboutGame || game.description}</p>
+              {game.description && !translatedDescription && language !== 'en' && (
+                <button className="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1.5 flex items-center gap-1 font-semibold" onClick={() => translateDescription(game.description)}>
+                  <Languages className="h-3 w-3" /> Traduci in {language.toUpperCase()}
+                </button>
               )}
-            </div>
+            </motion.div>
           )}
 
+          {/* HowLongToBeat Stats */}
+          <HltbStats gameName={game.title || game.name || ''} />
+
+          {/* ═══ SCREENSHOT GALLERY — horizontal scroll ═══ */}
+          {game.screenshots?.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5"><ImageIcon className="h-3 w-3" /> Screenshot</span>
+                <span className="text-[10px] text-slate-600">{game.screenshots.length} immagini</span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar snap-x snap-mandatory">
+                {game.screenshots.slice(0, 12).map((screenshot: any, index: number) => (
+                  <div key={index} className="relative shrink-0 w-[280px] aspect-video bg-slate-950 rounded-xl overflow-hidden cursor-pointer ring-1 ring-white/[0.06] hover:ring-2 hover:ring-indigo-500/40 transition-all duration-300 group snap-start"
+                    onClick={() => setSelectedScreenshotIndex(index)}
+                  >
+                    <img src={screenshot.path_full || screenshot.path_thumbnail} alt={`Screenshot ${index + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300 pointer-events-none" />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Scan progress */}
           {isScanning && (
-            <div className="flex items-center gap-3 mt-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800/30">
+            <div className="flex items-center gap-3 bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
               <Progress value={scanProgress} className="h-2 flex-1 bg-slate-800" />
               <span className="text-xs font-bold text-indigo-400 tabular-nums">{scanProgress}%</span>
             </div>
           )}
 
-        {/* Layout 3:1 - Tabs + Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 mt-6">
-          {/* Colonna Principale - Tabs */}
-          <div className="lg:col-span-3 space-y-4">
-
-            {/* Raccomandazione Traduzione - Sopra tabs */}
-            {(game.is_installed || game.installPath) && (
-              <TranslationRecommendation 
-                gamePath={game.installPath || ''} 
-                gameName={game.title || game.name || ''} 
+          {/* ═══ TRANSLATION RECOMMENDATION — compact banner ═══ */}
+          {(game.is_installed || game.installPath) && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <TranslationRecommendation
+                gamePath={game.installPath || ''}
+                gameName={game.title || game.name || ''}
                 onActionClick={async (route) => {
                   if (route === 'action:launch_game') {
                     if (game.appid && game.appid > 0) {
                       const steamUrl = `steam://rungameid/${game.appid}`;
-                      if (typeof window !== 'undefined' && (window as any).__TAURI__) {
-                        try {
-                                            await invoke('launch_steam_game', { appId: game.appid.toString() });
-                        } catch (e) {
-                          window.location.href = steamUrl;
-                        }
-                      } else {
-                        window.location.href = steamUrl;
-                      }
+                      try {
+                        const { open: shellOpen } = await import('@tauri-apps/plugin-shell');
+                        await shellOpen(steamUrl);
+                      } catch { window.location.href = steamUrl; }
                     } else if (game.installPath) {
                       try {
-                                        const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
-                        if (exeList?.length > 0) {
-                          await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
-                        }
-                      } catch (e) {
-                        console.error('[GameDetail] Errore avvio:', e);
-                      }
+                        const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
+                        if (exeList?.length > 0) await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
+                      } catch (e) { console.error('[GameDetail] Errore avvio:', e); }
                     }
-                  } else if (route === '/unity-patcher') {
-                    handleInstallUnityPatch();
-                  } else {
-                    router.push(route);
-                  }
+                  } else if (route === '/unity-patcher') { handleInstallUnityPatch(); }
+                  else { router.push(route); }
                 }}
               />
-            )}
+            </motion.div>
+          )}
 
-            {/* Tabs File/Traduzioni/Patch/Info/Audio */}
-            <Tabs defaultValue="files" className="space-y-4">
-              <TabsList className="h-auto bg-slate-900/40 backdrop-blur-xl border border-white/[0.06] flex flex-wrap max-w-full rounded-xl p-1.5 gap-1 shadow-inner">
-                <TabsTrigger value="files" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
-                  <FileText className="h-3.5 w-3.5 mr-1.5" /> {t('gameDetails.tabFiles')}
-                </TabsTrigger>
-                <TabsTrigger value="translations" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
-                  <Languages className="h-3.5 w-3.5 mr-1.5" /> {t('gameDetails.tabTranslations')}
-                </TabsTrigger>
-                <TabsTrigger value="patches" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
-                  <Zap className="h-3.5 w-3.5 mr-1.5" /> {t('gameDetails.tabPatch')}
-                </TabsTrigger>
-                <TabsTrigger value="audio" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
-                  <Monitor className="h-3.5 w-3.5 mr-1.5" /> Audio
-                </TabsTrigger>
-                <TabsTrigger value="info" className="text-xs font-semibold data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-300 data-[state=active]:shadow-sm data-[state=active]:shadow-indigo-500/10 data-[state=active]:border-indigo-500/20 border border-transparent rounded-lg px-4 py-2 transition-all duration-200">
-                  <Info className="h-3.5 w-3.5 mr-1.5" /> Info
-                </TabsTrigger>
-              </TabsList>
-
-            <TabsContent value="files" className="space-y-2">
-              <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
-                <CardContent className="p-5">
-                  {game.detectedFiles.length > 0 ? (
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                            <FileText className="h-3.5 w-3.5 text-indigo-400" />
-                          </div>
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{game.detectedFiles.length} {t('gameDetails.filesFound')}</span>
-                        </div>
-                        <Button size="sm" className="h-8 text-xs font-semibold bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-lg shadow-sm shadow-indigo-500/10 border border-indigo-500/20" onClick={() => router.push(`/translator?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`)}>
-                          <Sparkles className="h-3.5 w-3.5 mr-1.5" />Neural Translator
-                        </Button>
-                      </div>
-                      <div className="max-h-[300px] overflow-y-auto space-y-1.5 custom-scrollbar pr-2">
-                        {game.detectedFiles.map((file: string, index: number) => (
-                          <div key={index} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-xs hover:bg-white/[0.05] hover:border-white/[0.08] transition-all duration-200 group">
-                            <span className="truncate flex-1 font-medium text-slate-300 flex items-center gap-2">
-                              <FileText className="h-3.5 w-3.5 text-slate-600 shrink-0" />{file}
-                            </span>
-                            <Button size="sm" variant="ghost" className="h-7 text-[10px] font-bold uppercase tracking-wider px-3 text-slate-500 group-hover:text-indigo-400 group-hover:bg-indigo-500/10 rounded-lg ml-2" onClick={() => router.push(`/translator?gameId=${gameId}&file=${encodeURIComponent(file)}`)}>
-                              {t('gameDetails.translate')}
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-slate-800/40 border border-slate-700/30 flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-slate-600" />
-                      </div>
-                      <p className="text-sm font-semibold text-slate-300 mb-1.5">{t('gameDetails.noFilesDetected')}</p>
-                      <p className="text-[11px] text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">{t('gameDetails.searchTranslatableFiles')}</p>
-                      <Button size="sm" className="h-10 px-5 text-xs font-bold bg-slate-800/80 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700/50" onClick={scanGameFiles} disabled={isScanning}>
-                        <Search className="h-4 w-4 mr-2 text-slate-400" />{t('gameDetails.scan')}
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="translations" className="space-y-2">
-              <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
-                <CardContent className="p-5">
-                  {translations.length > 0 ? (
-                    <div className="max-h-[300px] overflow-y-auto space-y-1.5 custom-scrollbar pr-2">
-                      {translations.map((translation) => (
-                        <div key={translation.id} className="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl text-xs hover:bg-white/[0.05] hover:border-white/[0.08] transition-all duration-200">
-                          <span className="truncate flex-1 font-medium text-slate-300">{translation.filePath}</span>
-                          <Badge variant="outline" className="text-[9px] mx-2 bg-white/[0.03] text-slate-400 border-white/[0.06]">{translation.status}</Badge>
-                          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/15">{Math.round((translation.confidence || 0) * 100)}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-slate-800/40 border border-slate-700/30 flex items-center justify-center">
-                        <Languages className="h-6 w-6 text-slate-600" />
-                      </div>
-                      <p className="text-sm font-semibold text-slate-300 mb-1.5">{t('gameDetails.noActiveTranslations')}</p>
-                      <Link href={`/translator?gameId=${game.id}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`}>
-                        <Button size="sm" className="h-10 px-5 text-xs font-bold bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-xl mt-4 shadow-sm shadow-indigo-500/10 border border-indigo-500/20">
-                          <Languages className="h-4 w-4 mr-2" />{t('gameDetails.translate')}
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="patches" className="space-y-2">
-              <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
-                <CardContent className="p-5 space-y-3">
-                  {/* UNITY */}
-                  {game.engine === 'Unity' && (
-                    <div className="flex items-center justify-between p-4 bg-sky-500/[0.06] border border-sky-500/15 rounded-xl group hover:bg-sky-500/[0.1] transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/15">
-                          <Zap className="h-5 w-5 text-sky-400" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-sky-300">Unity AutoTranslator</span>
-                          <span className="text-[10px] text-sky-500/70 mt-0.5">Traduzione real-time in-game via BepInEx</span>
+          {/* ═══ BANNER TRADUZIONE COMUNITARIA (gamestranslator.it) ═══ */}
+          {communityTranslations.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              className="rounded-xl border border-emerald-500/25 bg-emerald-500/[0.07] p-3"
+            >
+              <div className="flex items-start gap-2.5">
+                <Globe className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-semibold text-emerald-300">
+                    Traduzione italiana disponibile su GameTranslator.it
+                  </p>
+                  <div className="mt-1.5 space-y-1.5">
+                    {communityTranslations.slice(0, 3).map((tr) => (
+                      <div key={tr.id} className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] text-[#c6d4df] font-medium truncate max-w-[220px]">{tr.title}</span>
+                        {tr.state && (
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${
+                            tr.state === '100%' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300'
+                            : 'bg-amber-500/20 border-amber-500/30 text-amber-300'
+                          }`}>{tr.state}</span>
+                        )}
+                        {tr.revision && <span className="text-[9px] text-[#8f98a0]">rev. {tr.revision}</span>}
+                        {tr.author && <span className="text-[9px] text-[#8f98a0]">by {tr.author}</span>}
+                        <div className="flex items-center gap-1 ml-auto shrink-0">
+                          <button
+                            className="h-5 px-2 rounded text-[10px] font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/20 transition-all flex items-center gap-1"
+                            onClick={() => invoke('open_gamestranslator_page', { url: tr.page_url }).catch(() => window.open(tr.page_url, '_blank'))}
+                          >
+                            <ExternalLink className="h-2.5 w-2.5" /> Scarica
+                          </button>
                         </div>
                       </div>
-                      <Button size="sm" className="h-8 text-[10px] font-bold bg-sky-600/80 hover:bg-sky-500 text-white rounded-lg border border-sky-500/30" onClick={handleInstallUnityPatch} disabled={isInstallingPatch}>
-                        {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
-                        Installa
-                      </Button>
-                    </div>
+                    ))}
+                  </div>
+                  {game.installPath && (
+                    <button
+                      className="mt-2 h-6 px-2.5 rounded-lg text-[10px] font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all flex items-center gap-1.5"
+                      onClick={installCommunityZip}
+                      disabled={isInstallingCommunityZip}
+                    >
+                      {isInstallingCommunityZip ? <Loader2 className="h-3 w-3 animate-spin" /> : <FolderOpen className="h-3 w-3" />}
+                      Installa ZIP scaricato...
+                    </button>
                   )}
+                </div>
+              </div>
+            </motion.div>
+          )}
 
-                  {/* UNREAL */}
-                  {game.engine === 'Unreal Engine' && (
-                    <div className="flex items-center justify-between p-4 bg-violet-500/[0.06] border border-violet-500/15 rounded-xl group hover:bg-violet-500/[0.1] transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/15">
-                          <Cpu className="h-5 w-5 text-violet-400" />
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold text-violet-300">Unreal Engine Translator</span>
-                          <span className="text-[10px] text-violet-500/70 mt-0.5">Traduzione automatica per UE4/UE5</span>
-                        </div>
-                      </div>
-                      <Button size="sm" className="h-8 text-[10px] font-bold bg-violet-600/80 hover:bg-violet-500 text-white rounded-lg border border-violet-500/30" onClick={handleInstallUnrealPatch} disabled={isInstallingPatch}>
-                        {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />}
-                        Installa
-                      </Button>
-                    </div>
+          {/* ═══ BANNER AGGIORNAMENTO GIOCO ═══ */}
+          {updateStatus && (updateStatus.update_detected || (!updateStatus.patch_intact && updateStatus.patch_type !== 'none')) && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              className={`rounded-xl border p-3 flex items-start gap-3 ${
+                !updateStatus.patch_intact && updateStatus.patch_type !== 'none'
+                  ? 'bg-red-500/[0.08] border-red-500/25'
+                  : 'bg-amber-500/[0.08] border-amber-500/25'
+              }`}
+            >
+              <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${!updateStatus.patch_intact && updateStatus.patch_type !== 'none' ? 'text-red-400' : 'text-amber-400'}`} />
+              <div className="flex-1 min-w-0">
+                <p className={`text-[12px] font-semibold ${!updateStatus.patch_intact && updateStatus.patch_type !== 'none' ? 'text-red-300' : 'text-amber-300'}`}>
+                  {!updateStatus.patch_intact && updateStatus.patch_type !== 'none'
+                    ? 'Patch di traduzione danneggiata'
+                    : 'Gioco aggiornato — verifica traduzione'}
+                </p>
+                <p className="text-[11px] text-[#8f98a0] mt-0.5">{updateStatus.message}</p>
+                {updateStatus.patch_details.length > 0 && (
+                  <div className="mt-1.5 space-y-0.5">
+                    {updateStatus.patch_details.map((d, i) => (
+                      <p key={i} className="text-[10px] text-[#8f98a0]/70">{d}</p>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  {/* Riapplica patch */}
+                  {updateStatus.patch_type === 'bepinex' && game.installPath && (
+                    <button
+                      className="h-6 px-2.5 rounded-lg text-[10px] font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/20 transition-all flex items-center gap-1"
+                      onClick={async () => {
+                        try {
+                          let exeName = '';
+                          const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath }).catch(() => [] as string[]);
+                          if (exeList?.length) exeName = exeList[0];
+                          await invoke('install_unity_autotranslator', { gamePath: game.installPath, gameExeName: exeName, targetLang: language || 'it', translationMode: 'google' });
+                          toast.success('Patch BepInEx riapplicata!');
+                          await loadUpdateStatus();
+                        } catch (e: any) { toast.error(String(e)); }
+                      }}
+                    >
+                      <Download className="h-3 w-3" /> Riapplica BepInEx
+                    </button>
                   )}
-
-                  {/* Nessun engine compatibile */}
-                  {game.engine !== 'Unity' && game.engine !== 'Unreal Engine' && (
-                    <div className="text-center py-10">
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-slate-800/40 border border-slate-700/30 flex items-center justify-center">
-                        <Wrench className="h-6 w-6 text-slate-600" />
-                      </div>
-                      <p className="text-sm font-semibold text-slate-300 mb-1.5">Nessuna patch automatica</p>
-                      <p className="text-[11px] text-slate-500 max-w-sm mx-auto leading-relaxed">
-                        {game.engine ? `Engine "${game.engine}" non supporta ancora patch automatiche.` : 'Engine non rilevato. Usa il pulsante "One-Click Translate" per tradurre manualmente.'}
-                      </p>
-                    </div>
+                  {updateStatus.patch_type === 'unreal_pak' && game.installPath && (
+                    <button
+                      className="h-6 px-2.5 rounded-lg text-[10px] font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 border border-violet-500/20 transition-all flex items-center gap-1"
+                      onClick={upgradeUEWithAI}
+                      disabled={isUeAiUpgrading}
+                    >
+                      <Cpu className="h-3 w-3" /> Rigenera _P.pak
+                    </button>
                   )}
+                  {/* Segna come visto */}
+                  <button
+                    className="h-6 px-2.5 rounded-lg text-[10px] font-semibold bg-white/5 hover:bg-white/10 text-[#8f98a0] hover:text-[#c6d4df] border border-white/10 transition-all"
+                    onClick={dismissUpdate}
+                    disabled={isDismissingUpdate}
+                  >
+                    {isDismissingUpdate ? <Loader2 className="h-3 w-3 animate-spin inline" /> : null} Segna come visto
+                  </button>
+                </div>
+              </div>
+              <span className="text-[9px] font-mono text-[#8f98a0]/50 shrink-0">build {updateStatus.current_build_id}</span>
+            </motion.div>
+          )}
 
-                  {/* Patch Status */}
-                  {patchStatus && (
-                    <div className={`flex items-center gap-3 p-3 rounded-xl border ${patchStatus.success ? 'bg-emerald-500/[0.06] border-emerald-500/15' : 'bg-red-500/[0.06] border-red-500/15'}`}>
-                      {patchStatus.success ? <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" /> : <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />}
-                      <span className={`text-xs font-medium ${patchStatus.success ? 'text-emerald-300' : 'text-red-300'}`}>{patchStatus.message}</span>
-                    </div>
-                  )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          </Tabs>
-        </div>
-
-        {/* Sidebar Destra - Azioni & Quick Links */}
-        <div className="space-y-4">
-          {/* Gestione Card */}
-          <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] flex items-center gap-2">
-                <Settings2 className="h-3.5 w-3.5" /> Gestione
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-2">
-              {game.platform === 'Steam' && game.appid > 0 && (
-                <button 
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-slate-300 hover:bg-blue-500/[0.06] hover:border-blue-500/15 hover:text-blue-300 transition-all duration-200 group"
-                  onClick={() => window.open(`steam://nav/games/details/${game.appid}`)}
+          {/* ═══ DETTAGLI & STRUMENTI ═══ */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            className="space-y-3"
+          >
+            {/* ── ROW 1: Quick tools ── */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-[#1a9fff]/10 hover:bg-[#1a9fff]/20 text-[#67c1f5] border border-[#1a9fff]/20 transition-all" onClick={scanGameFiles} disabled={isScanning}>
+                {isScanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />} {t('gameDetails.scan')}
+              </button>
+              {(engineInfo?.engine?.toLowerCase().includes('unreal') || game.engine?.toLowerCase().includes('unreal')) && game.installPath && (
+                <button
+                  className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all disabled:opacity-50"
+                  onClick={upgradeUEWithAI}
+                  disabled={isUeAiUpgrading}
+                  title="Estrae stringhe .locres, le traduce con Ollama AI e crea un _P.pak di override"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/15 transition-colors">
-                    <svg className="h-4 w-4 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2a10 10 0 0 1 10 10c0 4.42-2.87 8.17-6.84 9.5l-4.24-1.77a2.5 2.5 0 0 1-1.42-1.42L7.73 13.5 2 11.73V12a10 10 0 0 1 10-10"/>
-                    </svg>
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs font-semibold">Apri in Steam</span>
-                    <span className="text-[9px] text-slate-500">Visualizza nella libreria Steam</span>
-                  </div>
+                  {isUeAiUpgrading ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" />{ueAiProgress ? `${ueAiProgress.current}/${ueAiProgress.total}` : '...'}</>
+                  ) : (
+                    <><Cpu className="h-3.5 w-3.5" />Migliora con AI UE</>
+                  )}
                 </button>
+              )}
+              {(engineInfo?.engine?.toLowerCase().includes('unity') || game.engine?.toLowerCase().includes('unity')) && game.installPath && (
+                <button
+                  className="h-8 flex items-center gap-1.5 px-3.5 rounded-lg text-[11px] font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 transition-all disabled:opacity-50"
+                  onClick={upgradeWithAI}
+                  disabled={isAiUpgrading}
+                  title="Traduce le stringhe catturate da XUnity con Ollama AI e scrive il file di traduzione statica"
+                >
+                  {isAiUpgrading ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      {aiUpgradeProgress ? `${aiUpgradeProgress.current}/${aiUpgradeProgress.total}` : '...'}
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-3.5 w-3.5" />
+                      Migliora con AI
+                    </>
+                  )}
+                </button>
+              )}
+              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[11px] font-semibold bg-[#2a475e]/20 hover:bg-[#2a475e]/40 text-[#8f98a0] border border-[#2a475e]/30 transition-all" onClick={() => setIsCoverPickerOpen(true)}>
+                <ImageIcon className="h-3.5 w-3.5" /> Cover
+              </button>
+              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[10px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all" onClick={() => setShowGspackExport(true)}>
+                <Package className="h-3 w-3" /> {t('gspack.exportBtn')}
+              </button>
+              <button className="h-8 flex items-center gap-1.5 px-3 rounded-lg text-[10px] font-semibold bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/20 transition-all" onClick={() => setShowGspackImport(true)}>
+                <Upload className="h-3 w-3" /> {t('gspack.importBtn')}
+              </button>
+              {game.platform === 'Steam' && game.appid > 0 && (
+                <a href={`https://store.steampowered.com/app/${game.appid}`} target="_blank" rel="noopener noreferrer" className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-[10px] font-semibold text-[#8f98a0] hover:text-[#67c1f5] hover:bg-[#2a475e]/30 transition-all">
+                  <Globe className="h-3 w-3" /> Steam
+                </a>
               )}
               {game.installPath && (
-                <button 
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-slate-300 hover:bg-amber-500/[0.06] hover:border-amber-500/15 hover:text-amber-300 transition-all duration-200 group"
-                  onClick={async () => {
-                    try {
-                      await invoke('open_folder_in_explorer', { folderPath: game.installPath });
-                    } catch (e) {
-                      toast.error('Impossibile aprire la cartella');
-                    }
-                  }}
+                <button className="h-8 flex items-center gap-1 px-2.5 rounded-lg text-[10px] font-semibold text-[#8f98a0] hover:text-amber-300 hover:bg-amber-500/10 transition-all"
+                  onClick={async () => { try { await invoke('open_folder_in_explorer', { folderPath: game.installPath }); } catch { toast.error('Impossibile aprire la cartella'); } }}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/15 transition-colors">
-                    <FolderOpen className="h-4 w-4 text-amber-400" />
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-xs font-semibold">Sfoglia File</span>
-                    <span className="text-[9px] text-slate-500">Apri cartella gioco</span>
-                  </div>
+                  <FolderOpen className="h-3 w-3" /> Cartella
                 </button>
               )}
-              <button 
-                className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] text-slate-400 hover:bg-red-500/[0.06] hover:border-red-500/15 hover:text-red-400 transition-all duration-200 group"
-              >
-                <div className="w-8 h-8 rounded-lg bg-red-500/5 flex items-center justify-center group-hover:bg-red-500/10 transition-colors">
-                  <Trash2 className="h-4 w-4 text-red-400/60 group-hover:text-red-400" />
+            </div>
+
+            {/* ── ROW 2: File rilevati + Patch status ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {/* File traducibili */}
+              <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5"><FileText className="h-3.5 w-3.5 text-[#67c1f5]" /> {t('gameDetails.tabFiles')}</span>
+                  {(game.detectedFiles?.length || 0) > 0 && (
+                    <span className="text-[10px] font-bold text-[#67c1f5] bg-[#1a9fff]/10 px-2 py-0.5 rounded">{game.detectedFiles.length} file</span>
+                  )}
                 </div>
-                <div className="flex flex-col items-start">
-                  <span className="text-xs font-semibold">Nascondi</span>
-                  <span className="text-[9px] text-slate-500">Rimuovi dalla libreria</span>
+                {(game.detectedFiles?.length || 0) > 0 ? (
+                  <div className="max-h-[140px] overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
+                    {(game.detectedFiles || []).map((file: string, index: number) => (
+                      <div key={index} className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-[11px] hover:bg-[#2a475e]/20 transition-all group cursor-pointer"
+                        onClick={() => router.push(`/translator?gameId=${gameId}&file=${encodeURIComponent(file)}`)}>
+                        <FileText className="h-3 w-3 text-[#8f98a0]/40 shrink-0" />
+                        <span className="truncate flex-1 text-[#8f98a0] group-hover:text-[#c6d4df] transition-colors">{file}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-[11px] text-[#8f98a0]/60 mb-2">{t('gameDetails.noFilesDetected')}</p>
+                    <button className="text-[10px] font-semibold text-[#67c1f5] hover:text-[#1a9fff] transition-colors" onClick={scanGameFiles} disabled={isScanning}>
+                      {t('gameDetails.searchTranslatableFiles')}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Patch & Engine info */}
+              <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
+                <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5 mb-2"><Zap className="h-3.5 w-3.5 text-[#67c1f5]" /> {t('gameDetails.tabPatch')}</span>
+                <div className="space-y-2">
+                  {game.engine === 'Unity' && (
+                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-sky-500/[0.06] border border-sky-500/15">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-3.5 w-3.5 text-sky-400" />
+                        <div><span className="text-[11px] font-bold text-sky-300">XUnity AutoTranslator</span></div>
+                      </div>
+                      <Button size="sm" className="h-6 text-[9px] font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 rounded-lg border border-sky-500/20 px-2.5" onClick={handleInstallUnityPatch} disabled={isInstallingPatch}>
+                        {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} Installa
+                      </Button>
+                    </div>
+                  )}
+                  {game.engine === 'Unreal Engine' && (
+                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-violet-500/[0.06] border border-violet-500/15">
+                      <div className="flex items-center gap-2">
+                        <Cpu className="h-3.5 w-3.5 text-violet-400" />
+                        <div><span className="text-[11px] font-bold text-violet-300">Unreal Translator</span></div>
+                      </div>
+                      <Button size="sm" className="h-6 text-[9px] font-bold bg-violet-500/15 hover:bg-violet-500/25 text-violet-300 rounded-lg border border-violet-500/20 px-2.5" onClick={handleInstallUnrealPatch} disabled={isInstallingPatch}>
+                        {isInstallingPatch ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3 mr-1" />} Installa
+                      </Button>
+                    </div>
+                  )}
+                  {patchStatus && (
+                    <div className={`flex items-center gap-2 p-2 rounded-lg text-[11px] ${patchStatus.success ? 'bg-emerald-500/[0.06] border border-emerald-500/15 text-emerald-300' : 'bg-red-500/[0.06] border border-red-500/15 text-red-300'}`}>
+                      {patchStatus.success ? <CheckCircle className="h-3.5 w-3.5 shrink-0" /> : <AlertTriangle className="h-3.5 w-3.5 shrink-0" />}
+                      <span className="font-medium">{patchStatus.message}</span>
+                    </div>
+                  )}
+
+                  {/* Info compatte */}
+                  <div className="space-y-1.5 pt-1 border-t border-[#2a475e]/30">
+                    {game.developers?.[0] && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-[#8f98a0]/60">Sviluppatore</span>
+                        <span className="text-[#c6d4df] font-medium">{game.developers.join(', ')}</span>
+                      </div>
+                    )}
+                    {(game.release_date?.date || game.releaseDate) && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-[#8f98a0]/60">Uscita</span>
+                        <span className="text-[#c6d4df] font-medium">{game.release_date?.date || new Date(game.releaseDate * 1000).toLocaleDateString('it-IT', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                      </div>
+                    )}
+                    {showEngine && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-[#8f98a0]/60">Engine</span>
+                        <span className="text-sky-400 font-bold flex items-center gap-1"><Cpu className="h-2.5 w-2.5" /> {engineLabel}</span>
+                      </div>
+                    )}
+                    {game.metacritic?.score && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-[#8f98a0]/60">Metacritic</span>
+                        <span className={`font-bold ${game.metacritic.score >= 80 ? 'text-emerald-400' : game.metacritic.score >= 60 ? 'text-amber-400' : 'text-red-400'}`}>{game.metacritic.score}</span>
+                      </div>
+                    )}
+                    {game.playtime_forever > 0 && (
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className="text-[#8f98a0]/60">Giocato</span>
+                        <span className="text-[#c6d4df] font-medium">{Math.round(game.playtime_forever / 60)}h</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* DLC compatti */}
+                  {dlcGames.length > 0 && (
+                    <div className="pt-1 border-t border-[#2a475e]/30">
+                      <span className="text-[9px] text-[#8f98a0]/60">DLC: {dlcGames.length}</span>
+                    </div>
+                  )}
                 </div>
-              </button>
-            </CardContent>
-          </Card>
-          
-          {/* Quick Actions Card */}
-          <Card className="bg-slate-900/30 backdrop-blur-xl border-white/[0.06] shadow-lg rounded-2xl">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] flex items-center gap-2">
-                <Sparkles className="h-3.5 w-3.5" /> Azioni Rapide
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-2">
-              <Button 
-                size="sm" 
-                className="w-full h-9 text-xs font-semibold justify-start bg-indigo-500/10 hover:bg-indigo-500/15 text-indigo-300 border border-indigo-500/15 rounded-xl"
-                onClick={() => router.push(`/translator?gameId=${gameId}&gameName=${encodeURIComponent(game.title || '')}&installPath=${encodeURIComponent(game.installPath || '')}&gameImage=${encodeURIComponent(game.headerUrl || '')}`)}
-              >
-                <Languages className="h-3.5 w-3.5 mr-2" /> Traduci File
-              </Button>
-              <Button 
-                size="sm" 
-                className="w-full h-9 text-xs font-semibold justify-start bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-300 border border-emerald-500/15 rounded-xl"
-                onClick={scanGameFiles}
-                disabled={isScanning}
-              >
-                <Search className="h-3.5 w-3.5 mr-2" /> Scansiona File
-              </Button>
-              <Button 
-                size="sm" 
-                className="w-full h-9 text-xs font-semibold justify-start bg-slate-500/10 hover:bg-slate-500/15 text-slate-300 border border-slate-500/15 rounded-xl"
-                onClick={() => setIsCoverPickerOpen(true)}
-              >
-                <ImageIcon className="h-3.5 w-3.5 mr-2" /> Cambia Cover
-              </Button>
-            </CardContent>
-          </Card>
+              </div>
+            </div>
+
+            {/* ── ROW 3: Unreal Localization Panel ── */}
+            {(game.engine === 'Unreal Engine' || engineInfo?.engine?.toLowerCase().includes('unreal')) && game.installPath && (
+              <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5">
+                    <Cpu className="h-3.5 w-3.5 text-violet-400" /> Unreal Localizzazione (.locres)
+                  </span>
+                  <button className="text-[10px] font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
+                    onClick={async () => { setShowUeLocPanel(v => !v); if (!ueLocStatus) await loadUeLocStatus(); }}>
+                    {showUeLocPanel ? '▲ Chiudi' : '▼ Espandi'}
+                  </button>
+                </div>
+                {showUeLocPanel && (
+                  <div className="space-y-2">
+                    <div className={`flex items-center justify-between p-2 rounded-lg text-[11px] ${
+                      ueLocStatus?.has_gs_pak ? 'bg-emerald-500/[0.06] border border-emerald-500/20'
+                      : ueLocStatus?.has_locres ? 'bg-violet-500/[0.06] border border-violet-500/20'
+                      : 'bg-[#2a475e]/20 border border-[#2a475e]/30'
+                    }`}>
+                      <span className={ueLocStatus?.has_gs_pak ? 'text-emerald-300' : ueLocStatus?.has_locres ? 'text-violet-300' : 'text-[#8f98a0]'}>
+                        {ueLocStatus === null ? 'Caricamento...' : ueLocStatus.message}
+                      </span>
+                      {ueLocStatus?.has_gs_pak && (
+                        <button
+                          className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 transition-all"
+                          onClick={async () => {
+                            try {
+                              await invoke('remove_unreal_translation', { gamePath: game.installPath });
+                              await loadUeLocStatus();
+                              toast.success('Patch rimossa');
+                            } catch (e: any) { toast.error(String(e)); }
+                          }}
+                        >Rimuovi</button>
+                      )}
+                    </div>
+                    {ueLocStatus?.has_locres && !ueLocStatus?.has_gs_pak && (
+                      <button
+                        className="w-full h-8 flex items-center justify-center gap-1.5 rounded-lg text-[11px] font-semibold bg-violet-500/10 hover:bg-violet-500/20 text-violet-300 border border-violet-500/20 transition-all disabled:opacity-50"
+                        onClick={upgradeUEWithAI}
+                        disabled={isUeAiUpgrading}
+                      >
+                        {isUeAiUpgrading ? (<><Loader2 className="h-3.5 w-3.5 animate-spin" />{ueAiProgress ? `${ueAiProgress.current}/${ueAiProgress.total}` : '...'}</>) : (<><Zap className="h-3.5 w-3.5" />Migliora con AI — crea _P.pak</>)}
+                      </button>
+                    )}
+                    {ueLocStatus?.paks_dir && (
+                      <p className="text-[10px] text-[#8f98a0]/60">Paks: {ueLocStatus.paks_dir}</p>
+                    )}
+                    <p className="text-[10px] text-[#8f98a0]/50">Il _P.pak di override viene caricato automaticamente da UE4/UE5 senza modificare i file originali.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── ROW 3: UABEA Unity Assets (solo giochi Unity) ── */}
+            {(game.engine === 'Unity' || engineInfo?.engine?.toLowerCase().includes('unity')) && game.installPath && (
+              <div className="rounded-xl bg-[#1b2838]/60 border border-[#2a475e]/40 p-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold text-[#c6d4df] flex items-center gap-1.5">
+                    <HardDrive className="h-3.5 w-3.5 text-amber-400" /> Unity Assets (.assets)
+                  </span>
+                  <button
+                    className="text-[10px] font-semibold text-[#8f98a0] hover:text-[#c6d4df] transition-colors"
+                    onClick={async () => {
+                      setShowAssetsPanel(v => !v);
+                      if (!showAssetsPanel && !uabeaStatus) {
+                        try {
+                          const [status, files] = await Promise.all([
+                            invoke<any>('check_uabea_installed'),
+                            invoke<any[]>('find_unity_assets_files', { gamePath: game.installPath }),
+                          ]);
+                          setUabeaStatus(status);
+                          setAssetsFiles(files || []);
+                        } catch (e) { console.error('[UABEA]', e); }
+                      }
+                    }}
+                  >
+                    {showAssetsPanel ? '▲ Chiudi' : '▼ Espandi'}
+                  </button>
+                </div>
+
+                {showAssetsPanel && (
+                  <div className="space-y-2">
+                    {/* UABEA status */}
+                    <div className={`flex items-center justify-between p-2 rounded-lg text-[11px] ${uabeaStatus?.installed ? 'bg-emerald-500/[0.06] border border-emerald-500/20' : 'bg-amber-500/[0.06] border border-amber-500/20'}`}>
+                      <span className={uabeaStatus?.installed ? 'text-emerald-300' : 'text-amber-300'}>
+                        {uabeaStatus === null ? 'Verifica...' : uabeaStatus.installed ? '✓ UABEA installato' : '⚠ UABEA non installato'}
+                      </span>
+                      {!uabeaStatus?.installed && (
+                        <button
+                          className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/20 transition-all disabled:opacity-50"
+                          disabled={isDownloadingUabea}
+                          onClick={async () => {
+                            setIsDownloadingUabea(true);
+                            try {
+                              await invoke('download_uabea');
+                              const status = await invoke<any>('check_uabea_installed');
+                              setUabeaStatus(status);
+                              toast.success('UABEA installato!');
+                            } catch (e: any) {
+                              toast.error(`Errore: ${e?.toString?.()}`);
+                            } finally { setIsDownloadingUabea(false); }
+                          }}
+                        >
+                          {isDownloadingUabea ? <Loader2 className="h-3 w-3 animate-spin inline" /> : <Download className="h-3 w-3 inline mr-1" />}
+                          Installa UABEA
+                        </button>
+                      )}
+                    </div>
+
+                    {/* File .assets trovati */}
+                    {assetsFiles.length > 0 ? (
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-[#8f98a0]/60">{assetsFiles.length} file .assets trovati</span>
+                        <div className="max-h-[120px] overflow-y-auto space-y-0.5 custom-scrollbar pr-1">
+                          {assetsFiles.map((af: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-[#2a475e]/20 hover:bg-[#2a475e]/30 transition-all">
+                              <span className="text-[11px] text-[#c6d4df] truncate flex-1">{af.file_name}</span>
+                              <span className="text-[10px] text-[#8f98a0]/60 ml-2 shrink-0">{(af.size_bytes / 1048576).toFixed(1)} MB</span>
+                              {uabeaStatus?.installed && (
+                                <button
+                                  className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 border border-sky-500/20 transition-all shrink-0"
+                                  onClick={() => invoke('open_assets_with_uabea', { assetsFile: af.path }).catch(e => toast.error(String(e)))}
+                                >
+                                  Apri
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-[#8f98a0]/60 text-center py-2">Nessun file .assets trovato nella cartella del gioco</p>
+                    )}
+
+                    <p className="text-[10px] text-[#8f98a0]/50">
+                      UABEA permette di tradurre testi e texture incorporati nei file .assets Unity (come il pacchetto immagini di Blue Prince).
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </motion.div>
         </div>
       </div>
-      
+
+      {/* ═══ MODALS & DIALOGS (outside scroll container) ═══ */}
       {showTranslation && game && (
-        <InlineTranslator
-          gameId={game.appid.toString()}
-          gameName={game.name}
-          gamePath={game.installPath}
-          onClose={() => setShowTranslation(false)}
-        />
+        <InlineTranslator gameId={game.appid.toString()} gameName={game.name} gamePath={game.installPath} onClose={() => setShowTranslation(false)} />
       )}
 
-      {/* Screenshot Lightbox - renderizzato nel body via portal */}
+      {game && (
+        <>
+          <GspackExportDialog open={showGspackExport} onOpenChange={setShowGspackExport} gameName={game.title || game.name} gameAppId={game.appid} platform={game.platform || 'Steam'} engine={engineInfo?.engine || game.engine} />
+          <GspackImportDialog open={showGspackImport} onOpenChange={setShowGspackImport} />
+        </>
+      )}
+
+      {/* Screenshot Lightbox */}
       {selectedScreenshotIndex !== null && game?.screenshots && typeof document !== 'undefined' && createPortal(
         <motion.div 
           initial={{ opacity: 0 }}
@@ -1717,8 +2422,6 @@ export default function GameDetailPage() {
           }}
         />
       )}
-      </div>
-      </div>
     </div>
   );
 }

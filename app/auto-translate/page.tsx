@@ -276,6 +276,9 @@ export default function AutoTranslatePage() {
 
   // Unity auto-install BepInEx state
   const [unityDetected, setUnityDetected] = useState(false)
+  const [isIL2CPP, setIsIL2CPP] = useState(false)
+  const [hasBepInExInstalled, setHasBepInExInstalled] = useState(false)
+  const [xunityStringCount, setXunityStringCount] = useState(0)
   const [bepinexStatus, setBepinexStatus] = useState<'idle' | 'installing' | 'installed' | 'error' | 'needs_relaunch'>('idle')
   const [bepinexSteps, setBepinexSteps] = useState<string[]>([])
   const [bepinexError, setBepinexError] = useState<string | null>(null)
@@ -422,10 +425,30 @@ export default function AutoTranslatePage() {
         } catch {}
       }
       if (isUnityGame) {
-        console.log('[AutoTranslate] Unity game detected → redirecting to Unity CSV Translator')
+        // Rileva IL2CPP (GameAssembly.dll) vs Mono
+        let il2cpp = false
+        try {
+          il2cpp = await invoke<boolean>('check_path_exists', { path: `${installPath}\\GameAssembly.dll` })
+        } catch {}
+        // Rileva BepInEx già installato + stringhe catturate
+        let hasBepInEx = false
+        let stringCount = 0
+        try {
+          hasBepInEx = await invoke<boolean>('check_path_exists', { path: `${installPath}\\BepInEx` })
+        } catch {}
+        if (hasBepInEx) {
+          try {
+            const translations = await invoke<Record<string, string>>('extractXunityTranslations', { gamePath: installPath, targetLang: targetLang || 'it' })
+            stringCount = Object.keys(translations || {}).length
+          } catch {}
+        }
+        console.log(`[AutoTranslate] Unity game detected (${il2cpp ? 'IL2CPP' : 'Mono'}, BepInEx: ${hasBepInEx}, strings: ${stringCount}) → showing Unity panel`)
         setIsLoadingGame(false)
         setGameError(null)
         setUnityDetected(true)
+        setIsIL2CPP(il2cpp)
+        setHasBepInExInstalled(hasBepInEx)
+        setXunityStringCount(stringCount)
         return
       }
 
@@ -486,8 +509,13 @@ export default function AutoTranslatePage() {
           }
           
           if (isUnity) {
-            // Gioco Unity rilevato → attiva flusso auto-install BepInEx
+            // Gioco Unity rilevato — rileva IL2CPP
+            let il2cpp = false
+            try {
+              il2cpp = await invoke<boolean>('check_path_exists', { path: `${installPath}\\GameAssembly.dll` })
+            } catch {}
             setUnityDetected(true)
+            setIsIL2CPP(il2cpp)
             setGameError(null)
           } else {
             setGameError('No translatable files found for this game.')
@@ -583,6 +611,9 @@ export default function AutoTranslatePage() {
   const rescanAfterBepInEx = useCallback(async () => {
     if (!gameInfo?.installPath) return
     setUnityDetected(false)
+    setIsIL2CPP(false)
+    setHasBepInExInstalled(false)
+    setXunityStringCount(0)
     setBepinexStatus('idle')
     setBepinexSteps([])
     setBepinexError(null)
@@ -1519,7 +1550,7 @@ export default function AutoTranslatePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <div className="bg-gradient-to-r from-rose-600 via-pink-600 to-fuchsia-600 p-4">
+      <div className="bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             {gameInfo?.gameId && (
@@ -1617,7 +1648,7 @@ export default function AutoTranslatePage() {
 
             {/* Game Card (se selezionato) */}
             {gameInfo && (
-              <Card className="bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-fuchsia-500/10 border-purple-500/30 overflow-hidden">
+              <Card className="bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-violet-500/10 border-purple-500/30 overflow-hidden">
                 <CardContent className="p-5 flex items-center gap-5">
                   {gameInfo.gameImage && (
                     <img src={gameInfo.gameImage} alt={gameInfo.gameName} className="w-32 h-[72px] object-cover rounded-lg shadow-lg" />
@@ -1642,8 +1673,8 @@ export default function AutoTranslatePage() {
                           <span className="text-xs text-muted-foreground">files</span>
                         </div>
                         <div className="flex items-center gap-2 justify-end">
-                          <Languages className="h-4 w-4 text-fuchsia-400" />
-                          <span className="text-2xl font-black text-fuchsia-400">{totalStrings.toLocaleString()}</span>
+                          <Languages className="h-4 w-4 text-violet-400" />
+                          <span className="text-2xl font-black text-violet-400">{totalStrings.toLocaleString()}</span>
                           <span className="text-xs text-muted-foreground">strings</span>
                         </div>
                       </div>
@@ -1705,36 +1736,86 @@ export default function AutoTranslatePage() {
               </div>
             )}
 
-            {/* Unity rilevato → Auto-install BepInEx + XUnity AutoTranslator */}
+            {/* Unity rilevato → Smart Auto-Select Panel */}
             {unityDetected && (
-              <Card className="border-orange-500/30 bg-orange-500/5">
+              <Card className={cn("border-orange-500/30", isIL2CPP ? "bg-amber-500/5" : hasBepInExInstalled ? "bg-emerald-500/5" : "bg-orange-500/5")}>
                 <CardHeader className="py-3 px-4">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Zap className="h-4 w-4 text-orange-400" />
-                    Unity game detected
+                    Unity {isIL2CPP ? '(IL2CPP)' : '(Mono)'} detected
+                    {hasBepInExInstalled && !isIL2CPP && (
+                      <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[10px] ml-1">BepInEx installato</Badge>
+                    )}
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    I testi di questo gioco sono dentro gli asset binari Unity. Usa il <strong>{t('nav.unityCsvTranslator')}</strong> per scansionare, tradurre e iniettare le traduzioni con Resize Injection (zero troncamento).
+                    {isIL2CPP 
+                      ? 'Questo gioco usa IL2CPP — i testi sono dentro gli asset binari Unity. Usa il Unity CSV Translator per scansionare, tradurre e iniettare le traduzioni con Resize Injection (zero troncamento).'
+                      : hasBepInExInstalled && xunityStringCount > 0
+                        ? `BepInEx è già installato con ${xunityStringCount} stringhe catturate. Puoi tradurle con AI oppure usare il Unity CSV Translator per una copertura completa.`
+                        : hasBepInExInstalled
+                          ? 'BepInEx è installato ma non ci sono ancora stringhe catturate. Avvia il gioco per catturarle, oppure usa il Unity CSV Translator per tradurre tutto subito.'
+                          : 'Metodo consigliato: Unity CSV Translator — inietta le traduzioni direttamente negli asset binari Unity con copertura completa e zero troncamento.'
+                    }
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="px-4 pb-4 space-y-3">
-                  {/* Primary: Unity CSV Translator */}
-                  <Button 
-                    onClick={() => {
-                      if (gameInfo?.installPath) {
-                        sessionStorage.setItem('unityCsvGamePath', gameInfo.installPath)
-                      }
-                      window.location.href = '/unity-csv-translator'
-                    }} 
-                    size="sm" className="h-9 bg-orange-600 hover:bg-orange-500 gap-2"
-                  >
-                    <Globe className="h-4 w-4" />
-                    Apri Unity CSV Translator
-                  </Button>
+                  {/* IL2CPP Warning */}
+                  {isIL2CPP && (
+                    <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-semibold text-amber-300">BepInEx non compatibile</p>
+                        <p className="text-[10px] text-amber-300/70 mt-0.5">
+                          I giochi Unity IL2CPP non supportano BepInEx 5.x + XUnity AutoTranslator. L'installazione causerebbe crash all'avvio del gioco.
+                          Usa il <strong>Unity CSV Translator</strong> che inietta le traduzioni direttamente negli asset binari.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Secondary: BepInEx option */}
+                  {/* BepInEx già installato con stringhe catturate */}
+                  {hasBepInExInstalled && !isIL2CPP && xunityStringCount > 0 && (
+                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-emerald-300">{xunityStringCount} stringhe catturate da XUnity</p>
+                        <p className="text-[10px] text-emerald-300/70 mt-0.5">
+                          Le stringhe sono in <code className="text-[9px] bg-white/5 px-1 rounded">BepInEx/Translation/</code>. 
+                          Per qualità migliore, usa il <strong>Unity CSV Translator</strong> che traduce <em>tutte</em> le stringhe (non solo quelle apparse a schermo).
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Primary: Unity CSV Translator — SEMPRE visibile, consigliato */}
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-medium text-orange-300/80 uppercase tracking-wider">Metodo consigliato</p>
+                    <Button 
+                      onClick={() => {
+                        if (gameInfo?.installPath) {
+                          sessionStorage.setItem('unityCsvGamePath', gameInfo.installPath)
+                        }
+                        window.location.href = '/unity-csv-translator'
+                      }} 
+                      size="sm" className="h-9 w-full bg-orange-600 hover:bg-orange-500 gap-2"
+                    >
+                      <Globe className="h-4 w-4" />
+                      Apri Unity CSV Translator
+                    </Button>
+                    <p className="text-[10px] text-muted-foreground">
+                      Scansiona tutti gli asset, traduce con AI (Gemini/Claude) e inietta le traduzioni con Resize Injection. Copertura completa, zero troncamento.
+                    </p>
+                  </div>
+
+                  {/* Secondary: BepInEx option — SOLO per Mono, nascosto per IL2CPP */}
+                  {!isIL2CPP && (
                   <div className="pt-2 border-t border-white/5">
-                    <p className="text-[10px] text-muted-foreground mb-2">{t('autoTranslatePage.bepinexAlt')}</p>
+                    <p className="text-[10px] text-muted-foreground/80 mb-2">
+                      {hasBepInExInstalled 
+                        ? 'Oppure continua con BepInEx + XUnity (traduzione live durante il gameplay):'
+                        : 'Alternativa: BepInEx + XUnity AutoTranslator (traduzione live, richiede di avviare il gioco):'
+                      }
+                    </p>
                   {/* Steps log */}
                   {bepinexSteps.length > 0 && (
                     <ScrollArea className="h-[160px] rounded border border-white/5 bg-black/20 p-2">
@@ -1764,10 +1845,16 @@ export default function AutoTranslatePage() {
 
                   {/* Azioni BepInEx */}
                   <div className="flex items-center gap-2">
-                    {bepinexStatus === 'idle' && (
+                    {bepinexStatus === 'idle' && !hasBepInExInstalled && (
                       <Button onClick={installBepInEx} variant="outline" size="sm" className="h-7 text-xs">
                         <Download className="h-3 w-3 mr-1" />
                         Install BepInEx + XUnity
+                      </Button>
+                    )}
+                    {bepinexStatus === 'idle' && hasBepInExInstalled && (
+                      <Button onClick={rescanAfterBepInEx} variant="outline" size="sm" className="h-7 text-xs">
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Ri-Scansiona stringhe XUnity
                       </Button>
                     )}
                     {bepinexStatus === 'installing' && (
@@ -1800,6 +1887,7 @@ export default function AutoTranslatePage() {
                     </p>
                   </div>
                   </div>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -1812,7 +1900,7 @@ export default function AutoTranslatePage() {
                   <CardHeader className="py-2.5 px-4">
                     <CardTitle className="text-sm flex items-center justify-between">
                       <span>{files.length} translatable files</span>
-                      <Badge className="bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/30 text-xs">{totalStrings.toLocaleString()} strings</Badge>
+                      <Badge className="bg-violet-500/15 text-violet-400 border-violet-500/30 text-xs">{totalStrings.toLocaleString()} strings</Badge>
                     </CardTitle>
                   </CardHeader>
                   <ScrollArea className="h-[220px]">
@@ -1879,7 +1967,7 @@ export default function AutoTranslatePage() {
                     <Button
                       onClick={() => handleStartTranslation(false)}
                       disabled={files.length === 0 || isTranslating}
-                      className="w-full h-10 text-sm font-bold bg-gradient-to-r from-rose-500 to-fuchsia-500 hover:from-rose-600 hover:to-fuchsia-600"
+                      className="w-full h-10 text-sm font-bold bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600"
                     >
                       <Zap className="h-4 w-4 mr-2" />
                       Translate {totalStrings} strings
@@ -1932,7 +2020,7 @@ export default function AutoTranslatePage() {
             <Card className="overflow-hidden border-primary/20">
               <div className="h-1.5 bg-muted overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-rose-500 via-fuchsia-500 to-violet-500 transition-all duration-700 ease-out relative"
+                  className="h-full bg-gradient-to-r from-violet-500 via-indigo-500 to-purple-500 transition-all duration-700 ease-out relative"
                   style={{ width: `${progress.percent}%` }}
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent animate-pulse" />
@@ -1944,7 +2032,7 @@ export default function AutoTranslatePage() {
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       <div className="h-16 w-16 rounded-full border-4 border-primary/20 flex items-center justify-center">
-                        <span className="text-2xl font-black bg-gradient-to-br from-rose-400 to-fuchsia-400 bg-clip-text text-transparent">
+                        <span className="text-2xl font-black bg-gradient-to-br from-violet-400 to-indigo-400 bg-clip-text text-transparent">
                           {progress.percent}%
                         </span>
                       </div>
@@ -1999,7 +2087,7 @@ export default function AutoTranslatePage() {
                     </div>
                   </div>
                   <div className="bg-muted/40 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold tabular-nums text-fuchsia-400">{remaining !== null ? `~${remaining}m` : '...'}</div>
+                    <div className="text-2xl font-bold tabular-nums text-violet-400">{remaining !== null ? `~${remaining}m` : '...'}</div>
                     <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
                       <TrendingUp className="h-3 w-3" /> ETA
                     </div>
@@ -2118,7 +2206,7 @@ export default function AutoTranslatePage() {
                 <div className="text-[10px] text-muted-foreground">{t('autoTranslatePage.untranslated')}</div>
                 <div className="text-lg font-bold text-red-400">{untranslatedCount}</div>
                 {untranslatedCount > 0 && !isRetranslating && (
-                  <Button size="sm" className="w-full h-6 text-[9px] mt-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600" onClick={handleTranslateUntranslated}>
+                  <Button size="sm" className="w-full h-6 text-[9px] mt-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600" onClick={handleTranslateUntranslated}>
                     <Zap className="h-2.5 w-2.5 mr-0.5" /> Translate all
                   </Button>
                 )}
@@ -2135,7 +2223,7 @@ export default function AutoTranslatePage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Button onClick={handleGeneratePatch} className="h-9 text-xs bg-gradient-to-r from-rose-500 to-fuchsia-500">
+              <Button onClick={handleGeneratePatch} className="h-9 text-xs bg-gradient-to-r from-violet-500 to-indigo-500">
                 <Package className="h-3.5 w-3.5 mr-1.5" /> Create Patch
               </Button>
               {gameInfo?.installPath && isUnrealEngine(gameInfo.installPath) && (

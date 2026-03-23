@@ -310,7 +310,7 @@ export default function RPGMakerTranslatorPage() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-rose-700 via-pink-600 to-fuchsia-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -343,13 +343,13 @@ export default function RPGMakerTranslatorPage() {
       {/* Step 1: Select */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-full bg-rose-600 flex items-center justify-center text-white text-sm font-bold">1</div>
+          <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">1</div>
           <h2 className="text-base font-bold text-white">Seleziona progetto RPG Maker</h2>
         </div>
         <div className="flex gap-2 items-center">
           <Button onClick={browse} variant="outline" className="gap-2"><FolderOpen className="h-4 w-4" />Sfoglia</Button>
           <div className="flex-1 px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700 text-sm text-slate-300 truncate">{projectPath || 'Seleziona la cartella data/ del gioco'}</div>
-          <Button onClick={doScan} disabled={!projectPath || status === 'scanning'} className="gap-2 bg-rose-600 hover:bg-rose-500">
+          <Button onClick={doScan} disabled={!projectPath || status === 'scanning'} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
             {status === 'scanning' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}Scansiona
           </Button>
         </div>
@@ -370,7 +370,7 @@ export default function RPGMakerTranslatorPage() {
       {files.length > 0 && (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-pink-600 flex items-center justify-center text-white text-sm font-bold">2</div>
+            <div className="w-7 h-7 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold">2</div>
             <h2 className="text-base font-bold text-white">File del gioco ({files.length})</h2>
             <div className="flex-1" />
             <Button onClick={doExport} variant="outline" size="sm" className="gap-1 h-7 text-xs" disabled={totalDone === 0}><Download className="h-3 w-3" />Esporta</Button>
@@ -382,7 +382,7 @@ export default function RPGMakerTranslatorPage() {
                 <div key={fi} className="rounded-lg border border-slate-700/60 bg-slate-800/40">
                   <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-700/30 text-left" onClick={() => setExpanded(isExp ? null : f.name)}>
                     {isExp ? <ChevronDown className="h-3.5 w-3.5 text-slate-400" /> : <ChevronRight className="h-3.5 w-3.5 text-slate-400" />}
-                    <FileText className="h-3.5 w-3.5 text-rose-400" />
+                    <FileText className="h-3.5 w-3.5 text-emerald-400" />
                     <span className="text-sm font-semibold text-white flex-1">{f.name}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded ${catColor[f.category] || catColor.other}`}>{f.category}</span>
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">{f.entries.length} str</span>
@@ -418,7 +418,7 @@ export default function RPGMakerTranslatorPage() {
       {files.length > 0 && (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-full bg-fuchsia-600 flex items-center justify-center text-white text-sm font-bold">3</div>
+            <div className="w-7 h-7 rounded-full bg-cyan-600 flex items-center justify-center text-white text-sm font-bold">3</div>
             <h2 className="text-base font-bold text-white">Traduci con AI</h2>
             <div className="flex-1" />
             <Button onClick={() => setShowCfg(!showCfg)} variant="ghost" size="sm" className="h-7 gap-1 text-xs text-slate-400"><Settings2 className="h-3 w-3" />Config</Button>
@@ -449,17 +449,17 @@ export default function RPGMakerTranslatorPage() {
           {status === 'translating' && (
             <div className="mb-3">
               <div className="flex items-center gap-2 mb-1">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-rose-400" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" />
                 <span className="text-xs text-slate-300">{prog.file}: {prog.cur}/{prog.tot} ({pct}%)</span>
               </div>
               <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-rose-500 to-fuchsia-400 transition-all" style={{ width: `${pct}%` }} />
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all" style={{ width: `${pct}%` }} />
               </div>
             </div>
           )}
           <div className="flex gap-2">
             {status !== 'translating' ? (
-              <Button onClick={doTranslate} disabled={!models.length} className="gap-2 bg-rose-600 hover:bg-rose-500">
+              <Button onClick={doTranslate} disabled={!models.length} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
                 <Globe className="h-4 w-4" />Traduci ({totalStrings - totalDone})
               </Button>
             ) : (

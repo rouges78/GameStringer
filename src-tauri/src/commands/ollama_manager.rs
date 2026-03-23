@@ -357,30 +357,105 @@ pub async fn pull_ollama_model(app: tauri::AppHandle, model_name: String) -> Res
 #[tauri::command]
 pub async fn get_recommended_ollama_models() -> Result<Vec<OllamaModelInfo>, String> {
     Ok(vec![
+        // ─── TRADUZIONE SPECIALIZZATA ───
         OllamaModelInfo {
             name: "huihui_ai/hy-mt1.5-abliterated:7b".to_string(),
             size: "~4.5 GB".to_string(),
-            description: "⭐ Tencent HY-MT 1.5 7B — #1 WMT25, batte Google Translate in 30/31 lingue, 33 lingue".to_string(),
+            description: "⭐ Tencent HY-MT 1.5 7B — #1 WMT25, batte Google Translate in 30/31 lingue. Senza censura.".to_string(),
         },
         OllamaModelInfo {
             name: "huihui_ai/hy-mt1.5-abliterated:1.8b".to_string(),
             size: "~1.2 GB".to_string(),
-            description: "Tencent HY-MT 1.5 1.8B — Versione leggera e velocissima, ottima per batch massicci".to_string(),
+            description: "Tencent HY-MT 1.5 1.8B — Versione ultra-leggera e velocissima. Ideale per batch massicci.".to_string(),
         },
         OllamaModelInfo {
             name: "translategemma:12b".to_string(),
             size: "~8.0 GB".to_string(),
-            description: "Google TranslateGemma 12B — 55 lingue, qualità alta, richiede 10+ GB VRAM".to_string(),
+            description: "Google TranslateGemma 12B — 55 lingue, qualità alta, richiede 10+ GB VRAM.".to_string(),
         },
         OllamaModelInfo {
             name: "translategemma:2b".to_string(),
             size: "~1.5 GB".to_string(),
-            description: "Google TranslateGemma 2B — 55 lingue, veloce e leggero".to_string(),
+            description: "Google TranslateGemma 2B — 55 lingue, veloce e leggero.".to_string(),
+        },
+        // ─── MoE ULTRA-VELOCI (Marzo 2026) ───
+        OllamaModelInfo {
+            name: "qwen3.5:35b-a3b".to_string(),
+            size: "~4.5 GB".to_string(),
+            description: "🚀 Qwen 3.5 35B-A3B (MoE) — 35B parametri, attiva solo 3B. Velocità di un 3B, qualità di un 35B!".to_string(),
+        },
+        OllamaModelInfo {
+            name: "lfm2:24b".to_string(),
+            size: "~3.5 GB".to_string(),
+            description: "🚀 LFM2 24B-A2B (MoE) — Liquid AI, attiva solo 2B. Velocissimo su 8GB RAM!".to_string(),
+        },
+        // ─── MULTILINGUE GENERAL PURPOSE ───
+        OllamaModelInfo {
+            name: "glm4:8b".to_string(),
+            size: "~5.0 GB".to_string(),
+            description: "🆕 GLM-4.7 Flash 8B — Zhipu AI, tuttofare veloce, molto lodato dalla community.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "qwen3:8b".to_string(),
+            size: "~5.2 GB".to_string(),
+            description: "Alibaba Qwen3 8B — Top multilingue, ragionamento avanzato, eccellente su CJK e europee.".to_string(),
         },
         OllamaModelInfo {
             name: "qwen3:4b".to_string(),
-            size: "~2.5 GB".to_string(),
-            description: "Alibaba Qwen 3 4B — General purpose, buono per traduzione conversazionale".to_string(),
+            size: "~2.6 GB".to_string(),
+            description: "Alibaba Qwen3 4B — Compatto, ottimo rapporto qualità/velocità per traduzione.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "gemma3:12b".to_string(),
+            size: "~8.1 GB".to_string(),
+            description: "Google Gemma 3 12B — Prosa pulita, 128K context, multilingue.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "gemma3:4b".to_string(),
+            size: "~2.8 GB".to_string(),
+            description: "Google Gemma 3 4B — Versione leggera, gira su 8GB RAM.".to_string(),
+        },
+        // ─── REASONING / ANALISI ───
+        OllamaModelInfo {
+            name: "deepseek-r1:14b".to_string(),
+            size: "~9.0 GB".to_string(),
+            description: "DeepSeek R1 14B — Chain-of-thought esplicito, ragionamento complesso.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "deepseek-r1:7b".to_string(),
+            size: "~4.7 GB".to_string(),
+            description: "DeepSeek R1 7B — Chain-of-thought leggero, gira su 8GB.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "phi4:14b".to_string(),
+            size: "~8.5 GB".to_string(),
+            description: "Microsoft Phi-4 14B — Miglior ragionamento per GB (MATH: 80.4%).".to_string(),
+        },
+        OllamaModelInfo {
+            name: "phi4-mini".to_string(),
+            size: "~2.4 GB".to_string(),
+            description: "Microsoft Phi-4 Mini 3.8B — Ultra-leggero, buono con poca VRAM.".to_string(),
+        },
+        // ─── MODELLI GRANDI (16GB+ VRAM) ───
+        OllamaModelInfo {
+            name: "llama3.3:8b".to_string(),
+            size: "~5.0 GB".to_string(),
+            description: "Meta Llama 3.3 8B — Miglior all-rounder classe 8B, ecosistema vasto.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "mistral-small3.1:24b".to_string(),
+            size: "~14 GB".to_string(),
+            description: "Mistral Small 3.1 24B — Il più veloce (~50 tok/s), ottimo per lingue europee.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "deepseek-r1:32b".to_string(),
+            size: "~19 GB".to_string(),
+            description: "DeepSeek R1 32B — Ragionamento top, chain-of-thought. Richiede 24GB+ VRAM.".to_string(),
+        },
+        OllamaModelInfo {
+            name: "llama3.3:70b".to_string(),
+            size: "~40 GB".to_string(),
+            description: "Meta Llama 3.3 70B — General-purpose top. Richiede 48GB+ VRAM.".to_string(),
         },
     ])
 }

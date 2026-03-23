@@ -515,7 +515,7 @@ fn estimate_times(estimated_strings: u64) -> Vec<TimeEstimate> {
 
 fn estimate_chains(estimated_strings: u64, estimated_words: u64) -> Vec<ChainEstimate> {
     let s = estimated_strings as f64;
-    let w = estimated_words as f64;
+    let _w = estimated_words as f64;
     // DeepL: $20/1M chars = ~$0.00002/char, avg 30 chars/string
     let deepl_cost = s * 30.0 * 0.00002;
     // OpenAI: ~$0.003/1K tokens input + $0.006/1K output
@@ -863,8 +863,8 @@ pub async fn analyze_game_translation(
     install_path: String,
     game_title: String,
     engine: Option<String>,
-    source_lang: String,
-    target_lang: String,
+    _source_lang: String,
+    _target_lang: String,
 ) -> Result<PredictionResult, String> {
     let game_path = PathBuf::from(&install_path);
     if !game_path.exists() {

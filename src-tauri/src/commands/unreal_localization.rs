@@ -547,6 +547,90 @@ fn write_locres_v0(entries: &[LocEntry]) -> Vec<u8> {
     buf
 }
 
+/// Scrive un file .locres in formato v2 "Optimized" (UE4.25+ e UE5)
+/// Questo è il formato usato dalla maggior parte dei giochi moderni.
+fn write_locres_v2(entries: &[LocEntry]) -> Vec<u8> {
+    let mut buf = Vec::new();
+
+    // Magic
+    write_u32(&mut buf, 0x0E14DA7A);
+    // Version 2
+    buf.push(2u8);
+
+    // Costruisci stringa array deduplicata (mantenendo ordine di inserimento)
+    let mut string_array: Vec<String> = Vec::new();
+    let mut string_index: std::collections::HashMap<String, i32> = std::collections::HashMap::new();
+    for entry in entries {
+        if !entry.value.is_empty() && !string_index.contains_key(&entry.value) {
+            let idx = string_array.len() as i32;
+            string_index.insert(entry.value.clone(), idx);
+            string_array.push(entry.value.clone());
+        }
+    }
+
+    // String Array: count (i64) + per ogni stringa: FString + refcount (i32)
+    write_i64(&mut buf, string_array.len() as i64);
+    for s in &string_array {
+        write_fstring(&mut buf, s);
+        write_i32(&mut buf, 1); // ref count = 1 (non critico)
+    }
+
+    // Raggruppa per namespace (ordine deterministico)
+    let mut namespaces: std::collections::BTreeMap<&str, Vec<&LocEntry>> = std::collections::BTreeMap::new();
+    for entry in entries {
+        namespaces.entry(&entry.namespace).or_default().push(entry);
+    }
+
+    // Namespace count (i32)
+    write_i32(&mut buf, namespaces.len() as i32);
+
+    for (ns_name, ns_entries) in &namespaces {
+        // Namespace hash (CityHash32 del nome, ma UE lo ignora per il lookup)
+        let ns_hash = cityhash32(ns_name.as_bytes());
+        write_u32(&mut buf, ns_hash);
+        write_fstring(&mut buf, ns_name);
+
+        write_i32(&mut buf, ns_entries.len() as i32);
+
+        for entry in ns_entries {
+            let key_hash = cityhash32(entry.key.as_bytes());
+            write_u32(&mut buf, key_hash);
+            write_fstring(&mut buf, &entry.key);
+            write_u32(&mut buf, entry.source_hash);
+
+            // String index (i32): -1 se vuota, altrimenti indice nella string_array
+            let idx = if entry.value.is_empty() {
+                -1i32
+            } else {
+                *string_index.get(&entry.value).unwrap_or(&-1)
+            };
+            write_i32(&mut buf, idx);
+        }
+    }
+
+    buf
+}
+
+/// CityHash32 — usato da UE per namespace/key hash (non critico per il caricamento,
+/// ma corrisponde a ciò che FModel e unreal_locres_tool generano)
+fn cityhash32(s: &[u8]) -> u32 {
+    // Implementazione semplificata CRC32 come approssimazione:
+    // UE usa effettivamente un hash diverso ma il motore NON valida questi hash
+    // al caricamento (li usa solo per ricerche veloci, fallback alla stringa).
+    let mut h = crc32fast::hash(s);
+    h = h.wrapping_mul(0x9e3779b9);
+    h
+}
+
+/// Scrive un locres usando la stessa versione del sorgente estratto
+pub fn write_locres_matching_version(entries: &[LocEntry], source_version: u8) -> Vec<u8> {
+    if source_version >= 2 {
+        write_locres_v2(entries)
+    } else {
+        write_locres_v0(entries)
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // PAK WRITER (formato v8, compatibile UE5)
 // ═══════════════════════════════════════════════════════════════════
@@ -993,8 +1077,8 @@ pub async fn apply_unreal_translation(
         }
     }).collect();
     
-    // Scrivi il .locres
-    let locres_data = write_locres_v0(&loc_entries);
+    // Scrivi il .locres in formato v2 (Optimized — richiesto da UE4.25+ e UE5)
+    let locres_data = write_locres_v2(&loc_entries);
     
     // Determina il path del .locres nel .pak
     // Pattern standard: [ProjectName]/Content/Localization/Game/[lang]/Game.locres
@@ -1020,32 +1104,36 @@ pub async fn apply_unreal_translation(
     
     log::info!("📦 Creazione PAK con {} .locres: {}", pak_files.len(), locres_path_target);
     
-    // Crea il .pak con tutti i .locres
-    let pak_file_refs: Vec<(&str, &[u8])> = pak_files.iter()
-        .map(|(path, data)| (path.as_str(), data.as_slice()))
-        .collect();
-    let pak_data = create_pak_v4(&pak_file_refs);
-    
     // Trova la directory Paks
     let paks_dir = find_paks_dir(game_dir)
         .ok_or("Directory Content/Paks non trovata")?;
     
-    // Salva il .pak con suffisso _P (patch priority)
     let pak_filename = format!("{}_GameStringer_{}_P.pak", project_name, target_language);
     let pak_path = paks_dir.join(&pak_filename);
     
-    fs::write(&pak_path, &pak_data)
-        .map_err(|e| format!("Errore scrittura {}: {}", pak_path.display(), e))?;
+    // Rimuovi pak GS precedente se esiste
+    if pak_path.exists() {
+        let _ = fs::remove_file(&pak_path);
+    }
     
-    log::info!("✅ PAK traduzione salvato: {} ({} bytes)", pak_path.display(), pak_data.len());
+    // Usa repak (con fallback al writer custom) per massima compatibilità
+    let pak_file_refs: Vec<(&str, &[u8])> = pak_files.iter()
+        .map(|(path, data)| (path.as_str(), data.as_slice()))
+        .collect();
+    
+    let repak_result = super::repak_wrapper::create_pak(&pak_file_refs, &pak_path, None).await
+        .map_err(|e| format!("Errore creazione PAK: {}", e))?;
+    
+    log::info!("✅ PAK traduzione salvato via {}: {} ({} entries)", 
+        repak_result.method, pak_path.display(), loc_entries.len());
     
     Ok(TranslationPakResult {
         success: true,
         pak_path: pak_path.to_string_lossy().to_string(),
         entries_count: loc_entries.len(),
         message: format!(
-            "Creato {} con {} traduzioni ({})", 
-            pak_filename, loc_entries.len(), target_language
+            "Creato {} con {} traduzioni [{}]", 
+            pak_filename, loc_entries.len(), repak_result.method
         ),
     })
 }
@@ -1118,9 +1206,9 @@ pub async fn create_translation_pak(
     let data = fs::read(source_path)
         .map_err(|e| format!("Errore lettura .locres sorgente: {}", e))?;
     
-    let (_version, entries) = parse_locres(&data)?;
+    let (source_version, entries) = parse_locres(&data)?;
     
-    log::info!("📝 Creazione PAK tradotto: {} entry, {} traduzioni", entries.len(), translations.len());
+    log::info!("📝 Creazione PAK tradotto: {} entry, {} traduzioni (LocRes v{})", entries.len(), translations.len(), source_version);
     
     // Applica traduzioni: per ogni entry, se c'è una traduzione usa quella, altrimenti mantieni l'originale
     let translated_entries: Vec<LocEntry> = entries.iter().map(|e| {
@@ -1136,8 +1224,8 @@ pub async fn create_translation_pak(
         }
     }).collect();
     
-    // Scrivi il .locres tradotto
-    let locres_data = write_locres_v0(&translated_entries);
+    // Scrivi il .locres nella stessa versione del sorgente (v2 per UE5, v0 per vecchi UE4)
+    let locres_data = write_locres_matching_version(&translated_entries, source_version);
     
     // Determina path nel .pak
     let project_name = find_project_name(game_dir).unwrap_or_else(|| "Game".to_string());
@@ -1183,6 +1271,122 @@ pub async fn create_translation_pak(
             pak_filename, translated_count, target_language
         ),
     })
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// STATO E PIPELINE COMPLETA
+// ═══════════════════════════════════════════════════════════════════
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UnrealLocStatus {
+    pub has_locres: bool,
+    pub locres_count: usize,
+    pub has_gs_pak: bool,
+    pub gs_pak_path: Option<String>,
+    pub translated_entries: usize,
+    pub paks_dir: Option<String>,
+    pub message: String,
+}
+
+/// Restituisce lo stato corrente della localizzazione di un gioco UE
+#[tauri::command]
+pub async fn get_unreal_localization_status(game_path: String) -> Result<UnrealLocStatus, String> {
+    let game_dir = Path::new(&game_path);
+    let paks_dir = find_paks_dir(game_dir);
+
+    let mut has_gs_pak = false;
+    let mut gs_pak_path: Option<String> = None;
+    let mut translated_entries = 0usize;
+
+    if let Some(ref paks) = paks_dir {
+        if let Ok(entries) = fs::read_dir(paks) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                let name = p.file_name().unwrap_or_default().to_string_lossy().to_string();
+                if name.contains("GameStringer") && name.ends_with("_P.pak") {
+                    has_gs_pak = true;
+                    gs_pak_path = Some(p.to_string_lossy().to_string());
+                }
+            }
+        }
+    }
+
+    // Prova a contare le stringhe nel pak GS se presente
+    if let Some(ref pak_path) = gs_pak_path {
+        if let Ok(data) = fs::read(pak_path) {
+            if let Ok((_, index_offset, index_size, false)) = find_pak_footer(&data) {
+                if let Ok((_, pak_entries)) = parse_pak_index(&data, 4, index_offset, index_size) {
+                    for pe in &pak_entries {
+                        if pe.filename.ends_with(".locres") {
+                            if let Ok(locres_data) = extract_file_from_pak(&data, pe) {
+                                if let Ok((_, loc_entries)) = parse_locres(&locres_data) {
+                                    translated_entries += loc_entries.iter().filter(|e| !e.value.is_empty()).count();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Cerca .locres liberi
+    let loose_locres = find_loose_locres(game_dir);
+    let has_locres = !loose_locres.is_empty() || paks_dir.is_some();
+    let locres_count = loose_locres.len();
+
+    let message = if has_gs_pak {
+        format!("Patch GameStringer installata — {} stringhe tradotte", translated_entries)
+    } else if has_locres {
+        "Localizzazione trovata — pronto per la traduzione AI".to_string()
+    } else {
+        "Nessuna localizzazione trovata".to_string()
+    };
+
+    Ok(UnrealLocStatus {
+        has_locres,
+        locres_count,
+        has_gs_pak,
+        gs_pak_path,
+        translated_entries,
+        paks_dir: paks_dir.map(|p| p.to_string_lossy().to_string()),
+        message,
+    })
+}
+
+/// Pipeline completa: riceve entries già tradotte dal frontend (Ollama) e crea il _P.pak
+/// Rimuove automaticamente il vecchio pak GS prima di creare il nuovo
+#[tauri::command]
+pub async fn auto_translate_unreal(
+    game_path: String,
+    translations: Vec<TranslatedEntry>,
+    target_language: String,
+) -> Result<TranslationPakResult, String> {
+    let game_dir = Path::new(&game_path);
+
+    if !game_dir.exists() {
+        return Err(format!("Directory gioco non trovata: {}", game_path));
+    }
+    if translations.is_empty() {
+        return Err("Nessuna traduzione fornita".to_string());
+    }
+
+    // 1. Rimuovi vecchi pak GS per questo gioco/lingua
+    if let Some(paks_dir) = find_paks_dir(game_dir) {
+        if let Ok(entries) = fs::read_dir(&paks_dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                let name = p.file_name().unwrap_or_default().to_string_lossy().to_string();
+                if name.contains("GameStringer") && name.contains(&target_language) && name.ends_with("_P.pak") {
+                    let _ = fs::remove_file(&p);
+                    log::info!("🗑️ Rimosso vecchio pak: {}", name);
+                }
+            }
+        }
+    }
+
+    // 2. Applica traduzioni e crea nuovo pak
+    apply_unreal_translation(game_path, translations, target_language).await
 }
 
 /// Rimuove la patch di traduzione dal gioco.

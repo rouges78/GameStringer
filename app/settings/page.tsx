@@ -51,7 +51,131 @@ import { useVersion } from '@/lib/version';
 import { useTranslation } from '@/lib/i18n';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { OllamaManager } from '@/components/settings/ollama-manager';
+import { VramSettingsCard } from '@/components/settings/vram-settings-card';
 import { invoke } from '@/lib/tauri-api';
+import { saveConfig as saveSupabaseConfig, isBackendEnabled as isSupabaseEnabled, SUPABASE_MIGRATION_SQL } from '@/lib/community-hub-backend';
+
+// Supabase Settings Component
+function SupabaseSettingsCard() {
+  const { t, language } = useTranslation();
+  const [url, setUrl] = useState('');
+  const [anonKey, setAnonKey] = useState('');
+  const [enabled, setEnabled] = useState(false);
+  const [showSql, setShowSql] = useState(false);
+  const [showKey, setShowKey] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('gs_supabase_config');
+      if (raw) {
+        const cfg = JSON.parse(raw);
+        setUrl(cfg.url || '');
+        setAnonKey(cfg.anonKey || '');
+        setEnabled(cfg.enabled || false);
+      }
+    } catch {}
+  }, []);
+
+  const handleSave = () => {
+    saveSupabaseConfig({ url, anonKey, enabled: enabled && !!url && !!anonKey });
+    toast.success(language === 'it' ? 'Configurazione Supabase salvata' : 'Supabase config saved');
+  };
+
+  const handleCopySql = () => {
+    navigator.clipboard.writeText(SUPABASE_MIGRATION_SQL);
+    toast.success(language === 'it' ? 'SQL copiato negli appunti' : 'SQL copied to clipboard');
+  };
+
+  return (
+    <Card className="p-4">
+      <CardHeader className="p-0 pb-4">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Database className="h-4 w-4 text-emerald-400" />
+          Community Hub — Supabase Backend
+        </CardTitle>
+        <p className="text-xs text-muted-foreground mt-1">
+          {language === 'it'
+            ? 'Collega il Community Hub a un database Supabase per condividere pack di traduzione online.'
+            : 'Connect the Community Hub to a Supabase database to share translation packs online.'}
+        </p>
+      </CardHeader>
+      <CardContent className="p-0 space-y-4">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+          <div className="flex items-center gap-2">
+            <div className={`h-2.5 w-2.5 rounded-full ${enabled && url && anonKey ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+            <span className="text-sm font-medium">
+              {enabled && url && anonKey
+                ? (language === 'it' ? 'Backend attivo' : 'Backend active')
+                : (language === 'it' ? 'Backend disattivo (solo locale)' : 'Backend disabled (local only)')}
+            </span>
+          </div>
+          <Switch checked={enabled} onCheckedChange={setEnabled} />
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs">{language === 'it' ? 'URL Progetto Supabase' : 'Supabase Project URL'}</Label>
+            <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://abcdefgh.supabase.co"
+              className="mt-1 text-xs font-mono"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">{language === 'it' ? 'Chiave Anonima (anon key)' : 'Anonymous Key (anon key)'}</Label>
+            <div className="relative mt-1">
+              <Input
+                value={anonKey}
+                onChange={(e) => setAnonKey(e.target.value)}
+                type={showKey ? 'text' : 'password'}
+                placeholder="eyJhbGciOiJIUzI1NiIs..."
+                className="text-xs font-mono pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey(!showKey)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={handleSave} className="gap-1.5">
+            <Save className="h-3.5 w-3.5" />
+            {language === 'it' ? 'Salva' : 'Save'}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setShowSql(!showSql)} className="gap-1.5">
+            <Database className="h-3.5 w-3.5" />
+            {showSql ? (language === 'it' ? 'Nascondi SQL' : 'Hide SQL') : (language === 'it' ? 'Mostra SQL Setup' : 'Show SQL Setup')}
+          </Button>
+        </div>
+
+        {showSql && (
+          <div className="space-y-2">
+            <p className="text-[10px] text-muted-foreground">
+              {language === 'it'
+                ? 'Esegui questo SQL nel SQL Editor di Supabase per creare le tabelle necessarie:'
+                : 'Run this SQL in Supabase SQL Editor to create required tables:'}
+            </p>
+            <div className="relative">
+              <pre className="text-[9px] bg-slate-900 border border-slate-700 rounded-md p-3 max-h-48 overflow-y-auto custom-scrollbar font-mono text-slate-300 whitespace-pre-wrap">
+                {SUPABASE_MIGRATION_SQL.trim().substring(0, 2000)}
+                {SUPABASE_MIGRATION_SQL.length > 2000 ? '\n\n... (copia per vedere tutto)' : ''}
+              </pre>
+              <Button size="sm" variant="outline" onClick={handleCopySql} className="absolute top-2 right-2 h-6 text-[9px] gap-1">
+                {language === 'it' ? 'Copia SQL' : 'Copy SQL'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 // Cache Stats Component
 function CacheStatsCard() {
@@ -518,6 +642,10 @@ export default function SettingsPage() {
           <TabsTrigger value="rss" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Rss className="h-3.5 w-3.5" />
             <span>RSS</span>
+          </TabsTrigger>
+          <TabsTrigger value="community" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Globe className="h-3.5 w-3.5" />
+            <span>Community Hub</span>
           </TabsTrigger>
           <TabsTrigger value="display" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Maximize2 className="h-3.5 w-3.5" />
@@ -1000,6 +1128,9 @@ export default function SettingsPage() {
 
             </CardContent>
           </Card>
+
+          {/* VRAM Manager */}
+          <VramSettingsCard />
         </TabsContent>
 
         {/* Notifications Tab */}
@@ -1077,6 +1208,11 @@ export default function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Community Hub / Supabase Tab */}
+        <TabsContent value="community" className="space-y-3">
+          <SupabaseSettingsCard />
         </TabsContent>
 
         {/* Display Tab */}

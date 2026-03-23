@@ -137,7 +137,7 @@ export default function OllamaManagerPage() {
   return (
     <div className="p-4 pt-2 space-y-3 overflow-auto overflow-x-hidden">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 p-3">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">

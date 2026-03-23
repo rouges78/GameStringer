@@ -76,6 +76,7 @@ fn detect_exe_architecture(exe_path: &Path) -> Result<bool, String> {
 pub struct GameEngineCheck {
     pub is_unity: bool,
     pub is_unreal: bool,
+    pub is_il2cpp: bool,
     pub engine_name: String,
     pub engine_version: Option<String>,
     pub can_patch: bool,
@@ -1213,11 +1214,12 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: true,
             is_unreal: false,
+            is_il2cpp,
             engine_name: format!("Unity {} ({})", ver_str, runtime),
             engine_version: unity_version,
             can_patch: !is_il2cpp, // IL2CPP è più difficile da patchare
             message: if is_il2cpp {
-                "⚠ Unity IL2CPP - XUnity potrebbe non funzionare, prova BepInEx 6".to_string()
+                "⚠ Unity IL2CPP - BepInEx/XUnity non compatibile, usa Unity CSV Translator".to_string()
             } else {
                 "✓ Unity Mono - compatibile con XUnity AutoTranslator".to_string()
             },
@@ -1245,6 +1247,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: "Spike Chunsoft Engine".to_string(),
             engine_version: None,
             can_patch: false,
@@ -1301,6 +1304,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: true,
+            is_il2cpp: false,
             engine_name: format!("Unreal Engine {}", ver_str),
             engine_version: Some(ver_str),
             can_patch: false,
@@ -1341,6 +1345,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: format!("Godot {}", ver_str),
             engine_version: godot_version,
             can_patch: false,
@@ -1369,6 +1374,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: format!("RPG Maker {}", rpg_info.version),
             engine_version: Some(rpg_info.version.clone()),
             can_patch: rpg_info.can_translate_directly,
@@ -1395,6 +1401,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: format!("GameMaker {}", gm_info.version),
             engine_version: Some(gm_info.version),
             can_patch: false,
@@ -1423,6 +1430,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: format!("Ren'Py {}", renpy_version),
             engine_version: Some(renpy_version),
             can_patch: true,
@@ -1451,6 +1459,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: format!("Source Engine ({})", source_version),
             engine_version: Some(source_version),
             can_patch: false,
@@ -1473,6 +1482,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: format!("CryEngine {}", cry_version),
             engine_version: Some(cry_version),
             can_patch: false,
@@ -1501,6 +1511,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: "RE Engine (Capcom)".to_string(),
             engine_version: Some("RE".to_string()),
             can_patch: false,
@@ -1523,6 +1534,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: "Frostbite (EA)".to_string(),
             engine_version: Some("Frostbite".to_string()),
             can_patch: false,
@@ -1551,6 +1563,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: creation_version.clone(),
             engine_version: Some(creation_version),
             can_patch: true,
@@ -1573,6 +1586,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: format!("id Tech ({})", idtech_version),
             engine_version: Some(idtech_version),
             can_patch: false,
@@ -1588,6 +1602,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: construct_version.clone(),
             engine_version: Some(construct_version),
             can_patch: true,
@@ -1610,6 +1625,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: format!("Adventure Game Studio {}", ags_version),
             engine_version: Some(ags_version),
             can_patch: false,
@@ -1632,6 +1648,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: mono_variant.clone(),
             engine_version: Some(mono_variant),
             can_patch: false,
@@ -1647,6 +1664,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: "Defold".to_string(),
             engine_version: Some("Defold".to_string()),
             can_patch: false,
@@ -1662,6 +1680,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
         return Ok(GameEngineCheck {
             is_unity: false,
             is_unreal: false,
+            is_il2cpp: false,
             engine_name: "LÖVE (Love2D)".to_string(),
             engine_version: Some("Love2D".to_string()),
             can_patch: true,
@@ -1676,6 +1695,7 @@ pub async fn check_game_engine(game_path: String) -> Result<GameEngineCheck, Str
     Ok(GameEngineCheck {
         is_unity: false,
         is_unreal: false,
+        is_il2cpp: false,
         engine_name: "Sconosciuto".to_string(),
         engine_version: None,
         can_patch: false,
@@ -2057,18 +2077,14 @@ pub async fn install_unity_autotranslator(game_path: String, game_exe_name: Stri
         return install_il2cpp_patch(game_dir, &lang, &mode, is_64bit, steps).await;
     }
     
-    // Unity 5.6+ può usare BepInEx Legacy
+    // Unity 5.x usa BepInEx Legacy 5.4.11 (funziona con 5.0+)
     let use_legacy = unity_version.as_ref()
-        .map(|v| v.starts_with("5.6") || v.starts_with("5.7") || v.starts_with("5.8") || v.starts_with("5.9"))
+        .map(|v| v.starts_with("5."))
         .unwrap_or(false);
     
-    // Unity 5.0-5.5 e 4.x richiedono IPA (BepInEx non funziona)
+    // Solo Unity 4.x richiede IPA (versioni molto vecchie)
     let use_ipa = unity_version.as_ref()
-        .map(|v| {
-            v.starts_with("4.") || 
-            v.starts_with("5.0") || v.starts_with("5.1") || v.starts_with("5.2") || 
-            v.starts_with("5.3") || v.starts_with("5.4") || v.starts_with("5.5")
-        })
+        .map(|v| v.starts_with("4."))
         .unwrap_or(false);
     
     // Se usa IPA, flusso diverso
@@ -2120,52 +2136,21 @@ pub async fn install_unity_autotranslator(game_path: String, game_exe_name: Stri
         _ => ("", "Solo cattura (traduci manualmente)"), // capture = nessun endpoint
     };
     
-    // Config ottimizzato per velocità massima
-    let config_content = format!(r#"[General]
-Language={}
-FromLanguage=en
-
-[Service]
-Endpoint={}
-FallbackEndpoint=
-
-[Behaviour]
-MaxCharactersPerTranslation=500
-IgnoreWhitespaceInDialogue=true
-MinDelayBetweenEndpointCalls=0.05
-MaxDelayBetweenEndpointCalls=0.1
-EnableBatching=true
-MaxBatchSize=50
-TrimAllText=true
-UseStaticTranslations=true
-OverrideFont=
-
-[TextFrameworks]
-EnableUGUI=true
-EnableTextMeshPro=true
-EnableNGUI=true
-EnableIMGUI=true
-
-[Texture]
-TextureDirectory=Translation\Textures
-EnableTextureTranslation=false
-EnableTextureDumping=false
-
-[Debug]
-EnablePrintHierarchy=false
-EnableConsole=false
-
-[Files]
-OutputFile=Translation\_AutoGeneratedTranslations.txt
-Directory=Translation
-EnableTextAssetRedirector=true
-"#, lang, endpoint);
+    let config_content = build_xunity_config(&lang, endpoint);
     fs::write(&auto_translator_config, config_content).map_err(|e| e.to_string())?;
+
+    let translation_dir = game_dir.join("BepInEx").join("Translation").join(&lang).join("Text");
+    fs::create_dir_all(&translation_dir).map_err(|e| e.to_string())?;
+    for fname in &["_AutoGeneratedTranslations.txt", "_Substitutions.txt", "_Preprocessors.txt", "_Postprocessors.txt"] {
+        let fpath = translation_dir.join(fname);
+        if !fpath.exists() { fs::write(&fpath, "").map_err(|e| e.to_string())?; }
+    }
     steps.push(format!("✓ Configurazione: lingua={}, modalità={}", lang, mode_desc));
+    steps.push(format!("✓ Struttura Translation/{}/Text/ creata", lang));
 
     Ok(PatchStatus {
         success: true,
-        message: "Patch Unity installata con successo! Avvia il gioco per completare il setup.".to_string(),
+        message: "Patch Unity installata con successo! Avvia il gioco per catturare e tradurre i testi.".to_string(),
         steps_completed: steps,
     })
 }
@@ -2221,43 +2206,16 @@ async fn install_il2cpp_patch(game_dir: &Path, lang: &str, mode: &str, is_64bit:
         _ => ("", "Solo cattura (traduci manualmente)"),
     };
     
-    let config_content = format!(r#"[General]
-Language={}
-FromLanguage=en
-
-[Service]
-Endpoint={}
-FallbackEndpoint=
-
-[Behaviour]
-MaxCharactersPerTranslation=500
-IgnoreWhitespaceInDialogue=true
-MinDelayBetweenEndpointCalls=0.05
-MaxDelayBetweenEndpointCalls=0.1
-EnableBatching=true
-MaxBatchSize=50
-TrimAllText=true
-UseStaticTranslations=true
-
-[TextFrameworks]
-EnableUGUI=true
-EnableTextMeshPro=true
-EnableNGUI=true
-EnableIMGUI=true
-
-[Debug]
-EnablePrintHierarchy=false
-EnableConsole=false
-
-[Files]
-OutputFile=Translation\_AutoGeneratedTranslations.txt
-Directory=Translation
-EnableTextAssetRedirector=true
-"#, lang, endpoint);
-
+    let config_content = build_xunity_config(&lang, endpoint);
     fs::write(&auto_translator_config, config_content).map_err(|e| e.to_string())?;
+
+    let translation_dir = game_dir.join("BepInEx").join("Translation").join(&lang).join("Text");
+    fs::create_dir_all(&translation_dir).map_err(|e| e.to_string())?;
+    for fname in &["_AutoGeneratedTranslations.txt", "_Substitutions.txt", "_Preprocessors.txt", "_Postprocessors.txt"] {
+        let fpath = translation_dir.join(fname);
+        if !fpath.exists() { fs::write(&fpath, "").map_err(|e| e.to_string())?; }
+    }
     steps.push(format!("✓ Configurazione IL2CPP: lingua={}, modalità={}", lang, mode_desc));
-    
     steps.push("⚠ NOTA: Il primo avvio potrebbe richiedere alcuni minuti per generare i file IL2CPP".to_string());
 
     Ok(PatchStatus {
@@ -2265,6 +2223,60 @@ EnableTextAssetRedirector=true
         message: "Patch Unity IL2CPP installata! Il primo avvio richiederà alcuni minuti.".to_string(),
         steps_completed: steps,
     })
+}
+
+/// Genera AutoTranslatorConfig.ini nel formato corretto (basato sul patch Blue Prince funzionante)
+fn build_xunity_config(lang: &str, endpoint: &str) -> String {
+    let template = r#"[Service]
+Endpoint=ENDPOINT
+FallbackEndpoint=
+
+[General]
+Language=LANG
+FromLanguage=en
+
+[Files]
+Directory=Translation\{Lang}\Text
+OutputFile=Translation\{Lang}\Text\_AutoGeneratedTranslations.txt
+SubstitutionFile=Translation\{Lang}\Text\_Substitutions.txt
+PreprocessorsFile=Translation\{Lang}\Text\_Preprocessors.txt
+PostprocessorsFile=Translation\{Lang}\Text\_Postprocessors.txt
+
+[TextFrameworks]
+EnableIMGUI=False
+EnableUGUI=True
+EnableNGUI=True
+EnableTextMeshPro=True
+EnableTextMesh=False
+EnableFairyGUI=True
+
+[Behaviour]
+MaxCharactersPerTranslation=2500
+IgnoreWhitespaceInDialogue=True
+MinDialogueChars=0
+ForceSplitTextAfterCharacters=0
+EnableBatching=True
+UseStaticTranslations=True
+ReloadTranslationsOnFileChange=True
+EnableSilentMode=True
+HtmlEntityPreprocessing=True
+HandleRichText=True
+OutputUntranslatableText=False
+
+[Texture]
+TextureDirectory=Translation\{Lang}\Texture
+EnableTextureTranslation=False
+EnableTextureDumping=False
+TextureHashGenerationStrategy=FromImageName
+CacheTexturesInMemory=True
+
+[Http]
+DisableCertificateValidation=True
+
+[Debug]
+EnableConsole=False
+"#;
+    template.replace("ENDPOINT", endpoint).replace("LANG", lang)
 }
 
 async fn download_and_extract(url: &str, target_dir: &Path) -> Result<(), String> {
@@ -2378,6 +2390,121 @@ pub async fn save_xunity_translation(game_path: String, original: String, new_tr
         .map_err(|e| format!("Errore salvataggio: {}", e))?;
     
     Ok(())
+}
+
+/// Legge le stringhe catturate da XUnity dal percorso corretto per la lingua specificata
+#[command]
+pub async fn read_captured_translations(game_path: String, lang: String) -> Result<Vec<TranslationEntry>, String> {
+    let base = Path::new(&game_path).join("BepInEx").join("Translation");
+    let new_path = base.join(&lang).join("Text").join("_AutoGeneratedTranslations.txt");
+    let old_path = base.join("_AutoGeneratedTranslations.txt");
+
+    let file_to_read = if new_path.exists() { new_path.clone() }
+        else if old_path.exists() { old_path }
+        else {
+            return Err(format!(
+                "File traduzioni non trovato. Avvia il gioco almeno una volta. Percorso atteso: {}",
+                new_path.display()
+            ));
+        };
+
+    let content = fs::read_to_string(&file_to_read)
+        .map_err(|e| format!("Errore lettura: {}", e))?;
+
+    let entries = content.lines().enumerate()
+        .filter(|(_, l)| { let l = l.trim(); !l.is_empty() && !l.starts_with('#') && !l.starts_with(';') && l.contains('=') })
+        .filter_map(|(i, line)| {
+            let line = line.trim();
+            line.find('=').map(|pos| TranslationEntry {
+                original: line[..pos].to_string(),
+                translated: line[pos + 1..].to_string(),
+                line_number: i + 1,
+            })
+        })
+        .filter(|e| !e.original.is_empty())
+        .collect();
+
+    Ok(entries)
+}
+
+/// Scrive il file di traduzione statica nel formato XUnity (originale=tradotto)
+/// Percorso: BepInEx/Translation/{lang}/Text/{GameName}.txt
+#[command]
+pub async fn write_translation_file(
+    game_path: String,
+    lang: String,
+    game_name: String,
+    entries: Vec<TranslationEntry>,
+) -> Result<String, String> {
+    let translation_dir = Path::new(&game_path)
+        .join("BepInEx").join("Translation").join(&lang).join("Text");
+    fs::create_dir_all(&translation_dir)
+        .map_err(|e| format!("Errore creazione cartelle: {}", e))?;
+
+    let safe_name: String = game_name.chars()
+        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '_' })
+        .collect();
+    let file_path = translation_dir.join(format!("{}.txt", safe_name));
+
+    let mut content = String::with_capacity(entries.len() * 80);
+    let mut written = 0usize;
+    for e in &entries {
+        if !e.original.is_empty() && !e.translated.is_empty() && e.original != e.translated {
+            content.push_str(&e.original);
+            content.push('=');
+            content.push_str(&e.translated);
+            content.push('\n');
+            written += 1;
+        }
+    }
+    fs::write(&file_path, &content)
+        .map_err(|e| format!("Errore scrittura: {}", e))?;
+
+    Ok(format!("{} ({} stringhe tradotte)", file_path.display(), written))
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct TranslationStatus {
+    pub bepinex_installed: bool,
+    pub translation_dir_exists: bool,
+    pub captured_strings: usize,
+    pub static_translations: usize,
+    pub auto_gen_path: String,
+    pub static_file_path: String,
+    pub has_static_file: bool,
+}
+
+/// Controlla lo stato corrente della traduzione XUnity di un gioco
+#[command]
+pub async fn get_translation_status(game_path: String, lang: String, game_name: String) -> Result<TranslationStatus, String> {
+    let base = Path::new(&game_path).join("BepInEx").join("Translation").join(&lang).join("Text");
+    let auto_gen = base.join("_AutoGeneratedTranslations.txt");
+    let safe_name: String = game_name.chars()
+        .map(|c| if c.is_alphanumeric() || c == '-' || c == '_' { c } else { '_' })
+        .collect();
+    let static_file = base.join(format!("{}.txt", safe_name));
+
+    let captured_strings = if auto_gen.exists() {
+        fs::read_to_string(&auto_gen).unwrap_or_default().lines()
+            .filter(|l| { let l = l.trim(); !l.is_empty() && !l.starts_with('#') && l.contains('=') })
+            .count()
+    } else { 0 };
+
+    let static_translations = if static_file.exists() {
+        fs::read_to_string(&static_file).unwrap_or_default().lines()
+            .filter(|l| !l.trim().is_empty() && l.contains('='))
+            .count()
+    } else { 0 };
+
+    Ok(TranslationStatus {
+        bepinex_installed: Path::new(&game_path).join("BepInEx").exists(),
+        translation_dir_exists: base.exists(),
+        captured_strings,
+        static_translations,
+        auto_gen_path: auto_gen.display().to_string(),
+        static_file_path: static_file.display().to_string(),
+        has_static_file: static_file.exists(),
+    })
 }
 
 /// Rimuove BepInEx e XUnity da un gioco Unity
@@ -2588,8 +2715,11 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
     if anti_cheat_name.is_some() {
         tips.push("⚠️ Anti-cheat rilevato: usa OCR invece di patch invasive".to_string());
     }
-    if engine_check.is_unity && !engine_check.has_xunity {
+    if engine_check.is_unity && !engine_check.is_il2cpp && !engine_check.has_xunity {
         tips.push("💡 XUnity supporta oltre 20 servizi di traduzione AI".to_string());
+    }
+    if engine_check.is_unity && engine_check.is_il2cpp {
+        tips.push("⚠️ Gioco IL2CPP: usa Unity CSV Translator (BepInEx/XUnity non compatibile)".to_string());
     }
     if has_loc_files && files_count > 5 {
         tips.push(format!("📁 {} file traducibili trovati", files_count));
@@ -2601,19 +2731,34 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
     // 7. NUOVO: Analizza TUTTI gli strumenti disponibili in GameStringer
     let mut all_tools: Vec<TranslationTool> = Vec::new();
     
-    // XUnity AutoTranslator (Unity games)
-    let xunity_available = engine_check.is_unity;
+    // XUnity AutoTranslator (Unity Mono games only — NOT compatible with IL2CPP)
+    let xunity_available = engine_check.is_unity && !engine_check.is_il2cpp;
     let xunity_reliability = if engine_check.has_xunity { 95 } else if xunity_available && anti_cheat_name.is_none() { 90 } else if xunity_available { 75 } else { 0 };
     all_tools.push(TranslationTool {
         id: "xunity".to_string(),
         name: "XUnity AutoTranslator".to_string(),
-        description: "Traduzione live per giochi Unity con BepInEx".to_string(),
+        description: if engine_check.is_il2cpp { "Non compatibile con Unity IL2CPP".to_string() } else { "Traduzione live per giochi Unity con BepInEx".to_string() },
         reliability: xunity_reliability,
         route: "/unity-patcher".to_string(),
         available: xunity_available,
-        reason: if engine_check.has_xunity { "Già installato".to_string() } 
+        reason: if engine_check.is_il2cpp { "❌ Non compatibile con IL2CPP — causa crash all'avvio".to_string() }
+                else if engine_check.has_xunity { "Già installato".to_string() } 
                 else if xunity_available { format!("Compatibile con {}", engine_check.engine_name) }
                 else { "Solo per giochi Unity".to_string() },
+    });
+    
+    // Unity CSV Translator (per giochi Unity, specialmente IL2CPP)
+    let unity_csv_available = engine_check.is_unity;
+    let unity_csv_reliability = if engine_check.is_il2cpp { 95 } else { 80 };
+    all_tools.push(TranslationTool {
+        id: "unity_csv".to_string(),
+        name: "Unity CSV Translator".to_string(),
+        description: "Injection diretta nelle tabelle CSV degli asset Unity (zero troncamento)".to_string(),
+        reliability: unity_csv_reliability,
+        route: "/unity-csv-translator".to_string(),
+        available: unity_csv_available,
+        reason: if engine_check.is_il2cpp { "✓ Metodo consigliato per IL2CPP — injection diretta in resources.assets".to_string() }
+                else { "Alternativa a BepInEx per giochi Unity".to_string() },
     });
     
     // Neural Translator Pro (file traduzione)
@@ -2880,7 +3025,41 @@ pub async fn get_translation_recommendation(game_path: String, game_name: String
     
     // 9. Determina la raccomandazione basata sull'analisi
     let recommendation = if engine_check.is_unity {
-        if engine_check.has_xunity {
+        if engine_check.is_il2cpp {
+            // Unity IL2CPP → Unity CSV Translator (BepInEx/XUnity NON compatibile)
+            TranslationRecommendation {
+                primary_method: "file_translation".to_string(),
+                method_description: "Unity CSV Translator (injection diretta in assets)".to_string(),
+                reliability: 95,
+                recommended_ai: "gemini".to_string(),
+                reason: format!("Gioco {} — BepInEx/XUnity non è compatibile con IL2CPP. Usa Unity CSV Translator per iniettare le traduzioni direttamente negli asset binari.", engine_check.engine_name),
+                alternatives: vec![
+                    AlternativeMethod {
+                        method: "ocr".to_string(),
+                        description: "OCR Translator (overlay esterno)".to_string(),
+                        reliability: 70,
+                        route: "/ocr-translator".to_string(),
+                    },
+                ],
+                has_existing_patch: false,
+                has_localization_files: has_loc_files,
+                localization_format: loc_format,
+                missing_italian,
+                action_label: "🔧 Apri Unity CSV Translator".to_string(),
+                action_route: "/unity-csv-translator".to_string(),
+                engine_name: engine_check.engine_name.clone(),
+                anti_cheat_detected: anti_cheat_name.clone(),
+                anti_cheat_warning: anti_cheat_warn.clone(),
+                translation_memory_count: tm_count,
+                community_packages_count: community_count,
+                best_community_package: best_pkg.clone(),
+                community_rating: community_avg,
+                translatable_files_count: files_count,
+                tips: tips.clone(),
+                all_tools: all_tools.clone(),
+                optimal_strategy: optimal_strategy.clone(),
+            }
+        } else if engine_check.has_xunity {
             TranslationRecommendation {
                 primary_method: "live_unity".to_string(),
                 method_description: "XUnity AutoTranslator già installato".to_string(),

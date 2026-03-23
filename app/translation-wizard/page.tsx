@@ -1110,6 +1110,24 @@ export default function TranslationWizardPage() {
   // INLINE: Unity XUnity Autotranslator
   // ============================================================
   const inlineUnityXUnity = async (gameCtx: GameContext, log: (m: string) => void) => {
+    // Check IL2CPP — BepInEx/XUnity non compatibile
+    let isIL2CPP = false;
+    try {
+      isIL2CPP = await invoke<boolean>('check_path_exists', { path: `${gameCtx.installPath}\\GameAssembly.dll` });
+    } catch {}
+    if (isIL2CPP) {
+      log('⚠️ Unity IL2CPP rilevato — BepInEx/XUnity NON è compatibile con questo gioco.');
+      log('   L\'installazione causerebbe crash all\'avvio.');
+      log('');
+      log('✅ Usa il Unity CSV Translator per tradurre questo gioco:');
+      log('   Inietta le traduzioni direttamente negli asset binari Unity.');
+      log('   Copertura completa, zero troncamento, nessuna dipendenza.');
+      sessionStorage.setItem('unityCsvGamePath', gameCtx.installPath);
+      setTranslateStatus('IL2CPP — Usa Unity CSV Translator');
+      setTranslateProgress(100);
+      return;
+    }
+
     log('🔧 Unity — Installazione BepInEx + XUnity...');
 
     // Find main exe name

@@ -1230,147 +1230,139 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
     strategyReliability >= 60 ? 'text-yellow-400' : 'text-orange-400';
 
   return (
-    <div className="rounded-lg bg-violet-500/10 border border-violet-500/20 p-2.5 backdrop-blur-md w-full">
-      {/* Header compatto */}
-      <div className="flex items-center justify-between mb-2">
-        <span className="flex items-center gap-1.5 text-[10px] font-medium text-violet-300/80 uppercase tracking-wide">
-          <Sparkles className="h-3 w-3" />
-          Raccomandazione
-        </span>
-        <div className="flex items-center gap-1">
-          {recommendation.engine_name && recommendation.engine_name !== 'Sconosciuto' && (
-            <span className="flex items-center gap-1 text-[8px] text-cyan-400/70 bg-cyan-500/10 px-1.5 py-0.5 rounded">
-              <Cpu className="h-2 w-2" />
-              {recommendation.engine_name}
-            </span>
-          )}
-          {recommendation.has_existing_patch && (
-            <span className="flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded">
-              <CheckCircle2 className="h-2.5 w-2.5" />
-              Patch
-            </span>
-          )}
+    <div className="rounded-xl bg-[#1b2838]/80 border border-[#2a475e]/50 p-3.5 backdrop-blur-md w-full space-y-3">
+      {/* ── HEADER ── */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-violet-500/15">
+            <Sparkles className="h-4 w-4 text-violet-400" />
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-[#e5e9ed]">{t('translationRecommendationComp.strategiaOttimale')}</h3>
+            <div className="flex items-center gap-2 mt-0.5">
+              {recommendation.engine_name && recommendation.engine_name !== 'Sconosciuto' && (
+                <span className="flex items-center gap-1 text-[10px] text-cyan-400/80">
+                  <Cpu className="h-3 w-3" />
+                  {recommendation.engine_name}
+                </span>
+              )}
+              {recommendation.has_existing_patch && (
+                <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Patch installata
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className={`text-sm font-bold ${reliabilityColor}`}>{strategyReliability}%</span>
+          <div className="w-20 h-1.5 bg-[#0e1419] rounded-full overflow-hidden">
+            <div className="h-full rounded-full transition-all" style={{ width: `${strategyReliability}%`, background: strategyReliability >= 80 ? 'linear-gradient(90deg, #34d399, #22d3ee)' : strategyReliability >= 60 ? 'linear-gradient(90deg, #facc15, #fb923c)' : 'linear-gradient(90deg, #fb923c, #ef4444)' }} />
+          </div>
         </div>
       </div>
 
-      {/* Anti-cheat warning */}
+      {/* ── ANTI-CHEAT WARNING ── */}
       {recommendation.anti_cheat_detected && (
-        <div className="flex items-center gap-1.5 p-1.5 bg-red-500/10 border border-red-500/20 rounded mb-2">
-          <Shield className="h-3 w-3 text-red-400 shrink-0" />
-          <span className="text-[9px] text-red-300">
-            <strong>{recommendation.anti_cheat_detected}</strong>: {recommendation.anti_cheat_warning}
-          </span>
-        </div>
-      )}
-
-      {/* STRATEGIA COMBINATA OTTIMALE */}
-      {strategy && strategy.tools.length > 0 && (
-        <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-emerald-500/15 to-cyan-500/10 border border-emerald-500/20 rounded-md mb-2">
-          <div className="p-1.5 bg-emerald-500/20 rounded text-emerald-400 shrink-0">
-            <Zap className="h-4 w-4" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-[11px] font-semibold text-emerald-100">{t('translationRecommendationComp.strategiaOttimale')}</h3>
-            <p className="text-[9px] text-emerald-300/70 truncate">{strategy.description}</p>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className="w-16 h-1.5 bg-emerald-900/50 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full" style={{ width: `${strategyReliability}%` }} />
-            </div>
-            <span className={`text-[10px] font-bold ${reliabilityColor}`}>{strategyReliability}%</span>
+        <div className="flex items-center gap-2 p-2.5 bg-red-500/10 border border-red-500/25 rounded-lg">
+          <Shield className="h-4 w-4 text-red-400 shrink-0" />
+          <div>
+            <span className="text-[11px] font-semibold text-red-300">{recommendation.anti_cheat_detected}</span>
+            <p className="text-[10px] text-red-300/60 mt-0.5">{recommendation.anti_cheat_warning}</p>
           </div>
         </div>
       )}
 
-      {/* Strumenti combinati */}
-      {strategy && strategy.tools.length > 1 && (
-        <div className="flex flex-wrap gap-1 mb-2">
-          {strategy.tools.map((tool, idx) => (
-            <button
-              key={tool.id}
-              onClick={() => handleAction(tool.route)}
-              className="text-[8px] text-cyan-300/80 bg-cyan-500/10 hover:bg-cyan-500/20 px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors border border-cyan-500/20"
-            >
-              <span className="font-medium">{idx + 1}.</span> {tool.name}
-              <span className="text-cyan-400/60">({tool.reliability}%)</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Metodo principale - compatto (fallback se no strategy) */}
-      {(!strategy || strategy.tools.length === 0) && (
-        <div className="flex items-center gap-2 p-2 bg-violet-500/10 rounded-md mb-2">
-          <div className="p-1.5 bg-violet-500/20 rounded text-violet-400 shrink-0">
-            {methodIcons[recommendation.primary_method] || <Sparkles className="h-3.5 w-3.5" />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-[11px] font-medium text-violet-100 truncate">{recommendation.method_description}</h3>
-            <p className="text-[9px] text-violet-300/50 truncate">{recommendation.reason}</p>
-          </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <div className="w-12 h-1 bg-violet-900/50 rounded-full overflow-hidden">
-              <div className="h-full bg-violet-400 rounded-full" style={{ width: `${recommendation.reliability}%` }} />
-            </div>
-            <span className={`text-[9px] font-bold ${reliabilityColor}`}>{recommendation.reliability}%</span>
-          </div>
-        </div>
-      )}
-
-      {/* Tips */}
-      {recommendation.tips && recommendation.tips.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2">
-          {recommendation.tips.slice(0, 2).map((tip, idx) => (
-            <span key={idx} className="text-[8px] text-amber-300/70 bg-amber-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-              <Lightbulb className="h-2 w-2" />
-              {tip}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* AI + Badges inline */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[9px] text-violet-400/60 bg-violet-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-            <Bot className="h-2.5 w-2.5" />
-            {aiLabels[recommendation.recommended_ai] || recommendation.recommended_ai}
-          </span>
-          {recommendation.translatable_files_count && recommendation.translatable_files_count > 0 && (
-            <span className="text-[8px] text-blue-400/70 bg-blue-500/10 px-1.5 py-0.5 rounded flex items-center gap-1">
-              <FileText className="h-2 w-2" />
-              {recommendation.translatable_files_count} file
-            </span>
-          )}
-          {recommendation.missing_italian && (
-            <span className="text-[9px] text-orange-400/80 bg-orange-500/10 px-1.5 py-0.5 rounded">
-              IT mancante
-            </span>
-          )}
-        </div>
-        
-        {/* Bottoni azione */}
-        <div className="flex items-center gap-1.5">
-          {/* PULSANTE ONE-CLICK TRANSLATION */}
-          {strategy && strategy.tools.length > 0 && strategyReliability >= 75 && !recommendation.anti_cheat_detected && (
-            <button 
-              className="text-[10px] font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 border border-emerald-500/30"
-              onClick={() => setShowConfirmDialog(true)}
-            >
-              <Wand2 className="h-3.5 w-3.5" />
-              Traduci Tutto
-            </button>
-          )}
+      {/* ── STRATEGIA PRINCIPALE ── */}
+      {strategy && strategy.tools.length > 0 ? (
+        <div className="space-y-2">
+          <p className="text-[11px] text-[#8f98a0] leading-relaxed">{strategy.description}</p>
           
-          {/* Bottone manuale */}
-          <button 
-            className="text-[10px] font-medium text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors"
-            onClick={() => handleAction(recommendation.action_route)}
-          >
-            {recommendation.action_label}
-            <ChevronRight className="h-3 w-3" />
-          </button>
+          {/* Tool cards */}
+          <div className="space-y-1.5">
+            {strategy.tools.map((tool, idx) => (
+              <button
+                key={tool.id}
+                onClick={() => handleAction(tool.route)}
+                className="w-full flex items-center gap-2.5 p-2 rounded-lg bg-[#0e1419]/60 hover:bg-[#1a2736] border border-[#2a475e]/30 hover:border-[#67c1f5]/30 transition-all text-left group"
+              >
+                <span className="flex items-center justify-center w-5 h-5 rounded-md bg-[#1a9fff]/15 text-[#67c1f5] text-[10px] font-bold shrink-0">{idx + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-[11px] font-semibold text-[#c6d4df] group-hover:text-white transition-colors">{tool.name}</span>
+                  <span className="text-[10px] text-[#8f98a0] ml-2">{tool.reason}</span>
+                </div>
+                <span className={`text-[10px] font-bold shrink-0 ${tool.reliability >= 80 ? 'text-emerald-400' : tool.reliability >= 60 ? 'text-yellow-400' : 'text-orange-400'}`}>{tool.reliability}%</span>
+                <ChevronRight className="h-3 w-3 text-[#8f98a0]/40 group-hover:text-[#67c1f5] transition-colors shrink-0" />
+              </button>
+            ))}
+          </div>
         </div>
+      ) : (
+        /* Fallback: metodo singolo */
+        <div className="flex items-center gap-3 p-2.5 bg-[#0e1419]/60 rounded-lg border border-[#2a475e]/30">
+          <div className="p-2 bg-violet-500/15 rounded-lg text-violet-400 shrink-0">
+            {methodIcons[recommendation.primary_method] || <Sparkles className="h-4 w-4" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-[11px] font-semibold text-[#c6d4df]">{recommendation.method_description}</h4>
+            <p className="text-[10px] text-[#8f98a0] mt-0.5">{recommendation.reason}</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── INFO ROW: AI + file + lingua ── */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="flex items-center gap-1.5 text-[10px] text-violet-300/70 bg-violet-500/10 px-2 py-1 rounded-md">
+          <Bot className="h-3 w-3" />
+          {aiLabels[recommendation.recommended_ai] || recommendation.recommended_ai}
+        </span>
+        {recommendation.translatable_files_count != null && recommendation.translatable_files_count > 0 && (
+          <span className="flex items-center gap-1.5 text-[10px] text-blue-300/70 bg-blue-500/10 px-2 py-1 rounded-md">
+            <FileText className="h-3 w-3" />
+            {recommendation.translatable_files_count} file
+          </span>
+        )}
+        {recommendation.missing_italian && (
+          <span className="text-[10px] text-orange-300/80 bg-orange-500/10 px-2 py-1 rounded-md">
+            IT mancante
+          </span>
+        )}
+      </div>
+
+      {/* ── TIPS ── */}
+      {recommendation.tips && recommendation.tips.length > 0 && (
+        <div className="space-y-1">
+          {recommendation.tips.slice(0, 2).map((tip, idx) => (
+            <div key={idx} className="flex items-start gap-2 text-[10px] text-amber-200/70">
+              <Lightbulb className="h-3 w-3 text-amber-400/60 shrink-0 mt-0.5" />
+              <span>{tip}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── AZIONI ── */}
+      <div className="flex items-center gap-2 pt-1 border-t border-[#2a475e]/30">
+        {/* PULSANTE ONE-CLICK TRANSLATION */}
+        {strategy && strategy.tools.length > 0 && strategyReliability >= 75 && !recommendation.anti_cheat_detected && (
+          <button 
+            className="flex-1 text-[11px] font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5 border border-emerald-500/30"
+            onClick={() => setShowConfirmDialog(true)}
+          >
+            <Wand2 className="h-4 w-4" />
+            Traduci Tutto
+          </button>
+        )}
+        
+        {/* Bottone manuale */}
+        <button 
+          className={`text-[11px] font-medium text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/25 px-4 py-2 rounded-lg flex items-center gap-1.5 transition-colors ${strategy && strategy.tools.length > 0 && strategyReliability >= 75 && !recommendation.anti_cheat_detected ? '' : 'flex-1 justify-center'}`}
+          onClick={() => handleAction(recommendation.action_route)}
+        >
+          {recommendation.action_label}
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
       </div>
 
       {/* DIALOG CONFERMA ONE-CLICK */}

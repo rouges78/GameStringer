@@ -418,9 +418,92 @@ pub async fn read_game_file(file_path: String) -> Result<String, String> {
 pub async fn scan_game_files(game_path: String) -> Result<Vec<String>, String> {
     println!("[RUST] scan_game_files called for game_path: {}", game_path);
     
-    // This would implement the logic from /api/library/scan-files
-    // For now, return a placeholder
-    Err("Not yet implemented".to_string())
+    let root = Path::new(&game_path);
+    if !root.exists() {
+        return Err(format!("Directory not found: {}", game_path));
+    }
+
+    let translatable_extensions: Vec<&str> = vec![
+        // Text / localization
+        "txt", "csv", "tsv", "json", "xml", "yaml", "yml", "ini", "cfg",
+        "po", "pot", "mo", "resx", "strings", "lang", "loc", "locres",
+        // Subtitles
+        "srt", "ass", "ssa", "sub", "vtt",
+        // Game-specific
+        "rpy", "ks", "ink", "yarn", "twee", "dlg", "dialogue",
+        // Unity assets
+        "assets",
+        // Unreal
+        "uasset", "umap",
+    ];
+
+    let skip_dirs: Vec<&str> = vec![
+        "BepInEx", "BepInEx_backup", "_gamestringer", ".git",
+        "__pycache__", "node_modules", "Mono", "MonoBleedingEdge",
+    ];
+
+    let mut found_files: Vec<String> = Vec::new();
+    scan_game_dir_recursive(root, root, &translatable_extensions, &skip_dirs, 6, 0, &mut found_files);
+
+    // Sort and deduplicate
+    found_files.sort();
+    found_files.dedup();
+
+    println!("[RUST] scan_game_files found {} translatable files", found_files.len());
+    Ok(found_files)
+}
+
+fn scan_game_dir_recursive(
+    root: &Path,
+    dir: &Path,
+    extensions: &[&str],
+    skip_dirs: &[&str],
+    max_depth: u32,
+    current_depth: u32,
+    results: &mut Vec<String>,
+) {
+    if current_depth > max_depth {
+        return;
+    }
+    let entries = match fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            let dir_name = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+            if skip_dirs.iter().any(|s| dir_name.eq_ignore_ascii_case(s)) {
+                continue;
+            }
+            // Skip Managed DLL folders (not directly translatable)
+            if dir_name == "Managed" {
+                continue;
+            }
+            scan_game_dir_recursive(root, &path, extensions, skip_dirs, max_depth, current_depth + 1, results);
+        } else if path.is_file() {
+            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                let ext_lower = ext.to_lowercase();
+                if extensions.iter().any(|e| *e == ext_lower.as_str()) {
+                    // Skip very small files (<10 bytes) and very large non-text files (>50MB)
+                    if let Ok(meta) = fs::metadata(&path) {
+                        let size = meta.len();
+                        if size < 10 {
+                            continue;
+                        }
+                        // For binary assets, only include if reasonably sized
+                        if (ext_lower == "assets" || ext_lower == "uasset" || ext_lower == "umap") && size > 50_000_000 {
+                            continue;
+                        }
+                    }
+                    // Store relative path from game root
+                    if let Ok(relative) = path.strip_prefix(root) {
+                        results.push(relative.to_string_lossy().to_string());
+                    }
+                }
+            }
+        }
+    }
 }
 
 // --- Translation Wizard Commands ---

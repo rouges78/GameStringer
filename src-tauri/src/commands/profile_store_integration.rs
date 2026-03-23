@@ -217,7 +217,7 @@ pub async fn test_store_connection_for_profile(
 
     // Carica credenziali per lo store
     match manager.load_credential_for_active_profile(store_type).await {
-        Ok(Some(credential)) => {
+        Ok(Some(_credential)) => {
             // Qui dovremmo chiamare la funzione di test specifica per ogni store
             // Per ora restituiamo sempre true se le credenziali esistono
             Ok(CredentialResponse::success(true))
@@ -232,7 +232,7 @@ pub async fn test_store_connection_for_profile(
 pub async fn migrate_existing_credentials_to_profile(
     profile_state: State<'_, ProfileManagerState>,
 ) -> Result<CredentialResponse<HashMap<String, bool>>, String> {
-    let mut manager = profile_state.manager.lock().await;
+    let manager = profile_state.manager.lock().await;
     
     if !manager.is_profile_active() {
         return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));

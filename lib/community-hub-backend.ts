@@ -81,6 +81,14 @@ export interface HubUser {
   totalContributions: number;
   verifiedTranslator: boolean;
   createdAt: string;
+  bio?: string;
+  website?: string;
+  discord?: string;
+  github?: string;
+  followersCount?: number;
+  followingCount?: number;
+  favoriteLanguage?: string;
+  country?: string;
 }
 
 export async function signInWithEmail(email: string, password: string): Promise<HubUser> {
@@ -142,6 +150,14 @@ async function fetchUserProfile(userId: string): Promise<HubUser> {
     totalContributions: data.total_contributions || 0,
     verifiedTranslator: data.verified_translator || false,
     createdAt: data.created_at,
+    bio: data.bio,
+    website: data.website,
+    discord: data.discord,
+    github: data.github,
+    followersCount: data.followers_count || 0,
+    followingCount: data.following_count || 0,
+    favoriteLanguage: data.favorite_language,
+    country: data.country,
   };
 }
 
@@ -401,6 +417,407 @@ export async function reportPack(packId: string, reason: string): Promise<void> 
     reporter_id: user?.id,
     reason,
   });
+}
+
+// ─── FOLLOWERS ────────────────────────────────────────────────────
+
+export async function followUser(targetId: string): Promise<void> {
+  const supabase = await getSupabase();
+  await supabase.rpc('follow_user', { target_id: targetId });
+}
+
+export async function unfollowUser(targetId: string): Promise<void> {
+  const supabase = await getSupabase();
+  await supabase.rpc('unfollow_user', { target_id: targetId });
+}
+
+export async function isFollowing(targetId: string): Promise<boolean> {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  if (!user) return false;
+  const { data } = await supabase.from('user_followers').select('id').eq('follower_id', user.id).eq('following_id', targetId).maybeSingle();
+  return !!data;
+}
+
+export async function getFollowers(userId: string): Promise<HubUser[]> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from('user_followers')
+    .select('follower:user_profiles!follower_id(*)')
+    .eq('following_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(`Errore followers: ${error.message}`);
+  return (data || []).map((r: any) => mapUserRow(r.follower));
+}
+
+export async function getFollowing(userId: string): Promise<HubUser[]> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from('user_followers')
+    .select('following:user_profiles!following_id(*)')
+    .eq('follower_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(`Errore following: ${error.message}`);
+  return (data || []).map((r: any) => mapUserRow(r.following));
+}
+
+function mapUserRow(row: any): HubUser {
+  return {
+    id: row.id,
+    email: row.email,
+    username: row.username,
+    avatar: row.avatar_url,
+    reputation: row.reputation || 0,
+    totalContributions: row.total_contributions || 0,
+    verifiedTranslator: row.verified_translator || false,
+    createdAt: row.created_at,
+    bio: row.bio,
+    website: row.website,
+    discord: row.discord,
+    github: row.github,
+    followersCount: row.followers_count || 0,
+    followingCount: row.following_count || 0,
+    favoriteLanguage: row.favorite_language,
+    country: row.country,
+  };
+}
+
+// ─── COMMENTS ─────────────────────────────────────────────────────
+
+export interface PackComment {
+  id: string;
+  packId: string;
+  author: { id: string; username: string; avatar?: string; verifiedTranslator: boolean };
+  parentId: string | null;
+  content: string;
+  edited: boolean;
+  likes: number;
+  likedByMe: boolean;
+  createdAt: string;
+  updatedAt: string;
+  replies?: PackComment[];
+}
+
+export async function fetchComments(packId: string): Promise<PackComment[]> {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  
+  const { data, error } = await supabase
+    .from('pack_comments')
+    .select('*, author:user_profiles!author_id(id, username, avatar_url, verified_translator)')
+    .eq('pack_id', packId)
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(`Errore commenti: ${error.message}`);
+
+  // Get user's likes
+  let myLikes = new Set<string>();
+  if (user) {
+    const { data: likes } = await supabase.from('comment_likes').select('comment_id').eq('user_id', user.id);
+    myLikes = new Set((likes || []).map((l: any) => l.comment_id));
+  }
+
+  const comments: PackComment[] = (data || []).map((row: any) => ({
+    id: row.id,
+    packId: row.pack_id,
+    author: {
+      id: row.author?.id || '',
+      username: row.author?.username || 'Unknown',
+      avatar: row.author?.avatar_url,
+      verifiedTranslator: row.author?.verified_translator || false,
+    },
+    parentId: row.parent_id,
+    content: row.content,
+    edited: row.edited || false,
+    likes: row.likes || 0,
+    likedByMe: myLikes.has(row.id),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
+
+  // Build threaded tree
+  const rootComments: PackComment[] = [];
+  const byId = new Map<string, PackComment>();
+  for (const c of comments) { c.replies = []; byId.set(c.id, c); }
+  for (const c of comments) {
+    if (c.parentId && byId.has(c.parentId)) {
+      byId.get(c.parentId)!.replies!.push(c);
+    } else {
+      rootComments.push(c);
+    }
+  }
+  return rootComments;
+}
+
+export async function postComment(packId: string, content: string, parentId?: string): Promise<PackComment> {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Devi essere autenticato');
+
+  const { data, error } = await supabase.from('pack_comments').insert({
+    pack_id: packId,
+    author_id: user.id,
+    parent_id: parentId || null,
+    content,
+  }).select('*, author:user_profiles!author_id(id, username, avatar_url, verified_translator)').single();
+
+  if (error) throw new Error(`Errore commento: ${error.message}`);
+
+  // Notify pack author
+  const { data: pack } = await supabase.from('translation_packs').select('author_id, name').eq('id', packId).single();
+  if (pack && pack.author_id !== user.id) {
+    await supabase.from('user_notifications').insert({
+      user_id: pack.author_id,
+      type: 'pack_comment',
+      title: 'Nuovo commento',
+      message: `${user.username} ha commentato su "${pack.name}"`,
+      link: `/community-hub?pack=${packId}`,
+      data: { pack_id: packId, comment_id: data.id },
+    });
+  }
+
+  return {
+    id: data.id,
+    packId: data.pack_id,
+    author: { id: data.author?.id, username: data.author?.username, avatar: data.author?.avatar_url, verifiedTranslator: data.author?.verified_translator },
+    parentId: data.parent_id,
+    content: data.content,
+    edited: false,
+    likes: 0,
+    likedByMe: false,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    replies: [],
+  };
+}
+
+export async function editComment(commentId: string, content: string): Promise<void> {
+  const supabase = await getSupabase();
+  const { error } = await supabase.from('pack_comments').update({ content, edited: true, updated_at: new Date().toISOString() }).eq('id', commentId);
+  if (error) throw new Error(`Errore modifica: ${error.message}`);
+}
+
+export async function deleteComment(commentId: string): Promise<void> {
+  const supabase = await getSupabase();
+  const { error } = await supabase.from('pack_comments').delete().eq('id', commentId);
+  if (error) throw new Error(`Errore eliminazione: ${error.message}`);
+}
+
+export async function toggleCommentLike(commentId: string): Promise<boolean> {
+  const supabase = await getSupabase();
+  const { data } = await supabase.rpc('toggle_comment_like', { target_comment_id: commentId });
+  return data as boolean;
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────
+
+export interface HubNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  link?: string;
+  read: boolean;
+  data: Record<string, any>;
+  createdAt: string;
+}
+
+export async function fetchNotifications(limit = 50): Promise<HubNotification[]> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from('user_notifications')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`Errore notifiche: ${error.message}`);
+  return (data || []).map((row: any) => ({
+    id: row.id,
+    type: row.type,
+    title: row.title,
+    message: row.message || '',
+    link: row.link,
+    read: row.read || false,
+    data: row.data || {},
+    createdAt: row.created_at,
+  }));
+}
+
+export async function getUnreadCount(): Promise<number> {
+  const supabase = await getSupabase();
+  const { count, error } = await supabase
+    .from('user_notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('read', false);
+  if (error) return 0;
+  return count || 0;
+}
+
+export async function markNotificationsRead(ids: string[]): Promise<void> {
+  const supabase = await getSupabase();
+  await supabase.rpc('mark_notifications_read', { notification_ids: ids });
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const supabase = await getSupabase();
+  const { error } = await supabase.from('user_notifications').update({ read: true }).eq('read', false);
+  if (error) throw new Error(`Errore: ${error.message}`);
+}
+
+// ─── FAVORITES ────────────────────────────────────────────────────
+
+export async function toggleFavorite(packId: string): Promise<boolean> {
+  const supabase = await getSupabase();
+  const { data } = await supabase.rpc('toggle_favorite_pack', { target_pack_id: packId });
+  return data as boolean;
+}
+
+export async function getFavorites(): Promise<TranslationPack[]> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from('user_favorites')
+    .select('pack:translation_packs!pack_id(*, author:user_profiles!author_id(*))')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(`Errore preferiti: ${error.message}`);
+  return (data || []).map((r: any) => mapPackRow(r.pack));
+}
+
+export async function isFavorite(packId: string): Promise<boolean> {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  if (!user) return false;
+  const { data } = await supabase.from('user_favorites').select('pack_id').eq('user_id', user.id).eq('pack_id', packId).maybeSingle();
+  return !!data;
+}
+
+// ─── BADGES ───────────────────────────────────────────────────────
+
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: string;
+}
+
+export interface BadgeAward {
+  badge: Badge;
+  awardedAt: string;
+}
+
+export async function getAllBadges(): Promise<Badge[]> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from('user_badges').select('*').order('category');
+  if (error) throw new Error(`Errore badges: ${error.message}`);
+  return (data || []).map((r: any) => ({
+    id: r.id, name: r.name, description: r.description, icon: r.icon, color: r.color, category: r.category,
+  }));
+}
+
+export async function getUserBadges(userId: string): Promise<BadgeAward[]> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from('user_badge_awards')
+    .select('*, badge:user_badges!badge_id(*)')
+    .eq('user_id', userId)
+    .order('awarded_at', { ascending: false });
+  if (error) throw new Error(`Errore badge utente: ${error.message}`);
+  return (data || []).map((r: any) => ({
+    badge: { id: r.badge.id, name: r.badge.name, description: r.badge.description, icon: r.badge.icon, color: r.badge.color, category: r.badge.category },
+    awardedAt: r.awarded_at,
+  }));
+}
+
+export async function checkBadges(): Promise<string[]> {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  if (!user) return [];
+  const { data } = await supabase.rpc('check_and_award_badges', { target_user_id: user.id });
+  return (data as string[]) || [];
+}
+
+// ─── LEADERBOARD ──────────────────────────────────────────────────
+
+export interface LeaderboardEntry {
+  id: string;
+  username: string;
+  avatar?: string;
+  reputation: number;
+  totalContributions: number;
+  verifiedTranslator: boolean;
+  followersCount: number;
+  country?: string;
+  totalDownloads: number;
+  publishedPacks: number;
+  avgRating: number;
+  badgeCount: number;
+  score: number;
+}
+
+export async function fetchLeaderboard(limit = 50): Promise<LeaderboardEntry[]> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase.from('leaderboard').select('*').limit(limit);
+  if (error) throw new Error(`Errore leaderboard: ${error.message}`);
+  return (data || []).map((r: any) => ({
+    id: r.id,
+    username: r.username,
+    avatar: r.avatar_url,
+    reputation: r.reputation || 0,
+    totalContributions: r.total_contributions || 0,
+    verifiedTranslator: r.verified_translator || false,
+    followersCount: r.followers_count || 0,
+    country: r.country,
+    totalDownloads: Number(r.total_downloads) || 0,
+    publishedPacks: Number(r.published_packs) || 0,
+    avgRating: Number(r.avg_rating) || 0,
+    badgeCount: Number(r.badge_count) || 0,
+    score: Number(r.score) || 0,
+  }));
+}
+
+// ─── USER PROFILE (extended) ──────────────────────────────────────
+
+export async function updateProfile(updates: {
+  username?: string;
+  bio?: string;
+  website?: string;
+  discord?: string;
+  github?: string;
+  favoriteLanguage?: string;
+  country?: string;
+}): Promise<void> {
+  const supabase = await getSupabase();
+  const user = await getCurrentUser();
+  if (!user) throw new Error('Non autenticato');
+  const { error } = await supabase.from('user_profiles').update({
+    username: updates.username,
+    bio: updates.bio,
+    website: updates.website,
+    discord: updates.discord,
+    github: updates.github,
+    favorite_language: updates.favoriteLanguage,
+    country: updates.country,
+  }).eq('id', user.id);
+  if (error) throw new Error(`Errore aggiornamento profilo: ${error.message}`);
+}
+
+export async function getFullProfile(userId: string): Promise<HubUser & { badges: BadgeAward[]; packs: TranslationPack[]; favorites: number }> {
+  const supabase = await getSupabase();
+  
+  const [profileRes, badgesRes, packsRes, favsRes] = await Promise.all([
+    supabase.from('user_profiles').select('*').eq('id', userId).single(),
+    getUserBadges(userId),
+    supabase.from('translation_packs').select('*, author:user_profiles!author_id(*)').eq('author_id', userId).in('status', ['published', 'verified', 'featured']).order('downloads', { ascending: false }),
+    supabase.from('user_favorites').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+  ]);
+
+  if (profileRes.error || !profileRes.data) throw new Error('Profilo non trovato');
+
+  return {
+    ...mapUserRow(profileRes.data),
+    badges: badgesRes,
+    packs: (packsRes.data || []).map(mapPackRow),
+    favorites: favsRes.count || 0,
+  };
 }
 
 // ─── STATS ───────────────────────────────────────────────────────
@@ -670,18 +1087,259 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- User Followers
+CREATE TABLE IF NOT EXISTS user_followers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  follower_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  following_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(follower_id, following_id),
+  CHECK(follower_id != following_id)
+);
+
+-- User Badges
+CREATE TABLE IF NOT EXISTS user_badges (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  icon TEXT DEFAULT '',
+  color TEXT DEFAULT '#a855f7',
+  category TEXT DEFAULT 'general' CHECK (category IN ('general','contribution','quality','community','special')),
+  requirement_type TEXT CHECK (requirement_type IN ('packs_published','downloads_total','reviews_given','reputation','verified_packs','followers','manual')),
+  requirement_value INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Badge Awards
+CREATE TABLE IF NOT EXISTS user_badge_awards (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  badge_id TEXT NOT NULL REFERENCES user_badges(id) ON DELETE CASCADE,
+  awarded_at TIMESTAMPTZ DEFAULT NOW(),
+  awarded_by UUID REFERENCES user_profiles(id),
+  UNIQUE(user_id, badge_id)
+);
+
+-- Pack Comments (threaded)
+CREATE TABLE IF NOT EXISTS pack_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  pack_id UUID NOT NULL REFERENCES translation_packs(id) ON DELETE CASCADE,
+  author_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  parent_id UUID REFERENCES pack_comments(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  edited BOOLEAN DEFAULT FALSE,
+  likes INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Comment Likes (prevent duplicate likes)
+CREATE TABLE IF NOT EXISTS comment_likes (
+  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  comment_id UUID NOT NULL REFERENCES pack_comments(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY(user_id, comment_id)
+);
+
+-- User Notifications
+CREATE TABLE IF NOT EXISTS user_notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('new_follower','pack_review','pack_comment','pack_downloaded','badge_earned','pack_featured','pack_verified','system')),
+  title TEXT NOT NULL,
+  message TEXT DEFAULT '',
+  link TEXT,
+  read BOOLEAN DEFAULT FALSE,
+  data JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- User Favorites (bookmarked packs)
+CREATE TABLE IF NOT EXISTS user_favorites (
+  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  pack_id UUID NOT NULL REFERENCES translation_packs(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY(user_id, pack_id)
+);
+
+-- Extend user_profiles with bio, social links, follower counts
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS bio TEXT DEFAULT '';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS website TEXT DEFAULT '';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS discord TEXT DEFAULT '';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS github TEXT DEFAULT '';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS followers_count INTEGER DEFAULT 0;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS following_count INTEGER DEFAULT 0;
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS favorite_language TEXT DEFAULT '';
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS country TEXT DEFAULT '';
+
+-- Default badges
+INSERT INTO user_badges (id, name, description, icon, color, category, requirement_type, requirement_value) VALUES
+  ('first_pack',      'Prima Traduzione',    'Hai pubblicato il tuo primo pack',             '🎉', '#22c55e', 'contribution', 'packs_published', 1),
+  ('prolific',        'Traduttore Prolifico','10 pack pubblicati',                            '📚', '#3b82f6', 'contribution', 'packs_published', 10),
+  ('master',          'Maestro Traduttore',  '50 pack pubblicati',                            '👑', '#f59e0b', 'contribution', 'packs_published', 50),
+  ('popular',         'Popolare',            '100 download totali sui tuoi pack',              '🔥', '#ef4444', 'quality',      'downloads_total', 100),
+  ('viral',           'Virale',              '1000 download totali sui tuoi pack',             '🚀', '#a855f7', 'quality',      'downloads_total', 1000),
+  ('reviewer',        'Critico',             'Hai scritto 10 recensioni',                      '✍️', '#06b6d4', 'community',    'reviews_given', 10),
+  ('trusted',         'Verificato',          'Hai almeno 5 pack verificati',                   '✅', '#10b981', 'quality',      'verified_packs', 5),
+  ('influencer',      'Influencer',          '50 follower',                                    '⭐', '#f97316', 'community',    'followers', 50),
+  ('early_adopter',   'Early Adopter',       'Tra i primi 100 utenti registrati',              '🏅', '#8b5cf6', 'special',      'manual', 0),
+  ('community_hero',  'Eroe della Community','Contributo eccezionale alla community',          '🦸', '#ec4899', 'special',      'manual', 0)
+ON CONFLICT (id) DO NOTHING;
+
+-- RPC: Follow/Unfollow
+CREATE OR REPLACE FUNCTION follow_user(target_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO user_followers (follower_id, following_id) VALUES (auth.uid(), target_id) ON CONFLICT DO NOTHING;
+  UPDATE user_profiles SET followers_count = followers_count + 1 WHERE id = target_id;
+  UPDATE user_profiles SET following_count = following_count + 1 WHERE id = auth.uid();
+  -- Notification
+  INSERT INTO user_notifications (user_id, type, title, message, data)
+  VALUES (target_id, 'new_follower', 'Nuovo follower!',
+    (SELECT username FROM user_profiles WHERE id = auth.uid()) || ' ha iniziato a seguirti',
+    jsonb_build_object('follower_id', auth.uid()));
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION unfollow_user(target_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  DELETE FROM user_followers WHERE follower_id = auth.uid() AND following_id = target_id;
+  UPDATE user_profiles SET followers_count = GREATEST(followers_count - 1, 0) WHERE id = target_id;
+  UPDATE user_profiles SET following_count = GREATEST(following_count - 1, 0) WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RPC: Toggle comment like
+CREATE OR REPLACE FUNCTION toggle_comment_like(target_comment_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  already_liked BOOLEAN;
+BEGIN
+  SELECT EXISTS(SELECT 1 FROM comment_likes WHERE user_id = auth.uid() AND comment_id = target_comment_id) INTO already_liked;
+  IF already_liked THEN
+    DELETE FROM comment_likes WHERE user_id = auth.uid() AND comment_id = target_comment_id;
+    UPDATE pack_comments SET likes = GREATEST(likes - 1, 0) WHERE id = target_comment_id;
+    RETURN FALSE;
+  ELSE
+    INSERT INTO comment_likes (user_id, comment_id) VALUES (auth.uid(), target_comment_id);
+    UPDATE pack_comments SET likes = likes + 1 WHERE id = target_comment_id;
+    RETURN TRUE;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RPC: Toggle favorite pack
+CREATE OR REPLACE FUNCTION toggle_favorite_pack(target_pack_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  already_fav BOOLEAN;
+BEGIN
+  SELECT EXISTS(SELECT 1 FROM user_favorites WHERE user_id = auth.uid() AND pack_id = target_pack_id) INTO already_fav;
+  IF already_fav THEN
+    DELETE FROM user_favorites WHERE user_id = auth.uid() AND pack_id = target_pack_id;
+    RETURN FALSE;
+  ELSE
+    INSERT INTO user_favorites (user_id, pack_id) VALUES (auth.uid(), target_pack_id);
+    RETURN TRUE;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RPC: Mark notifications as read
+CREATE OR REPLACE FUNCTION mark_notifications_read(notification_ids UUID[])
+RETURNS VOID AS $$
+  UPDATE user_notifications SET read = TRUE WHERE id = ANY(notification_ids) AND user_id = auth.uid();
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- RPC: Check and award badges automatically
+CREATE OR REPLACE FUNCTION check_and_award_badges(target_user_id UUID)
+RETURNS TEXT[] AS $$
+DECLARE
+  badge RECORD;
+  awarded TEXT[] := '{}';
+  val INTEGER;
+BEGIN
+  FOR badge IN SELECT * FROM user_badges WHERE requirement_type != 'manual' LOOP
+    -- Skip if already awarded
+    IF EXISTS(SELECT 1 FROM user_badge_awards WHERE user_id = target_user_id AND badge_id = badge.id) THEN
+      CONTINUE;
+    END IF;
+
+    -- Calculate value based on requirement type
+    CASE badge.requirement_type
+      WHEN 'packs_published' THEN
+        SELECT COUNT(*) INTO val FROM translation_packs WHERE author_id = target_user_id AND status IN ('published','verified','featured');
+      WHEN 'downloads_total' THEN
+        SELECT COALESCE(SUM(downloads), 0) INTO val FROM translation_packs WHERE author_id = target_user_id;
+      WHEN 'reviews_given' THEN
+        SELECT COUNT(*) INTO val FROM pack_reviews WHERE author_id = target_user_id;
+      WHEN 'reputation' THEN
+        SELECT reputation INTO val FROM user_profiles WHERE id = target_user_id;
+      WHEN 'verified_packs' THEN
+        SELECT COUNT(*) INTO val FROM translation_packs WHERE author_id = target_user_id AND status = 'verified';
+      WHEN 'followers' THEN
+        SELECT followers_count INTO val FROM user_profiles WHERE id = target_user_id;
+      ELSE
+        CONTINUE;
+    END CASE;
+
+    IF val >= badge.requirement_value THEN
+      INSERT INTO user_badge_awards (user_id, badge_id) VALUES (target_user_id, badge.id) ON CONFLICT DO NOTHING;
+      awarded := awarded || badge.id;
+      -- Notification
+      INSERT INTO user_notifications (user_id, type, title, message, data)
+      VALUES (target_user_id, 'badge_earned', 'Badge sbloccato!',
+        badge.icon || ' ' || badge.name || ' — ' || badge.description,
+        jsonb_build_object('badge_id', badge.id));
+    END IF;
+  END LOOP;
+  RETURN awarded;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Leaderboard View
+CREATE OR REPLACE VIEW leaderboard AS
+SELECT
+  up.id,
+  up.username,
+  up.avatar_url,
+  up.reputation,
+  up.total_contributions,
+  up.verified_translator,
+  up.followers_count,
+  up.country,
+  COALESCE(SUM(tp.downloads), 0) AS total_downloads,
+  COUNT(DISTINCT tp.id) FILTER (WHERE tp.status IN ('published','verified','featured')) AS published_packs,
+  COALESCE(AVG(tp.rating) FILTER (WHERE tp.rating > 0), 0) AS avg_rating,
+  (SELECT COUNT(*) FROM user_badge_awards uba WHERE uba.user_id = up.id) AS badge_count,
+  -- Score: reputation + downloads/10 + packs*50 + followers*5
+  (up.reputation + COALESCE(SUM(tp.downloads), 0) / 10 + COUNT(DISTINCT tp.id) FILTER (WHERE tp.status IN ('published','verified','featured')) * 50 + up.followers_count * 5) AS score
+FROM user_profiles up
+LEFT JOIN translation_packs tp ON tp.author_id = up.id
+GROUP BY up.id, up.username, up.avatar_url, up.reputation, up.total_contributions, up.verified_translator, up.followers_count, up.country
+ORDER BY score DESC;
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_packs_game_id ON translation_packs(game_id);
 CREATE INDEX IF NOT EXISTS idx_packs_target_language ON translation_packs(target_language);
 CREATE INDEX IF NOT EXISTS idx_packs_status ON translation_packs(status);
 CREATE INDEX IF NOT EXISTS idx_packs_downloads ON translation_packs(downloads DESC);
 CREATE INDEX IF NOT EXISTS idx_packs_rating ON translation_packs(rating DESC);
+CREATE INDEX IF NOT EXISTS idx_packs_author ON translation_packs(author_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_pack_id ON pack_reviews(pack_id);
+CREATE INDEX IF NOT EXISTS idx_comments_pack_id ON pack_comments(pack_id);
+CREATE INDEX IF NOT EXISTS idx_comments_parent ON pack_comments(parent_id);
+CREATE INDEX IF NOT EXISTS idx_followers_follower ON user_followers(follower_id);
+CREATE INDEX IF NOT EXISTS idx_followers_following ON user_followers(following_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON user_notifications(user_id, read);
+CREATE INDEX IF NOT EXISTS idx_favorites_user ON user_favorites(user_id);
+CREATE INDEX IF NOT EXISTS idx_badge_awards_user ON user_badge_awards(user_id);
 
 -- Storage bucket
 INSERT INTO storage.buckets (id, name, public) VALUES ('translation-packs', 'translation-packs', true) ON CONFLICT DO NOTHING;
 
--- RLS Policies
+-- RLS Policies (existing tables)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE translation_packs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pack_files ENABLE ROW LEVEL SECURITY;
@@ -703,4 +1361,33 @@ CREATE POLICY "Authors manage pack files" ON pack_files FOR ALL USING (
 CREATE POLICY "Public read reviews" ON pack_reviews FOR SELECT USING (true);
 CREATE POLICY "Authenticated users create reviews" ON pack_reviews FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "Authors update own reviews" ON pack_reviews FOR UPDATE USING (author_id = auth.uid());
+
+-- RLS Policies (new tables)
+ALTER TABLE user_followers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_badges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_badge_awards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pack_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comment_likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read followers" ON user_followers FOR SELECT USING (true);
+CREATE POLICY "Users manage own follows" ON user_followers FOR ALL USING (follower_id = auth.uid());
+
+CREATE POLICY "Public read badges" ON user_badges FOR SELECT USING (true);
+CREATE POLICY "Public read badge awards" ON user_badge_awards FOR SELECT USING (true);
+
+CREATE POLICY "Public read comments" ON pack_comments FOR SELECT USING (true);
+CREATE POLICY "Authenticated users create comments" ON pack_comments FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Authors edit own comments" ON pack_comments FOR UPDATE USING (author_id = auth.uid());
+CREATE POLICY "Authors delete own comments" ON pack_comments FOR DELETE USING (author_id = auth.uid());
+
+CREATE POLICY "Public read comment likes" ON comment_likes FOR SELECT USING (true);
+CREATE POLICY "Users manage own likes" ON comment_likes FOR ALL USING (user_id = auth.uid());
+
+CREATE POLICY "Users read own notifications" ON user_notifications FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users update own notifications" ON user_notifications FOR UPDATE USING (user_id = auth.uid());
+
+CREATE POLICY "Public read favorites" ON user_favorites FOR SELECT USING (true);
+CREATE POLICY "Users manage own favorites" ON user_favorites FOR ALL USING (user_id = auth.uid());
 `;

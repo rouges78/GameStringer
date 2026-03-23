@@ -44,22 +44,22 @@ pub async fn launch_steam_game(app_id: String) -> Result<LaunchResult, String> {
         });
     }
 
-    // Metodo 1: Esecuzione diretta Steam (più affidabile)
-    match launch_steam_direct(&app_id).await {
-        Ok(result) => {
-            info!("✅ Gioco Steam {} avviato con successo via steam.exe -applaunch", app_id);
-            return Ok(result);
-        }
-        Err(e) => {
-            warn!("⚠️ Fallimento esecuzione diretta Steam per {}: {}", app_id, e);
-        }
-    }
-
-    // Metodo 2: Fallback - Protocollo Steam
+    // Metodo 1: Protocollo Steam (più affidabile — apre il gioco tramite Steam client)
     let steam_url = format!("steam://rungameid/{}", app_id);
     match launch_with_steam_protocol(&steam_url, &app_id).await {
         Ok(result) => {
-            info!("✅ Gioco Steam {} avviato con successo via protocollo", app_id);
+            info!("✅ Gioco Steam {} avviato con successo via protocollo steam://", app_id);
+            return Ok(result);
+        }
+        Err(e) => {
+            warn!("⚠️ Fallimento protocollo Steam per {}: {}", app_id, e);
+        }
+    }
+
+    // Metodo 2: Fallback - Esecuzione diretta steam.exe -applaunch
+    match launch_steam_direct(&app_id).await {
+        Ok(result) => {
+            info!("✅ Gioco Steam {} avviato con successo via steam.exe -applaunch", app_id);
             Ok(result)
         }
         Err(e) => {

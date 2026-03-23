@@ -14,21 +14,21 @@ export default function CommunityHubPage() {
   const gameName = searchParams.get('gameName') ? decodeURIComponent(searchParams.get('gameName')!) : undefined;
   
   return (
-    <div className="container mx-auto p-4 space-y-3">
-      {/* Compact Hero Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 p-3 text-white">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+    <div className="h-full overflow-y-auto custom-scrollbar p-4 space-y-3" style={{ background: 'linear-gradient(180deg, #1b2838 0%, #171d25 40%, #0e1419 100%)' }}>
+      {/* Compact Hero Header — Steam style */}
+      <div className="relative overflow-hidden rounded-sm bg-[#1b2838]/80 border border-[#2a475e]/30 p-3">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#1a9fff]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-black/30 rounded-lg border border-white/10">
-              <Globe className="h-5 w-5 text-white" />
+            <div className="p-2 bg-[#1a9fff]/10 rounded-sm border border-[#1a9fff]/20">
+              <Globe className="h-5 w-5 text-[#67c1f5]" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-white">
+              <h1 className="text-base font-bold text-[#c6d4df]">
                 {t('communityHub.title')}
               </h1>
-              <p className="text-white/60 text-[10px]">
+              <p className="text-[#8f98a0] text-[10px]">
                 {t('communityHub.subtitle')}
               </p>
             </div>

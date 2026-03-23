@@ -25,6 +25,7 @@ pub mod utilities;
 pub mod patches;
 pub mod dlc_manager;
 pub mod profile_credentials;
+#[allow(dead_code)]
 pub mod profile_store_integration;
 pub mod profiles;
 pub mod profile_settings;
@@ -59,6 +60,7 @@ pub mod audio_patcher;
 pub mod offline_translation;
 pub mod ollama_manager;
 pub mod system_monitor;
+pub mod gspack;
 #[allow(dead_code, unused_imports)]
 pub mod notifications;
 
@@ -90,6 +92,18 @@ pub mod screen_capture;
 pub mod universal_injector;
 // Auto-Hook Scanner (cross-platform, con stubs per non-Windows)
 pub mod auto_hook;
+// Unity .assets file manager (UABEA integration)
+pub mod unity_assets;
+// Game update tracker (Steam buildid + patch integrity)
+pub mod game_update_tracker;
+// GameTranslator.it community integration
+pub mod gamestranslator_integration;
+// repak wrapper (PAK creation via repak binary)
+pub mod repak_wrapper;
+// RSS proxy (bypass CORS per feed news)
+pub mod rss_proxy;
+// Godot Engine PCK patcher
+pub mod godot_patcher;
 
 // === Linux stubs for Windows-only modules ===
 #[cfg(not(windows))]

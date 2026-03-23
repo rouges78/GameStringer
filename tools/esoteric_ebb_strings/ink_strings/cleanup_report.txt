@@ -1,0 +1,20 @@
+===============================================
+  PULIZIA ARTEFATTI AI - Esoteric Ebb (Ink)
+===============================================
+
+Totale entries analizzate:   4547
+Entries con artefatti:       2834
+
+RISULTATO PULIZIA:
+  Gia pulite (invariate):    1701
+  Pulite con successo:       727
+  Irrecuperabili (garbage):  2119
+
+Traduzioni salvate:  2428
+Da ri-tradurre:      2119
+
+File generati:
+  -> translate_progress_cleaned.json
+  -> needs_retranslation.json
+  -> cleanup_report.txt
+===============================================

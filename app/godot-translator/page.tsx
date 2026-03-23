@@ -254,7 +254,7 @@ export default function GodotTranslatorPage() {
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-700 via-indigo-600 to-violet-600 p-3">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-700 via-teal-600 to-cyan-600 p-3">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
         <div className="relative flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -286,13 +286,13 @@ export default function GodotTranslatorPage() {
       {/* Step 1: Select */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-bold">1</div>
+          <div className="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-bold">1</div>
           <h2 className="text-base font-bold text-white">Seleziona progetto Godot</h2>
         </div>
         <div className="flex gap-2 items-center">
           <Button onClick={browse} variant="outline" className="gap-2"><FolderOpen className="h-4 w-4" />Sfoglia</Button>
           <div className="flex-1 px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700 text-sm text-slate-300 truncate">{projectPath || 'Nessuna cartella selezionata'}</div>
-          <Button onClick={doScan} disabled={!projectPath || status === 'scanning'} className="gap-2 bg-indigo-600 hover:bg-indigo-500">
+          <Button onClick={doScan} disabled={!projectPath || status === 'scanning'} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
             {status === 'scanning' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}Scansiona
           </Button>
         </div>
@@ -381,17 +381,17 @@ export default function GodotTranslatorPage() {
           {status === 'translating' && (
             <div className="mb-3">
               <div className="flex items-center gap-2 mb-1">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-400" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-400" />
                 <span className="text-xs text-slate-300">{prog.file}: {prog.cur}/{prog.tot} ({pct}%)</span>
               </div>
               <div className="h-2 rounded-full bg-slate-700 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-400 transition-all" style={{ width: `${pct}%` }} />
+                <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all" style={{ width: `${pct}%` }} />
               </div>
             </div>
           )}
           <div className="flex gap-2">
             {status !== 'translating' ? (
-              <Button onClick={doTranslate} disabled={!models.length} className="gap-2 bg-indigo-600 hover:bg-indigo-500">
+              <Button onClick={doTranslate} disabled={!models.length} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
                 <Globe className="h-4 w-4" />Traduci ({totalStrings - totalDone})
               </Button>
             ) : (

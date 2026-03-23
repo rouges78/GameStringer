@@ -102,11 +102,30 @@ export function OllamaManager() {
         setRecommendedModels(models);
       } else {
         setRecommendedModels([
-          { name: 'huihui_ai/hy-mt1.5-abliterated:7b', size: '~4.5 GB', description: '⭐ Tencent HY-MT 1.5 7B — #1 WMT25, batte Google Translate in 30/31 lingue' },
-          { name: 'huihui_ai/hy-mt1.5-abliterated:1.8b', size: '~1.2 GB', description: 'Tencent HY-MT 1.5 1.8B — Versione leggera e velocissima' },
-          { name: 'translategemma:12b', size: '~8.0 GB', description: 'Google TranslateGemma 12B — 55 lingue, qualità alta' },
-          { name: 'translategemma:2b', size: '~1.5 GB', description: 'Google TranslateGemma 2B — 55 lingue, veloce e leggero' },
-          { name: 'qwen3:4b', size: '~2.5 GB', description: 'Alibaba Qwen 3 4B — General purpose, buono per traduzione' },
+          // Traduzione specializzata
+          { name: 'huihui_ai/hy-mt1.5-abliterated:7b', size: '~4.5 GB', description: '⭐ Tencent HY-MT 1.5 7B — #1 WMT25, batte Google Translate in 30/31 lingue. Senza censura.' },
+          { name: 'huihui_ai/hy-mt1.5-abliterated:1.8b', size: '~1.2 GB', description: 'Tencent HY-MT 1.5 1.8B — Ultra-leggera e velocissima. Ideale per batch massicci.' },
+          { name: 'translategemma:12b', size: '~8.0 GB', description: 'Google TranslateGemma 12B — 55 lingue, qualità alta.' },
+          { name: 'translategemma:2b', size: '~1.5 GB', description: 'Google TranslateGemma 2B — 55 lingue, veloce e leggero.' },
+          // MoE ultra-veloci (Marzo 2026)
+          { name: 'qwen3.5:35b-a3b', size: '~4.5 GB', description: '🚀 Qwen 3.5 35B-A3B (MoE) — 35B parametri, attiva solo 3B. Qualità top!' },
+          { name: 'lfm2:24b', size: '~3.5 GB', description: '🚀 LFM2 24B-A2B (MoE) — Liquid AI, attiva solo 2B. Velocissimo su 8GB RAM!' },
+          // Multilingue general purpose
+          { name: 'glm4:8b', size: '~5.0 GB', description: '🆕 GLM-4.7 Flash 8B — Zhipu AI, tuttofare veloce.' },
+          { name: 'qwen3:8b', size: '~5.2 GB', description: 'Alibaba Qwen3 8B — Top multilingue, eccellente su CJK e europee.' },
+          { name: 'qwen3:4b', size: '~2.6 GB', description: 'Alibaba Qwen3 4B — Compatto, buon rapporto qualità/velocità.' },
+          { name: 'gemma3:12b', size: '~8.1 GB', description: 'Google Gemma 3 12B — Prosa pulita, 128K context.' },
+          { name: 'gemma3:4b', size: '~2.8 GB', description: 'Google Gemma 3 4B — Leggera, gira su 8GB RAM.' },
+          // Reasoning
+          { name: 'deepseek-r1:14b', size: '~9.0 GB', description: 'DeepSeek R1 14B — Chain-of-thought, ragionamento complesso.' },
+          { name: 'deepseek-r1:7b', size: '~4.7 GB', description: 'DeepSeek R1 7B — Chain-of-thought leggero, gira su 8GB.' },
+          { name: 'phi4:14b', size: '~8.5 GB', description: 'Microsoft Phi-4 14B — Miglior ragionamento per GB.' },
+          { name: 'phi4-mini', size: '~2.4 GB', description: 'Microsoft Phi-4 Mini 3.8B — Ultra-leggero.' },
+          // Grandi
+          { name: 'llama3.3:8b', size: '~5.0 GB', description: 'Meta Llama 3.3 8B — Miglior all-rounder classe 8B.' },
+          { name: 'mistral-small3.1:24b', size: '~14 GB', description: 'Mistral Small 3.1 24B — Il più veloce (~50 tok/s).' },
+          { name: 'deepseek-r1:32b', size: '~19 GB', description: 'DeepSeek R1 32B — Ragionamento top. Richiede 24GB+ VRAM.' },
+          { name: 'llama3.3:70b', size: '~40 GB', description: 'Meta Llama 3.3 70B — Top assoluto. Richiede 48GB+ VRAM.' },
         ]);
       }
     } catch (error) {

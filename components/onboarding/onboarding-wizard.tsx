@@ -16,10 +16,13 @@ import {
   Users,
   Cpu,
   Download,
-  Image as ImageIcon,
   Scan,
   Wand2,
-  X
+  X,
+  FileText,
+  Workflow,
+  ScanEye,
+  Layers
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -47,7 +50,7 @@ interface OnboardingStep {
 }
 
 const ONBOARDING_KEY = 'gamestringer_onboarding_completed';
-const ONBOARDING_VERSION = '2';
+const ONBOARDING_VERSION = '3';
 const TUTORIAL_KEY = 'gamestringer-tutorial-completed'; // Chiave condivisa con InteractiveTutorial
 
 export function OnboardingWizard() {
@@ -71,6 +74,17 @@ export function OnboardingWizard() {
     
     const completed = localStorage.getItem(ONBOARDING_KEY);
     if (completed !== ONBOARDING_VERSION) {
+      // Non mostrare se i Terms of Use non sono ancora stati accettati
+      const tosAccepted = localStorage.getItem('gamestringer_tos_accepted');
+      if (!tosAccepted) {
+        const retryInterval = setInterval(() => {
+          if (localStorage.getItem('gamestringer_tos_accepted')) {
+            clearInterval(retryInterval);
+            setTimeout(() => setIsOpen(true), 500);
+          }
+        }, 500);
+        return;
+      }
       setIsOpen(true);
     }
   };
@@ -198,13 +212,13 @@ export function OnboardingWizard() {
           <div className="space-y-2">
             {[
               { icon: Sparkles, name: t('onboarding.tools.aiTranslator'), desc: t('onboarding.tools.aiTranslatorDesc'), color: 'text-purple-500' },
-              { icon: Brain, name: t('onboarding.tools.multiLlm'), desc: t('onboarding.tools.multiLlmDesc'), color: 'text-indigo-500' },
-              { icon: Scan, name: t('onboarding.tools.ocrTranslator'), desc: t('onboarding.tools.ocrTranslatorDesc'), color: 'text-blue-500' },
-              { icon: Wand2, name: t('onboarding.tools.unityPatcher'), desc: t('onboarding.tools.unityPatcherDesc'), color: 'text-green-500' },
-              { icon: Cpu, name: t('onboarding.tools.ueTranslator'), desc: t('onboarding.tools.ueTranslatorDesc'), color: 'text-cyan-500' },
-              { icon: Gamepad2, name: t('onboarding.tools.telltalePatcher'), desc: t('onboarding.tools.telltalePatcherDesc'), color: 'text-amber-500' },
-              { icon: Download, name: t('onboarding.tools.nexusMods'), desc: t('onboarding.tools.nexusModsDesc'), color: 'text-orange-500' },
-              { icon: ImageIcon, name: t('onboarding.tools.visualEditor'), desc: t('onboarding.tools.visualEditorDesc'), color: 'text-pink-500' },
+              { icon: Workflow, name: t('onboarding.tools.aiPipeline'), desc: t('onboarding.tools.aiPipelineDesc'), color: 'text-pink-500' },
+              { icon: FileText, name: t('onboarding.tools.unityCsvTranslator'), desc: t('onboarding.tools.unityCsvTranslatorDesc'), color: 'text-green-500' },
+              { icon: ScanEye, name: t('onboarding.tools.ocrMultiEngine'), desc: t('onboarding.tools.ocrMultiEngineDesc'), color: 'text-cyan-500' },
+              { icon: Wand2, name: t('onboarding.tools.unityPatcher'), desc: t('onboarding.tools.unityPatcherDesc'), color: 'text-emerald-500' },
+              { icon: Cpu, name: t('onboarding.tools.ueTranslator'), desc: t('onboarding.tools.ueTranslatorDesc'), color: 'text-blue-500' },
+              { icon: Layers, name: t('onboarding.tools.batchOffline'), desc: t('onboarding.tools.batchOfflineDesc'), color: 'text-amber-500' },
+              { icon: Gamepad2, name: t('onboarding.tools.danganronpaPatcher'), desc: t('onboarding.tools.danganronpaPatcherDesc'), color: 'text-orange-500' },
             ].map(tool => (
               <div key={tool.name} className="flex items-center gap-3 p-2 bg-muted/30 rounded-lg">
                 <tool.icon className={cn("h-4 w-4", tool.color)} />
@@ -252,7 +266,7 @@ export function OnboardingWizard() {
           <div className="space-y-3">
             <p className="text-sm font-medium">{t('onboarding.ai.supportedProviders')}</p>
             <div className="grid grid-cols-2 gap-2">
-              {['Ollama (Locale)', 'LM Studio', 'OpenAI', 'Claude', 'Gemini', 'DeepL'].map(provider => (
+              {['Ollama (Locale)', 'OpenAI / GPT-4', 'Claude', 'Gemini', 'DeepL', 'Lingva'].map(provider => (
                 <Badge key={provider} variant="outline" className="justify-center py-2">
                   {provider}
                 </Badge>
@@ -309,9 +323,9 @@ export function OnboardingWizard() {
           </div>
 
           <div className="p-4 bg-muted/30 rounded-lg">
-            <h4 className="font-medium mb-2">Integrazione Nexus Mods</h4>
+            <h4 className="font-medium mb-2">{t('onboarding.community.hubTitle')}</h4>
             <p className="text-sm text-muted-foreground">
-              {t('onboarding.community.nexusInfo')}
+              {t('onboarding.community.hubInfo')}
             </p>
           </div>
         </div>
