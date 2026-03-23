@@ -189,7 +189,7 @@ struct VbinLocation {
 fn find_vbin_in_vis(data: &[u8]) -> Result<VbinLocation, String> {
     // VBIN (game.veb) is typically near the end of the .vis archive.
     // Search backwards in large chunks for speed on 800MB+ files.
-    let needle = b"VBIN";
+    let needle: &[u8] = VBIN_MAGIC;
     
     // Search backwards from the end in 16MB chunks
     let chunk_size = 16 * 1024 * 1024;
