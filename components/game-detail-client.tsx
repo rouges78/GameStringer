@@ -1150,6 +1150,7 @@ export default function GameDetailPage() {
       updateStep(2, 'running');
       const isUnity = detectedEngine.toLowerCase().includes('unity');
       const isUnreal = detectedEngine.toLowerCase().includes('unreal');
+      const isGameMaker = detectedEngine.toLowerCase().includes('gamemaker') || detectedEngine.toLowerCase().includes('game maker');
 
       if (isUnity) {
         updateStep(2, 'running', 'Download BepInEx + XUnity AutoTranslator...');
@@ -1197,6 +1198,21 @@ export default function GameDetailPage() {
         } catch {
           updateStep(2, 'done', 'Unreal Engine rilevato');
         }
+      } else if (isGameMaker) {
+        // GameMaker: scan data.win / language files
+        updateStep(2, 'running', 'Analisi GameMaker — ricerca file .jn e data.win...');
+        try {
+          const gmInfo = await invoke<any>('gm_scan_data_win', { gamePath: game.installPath });
+          if (gmInfo?.has_language_files) {
+            updateStep(2, 'done', `${gmInfo.language_file_count} file .jn trovati (${gmInfo.translatable_strings} stringhe)`);
+          } else if (gmInfo?.is_yyc) {
+            updateStep(2, 'done', `YYC — ${gmInfo.translatable_strings} stringhe nell'EXE`);
+          } else {
+            updateStep(2, 'done', `data.win — ${gmInfo.translatable_strings} stringhe traducibili`);
+          }
+        } catch (e: any) {
+          updateStep(2, 'done', `GameMaker rilevato: ${e?.toString?.() || ''}`);
+        }
       } else {
         updateStep(2, 'done', t('gameDetails.noPatchNeeded') || 'No patch needed — direct translation');
       }
@@ -1205,7 +1221,65 @@ export default function GameDetailPage() {
       // ── STEP 4: Configurazione traduzione ──
       updateStep(3, 'running', language === 'it' ? 'Verifica stato traduzione...' : 'Checking translation status...');
       
-      if (isUnreal) {
+      if (isGameMaker) {
+        // GameMaker: estrai, traduci e patcha file .jn / data.win / EXE
+        try {
+          // 4a. Extract all translatable strings
+          updateStep(3, 'running', 'Estrazione stringhe GameMaker...');
+          const allStrings: any[] = [];
+          let pageNum = 0;
+          while (true) {
+            const pageStrings = await invoke<any[]>('gm_extract_strings', {
+              gamePath: game.installPath,
+              onlyTranslatable: true,
+              offset: pageNum * 200,
+              limit: 200,
+            });
+            if (!pageStrings || pageStrings.length === 0) break;
+            allStrings.push(...pageStrings);
+            pageNum++;
+          }
+          
+          if (allStrings.length === 0) {
+            updateStep(3, 'done', 'Nessuna stringa traducibile trovata');
+          } else {
+            // 4b. Translate with AI in batches
+            const translations: Record<number, string> = {};
+            const BATCH = 5;
+            let done = 0;
+            
+            for (let i = 0; i < allStrings.length; i += BATCH) {
+              if (!autoTranslateRunningRef.current) break;
+              const batch = allStrings.slice(i, i + BATCH);
+              const promises = batch.map(async (s: any) => {
+                try {
+                  const result = await invoke<{ translated_text: string }>('translate_text_simple', {
+                    text: s.original,
+                    targetLang: language || 'it',
+                  });
+                  if (result?.translated_text) {
+                    translations[s.index] = result.translated_text;
+                  }
+                } catch {}
+              });
+              await Promise.all(promises);
+              done += batch.length;
+              updateStep(3, 'running', `Traduzione AI: ${done}/${allStrings.length} stringhe...`);
+            }
+            
+            // 4c. Patch
+            updateStep(3, 'running', 'Applicazione traduzioni ai file di gioco...');
+            const patchResult = await invoke<any>('gm_patch_strings', {
+              gamePath: game.installPath,
+              translations,
+            });
+            
+            updateStep(3, 'done', patchResult?.message || `${Object.keys(translations).length} stringhe tradotte e applicate`);
+          }
+        } catch (e: any) {
+          updateStep(3, 'error', `Errore GameMaker: ${e?.toString?.() || 'sconosciuto'}`);
+        }
+      } else if (isUnreal) {
         // Per Unreal: mostra stato localizzazione .locres / _P.pak
         try {
           const locStatus: any = ueLocStatus || await invoke('get_unreal_localization_status', { gamePath: game.installPath });
@@ -1330,6 +1404,7 @@ export default function GameDetailPage() {
       toast.error(t('gameDetails.translationError') || 'Error during auto-translation');
     } finally {
       autoTranslateRunningRef.current = false;
+      setAutoTranslateActive(false);
     }
   };
 
