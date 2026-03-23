@@ -18,8 +18,8 @@
 //   - https://github.com/adm244/VISUnpacker
 //   - https://github.com/darkstar/gus/blob/master/UnpackShell/Unpackers/VISUnpacker.cs
 
-use std::fs;
-use std::io::{Read, Write};
+use std::fs::{self, File};
+use std::io::{Read, Write, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use tauri::command;
 use serde::{Serialize, Deserialize};
@@ -180,43 +180,49 @@ fn find_vis_file(game_path: &str) -> Option<PathBuf> {
 // game.veb is the only VBIN block in a .vis archive.
 
 struct VbinLocation {
-    offset: usize,       // absolute offset of VBIN header in .vis file
+    offset: u64,         // absolute offset of VBIN header in .vis file
     _unknown: u32,       // unknown field at VBIN+4
     uncompressed: usize, // uncompressed payload size
     compressed: usize,   // compressed payload size
 }
 
-fn find_vbin_in_vis(data: &[u8]) -> Result<VbinLocation, String> {
-    // VBIN (game.veb) is typically near the end of the .vis archive.
-    // Search backwards in large chunks for speed on 800MB+ files.
+/// Find VBIN magic in a .vis file using seek-based I/O.
+/// Only reads ~16MB chunks backwards from end — never loads the full file.
+fn find_vbin_in_file(file: &mut File, file_size: u64) -> Result<VbinLocation, String> {
     let needle: &[u8] = VBIN_MAGIC;
-    
-    // Search backwards from the end in 16MB chunks
-    let chunk_size = 16 * 1024 * 1024;
-    let mut search_end = data.len();
+    let chunk_size: u64 = 16 * 1024 * 1024;
+    let mut search_end = file_size;
     
     while search_end > 16 {
         let search_start = if search_end > chunk_size { search_end - chunk_size } else { 0 };
-        let chunk = &data[search_start..search_end];
+        let read_len = (search_end - search_start) as usize;
         
-        // Scan chunk for "VBIN" magic
+        let mut chunk = vec![0u8; read_len];
+        file.seek(SeekFrom::Start(search_start))
+            .map_err(|e| format!("Seek fallito: {}", e))?;
+        file.read_exact(&mut chunk)
+            .map_err(|e| format!("Read fallito: {}", e))?;
+        
         if let Some(rel_pos) = chunk.windows(4).rposition(|w| w == needle) {
-            let pos = search_start + rel_pos;
-            if pos + 16 < data.len() {
-                let _unknown = read_le_u32(data, pos + 4);
-                let uncompressed = read_le_u32(data, pos + 8) as usize;
-                let compressed = read_le_u32(data, pos + 12) as usize;
-                
-                if compressed > 0 && compressed < data.len() - pos - 16
-                    && uncompressed > 0 && uncompressed < 500_000_000
-                {
-                    log::info!("[VIS] VBIN trovato a offset {} (ricerca backward): uncomp={} comp={}", pos, uncompressed, compressed);
-                    return Ok(VbinLocation { offset: pos, _unknown, uncompressed, compressed });
+            let pos = search_start + rel_pos as u64;
+            if pos + 16 < file_size {
+                // Read VBIN header at this position
+                let hdr_offset = rel_pos;
+                if hdr_offset + 16 <= chunk.len() {
+                    let unknown = read_le_u32(&chunk, hdr_offset + 4);
+                    let uncompressed = read_le_u32(&chunk, hdr_offset + 8) as usize;
+                    let compressed = read_le_u32(&chunk, hdr_offset + 12) as usize;
+                    
+                    if compressed > 0 && (pos + 16 + compressed as u64) <= file_size
+                        && uncompressed > 0 && uncompressed < 500_000_000
+                    {
+                        log::info!("[VIS] VBIN trovato a offset {}: uncomp={} comp={}", pos, uncompressed, compressed);
+                        return Ok(VbinLocation { offset: pos, _unknown: unknown, uncompressed, compressed });
+                    }
                 }
             }
         }
         
-        // Move to previous chunk (overlap by 4 bytes to avoid missing magic at boundary)
         if search_start == 0 { break; }
         search_end = search_start + 4;
     }
@@ -224,28 +230,35 @@ fn find_vbin_in_vis(data: &[u8]) -> Result<VbinLocation, String> {
     Err("VBIN non trovato nell'archivio .vis".to_string())
 }
 
-// ── Get file count from VIS5 header ──
-
-fn get_vis_file_count(data: &[u8]) -> u32 {
-    if data.len() >= 8 {
-        read_be_u32(data, 4)
+/// Read header (magic + file count) from .vis file — only reads 8 bytes.
+fn read_vis_header(file: &mut File) -> Result<(String, u32), String> {
+    let mut hdr = [0u8; 8];
+    file.seek(SeekFrom::Start(0)).map_err(|e| format!("Seek: {}", e))?;
+    file.read_exact(&mut hdr).map_err(|e| format!("Read header: {}", e))?;
+    
+    let magic = &hdr[0..4];
+    let version = if magic == VIS5_MAGIC {
+        "VIS5".to_string()
+    } else if magic == VIS3_MAGIC {
+        "VIS3".to_string()
     } else {
-        0
-    }
+        return Err(format!("Magic non valido: {:?}", magic));
+    };
+    let count = read_be_u32(&hdr, 4);
+    Ok((version, count))
 }
 
-// ── Decompress VBIN payload ──
-
-fn decompress_vbin(data: &[u8], loc: &VbinLocation) -> Result<Vec<u8>, String> {
+/// Read and decompress VBIN payload from file — only reads the compressed data (~5MB).
+fn read_vbin_payload(file: &mut File, loc: &VbinLocation) -> Result<Vec<u8>, String> {
     let compressed_start = loc.offset + 16;
-    let compressed_end = compressed_start + loc.compressed;
     
-    if compressed_end > data.len() {
-        return Err(format!("VBIN compressed data overflow: {} > {}", compressed_end, data.len()));
-    }
+    let mut compressed = vec![0u8; loc.compressed];
+    file.seek(SeekFrom::Start(compressed_start))
+        .map_err(|e| format!("Seek VBIN payload: {}", e))?;
+    file.read_exact(&mut compressed)
+        .map_err(|e| format!("Read VBIN payload: {}", e))?;
     
-    let compressed = &data[compressed_start..compressed_end];
-    let mut decoder = ZlibDecoder::new(compressed);
+    let mut decoder = ZlibDecoder::new(&compressed[..]);
     let mut decompressed = Vec::with_capacity(loc.uncompressed);
     decoder.read_to_end(&mut decompressed)
         .map_err(|e| format!("Decompressione VBIN fallita: {}", e))?;
@@ -483,24 +496,12 @@ pub async fn detect_visionaire(game_path: String) -> Result<VisInfo, String> {
     let vis_path = find_vis_file(&game_path)
         .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
     
-    let data = fs::read(&vis_path)
-        .map_err(|e| format!("Errore lettura {}: {}", vis_path.display(), e))?;
+    let mut file = File::open(&vis_path)
+        .map_err(|e| format!("Errore apertura {}: {}", vis_path.display(), e))?;
     
-    if data.len() < 8 {
-        return Err("File troppo piccolo".into());
-    }
-    
-    let magic = &data[0..4];
-    let version = if magic == VIS5_MAGIC {
-        "VIS5".to_string()
-    } else if magic == VIS3_MAGIC {
-        "VIS3".to_string()
-    } else {
-        return Err(format!("Non è un file Visionaire: magic {:?}", &data[0..4]));
-    };
-    
-    let file_count = get_vis_file_count(&data);
-    let has_veb = find_vbin_in_vis(&data).is_ok();
+    let (version, file_count) = read_vis_header(&mut file)?;
+    let file_size = file.seek(SeekFrom::End(0)).map_err(|e| format!("Seek: {}", e))?;
+    let has_veb = find_vbin_in_file(&mut file, file_size).is_ok();
     
     Ok(VisInfo {
         is_visionaire: true,
@@ -520,22 +521,21 @@ pub async fn scan_vis_strings(game_path: String) -> Result<VisInfo, String> {
     let vis_path = find_vis_file(&game_path)
         .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
     
-    let data = fs::read(&vis_path)
-        .map_err(|e| format!("Errore lettura: {}", e))?;
+    let mut file = File::open(&vis_path)
+        .map_err(|e| format!("Errore apertura: {}", e))?;
     
-    let version = if data.len() >= 4 && &data[0..4] == VIS5_MAGIC { "VIS5" } else { "VIS3" };
-    let file_count = get_vis_file_count(&data);
+    let (version, file_count) = read_vis_header(&mut file)?;
+    let file_size = file.seek(SeekFrom::End(0)).map_err(|e| format!("Seek: {}", e))?;
     
-    // Find VBIN by scanning for magic
-    let vbin_loc = find_vbin_in_vis(&data)?;
-    let payload = decompress_vbin(&data, &vbin_loc)?;
+    let vbin_loc = find_vbin_in_file(&mut file, file_size)?;
+    let payload = read_vbin_payload(&mut file, &vbin_loc)?;
     let strings = parse_vbin_strings(&payload)?;
     
     log::info!("[VIS] Trovate {} stringhe traducibili", strings.len());
     
     Ok(VisInfo {
         is_visionaire: true,
-        version: version.to_string(),
+        version,
         vis_path: vis_path.to_string_lossy().to_string(),
         file_count,
         total_strings: strings.len(),
@@ -555,11 +555,12 @@ pub async fn extract_vis_strings(
     let vis_path = find_vis_file(&game_path)
         .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
     
-    let data = fs::read(&vis_path)
-        .map_err(|e| format!("Errore lettura: {}", e))?;
+    let mut file = File::open(&vis_path)
+        .map_err(|e| format!("Errore apertura: {}", e))?;
     
-    let vbin_loc = find_vbin_in_vis(&data)?;
-    let payload = decompress_vbin(&data, &vbin_loc)?;
+    let file_size = file.seek(SeekFrom::End(0)).map_err(|e| format!("Seek: {}", e))?;
+    let vbin_loc = find_vbin_in_file(&mut file, file_size)?;
+    let payload = read_vbin_payload(&mut file, &vbin_loc)?;
     let all_strings = parse_vbin_strings(&payload)?;
     
     // Apply pagination
@@ -593,21 +594,37 @@ pub async fn patch_vis_strings(
         log::info!("[VIS] Backup creato: {}", backup_path.display());
     }
     
+    // Patch requires full file read for rebuild
     let data = fs::read(&vis_path)
         .map_err(|e| format!("Errore lettura: {}", e))?;
     
-    let vbin_loc = find_vbin_in_vis(&data)?;
-    let payload = decompress_vbin(&data, &vbin_loc)?;
+    // Find VBIN in the loaded data (in-memory scan)
+    let needle: &[u8] = VBIN_MAGIC;
+    let vbin_pos = data.windows(4).rposition(|w| w == needle)
+        .ok_or_else(|| "VBIN non trovato per patching".to_string())?;
     
-    // Patch strings in decompressed payload
+    let uncompressed = read_le_u32(&data, vbin_pos + 8) as usize;
+    let compressed = read_le_u32(&data, vbin_pos + 12) as usize;
+    
+    if vbin_pos + 16 + compressed > data.len() {
+        return Err("VBIN payload overflow".to_string());
+    }
+    
+    // Decompress payload
+    let compressed_data = &data[vbin_pos + 16..vbin_pos + 16 + compressed];
+    let mut decoder = ZlibDecoder::new(compressed_data);
+    let mut payload = Vec::with_capacity(uncompressed);
+    decoder.read_to_end(&mut payload)
+        .map_err(|e| format!("Decompressione fallita: {}", e))?;
+    
+    // Patch strings
     let patched_vbin = patch_vbin_strings(&data, &payload, &translations)?;
     
     // Replace VBIN block in the archive
-    let vbin_start = vbin_loc.offset;
-    let vbin_end = vbin_loc.offset + 16 + vbin_loc.compressed;
+    let vbin_end = vbin_pos + 16 + compressed;
     
     let mut new_data = Vec::with_capacity(data.len());
-    new_data.extend_from_slice(&data[..vbin_start]);
+    new_data.extend_from_slice(&data[..vbin_pos]);
     new_data.extend_from_slice(&patched_vbin);
     if vbin_end < data.len() {
         new_data.extend_from_slice(&data[vbin_end..]);
