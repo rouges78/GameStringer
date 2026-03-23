@@ -375,6 +375,54 @@ fn is_translatable_vis_string(s: &str) -> bool {
         if lower.ends_with(ext) { return false; }
     }
     
+    // ── Visionaire engine action logs / commands (biggest source of noise) ──
+    // These are prefixes of Visionaire action log entries found in game.veb
+    let engine_prefixes: &[&str] = &[
+        "pause for ", "play sound", "play animation", "play ",
+        "fade '", "fade \"", "fade ",
+        "stop sound", "stop character", "stop centering", "stop ",
+        "set ", "change ", "show ", "hide ",
+        "start ", "call ", "wait ", "if ", "else ", "end if", "end of",
+        "cursor ", "at ", "left click", "right click", "mouse ", "key ",
+        "add item", "remove item", "character ", "quit ",
+        "open ", "close ", "enable ", "disable ",
+        "move ", "scroll ", "zoom ", "rotate ", "shake ",
+        "load ", "save ", "hint menu",
+        "switch to ", "execute ", "begin of", "jump to ",
+        "align ", "center ", "send ", "walk ",
+        "pick up", "use item", "give item", "combine ",
+        "run ", "trigger ", "activate ", "deactivate ",
+        "create ", "delete ", "update ", "reset ",
+        "flip ", "fade ", "tween ", "scale ",
+        "turn ", "look ", "say ", "speak ",
+        "delay ", "sleep ", "resume ",
+    ];
+    if lower.contains("executed") { return false; }
+    for prefix in engine_prefixes {
+        if lower.starts_with(prefix) { return false; }
+    }
+    // Also check with leading whitespace/special chars stripped
+    let trimmed_lower = lower.trim_start_matches(|c: char| !c.is_alphanumeric());
+    if trimmed_lower != lower {
+        for prefix in engine_prefixes {
+            if trimmed_lower.starts_with(prefix) { return false; }
+        }
+    }
+    
+    // Skip strings starting with - ! ; (section names, comments, special)
+    if s.starts_with('-') || s.starts_with('!') || s.starts_with(';') { return false; }
+    
+    // Skip strings starting with digits (sound names: "1-003 cat meow", "99-3-053b Coming Out")
+    if s.chars().next().map_or(false, |c| c.is_ascii_digit()) { return false; }
+    
+    // Skip strings that contain 'identifier_name' patterns (engine references)
+    // e.g. "Switch to scene 'deadnettle'", "Play animation 'pickup_waist_back'"
+    if s.contains("'") && s.matches('\'').count() >= 2 { return false; }
+    if s.contains("[\"") || s.contains("\"]") { return false; } // Lua table access
+    if s.contains("replaceItem(") || s.contains("replaceitem(") { return false; }
+    if lower.contains("activate voice") || lower.contains("activate text") { return false; }
+    if lower.contains("clickbehaviour") || lower.contains("clickbehavior") { return false; }
+    
     // Skip Lua code patterns
     if s.contains("function ") || s.contains("local ") || s.contains("end\n") { return false; }
     if s.contains("if ") && s.contains(" then") { return false; }
@@ -391,9 +439,19 @@ fn is_translatable_vis_string(s: &str) -> bool {
     if s.starts_with('<') && s.ends_with('>') { return false; }
     if s.contains("</") || s.contains("/>") { return false; }
     
+    // Skip strings with >> (Visionaire sequence markers: "692 >> double headline >> 693")
+    if s.contains(" >> ") { return false; }
+    
+    // Skip strings with quotes around identifiers ('item_name', "sound_name")
+    if s.contains("'") && !s.contains(' ') { return false; }
+    
     // Skip if looks like code identifier (snake_case, camelCase, ALL_CAPS)
     if s.chars().all(|c| c.is_alphanumeric() || c == '_') && s.contains('_') { return false; }
-    if s.chars().all(|c| c.is_uppercase() || c == '_' || c.is_numeric()) && s.len() > 3 { return false; }
+    // Skip if ANY word contains underscore (e.g. "anim_statue worki")
+    if s.split_whitespace().any(|w| w.contains('_')) { return false; }
+    if s.chars().all(|c| c.is_uppercase() || c == '_' || c.is_numeric() || c == ' ') && s.len() > 3 {
+        return false;
+    }
     
     // Skip single words (not translatable dialogue)
     if !s.contains(' ') { return false; }
@@ -415,45 +473,42 @@ fn is_translatable_vis_string(s: &str) -> bool {
         if s.starts_with(prefix) || lower.starts_with(&prefix.to_lowercase()) { return false; }
     }
     
-    // Skip Visionaire action/command names
+    // Skip Visionaire action/command keywords in string
     let skip_contains = ["ActiveAnimations", "PolygonalLink", "ScrollPosition",
                          "CharacterLink", "ObjectLink", "SceneLink", "ActionLink",
                          "SoundLink", "MusicLink", "FontLink", "CursorLink",
                          "ParticleLink", "InterfaceLink", "AnimationLink",
                          "ConditionLink", "ValueLink", "DialogLink",
                          "Brightness", "Saturation", "setPosition", "getPosition",
-                         "currentCharacter", "activeScene", "mainCharacter"];
+                         "currentCharacter", "activeScene", "mainCharacter",
+                         "milliseconds", " to object ", "object area",
+                         "(immediate)", " position"];
     for kw in skip_contains {
         if s.contains(kw) { return false; }
     }
     
-    // Skip object references
-    if s.starts_with("Set ") && s.contains(" position") && !s.contains('.') { return false; }
-    if s.starts_with("Show/") || s.starts_with("Hide/") { return false; }
-    if s.starts_with("Change ") && s.contains(":") { return false; }
-    
-    // Skip strings that are mostly CamelCase identifiers with spaces
-    // e.g. "Active Animations" "Polygonal Link" — internal Visionaire names
-    let capitalized_words = words.iter().filter(|w| {
-        let first = w.chars().next().unwrap_or('a');
-        first.is_uppercase() && w.len() <= 20
-    }).count();
-    if words.len() >= 2 && words.len() <= 3 && capitalized_words == words.len() {
-        // All words capitalized, 2-3 words — likely an internal name, not dialogue
-        // Exception: if it ends with punctuation, it's likely dialogue
-        let last_char = s.chars().last().unwrap_or('a');
-        if !last_char.is_ascii_punctuation() || last_char == ')' {
-            return false;
-        }
-    }
-    
-    // Require at least one lowercase word — real dialogue has articles, prepositions etc.
+    // Real dialogue heuristic: must have at least one lowercase-starting word
+    // (articles, prepositions: "the", "a", "is", "in", "to", "of"...)
+    // or contain sentence punctuation (. ! ? , — used in dialogue/UI text)
     let has_lowercase_word = words.iter().any(|w| {
         w.chars().next().map_or(false, |c| c.is_lowercase())
     });
-    // Exception: short strings (≤ 30 chars) with punctuation are likely UI text
-    let has_punctuation = s.chars().any(|c| matches!(c, '.' | '!' | '?' | ',' | ':' | ';' | '"' | '\''));
-    if !has_lowercase_word && !has_punctuation && s.len() > 30 { return false; }
+    let has_sentence_punct = s.chars().any(|c| matches!(c, '.' | '!' | '?' | ',' | ':' | ';' | '"' | '…'));
+    
+    if !has_lowercase_word && !has_sentence_punct {
+        // No lowercase words and no punctuation — almost certainly an internal name
+        return false;
+    }
+    
+    // Short strings (< 40 chars) without sentence-ending punctuation are likely
+    // object/animation names, not translatable dialogue
+    let has_end_punct = s.chars().last().map_or(false, |c| matches!(c, '.' | '!' | '?' | ';' | ':' | '"' | '\u{2026}'));
+    if s.len() < 40 && !has_end_punct && words.len() <= 4 {
+        // Exception: dialogue format "character: text"
+        if !s.contains(':') {
+            return false;
+        }
+    }
     
     true
 }
