@@ -32,8 +32,11 @@ use flate2::Compression;
 const VIS5_MAGIC: &[u8; 4] = b"VIS5";
 const VIS3_MAGIC: &[u8; 4] = b"VIS3";
 const VBIN_MAGIC: &[u8; 4] = b"VBIN";
+#[allow(dead_code)]
 const PASSPHRASE: &str = "AGAME4VISPL4";
+#[allow(dead_code)]
 const HDR_MARKER: &[u8; 3] = b"HDR";
+#[allow(dead_code)]
 const END_MARKER: &[u8; 3] = b"END";
 
 // ── Data types ──
@@ -56,6 +59,7 @@ pub struct VisString {
     pub language_id: i32,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 struct VisEntry {
     hash: u32,
@@ -88,6 +92,7 @@ fn write_le_u32(data: &mut Vec<u8>, val: u32) {
 
 // ── Joaat64 hash (truncated to 32-bit) for VIS5 filename lookup ──
 
+#[allow(dead_code)]
 fn joaat64_hash(name: &str) -> u32 {
     let bytes = name.as_bytes();
     let mut hash: u64 = 0;
@@ -104,12 +109,13 @@ fn joaat64_hash(name: &str) -> u32 {
 
 // ── MD5 XOR key for directory decryption ──
 
+#[allow(dead_code)]
 fn get_xor_key() -> Vec<u8> {
     let digest = md5::compute(PASSPHRASE.as_bytes());
-    let hex = format!("{:x}", digest);
-    hex.as_bytes().to_vec()
+    digest.0.to_vec()
 }
 
+#[allow(dead_code)]
 fn xor_decrypt(data: &mut [u8], key: &[u8]) {
     for (i, byte) in data.iter_mut().enumerate() {
         *byte ^= key[i % key.len()];
@@ -168,164 +174,76 @@ fn find_vis_file(game_path: &str) -> Option<PathBuf> {
     None
 }
 
-// ── Parse VIS5 archive directory ──
+// ── Scan .vis file for VBIN magic (brute-force) ──
+// The VIS5 directory entry layout differs from documentation.
+// Instead of parsing entries, we scan the archive for the VBIN magic directly.
+// game.veb is the only VBIN block in a .vis archive.
 
-fn parse_vis_directory(data: &[u8]) -> Result<(Vec<VisEntry>, bool), String> {
-    if data.len() < 8 {
-        return Err("File troppo piccolo".into());
-    }
-    
-    let magic = &data[0..4];
-    let is_vis5 = magic == VIS5_MAGIC;
-    let is_vis3 = magic == VIS3_MAGIC;
-    
-    if !is_vis5 && !is_vis3 {
-        return Err(format!("Magic non valido: {:?}", &data[0..4]));
-    }
-    
-    let count = read_be_u32(data, 4) as usize;
-    if count > 1_000_000 {
-        return Err(format!("Troppi file: {}", count));
-    }
-    
-    log::info!("[VIS] Archivio {:?}, {} file", std::str::from_utf8(magic).unwrap_or("?"), count);
-    
-    // Directory starts at offset 8, encrypted
-    let xor_key = get_xor_key();
-    
-    // Calculate directory size
-    let hdr_size = 3; // "HDR"
-    let hash_size = if is_vis5 { count * 4 } else { 0 }; // joaat hashes only in VIS5
-    let entry_size = count * 16; // 4 fields × 4 bytes each (value?, offset, size, flags)
-    let end_size = 3; // "END"
-    let dir_total = hdr_size + hash_size + entry_size + end_size;
-    
-    if 8 + dir_total > data.len() {
-        return Err(format!("Directory overflow: {} > {}", 8 + dir_total, data.len()));
-    }
-    
-    // Decrypt directory
-    let mut dir_data = data[8..8 + dir_total].to_vec();
-    xor_decrypt(&mut dir_data, &xor_key);
-    
-    // Verify HDR marker
-    if &dir_data[0..3] != HDR_MARKER {
-        return Err(format!("HDR marker mancante: {:?}", &dir_data[0..3]));
-    }
-    
-    let mut pos = 3;
-    
-    // Read hashes (VIS5 only)
-    let mut hashes = Vec::with_capacity(count);
-    if is_vis5 {
-        for _ in 0..count {
-            hashes.push(read_be_u32(&dir_data, pos));
-            pos += 4;
+struct VbinLocation {
+    offset: usize,       // absolute offset of VBIN header in .vis file
+    _unknown: u32,       // unknown field at VBIN+4
+    uncompressed: usize, // uncompressed payload size
+    compressed: usize,   // compressed payload size
+}
+
+fn find_vbin_in_vis(data: &[u8]) -> Result<VbinLocation, String> {
+    // Scan for "VBIN" magic in the archive
+    let needle = VBIN_MAGIC;
+    let mut pos = 0;
+    while pos + 16 < data.len() {
+        if &data[pos..pos+4] == needle {
+            let _unknown = read_le_u32(data, pos + 4);
+            let uncompressed = read_le_u32(data, pos + 8) as usize;
+            let compressed = read_le_u32(data, pos + 12) as usize;
+            
+            // Sanity: compressed data must fit in remaining file
+            if compressed > 0 && compressed < data.len() - pos - 16
+                && uncompressed > 0 && uncompressed < 500_000_000
+            {
+                log::info!("[VIS] VBIN trovato a offset {}: uncomp={} comp={}", pos, uncompressed, compressed);
+                return Ok(VbinLocation { offset: pos, _unknown, uncompressed, compressed });
+            }
         }
+        pos += 1;
     }
-    
-    // Read entries (SEntryInfo2)
-    let mut entries = Vec::with_capacity(count);
-    for i in 0..count {
-        let _value = read_be_u32(&dir_data, pos); pos += 4;
-        let offset = read_be_u32(&dir_data, pos); pos += 4;
-        let size = read_be_u32(&dir_data, pos); pos += 4;
-        let flags = read_be_u32(&dir_data, pos); pos += 4;
-        
-        let hash = if is_vis5 && i < hashes.len() { hashes[i] } else { 0 };
-        entries.push(VisEntry { hash, offset, size, flags });
-    }
-    
-    // Verify END marker
-    if pos + 3 <= dir_data.len() && &dir_data[pos..pos+3] != END_MARKER {
-        log::warn!("[VIS] END marker non trovato alla posizione {}", pos);
-    }
-    
-    Ok((entries, is_vis5))
+    Err("VBIN non trovato nell'archivio .vis".to_string())
 }
 
-// ── Extract a file from the archive ──
+// ── Get file count from VIS5 header ──
 
-fn extract_file(data: &[u8], entry: &VisEntry, dir_total: usize) -> Result<Vec<u8>, String> {
-    let base_offset = 8 + dir_total;
-    let file_start = base_offset + entry.offset as usize;
-    let file_end = file_start + entry.size as usize;
-    
-    if file_end > data.len() {
-        return Err(format!("File overflow: {}..{} > {}", file_start, file_end, data.len()));
-    }
-    
-    let mut file_data = data[file_start..file_end].to_vec();
-    
-    // Check if zlib compressed (flag 0x10)
-    if entry.flags & 0x10 != 0 {
-        // Decompress zlib chunks
-        let mut decoder = ZlibDecoder::new(&file_data[..]);
-        let mut decompressed = Vec::new();
-        if decoder.read_to_end(&mut decompressed).is_ok() {
-            return Ok(decompressed);
-        }
-    }
-    
-    // Check if encrypted (flag 0x2)
-    if entry.flags & 0x2 != 0 {
-        let key = get_xor_key(); // Use passphrase key as default
-        xor_decrypt(&mut file_data, &key);
-    }
-    
-    Ok(file_data)
-}
-
-// ── Find game.veb in VIS5 entries ──
-
-fn find_veb_entry(entries: &[VisEntry], is_vis5: bool) -> Option<usize> {
-    if is_vis5 {
-        let veb_hash = joaat64_hash("game.veb");
-        log::info!("[VIS] Cerco game.veb con hash: 0x{:08x}", veb_hash);
-        entries.iter().position(|e| e.hash == veb_hash)
+fn get_vis_file_count(data: &[u8]) -> u32 {
+    if data.len() >= 8 {
+        read_be_u32(data, 4)
     } else {
-        // VIS3: entries have sequential indices, game.veb is typically one of the first
-        // Try to identify by flags (flag 0x2 = encrypted VED, flag 0x10 = compressed)
-        entries.iter().position(|e| e.flags & 0x12 != 0 && e.size > 10000)
+        0
     }
 }
 
-// ── Parse VBIN (binary VED) and extract text strings ──
+// ── Decompress VBIN payload ──
 
-fn parse_vbin_strings(vbin_data: &[u8]) -> Result<Vec<VisString>, String> {
-    if vbin_data.len() < 16 {
-        return Err("VBIN troppo piccolo".into());
+fn decompress_vbin(data: &[u8], loc: &VbinLocation) -> Result<Vec<u8>, String> {
+    let compressed_start = loc.offset + 16;
+    let compressed_end = compressed_start + loc.compressed;
+    
+    if compressed_end > data.len() {
+        return Err(format!("VBIN compressed data overflow: {} > {}", compressed_end, data.len()));
     }
     
-    // Check VBIN header
-    let magic = &vbin_data[0..4];
-    if magic != VBIN_MAGIC {
-        log::warn!("[VIS] VBIN magic non trovato: {:?}, provo parsing diretto", magic);
-    }
+    let compressed = &data[compressed_start..compressed_end];
+    let mut decoder = ZlibDecoder::new(compressed);
+    let mut decompressed = Vec::with_capacity(loc.uncompressed);
+    decoder.read_to_end(&mut decompressed)
+        .map_err(|e| format!("Decompressione VBIN fallita: {}", e))?;
     
-    let uncompressed_size = read_le_u32(vbin_data, 8) as usize;
-    let compressed_size = read_le_u32(vbin_data, 12) as usize;
-    
-    log::info!("[VIS] VBIN: uncompressed={}, compressed={}", uncompressed_size, compressed_size);
-    
-    // Decompress the VBIN payload (after 16-byte header)
-    let payload = if magic == VBIN_MAGIC && vbin_data.len() > 16 {
-        let compressed = &vbin_data[16..];
-        let mut decoder = ZlibDecoder::new(compressed);
-        let mut decompressed = Vec::with_capacity(uncompressed_size);
-        decoder.read_to_end(&mut decompressed)
-            .map_err(|e| format!("Decompressione VBIN fallita: {}", e))?;
-        decompressed
-    } else {
-        vbin_data.to_vec()
-    };
-    
-    log::info!("[VIS] Payload decompresso: {} bytes", payload.len());
-    
-    // Scan for strings in the binary VED structure
-    // Strings are stored as: LE uint32 length + char[length] (null terminated, UTF-8)
-    // We look for sequences that look like text strings
-    extract_strings_from_binary(&payload)
+    log::info!("[VIS] VBIN decompresso: {} bytes (attesi {})", decompressed.len(), loc.uncompressed);
+    Ok(decompressed)
+}
+
+// ── Parse decompressed VBIN payload and extract text strings ──
+
+fn parse_vbin_strings(payload: &[u8]) -> Result<Vec<VisString>, String> {
+    log::info!("[VIS] Parsing stringhe da payload {} bytes", payload.len());
+    extract_strings_from_binary(payload)
 }
 
 // ── Extract translatable strings from binary VED data ──
@@ -372,48 +290,65 @@ fn extract_strings_from_binary(data: &[u8]) -> Result<Vec<VisString>, String> {
 
 fn is_translatable_vis_string(s: &str) -> bool {
     let s = s.trim();
-    if s.len() < 3 { return false; }
+    if s.len() < 5 { return false; }
     
     // Must have letters
     let letter_count = s.chars().filter(|c| c.is_alphabetic()).count();
-    if letter_count < 3 { return false; }
+    if letter_count < 4 { return false; }
     
     // Skip if mostly non-ASCII (binary leftovers)
     let ascii_ratio = s.chars().filter(|c| c.is_ascii()).count() as f32 / s.len() as f32;
-    if ascii_ratio < 0.7 { return false; }
+    if ascii_ratio < 0.8 { return false; }
     
-    // Skip paths, filenames, technical identifiers
+    // Skip paths and filenames (contains / or \ or file extensions)
     if s.contains('/') || s.contains('\\') { return false; }
-    if s.ends_with(".png") || s.ends_with(".ogg") || s.ends_with(".wav") || s.ends_with(".mp3") { return false; }
-    if s.ends_with(".lua") || s.ends_with(".xml") || s.ends_with(".json") { return false; }
-    
-    // Skip if looks like a code identifier (camelCase, snake_case, ALL_CAPS)
-    if s.chars().all(|c| c.is_alphanumeric() || c == '_') && s.contains('_') { return false; }
-    if !s.contains(' ') && s.len() > 3 {
-        let has_upper = s.chars().any(|c| c.is_uppercase());
-        let has_lower = s.chars().any(|c| c.is_lowercase());
-        if has_upper && has_lower && !s.contains(' ') {
-            // camelCase / PascalCase — likely identifier
-            let upper_count = s.chars().filter(|c| c.is_uppercase()).count();
-            if upper_count > 1 { return false; }
-        }
+    let ext_skip = [".png", ".ogg", ".wav", ".mp3", ".mp4", ".webp", ".jpg", ".jpeg",
+                    ".lua", ".xml", ".json", ".csv", ".ini", ".cfg", ".ttf", ".otf",
+                    ".vis", ".veb", ".ved", ".dat", ".bin", ".exe", ".dll"];
+    let lower = s.to_lowercase();
+    for ext in ext_skip {
+        if lower.ends_with(ext) { return false; }
     }
     
-    // Must have at least 2 real words to be a translatable sentence
+    // Skip Lua code patterns
+    if s.contains("function ") || s.contains("local ") || s.contains("end\n") { return false; }
+    if s.contains("if ") && s.contains(" then") { return false; }
+    if s.contains("return ") || s.contains("require(") { return false; }
+    if s.contains(" = ") && (s.contains("true") || s.contains("false") || s.contains("nil")) { return false; }
+    if s.contains("getObject(") || s.contains("getName(") || s.contains("setValue(") { return false; }
+    
+    // Skip config/code lines with = assignment
+    if s.contains('=') && !s.contains(' ') { return false; }
+    
+    // Skip if looks like code identifier (snake_case, camelCase, ALL_CAPS)
+    if s.chars().all(|c| c.is_alphanumeric() || c == '_') && s.contains('_') { return false; }
+    if !s.contains(' ') {
+        // Single word — skip unless it's a common game term
+        return false;
+    }
+    
+    // Must have at least 2 real words (letters >= 2) to be translatable text
     let words: Vec<&str> = s.split_whitespace()
         .filter(|w| w.chars().filter(|c| c.is_alphabetic()).count() >= 2)
         .collect();
-    if words.len() < 2 && s.len() < 20 { return false; }
+    if words.len() < 2 { return false; }
     
-    // Skip HTML tags
-    if s.starts_with('<') && s.contains('>') && !s.contains(' ') { return false; }
+    // Skip HTML/XML tags
+    if s.starts_with('<') && s.ends_with('>') { return false; }
     
-    // Skip common Visionaire internal names
-    let lower = s.to_lowercase();
-    let skip_prefixes = ["eshader", "ealign", "eonly", "etext", "action_", "scene_", "char_", "obj_"];
+    // Skip Visionaire internal names and plugin strings
+    let skip_prefixes = ["eshader", "ealign", "eonly", "etext", "action_", "scene_",
+                         "char_", "obj_", "cond_", "val_", "anim_", "sound_",
+                         "plugins/", "Graphics/", "Sounds/", "Music/", "Fonts/",
+                         "config.", "plugin", "TVis", "TScript"];
     for prefix in skip_prefixes {
-        if lower.starts_with(prefix) { return false; }
+        if s.starts_with(prefix) || lower.starts_with(&prefix.to_lowercase()) { return false; }
     }
+    
+    // Skip strings that look like Visionaire object references
+    if s.starts_with("Set ") && s.contains(" position") && !s.contains('.') { return false; }
+    if s.starts_with("Show/") || s.starts_with("Hide/") { return false; }
+    if s.starts_with("Change ") && s.contains("/") { return false; }
     
     true
 }
@@ -549,14 +484,14 @@ pub async fn detect_visionaire(game_path: String) -> Result<VisInfo, String> {
         return Err(format!("Non è un file Visionaire: magic {:?}", &data[0..4]));
     };
     
-    let (entries, is_vis5) = parse_vis_directory(&data)?;
-    let has_veb = find_veb_entry(&entries, is_vis5).is_some();
+    let file_count = get_vis_file_count(&data);
+    let has_veb = find_vbin_in_vis(&data).is_ok();
     
     Ok(VisInfo {
         is_visionaire: true,
         version,
         vis_path: vis_path.to_string_lossy().to_string(),
-        file_count: entries.len() as u32,
+        file_count,
         total_strings: 0,
         has_veb,
     })
@@ -573,21 +508,13 @@ pub async fn scan_vis_strings(game_path: String) -> Result<VisInfo, String> {
     let data = fs::read(&vis_path)
         .map_err(|e| format!("Errore lettura: {}", e))?;
     
-    let (entries, is_vis5) = parse_vis_directory(&data)?;
+    let version = if data.len() >= 4 && &data[0..4] == VIS5_MAGIC { "VIS5" } else { "VIS3" };
+    let file_count = get_vis_file_count(&data);
     
-    let version = if &data[0..4] == VIS5_MAGIC { "VIS5" } else { "VIS3" };
-    
-    // Find and extract game.veb
-    let veb_idx = find_veb_entry(&entries, is_vis5)
-        .ok_or_else(|| "game.veb non trovato nell'archivio".to_string())?;
-    
-    let dir_total = 3 + (if is_vis5 { entries.len() * 4 } else { 0 }) + entries.len() * 16 + 3;
-    let veb_data = extract_file(&data, &entries[veb_idx], dir_total)?;
-    
-    log::info!("[VIS] game.veb estratto: {} bytes", veb_data.len());
-    
-    // Parse VBIN and extract strings
-    let strings = parse_vbin_strings(&veb_data)?;
+    // Find VBIN by scanning for magic
+    let vbin_loc = find_vbin_in_vis(&data)?;
+    let payload = decompress_vbin(&data, &vbin_loc)?;
+    let strings = parse_vbin_strings(&payload)?;
     
     log::info!("[VIS] Trovate {} stringhe traducibili", strings.len());
     
@@ -595,7 +522,7 @@ pub async fn scan_vis_strings(game_path: String) -> Result<VisInfo, String> {
         is_visionaire: true,
         version: version.to_string(),
         vis_path: vis_path.to_string_lossy().to_string(),
-        file_count: entries.len() as u32,
+        file_count,
         total_strings: strings.len(),
         has_veb: true,
     })
@@ -616,15 +543,9 @@ pub async fn extract_vis_strings(
     let data = fs::read(&vis_path)
         .map_err(|e| format!("Errore lettura: {}", e))?;
     
-    let (entries, is_vis5) = parse_vis_directory(&data)?;
-    
-    let veb_idx = find_veb_entry(&entries, is_vis5)
-        .ok_or_else(|| "game.veb non trovato".to_string())?;
-    
-    let dir_total = 3 + (if is_vis5 { entries.len() * 4 } else { 0 }) + entries.len() * 16 + 3;
-    let veb_data = extract_file(&data, &entries[veb_idx], dir_total)?;
-    
-    let all_strings = parse_vbin_strings(&veb_data)?;
+    let vbin_loc = find_vbin_in_vis(&data)?;
+    let payload = decompress_vbin(&data, &vbin_loc)?;
+    let all_strings = parse_vbin_strings(&payload)?;
     
     // Apply pagination
     let start = offset.unwrap_or(0);
@@ -660,58 +581,21 @@ pub async fn patch_vis_strings(
     let data = fs::read(&vis_path)
         .map_err(|e| format!("Errore lettura: {}", e))?;
     
-    let (entries, is_vis5) = parse_vis_directory(&data)?;
+    let vbin_loc = find_vbin_in_vis(&data)?;
+    let payload = decompress_vbin(&data, &vbin_loc)?;
     
-    let veb_idx = find_veb_entry(&entries, is_vis5)
-        .ok_or_else(|| "game.veb non trovato".to_string())?;
+    // Patch strings in decompressed payload
+    let patched_vbin = patch_vbin_strings(&data, &payload, &translations)?;
     
-    let dir_total = 3 + (if is_vis5 { entries.len() * 4 } else { 0 }) + entries.len() * 16 + 3;
-    let veb_data = extract_file(&data, &entries[veb_idx], dir_total)?;
+    // Replace VBIN block in the archive
+    let vbin_start = vbin_loc.offset;
+    let vbin_end = vbin_loc.offset + 16 + vbin_loc.compressed;
     
-    // Decompress VBIN to get raw payload
-    let payload = if veb_data.len() > 16 && &veb_data[0..4] == VBIN_MAGIC {
-        let compressed = &veb_data[16..];
-        let mut decoder = ZlibDecoder::new(compressed);
-        let mut decompressed = Vec::new();
-        decoder.read_to_end(&mut decompressed)
-            .map_err(|e| format!("Decompressione fallita: {}", e))?;
-        decompressed
-    } else {
-        veb_data.clone()
-    };
-    
-    // Patch strings
-    let patched_vbin = patch_vbin_strings(&veb_data, &payload, &translations)?;
-    
-    // Rebuild the VIS archive with patched game.veb
-    let mut new_data = data.clone();
-    let base_offset = 8 + dir_total;
-    let entry = &entries[veb_idx];
-    let file_start = base_offset + entry.offset as usize;
-    let file_end = file_start + entry.size as usize;
-    
-    if patched_vbin.len() == entry.size as usize {
-        // Same size: simple in-place replacement
-        new_data[file_start..file_end].copy_from_slice(&patched_vbin);
-    } else {
-        // Different size: need to rebuild the archive
-        // For now, only support same-size patching (most common case with in-place string replacement)
-        // Full rebuild would require recalculating all offsets
-        log::warn!("[VIS] Dimensione VEB cambiata: {} -> {}, tento sovrascrittura", entry.size, patched_vbin.len());
-        
-        // Rebuild: everything before VEB + patched VEB + everything after
-        let mut rebuilt = Vec::with_capacity(new_data.len());
-        rebuilt.extend_from_slice(&new_data[..file_start]);
-        rebuilt.extend_from_slice(&patched_vbin);
-        if file_end < new_data.len() {
-            rebuilt.extend_from_slice(&new_data[file_end..]);
-        }
-        
-        // Update size in directory entry
-        // We need to re-encrypt the directory with updated size
-        // This is complex — for safety, warn user
-        log::warn!("[VIS] Ricostruzione archivio completa necessaria — dimensioni diverse");
-        new_data = rebuilt;
+    let mut new_data = Vec::with_capacity(data.len());
+    new_data.extend_from_slice(&data[..vbin_start]);
+    new_data.extend_from_slice(&patched_vbin);
+    if vbin_end < data.len() {
+        new_data.extend_from_slice(&data[vbin_end..]);
     }
     
     // Write patched archive
