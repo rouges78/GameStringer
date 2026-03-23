@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::io::{Seek, SeekFrom, Write, Cursor};
+// std::io imports removed — patching uses extend_from_slice on Vec<u8>
 use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
@@ -76,40 +76,103 @@ fn detect_version(chunks: &[String]) -> String {
 }
 
 /// Heuristic: is this string translatable (visible user text)?
+/// Key insight: real game text contains spaces (sentences, descriptions).
+/// Internal resource names (sprites, sounds, objects) are snake_case without spaces.
 fn is_translatable(s: &str) -> bool {
     let s = s.trim();
-    // Skip empty
-    if s.is_empty() { return false; }
-    // Skip very short (single char, numbers)
-    if s.len() < 2 { return false; }
-    // Skip pure numbers
+    // Skip empty or very short
+    if s.len() < 3 { return false; }
+    // Skip pure numbers / floats
     if s.parse::<f64>().is_ok() { return false; }
-    // Skip file paths and extensions
+    // Skip file paths
     if s.contains('/') || s.contains('\\') { return false; }
-    if s.starts_with('.') && s.len() < 10 { return false; } // .png, .ogg etc
-    // Skip script/function names (camelCase or snake_case identifiers)
-    if s.starts_with("gml_") || s.starts_with("scr_") || s.starts_with("obj_") 
-       || s.starts_with("spr_") || s.starts_with("snd_") || s.starts_with("rm_")
-       || s.starts_with("bg_") || s.starts_with("fnt_") || s.starts_with("tl_")
-       || s.starts_with("seq_") || s.starts_with("ds_") || s.starts_with("ev_")
-       || s.starts_with("__") {
+    // Skip file extensions
+    let lower = s.to_lowercase();
+    if lower.ends_with(".ogg") || lower.ends_with(".wav") || lower.ends_with(".mp3")
+       || lower.ends_with(".png") || lower.ends_with(".jpg") || lower.ends_with(".gif")
+       || lower.ends_with(".bmp") || lower.ends_with(".json") || lower.ends_with(".csv")
+       || lower.ends_with(".xml") || lower.ends_with(".ini") || lower.ends_with(".txt")
+       || lower.ends_with(".gml") || lower.ends_with(".yy") || lower.ends_with(".yyp") {
         return false;
     }
+    if s.starts_with('.') && s.len() < 10 { return false; }
     // Skip hex colors
     if s.starts_with('#') && s.len() <= 9 && s[1..].chars().all(|c| c.is_ascii_hexdigit()) {
         return false;
     }
-    // Skip if no letter characters at all
+    // Skip if no letter at all
     if !s.chars().any(|c| c.is_alphabetic()) { return false; }
-    // Skip very long strings that look like code
+    // Skip very long strings (likely code blocks)
     if s.len() > 5000 { return false; }
-    // Skip if looks like GML code
+    // Skip GML code patterns
     if s.contains("var ") && s.contains(";") { return false; }
-    if s.contains("function(") || s.contains("if (") { return false; }
-    // Skip known GM internal prefixes
-    let lower = s.to_lowercase();
+    if s.contains("function(") || s.contains("if (") || s.contains("while (") { return false; }
+    if s.contains("&&") || s.contains("||") || s.contains("!=") { return false; }
+    if s.contains("global.") || s.contains("self.") || s.contains("other.") { return false; }
+    // Skip known GM internal prefixes (very comprehensive)
     if lower.starts_with("@@") || lower.starts_with("$$") { return false; }
-    // Likely translatable
+
+    // ── GameMaker resource prefixes ──
+    // Standard GM resource prefixes
+    const GM_PREFIXES: &[&str] = &[
+        "gml_", "scr_", "obj_", "spr_", "snd_", "rm_", "bg_", "fnt_", "tl_",
+        "seq_", "ds_", "ev_", "__",
+        // Sprite / visual asset prefixes (WOH-style and generic)
+        "s_", "scard_", "shaus_", "smenu_", "smap_", "shud_", "ssumm_",
+        // Sound / music prefixes
+        "nes_", "sfx_", "ost_", "voc_", "ness_",
+        // Character sprite prefixes
+        "char_",
+        // UI / menu prefixes
+        "menu_", "menut_",
+        // Audio group prefixes  
+        "audiogroup_",
+        // Pattern / card / god prefixes
+        "pattern_", "cardgod_",
+        // Other common GM resource prefixes
+        "sprite", "sound", "font", "path", "timeline", "object", "room",
+        // Control/system prefixes
+        "vk_", "mb_", "cr_", "os_", "gp_", "buffer_",
+    ];
+    for prefix in GM_PREFIXES {
+        if lower.starts_with(prefix) {
+            return false;
+        }
+    }
+
+    // ── Key rule: real translatable text almost always contains spaces ──
+    // Internal identifiers (theme_combat, select_god, combat_win) do NOT have spaces.
+    // Real game text: "FRESH MEAT - gain a mysterious meat", "Choose your character", etc.
+    let has_space = s.contains(' ');
+    
+    if !has_space {
+        // No space: only allow if it looks like a single real word (no underscores, not camelCase)
+        // e.g. "Yes", "No", "OK", "Cancel", "STAMINA", "REASON" are legit short words
+        if s.contains('_') { return false; } // snake_case identifier
+        // Check for camelCase: lowercase followed by uppercase
+        let chars: Vec<char> = s.chars().collect();
+        for i in 1..chars.len() {
+            if chars[i-1].is_lowercase() && chars[i].is_uppercase() {
+                return false; // camelCase identifier
+            }
+        }
+        // Single word with no underscore and no camelCase — could be a label
+        // But skip if it looks like a known resource naming pattern
+        if lower.starts_with("new_") || lower.starts_with("combat_") || lower.starts_with("select_")
+           || lower.starts_with("theme_") || lower.starts_with("terminal_") {
+            return false;
+        }
+        // Allow single real words (labels, UI elements)
+        return true;
+    }
+
+    // Has spaces — very likely real text. Final sanity checks:
+    // Skip if it looks like a comma-separated list of identifiers
+    let words: Vec<&str> = s.split_whitespace().collect();
+    if words.len() >= 2 && words.iter().all(|w| w.contains('_') && !w.contains(' ')) {
+        return false; // list of identifiers separated by spaces
+    }
+
     true
 }
 
