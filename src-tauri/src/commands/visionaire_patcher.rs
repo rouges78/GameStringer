@@ -187,25 +187,40 @@ struct VbinLocation {
 }
 
 fn find_vbin_in_vis(data: &[u8]) -> Result<VbinLocation, String> {
-    // Scan for "VBIN" magic in the archive
-    let needle = VBIN_MAGIC;
-    let mut pos = 0;
-    while pos + 16 < data.len() {
-        if &data[pos..pos+4] == needle {
-            let _unknown = read_le_u32(data, pos + 4);
-            let uncompressed = read_le_u32(data, pos + 8) as usize;
-            let compressed = read_le_u32(data, pos + 12) as usize;
-            
-            // Sanity: compressed data must fit in remaining file
-            if compressed > 0 && compressed < data.len() - pos - 16
-                && uncompressed > 0 && uncompressed < 500_000_000
-            {
-                log::info!("[VIS] VBIN trovato a offset {}: uncomp={} comp={}", pos, uncompressed, compressed);
-                return Ok(VbinLocation { offset: pos, _unknown, uncompressed, compressed });
+    // VBIN (game.veb) is typically near the end of the .vis archive.
+    // Search backwards in large chunks for speed on 800MB+ files.
+    let needle = b"VBIN";
+    
+    // Search backwards from the end in 16MB chunks
+    let chunk_size = 16 * 1024 * 1024;
+    let mut search_end = data.len();
+    
+    while search_end > 16 {
+        let search_start = if search_end > chunk_size { search_end - chunk_size } else { 0 };
+        let chunk = &data[search_start..search_end];
+        
+        // Scan chunk for "VBIN" magic
+        if let Some(rel_pos) = chunk.windows(4).rposition(|w| w == needle) {
+            let pos = search_start + rel_pos;
+            if pos + 16 < data.len() {
+                let _unknown = read_le_u32(data, pos + 4);
+                let uncompressed = read_le_u32(data, pos + 8) as usize;
+                let compressed = read_le_u32(data, pos + 12) as usize;
+                
+                if compressed > 0 && compressed < data.len() - pos - 16
+                    && uncompressed > 0 && uncompressed < 500_000_000
+                {
+                    log::info!("[VIS] VBIN trovato a offset {} (ricerca backward): uncomp={} comp={}", pos, uncompressed, compressed);
+                    return Ok(VbinLocation { offset: pos, _unknown, uncompressed, compressed });
+                }
             }
         }
-        pos += 1;
+        
+        // Move to previous chunk (overlap by 4 bytes to avoid missing magic at boundary)
+        if search_start == 0 { break; }
+        search_end = search_start + 4;
     }
+    
     Err("VBIN non trovato nell'archivio .vis".to_string())
 }
 
