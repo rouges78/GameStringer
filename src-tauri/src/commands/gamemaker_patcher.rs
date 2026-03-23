@@ -748,22 +748,34 @@ pub async fn gm_patch_strings(
     }
 }
 
-/// Create itaLanguage/ with translated .jn files based on engLanguage/ source
+/// Overwrite engLanguage/ .jn files with translations (backup to engLanguage.bak/)
 fn patch_language_files(
     lang_dir: &Path,
     eng_dir: &Path,
     translations: &HashMap<usize, String>,
 ) -> Result<GmPatchResult, String> {
-    let ita_dir = lang_dir.join("itaLanguage");
+    // Backup engLanguage/ → engLanguage.bak/ (only first time)
+    let backup_dir = lang_dir.join("engLanguage.bak");
+    if !backup_dir.exists() {
+        println!("[GM-JN] Backup engLanguage/ → engLanguage.bak/");
+        fs::create_dir_all(&backup_dir)
+            .map_err(|e| format!("Errore creazione backup: {}", e))?;
+        
+        if let Ok(entries) = fs::read_dir(eng_dir) {
+            for entry in entries.flatten() {
+                let src = entry.path();
+                if src.is_file() {
+                    let dst = backup_dir.join(entry.file_name());
+                    fs::copy(&src, &dst)
+                        .map_err(|e| format!("Errore backup {}: {}", src.display(), e))?;
+                }
+            }
+        }
+    }
     
-    // Create itaLanguage/ directory
-    fs::create_dir_all(&ita_dir)
-        .map_err(|e| format!("Errore creazione itaLanguage/: {}", e))?;
+    println!("[GM-JN] Patching engLanguage/ in {}", lang_dir.display());
     
-    println!("[GM-JN] Creating itaLanguage/ in {}", lang_dir.display());
-    
-    // Build a map: index -> translated text from the flat index
-    // We need to re-walk the .jn files in the same order as extract_jn_strings
+    // Re-walk .jn files in same order as extract_jn_strings
     let mut entries = fs::read_dir(eng_dir)
         .map_err(|e| format!("Errore lettura engLanguage/: {}", e))?
         .filter_map(|e| e.ok())
@@ -778,7 +790,11 @@ fn patch_language_files(
         if path.extension().map_or(true, |ext| ext != "jn") { continue; }
         let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
         
-        let content = fs::read_to_string(path)
+        // Read from backup (original) to avoid re-patching already patched files
+        let backup_file = backup_dir.join(&filename);
+        let source_path = if backup_file.exists() { &backup_file } else { path };
+        
+        let content = fs::read_to_string(source_path)
             .map_err(|e| format!("Errore lettura {}: {}", filename, e))?;
         
         let mut output_lines = Vec::new();
@@ -805,7 +821,6 @@ fn patch_language_files(
             
             // Check if we have a translation for this index
             if let Some(translated) = translations.get(&global_index) {
-                // Write: "Italian translation|Japanese text" (keep JP part)
                 if let Some(jp) = jp_part {
                     output_lines.push(format!("{}|{}", translated, jp));
                 } else {
@@ -820,20 +835,19 @@ fn patch_language_files(
             global_index += 1;
         }
         
-        // Write to itaLanguage/
-        let out_path = ita_dir.join(&filename);
-        fs::write(&out_path, output_lines.join("\n"))
+        // Overwrite engLanguage/ file directly
+        fs::write(path, output_lines.join("\n"))
             .map_err(|e| format!("Errore scrittura {}: {}", filename, e))?;
     }
     
-    println!("[GM-JN] itaLanguage/ creata: {} stringhe tradotte in {} file", 
-             patched_count, entries.iter().filter(|p| p.extension().map_or(false, |ext| ext == "jn")).count());
+    let file_count = entries.iter().filter(|p| p.extension().map_or(false, |ext| ext == "jn")).count();
+    println!("[GM-JN] engLanguage/ patchata: {} stringhe in {} file", patched_count, file_count);
     
     Ok(GmPatchResult {
         success: true,
         patched_count,
-        backup_path: ita_dir.to_string_lossy().to_string(),
-        message: format!("{} stringhe tradotte in itaLanguage/", patched_count),
+        backup_path: backup_dir.to_string_lossy().to_string(),
+        message: format!("{} stringhe tradotte in engLanguage/ (backup in engLanguage.bak/)", patched_count),
     })
 }
 
@@ -1080,6 +1094,25 @@ pub async fn gm_restore_backup(game_path: String) -> Result<String, String> {
                 .map_err(|e| format!("Errore ripristino EXE: {}", e))?;
             println!("[GM] EXE backup ripristinato: {}", exe_path.display());
             restored.push("EXE");
+        }
+    }
+    
+    // Try restoring engLanguage.bak/ (language file games)
+    if let Some((_lang_dir, eng_dir)) = find_language_dir(&game_path) {
+        let backup_dir = eng_dir.parent().unwrap_or(Path::new(".")).join("engLanguage.bak");
+        if backup_dir.exists() {
+            if let Ok(entries) = fs::read_dir(&backup_dir) {
+                for entry in entries.flatten() {
+                    let src = entry.path();
+                    if src.is_file() {
+                        let dst = eng_dir.join(entry.file_name());
+                        fs::copy(&src, &dst)
+                            .map_err(|e| format!("Errore ripristino {}: {}", src.display(), e))?;
+                    }
+                }
+            }
+            println!("[GM] engLanguage/ ripristinata da backup");
+            restored.push("engLanguage");
         }
     }
     
