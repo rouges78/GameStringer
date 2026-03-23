@@ -106,6 +106,8 @@ pub mod rss_proxy;
 pub mod godot_patcher;
 // GameMaker data.win string extractor & patcher
 pub mod gamemaker_patcher;
+// Visionaire Studio 5 .vis archive patcher
+pub mod visionaire_patcher;
 
 // === Linux stubs for Windows-only modules ===
 #[cfg(not(windows))]

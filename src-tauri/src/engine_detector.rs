@@ -49,6 +49,7 @@ pub enum GameEngine {
     Luminous,
     Void,
     Platinum,
+    Visionaire,
     Unknown,
 }
 
@@ -101,6 +102,7 @@ impl GameEngine {
             GameEngine::Luminous => "Luminous Engine",
             GameEngine::Void => "Void Engine",
             GameEngine::Platinum => "Platinum Engine",
+            GameEngine::Visionaire => "Visionaire Studio",
             GameEngine::Unknown => "Unknown",
         }
     }
@@ -144,6 +146,11 @@ pub fn detect_engine(game_path: &Path) -> GameEngine {
     // 6. GameMaker
     if is_gamemaker(game_path) {
         return GameEngine::GameMaker;
+    }
+    
+    // 6.5. Visionaire Studio
+    if is_visionaire(game_path) {
+        return GameEngine::Visionaire;
     }
     
     // 7. Source Engine
@@ -491,6 +498,39 @@ fn is_renpy(path: &Path) -> bool {
         }
     }
     
+    false
+}
+
+fn is_visionaire(path: &Path) -> bool {
+    // Visionaire Studio 5 — .vis archive file (data.vis, game.vis, etc.)
+    // Also check config.ini for "FILE = *.vis" pattern
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.extension().map_or(false, |e| e.to_ascii_lowercase() == "vis") {
+                // Verify VIS5/VIS3 magic
+                if let Ok(f) = std::fs::File::open(&p) {
+                    use std::io::Read;
+                    let mut magic = [0u8; 4];
+                    if (&f).take(4).read(&mut magic).is_ok() {
+                        if &magic == b"VIS5" || &magic == b"VIS3" {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // Fallback: config.ini with FILE=data.vis or similar
+    let config = path.join("config.ini");
+    if config.exists() {
+        if let Ok(content) = std::fs::read_to_string(&config) {
+            let lower = content.to_lowercase();
+            if lower.contains(".vis") && (lower.contains("file") || lower.contains("fullscreen") || lower.contains("resolution")) {
+                return true;
+            }
+        }
+    }
     false
 }
 
@@ -1214,6 +1254,16 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
         "cassette beasts", "cruelty squad", "dome keeper", "brotato",
         "sonic colors ultimate", "halls of torment"
     ];
+    // 🎭 VISIONAIRE STUDIO (Adventure games)
+    let visionaire_games = [
+        "deponia", "edna & harvey", "edna and harvey", "the whispered world",
+        "the dark eye", "memoria", "silence", "anna's quest", "the inner world",
+        "foolish mortals", "kelvin and the infamous machine", "trüberbrook",
+        "truberbrook", "unforeseen incidents", "gibbous", "lamplight city",
+        "detective gallo", "the raven", "the book of unwritten tales",
+        "harvey's new eyes", "a new beginning", "chains of satinav",
+    ];
+    
     let gamemaker_games = [
         "undertale", "deltarune", "hyper light drifter", "hotline miami",
         "nuclear throne", "decarnation", "katana zero", "downwell",
@@ -1331,6 +1381,9 @@ pub fn detect_engine_by_name(name: &str) -> Option<String> {
     }
     if godot_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("Godot".to_string());
+    }
+    if visionaire_games.iter().any(|&game| name_lower.contains(game)) {
+        return Some("Visionaire Studio".to_string());
     }
     if rpgmaker_games.iter().any(|&game| name_lower.contains(game)) {
         return Some("RPG Maker".to_string());

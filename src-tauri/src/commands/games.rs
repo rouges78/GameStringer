@@ -557,6 +557,16 @@ pub async fn detect_engine_for_game(
                 "💡 Testi in file .ks o .tjs".to_string(),
             ]
         ),
+        "Visionaire" | "Visionaire Studio" | "Visionaire Studio 5" => (
+            true,
+            Some("GameStringer Visionaire Patcher".to_string()),
+            Some("Estrai e traduci i testi dal file .vis direttamente con GameStringer.".to_string()),
+            vec![
+                "✅ Visionaire Studio supportato! Patcher integrato".to_string(),
+                "📁 Testi dentro data.vis → game.veb (formato VBIN)".to_string(),
+                "💡 Backup automatico .gs_bak prima di modificare".to_string(),
+            ]
+        ),
         "Spike Chunsoft Engine" => (
             true,
             Some("DRAT (Danganronpa Another Tool)".to_string()),

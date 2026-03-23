@@ -115,7 +115,7 @@ export default function GameDetailPage() {
   // Pre-computed translation strategy (populated on page load)
   const [translationStrategy, setTranslationStrategy] = useState<{
     engine: string;
-    method: 'unity' | 'unreal' | 'gamemaker' | 'generic';
+    method: 'unity' | 'unreal' | 'gamemaker' | 'visionaire' | 'generic';
     detail: string;
     fileCount: number;
     stringCount: number;
@@ -280,6 +280,22 @@ export default function GameDetailPage() {
           });
         } catch {
           setTranslationStrategy({ engine: detectedEngine, method: 'unreal', detail: 'Unreal Engine rilevato', fileCount: 0, stringCount: 0, ready: true });
+        }
+      } else if (eng.includes('visionaire')) {
+        try {
+          const visInfo: any = await invoke('scan_vis_strings', { gamePath: game.installPath });
+          setTranslationStrategy({
+            engine: detectedEngine || 'Visionaire Studio',
+            method: 'visionaire',
+            detail: visInfo?.total_strings > 0 
+              ? `${visInfo.version} — ${visInfo.total_strings} stringhe in game.veb`
+              : `${visInfo?.version || 'VIS5'} — scansione al click`,
+            fileCount: visInfo?.file_count || 0,
+            stringCount: visInfo?.total_strings || 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine || 'Visionaire Studio', method: 'visionaire', detail: 'Visionaire rilevato — scansione al click', fileCount: 0, stringCount: 0, ready: true });
         }
       } else {
         // Generic: scan for text files
@@ -1296,6 +1312,14 @@ export default function GameDetailPage() {
         } catch (e: any) {
           updateStep(2, 'done', `GameMaker rilevato: ${e?.toString?.() || ''}`);
         }
+      } else if (detectedEngine.toLowerCase().includes('visionaire')) {
+        updateStep(2, 'running', 'Analisi Visionaire Studio — scansione data.vis...');
+        try {
+          const visInfo: any = await invoke('scan_vis_strings', { gamePath: game.installPath });
+          updateStep(2, 'done', `${visInfo?.version || 'VIS5'} — ${visInfo?.total_strings || 0} stringhe in game.veb`);
+        } catch (e: any) {
+          updateStep(2, 'done', `Visionaire rilevato: ${e?.toString?.() || ''}`);
+        }
       } else {
         updateStep(2, 'done', t('gameDetails.noPatchNeeded') || 'No patch needed — direct translation');
       }
@@ -1379,6 +1403,62 @@ export default function GameDetailPage() {
           await new Promise(r => setTimeout(r, 600));
           updateStep(3, 'done', 'Traduzione Unreal configurata');
         }
+      } else if (detectedEngine.toLowerCase().includes('visionaire')) {
+        // Visionaire Studio: extract strings from game.veb, translate with AI, patch back
+        try {
+          updateStep(3, 'running', 'Estrazione stringhe da game.veb...');
+          const allStrings: any[] = [];
+          let pageNum = 0;
+          while (true) {
+            const pageStrings = await invoke<any[]>('extract_vis_strings', {
+              gamePath: game.installPath,
+              offset: pageNum * 200,
+              limit: 200,
+            });
+            if (!pageStrings || pageStrings.length === 0) break;
+            allStrings.push(...pageStrings);
+            pageNum++;
+          }
+
+          if (allStrings.length === 0) {
+            updateStep(3, 'done', 'Nessuna stringa traducibile trovata in game.veb');
+          } else {
+            // Translate with AI in batches
+            const translations: Record<number, string> = {};
+            const BATCH = 5;
+            let done = 0;
+
+            for (let i = 0; i < allStrings.length; i += BATCH) {
+              if (!autoTranslateRunningRef.current) break;
+              const batch = allStrings.slice(i, i + BATCH);
+              const promises = batch.map(async (s: any) => {
+                try {
+                  const result = await invoke<{ translated_text: string }>('translate_text_simple', {
+                    text: s.text,
+                    targetLang: language || 'it',
+                  });
+                  if (result?.translated_text) {
+                    translations[s.index] = result.translated_text;
+                  }
+                } catch {}
+              });
+              await Promise.all(promises);
+              done += batch.length;
+              updateStep(3, 'running', `Traduzione AI Visionaire: ${done}/${allStrings.length} stringhe...`);
+            }
+
+            // Patch translations back into .vis archive
+            updateStep(3, 'running', 'Applicazione traduzioni al file .vis...');
+            const patchResult = await invoke<any>('patch_vis_strings', {
+              gamePath: game.installPath,
+              translations,
+            });
+
+            updateStep(3, 'done', patchResult?.message || `${Object.keys(translations).length} stringhe tradotte e applicate`);
+          }
+        } catch (e: any) {
+          updateStep(3, 'error', `Errore Visionaire: ${e?.toString?.() || 'sconosciuto'}`);
+        }
       } else if (isUnity) {
         // Per Unity con XUnity: controlla se ci sono già stringhe catturate
         try {
@@ -1434,7 +1514,7 @@ export default function GameDetailPage() {
               const lines = content.split('\n');
               const translatableLines: { idx: number; text: string }[] = [];
               const isConfigFile = /\.(ini|cfg|conf|config|properties)$/i.test(fileName);
-              const configBlocklist = /^(yes|no|true|false|auto|desktop|game|info|warning|error|debug|none|default|on|off|enabled|disabled|null|undefined|\d+(\.\d+)?|[a-z]:\\.*|\/.*\..+|[a-zA-Z0-9_.-]+\.(vis|win|dat|exe|dll|pak|png|jpg|wav|ogg|mp3|mp4|bin|db|log|tmp|bak))$/i;
+              const configBlocklist = /^(yes|no|true|false|auto|desktop|game|info|warning|error|debug|none|default|on|off|enabled|disabled|null|undefined|\d+(\.\d+)?|[a-zA-Z]:\\.*|\/.*\..+|[a-zA-Z0-9_.-]+\.(vis|win|dat|exe|dll|pak|png|jpg|wav|ogg|mp3|mp4|bin|db|log|tmp|bak))$/i;
               
               for (let li = 0; li < lines.length; li++) {
                 const line = lines[li].trim();

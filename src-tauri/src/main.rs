@@ -494,6 +494,13 @@ fn main() {
             commands::gamemaker_patcher::gm_restore_backup,
             commands::gamemaker_patcher::gm_search_strings,
 
+            // Visionaire Studio 5 patcher
+            commands::visionaire_patcher::detect_visionaire,
+            commands::visionaire_patcher::scan_vis_strings,
+            commands::visionaire_patcher::extract_vis_strings,
+            commands::visionaire_patcher::patch_vis_strings,
+            commands::visionaire_patcher::restore_vis_backup,
+
             // repak wrapper
             commands::repak_wrapper::download_repak_tool,
             commands::repak_wrapper::check_repak_installed,
