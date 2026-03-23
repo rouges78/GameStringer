@@ -54,6 +54,7 @@ fn read_u32_le(data: &[u8], pos: usize) -> u32 {
     u32::from_le_bytes([data[pos], data[pos+1], data[pos+2], data[pos+3]])
 }
 
+#[allow(dead_code)]
 fn _write_u32_le(data: &mut [u8], pos: usize, val: u32) {
     let bytes = val.to_le_bytes();
     data[pos..pos+4].copy_from_slice(&bytes);
