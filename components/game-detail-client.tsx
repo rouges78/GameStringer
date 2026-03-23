@@ -112,6 +112,17 @@ export default function GameDetailPage() {
   const [autoTranslateSteps, setAutoTranslateSteps] = useState<{label: string, status: 'pending' | 'running' | 'done' | 'error', detail?: string}[]>([]);
   const [autoTranslateError, setAutoTranslateError] = useState<string | null>(null);
 
+  // Pre-computed translation strategy (populated on page load)
+  const [translationStrategy, setTranslationStrategy] = useState<{
+    engine: string;
+    method: 'unity' | 'unreal' | 'gamemaker' | 'generic';
+    detail: string;
+    fileCount: number;
+    stringCount: number;
+    ready: boolean;
+  } | null>(null);
+  const strategyComputedRef = useRef<string | null>(null);
+
   // Migliora con AI — traduce le stringhe catturate da XUnity con Ollama
   const [isAiUpgrading, setIsAiUpgrading] = useState(false);
   const [aiUpgradeProgress, setAiUpgradeProgress] = useState<{current: number, total: number} | null>(null);
@@ -221,6 +232,75 @@ export default function GameDetailPage() {
       }
     } finally {
       setIsDetectingEngine(false);
+    }
+  };
+
+  // Pre-compute translation strategy on page load (engine + files + method)
+  const computeTranslationStrategy = async () => {
+    if (!game?.installPath) return;
+    const gameKey = game.id || game.appid?.toString() || gameId;
+    if (strategyComputedRef.current === gameKey) return;
+    strategyComputedRef.current = gameKey;
+
+    const detectedEngine = game.engine || engineInfo?.engine || detectEngineByName(game.name || game.title || '') || '';
+    const eng = detectedEngine.toLowerCase();
+
+    try {
+      if (eng.includes('gamemaker') || eng.includes('game maker')) {
+        // GameMaker: check for .jn files or data.win
+        try {
+          const gmInfo = await invoke<any>('gm_scan_data_win', { gamePath: game.installPath });
+          setTranslationStrategy({
+            engine: detectedEngine || 'GameMaker',
+            method: 'gamemaker',
+            detail: gmInfo?.has_language_files 
+              ? `${gmInfo.language_file_count} file .jn — ${gmInfo.translatable_strings} stringhe`
+              : gmInfo?.is_yyc
+                ? `YYC EXE — ${gmInfo.translatable_strings} stringhe`
+                : `data.win — ${gmInfo.translatable_strings} stringhe`,
+            fileCount: gmInfo?.language_file_count || 1,
+            stringCount: gmInfo?.translatable_strings || 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine || 'GameMaker', method: 'gamemaker', detail: 'GameMaker rilevato', fileCount: 0, stringCount: 0, ready: true });
+        }
+      } else if (eng.includes('unity')) {
+        setTranslationStrategy({ engine: detectedEngine, method: 'unity', detail: 'BepInEx + XUnity AutoTranslator', fileCount: 0, stringCount: 0, ready: true });
+      } else if (eng.includes('unreal')) {
+        try {
+          const locStatus: any = await invoke('get_unreal_localization_status', { gamePath: game.installPath });
+          setTranslationStrategy({
+            engine: detectedEngine,
+            method: 'unreal',
+            detail: locStatus?.has_gs_pak ? `Patch attiva — ${locStatus.translated_entries} stringhe` : locStatus?.has_locres ? `.locres trovati — traduzione AI disponibile` : 'Unreal Engine rilevato',
+            fileCount: locStatus?.locres_count || 0,
+            stringCount: locStatus?.total_entries || 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine, method: 'unreal', detail: 'Unreal Engine rilevato', fileCount: 0, stringCount: 0, ready: true });
+        }
+      } else {
+        // Generic: scan for text files
+        try {
+          const scannedFiles = await invoke<string[]>('scan_game_files', { gamePath: game.installPath });
+          const textExts = ['.json', '.csv', '.txt', '.xml', '.po', '.yaml', '.yml', '.ini', '.cfg', '.lang', '.loc', '.strings', '.jn'];
+          const textFiles = (scannedFiles || []).filter(f => textExts.some(ext => f.toLowerCase().endsWith(ext)));
+          setTranslationStrategy({
+            engine: detectedEngine || 'Sconosciuto',
+            method: 'generic',
+            detail: textFiles.length > 0 ? `${textFiles.length} file di testo traducibili` : 'Scansione file al click',
+            fileCount: textFiles.length,
+            stringCount: 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine || 'Sconosciuto', method: 'generic', detail: 'Traduzione diretta AI', fileCount: 0, stringCount: 0, ready: true });
+        }
+      }
+    } catch {
+      setTranslationStrategy({ engine: detectedEngine || 'Sconosciuto', method: 'generic', detail: 'Pronto per traduzione', fileCount: 0, stringCount: 0, ready: true });
     }
   };
 
@@ -889,6 +969,8 @@ export default function GameDetailPage() {
       if (!engineInfo && !isDetectingEngine) {
         detectEngine();
       }
+      // Pre-compute translation strategy
+      computeTranslationStrategy();
       if (game.engine === 'Unreal Engine' && game.installPath) {
         loadUnrealPatchStatus();
         loadUeLocStatus();
@@ -1112,9 +1194,9 @@ export default function GameDetailPage() {
     };
 
     try {
-      // ── STEP 1: Rileva engine ──
+      // ── STEP 1: Rileva engine (usa strategia pre-calcolata se disponibile) ──
       updateStep(0, 'running', t('gameDetails.analyzingFolder') || 'Analyzing game folder...');
-      let detectedEngine = game.engine || engineInfo?.engine || '';
+      let detectedEngine = translationStrategy?.engine || game.engine || engineInfo?.engine || '';
       
       if (!detectedEngine) {
         try {
@@ -1122,11 +1204,12 @@ export default function GameDetailPage() {
           detectedEngine = engineResult?.engine_name || '';
           setEngineInfo(engineResult);
         } catch {
-          // Fallback: prova dal nome
           detectedEngine = detectEngineByName(game.name || game.title || '') || '';
         }
       }
-      updateStep(0, 'done', detectedEngine ? `Engine: ${detectedEngine}` : t('gameDetails.engineNotDetected') || 'Engine not detected — generic translation');
+      updateStep(0, 'done', translationStrategy 
+        ? `${detectedEngine || 'Engine'} · ${translationStrategy.detail}`
+        : detectedEngine ? `Engine: ${detectedEngine}` : t('gameDetails.engineNotDetected') || 'Engine not detected — generic translation');
       await new Promise(r => setTimeout(r, 600));
 
       // ── STEP 2: Scansiona file ──
@@ -1875,13 +1958,20 @@ export default function GameDetailPage() {
                 <Play className="h-4 w-4 fill-current group-hover:scale-110 transition-transform" /> Gioca
               </button>
             )}
-            <button className="h-10 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 relative overflow-hidden group"
-              onClick={startAutoTranslate}
-              disabled={autoTranslateActive}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-              {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateActive ? t('gameDetails.translating') || 'Translating...' : `${t('gameDetails.translate') || 'Translate'} (${language.toUpperCase()})`}
-            </button>
+            <div className="flex flex-col items-stretch">
+              <button className="h-10 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 relative overflow-hidden group"
+                onClick={startAutoTranslate}
+                disabled={autoTranslateActive}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateActive ? t('gameDetails.translating') || 'Translating...' : `${t('gameDetails.translate') || 'Translate'} (${language.toUpperCase()})`}
+              </button>
+              {translationStrategy?.ready && (
+                <div className="text-[8px] text-center mt-1 text-slate-500 tracking-wide">
+                  {translationStrategy.engine} · {translationStrategy.detail}
+                </div>
+              )}
+            </div>
             {game.platform === 'Steam' && game.appid > 0 && (
               <button className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white text-[9px] font-bold uppercase tracking-wider transition-all"
                 onClick={() => window.open(`steam://nav/games/details/${game.appid}`)}
