@@ -479,7 +479,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
               onClick={patchDataWin}
               disabled={isPatching || translatedCount === 0}>
               {isPatching ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
-              Salva in data.win ({translatedCount})
+              {dataInfo?.is_yyc ? `Salva in EXE (${translatedCount})` : `Salva in data.win (${translatedCount})`}
             </Button>
           </div>
 
