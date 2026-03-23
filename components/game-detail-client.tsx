@@ -1329,25 +1329,126 @@ export default function GameDetailPage() {
             : 'XUnity AutoTranslator installed — auto-translation active on first launch');
         }
       } else {
-        // Traduzione diretta tramite Ollama per file di testo (giochi non-Unity)
-        let translatedCount = 0;
-        const textFiles = scannedFiles.filter(f => 
-          f.endsWith('.json') || f.endsWith('.csv') || f.endsWith('.txt') || 
-          f.endsWith('.xml') || f.endsWith('.po') || f.endsWith('.yaml') || f.endsWith('.yml')
-        );
+        // Traduzione diretta AI per file di testo (giochi con engine sconosciuto/custom)
+        const textExts = ['.json', '.csv', '.txt', '.xml', '.po', '.yaml', '.yml', '.ini', '.cfg', '.lang', '.loc', '.strings', '.jn'];
+        const textFiles = scannedFiles.filter(f => textExts.some(ext => f.toLowerCase().endsWith(ext)));
 
         if (textFiles.length > 0) {
-          for (let i = 0; i < Math.min(textFiles.length, 5); i++) {
-            updateStep(3, 'running', `${language === 'it' ? 'Traduzione' : 'Translating'} ${i + 1}/${Math.min(textFiles.length, 5)}: ${textFiles[i].split(/[/\\]/).pop()}`);
+          let translatedFiles = 0;
+          let totalStrings = 0;
+          
+          for (let i = 0; i < textFiles.length; i++) {
+            if (!autoTranslateRunningRef.current) break;
+            const fileName = textFiles[i].split(/[/\\]/).pop() || textFiles[i];
+            updateStep(3, 'running', `File ${i + 1}/${textFiles.length}: ${fileName}...`);
+            
             try {
               const filePath = `${game.installPath}\\${textFiles[i]}`;
               const content = await invoke<string>('read_text_file', { path: filePath });
-              if (content && content.length > 10) translatedCount++;
-            } catch { /* skip */ }
+              if (!content || content.length < 10) continue;
+              
+              // Extract translatable lines (non-empty, has letters, not code/binary)
+              const lines = content.split('\n');
+              const translatableLines: { idx: number; text: string }[] = [];
+              
+              for (let li = 0; li < lines.length; li++) {
+                const line = lines[li].trim();
+                // Skip empty, comments, code-like lines
+                if (!line || line.startsWith('//') || line.startsWith('#') || line.startsWith(';') || line.startsWith('--')) continue;
+                // Extract value part from key=value, key:value, "key":"value" patterns
+                let textPart = line;
+                // JSON-like: "key": "value" → extract value
+                const jsonMatch = line.match(/"[^"]*"\s*:\s*"([^"]+)"/);
+                if (jsonMatch) { textPart = jsonMatch[1]; }
+                // INI-like: key=value
+                else if (line.includes('=') && !line.startsWith('[')) {
+                  textPart = line.split('=').slice(1).join('=').trim();
+                  // Remove surrounding quotes
+                  if ((textPart.startsWith('"') && textPart.endsWith('"')) || (textPart.startsWith("'") && textPart.endsWith("'"))) {
+                    textPart = textPart.slice(1, -1);
+                  }
+                }
+                // Must have at least 3 letters and look like real text
+                const letterCount = (textPart.match(/[a-zA-Z]/g) || []).length;
+                if (letterCount < 3) continue;
+                if (textPart.length < 5 || textPart.length > 2000) continue;
+                // Skip paths, URLs, hex codes
+                if (textPart.match(/^[\/\\]|^https?:|^#[0-9a-fA-F]{6}|\.dll$|\.exe$|\.png$|\.wav$/i)) continue;
+                
+                translatableLines.push({ idx: li, text: textPart });
+              }
+              
+              if (translatableLines.length === 0) continue;
+              
+              // Backup original file (only first time)
+              const backupPath = filePath + '.gs_bak';
+              try { await invoke('read_text_file', { path: backupPath }); } catch {
+                // No backup yet — create one
+                try { await invoke('write_text_file', { path: backupPath, content }); } catch {}
+              }
+              
+              // Translate in batches of 5
+              const translatedMap: Record<number, string> = {};
+              for (let bi = 0; bi < translatableLines.length; bi += 5) {
+                if (!autoTranslateRunningRef.current) break;
+                const batch = translatableLines.slice(bi, bi + 5);
+                const promises = batch.map(async (item) => {
+                  try {
+                    const result = await invoke<{ translated_text: string }>('translate_text_simple', {
+                      text: item.text,
+                      targetLang: language || 'it',
+                    });
+                    if (result?.translated_text) {
+                      translatedMap[item.idx] = result.translated_text;
+                    }
+                  } catch {}
+                });
+                await Promise.all(promises);
+                totalStrings += batch.length;
+                updateStep(3, 'running', `File ${i + 1}/${textFiles.length}: ${fileName} — ${Object.keys(translatedMap).length}/${translatableLines.length} stringhe...`);
+              }
+              
+              // Rebuild file with translations
+              if (Object.keys(translatedMap).length > 0) {
+                const newLines = [...lines];
+                for (const [lineIdx, translated] of Object.entries(translatedMap)) {
+                  const li = Number(lineIdx);
+                  const origLine = lines[li];
+                  // JSON: replace value in "key": "value"
+                  const jsonMatch = origLine.match(/^(\s*"[^"]*"\s*:\s*")([^"]+)(".*)/);
+                  if (jsonMatch) {
+                    newLines[li] = jsonMatch[1] + translated + jsonMatch[3];
+                  }
+                  // INI: replace value in key=value
+                  else if (origLine.includes('=') && !origLine.trim().startsWith('[')) {
+                    const eqPos = origLine.indexOf('=');
+                    const key = origLine.slice(0, eqPos + 1);
+                    const origVal = origLine.slice(eqPos + 1).trim();
+                    if ((origVal.startsWith('"') && origVal.endsWith('"'))) {
+                      newLines[li] = key + '"' + translated + '"';
+                    } else if ((origVal.startsWith("'") && origVal.endsWith("'"))) {
+                      newLines[li] = key + "'" + translated + "'";
+                    } else {
+                      newLines[li] = key + translated;
+                    }
+                  }
+                  // Plain text: replace whole line
+                  else {
+                    newLines[li] = translated;
+                  }
+                }
+                
+                try {
+                  await invoke('write_text_file', { path: filePath, content: newLines.join('\n') });
+                  translatedFiles++;
+                } catch {}
+              }
+            } catch { /* skip unreadable files */ }
           }
-          updateStep(3, 'done', `${translatedCount} ${language === 'it' ? 'file processati' : 'files processed'}`);
+          
+          updateStep(3, 'done', `${translatedFiles} file tradotti (${totalStrings} stringhe)`);
         } else {
-          updateStep(3, 'done', language === 'it' ? 'Traduzione configurata' : 'Translation configured');
+          updateStep(3, 'done', 'Nessun file di testo traducibile trovato');
         }
       }
       await new Promise(r => setTimeout(r, 600));
