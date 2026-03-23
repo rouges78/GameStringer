@@ -1433,30 +1433,44 @@ export default function GameDetailPage() {
               // Extract translatable lines (non-empty, has letters, not code/binary)
               const lines = content.split('\n');
               const translatableLines: { idx: number; text: string }[] = [];
+              const isConfigFile = /\.(ini|cfg|conf|config|properties)$/i.test(fileName);
+              const configBlocklist = /^(yes|no|true|false|auto|desktop|game|info|warning|error|debug|none|default|on|off|enabled|disabled|null|undefined|\d+(\.\d+)?|[a-z]:\\.*|\/.*\..+|[a-zA-Z0-9_.-]+\.(vis|win|dat|exe|dll|pak|png|jpg|wav|ogg|mp3|mp4|bin|db|log|tmp|bak))$/i;
               
               for (let li = 0; li < lines.length; li++) {
                 const line = lines[li].trim();
-                // Skip empty, comments, code-like lines
-                if (!line || line.startsWith('//') || line.startsWith('#') || line.startsWith(';') || line.startsWith('--')) continue;
+                // Skip empty, comments, code-like lines, section headers
+                if (!line || line.startsWith('//') || line.startsWith('#') || line.startsWith(';') || line.startsWith('--') || line.startsWith('[')) continue;
                 // Extract value part from key=value, key:value, "key":"value" patterns
                 let textPart = line;
+                let isKeyValue = false;
                 // JSON-like: "key": "value" → extract value
                 const jsonMatch = line.match(/"[^"]*"\s*:\s*"([^"]+)"/);
-                if (jsonMatch) { textPart = jsonMatch[1]; }
-                // INI-like: key=value
+                if (jsonMatch) { textPart = jsonMatch[1]; isKeyValue = true; }
+                // INI/config: key=value
                 else if (line.includes('=') && !line.startsWith('[')) {
                   textPart = line.split('=').slice(1).join('=').trim();
-                  // Remove surrounding quotes
                   if ((textPart.startsWith('"') && textPart.endsWith('"')) || (textPart.startsWith("'") && textPart.endsWith("'"))) {
                     textPart = textPart.slice(1, -1);
                   }
+                  isKeyValue = true;
+                }
+                // For config files: skip key=value unless value is a real sentence (3+ words)
+                if (isConfigFile && isKeyValue) {
+                  const wordCount = textPart.split(/\s+/).filter(w => w.length > 1).length;
+                  if (wordCount < 3) continue;
+                  if (configBlocklist.test(textPart)) continue;
                 }
                 // Must have at least 3 letters and look like real text
                 const letterCount = (textPart.match(/[a-zA-Z]/g) || []).length;
                 if (letterCount < 3) continue;
-                if (textPart.length < 5 || textPart.length > 2000) continue;
-                // Skip paths, URLs, hex codes
-                if (textPart.match(/^[\/\\]|^https?:|^#[0-9a-fA-F]{6}|\.dll$|\.exe$|\.png$|\.wav$/i)) continue;
+                if (textPart.length < 8 || textPart.length > 2000) continue;
+                // Must contain at least 2 words (real human text, not single identifiers)
+                const words = textPart.split(/\s+/).filter(w => /[a-zA-Z]{2,}/.test(w));
+                if (words.length < 2) continue;
+                // Skip paths, URLs, hex codes, file extensions, technical values
+                if (textPart.match(/^[\/\\]|^https?:|^#[0-9a-fA-F]{6}|^\{|^\[|\.dll$|\.exe$|\.png$|\.wav$|\.vis$|\.dat$/i)) continue;
+                // Skip lines that look like code (contains brackets, semicolons, assignments)
+                if (textPart.match(/[{}();]|=>|::|->|\+=|-=|\*=/)) continue;
                 
                 translatableLines.push({ idx: li, text: textPart });
               }
