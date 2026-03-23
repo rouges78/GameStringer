@@ -1865,6 +1865,18 @@ export default function GameDetailPage() {
           </button>
         </Link>
 
+        {/* Metacritic score (floating top-right) */}
+        {game?.metacritic?.score > 0 && (
+          <div className="absolute top-4 right-6 z-20 flex flex-col items-center gap-1">
+            <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-black text-white shadow-lg ${
+              game.metacritic.score >= 75 ? 'bg-[#66cc33]' : game.metacritic.score >= 50 ? 'bg-[#ffcc33]' : 'bg-[#ff0000]'
+            }`}>
+              {game.metacritic.score}
+            </div>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-white/50">Metacritic</span>
+          </div>
+        )}
+
         {/* Hero content overlay */}
         <div className="relative z-10 flex items-end gap-6 px-6 pb-6 pt-16 max-w-[1400px] mx-auto">
           {/* Cover */}
@@ -1930,11 +1942,6 @@ export default function GameDetailPage() {
               {game.genres?.filter((g: any) => g?.description).slice(0, 4).map((genre: any, i: number) => (
                 <span key={i} className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-slate-300">{genre.description}</span>
               ))}
-              {game.metacritic?.score && (
-                <span className={`text-[10px] font-black px-2.5 py-1 rounded-md border ${game.metacritic.score >= 80 ? 'text-emerald-300 bg-emerald-500/15 border-emerald-500/25' : game.metacritic.score >= 60 ? 'text-amber-300 bg-amber-500/15 border-amber-500/25' : 'text-red-300 bg-red-500/15 border-red-500/25'}`}>
-                  {game.metacritic.score} MC
-                </span>
-              )}
               {game.recommendations?.total > 0 && (
                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.total.toLocaleString()}</span>
               )}
