@@ -31,6 +31,10 @@ pub struct GmDataInfo {
     pub chunks: Vec<String>,
     pub is_yyc: bool,         // true if game is compiled with YYC (text in EXE, not data.win)
     pub exe_path: Option<String>, // path to game executable (for YYC games)
+    pub has_language_files: bool,  // true if game has language/*.jn files
+    pub language_dir: Option<String>, // path to language directory
+    pub language_file_count: usize, // number of .jn files in engLanguage/
+    pub string_source: String,  // "strg", "exe", or "language_files"
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -453,9 +457,99 @@ fn find_data_win(game_path: &str) -> Option<PathBuf> {
     None
 }
 
+/// Find language directory with .jn files (e.g. language/engLanguage/)
+fn find_language_dir(game_path: &str) -> Option<(PathBuf, PathBuf)> {
+    let dir = Path::new(game_path);
+    let lang_dir = dir.join("language");
+    if !lang_dir.is_dir() { return None; }
+    
+    // Look for engLanguage/ (English source for translations)
+    let eng_dir = lang_dir.join("engLanguage");
+    if eng_dir.is_dir() {
+        // Check if it has .jn files
+        if let Ok(entries) = fs::read_dir(&eng_dir) {
+            let jn_count = entries.flatten()
+                .filter(|e| e.path().extension().map_or(false, |ext| ext == "jn"))
+                .count();
+            if jn_count > 0 {
+                return Some((lang_dir, eng_dir));
+            }
+        }
+    }
+    None
+}
+
+/// Count translatable strings in .jn files (format: "English text|Japanese text" per line)
+fn count_jn_strings(eng_dir: &Path) -> (usize, usize) {
+    let mut total = 0usize;
+    let mut file_count = 0usize;
+    
+    if let Ok(entries) = fs::read_dir(eng_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map_or(false, |ext| ext == "jn") {
+                file_count += 1;
+                if let Ok(content) = fs::read_to_string(&path) {
+                    for line in content.lines() {
+                        let line = line.trim();
+                        if !line.is_empty() && line.contains('|') {
+                            total += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    (total, file_count)
+}
+
+/// Extract strings from .jn files as GmString entries
+fn extract_jn_strings(eng_dir: &Path) -> Vec<GmString> {
+    let mut strings = Vec::new();
+    let mut index = 0;
+    
+    if let Ok(entries) = fs::read_dir(eng_dir) {
+        let mut paths: Vec<_> = entries.flatten().map(|e| e.path()).collect();
+        paths.sort();
+        
+        for path in paths {
+            if path.extension().map_or(true, |ext| ext != "jn") { continue; }
+            let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+            
+            if let Ok(content) = fs::read_to_string(&path) {
+                for (line_num, line) in content.lines().enumerate() {
+                    let line = line.trim();
+                    if line.is_empty() { continue; }
+                    
+                    // Format: "English text|Japanese text" or just "English text"
+                    let english_part = if let Some(pipe_pos) = line.find('|') {
+                        &line[..pipe_pos]
+                    } else {
+                        line
+                    };
+                    
+                    if english_part.is_empty() { continue; }
+                    
+                    strings.push(GmString {
+                        index,
+                        offset: line_num as u64,     // line number in file
+                        data_offset: 0,              // not used for .jn
+                        original: english_part.to_string(),
+                        translated: None,
+                        length: english_part.len(),
+                        is_translatable: true,       // all .jn strings are translatable
+                    });
+                    index += 1;
+                }
+            }
+        }
+    }
+    strings
+}
+
 #[tauri::command(rename_all = "camelCase")]
 pub async fn gm_scan_data_win(game_path: String) -> Result<GmDataInfo, String> {
-    println!("[GM] Scanning data.win in: {}", game_path);
+    println!("[GM] Scanning in: {}", game_path);
     
     let data_win_path = find_data_win(&game_path)
         .ok_or_else(|| "data.win non trovato nella cartella del gioco".to_string())?;
@@ -467,7 +561,29 @@ pub async fn gm_scan_data_win(game_path: String) -> Result<GmDataInfo, String> {
     let chunk_names: Vec<String> = chunks.iter().map(|(name, _, _)| name.clone()).collect();
     let version = detect_version(&chunk_names);
     
-    // Find STRG chunk and count translatable strings
+    // ── Priority 1: Check for language/*.jn files ──
+    if let Some((lang_dir, eng_dir)) = find_language_dir(&game_path) {
+        let (jn_total, jn_file_count) = count_jn_strings(&eng_dir);
+        println!("[GM] Language files found: {} .jn files, {} strings in {}", 
+                 jn_file_count, jn_total, eng_dir.display());
+        
+        return Ok(GmDataInfo {
+            file_path: data_win_path.to_string_lossy().to_string(),
+            file_size: data.len() as u64,
+            gm_version: format!("{} (Language Files)", version),
+            total_strings: jn_total,
+            translatable_strings: jn_total, // all .jn strings are translatable
+            chunks: chunk_names,
+            is_yyc: false,
+            exe_path: None,
+            has_language_files: true,
+            language_dir: Some(lang_dir.to_string_lossy().to_string()),
+            language_file_count: jn_file_count,
+            string_source: "language_files".to_string(),
+        });
+    }
+    
+    // ── Priority 2: STRG chunk analysis ──
     let strg = chunks.iter().find(|(name, _, _)| name == "STRG");
     let (strg_total, strg_translatable) = if let Some((_, size, offset)) = strg {
         let strings = extract_strings(&data, *offset, *size);
@@ -477,36 +593,36 @@ pub async fn gm_scan_data_win(game_path: String) -> Result<GmDataInfo, String> {
         (0, 0)
     };
     
-    // Detect YYC: if data.win has very few translatable strings (< 5% or < 50),
-    // the game is likely compiled with YYC and text is in the EXE
+    // ── Priority 3: YYC detection → EXE scan ──
     let yyc_threshold = (strg_total as f64 * 0.05) as usize;
     let is_yyc = strg_translatable < 50.min(yyc_threshold.max(50));
     
-    let (total, translatable, exe_path) = if is_yyc {
-        // Try to extract strings from EXE
+    let (total, translatable, exe_path, source) = if is_yyc {
         if let Some(exe) = find_game_exe(&game_path) {
             println!("[GM] YYC detected — scanning EXE: {}", exe.display());
             match fs::read(&exe) {
                 Ok(exe_data) => {
                     let exe_strings = extract_exe_strings(&exe_data, 15);
                     let t = exe_strings.iter().filter(|s| s.is_translatable).count();
-                    println!("[GM] EXE: {} total strings, {} translatable", exe_strings.len(), t);
-                    (exe_strings.len(), t, Some(exe.to_string_lossy().to_string()))
+                    println!("[GM] EXE: {} total, {} translatable", exe_strings.len(), t);
+                    (exe_strings.len(), t, Some(exe.to_string_lossy().to_string()), "exe")
                 }
                 Err(e) => {
                     println!("[GM] Failed to read EXE: {}", e);
-                    (strg_total, strg_translatable, None)
+                    (strg_total, strg_translatable, None, "strg")
                 }
             }
         } else {
-            println!("[GM] YYC detected but no EXE found — using data.win STRG");
-            (strg_total, strg_translatable, None)
+            (strg_total, strg_translatable, None, "strg")
         }
     } else {
-        (strg_total, strg_translatable, None)
+        (strg_total, strg_translatable, None, "strg")
     };
     
-    let info = GmDataInfo {
+    println!("[GM] Found {} strings ({} translatable) — source={}, YYC={}", 
+             total, translatable, source, is_yyc);
+    
+    Ok(GmDataInfo {
         file_path: data_win_path.to_string_lossy().to_string(),
         file_size: data.len() as u64,
         gm_version: if is_yyc { format!("{} (YYC)", version) } else { version },
@@ -515,12 +631,11 @@ pub async fn gm_scan_data_win(game_path: String) -> Result<GmDataInfo, String> {
         chunks: chunk_names,
         is_yyc,
         exe_path,
-    };
-    
-    println!("[GM] Found {} strings ({} translatable) — YYC={} in {}", 
-             total, translatable, is_yyc, data_win_path.display());
-    
-    Ok(info)
+        has_language_files: false,
+        language_dir: None,
+        language_file_count: 0,
+        string_source: source.to_string(),
+    })
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -532,7 +647,27 @@ pub async fn gm_extract_strings(
 ) -> Result<Vec<GmString>, String> {
     println!("[GM] Extracting strings from: {}", game_path);
     
-    // First check data.win STRG
+    // ── Priority 1: Language .jn files ──
+    if let Some((_lang_dir, eng_dir)) = find_language_dir(&game_path) {
+        let mut strings = extract_jn_strings(&eng_dir);
+        println!("[GM] Language files mode — {} strings from .jn files", strings.len());
+        
+        if only_translatable.unwrap_or(true) {
+            strings.retain(|s| s.is_translatable);
+        }
+        let start = offset.unwrap_or(0);
+        let count = limit.unwrap_or(100);
+        let end = (start + count).min(strings.len());
+        if start < strings.len() {
+            strings = strings[start..end].to_vec();
+        } else {
+            strings = vec![];
+        }
+        println!("[GM] Returning {} strings (offset={}, limit={}, source=jn)", strings.len(), start, count);
+        return Ok(strings);
+    }
+    
+    // ── Priority 2/3: STRG or EXE ──
     let data_win_path = find_data_win(&game_path)
         .ok_or_else(|| "data.win non trovato".to_string())?;
     
@@ -545,8 +680,6 @@ pub async fn gm_extract_strings(
     
     let strg_strings = extract_strings(&data, strg.2, strg.1);
     let strg_translatable = strg_strings.iter().filter(|s| s.is_translatable).count();
-    
-    // Detect YYC: few translatable STRG strings → extract from EXE
     let is_yyc = strg_translatable < 50;
     
     let mut strings = if is_yyc {
@@ -588,10 +721,15 @@ pub async fn gm_patch_strings(
 ) -> Result<GmPatchResult, String> {
     println!("[GM] Patching {} strings in: {}", translations.len(), game_path);
     
+    // ── Priority 1: Language .jn files → create itaLanguage/ ──
+    if let Some((lang_dir, eng_dir)) = find_language_dir(&game_path) {
+        return patch_language_files(&lang_dir, &eng_dir, &translations);
+    }
+    
+    // ── Priority 2/3: EXE or data.win ──
     let data_win_path = find_data_win(&game_path)
         .ok_or_else(|| "data.win non trovato".to_string())?;
     
-    // Check if YYC
     let data = fs::read(&data_win_path)
         .map_err(|e| format!("Errore lettura data.win: {}", e))?;
     
@@ -604,12 +742,99 @@ pub async fn gm_patch_strings(
     let is_yyc = strg_translatable < 50;
     
     if is_yyc {
-        // ── YYC MODE: patch EXE directly ──
         patch_exe(&game_path, &translations)
     } else {
-        // ── Standard MODE: patch data.win STRG ──
         patch_data_win(&data, &data_win_path, strg, &strg_strings, &translations)
     }
+}
+
+/// Create itaLanguage/ with translated .jn files based on engLanguage/ source
+fn patch_language_files(
+    lang_dir: &Path,
+    eng_dir: &Path,
+    translations: &HashMap<usize, String>,
+) -> Result<GmPatchResult, String> {
+    let ita_dir = lang_dir.join("itaLanguage");
+    
+    // Create itaLanguage/ directory
+    fs::create_dir_all(&ita_dir)
+        .map_err(|e| format!("Errore creazione itaLanguage/: {}", e))?;
+    
+    println!("[GM-JN] Creating itaLanguage/ in {}", lang_dir.display());
+    
+    // Build a map: index -> translated text from the flat index
+    // We need to re-walk the .jn files in the same order as extract_jn_strings
+    let mut entries = fs::read_dir(eng_dir)
+        .map_err(|e| format!("Errore lettura engLanguage/: {}", e))?
+        .filter_map(|e| e.ok())
+        .map(|e| e.path())
+        .collect::<Vec<_>>();
+    entries.sort();
+    
+    let mut global_index = 0usize;
+    let mut patched_count = 0usize;
+    
+    for path in &entries {
+        if path.extension().map_or(true, |ext| ext != "jn") { continue; }
+        let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
+        
+        let content = fs::read_to_string(path)
+            .map_err(|e| format!("Errore lettura {}: {}", filename, e))?;
+        
+        let mut output_lines = Vec::new();
+        
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                output_lines.push(String::new());
+                continue;
+            }
+            
+            // Parse: "English text|Japanese text"
+            let (english_part, jp_part) = if let Some(pipe_pos) = trimmed.find('|') {
+                (&trimmed[..pipe_pos], Some(&trimmed[pipe_pos + 1..]))
+            } else {
+                (trimmed, None)
+            };
+            
+            if english_part.is_empty() {
+                output_lines.push(trimmed.to_string());
+                global_index += 1;
+                continue;
+            }
+            
+            // Check if we have a translation for this index
+            if let Some(translated) = translations.get(&global_index) {
+                // Write: "Italian translation|Japanese text" (keep JP part)
+                if let Some(jp) = jp_part {
+                    output_lines.push(format!("{}|{}", translated, jp));
+                } else {
+                    output_lines.push(translated.clone());
+                }
+                patched_count += 1;
+            } else {
+                // No translation — copy original
+                output_lines.push(trimmed.to_string());
+            }
+            
+            global_index += 1;
+        }
+        
+        // Write to itaLanguage/
+        let out_path = ita_dir.join(&filename);
+        fs::write(&out_path, output_lines.join("\n"))
+            .map_err(|e| format!("Errore scrittura {}: {}", filename, e))?;
+    }
+    
+    println!("[GM-JN] itaLanguage/ creata: {} stringhe tradotte in {} file", 
+             patched_count, entries.iter().filter(|p| p.extension().map_or(false, |ext| ext == "jn")).count());
+    
+    Ok(GmPatchResult {
+        success: true,
+        patched_count,
+        backup_path: ita_dir.to_string_lossy().to_string(),
+        message: format!("{} stringhe tradotte in itaLanguage/", patched_count),
+    })
 }
 
 /// Patch a YYC-compiled EXE by replacing strings at their exact byte offsets
@@ -871,30 +1096,31 @@ pub async fn gm_search_strings(
     query: String,
     only_translatable: Option<bool>,
 ) -> Result<Vec<GmString>, String> {
-    let data_win_path = find_data_win(&game_path)
-        .ok_or_else(|| "data.win non trovato".to_string())?;
-    
-    let data = fs::read(&data_win_path)
-        .map_err(|e| format!("Errore lettura: {}", e))?;
-    
-    let chunks = parse_chunks(&data);
-    let strg = chunks.iter().find(|(name, _, _)| name == "STRG")
-        .ok_or_else(|| "Chunk STRG non trovato".to_string())?;
-    
-    let strg_strings = extract_strings(&data, strg.2, strg.1);
-    let strg_translatable = strg_strings.iter().filter(|s| s.is_translatable).count();
-    
-    // YYC fallback
-    let strings = if strg_translatable < 50 {
-        if let Some(exe_path) = find_game_exe(&game_path) {
-            let exe_data = fs::read(&exe_path)
-                .map_err(|e| format!("Errore lettura EXE: {}", e))?;
-            extract_exe_strings(&exe_data, 15)
+    // ── Priority 1: Language .jn files ──
+    let strings = if let Some((_lang_dir, eng_dir)) = find_language_dir(&game_path) {
+        extract_jn_strings(&eng_dir)
+    } else {
+        // ── Priority 2/3: STRG or EXE ──
+        let data_win_path = find_data_win(&game_path)
+            .ok_or_else(|| "data.win non trovato".to_string())?;
+        let data = fs::read(&data_win_path)
+            .map_err(|e| format!("Errore lettura: {}", e))?;
+        let chunks = parse_chunks(&data);
+        let strg = chunks.iter().find(|(name, _, _)| name == "STRG")
+            .ok_or_else(|| "Chunk STRG non trovato".to_string())?;
+        let strg_strings = extract_strings(&data, strg.2, strg.1);
+        let strg_translatable = strg_strings.iter().filter(|s| s.is_translatable).count();
+        if strg_translatable < 50 {
+            if let Some(exe_path) = find_game_exe(&game_path) {
+                let exe_data = fs::read(&exe_path)
+                    .map_err(|e| format!("Errore lettura EXE: {}", e))?;
+                extract_exe_strings(&exe_data, 15)
+            } else {
+                strg_strings
+            }
         } else {
             strg_strings
         }
-    } else {
-        strg_strings
     };
     
     let query_lower = query.to_lowercase();

@@ -34,6 +34,10 @@ interface GmDataInfo {
   chunks: string[];
   is_yyc: boolean;
   exe_path: string | null;
+  has_language_files: boolean;
+  language_dir: string | null;
+  language_file_count: number;
+  string_source: string; // "strg" | "exe" | "language_files"
 }
 
 interface GameMakerTranslatorProps {
@@ -71,9 +75,11 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       const info = await invoke<GmDataInfo>('gm_scan_data_win', { gamePath });
       setDataInfo(info);
       setTotalTranslatable(info.translatable_strings);
-      toast.success(info.is_yyc 
-        ? `YYC: ${info.translatable_strings} stringhe traducibili trovate nell'EXE` 
-        : `data.win: ${info.translatable_strings} stringhe traducibili`);
+      toast.success(info.has_language_files 
+        ? `Language Files: ${info.translatable_strings} stringhe in ${info.language_file_count} file .jn`
+        : info.is_yyc 
+          ? `YYC: ${info.translatable_strings} stringhe traducibili dall'EXE` 
+          : `data.win: ${info.translatable_strings} stringhe traducibili`);
     } catch (e: any) {
       toast.error(e?.toString() || 'data.win non trovato');
     } finally {
@@ -374,6 +380,11 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
                   EXE Strings
                 </Badge>
               )}
+              {dataInfo.has_language_files && (
+                <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">
+                  .jn Files ({dataInfo.language_file_count})
+                </Badge>
+              )}
             </>
           )}
         </div>
@@ -479,7 +490,11 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
               onClick={patchDataWin}
               disabled={isPatching || translatedCount === 0}>
               {isPatching ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
-              {dataInfo?.is_yyc ? `Salva in EXE (${translatedCount})` : `Salva in data.win (${translatedCount})`}
+              {dataInfo?.has_language_files 
+                ? `Crea itaLanguage (${translatedCount})` 
+                : dataInfo?.is_yyc 
+                  ? `Salva in EXE (${translatedCount})` 
+                  : `Salva in data.win (${translatedCount})`}
             </Button>
           </div>
 
