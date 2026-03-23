@@ -21,11 +21,47 @@
 use std::fs::{self, File};
 use std::io::{Read, Write, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use tauri::command;
 use serde::{Serialize, Deserialize};
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
 use flate2::Compression;
+
+// ── Global VBIN cache — avoids re-reading and decompressing 5MB+61MB on every paginated call ──
+
+struct VbinCache {
+    vis_path: String,
+    strings: Vec<VisString>,
+}
+
+static VBIN_CACHE: once_cell::sync::Lazy<Mutex<Option<VbinCache>>> =
+    once_cell::sync::Lazy::new(|| Mutex::new(None));
+
+fn get_cached_strings(vis_path: &str) -> Option<Vec<VisString>> {
+    let cache = VBIN_CACHE.lock().ok()?;
+    if let Some(ref c) = *cache {
+        if c.vis_path == vis_path {
+            return Some(c.strings.clone());
+        }
+    }
+    None
+}
+
+fn set_cached_strings(vis_path: &str, strings: Vec<VisString>) {
+    if let Ok(mut cache) = VBIN_CACHE.lock() {
+        *cache = Some(VbinCache {
+            vis_path: vis_path.to_string(),
+            strings,
+        });
+    }
+}
+
+fn invalidate_cache() {
+    if let Ok(mut cache) = VBIN_CACHE.lock() {
+        *cache = None;
+    }
+}
 
 // ── Constants ──
 
@@ -328,11 +364,12 @@ fn is_translatable_vis_string(s: &str) -> bool {
     let ascii_ratio = s.chars().filter(|c| c.is_ascii()).count() as f32 / s.len() as f32;
     if ascii_ratio < 0.8 { return false; }
     
-    // Skip paths and filenames (contains / or \ or file extensions)
+    // Skip paths and filenames
     if s.contains('/') || s.contains('\\') { return false; }
     let ext_skip = [".png", ".ogg", ".wav", ".mp3", ".mp4", ".webp", ".jpg", ".jpeg",
                     ".lua", ".xml", ".json", ".csv", ".ini", ".cfg", ".ttf", ".otf",
-                    ".vis", ".veb", ".ved", ".dat", ".bin", ".exe", ".dll"];
+                    ".vis", ".veb", ".ved", ".dat", ".bin", ".exe", ".dll", ".fx",
+                    ".hlsl", ".glsl", ".vert", ".frag", ".tga", ".bmp", ".gif"];
     let lower = s.to_lowercase();
     for ext in ext_skip {
         if lower.ends_with(ext) { return false; }
@@ -344,16 +381,22 @@ fn is_translatable_vis_string(s: &str) -> bool {
     if s.contains("return ") || s.contains("require(") { return false; }
     if s.contains(" = ") && (s.contains("true") || s.contains("false") || s.contains("nil")) { return false; }
     if s.contains("getObject(") || s.contains("getName(") || s.contains("setValue(") { return false; }
+    if s.contains("startAction(") || s.contains("getLink(") || s.contains(".Value") { return false; }
     
     // Skip config/code lines with = assignment
     if s.contains('=') && !s.contains(' ') { return false; }
+    if s.contains('=') && s.contains(';') { return false; }
+    
+    // Skip XML/HTML content
+    if s.starts_with('<') && s.ends_with('>') { return false; }
+    if s.contains("</") || s.contains("/>") { return false; }
     
     // Skip if looks like code identifier (snake_case, camelCase, ALL_CAPS)
     if s.chars().all(|c| c.is_alphanumeric() || c == '_') && s.contains('_') { return false; }
-    if !s.contains(' ') {
-        // Single word — skip unless it's a common game term
-        return false;
-    }
+    if s.chars().all(|c| c.is_uppercase() || c == '_' || c.is_numeric()) && s.len() > 3 { return false; }
+    
+    // Skip single words (not translatable dialogue)
+    if !s.contains(' ') { return false; }
     
     // Must have at least 2 real words (letters >= 2) to be translatable text
     let words: Vec<&str> = s.split_whitespace()
@@ -361,22 +404,56 @@ fn is_translatable_vis_string(s: &str) -> bool {
         .collect();
     if words.len() < 2 { return false; }
     
-    // Skip HTML/XML tags
-    if s.starts_with('<') && s.ends_with('>') { return false; }
-    
-    // Skip Visionaire internal names and plugin strings
+    // Skip Visionaire internal names, object names, and plugin strings
     let skip_prefixes = ["eshader", "ealign", "eonly", "etext", "action_", "scene_",
                          "char_", "obj_", "cond_", "val_", "anim_", "sound_",
                          "plugins/", "Graphics/", "Sounds/", "Music/", "Fonts/",
-                         "config.", "plugin", "TVis", "TScript"];
+                         "config.", "plugin", "TVis", "TScript", "Vis ", "vis_",
+                         "cursor_", "button_", "interface_", "menu_", "dialog_",
+                         "sfx_", "bgm_", "vfx_", "ui_", "hud_"];
     for prefix in skip_prefixes {
         if s.starts_with(prefix) || lower.starts_with(&prefix.to_lowercase()) { return false; }
     }
     
-    // Skip strings that look like Visionaire object references
+    // Skip Visionaire action/command names
+    let skip_contains = ["ActiveAnimations", "PolygonalLink", "ScrollPosition",
+                         "CharacterLink", "ObjectLink", "SceneLink", "ActionLink",
+                         "SoundLink", "MusicLink", "FontLink", "CursorLink",
+                         "ParticleLink", "InterfaceLink", "AnimationLink",
+                         "ConditionLink", "ValueLink", "DialogLink",
+                         "Brightness", "Saturation", "setPosition", "getPosition",
+                         "currentCharacter", "activeScene", "mainCharacter"];
+    for kw in skip_contains {
+        if s.contains(kw) { return false; }
+    }
+    
+    // Skip object references
     if s.starts_with("Set ") && s.contains(" position") && !s.contains('.') { return false; }
     if s.starts_with("Show/") || s.starts_with("Hide/") { return false; }
-    if s.starts_with("Change ") && s.contains("/") { return false; }
+    if s.starts_with("Change ") && s.contains(":") { return false; }
+    
+    // Skip strings that are mostly CamelCase identifiers with spaces
+    // e.g. "Active Animations" "Polygonal Link" — internal Visionaire names
+    let capitalized_words = words.iter().filter(|w| {
+        let first = w.chars().next().unwrap_or('a');
+        first.is_uppercase() && w.len() <= 20
+    }).count();
+    if words.len() >= 2 && words.len() <= 3 && capitalized_words == words.len() {
+        // All words capitalized, 2-3 words — likely an internal name, not dialogue
+        // Exception: if it ends with punctuation, it's likely dialogue
+        let last_char = s.chars().last().unwrap_or('a');
+        if !last_char.is_ascii_punctuation() || last_char == ')' {
+            return false;
+        }
+    }
+    
+    // Require at least one lowercase word — real dialogue has articles, prepositions etc.
+    let has_lowercase_word = words.iter().any(|w| {
+        w.chars().next().map_or(false, |c| c.is_lowercase())
+    });
+    // Exception: short strings (≤ 30 chars) with punctuation are likely UI text
+    let has_punctuation = s.chars().any(|c| matches!(c, '.' | '!' | '?' | ',' | ':' | ';' | '"' | '\''));
+    if !has_lowercase_word && !has_punctuation && s.len() > 30 { return false; }
     
     true
 }
@@ -513,13 +590,25 @@ pub async fn detect_visionaire(game_path: String) -> Result<VisInfo, String> {
     })
 }
 
-/// Scan a Visionaire game and count translatable strings
+/// Scan a Visionaire game and count translatable strings (populates cache)
 #[command]
 pub async fn scan_vis_strings(game_path: String) -> Result<VisInfo, String> {
     log::info!("[VIS] scan_vis_strings: {}", game_path);
     
     let vis_path = find_vis_file(&game_path)
         .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
+    let vis_path_str = vis_path.to_string_lossy().to_string();
+    
+    // Check cache first
+    if let Some(cached) = get_cached_strings(&vis_path_str) {
+        log::info!("[VIS] Cache hit: {} stringhe", cached.len());
+        let mut file = File::open(&vis_path).map_err(|e| format!("Errore: {}", e))?;
+        let (version, file_count) = read_vis_header(&mut file)?;
+        return Ok(VisInfo {
+            is_visionaire: true, version, vis_path: vis_path_str,
+            file_count, total_strings: cached.len(), has_veb: true,
+        });
+    }
     
     let mut file = File::open(&vis_path)
         .map_err(|e| format!("Errore apertura: {}", e))?;
@@ -531,37 +620,44 @@ pub async fn scan_vis_strings(game_path: String) -> Result<VisInfo, String> {
     let payload = read_vbin_payload(&mut file, &vbin_loc)?;
     let strings = parse_vbin_strings(&payload)?;
     
-    log::info!("[VIS] Trovate {} stringhe traducibili", strings.len());
+    log::info!("[VIS] Trovate {} stringhe traducibili (cached)", strings.len());
+    set_cached_strings(&vis_path_str, strings.clone());
     
     Ok(VisInfo {
         is_visionaire: true,
         version,
-        vis_path: vis_path.to_string_lossy().to_string(),
+        vis_path: vis_path_str,
         file_count,
         total_strings: strings.len(),
         has_veb: true,
     })
 }
 
-/// Extract all translatable strings from a Visionaire game
+/// Extract translatable strings from a Visionaire game (uses cache from scan)
 #[command]
 pub async fn extract_vis_strings(
     game_path: String,
     offset: Option<usize>,
     limit: Option<usize>,
 ) -> Result<Vec<VisString>, String> {
-    log::info!("[VIS] extract_vis_strings: {}", game_path);
-    
     let vis_path = find_vis_file(&game_path)
         .ok_or_else(|| "Nessun file .vis trovato".to_string())?;
+    let vis_path_str = vis_path.to_string_lossy().to_string();
     
-    let mut file = File::open(&vis_path)
-        .map_err(|e| format!("Errore apertura: {}", e))?;
-    
-    let file_size = file.seek(SeekFrom::End(0)).map_err(|e| format!("Seek: {}", e))?;
-    let vbin_loc = find_vbin_in_file(&mut file, file_size)?;
-    let payload = read_vbin_payload(&mut file, &vbin_loc)?;
-    let all_strings = parse_vbin_strings(&payload)?;
+    // Use cached strings if available (populated by scan_vis_strings)
+    let all_strings = if let Some(cached) = get_cached_strings(&vis_path_str) {
+        cached
+    } else {
+        log::info!("[VIS] extract_vis_strings: cache miss, loading from disk");
+        let mut file = File::open(&vis_path)
+            .map_err(|e| format!("Errore apertura: {}", e))?;
+        let file_size = file.seek(SeekFrom::End(0)).map_err(|e| format!("Seek: {}", e))?;
+        let vbin_loc = find_vbin_in_file(&mut file, file_size)?;
+        let payload = read_vbin_payload(&mut file, &vbin_loc)?;
+        let strings = parse_vbin_strings(&payload)?;
+        set_cached_strings(&vis_path_str, strings.clone());
+        strings
+    };
     
     // Apply pagination
     let start = offset.unwrap_or(0);
@@ -634,6 +730,7 @@ pub async fn patch_vis_strings(
     fs::write(&vis_path, &new_data)
         .map_err(|e| format!("Errore scrittura: {}", e))?;
     
+    invalidate_cache(); // file changed, cache stale
     log::info!("[VIS] Archivio patchato con {} traduzioni", translations.len());
     
     Ok(serde_json::json!({
@@ -656,6 +753,8 @@ pub async fn restore_vis_backup(game_path: String) -> Result<serde_json::Value, 
     
     fs::copy(&backup_path, &vis_path)
         .map_err(|e| format!("Errore ripristino: {}", e))?;
+    
+    invalidate_cache(); // restored original, cache stale
     
     Ok(serde_json::json!({
         "success": true,
