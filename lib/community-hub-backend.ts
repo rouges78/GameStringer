@@ -61,7 +61,7 @@ export function resetSupabaseClient(): void {
   _lastConfigHash = '';
 }
 
-async function getSupabase(): Promise<SupabaseClient> {
+export async function getSupabase(): Promise<SupabaseClient> {
   const cfg = getConfig();
   if (!cfg.url || !cfg.anonKey) throw new Error('Supabase non configurato');
 

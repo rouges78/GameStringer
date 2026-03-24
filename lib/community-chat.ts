@@ -11,7 +11,8 @@
  * - Realtime subscription via Supabase
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { getSupabase as getSharedSupabase } from './community-hub-backend';
 
 // ─── TYPES ──────────────────────────────────────────────────────
 
@@ -56,28 +57,11 @@ export interface UserPresence {
 }
 
 // ─── SUPABASE CLIENT HELPER ─────────────────────────────────────
+// Delegates to the shared client from community-hub-backend to avoid
+// "Multiple GoTrueClient instances" warnings.
 
-async function getSupabase() {
-  const STORAGE_KEY = 'gs_supabase_config';
-  let config: any = {};
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) config = JSON.parse(raw);
-  } catch {}
-
-  if (!config.url || !config.anonKey || !config.enabled) {
-    throw new Error('Supabase non configurato. Vai in Impostazioni → Community Hub Backend.');
-  }
-
-  // Reuse global client if exists
-  const g = globalThis as any;
-  if (g.__gsSupabaseChat) return g.__gsSupabaseChat as SupabaseClient;
-
-  g.__gsSupabaseChat = createClient(config.url, config.anonKey, {
-    auth: { persistSession: true, autoRefreshToken: true },
-    realtime: { params: { eventsPerSecond: 10 } },
-  });
-  return g.__gsSupabaseChat as SupabaseClient;
+async function getSupabase(): Promise<SupabaseClient> {
+  return getSharedSupabase();
 }
 
 // ─── CHAT SERVICE ───────────────────────────────────────────────
@@ -114,15 +98,46 @@ interface GSSessionInfo {
 
 function getGSSession(): GSSessionInfo | null {
   try {
-    const raw = localStorage.getItem('gs_session');
-    if (!raw) return null;
-    const session = JSON.parse(raw);
-    if (!session?.user) return null;
-    const u = session.user;
-    // Build a deterministic email if user has no real email
-    const email = u.email || `gs_${u.id}@gamestringer.local`;
-    return { id: u.id, email, name: u.name || u.id, image: u.image };
-  } catch {
+    // Try gs_session first (has .user object)
+    const rawSession = localStorage.getItem('gs_session');
+    if (rawSession) {
+      const session = JSON.parse(rawSession);
+      if (session?.user?.id) {
+        const u = session.user;
+        const email = u.email || `gs_${u.id}@gamestringer.local`;
+        console.log('[Chat Bridge] Sessione GS trovata da gs_session:', u.id, u.name);
+        return { id: u.id, email, name: u.name || u.id, image: u.image };
+      }
+    }
+
+    // Fallback: try gs_user directly
+    const rawUser = localStorage.getItem('gs_user');
+    if (rawUser) {
+      const u = JSON.parse(rawUser);
+      if (u?.id) {
+        const email = u.email || `gs_${u.id}@gamestringer.local`;
+        console.log('[Chat Bridge] Sessione GS trovata da gs_user:', u.id, u.name);
+        return { id: u.id, email, name: u.name || u.id, image: u.image };
+      }
+    }
+
+    // Fallback: try gs_accounts (pick first account)
+    const rawAccounts = localStorage.getItem('gs_accounts');
+    if (rawAccounts) {
+      const accounts = JSON.parse(rawAccounts);
+      if (Array.isArray(accounts) && accounts.length > 0) {
+        const acc = accounts[0];
+        const id = acc.userId || acc.id || 'unknown';
+        const email = acc.email || `gs_${id}@gamestringer.local`;
+        console.log('[Chat Bridge] Sessione GS trovata da gs_accounts:', id, acc.name);
+        return { id, email, name: acc.name || id, image: acc.image };
+      }
+    }
+
+    console.log('[Chat Bridge] Nessuna sessione GS trovata in localStorage');
+    return null;
+  } catch (e) {
+    console.error('[Chat Bridge] Errore lettura sessione GS:', e);
     return null;
   }
 }
