@@ -172,64 +172,77 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
   const supabase = await getSupabase();
   const password = derivePassword(gs.id);
 
+  let authenticatedUserId: string | null = null;
+
   // 1. Check if already signed in
   const { data: current } = await supabase.auth.getUser();
   if (current?.user?.id) {
     console.log('[Chat Bridge] Già autenticato su Supabase:', current.user.id);
-    return current.user.id;
+    authenticatedUserId = current.user.id;
   }
 
   // 2. Try sign in first (existing user)
-  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-    email: gs.email!,
-    password,
-  });
-
-  if (signInData?.user?.id) {
-    console.log('[Chat Bridge] Sign-in Supabase riuscito:', signInData.user.id);
-    return signInData.user.id;
-  }
-
-  // 3. If sign-in fails, try sign up (new user)
-  if (signInError) {
-    console.log('[Chat Bridge] Sign-in fallito, provo sign-up...', signInError.message);
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+  if (!authenticatedUserId) {
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: gs.email!,
       password,
-      options: {
-        data: {
-          username: gs.name || gs.id,
-          avatar_url: gs.image || '',
-          gs_id: gs.id,
-        },
-        // Skip email confirmation for local community
-        emailRedirectTo: undefined,
-      },
     });
 
-    if (signUpError) {
-      console.error('[Chat Bridge] Sign-up fallito:', signUpError.message);
-      return null;
-    }
+    if (signInData?.user?.id) {
+      console.log('[Chat Bridge] Sign-in Supabase riuscito:', signInData.user.id);
+      authenticatedUserId = signInData.user.id;
+    } else if (signInError) {
+      // 3. If sign-in fails, try sign up (new user)
+      console.log('[Chat Bridge] Sign-in fallito, provo sign-up...', signInError.message);
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: gs.email!,
+        password,
+        options: {
+          data: {
+            username: gs.name || gs.id,
+            avatar_url: gs.image || '',
+            gs_id: gs.id,
+          },
+          emailRedirectTo: undefined,
+        },
+      });
 
-    if (signUpData?.user?.id) {
-      console.log('[Chat Bridge] Sign-up Supabase riuscito:', signUpData.user.id);
-      // Create user_profiles row
-      try {
-        await supabase.from('user_profiles').upsert({
-          id: signUpData.user.id,
+      if (signUpError) {
+        console.error('[Chat Bridge] Sign-up fallito:', signUpError.message);
+        return null;
+      }
+
+      if (signUpData?.user?.id) {
+        console.log('[Chat Bridge] Sign-up Supabase riuscito:', signUpData.user.id);
+        authenticatedUserId = signUpData.user.id;
+      }
+    }
+  }
+
+  // 4. Ensure user_profiles row exists (prevents FK errors on presence/membership)
+  if (authenticatedUserId) {
+    try {
+      const { data: existingProfile } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', authenticatedUserId)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        console.log('[Chat Bridge] Creo profilo mancante per:', authenticatedUserId);
+        await supabase.from('user_profiles').insert({
+          id: authenticatedUserId,
           username: gs.name || `gs_${gs.id.substring(0, 8)}`,
           email: gs.email,
           avatar_url: gs.image || '',
-        }, { onConflict: 'id' });
-      } catch (e) {
-        console.warn('[Chat Bridge] Errore creazione profilo:', e);
+        });
       }
-      return signUpData.user.id;
+    } catch (e) {
+      console.warn('[Chat Bridge] Errore verifica/creazione profilo:', e);
     }
   }
 
-  return null;
+  return authenticatedUserId;
 }
 
 // ─── ROOMS ──────────────────────────────────────────────────────
@@ -417,7 +430,7 @@ export async function subscribeToPresence(onPresence: PresenceCallback): Promise
               .from('user_profiles')
               .select('username, avatar_url')
               .eq('id', userId)
-              .single();
+              .maybeSingle();
             channel.track({
               user_id: userId,
               username: profile?.username || 'Utente',
@@ -477,22 +490,28 @@ export async function joinRoom(roomId: string): Promise<void> {
   const supabase = await getSupabase();
   const userId = await getCurrentUserId();
   if (!userId) return;
-  await supabase.from('chat_room_members').upsert({
-    room_id: roomId,
-    user_id: userId,
-    last_read_at: new Date().toISOString(),
-  });
+  try {
+    await supabase.from('chat_room_members').upsert(
+      { room_id: roomId, user_id: userId, last_read_at: new Date().toISOString() },
+      { onConflict: 'room_id,user_id' }
+    );
+  } catch {
+    // Silent fail — membership is best-effort
+  }
 }
 
 export async function markRoomRead(roomId: string): Promise<void> {
   const supabase = await getSupabase();
   const userId = await getCurrentUserId();
   if (!userId) return;
-  await supabase.from('chat_room_members').upsert({
-    room_id: roomId,
-    user_id: userId,
-    last_read_at: new Date().toISOString(),
-  });
+  try {
+    await supabase.from('chat_room_members').upsert(
+      { room_id: roomId, user_id: userId, last_read_at: new Date().toISOString() },
+      { onConflict: 'room_id,user_id' }
+    );
+  } catch {
+    // Silent fail
+  }
 }
 
 // ─── MAPPERS ────────────────────────────────────────────────────
