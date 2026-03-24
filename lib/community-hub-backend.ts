@@ -1390,4 +1390,120 @@ CREATE POLICY "Users update own notifications" ON user_notifications FOR UPDATE 
 
 CREATE POLICY "Public read favorites" ON user_favorites FOR SELECT USING (true);
 CREATE POLICY "Users manage own favorites" ON user_favorites FOR ALL USING (user_id = auth.uid());
+
+-- ═══════════════════════════════════════════════════════════════
+-- CHAT REALTIME
+-- ═══════════════════════════════════════════════════════════════
+
+-- Chat Rooms (general, per-game, translation requests, feedback)
+CREATE TABLE IF NOT EXISTS chat_rooms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  type TEXT NOT NULL DEFAULT 'general' CHECK (type IN ('general','game','translation_request','feedback','announcement')),
+  game_id TEXT,
+  game_name TEXT,
+  created_by UUID REFERENCES user_profiles(id),
+  is_pinned BOOLEAN DEFAULT FALSE,
+  is_archived BOOLEAN DEFAULT FALSE,
+  last_message_at TIMESTAMPTZ DEFAULT NOW(),
+  member_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Chat Messages
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
+  author_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  type TEXT DEFAULT 'text' CHECK (type IN ('text','system','pack_share','image','translation_request')),
+  reply_to UUID REFERENCES chat_messages(id) ON DELETE SET NULL,
+  metadata JSONB DEFAULT '{}',
+  edited BOOLEAN DEFAULT FALSE,
+  deleted BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Chat Room Members (for tracking who joined which room)
+CREATE TABLE IF NOT EXISTS chat_room_members (
+  room_id UUID NOT NULL REFERENCES chat_rooms(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+  last_read_at TIMESTAMPTZ DEFAULT NOW(),
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY(room_id, user_id)
+);
+
+-- Online Presence (ephemeral, tracks who is currently online)
+CREATE TABLE IF NOT EXISTS user_presence (
+  user_id UUID PRIMARY KEY REFERENCES user_profiles(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'online' CHECK (status IN ('online','away','offline')),
+  last_seen TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for chat
+CREATE INDEX IF NOT EXISTS idx_chat_messages_room ON chat_messages(room_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_author ON chat_messages(author_id);
+CREATE INDEX IF NOT EXISTS idx_chat_rooms_type ON chat_rooms(type);
+CREATE INDEX IF NOT EXISTS idx_chat_rooms_game ON chat_rooms(game_id);
+CREATE INDEX IF NOT EXISTS idx_chat_rooms_last_msg ON chat_rooms(last_message_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_members_user ON chat_room_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_presence_status ON user_presence(status);
+
+-- RLS for chat
+ALTER TABLE chat_rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_room_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_presence ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read rooms" ON chat_rooms FOR SELECT USING (true);
+CREATE POLICY "Authenticated create rooms" ON chat_rooms FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Creator manages rooms" ON chat_rooms FOR UPDATE USING (created_by = auth.uid());
+
+CREATE POLICY "Public read messages" ON chat_messages FOR SELECT USING (true);
+CREATE POLICY "Authenticated send messages" ON chat_messages FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Authors edit own messages" ON chat_messages FOR UPDATE USING (author_id = auth.uid());
+CREATE POLICY "Authors delete own messages" ON chat_messages FOR DELETE USING (author_id = auth.uid());
+
+CREATE POLICY "Public read members" ON chat_room_members FOR SELECT USING (true);
+CREATE POLICY "Users manage own membership" ON chat_room_members FOR ALL USING (user_id = auth.uid());
+
+CREATE POLICY "Public read presence" ON user_presence FOR SELECT USING (true);
+CREATE POLICY "Users update own presence" ON user_presence FOR ALL USING (user_id = auth.uid());
+
+-- RPC: Update room stats when a message is sent
+CREATE OR REPLACE FUNCTION on_chat_message_sent()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE chat_rooms SET last_message_at = NOW() WHERE id = NEW.room_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trigger_chat_message_sent
+  AFTER INSERT ON chat_messages
+  FOR EACH ROW EXECUTE FUNCTION on_chat_message_sent();
+
+-- RPC: Update presence heartbeat
+CREATE OR REPLACE FUNCTION update_presence(new_status TEXT DEFAULT 'online')
+RETURNS VOID AS $$
+BEGIN
+  INSERT INTO user_presence (user_id, status, last_seen)
+  VALUES (auth.uid(), new_status, NOW())
+  ON CONFLICT (user_id) DO UPDATE SET status = new_status, last_seen = NOW();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Default chat rooms
+INSERT INTO chat_rooms (name, description, type, is_pinned) VALUES
+  ('Generale', 'Chat generale della community GameStringer', 'general', true),
+  ('Traduzioni', 'Discuti di traduzioni, chiedi aiuto, condividi progressi', 'general', true),
+  ('Feedback & Bug', 'Segnala bug e suggerisci miglioramenti per GameStringer', 'feedback', true),
+  ('Annunci', 'Novità e aggiornamenti ufficiali di GameStringer', 'announcement', true)
+ON CONFLICT DO NOTHING;
+
+-- Enable Supabase Realtime on chat tables
+ALTER PUBLICATION supabase_realtime ADD TABLE chat_messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE user_presence;
 `;

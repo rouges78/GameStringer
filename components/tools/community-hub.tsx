@@ -101,6 +101,7 @@ import {
   isBackendEnabled,
 } from '@/lib/community-hub-backend';
 import { GitHubDiscussions } from './github-discussions';
+import { CommunityChat } from './community-chat';
 
 const languages = [
   { code: 'it', name: 'Italiano', flag: '🇮🇹' },
@@ -166,6 +167,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
   const [packReviews, setPackReviews] = useState<PackReview[]>([]);
   const [showPackDetails, setShowPackDetails] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   // New community features state
@@ -1509,6 +1511,39 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* ── Chat Widget fisso in basso (stile chatbot) ── */}
+      <div className={`fixed bottom-0 right-4 z-50 transition-all duration-300 ease-in-out ${
+        chatOpen ? 'w-[700px] h-[520px]' : 'w-auto h-auto'
+      }`}>
+        {chatOpen ? (
+          <div className="flex flex-col h-full rounded-t-xl border border-slate-700/60 bg-slate-950 shadow-2xl overflow-hidden">
+            {/* Header bar */}
+            <button
+              onClick={() => setChatOpen(false)}
+              className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-cyan-900/60 to-slate-900/80 border-b border-slate-700/40 hover:from-cyan-900/80 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-cyan-400" />
+                <span className="text-sm font-semibold text-slate-200">Community Chat</span>
+              </div>
+              <span className="text-[10px] text-slate-500">▼ Chiudi</span>
+            </button>
+            {/* Chat body */}
+            <div className="flex-1 overflow-hidden">
+              <CommunityChat />
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setChatOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-t-xl bg-gradient-to-r from-cyan-900/70 to-slate-900/90 border border-b-0 border-slate-700/50 shadow-lg hover:from-cyan-800/80 transition-all group"
+          >
+            <MessageSquare className="h-4 w-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+            <span className="text-sm font-semibold text-slate-200">Chat</span>
+            <span className="text-[10px] text-slate-500 ml-1">▲</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }
