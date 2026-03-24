@@ -1,9 +1,9 @@
 // GameStringer Website i18n — 11 languages
-// v1.4.2 — i18n 11 Lingue, Guide Complete, CI Fix
+// v1.5.0 — Community Chat Realtime, Auto-Bridge Auth, 11 Lingue
 
 const translations = {
   it: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, Dashboard Avanzata, Build Linux, 11 Lingue UI',
+    'hero.badge': 'v1.5.0 — Community Chat Realtime, Auto-Bridge Auth, 11 Lingue',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localizza videogiochi con l\'AI. Open source. Gratuito.',
     'hero.desc': 'Supporta <strong>11+ engine</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provider AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-riga (0-100), Auto-glossario AI, Translation Memory persistente, Tutorial interattivo. <strong>500 stringhe gratuite</strong>, poi donazione libera.',
@@ -65,7 +65,7 @@ const translations = {
   },
 
   en: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, Advanced Dashboard, Linux Build, 11 UI Languages',
+    'hero.badge': 'v1.5.0 — Community Chat Realtime, Auto-Bridge Auth, 11 Languages',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localize video games with AI. Open source. Free.',
     'hero.desc': 'Supports <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) and <strong>20+ AI providers</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> per-line (0-100), AI Auto-glossary, persistent Translation Memory, Interactive Tutorial. <strong>500 free strings</strong>, then pay-what-you-want.',
@@ -127,7 +127,7 @@ const translations = {
   },
 
   es: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, Dashboard Avanzado, Build Linux, 11 Idiomas UI',
+    'hero.badge': 'v1.5.0 — Chat Comunidad en Tiempo Real, Auto-Bridge Auth, 11 Idiomas',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localiza videojuegos con IA. Open source. Gratuito.',
     'hero.desc': 'Soporta <strong>11+ motores</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) y <strong>20+ proveedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por línea (0-100), Auto-glosario IA, Translation Memory persistente, Tutorial interactivo. <strong>500 cadenas gratis</strong>, luego donación libre.',
@@ -189,7 +189,7 @@ const translations = {
   },
 
   de: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, Erweitertes Dashboard, Linux-Build, 11 UI-Sprachen',
+    'hero.badge': 'v1.5.0 — Community-Chat Echtzeit, Auto-Bridge Auth, 11 Sprachen',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Lokalisiere Videospiele mit KI. Open Source. Kostenlos.',
     'hero.desc': 'Unterstützt <strong>11+ Engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) und <strong>20+ KI-Anbieter</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> pro Zeile (0-100), KI-Auto-Glossar, persistenter Translation Memory, Interaktives Tutorial. <strong>500 Strings kostenlos</strong>, dann freiwillige Spende.',
@@ -251,7 +251,7 @@ const translations = {
   },
 
   fr: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, Dashboard Avancé, Build Linux, 11 Langues UI',
+    'hero.badge': 'v1.5.0 — Chat Communautaire Temps Réel, Auto-Bridge Auth, 11 Langues',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localisez les jeux vidéo avec l\'IA. Open source. Gratuit.',
     'hero.desc': 'Supporte <strong>11+ moteurs</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) et <strong>20+ fournisseurs IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> par ligne (0-100), Auto-glossaire IA, Translation Memory persistante, Tutoriel interactif. <strong>500 chaînes gratuites</strong>, puis don libre.',
@@ -313,7 +313,7 @@ const translations = {
   },
 
   ja: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy、高度なダッシュボード、Linuxビルド、11言語UI',
+    'hero.badge': 'v1.5.0 — コミュニティチャット リアルタイム、Auto-Bridge Auth、11言語',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'AIでビデオゲームをローカライズ。オープンソース。無料。',
     'hero.desc': '<strong>11以上のエンジン</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>ダンガンロンパ</strong>...）と<strong>20以上のAIプロバイダー</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）をサポート。行ごとの<strong>品質バッジ</strong>（0-100）、AI自動用語集、永続的翻訳メモリ、インタラクティブチュートリアル。<strong>500文字列無料</strong>、その後は任意の寄付。',
@@ -375,7 +375,7 @@ const translations = {
   },
 
   zh: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy、高级仪表板、Linux构建、11种语言UI',
+    'hero.badge': 'v1.5.0 — 社区实时聊天、Auto-Bridge Auth、11种语言',
     'hero.title': 'GameStringer',
     'hero.subtitle': '用AI本地化电子游戏。开源。免费。',
     'hero.desc': '支持<strong>11+引擎</strong>（Unity、Unreal、Godot、RPG Maker、Ren\'Py、<strong>弹丸论破</strong>...）和<strong>20+ AI提供商</strong>（TranslateGemma、HY-MT、Ollama、GPT-4、Claude、Gemini、DeepSeek...）。逐行<strong>质量徽章</strong>（0-100）、AI自动术语表、持久化翻译记忆、交互式教程。<strong>500条字符串免费</strong>，之后自愿捐赠。',
@@ -437,7 +437,7 @@ const translations = {
   },
 
   ko: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, 고급 대시보드, Linux 빌드, 11개 언어 UI',
+    'hero.badge': 'v1.5.0 — 커뮤니티 실시간 채팅, Auto-Bridge Auth, 11개 언어',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'AI로 비디오 게임을 현지화하세요. 오픈 소스. 무료.',
     'hero.desc': '<strong>11개 이상의 엔진</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>단간론파</strong>...)과 <strong>20개 이상의 AI 제공업체</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...)를 지원합니다. 행별 <strong>품질 배지</strong> (0-100), AI 자동 용어집, 영구 번역 메모리, 인터랙티브 튜토리얼. <strong>500개 문자열 무료</strong>, 이후 자유 기부.',
@@ -499,7 +499,7 @@ const translations = {
   },
 
   pt: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, Dashboard Avançado, Build Linux, 11 Idiomas UI',
+    'hero.badge': 'v1.5.0 — Chat Comunidade em Tempo Real, Auto-Bridge Auth, 11 Idiomas',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Localize videogames com IA. Open source. Gratuito.',
     'hero.desc': 'Suporta <strong>11+ engines</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) e <strong>20+ provedores IA</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> por linha (0-100), Auto-glossário IA, Translation Memory persistente, Tutorial interativo. <strong>500 strings grátis</strong>, depois doação livre.',
@@ -561,7 +561,7 @@ const translations = {
   },
 
   ru: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, Расширенная панель, Сборка Linux, 11 языков UI',
+    'hero.badge': 'v1.5.0 — Чат сообщества в реальном времени, Auto-Bridge Auth, 11 языков',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Локализуйте видеоигры с ИИ. Открытый код. Бесплатно.',
     'hero.desc': 'Поддержка <strong>11+ движков</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) и <strong>20+ провайдеров ИИ</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> построчно (0-100), авто-глоссарий ИИ, постоянная память переводов, интерактивный учебник. <strong>500 строк бесплатно</strong>, затем свободные пожертвования.',
@@ -610,7 +610,7 @@ const translations = {
   },
 
   pl: {
-    'hero.badge': 'v1.4.2 — GOG Galaxy, Zaawansowany Dashboard, Build Linux, 11 języków UI',
+    'hero.badge': 'v1.5.0 — Czat społeczności w czasie rzeczywistym, Auto-Bridge Auth, 11 języków',
     'hero.title': 'GameStringer',
     'hero.subtitle': 'Lokalizuj gry wideo z AI. Open source. Za darmo.',
     'hero.desc': 'Obsługa <strong>11+ silników</strong> (Unity, Unreal, Godot, RPG Maker, Ren\'Py, <strong>Danganronpa</strong>...) i <strong>20+ dostawców AI</strong> (TranslateGemma, HY-MT, Ollama, GPT-4, Claude, Gemini, DeepSeek...). <strong>Quality Badges</strong> na wiersz (0-100), auto-glosariusz AI, trwała pamięć tłumaczeń, interaktywny samouczek. <strong>500 ciągów za darmo</strong>, potem dobrowolna donacja.',
