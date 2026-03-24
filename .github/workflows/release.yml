@@ -195,6 +195,30 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Generate icons for Linux bundler
+        run: |
+          cd src-tauri/icons
+          # Ensure all required PNG sizes exist
+          if [ ! -f 32x32.png ] && [ -f png/icon-32.png ]; then cp png/icon-32.png 32x32.png; fi
+          if [ ! -f 128x128.png ] && [ -f png/icon-256.png ]; then
+            npx --yes sharp-cli resize 128 128 --input png/icon-256.png --output 128x128.png
+          fi
+          if [ ! -f 128x128@2x.png ] && [ -f png/icon-256.png ]; then cp png/icon-256.png 128x128@2x.png; fi
+          if [ ! -f icon.png ] && [ -f png/icon-256.png ]; then cp png/icon-256.png icon.png; fi
+          # Create minimal icns from png (Tauri needs it even on Linux for deb)
+          if [ ! -f icon.icns ] && [ -f png/icon-256.png ]; then
+            mkdir -p tmp.iconset
+            cp png/icon-256.png tmp.iconset/icon_256x256.png
+            cp png/icon-256.png tmp.iconset/icon_128x128@2x.png
+            if [ -f png/icon-48.png ]; then cp png/icon-48.png tmp.iconset/icon_32x32@2x.png; fi
+            if [ -f png/icon-32.png ]; then cp png/icon-32.png tmp.iconset/icon_32x32.png; fi
+            if [ -f png/icon-16.png ]; then cp png/icon-16.png tmp.iconset/icon_16x16.png; fi
+            # iconutil only works on macOS, use png2icns alternative
+            npx --yes @aspect-build/icns-gen --input tmp.iconset/icon_256x256.png --output icon.icns 2>/dev/null || cp png/icon-256.png icon.icns
+            rm -rf tmp.iconset
+          fi
+          ls -la
+
       - name: Build Tauri App (Linux)
         uses: tauri-apps/tauri-action@v0.5
         env:
@@ -238,6 +262,32 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Generate icons for macOS bundler
+        run: |
+          cd src-tauri/icons
+          # Ensure PNG sizes exist
+          if [ ! -f 32x32.png ] && [ -f png/icon-32.png ]; then cp png/icon-32.png 32x32.png; fi
+          if [ ! -f 128x128.png ] && [ -f png/icon-256.png ]; then
+            npx --yes sharp-cli resize 128 128 --input png/icon-256.png --output 128x128.png
+          fi
+          if [ ! -f 128x128@2x.png ] && [ -f png/icon-256.png ]; then cp png/icon-256.png 128x128@2x.png; fi
+          if [ ! -f icon.png ] && [ -f png/icon-256.png ]; then cp png/icon-256.png icon.png; fi
+          # Generate icns using macOS native iconutil
+          if [ ! -f icon.icns ] && [ -f png/icon-256.png ]; then
+            mkdir -p GameStringer.iconset
+            sips -z 16 16 png/icon-256.png --out GameStringer.iconset/icon_16x16.png 2>/dev/null || cp png/icon-16.png GameStringer.iconset/icon_16x16.png
+            sips -z 32 32 png/icon-256.png --out GameStringer.iconset/icon_16x16@2x.png 2>/dev/null || cp png/icon-32.png GameStringer.iconset/icon_16x16@2x.png
+            sips -z 32 32 png/icon-256.png --out GameStringer.iconset/icon_32x32.png 2>/dev/null || cp png/icon-32.png GameStringer.iconset/icon_32x32.png
+            sips -z 64 64 png/icon-256.png --out GameStringer.iconset/icon_32x32@2x.png 2>/dev/null || true
+            sips -z 128 128 png/icon-256.png --out GameStringer.iconset/icon_128x128.png 2>/dev/null || true
+            sips -z 256 256 png/icon-256.png --out GameStringer.iconset/icon_128x128@2x.png 2>/dev/null || cp png/icon-256.png GameStringer.iconset/icon_128x128@2x.png
+            sips -z 256 256 png/icon-256.png --out GameStringer.iconset/icon_256x256.png 2>/dev/null || cp png/icon-256.png GameStringer.iconset/icon_256x256.png
+            cp png/icon-256.png GameStringer.iconset/icon_256x256@2x.png
+            iconutil -c icns GameStringer.iconset -o icon.icns
+            rm -rf GameStringer.iconset
+          fi
+          ls -la
 
       - name: Build Tauri App (macOS Apple Silicon)
         uses: tauri-apps/tauri-action@v0.5
