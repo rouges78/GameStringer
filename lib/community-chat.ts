@@ -229,16 +229,39 @@ export async function autoSyncGSToSupabase(): Promise<string | null> {
         .maybeSingle();
 
       if (!existingProfile) {
-        console.log('[Chat Bridge] Creo profilo mancante per:', authenticatedUserId);
-        await supabase.from('user_profiles').insert({
-          id: authenticatedUserId,
-          username: gs.name || `gs_${gs.id.substring(0, 8)}`,
-          email: gs.email,
-          avatar_url: gs.image || '',
+        const username = gs.name || `gs_${gs.id.substring(0, 8)}`;
+        console.log('[Chat Bridge] Profilo mancante, creo via RPC per:', authenticatedUserId, username);
+
+        // Try RPC first (SECURITY DEFINER, bypasses RLS)
+        const { error: rpcErr } = await supabase.rpc('ensure_user_profile', {
+          p_user_id: authenticatedUserId,
+          p_username: username,
+          p_email: gs.email || null,
+          p_avatar_url: gs.image || '',
         });
+
+        if (rpcErr) {
+          console.warn('[Chat Bridge] RPC ensure_user_profile fallita:', rpcErr.message, '- provo INSERT diretto');
+          // Fallback: direct insert
+          const { error: insertErr } = await supabase.from('user_profiles').insert({
+            id: authenticatedUserId,
+            username,
+            email: gs.email,
+            avatar_url: gs.image || '',
+          });
+          if (insertErr) {
+            console.error('[Chat Bridge] INSERT user_profiles fallita:', insertErr.message, insertErr.code);
+          } else {
+            console.log('[Chat Bridge] Profilo creato via INSERT diretto');
+          }
+        } else {
+          console.log('[Chat Bridge] Profilo creato via RPC');
+        }
+      } else {
+        console.log('[Chat Bridge] Profilo già esistente per:', authenticatedUserId);
       }
     } catch (e) {
-      console.warn('[Chat Bridge] Errore verifica/creazione profilo:', e);
+      console.error('[Chat Bridge] Errore verifica/creazione profilo:', e);
     }
   }
 
