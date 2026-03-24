@@ -54,6 +54,8 @@
 50. [Novità v1.4.0](#novità-v140)
 51. [Novità v1.4.1](#novità-v141)
 52. [Novità v1.4.2](#novità-v142)
+53. [Chat Community in Tempo Reale](#chat-community-in-tempo-reale) *(NUOVO v1.5.0)*
+54. [Novità v1.5.0](#novità-v150)
 
 ---
 
@@ -1727,4 +1729,54 @@ Ogni riga tradotta ora mostra indicatori di qualità visivi:
 
 ---
 
-GameStringer v1.4.2 - Guida aggiornata al 03/03/2026
+## Chat Community in Tempo Reale
+
+*(NUOVO v1.5.0)*
+
+La Chat Community è una funzionalità di messaggistica in tempo reale integrata nel Community Hub, alimentata da Supabase Realtime.
+
+### Come accedere
+
+1. Vai al **Community Hub** dalla sidebar
+2. Clicca sul tab **Chat** o sull'icona chat in basso a destra
+3. Se sei loggato con il tuo profilo GameStringer, vieni **connesso automaticamente** — nessun login aggiuntivo richiesto!
+
+### Stanze predefinite
+
+- **Generale**: chat libera della community GameStringer
+- **Traduzioni**: discuti di traduzioni, chiedi aiuto, condividi progressi
+- **Feedback & Bug**: segnala bug e suggerisci miglioramenti
+- **Annunci**: novità e aggiornamenti ufficiali
+
+### Funzionalità
+
+- **Messaggi in tempo reale**: i messaggi appaiono istantaneamente grazie a Supabase Realtime
+- **Presenza online**: vedi chi è online in tempo reale
+- **Rispondi ai messaggi**: clicca su un messaggio per rispondere in thread
+- **Modifica/Elimina**: modifica o elimina i tuoi messaggi
+- **Crea stanze personalizzate**: crea stanze dedicate per progetti o giochi specifici
+- **Auto-login**: il bridge automatico sincronizza il tuo profilo GS con Supabase Auth
+
+### Requisiti
+
+- Profilo GameStringer attivo (login effettuato)
+- Connessione internet attiva
+- Backend Supabase configurato (per self-hosting)
+
+---
+
+## Novità v1.5.0
+
+### Chat Community Realtime
+- **Chat in tempo reale** integrata nel Community Hub con Supabase Realtime
+- **4 stanze predefinite**: Generale, Traduzioni, Feedback & Bug, Annunci
+- **Auto-bridge**: login automatico Supabase tramite profilo GameStringer
+- **Presenza online**: indicatore utenti connessi in tempo reale
+- **Creazione stanze**: crea stanze personalizzate per giochi o progetti
+- **Risposte, modifica, eliminazione** messaggi
+- **Widget chat** in basso a destra con drawer espandibile
+- **i18n**: traduzioni chat in tutte le 11 lingue supportate
+
+---
+
+GameStringer v1.5.0 - Guida aggiornata al 24/03/2026

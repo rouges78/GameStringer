@@ -347,6 +347,65 @@ export const patchesTutorial: TutorialConfig = {
   ]
 };
 
+// Community Chat Tutorial
+export const communityChatTutorial: TutorialConfig = {
+  id: 'community-chat-guide',
+  name: 'Community Chat Guide',
+  description: 'Learn how to use the real-time community chat',
+  canSkip: true,
+  showProgress: true,
+  steps: [
+    {
+      id: 'chat-intro',
+      title: 'Community Chat',
+      description: 'Chat in real-time with other GameStringer translators! Share tips, ask for help, and collaborate on translations.',
+      target: '.container',
+      position: 'bottom'
+    },
+    {
+      id: 'chat-rooms',
+      title: 'Chat Rooms',
+      description: 'Browse available rooms: General, Translations, Feedback & Bug, and Announcements. You can also create custom rooms.',
+      target: '[data-testid="chat-rooms"]',
+      position: 'right',
+      optional: true
+    },
+    {
+      id: 'chat-auto-login',
+      title: 'Automatic Login',
+      description: 'When you\'re logged into your GameStringer profile, you\'re automatically connected to chat. No extra login needed!',
+      target: '[data-testid="chat-status"]',
+      position: 'bottom',
+      optional: true
+    },
+    {
+      id: 'chat-send-message',
+      title: 'Send Messages',
+      description: 'Type your message and press Enter or click Send. You can also reply to specific messages.',
+      target: 'input[placeholder*="messaggio"]',
+      position: 'top',
+      action: 'input',
+      optional: true
+    },
+    {
+      id: 'chat-online-users',
+      title: 'Online Users',
+      description: 'See who\'s online right now. The presence indicator shows active community members.',
+      target: '[data-testid="online-users"]',
+      position: 'left',
+      optional: true
+    },
+    {
+      id: 'chat-create-room',
+      title: 'Create a Room',
+      description: 'Need a dedicated space for your translation project? Create a custom room for your team or game.',
+      target: 'button:contains("New Room")',
+      position: 'bottom',
+      optional: true
+    }
+  ]
+};
+
 // Settings Tutorial
 export const settingsTutorial: TutorialConfig = {
   id: 'settings-guide',
@@ -404,6 +463,7 @@ export const tutorialRegistry = {
   'neural-translator-guide': neuralTranslatorTutorial,
   'editor-guide': editorTutorial,
   'patches-guide': patchesTutorial,
+  'community-chat-guide': communityChatTutorial,
   'settings-guide': settingsTutorial
 };
 
@@ -425,6 +485,7 @@ export function getTutorialsForPage(pathname: string): TutorialConfig[] {
     '/injekt-translator': ['neural-translator-guide'],
     '/editor': ['editor-guide'],
     '/patches': ['patches-guide'],
+    '/community-hub': ['community-chat-guide'],
     '/settings': ['settings-guide']
   };
 

@@ -20,6 +20,7 @@
 16. [Advanced Tools](#phase-16-advanced-tools)
 17. [Security & Recovery Key](#phase-17-security)
 18. [Troubleshooting](#phase-18-troubleshooting)
+19. [Community Chat (Real-Time)](#phase-19-community-chat) *(NEW v1.5.0)*
 
 ---
 
@@ -372,3 +373,43 @@ Login screen → **"Forgot password?"** → enter the 12 words → new password.
 - Sidebar: green dot = online, red = offline
 - Ollama Manager → check installed models
 - Recommended: 7B model for speed, 13B+ for quality
+
+---
+
+## PHASE 19: COMMUNITY CHAT
+
+*(NEW v1.5.0)*
+
+Real-time community chat integrated into the Community Hub, powered by Supabase Realtime.
+
+### How to Access
+
+1. Go to **Community Hub** from the sidebar
+2. Click the **Chat** tab or the chat icon in the bottom-right corner
+3. If you're logged into your GameStringer profile, you're **automatically connected** — no extra login needed!
+
+### Default Rooms
+
+- **General**: free chat for the GameStringer community
+- **Translations**: discuss translations, ask for help, share progress
+- **Feedback & Bug**: report bugs and suggest improvements
+- **Announcements**: official news and updates
+
+### Features
+
+- **Real-time messages**: messages appear instantly via Supabase Realtime
+- **Online presence**: see who's online in real-time
+- **Reply to messages**: click a message to reply in thread
+- **Edit/Delete**: edit or delete your own messages
+- **Create custom rooms**: create dedicated rooms for specific projects or games
+- **Auto-login**: automatic bridge syncs your GS profile with Supabase Auth
+
+### Requirements
+
+- Active GameStringer profile (logged in)
+- Active internet connection
+- Supabase backend configured (for self-hosting)
+
+---
+
+GameStringer v1.5.0 - Guide updated 24/03/2026

@@ -20,6 +20,7 @@
 16. [Zaawansowane narzędzia](#faza-16-zaawansowane-narzędzia)
 17. [Bezpieczeństwo i Recovery Key](#faza-17-bezpieczeństwo)
 18. [Rozwiązywanie problemów](#faza-18-rozwiązywanie-problemów)
+19. [Czat Społeczności (Czas Rzeczywisty)](#faza-19-czat-społeczności) *(NOWOŚĆ v1.5.0)*
 
 ---
 
@@ -381,3 +382,37 @@ Ekran logowania → **"Zapomniałeś hasła?"** → wpisz 12 słów → nowe has
 - Panel boczny: zielona kropka = online, czerwona = offline
 - Ollama Manager → sprawdź zainstalowane modele
 - Zalecane: model 7B dla szybkości, 13B+ dla jakości
+
+---
+
+## FAZA 19: CZAT SPOŁECZNOŚCI
+
+*(NOWOŚĆ v1.5.0)*
+
+Czat w czasie rzeczywistym zintegrowany z Community Hub, oparty na Supabase Realtime.
+
+### Dostęp
+
+1. Przejdź do **Community Hub** z paska bocznego
+2. Kliknij zakładkę **Czat** lub ikonę czatu w prawym dolnym rogu
+3. Jeśli jesteś zalogowany na swój profil GameStringer, łączysz się **automatycznie**
+
+### Domyślne pokoje
+
+- **Ogólny**: wolny czat społeczności GameStringer
+- **Tłumaczenia**: dyskusje o tłumaczeniach, prośby o pomoc, dzielenie się postępami
+- **Opinie i błędy**: zgłaszanie błędów i sugestie ulepszeń
+- **Ogłoszenia**: oficjalne wiadomości i aktualizacje
+
+### Funkcje
+
+- **Wiadomości w czasie rzeczywistym** przez Supabase Realtime
+- **Obecność online**: sprawdź kto jest online
+- **Odpowiadanie na wiadomości**: kliknij aby odpowiedzieć
+- **Edycja/Usuwanie**: edytuj lub usuwaj swoje wiadomości
+- **Tworzenie własnych pokojów**: dedykowane pokoje dla projektów lub gier
+- **Auto-login**: automatyczne połączenie przez profil GameStringer
+
+---
+
+GameStringer v1.5.0 - Przewodnik zaktualizowany 24.03.2026

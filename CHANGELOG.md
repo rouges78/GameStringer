@@ -19,6 +19,43 @@
 
 ## 📅 Marzo 2026
 
+### v1.5.0 — Community Chat Realtime 💬🌐
+
+> **Data**: 2026-03-24
+
+#### 💬 Chat Community in Tempo Reale
+
+- **Chat Realtime**: messaggistica in tempo reale nel Community Hub via Supabase Realtime
+- **4 stanze predefinite**: Generale, Traduzioni, Feedback & Bug, Annunci
+- **Creazione stanze**: crea stanze personalizzate per giochi o progetti
+- **Messaggi**: invio, risposta, modifica, eliminazione in tempo reale
+- **Presenza online**: indicatore utenti connessi con Supabase Presence
+- **Widget chat**: drawer espandibile in basso a destra
+
+#### 🔗 Auto-Bridge Authentication
+
+- **Auto-login Supabase**: il profilo GameStringer si sincronizza automaticamente con Supabase Auth
+- **Zero-config**: nessun login aggiuntivo richiesto per la chat
+- **Client unificato**: eliminati i warning "Multiple GoTrueClient instances"
+- **Profilo automatico**: trigger database crea user_profiles al sign-up
+
+#### 🌍 i18n & Documentazione
+
+- **Traduzioni chat** in tutte le 11 lingue (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL)
+- **Guide utente** aggiornate in 11 lingue con sezione Community Chat
+- **Tutorial interattivo** Community Chat aggiunto
+- **Locales** common.json aggiornati con sezione chat
+
+#### 🗄️ Backend Supabase
+
+- **PostgreSQL**: tabelle chat_rooms, chat_messages, chat_room_members, user_presence
+- **RLS Policies**: sicurezza a livello di riga per tutti i dati chat
+- **RPC Functions**: ensure_user_profile, update_presence (SECURITY DEFINER)
+- **Trigger**: auto-creazione profilo utente al sign-up
+- **Realtime**: pubblicazione messaggi e presenza via Supabase Realtime
+
+---
+
 ### v1.4.2 — Vision LLM, Advanced Tools & Community Fix 🚀🧠
 
 > **Data**: 2026-03-03

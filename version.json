@@ -1,14 +1,32 @@
 {
-  "version": "1.4.2",
+  "version": "1.5.0",
   "major": 1,
-  "minor": 4,
-  "patch": 2,
+  "minor": 5,
+  "patch": 0,
   "prerelease": null,
-  "buildNumber": 121,
-  "buildDate": "2026-03-03T18:15:00.000Z",
-  "gitHash": "af27346",
+  "buildNumber": 122,
+  "buildDate": "2026-03-24T17:00:00.000Z",
+  "gitHash": "bf3e1cc",
   "branch": "main",
   "changelog": {
+    "1.5.0": {
+      "date": "2026-03-24",
+      "type": "feature",
+      "changes": [
+        "Community Chat Realtime: chat in tempo reale integrata nel Community Hub con Supabase Realtime",
+        "4 stanze predefinite: Generale, Traduzioni, Feedback & Bug, Annunci",
+        "Auto-bridge: login automatico Supabase tramite profilo GameStringer (nessun login aggiuntivo)",
+        "Presenza online: indicatore utenti connessi in tempo reale con Supabase Presence",
+        "Creazione stanze personalizzate per giochi o progetti specifici",
+        "Risposte, modifica ed eliminazione messaggi",
+        "Widget chat in basso a destra con drawer espandibile",
+        "Backend Supabase: PostgreSQL, RLS policies, trigger auto-profilo, RPC functions",
+        "i18n: traduzioni chat in tutte le 11 lingue supportate (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL)",
+        "Tutorial interattivo Community Chat aggiunto",
+        "Guide utente aggiornate in 11 lingue con sezione Chat Community",
+        "Client Supabase unificato (eliminati Multiple GoTrueClient warnings)"
+      ]
+    },
     "1.4.2": {
       "date": "2026-03-03",
       "type": "patch",

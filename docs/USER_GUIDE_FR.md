@@ -20,6 +20,7 @@
 16. [Outils Avancés](#phase-16-outils-avancés)
 17. [Sécurité et Recovery Key](#phase-17-sécurité)
 18. [Dépannage](#phase-18-dépannage)
+19. [Chat Communautaire (Temps Réel)](#phase-19-chat-communautaire) *(NOUVEAU v1.5.0)*
 
 ---
 
@@ -381,3 +382,37 @@ Partagez des traductions, votez, commentez, téléchargez les traductions de la 
 - Barre latérale : point vert = en ligne, rouge = hors ligne
 - Ollama Manager → vérifier les modèles installés
 - Recommandé : modèle 7B pour la vitesse, 13B+ pour la qualité
+
+---
+
+## PHASE 19 : CHAT COMMUNAUTAIRE
+
+*(NOUVEAU v1.5.0)*
+
+Chat en temps réel intégré au Community Hub, propulsé par Supabase Realtime.
+
+### Accès
+
+1. Allez au **Community Hub** depuis la barre latérale
+2. Cliquez sur l'onglet **Chat** ou l'icône chat en bas à droite
+3. Si vous êtes connecté à votre profil GameStringer, vous êtes **automatiquement connecté**
+
+### Salons par défaut
+
+- **Général** : chat libre de la communauté GameStringer
+- **Traductions** : discutez traductions, demandez de l'aide, partagez vos progrès
+- **Retours & Bugs** : signalez des bugs et suggérez des améliorations
+- **Annonces** : nouvelles et mises à jour officielles
+
+### Fonctionnalités
+
+- **Messages en temps réel** via Supabase Realtime
+- **Présence en ligne** : voyez qui est connecté
+- **Répondre aux messages** : cliquez pour répondre
+- **Modifier/Supprimer** : modifiez ou supprimez vos messages
+- **Créer des salons personnalisés** : salons dédiés pour projets ou jeux
+- **Auto-login** : connexion automatique via profil GameStringer
+
+---
+
+GameStringer v1.5.0 - Guide mise à jour le 24/03/2026

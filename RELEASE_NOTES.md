@@ -1,31 +1,40 @@
-# 🎮 GameStringer v1.0.9
+# 🎮 GameStringer v1.5.0
 
-> **Release Date**: January 31, 2026  
-> **Type**: Animated Headers & UI Polish
-
----
-
-## ✨ Animated Headers (v1.0.9)
-
-- **Breathing effect**: Gradient expands/contracts smoothly (12s animation)
-- **Shimmer animation**: Custom CSS keyframes for fluid movement
-- **Deep shadows**: shadow-xl with blue tint for depth
-- **16 pages updated** with new animated header style
-
-## 🎨 UI Improvements
-
-- **Unified gradient**: Sky → Blue → Cyan on all Translation headers
-- **Sidebar menu**: Sub-items with dark green hover (emerald-600)
-- **Visual consistency**: Unified style across all translation pages
+> **Release Date**: March 24, 2026  
+> **Type**: Community Chat Realtime
 
 ---
 
-## � Community Hub (v1.0.7)
+## 💬 Community Chat (v1.5.0)
 
-- **GitHub Discussions** integration for community support
-- **Custom UI**: GameStringer themed discussions
-- **API Route**: Auto-fetch from GitHub with scraping fallback
-- **External links**: Open with Tauri shell API
+- **Real-time chat** integrated into Community Hub via Supabase Realtime
+- **4 default rooms**: General, Translations, Feedback & Bug, Announcements
+- **Create custom rooms** for specific games or translation projects
+- **Auto-bridge authentication**: GameStringer profile auto-syncs with Supabase Auth — no extra login needed
+- **Online presence**: see who's online in real-time
+- **Message actions**: send, reply, edit, delete messages
+- **Chat widget**: expandable drawer in bottom-right corner
+
+## 🔗 Auto-Bridge Authentication
+
+- **Zero-config login**: your GS profile is automatically bridged to Supabase
+- **Unified Supabase client**: eliminated "Multiple GoTrueClient" warnings
+- **Auto-profile creation**: database trigger creates user profile on sign-up
+
+## 🌍 i18n & Documentation
+
+- **Chat translations** in all 11 supported languages (IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL)
+- **User guides** updated in 11 languages with Community Chat section
+- **Interactive tutorial** for Community Chat added
+- **Locales** common.json updated with chat section
+
+## 🗄️ Supabase Backend
+
+- **PostgreSQL**: chat_rooms, chat_messages, chat_room_members, user_presence tables
+- **RLS Policies**: row-level security for all chat data
+- **RPC Functions**: ensure_user_profile, update_presence (SECURITY DEFINER)
+- **Trigger**: auto-create user profile on auth sign-up
+- **Realtime**: message and presence broadcasting via Supabase Realtime
 
 ## 📜 License v1.1
 
@@ -47,8 +56,8 @@
 
 | File | Description |
 |------|-------------|
-| `GameStringer-1.0.9-Setup.exe` | Windows Installer (recommended) |
-| `GameStringer-1.0.9-Portable.zip` | Portable version (no install) |
+| `GameStringer-1.5.0-Setup.exe` | Windows Installer (recommended) |
+| `GameStringer-1.5.0-Portable.zip` | Portable version (no install) |
 | `checksums-sha256.txt` | SHA256 checksums for verification |
 
 ### System Requirements
@@ -63,14 +72,14 @@
 
 ### Setup (Recommended)
 
-1. Download `GameStringer-1.0.9-Setup.exe`
+1. Download `GameStringer-1.5.0-Setup.exe`
 2. Run the installer
 3. Follow the installation wizard
 4. Launch GameStringer from Start Menu
 
 ### Portable
 
-1. Download `GameStringer-1.0.9-Portable.zip`
+1. Download `GameStringer-1.5.0-Portable.zip`
 2. Extract to any folder
 3. Run `GameStringer.exe`
 
@@ -78,7 +87,7 @@
 
 ## 📖 Documentation
 
-User guides available in 7 languages:
+User guides available in 11 languages:
 
 | Language | Guide |
 |----------|-------|
@@ -89,6 +98,10 @@ User guides available in 7 languages:
 | 🇩🇪 German | [USER_GUIDE_DE.md](docs/USER_GUIDE_DE.md) |
 | 🇯🇵 Japanese | [USER_GUIDE_JA.md](docs/USER_GUIDE_JA.md) |
 | 🇨🇳 Chinese | [USER_GUIDE_ZH.md](docs/USER_GUIDE_ZH.md) |
+| 🇰🇷 Korean | [USER_GUIDE_KO.md](docs/USER_GUIDE_KO.md) |
+| 🇧🇷 Portuguese | [USER_GUIDE_PT.md](docs/USER_GUIDE_PT.md) |
+| 🇷🇺 Russian | [USER_GUIDE_RU.md](docs/USER_GUIDE_RU.md) |
+| 🇵🇱 Polish | [USER_GUIDE_PL.md](docs/USER_GUIDE_PL.md) |
 
 ---
 
@@ -113,4 +126,4 @@ If GameStringer helped you enjoy games in your language:
 
 ---
 
-**Full Changelog**: <https://github.com/rouges78/GameStringer/compare/v1.0.6...v1.0.9>
+**Full Changelog**: <https://github.com/rouges78/GameStringer/compare/v1.4.2...v1.5.0>

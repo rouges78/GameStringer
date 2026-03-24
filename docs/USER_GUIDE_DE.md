@@ -20,6 +20,7 @@
 16. [Erweiterte Tools](#phase-16-erweiterte-tools)
 17. [Sicherheit und Recovery Key](#phase-17-sicherheit)
 18. [Fehlerbehebung](#phase-18-fehlerbehebung)
+19. [Community-Chat (Echtzeit)](#phase-19-community-chat) *(NEU v1.5.0)*
 
 ---
 
@@ -381,3 +382,37 @@ Anmeldebildschirm → **"Passwort vergessen?"** → 12 Wörter eingeben → neue
 - Seitenleiste: grüner Punkt = online, rot = offline
 - Ollama Manager → installierte Modelle prüfen
 - Empfohlen: 7B-Modell für Geschwindigkeit, 13B+ für Qualität
+
+---
+
+## PHASE 19: COMMUNITY-CHAT
+
+*(NEU v1.5.0)*
+
+Echtzeit-Community-Chat im Community Hub, betrieben mit Supabase Realtime.
+
+### Zugang
+
+1. Gehen Sie zum **Community Hub** in der Seitenleiste
+2. Klicken Sie auf den **Chat**-Tab oder das Chat-Symbol unten rechts
+3. Wenn Sie in Ihrem GameStringer-Profil angemeldet sind, werden Sie **automatisch verbunden**!
+
+### Standard-Räume
+
+- **Allgemein**: freier Chat der GameStringer-Community
+- **Übersetzungen**: Übersetzungen diskutieren, Hilfe bitten, Fortschritte teilen
+- **Feedback & Bugs**: Fehler melden und Verbesserungen vorschlagen
+- **Ankündigungen**: offizielle Neuigkeiten und Updates
+
+### Funktionen
+
+- **Echtzeit-Nachrichten**: Nachrichten erscheinen sofort über Supabase Realtime
+- **Online-Präsenz**: sehen, wer gerade online ist
+- **Antworten**: auf Nachrichten antworten
+- **Bearbeiten/Löschen**: eigene Nachrichten bearbeiten oder löschen
+- **Eigene Räume erstellen**: dedizierte Räume für Projekte oder Spiele
+- **Auto-Login**: automatische Verbindung über GameStringer-Profil
+
+---
+
+GameStringer v1.5.0 - Anleitung aktualisiert am 24.03.2026
