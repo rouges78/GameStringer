@@ -50,15 +50,30 @@ export function isBackendEnabled(): boolean {
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────
 
 let _supabaseClient: SupabaseClient | null = null;
+let _lastConfigHash = '';
+
+function configHash(cfg: SupabaseConfig): string {
+  return `${cfg.url}|${cfg.anonKey}`;
+}
+
+export function resetSupabaseClient(): void {
+  _supabaseClient = null;
+  _lastConfigHash = '';
+}
 
 async function getSupabase(): Promise<SupabaseClient> {
-  if (_supabaseClient) return _supabaseClient;
   const cfg = getConfig();
   if (!cfg.url || !cfg.anonKey) throw new Error('Supabase non configurato');
 
+  const hash = configHash(cfg);
+  if (_supabaseClient && hash === _lastConfigHash) return _supabaseClient;
+
+  // Config changed or first init — (re)create client
   _supabaseClient = createClient(cfg.url, cfg.anonKey, {
     auth: { persistSession: true, autoRefreshToken: true },
   });
+  _lastConfigHash = hash;
+  console.log('[Supabase] Client creato per:', cfg.url);
   return _supabaseClient;
 }
 

@@ -1512,7 +1512,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
         </DialogContent>
       </Dialog>
       {/* ── Chat Widget fisso in basso (stile chatbot) ── */}
-      <div className={`fixed bottom-0 right-4 z-50 transition-all duration-300 ease-in-out ${
+      <div className={`fixed bottom-0 right-52 z-50 transition-all duration-300 ease-in-out ${
         chatOpen ? 'w-[700px] h-[520px]' : 'w-auto h-auto'
       }`}>
         {chatOpen ? (
