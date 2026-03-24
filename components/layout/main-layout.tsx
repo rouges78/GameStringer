@@ -75,7 +75,7 @@ import {
 import { invoke } from '@/lib/tauri-api';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ProfileHeader } from '@/components/profiles/profile-header';
 import { AuthStatusSidebar } from '@/components/auth/auth-status-sidebar';
 import { ProfileNotifications } from '@/components/profiles/profile-notifications';
@@ -215,521 +215,6 @@ interface SystemStatus {
   cache: { percentage: number; color: string; text: string };
 }
 
-// Changelog content completo
-const CHANGELOG_CONTENT = `
-# GameStringer Changelog
-
-## 🎉 Release Pubblica
-
-| Fase | Versione | Stato |
-|------|----------|-------|
-| Alpha | 0.1.x - 0.4.x | ✅ Completato |
-| Beta | 0.5.x - 0.8.x | ✅ Completato |
-| Release Candidate | 0.9.x | ✅ Completato |
-| **Release Pubblica** | **1.0.x** | ✅ Rilasciato |
-
----
-
-## 📅 Marzo 2026
-
-### 🚀 v1.4.2 — Vision LLM, Advanced Tools & Community Fix
-\`2026-03-03\`
-
-**Vision LLM Translator**
-- Traduzione context-aware con screenshot del gioco
-- Provider: Ollama (locale), Gemini, OpenAI GPT-4o
-- Upload immagine o cattura schermo per contesto visivo
-
-**Advanced Tools**
-- Lore Assistant: chat RAG per lore e dialoghi del gioco
-- Auto-Hook Scanner: scansione memoria processo (WinAPI)
-- System Monitor: VRAM/RAM in tempo reale
-- Ollama Setup Wizard: installazione guidata AI locale
-
-**Community & Fix**
-- GitHub Discussions: 12 discussioni create
-- Community Hub: fix fetch REST API pubblica
-- Sidebar: rinominato Workshop in Steam Workshop
-- Update Bell: fix versione corrente nel popup
-- CI/CD: Tauri Signing Key per release firmate
-
-**Translation Provider Fix**
-- Ollama: cooldown 30s invece di blocco permanente per errori rete
-- Lingva: troncamento testi >500 chars (evita URL 404)
-- Auto-Translate: pulsante "Traduci tutte le non tradotte" con progress
-- Tutorial: fix querySelector SyntaxError con :contains()
-
----
-
-### 🌍 v1.4.1 — i18n 11 Lingue, Guide Complete & CI Fix
-\`2026-03-02\`
-
-**i18n — 11 Lingue UI**
-- 4 nuove lingue: Coreano (KO), Portoghese (PT), Russo (RU), Polacco (PL)
-- translations.ts: +9.056 righe (da 13.472 a 22.528)
-- Lingue totali: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL
-
-**Guide Utente Aggiornate**
-- 7 guide esistenti aggiornate con sezioni v1.1-v1.4
-- 4 nuove guide: KO, PT, RU, PL
-- README aggiornati con 11 lingue
-
-**CI/CD**
-- Workflow CI Linux + Windows fixato
-- Stub frontend out/ per tauri::generate_context!()
-
----
-
-## 📅 Febbraio 2026
-
-### 🧹 v1.4.0 — Radix Unificato, Quality Badges & Pulizia Codebase
-\`2026-02-13\`
-
-**Migrazione Radix UI**
-- 37 file migrati da @radix-ui/react-* a radix-ui
-- 27 pacchetti rimossi, bundle più leggero
-
-**Quality Badge nel Traduttore Pro**
-- Punteggio qualità per-riga (0-100) con colori
-- Live preview durante traduzione batch
-- Tabella risultati con tipo contenuto e score
-
-**Nuove Feature**
-- Supporto RTL automatico per lingue arabe/ebraiche
-- Ollama Generico con chain presets fallback
-
-**Ottimizzazione & Fix**
-- Bundle ottimizzato con optimizePackageImports
-- 0 errori TypeScript nei sorgenti (da ~15)
-- Fix props mancanti in notifiche, tutorial, TM
-
----
-
-### 🎮 v1.3.0 — Danganronpa WAD Patcher & Export System
-\`2026-02-09\`
-
-**Danganronpa WAD Patcher v15**
-- All-Ice base + GameStringer override (35.865 stringhe)
-- WAD Text Extractor CLI per estrazione testi
-- WAD Patcher v15 con override selettivo
-
-**WAD Extractor UI**
-- Nuovo tab nel Danganronpa Patcher
-- Editor con ricerca, filtri e traduzione batch AI
-- Export JSON traduzioni
-
-**Export Patch Distribuibile**
-- Backend Rust: zip streaming ~626 MB
-- UI con dialog salvataggio nativo
-- ZIP: WAD + install.bat + LEGGIMI.txt + translations.json
-
-**Dashboard Stats Reali**
-- Translation Memory da backend Rust
-- Activity history: traduzioni e patch
-- Tempo risparmiato e Entry TM reali
-
-**UI Compattata**
-- Tutti i tab Danganronpa Patcher ottimizzati
-- Header, spacing e scroll areas ridotti
-
----
-
-### 🛡️ v1.2.0 — Fallback Provider & Full Tauri Compatibility
-\`2026-02-06\`
-
-**Fallback Provider Automatico**
-- Traduzione: Gemini → DeepSeek → OpenAI → testo originale
-- 10+ componenti aggiornati con fallback automatico
-- Zero crash se un provider fallisce
-
-**Audit /api/* Completato al 100%**
-- 0 fetch('/api/') attive — tutto compatibile Tauri
-- Injection, secrets, logging, import → tutto locale
-
-**Danganronpa Filtro Smart**
-- Nuovo modulo danganronpa-filter.ts
-- Riduce 18K → ~3K stringhe rilevanti
-- Filtro locale + classificazione AI opzionale
-
-**Test E2E Playwright**
-- 38 test reali tutti passanti
-- Navigation, translation, danganronpa
-
----
-
-### ✨ v1.1.0 — Danganronpa & Auto-Update
-\`2026-02-05\`
-
-**Danganronpa Auto-Translator**
-- Supporto nativo file PAK/LIN/STX
-- Integrazione con DRAT
-- Estrazione e traduzione automatica dialoghi
-
-**Auto-Update In-App**
-- Aggiornamento diretto senza browser
-- Progress bar download
-- Installazione e riavvio automatico
-
-**Test E2E**
-- 9 test Playwright per navigation, translation, danganronpa
-- Config multi-browser
-
----
-
-## 📅 Gennaio 2026
-
-### ✨ v1.0.9 — Animated Headers & UI Polish
-\`2026-01-31\`
-
-**Header Animati**
-- Effetto "Respiro" con gradiente che si espande/contrae
-- Animazione shimmer CSS personalizzata (12s)
-- Ombreggiature profonde shadow-xl blu
-- 16 pagine aggiornate con nuovo stile
-
-**UI Miglioramenti**
-- Gradiente uniforme Sky → Blue → Cyan
-- Menu Sidebar sub-item verde scuro
-- Coerenza visiva su tutte le pagine Traduzione
-
----
-
-### 🔧 v1.0.8 — Fix Update Download
-\`2026-01-29\`
-
-**Bug Fix**
-- Pulsante "Scarica" ora apre il browser
-- Usato Tauri Shell API per link esterni
-- Feedback toast per conferma
-
----
-
-### �💬 v1.0.7 — Community Forum & License
-\`2026-01-29\`
-
-**GitHub Discussions**
-- Forum integrato nel Community Hub
-- Grafica personalizzata GameStringer
-- Fetch automatico da GitHub
-
-**Community Hub**
-- Rimossi dati mock, ora solo dati reali
-- Modal warning rimosso
-
-**Licenza v1.1**
-- Source Available License aggiornata
-- YouTuber/streamer OK con attribuzione
-- Fork non-commerciali permessi
-
----
-
-### 🎤 v1.0.5 — AI Voice & VR Tools
-\`2026-01-26\`
-
-**Voice Clone Studio**
-- AI voice cloning con ElevenLabs e OpenAI TTS
-- Text-to-speech con voci multiple
-- Profili voce personalizzati da campioni audio
-
-**VR Text Overlay**
-- Sottotitoli spaziali per giochi VR
-- Rilevamento headset: Oculus, SteamVR, WMR
-- Preset posizione e stile personalizzabile
-
-**Quality Gates**
-- Sistema QA automatico per validazione traduzioni
-- Controlli: placeholder, numeri, tag HTML, lunghezza
-
-**Player Feedback**
-- Raccolta feedback dai giocatori
-- Sistema rating 5 stelle con tracking
-
----
-
-### 🚀 v1.0.4 — Translation Tools Expansion
-\`2026-01-23\`
-
-**Subtitle Translator**
-- Parser completo per SRT, VTT, ASS/SSA
-- Preview in tempo reale con validazione QA
-
-**Batch Folder Translator**
-- Scansione ricorsiva con 10+ formati supportati
-- Progress tracking con pausa/stop
-
-**Community Hub**
-- Browser pacchetti TM con search/filter
-- Top contributori e statistiche
-
-**Retro ROM Tools**
-- 8 console supportate (NES, SNES, GB, GBA, Genesis, PSX, N64)
-- Table file (.TBL) parser/generator
-
-**API Pubblica v1**
-- Endpoint traduzioni singole e batch
-- 20 lingue supportate
-
----
-
-### 🔐 v1.0.3 — Recovery Key & i18n Complete
-\`2026-01-22\`
-
-**Recovery Key System**
-- Sistema recupero password con 12 parole mnemoniche
-- Generazione automatica alla creazione profilo
-- UI copia/download per salvare la chiave
-- Verifica chiave per reset password
-
-**Traduzioni Complete**
-- +537 righe per ES, FR, DE
-- 9 nuove sezioni tradotte
-- Tutte le lingue ora complete
-
----
-
-### 🌍 v1.0.2 — Multilingual Support
-\`2026-01-22\`
-
-**Nuove Lingue**
-- Supporto multilingua: Español, Français, Deutsch, 日本語, 中文
-- Selettore lingua attivo per tutte le lingue
-- Traduzioni Translation Fixer complete
-- Traduzioni AI Context Crawler complete
-- Categorie glossario tradotte
-
----
-
-### 🎨 v1.0.1 — Game Details Layout Overhaul
-\`2026-01-21\`
-
-**Layout Redesign**
-- Nuovo layout 3:1 per pagina dettaglio gioco
-- Screenshot gallery espansa (12 screenshot)
-- Raccomandazione traduzione full-width
-
----
-
-### 🎉 v1.0.0 — Public Release
-\`2026-01-20\`
-
-**Nuove Feature**
-- Hero Image Fusion per tutte le pagine
-- Screenshot Gallery nella pagina dettaglio
-- Sistema i18n completo (Italiano/English)
-- GitHub Sponsors integrato
-
-**Traduzioni**
-- Componente Support tradotto
-- Pulsanti Libreria tradotti
-
----
-
-### 🚀 v0.9.9-beta — Pre-Release Final
-\`2026-01-19\`
-
-**Release Preparation**
-- Ultima beta prima del release 1.0.0
-- Sistema i18n completo
-- Integrazione Ko-fi e GitHub Sponsors
-- Ottimizzazioni finali e bug fix
-
----
-
-### 🚀 v0.9.8-beta — Core Features & OCR
-\`2026-01-18\`
-
-**Nuove Feature**
-- Telltale Patcher per Wolf Among Us, Walking Dead, Batman
-- Parser Telltale (.langdb, .landb, .dlog)
-
-**Fix**
-- Immagini games nella pagina dettaglio
-- Steam API 403 rate limiting gestito gracefully
-- Tauri CLI updated a v2.5.0
-
----
-
-### 🎨 v0.8.1-beta — UI Polish & Fixes
-\`2026-01-04\`
-
-**Miglioramenti UI**
-- Dizionario righe compatte
-- Estensioni layout unificato con Parser
-- Campanella notifiche gialla fosforescente
-- Placeholder colorati per copertine mancanti
-
----
-
-### 🎮 v0.8.0-beta — Epic Games Store Integration
-\`2026-01-02\`
-
-**Nuove Feature**
-- Integrazione Epic Games Store via Legendary CLI
-- Badge piattaforma dinamico (Steam/Epic/GOG/Origin)
-
----
-
-### 🏅 v0.7.9-beta — Badge Traduzione + Tracking
-\`2026-01-01\`
-
-**Nuove Feature**
-- Badge visivo stato traduzione (🥈 Argento / 🥉 Bronzo)
-- Tracking patch installate in "Attività Recenti"
-
-**Fix**
-- Layout Unity Patcher tagliato a destra
-- Warning dead_code per costanti BepInEx 6.x
-
----
-
-## 📅 Dicembre 2025
-
-### 🔧 v0.7.8-beta — Unity Patcher Stabilization
-\`2025-12-31\`
-
-**Miglioramenti**
-- BepInEx 5.4.23.4 come default (compatibile con XUnity 5.5)
-- Plugin UIToolkitTranslator sperimentale
-
-**Fix**
-- Rimosso BepInEx 6.x (incompatibile con XUnity)
-
----
-
-### 🔗 v0.7.7-beta — Family Sharing Completo
-\`2025-12-31\`
-
-**Nuove Feature**
-- Supporto fino a 4 Steam ID condivisori
-- Screenshot gallery con lightbox
-- UX intelligente Neural Translator
-
-**Miglioramenti**
-- Persistenza IDs nel backend (non più persi al riavvio)
-- Da 107 a ~276 games Family Sharing visibili
-
----
-
-### ⚡ v0.7.6-beta — Streaming LLM Translation
-\`2025-12-31\`
-
-**Nuove Feature**
-- Traduzioni in tempo reale con Server-Sent Events
-- Supporto OpenAI, Claude, Gemini, DeepSeek
-
-**Miglioramenti**
-- Da 50 a 426+ games Steam rilevati
-
----
-
-### 📖 v0.7.5-beta — Translation Tools Pro
-\`2025-12-30\`
-
-**Nuove Feature**
-- Glossario personalizzato con categorie
-- Hotkey globali OCR (Ctrl+Shift+T)
-- History traduzioni con statistiche
-- Auto-detect lingua sorgente
-
----
-
-### 🐛 v0.7.4-beta — Epic Games Fix + Ottimizzazioni
-\`2025-12-30\`
-
-**Nuove Feature**
-- Supporto IPA per Unity 5.0-5.5
-- Link tool esterni (gdsdecomp, UnrealLocres)
-- Sistema notifiche aggiornamenti
-- Ricerca fuzzy nella Library
-- Plugin system per formati file
-
-**Ottimizzazioni**
-- Virtualizzazione liste (50MB → 5MB RAM)
-- Lazy loading immagini
-- Cache LRU con limite 5000 entries
-- Startup time ridotto
-
-**Fix**
-- Epic Games Parser: da 1939 a ~31 games reali
-- Steam Family Sharing con badge 🔗
-
----
-
-### 🎯 v0.7.3-beta — Translation Recommendation
-\`2025-12-29\`
-
-**Nuove Feature**
-- Card raccomandazione metodo traduzione
-- Ordinamento "Recenti" nella Library
-
-**Fix**
-- OCR Overlay non blocca più i games
-
----
-
-### 🎨 v0.7.2-beta — Codebase Cleanup
-\`2025-12-29\`
-
-- Risolti tutti i 29 warning Rust
-- Compilazione pulita senza warning
-
----
-
-### 🌐 v0.7.1-beta — Editor Multi-lingua
-\`2025-12-11\`
-
-**Nuove Feature**
-- Vista split IDE-style per traduzioni
-- Translation Wizard integrato
-- Activity History con filtri
-- Bandiere grafiche per lingue
-
----
-
-## 📅 Agosto 2025
-
-### 🔐 v0.6.x-beta — Sistema Profili
-\`2025-08\`
-
-- Sistema profili utente completo
-- Fix critico riavvio app durante login
-- Sistema notifiche con toast
-
----
-
-## 📅 Luglio 2025
-
-### 🚀 v0.5.x-beta — Tauri v2 Migration
-\`2025-07\`
-
-**Major Changes**
-- Migrazione completa a Tauri v2
-- Sistema traduzione OCR avanzato
-- Backend multipli (Claude, OpenAI, Google)
-- Prima esecuzione con successo
-
-**Nuove Feature**
-- Game Launch Integration
-- Engine Detection automatico
-- HowLongToBeat integration
-- Supporto 2FA per GOG
-
----
-
-## 📅 Giugno 2025
-
-### 🏗️ v0.1.x-alpha — Fondamenta
-\`2025-06\`
-
-**Core Features**
-- Scansione librerie (Steam, Epic, GOG, Origin, Ubisoft, Battle.net, itch.io, Rockstar)
-- Traduzione neurale batch (Claude, OpenAI)
-- Translation Memory locale in Rust
-- Quality Gates per validazione
-- Supporto formati: JSON, PO, RESX, CSV
-- UI moderna Next.js + TailwindCSS + shadcn/ui
-`;
-
 export function MainLayout({ children }: MainLayoutProps) {
   const { t, language, setLanguage } = useTranslation();
   const navGroups = getNavGroups(t);
@@ -762,7 +247,29 @@ export function MainLayout({ children }: MainLayoutProps) {
   });
   const [isOnline, setIsOnline] = useState(true);
   const pathname = usePathname();
-  const { version, buildInfo } = useVersion();
+  const router = useRouter();
+  const { version, buildInfo, allVersions } = useVersion();
+
+  // Tray icon navigation events — riceve percorsi dal backend Rust
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    
+    const setupTrayListener = async () => {
+      try {
+        const { listen } = await import('@tauri-apps/api/event');
+        unlisten = await listen<string>('navigate', (event) => {
+          if (event.payload && typeof event.payload === 'string') {
+            router.push(event.payload);
+          }
+        });
+      } catch {
+        // Non in ambiente Tauri (browser dev)
+      }
+    };
+    
+    setupTrayListener();
+    return () => { unlisten?.(); };
+  }, [router]);
   
   // Check internet connection
   useEffect(() => {
@@ -1595,62 +1102,46 @@ export function MainLayout({ children }: MainLayoutProps) {
               </DialogTitle>
             </DialogHeader>
             <ScrollArea className="h-[60vh] pr-4">
-              <div className="space-y-3">
-                {CHANGELOG_CONTENT.split('\n').map((line, i) => {
-                  // Titoli versione ### 
-                  if (line.startsWith('### ')) {
-                    const title = line.replace('### ', '').replace(/`[^`]+`/g, '');
-                    return (
-                      <div key={i} className="flex items-center gap-2 mt-6 mb-3">
-                        <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full" />
-                        <h3 className="text-lg font-bold text-white">{title}</h3>
+              <div className="space-y-6">
+                {allVersions.map((versionEntry, idx) => (
+                  <div key={versionEntry.version} className="space-y-2">
+                    {/* Version Header */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="h-8 w-1 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full" />
+                      <div>
+                        <h3 className="text-lg font-bold text-white">
+                          {versionEntry.version === '1.5.0' && '💬 '}
+                          {versionEntry.version === '1.4.2' && '🚀 '}
+                          {versionEntry.version === '1.4.1' && '🌍 '}
+                          {versionEntry.version === '1.4.0' && '🧹 '}
+                          {versionEntry.version === '1.3.0' && '🎮 '}
+                          {versionEntry.version === '1.2.0' && '🛡️ '}
+                          {versionEntry.version === '1.1.0' && '🌐 '}
+                          {versionEntry.version === '1.0.0' && '🎉 '}
+                          v{versionEntry.version}
+                        </h3>
+                        <span className="inline-block text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded mt-1">
+                          {versionEntry.date}
+                        </span>
                       </div>
-                    );
-                  }
-                  // Sottotitoli **Bold**
-                  if (line.startsWith('**') && line.endsWith('**')) {
-                    const text = line.replace(/\*\*/g, '');
-                    return (
-                      <p key={i} className="text-sm font-semibold text-blue-300 mt-4 mb-1">{text}</p>
-                    );
-                  }
-                  // Lista items
-                  if (line.startsWith('- ')) {
-                    const content = line.replace('- ', '');
-                    return (
-                      <div key={i} className="flex items-start gap-2 ml-2">
-                        <span className="text-blue-400 mt-1">•</span>
-                        <span className="text-sm text-gray-300">{content}</span>
-                      </div>
-                    );
-                  }
-                  // Sub-lista
-                  if (line.startsWith('  - ')) {
-                    return (
-                      <div key={i} className="flex items-start gap-2 ml-6">
-                        <span className="text-gray-500 mt-1">◦</span>
-                        <span className="text-xs text-gray-400">{line.replace('  - ', '')}</span>
-                      </div>
-                    );
-                  }
-                  // Separatore
-                  if (line === '---') {
-                    return <div key={i} className="border-t border-gray-700/50 my-4" />;
-                  }
-                  // Date `2026-01-18`
-                  if (line.startsWith('`') && line.endsWith('`')) {
-                    return (
-                      <span key={i} className="inline-block text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded mb-2">
-                        {line.replace(/`/g, '')}
-                      </span>
-                    );
-                  }
-                  // Testo normale
-                  if (line.trim() && !line.startsWith('#') && !line.startsWith('|')) {
-                    return <p key={i} className="text-sm text-gray-400">{line}</p>;
-                  }
-                  return null;
-                })}
+                    </div>
+                    
+                    {/* Changes List */}
+                    <div className="space-y-1 ml-4">
+                      {versionEntry.changes.map((change, changeIdx) => (
+                        <div key={changeIdx} className="flex items-start gap-2">
+                          <span className="text-blue-400 mt-1">•</span>
+                          <span className="text-sm text-gray-300">{change}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Separator between versions */}
+                    {idx < allVersions.length - 1 && (
+                      <div className="border-t border-gray-700/50 mt-4" />
+                    )}
+                  </div>
+                ))}
               </div>
             </ScrollArea>
           </DialogContent>

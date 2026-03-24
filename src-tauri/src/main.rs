@@ -30,9 +30,9 @@ use commands::profile_settings::ProfileSettingsManagerState;
 use commands::notifications::NotificationManagerState;
 
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager,
+    Manager, Emitter,
 };
 
 #[cfg(windows)]
@@ -953,22 +953,103 @@ fn main() {
         ])
         .setup(|app| {
             // ═══════════════════════════════════════════════════
-            // SYSTEM TRAY — Mantiene l'app in memoria
+            // SYSTEM TRAY — Pacchetto Completo
             // ═══════════════════════════════════════════════════
+
+            // ── Finestra ─────────────────────────────────────
             let show_item = MenuItem::with_id(app, "show", "🎮 Apri GameStringer", true, None::<&str>)?;
             let hide_item = MenuItem::with_id(app, "hide", "⬇ Minimizza in Tray", true, None::<&str>)?;
-            let separator = MenuItem::with_id(app, "sep", "─────────────", false, None::<&str>)?;
-            let quit_item = MenuItem::with_id(app, "quit", "✕ Esci", true, None::<&str>)?;
 
-            let menu = Menu::with_items(app, &[&show_item, &hide_item, &separator, &quit_item])?;
+            let sep1 = PredefinedMenuItem::separator(app)?;
 
-            TrayIconBuilder::new()
+            // ── Azioni Rapide ────────────────────────────────
+            let quick_translate = MenuItem::with_id(app, "quick_translate", "⚡ Traduzione Rapida", true, Some("CmdOrCtrl+Shift+T"))?;
+            let screen_capture = MenuItem::with_id(app, "screen_capture", "📷 Cattura Schermo OCR", true, None::<&str>)?;
+            let open_library = MenuItem::with_id(app, "open_library", "📚 Libreria Giochi", true, None::<&str>)?;
+            let open_community = MenuItem::with_id(app, "open_community", "💬 Community Chat", true, None::<&str>)?;
+
+            let sep2 = PredefinedMenuItem::separator(app)?;
+
+            // ── Navigazione Rapida (Submenu) ─────────────────
+            let nav_translator = MenuItem::with_id(app, "nav_translator", "🤖 AI Translator", true, None::<&str>)?;
+            let nav_batch = MenuItem::with_id(app, "nav_batch", "📁 Batch Translator", true, None::<&str>)?;
+            let nav_patcher = MenuItem::with_id(app, "nav_patcher", "🔧 Patcher Engine", true, None::<&str>)?;
+            let nav_settings = MenuItem::with_id(app, "nav_settings", "⚙️ Impostazioni", true, None::<&str>)?;
+            let tools_submenu = Submenu::with_items(
+                app,
+                "🛠️ Strumenti",
+                true,
+                &[&nav_translator, &nav_batch, &nav_patcher, &nav_settings],
+            )?;
+
+            let sep3 = PredefinedMenuItem::separator(app)?;
+
+            // ── Stato Sistema ────────────────────────────────
+            let ollama_status = MenuItem::with_id(app, "ollama_status", "🟢 Ollama: Verifica...", false, None::<&str>)?;
+            let version_info = MenuItem::with_id(app, "version_info", "ℹ️ v1.5.0 (build 122)", false, None::<&str>)?;
+
+            let sep4 = PredefinedMenuItem::separator(app)?;
+
+            // ── Link Esterni ─────────────────────────────────
+            let github_link = MenuItem::with_id(app, "github", "🌐 GitHub Repository", true, None::<&str>)?;
+            let report_bug = MenuItem::with_id(app, "report_bug", "🐛 Segnala Bug", true, None::<&str>)?;
+
+            let sep5 = PredefinedMenuItem::separator(app)?;
+
+            // ── Esci ─────────────────────────────────────────
+            let quit_item = MenuItem::with_id(app, "quit", "✕ Esci da GameStringer", true, None::<&str>)?;
+
+            let menu = Menu::with_items(app, &[
+                &show_item,
+                &hide_item,
+                &sep1,
+                &quick_translate,
+                &screen_capture,
+                &open_library,
+                &open_community,
+                &sep2,
+                &tools_submenu,
+                &sep3,
+                &ollama_status,
+                &version_info,
+                &sep4,
+                &github_link,
+                &report_bug,
+                &sep5,
+                &quit_item,
+            ])?;
+
+            // ── Verifica stato Ollama in background ──────────
+            let ollama_status_clone = ollama_status.clone();
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    let is_online = reqwest::Client::new()
+                        .get("http://localhost:11434/api/tags")
+                        .timeout(std::time::Duration::from_secs(3))
+                        .send()
+                        .await
+                        .is_ok();
+
+                    let label = if is_online {
+                        "🟢 Ollama: Online"
+                    } else {
+                        "🔴 Ollama: Offline"
+                    };
+
+                    let _ = ollama_status_clone.set_text(label);
+
+                    tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                }
+            });
+
+            TrayIconBuilder::with_id("main-tray")
                 .icon(app.default_window_icon().cloned().unwrap())
                 .menu(&menu)
                 .show_menu_on_left_click(false)
-                .tooltip("GameStringer — AI Game Translation")
+                .tooltip("GameStringer v1.5.0 — AI Game Translation")
                 .on_menu_event(|app, event| {
                     match event.id.as_ref() {
+                        // ── Finestra ──
                         "show" => {
                             if let Some(window) = app.get_webview_window("main") {
                                 let _ = window.show();
@@ -981,6 +1062,80 @@ fn main() {
                                 let _ = window.hide();
                             }
                         }
+
+                        // ── Azioni Rapide — navigano a pagine specifiche ──
+                        "quick_translate" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                                let _ = app.emit("navigate", "/ai-translator");
+                            }
+                        }
+                        "screen_capture" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                                let _ = app.emit("navigate", "/ocr-translator");
+                            }
+                        }
+                        "open_library" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                                let _ = app.emit("navigate", "/library");
+                            }
+                        }
+                        "open_community" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                                let _ = app.emit("navigate", "/community-hub");
+                            }
+                        }
+
+                        // ── Submenu Strumenti ──
+                        "nav_translator" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                let _ = app.emit("navigate", "/ai-translator");
+                            }
+                        }
+                        "nav_batch" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                let _ = app.emit("navigate", "/batch");
+                            }
+                        }
+                        "nav_patcher" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                let _ = app.emit("navigate", "/unity-patcher");
+                            }
+                        }
+                        "nav_settings" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                let _ = app.emit("navigate", "/settings");
+                            }
+                        }
+
+                        // ── Link Esterni ──
+                        "github" => {
+                            let _ = open::that("https://github.com/rouges78/GameStringer");
+                        }
+                        "report_bug" => {
+                            let _ = open::that("https://github.com/rouges78/GameStringer/issues/new");
+                        }
+
+                        // ── Esci ──
                         "quit" => {
                             app.exit(0);
                         }
@@ -988,7 +1143,6 @@ fn main() {
                     }
                 })
                 .on_tray_icon_event(|tray, event| {
-                    // Doppio-click o click sinistro → riapri la finestra
                     if let TrayIconEvent::Click {
                         button: MouseButton::Left,
                         button_state: MouseButtonState::Up,
@@ -1010,14 +1164,13 @@ fn main() {
                 let window_clone = window.clone();
                 window.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        // Previeni la chiusura, nascondi la finestra
                         api.prevent_close();
                         let _ = window_clone.hide();
                     }
                 });
             }
 
-            println!("[TRAY] ✅ System Tray attivo — GameStringer resta in memoria");
+            println!("[TRAY] ✅ System Tray Completo attivo — 12 voci menu + Ollama monitor");
             Ok(())
         })
         .run(tauri::generate_context!())
