@@ -327,9 +327,35 @@ fn extract_strings_from_binary(data: &[u8]) -> Result<Vec<VisString>, String> {
             let str_end = str_start + len;
             let bytes = &data[str_start..str_end];
             
+            // Reject if first byte is a control char or null — real strings
+            // start with printable ASCII. This catches false length-prefix matches
+            // where random binary data looks like a valid LE u32 length.
+            if bytes[0] < 0x20 && bytes[0] != b'\t' && bytes[0] != b'\n' && bytes[0] != b'\r' {
+                pos += 1;
+                continue;
+            }
+            
+            // Reject if any of the first 8 bytes are null/control — real dialogue
+            // never has embedded nulls except as trailing terminator
+            let check_len = bytes.len().min(8);
+            let has_early_control = bytes[..check_len].iter()
+                .any(|&b| b == 0 || (b < 0x20 && b != b'\t' && b != b'\n' && b != b'\r'));
+            if has_early_control {
+                pos += 1;
+                continue;
+            }
+            
             // Check if it looks like valid UTF-8 text (not binary garbage)
             if let Ok(text) = std::str::from_utf8(bytes) {
                 let trimmed = text.trim_end_matches('\0');
+                
+                // Extra safety: reject strings that still have embedded nulls
+                // (real text has nulls only at the end as terminator)
+                if trimmed.contains('\0') {
+                    pos += 1;
+                    continue;
+                }
+                
                 if is_translatable_vis_string(trimmed) {
                     strings.push(VisString {
                         index,
