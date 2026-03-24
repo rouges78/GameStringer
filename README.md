@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.4.2-blue" alt="Version" />
+  <img src="https://img.shields.io/badge/version-1.5.0-blue" alt="Version" />
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux-lightgrey" alt="Platform" />
   <img src="https://img.shields.io/badge/license-Source--Available-green" alt="License" />
   <img src="https://img.shields.io/badge/Tauri_2-24C8DB?logo=tauri&logoColor=white" alt="Tauri" />
@@ -30,6 +30,36 @@
 <p align="center">
   <a href="README_IT.md">🇮🇹 Leggi in Italiano</a>
 </p>
+
+---
+
+## Demo
+
+<p align="center">
+  <img src="docs/sito/images/screenshot-library.png" alt="GameStringer Library" width="720" />
+</p>
+
+<p align="center">
+  <em>Game Library — auto-detect Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io</em>
+</p>
+
+<p align="center">
+  <img src="docs/sito/images/screenshot-translator.png" alt="GameStringer AI Translator" width="720" />
+</p>
+
+<p align="center">
+  <em>AI Translator — 20+ providers, Quality Badges 0-100, Translation Memory</em>
+</p>
+
+<p align="center">
+  <img src="docs/sito/images/screenshot-patcher.png" alt="GameStringer Game Patcher" width="720" />
+</p>
+
+<p align="center">
+  <em>One-Click Patcher — BepInEx, XUnity, UnrealLocres, auto-backup</em>
+</p>
+
+> Replace these screenshots with animated GIFs for maximum impact. Record with [ScreenToGif](https://www.screentogif.com/) or [LICEcap](https://www.cockos.com/licecap/).
 
 ---
 
@@ -97,7 +127,7 @@ That's it. No command line, no manual file editing, no modding experience needed
 
 ### AI Translation
 
-- **18+ providers**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, DeepL, Ollama (local), LM Studio, Qwen 3, NLLB-200, and more
+- **20+ providers**: OpenAI, Claude, Gemini, DeepSeek, Mistral, Groq, DeepL, Ollama (local), LM Studio, TranslateGemma, HY-MT, Qwen 3, NLLB-200, and more
 - **Context-aware**: understands game genre, character voice, tone
 - **Translation Memory & Glossary**: consistency across the project
 - **Multi-LLM Compare**: run multiple providers in parallel, pick the best result
@@ -128,6 +158,14 @@ That's it. No command line, no manual file editing, no modding experience needed
 - **Community Hub**: share and download translation memories
 - **Public API v1**: REST endpoints for integration (`/api/v1/translate`, `/api/v1/batch`)
 
+### Community Chat (NEW in v1.5.0)
+
+- **Real-time chat** with other translators via Supabase Realtime
+- **4 default rooms**: General, Translations, Feedback & Bugs, Announcements
+- **Custom rooms**: create rooms for specific games or projects
+- **Auto-Bridge Auth**: your GameStringer profile auto-syncs to Supabase — zero extra login
+- **Online presence**: see who’s online in each room
+
 ### App
 
 - **11 languages UI**: IT, EN, ES, FR, DE, JA, ZH, KO, PT, RU, PL
@@ -144,16 +182,26 @@ That's it. No command line, no manual file editing, no modding experience needed
 |----------|---------|-----------|
 | Ollama | No (local) | ✅ Unlimited |
 | LM Studio | No (local) | ✅ Unlimited |
-| Gemini | Yes | ✅ Free tier |
-| DeepSeek | Yes | ✅ Very cheap |
+| TranslateGemma | No (Ollama) | ✅ Unlimited — 55 languages, Google |
+| HY-MT1.5 | No (Ollama) | ✅ Unlimited — ~1GB RAM, Tencent |
+| Qwen 3 | No (Ollama) | ✅ Unlimited — Best for CJK |
+| Gemini | Yes | ✅ Free tier (15 RPM) |
+| DeepSeek | Yes | ✅ $0.14/1M input |
 | Groq | Yes | ✅ 14,400 req/day |
 | Mistral | Yes | ✅ Free tier |
 | OpenAI | Yes | Paid |
 | Claude | Yes | Paid |
 | DeepL | Yes | ✅ 500k chars/month |
-| MyMemory | No | ✅ 1000 words/day |
+| MyMemory | No | ✅ Unlimited |
+| Lingva | No | ✅ Unlimited |
+| Cerebras | Yes | ✅ Free tier |
+| Together AI | Yes | ✅ $25 free credit |
+| Fireworks | Yes | ✅ Free tier |
+| OpenRouter | Yes | ✅ Free models |
+| NLLB-200 | Yes | ✅ 200 languages |
+| Cohere | Yes | ✅ Free trial |
 
-**Recommended to start**: **Ollama** (free, local) or **Gemini** (free tier, cloud).
+**Recommended to start**: **TranslateGemma** via Ollama (free, local, 55 languages) or **Gemini** (free tier, cloud). Low RAM: **HY-MT1.5** (~1GB).
 
 ---
 
@@ -226,5 +274,5 @@ See [LICENSE](LICENSE) for details. Questions? Open a [Discussion](https://githu
 
 <p align="center">
   Made with ❤️ for gamers who want to play in their own language<br>
-  <strong>GameStringer v1.4.2</strong> · © 2025-2026 GameStringer Team
+  <strong>GameStringer v1.5.0</strong> · © 2025-2026 GameStringer Team
 </p>
