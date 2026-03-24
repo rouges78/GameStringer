@@ -963,6 +963,63 @@ function LibraryListView() {
 
           // Track activity
           activityHistory.trackSteamSync(initialGames.length).catch(() => {});
+
+          // ── Check aggiornamenti giochi tracciati ──
+          try {
+            const tracked = await invoke<Record<string, any>>('get_all_tracked_games');
+            if (tracked && Object.keys(tracked).length > 0) {
+              const updatedGames: string[] = [];
+              const brokenPatches: string[] = [];
+
+              const installedSteam = initialGames.filter(
+                g => g.platform === 'Steam' && g.is_installed && g.install_dir && g.app_id
+              );
+
+              // Controlla solo i giochi che hanno tracking attivo
+              const toCheck = installedSteam.filter(g => {
+                const key = `steam_${g.app_id}`;
+                return tracked[key];
+              });
+
+              // Check in parallelo (max 10 alla volta per non sovraccaricare)
+              const BATCH = 10;
+              for (let i = 0; i < toCheck.length; i += BATCH) {
+                const batch = toCheck.slice(i, i + BATCH);
+                const results = await Promise.all(
+                  batch.map(g =>
+                    invoke<any>('check_game_update', {
+                      appId: g.app_id,
+                      gamePath: g.install_dir,
+                    }).catch(() => null)
+                  )
+                );
+                results.forEach((r, idx) => {
+                  if (!r) return;
+                  const game = batch[idx];
+                  if (r.update_detected) updatedGames.push(game.title);
+                  if (!r.patch_intact && r.patch_type !== 'none') brokenPatches.push(game.title);
+                });
+              }
+
+              if (updatedGames.length > 0 || brokenPatches.length > 0) {
+                const parts: string[] = [];
+                if (updatedGames.length > 0) {
+                  parts.push(`🔄 ${updatedGames.length} ${updatedGames.length === 1 ? 'gioco aggiornato' : 'giochi aggiornati'}: ${updatedGames.slice(0, 3).join(', ')}${updatedGames.length > 3 ? ` (+${updatedGames.length - 3})` : ''}`);
+                }
+                if (brokenPatches.length > 0) {
+                  parts.push(`⚠️ ${brokenPatches.length} patch ${brokenPatches.length === 1 ? 'danneggiata' : 'danneggiate'}: ${brokenPatches.slice(0, 3).join(', ')}${brokenPatches.length > 3 ? ` (+${brokenPatches.length - 3})` : ''}`);
+                }
+
+                toast.warning('Aggiornamenti rilevati', {
+                  description: parts.join('\n'),
+                  duration: 12000,
+                });
+                console.log(`[Library] 🔔 Update alert: ${updatedGames.length} updated, ${brokenPatches.length} broken patches`);
+              }
+            }
+          } catch (e) {
+            console.warn('[Library] Update check failed:', e);
+          }
         };
 
         if (typeof requestIdleCallback !== 'undefined') {
