@@ -103,6 +103,108 @@ export async function getCurrentUserId(): Promise<string | null> {
   }
 }
 
+// ─── GS ↔ SUPABASE AUTH BRIDGE ──────────────────────────────────
+
+interface GSSessionInfo {
+  id: string;
+  email?: string;
+  name?: string;
+  image?: string;
+}
+
+function getGSSession(): GSSessionInfo | null {
+  try {
+    const raw = localStorage.getItem('gs_session');
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (!session?.user) return null;
+    const u = session.user;
+    // Build a deterministic email if user has no real email
+    const email = u.email || `gs_${u.id}@gamestringer.local`;
+    return { id: u.id, email, name: u.name || u.id, image: u.image };
+  } catch {
+    return null;
+  }
+}
+
+function derivePassword(gsId: string): string {
+  // Deterministic password from GS user ID — not meant to be "secure" in the
+  // traditional sense since this is a community feature, not a bank.
+  return `gs_community_${gsId}_!Str1ng3r`;
+}
+
+/**
+ * Auto-sync: if the user is logged into GS locally, automatically
+ * sign them into Supabase (signup on first use, then signin).
+ * Returns the Supabase user ID or null.
+ */
+export async function autoSyncGSToSupabase(): Promise<string | null> {
+  const gs = getGSSession();
+  if (!gs) return null;
+
+  const supabase = await getSupabase();
+  const password = derivePassword(gs.id);
+
+  // 1. Check if already signed in
+  const { data: current } = await supabase.auth.getUser();
+  if (current?.user?.id) {
+    console.log('[Chat Bridge] Già autenticato su Supabase:', current.user.id);
+    return current.user.id;
+  }
+
+  // 2. Try sign in first (existing user)
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    email: gs.email!,
+    password,
+  });
+
+  if (signInData?.user?.id) {
+    console.log('[Chat Bridge] Sign-in Supabase riuscito:', signInData.user.id);
+    return signInData.user.id;
+  }
+
+  // 3. If sign-in fails, try sign up (new user)
+  if (signInError) {
+    console.log('[Chat Bridge] Sign-in fallito, provo sign-up...', signInError.message);
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email: gs.email!,
+      password,
+      options: {
+        data: {
+          username: gs.name || gs.id,
+          avatar_url: gs.image || '',
+          gs_id: gs.id,
+        },
+        // Skip email confirmation for local community
+        emailRedirectTo: undefined,
+      },
+    });
+
+    if (signUpError) {
+      console.error('[Chat Bridge] Sign-up fallito:', signUpError.message);
+      return null;
+    }
+
+    if (signUpData?.user?.id) {
+      console.log('[Chat Bridge] Sign-up Supabase riuscito:', signUpData.user.id);
+      // Create user_profiles row
+      try {
+        await supabase.from('user_profiles').upsert({
+          id: signUpData.user.id,
+          username: gs.name || `gs_${gs.id.substring(0, 8)}`,
+          email: gs.email,
+          avatar_url: gs.image || '',
+        }, { onConflict: 'id' });
+      } catch (e) {
+        console.warn('[Chat Bridge] Errore creazione profilo:', e);
+      }
+      return signUpData.user.id;
+    }
+  }
+
+  return null;
+}
+
 // ─── ROOMS ──────────────────────────────────────────────────────
 
 export async function fetchRooms(): Promise<ChatRoom[]> {

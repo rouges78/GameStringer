@@ -47,6 +47,7 @@ import { toast } from 'sonner';
 import {
   isChatEnabled,
   getCurrentUserId,
+  autoSyncGSToSupabase,
   fetchRooms,
   fetchMessages,
   sendMessage,
@@ -126,7 +127,11 @@ export function CommunityChat() {
 
     const init = async () => {
       try {
-        const uid = await getCurrentUserId();
+        // Try to auto-bridge GS account to Supabase
+        let uid = await getCurrentUserId();
+        if (!uid) {
+          uid = await autoSyncGSToSupabase();
+        }
         setUserId(uid);
         const chatRooms = await fetchRooms();
         setRooms(chatRooms);
@@ -271,15 +276,39 @@ export function CommunityChat() {
   // ─── NOT AUTHENTICATED STATE ──────────────────────────────────
 
   if (!isLoading && !userId) {
+    const handleRetrySync = async () => {
+      setIsLoading(true);
+      try {
+        const uid = await autoSyncGSToSupabase();
+        if (uid) {
+          setUserId(uid);
+          const chatRooms = await fetchRooms();
+          setRooms(chatRooms);
+          if (chatRooms.length > 0) setActiveRoom(chatRooms[0]);
+          updatePresence('online');
+          toast.success('Connesso alla chat community!');
+        } else {
+          toast.error('Devi prima effettuare il login in GameStringer.');
+        }
+      } catch (e: any) {
+        toast.error(e.message || 'Errore connessione');
+      } finally {
+        setIsLoading(false);
+      }
+    };
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center gap-4">
         <LogIn className="h-12 w-12 text-slate-500" />
         <div>
           <h3 className="text-lg font-semibold text-slate-200">Accedi per chattare</h3>
           <p className="text-sm text-slate-400 mt-1 max-w-md">
-            Devi effettuare il login con il tuo account Supabase per partecipare alla chat community.
+            Effettua il login in GameStringer per partecipare alla chat community.
           </p>
         </div>
+        <Button variant="outline" size="sm" onClick={handleRetrySync} className="gap-2">
+          <LogIn className="h-4 w-4" />
+          Riprova connessione
+        </Button>
       </div>
     );
   }
