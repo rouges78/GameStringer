@@ -30,7 +30,7 @@
     <nav>
       <div class="nav-logo"><img src="logo.png" alt="GameStringer" style="height:200px;width:auto"></div>
       <div class="nav-links">
-        <a href="#features">Features</a><a href="#engines">Engines</a><a href="#ai">AI</a><a href="#tools">Tools</a><a href="#whatsnew">What's New</a><a href="#usecases">Use Cases</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
+        <a href="#showcase">Showcase</a><a href="#features">Features</a><a href="#engines">Engines</a><a href="#ai">AI</a><a href="#tools">Tools</a><a href="#whatsnew">What's New</a><a href="#usecases">Use Cases</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a>
       </div>
       <a href="https://github.com/rouges78/GameStringer" target="_blank" rel="noopener" class="btn btn-outline btn-sm">⭐ GitHub</a>
       <div class="lang-selector">
@@ -69,14 +69,90 @@
         <div class="stat"><div class="stat-value">7</div><div class="stat-label" data-i18n="stats.stores">Store Integrati</div><div class="stat-detail">Steam, Epic, GOG, Origin...</div></div>
         <div class="stat"><div class="stat-value">∞</div><div class="stat-label" data-i18n="stats.games">Games Traducibili</div><div class="stat-detail">Indie, retro, AAA</div></div>
       </div>
-      <div class="screenshots-gallery">
-        <div class="screenshot-item"><img src="images/screenshot-library.png" alt="Library"><span class="screenshot-label">📚 Libreria Giochi</span></div>
-        <div class="screenshot-item"><img src="images/screenshot-patcher.png" alt="Patcher"><span class="screenshot-label">🔧 Game Patcher</span></div>
-        <div class="screenshot-item"><img src="images/screenshot-translator.png" alt="Translator"><span class="screenshot-label">🤖 AI Translator</span></div>
-      </div>
     </div>
   </div>
 </header>
+
+<!-- UI SHOWCASE -->
+<section id="showcase" style="padding:80px 0;background:linear-gradient(180deg,#0f172a 0%,#0c1222 100%)">
+  <div class="container" style="text-align:center">
+    <span class="badge section-badge" style="background:rgba(99,102,241,0.15);border-color:rgba(99,102,241,0.3);color:#a5b4fc">📸 UI Showcase</span>
+    <h2 class="section-title" data-i18n="showcase.title">Interfaccia Moderna & Professionale</h2>
+    <p class="section-desc" data-i18n="showcase.desc">Un'interfaccia intuitiva progettata per traduttori professionisti e appassionati. Dark theme, responsive, con ogni strumento a portata di click.</p>
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:48px">
+      <!-- Screenshot 1: Library -->
+      <div class="ui-shot" onclick="openLightbox(this)" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(99,102,241,0.2);cursor:pointer;transition:all 0.3s ease;background:#1e293b">
+        <div style="position:relative;overflow:hidden">
+          <img src="images/screenshot-library.png" alt="GameStringer - Libreria Giochi" style="width:100%;display:block;transition:transform 0.4s ease" loading="lazy">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,0.9) 0%,transparent 50%);pointer-events:none"></div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px;text-align:left">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:1.2rem">📚</span>
+            <h4 style="color:#e2e8f0;font-size:1rem;font-weight:700;margin:0">Libreria Giochi</h4>
+            <span style="background:rgba(34,197,94,0.2);color:#4ade80;font-size:0.65rem;padding:2px 8px;border-radius:4px;font-weight:600">7 STORE</span>
+          </div>
+          <p style="color:#94a3b8;font-size:0.78rem;margin:0;line-height:1.4">Scansione automatica Steam, Epic, GOG, EA, Ubisoft, Amazon, itch.io. Rilevamento engine e file traducibili.</p>
+        </div>
+      </div>
+      
+      <!-- Screenshot 2: AI Translator -->
+      <div class="ui-shot" onclick="openLightbox(this)" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(99,102,241,0.2);cursor:pointer;transition:all 0.3s ease;background:#1e293b">
+        <div style="position:relative;overflow:hidden">
+          <img src="images/screenshot-translator.png" alt="GameStringer - AI Translator" style="width:100%;display:block;transition:transform 0.4s ease" loading="lazy">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,0.9) 0%,transparent 50%);pointer-events:none"></div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px;text-align:left">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:1.2rem">🤖</span>
+            <h4 style="color:#e2e8f0;font-size:1rem;font-weight:700;margin:0">AI Translator</h4>
+            <span style="background:rgba(14,165,233,0.2);color:#7dd3fc;font-size:0.65rem;padding:2px 8px;border-radius:4px;font-weight:600">20+ AI</span>
+          </div>
+          <p style="color:#94a3b8;font-size:0.78rem;margin:0;line-height:1.4">Traduzione context-aware con Quality Badges, glossario AI, Translation Memory e anteprima in tempo reale.</p>
+        </div>
+      </div>
+      
+      <!-- Screenshot 3: Game Patcher -->
+      <div class="ui-shot" onclick="openLightbox(this)" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(99,102,241,0.2);cursor:pointer;transition:all 0.3s ease;background:#1e293b">
+        <div style="position:relative;overflow:hidden">
+          <img src="images/screenshot-patcher.png" alt="GameStringer - Game Patcher" style="width:100%;display:block;transition:transform 0.4s ease" loading="lazy">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,0.9) 0%,transparent 50%);pointer-events:none"></div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px;text-align:left">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:1.2rem">🔧</span>
+            <h4 style="color:#e2e8f0;font-size:1rem;font-weight:700;margin:0">Game Patcher</h4>
+            <span style="background:rgba(249,115,22,0.2);color:#fb923c;font-size:0.65rem;padding:2px 8px;border-radius:4px;font-weight:600">ONE-CLICK</span>
+          </div>
+          <p style="color:#94a3b8;font-size:0.78rem;margin:0;line-height:1.4">Patching automatico con BepInEx, XUnity, UnrealLocres. Backup integrato e ripristino con un click.</p>
+        </div>
+      </div>
+      
+      <!-- Screenshot 4: Community Chat (NEW) -->
+      <div class="ui-shot" onclick="openLightbox(this)" style="position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(14,165,233,0.3);cursor:pointer;transition:all 0.3s ease;background:#1e293b">
+        <div style="position:relative;overflow:hidden">
+          <img src="images/screenshot-chat.svg" alt="GameStringer - Community Chat" style="width:100%;display:block;transition:transform 0.4s ease" loading="lazy">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,0.9) 0%,transparent 50%);pointer-events:none"></div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:20px 24px;text-align:left">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:1.2rem">💬</span>
+            <h4 style="color:#e2e8f0;font-size:1rem;font-weight:700;margin:0">Community Chat</h4>
+            <span style="background:rgba(14,165,233,0.3);color:#7dd3fc;font-size:0.65rem;padding:2px 8px;border-radius:4px;font-weight:600">NEW v1.5.0</span>
+          </div>
+          <p style="color:#94a3b8;font-size:0.78rem;margin:0;line-height:1.4">Chat in tempo reale con Supabase Realtime. Stanze tematiche, presenza online, auto-login da profilo GS.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);backdrop-filter:blur(8px);cursor:zoom-out;align-items:center;justify-content:center;padding:40px">
+  <img id="lightbox-img" src="" alt="" style="max-width:95%;max-height:95%;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+  <button onclick="closeLightbox()" style="position:absolute;top:20px;right:24px;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:24px;width:44px;height:44px;border-radius:50%;cursor:pointer;backdrop-filter:blur(8px)">✕</button>
+</div>
 
 <!-- FEATURES -->
 <section id="features">
@@ -507,7 +583,7 @@
     </div>
     <div class="footer-bottom">
       <p>© 2025-2026 GameStringer by <span style="color:#7dd3fc">rouges78</span>. Source-Available License v1.1</p>
-      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.4.2</p>
+      <p>Made with <span class="footer-heart">♥</span> in Italy 🇮🇹 — v1.5.0</p>
     </div>
   </div>
 </footer>
@@ -528,6 +604,43 @@
   sr.reveal('.tool-card', { interval:50 });
   sr.reveal('.usecase-card', { interval:150, origin:'left' });
   sr.reveal('.cta-section', { delay:200, scale:0.95 });
+  sr.reveal('.ui-shot', { interval:150, distance:'40px', scale:0.95 });
+  sr.reveal('#showcase .section-title', { delay:300 });
+
+  // Lightbox
+  function openLightbox(el) {
+    const img = el.querySelector('img');
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox-img').alt = img.alt;
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+  window.openLightbox = openLightbox;
+  window.closeLightbox = closeLightbox;
+
+  // Hover effects for UI shots
+  document.querySelectorAll('.ui-shot').forEach(shot => {
+    shot.addEventListener('mouseenter', () => {
+      shot.style.transform = 'translateY(-8px)';
+      shot.style.boxShadow = '0 20px 40px rgba(99,102,241,0.15)';
+      shot.style.borderColor = 'rgba(99,102,241,0.4)';
+      const img = shot.querySelector('img');
+      if (img) img.style.transform = 'scale(1.03)';
+    });
+    shot.addEventListener('mouseleave', () => {
+      shot.style.transform = '';
+      shot.style.boxShadow = '';
+      shot.style.borderColor = '';
+      const img = shot.querySelector('img');
+      if (img) img.style.transform = '';
+    });
+  });
 
   window.addEventListener('scroll', () => {
     const nav = document.querySelector('nav');
