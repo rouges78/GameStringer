@@ -11,6 +11,8 @@
  * - Realtime subscription via Supabase
  */
 
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
 // ─── TYPES ──────────────────────────────────────────────────────
 
 export interface ChatRoom {
@@ -69,21 +71,13 @@ async function getSupabase() {
 
   // Reuse global client if exists
   const g = globalThis as any;
-  if (g.__gsSupabaseChat) return g.__gsSupabaseChat;
-
-  let createClient: any;
-  try {
-    const mod = await (eval('import("@supabase/supabase-js")') as Promise<any>);
-    createClient = mod.createClient;
-  } catch {
-    throw new Error('Pacchetto @supabase/supabase-js non installato.');
-  }
+  if (g.__gsSupabaseChat) return g.__gsSupabaseChat as SupabaseClient;
 
   g.__gsSupabaseChat = createClient(config.url, config.anonKey, {
     auth: { persistSession: true, autoRefreshToken: true },
     realtime: { params: { eventsPerSecond: 10 } },
   });
-  return g.__gsSupabaseChat;
+  return g.__gsSupabaseChat as SupabaseClient;
 }
 
 // ─── CHAT SERVICE ───────────────────────────────────────────────

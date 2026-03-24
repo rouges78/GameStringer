@@ -1,3 +1,5 @@
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
 /**
  * 🌐 Community Hub Backend — Supabase Integration
  * 
@@ -47,23 +49,13 @@ export function isBackendEnabled(): boolean {
 
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────
 
-let _supabaseClient: any = null;
+let _supabaseClient: SupabaseClient | null = null;
 
-async function getSupabase() {
+async function getSupabase(): Promise<SupabaseClient> {
   if (_supabaseClient) return _supabaseClient;
   const cfg = getConfig();
   if (!cfg.url || !cfg.anonKey) throw new Error('Supabase non configurato');
 
-  // Dynamic import — richiede `npm install @supabase/supabase-js`
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  let createClient: any;
-  try {
-    // Use eval to prevent webpack from statically resolving this
-    const mod = await (eval('import("@supabase/supabase-js")') as Promise<any>);
-    createClient = mod.createClient;
-  } catch {
-    throw new Error('Pacchetto @supabase/supabase-js non installato. Esegui: npm install @supabase/supabase-js');
-  }
   _supabaseClient = createClient(cfg.url, cfg.anonKey, {
     auth: { persistSession: true, autoRefreshToken: true },
   });

@@ -97,6 +97,7 @@
     "@hookform/resolvers": "3.9.0",
     "@node-steam/vdf": "^2.2.0",
     "@prisma/client": "^6.10.1",
+    "@supabase/supabase-js": "^2.100.0",
     "@tabler/icons-react": "^3.34.0",
     "@tanstack/react-query": "5.0.0",
     "@tauri-apps/api": "^2.10.1",
