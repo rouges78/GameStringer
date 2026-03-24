@@ -165,6 +165,14 @@ function ProfileCard({ profile, isSelected, isCurrentProfile = false }: ProfileC
     
     if (success) {
       console.log('✅ Login successful for:', profile.name);
+      // Persist current profile for community chat bridge
+      try {
+        localStorage.setItem('gamestringer_current_profile', JSON.stringify({
+          id: profile.id,
+          name: profile.name,
+          avatar_path: profile.avatar_path,
+        }));
+      } catch {}
       // Save or remove password based on checkbox
       if (rememberPassword) {
         localStorage.setItem(`gs_pwd_${profile.id}`, btoa(password)); // Encode base64

@@ -98,7 +98,19 @@ interface GSSessionInfo {
 
 function getGSSession(): GSSessionInfo | null {
   try {
-    // Try gs_session first (has .user object)
+    // 1. Try gamestringer_current_profile (primary — used by profile system)
+    const rawProfile = localStorage.getItem('gamestringer_current_profile');
+    if (rawProfile) {
+      const p = JSON.parse(rawProfile);
+      if (p?.id || p?.name) {
+        const id = p.id || p.name;
+        const email = p.email || `gs_${id}@gamestringer.local`;
+        console.log('[Chat Bridge] Sessione GS trovata da gamestringer_current_profile:', id, p.name);
+        return { id, email, name: p.name || id, image: p.avatar_url || p.avatar_path || undefined };
+      }
+    }
+
+    // 2. Try gs_session (has .user object)
     const rawSession = localStorage.getItem('gs_session');
     if (rawSession) {
       const session = JSON.parse(rawSession);
@@ -110,7 +122,7 @@ function getGSSession(): GSSessionInfo | null {
       }
     }
 
-    // Fallback: try gs_user directly
+    // 3. Fallback: try gs_user directly
     const rawUser = localStorage.getItem('gs_user');
     if (rawUser) {
       const u = JSON.parse(rawUser);
@@ -121,7 +133,7 @@ function getGSSession(): GSSessionInfo | null {
       }
     }
 
-    // Fallback: try gs_accounts (pick first account)
+    // 4. Fallback: try gs_accounts (pick first account)
     const rawAccounts = localStorage.getItem('gs_accounts');
     if (rawAccounts) {
       const accounts = JSON.parse(rawAccounts);

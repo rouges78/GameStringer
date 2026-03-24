@@ -275,6 +275,8 @@ export function useProfilesCore(): UseProfilesReturn {
       
       if (response.success) {
         setCurrentProfile(null);
+        // Clear persisted profile for chat bridge
+        try { localStorage.removeItem('gamestringer_current_profile'); } catch {}
         // Pulisci cache per evitare avatar stale
         profileCache.clearCache();
         profilePreloader.clearPreloaded();
