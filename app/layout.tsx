@@ -9,7 +9,6 @@ import { ProfileWrapper } from '@/components/profiles/profile-wrapper';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ProgressProvider } from '@/components/progress/progress-provider';
 import { ProgressUIManager } from '@/components/progress/progress-ui-manager';
-import { DisclaimerModal } from '@/components/legal/disclaimer-modal';
 import { I18nProvider } from '@/lib/i18n';
 import { ScreenProvider } from '@/components/providers/screen-provider';
 import { AnimatedBackground } from '@/components/ui/animated-background';
@@ -42,8 +41,6 @@ export default function RootLayout({
                     <ErrorBoundary>
                       {children}
                     </ErrorBoundary>
-                    {/* Disclaimer legale - primo avvio */}
-                    <DisclaimerModal />
                   </ProfileWrapper>
                 </ErrorBoundary>
                 <Toaster richColors position="top-right" />
