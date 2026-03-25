@@ -24,6 +24,10 @@ import type { TranslationPack, CommunityAuthor, PackReview, PackSearchFilters, H
 
 const STORAGE_KEY_SUPABASE = 'gs_supabase_config';
 
+// Built-in defaults — la chat funziona subito per tutti senza configurazione
+const DEFAULT_SUPABASE_URL = 'https://relbkjoxdnbqizgomzhs.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlbGJram94ZG5icWl6Z29temhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDcxMDUsImV4cCI6MjA4OTkyMzEwNX0.TY4pVsZVJ3vS_8AArXXr4RghxUn1ATju4kiVwjzpdyM';
+
 interface SupabaseConfig {
   url: string;
   anonKey: string;
@@ -33,9 +37,19 @@ interface SupabaseConfig {
 function getConfig(): SupabaseConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_SUPABASE);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const cfg = JSON.parse(raw) as SupabaseConfig;
+      if (cfg.url && cfg.anonKey) return cfg;
+    }
   } catch {}
-  return { url: '', anonKey: '', enabled: false };
+  // Usa defaults built-in e salva in localStorage per persistenza
+  const defaults: SupabaseConfig = {
+    url: DEFAULT_SUPABASE_URL,
+    anonKey: DEFAULT_SUPABASE_ANON_KEY,
+    enabled: true,
+  };
+  try { localStorage.setItem(STORAGE_KEY_SUPABASE, JSON.stringify(defaults)); } catch {}
+  return defaults;
 }
 
 export function saveConfig(config: SupabaseConfig): void {

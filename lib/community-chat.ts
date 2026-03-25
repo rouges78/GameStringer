@@ -68,10 +68,8 @@ async function getSupabase(): Promise<SupabaseClient> {
 
 export function isChatEnabled(): boolean {
   try {
-    const raw = localStorage.getItem('gs_supabase_config');
-    if (!raw) return false;
-    const cfg = JSON.parse(raw);
-    return cfg.enabled && !!cfg.url && !!cfg.anonKey;
+    const { isBackendEnabled } = require('./community-hub-backend');
+    return isBackendEnabled();
   } catch {
     return false;
   }
