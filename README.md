@@ -36,30 +36,44 @@
 ## Demo
 
 <p align="center">
-  <img src="docs/sito/images/screenshot-library.png" alt="GameStringer Library" width="720" />
+  <img src="docs/demo/demo-library.gif" alt="GameStringer Library Demo" width="720" />
 </p>
 
 <p align="center">
-  <em>Game Library — auto-detect Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io</em>
+  <em>🎮 Game Library — auto-detect Steam, Epic, GOG, Origin, Ubisoft, Amazon, itch.io</em>
 </p>
 
 <p align="center">
-  <img src="docs/sito/images/screenshot-translator.png" alt="GameStringer AI Translator" width="720" />
+  <img src="docs/demo/demo-translator.gif" alt="GameStringer AI Translator Demo" width="720" />
 </p>
 
 <p align="center">
-  <em>AI Translator — 20+ providers, Quality Badges 0-100, Translation Memory</em>
+  <em>🤖 AI Translator — 20+ providers, Quality Badges 0-100, Translation Memory</em>
 </p>
 
 <p align="center">
-  <img src="docs/sito/images/screenshot-patcher.png" alt="GameStringer Game Patcher" width="720" />
+  <img src="docs/demo/demo-patcher.gif" alt="GameStringer Game Patcher Demo" width="720" />
 </p>
 
 <p align="center">
-  <em>One-Click Patcher — BepInEx, XUnity, UnrealLocres, auto-backup</em>
+  <em>🔧 One-Click Patcher — BepInEx, XUnity, UnrealLocres, auto-backup</em>
 </p>
 
-> Replace these screenshots with animated GIFs for maximum impact. Record with [ScreenToGif](https://www.screentogif.com/) or [LICEcap](https://www.cockos.com/licecap/).
+<p align="center">
+  <img src="docs/demo/demo-chat.gif" alt="GameStringer Community Chat Demo" width="720" />
+</p>
+
+<p align="center">
+  <em>💬 Community Chat — Supabase Realtime, stanze personalizzate, presenza online</em>
+</p>
+
+<p align="center">
+  <img src="docs/demo/demo-tray.gif" alt="GameStringer Tray Icon Demo" width="480" />
+</p>
+
+<p align="center">
+  <em>🖥️ System Tray — azioni rapide, stato Ollama live, submenu strumenti</em>
+</p>
 
 ---
 

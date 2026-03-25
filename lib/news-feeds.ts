@@ -56,9 +56,9 @@ export const FEED_CATEGORIES: { id: NewsFeedCategory; label_it: string; label_en
 
 export const DEFAULT_FEED_SOURCES: NewsFeedSource[] = [
   // ── Gaming News (IT) ──────────────────────────────
-  { id: 'everyeye', name: 'Everyeye.it', url: 'https://www.everyeye.it', rssUrl: 'https://www.everyeye.it/feed_news.xml', category: 'gaming_news', icon: '🇮🇹', enabled: true, language: 'it', description: 'Notizie, recensioni e anteprime dal mondo dei videogiochi' },
-  { id: 'multiplayer', name: 'Multiplayer.it', url: 'https://multiplayer.it', rssUrl: 'https://multiplayer.it/feed/rss.xml', category: 'gaming_news', icon: '🇮🇹', enabled: true, language: 'it', description: 'Il portale italiano di riferimento per il gaming' },
-  { id: 'spaziogames', name: 'SpazioGames', url: 'https://www.spaziogames.it', rssUrl: 'https://www.spaziogames.it/feed', category: 'gaming_news', icon: '🇮🇹', enabled: false, language: 'it', description: 'News, recensioni e guide sui videogiochi' },
+  { id: 'everyeye', name: 'Everyeye.it', url: 'https://www.everyeye.it', rssUrl: 'https://www.everyeye.it/feed_news.xml', category: 'gaming_news', icon: '🇮🇹', enabled: false, language: 'it', description: 'Notizie, recensioni e anteprime dal mondo dei videogiochi (RSS non disponibile)' },
+  { id: 'multiplayer', name: 'Multiplayer.it', url: 'https://multiplayer.it', rssUrl: 'https://multiplayer.it/feed/rss.xml', category: 'gaming_news', icon: '🇮🇹', enabled: false, language: 'it', description: 'Il portale italiano di riferimento per il gaming (RSS non disponibile)' },
+  { id: 'spaziogames', name: 'SpazioGames', url: 'https://www.spaziogames.it', rssUrl: 'https://www.spaziogames.it/feed', category: 'gaming_news', icon: '🇮🇹', enabled: true, language: 'it', description: 'News, recensioni e guide sui videogiochi' },
 
   // ── Gaming News (EN) ──────────────────────────────
   { id: 'ign', name: 'IGN', url: 'https://www.ign.com', rssUrl: 'https://feeds.feedburner.com/ign/games-all', category: 'gaming_news', icon: '🌐', enabled: true, language: 'en', description: 'Global gaming news, reviews and walkthroughs' },
@@ -74,7 +74,7 @@ export const DEFAULT_FEED_SOURCES: NewsFeedSource[] = [
   // ── Indie & Dev ───────────────────────────────────
   { id: 'indiegames', name: 'IndieGames.com', url: 'https://indiegames.com', rssUrl: 'https://indiegames.com/feed', category: 'indie', icon: '🕹️', enabled: true, language: 'en', description: 'Indie game news and developer spotlights' },
   { id: 'gamedeveloper', name: 'Game Developer', url: 'https://www.gamedeveloper.com', rssUrl: 'https://www.gamedeveloper.com/rss.xml', category: 'game_dev', icon: '🛠️', enabled: true, language: 'en', description: 'The art and business of making games (ex Gamasutra)' },
-  { id: 'itchio', name: 'itch.io Blog', url: 'https://itch.io', rssUrl: 'https://itch.io/blog.rss', category: 'indie', icon: '🕹️', enabled: false, language: 'en', description: 'News from the largest indie game marketplace' },
+  { id: 'itchio', name: 'itch.io Blog', url: 'https://itch.io', rssUrl: 'https://itch.io/blog.rss', category: 'indie', icon: '🕹️', enabled: true, language: 'en', description: 'News from the largest indie game marketplace' },
 
   // ── Console ───────────────────────────────────────
   { id: 'nintendolife', name: 'Nintendo Life', url: 'https://www.nintendolife.com', rssUrl: 'https://www.nintendolife.com/feeds/latest', category: 'console', icon: '🎯', enabled: false, language: 'en', description: 'Nintendo news, reviews and features' },
@@ -87,15 +87,15 @@ export const DEFAULT_FEED_SOURCES: NewsFeedSource[] = [
 
   // ── Retrogaming ───────────────────────────────────
   { id: 'retrorgb', name: 'RetroRGB', url: 'https://www.retrorgb.com', rssUrl: 'https://www.retrorgb.com/feed', category: 'retro', icon: '👾', enabled: false, language: 'en', description: 'Retro gaming hardware, software and culture' },
-  { id: 'romhacking', name: 'RomHacking.net News', url: 'https://www.romhacking.net', rssUrl: 'https://www.romhacking.net/rss/news/', category: 'retro', icon: '👾', enabled: true, language: 'en', description: 'ROM hacking news and community updates' },
+  { id: 'romhacking', name: 'RomHacking.net News', url: 'https://www.romhacking.net', rssUrl: 'https://www.romhacking.net/rss/news/', category: 'retro', icon: '👾', enabled: false, language: 'en', description: 'ROM hacking news and community updates (RSS non disponibile)' },
 
   // ── Esports ───────────────────────────────────────
   { id: 'dotesports', name: 'Dot Esports', url: 'https://dotesports.com', rssUrl: 'https://dotesports.com/feed', category: 'esports', icon: '🏆', enabled: false, language: 'en', description: 'Esports news and competitive gaming coverage' },
 
   // ── Traduzioni Fan / Localizzazione / Modding ──────
-  { id: 'nexusmods', name: 'NexusMods', url: 'https://www.nexusmods.com', rssUrl: 'https://www.nexusmods.com/news/rss/', category: 'translations', icon: '🔷', enabled: true, language: 'en', description: 'La più grande piattaforma di mod per videogiochi — traduzioni, patch e tool' },
+  { id: 'nexusmods', name: 'NexusMods', url: 'https://www.nexusmods.com', rssUrl: 'https://www.nexusmods.com/news/rss/', category: 'translations', icon: '🔷', enabled: false, language: 'en', description: 'La più grande piattaforma di mod per videogiochi (RSS bloccato da bot protection)' },
   { id: 'gamestranslator', name: 'GamesTranslator.it', url: 'https://www.gamestranslator.it', rssUrl: 'https://www.gamestranslator.it/index.php?/discover/&type=core_File&changeType=new&format=rss', category: 'translations', icon: '🇮🇹', enabled: true, language: 'it', description: 'La più grande community italiana di fan translation per videogiochi' },
-  { id: 'romhacking_translations', name: 'RomHacking Translations', url: 'https://www.romhacking.net/translations/', rssUrl: 'https://www.romhacking.net/rss/translations/', category: 'translations', icon: '🌍', enabled: true, language: 'en', description: 'Database globale di traduzioni fan per ROM retro' },
+  { id: 'romhacking_translations', name: 'RomHacking Translations', url: 'https://www.romhacking.net/translations/', rssUrl: 'https://www.romhacking.net/rss/translations/', category: 'translations', icon: '🌍', enabled: false, language: 'en', description: 'Database globale di traduzioni fan per ROM retro (RSS non disponibile)' },
   { id: 'romhackplaza', name: 'RomHack Plaza', url: 'https://romhackplaza.org', rssUrl: 'https://romhackplaza.org/feed/', category: 'translations', icon: '🌍', enabled: true, language: 'en', description: 'Hacks, fan translations and homebrew games' },
 ];
 
@@ -187,11 +187,25 @@ class NewsFeedService {
       if (xml && (xml.includes('<rss') || xml.includes('<feed') || xml.includes('<channel') || xml.includes('<?xml'))) {
         return xml;
       }
-    } catch (e) {
+    } catch {
       // Tauri non disponibile (es. browser puro) — fallback
     }
 
-    // 2) Fallback: fetch diretto (funziona se il server manda CORS headers)
+    // 2) Proxy locale Next.js (dev mode — nessun CORS)
+    try {
+      const proxyUrl = `/api/rss-proxy?url=${encodeURIComponent(url)}`;
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(15000) });
+      if (res.ok) {
+        const text = await res.text();
+        if (text.includes('<rss') || text.includes('<feed') || text.includes('<channel') || text.includes('<?xml')) {
+          return text;
+        }
+      }
+    } catch {
+      // API route non disponibile — fallback
+    }
+
+    // 3) Fallback: fetch diretto (funziona se il server manda CORS headers)
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
       if (res.ok) {
@@ -202,7 +216,7 @@ class NewsFeedService {
       }
     } catch {}
 
-    // 3) Ultimo fallback: CORS proxies pubblici
+    // 4) Ultimo fallback: CORS proxies pubblici
     for (const proxy of CORS_PROXIES) {
       try {
         const res = await fetch(proxy + encodeURIComponent(url), { signal: AbortSignal.timeout(10000) });

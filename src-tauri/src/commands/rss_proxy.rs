@@ -18,7 +18,7 @@ pub async fn fetch_rss_feed(url: String) -> Result<String, String> {
     let client = Client::builder()
         .timeout(Duration::from_secs(12))
         .redirect(reqwest::redirect::Policy::limited(5))
-        .user_agent("GameStringer/1.4 RSS Reader")
+        .user_agent("GameStringer/1.5 RSS Reader")
         .build()
         .map_err(|e| format!("Client HTTP: {}", e))?;
 
