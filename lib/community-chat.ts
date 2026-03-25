@@ -482,7 +482,12 @@ export async function subscribeToPresence(onPresence: PresenceCallback): Promise
 export async function updatePresence(status: 'online' | 'away' | 'offline'): Promise<void> {
   try {
     const supabase = await getSupabase();
-    await supabase.rpc('update_presence', { new_status: status });
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+    await supabase.from('user_presence').upsert(
+      { user_id: userId, status, last_seen: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
   } catch {
     // Silent fail — presence is best-effort
   }
