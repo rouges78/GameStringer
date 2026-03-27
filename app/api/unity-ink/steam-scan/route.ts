@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 import fs from 'fs';
 import path from 'path';
 
@@ -20,66 +21,62 @@ const STEAM_PATHS = [
   'G:\\SteamLibrary\\steamapps\\common',
 ];
 
-export async function GET() {
-  try {
-    const games: DetectedGame[] = [];
-    
-    // Also check libraryfolders.vdf for additional Steam library paths
-    const extraPaths = findSteamLibraryFolders();
-    const allPaths = [...new Set([...STEAM_PATHS, ...extraPaths])];
-    
-    for (const steamPath of allPaths) {
-      if (!fs.existsSync(steamPath)) continue;
-      
-      let entries: string[];
-      try {
-        entries = fs.readdirSync(steamPath);
-      } catch { continue; }
-      
-      for (const entry of entries) {
-        const gamePath = path.join(steamPath, entry);
-        
-        let stat;
-        try { stat = fs.statSync(gamePath); } catch { continue; }
-        if (!stat.isDirectory()) continue;
-        
-        // Look for _Data folder (Unity signature)
-        const dataFolders = findDataFolder(gamePath, entry);
-        
-        for (const dataPath of dataFolders) {
-          const inkCount = countInkBlobs(dataPath);
-          if (inkCount.blobs > 0) {
-            // Try to find appId from steam_appid.txt
-            let appId = '';
-            const appIdFile = path.join(gamePath, 'steam_appid.txt');
-            if (fs.existsSync(appIdFile)) {
-              try { appId = fs.readFileSync(appIdFile, 'utf-8').trim(); } catch {}
-            }
+export const GET = withErrorHandler(async function() {
+  const games: DetectedGame[] = [];
 
-            const dirSize = getDirSizeApprox(dataPath);
-            
-            games.push({
-              name: entry,
-              dataPath,
-              appId,
-              inkBlobs: inkCount.blobs,
-              assetsFiles: inkCount.files,
-              size: formatSize(dirSize),
-            });
+  // Also check libraryfolders.vdf for additional Steam library paths
+  const extraPaths = findSteamLibraryFolders();
+  const allPaths = [...new Set([...STEAM_PATHS, ...extraPaths])];
+
+  for (const steamPath of allPaths) {
+    if (!fs.existsSync(steamPath)) continue;
+
+    let entries: string[];
+    try {
+      entries = fs.readdirSync(steamPath);
+    } catch { continue; }
+
+    for (const entry of entries) {
+      const gamePath = path.join(steamPath, entry);
+
+      let stat;
+      try { stat = fs.statSync(gamePath); } catch { continue; }
+      if (!stat.isDirectory()) continue;
+
+      // Look for _Data folder (Unity signature)
+      const dataFolders = findDataFolder(gamePath, entry);
+
+      for (const dataPath of dataFolders) {
+        const inkCount = countInkBlobs(dataPath);
+        if (inkCount.blobs > 0) {
+          // Try to find appId from steam_appid.txt
+          let appId = '';
+          const appIdFile = path.join(gamePath, 'steam_appid.txt');
+          if (fs.existsSync(appIdFile)) {
+            try { appId = fs.readFileSync(appIdFile, 'utf-8').trim(); } catch {}
           }
+
+          const dirSize = getDirSizeApprox(dataPath);
+
+          games.push({
+            name: entry,
+            dataPath,
+            appId,
+            inkBlobs: inkCount.blobs,
+            assetsFiles: inkCount.files,
+            size: formatSize(dirSize),
+          });
         }
       }
     }
-
-    return NextResponse.json({ 
-      games, 
-      scannedPaths: allPaths.filter(p => fs.existsSync(p)),
-      totalFound: games.length 
-    });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message, games: [] }, { status: 500 });
   }
-}
+
+  return NextResponse.json({
+    games,
+    scannedPaths: allPaths.filter(p => fs.existsSync(p)),
+    totalFound: games.length
+  });
+});
 
 function findSteamLibraryFolders(): string[] {
   const paths: string[] = [];
@@ -87,7 +84,7 @@ function findSteamLibraryFolders(): string[] {
     'C:\\Program Files (x86)\\Steam\\steamapps\\libraryfolders.vdf',
     'C:\\Program Files\\Steam\\steamapps\\libraryfolders.vdf',
   ];
-  
+
   for (const vdf of vdfLocations) {
     if (!fs.existsSync(vdf)) continue;
     try {
@@ -109,11 +106,11 @@ function findSteamLibraryFolders(): string[] {
 
 function findDataFolder(gamePath: string, gameName: string): string[] {
   const results: string[] = [];
-  
+
   // Pattern 1: GameName_Data
   const dataDir = path.join(gamePath, `${gameName}_Data`);
   if (fs.existsSync(dataDir)) results.push(dataDir);
-  
+
   // Pattern 2: Look for any *_Data folder
   try {
     const entries = fs.readdirSync(gamePath);
@@ -126,7 +123,7 @@ function findDataFolder(gamePath: string, gameName: string): string[] {
       }
     }
   } catch {}
-  
+
   return results;
 }
 
@@ -134,15 +131,15 @@ function countInkBlobs(dataPath: string): { blobs: number; files: number } {
   const inkMarker = Buffer.from('inkVersion');
   let totalBlobs = 0;
   let totalFiles = 0;
-  
+
   let entries: string[];
   try { entries = fs.readdirSync(dataPath); } catch { return { blobs: 0, files: 0 }; }
-  
-  const targets = entries.filter(f => 
+
+  const targets = entries.filter(f =>
     (f.startsWith('sharedassets') && f.endsWith('.assets')) ||
     /^level\d+$/.test(f)
   );
-  
+
   for (const f of targets) {
     const fp = path.join(dataPath, f);
     try {
@@ -159,7 +156,7 @@ function countInkBlobs(dataPath: string): { blobs: number; files: number } {
       if (found) totalFiles++;
     } catch {}
   }
-  
+
   return { blobs: totalBlobs, files: totalFiles };
 }
 

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 import fs from 'fs';
 import path from 'path';
 import { progressMap } from '../translate/route';
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async function(req: NextRequest) {
   const gameDir = req.nextUrl.searchParams.get('gameDir');
-  
+
   if (!gameDir) {
     return NextResponse.json({ error: 'gameDir richiesto' }, { status: 400 });
   }
@@ -28,4 +29,4 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json({ status: 'idle', done: 0, total: 0, errors: 0, rate: 0, eta: 0 });
-}
+});

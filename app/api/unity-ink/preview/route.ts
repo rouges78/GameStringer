@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 import fs from 'fs';
 import path from 'path';
 
-export async function GET(req: NextRequest) {
+export const GET = withErrorHandler(async function(req: NextRequest) {
   const gameDir = req.nextUrl.searchParams.get('gameDir');
   const page = parseInt(req.nextUrl.searchParams.get('page') || '0');
   const search = req.nextUrl.searchParams.get('search') || '';
   const pageSize = 20;
-  
+
   if (!gameDir) {
     return NextResponse.json({ error: 'gameDir richiesto' }, { status: 400 });
   }
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest) {
   }
 
   const strings: string[] = JSON.parse(fs.readFileSync(stringsPath, 'utf-8'));
-  
+
   let translations: Record<string, string> = {};
   if (fs.existsSync(translationsPath)) {
     translations = JSON.parse(fs.readFileSync(translationsPath, 'utf-8'));
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
   const totalStrings = strings.length;
   const translatedCount = strings.filter(s => translations[s]).length;
   const coverage = totalStrings > 0 ? Math.round((translatedCount / totalStrings) * 100) : 0;
-  
+
   // Length distribution
   const shortCount = strings.filter(s => s.length < 20).length;
   const mediumCount = strings.filter(s => s.length >= 20 && s.length < 80).length;
@@ -46,8 +47,8 @@ export async function GET(req: NextRequest) {
 
   if (search) {
     const q = search.toLowerCase();
-    filtered = filtered.filter(p => 
-      p.english.toLowerCase().includes(q) || 
+    filtered = filtered.filter(p =>
+      p.english.toLowerCase().includes(q) ||
       p.italian.toLowerCase().includes(q)
     );
   }
@@ -74,4 +75,4 @@ export async function GET(req: NextRequest) {
       totalFiltered: filtered.length,
     }
   });
-}
+});

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 
 /**
  * 🔌 GameStringer Public API v1 - Batch Translation
- * 
+ *
  * POST /api/v1/batch
- * 
+ *
  * Body:
  * {
  *   "texts": ["Hello", "World", "Game"],
@@ -12,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
  *   "provider": "libre",
  *   "context": "UI labels"
  * }
- * 
+ *
  * Response:
  * {
  *   "success": true,
@@ -47,9 +48,9 @@ async function translateWithLibre(text: string, targetLang: string): Promise<str
     const response = await fetch(
       `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`
     );
-    
+
     if (!response.ok) throw new Error('API error');
-    
+
     const data = await response.json();
     return data.responseData?.translatedText || text;
   } catch {
@@ -57,97 +58,87 @@ async function translateWithLibre(text: string, targetLang: string): Promise<str
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body: BatchRequest = await request.json();
-    
-    // Validation
-    if (!body.texts || !Array.isArray(body.texts) || body.texts.length === 0) {
-      return NextResponse.json<BatchResponse>({
-        success: false,
-        error: 'Missing or invalid field: texts (must be non-empty array)',
-        timestamp: new Date().toISOString()
-      }, { status: 400 });
-    }
-    
-    if (!body.targetLanguage) {
-      return NextResponse.json<BatchResponse>({
-        success: false,
-        error: 'Missing required field: targetLanguage',
-        timestamp: new Date().toISOString()
-      }, { status: 400 });
-    }
-    
-    // Limit batch size
-    if (body.texts.length > 100) {
-      return NextResponse.json<BatchResponse>({
-        success: false,
-        error: 'Batch size exceeds limit of 100 texts',
-        timestamp: new Date().toISOString()
-      }, { status: 400 });
-    }
-    
-    const provider = body.provider || 'libre';
-    const translations: string[] = [];
-    let failed = 0;
-    
-    // Process in parallel with rate limiting
-    const batchSize = 10;
-    for (let i = 0; i < body.texts.length; i += batchSize) {
-      const batch = body.texts.slice(i, i + batchSize);
-      
-      const results = await Promise.all(
-        batch.map(async (text) => {
-          try {
-            const translated = await translateWithLibre(text, body.targetLanguage);
-            
-            // Apply glossary if provided
-            if (body.glossary) {
-              let result = translated;
-              for (const [source, target] of Object.entries(body.glossary)) {
-                // Escape special regex characters to prevent injection errors
-                const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                result = result.replace(new RegExp(escaped, 'gi'), target);
-              }
-              return result;
-            }
-            
-            return translated;
-          } catch {
-            failed++;
-            return text;
-          }
-        })
-      );
-      
-      translations.push(...results);
-      
-      // Rate limiting delay between batches
-      if (i + batchSize < body.texts.length) {
-        await new Promise(r => setTimeout(r, 100));
-      }
-    }
-    
-    return NextResponse.json<BatchResponse>({
-      success: true,
-      translations,
-      count: translations.length,
-      provider,
-      failed: failed > 0 ? failed : undefined,
-      timestamp: new Date().toISOString()
-    });
-    
-  } catch (error) {
-    console.error('API v1 batch error:', error);
+export const POST = withErrorHandler(async function(request: NextRequest) {
+  const body: BatchRequest = await request.json();
+
+  // Validation
+  if (!body.texts || !Array.isArray(body.texts) || body.texts.length === 0) {
     return NextResponse.json<BatchResponse>({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: 'Missing or invalid field: texts (must be non-empty array)',
       timestamp: new Date().toISOString()
-    }, { status: 500 });
+    }, { status: 400 });
   }
-}
 
-export async function GET() {
+  if (!body.targetLanguage) {
+    return NextResponse.json<BatchResponse>({
+      success: false,
+      error: 'Missing required field: targetLanguage',
+      timestamp: new Date().toISOString()
+    }, { status: 400 });
+  }
+
+  // Limit batch size
+  if (body.texts.length > 100) {
+    return NextResponse.json<BatchResponse>({
+      success: false,
+      error: 'Batch size exceeds limit of 100 texts',
+      timestamp: new Date().toISOString()
+    }, { status: 400 });
+  }
+
+  const provider = body.provider || 'libre';
+  const translations: string[] = [];
+  let failed = 0;
+
+  // Process in parallel with rate limiting
+  const batchSize = 10;
+  for (let i = 0; i < body.texts.length; i += batchSize) {
+    const batch = body.texts.slice(i, i + batchSize);
+
+    const results = await Promise.all(
+      batch.map(async (text) => {
+        try {
+          const translated = await translateWithLibre(text, body.targetLanguage);
+
+          // Apply glossary if provided
+          if (body.glossary) {
+            let result = translated;
+            for (const [source, target] of Object.entries(body.glossary)) {
+              // Escape special regex characters to prevent injection errors
+              const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              result = result.replace(new RegExp(escaped, 'gi'), target);
+            }
+            return result;
+          }
+
+          return translated;
+        } catch {
+          failed++;
+          return text;
+        }
+      })
+    );
+
+    translations.push(...results);
+
+    // Rate limiting delay between batches
+    if (i + batchSize < body.texts.length) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
+
+  return NextResponse.json<BatchResponse>({
+    success: true,
+    translations,
+    count: translations.length,
+    provider,
+    failed: failed > 0 ? failed : undefined,
+    timestamp: new Date().toISOString()
+  });
+});
+
+export const GET = withErrorHandler(async function() {
   return NextResponse.json({
     name: 'GameStringer API v1 - Batch Translation',
     version: '1.0.0',
@@ -169,4 +160,4 @@ export async function GET() {
       }
     }
   });
-}
+});

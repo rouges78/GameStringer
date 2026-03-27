@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 import fs from 'fs';
 import path from 'path';
 
@@ -31,50 +32,46 @@ const progressMap = new Map<string, {
 
 export { progressMap };
 
-export async function POST(req: NextRequest) {
-  try {
-    const { gameDir, targetLang = 'it', model = 'huihui_ai/hy-mt1.5-abliterated:7b', characterProfiles = [] } = await req.json();
-    
-    if (!gameDir) {
-      return NextResponse.json({ error: 'gameDir richiesto' }, { status: 400 });
-    }
+export const POST = withErrorHandler(async function(req: NextRequest) {
+  const { gameDir, targetLang = 'it', model = 'huihui_ai/hy-mt1.5-abliterated:7b', characterProfiles = [] } = await req.json();
 
-    const gsDir = path.join(gameDir, '_gamestringer');
-    const stringsPath = path.join(gsDir, 'extracted_strings.json');
-    const translationsPath = path.join(gsDir, 'translations.json');
-    const progressPath = path.join(gsDir, 'translate_progress.json');
-
-    if (!fs.existsSync(stringsPath)) {
-      return NextResponse.json({ error: 'Stringhe non estratte. Esegui prima l\'estrazione.' }, { status: 400 });
-    }
-
-    const strings: string[] = JSON.parse(fs.readFileSync(stringsPath, 'utf-8'));
-    
-    // Load existing translations
-    let translations: Record<string, string> = {};
-    if (fs.existsSync(translationsPath)) {
-      translations = JSON.parse(fs.readFileSync(translationsPath, 'utf-8'));
-    }
-
-    const remaining = strings.filter(s => !translations[s]);
-    const total = remaining.length;
-
-    if (total === 0) {
-      return NextResponse.json({ total: 0, message: 'Tutte le stringhe sono già tradotte' });
-    }
-
-    // Initialize progress
-    const progress = { total, done: 0, errors: 0, currentText: '', currentCharacter: '', rate: 0, eta: 0, status: 'running' as const };
-    progressMap.set(gameDir, progress);
-
-    // Start translation in background
-    translateInBackground(remaining, translations, translationsPath, progressPath, gameDir, targetLang, model, characterProfiles);
-
-    return NextResponse.json({ total, alreadyTranslated: strings.length - total });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  if (!gameDir) {
+    return NextResponse.json({ error: 'gameDir richiesto' }, { status: 400 });
   }
-}
+
+  const gsDir = path.join(gameDir, '_gamestringer');
+  const stringsPath = path.join(gsDir, 'extracted_strings.json');
+  const translationsPath = path.join(gsDir, 'translations.json');
+  const progressPath = path.join(gsDir, 'translate_progress.json');
+
+  if (!fs.existsSync(stringsPath)) {
+    return NextResponse.json({ error: 'Stringhe non estratte. Esegui prima l\'estrazione.' }, { status: 400 });
+  }
+
+  const strings: string[] = JSON.parse(fs.readFileSync(stringsPath, 'utf-8'));
+
+  // Load existing translations
+  let translations: Record<string, string> = {};
+  if (fs.existsSync(translationsPath)) {
+    translations = JSON.parse(fs.readFileSync(translationsPath, 'utf-8'));
+  }
+
+  const remaining = strings.filter(s => !translations[s]);
+  const total = remaining.length;
+
+  if (total === 0) {
+    return NextResponse.json({ total: 0, message: 'Tutte le stringhe sono già tradotte' });
+  }
+
+  // Initialize progress
+  const progress = { total, done: 0, errors: 0, currentText: '', currentCharacter: '', rate: 0, eta: 0, status: 'running' as const };
+  progressMap.set(gameDir, progress);
+
+  // Start translation in background
+  translateInBackground(remaining, translations, translationsPath, progressPath, gameDir, targetLang, model, characterProfiles);
+
+  return NextResponse.json({ total, alreadyTranslated: strings.length - total });
+});
 
 const LANG_NAMES: Record<string, string> = {
   it: 'Italian', es: 'Spanish', de: 'German', fr: 'French',
@@ -114,20 +111,20 @@ function matchProfileToText(
   profiles: CharacterVoiceProfile[]
 ): CharacterVoiceProfile | null {
   if (profiles.length === 0) return null;
-  
+
   const speaker = detectSpeaker(text);
   if (speaker) {
-    const match = profiles.find(p => 
+    const match = profiles.find(p =>
       p.name.toLowerCase() === speaker.toLowerCase()
     );
     if (match) return match;
   }
-  
+
   // Match per tipo di testo → archetipo appropriato
   if (textType === 'narration') {
     return profiles.find(p => p.archetype === 'narrator') || null;
   }
-  
+
   // Per dialoghi senza speaker identificato, usa il profilo generico se disponibile
   return null;
 }
@@ -141,11 +138,11 @@ function buildCharacterPrompt(
 ): string {
   if (!profile) {
     // Prompt base migliorato con context tipo testo
-    const typeHint = textType === 'dialogue' ? 'This is character dialogue.' 
+    const typeHint = textType === 'dialogue' ? 'This is character dialogue.'
       : textType === 'narration' ? 'This is narrative/descriptive text.'
       : textType === 'action' ? 'This is a stage direction or action.'
       : 'This is a game system text.';
-    
+
     return `You are an expert video game translator. ${typeHint}
 Translate the following text from English to ${langName}.
 Maintain the original tone, style, and any HTML/formatting tags.
@@ -168,11 +165,11 @@ CHARACTER PROFILE: ${profile.name}
   if (profile.catchphrases.length > 0) {
     prompt += `\n- Catchphrases/patterns: ${profile.catchphrases.join(', ')}`;
   }
-  
+
   if (profile.avoidWords.length > 0) {
     prompt += `\n- Words to AVOID: ${profile.avoidWords.join(', ')}`;
   }
-  
+
   if (Object.keys(profile.preferredWords).length > 0) {
     prompt += `\n- Preferred word substitutions:`;
     for (const [from, to] of Object.entries(profile.preferredWords)) {
@@ -300,7 +297,7 @@ async function translateInBackground(
   // Final save
   progress.status = progress.errors > remaining.length / 2 ? 'error' : 'done';
   progressMap.set(gameDir, progress);
-  
+
   try {
     fs.writeFileSync(translationsPath, JSON.stringify(translations, null, 2), 'utf-8');
     fs.writeFileSync(progressPath, JSON.stringify({ ...progress, currentText: '' }), 'utf-8');

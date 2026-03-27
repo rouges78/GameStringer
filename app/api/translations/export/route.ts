@@ -1,60 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 
 // GET /api/translations/export - Export translations in various formats
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const gameId = searchParams.get('gameId');
-    const format = searchParams.get('format') || 'json';
-    const status = searchParams.get('status');
+export const GET = withErrorHandler(async function(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const gameId = searchParams.get('gameId');
+  const format = searchParams.get('format') || 'json';
+  const status = searchParams.get('status');
 
-    if (!gameId || gameId === 'all') {
-      return NextResponse.json({ error: 'Game ID is required for export' }, { status: 400 });
-    }
-
-    // Fetch translations from the main endpoint (in production, use shared storage)
-    const baseUrl = request.nextUrl.origin;
-    const params = new URLSearchParams();
-    params.append('gameId', gameId);
-    if (status && status !== 'all') params.append('status', status);
-
-    const response = await fetch(`${baseUrl}/api/translations?${params}`);
-    const translations = await response.json();
-
-    let content: string;
-    let contentType: string;
-    let filename: string;
-
-    switch (format) {
-      case 'csv':
-        content = exportToCSV(translations);
-        contentType = 'text/csv';
-        filename = `translations-${gameId}.csv`;
-        break;
-      case 'po':
-        content = exportToPO(translations);
-        contentType = 'text/x-gettext-translation';
-        filename = `translations-${gameId}.po`;
-        break;
-      case 'json':
-      default:
-        content = JSON.stringify(translations, null, 2);
-        contentType = 'application/json';
-        filename = `translations-${gameId}.json`;
-        break;
-    }
-
-    return new NextResponse(content, {
-      headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${filename}"`,
-      },
-    });
-  } catch (error) {
-    console.error('Error exporting translations:', error);
-    return NextResponse.json({ error: 'Failed to export translations' }, { status: 500 });
+  if (!gameId || gameId === 'all') {
+    return NextResponse.json({ error: 'Game ID is required for export' }, { status: 400 });
   }
-}
+
+  // Fetch translations from the main endpoint (in production, use shared storage)
+  const baseUrl = request.nextUrl.origin;
+  const params = new URLSearchParams();
+  params.append('gameId', gameId);
+  if (status && status !== 'all') params.append('status', status);
+
+  const response = await fetch(`${baseUrl}/api/translations?${params}`);
+  const translations = await response.json();
+
+  let content: string;
+  let contentType: string;
+  let filename: string;
+
+  switch (format) {
+    case 'csv':
+      content = exportToCSV(translations);
+      contentType = 'text/csv';
+      filename = `translations-${gameId}.csv`;
+      break;
+    case 'po':
+      content = exportToPO(translations);
+      contentType = 'text/x-gettext-translation';
+      filename = `translations-${gameId}.po`;
+      break;
+    case 'json':
+    default:
+      content = JSON.stringify(translations, null, 2);
+      contentType = 'application/json';
+      filename = `translations-${gameId}.json`;
+      break;
+  }
+
+  return new NextResponse(content, {
+    headers: {
+      'Content-Type': contentType,
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    },
+  });
+});
 
 function exportToCSV(translations: any[]): string {
   const headers = ['id', 'originalText', 'translatedText', 'sourceLanguage', 'targetLanguage', 'status', 'confidence'];

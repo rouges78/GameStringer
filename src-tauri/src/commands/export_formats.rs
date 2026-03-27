@@ -177,12 +177,14 @@ pub fn export_to_xliff(
                 escape_xml(&entry.target)
             ));
             
-            if options.include_notes && entry.notes.is_some() {
-                xliff.push_str(&format!("      <notes>\n        <note>{}</note>\n      </notes>\n",
-                    escape_xml(entry.notes.as_ref().unwrap())
-                ));
+            if let Some(notes) = &entry.notes {
+                if options.include_notes {
+                    xliff.push_str(&format!("      <notes>\n        <note>{}</note>\n      </notes>\n",
+                        escape_xml(notes)
+                    ));
+                }
             }
-            
+
             xliff.push_str("    </unit>\n");
         } else {
             // XLIFF 1.2 format
@@ -194,17 +196,21 @@ pub fn export_to_xliff(
                 escape_xml(&entry.source),
                 escape_xml(&entry.target)
             ));
-            
-            if options.include_context && entry.context.is_some() {
-                xliff.push_str(&format!("        <context-group><context context-type=\"x-context\">{}</context></context-group>\n",
-                    escape_xml(entry.context.as_ref().unwrap())
-                ));
+
+            if let Some(context) = &entry.context {
+                if options.include_context {
+                    xliff.push_str(&format!("        <context-group><context context-type=\"x-context\">{}</context></context-group>\n",
+                        escape_xml(context)
+                    ));
+                }
             }
-            
-            if options.include_notes && entry.notes.is_some() {
-                xliff.push_str(&format!("        <note>{}</note>\n",
-                    escape_xml(entry.notes.as_ref().unwrap())
-                ));
+
+            if let Some(notes) = &entry.notes {
+                if options.include_notes {
+                    xliff.push_str(&format!("        <note>{}</note>\n",
+                        escape_xml(notes)
+                    ));
+                }
             }
             
             xliff.push_str("      </trans-unit>\n");
@@ -285,13 +291,17 @@ msgstr ""
         }
         
         // Context (msgctxt)
-        if options.include_context && entry.context.is_some() {
-            po.push_str(&format!("#. Context: {}\n", entry.context.as_ref().unwrap()));
+        if let Some(context) = &entry.context {
+            if options.include_context {
+                po.push_str(&format!("#. Context: {}\n", context));
+            }
         }
-        
+
         // Notes as translator comments
-        if options.include_notes && entry.notes.is_some() {
-            po.push_str(&format!("#. {}\n", entry.notes.as_ref().unwrap()));
+        if let Some(notes) = &entry.notes {
+            if options.include_notes {
+                po.push_str(&format!("#. {}\n", notes));
+            }
         }
         
         // Reference (using ID)

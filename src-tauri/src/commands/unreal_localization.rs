@@ -356,8 +356,10 @@ fn parse_pak_index(
         });
         
         // Log primi file per debug
-        if i < 5 || entries.last().map(|e| e.filename.contains(".locres")).unwrap_or(false) {
-            log::info!("  📄 {} ({} bytes)", entries.last().unwrap().filename, uncompressed_size);
+        if let Some(last) = entries.last() {
+            if i < 5 || last.filename.contains(".locres") {
+                log::info!("  📄 {} ({} bytes)", last.filename, uncompressed_size);
+            }
         }
     }
     

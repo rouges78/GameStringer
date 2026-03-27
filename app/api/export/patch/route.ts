@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exportPatchZip, exportGSTranslation, TranslatedFile, PatchMetadata } from '@/lib/patch-exporter';
+import { withErrorHandler } from '@/lib/error-handler';
 
 interface ExportRequest {
   files: TranslatedFile[];
@@ -13,71 +14,62 @@ interface ExportRequest {
   };
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const body: ExportRequest = await request.json();
-    const { files, metadata, format, options } = body;
+export const POST = withErrorHandler(async function(request: NextRequest) {
+  const body: ExportRequest = await request.json();
+  const { files, metadata, format, options } = body;
 
-    if (!files || !Array.isArray(files) || files.length === 0) {
-      return NextResponse.json(
-        { error: 'No files provided' },
-        { status: 400 }
-      );
-    }
-
-    if (!metadata || !metadata.gameName) {
-      return NextResponse.json(
-        { error: 'Missing metadata' },
-        { status: 400 }
-      );
-    }
-
-    let blob: Blob;
-    let filename: string;
-    let contentType: string;
-
-    switch (format) {
-      case 'zip':
-        blob = await exportPatchZip(files, metadata, {
-          ...options,
-          xunityFormat: options?.xunityFormat ?? true
-        });
-        filename = `${sanitizeFilename(metadata.gameName)}_${metadata.targetLanguage}_patch.zip`;
-        contentType = 'application/zip';
-        break;
-
-      case 'gstranslation':
-        blob = await exportGSTranslation(files, metadata);
-        filename = `${sanitizeFilename(metadata.gameName)}_${metadata.targetLanguage}.gstranslation`;
-        contentType = 'application/x-gstranslation';
-        break;
-
-      default:
-        return NextResponse.json(
-          { error: `Unsupported format: ${format}` },
-          { status: 400 }
-        );
-    }
-
-    // Converti Blob in ArrayBuffer per la risposta
-    const arrayBuffer = await blob.arrayBuffer();
-
-    return new NextResponse(arrayBuffer, {
-      headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': arrayBuffer.byteLength.toString()
-      }
-    });
-
-  } catch (error) {
-    console.error('[EXPORT API] Error:', error);
+  if (!files || !Array.isArray(files) || files.length === 0) {
     return NextResponse.json(
-      { error: 'Export failed', message: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+      { error: 'No files provided' },
+      { status: 400 }
     );
   }
-}
+
+  if (!metadata || !metadata.gameName) {
+    return NextResponse.json(
+      { error: 'Missing metadata' },
+      { status: 400 }
+    );
+  }
+
+  let blob: Blob;
+  let filename: string;
+  let contentType: string;
+
+  switch (format) {
+    case 'zip':
+      blob = await exportPatchZip(files, metadata, {
+        ...options,
+        xunityFormat: options?.xunityFormat ?? true
+      });
+      filename = `${sanitizeFilename(metadata.gameName)}_${metadata.targetLanguage}_patch.zip`;
+      contentType = 'application/zip';
+      break;
+
+    case 'gstranslation':
+      blob = await exportGSTranslation(files, metadata);
+      filename = `${sanitizeFilename(metadata.gameName)}_${metadata.targetLanguage}.gstranslation`;
+      contentType = 'application/x-gstranslation';
+      break;
+
+    default:
+      return NextResponse.json(
+        { error: `Unsupported format: ${format}` },
+        { status: 400 }
+      );
+  }
+
+  // Converti Blob in ArrayBuffer per la risposta
+  const arrayBuffer = await blob.arrayBuffer();
+
+  return new NextResponse(arrayBuffer, {
+    headers: {
+      'Content-Type': contentType,
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': arrayBuffer.byteLength.toString()
+    }
+  });
+});
 
 function sanitizeFilename(name: string): string {
   return name

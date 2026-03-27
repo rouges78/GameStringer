@@ -1768,8 +1768,8 @@ fn city_hash_64(data: &[u8]) -> u64 {
     const K1: u64 = 0xb492b66fbe98f273;
     const K2: u64 = 0x9ae16a3b2f90404f;
 
-    #[inline] fn f64(s: &[u8], i: usize) -> u64 { u64::from_le_bytes(s[i..i+8].try_into().unwrap()) }
-    #[inline] fn f32(s: &[u8], i: usize) -> u64 { u32::from_le_bytes(s[i..i+4].try_into().unwrap()) as u64 }
+    #[inline] fn f64(s: &[u8], i: usize) -> u64 { s.get(i..i+8).and_then(|b| b.try_into().ok()).map(u64::from_le_bytes).unwrap_or(0) }
+    #[inline] fn f32(s: &[u8], i: usize) -> u64 { s.get(i..i+4).and_then(|b| b.try_into().ok()).map(u32::from_le_bytes).unwrap_or(0) as u64 }
     #[inline] fn rot(v: u64, s: u32) -> u64 { if s == 0 { v } else { (v >> s) | (v << (64 - s)) } }
     #[inline] fn smix(v: u64) -> u64 { v ^ (v >> 47) }
     #[inline] fn h16(u: u64, v: u64, mul: u64) -> u64 {

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { secretsManager } from '@/lib/secrets-manager';
+import { withErrorHandler } from '@/lib/error-handler';
 
 interface StreamTranslationRequest {
   text: string;
@@ -10,15 +11,15 @@ interface StreamTranslationRequest {
   apiKey?: string;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandler(async function(request: NextRequest) {
   const body: StreamTranslationRequest = await request.json();
-  const { 
-    text, 
-    targetLanguage, 
-    sourceLanguage = 'auto', 
-    provider = 'openai', 
+  const {
+    text,
+    targetLanguage,
+    sourceLanguage = 'auto',
+    provider = 'openai',
     context,
-    apiKey: userApiKey 
+    apiKey: userApiKey
   } = body;
 
   if (!text || !targetLanguage) {
@@ -48,7 +49,7 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
           case 'gpt5': {
             const apiKey = secretsManager.get('OPENAI_API_KEY');
             if (!apiKey) throw new Error('OpenAI API key not configured');
-            
+
             apiUrl = 'https://api.openai.com/v1/chat/completions';
             headers = {
               'Authorization': `Bearer ${apiKey}`,
@@ -65,11 +66,11 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
             };
             break;
           }
-          
+
           case 'claude': {
             const apiKey = userApiKey || secretsManager.get('ANTHROPIC_API_KEY');
             if (!apiKey) throw new Error('Anthropic API key not configured');
-            
+
             apiUrl = 'https://api.anthropic.com/v1/messages';
             headers = {
               'x-api-key': apiKey,
@@ -85,11 +86,11 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
             };
             break;
           }
-          
+
           case 'gemini': {
             const apiKey = userApiKey || secretsManager.get('GEMINI_API_KEY');
             if (!apiKey) throw new Error('Gemini API key not configured');
-            
+
             apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:streamGenerateContent?key=${apiKey}`;
             headers = { 'Content-Type': 'application/json' };
             body = {
@@ -100,11 +101,11 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
             };
             break;
           }
-          
+
           case 'deepseek': {
             const apiKey = secretsManager.get('DEEPSEEK_API_KEY');
             if (!apiKey) throw new Error('DeepSeek API key not configured');
-            
+
             apiUrl = 'https://api.deepseek.com/v1/chat/completions';
             headers = {
               'Authorization': `Bearer ${apiKey}`,
@@ -121,7 +122,7 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
             };
             break;
           }
-          
+
           default:
             throw new Error(`Streaming not supported for provider: ${provider}`);
         }
@@ -157,10 +158,10 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
 
           for (const line of lines) {
             if (!line.trim() || line.startsWith(':')) continue;
-            
+
             const dataMatch = line.match(/^data: (.+)$/);
             if (!dataMatch) continue;
-            
+
             const data = dataMatch[1];
             if (data === '[DONE]') continue;
 
@@ -192,8 +193,8 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
         }
 
         // Send complete event
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-          type: 'complete', 
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+          type: 'complete',
           fullText,
           provider,
           sourceLanguage,
@@ -216,4 +217,4 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
       'Connection': 'keep-alive',
     },
   });
-}
+});
