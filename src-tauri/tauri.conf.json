@@ -44,7 +44,7 @@
       }
     ],
     "security": {
-      "csp": null,
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://cdn.cloudflare.steamstatic.com https://steamcdn-a.akamaihd.net https://cdn.akamai.steamstatic.com https://cdn2.steamgriddb.com https://shared.akamai.steamstatic.com https://images.igdb.com; connect-src 'self' https: http://127.0.0.1:* http://localhost:*; font-src 'self' data:; media-src 'self' blob:",
       "capabilities": [
         "default",
         "app-events"
