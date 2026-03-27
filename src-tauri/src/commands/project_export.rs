@@ -118,7 +118,7 @@ pub async fn export_translation_project(
             .map_err(|e| format!("Errore creazione directory output: {}", e))?;
     }
 
-    let file = fs::File::create(&output)
+    let file = fs::File::create(output)
         .map_err(|e| format!("Errore creazione file ZIP: {}", e))?;
     let mut zip = ZipWriter::new(file);
     let options = FileOptions::default()

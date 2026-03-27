@@ -151,7 +151,7 @@ mod end_to_end_tests {
         let current_settings = manager.get_settings().expect("No current settings");
         assert_eq!(current_settings.theme, Theme::Light);
         assert_eq!(current_settings.language, "en");
-        assert_eq!(current_settings.auto_login, true);
+        assert!(current_settings.auto_login);
         
         // 3.4: Verifica credenziali
         let steam_cred = manager.get_credential("steam").expect("Steam credential not found");
@@ -356,7 +356,7 @@ mod end_to_end_tests {
         let work_current_settings = manager.get_settings().unwrap();
         assert_eq!(work_current_settings.theme, Theme::Light);
         assert_eq!(work_current_settings.language, "en");
-        assert_eq!(work_current_settings.auto_login, true);
+        assert!(work_current_settings.auto_login);
         
         println!("✅ Isolamento dati Work verificato");
 
@@ -381,7 +381,7 @@ mod end_to_end_tests {
         let gaming_current_settings = manager.get_settings().unwrap();
         assert_eq!(gaming_current_settings.theme, Theme::Dark);
         assert_eq!(gaming_current_settings.language, "it");
-        assert_eq!(gaming_current_settings.auto_login, false);
+        assert!(!gaming_current_settings.auto_login);
         
         println!("✅ Isolamento dati Gaming verificato");
 
@@ -480,7 +480,7 @@ mod end_to_end_tests {
             };
             
             source_manager.add_credential(credential, "ComplexPass123!")
-                .await.expect(&format!("Failed to add {} credential", store));
+                .await.unwrap_or_else(|_| panic!("Failed to add {} credential", store));
         }
         
         println!("✅ Profilo complesso configurato con 5 credenziali");
@@ -543,7 +543,7 @@ mod end_to_end_tests {
             };
             
             target_manager.add_credential(credential, "ComplexPass123!")
-                .await.expect(&format!("Failed to import {} credential", store));
+                .await.unwrap_or_else(|_| panic!("Failed to import {} credential", store));
         }
         
         println!("✅ Profilo importato su nuovo sistema");
@@ -557,9 +557,9 @@ mod end_to_end_tests {
         // Verifica impostazioni
         assert_eq!(imported_settings.theme, Theme::Auto);
         assert_eq!(imported_settings.language, "fr");
-        assert_eq!(imported_settings.auto_login, true);
-        assert_eq!(imported_settings.notifications.desktop_enabled, true);
-        assert_eq!(imported_settings.notifications.sound_enabled, false);
+        assert!(imported_settings.auto_login);
+        assert!(imported_settings.notifications.desktop_enabled);
+        assert!(!imported_settings.notifications.sound_enabled);
         assert_eq!(imported_settings.game_library.default_view, crate::profiles::models::LibraryView::List);
         assert_eq!(imported_settings.game_library.default_sort, crate::profiles::models::LibrarySort::RecentlyAdded);
         assert_eq!(imported_settings.security.session_timeout, 180);
@@ -568,9 +568,9 @@ mod end_to_end_tests {
         // Verifica credenziali
         for store in &stores {
             let imported_cred = target_manager.get_credential(store)
-                .expect(&format!("Imported credential {} should exist", store));
+                .unwrap_or_else(|| panic!("Imported credential {} should exist", store));
             let original_cred = source_manager.get_credential(store)
-                .expect(&format!("Original credential {} should exist", store));
+                .unwrap_or_else(|| panic!("Original credential {} should exist", store));
             
             assert_eq!(imported_cred.store, original_cred.store);
             assert_eq!(imported_cred.encrypted_data, original_cred.encrypted_data);
@@ -707,7 +707,7 @@ mod end_to_end_tests {
                 encryption_version: 1,
             };
             manager.add_credential(credential, "MainUserPass123!").await
-                .expect(&format!("Failed to add {} credential to MainUser", store));
+                .unwrap_or_else(|_| panic!("Failed to add {} credential to MainUser", store));
         }
 
         // Modifica impostazioni
@@ -776,7 +776,7 @@ mod end_to_end_tests {
         let second_settings = manager.get_settings().unwrap();
         assert_eq!(second_settings.theme, Theme::Auto);
         assert_eq!(second_settings.language, "fr");
-        assert_eq!(second_settings.auto_login, true);
+        assert!(second_settings.auto_login);
 
         // Aggiungi credenziali specifiche per SecondUser
         let second_credentials = vec![
@@ -795,7 +795,7 @@ mod end_to_end_tests {
                 encryption_version: 1,
             };
             manager.add_credential(credential, "SecondUserPass456!").await
-                .expect(&format!("Failed to add {} credential to SecondUser", store));
+                .unwrap_or_else(|_| panic!("Failed to add {} credential to SecondUser", store));
         }
 
         println!("✅ SecondUser creato e isolamento dati verificato");
@@ -823,7 +823,7 @@ mod end_to_end_tests {
         let main_current_settings = manager.get_settings().unwrap();
         assert_eq!(main_current_settings.theme, Theme::Light);
         assert_eq!(main_current_settings.language, "en");
-        assert_eq!(main_current_settings.notifications.deals, true);
+        assert!(main_current_settings.notifications.deals);
 
         println!("✅ Isolamento bidirezionale verificato");
 
@@ -910,7 +910,7 @@ mod end_to_end_tests {
         let imported_main_settings = import_manager.get_settings().unwrap();
         assert_eq!(imported_main_settings.theme, Theme::Light);
         assert_eq!(imported_main_settings.language, "en");
-        assert_eq!(imported_main_settings.notifications.deals, true);
+        assert!(imported_main_settings.notifications.deals);
 
         assert!(import_manager.get_credential("steam").is_some());
         assert!(import_manager.get_credential("epic").is_some());
@@ -924,7 +924,7 @@ mod end_to_end_tests {
         let imported_second_settings = import_manager.get_settings().unwrap();
         assert_eq!(imported_second_settings.theme, Theme::Auto);
         assert_eq!(imported_second_settings.language, "fr");
-        assert_eq!(imported_second_settings.auto_login, true);
+        assert!(imported_second_settings.auto_login);
 
         assert!(import_manager.get_credential("gog").is_some());
         assert!(import_manager.get_credential("origin").is_some());
@@ -994,7 +994,7 @@ mod end_to_end_tests {
             }
             
             let profile = manager.create_profile(request).await
-                .expect(&format!("Failed to create profile for {}", name));
+                .unwrap_or_else(|_| panic!("Failed to create profile for {}", name));
             created_profiles.push((profile, password));
             
             println!("✅ Profilo {} creato", name);
@@ -1025,7 +1025,7 @@ mod end_to_end_tests {
             };
             
             manager.add_credential(credential, "DadSecurePass123!")
-                .await.expect(&format!("Failed to add {} for Dad", store));
+                .await.unwrap_or_else(|_| panic!("Failed to add {} for Dad", store));
         }
         
         println!("✅ Dad configurato con Steam, Epic, Origin");
@@ -1051,7 +1051,7 @@ mod end_to_end_tests {
             };
             
             manager.add_credential(credential, "MomSecurePass456!")
-                .await.expect(&format!("Failed to add {} for Mom", store));
+                .await.unwrap_or_else(|_| panic!("Failed to add {} for Mom", store));
         }
         
         println!("✅ Mom configurata con Steam e Mobile Games");
@@ -1079,7 +1079,7 @@ mod end_to_end_tests {
             };
             
             manager.add_credential(credential, "TeenGamePass789!")
-                .await.expect(&format!("Failed to add {} for Teen", store));
+                .await.unwrap_or_else(|_| panic!("Failed to add {} for Teen", store));
         }
         
         println!("✅ Teen configurato con Steam, Epic, Discord, Twitch");
@@ -1104,7 +1104,7 @@ mod end_to_end_tests {
             };
             
             manager.add_credential(credential, "KidSafePass012!")
-                .await.expect(&format!("Failed to add {} for Kid", store));
+                .await.unwrap_or_else(|_| panic!("Failed to add {} for Kid", store));
         }
         
         println!("✅ Kid configurato con Educational Games");
@@ -1172,7 +1172,7 @@ mod end_to_end_tests {
             ("Kid", "KidSafePass012!"),
         ] {
             manager.authenticate_profile(name, password)
-                .await.expect(&format!("Failed to re-authenticate {} after restart", name));
+                .await.unwrap_or_else(|_| panic!("Failed to re-authenticate {} after restart", name));
             
             let settings = manager.get_settings().unwrap();
             
@@ -1205,7 +1205,7 @@ mod end_to_end_tests {
                 _ => {}
             }
             
-            manager.logout().expect(&format!("Failed to logout {}", name));
+            manager.logout().unwrap_or_else(|_| panic!("Failed to logout {}", name));
             println!("✅ {} - persistenza verificata", name);
         }
 

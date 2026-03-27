@@ -348,7 +348,7 @@ fn is_unreal(path: &Path) -> bool {
     // 3. .uproject file
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
-            if entry.path().extension().map_or(false, |e| e == "uproject") {
+            if entry.path().extension().is_some_and(|e| e == "uproject") {
                 return true;
             }
         }
@@ -357,13 +357,11 @@ fn is_unreal(path: &Path) -> bool {
     // 4. Standard UE packaging: SubDir/Binaries/Win64 or SubDir/Content/Paks
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
-            if entry.file_type().map_or(false, |ft| ft.is_dir()) {
+            if entry.file_type().is_ok_and(|ft| ft.is_dir()) {
                 let p = entry.path();
                 let name = entry.file_name().to_string_lossy().to_lowercase();
-                if name != "engine" {
-                    if p.join("Binaries/Win64").exists() || p.join("Content/Paks").exists() {
-                        return true;
-                    }
+                if name != "engine" && (p.join("Binaries/Win64").exists() || p.join("Content/Paks").exists()) {
+                    return true;
                 }
             }
         }
@@ -507,15 +505,13 @@ fn is_visionaire(path: &Path) -> bool {
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
             let p = entry.path();
-            if p.extension().map_or(false, |e| e.to_ascii_lowercase() == "vis") {
+            if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("vis")) {
                 // Verify VIS5/VIS3 magic
                 if let Ok(f) = std::fs::File::open(&p) {
                     use std::io::Read;
                     let mut magic = [0u8; 4];
-                    if (&f).take(4).read(&mut magic).is_ok() {
-                        if &magic == b"VIS5" || &magic == b"VIS3" {
-                            return true;
-                        }
+                    if (&f).take(4).read(&mut magic).is_ok() && (&magic == b"VIS5" || &magic == b"VIS3") {
+                        return true;
                     }
                 }
             }
@@ -575,12 +571,9 @@ fn is_source(path: &Path) -> bool {
     
     // Check for bin folder with engine DLLs
     let bin = path.join("bin");
-    if bin.exists() {
-        if bin.join("engine.dll").exists() 
-            || bin.join("vstdlib.dll").exists()
-            || bin.join("tier0.dll").exists() {
-            return true;
-        }
+    if bin.exists() && (bin.join("engine.dll").exists() 
+            || bin.join("vstdlib.dll").exists() || bin.join("tier0.dll").exists()) {
+        return true;
     }
     
     false
@@ -636,7 +629,7 @@ fn is_telltale(path: &Path) -> bool {
     if path.join("Pack").exists() {
         if let Ok(entries) = std::fs::read_dir(path.join("Pack")) {
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "ttarch" || e == "ttarch2") {
+                if entry.path().extension().is_some_and(|e| e == "ttarch" || e == "ttarch2") {
                     return true;
                 }
             }
@@ -1485,10 +1478,8 @@ fn is_source2(path: &Path) -> bool {
         // Check for pak01_dir.vpk inside game subdirs
         if let Ok(entries) = std::fs::read_dir(&game_dir) {
             for entry in entries.flatten() {
-                if entry.file_type().map_or(false, |ft| ft.is_dir()) {
-                    if entry.path().join("pak01_dir.vpk").exists() {
-                        return true;
-                    }
+                if entry.file_type().is_ok_and(|ft| ft.is_dir()) && entry.path().join("pak01_dir.vpk").exists() {
+                    return true;
                 }
             }
         }
@@ -1496,7 +1487,7 @@ fn is_source2(path: &Path) -> bool {
     // Check for .vpk + gameinfo.gi (Source 2 uses .gi instead of .txt)
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
-            if entry.path().extension().map_or(false, |e| e == "gi") {
+            if entry.path().extension().is_some_and(|e| e == "gi") {
                 return true;
             }
         }
@@ -1532,7 +1523,7 @@ fn is_rage(path: &Path) -> bool {
     // RAGE Engine (Rockstar): .rpf files, update/update.rpf, x64/ folder
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
-            if entry.path().extension().map_or(false, |e| e == "rpf") {
+            if entry.path().extension().is_some_and(|e| e == "rpf") {
                 return true;
             }
         }
@@ -1541,7 +1532,7 @@ fn is_rage(path: &Path) -> bool {
     if path.join("x64").exists() || path.join("update").exists() {
         if let Ok(entries) = std::fs::read_dir(path.join("x64")) {
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "rpf") {
+                if entry.path().extension().is_some_and(|e| e == "rpf") {
                     return true;
                 }
             }
@@ -1583,7 +1574,7 @@ fn is_iwengine(path: &Path) -> bool {
     if zone.exists() {
         if let Ok(entries) = std::fs::read_dir(&zone) {
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "ff") {
+                if entry.path().extension().is_some_and(|e| e == "ff") {
                     return true;
                 }
             }
@@ -1604,7 +1595,7 @@ fn is_iwengine(path: &Path) -> bool {
     if path.join("main").exists() {
         if let Ok(entries) = std::fs::read_dir(path.join("main")) {
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "iwd") {
+                if entry.path().extension().is_some_and(|e| e == "iwd") {
                     return true;
                 }
             }
@@ -1618,7 +1609,7 @@ fn is_glacier(path: &Path) -> bool {
     if path.join("Runtime").exists() {
         if let Ok(entries) = std::fs::read_dir(path.join("Runtime")) {
             for entry in entries.flatten() {
-                if entry.path().extension().map_or(false, |e| e == "rpkg") {
+                if entry.path().extension().is_some_and(|e| e == "rpkg") {
                     return true;
                 }
             }
@@ -1627,7 +1618,7 @@ fn is_glacier(path: &Path) -> bool {
     // .rpkg in root
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
-            if entry.path().extension().map_or(false, |e| e == "rpkg") {
+            if entry.path().extension().is_some_and(|e| e == "rpkg") {
                 return true;
             }
         }
@@ -1644,7 +1635,7 @@ fn is_mt_framework(path: &Path) -> bool {
     if let Ok(entries) = std::fs::read_dir(path) {
         let mut arc_count = 0;
         for entry in entries.flatten() {
-            if entry.path().extension().map_or(false, |e| e == "arc") {
+            if entry.path().extension().is_some_and(|e| e == "arc") {
                 arc_count += 1;
                 if arc_count >= 2 {
                     return true;
@@ -1705,7 +1696,7 @@ fn scan_exe_for_engine(path: &Path) -> GameEngine {
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.flatten() {
             let p = entry.path();
-            if p.extension().map_or(false, |e| e == "exe") {
+            if p.extension().is_some_and(|e| e == "exe") {
                 if let Ok(data) = std::fs::read(&p) {
                     // FASE 1: Analisi PE Import Table (DLL names) — molto affidabile
                     if let Some(engine) = detect_engine_from_pe_imports(&data) {

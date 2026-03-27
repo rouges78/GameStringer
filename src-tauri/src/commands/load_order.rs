@@ -287,7 +287,7 @@ impl GameLoadOrder {
         for (mod_id, files) in mod_files {
             for file in files {
                 file_owners.entry(file.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(mod_id.clone());
             }
         }

@@ -484,7 +484,7 @@ fn scan_game_dir_recursive(
         } else if path.is_file() {
             if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
                 let ext_lower = ext.to_lowercase();
-                if extensions.iter().any(|e| *e == ext_lower.as_str()) {
+                if extensions.contains(&ext_lower.as_str()) {
                     // Skip very small files (<10 bytes) and very large non-text files (>50MB)
                     if let Ok(meta) = fs::metadata(&path) {
                         let size = meta.len();
@@ -607,11 +607,11 @@ pub async fn read_text_file(path: String, max_bytes: Option<u64>) -> Result<Stri
     
     let max = max_bytes.unwrap_or(1_000_000); // Default 1MB max
     
-    match fs::metadata(&file_path) {
+    match fs::metadata(file_path) {
         Ok(metadata) => {
             if metadata.len() > max {
                 // Read only first max_bytes
-                match fs::read(&file_path) {
+                match fs::read(file_path) {
                     Ok(bytes) => {
                         let truncated = &bytes[..std::cmp::min(bytes.len(), max as usize)];
                         Ok(String::from_utf8_lossy(truncated).to_string())
@@ -620,7 +620,7 @@ pub async fn read_text_file(path: String, max_bytes: Option<u64>) -> Result<Stri
                 }
             } else {
                 // Usa read + from_utf8_lossy per gestire file non-UTF8 (binari, encoding diversi)
-                match fs::read(&file_path) {
+                match fs::read(file_path) {
                     Ok(bytes) => Ok(String::from_utf8_lossy(&bytes).to_string()),
                     Err(e) => Err(format!("Failed to read file: {}", e))
                 }
@@ -642,7 +642,7 @@ pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
         return Err(format!("File not found: {}", path));
     }
     
-    let metadata = fs::metadata(&file_path)
+    let metadata = fs::metadata(file_path)
         .map_err(|e| format!("Failed to get file metadata: {}", e))?;
     
     // Limite 50MB per evitare OOM
@@ -650,7 +650,7 @@ pub async fn read_binary_file_base64(path: String) -> Result<String, String> {
         return Err(format!("File too large: {} bytes (max 50MB)", metadata.len()));
     }
     
-    let bytes = fs::read(&file_path)
+    let bytes = fs::read(file_path)
         .map_err(|e| format!("Failed to read file: {}", e))?;
     
     Ok(general_purpose::STANDARD.encode(&bytes))

@@ -189,6 +189,7 @@ pub struct ProfileMetadata {
 
 /// Statistiche utilizzo profilo
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct UsageStats {
     /// Tempo totale utilizzo (secondi)
     pub total_usage_time: u64,
@@ -262,16 +263,6 @@ impl Default for ProfileMetadata {
     }
 }
 
-impl Default for UsageStats {
-    fn default() -> Self {
-        Self {
-            total_usage_time: 0,
-            games_added: 0,
-            stores_connected: 0,
-            last_backup: None,
-        }
-    }
-}
 
 /// Implementazioni per UserProfile
 impl UserProfile {
@@ -363,6 +354,7 @@ impl CreateProfileRequest {
 
 /// Statistiche generali del sistema profili
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct ProfilesSystemStats {
     /// Numero totale di profili
     pub total_profiles: u32,
@@ -384,6 +376,7 @@ pub struct ProfilesSystemStats {
 
 /// Statistiche di utilizzo del sistema
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct SystemUsageStats {
     /// Tempo totale di utilizzo (in secondi)
     pub total_usage_time: u64,
@@ -463,32 +456,7 @@ pub struct ProfilesSystemConfig {
     pub verbose_logging: bool,
 }
 
-impl Default for ProfilesSystemStats {
-    fn default() -> Self {
-        Self {
-            total_profiles: 0,
-            active_profiles: 0,
-            locked_profiles: 0,
-            total_data_size: 0,
-            total_credentials: 0,
-            total_backups: 0,
-            last_integrity_check: None,
-            usage_stats: SystemUsageStats::default(),
-        }
-    }
-}
 
-impl Default for SystemUsageStats {
-    fn default() -> Self {
-        Self {
-            total_usage_time: 0,
-            total_authentications: 0,
-            profile_switches: 0,
-            export_import_operations: 0,
-            authentication_errors: 0,
-        }
-    }
-}
 
 impl Default for ProfilesSystemConfig {
     fn default() -> Self {
@@ -517,6 +485,12 @@ pub struct ProfileUsageStats {
     pub last_login: DateTime<Utc>,
     pub session_count: u64,
     pub average_session_duration: u64,
+}
+
+impl Default for ProfilesHealthCheck {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ProfilesHealthCheck {

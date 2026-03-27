@@ -37,7 +37,7 @@ impl StoreType {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "steam" => Some(StoreType::Steam),
             "epic" => Some(StoreType::Epic),
@@ -220,7 +220,7 @@ impl ProfileCredentialManager {
             .ok_or(ProfileError::Unauthorized)?;
 
         let stores: Vec<StoreType> = profile.credentials.keys()
-            .filter_map(|store_str| StoreType::from_str(store_str))
+            .filter_map(|store_str| StoreType::parse_str(store_str))
             .collect();
 
         Ok(stores)

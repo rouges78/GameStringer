@@ -42,6 +42,7 @@ impl Default for UETranslatorConfig {
 
 /// Stato del translator per un gioco
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct UETranslatorState {
     pub is_injected: bool,
     pub is_translating: bool,
@@ -50,17 +51,6 @@ pub struct UETranslatorState {
     pub last_error: Option<String>,
 }
 
-impl Default for UETranslatorState {
-    fn default() -> Self {
-        Self {
-            is_injected: false,
-            is_translating: false,
-            texts_translated: 0,
-            texts_cached: 0,
-            last_error: None,
-        }
-    }
-}
 
 /// Richiesta di traduzione dal gioco
 #[derive(Debug, Clone, Serialize, Deserialize)]

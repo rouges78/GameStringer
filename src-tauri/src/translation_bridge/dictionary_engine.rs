@@ -126,7 +126,7 @@ impl DictionaryEngine {
     /// Carica traduzioni per una coppia di lingue
     pub fn load_translations(&mut self, source: &str, target: &str, translations: Vec<(String, String)>) -> usize {
         let key = Self::get_key(source, target);
-        let dict = self.dictionaries.entry(key).or_insert_with(LanguageDictionary::new);
+        let dict = self.dictionaries.entry(key).or_default();
         
         let count = translations.len();
         for (original, translated) in translations {
@@ -265,7 +265,7 @@ impl DictionaryEngine {
     /// Aggiunge una singola traduzione
     pub fn add_translation(&mut self, original: String, translated: String) {
         let key = Self::get_key(&self.active_source, &self.active_target);
-        let dict = self.dictionaries.entry(key).or_insert_with(LanguageDictionary::new);
+        let dict = self.dictionaries.entry(key).or_default();
         dict.add(original, translated);
     }
     

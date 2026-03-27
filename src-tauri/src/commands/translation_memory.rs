@@ -155,7 +155,7 @@ pub fn list_translation_memories() -> Result<Vec<TranslationMemoryInfo>, String>
     if let Ok(entries) = fs::read_dir(&data_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "json") {
+            if path.extension().is_some_and(|ext| ext == "json") {
                 if let Ok(content) = fs::read_to_string(&path) {
                     if let Ok(tm) = serde_json::from_str::<TranslationMemory>(&content) {
                         memories.push(TranslationMemoryInfo {

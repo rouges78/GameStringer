@@ -1,9 +1,7 @@
-/**
- * Global Hotkeys Module
- * 
- * Gestisce le hotkey globali per OCR e altre funzionalità.
- * Nota: GlobalHotKeyManager deve essere creato e usato sul main thread.
- */
+// Global Hotkeys Module
+//
+// Gestisce le hotkey globali per OCR e altre funzionalità.
+// Nota: GlobalHotKeyManager deve essere creato e usato sul main thread.
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};

@@ -166,7 +166,7 @@ pub async fn clear_all_credentials_for_profile(
     ];
     let mut removed = 0;
     for st in all_stores {
-        if let Ok(_) = manager.remove_credential_for_active_profile(st).await {
+        if manager.remove_credential_for_active_profile(st).await.is_ok() {
             removed += 1;
         }
     }
@@ -210,7 +210,7 @@ pub async fn test_store_connection_for_profile(
         return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
     }
 
-    let store_type = match StoreType::from_str(&store) {
+    let store_type = match StoreType::parse_str(&store) {
         Some(st) => st,
         None => return Ok(CredentialResponse::error(format!("Store non supportato: {}", store))),
     };
@@ -416,7 +416,7 @@ pub async fn save_store_credentials(
         return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
     }
 
-    let store_type = match StoreType::from_str(&store) {
+    let store_type = match StoreType::parse_str(&store) {
         Some(st) => st,
         None => return Ok(CredentialResponse::error(format!("Store non supportato: {}", store))),
     };
@@ -444,7 +444,7 @@ pub async fn load_store_credentials(
         return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
     }
 
-    let store_type = match StoreType::from_str(&store) {
+    let store_type = match StoreType::parse_str(&store) {
         Some(st) => st,
         None => return Ok(CredentialResponse::error(format!("Store non supportato: {}", store))),
     };
@@ -479,7 +479,7 @@ pub async fn delete_store_credentials_for_profile(
         return Ok(CredentialResponse::error("Nessun profilo attivo".to_string()));
     }
 
-    let store_type = match StoreType::from_str(&store) {
+    let store_type = match StoreType::parse_str(&store) {
         Some(st) => st,
         None => return Ok(CredentialResponse::error(format!("Store non supportato: {}", store))),
     };

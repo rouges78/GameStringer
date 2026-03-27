@@ -210,16 +210,16 @@ pub async fn test_itchio_connection(api_key: Option<String>) -> Result<String, S
                 match get_itchio_owned_games(&key).await {
                     Ok(games) => {
                         Ok(format!("✅ Connesso come '{}' - {} giochi trovati", 
-                                  user.display_name.unwrap_or_else(|| user.username), 
+                                  user.display_name.unwrap_or(user.username), 
                                   games.len()))
                     }
                     Err(e) => {
                         if e.contains("403") || e.contains("Forbidden") {
                             Ok(format!("✅ Connesso come '{}' - Autenticazione riuscita (limitazioni API per lista giochi)", 
-                                      user.display_name.unwrap_or_else(|| user.username)))
+                                      user.display_name.unwrap_or(user.username)))
                         } else {
                             Ok(format!("✅ Connesso come '{}' - Autenticazione riuscita", 
-                                      user.display_name.unwrap_or_else(|| user.username)))
+                                      user.display_name.unwrap_or(user.username)))
                         }
                     }
                 }
@@ -366,14 +366,12 @@ async fn parse_itchio_game_folder(folder_path: &Path) -> Result<InstalledGame, S
 async fn find_main_executable(game_path: &Path) -> Option<String> {
     if let Ok(entries) = fs::read_dir(game_path) {
         // Prima cerca eseguibili comuni per giochi indie
-        let common_executables = vec![
-            "game.exe", "Game.exe",
+        let common_executables = ["game.exe", "Game.exe",
             "main.exe", "Main.exe",
             "start.exe", "Start.exe",
             "run.exe", "Run.exe",
             "play.exe", "Play.exe",
-            "launcher.exe", "Launcher.exe",
-        ];
+            "launcher.exe", "Launcher.exe"];
         
         for entry in entries.flatten() {
             if let Some(file_name) = entry.file_name().to_str() {
@@ -680,7 +678,7 @@ fn encrypt_api_key(api_key: &str) -> Result<(String, String), String> {
     
     Ok((
         general_purpose::STANDARD.encode(&ciphertext),
-        general_purpose::STANDARD.encode(&nonce_bytes)
+        general_purpose::STANDARD.encode(nonce_bytes)
     ))
 }
 

@@ -83,11 +83,6 @@ impl RateLimiter {
         }
     }
 
-    /// Crea un nuovo rate limiter con la configurazione di default
-    pub fn default() -> Self {
-        Self::new(RateLimiterConfig::default())
-    }
-
     /// Controlla se un identificatore può effettuare un tentativo di accesso
     pub fn check_rate_limit(&self, identifier: &str) -> RateLimitResult {
         // Cleanup periodico per evitare memory leak
@@ -226,5 +221,11 @@ impl RateLimiter {
     /// Imposta la configurazione del rate limiter
     pub fn set_config(&mut self, config: RateLimiterConfig) {
         self.config = config;
+    }
+}
+
+impl Default for RateLimiter {
+    fn default() -> Self {
+        Self::new(RateLimiterConfig::default())
     }
 }

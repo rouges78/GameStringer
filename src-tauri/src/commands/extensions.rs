@@ -5,7 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use log::{info, warn};
 
 // ============================================================================
@@ -125,7 +125,7 @@ impl ExtensionManager {
     }
     
     /// Carica una singola estensione
-    async fn load_extension(&mut self, path: &PathBuf) -> Result<String, String> {
+    async fn load_extension(&mut self, path: &Path) -> Result<String, String> {
         let manifest_path = path.join("manifest.json");
         
         if !manifest_path.exists() {
@@ -140,7 +140,7 @@ impl ExtensionManager {
         
         let extension = Extension {
             manifest: manifest.clone(),
-            path: path.clone(),
+            path: path.to_path_buf(),
             state: ExtensionState::Enabled,
             load_order: self.extensions.len() as i32,
             settings: HashMap::new(),
@@ -529,7 +529,7 @@ pub async fn load_engine_plugins() -> Result<Vec<EngineDetectionRule>, String> {
     if let Ok(entries) = std::fs::read_dir(&dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "json") && !path.file_name().map_or(false, |n| n.to_string_lossy().starts_with('_')) {
+            if path.extension().is_some_and(|e| e == "json") && !path.file_name().is_some_and(|n| n.to_string_lossy().starts_with('_')) {
                 if let Ok(content) = std::fs::read_to_string(&path) {
                     match serde_json::from_str::<Vec<EngineDetectionRule>>(&content) {
                         Ok(mut file_rules) => {
@@ -597,7 +597,7 @@ pub async fn load_translation_provider_plugins() -> Result<Vec<TranslationProvid
     if let Ok(entries) = std::fs::read_dir(&dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "json") && !path.file_name().map_or(false, |n| n.to_string_lossy().starts_with('_')) {
+            if path.extension().is_some_and(|e| e == "json") && !path.file_name().is_some_and(|n| n.to_string_lossy().starts_with('_')) {
                 if let Ok(content) = std::fs::read_to_string(&path) {
                     match serde_json::from_str::<Vec<TranslationProviderPlugin>>(&content) {
                         Ok(mut file_providers) => {

@@ -349,10 +349,8 @@ pub async fn update_preferences(
         let settings_manager = settings_state.manager.lock().await;
         
         // Carica settings attuali del profilo
-        let mut profile_settings = match settings_manager.load_profile_settings(&profile.id).await {
-            Ok(settings) => settings,
-            Err(_) => crate::profiles::models::ProfileSettings::default(),
-        };
+        let mut profile_settings = settings_manager.load_profile_settings(&profile.id).await
+            .unwrap_or_default();
         
         // Aggiorna settings con i nuovi valori
         if let Some(language) = preferences.get("language").and_then(|v| v.as_str()) {

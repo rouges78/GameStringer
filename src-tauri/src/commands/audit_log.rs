@@ -218,7 +218,7 @@ pub async fn get_audit_events(
     if let Ok(entries) = fs::read_dir(&audit_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "json") {
+            if path.extension().is_some_and(|e| e == "json") {
                 let events = load_events_from_file(&path);
                 all_events.extend(events);
             }
@@ -306,11 +306,9 @@ pub async fn cleanup_audit_logs(keep_months: u32) -> Result<u32, String> {
             if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
                 // Estrai anno-mese dal filename (es: 2026-01.audit.json)
                 if let Some(ym) = filename.split('.').next() {
-                    if ym < cutoff_str.as_str() {
-                        if fs::remove_file(&path).is_ok() {
-                            deleted += 1;
-                            info!("🗑️ Audit log eliminato: {}", filename);
-                        }
+                    if ym < cutoff_str.as_str() && fs::remove_file(&path).is_ok() {
+                        deleted += 1;
+                        info!("🗑️ Audit log eliminato: {}", filename);
                     }
                 }
             }

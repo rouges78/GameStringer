@@ -356,12 +356,10 @@ async fn parse_ubisoft_game_folder(folder_path: &Path) -> Result<InstalledGame, 
 async fn find_main_executable(game_path: &Path) -> Option<String> {
     if let Ok(entries) = fs::read_dir(game_path) {
         // Prima cerca eseguibili comuni di Ubisoft
-        let common_executables = vec![
-            "Game.exe", "game.exe",
+        let common_executables = ["Game.exe", "game.exe",
             "Launcher.exe", "launcher.exe",
             "Main.exe", "main.exe",
-            "Start.exe", "start.exe",
-        ];
+            "Start.exe", "start.exe"];
         
         for entry in entries.flatten() {
             if let Some(file_name) = entry.file_name().to_str() {
@@ -525,7 +523,7 @@ fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, S
     Ok((
         general_purpose::STANDARD.encode(&email_ciphertext),
         general_purpose::STANDARD.encode(&password_ciphertext),
-        general_purpose::STANDARD.encode(&nonce_bytes)
+        general_purpose::STANDARD.encode(nonce_bytes)
     ))
 }
 

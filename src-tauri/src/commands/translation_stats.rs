@@ -131,7 +131,7 @@ pub async fn get_translation_dashboard_stats() -> Result<TranslationDashboardSta
             if let Ok(entries) = fs::read_dir(&dir) {
                 for entry in entries.flatten() {
                     let path = entry.path();
-                    if path.extension().map_or(false, |e| e == "json") {
+                    if path.extension().is_some_and(|e| e == "json") {
                         if let Ok(content) = fs::read_to_string(&path) {
                             if let Ok(strings) = serde_json::from_str::<crate::commands::project_export::TranslationStrings>(&content) {
                                 let total = strings.entries.len() as u32;
@@ -193,7 +193,7 @@ pub async fn get_translation_dashboard_stats() -> Result<TranslationDashboardSta
             if let Ok(entries) = fs::read_dir(&dir) {
                 for entry in entries.flatten() {
                     let path = entry.path();
-                    if path.extension().map_or(false, |e| e == "json") {
+                    if path.extension().is_some_and(|e| e == "json") {
                         if let Ok(content) = fs::read_to_string(&path) {
                             if let Ok(snap) = serde_json::from_str::<crate::commands::translation_diff::TranslationSnapshot>(&content) {
                                 stats.recent_activity.push(ActivityEntry {

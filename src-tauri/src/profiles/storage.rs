@@ -161,7 +161,7 @@ impl ProfileStorage {
         // Verifica integrità file
         let current_hash = self.calculate_file_hash(&profile_path).await?;
         if current_hash != entry.file_hash {
-            return Err(StorageError::FileNotFound(format!("File profilo corrotto: hash non corrispondente")));
+            return Err(StorageError::FileNotFound("File profilo corrotto: hash non corrispondente".to_string()));
         }
         
         // Leggi file crittografato
@@ -203,7 +203,7 @@ impl ProfileStorage {
     #[allow(dead_code)] // API per sicurezza memoria - utilizzata in manager.rs
     pub async fn load_profile_secure(&self, id: &str, password: &SecureMemory<String>) -> StorageResult<UserProfile> {
         // Usa il metodo esistente con la password estratta da SecureMemory
-        self.load_profile(id, &**password).await
+        self.load_profile(id, password).await
     }
     
     /// Lista informazioni di tutti i profili

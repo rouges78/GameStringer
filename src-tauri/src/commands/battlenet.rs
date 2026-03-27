@@ -426,19 +426,17 @@ async fn find_main_executable(game_path: &Path) -> Option<String> {
         
         for entry in entries.flatten() {
             if let Some(file_name) = entry.file_name().to_str() {
-                if blizzard_executables.iter().any(|&exe| file_name == exe) {
+                if blizzard_executables.contains(&file_name) {
                     return Some(entry.path().to_string_lossy().to_string());
                 }
             }
         }
         
         // Cerca eseguibili comuni
-        let common_executables = vec![
-            "Game.exe", "game.exe",
+        let common_executables = ["Game.exe", "game.exe",
             "Launcher.exe", "launcher.exe",
             "Main.exe", "main.exe",
-            "Start.exe", "start.exe",
-        ];
+            "Start.exe", "start.exe"];
         
         if let Ok(entries) = fs::read_dir(game_path) {
             for entry in entries.flatten() {
@@ -540,7 +538,7 @@ fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, S
     Ok((
         general_purpose::STANDARD.encode(&email_ciphertext),
         general_purpose::STANDARD.encode(&password_ciphertext),
-        general_purpose::STANDARD.encode(&nonce_bytes)
+        general_purpose::STANDARD.encode(nonce_bytes)
     ))
 }
 

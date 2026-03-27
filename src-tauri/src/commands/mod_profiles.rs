@@ -5,7 +5,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use log::info;
 use chrono::{DateTime, Utc};
 
@@ -108,7 +108,7 @@ pub struct GameModConfig {
 }
 
 impl GameModConfig {
-    pub fn new(game_id: &str, game_name: &str, base_dir: &PathBuf) -> Self {
+    pub fn new(game_id: &str, game_name: &str, base_dir: &Path) -> Self {
         let mods_dir = base_dir.join("mods").join(game_id);
         let staging_dir = base_dir.join("staging").join(game_id);
         

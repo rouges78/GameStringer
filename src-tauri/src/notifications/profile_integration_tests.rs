@@ -504,7 +504,7 @@ mod profile_integration_tests {
         // Verifica custom_data
         if let Some(ref custom_data) = backup_notification.metadata.custom_data {
             assert_eq!(custom_data.get("backup_path").unwrap().as_str().unwrap(), backup_path);
-            assert_eq!(custom_data.get("success").unwrap().as_bool().unwrap(), true);
+            assert!(custom_data.get("success").unwrap().as_bool().unwrap());
             assert_eq!(custom_data.get("event_type").unwrap().as_str().unwrap(), "backup_operation");
         }
     }
@@ -549,7 +549,7 @@ mod profile_integration_tests {
         
         // Verifica custom_data
         if let Some(ref custom_data) = error_notification.metadata.custom_data {
-            assert_eq!(custom_data.get("success").unwrap().as_bool().unwrap(), false);
+            assert!(!custom_data.get("success").unwrap().as_bool().unwrap());
             assert_eq!(custom_data.get("event_type").unwrap().as_str().unwrap(), "backup_operation");
         }
     }

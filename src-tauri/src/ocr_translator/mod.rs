@@ -280,7 +280,7 @@ fn run_ocr_loop(app: tauri::AppHandle, config: OcrConfig) {
 }
 
 /// Traduce i testi rilevati usando Translation Memory + dizionario locale
-fn translate_detected_texts(texts: &mut Vec<DetectedText>, target_lang: &str) {
+fn translate_detected_texts(texts: &mut [DetectedText], target_lang: &str) {
     let mut cache = match TRANSLATION_CACHE.lock() {
         Ok(c) => c,
         Err(_) => return,

@@ -94,13 +94,16 @@ impl PooledConnection {
         }
     }
 
-    /// Ottiene un riferimento alla connessione
-    pub fn as_ref(&self) -> &Connection {
+}
+
+impl AsRef<Connection> for PooledConnection {
+    fn as_ref(&self) -> &Connection {
         self.connection.as_ref().unwrap()
     }
+}
 
-    /// Ottiene un riferimento mutabile alla connessione
-    pub fn as_mut(&mut self) -> &mut Connection {
+impl AsMut<Connection> for PooledConnection {
+    fn as_mut(&mut self) -> &mut Connection {
         self.connection.as_mut().unwrap()
     }
 }
@@ -284,7 +287,7 @@ impl BatchOperationManager {
             for preferences in preferences_list {
                 let type_settings_json = serde_json::to_string(&preferences.type_settings)?;
                 let quiet_hours_json = preferences.quiet_hours.as_ref()
-                    .map(|qh| serde_json::to_string(qh))
+                    .map(serde_json::to_string)
                     .transpose()?;
 
                 stmt.execute(params![
@@ -500,7 +503,7 @@ impl PerformanceAnalyzer {
         for (query_name, explain_sql) in explain_results {
             let mut stmt = conn.as_ref().prepare(explain_sql)?;
             let rows = stmt.query_map([], |row| {
-                Ok(row.get::<_, String>(3)?) // detail column
+                row.get::<_, String>(3) // detail column
             })?;
 
             let mut uses_index = false;

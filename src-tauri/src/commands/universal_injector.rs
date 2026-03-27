@@ -215,10 +215,10 @@ fn detect_unity(game_dir: &Path) -> Option<EngineDetectionResult> {
 fn read_unity_version(ggm_path: &Path) -> Option<String> {
     let mut file = File::open(ggm_path).ok()?;
     let mut buffer = vec![0u8; 4096];
-    file.read(&mut buffer).ok()?;
-    
+    let bytes_read = file.read(&mut buffer).ok()?;
+
     // Cerca pattern versione Unity (es. "2021.3.1f1", "5.6.7f1")
-    let content = String::from_utf8_lossy(&buffer);
+    let content = String::from_utf8_lossy(&buffer[..bytes_read]);
     let re = regex::Regex::new(r"(\d+\.\d+\.\d+[a-z]\d+)").ok()?;
     re.find(&content).map(|m| m.as_str().to_string())
 }
@@ -227,7 +227,7 @@ fn detect_unreal(game_dir: &Path) -> Option<EngineDetectionResult> {
     // Cerca .pak files
     let has_pak = fs::read_dir(game_dir).ok()?
         .filter_map(|e| e.ok())
-        .any(|e| e.path().extension().map_or(false, |ext| ext == "pak"));
+        .any(|e| e.path().extension().is_some_and(|ext| ext == "pak"));
 
     // Cerca Engine folder o Content folder
     let has_engine = game_dir.join("Engine").exists() 
@@ -298,7 +298,7 @@ fn find_unreal_translatable(game_dir: &Path) -> Vec<TranslatableFile> {
     if let Ok(entries) = fs::read_dir(game_dir) {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "pak") {
+            if path.extension().is_some_and(|ext| ext == "pak") {
                 files.push(TranslatableFile {
                     path: path.file_name().unwrap().to_string_lossy().to_string(),
                     file_type: "PAK".to_string(),
@@ -315,7 +315,7 @@ fn detect_godot(game_dir: &Path) -> Option<EngineDetectionResult> {
     // Cerca .pck files o project.godot
     let has_pck = fs::read_dir(game_dir).ok()?
         .filter_map(|e| e.ok())
-        .any(|e| e.path().extension().map_or(false, |ext| ext == "pck"));
+        .any(|e| e.path().extension().is_some_and(|ext| ext == "pck"));
 
     let has_project = game_dir.join("project.godot").exists();
 
@@ -381,7 +381,7 @@ fn detect_rpgmaker_mv_mz(game_dir: &Path) -> Option<EngineDetectionResult> {
     if let Ok(entries) = fs::read_dir(&data_path) {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "json") {
+            if path.extension().is_some_and(|ext| ext == "json") {
                 let filename = path.file_name().unwrap().to_string_lossy().to_string();
                 // File con testi traducibili
                 if ["Actors.json", "Classes.json", "CommonEvents.json", "Enemies.json",
@@ -435,7 +435,7 @@ fn detect_rpgmaker_vx(game_dir: &Path) -> Option<EngineDetectionResult> {
         // Cerca .rxdata files (XP)
         let has_rxdata = fs::read_dir(&data_folder).ok()?
             .filter_map(|e| e.ok())
-            .any(|e| e.path().extension().map_or(false, |ext| ext == "rxdata"));
+            .any(|e| e.path().extension().is_some_and(|ext| ext == "rxdata"));
         
         if has_rxdata {
             (GameEngine::RPGMakerXP, "XP")
@@ -526,7 +526,7 @@ fn detect_renpy(game_dir: &Path) -> Option<EngineDetectionResult> {
     let has_rpa = if game_folder.exists() {
         fs::read_dir(&game_folder).ok()?
             .filter_map(|e| e.ok())
-            .any(|e| e.path().extension().map_or(false, |ext| ext == "rpa" || ext == "rpy"))
+            .any(|e| e.path().extension().is_some_and(|ext| ext == "rpa" || ext == "rpy"))
     } else {
         false
     };
@@ -591,7 +591,7 @@ fn detect_kirikiri(game_dir: &Path) -> Option<EngineDetectionResult> {
     // Cerca .xp3 files
     let has_xp3 = fs::read_dir(game_dir).ok()?
         .filter_map(|e| e.ok())
-        .any(|e| e.path().extension().map_or(false, |ext| ext == "xp3"));
+        .any(|e| e.path().extension().is_some_and(|ext| ext == "xp3"));
 
     if !has_xp3 {
         return None;
@@ -671,7 +671,7 @@ fn detect_wolf(game_dir: &Path) -> Option<EngineDetectionResult> {
     let has_wolf = if data_folder.exists() {
         fs::read_dir(&data_folder).ok()?
             .filter_map(|e| e.ok())
-            .any(|e| e.path().extension().map_or(false, |ext| ext == "wolf"))
+            .any(|e| e.path().extension().is_some_and(|ext| ext == "wolf"))
     } else {
         false
     };

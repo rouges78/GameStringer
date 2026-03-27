@@ -429,7 +429,7 @@ pub async fn sanitize_logs() -> Result<u32, String> {
     if let Ok(entries) = fs::read_dir(&data_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "log" || e == "txt") {
+            if path.extension().is_some_and(|e| e == "log" || e == "txt") {
                 if let Ok(content) = fs::read_to_string(&path) {
                     let mut new_content = content.clone();
                     for pattern in &patterns {

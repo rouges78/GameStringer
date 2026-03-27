@@ -118,7 +118,7 @@ async fn launch_steam_direct(app_id: &str) -> Result<LaunchResult, String> {
     
     // Esegui steam.exe -applaunch <appid>
     match Command::new(&steam_path)
-        .args(&["-applaunch", app_id])
+        .args(["-applaunch", app_id])
         .spawn()
     {
         Ok(_) => {
@@ -250,7 +250,7 @@ async fn launch_with_epic_protocol(epic_url: &str, app_name: &str) -> Result<Lau
     #[cfg(target_os = "windows")]
     {
         match Command::new("cmd")
-            .args(&["/C", "start", epic_url])
+            .args(["/C", "start", epic_url])
             .spawn()
         {
             Ok(_) => {
@@ -302,7 +302,7 @@ async fn launch_epic_direct(app_name: &str) -> Result<LaunchResult, String> {
     
     // Esegui EpicGamesLauncher.exe -openapp <appname>
     match Command::new(&epic_path)
-        .args(&["-openapp", app_name])
+        .args(["-openapp", app_name])
         .spawn()
     {
         Ok(_) => {
@@ -365,7 +365,7 @@ pub async fn launch_gog_game(game_id: String) -> Result<LaunchResult, String> {
             success: false,
             message: error_msg,
             method: "gog_protocol".to_string(),
-            game_id: game_id,
+            game_id,
             store: "GOG".to_string(),
         });
     }
@@ -395,7 +395,7 @@ pub async fn launch_gog_game(game_id: String) -> Result<LaunchResult, String> {
                 success: false,
                 message: error_msg,
                 method: "failed".to_string(),
-                game_id: game_id,
+                game_id,
                 store: "GOG".to_string(),
             })
         }
@@ -409,7 +409,7 @@ async fn launch_with_gog_protocol(gog_url: &str, game_id: &str) -> Result<Launch
     #[cfg(target_os = "windows")]
     {
         match Command::new("cmd")
-            .args(&["/C", "start", gog_url])
+            .args(["/C", "start", gog_url])
             .spawn()
         {
             Ok(_) => {
@@ -461,7 +461,7 @@ async fn launch_gog_direct(game_id: &str) -> Result<LaunchResult, String> {
     
     // Esegui GalaxyClient.exe /gameId=<gameid>
     match Command::new(&gog_path)
-        .args(&[&format!("/gameId={}", game_id)])
+        .args([&format!("/gameId={}", game_id)])
         .spawn()
     {
         Ok(_) => {
@@ -608,7 +608,7 @@ pub async fn launch_game_universal(request: LaunchRequest) -> Result<LaunchResul
 /// Valida un Steam App ID
 fn is_valid_steam_app_id(app_id: &str) -> bool {
     if let Ok(numeric_id) = app_id.parse::<u64>() {
-        numeric_id >= 1 && numeric_id <= 9999999999
+        (1..=9999999999).contains(&numeric_id)
     } else {
         false
     }

@@ -182,15 +182,13 @@ impl AntiCheatManager {
         let running_processes = self.get_running_processes()?;
         for process in &running_processes {
             for (key, info) in &self.known_systems {
-                if matches!(info.detection_method, DetectionMethod::ProcessName) {
-                    if process.name.to_lowercase().contains(key) {
-                        detected_systems.push(info.name.clone());
-                        details.insert(
-                            format!("process_{}", key),
-                            format!("Processo rilevato: {} (PID: {})", process.name, process.pid)
-                        );
-                        max_risk = self.max_risk_level(&max_risk, &info.risk_level);
-                    }
+                if matches!(info.detection_method, DetectionMethod::ProcessName) && process.name.to_lowercase().contains(key) {
+                    detected_systems.push(info.name.clone());
+                    details.insert(
+                        format!("process_{}", key),
+                        format!("Processo rilevato: {} (PID: {})", process.name, process.pid)
+                    );
+                    max_risk = self.max_risk_level(&max_risk, &info.risk_level);
                 }
             }
         }
@@ -199,15 +197,13 @@ impl AntiCheatManager {
         if let Ok(modules) = self.get_process_modules(pid) {
             for module in &modules {
                 for (key, info) in &self.known_systems {
-                    if matches!(info.detection_method, DetectionMethod::ModuleName) {
-                        if module.to_lowercase().contains(key) {
-                            detected_systems.push(info.name.clone());
-                            details.insert(
-                                format!("module_{}", key),
-                                format!("Modulo rilevato: {}", module)
-                            );
-                            max_risk = self.max_risk_level(&max_risk, &info.risk_level);
-                        }
+                    if matches!(info.detection_method, DetectionMethod::ModuleName) && module.to_lowercase().contains(key) {
+                        detected_systems.push(info.name.clone());
+                        details.insert(
+                            format!("module_{}", key),
+                            format!("Modulo rilevato: {}", module)
+                        );
+                        max_risk = self.max_risk_level(&max_risk, &info.risk_level);
                     }
                 }
             }
@@ -235,7 +231,7 @@ impl AntiCheatManager {
 
     #[allow(dead_code)] // Strategie compatibilità - essenziali per bypass sicuro
     pub fn get_compatibility_strategies(&self, anti_cheat_name: &str) -> Vec<BypassStrategy> {
-        for (_key, info) in &self.known_systems {
+        for info in self.known_systems.values() {
             if info.name.to_lowercase().contains(&anti_cheat_name.to_lowercase()) {
                 return info.bypass_strategies.clone();
             }
@@ -352,7 +348,7 @@ impl AntiCheatManager {
         let mut max_restriction = CompatibilityMode::Direct;
 
         for system_name in detected_systems {
-            for (_, info) in &self.known_systems {
+            for info in self.known_systems.values() {
                 if info.name == *system_name {
                     max_restriction = match (&max_restriction, &info.compatibility_mode) {
                         (_, CompatibilityMode::Disabled) => CompatibilityMode::Disabled,

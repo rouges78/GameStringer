@@ -637,24 +637,21 @@ pub async fn translate_text_simple(
         urlencoding::encode(&text)
     );
     
-    match client.get(&url).send().await {
-        Ok(response) => {
-            if let Ok(json) = response.json::<serde_json::Value>().await {
-                // Formato risposta: [[["traduzione","originale",...],...],...]
-                if let Some(arr) = json.get(0).and_then(|v| v.as_array()) {
-                    let mut result = String::new();
-                    for item in arr {
-                        if let Some(translated) = item.get(0).and_then(|v| v.as_str()) {
-                            result.push_str(translated);
-                        }
+    if let Ok(response) = client.get(&url).send().await {
+        if let Ok(json) = response.json::<serde_json::Value>().await {
+            // Formato risposta: [[["traduzione","originale",...],...],...]
+            if let Some(arr) = json.get(0).and_then(|v| v.as_array()) {
+                let mut result = String::new();
+                for item in arr {
+                    if let Some(translated) = item.get(0).and_then(|v| v.as_str()) {
+                        result.push_str(translated);
                     }
-                    if !result.is_empty() {
-                        return Ok(TranslateResult { translated_text: result });
-                    }
+                }
+                if !result.is_empty() {
+                    return Ok(TranslateResult { translated_text: result });
                 }
             }
         }
-        Err(_) => {}
     }
     
     // Fallback: ritorna testo originale
@@ -1163,12 +1160,12 @@ async fn get_cache_file_path() -> Result<std::path::PathBuf, String> {
     Ok(cache_dir.join("games_cache.json"))
 }
 
-async fn save_games_to_cache(games: &Vec<GameInfo>) -> Result<(), String> {
+async fn save_games_to_cache(games: &[GameInfo]) -> Result<(), String> {
     let cache_path = get_cache_file_path().await?;
     
     let cache = GameCache {
         timestamp: Utc::now().timestamp(),
-        games: games.clone(),
+        games: games.to_vec(),
     };
     
     let json_data = serde_json::to_string_pretty(&cache)
@@ -1441,7 +1438,7 @@ async fn find_steam_game_fast(game_id: &str) -> Result<Option<GameInfo>, String>
     let data = fs::read_to_string(&cache_path).await.map_err(|e| e.to_string())?;
     let games: Vec<GameInfo> = serde_json::from_str(&data).unwrap_or_default();
     
-    Ok(games.into_iter().find(|g| g.steam_app_id == Some(appid) || g.id == game_id.to_string()))
+    Ok(games.into_iter().find(|g| g.steam_app_id == Some(appid) || g.id == *game_id))
 }
 
 /// Percorso cache Steam
@@ -1685,7 +1682,7 @@ async fn parse_steam_manifest(manifest_path: &Path) -> Result<Option<GameScanRes
     
     if let (Some(app_id), Some(name), Some(install_dir)) = (app_id, name, install_dir) {
         // Verifica se il gioco è installato (StateFlags & 4 == 4)
-        let is_installed = state_flags.map_or(false, |flags| flags & 4 == 4);
+        let is_installed = state_flags.is_some_and(|flags| flags & 4 == 4);
         
         if is_installed {
             let library_path = manifest_path.parent()
@@ -1793,7 +1790,7 @@ pub async fn launch_executable(path: String) -> Result<String, String> {
         {
             // PowerShell Start-Process con working directory
             let output = Command::new("powershell")
-                .args(&[
+                .args([
                     "-NoProfile",
                     "-Command",
                     &format!(

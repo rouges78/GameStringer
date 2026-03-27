@@ -129,7 +129,7 @@ fn pad_to(buf: &mut Vec<u8>, alignment: usize) {
     let rest = buf.len() % alignment;
     if rest > 0 {
         let pad = alignment - rest;
-        buf.extend(std::iter::repeat(0u8).take(pad));
+        buf.extend(std::iter::repeat_n(0u8, pad));
     }
 }
 

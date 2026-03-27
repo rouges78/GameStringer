@@ -210,9 +210,9 @@ mod profile_manager_integration_tests {
         let current_settings = manager.get_settings().expect("No current settings");
         assert_eq!(current_settings.theme, Theme::Light);
         assert_eq!(current_settings.language, "en");
-        assert_eq!(current_settings.auto_login, true);
-        assert_eq!(current_settings.notifications.desktop_enabled, false);
-        assert_eq!(current_settings.game_library.auto_refresh, false);
+        assert!(current_settings.auto_login);
+        assert!(!current_settings.notifications.desktop_enabled);
+        assert!(!current_settings.game_library.auto_refresh);
         assert_eq!(current_settings.security.session_timeout, 30);
     }
 
@@ -545,7 +545,7 @@ mod profile_manager_integration_tests {
                 encryption_version: 1,
             };
             manager.add_credential(credential, "CompletePass123!").await
-                .expect(&format!("Failed to add {} credential", store));
+                .unwrap_or_else(|_| panic!("Failed to add {} credential", store));
         }
 
         // 3b. Modifica impostazioni multiple volte
@@ -561,7 +561,7 @@ mod profile_manager_integration_tests {
         let current_settings = manager.get_settings().expect("No current settings");
         assert_eq!(current_settings.theme, Theme::Light);
         assert_eq!(current_settings.language, "en");
-        assert_eq!(current_settings.notifications.desktop_enabled, false);
+        assert!(!current_settings.notifications.desktop_enabled);
 
         // 3c. Seconda modifica impostazioni
         updated_settings.security.session_timeout = 30;
@@ -671,7 +671,7 @@ mod profile_manager_integration_tests {
             }
             
             let profile = manager.create_profile(request).await
-                .expect(&format!("Failed to create profile {}", name));
+                .unwrap_or_else(|_| panic!("Failed to create profile {}", name));
             created_profiles.push((profile, password));
         }
 
@@ -679,7 +679,7 @@ mod profile_manager_integration_tests {
         for (i, (profile, password)) in created_profiles.iter().enumerate() {
             // Autentica profilo corrente
             manager.authenticate_profile(&profile.name, password).await
-                .expect(&format!("Failed to authenticate {}", profile.name));
+                .unwrap_or_else(|_| panic!("Failed to authenticate {}", profile.name));
 
             // Aggiungi credenziali specifiche per questo profilo
             let credential = EncryptedCredential {
@@ -693,7 +693,7 @@ mod profile_manager_integration_tests {
             };
             
             manager.add_credential(credential, password).await
-                .expect(&format!("Failed to add credential for {}", profile.name));
+                .unwrap_or_else(|_| panic!("Failed to add credential for {}", profile.name));
 
             // Modifica impostazioni specifiche
             let mut settings = manager.get_settings().expect("No settings").clone();
@@ -701,7 +701,7 @@ mod profile_manager_integration_tests {
             settings.game_library.refresh_interval = 10 + (i as u32 * 5); // Intervalli diversi
             
             manager.update_settings(settings, password).await
-                .expect(&format!("Failed to update settings for {}", profile.name));
+                .unwrap_or_else(|_| panic!("Failed to update settings for {}", profile.name));
 
             manager.logout().expect("Failed to logout");
         }
@@ -709,7 +709,7 @@ mod profile_manager_integration_tests {
         // Verifica isolamento: ogni profilo dovrebbe vedere solo i propri dati
         for (i, (profile, password)) in created_profiles.iter().enumerate() {
             manager.authenticate_profile(&profile.name, password).await
-                .expect(&format!("Failed to re-authenticate {}", profile.name));
+                .unwrap_or_else(|_| panic!("Failed to re-authenticate {}", profile.name));
 
             // Verifica che veda solo la propria credenziale
             let own_credential = manager.get_credential(&format!("store_{}", i));
@@ -798,7 +798,7 @@ mod profile_manager_integration_tests {
                 encryption_version: 1,
             };
             source_manager.add_credential(credential, "ExportPass123!").await
-                .expect(&format!("Failed to add complex credential {}", store));
+                .unwrap_or_else(|_| panic!("Failed to add complex credential {}", store));
         }
 
         // Export del profilo
@@ -828,9 +828,9 @@ mod profile_manager_integration_tests {
         let imported_settings = target_manager.get_settings().expect("No imported settings");
         assert_eq!(imported_settings.theme, Theme::Light);
         assert_eq!(imported_settings.language, "es");
-        assert_eq!(imported_settings.auto_login, false);
-        assert_eq!(imported_settings.notifications.desktop_enabled, false);
-        assert_eq!(imported_settings.notifications.sound_enabled, true);
+        assert!(!imported_settings.auto_login);
+        assert!(!imported_settings.notifications.desktop_enabled);
+        assert!(imported_settings.notifications.sound_enabled);
         assert_eq!(imported_settings.game_library.default_view, crate::profiles::models::LibraryView::List);
         assert_eq!(imported_settings.game_library.refresh_interval, 45);
         assert_eq!(imported_settings.security.session_timeout, 90);

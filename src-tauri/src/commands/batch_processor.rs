@@ -190,10 +190,8 @@ pub fn scan_folder_for_translation(
             .map(|e| e.to_string_lossy().to_lowercase())
             .unwrap_or_default();
         
-        if !opts.include_extensions.is_empty() {
-            if !opts.include_extensions.iter().any(|ext| ext.to_lowercase() == extension) {
-                continue;
-            }
+        if !opts.include_extensions.is_empty() && !opts.include_extensions.iter().any(|ext| ext.to_lowercase() == extension) {
+            continue;
         }
         
         // Get file info

@@ -650,12 +650,10 @@ mod tests {
                 } else {
                     panic!("Expected InvalidCredentials error on attempt {}", i);
                 }
+            } else if let Err(ProfileError::TooManyAttempts(_)) = result {
+                // Corretto
             } else {
-                if let Err(ProfileError::TooManyAttempts(_)) = result {
-                    // Corretto
-                } else {
-                    panic!("Expected TooManyAttempts error on attempt {}", i);
-                }
+                panic!("Expected TooManyAttempts error on attempt {}", i);
             }
         }
 

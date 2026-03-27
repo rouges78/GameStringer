@@ -92,7 +92,7 @@ pub async fn backup_legacy_credentials(
     // Verifica se esistono credenziali legacy
     match manager.has_legacy_credentials().await {
         Ok(false) => {
-            return Ok(MigrationResponse::error("Nessuna credenziale legacy trovata".to_string()));
+            Ok(MigrationResponse::error("Nessuna credenziale legacy trovata".to_string()))
         }
         Ok(true) => {
             // Crea backup
@@ -270,7 +270,7 @@ pub async fn backup_legacy_settings(
     // Verifica se esistono impostazioni legacy
     match manager.has_legacy_settings().await {
         Ok(false) => {
-            return Ok(MigrationResponse::error("Nessuna impostazione legacy trovata".to_string()));
+            Ok(MigrationResponse::error("Nessuna impostazione legacy trovata".to_string()))
         }
         Ok(true) => {
             // Crea backup
@@ -437,7 +437,7 @@ pub async fn migration_wizard(
     result.steps.push("Migrazione impostazioni disponibile tramite comando separato".to_string());
     
     // Step 4: Pulizia opzionale (solo se migrazione riuscita)
-    if result.migration_result.as_ref().map_or(false, |r| r.total_migrated > 0) {
+    if result.migration_result.as_ref().is_some_and(|r| r.total_migrated > 0) {
         result.steps.push("Migrazione completata con successo".to_string());
     }
     
@@ -454,8 +454,8 @@ pub struct MigrationWizardResult {
     pub completed_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl MigrationWizardResult {
-    pub fn new() -> Self {
+impl Default for MigrationWizardResult {
+    fn default() -> Self {
         Self {
             steps: Vec::new(),
             errors: Vec::new(),
@@ -463,5 +463,11 @@ impl MigrationWizardResult {
             migration_result: None,
             completed_at: chrono::Utc::now(),
         }
+    }
+}
+
+impl MigrationWizardResult {
+    pub fn new() -> Self {
+        Self::default()
     }
 }

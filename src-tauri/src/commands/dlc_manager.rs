@@ -203,7 +203,7 @@ async fn scan_steam_dlc(
                 }
             }
             
-            let completion_percentage = if game.dlc.len() > 0 {
+            let completion_percentage = if !game.dlc.is_empty() {
                 (owned_count as f32 / game.dlc.len() as f32) * 100.0
             } else {
                 0.0
@@ -308,7 +308,7 @@ async fn scan_epic_dlc() -> Result<Vec<GameDLCStats>, String> {
         if item.is_dlc {
             // Trova il gioco base associato a questo DLC
             let base_game_key = find_epic_base_game_for_dlc(item, &epic_library);
-            dlc_map.entry(base_game_key).or_insert_with(Vec::new).push(item.clone());
+            dlc_map.entry(base_game_key).or_default().push(item.clone());
         }
     }
     
@@ -359,7 +359,7 @@ async fn scan_epic_dlc() -> Result<Vec<GameDLCStats>, String> {
                     });
                 }
                 
-                let completion_percentage = if dlc_list.len() > 0 {
+                let completion_percentage = if !dlc_list.is_empty() {
                     (owned_count as f32 / dlc_list.len() as f32) * 100.0
                 } else {
                     0.0
@@ -524,7 +524,7 @@ async fn scan_ubisoft_dlc() -> Result<Vec<GameDLCStats>, String> {
                 }
             }
             
-            let completion_percentage = if dlc_list.len() > 0 {
+            let completion_percentage = if !dlc_list.is_empty() {
                 (owned_count as f32 / dlc_list.len() as f32) * 100.0
             } else {
                 0.0
@@ -630,7 +630,7 @@ async fn detect_ubisoft_dlc_for_game(game: &crate::commands::library::InstalledG
                 // In implementazione reale, controllare file system o registro
                 let is_installed = std::path::Path::new(&game.path)
                     .join("dlc")
-                    .join(&dlc_name.to_lowercase().replace(" ", "_"))
+                    .join(dlc_name.to_lowercase().replace(" ", "_"))
                     .exists();
                 
                 let is_owned = is_installed || (rand::random::<f32>() > 0.7); // Mock ownership

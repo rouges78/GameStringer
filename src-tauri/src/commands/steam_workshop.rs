@@ -51,7 +51,7 @@ pub async fn search_steam_workshop(
         .map_err(|e| format!("Errore creazione client HTTP: {}", e))?;
 
     // query_type: 1 = RankedByVote, 3 = RankedByPublicationDate, 9 = RankedByTotalUniqueSubscriptions, 12 = RankedByTextSearch
-    let qt = if search_text.as_ref().map_or(false, |s| !s.is_empty()) {
+    let qt = if search_text.as_ref().is_some_and(|s| !s.is_empty()) {
         query_type.unwrap_or(12) // RankedByTextSearch quando c'è testo
     } else {
         // Mappa il sort_by del frontend

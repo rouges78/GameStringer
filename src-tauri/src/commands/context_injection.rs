@@ -163,7 +163,7 @@ pub fn generate_translation_context(
     let context_string = context_parts.join(". ");
     
     // DeepL format (simple context)
-    let deepl_context = if context_parts.len() > 0 {
+    let deepl_context = if !context_parts.is_empty() {
         context_string.clone()
     } else {
         String::new()
@@ -305,7 +305,7 @@ pub fn extract_context_from_text(
 ) -> Result<SurroundingText, String> {
     let window = window_size.unwrap_or(2);
     
-    let start = if current_index >= window { current_index - window } else { 0 };
+    let start = current_index.saturating_sub(window);
     let end = std::cmp::min(current_index + window + 1, texts.len());
     
     let previous_lines: Vec<String> = if current_index > 0 {

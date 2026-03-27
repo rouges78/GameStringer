@@ -7,7 +7,7 @@
 //! 4. Gaming Services registry entries
 
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use crate::commands::library::InstalledGame;
 use log::{info, debug};
 
@@ -145,7 +145,7 @@ async fn scan_xbox_games_folder() -> Vec<InstalledGame> {
 }
 
 /// Legge MicrosoftGame.config per ottenere nome e ID ufficiale del gioco
-fn read_microsoft_game_config(game_dir: &PathBuf) -> Option<(String, String)> {
+fn read_microsoft_game_config(game_dir: &Path) -> Option<(String, String)> {
     let config_path = game_dir.join("MicrosoftGame.config");
     if !config_path.exists() {
         return None;
@@ -390,7 +390,7 @@ fn is_xbox_game_package(package_name: &str) -> bool {
 }
 
 /// Estrae il nome visualizzato da AppxManifest.xml di un package
-fn extract_display_name_from_package(pkg_dir: &PathBuf) -> Option<String> {
+fn extract_display_name_from_package(pkg_dir: &Path) -> Option<String> {
     // Prima prova MicrosoftGame.config
     if let Some((name, _)) = read_microsoft_game_config(pkg_dir) {
         if !name.is_empty() {

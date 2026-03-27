@@ -356,7 +356,7 @@ fn extract_strings_from_binary(data: &[u8]) -> Vec<String> {
     
     for &byte in data {
         // Caratteri ASCII stampabili o UTF-8 multi-byte
-        if (byte >= 0x20 && byte <= 0x7E) || byte >= 0x80 {
+        if (0x20..=0x7E).contains(&byte) || byte >= 0x80 {
             current.push(byte);
             in_string = true;
         } else if in_string {

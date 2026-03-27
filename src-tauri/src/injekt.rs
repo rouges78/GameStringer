@@ -808,10 +808,8 @@ impl InjektTranslator {
     /// Verifica se un modulo è sicuro per l'hook
     #[allow(dead_code)] // Validazione sicurezza moduli - critica per protezione anti-cheat
     fn is_module_safe(&self, module_name: &str) -> bool {
-        let unsafe_modules = vec![
-            "kernel32.dll", "ntdll.dll", "user32.dll", "advapi32.dll",
-            "BattlEye", "EasyAntiCheat", "VAC", "steam_api"
-        ];
+        let unsafe_modules = ["kernel32.dll", "ntdll.dll", "user32.dll", "advapi32.dll",
+            "BattlEye", "EasyAntiCheat", "VAC", "steam_api"];
         
         !unsafe_modules.iter().any(|&unsafe_mod| 
             module_name.to_lowercase().contains(&unsafe_mod.to_lowercase())
@@ -917,7 +915,7 @@ impl InjektTranslator {
                 }
                 
                 // Crea il jump hook (JMP instruction)
-                let hook_bytes = vec![0xE9, 0x00, 0x00, 0x00, 0x00]; // JMP placeholder
+                let hook_bytes = [0xE9, 0x00, 0x00, 0x00, 0x00]; // JMP placeholder
                 
                 // Scrivi l'hook
                 let write_result = WriteProcessMemory(
