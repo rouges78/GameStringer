@@ -466,7 +466,12 @@ export class BatchTranslator {
           continue;
         }
 
-        // Fuzzy path: cerca match ≥90% — abbastanza simili da riusare direttamente
+        // Fuzzy path: cerca match ≥90% — solo per stringhe abbastanza lunghe
+        // (stringhe corte come "Yes", "No" hanno falsi positivi con Levenshtein)
+        if (item.sourceText.length < 10) {
+          itemsNeedingApi.push(item);
+          continue;
+        }
         const fuzzyResults = translationMemory.search(item.sourceText, {
           minSimilarity: 90,
           maxResults: 1,
@@ -679,6 +684,9 @@ export class BatchTranslator {
       console.warn(`[BatchTranslator] Batch ${batchNum} failed, falling back to single:`, error);
       
       for (const item of batchItems) {
+        // Skip items already processed before the batch error
+        if (item.status === 'completed' || item.status === 'failed') continue;
+
         try {
           await this.translateItem(item);
           item.status = 'completed';
@@ -913,6 +921,7 @@ export class BatchTranslator {
     const failedQaItems: Array<{ item: BatchTranslationItem; issues: string[] }> = [];
 
     for (const item of completedItems) {
+      if (this.isCancelled) break;
       if (!item.translatedText) continue;
 
       const report = runQualityGates({
@@ -944,7 +953,7 @@ export class BatchTranslator {
     }
 
     // Step 2: Auto post-edit per items con QA fallito
-    if (failedQaItems.length > 0) {
+    if (failedQaItems.length > 0 && !this.isCancelled) {
       await this.autoPostEdit(failedQaItems);
 
       // Step 3: Ricalcola score medio includendo items post-editati
@@ -969,6 +978,8 @@ export class BatchTranslator {
     if (!this.job) return;
 
     const MIN_POST_EDIT_CONFIDENCE = 75;
+
+    if (this.isCancelled) return;
 
     console.log(`[BatchTranslator] Auto post-editing ${failedItems.length} items with QA issues`);
     this.job.progress.statusMessage = `Post-editing ${failedItems.length} items...`;
@@ -1010,8 +1021,8 @@ export class BatchTranslator {
           translatedText: suggestion.improved,
           context: item.classification?.type as any,
           maxLength: item.metadata?.maxLength,
-          glossaryTerms: this.job.options.glossaryTerms,
-          minQualityScore: this.job.options.minQualityScore,
+          glossaryTerms: this.job!.options.glossaryTerms,
+          minQualityScore: this.job!.options.minQualityScore,
         });
 
         const oldScore = item.qualityReport?.overallScore || 0;
@@ -1020,15 +1031,20 @@ export class BatchTranslator {
           // Post-edit accettato — migliora lo score
           item.translatedText = suggestion.improved;
           item.qualityReport = newReport;
-          this.job.progress.postEdited++;
-          this.job.results.postEditedItems++;
+          this.job!.progress.postEdited++;
+          this.job!.results.postEditedItems++;
+
+          // Traccia costi del post-edit (input originale + output migliorato)
+          const peTokens = Math.ceil(item.sourceText.length / 4) + Math.ceil(item.translatedText!.length / 4) + Math.ceil(suggestion.improved.length / 4);
+          this.job!.results.totalTokensUsed += peTokens;
+          this.job!.results.estimatedCost += peTokens * 0.00002;
 
           // Aggiorna TM con la versione migliorata
-          if (this.job.options.saveToMemory) {
+          if (this.job!.options.saveToMemory) {
             translationMemory.add(item.sourceText, suggestion.improved, {
               context: item.classification?.type,
-              gameId: this.job.gameId,
-              provider: this.job.provider,
+              gameId: this.job!.gameId,
+              provider: this.job!.provider,
               confidence: 0.92, // Alta confidence per post-edit verificato
             }).catch(() => {});
           }
