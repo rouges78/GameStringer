@@ -208,7 +208,7 @@ export function UnityInkTranslator() {
       addLog(`Gioco rilevato: ${data.gameName} — ${data.assetsCount} file assets, ${data.inkBlobCount} blob Ink`);
       toast({ title: `${data.gameName} rilevato`, description: `${data.inkBlobCount} blob Ink in ${data.assetsCount} file` });
       setStep('extract');
-    } catch (e: any) {
+    } catch (e: unknown) {
       addLog(`Errore connessione: ${e.message}`);
     }
   }
@@ -236,7 +236,7 @@ export function UnityInkTranslator() {
       addLog(`Estratte ${data.uniqueStrings} stringhe uniche da ${data.totalBlobs} blob in ${data.totalFiles} file`);
       toast({ title: 'Estrazione completata', description: `${data.uniqueStrings.toLocaleString()} stringhe uniche trovate` });
       setStep('translate');
-    } catch (e: any) {
+    } catch (e: unknown) {
       addLog(`Errore: ${e.message}`);
     }
     setExtracting(false);
@@ -271,7 +271,7 @@ export function UnityInkTranslator() {
       
       // Start polling for progress
       startProgressPolling();
-    } catch (e: any) {
+    } catch (e: unknown) {
       addLog(`Errore: ${e.message}`);
       setTranslateProgress(prev => ({ ...prev, status: 'error' }));
     }
@@ -343,7 +343,7 @@ export function UnityInkTranslator() {
       addLog(`Iniezione completata: ${data.totalReplacements} sostituzioni in ${data.filesProcessed} file`);
       toast({ title: 'Iniezione completata!', description: `${data.totalReplacements.toLocaleString()} sostituzioni — avvia il gioco!` });
       setStep('done');
-    } catch (e: any) {
+    } catch (e: unknown) {
       addLog(`Errore: ${e.message}`);
       setInjectResult(prev => ({ ...prev, status: 'error', error: e.message }));
     }
@@ -360,7 +360,7 @@ export function UnityInkTranslator() {
       });
       const data = await resp.json();
       addLog(data.message || 'Ripristino completato');
-    } catch (e: any) {
+    } catch (e: unknown) {
       addLog(`Errore ripristino: ${e.message}`);
     }
   }
@@ -422,7 +422,7 @@ export function UnityInkTranslator() {
       a.click();
       URL.revokeObjectURL(url);
       addLog('Pack esportato!');
-    } catch (e: any) {
+    } catch (e: unknown) {
       addLog(`Errore export: ${e.message}`);
     }
   }
@@ -1078,7 +1078,7 @@ export function UnityInkTranslator() {
                     </div>
                     <select
                       value={previewFilter}
-                      onChange={(e) => { setPreviewFilter(e.target.value as any); loadPreview(0, previewSearch); }}
+                      onChange={(e) => { setPreviewFilter(e.target.value as string); loadPreview(0, previewSearch); }}
                       className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-2 py-1.5 text-xs text-slate-300"
                     >
                       <option value="all">Tutte</option>

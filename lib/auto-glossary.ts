@@ -11,6 +11,7 @@
  */
 
 import { translateSmart, getApiKeys, type TranslateOptions } from './ai-translate-direct';
+import { invoke } from '@/lib/tauri-api';
 
 // ═══════════════════════════════════════════════════════════════════
 // TYPES
@@ -111,6 +112,12 @@ export function loadGlossaryConfig(): AutoGlossaryConfig {
     }
   } catch {}
   configLoaded = true;
+  // Async: carica da Tauri in background e aggiorna se disponibile
+  invoke<{ [key: string]: unknown } | null>('load_auto_glossary_config').then(data => {
+    if (data) {
+      glossaryConfig = { ...DEFAULT_CONFIG, ...data } as AutoGlossaryConfig;
+    }
+  }).catch(() => {});
   return glossaryConfig;
 }
 
@@ -119,6 +126,8 @@ export function saveGlossaryConfig(updates: Partial<AutoGlossaryConfig>): void {
   try {
     localStorage.setItem(CONFIG_KEY, JSON.stringify(glossaryConfig));
   } catch {}
+  // Persisti su Tauri (fire & forget)
+  invoke('save_auto_glossary_config', { config: glossaryConfig }).catch(() => {});
 }
 
 export function getGlossaryConfig(): AutoGlossaryConfig {
@@ -140,10 +149,35 @@ function loadAllGlossaries(): Record<string, AutoGlossary> {
   return glossaryCache;
 }
 
+/**
+ * Inizializza glossari da Tauri (persistente) con fallback localStorage.
+ * Chiama questa funzione all'avvio per caricare dati persistiti.
+ */
+export async function initializeGlossaries(): Promise<void> {
+  try {
+    const data = await invoke<Record<string, AutoGlossary> | null>('load_all_auto_glossaries');
+    if (data && Object.keys(data).length > 0) {
+      glossaryCache = data as Record<string, AutoGlossary>;
+      // Sincronizza anche localStorage come cache veloce
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(glossaryCache)); } catch {}
+      console.log(`[AutoGlossary] Caricati ${Object.keys(glossaryCache).length} glossari da Tauri`);
+      return;
+    }
+  } catch {
+    // Tauri non disponibile, usa localStorage
+  }
+  loadAllGlossaries();
+}
+
 function saveAllGlossaries(): void {
+  // localStorage come cache veloce
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(glossaryCache));
   } catch {}
+  // Persisti ogni glossario su Tauri (fire & forget)
+  for (const [gameId, glossary] of Object.entries(glossaryCache)) {
+    invoke('save_auto_glossary', { gameId, data: glossary }).catch(() => {});
+  }
 }
 
 export function loadGlossary(gameId: string): AutoGlossary | null {
@@ -151,11 +185,36 @@ export function loadGlossary(gameId: string): AutoGlossary | null {
   return all[gameId] || null;
 }
 
+/**
+ * Carica glossario da Tauri (persistente) con fallback cache locale.
+ */
+export async function loadGlossaryAsync(gameId: string): Promise<AutoGlossary | null> {
+  // Prima controlla cache locale
+  if (glossaryCache[gameId]) return glossaryCache[gameId];
+
+  try {
+    const data = await invoke<AutoGlossary | null>('load_auto_glossary', { gameId });
+    if (data) {
+      glossaryCache[gameId] = data as AutoGlossary;
+      return data as AutoGlossary;
+    }
+  } catch {
+    // Tauri non disponibile
+  }
+
+  return loadGlossary(gameId);
+}
+
 export function saveGlossary(glossary: AutoGlossary): void {
   glossary.updatedAt = Date.now();
   glossary.stats = calculateStats(glossary.entries);
   glossaryCache[glossary.gameId] = glossary;
-  saveAllGlossaries();
+  // localStorage come cache veloce
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(glossaryCache));
+  } catch {}
+  // Persisti su Tauri (fire & forget)
+  invoke('save_auto_glossary', { gameId: glossary.gameId, data: glossary }).catch(() => {});
 }
 
 export function createGlossary(
@@ -185,7 +244,8 @@ export function createGlossary(
 
 export function deleteGlossary(gameId: string): void {
   delete glossaryCache[gameId];
-  saveAllGlossaries();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(glossaryCache)); } catch {}
+  invoke('delete_auto_glossary', { gameId }).catch(() => {});
 }
 
 export function listGlossaries(): AutoGlossary[] {

@@ -83,17 +83,12 @@ impl RateLimiter {
         }
     }
 
-    /// Crea un nuovo rate limiter con la configurazione di default
-    pub fn default() -> Self {
-        Self::new(RateLimiterConfig::default())
-    }
-
     /// Controlla se un identificatore può effettuare un tentativo di accesso
     pub fn check_rate_limit(&self, identifier: &str) -> RateLimitResult {
         // Cleanup periodico per evitare memory leak
         self.cleanup_if_needed();
 
-        let attempts = self.attempts.lock().unwrap();
+        let attempts = self.attempts.lock().unwrap_or_else(|e| e.into_inner());
         let now = Utc::now();
 
         // Se l'identificatore non esiste nella mappa, è il primo tentativo
@@ -120,7 +115,7 @@ impl RateLimiter {
 
     /// Registra un tentativo di accesso fallito
     pub fn register_failed_attempt(&self, identifier: &str) -> RateLimitResult {
-        let mut attempts = self.attempts.lock().unwrap();
+        let mut attempts = self.attempts.lock().unwrap_or_else(|e| e.into_inner());
         let now = Utc::now();
 
         // Ottieni o crea le informazioni sui tentativi
@@ -177,7 +172,7 @@ impl RateLimiter {
 
     /// Registra un tentativo di accesso riuscito
     pub fn register_successful_attempt(&self, identifier: &str) {
-        let mut attempts = self.attempts.lock().unwrap();
+        let mut attempts = self.attempts.lock().unwrap_or_else(|e| e.into_inner());
         
         // Rimuovi l'identificatore dalla mappa
         attempts.remove(identifier);
@@ -185,14 +180,14 @@ impl RateLimiter {
 
     /// Pulisce la mappa degli accessi da entry vecchie
     fn cleanup_if_needed(&self) {
-        let mut last_cleanup = self.last_cleanup.lock().unwrap();
+        let mut last_cleanup = self.last_cleanup.lock().unwrap_or_else(|e| e.into_inner());
         
         // Esegui il cleanup solo ogni 10 minuti
         if last_cleanup.elapsed() < Duration::from_secs(600) {
             return;
         }
 
-        let mut attempts = self.attempts.lock().unwrap();
+        let mut attempts = self.attempts.lock().unwrap_or_else(|e| e.into_inner());
         let now = Utc::now();
         let reset_seconds = self.config.reset_after_seconds;
 
@@ -208,13 +203,13 @@ impl RateLimiter {
 
     /// Ottiene le informazioni sui tentativi di accesso per un identificatore
     pub fn get_attempt_info(&self, identifier: &str) -> Option<AccessAttemptInfo> {
-        let attempts = self.attempts.lock().unwrap();
+        let attempts = self.attempts.lock().unwrap_or_else(|e| e.into_inner());
         attempts.get(identifier).cloned()
     }
 
     /// Resetta i tentativi di accesso per un identificatore
     pub fn reset_attempts(&self, identifier: &str) {
-        let mut attempts = self.attempts.lock().unwrap();
+        let mut attempts = self.attempts.lock().unwrap_or_else(|e| e.into_inner());
         attempts.remove(identifier);
     }
 
@@ -226,5 +221,11 @@ impl RateLimiter {
     /// Imposta la configurazione del rate limiter
     pub fn set_config(&mut self, config: RateLimiterConfig) {
         self.config = config;
+    }
+}
+
+impl Default for RateLimiter {
+    fn default() -> Self {
+        Self::new(RateLimiterConfig::default())
     }
 }

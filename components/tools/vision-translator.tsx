@@ -116,7 +116,7 @@ export function VisionTranslator() {
         provider,
       });
       setResult(res);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.message || err?.toString() || 'Errore durante la traduzione');
     } finally {
       setLoading(false);

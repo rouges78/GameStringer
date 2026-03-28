@@ -35,7 +35,7 @@ export function TranslationImportDialog({
     }
   };
 
-  const parseCSV = async (text: string): Promise<any[]> => {
+  const parseCSV = async (text: string): Promise<unknown[]> => {
     const lines = text.split('\n').filter(line => line.trim());
     const headers = lines[0].split(',').map(h => h.trim());
     
@@ -59,14 +59,14 @@ export function TranslationImportDialog({
     return translations;
   };
 
-  const parseJSON = async (text: string): Promise<any[]> => {
+  const parseJSON = async (text: string): Promise<unknown[]> => {
     try {
       const data = JSON.parse(text);
       
       // Supporta sia array diretto che oggetto con campo translations
       const translations = Array.isArray(data) ? data : (data.translations || []);
       
-      return translations.map((t: any) => ({
+      return translations.map((t: unknown) => ({
         filePath: t.filePath || 'unknown',
         originalText: t.originalText || '',
         translatedText: t.translatedText || '',
@@ -93,7 +93,7 @@ export function TranslationImportDialog({
     
     try {
       const text = await selectedFile.text();
-      let translations: any[] = [];
+      let translations: unknown[] = [];
       
       if (selectedFile.name.endsWith('.csv')) {
         translations = await parseCSV(text);

@@ -10,18 +10,18 @@ interface ConnectedAccount {
   provider: string;
   userId: string;
   steamId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface User {
   id: string;
   accounts: ConnectedAccount[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface Session {
   user?: User;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface UseSessionReturn {
@@ -33,7 +33,7 @@ interface UseSessionReturn {
 interface SignInResult {
   error?: string | null;
   ok?: boolean;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Chiavi localStorage
@@ -121,7 +121,7 @@ export const useSession = (): UseSessionReturn => {
 };
 
 // Funzione per il login
-export const signIn = async (provider: string, options?: any): Promise<SignInResult> => {
+export const signIn = async (provider: string, options?: Record<string, unknown>): Promise<SignInResult> => {
   console.log(`Auth locale: tentativo di login con ${provider}`, options);
   
   try {

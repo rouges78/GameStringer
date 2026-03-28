@@ -49,7 +49,7 @@ fn url_to_filename(url: &str) -> String {
     let hash = hasher.finish();
     
     // Estrai estensione dall'URL
-    let ext = url.split('.').last()
+    let ext = url.split('.').next_back()
         .filter(|e| ["jpg", "jpeg", "png", "webp", "gif"].contains(e))
         .unwrap_or("jpg");
     
@@ -159,10 +159,8 @@ pub fn cleanup_image_cache(max_age_days: u32) -> Result<u32, String> {
                 if metadata.is_file() {
                     if let Ok(modified) = metadata.modified() {
                         if let Ok(age) = modified.elapsed() {
-                            if age.as_secs() > max_age_secs {
-                                if fs::remove_file(entry.path()).is_ok() {
-                                    removed += 1;
-                                }
+                            if age.as_secs() > max_age_secs && fs::remove_file(entry.path()).is_ok() {
+                                removed += 1;
                             }
                         }
                     }
@@ -183,10 +181,8 @@ pub fn clear_image_cache() -> Result<u32, String> {
     if let Ok(entries) = fs::read_dir(&cache_dir) {
         for entry in entries.flatten() {
             if let Ok(metadata) = entry.metadata() {
-                if metadata.is_file() {
-                    if fs::remove_file(entry.path()).is_ok() {
-                        removed += 1;
-                    }
+                if metadata.is_file() && fs::remove_file(entry.path()).is_ok() {
+                    removed += 1;
                 }
             }
         }

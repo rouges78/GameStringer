@@ -3,7 +3,7 @@
  * Implements command pattern with history stack
  */
 
-export interface UndoableAction<T = any> {
+export interface UndoableAction<T = unknown> {
   id: string;
   type: string;
   timestamp: number;

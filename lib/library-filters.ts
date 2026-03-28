@@ -104,7 +104,7 @@ export function fuzzyMatch(text: string, query: string): boolean {
 /**
  * Debounce utility per ritardare chiamate
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

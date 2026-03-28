@@ -145,7 +145,7 @@ export function CommunityChat() {
             setOnlineUsers(users);
           });
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('[Chat] Init error:', e);
         toast.error(e.message || 'Errore inizializzazione chat');
       } finally {
@@ -181,7 +181,7 @@ export function CommunityChat() {
             return [...prev, newMsg];
           });
         });
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('[Chat] Load room error:', e);
       }
     };
@@ -218,7 +218,7 @@ export function CommunityChat() {
         await sendMessage(activeRoom.id, content, 'text', replyTo?.id);
         setReplyTo(null);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e.message || 'Errore invio messaggio');
       setMessageInput(content); // restore
     } finally {
@@ -235,7 +235,7 @@ export function CommunityChat() {
       setMessages((prev) =>
         prev.map((m) => (m.id === msg.id ? { ...m, deleted: true, content: '[messaggio eliminato]' } : m))
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e.message || 'Errore eliminazione');
     }
   };
@@ -252,7 +252,7 @@ export function CommunityChat() {
       setNewRoomName('');
       setNewRoomDesc('');
       toast.success('Stanza creata!');
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e.message || 'Errore creazione stanza');
     }
   };
@@ -290,7 +290,7 @@ export function CommunityChat() {
         } else {
           toast.error('Devi prima effettuare il login in GameStringer.');
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         toast.error(e.message || 'Errore connessione');
       } finally {
         setIsLoading(false);
@@ -579,7 +579,7 @@ export function CommunityChat() {
             </div>
             <div>
               <Label className="text-xs">Tipo</Label>
-              <Select value={newRoomType} onValueChange={(v: any) => setNewRoomType(v)}>
+              <Select value={newRoomType} onValueChange={(v: unknown) => setNewRoomType(v)}>
                 <SelectTrigger className="mt-1">
                   <SelectValue />
                 </SelectTrigger>

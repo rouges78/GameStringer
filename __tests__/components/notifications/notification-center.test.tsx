@@ -85,7 +85,7 @@ describe('NotificationCenter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (require('@/hooks/use-notifications').useNotifications as any).mockReturnValue(mockUseNotifications);
+    (require('@/hooks/use-notifications').useNotifications as unknown).mockReturnValue(mockUseNotifications);
   });
 
   describe('Rendering', () => {
@@ -112,7 +112,7 @@ describe('NotificationCenter', () => {
     });
 
     it('should show loading state', () => {
-      (require('@/hooks/use-notifications').useNotifications as any).mockReturnValue({
+      (require('@/hooks/use-notifications').useNotifications as unknown).mockReturnValue({
         ...mockUseNotifications,
         isLoading: true,
         notifications: []
@@ -124,7 +124,7 @@ describe('NotificationCenter', () => {
     });
 
     it('should show empty state when no notifications', () => {
-      (require('@/hooks/use-notifications').useNotifications as any).mockReturnValue({
+      (require('@/hooks/use-notifications').useNotifications as unknown).mockReturnValue({
         ...mockUseNotifications,
         notifications: [],
         unreadCount: 0

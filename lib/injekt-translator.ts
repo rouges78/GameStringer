@@ -137,7 +137,7 @@ class InjektTranslator {
       
       try {
         // Ottieni statistiche dal backend Tauri
-        const stats = await invoke<any>('get_stats');
+        const stats = await invoke<unknown>('get_stats');
         
         if (stats) {
           this.stats.activeHooks = stats.activeHooks || 0;
@@ -296,7 +296,7 @@ class InjektTranslator {
   }
   
   // Metodo per emettere eventi
-  private emit(event: string, data: any): void {
+  private emit(event: string, data: unknown): void {
     const listeners = this.listeners.get(event) || [];
     listeners.forEach(listener => listener(data));
   }
@@ -325,14 +325,14 @@ export const injektTranslator = new InjektTranslator();
 // Hook per React
 export function useInjektTranslator() {
   const [stats, setStats] = useState(injektTranslator.getStatistics());
-  const [translations, setTranslations] = useState<any[]>([]);
+  const [translations, setTranslations] = useState<unknown[]>([]);
 
   useEffect(() => {
     const updateStats = () => {
       setStats(injektTranslator.getStatistics());
     };
 
-    const handleTranslation = (event: any) => {
+    const handleTranslation = (event: unknown) => {
       setTranslations(prev => [...prev.slice(-9), event.detail]);
     };
 

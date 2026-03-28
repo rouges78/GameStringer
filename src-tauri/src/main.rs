@@ -431,6 +431,12 @@ fn main() {
             commands::glossary::export_glossary,
             commands::glossary::import_glossary,
             commands::glossary::search_glossary,
+            commands::glossary::save_auto_glossary,
+            commands::glossary::load_auto_glossary,
+            commands::glossary::delete_auto_glossary,
+            commands::glossary::load_all_auto_glossaries,
+            commands::glossary::save_auto_glossary_config,
+            commands::glossary::load_auto_glossary_config,
 
             // Translation Memory System
             commands::translation_memory::load_translation_memory,

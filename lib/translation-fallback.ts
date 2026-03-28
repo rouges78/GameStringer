@@ -183,7 +183,7 @@ class TranslationFallbackManager {
         newTranslations.forEach(t => {
           this.cacheTranslation(t.original, t.translated, targetLang, provider, t.confidence);
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         if (error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('rate limit')) {
           // Rate limit - usa solo cache
           this.markRateLimited(provider, 60000);

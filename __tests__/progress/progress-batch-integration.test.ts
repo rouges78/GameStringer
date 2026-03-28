@@ -162,7 +162,7 @@ describe('ProgressBatchProcessor Integration', () => {
     };
 
     // Sostituisci il batch processor interno
-    (processor as any).batchProcessor = mockBatchProcessor;
+    (processor as unknown).batchProcessor = mockBatchProcessor;
 
     await expect(processor.processBatch(items, mockProcessor, 'translate')).rejects.toThrow('Batch processing failed');
 

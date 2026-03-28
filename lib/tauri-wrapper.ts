@@ -5,11 +5,11 @@
 // Funzione per rilevare se siamo in ambiente Tauri
 export function isTauriEnvironment(): boolean {
   if (typeof window === 'undefined') return false;
-  return !!(window as any).__TAURI__;
+  return !!(window as unknown as Record<string, unknown>).__TAURI__;
 }
 
 // Wrapper per le chiamate invoke che gestisce ambiente web/desktop
-export async function safeInvoke<T>(command: string, args?: any): Promise<T> {
+export async function safeInvoke<T>(command: string, args?: Record<string, unknown>): Promise<T> {
   if (isTauriEnvironment()) {
     try {
       const { invoke } = await import('@tauri-apps/api/core');
@@ -29,8 +29,8 @@ export async function safeInvoke<T>(command: string, args?: any): Promise<T> {
 }
 
 // Risposte mock per ambiente web
-function getMockResponse<T>(command: string, args?: any): Promise<T> {
-  const mockResponses: Record<string, any> = {
+function getMockResponse<T>(command: string, args?: Record<string, unknown>): Promise<T> {
+  const mockResponses: Record<string, unknown> = {
     'get_games': [],
     'get_steam_games_with_family_sharing': generateMockGames(),
     'force_refresh_all_games': generateMockGames(),

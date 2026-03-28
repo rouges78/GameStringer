@@ -470,7 +470,7 @@ fn find_language_dir(game_path: &str) -> Option<(PathBuf, PathBuf)> {
         // Check if it has .jn files
         if let Ok(entries) = fs::read_dir(&eng_dir) {
             let jn_count = entries.flatten()
-                .filter(|e| e.path().extension().map_or(false, |ext| ext == "jn"))
+                .filter(|e| e.path().extension().is_some_and(|ext| ext == "jn"))
                 .count();
             if jn_count > 0 {
                 return Some((lang_dir, eng_dir));
@@ -488,7 +488,7 @@ fn count_jn_strings(eng_dir: &Path) -> (usize, usize) {
     if let Ok(entries) = fs::read_dir(eng_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "jn") {
+            if path.extension().is_some_and(|ext| ext == "jn") {
                 file_count += 1;
                 if let Ok(content) = fs::read_to_string(&path) {
                     for line in content.lines() {
@@ -514,7 +514,7 @@ fn extract_jn_strings(eng_dir: &Path) -> Vec<GmString> {
         paths.sort();
         
         for path in paths {
-            if path.extension().map_or(true, |ext| ext != "jn") { continue; }
+            if path.extension().is_none_or(|ext| ext != "jn") { continue; }
             let _filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
             
             if let Ok(content) = fs::read_to_string(&path) {
@@ -596,7 +596,7 @@ pub async fn gm_scan_data_win(game_path: String) -> Result<GmDataInfo, String> {
     
     // ── Priority 3: YYC detection → EXE scan ──
     let yyc_threshold = (strg_total as f64 * 0.05) as usize;
-    let is_yyc = strg_translatable < 50.min(yyc_threshold.max(50));
+    let is_yyc = strg_translatable < yyc_threshold.max(50);
     
     let (total, translatable, exe_path, source) = if is_yyc {
         if let Some(exe) = find_game_exe(&game_path) {
@@ -788,7 +788,7 @@ fn patch_language_files(
     let mut patched_count = 0usize;
     
     for path in &entries {
-        if path.extension().map_or(true, |ext| ext != "jn") { continue; }
+        if path.extension().is_none_or(|ext| ext != "jn") { continue; }
         let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
         
         // Read from backup (original) to avoid re-patching already patched files
@@ -844,7 +844,7 @@ fn patch_language_files(
             .map_err(|e| format!("Errore scrittura {}: {}", filename, e))?;
     }
     
-    let file_count = entries.iter().filter(|p| p.extension().map_or(false, |ext| ext == "jn")).count();
+    let file_count = entries.iter().filter(|p| p.extension().is_some_and(|ext| ext == "jn")).count();
     println!("[GM-JN] engLanguage/ patchata: {} stringhe in {} file", patched_count, file_count);
     
     Ok(GmPatchResult {

@@ -24,7 +24,7 @@ interface PersistedOperation {
     message: string;
     stack?: string;
   };
-  result?: any;
+  result?: unknown;
 }
 
 interface PersistedProgressData {

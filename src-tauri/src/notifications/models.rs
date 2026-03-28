@@ -93,6 +93,7 @@ pub struct CreateNotificationRequest {
 
 /// Filtro per le notifiche
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct NotificationFilter {
     /// Filtra per tipo di notifica
     pub notification_type: Option<NotificationType>,
@@ -458,18 +459,6 @@ pub enum NotificationSortBy {
     ReadStatus,
 }
 
-impl Default for NotificationFilter {
-    fn default() -> Self {
-        Self {
-            notification_type: None,
-            priority: None,
-            unread_only: None,
-            category: None,
-            limit: None,
-            offset: None,
-        }
-    }
-}
 
 /// Aggiornamenti parziali per le preferenze notifiche
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

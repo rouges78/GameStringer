@@ -5,7 +5,7 @@
 use tauri::command;
 use serde::{Serialize, Deserialize};
 use std::process::Command;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::io::Write;
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -150,7 +150,7 @@ pub async fn inject_unity_assets(
 
 /// Export translation entries to CSV files in the given directory.
 /// Groups by table name and writes one CSV per table.
-fn export_translations_to_csv(dir: &PathBuf, entries: &[TranslationEntry]) -> Result<String, String> {
+fn export_translations_to_csv(dir: &Path, entries: &[TranslationEntry]) -> Result<String, String> {
     // Group entries by table
     let mut tables: std::collections::HashMap<String, Vec<&TranslationEntry>> = std::collections::HashMap::new();
     for e in entries {
@@ -180,7 +180,7 @@ fn export_translations_to_csv(dir: &PathBuf, entries: &[TranslationEntry]) -> Re
 }
 
 /// Export Ink translation entries to a single CSV file.
-fn export_ink_to_csv(dir: &PathBuf, entries: &[TranslationEntry]) -> Result<String, String> {
+fn export_ink_to_csv(dir: &Path, entries: &[TranslationEntry]) -> Result<String, String> {
     let csv_path = dir.join("ink_translations.csv");
     let mut file = std::fs::File::create(&csv_path)
         .map_err(|e| format!("Errore creazione Ink CSV: {}", e))?;

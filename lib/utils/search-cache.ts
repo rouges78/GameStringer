@@ -197,7 +197,7 @@ export function getGameSearchCache(): SearchCache<{ id: string; name: string }> 
 /**
  * Debounce utility for search input
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

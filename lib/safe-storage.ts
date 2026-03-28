@@ -76,7 +76,7 @@ export function safeSetItem<T>(key: string, value: T, version: number = 1): bool
     localStorage.setItem(key, serialized);
     
     return true;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Gestione quota exceeded
     if (error.name === 'QuotaExceededError' || error.code === 22) {
       console.warn(`[SafeStorage] Quota exceeded per "${key}", tentativo cleanup...`);

@@ -180,17 +180,17 @@ async fn get_gog_games_from_galaxy_db() -> Result<Vec<InstalledGame>, String> {
     })
     .map_err(|e| format!("Errore lettura Galaxy DB: {}", e))?
     .filter_map(|r| r.ok())
-    .filter_map(|(release_key, title_json)| {
+    .map(|(release_key, title_json)| {
         // Il titolo è in formato JSON: {"title":"Game Name"}
         let title = serde_json::from_str::<serde_json::Value>(&title_json)
             .ok()
             .and_then(|v| v["title"].as_str().map(|s| s.to_string()))
             .unwrap_or_else(|| release_key.replace("gog_", ""));
-        
+
         // Estrai l'ID numerico GOG dalla release key (es: "gog_1423049311" -> "1423049311")
         let gog_id = release_key.replace("gog_", "");
-        
-        Some(InstalledGame {
+
+        InstalledGame {
             id: format!("gog_{}", gog_id),
             name: title,
             path: String::new(),
@@ -198,7 +198,7 @@ async fn get_gog_games_from_galaxy_db() -> Result<Vec<InstalledGame>, String> {
             size_bytes: None,
             last_modified: None,
             platform: "GOG".to_string(),
-        })
+        }
     })
     .collect();
     
@@ -722,16 +722,12 @@ fn parse_gog_game_data(data: &serde_json::Value) -> Result<GogGame, String> {
     }
     
     // Parsing del prezzo
-    let price = if let Some(price_data) = data["price"].as_object() {
-        Some(GogPrice {
+    let price = data["price"].as_object().map(|price_data| GogPrice {
             currency: price_data["currency"].as_str().unwrap_or("USD").to_string(),
             base_price: price_data["basePrice"].as_str().map(|s| s.to_string()),
             final_price: price_data["finalPrice"].as_str().map(|s| s.to_string()),
             discount_percentage: price_data["discountPercentage"].as_i64().map(|p| p as i32),
-        })
-    } else {
-        None
-    };
+        });
     
     Ok(GogGame {
         id,
@@ -855,7 +851,7 @@ fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, S
     Ok((
         general_purpose::STANDARD.encode(&email_ciphertext),
         general_purpose::STANDARD.encode(&password_ciphertext),
-        general_purpose::STANDARD.encode(&nonce_bytes)
+        general_purpose::STANDARD.encode(nonce_bytes)
     ))
 }
 

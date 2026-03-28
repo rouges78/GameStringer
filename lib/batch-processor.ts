@@ -9,13 +9,13 @@ export interface BatchProcessorOptions {
 
 export interface BatchItem {
   id: string;
-  data: any;
+  data: unknown;
 }
 
 export interface BatchProcessorCallbacks {
   onProgress?: (progress: number, status: string) => void;
   onItemStart?: (itemId: string) => void;
-  onItemComplete?: (itemId: string, result: any) => void;
+  onItemComplete?: (itemId: string, result: unknown) => void;
   onItemError?: (itemId: string, error: Error, attempt: number) => void;
   onComplete?: (result: BatchResult) => void;
   onError?: (error: Error) => void;

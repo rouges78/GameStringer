@@ -362,7 +362,7 @@ async fn scan_epic_via_legendary() -> Result<Vec<EpicGameEnhanced>, String> {
     
     // Verifica se Legendary è disponibile
     let output = Command::new("legendary")
-        .args(&["list", "--json"])
+        .args(["list", "--json"])
         .output()
         .map_err(|_| "Legendary CLI non disponibile")?;
     
@@ -409,7 +409,7 @@ async fn scan_epic_via_legendary() -> Result<Vec<EpicGameEnhanced>, String> {
     Ok(games)
 }
 
-/// 🔧 Funzioni helper
+// 🔧 Funzioni helper
 
 /// Merge giochi Epic evitando duplicati
 fn merge_epic_games(existing: &mut Vec<EpicGameEnhanced>, new_games: Vec<EpicGameEnhanced>) {

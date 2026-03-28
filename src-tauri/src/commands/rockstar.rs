@@ -479,7 +479,7 @@ fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, S
     Ok((
         general_purpose::STANDARD.encode(&email_ciphertext),
         general_purpose::STANDARD.encode(&password_ciphertext),
-        general_purpose::STANDARD.encode(&nonce_bytes)
+        general_purpose::STANDARD.encode(nonce_bytes)
     ))
 }
 

@@ -318,7 +318,7 @@ pub fn search_glossary_terms(
                 t.target_term.to_lowercase().contains(&query_lower);
             
             // Match tier filter
-            let matches_tier = tier_filter.as_ref().map_or(true, |f| {
+            let matches_tier = tier_filter.as_ref().is_none_or(|f| {
                 match f.to_lowercase().as_str() {
                     "locked" => t.tier == GlossaryTier::Locked,
                     "synced" => t.tier == GlossaryTier::Synced,
@@ -328,8 +328,8 @@ pub fn search_glossary_terms(
             });
             
             // Match category filter
-            let matches_category = category_filter.as_ref().map_or(true, |f| {
-                t.category.as_ref().map_or(false, |c| c.to_lowercase() == f.to_lowercase())
+            let matches_category = category_filter.as_ref().is_none_or(|f| {
+                t.category.as_ref().is_some_and(|c| c.to_lowercase() == f.to_lowercase())
             });
             
             matches_query && matches_tier && matches_category

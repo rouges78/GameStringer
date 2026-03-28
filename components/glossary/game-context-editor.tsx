@@ -85,7 +85,7 @@ export function GameContextEditor({
     role: ''
   });
 
-  const handleMetadataChange = (key: keyof GlossaryMetadata, value: any) => {
+  const handleMetadataChange = (key: keyof GlossaryMetadata, value: unknown) => {
     onMetadataChange({
       ...metadata,
       [key]: value
@@ -325,7 +325,7 @@ export function GameContextEditor({
                         <Label>{t('gameContextEditorComp.gender')}</Label>
                         <Select
                           value={characterForm.gender}
-                          onValueChange={(v: any) => setCharacterForm({...characterForm, gender: v})}
+                          onValueChange={(v: unknown) => setCharacterForm({...characterForm, gender: v})}
                         >
                           <SelectTrigger>
                             <SelectValue />

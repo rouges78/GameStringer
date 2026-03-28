@@ -7,7 +7,7 @@ import { analyzeEmotion } from './emotion-analyzer'
 import { calculateSimilarity } from './translation-memory'
 
 // Cache TM per evitare import dinamici ripetuti
-let tmManagerInstance: any = null
+let tmManagerInstance: unknown = null
 
 export type ConfidenceLevel = 'critical' | 'low' | 'medium' | 'high' | 'perfect'
 
@@ -45,7 +45,7 @@ export interface TranslationPair {
   original: string
   translated: string
   context?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface HeatmapData {
@@ -751,7 +751,7 @@ export async function calculateBatchConfidenceWithTM(
         maxResults: 3
       })
       
-      const tmMatches = tmResults.map((r: any) => ({
+      const tmMatches = tmResults.map((r: Record<string, unknown>) => ({
         sourceText: r.unit.sourceText,
         targetText: r.unit.targetText,
         similarity: r.similarity

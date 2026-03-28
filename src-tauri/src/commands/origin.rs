@@ -465,7 +465,7 @@ fn determine_game_info(folder_path: &Path, folder_name: &str) -> (String, String
     } else if folder_name_lower.contains("plants vs zombies") || folder_name_lower.contains("pvz") {
         "Plants vs. Zombies"
     } else {
-        &folder_name
+        folder_name
     };
     
     (game_name.to_string(), platform.to_string())
@@ -626,7 +626,7 @@ fn encrypt_credentials(email: &str, password: &str) -> Result<(String, String, S
     Ok((
         general_purpose::STANDARD.encode(&email_ciphertext),
         general_purpose::STANDARD.encode(&password_ciphertext),
-        general_purpose::STANDARD.encode(&nonce_bytes)
+        general_purpose::STANDARD.encode(nonce_bytes)
     ))
 }
 

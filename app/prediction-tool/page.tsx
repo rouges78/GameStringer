@@ -126,7 +126,7 @@ function DifficultyGauge({ score, label }: { score: number; label: string }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, sub, color = 'text-indigo-400' }: { icon: any; label: string; value: string; sub?: string; color?: string }) {
+function StatCard({ icon: Icon, label, value, sub, color = 'text-indigo-400' }: { icon: unknown; label: string; value: string; sub?: string; color?: string }) {
   return (
     <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4 flex items-start gap-3">
       <div className={`p-2 rounded-lg bg-slate-700/50 ${color}`}>
@@ -186,7 +186,7 @@ export default function PredictionToolPage() {
         targetLang,
       });
       setResult(res);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(String(e));
     } finally {
       setLoading(false);

@@ -1,9 +1,7 @@
-/**
- * Global Hotkeys Module
- * 
- * Gestisce le hotkey globali per OCR e altre funzionalità.
- * Nota: GlobalHotKeyManager deve essere creato e usato sul main thread.
- */
+// Global Hotkeys Module
+//
+// Gestisce le hotkey globali per OCR e altre funzionalità.
+// Nota: GlobalHotKeyManager deve essere creato e usato sul main thread.
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -46,7 +44,7 @@ pub async fn register_global_hotkey(
     };
     
     // Salva associazione
-    let mut hotkeys = REGISTERED_HOTKEYS.lock().unwrap();
+    let mut hotkeys = REGISTERED_HOTKEYS.lock().unwrap_or_else(|e| e.into_inner());
     
     // Rimuovi se già esiste
     hotkeys.retain(|(hid, _)| *hid != id);
@@ -59,7 +57,7 @@ pub async fn register_global_hotkey(
 /// Rimuove una hotkey registrata
 #[tauri::command]
 pub async fn unregister_global_hotkey(id: u32) -> Result<bool, String> {
-    let mut hotkeys = REGISTERED_HOTKEYS.lock().unwrap();
+    let mut hotkeys = REGISTERED_HOTKEYS.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(pos) = hotkeys.iter().position(|(hid, _)| *hid == id) {
         hotkeys.remove(pos);
         println!("[HOTKEY] Rimossa: {}", id);
@@ -72,14 +70,14 @@ pub async fn unregister_global_hotkey(id: u32) -> Result<bool, String> {
 /// Lista hotkey registrate
 #[tauri::command]
 pub async fn list_global_hotkeys() -> Result<Vec<(u32, String)>, String> {
-    let hotkeys = REGISTERED_HOTKEYS.lock().unwrap();
+    let hotkeys = REGISTERED_HOTKEYS.lock().unwrap_or_else(|e| e.into_inner());
     Ok(hotkeys.clone())
 }
 
 /// Rimuove tutte le hotkey
 #[tauri::command]
 pub async fn clear_global_hotkeys() -> Result<bool, String> {
-    let mut hotkeys = REGISTERED_HOTKEYS.lock().unwrap();
+    let mut hotkeys = REGISTERED_HOTKEYS.lock().unwrap_or_else(|e| e.into_inner());
     hotkeys.clear();
     println!("[HOTKEY] Tutte le hotkey rimosse");
     Ok(true)

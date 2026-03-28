@@ -26,7 +26,7 @@ export function EpicModal({ isOpen, onClose, onSubmit, isLoading }: EpicModalPro
   const [errors, setErrors] = useState<Record<string, string>>({});
   
   // Stati per Legendary
-  const [legendaryStatus, setLegendaryStatus] = useState<any>(null);
+  const [legendaryStatus, setLegendaryStatus] = useState<unknown>(null);
   const [legendaryLoading, setLegendaryLoading] = useState(false);
   const [installLegendaryLoading, setInstallLegendaryLoading] = useState(false);
   const [authLegendaryLoading, setAuthLegendaryLoading] = useState(false);

@@ -61,7 +61,7 @@ export function saveSnapshot(
   translations?: Map<string, string>,
   version?: string,
 ): void {
-  const snapshot: any = {
+  const snapshot: unknown = {
     gameId,
     gameName,
     timestamp: Date.now(),

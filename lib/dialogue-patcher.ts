@@ -33,7 +33,7 @@ export class DialoguePatcher {
   /**
    * Parse dialogue file from Decarnation or similar games
    */
-  parseDialogueFile(filePath: string): any[] {
+  parseDialogueFile(filePath: string): unknown[] {
     const content = fs.readFileSync(filePath, 'utf-8');
     
     // Parse TSV/CSV with flexible options
@@ -51,7 +51,7 @@ export class DialoguePatcher {
   /**
    * Extract dialogue entries from parsed records
    */
-  extractDialogues(records: any[]): DialogueEntry[] {
+  extractDialogues(records: unknown[]): DialogueEntry[] {
     const dialogues: DialogueEntry[] = [];
     
     // Column indices for Decarnation format

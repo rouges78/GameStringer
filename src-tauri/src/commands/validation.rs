@@ -115,10 +115,7 @@ pub async fn validate_profile_creation(
     let name_result = manager.validate_profile_name(&name);
     let password_result = manager.validate_password(&password);
     
-    let unique_result = match manager.validate_unique_profile_name(&name).await {
-        Ok(_) => true,
-        Err(_) => false,
-    };
+    let unique_result = (manager.validate_unique_profile_name(&name).await).is_ok();
     
     let is_valid = name_result.is_valid && password_result.is_valid && unique_result;
     

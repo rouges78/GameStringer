@@ -63,7 +63,7 @@ export function TranslationStatsWidget() {
       const activities = await activityHistory.getRecent(500);
       
       // Filtra solo traduzioni
-      const translations = activities.filter((a: any) => a.activity_type === 'translation');
+      const translations = activities.filter((a: unknown) => a.activity_type === 'translation');
       
       // Calcola date
       const now = new Date();
@@ -72,15 +72,15 @@ export function TranslationStatsWidget() {
       const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
       // Conta traduzioni per periodo
-      const todayTranslations = translations.filter((t: any) => 
+      const todayTranslations = translations.filter((t: unknown) => 
         new Date(t.timestamp) >= today
       ).length;
       
-      const weekTranslations = translations.filter((t: any) => 
+      const weekTranslations = translations.filter((t: unknown) => 
         new Date(t.timestamp) >= weekAgo
       ).length;
       
-      const monthTranslations = translations.filter((t: any) => 
+      const monthTranslations = translations.filter((t: unknown) => 
         new Date(t.timestamp) >= monthAgo
       ).length;
 
@@ -90,7 +90,7 @@ export function TranslationStatsWidget() {
         const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
         const dateStr = date.toLocaleDateString('it-IT', { weekday: 'short' });
         const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
-        const count = translations.filter((t: any) => {
+        const count = translations.filter((t: unknown) => {
           const tDate = new Date(t.timestamp);
           return tDate >= date && tDate < nextDate;
         }).length;
@@ -110,7 +110,7 @@ export function TranslationStatsWidget() {
       ].filter(l => l.count > 0);
 
       // Progetti (mock basato su games unici)
-      const uniqueGames = new Set(translations.map((t: any) => t.game_id || t.game_name).filter(Boolean));
+      const uniqueGames = new Set(translations.map((t: unknown) => t.game_id || t.game_name).filter(Boolean));
       const completedProjects = Math.floor(uniqueGames.size * 0.6);
       const activeProjects = uniqueGames.size - completedProjects;
 

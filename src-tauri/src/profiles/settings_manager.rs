@@ -47,6 +47,7 @@ pub struct WindowSize {
 
 /// Settings legacy (formato precedente)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct LegacySettings {
     pub language: Option<String>,
     pub theme: Option<String>,
@@ -87,7 +88,7 @@ impl ProfileSettingsManager {
     pub async fn initialize(&self) -> ProfileResult<()> {
         if !self.settings_dir.exists() {
             fs::create_dir_all(&self.settings_dir).await
-                .map_err(|e| ProfileError::IoError(e))?;
+                .map_err(ProfileError::IoError)?;
         }
         Ok(())
     }
@@ -102,10 +103,10 @@ impl ProfileSettingsManager {
         }
 
         let content = fs::read_to_string(&settings_path).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
             
         let settings: ProfileSettings = serde_json::from_str(&content)
-            .map_err(|e| ProfileError::SerializationError(e))?;
+            .map_err(ProfileError::SerializationError)?;
             
         Ok(settings)
     }
@@ -117,10 +118,10 @@ impl ProfileSettingsManager {
         let settings_path = self.settings_dir.join(format!("{}.json", profile_id));
         
         let content = serde_json::to_string_pretty(settings)
-            .map_err(|e| ProfileError::SerializationError(e))?;
+            .map_err(ProfileError::SerializationError)?;
             
         fs::write(&settings_path, content).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
             
         Ok(())
     }
@@ -131,7 +132,7 @@ impl ProfileSettingsManager {
         
         if settings_path.exists() {
             fs::remove_file(&settings_path).await
-                .map_err(|e| ProfileError::IoError(e))?;
+                .map_err(ProfileError::IoError)?;
         }
         
         Ok(())
@@ -146,10 +147,10 @@ impl ProfileSettingsManager {
         }
 
         let content = fs::read_to_string(&global_path).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
             
         let settings: GlobalSettings = serde_json::from_str(&content)
-            .map_err(|e| ProfileError::SerializationError(e))?;
+            .map_err(ProfileError::SerializationError)?;
             
         Ok(settings)
     }
@@ -161,10 +162,10 @@ impl ProfileSettingsManager {
         let global_path = self.settings_dir.join("global.json");
         
         let content = serde_json::to_string_pretty(settings)
-            .map_err(|e| ProfileError::SerializationError(e))?;
+            .map_err(ProfileError::SerializationError)?;
             
         fs::write(&global_path, content).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
             
         Ok(())
     }
@@ -181,10 +182,10 @@ impl ProfileSettingsManager {
         // Crea backup dei settings legacy
         let backup_path = self.settings_dir.join(format!("legacy_backup_{}.json", Utc::now().timestamp()));
         let backup_content = serde_json::to_string_pretty(&legacy_data)
-            .map_err(|e| ProfileError::SerializationError(e))?;
+            .map_err(ProfileError::SerializationError)?;
         
         fs::write(&backup_path, backup_content).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
         
         result.backup_path = Some(backup_path.to_string_lossy().to_string());
 
@@ -238,8 +239,10 @@ impl ProfileSettingsManager {
         result.created_profile = Some(default_profile_id.to_string());
 
         // Crea settings globali
-        let mut global_settings = GlobalSettings::default();
-        global_settings.last_profile = Some(default_profile_id.to_string());
+        let global_settings = GlobalSettings {
+            last_profile: Some(default_profile_id.to_string()),
+            ..Default::default()
+        };
         self.save_global_settings(&global_settings).await?;
 
         Ok(result)
@@ -302,13 +305,13 @@ impl ProfileSettingsManager {
 
         let mut profiles = Vec::new();
         let mut entries = fs::read_dir(&self.settings_dir).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
 
         while let Some(entry) = entries.next_entry().await
-            .map_err(|e| ProfileError::IoError(e))? {
+            .map_err(ProfileError::IoError)? {
             
             let path = entry.path();
-            if path.is_file() && path.extension().map_or(false, |ext| ext == "json") {
+            if path.is_file() && path.extension().is_some_and(|ext| ext == "json") {
                 if let Some(file_name) = path.file_stem() {
                     let profile_id = file_name.to_string_lossy().to_string();
                     if profile_id != "global" {
@@ -336,19 +339,3 @@ impl Default for GlobalSettings {
     }
 }
 
-impl Default for LegacySettings {
-    fn default() -> Self {
-        Self {
-            language: None,
-            theme: None,
-            auto_scan: None,
-            cache_enabled: None,
-            cache_duration_hours: None,
-            steam_api_key: None,
-            steamgriddb_api_key: None,
-            howlongtobeat_enabled: None,
-            notifications_enabled: None,
-            auto_update_check: None,
-        }
-    }
-}

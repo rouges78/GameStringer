@@ -268,8 +268,8 @@ class TranslationHistoryManager {
               target: parts[2].replace(/^"|"$/g, '').replace(/""/g, '"'),
               sourceLanguage: parts[3],
               targetLanguage: parts[4],
-              provider: parts[5] as any,
-              tool: parts[6] as any,
+              provider: parts[5] as unknown,
+              tool: parts[6] as unknown,
               gameName: parts[7] || undefined,
             });
           }

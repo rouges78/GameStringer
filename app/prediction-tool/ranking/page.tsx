@@ -77,7 +77,7 @@ export default function PredictionRankingPage() {
       const result = await invoke('analyze_all_installed_games') as GameQuickSummary[];
       setSummaries(result);
       setScanned(true);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(e?.toString() || 'Errore durante la scansione');
     } finally {
       setLoading(false);

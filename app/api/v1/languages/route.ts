@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 
 /**
  * 🔌 GameStringer Public API v1 - Languages
- * 
+ *
  * GET /api/v1/languages
- * 
+ *
  * Returns list of supported languages with their codes.
  */
 
@@ -44,7 +45,7 @@ const LANGUAGES: Language[] = [
   { code: 'uk', name: 'Ukrainian', nativeName: 'Українська', flag: '🇺🇦', supported: { libre: true, gemini: true, openai: true, deepl: true } },
 ];
 
-export async function GET() {
+export const GET = withErrorHandler(async function() {
   return NextResponse.json({
     success: true,
     count: LANGUAGES.length,
@@ -52,4 +53,4 @@ export async function GET() {
     providers: ['libre', 'gemini', 'openai', 'deepl', 'claude', 'deepseek', 'mistral'],
     timestamp: new Date().toISOString()
   });
-}
+});

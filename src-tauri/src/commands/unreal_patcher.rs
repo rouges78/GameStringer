@@ -365,7 +365,7 @@ fn find_game_executable(game_dir: &Path) -> Option<String> {
             for entry in entries.filter_map(|e| e.ok()) {
                 let path = entry.path();
                 if path.extension().map(|e| e == "exe").unwrap_or(false) {
-                    let name = path.file_name().unwrap().to_string_lossy().to_lowercase();
+                    let name = path.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
                     if !name.contains("crash") && !name.contains("cmd") {
                         return Some(format!("Binaries/Win64/{}", path.file_name()?.to_string_lossy()));
                     }

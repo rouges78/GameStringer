@@ -21,13 +21,13 @@ interface ApiResponse<T> {
 }
 
 // Simple in-memory cache
-const cache = new Map<string, { data: any; timestamp: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number }>();
 const DEFAULT_CACHE_TIME = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Main API client function
  */
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   url: string,
   options: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
@@ -91,7 +91,7 @@ export async function apiRequest<T = any>(
       }
 
       return { data, error: null, status: response.status };
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err.name === 'AbortError') {
         lastError = 'Request timeout';
       } else {
@@ -117,21 +117,21 @@ function sleep(ms: number): Promise<void> {
 
 // Convenience methods
 export const api = {
-  get: <T = any>(url: string, options?: RequestOptions) =>
+  get: <T = unknown>(url: string, options?: RequestOptions) =>
     apiRequest<T>(url, { ...options, method: 'GET' }),
 
-  post: <T = any>(url: string, body: any, options?: RequestOptions) =>
+  post: <T = unknown>(url: string, body: unknown, options?: RequestOptions) =>
     apiRequest<T>(url, { ...options, method: 'POST', body: JSON.stringify(body) }),
 
-  put: <T = any>(url: string, body: any, options?: RequestOptions) =>
+  put: <T = unknown>(url: string, body: unknown, options?: RequestOptions) =>
     apiRequest<T>(url, { ...options, method: 'PUT', body: JSON.stringify(body) }),
 
-  delete: <T = any>(url: string, options?: RequestOptions) =>
+  delete: <T = unknown>(url: string, options?: RequestOptions) =>
     apiRequest<T>(url, { ...options, method: 'DELETE' }),
 
   // Translation-specific endpoints
   translate: (text: string, targetLang: string, options?: { provider?: string; emotionAware?: boolean }) =>
-    apiRequest<{ translatedText: string; emotion?: any }>('/api/translate', {
+    apiRequest<{ translatedText: string; emotion?: string }>('/api/translate', {
       method: 'POST',
       body: JSON.stringify({
         text,

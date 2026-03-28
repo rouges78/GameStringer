@@ -11,7 +11,7 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
     logger.info('Fetching game library', 'GAMES_API', { provider, forceRefresh });
 
     // Check if we're in a Tauri environment
-    const isTauriEnvironment = typeof window !== 'undefined' && (window as any).__TAURI__;
+    const isTauriEnvironment = typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__TAURI__;
     
     if (isTauriEnvironment) {
       // Use Tauri integration for real game detection

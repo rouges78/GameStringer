@@ -6,7 +6,7 @@
 use crate::profiles::{ProfileCredentialManager, PlainCredential, StoreType, CredentialInfo, MigrationResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use tauri::State;
 
 /// Stato globale del credential manager
@@ -16,14 +16,20 @@ pub struct CredentialManagerState {
     pub manager: Mutex<ProfileCredentialManager>,
 }
 
+impl Default for CredentialManagerState {
+    fn default() -> Self {
+        Self {
+            manager: Mutex::new(ProfileCredentialManager::new()),
+        }
+    }
+}
+
 impl CredentialManagerState {
     /// Creates a new credential manager state
     /// FUTURE USE: Will be initialized when profile system is fully deployed
     #[allow(dead_code)]
     pub fn new() -> Self {
-        Self {
-            manager: Mutex::new(ProfileCredentialManager::new()),
-        }
+        Self::default()
     }
 }
 
@@ -67,7 +73,7 @@ pub async fn save_profile_credential(
     request: SaveCredentialRequest,
     state: State<'_, CredentialManagerState>,
 ) -> Result<String, String> {
-    let store_type = StoreType::from_str(&request.store)
+    let store_type = StoreType::parse_str(&request.store)
         .ok_or_else(|| format!("Store type non supportato: {}", request.store))?;
 
     let mut credential = PlainCredential::new(
@@ -83,8 +89,7 @@ pub async fn save_profile_credential(
         }
     }
 
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let mut manager = state.manager.lock().await;
 
     manager.save_credential(credential, &request.profile_password).await
         .map_err(|e| format!("Errore salvataggio credenziale: {}", e))?;
@@ -100,11 +105,10 @@ pub async fn load_profile_credential(
     request: LoadCredentialRequest,
     state: State<'_, CredentialManagerState>,
 ) -> Result<LoadCredentialResponse, String> {
-    let store_type = StoreType::from_str(&request.store)
+    let store_type = StoreType::parse_str(&request.store)
         .ok_or_else(|| format!("Store type non supportato: {}", request.store))?;
 
-    let manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let manager = state.manager.lock().await;
 
     let credential = manager.load_credential(store_type, &request.profile_password).await
         .map_err(|e| format!("Errore caricamento credenziale: {}", e))?;
@@ -128,11 +132,10 @@ pub async fn remove_profile_credential(
     profile_password: String,
     state: State<'_, CredentialManagerState>,
 ) -> Result<String, String> {
-    let store_type = StoreType::from_str(&store)
+    let store_type = StoreType::parse_str(&store)
         .ok_or_else(|| format!("Store type non supportato: {}", store))?;
 
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let mut manager = state.manager.lock().await;
 
     manager.remove_credential(store_type.clone(), &profile_password).await
         .map_err(|e| format!("Errore rimozione credenziale: {}", e))?;
@@ -147,8 +150,7 @@ pub async fn remove_profile_credential(
 pub async fn list_profile_credentials(
     state: State<'_, CredentialManagerState>,
 ) -> Result<Vec<String>, String> {
-    let manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let manager = state.manager.lock().await;
 
     let stores = manager.list_stored_credentials()
         .map_err(|e| format!("Errore lista credenziali: {}", e))?;
@@ -164,11 +166,10 @@ pub async fn has_profile_credential(
     store: String,
     state: State<'_, CredentialManagerState>,
 ) -> Result<bool, String> {
-    let store_type = StoreType::from_str(&store)
+    let store_type = StoreType::parse_str(&store)
         .ok_or_else(|| format!("Store type non supportato: {}", store))?;
 
-    let manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let manager = state.manager.lock().await;
 
     manager.has_credential(store_type)
         .map_err(|e| format!("Errore verifica credenziale: {}", e))
@@ -182,11 +183,10 @@ pub async fn get_profile_credential_info(
     store: String,
     state: State<'_, CredentialManagerState>,
 ) -> Result<Option<CredentialInfo>, String> {
-    let store_type = StoreType::from_str(&store)
+    let store_type = StoreType::parse_str(&store)
         .ok_or_else(|| format!("Store type non supportato: {}", store))?;
 
-    let manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let manager = state.manager.lock().await;
 
     manager.get_credential_info(store_type)
         .map_err(|e| format!("Errore info credenziale: {}", e))
@@ -200,8 +200,7 @@ pub async fn migrate_legacy_credentials(
     profile_password: String,
     state: State<'_, CredentialManagerState>,
 ) -> Result<MigrationResult, String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let mut manager = state.manager.lock().await;
 
     manager.migrate_legacy_credentials(&profile_password).await
         .map_err(|e| format!("Errore migrazione: {}", e))
@@ -216,11 +215,10 @@ pub async fn test_profile_credential_connection(
     profile_password: String,
     state: State<'_, CredentialManagerState>,
 ) -> Result<String, String> {
-    let store_type = StoreType::from_str(&store)
+    let store_type = StoreType::parse_str(&store)
         .ok_or_else(|| format!("Store type non supportato: {}", store))?;
 
-    let manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let manager = state.manager.lock().await;
 
     let credential = manager.load_credential(store_type.clone(), &profile_password).await
         .map_err(|e| format!("Errore caricamento credenziale: {}", e))?;
@@ -278,15 +276,14 @@ pub async fn clear_all_profile_credentials(
     profile_password: String,
     state: State<'_, CredentialManagerState>,
 ) -> Result<String, String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Errore accesso manager: {}", e))?;
+    let mut manager = state.manager.lock().await;
 
     let stores = manager.list_stored_credentials()
         .map_err(|e| format!("Errore lista credenziali: {}", e))?;
 
     let mut removed_count = 0;
     for store in stores {
-        if let Ok(_) = manager.remove_credential(store, &profile_password).await {
+        if manager.remove_credential(store, &profile_password).await.is_ok() {
             removed_count += 1;
         }
     }

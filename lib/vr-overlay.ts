@@ -235,7 +235,7 @@ class VROverlayService {
     try {
       // Check for WebXR support
       if ('xr' in navigator) {
-        const xr = (navigator as any).xr;
+        const xr = (navigator as unknown).xr;
         const isSupported = await xr.isSessionSupported('immersive-vr');
         
         if (isSupported) {

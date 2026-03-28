@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 
 const GITHUB_REPO_OWNER = 'rouges78';
 const GITHUB_REPO_NAME = 'GameStringer';
@@ -35,46 +36,40 @@ const DISCUSSIONS_QUERY = `
   }
 `;
 
-export async function GET() {
-  try {
-    // Prima prova senza token (pubblico)
-    const response = await fetch('https://api.github.com/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Token opzionale per rate limit più alto
-        ...(process.env.GITHUB_TOKEN ? { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` } : {})
-      },
-      body: JSON.stringify({
-        query: DISCUSSIONS_QUERY,
-        variables: {
-          owner: GITHUB_REPO_OWNER,
-          name: GITHUB_REPO_NAME,
-          first: 20
-        }
-      })
-    });
+export const GET = withErrorHandler(async function() {
+  // Prima prova senza token (pubblico)
+  const response = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      // Token opzionale per rate limit più alto
+      ...(process.env.GITHUB_TOKEN ? { 'Authorization': `Bearer ${process.env.GITHUB_TOKEN}` } : {})
+    },
+    body: JSON.stringify({
+      query: DISCUSSIONS_QUERY,
+      variables: {
+        owner: GITHUB_REPO_OWNER,
+        name: GITHUB_REPO_NAME,
+        first: 20
+      }
+    })
+  });
 
-    if (!response.ok) {
-      // Fallback: scrape della pagina HTML delle discussions
-      return await scrapeDiscussions();
-    }
-
-    const data = await response.json();
-    
-    if (data.errors) {
-      // GraphQL senza auth non funziona, prova scraping
-      return await scrapeDiscussions();
-    }
-
-    const discussions = data.data?.repository?.discussions?.nodes || [];
-    return NextResponse.json(discussions);
-    
-  } catch (error) {
-    console.error('Error fetching discussions:', error);
+  if (!response.ok) {
+    // Fallback: scrape della pagina HTML delle discussions
     return await scrapeDiscussions();
   }
-}
+
+  const data = await response.json();
+
+  if (data.errors) {
+    // GraphQL senza auth non funziona, prova scraping
+    return await scrapeDiscussions();
+  }
+
+  const discussions = data.data?.repository?.discussions?.nodes || [];
+  return NextResponse.json(discussions);
+});
 
 // Fallback: scrape della pagina HTML
 async function scrapeDiscussions() {
@@ -94,17 +89,17 @@ async function scrapeDiscussions() {
     }
 
     const html = await response.text();
-    
+
     // Parse semplice per estrarre le discussions dalla pagina HTML
-    const discussions: any[] = [];
-    
+    const discussions: unknown[] = [];
+
     // Regex per trovare i link alle discussions
     const discussionRegex = /\/discussions\/(\d+)"[^>]*>([^<]+)</g;
     let match;
-    
+
     while ((match = discussionRegex.exec(html)) !== null && discussions.length < 20) {
       const [, number, title] = match;
-      
+
       // Evita duplicati
       if (!discussions.find(d => d.number === parseInt(number))) {
         discussions.push({
@@ -125,7 +120,7 @@ async function scrapeDiscussions() {
     }
 
     return NextResponse.json(discussions);
-    
+
   } catch (error) {
     console.error('Error scraping discussions:', error);
     return NextResponse.json([]);

@@ -195,7 +195,7 @@ function parsePostEditResponse(raw: string): PostEditSuggestion | null {
       reason: String(parsed.reason || '').trim(),
       confidence: Math.min(100, Math.max(0, Number(parsed.confidence) || 70)),
       changes: Array.isArray(parsed.changes)
-        ? parsed.changes.map((c: any) => ({
+        ? parsed.changes.map((c: Record<string, unknown>) => ({
             type: String(c.type || 'fluency') as PostEditChange['type'],
             description: String(c.description || ''),
           }))

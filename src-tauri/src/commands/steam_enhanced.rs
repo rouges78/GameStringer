@@ -133,23 +133,17 @@ pub async fn get_enhanced_steam_info() -> Result<EnhancedSteamInfo, String> {
     match steam_dir.libraries() {
         Ok(libraries) => {
             for library_result in libraries {
-                match library_result {
-                    Ok(library) => {
-                        libraries_count += 1;
-                        
-                        for app_result in library.apps() {
-                            match app_result {
-                                Ok(app) => {
-                                    total_apps += 1;
-                                    if app.name.is_some() {
-                                        installed_apps += 1;
-                                    }
-                                },
-                                Err(_) => {}
+                if let Ok(library) = library_result {
+                    libraries_count += 1;
+                    
+                    for app_result in library.apps() {
+                        if let Ok(app) = app_result {
+                            total_apps += 1;
+                            if app.name.is_some() {
+                                installed_apps += 1;
                             }
                         }
-                    },
-                    Err(_) => {}
+                    }
                 }
             }
         },
@@ -241,18 +235,15 @@ pub async fn test_steamlocate_integration() -> Result<String, String> {
                         
                         let mut local_app_count = 0;
                         for app_result in library.apps() {
-                            match app_result {
-                                Ok(app) => {
-                                    app_count += 1;
-                                    local_app_count += 1;
-                                    
-                                    // Mostra solo i primi 3 giochi per libreria
-                                    if local_app_count <= 3 {
-                                        let name = app.name.as_deref().unwrap_or("Senza nome");
-                                        report.push_str(&format!("  🎮 {} (ID: {})\n", name, app.app_id));
-                                    }
-                                },
-                                Err(_) => {}
+                            if let Ok(app) = app_result {
+                                app_count += 1;
+                                local_app_count += 1;
+                                
+                                // Mostra solo i primi 3 giochi per libreria
+                                if local_app_count <= 3 {
+                                    let name = app.name.as_deref().unwrap_or("Senza nome");
+                                    report.push_str(&format!("  🎮 {} (ID: {})\n", name, app.app_id));
+                                }
                             }
                         }
                         
@@ -267,10 +258,10 @@ pub async fn test_steamlocate_integration() -> Result<String, String> {
                 }
             }
             
-            report.push_str(&format!("📊 RIEPILOGO:\n"));
+            report.push_str("📊 RIEPILOGO:\n");
             report.push_str(&format!("  - Librerie trovate: {}\n", lib_count));
             report.push_str(&format!("  - App totali: {}\n", app_count));
-            report.push_str(&format!("✅ Test steamlocate-rs completato con successo!\n"));
+            report.push_str("✅ Test steamlocate-rs completato con successo!\n");
         },
         Err(e) => {
             report.push_str(&format!("❌ Errore accesso librerie: {}\n", e));
@@ -366,7 +357,7 @@ async fn fetch_game_name_from_steam(appid: u32) -> Option<String> {
     let response = client.get(&url).send().await.ok()?;
     let json: serde_json::Value = response.json().await.ok()?;
     
-    json.get(&appid.to_string())?
+    json.get(appid.to_string())?
         .get("data")?
         .get("name")?
         .as_str()
@@ -792,11 +783,11 @@ pub async fn scan_all_steam_games_fast() -> Result<Vec<GameInfo>, String> {
                         if let Ok(appid) = folder_name.parse::<u32>() {
                             if is_dlc(appid) { continue; }
                             if appid < 1000 { continue; } // Salta app di sistema
-                            if !all_games.contains_key(&appid) {
+                            if let std::collections::hash_map::Entry::Vacant(e) = all_games.entry(appid) {
                                 let name = get_name(appid);
                                 if name.starts_with("Game ") { continue; }
                                 let engine = crate::engine_detector::detect_engine_by_name(&name);
-                                all_games.insert(appid, GameInfo {
+                                e.insert(GameInfo {
                                     id: format!("steam_shared_{}", appid),
                                     title: name,
                                     platform: "Steam".to_string(),
@@ -1940,8 +1931,8 @@ pub async fn save_batch_added_dates(game_ids: Vec<String>) -> Result<std::collec
         
         let mut new_games = 0;
         for game_id in game_ids {
-            if !cache.contains_key(&game_id) {
-                cache.insert(game_id, now);
+            if let std::collections::hash_map::Entry::Vacant(e) = cache.entry(game_id) {
+                e.insert(now);
                 new_games += 1;
             }
         }
@@ -2206,12 +2197,7 @@ pub async fn steam_openid_wait_callback(timeout_secs: u64) -> Result<String, Str
 }
 
 fn find_available_port() -> Option<u16> {
-    for port in 31350..31400 {
-        if TcpListener::bind(format!("127.0.0.1:{}", port)).is_ok() {
-            return Some(port);
-        }
-    }
-    None
+    (31350..31400).find(|&port| TcpListener::bind(format!("127.0.0.1:{}", port)).is_ok())
 }
 
 fn run_callback_server_sync(port: u16) {
@@ -2253,7 +2239,7 @@ fn run_callback_server_sync(port: u16) {
                 
                 // Extract SteamID from claimed_id
                 if let Some(claimed_id) = params.get("openid.claimed_id") {
-                    if let Some(steam_id) = claimed_id.split('/').last() {
+                    if let Some(steam_id) = claimed_id.split('/').next_back() {
                         info!("✅ Estratto SteamID dal callback: {}", steam_id);
                         *STEAM_CALLBACK_RESULT.blocking_lock() = Some(steam_id.to_string());
                     }
@@ -2305,7 +2291,7 @@ pub async fn steam_openid_verify(params: HashMap<String, String>) -> Result<Stri
     // Il claimed_id ha formato: https://steamcommunity.com/openid/id/76561198xxxxxxxxx
     let steam_id = claimed_id
         .split('/')
-        .last()
+        .next_back()
         .ok_or("Invalid claimed_id format")?
         .to_string();
     
@@ -2488,21 +2474,18 @@ pub async fn steam_get_wishlist(steam_id: String, api_key: Option<String>) -> Re
                                 // Recupera i nomi dei giochi in batch
                                 for game in &mut wishlist {
                                     if game.name.is_empty() {
-                                        match client.get(&format!(
+                                        if let Ok(r) = client.get(format!(
                                             "https://store.steampowered.com/api/appdetails?appids={}&filters=basic",
                                             game.app_id
                                         )).send().await {
-                                            Ok(r) => {
-                                                if let Ok(text) = r.text().await {
-                                                    if let Ok(details) = serde_json::from_str::<serde_json::Value>(&text) {
-                                                        let key = game.app_id.to_string();
-                                                        if let Some(name) = details[&key]["data"]["name"].as_str() {
-                                                            game.name = name.to_string();
-                                                        }
+                                            if let Ok(text) = r.text().await {
+                                                if let Ok(details) = serde_json::from_str::<serde_json::Value>(&text) {
+                                                    let key = game.app_id.to_string();
+                                                    if let Some(name) = details[&key]["data"]["name"].as_str() {
+                                                        game.name = name.to_string();
                                                     }
                                                 }
-                                            },
-                                            Err(_) => {}
+                                            }
                                         }
                                     }
                                 }

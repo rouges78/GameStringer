@@ -397,15 +397,13 @@ fn extract_strings_from_data(data: &[u8]) -> Result<Vec<LocalizedString>, String
             
             // Verifica che sia UTF-8 valido e contenga caratteri stampabili
             if let Ok(s) = std::str::from_utf8(str_data) {
-                if s.chars().all(|c| c.is_ascii_graphic() || c.is_ascii_whitespace() || !c.is_ascii()) {
-                    if s.len() > 1 && !s.chars().all(|c| c.is_ascii_digit()) {
-                        strings.push(LocalizedString {
-                            key: format!("str_{:08x}", i),
-                            value: s.to_string(),
-                            table_name: None,
-                            offset: i,
-                        });
-                    }
+                if s.chars().all(|c| c.is_ascii_graphic() || c.is_ascii_whitespace() || !c.is_ascii()) && s.len() > 1 && !s.chars().all(|c| c.is_ascii_digit()) {
+                    strings.push(LocalizedString {
+                        key: format!("str_{:08x}", i),
+                        value: s.to_string(),
+                        table_name: None,
+                        offset: i,
+                    });
                 }
             }
             i += 4 + len;

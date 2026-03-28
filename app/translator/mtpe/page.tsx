@@ -32,7 +32,7 @@ export default function MTPEPage() {
     }
   }, []);
   const [translations, setTranslations] = useState<Array<{ source: string; translation: string }>>([]);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<unknown[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -72,7 +72,7 @@ export default function MTPEPage() {
     setPhase('review');
   };
 
-  const handleComplete = (reviewedItems: any[]) => {
+  const handleComplete = (reviewedItems: unknown[]) => {
     setResults(reviewedItems);
     setPhase('complete');
   };

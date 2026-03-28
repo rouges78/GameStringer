@@ -161,7 +161,7 @@ impl ProfileStorage {
         // Verifica integrità file
         let current_hash = self.calculate_file_hash(&profile_path).await?;
         if current_hash != entry.file_hash {
-            return Err(StorageError::FileNotFound(format!("File profilo corrotto: hash non corrispondente")));
+            return Err(StorageError::FileNotFound("File profilo corrotto: hash non corrispondente".to_string()));
         }
         
         // Leggi file crittografato
@@ -186,14 +186,15 @@ impl ProfileStorage {
         profile.update_last_access();
         
         // Salva aggiornamento (senza password per evitare loop)
-        tokio::spawn({
-            let storage = ProfileStorage::new(self.profiles_dir.parent().unwrap().to_path_buf()).unwrap();
-            let profile_clone = profile.clone();
-            let password = password.to_string();
-            async move {
-                let _ = storage.save_profile(&profile_clone, &password).await;
+        if let Some(parent) = self.profiles_dir.parent() {
+            if let Ok(storage) = ProfileStorage::new(parent.to_path_buf()) {
+                let profile_clone = profile.clone();
+                let password = password.to_string();
+                tokio::spawn(async move {
+                    let _ = storage.save_profile(&profile_clone, &password).await;
+                });
             }
-        });
+        }
         
         println!("[PROFILE STORAGE] ✅ Profilo '{}' caricato", profile.name);
         Ok(profile)
@@ -203,7 +204,7 @@ impl ProfileStorage {
     #[allow(dead_code)] // API per sicurezza memoria - utilizzata in manager.rs
     pub async fn load_profile_secure(&self, id: &str, password: &SecureMemory<String>) -> StorageResult<UserProfile> {
         // Usa il metodo esistente con la password estratta da SecureMemory
-        self.load_profile(id, &**password).await
+        self.load_profile(id, password).await
     }
     
     /// Lista informazioni di tutti i profili

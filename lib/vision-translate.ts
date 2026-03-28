@@ -65,7 +65,7 @@ async function translateWithOllamaVision(
   imageBase64?: string,
   model: string = 'llava:13b'
 ): Promise<VisionTranslateResult> {
-  const body: any = {
+  const body: Record<string, unknown> = {
     model,
     prompt: `${VISION_SYSTEM_PROMPT}\n\n${prompt}`,
     stream: false,
@@ -109,7 +109,7 @@ async function translateWithOpenAIVision(
   const apiKey = typeof window !== 'undefined' ? localStorage.getItem('k.openai') : null;
   if (!apiKey) throw new Error('OpenAI API key not configured');
 
-  const messages: any[] = [
+  const messages: unknown[] = [
     { role: 'system', content: VISION_SYSTEM_PROMPT },
   ];
 
@@ -160,7 +160,7 @@ async function translateWithGeminiVision(
   const apiKey = typeof window !== 'undefined' ? localStorage.getItem('k.gemini') : null;
   if (!apiKey) throw new Error('Gemini API key not configured');
 
-  const parts: any[] = [{ text: `${VISION_SYSTEM_PROMPT}\n\n${prompt}` }];
+  const parts: unknown[] = [{ text: `${VISION_SYSTEM_PROMPT}\n\n${prompt}` }];
   if (imageBase64) {
     parts.push({
       inline_data: {
@@ -217,7 +217,7 @@ export async function getAvailableVisionModels(): Promise<string[]> {
     const data = await response.json();
     const models = data.models || [];
     return models
-      .map((m: any) => m.name as string)
+      .map((m: { name: string }) => m.name as string)
       .filter((name: string) => 
         name.includes('llava') || 
         name.includes('vision') || 

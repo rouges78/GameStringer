@@ -118,7 +118,7 @@ const CACHE_DURATION = 1000 * 60 * 30; // 30 minuti
 
 class NexusModsService {
   private apiKey: string | null = null;
-  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private cache: Map<string, { data: unknown; timestamp: number }> = new Map();
   private userInfo: NexusUserValidation | null = null;
 
   constructor() {
@@ -162,7 +162,7 @@ class NexusModsService {
     return null;
   }
 
-  private setCache(key: string, data: any): void {
+  private setCache(key: string, data: unknown): void {
     this.cache.set(key, { data, timestamp: Date.now() });
     this.saveCache();
   }

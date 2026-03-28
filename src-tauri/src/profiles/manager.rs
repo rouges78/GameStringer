@@ -257,7 +257,7 @@ impl ProfileManager {
 
         // Carica da storage
         let profiles = self.storage.list_profile_info().await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         println!("[PROFILE MANAGER] ✅ Lista profili caricata ({} profili)", profiles.len());
         Ok(profiles)
@@ -339,7 +339,7 @@ impl ProfileManager {
 
         // Salva profilo crittografato
         self.storage.save_profile(&profile, &request.password).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         // Avatar path è già impostato dalla richiesta se fornito
 
@@ -357,7 +357,7 @@ impl ProfileManager {
     pub async fn delete_profile(&mut self, profile_id: &str, password: &str) -> ProfileResult<()> {
         // Verifica che il profilo esista e la password sia corretta
         let profile = self.storage.load_profile(profile_id, password).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         // Non permettere eliminazione del profilo attivo
         if let Some(current) = &self.current_profile {
@@ -368,7 +368,7 @@ impl ProfileManager {
 
         // Elimina profilo
         self.storage.delete_profile(profile_id).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         // Invalida cache
         self.invalidate_cache();
@@ -399,7 +399,7 @@ impl ProfileManager {
             
             // Salva modifiche
             self.storage.save_profile(profile, password).await
-                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+                .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
             // Aggiorna statistiche sessione
             if let Some(stats) = &mut self.session_stats {
@@ -426,7 +426,7 @@ impl ProfileManager {
             
             // Salva modifiche
             self.storage.save_profile(profile, password).await
-                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+                .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
             // Aggiorna statistiche
             if let Some(stats) = &mut self.session_stats {
@@ -449,7 +449,7 @@ impl ProfileManager {
             
             // Salva modifiche
             self.storage.save_profile(profile, password).await
-                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+                .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
             // Aggiorna statistiche
             if let Some(stats) = &mut self.session_stats {
@@ -477,7 +477,7 @@ impl ProfileManager {
             
             // Salva modifiche
             self.storage.save_profile(profile, password).await
-                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+                .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
             // Aggiorna statistiche
             if let Some(stats) = &mut self.session_stats {
@@ -698,8 +698,7 @@ impl ProfileManager {
         // Autentica nuovo profilo
         let new_profile = self.authenticate_profile(name, password).await?;
         
-        println!("[PROFILE MANAGER] 🔄 Cambio profilo completato: {} -> {}", 
-                 "precedente", new_profile.name);
+        println!("[PROFILE MANAGER] 🔄 Cambio profilo completato: precedente -> {}", new_profile.name);
         
         Ok(new_profile)
     }
@@ -742,7 +741,7 @@ impl ProfileManager {
             .ok_or_else(|| ProfileError::ProfileNotFound(name.to_string()))?;
 
         self.storage.update_failed_attempts(&profile_info.id, false).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         // Invalida cache
         self.invalidate_cache();
@@ -815,7 +814,7 @@ impl ProfileManager {
     pub async fn change_profile_password(&mut self, profile_id: &str, old_password: &str, new_password: &str) -> ProfileResult<()> {
         // Verifica che il profilo esista e la vecchia password sia corretta
         let profile = self.storage.load_profile(profile_id, old_password).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         // Validazione nuova password
         if new_password.len() < 4 {
@@ -824,7 +823,7 @@ impl ProfileManager {
 
         // Salva con la nuova password
         self.storage.save_profile(&profile, new_password).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
             
         println!("[PROFILE MANAGER] 🔐 Password aggiornata per profilo {}", profile_id);
         Ok(())
@@ -908,7 +907,7 @@ impl ProfileManager {
                 
                 // Salva su disco
                 let filename = self.storage.save_avatar(profile_id, &image_data, "png").await
-                    .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+                    .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
                 
                 Some(filename)
             } else if data.len() > 100 { 
@@ -919,7 +918,7 @@ impl ProfileManager {
                 
                 // Salva su disco
                 let filename = self.storage.save_avatar(profile_id, &image_data, "png").await
-                    .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+                    .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
                  Some(filename)
             } else {
@@ -932,7 +931,7 @@ impl ProfileManager {
 
         // Aggiorna storage
         self.storage.update_profile_avatar(profile_id, avatar_path.clone()).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         // Aggiorna profilo corrente in memoria se corrisponde
         if let Some(profile) = &mut self.current_profile {
@@ -1090,7 +1089,7 @@ impl ProfileManager {
     pub async fn export_profile(&self, profile_id: &str, password: &str, export_password: Option<&str>) -> ProfileResult<ExportedProfile> {
         // Carica il profilo per verificare password
         let profile = self.storage.load_profile(profile_id, password).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         // Serializza il profilo completo
         let profile_json = serde_json::to_string_pretty(&profile)
@@ -1103,7 +1102,7 @@ impl ProfileManager {
         let encrypted_data = self.encryption.encrypt_profile_data(profile_json.as_bytes(), final_password)?;
 
         // Calcola hash integrità
-        let integrity_hash = self.calculate_data_hash(&profile_json.as_bytes());
+        let integrity_hash = self.calculate_data_hash(profile_json.as_bytes());
 
         // Crea metadati export
         let export_metadata = ExportMetadata {
@@ -1142,7 +1141,7 @@ impl ProfileManager {
 
         // Salva su file
         tokio::fs::write(file_path, export_data).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
 
         println!("[PROFILE MANAGER] ✅ Profilo esportato in file: {}", file_path);
         Ok(())
@@ -1200,7 +1199,7 @@ impl ProfileManager {
 
         // Salva il profilo importato
         self.storage.save_profile(&imported_profile, import_password).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         // Invalida cache
         self.invalidate_cache();
@@ -1213,7 +1212,7 @@ impl ProfileManager {
     pub async fn import_profile_from_file(&mut self, file_path: &str, import_password: &str, new_name: Option<String>) -> ProfileResult<UserProfile> {
         // Leggi file
         let export_data = tokio::fs::read(file_path).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
 
         // Deserializza export
         let exported: ExportedProfile = bincode::deserialize(&export_data)
@@ -1227,7 +1226,7 @@ impl ProfileManager {
     pub async fn validate_export_file(&self, file_path: &str) -> ProfileResult<ExportMetadata> {
         // Leggi file
         let export_data = tokio::fs::read(file_path).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
 
         // Deserializza export
         let exported: ExportedProfile = bincode::deserialize(&export_data)
@@ -1262,7 +1261,7 @@ impl ProfileManager {
         
         // Usa directory backup del storage
         let backup_path = self.storage.backup_profile(profile_id, &backup_name).await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
         println!("[PROFILE MANAGER] ✅ Backup creato: {}", backup_path.display());
         Ok(backup_path.to_string_lossy().to_string())
@@ -1284,10 +1283,10 @@ impl ProfileManager {
         
         // Combina metadati e dati per la firma
         let mut hasher = Sha256::new();
-        hasher.update(&metadata.profile_name.as_bytes());
-        hasher.update(&metadata.exported_at.to_rfc3339().as_bytes());
-        hasher.update(&metadata.app_version.as_bytes());
-        hasher.update(&metadata.integrity_hash.as_bytes());
+        hasher.update(metadata.profile_name.as_bytes());
+        hasher.update(metadata.exported_at.to_rfc3339().as_bytes());
+        hasher.update(metadata.app_version.as_bytes());
+        hasher.update(metadata.integrity_hash.as_bytes());
         hasher.update(encrypted_data);
         
         format!("{:x}", hasher.finalize())
@@ -1297,7 +1296,7 @@ impl ProfileManager {
     #[allow(dead_code)] // API per statistiche storage
     pub async fn get_storage_stats(&self) -> ProfileResult<crate::profiles::storage::StorageStats> {
         self.storage.get_storage_stats().await
-            .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))
+            .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))
     }
 
     /// Valida nome profilo
@@ -1351,7 +1350,7 @@ impl ProfileManager {
             
             // Salva profilo aggiornato
             self.storage.save_profile(profile, "").await
-                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+                .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
             Ok(())
         } else {
@@ -1383,7 +1382,7 @@ impl ProfileManager {
             
             // Salva profilo aggiornato
             self.storage.save_profile(profile, "").await
-                .map_err(|e| ProfileError::IoError(std::io::Error::new(std::io::ErrorKind::Other, e.to_string())))?;
+                .map_err(|e| ProfileError::IoError(std::io::Error::other(e.to_string())))?;
 
             Ok(())
         } else {
@@ -1433,7 +1432,7 @@ impl ProfileManager {
 
         // Leggi credenziali legacy
         let content = tokio::fs::read_to_string(&credentials_path).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
 
         let legacy_credentials: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| ProfileError::CorruptedProfile(format!("Formato credenziali legacy invalido: {}", e)))?;
@@ -1513,9 +1512,8 @@ impl ProfileManager {
                     file_path: credentials_path.to_string_lossy().to_string(),
                     created_at: metadata.created().ok()
                         .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                        .map(|d| chrono::DateTime::from_timestamp(d.as_secs() as i64, 0))
-                        .flatten()
-                        .unwrap_or_else(|| chrono::Utc::now()),
+                        .and_then(|d| chrono::DateTime::from_timestamp(d.as_secs() as i64, 0))
+                        .unwrap_or_else(chrono::Utc::now),
                     file_size: metadata.len(),
                 });
             }
@@ -1574,9 +1572,8 @@ impl ProfileManager {
                         file_path: file_path.to_string_lossy().to_string(),
                         created_at: metadata.created().ok()
                             .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                            .map(|d| chrono::DateTime::from_timestamp(d.as_secs() as i64, 0))
-                            .flatten()
-                            .unwrap_or_else(|| chrono::Utc::now()),
+                            .and_then(|d| chrono::DateTime::from_timestamp(d.as_secs() as i64, 0))
+                            .unwrap_or_else(chrono::Utc::now),
                         file_size: metadata.len(),
                     });
                 }
@@ -1643,7 +1640,7 @@ impl ProfileManager {
         settings_manager: &mut crate::profiles::settings_manager::ProfileSettingsManager
     ) -> ProfileResult<Vec<String>> {
         let content = tokio::fs::read_to_string(file_path).await
-            .map_err(|e| ProfileError::IoError(e))?;
+            .map_err(ProfileError::IoError)?;
 
         let legacy_data: serde_json::Value = serde_json::from_str(&content)
             .map_err(|e| ProfileError::CorruptedProfile(format!("Formato impostazioni legacy invalido: {}", e)))?;

@@ -236,7 +236,7 @@ export function BatchTranslationQueue({ onTranslateFile }: BatchTranslationQueue
           ));
         }
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Translation error:', error);
         setQueue(prev => prev.map(j => 
           j.id === job.id ? { 

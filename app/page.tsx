@@ -136,7 +136,7 @@ export default function Dashboard() {
           const r = await fetch('http://localhost:11434/api/tags', { signal: AbortSignal.timeout(5000) });
           if (r.ok) {
             const data = await r.json();
-            const models = data.models as any[];
+            const models = data.models as unknown[];
             setOllamaStatus({ running: true, models: models.length, bestModel: models[0]?.name || '' });
           }
         } catch {}
@@ -165,7 +165,7 @@ export default function Dashboard() {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.models) {
-          const models = data.models as any[];
+          const models = data.models as unknown[];
           setOllamaStatus({ running: true, models: models.length, bestModel: models[0]?.name || '' });
         }
       })
@@ -181,7 +181,7 @@ export default function Dashboard() {
     try {
       setLoading(true);
       
-      let games: any[] = [];
+      let games: unknown[] = [];
       
       // Prima prova dalla cache sessione della libreria (già popolata, multi-store)
       try {
@@ -197,11 +197,11 @@ export default function Dashboard() {
       // Se non c'è cache, carica da backend
       if (games.length === 0) {
         try {
-          const allGames = await invoke('get_games') as any[];
+          const allGames = await invoke('get_games') as unknown[];
           if (allGames && allGames.length > 0) games = allGames;
         } catch {
           try {
-            const steamGames = await invoke('get_steam_games', { apiKey: '', steamId: '', forceRefresh: false }) as any[];
+            const steamGames = await invoke('get_steam_games', { apiKey: '', steamId: '', forceRefresh: false }) as unknown[];
             if (steamGames && steamGames.length > 0) games = steamGames;
           } catch {
             console.log('Dashboard: No games loaded');
@@ -210,8 +210,8 @@ export default function Dashboard() {
       }
       
       // --- Dati reali: Activity History ---
-      let savedTranslations: any[] = [];
-      let savedPatches: any[] = [];
+      let savedTranslations: unknown[] = [];
+      let savedPatches: unknown[] = [];
       
       try {
         const allActivities = await activityHistory.getRecent(500);
@@ -230,9 +230,9 @@ export default function Dashboard() {
       // --- Dati reali: Translation Memory (backend Rust) ---
       let tmEntries = 0;
       try {
-        const tmList = await invoke('list_translation_memories') as any[];
+        const tmList = await invoke('list_translation_memories') as unknown[];
         if (tmList && Array.isArray(tmList)) {
-          tmEntries = tmList.reduce((sum: number, tm: any) => sum + (tm.unit_count || tm.unitCount || 0), 0);
+          tmEntries = tmList.reduce((sum: number, tm: unknown) => sum + (tm.unit_count || tm.unitCount || 0), 0);
         }
       } catch (e) {
         console.log('Dashboard: TM not available', e);
@@ -243,7 +243,7 @@ export default function Dashboard() {
       
       // Conta giochi per piattaforma/store dai dati reali
       const platformCount: Record<string, number> = {};
-      games.forEach((g: any) => {
+      games.forEach((g: unknown) => {
         const p = (g.platform || g.source || 'Steam').toLowerCase();
         const key = p.includes('steam') ? 'steam'
           : p.includes('epic') ? 'epic'
@@ -270,18 +270,18 @@ export default function Dashboard() {
       };
       
       const engineStats: Record<string, number> = {};
-      games.forEach((g: any) => {
+      games.forEach((g: unknown) => {
         const engine = g.engine || 'Unknown';
         engineStats[engine] = (engineStats[engine] || 0) + 1;
       });
       
       const platformStats: Record<string, number> = {};
-      games.forEach((g: any) => {
+      games.forEach((g: unknown) => {
         const platform = g.platform || 'Unknown';
         platformStats[platform] = (platformStats[platform] || 0) + 1;
       });
       
-      const completedTranslations = savedTranslations.filter((t: any) => 
+      const completedTranslations = savedTranslations.filter((t: unknown) => 
         t.status === 'completed' || t.title?.includes('completata')
       ).length || savedTranslations.length;
       
@@ -293,7 +293,7 @@ export default function Dashboard() {
         total: savedTranslations.length,
         completed: completedTranslations,
         pending: savedTranslations.length - completedTranslations,
-        edited: savedTranslations.filter((t: any) => t.status === 'edited').length
+        edited: savedTranslations.filter((t: unknown) => t.status === 'edited').length
       };
       
       let lastScan = new Date(Date.now());
@@ -350,7 +350,7 @@ export default function Dashboard() {
 
       setStats({
         totalGames: games.length,
-        installedGames: games.filter((g: any) => g.is_installed).length,
+        installedGames: games.filter((g: unknown) => g.is_installed).length,
         translations: savedTranslations.length,
         patches: savedPatches.length,
         tmEntries,

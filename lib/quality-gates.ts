@@ -16,7 +16,7 @@ export interface QualityCheck {
   severity: 'error' | 'warning' | 'info';
   passed: boolean;
   message?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export interface QualityReport {

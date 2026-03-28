@@ -42,7 +42,7 @@ impl NotificationStorage {
 
     /// Inizializza il database e crea le tabelle
     pub async fn initialize(&self) -> NotificationResult<()> {
-        let mut conn_guard = self.connection.lock().unwrap();
+        let mut conn_guard = self.connection.lock().unwrap_or_else(|e| e.into_inner());
         
         if conn_guard.is_none() {
             // Crea la directory se non esiste
@@ -132,7 +132,7 @@ impl NotificationStorage {
 
     /// Ottiene una connessione al database
     fn get_connection(&self) -> NotificationResult<std::sync::MutexGuard<Option<Connection>>> {
-        Ok(self.connection.lock().unwrap())
+        Ok(self.connection.lock().unwrap_or_else(|e| e.into_inner()))
     }
 
     /// Salva una notifica nel database
@@ -355,7 +355,7 @@ impl NotificationStorage {
 
         let type_settings_json = serde_json::to_string(&preferences.type_settings)?;
         let quiet_hours_json = preferences.quiet_hours.as_ref()
-            .map(|qh| serde_json::to_string(qh))
+            .map(serde_json::to_string)
             .transpose()?;
 
         conn.execute(
@@ -504,23 +504,26 @@ impl NotificationStorage {
 
     /// Ottiene tutti i profili con le loro preferenze per la pulizia
     pub async fn get_all_profiles_with_preferences(&self) -> NotificationResult<Vec<(String, Option<NotificationPreferences>)>> {
-        let conn_guard = self.get_connection()?;
-        let conn = conn_guard
-            .as_ref()
-            .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
+        let profile_ids = {
+            let conn_guard = self.get_connection()?;
+            let conn = conn_guard
+                .as_ref()
+                .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
 
-        // Prima ottieni tutti i profili unici dalle notifiche
-        let mut stmt = conn.prepare("SELECT DISTINCT profile_id FROM notifications")?;
-        let profile_iter = stmt.query_map([], |row| {
-            Ok(row.get::<_, String>("profile_id")?)
-        })?;
+            // Prima ottieni tutti i profili unici dalle notifiche
+            let mut stmt = conn.prepare("SELECT DISTINCT profile_id FROM notifications")?;
+            let profile_iter = stmt.query_map([], |row| {
+                row.get::<_, String>("profile_id")
+            })?;
 
-        let mut profile_ids = Vec::new();
-        for profile_result in profile_iter {
-            let profile_id = profile_result?;
-            profile_ids.push(profile_id);
-        }
-        
+            let mut ids = Vec::new();
+            for profile_result in profile_iter {
+                let profile_id = profile_result?;
+                ids.push(profile_id);
+            }
+            ids
+        }; // conn_guard dropped here before await
+
         // Ora carica le preferenze per ogni profilo
         let mut results = Vec::new();
         for profile_id in profile_ids {
@@ -538,17 +541,15 @@ impl NotificationStorage {
             .as_ref()
             .ok_or_else(|| NotificationError::StorageError("Database non inizializzato".to_string()))?;
 
-        let mut stats = NotificationStats::default();
-
         // Conta totali
-        stats.total_notifications = conn.query_row(
+        let total_notifications = conn.query_row(
             "SELECT COUNT(*) FROM notifications WHERE profile_id = ?1",
             params![profile_id],
             |row| row.get::<_, i64>(0),
         )? as u32;
 
         // Conta non lette
-        stats.unread_notifications = conn.query_row(
+        let unread_notifications = conn.query_row(
             "SELECT COUNT(*) FROM notifications WHERE profile_id = ?1 AND read_at IS NULL",
             params![profile_id],
             |row| row.get::<_, i64>(0),
@@ -556,39 +557,37 @@ impl NotificationStorage {
 
         // Conta scadute
         let now = Utc::now().to_rfc3339();
-        stats.expired_notifications = conn.query_row(
+        let expired_notifications = conn.query_row(
             "SELECT COUNT(*) FROM notifications WHERE profile_id = ?1 AND expires_at IS NOT NULL AND expires_at < ?2",
             params![profile_id, now],
             |row| row.get::<_, i64>(0),
         )? as u32;
 
         // Notifica più vecchia
-        let oldest_result: Result<String, rusqlite::Error> = conn.query_row(
+        let oldest_notification = conn.query_row(
             "SELECT created_at FROM notifications WHERE profile_id = ?1 ORDER BY created_at ASC LIMIT 1",
             params![profile_id],
-            |row| row.get(0),
-        );
-
-        if let Ok(oldest_str) = oldest_result {
-            if let Ok(oldest_date) = DateTime::parse_from_rfc3339(&oldest_str) {
-                stats.oldest_notification = Some(oldest_date.with_timezone(&Utc));
-            }
-        }
+            |row| row.get::<_, String>(0),
+        ).ok()
+            .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+            .map(|d| d.with_timezone(&Utc));
 
         // Notifica più recente
-        let newest_result: Result<String, rusqlite::Error> = conn.query_row(
+        let newest_notification = conn.query_row(
             "SELECT created_at FROM notifications WHERE profile_id = ?1 ORDER BY created_at DESC LIMIT 1",
             params![profile_id],
-            |row| row.get(0),
-        );
+            |row| row.get::<_, String>(0),
+        ).ok()
+            .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
+            .map(|d| d.with_timezone(&Utc));
 
-        if let Ok(newest_str) = newest_result {
-            if let Ok(newest_date) = DateTime::parse_from_rfc3339(&newest_str) {
-                stats.newest_notification = Some(newest_date.with_timezone(&Utc));
-            }
-        }
-
-        Ok(stats)
+        Ok(NotificationStats {
+            total_notifications,
+            unread_notifications,
+            expired_notifications,
+            oldest_notification,
+            newest_notification,
+        })
     }
 
     /// Converte una riga del database in NotificationPreferences
@@ -990,7 +989,7 @@ impl NotificationStorage {
         )?;
 
         let unread_iter = stmt.query_map(params![broadcast_id], |row| {
-            Ok(row.get::<_, String>(0)?)
+            row.get::<_, String>(0)
         })?;
 
         let mut unread_by_profiles = Vec::new();
@@ -1100,7 +1099,7 @@ impl NotificationStorage {
 
         let mut stmt = conn.prepare("SELECT DISTINCT profile_id FROM notifications")?;
         let profile_iter = stmt.query_map([], |row| {
-            Ok(row.get::<_, String>(0)?)
+            row.get::<_, String>(0)
         })?;
 
         let mut profile_ids = Vec::new();

@@ -15,7 +15,7 @@ export interface ParsedString {
   context?: string;
   comment?: string;
   maxLength?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ParseResult {
@@ -536,7 +536,7 @@ export function parseJSON(content: string): ParseResult {
 /**
  * Appiattisce JSON annidato
  */
-function flattenJSON(obj: any, prefix: string, strings: ParsedString[]): void {
+function flattenJSON(obj: unknown, prefix: string, strings: ParsedString[]): void {
   for (const [key, value] of Object.entries(obj)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
     
@@ -558,7 +558,7 @@ export function writeJSON(
 ): string {
   if (options.nested) {
     // Reconstruct nested structure
-    const obj: any = {};
+    const obj: unknown = {};
     
     for (const str of result.strings) {
       const translation = translations.get(str.key) || str.value;

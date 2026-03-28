@@ -17,7 +17,7 @@ interface CacheStats {
 }
 
 class CacheManager {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   private stats = { hits: 0, misses: 0 };
 
   // 🔧 Configura TTL default per diversi tipi di dati
@@ -176,6 +176,6 @@ export const useCacheStats = () => {
 
 // 📊 Debug cache in sviluppo
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  (window as any).gameStringerCache = cacheManager;
+  (window as unknown as Record<string, unknown>).gameStringerCache = cacheManager;
   console.log('🔧 GameStringer Cache Manager disponibile in window.gameStringerCache');
 }

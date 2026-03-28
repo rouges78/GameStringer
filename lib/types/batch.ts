@@ -34,7 +34,7 @@ export interface BatchResult {
 export interface BatchItemResult {
   itemId: string;
   success: boolean;
-  result?: any;
+  result?: unknown;
   error?: string;
   duration?: number;
 }

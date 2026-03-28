@@ -259,7 +259,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
       } else {
         setIgdbError(result.error || 'Errore durante la ricerca su IGDB');
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('IGDB fetch error:', e);
       // Se il comando non esiste, mostra messaggio appropriato
       if (e.toString().includes('not found') || e.toString().includes('command')) {
@@ -456,7 +456,7 @@ export function CoverPicker({ isOpen, onClose, appId, gameName, onCoverSelected,
             )}
           </div>
         ) : (
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="flex-1 flex flex-col overflow-hidden">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as string)} className="flex-1 flex flex-col overflow-hidden">
           <div className="flex items-center justify-between">
             <TabsList className="grid grid-cols-4 w-fit">
               <TabsTrigger value="grid" className="gap-1">

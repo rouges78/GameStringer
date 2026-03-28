@@ -776,7 +776,7 @@ pub async fn analyze_all_installed_games() -> Result<Vec<GameQuickSummary>, Stri
     let mut summaries: Vec<GameQuickSummary> = Vec::new();
 
     for game in &installed {
-        let path_str = game.install_path.as_ref().unwrap();
+        let Some(path_str) = game.install_path.as_ref() else { continue; };
         let game_path = PathBuf::from(path_str);
         if !game_path.exists() { continue; }
 

@@ -1,114 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withErrorHandler } from '@/lib/error-handler';
 
-export async function GET(
+export const GET = withErrorHandler(async function(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const includeTranslations = searchParams.get('includeTranslations') === 'true';
+  const { id } = await params;
+  const { searchParams } = new URL(request.url);
+  const includeTranslations = searchParams.get('includeTranslations') === 'true';
 
-    // Build the query based on what data is requested
-    const include: any = {};
-    if (includeTranslations) {
-      include.translations = {
-        include: {
-          suggestions: {
-            orderBy: { confidence: 'desc' },
-            take: 3
-          }
-        },
-        orderBy: { updatedAt: 'desc' }
-      };
-    }
+  // Build the query based on what data is requested
+  const include: Record<string, unknown> = {};
+  if (includeTranslations) {
+    include.translations = {
+      include: {
+        suggestions: {
+          orderBy: { confidence: 'desc' },
+          take: 3
+        }
+      },
+      orderBy: { updatedAt: 'desc' }
+    };
+  }
 
-    const game = await prisma.game.findUnique({
-      where: { id },
-      include
-    });
+  const game = await prisma.game.findUnique({
+    where: { id },
+    include
+  });
 
-    if (!game) {
-      return NextResponse.json(
-        { error: 'Game not found' },
-        { status: 404 }
-      );
-    }
-
-    // If translations are included, add summary stats
-    if (includeTranslations && game.translations) {
-      const stats = {
-        total: game.translations.length,
-        completed: game.translations.filter((t: any) => t.status === 'completed').length,
-        pending: game.translations.filter((t: any) => t.status === 'pending').length,
-        reviewed: game.translations.filter((t: any) => t.status === 'reviewed').length,
-        edited: game.translations.filter((t: any) => t.status === 'edited').length,
-        averageConfidence: game.translations.reduce((sum, t) => sum + t.confidence, 0) / game.translations.length || 0
-      };
-
-      return NextResponse.json({
-        ...game,
-        translationStats: stats
-      });
-    }
-
-    return NextResponse.json(game);
-
-  } catch (error) {
-    console.error('Error fetching game:', error);
+  if (!game) {
     return NextResponse.json(
-      { error: 'Failed to fetch game' },
-      { status: 500 }
+      { error: 'Game not found' },
+      { status: 404 }
     );
   }
-}
 
-export async function PUT(
+  // If translations are included, add summary stats
+  if (includeTranslations && game.translations) {
+    const stats = {
+      total: game.translations.length,
+      completed: game.translations.filter((t: unknown) => t.status === 'completed').length,
+      pending: game.translations.filter((t: unknown) => t.status === 'pending').length,
+      reviewed: game.translations.filter((t: unknown) => t.status === 'reviewed').length,
+      edited: game.translations.filter((t: unknown) => t.status === 'edited').length,
+      averageConfidence: game.translations.reduce((sum, t) => sum + t.confidence, 0) / game.translations.length || 0
+    };
+
+    return NextResponse.json({
+      ...game,
+      translationStats: stats
+    });
+  }
+
+  return NextResponse.json(game);
+});
+
+export const PUT = withErrorHandler(async function(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
-    const body = await request.json();
+  const { id } = await params;
+  const body = await request.json();
 
-    const game = await prisma.game.update({
-      where: { id },
-      data: {
-        ...body,
-        updatedAt: new Date()
-      }
-    });
+  const game = await prisma.game.update({
+    where: { id },
+    data: {
+      ...body,
+      updatedAt: new Date()
+    }
+  });
 
-    return NextResponse.json(game, { status: 200 });
+  return NextResponse.json(game, { status: 200 });
+});
 
-  } catch (error) {
-    console.error('Error updating game:', error);
-    return NextResponse.json(
-      { error: 'Failed to update game' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
+export const DELETE = withErrorHandler(async function(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
+  const { id } = await params;
 
-    await prisma.game.delete({
-      where: { id }
-    });
+  await prisma.game.delete({
+    where: { id }
+  });
 
-    return NextResponse.json({ message: 'Game deleted successfully' }, { status: 200 });
-
-  } catch (error) {
-    console.error('Error deleting game:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete game' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({ message: 'Game deleted successfully' }, { status: 200 });
+});

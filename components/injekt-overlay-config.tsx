@@ -104,7 +104,7 @@ export function InjektOverlayConfig({ config, onConfigChange }: InjektOverlayCon
     setLocalConfig(config);
   }, [config]);
 
-  const handleChange = (key: keyof OverlayConfig, value: any) => {
+  const handleChange = (key: keyof OverlayConfig, value: unknown) => {
     const newConfig = { ...localConfig, [key]: value };
     setLocalConfig(newConfig);
     onConfigChange(newConfig);
@@ -406,7 +406,7 @@ export function InjektOverlayConfig({ config, onConfigChange }: InjektOverlayCon
                 <Label>{t('injektOverlayConfigComp.basePosition')}</Label>
                 <Select
                   value={localConfig.position}
-                  onValueChange={(value: any) => handleChange('position', value)}
+                  onValueChange={(value: unknown) => handleChange('position', value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -510,7 +510,7 @@ export function InjektOverlayConfig({ config, onConfigChange }: InjektOverlayCon
                     <Label>{t('injektOverlayConfigComp.animationType')}</Label>
                     <Select
                       value={localConfig.animationType}
-                      onValueChange={(value: any) => handleChange('animationType', value)}
+                      onValueChange={(value: unknown) => handleChange('animationType', value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -706,7 +706,7 @@ export function InjektOverlayConfig({ config, onConfigChange }: InjektOverlayCon
 }
 
 function getOverlayPosition(position: string, offset: { x: number; y: number }) {
-  const base: any = {
+  const base: Record<string, unknown> = {
     'top-left': { top: 20, left: 20 },
     'top-center': { top: 20, left: '50%', transform: 'translateX(-50%)' },
     'top-right': { top: 20, right: 20 },

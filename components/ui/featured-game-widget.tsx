@@ -73,19 +73,19 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
       setIsLoading(true);
       try {
         // Prova più metodi per ottenere i giochi
-        let games: any[] = [];
+        let games: unknown[] = [];
         
         try {
-          const result = await invoke<any>('scan_steam_with_steamlocate');
+          const result = await invoke<unknown>('scan_steam_with_steamlocate');
           games = result?.games || result?.installed_games || result || [];
         } catch {
           // Fallback: prova get_steam_games
           try {
-            games = await invoke<any[]>('get_steam_games', { apiKey: '', steamId: '', forceRefresh: false }) || [];
+            games = await invoke<unknown[]>('get_steam_games', { apiKey: '', steamId: '', forceRefresh: false }) || [];
           } catch {
             // Fallback: prova get_games
             try {
-              games = await invoke<any[]>('get_games') || [];
+              games = await invoke<unknown[]>('get_games') || [];
             } catch {
               games = [];
             }
@@ -123,7 +123,7 @@ export function FeaturedGameWidget({ collapsed = false }: FeaturedGameWidgetProp
           if (!gameAppId || gameAppId <= 0) continue;
           
           try {
-            const details = await invoke<any>('fetch_steam_game_details', { appId: gameAppId });
+            const details = await invoke<unknown>('fetch_steam_game_details', { appId: gameAppId });
             if (details && details.supported_languages) {
               const hasLang = gameHasLanguage(details.supported_languages, targetLang);
               if (!hasLang) {

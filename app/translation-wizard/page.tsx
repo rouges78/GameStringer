@@ -152,8 +152,8 @@ export default function TranslationWizardPage() {
         if (!autoGame.install_path) {
           (async () => {
             try {
-              const allGames = await invoke('scan_all_steam_games_fast') as any[];
-              const match = allGames?.find((sg: any) =>
+              const allGames = await invoke('scan_all_steam_games_fast') as unknown[];
+              const match = allGames?.find((sg: unknown) =>
                 (sg.steam_app_id && String(sg.steam_app_id) === String(g.steam_app_id)) ||
                 (sg.title && sg.title.toLowerCase() === g.title?.toLowerCase())
               );
@@ -211,8 +211,8 @@ export default function TranslationWizardPage() {
       const allGames = await invoke('scan_all_steam_games_fast');
       if (Array.isArray(allGames)) {
         const installedGames = allGames
-          .filter((g: any) => g.is_installed && g.title && g.install_path)
-          .map((g: any) => ({
+          .filter((g: unknown) => g.is_installed && g.title && g.install_path)
+          .map((g: unknown) => ({
             id: String(g.steam_app_id || g.id),
             title: g.title,
             steam_app_id: g.steam_app_id,
@@ -259,9 +259,9 @@ export default function TranslationWizardPage() {
       setAnalysisProgress(15);
       setAnalysisStatus('Analisi profonda del motore di gioco...');
       let engine = 'Unknown';
-      let engineDetails: any = null;
+      let engineDetails: unknown = null;
       try {
-        engineDetails = await invoke<any>('check_game_engine', { gamePath: installPath });
+        engineDetails = await invoke<unknown>('check_game_engine', { gamePath: installPath });
         engine = engineDetails?.engine_name || 'Unknown';
         console.log('[Wizard] Rust engine detection:', engine, engineDetails);
       } catch (e) {
@@ -272,9 +272,9 @@ export default function TranslationWizardPage() {
       // Step 3: DEEP localization scan via Rust
       setAnalysisProgress(30);
       setAnalysisStatus('Scansione profonda file di localizzazione...');
-      let locInfo: any = null;
+      let locInfo: unknown = null;
       try {
-        locInfo = await invoke<any>('detect_localization_files', { gamePath: installPath });
+        locInfo = await invoke<unknown>('detect_localization_files', { gamePath: installPath });
         console.log('[Wizard] Rust loc detection:', locInfo);
       } catch (e) {
         console.warn('[Wizard] detect_localization_files failed:', e);
@@ -283,9 +283,9 @@ export default function TranslationWizardPage() {
       // Step 4: Get full recommendation from Rust backend
       setAnalysisProgress(50);
       setAnalysisStatus('Generazione raccomandazione intelligente...');
-      let rustRecommendation: any = null;
+      let rustRecommendation: unknown = null;
       try {
-        rustRecommendation = await invoke<any>('get_translation_recommendation', { gamePath: installPath, gameName: game.title });
+        rustRecommendation = await invoke<unknown>('get_translation_recommendation', { gamePath: installPath, gameName: game.title });
         console.log('[Wizard] Rust recommendation:', rustRecommendation);
       } catch (e) {
         console.warn('[Wizard] get_translation_recommendation failed:', e);
@@ -306,7 +306,7 @@ export default function TranslationWizardPage() {
               path: rustFile.path,
               name: rustFile.name || rustFile.path.split(/[\\/]/).pop() || '',
               size: rustFile.size || 0,
-              type: (rustFile.extension || 'unknown') as any,
+              type: (rustFile.extension || 'unknown') as unknown,
               languages: rustFile.languages || [],
               stringCount: rustFile.string_count || 0,
               hasItalian: rustFile.has_italian || false,
@@ -403,7 +403,7 @@ export default function TranslationWizardPage() {
       
       // If Rust recommended specific tools, consider them as alternatives
       if (rustRecommendation?.tools?.length) {
-        const rustToolIds = new Set(rustRecommendation.tools.filter((t: any) => t.available).map((t: any) => t.id));
+        const rustToolIds = new Set(rustRecommendation.tools.filter((t: unknown) => t.available).map((t: unknown) => t.id));
         console.log(`[Wizard] Rust tools: ${[...rustToolIds].join(', ')}`);
       }
 
@@ -474,7 +474,7 @@ export default function TranslationWizardPage() {
       // Use the new scan_localization_files command with deeper search
       const extensions = ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings', 'ini'];
       
-      const results = await invoke<any[]>('scan_localization_files', { 
+      const results = await invoke<unknown[]>('scan_localization_files', { 
         path: installPath,
         extensions,
         maxDepth: 10  // Increased depth for Unity _Data subfolders
@@ -513,7 +513,7 @@ export default function TranslationWizardPage() {
               path: file.path,
               name: file.name,
               size: file.size,
-              type: (file.extension || 'unknown') as any,
+              type: (file.extension || 'unknown') as unknown,
               languages: [],
               stringCount: 0,
               hasItalian: false
@@ -859,13 +859,13 @@ export default function TranslationWizardPage() {
     // Find exe/dll files
     let binaryFiles: string[] = [];
     try {
-      const allFiles = await invoke<any[]>('scan_localization_files', { 
+      const allFiles = await invoke<unknown[]>('scan_localization_files', { 
         path: gameCtx.installPath, extensions: ['exe', 'dll'], maxDepth: 3 
       });
       binaryFiles = (allFiles || [])
-        .filter((f: any) => f.size > 50000 && f.size < 200000000) // 50KB - 200MB
-        .sort((a: any, b: any) => b.size - a.size)
-        .map((f: any) => f.path);
+        .filter((f: unknown) => f.size > 50000 && f.size < 200000000) // 50KB - 200MB
+        .sort((a: unknown, b: unknown) => b.size - a.size)
+        .map((f: unknown) => f.path);
     } catch {
       // Fallback: try to find main exe
       try {
@@ -1148,7 +1148,7 @@ export default function TranslationWizardPage() {
     setTranslateProgress(20);
 
     try {
-      const result = await invoke<any>('install_unity_autotranslator', {
+      const result = await invoke<unknown>('install_unity_autotranslator', {
         gamePath: gameCtx.installPath,
         gameExeName: exeName,
         targetLang: targetLanguage,
@@ -1181,14 +1181,14 @@ export default function TranslationWizardPage() {
     // Check if there are already captured strings to translate
     setTranslateProgress(90);
     try {
-      const translations = await invoke<any[]>('read_xunity_translations', { gamePath: gameCtx.installPath });
+      const translations = await invoke<unknown[]>('read_xunity_translations', { gamePath: gameCtx.installPath });
       if (translations && translations.length > 0) {
         log(`\n  📝 ${translations.length} stringhe già catturate trovate!`);
         log('  🤖 Traduzione automatica...');
 
-        const untranslated = translations.filter((t: any) => !t.translation || t.translation === t.original);
+        const untranslated = translations.filter((t: unknown) => !t.translation || t.translation === t.original);
         if (untranslated.length > 0) {
-          const texts = untranslated.slice(0, 200).map((t: any) => t.original);
+          const texts = untranslated.slice(0, 200).map((t: unknown) => t.original);
           try {
             const result = await translateSmart({
               texts,
@@ -1231,10 +1231,10 @@ export default function TranslationWizardPage() {
     // Find .rpy files
     let rpyFiles: string[] = [];
     try {
-      const files = await invoke<any[]>('scan_localization_files', {
+      const files = await invoke<unknown[]>('scan_localization_files', {
         path: gameCtx.installPath, extensions: ['rpy'], maxDepth: 5
       });
-      rpyFiles = (files || []).filter((f: any) => f.size > 100).map((f: any) => f.path);
+      rpyFiles = (files || []).filter((f: unknown) => f.size > 100).map((f: unknown) => f.path);
     } catch {}
 
     if (rpyFiles.length === 0) {
@@ -1320,9 +1320,9 @@ export default function TranslationWizardPage() {
     setTranslateStatus('Estrazione stringhe Unreal...');
 
     // Step 1: Try extract_unreal_localization (handles loose .locres + .pak)
-    let extraction: any = null;
+    let extraction: unknown = null;
     try {
-      extraction = await invoke<any>('extract_unreal_localization', { gamePath: gameCtx.installPath });
+      extraction = await invoke<unknown>('extract_unreal_localization', { gamePath: gameCtx.installPath });
       if (extraction?.success && extraction?.entries?.length > 0) {
         log(`  ✅ Estratte ${extraction.entries.length} stringhe`);
         log(`  📄 Sorgente: ${extraction.message || extraction.source_file}`);
@@ -1335,7 +1335,7 @@ export default function TranslationWizardPage() {
     if (!extraction?.success || !extraction?.entries?.length) {
       log('  🔄 Provo estrazione IoStore (UE5)...');
       try {
-        extraction = await invoke<any>('extract_iostore_localization', { gamePath: gameCtx.installPath });
+        extraction = await invoke<unknown>('extract_iostore_localization', { gamePath: gameCtx.installPath });
         if (extraction?.success && extraction?.entries?.length > 0) {
           log(`  ✅ IoStore: ${extraction.entries.length} stringhe`);
           log(`  📄 ${extraction.message}`);
@@ -1431,7 +1431,7 @@ export default function TranslationWizardPage() {
     log('\n  📦 Creazione .pak tradotto...');
 
     try {
-      const pakResult = await invoke<any>('apply_unreal_translation', {
+      const pakResult = await invoke<unknown>('apply_unreal_translation', {
         gamePath: gameCtx.installPath,
         translations,
         targetLanguage,
@@ -1464,9 +1464,9 @@ export default function TranslationWizardPage() {
     setTranslateStatus('Estrazione dialoghi Danganronpa...');
 
     // Step 1: Extract dialogues via backend
-    let extraction: any = null;
+    let extraction: unknown = null;
     try {
-      extraction = await invoke<any>('extract_danganronpa_dialogues', { gamePath: gameCtx.installPath });
+      extraction = await invoke<unknown>('extract_danganronpa_dialogues', { gamePath: gameCtx.installPath });
     } catch (e) {
       log(`  ❌ Errore estrazione: ${e}`);
     }
@@ -1633,7 +1633,7 @@ export default function TranslationWizardPage() {
     const strings: Array<{ key: string; value: string }> = [];
     try {
       const obj = JSON.parse(content);
-      const walk = (o: any, path: string) => {
+      const walk = (o: unknown, path: string) => {
         if (typeof o === 'string' && o.length > 1 && o.length < 2000) {
           strings.push({ key: path, value: o });
         } else if (Array.isArray(o)) {
@@ -1712,14 +1712,14 @@ export default function TranslationWizardPage() {
   const applyJsonTranslations = (content: string, translations: Map<string, string>): string => {
     try {
       const obj = JSON.parse(content);
-      const apply = (o: any, path: string): any => {
+      const apply = (o: unknown, path: string): unknown => {
         if (typeof o === 'string') {
           const t = translations.get(path);
           return t !== undefined ? t : o;
         } else if (Array.isArray(o)) {
           return o.map((item, i) => apply(item, `${path}[${i}]`));
         } else if (o && typeof o === 'object') {
-          const result: any = {};
+          const result: unknown = {};
           for (const [k, v] of Object.entries(o)) {
             result[k] = apply(v, path ? `${path}.${k}` : k);
           }

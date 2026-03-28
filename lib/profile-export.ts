@@ -11,10 +11,10 @@ export interface ProfileExportData {
     avatar_path?: string;
     created_at: string;
   };
-  settings?: any;
+  settings?: Record<string, unknown>;
 }
 
-export function exportProfile(profile: any, settings: any) {
+export function exportProfile(profile: Record<string, unknown>, settings: Record<string, unknown>) {
   try {
     const exportData: ProfileExportData = {
       version: '1.0',

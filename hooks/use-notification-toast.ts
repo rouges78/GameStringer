@@ -28,8 +28,8 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
       try {
         // Usa wrapper invoke (gestisce ambiente Tauri/web). In web può lanciare: gestiamo con try/catch
         const result = await invoke('get_notification_preferences', { profile_id: profileId });
-        if ((result as any)?.success && (result as any)?.data) {
-          setPreferences((result as any).data as NotificationPreferences);
+        if ((result as unknown)?.success && (result as unknown)?.data) {
+          setPreferences((result as unknown).data as NotificationPreferences);
         }
       } catch (error) {
         console.error('Errore nel caricamento delle preferenze notifiche:', error);
@@ -72,12 +72,12 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
     // Ascolta eventi Tauri se disponibili (con guardie)
     let unlistenPromise: Promise<(() => void) | void> | null = null;
     if (typeof window !== 'undefined') {
-      const tauri: any = (window as any).__TAURI__;
+      const tauri: unknown = (window as unknown as Record<string, unknown>).__TAURI__;
       const listenFn = tauri?.event?.listen as
-        | ((event: string, cb: (e: any) => void) => Promise<() => void>)
+        | ((event: string, cb: (e: unknown) => void) => Promise<() => void>)
         | undefined;
       if (listenFn) {
-        unlistenPromise = listenFn('notification-created', (evt: any) => {
+        unlistenPromise = listenFn('notification-created', (evt: unknown) => {
           const notification = evt?.payload as Notification;
           handleNewNotification(new CustomEvent('new-notification', { detail: notification }));
         });
@@ -116,7 +116,7 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
         preferences: updatedPreferences
       });
 
-      if ((result as any)?.success) {
+      if ((result as unknown)?.success) {
         setPreferences(updatedPreferences as NotificationPreferences);
         return true;
       }
@@ -133,10 +133,10 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
       success: {
         id: `test-success-${Date.now()}`,
         profileId,
-        type: 'Profile' as any,
+        type: 'Profile' as unknown,
         title: 'Test Successo',
         message: 'Questa è una notifica di test per verificare il funzionamento del sistema.',
-        priority: 'Normal' as any,
+        priority: 'Normal' as unknown,
         createdAt: new Date().toISOString(),
         metadata: {
           source: 'test',
@@ -147,10 +147,10 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
       error: {
         id: `test-error-${Date.now()}`,
         profileId,
-        type: 'Security' as any,
+        type: 'Security' as unknown,
         title: 'Test Errore',
         message: 'Questa è una notifica di errore di test.',
-        priority: 'High' as any,
+        priority: 'High' as unknown,
         createdAt: new Date().toISOString(),
         metadata: {
           source: 'test',
@@ -161,10 +161,10 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
       info: {
         id: `test-info-${Date.now()}`,
         profileId,
-        type: 'System' as any,
+        type: 'System' as unknown,
         title: 'Test Informazione',
         message: 'Questa è una notifica informativa di test.',
-        priority: 'Normal' as any,
+        priority: 'Normal' as unknown,
         createdAt: new Date().toISOString(),
         metadata: {
           source: 'test',
@@ -175,10 +175,10 @@ export const useNotificationToastIntegration = (options: UseNotificationToastInt
       warning: {
         id: `test-warning-${Date.now()}`,
         profileId,
-        type: 'System' as any,
+        type: 'System' as unknown,
         title: 'Test Avviso',
         message: 'Questa è una notifica di avviso di test.',
-        priority: 'High' as any,
+        priority: 'High' as unknown,
         createdAt: new Date().toISOString(),
         metadata: {
           source: 'test',

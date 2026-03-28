@@ -5,7 +5,7 @@ import { RefreshCw, Zap } from 'lucide-react';
 import { invoke } from '@/lib/tauri-api';
 
 interface ForceRefreshButtonProps {
-  onRefreshComplete?: (games: any[]) => void;
+  onRefreshComplete?: (games: unknown[]) => void;
   className?: string;
 }
 
@@ -23,7 +23,7 @@ export function ForceRefreshButton({ onRefreshComplete, className }: ForceRefres
         console.log('✅ Force refresh completed con Tauri:', freshGames);
         
         if (onRefreshComplete) {
-          onRefreshComplete(freshGames as any[]);
+          onRefreshComplete(freshGames as unknown[]);
         }
       } catch (tauriError) {
         console.error('❌ Force refresh Tauri failed:', tauriError);

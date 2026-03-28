@@ -23,7 +23,7 @@ interface Translation {
 }
 
 class InjectionService {
-  private nativeModule: any;
+  private nativeModule: unknown;
   private isAdmin: boolean = false;
   private activeInjections: Map<number, NodeJS.Timeout> = new Map();
 
@@ -146,7 +146,7 @@ class InjectionService {
         gameProfileManager.incrementInjectionCount(processName, result.injectedCount);
         
         // Salva indirizzi di memoria per future injection più veloci
-        result.injected?.forEach((item: any) => {
+        result.injected?.forEach((item: unknown) => {
           gameProfileManager.addMemoryAddress(
             processName,
             item.address,
@@ -216,14 +216,14 @@ class InjectionService {
   public stopMonitoring(processId: number) {
     const timer = this.activeInjections.get(processId);
     if (timer) {
-      clearInterval(timer as any);
+      clearInterval(timer as unknown as number);
       this.activeInjections.delete(processId);
     }
   }
 
   public stopAllMonitoring() {
     for (const [processId, timer] of this.activeInjections) {
-      clearInterval(timer as any);
+      clearInterval(timer as unknown as number);
     }
     this.activeInjections.clear();
   }

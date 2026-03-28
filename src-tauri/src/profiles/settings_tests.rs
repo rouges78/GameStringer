@@ -30,7 +30,7 @@ mod tests {
         
         assert_eq!(loaded_settings.theme, Theme::Dark);
         assert_eq!(loaded_settings.language, "en");
-        assert_eq!(loaded_settings.auto_login, true);
+        assert!(loaded_settings.auto_login);
     }
 
     #[tokio::test]
@@ -49,8 +49,8 @@ mod tests {
         let loaded_settings = manager.load_global_settings().await.unwrap();
         
         assert_eq!(loaded_settings.last_profile, Some("test_profile".to_string()));
-        assert_eq!(loaded_settings.auto_start_last_profile, true);
-        assert_eq!(loaded_settings.debug_mode, true);
+        assert!(loaded_settings.auto_start_last_profile);
+        assert!(loaded_settings.debug_mode);
     }
 
     #[tokio::test]
@@ -99,8 +99,8 @@ mod tests {
         
         assert_eq!(migrated_settings.language, "it");
         assert_eq!(migrated_settings.theme, Theme::Dark);
-        assert_eq!(migrated_settings.game_library.auto_refresh, true);
-        assert_eq!(migrated_settings.notifications.desktop_enabled, false);
+        assert!(migrated_settings.game_library.auto_refresh);
+        assert!(!migrated_settings.notifications.desktop_enabled);
     }
 
     #[tokio::test]
@@ -193,22 +193,22 @@ mod tests {
         // Verifica tutti i campi
         assert_eq!(loaded_settings.theme, Theme::Auto);
         assert_eq!(loaded_settings.language, "de");
-        assert_eq!(loaded_settings.auto_login, true);
+        assert!(loaded_settings.auto_login);
         
-        assert_eq!(loaded_settings.notifications.desktop_enabled, true);
-        assert_eq!(loaded_settings.notifications.sound_enabled, false);
-        assert_eq!(loaded_settings.notifications.new_games, true);
-        assert_eq!(loaded_settings.notifications.updates, false);
-        assert_eq!(loaded_settings.notifications.deals, true);
+        assert!(loaded_settings.notifications.desktop_enabled);
+        assert!(!loaded_settings.notifications.sound_enabled);
+        assert!(loaded_settings.notifications.new_games);
+        assert!(!loaded_settings.notifications.updates);
+        assert!(loaded_settings.notifications.deals);
         
         assert_eq!(loaded_settings.game_library.default_view, LibraryView::Grid);
         assert_eq!(loaded_settings.game_library.default_sort, LibrarySort::Platform);
-        assert_eq!(loaded_settings.game_library.show_hidden, true);
-        assert_eq!(loaded_settings.game_library.auto_refresh, false);
+        assert!(loaded_settings.game_library.show_hidden);
+        assert!(!loaded_settings.game_library.auto_refresh);
         assert_eq!(loaded_settings.game_library.refresh_interval, 60);
         
         assert_eq!(loaded_settings.security.session_timeout, 30);
-        assert_eq!(loaded_settings.security.require_password_for_sensitive, true);
+        assert!(loaded_settings.security.require_password_for_sensitive);
         assert_eq!(loaded_settings.security.auto_lock_failed_attempts, 5);
         assert_eq!(loaded_settings.security.lock_duration, 15);
     }

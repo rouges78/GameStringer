@@ -32,7 +32,7 @@ interface LogEntry {
   level: 'debug' | 'info' | 'warn' | 'error' | 'fatal';
   message: string;
   component?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   error?: {
     name: string;
     message: string;

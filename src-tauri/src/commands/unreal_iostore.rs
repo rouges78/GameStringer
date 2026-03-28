@@ -657,7 +657,7 @@ fn try_read_fstring_at(data: &[u8], off: &mut usize) -> Option<String> {
             }
             Err(_) => None
         }
-    } else if len < 0 && len >= -10000 {
+    } else if (-10000..0).contains(&len) {
         // UTF-16
         let char_count = (-len) as usize;
         let byte_count = char_count * 2;
@@ -753,7 +753,7 @@ fn scan_stringtable_entries(data: &[u8]) -> Vec<(String, String, String)> {
                     let count = i32::from_le_bytes([data[off], data[off+1], data[off+2], data[off+3]]);
                     
                     // Count ragionevole per una StringTable
-                    if count >= 2 && count <= 50000 {
+                    if (2..=50000).contains(&count) {
                         let mut pairs_off = off + 4;
                         let mut pairs: Vec<(String, String)> = Vec::new();
                         let mut valid = true;
@@ -831,7 +831,7 @@ fn scan_uasset_strings(data: &[u8], source_name: &str) -> Vec<super::unreal_loca
     while i + 4 < data.len() {
         let len = i32::from_le_bytes([data[i], data[i+1], data[i+2], data[i+3]]);
         
-        if len >= 3 && len <= 2000 {
+        if (3..=2000).contains(&len) {
             let str_start = i + 4;
             let str_end = str_start + (len as usize);
             
@@ -1392,7 +1392,7 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
             if chunk_id_offset + 12 <= utoc_raw.len() {
                 let chunk_id_hex = utoc_raw[chunk_id_offset..chunk_id_offset + 12]
                     .iter().map(|b| format!("{:02x}", b)).collect::<String>();
-                let safe_name = ctx.file.path.replace('/', "_").replace('\\', "_");
+                let safe_name = ctx.file.path.replace(['/', '\\'], "_");
                 chunk_map.insert(safe_name, chunk_id_hex.clone());
                 log::info!("🔑 ChunkID per {}: {}", ctx.file.path, chunk_id_hex);
             }
@@ -1419,7 +1419,7 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
                         }
                         for (ns, key, val) in st_entries {
                             let dedup_key = format!("{}::{}", ns, key);
-                            if !seen_st.contains(&dedup_key) && val.len() >= 1 {
+                            if !seen_st.contains(&dedup_key) && !val.is_empty() {
                                 seen_st.insert(dedup_key);
                                 stringtable_entries.push(super::unreal_localization::LocEntry {
                                     namespace: ns,
@@ -1466,7 +1466,7 @@ pub async fn extract_iostore_localization(game_path: String) -> Result<Extractio
                     // Cache .uasset raw (serve per binary patching se FText non funziona)
                     let cache_dir = game_dir.join("GameStringer").join("uasset_cache");
                     let _ = fs::create_dir_all(&cache_dir);
-                    let safe_name = ctx.file.path.replace('/', "_").replace('\\', "_");
+                    let safe_name = ctx.file.path.replace(['/', '\\'], "_");
                     let cache_path = cache_dir.join(&safe_name);
                     let _ = fs::write(&cache_path, &uasset_data);
                     
@@ -1683,7 +1683,7 @@ fn patch_uasset_binary(data: &[u8], replacements: &std::collections::HashMap<Str
             let len = i32::from_le_bytes([data[i], data[i+1], data[i+2], data[i+3]]);
             
             // FString valida: lunghezza ragionevole (min 3 chars)
-            if len >= 3 && len <= 2000 {
+            if (3..=2000).contains(&len) {
                 let str_start = i + 4;
                 let str_end = str_start + (len as usize);
                 
@@ -1768,8 +1768,8 @@ fn city_hash_64(data: &[u8]) -> u64 {
     const K1: u64 = 0xb492b66fbe98f273;
     const K2: u64 = 0x9ae16a3b2f90404f;
 
-    #[inline] fn f64(s: &[u8], i: usize) -> u64 { u64::from_le_bytes(s[i..i+8].try_into().unwrap()) }
-    #[inline] fn f32(s: &[u8], i: usize) -> u64 { u32::from_le_bytes(s[i..i+4].try_into().unwrap()) as u64 }
+    #[inline] fn f64(s: &[u8], i: usize) -> u64 { s.get(i..i+8).and_then(|b| b.try_into().ok()).map(u64::from_le_bytes).unwrap_or(0) }
+    #[inline] fn f32(s: &[u8], i: usize) -> u64 { s.get(i..i+4).and_then(|b| b.try_into().ok()).map(u32::from_le_bytes).unwrap_or(0) as u64 }
     #[inline] fn rot(v: u64, s: u32) -> u64 { if s == 0 { v } else { (v >> s) | (v << (64 - s)) } }
     #[inline] fn smix(v: u64) -> u64 { v ^ (v >> 47) }
     #[inline] fn h16(u: u64, v: u64, mul: u64) -> u64 {
@@ -2057,7 +2057,7 @@ fn create_iostore_container(
     // --- ChunksWithoutPH (entry_count indices for linear search fallback) ---
     if utoc_version >= 5 {
         for i in 0..entry_count {
-            utoc.extend_from_slice(&(i as u32).to_le_bytes());
+            utoc.extend_from_slice(&i.to_le_bytes());
         }
     }
     
@@ -2206,7 +2206,7 @@ pub async fn apply_datatable_translation(
                     uasset_data[scan_i], uasset_data[scan_i+1], 
                     uasset_data[scan_i+2], uasset_data[scan_i+3]
                 ]);
-                if len >= 3 && len <= 2000 {
+                if (3..=2000).contains(&len) {
                     let str_start = scan_i + 4;
                     let str_end = str_start + (len as usize);
                     if str_end <= uasset_data.len() && uasset_data[str_end - 1] == 0 {

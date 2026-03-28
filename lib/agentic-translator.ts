@@ -42,7 +42,7 @@ export class AgenticTranslator {
       
       if (!res.ok) return 'llama3';
       const data = await res.json();
-      const available = (data.models || []).map((m: any) => m.name) as string[];
+      const available = (data.models || []).map((m: { name: string }) => m.name) as string[];
       
       if (available.length === 0) return 'llama3';
       
@@ -195,7 +195,7 @@ Provide the corrected translation. Output ONLY the corrected text.`;
         currentTranslation = currentTranslation.replace(/^(Translation|Output):\s*/i, '').replace(/^["']|["']$/g, '');
       }
 
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[Agentic Pipeline] Error:', e);
       // Fallback
       if (!currentTranslation) currentTranslation = opts.text; 

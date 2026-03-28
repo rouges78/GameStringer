@@ -70,7 +70,7 @@ pub async fn start_ue_translator(
         return Ok(UETranslatorResult {
             success: false,
             message: "La DLL del translator deve ancora essere compilata. Questa è la struttura base.".to_string(),
-            state: TRANSLATOR_STATE.lock().unwrap().clone(),
+            state: TRANSLATOR_STATE.lock().unwrap_or_else(|e| e.into_inner()).clone(),
         });
     }
     
@@ -79,7 +79,7 @@ pub async fn start_ue_translator(
     
     // Aggiorna stato
     {
-        let mut state = TRANSLATOR_STATE.lock().unwrap();
+        let mut state = TRANSLATOR_STATE.lock().unwrap_or_else(|e| e.into_inner());
         state.is_injected = result.success;
         state.is_translating = config.auto_translate;
     }
@@ -95,7 +95,7 @@ pub async fn start_ue_translator(
         let cache = TranslationCache::load(&cache_dir, &game_id)
             .unwrap_or_else(|_| TranslationCache::new(&game_id));
         
-        let mut active = ACTIVE_CACHE.lock().unwrap();
+        let mut active = ACTIVE_CACHE.lock().unwrap_or_else(|e| e.into_inner());
         *active = Some(cache);
     }
     
@@ -113,7 +113,7 @@ pub async fn start_ue_translator(
     Ok(UETranslatorResult {
         success: true,
         message: format!("UE AutoTranslator avviato per {} (PID: {})", executable, process_id),
-        state: TRANSLATOR_STATE.lock().unwrap().clone(),
+        state: TRANSLATOR_STATE.lock().unwrap_or_else(|e| e.into_inner()).clone(),
     })
 }
 
@@ -124,7 +124,7 @@ pub async fn stop_ue_translator(game_path: String) -> Result<UETranslatorResult,
     
     // Salva cache prima di fermare
     {
-        let cache = ACTIVE_CACHE.lock().unwrap();
+        let cache = ACTIVE_CACHE.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(ref c) = *cache {
             let cache_dir = Path::new(&game_path).join("GameStringer").join("cache");
             let _ = c.save(&cache_dir);
@@ -133,7 +133,7 @@ pub async fn stop_ue_translator(game_path: String) -> Result<UETranslatorResult,
     
     // Reset stato
     {
-        let mut state = TRANSLATOR_STATE.lock().unwrap();
+        let mut state = TRANSLATOR_STATE.lock().unwrap_or_else(|e| e.into_inner());
         state.is_injected = false;
         state.is_translating = false;
     }
@@ -141,20 +141,20 @@ pub async fn stop_ue_translator(game_path: String) -> Result<UETranslatorResult,
     Ok(UETranslatorResult {
         success: true,
         message: "Translator fermato".to_string(),
-        state: TRANSLATOR_STATE.lock().unwrap().clone(),
+        state: TRANSLATOR_STATE.lock().unwrap_or_else(|e| e.into_inner()).clone(),
     })
 }
 
 /// Ottiene lo stato corrente del translator
 #[command]
 pub async fn get_ue_translator_state() -> Result<UETranslatorState, String> {
-    Ok(TRANSLATOR_STATE.lock().unwrap().clone())
+    Ok(TRANSLATOR_STATE.lock().unwrap_or_else(|e| e.into_inner()).clone())
 }
 
 /// Attiva/disattiva traduzione
 #[command]
 pub async fn toggle_ue_translation() -> Result<UETranslatorState, String> {
-    let mut state = TRANSLATOR_STATE.lock().unwrap();
+    let mut state = TRANSLATOR_STATE.lock().unwrap_or_else(|e| e.into_inner());
     state.is_translating = !state.is_translating;
     log::info!("🔄 Traduzione: {}", if state.is_translating { "ON" } else { "OFF" });
     Ok(state.clone())
@@ -163,7 +163,7 @@ pub async fn toggle_ue_translation() -> Result<UETranslatorState, String> {
 /// Ottiene statistiche della cache
 #[command]
 pub async fn get_ue_cache_stats() -> Result<CacheStats, String> {
-    let cache = ACTIVE_CACHE.lock().unwrap();
+    let cache = ACTIVE_CACHE.lock().unwrap_or_else(|e| e.into_inner());
     match &*cache {
         Some(c) => Ok(c.stats()),
         None => Err("Nessuna cache attiva".to_string()),
@@ -173,7 +173,7 @@ pub async fn get_ue_cache_stats() -> Result<CacheStats, String> {
 /// Pulisce la cache delle traduzioni
 #[command]
 pub async fn clear_ue_cache() -> Result<String, String> {
-    let mut cache = ACTIVE_CACHE.lock().unwrap();
+    let mut cache = ACTIVE_CACHE.lock().unwrap_or_else(|e| e.into_inner());
     if let Some(ref mut c) = *cache {
         c.entries.clear();
         c.total_hits = 0;

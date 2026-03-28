@@ -94,12 +94,12 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
 
     const setup = async () => {
       try {
-        unlistenDownload = await listen<any>('ollama-download-progress', (event) => {
+        unlistenDownload = await listen<unknown>('ollama-download-progress', (event) => {
           const data = event.payload;
           setProgress(data.progress || 0);
           setProgressMessage(data.message || '');
         });
-        unlistenPull = await listen<any>('ollama-pull-progress', (event) => {
+        unlistenPull = await listen<unknown>('ollama-pull-progress', (event) => {
           const data = event.payload;
           setProgress(data.progress || 0);
           setProgressMessage(data.message || '');
@@ -124,7 +124,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
     try {
       await invoke('download_ollama');
       setProgressMessage('Installer avviato. Completa l\'installazione e premi Continua.');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.toString() || 'Errore durante il download');
     } finally {
       setLoading(false);
@@ -137,7 +137,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
     try {
       await invoke('start_ollama');
       await checkStatus();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.toString() || 'Impossibile avviare Ollama');
     } finally {
       setLoading(false);
@@ -152,7 +152,7 @@ export function OllamaSetupWizard({ onComplete }: { onComplete?: () => void }) {
     try {
       await invoke('pull_ollama_model', { modelName: selectedModel });
       setStep('done');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.toString() || 'Errore download modello');
     } finally {
       setLoading(false);

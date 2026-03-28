@@ -54,7 +54,7 @@ export function AutoHookScanner() {
         searchText: searchText.trim(),
       }) as HookScanResult;
       setResult(res);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.toString() || 'Errore durante la scansione');
     } finally {
       setLoading(false);

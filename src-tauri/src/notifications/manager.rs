@@ -391,7 +391,7 @@ impl NotificationManager {
     }
 
     /// Applica ordinamento personalizzato
-    fn apply_custom_sorting(&self, notifications: &mut Vec<Notification>, _filter: &NotificationFilter) {
+    fn apply_custom_sorting(&self, notifications: &mut [Notification], _filter: &NotificationFilter) {
         // Ordinamento predefinito: non lette prima, poi per data di creazione (più recenti prima)
         notifications.sort_by(|a, b| {
             // Prima le non lette
@@ -568,8 +568,10 @@ impl NotificationManager {
         
         let all_notifications = self.storage.load_notifications(profile_id, &filter).await?;
         
-        let mut counts = NotificationCounts::default();
-        counts.total = all_notifications.len() as u32;
+        let mut counts = NotificationCounts {
+            total: all_notifications.len() as u32,
+            ..Default::default()
+        };
         
         for notification in &all_notifications {
             if !notification.is_read() {
@@ -722,8 +724,10 @@ impl NotificationManager {
             type_preference.enabled = enabled;
         } else {
             // Crea una nuova preferenza per questo tipo
-            let mut new_preference = crate::notifications::models::TypePreference::default();
-            new_preference.enabled = enabled;
+            let new_preference = crate::notifications::models::TypePreference {
+                enabled,
+                ..Default::default()
+            };
             preferences.type_settings.insert(notification_type, new_preference);
         }
         
@@ -796,10 +800,11 @@ impl NotificationManager {
 
     /// Crea preferenze predefinite per un profilo
     fn create_default_preferences(&self, profile_id: &str) -> NotificationPreferences {
-        let mut preferences = NotificationPreferences::default();
-        preferences.profile_id = profile_id.to_string();
-        preferences.updated_at = Utc::now();
-        preferences
+        NotificationPreferences {
+            profile_id: profile_id.to_string(),
+            updated_at: Utc::now(),
+            ..Default::default()
+        }
     }
 
     /// Valida le preferenze notifiche

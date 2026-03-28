@@ -96,7 +96,7 @@ fn validate_steam_app_id(app_id: &str) -> bool {
     if let Ok(numeric_id) = app_id.parse::<u64>() {
         // Steam App IDs range from 1 to approximately 2,000,000+ (as of 2024)
         // We'll use a reasonable upper bound to prevent abuse
-        numeric_id >= 1 && numeric_id <= 9999999999
+        (1..=9999999999).contains(&numeric_id)
     } else {
         false
     }
@@ -180,10 +180,10 @@ impl SteamApiRateLimiter {
     
     fn is_request_allowed(&self, endpoint: &str) -> bool {
         let now = Self::get_current_time_ms();
-        let mut requests = self.requests.lock().unwrap();
+        let mut requests = self.requests.lock().unwrap_or_else(|e| e.into_inner());
         
         // Get or create request history for this endpoint
-        let request_history = requests.entry(endpoint.to_string()).or_insert(Vec::new());
+        let request_history = requests.entry(endpoint.to_string()).or_default();
         
         // Clean old requests outside the window
         request_history.retain(|&timestamp| now - timestamp < self.rate_limit_window);
@@ -214,7 +214,7 @@ impl SteamApiRateLimiter {
     
     fn get_delay_until_next_request(&self, endpoint: &str) -> u64 {
         let now = Self::get_current_time_ms();
-        let requests = self.requests.lock().unwrap();
+        let requests = self.requests.lock().unwrap_or_else(|e| e.into_inner());
         
         if let Some(request_history) = requests.get(endpoint) {
             // Check if we need to wait for burst limit
@@ -256,7 +256,7 @@ impl SteamApiRateLimiter {
 
 // Global rate limiter instance
 static RATE_LIMITER: once_cell::sync::Lazy<SteamApiRateLimiter> = 
-    once_cell::sync::Lazy::new(|| SteamApiRateLimiter::new());
+    once_cell::sync::Lazy::new(SteamApiRateLimiter::new);
 
 /// Helper function for rate-limited Steam API calls with exponential backoff
 /// Handles 403/429 errors with automatic retry
@@ -1403,7 +1403,7 @@ fn encrypt_api_key(api_key: &str) -> Result<(String, String), String> {
     
     // SECURITY FIX: Encode with URL-safe base64 for better compatibility
     let encrypted_b64 = general_purpose::STANDARD.encode(&ciphertext);
-    let nonce_b64 = general_purpose::STANDARD.encode(&nonce_bytes);
+    let nonce_b64 = general_purpose::STANDARD.encode(nonce_bytes);
     
     // SECURITY FIX: Log successful encryption (without sensitive data)
     info!("[Security] API key encrypted successfully with timestamp {}", timestamp);
@@ -3195,7 +3195,7 @@ pub async fn get_appid_from_install_path(install_path: String) -> Result<Option<
     let game_folder = install_path
         .split('/')
         .filter(|s| !s.is_empty())
-        .last()
+        .next_back()
         .unwrap_or("")
         .to_lowercase();
     
@@ -3515,7 +3515,7 @@ async fn read_library_folders(steam_path: &str) -> Result<Vec<String>, String> {
         }
         
         // Metodo alternativo: cerca anche pattern numerici come "1", "2", "3" che rappresentano librerie
-        if line.starts_with('"') && line.len() < 10 && line.chars().nth(1).map_or(false, |c| c.is_numeric()) {
+        if line.starts_with('"') && line.len() < 10 && line.chars().nth(1).is_some_and(|c| c.is_numeric()) {
             _current_section = line.trim_matches('"').to_string();
         }
     }

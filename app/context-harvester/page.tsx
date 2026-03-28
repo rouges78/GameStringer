@@ -213,7 +213,7 @@ export default function ContextHarvesterPage() {
         // Prova JSON
         const parsed = JSON.parse(content)
         if (Array.isArray(parsed)) {
-          inputs = parsed.map((item: any) => ({
+          inputs = parsed.map((item: unknown) => ({
             text: item.text || item.value || item.source || String(item),
             key: item.key || item.id,
             filename: file.name,
@@ -320,7 +320,7 @@ export default function ContextHarvesterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-3">
-            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as any)}>
+            <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as string)}>
               <TabsList className="h-8">
                 <TabsTrigger value="demo" className="text-xs h-7">
                   <Sparkles className="h-3 w-3 mr-1" />
@@ -495,7 +495,7 @@ export default function ContextHarvesterPage() {
               <div className="flex-1" />
               <select
                 value={filterScreen}
-                onChange={(e) => setFilterScreen(e.target.value as any)}
+                onChange={(e) => setFilterScreen(e.target.value as string)}
                 className="h-7 text-xs bg-background border rounded px-2"
               >
                 <option value="all">{t('contextHarvesterPage.allScreenshots')}</option>
@@ -505,7 +505,7 @@ export default function ContextHarvesterPage() {
               </select>
               <select
                 value={filterSpeaker}
-                onChange={(e) => setFilterSpeaker(e.target.value as any)}
+                onChange={(e) => setFilterSpeaker(e.target.value as string)}
                 className="h-7 text-xs bg-background border rounded px-2"
               >
                 <option value="all">{t('contextHarvesterPage.allSpeakers')}</option>

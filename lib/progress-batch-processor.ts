@@ -14,11 +14,11 @@ export interface ProgressBatchProcessorOptions extends BatchProcessorOptions {
 
 export class ProgressBatchProcessor {
   private batchProcessor: BatchProcessor;
-  private progressState: any; // Sarà iniettato dal hook
+  private progressState: unknown; // Sarà iniettato dal hook
   private options: ProgressBatchProcessorOptions;
 
   constructor(
-    progressState: any,
+    progressState: unknown,
     options: ProgressBatchProcessorOptions = {}
   ) {
     this.progressState = progressState;
@@ -95,7 +95,7 @@ export class ProgressBatchProcessor {
     }
   }
 
-  private handleItemComplete(itemId: string, result: any) {
+  private handleItemComplete(itemId: string, result: unknown) {
     // Potresti aggiungere logging o altre azioni qui
   }
 
@@ -158,7 +158,7 @@ export class ProgressBatchProcessor {
  * Factory function per creare ProgressBatchProcessor con configurazioni predefinite
  */
 export function createProgressBatchProcessor(
-  progressState: any,
+  progressState: unknown,
   operationType: BatchOperationType,
   options: ProgressBatchProcessorOptions = {}
 ): ProgressBatchProcessor {

@@ -57,7 +57,7 @@ function detectCategory(name: string): RPGMakerFile['category'] {
 }
 
 /** Extract translatable strings from RPG Maker JSON data */
-function extractRPGMakerStrings(data: any, filename: string, path = ''): RPGMakerEntry[] {
+function extractRPGMakerStrings(data: unknown, filename: string, path = ''): RPGMakerEntry[] {
   const entries: RPGMakerEntry[] = [];
   
   if (!data) return entries;

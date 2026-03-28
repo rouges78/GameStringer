@@ -112,7 +112,7 @@ export const LazyDropZone = dynamic(
 );
 
 // Utility: Create lazy component with custom loading
-export function createLazyComponent<T extends ComponentType<any>>(
+export function createLazyComponent<T extends ComponentType<unknown>>(
   importFn: () => Promise<{ default: T }>,
   LoadingComponent: ReactNode = <LoadingFallback />
 ) {
@@ -125,7 +125,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
 }
 
 // Prefetch utility for anticipated navigation
-export function prefetchComponent(importFn: () => Promise<any>): void {
+export function prefetchComponent(importFn: () => Promise<unknown>): void {
   if (typeof window !== 'undefined') {
     // Use requestIdleCallback if available, otherwise setTimeout
     const schedulePreload = window.requestIdleCallback || ((cb) => setTimeout(cb, 1));

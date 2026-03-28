@@ -222,7 +222,7 @@ fn find_pak_footer(data: &[u8]) -> Result<(i32, i64, i64, bool), String> {
     }
     
     // Cerca il magic dalla fine del file (ultimi 1024 bytes)
-    let search_start = if len > 1024 { len - 1024 } else { 0 };
+    let search_start = len.saturating_sub(1024);
     
     for i in (search_start..len.saturating_sub(24)).rev() {
         if i + 4 > len { continue; }
@@ -251,7 +251,7 @@ fn find_pak_footer(data: &[u8]) -> Result<(i32, i64, i64, bool), String> {
             };
             
             // Sanity check
-            if version >= 1 && version <= 11 
+            if (1..=11).contains(&version) 
                 && index_offset >= 0 
                 && index_offset < len as i64 
                 && index_size > 0 
@@ -286,7 +286,7 @@ fn parse_pak_index(
     let num_records = read_i32(data, &mut offset)?;
     log::info!("📦 Records: {}", num_records);
     
-    if num_records < 0 || num_records > 1_000_000 {
+    if !(0..=1_000_000).contains(&num_records) {
         return Err(format!("Numero record sospetto: {}", num_records));
     }
     
@@ -356,8 +356,10 @@ fn parse_pak_index(
         });
         
         // Log primi file per debug
-        if i < 5 || entries.last().map(|e| e.filename.contains(".locres")).unwrap_or(false) {
-            log::info!("  📄 {} ({} bytes)", entries.last().unwrap().filename, uncompressed_size);
+        if let Some(last) = entries.last() {
+            if i < 5 || last.filename.contains(".locres") {
+                log::info!("  📄 {} ({} bytes)", last.filename, uncompressed_size);
+            }
         }
     }
     
@@ -451,7 +453,7 @@ fn parse_locres(data: &[u8]) -> Result<(u8, Vec<LocEntry>), String> {
     let namespace_count = read_i32(data, &mut offset)?;
     log::info!("📝 Namespaces: {}", namespace_count);
     
-    if namespace_count < 0 || namespace_count > 100_000 {
+    if !(0..=100_000).contains(&namespace_count) {
         return Err(format!("Numero namespace sospetto: {}", namespace_count));
     }
     

@@ -130,7 +130,7 @@ function countStrings(content: string, format: string): { total: number; transla
   try {
     if (format === 'json') {
       const data = JSON.parse(content);
-      const count = (obj: any) => {
+      const count = (obj: unknown) => {
         for (const val of Object.values(obj)) {
           if (typeof val === 'string') { total++; if (val.trim()) translated++; }
           else if (typeof val === 'object' && val !== null) count(val);
@@ -307,7 +307,7 @@ export function importGspack(rawContent: string): ImportResult {
       notes: data.notes || '',
       warnings,
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     return { success: false, error: `Errore lettura pack: ${e.message}`, warnings };
   }
 }
@@ -367,7 +367,7 @@ export function getInstalledPackForGame(gameName: string, targetLanguage: string
  * Salva .gspack su disco via Tauri dialog
  */
 export async function saveGspackToFile(data: string, filename: string): Promise<boolean> {
-  if (typeof window === 'undefined' || !(window as any).__TAURI__) {
+  if (typeof window === 'undefined' || !(window as unknown as Record<string, unknown>).__TAURI__) {
     // Fallback: download via browser
     const blob = new Blob([data], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
@@ -403,7 +403,7 @@ export async function saveGspackToFile(data: string, filename: string): Promise<
  * Carica .gspack da disco via Tauri dialog
  */
 export async function loadGspackFromFile(): Promise<string | null> {
-  if (typeof window === 'undefined' || !(window as any).__TAURI__) {
+  if (typeof window === 'undefined' || !(window as unknown as Record<string, unknown>).__TAURI__) {
     // Fallback: file input
     return new Promise((resolve) => {
       const input = document.createElement('input');

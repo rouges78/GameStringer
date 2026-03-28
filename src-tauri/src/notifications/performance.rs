@@ -33,7 +33,7 @@ impl ConnectionPool {
 
     /// Ottiene una connessione dal pool o ne crea una nuova
     pub fn get_connection(&self) -> NotificationResult<PooledConnection> {
-        let mut connections = self.connections.lock().unwrap();
+        let mut connections = self.connections.lock().unwrap_or_else(|e| e.into_inner());
         
         // Prova a riutilizzare una connessione esistente
         if let Some(conn) = connections.pop() {
@@ -69,11 +69,11 @@ impl ConnectionPool {
 
     /// Pulisce le connessioni inattive
     pub fn cleanup_idle_connections(&self) {
-        let mut last_cleanup = self.last_cleanup.lock().unwrap();
+        let mut last_cleanup = self.last_cleanup.lock().unwrap_or_else(|e| e.into_inner());
         let now = Instant::now();
         
         if now.duration_since(*last_cleanup) > Duration::from_secs(60) {
-            let mut connections = self.connections.lock().unwrap();
+            let mut connections = self.connections.lock().unwrap_or_else(|e| e.into_inner());
             connections.clear(); // Chiude tutte le connessioni inattive
             *last_cleanup = now;
         }
@@ -94,13 +94,16 @@ impl PooledConnection {
         }
     }
 
-    /// Ottiene un riferimento alla connessione
-    pub fn as_ref(&self) -> &Connection {
+}
+
+impl AsRef<Connection> for PooledConnection {
+    fn as_ref(&self) -> &Connection {
         self.connection.as_ref().unwrap()
     }
+}
 
-    /// Ottiene un riferimento mutabile alla connessione
-    pub fn as_mut(&mut self) -> &mut Connection {
+impl AsMut<Connection> for PooledConnection {
+    fn as_mut(&mut self) -> &mut Connection {
         self.connection.as_mut().unwrap()
     }
 }
@@ -108,7 +111,7 @@ impl PooledConnection {
 impl Drop for PooledConnection {
     fn drop(&mut self) {
         if let Some(conn) = self.connection.take() {
-            let mut pool = self.pool.lock().unwrap();
+            let mut pool = self.pool.lock().unwrap_or_else(|e| e.into_inner());
             pool.push(conn);
         }
     }
@@ -284,7 +287,7 @@ impl BatchOperationManager {
             for preferences in preferences_list {
                 let type_settings_json = serde_json::to_string(&preferences.type_settings)?;
                 let quiet_hours_json = preferences.quiet_hours.as_ref()
-                    .map(|qh| serde_json::to_string(qh))
+                    .map(serde_json::to_string)
                     .transpose()?;
 
                 stmt.execute(params![
@@ -500,7 +503,7 @@ impl PerformanceAnalyzer {
         for (query_name, explain_sql) in explain_results {
             let mut stmt = conn.as_ref().prepare(explain_sql)?;
             let rows = stmt.query_map([], |row| {
-                Ok(row.get::<_, String>(3)?) // detail column
+                row.get::<_, String>(3) // detail column
             })?;
 
             let mut uses_index = false;

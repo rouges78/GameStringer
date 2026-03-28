@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
+import { withErrorHandler } from '@/lib/error-handler';
 
 /**
  * 🔌 GameStringer Public API v1 - Health Check
- * 
+ *
  * GET /api/v1/health
- * 
+ *
  * Returns API status and version info.
  */
 
-export async function GET() {
+export const GET = withErrorHandler(async function() {
   const startTime = Date.now();
-  
+
   // Check libre API
   let libreStatus = 'unknown';
   try {
@@ -22,9 +23,9 @@ export async function GET() {
   } catch {
     libreStatus = 'timeout';
   }
-  
+
   const responseTime = Date.now() - startTime;
-  
+
   return NextResponse.json({
     status: 'healthy',
     version: '1.0.0',
@@ -50,4 +51,4 @@ export async function GET() {
       cacheTTL: '1 hour'
     }
   });
-}
+});

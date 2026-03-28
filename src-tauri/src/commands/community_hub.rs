@@ -199,15 +199,15 @@ pub async fn community_upload_package(
     // Save entries
     let community_dir = get_community_dir()?;
     let entries_file = community_dir.join(format!("entries_{}.json", pkg_id));
-    fs::write(&entries_file, serde_json::to_string_pretty(&entries).unwrap())
+    fs::write(&entries_file, serde_json::to_string_pretty(&entries).map_err(|e| format!("Serialization error: {}", e))?)
         .map_err(|e| format!("Cannot save entries: {}", e))?;
-    
+
     // Update packages index
     let mut packages = community_get_packages(None, None, None, None).await.unwrap_or_default();
     packages.push(package.clone());
-    
+
     let index_path = get_packages_index_path()?;
-    fs::write(&index_path, serde_json::to_string_pretty(&packages).unwrap())
+    fs::write(&index_path, serde_json::to_string_pretty(&packages).map_err(|e| format!("Serialization error: {}", e))?)
         .map_err(|e| format!("Cannot save index: {}", e))?;
     
     info!("✅ Package uploaded: {}", pkg_id);
@@ -231,7 +231,7 @@ pub async fn community_rate_package(package_id: String, rating: f32) -> Result<(
     
     if new_rating > 0.0 {
         let index_path = get_packages_index_path()?;
-        fs::write(&index_path, serde_json::to_string_pretty(&packages).unwrap())
+        fs::write(&index_path, serde_json::to_string_pretty(&packages).map_err(|e| format!("Serialization error: {}", e))?)
             .map_err(|e| format!("Cannot save: {}", e))?;
         info!("✅ Package rated: {} stars", new_rating);
     }
@@ -282,9 +282,9 @@ pub async fn community_delete_package(package_id: String, author_id: String) -> 
         
         // Save updated index
         let index_path = get_packages_index_path()?;
-        fs::write(&index_path, serde_json::to_string_pretty(&packages).unwrap())
+        fs::write(&index_path, serde_json::to_string_pretty(&packages).map_err(|e| format!("Serialization error: {}", e))?)
             .map_err(|e| format!("Cannot save: {}", e))?;
-        
+
         // Delete entries file
         let community_dir = get_community_dir()?;
         let entries_file = community_dir.join(format!("entries_{}.json", package_id));
@@ -307,10 +307,10 @@ async fn increment_download_count(package_id: &str) -> Result<(), String> {
         pkg.downloads += 1;
         
         let index_path = get_packages_index_path()?;
-        fs::write(&index_path, serde_json::to_string_pretty(&packages).unwrap())
+        fs::write(&index_path, serde_json::to_string_pretty(&packages).map_err(|e| format!("Serialization error: {}", e))?)
             .map_err(|e| format!("Cannot save: {}", e))?;
     }
-    
+
     Ok(())
 }
 

@@ -59,7 +59,7 @@ class ClientLogger {
     return levels[level] >= levels[this.config.level];
   }
 
-  private sanitizeData(data: any): any {
+  private sanitizeData(data: unknown): unknown {
     if (typeof data !== 'object' || data === null) {
       return data;
     }
@@ -83,7 +83,7 @@ class ClientLogger {
     level: LogLevel,
     message: string,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): ClientLogEntry {
     return {
       timestamp: new Date().toISOString(),
@@ -191,7 +191,7 @@ class ClientLogger {
     level: LogLevel,
     message: string,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     if (!this.shouldLog(level)) return;
 
@@ -201,27 +201,27 @@ class ClientLogger {
     this.addToBuffer(entry);
   }
 
-  public debug(message: string, component?: string, metadata?: Record<string, any>): void {
+  public debug(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('debug', message, component, metadata);
   }
 
-  public info(message: string, component?: string, metadata?: Record<string, any>): void {
+  public info(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('info', message, component, metadata);
   }
 
-  public warn(message: string, component?: string, metadata?: Record<string, any>): void {
+  public warn(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('warn', message, component, metadata);
   }
 
-  public error(message: string, component?: string, metadata?: Record<string, any>): void {
+  public error(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('error', message, component, metadata);
   }
 
-  public fatal(message: string, component?: string, metadata?: Record<string, any>): void {
+  public fatal(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('fatal', message, component, metadata);
   }
 
-  public logError(error: Error, component?: string, metadata?: Record<string, any>): void {
+  public logError(error: Error, component?: string, metadata?: Record<string, unknown>): void {
     this.log('error', error.message, component, {
       error: {
         name: error.name,
@@ -235,7 +235,7 @@ class ClientLogger {
   public logUserAction(
     action: string,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     this.log('info', `User action: ${action}`, component, {
       action,
@@ -243,7 +243,7 @@ class ClientLogger {
     });
   }
 
-  public logPageView(page: string, metadata?: Record<string, any>): void {
+  public logPageView(page: string, metadata?: Record<string, unknown>): void {
     this.log('info', `Page view: ${page}`, 'NAVIGATION', {
       page,
       referrer: document.referrer,
@@ -255,7 +255,7 @@ class ClientLogger {
     operation: string,
     duration: number,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     this.log('info', `Performance: ${operation} took ${duration}ms`, component, {
       operation,
@@ -269,7 +269,7 @@ class ClientLogger {
     url: string,
     statusCode: number,
     duration: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     const level = statusCode >= 400 ? 'error' : 'info';
     this.log(level, `API: ${method} ${url} - ${statusCode} (${duration}ms)`, 'API', {
@@ -326,27 +326,27 @@ export const clientLogger = ClientLogger.getInstance();
 // Utility functions for client-side logging
 export function createClientComponentLogger(componentName: string) {
   return {
-    debug: (message: string, metadata?: Record<string, any>) => 
+    debug: (message: string, metadata?: Record<string, unknown>) => 
       clientLogger.debug(message, componentName, metadata),
-    info: (message: string, metadata?: Record<string, any>) => 
+    info: (message: string, metadata?: Record<string, unknown>) => 
       clientLogger.info(message, componentName, metadata),
-    warn: (message: string, metadata?: Record<string, any>) => 
+    warn: (message: string, metadata?: Record<string, unknown>) => 
       clientLogger.warn(message, componentName, metadata),
-    error: (message: string, metadata?: Record<string, any>) => 
+    error: (message: string, metadata?: Record<string, unknown>) => 
       clientLogger.error(message, componentName, metadata),
-    fatal: (message: string, metadata?: Record<string, any>) => 
+    fatal: (message: string, metadata?: Record<string, unknown>) => 
       clientLogger.fatal(message, componentName, metadata),
-    logError: (error: Error, metadata?: Record<string, any>) => 
+    logError: (error: Error, metadata?: Record<string, unknown>) => 
       clientLogger.logError(error, componentName, metadata),
-    logUserAction: (action: string, metadata?: Record<string, any>) => 
+    logUserAction: (action: string, metadata?: Record<string, unknown>) => 
       clientLogger.logUserAction(action, componentName, metadata),
-    logPerformance: (operation: string, duration: number, metadata?: Record<string, any>) => 
+    logPerformance: (operation: string, duration: number, metadata?: Record<string, unknown>) => 
       clientLogger.logPerformance(operation, duration, componentName, metadata)
   };
 }
 
 // Performance monitoring utilities
-export function withClientPerformanceLogging<T extends any[]>(
+export function withClientPerformanceLogging<T extends unknown[]>(
   fn: (...args: T) => any,
   operation: string,
   component?: string
@@ -375,8 +375,8 @@ export function withClientPerformanceLogging<T extends any[]>(
   };
 }
 
-export function withClientAsyncPerformanceLogging<T extends any[]>(
-  fn: (...args: T) => Promise<any>,
+export function withClientAsyncPerformanceLogging<T extends unknown[]>(
+  fn: (...args: T) => Promise<unknown>,
   operation: string,
   component?: string
 ) {

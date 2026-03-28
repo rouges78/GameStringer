@@ -201,7 +201,7 @@ fn find_vis_file(game_path: &str) -> Option<PathBuf> {
     if let Ok(entries) = fs::read_dir(dir) {
         for entry in entries.flatten() {
             let p = entry.path();
-            if p.extension().map_or(false, |e| e.to_ascii_lowercase() == "vis") {
+            if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("vis")) {
                 return Some(p);
             }
         }
@@ -230,7 +230,7 @@ fn find_vbin_in_file(file: &mut File, file_size: u64) -> Result<VbinLocation, St
     let mut search_end = file_size;
     
     while search_end > 16 {
-        let search_start = if search_end > chunk_size { search_end - chunk_size } else { 0 };
+        let search_start = search_end.saturating_sub(chunk_size);
         let read_len = (search_end - search_start) as usize;
         
         let mut chunk = vec![0u8; read_len];
@@ -322,7 +322,7 @@ fn extract_strings_from_binary(data: &[u8]) -> Result<Vec<VisString>, String> {
         let len = read_le_u32(data, pos) as usize;
         
         // Sanity: string length between 2 and 10000, must fit in data
-        if len >= 2 && len <= 10000 && pos + 4 + len <= data.len() {
+        if (2..=10000).contains(&len) && pos + 4 + len <= data.len() {
             let str_start = pos + 4;
             let str_end = str_start + len;
             let bytes = &data[str_start..str_end];
@@ -439,7 +439,7 @@ fn is_translatable_vis_string(s: &str) -> bool {
     if s.starts_with('-') || s.starts_with('!') || s.starts_with(';') { return false; }
     
     // Skip strings starting with digits (sound names: "1-003 cat meow", "99-3-053b Coming Out")
-    if s.chars().next().map_or(false, |c| c.is_ascii_digit()) { return false; }
+    if s.chars().next().is_some_and(|c| c.is_ascii_digit()) { return false; }
     
     // Skip strings that contain 'identifier_name' patterns (engine references)
     // e.g. "Switch to scene 'deadnettle'", "Play animation 'pickup_waist_back'"
@@ -517,7 +517,7 @@ fn is_translatable_vis_string(s: &str) -> bool {
     // (articles, prepositions: "the", "a", "is", "in", "to", "of"...)
     // or contain sentence punctuation (. ! ? , — used in dialogue/UI text)
     let has_lowercase_word = words.iter().any(|w| {
-        w.chars().next().map_or(false, |c| c.is_lowercase())
+        w.chars().next().is_some_and(|c| c.is_lowercase())
     });
     let has_sentence_punct = s.chars().any(|c| matches!(c, '.' | '!' | '?' | ',' | ':' | ';' | '"' | '…'));
     
@@ -528,7 +528,7 @@ fn is_translatable_vis_string(s: &str) -> bool {
     
     // Short strings (< 40 chars) without sentence-ending punctuation are likely
     // object/animation names, not translatable dialogue
-    let has_end_punct = s.chars().last().map_or(false, |c| matches!(c, '.' | '!' | '?' | ';' | ':' | '"' | '\u{2026}'));
+    let has_end_punct = s.chars().last().is_some_and(|c| matches!(c, '.' | '!' | '?' | ';' | ':' | '"' | '\u{2026}'));
     if s.len() < 40 && !has_end_punct && words.len() <= 4 {
         // Exception: dialogue format "character: text"
         if !s.contains(':') {

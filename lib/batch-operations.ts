@@ -30,7 +30,7 @@ export interface BatchOperation {
   completedAt?: number;
   estimatedTimeRemaining?: number;
   errors: Array<{ stringId: string; error: string }>;
-  options?: Record<string, any>;
+  options?: Record<string, unknown>;
 }
 
 export interface BatchOperationResult {
@@ -42,7 +42,7 @@ export interface BatchOperationResult {
 }
 
 type ProgressCallback = (operation: BatchOperation) => void;
-type ItemProcessor = (stringId: string, options?: Record<string, any>) => Promise<boolean>;
+type ItemProcessor = (stringId: string, options?: Record<string, unknown>) => Promise<boolean>;
 
 class BatchOperationsManager {
   private operations: Map<string, BatchOperation> = new Map();
@@ -102,7 +102,7 @@ class BatchOperationsManager {
   async execute(
     type: BatchOperationType,
     stringIds: string[],
-    options?: Record<string, any>
+    options?: Record<string, unknown>
   ): Promise<BatchOperationResult> {
     if (this.activeOperation && this.activeOperation.status === 'running') {
       throw new Error('Another batch operation is already running');
@@ -346,7 +346,7 @@ export function useBatchOperations() {
   const execute = useCallback(async (
     type: BatchOperationType,
     stringIds: string[],
-    options?: Record<string, any>
+    options?: Record<string, unknown>
   ) => {
     return batchOperations.execute(type, stringIds, options);
   }, []);

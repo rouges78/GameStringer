@@ -172,7 +172,7 @@ fn cleanup_old_backups(dir: &PathBuf, keep: usize) -> Result<(), String> {
     let mut files: Vec<_> = fs::read_dir(dir)
         .map_err(|e| format!("Errore lettura directory: {}", e))?
         .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension().map_or(false, |ext| ext == "json"))
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "json"))
         .collect();
     
     if files.len() <= keep {
@@ -211,7 +211,7 @@ pub fn get_backup_stats() -> Result<BackupStats, String> {
                 let path = entry.path();
                 if path.is_dir() {
                     scan_dir(&path, total, size, oldest, newest);
-                } else if path.extension().map_or(false, |e| e == "json") {
+                } else if path.extension().is_some_and(|e| e == "json") {
                     if let Ok(metadata) = entry.metadata() {
                         *total += 1;
                         *size += metadata.len();
@@ -261,7 +261,7 @@ pub fn list_backups() -> Result<Vec<String>, String> {
                 let path = entry.path();
                 if path.is_dir() {
                     collect_files(&path, files);
-                } else if path.extension().map_or(false, |e| e == "json") {
+                } else if path.extension().is_some_and(|e| e == "json") {
                     files.push(path.to_string_lossy().to_string());
                 }
             }
@@ -402,7 +402,7 @@ pub async fn run_auto_backup() -> Result<AutoBackupResult, String> {
             if let Ok(entries) = fs::read_dir(&tm_source) {
                 let mut memories = Vec::new();
                 for entry in entries.flatten() {
-                    if entry.path().extension().map_or(false, |e| e == "json") {
+                    if entry.path().extension().is_some_and(|e| e == "json") {
                         if let Ok(content) = fs::read_to_string(entry.path()) {
                             if let Ok(tm) = serde_json::from_str::<serde_json::Value>(&content) {
                                 memories.push(tm);
@@ -443,7 +443,7 @@ pub async fn run_auto_backup() -> Result<AutoBackupResult, String> {
             if let Ok(entries) = fs::read_dir(&dict_source) {
                 let mut dicts = Vec::new();
                 for entry in entries.flatten() {
-                    if entry.path().extension().map_or(false, |e| e == "json") {
+                    if entry.path().extension().is_some_and(|e| e == "json") {
                         if let Ok(content) = fs::read_to_string(entry.path()) {
                             if let Ok(dict) = serde_json::from_str::<serde_json::Value>(&content) {
                                 dicts.push(dict);
@@ -484,7 +484,7 @@ pub async fn run_auto_backup() -> Result<AutoBackupResult, String> {
             if let Ok(entries) = fs::read_dir(&settings_source) {
                 let mut profiles = Vec::new();
                 for entry in entries.flatten() {
-                    if entry.path().extension().map_or(false, |e| e == "json") {
+                    if entry.path().extension().is_some_and(|e| e == "json") {
                         if let Ok(content) = fs::read_to_string(entry.path()) {
                             if let Ok(profile) = serde_json::from_str::<serde_json::Value>(&content) {
                                 profiles.push(profile);
@@ -528,7 +528,7 @@ fn cleanup_auto_backups(dir: &PathBuf, max_backups: usize) -> Result<(), String>
     let files: Vec<_> = fs::read_dir(dir)
         .map_err(|e| format!("Errore lettura directory: {}", e))?
         .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension().map_or(false, |ext| ext == "json"))
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "json"))
         .collect();
     
     // Conta backup per tipo (tm_, dictionaries_, settings_)
@@ -608,7 +608,7 @@ pub async fn restore_from_auto_backup(backup_path: String, restore_type: String)
             }
             
             if let Some(memories) = backup.get("memories").and_then(|m| m.as_array()) {
-                for (_i, mem) in memories.iter().enumerate() {
+                for mem in memories.iter() {
                     if let Some(src_lang) = mem.get("sourceLanguage").and_then(|l| l.as_str()) {
                         if let Some(tgt_lang) = mem.get("targetLanguage").and_then(|l| l.as_str()) {
                             let filename = format!("tm_{}_{}.json", src_lang.to_lowercase(), tgt_lang.to_lowercase());
@@ -695,7 +695,7 @@ pub fn list_auto_backups() -> Result<Vec<AutoBackupInfo>, String> {
     if let Ok(entries) = fs::read_dir(&auto_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "json") {
+            if path.extension().is_some_and(|e| e == "json") {
                 let filename = path.file_name()
                     .map(|n| n.to_string_lossy().to_string())
                     .unwrap_or_default();
@@ -822,7 +822,7 @@ pub async fn export_encrypted_backup(
         created_at: Utc::now().to_rfc3339(),
         profile_name: profile_id.clone(),
         encrypted_data: BASE64.encode(&encrypted),
-        nonce: BASE64.encode(&nonce_bytes),
+        nonce: BASE64.encode(nonce_bytes),
         checksum,
     };
     
@@ -973,7 +973,7 @@ pub fn list_encrypted_backups() -> Result<Vec<AutoBackupInfo>, String> {
     if let Ok(entries) = fs::read_dir(&encrypted_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "gsbackup") {
+            if path.extension().is_some_and(|e| e == "gsbackup") {
                 let filename = path.file_name()
                     .map(|n| n.to_string_lossy().to_string())
                     .unwrap_or_default();

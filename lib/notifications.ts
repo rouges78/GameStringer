@@ -16,13 +16,13 @@ interface NotificationOptions {
 }
 
 // Store reference to toast function
-let toastFn: ((opts: any) => void) | null = null;
+let toastFn: ((opts: unknown) => void) | null = null;
 
 /**
  * Initialize the notification system with the toast function
  * Call this once in your app root with useToast hook
  */
-export function initNotifications(toast: (opts: any) => void) {
+export function initNotifications(toast: (opts: unknown) => void) {
   toastFn = toast;
 }
 

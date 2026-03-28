@@ -201,7 +201,7 @@ export function VramSettingsCard() {
 
           <div className="space-y-2">
             <Label className="text-xs">{t('vramManager.cloudFallback')}</Label>
-            <Select value={config.cloudProvider} onValueChange={(v) => updateConfig({ cloudProvider: v as any })}>
+            <Select value={config.cloudProvider} onValueChange={(v) => updateConfig({ cloudProvider: v as string })}>
               <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="auto">{t('vramManager.cloudAuto')}</SelectItem>

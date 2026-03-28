@@ -130,12 +130,12 @@ describe('Edge Cases - Malformed API Data', () => {
       
       // Should not throw when mapping
       expect(() => {
-        games.map((g: any) => g?.id || 'unknown');
+        games.map((g: unknown) => g?.id || 'unknown');
       }).not.toThrow();
     });
 
     it('should handle array with circular references', () => {
-      const obj: any = { id: '1', title: 'Game 1' };
+      const obj: unknown = { id: '1', title: 'Game 1' };
       obj.self = obj;
       const apiResponse = [obj];
       
@@ -195,7 +195,7 @@ describe('Edge Cases - Network Errors', () => {
     });
 
     it('should handle timeout with undefined result', () => {
-      let result: any;
+      let result: unknown;
       // Simulate timeout - result never set
       
       const games = ensureArray(result);
@@ -222,7 +222,7 @@ describe('Edge Cases - Network Errors', () => {
       expect(games.length).toBe(3);
       
       // Should handle missing fields gracefully
-      const titles = safeMap(games, (g: any) => g?.title || 'Unknown');
+      const titles = safeMap(games, (g: unknown) => g?.title || 'Unknown');
       expect(titles).toEqual(['Unknown', 'Game 2', 'Unknown']);
     });
   });
@@ -242,7 +242,7 @@ describe('Edge Cases - Extreme Data Scenarios', () => {
       
       // Should not throw on operations
       expect(() => {
-        games.filter((g: any) => g.platform === 'Steam');
+        games.filter((g: unknown) => g.platform === 'Steam');
       }).not.toThrow();
     });
 
@@ -253,13 +253,13 @@ describe('Edge Cases - Extreme Data Scenarios', () => {
         { id: '2', title: longString }
       ];
       
-      const games = ensureArray<any>(apiResponse);
+      const games = ensureArray<unknown>(apiResponse);
       expect(games.length).toBe(2);
       expect(games[0].title.length).toBe(100000);
     });
 
     it('should handle deeply nested game objects', () => {
-      const deepObject: any = { id: '1', title: 'Game 1' };
+      const deepObject: unknown = { id: '1', title: 'Game 1' };
       let current = deepObject;
       
       // Create 100 levels of nesting
@@ -283,7 +283,7 @@ describe('Edge Cases - Extreme Data Scenarios', () => {
       expect(games.length).toBe(100);
       
       // Should handle undefined elements
-      const validGames = safeFilter(games, (g: any) => g !== undefined);
+      const validGames = safeFilter(games, (g: unknown) => g !== undefined);
       expect(validGames.length).toBe(2);
     });
 
@@ -307,7 +307,7 @@ describe('Edge Cases - Extreme Data Scenarios', () => {
         { id: '2', title: '🚀 Space Game 🌟' }
       ];
       
-      const games = ensureArray<any>(apiResponse);
+      const games = ensureArray<unknown>(apiResponse);
       expect(games.length).toBe(2);
       expect(games[0].title).toContain('🎮');
     });
@@ -350,7 +350,7 @@ describe('Edge Cases - Extreme Data Scenarios', () => {
 describe('Edge Cases - Race Conditions and Async', () => {
   describe('Concurrent Updates', () => {
     it('should handle rapid successive updates', () => {
-      let games: any[] = [];
+      let games: unknown[] = [];
       
       // Simulate rapid updates
       for (let i = 0; i < 100; i++) {
@@ -381,7 +381,7 @@ describe('Edge Cases - Race Conditions and Async', () => {
 
   describe('State Transitions', () => {
     it('should handle transition from loading to loaded', () => {
-      let games: any = undefined; // Initial loading state
+      let games: unknown = undefined; // Initial loading state
       
       games = ensureArray(games);
       expect(games).toEqual([]);
@@ -392,7 +392,7 @@ describe('Edge Cases - Race Conditions and Async', () => {
     });
 
     it('should handle transition from loaded to error', () => {
-      let games: any = [{ id: '1', title: 'Game 1' }];
+      let games: unknown = [{ id: '1', title: 'Game 1' }];
       
       games = ensureArray(games);
       expect(games.length).toBe(1);
@@ -403,7 +403,7 @@ describe('Edge Cases - Race Conditions and Async', () => {
     });
 
     it('should handle transition from error to retry', () => {
-      let games: any = null; // Error state
+      let games: unknown = null; // Error state
       
       games = ensureArray(games);
       expect(games).toEqual([]);
@@ -453,7 +453,7 @@ describe('Edge Cases - Memory and Performance', () => {
       const games = ensureArray(largeArray);
       
       const startTime = performance.now();
-      const filtered = safeFilter(games, (g: any) => g.platform === 'Steam');
+      const filtered = safeFilter(games, (g: unknown) => g.platform === 'Steam');
       const endTime = performance.now();
       
       expect(filtered.length).toBe(5000);
@@ -466,10 +466,10 @@ describe('Edge Cases - Memory and Performance', () => {
         title: `Game ${i}`
       }));
       
-      const games = ensureArray<any>(largeArray);
+      const games = ensureArray<unknown>(largeArray);
       
       const startTime = performance.now();
-      const titles = safeMap(games, (g: any) => g.title);
+      const titles = safeMap(games, (g: unknown) => g.title);
       const endTime = performance.now();
       
       expect(titles.length).toBe(10000);
@@ -512,7 +512,7 @@ describe('Edge Cases - Browser Compatibility', () => {
       
       const proxyArray = new Proxy(originalArray, {
         get(target, prop) {
-          return target[prop as any];
+          return target[prop as string];
         }
       });
       
@@ -546,7 +546,7 @@ describe('Edge Cases - Real-World API Scenarios', () => {
       };
       
       // Extract games array correctly
-      const gamesArray = (steamResponse as any).response?.games;
+      const gamesArray = (steamResponse as unknown).response?.games;
       const games = ensureArray(gamesArray);
       
       expect(games.length).toBe(2);
@@ -591,7 +591,7 @@ describe('Edge Cases - Real-World API Scenarios', () => {
       };
       
       // Extract games array correctly
-      const gamesArray = (epicResponse as any).data?.Catalog?.searchStore?.elements;
+      const gamesArray = (epicResponse as unknown).data?.Catalog?.searchStore?.elements;
       const games = ensureArray(gamesArray);
       
       expect(games.length).toBe(2);

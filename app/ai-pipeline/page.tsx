@@ -126,7 +126,7 @@ export default function AIPipelinePage() {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.models) {
-          setOllamaModels(data.models.map((m: any) => m.name as string).sort());
+          setOllamaModels(data.models.map((m: { name: string }) => m.name as string).sort());
         }
       })
       .catch(() => {});

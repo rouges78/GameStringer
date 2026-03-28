@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use chrono::Utc;
 
 /// Risultato diff tra due versioni di traduzione
@@ -136,7 +136,7 @@ pub async fn list_translation_snapshots(game_id: String) -> Result<Vec<Translati
     if let Ok(entries) = fs::read_dir(&dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |e| e == "json") {
+            if path.extension().is_some_and(|e| e == "json") {
                 if let Some(name) = path.file_stem() {
                     if name.to_string_lossy().starts_with(&prefix) {
                         if let Ok(content) = fs::read_to_string(&path) {
@@ -241,7 +241,7 @@ pub async fn diff_translation_files(
     Ok(compute_diff(&snap_a, &snap_b))
 }
 
-fn load_snapshot(dir: &PathBuf, id: &str) -> Result<TranslationSnapshot, String> {
+fn load_snapshot(dir: &Path, id: &str) -> Result<TranslationSnapshot, String> {
     let path = dir.join(format!("{}.json", id));
     let content = fs::read_to_string(&path)
         .map_err(|e| format!("Snapshot '{}' non trovato: {}", id, e))?;

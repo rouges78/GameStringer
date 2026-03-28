@@ -246,7 +246,7 @@ export function TelltalePatcher() {
       addLog('✅ Instructions completed!');
       toast.success('Instructions generated successfully');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setStatus('error');
       setErrorMessage(error.message || 'Unknown error');
       addLog(`❌ Error: ${error.message}`);
@@ -283,7 +283,7 @@ export function TelltalePatcher() {
       setBackupPath(backupDir);
       addLog(`✅ Backup created: ${backupDir}`);
       toast.success('Backup created successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       addLog(`❌ Backup error: ${error.message}`);
       toast.error('Error creating backup');
     }
@@ -303,7 +303,7 @@ export function TelltalePatcher() {
       addLog('✅ Backup restored successfully');
       toast.success('Original files restored');
       setHasExistingPatch(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       addLog(`❌ Restore error: ${error.message}`);
       toast.error('Error during restore');
     }
@@ -351,7 +351,7 @@ export function TelltalePatcher() {
         addLog('⚠️ No .langdb files found in Pack folder');
         addLog('   You may need to extract files from the archive');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       addLog(`❌ Verification error: ${error.message}`);
     }
   };

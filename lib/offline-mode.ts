@@ -7,15 +7,15 @@ const OFFLINE_CACHE_KEY = 'offline_data_cache';
 export interface OfflineAction {
   id: string;
   type: 'translation' | 'save' | 'sync' | 'backup';
-  payload: any;
+  payload: unknown;
   createdAt: number;
   retries: number;
 }
 
 export interface OfflineCache {
-  games: any[];
-  profiles: any[];
-  translationMemory: any[];
+  games: unknown[];
+  profiles: unknown[];
+  translationMemory: unknown[];
   lastSyncedAt: number;
 }
 
@@ -33,7 +33,7 @@ export function getConnectionStatus(): ConnectionStatus {
   if (!navigator.onLine) return 'offline';
   
   // Controlla se la connessione è lenta
-  const connection = (navigator as any).connection;
+  const connection = (navigator as unknown as Record<string, unknown>).connection;
   if (connection) {
     const effectiveType = connection.effectiveType;
     if (effectiveType === 'slow-2g' || effectiveType === '2g') {
@@ -129,7 +129,7 @@ export function incrementRetry(actionId: string): void {
 /**
  * Cache dati per uso offline
  */
-export function cacheForOffline(key: keyof OfflineCache, data: any): void {
+export function cacheForOffline(key: keyof OfflineCache, data: unknown): void {
   const cache = getOfflineCache();
   cache[key] = data;
   cache.lastSyncedAt = Date.now();
@@ -261,7 +261,7 @@ async function executeOfflineAction(action: OfflineAction): Promise<void> {
  * Wrapper per funzioni che richiedono connessione
  * Se offline, salva l'azione per dopo
  */
-export function withOfflineSupport<T extends (...args: any[]) => Promise<any>>(
+export function withOfflineSupport<T extends (...args: unknown[]) => Promise<unknown>>(
   fn: T,
   actionType: OfflineAction['type']
 ): T {

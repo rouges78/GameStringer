@@ -12,7 +12,7 @@ export interface LogEntry {
   userId?: string;
   sessionId?: string;
   requestId?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   error?: {
     name: string;
     message: string;
@@ -82,7 +82,7 @@ class Logger {
     return LOG_LEVELS[level] >= LOG_LEVELS[this.config.level];
   }
 
-  private sanitizeData(data: any): any {
+  private sanitizeData(data: unknown): unknown {
     if (typeof data !== 'object' || data === null) {
       return data;
     }
@@ -106,7 +106,7 @@ class Logger {
     level: LogLevel,
     message: string,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): LogEntry {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
@@ -236,7 +236,7 @@ class Logger {
     level: LogLevel,
     message: string,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     if (!this.shouldLog(level)) return;
 
@@ -249,27 +249,27 @@ class Logger {
     this.addToBuffer(entry);
   }
 
-  public debug(message: string, component?: string, metadata?: Record<string, any>): void {
+  public debug(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('debug', message, component, metadata);
   }
 
-  public info(message: string, component?: string, metadata?: Record<string, any>): void {
+  public info(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('info', message, component, metadata);
   }
 
-  public warn(message: string, component?: string, metadata?: Record<string, any>): void {
+  public warn(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('warn', message, component, metadata);
   }
 
-  public error(message: string, component?: string, metadata?: Record<string, any>): void {
+  public error(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('error', message, component, metadata);
   }
 
-  public fatal(message: string, component?: string, metadata?: Record<string, any>): void {
+  public fatal(message: string, component?: string, metadata?: Record<string, unknown>): void {
     this.log('fatal', message, component, metadata);
   }
 
-  public logError(error: Error, component?: string, metadata?: Record<string, any>): void {
+  public logError(error: Error, component?: string, metadata?: Record<string, unknown>): void {
     const entry = this.createLogEntry('error', error.message, component, metadata);
     entry.error = {
       name: error.name,
@@ -287,7 +287,7 @@ class Logger {
     statusCode: number,
     duration: number,
     userId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     this.log('info', `${method} ${url} - ${statusCode} (${duration}ms)`, 'API', {
       method,
@@ -303,7 +303,7 @@ class Logger {
     action: string,
     userId: string,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     this.log('info', `User action: ${action}`, component || 'USER', {
       action,
@@ -315,7 +315,7 @@ class Logger {
   public logSystemEvent(
     event: string,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     this.log('info', `System event: ${event}`, component || 'SYSTEM', metadata);
   }
@@ -324,7 +324,7 @@ class Logger {
     operation: string,
     duration: number,
     component?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     this.log('info', `Performance: ${operation} took ${duration}ms`, component || 'PERF', {
       operation,
@@ -337,7 +337,7 @@ class Logger {
     event: string,
     severity: 'low' | 'medium' | 'high' | 'critical',
     userId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): void {
     const level: LogLevel = severity === 'critical' ? 'fatal' : 
                            severity === 'high' ? 'error' : 'warn';
@@ -378,22 +378,22 @@ export const logger = Logger.getInstance();
 // Utility functions
 export function createComponentLogger(componentName: string) {
   return {
-    debug: (message: string, metadata?: Record<string, any>) => 
+    debug: (message: string, metadata?: Record<string, unknown>) => 
       logger.debug(message, componentName, metadata),
-    info: (message: string, metadata?: Record<string, any>) => 
+    info: (message: string, metadata?: Record<string, unknown>) => 
       logger.info(message, componentName, metadata),
-    warn: (message: string, metadata?: Record<string, any>) => 
+    warn: (message: string, metadata?: Record<string, unknown>) => 
       logger.warn(message, componentName, metadata),
-    error: (message: string, metadata?: Record<string, any>) => 
+    error: (message: string, metadata?: Record<string, unknown>) => 
       logger.error(message, componentName, metadata),
-    fatal: (message: string, metadata?: Record<string, any>) => 
+    fatal: (message: string, metadata?: Record<string, unknown>) => 
       logger.fatal(message, componentName, metadata),
-    logError: (error: Error, metadata?: Record<string, any>) => 
+    logError: (error: Error, metadata?: Record<string, unknown>) => 
       logger.logError(error, componentName, metadata)
   };
 }
 
-export function withLogging<T extends any[]>(
+export function withLogging<T extends unknown[]>(
   fn: (...args: T) => any,
   operation: string,
   component?: string
@@ -422,8 +422,8 @@ export function withLogging<T extends any[]>(
   };
 }
 
-export function withAsyncLogging<T extends any[]>(
-  fn: (...args: T) => Promise<any>,
+export function withAsyncLogging<T extends unknown[]>(
+  fn: (...args: T) => Promise<unknown>,
   operation: string,
   component?: string
 ) {

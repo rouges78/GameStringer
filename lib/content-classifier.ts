@@ -517,9 +517,9 @@ export function classifyBatch(
   }
 ): BatchClassificationResult {
   const items: BatchClassificationResult['items'] = [];
-  const byType: Record<ContentType, number> = {} as any;
-  const byRoute: Record<TranslationRoute, number> = {} as any;
-  const byPriority: Record<ContentPriority, number> = {} as any;
+  const byType: Record<ContentType, number> = {} as Record<string, unknown>;
+  const byRoute: Record<TranslationRoute, number> = {} as Record<string, unknown>;
+  const byPriority: Record<ContentPriority, number> = {} as Record<string, unknown>;
   
   // Track repeated texts
   const textCounts = new Map<string, number>();
@@ -650,7 +650,7 @@ export function sortByPriority(
 export function groupByType(
   items: BatchClassificationResult['items']
 ): Record<ContentType, BatchClassificationResult['items']> {
-  const groups: Record<ContentType, BatchClassificationResult['items']> = {} as any;
+  const groups: Record<ContentType, BatchClassificationResult['items']> = {} as Record<string, unknown>;
   
   for (const item of items) {
     const type = item.classification.type;

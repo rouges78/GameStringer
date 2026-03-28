@@ -248,7 +248,7 @@ function extractTranslationPairs(
 }
 
 function extractJsonPairs(
-  obj: any,
+  obj: unknown,
   pairs: Array<{ original: string; translated: string }>,
   prefix = ''
 ): void {
@@ -659,7 +659,7 @@ export async function importGSTranslation(
   
   return {
     metadata: data.metadata,
-    files: data.files.map((f: any) => ({
+    files: data.files.map((f: unknown) => ({
       originalPath: f.originalPath,
       relativePath: f.path,
       content: f.content,

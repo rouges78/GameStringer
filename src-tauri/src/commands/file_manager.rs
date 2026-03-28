@@ -176,7 +176,7 @@ pub async fn ensure_directory(path: String) -> Result<EnsureDirectoryResult, Str
         });
     }
     
-    fs::create_dir_all(&dir_path)
+    fs::create_dir_all(dir_path)
         .map_err(|e| format!("Failed to create directory: {}", e))?;
     
     println!("[FILE MANAGER] ✅ Directory creata: {}", path);

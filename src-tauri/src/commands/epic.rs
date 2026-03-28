@@ -118,9 +118,7 @@ pub async fn get_epic_game_details(app_name: String) -> Result<EpicGame, String>
     println!("[EPIC] Recupero dettagli per: {}", app_name);
     
     // Epic Games Store API endpoint (pubblico)
-    let url = format!(
-        "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=it&country=IT&allowCountries=IT"
-    );
+    let url = "https://store-site-backend-static.ak.epicgames.com/freeGamesPromotions?locale=it&country=IT&allowCountries=IT".to_string();
     
     match HTTP_CLIENT.get(&url).send().await {
         Ok(response) => {
@@ -267,14 +265,12 @@ async fn start_oauth_callback_server() -> Result<(), Box<dyn std::error::Error +
                 // Scambia il code con un access token
                 match exchange_oauth_code_for_token(authorization_code).await {
                     Ok(token_data) => {
-                        let response = format!(
-                            "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n\
+                        let response = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n\
                             <html><body>\
                             <h1>✅ Autenticazione Epic Games completata!</h1>\
                             <p>Puoi chiudere questa finestra e tornare a GameStringer.</p>\
                             <script>window.close();</script>\
-                            </body></html>"
-                        );
+                            </body></html>".to_string();
                         let _ = stream.write_all(response.as_bytes()).await;
                         
                         // Salva i token
@@ -315,7 +311,7 @@ async fn exchange_oauth_code_for_token(authorization_code: &str) -> Result<EpicA
     // Parametri per lo scambio del code
     let params = [
         ("grant_type", "authorization_code"),
-        ("code", &authorization_code),
+        ("code", authorization_code),
         ("client_id", "34a02cf8f4414e29b15921876da36f9a"), // Epic Games Launcher client ID
         ("client_secret", "daafbccc737745039dffe53d94fc76cf"), // Epic Games Launcher client secret
         ("redirect_uri", "https://localhost/launcher/authorized"),
@@ -403,8 +399,8 @@ async fn save_epic_auth_data(auth_data: &EpicAuthData) -> Result<(), String> {
     // Salva su file: key(base64) + "." + nonce(base64) + "." + data(base64)
     let encoded = format!(
         "{}.{}.{}",
-        general_purpose::STANDARD.encode(&key_bytes),
-        general_purpose::STANDARD.encode(&nonce_bytes),
+        general_purpose::STANDARD.encode(key_bytes),
+        general_purpose::STANDARD.encode(nonce_bytes),
         general_purpose::STANDARD.encode(&encrypted)
     );
     
@@ -436,7 +432,7 @@ pub async fn test_epic_connection() -> Result<serde_json::Value, String> {
     });
     
     // PRIMA: Controlla se Legendary è autenticato (metodo preferito)
-    match hidden_command("legendary").args(&["status"]).output() {
+    match hidden_command("legendary").args(["status"]).output() {
         Ok(output) => {
             let status_text = String::from_utf8_lossy(&output.stdout);
             if status_text.contains("Epic account:") && !status_text.contains("not logged in") {
@@ -530,11 +526,11 @@ pub async fn test_epic_connection() -> Result<serde_json::Value, String> {
     Ok(result)
 }
 
-/// Ottiene tutti i giochi posseduti dall'account Epic Games (tramite credenziali)
 // ============================================================================
 // SEZIONE 4: GAMES LIBRARY
 // ============================================================================
 
+/// Ottiene tutti i giochi posseduti dall'account Epic Games (tramite credenziali)
 async fn get_epic_owned_games() -> Result<Vec<GameInfo>, String> {
     println!("[EPIC] 🔄 Tentativo accesso libreria completa Epic Games...");
     
@@ -581,7 +577,7 @@ async fn get_epic_owned_games() -> Result<Vec<GameInfo>, String> {
 async fn try_legendary_library(_username: &str) -> Result<Vec<GameInfo>, String> {
     // Prova a eseguire Legendary se installato
     let output = hidden_command("legendary")
-        .args(&["list", "--json"])
+        .args(["list", "--json"])
         .output();
         
     match output {
@@ -801,7 +797,7 @@ async fn try_legendary_library_direct() -> Result<Vec<GameInfo>, String> {
     println!("[EPIC] 🔄 Tentativo Legendary direct...");
     
     let output = hidden_command("legendary")
-        .args(&["list", "--json"])
+        .args(["list", "--json"])
         .output()
         .map_err(|e| format!("Legendary non trovato: {}", e))?;
     
@@ -942,11 +938,7 @@ async fn try_legendary_library_direct() -> Result<Vec<GameInfo>, String> {
                 .unwrap_or_default();
             if !categories.is_empty() {
                 let is_real_game = categories.iter().any(|c| c == "games" || c == "applications");
-                let is_ue_content = categories.iter().any(|c|
-                    c.contains("assets") || c.contains("plugins") || c.contains("digitalextras")
-                    || c.contains("feature") || c.contains("addons")
-                );
-                if (is_ue_content && !is_real_game) || !is_real_game {
+                if !is_real_game {
                     continue;
                 }
             }
@@ -1016,7 +1008,7 @@ pub async fn check_legendary_status() -> Result<serde_json::Value, String> {
     });
     
     // Verifica se Legendary è installato
-    match hidden_command("legendary").args(&["--version"]).output() {
+    match hidden_command("legendary").args(["--version"]).output() {
         Ok(output) => {
             if output.status.success() {
                 let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -1024,7 +1016,7 @@ pub async fn check_legendary_status() -> Result<serde_json::Value, String> {
                 result["version"] = serde_json::Value::String(version.clone());
                 
                 // Verifica se è autenticato
-                match hidden_command("legendary").args(&["status"]).output() {
+                match hidden_command("legendary").args(["status"]).output() {
                     Ok(status_output) => {
                         let status_text = String::from_utf8_lossy(&status_output.stdout);
                         println!("[LEGENDARY] Status output: {}", status_text);
@@ -1063,7 +1055,7 @@ pub async fn install_legendary() -> Result<String, String> {
     println!("[EPIC] 🔧 Installazione automatica Legendary");
     
     // Prima verifica se pip è disponibile
-    match hidden_command("pip").args(&["--version"]).output() {
+    match hidden_command("pip").args(["--version"]).output() {
         Ok(output) => {
             if !output.status.success() {
                 return Err("pip non trovato. Assicurati che Python sia installato correttamente.".to_string());
@@ -1118,7 +1110,7 @@ pub async fn install_legendary() -> Result<String, String> {
     // Verifica che l'installazione sia riuscita
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
     
-    match hidden_command("legendary").args(&["--version"]).output() {
+    match hidden_command("legendary").args(["--version"]).output() {
         Ok(output) => {
             if output.status.success() {
                 let version = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -1139,7 +1131,7 @@ pub async fn authenticate_legendary() -> Result<String, String> {
     println!("[EPIC] 🔐 Autenticazione Legendary");
     
     // Prima verifica se Legendary è installato
-    match hidden_command("legendary").args(&["--version"]).output() {
+    match hidden_command("legendary").args(["--version"]).output() {
         Ok(output) => {
             if !output.status.success() {
                 return Err("Legendary non installato. Usa 'Installa Legendary' prima.".to_string());
@@ -1152,7 +1144,7 @@ pub async fn authenticate_legendary() -> Result<String, String> {
     
     // Prova prima con --import che importa la sessione dal browser/launcher Epic
     println!("[EPIC] 🔄 Tentativo import sessione da Epic Games Launcher...");
-    match hidden_command("legendary").args(&["auth", "--import"]).output() {
+    match hidden_command("legendary").args(["auth", "--import"]).output() {
         Ok(output) => {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
@@ -1179,7 +1171,7 @@ pub async fn authenticate_legendary() -> Result<String, String> {
     }
     
     // Avvia il processo di autenticazione in background
-    match hidden_command("legendary").args(&["auth"]).spawn() {
+    match hidden_command("legendary").args(["auth"]).spawn() {
         Ok(mut child) => {
             // Aspetta che il processo finisca (timeout 120 secondi)
             let timeout = std::time::Duration::from_secs(120);
@@ -1192,7 +1184,7 @@ pub async fn authenticate_legendary() -> Result<String, String> {
                             // Verifica l'autenticazione
                             tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
                             
-                            match hidden_command("legendary").args(&["status"]).output() {
+                            match hidden_command("legendary").args(["status"]).output() {
                                 Ok(status_output) => {
                                     let status_text = String::from_utf8_lossy(&status_output.stdout);
                                     if status_text.contains("Epic Games account") && !status_text.contains("not logged in") {
@@ -1462,7 +1454,7 @@ pub async fn get_epic_games_by_account_id(_account_id: String) -> Result<serde_j
         "success": success,
         "games_count": filtered_games.len(),
         "games": filtered_games,
-        "connected": filtered_games.len() > 0,
+        "connected": !filtered_games.is_empty(),
         "methods_tried": methods_tried,
         "message": format!("Trovati {} giochi Epic Games", filtered_games.len())
     }))
@@ -1973,8 +1965,7 @@ fn parse_epic_game_data(game_data: &serde_json::Value) -> Result<EpicGame, Strin
     }
     
     // Parsing del prezzo (con controlli sicuri)
-    let price = if let Some(price_data) = game_data["price"].as_object() {
-        Some(EpicPrice {
+    let price = game_data["price"].as_object().map(|price_data| EpicPrice {
             currency: price_data.get("currencyCode")
                 .and_then(|v| v.as_str())
                 .unwrap_or("EUR")
@@ -1988,10 +1979,7 @@ fn parse_epic_game_data(game_data: &serde_json::Value) -> Result<EpicGame, Strin
             discount_percentage: price_data.get("discountPercentage")
                 .and_then(|v| v.as_i64())
                 .map(|p| p as i32),
-        })
-    } else {
-        None
-    };
+        });
     
     Ok(EpicGame {
         id,

@@ -330,6 +330,130 @@ pub async fn search_glossary(
     Ok(replacements)
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// AUTO-GLOSSARY PERSISTENCE (per lib/auto-glossary.ts)
+// Salva/carica glossari automatici in formato JSON opaco per gameId
+// ═══════════════════════════════════════════════════════════════════
+
+fn get_auto_glossary_dir() -> Result<PathBuf, String> {
+    let app_data = dirs::data_local_dir()
+        .ok_or("Impossibile trovare la directory dei dati locali")?;
+    let dir = app_data.join("GameStringer").join("auto_glossaries");
+
+    if !dir.exists() {
+        fs::create_dir_all(&dir)
+            .map_err(|e| format!("Errore creazione directory auto-glossari: {}", e))?;
+    }
+
+    Ok(dir)
+}
+
+#[tauri::command]
+pub fn save_auto_glossary(game_id: String, data: serde_json::Value) -> Result<(), String> {
+    log::info!("💾 Salvataggio auto-glossario: {}", game_id);
+    let dir = get_auto_glossary_dir()?;
+    let path = dir.join(format!("auto_{}.json", game_id));
+
+    let json = serde_json::to_string_pretty(&data)
+        .map_err(|e| format!("Errore serializzazione auto-glossario: {}", e))?;
+
+    fs::write(&path, json)
+        .map_err(|e| format!("Errore scrittura auto-glossario: {}", e))?;
+
+    log::info!("✅ Auto-glossario salvato: {}", game_id);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn load_auto_glossary(game_id: String) -> Result<Option<serde_json::Value>, String> {
+    let dir = get_auto_glossary_dir()?;
+    let path = dir.join(format!("auto_{}.json", game_id));
+
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let content = fs::read_to_string(&path)
+        .map_err(|e| format!("Errore lettura auto-glossario: {}", e))?;
+
+    let data: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Errore parsing auto-glossario: {}", e))?;
+
+    Ok(Some(data))
+}
+
+#[tauri::command]
+pub fn delete_auto_glossary(game_id: String) -> Result<(), String> {
+    let dir = get_auto_glossary_dir()?;
+    let path = dir.join(format!("auto_{}.json", game_id));
+
+    if path.exists() {
+        fs::remove_file(&path)
+            .map_err(|e| format!("Errore eliminazione auto-glossario: {}", e))?;
+        log::info!("🗑️ Auto-glossario eliminato: {}", game_id);
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn load_all_auto_glossaries() -> Result<serde_json::Value, String> {
+    let dir = get_auto_glossary_dir()?;
+    let mut all = serde_json::Map::new();
+
+    if let Ok(entries) = fs::read_dir(&dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) == Some("json") {
+                if let Ok(content) = fs::read_to_string(&path) {
+                    if let Ok(data) = serde_json::from_str::<serde_json::Value>(&content) {
+                        // Estrai gameId dal nome file (auto_{gameId}.json)
+                        if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                            if let Some(game_id) = stem.strip_prefix("auto_") {
+                                all.insert(game_id.to_string(), data);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(serde_json::Value::Object(all))
+}
+
+#[tauri::command]
+pub fn save_auto_glossary_config(config: serde_json::Value) -> Result<(), String> {
+    let dir = get_auto_glossary_dir()?;
+    let path = dir.join("_config.json");
+
+    let json = serde_json::to_string_pretty(&config)
+        .map_err(|e| format!("Errore serializzazione config glossario: {}", e))?;
+
+    fs::write(&path, json)
+        .map_err(|e| format!("Errore scrittura config glossario: {}", e))
+}
+
+#[tauri::command]
+pub fn load_auto_glossary_config() -> Result<Option<serde_json::Value>, String> {
+    let dir = get_auto_glossary_dir()?;
+    let path = dir.join("_config.json");
+
+    if !path.exists() {
+        return Ok(None);
+    }
+
+    let content = fs::read_to_string(&path)
+        .map_err(|e| format!("Errore lettura config glossario: {}", e))?;
+
+    let data: serde_json::Value = serde_json::from_str(&content)
+        .map_err(|e| format!("Errore parsing config glossario: {}", e))?;
+
+    Ok(Some(data))
+}
+
+// ═══════════════════════════════════════════════════════════════════
+
 fn save_glossary_internal(glossary: &GameGlossary) -> Result<(), String> {
     let path = get_glossary_path(&glossary.game_id)?;
     

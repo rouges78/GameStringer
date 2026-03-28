@@ -316,7 +316,7 @@ class SteamApiRateLimiter {
  */
 class AdvancedSteamCache {
   private static instance: AdvancedSteamCache;
-  private memoryCache: Map<string, { data: any; timestamp: number; ttl: number }> = new Map();
+  private memoryCache: Map<string, { data: unknown; timestamp: number; ttl: number }> = new Map();
   private persistentCacheDir: string;
   private readonly defaultTtl = 30 * 60 * 1000; // 30 minutes default TTL
   private readonly maxMemoryCacheSize = 1000; // Maximum in-memory entries
@@ -352,7 +352,7 @@ class AdvancedSteamCache {
   /**
    * Set data in both memory and persistent cache
    */
-  async set(key: string, data: any, ttl: number = this.defaultTtl): Promise<void> {
+  async set(key: string, data: unknown, ttl: number = this.defaultTtl): Promise<void> {
     // Clean memory cache if getting too large
     if (this.memoryCache.size >= this.maxMemoryCacheSize) {
       this.cleanExpiredMemoryEntries();
@@ -467,7 +467,7 @@ class AdvancedSteamCache {
     }
   }
   
-  private async setPersistent(key: string, entry: any): Promise<void> {
+  private async setPersistent(key: string, entry: unknown): Promise<void> {
     const filePath = path.join(this.persistentCacheDir, `${this.sanitizeKey(key)}.json`);
     await fs.writeFile(filePath, JSON.stringify(entry));
   }
@@ -798,7 +798,7 @@ export class SteamCacheManager {
   /**
    * Manually set cache data for a game
    */
-  static async setCachedGameData(appId: string, data: any, ttl?: number): Promise<void> {
+  static async setCachedGameData(appId: string, data: unknown, ttl?: number): Promise<void> {
     await this.cache.set(`game_details_${appId}`, data, ttl);
   }
 }
@@ -814,7 +814,7 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
       key:  '\\Software\\Valve\\Steam'
     });
     const steamPathValue = await new Promise((resolve, reject) => {
-      regKey.get('SteamPath', (err: any, item: any) => {
+      regKey.get('SteamPath', (err: unknown, item: unknown) => {
         if (err) return reject(err);
         resolve(item.value);
       });
@@ -828,7 +828,7 @@ async function getSteamInstallPathFromRegistry(): Promise<string | null> {
             key:  '\\SOFTWARE\\Wow6432Node\\Valve\\Steam'
         });
         const steamPathValue = await new Promise((resolve, reject) => {
-            regKey.get('InstallPath', (err: any, item: any) => {
+            regKey.get('InstallPath', (err: unknown, item: unknown) => {
                 if (err) return reject(err);
                 resolve(item.value);
             });
@@ -852,17 +852,17 @@ async function getSteamLibraryFolders(steamPath: string): Promise<string[]> {
 
   try {
     const content = await fs.readFile(libraryFoldersVdfPath, 'utf-8');
-    const data: any = vdf.parse(content);
+    const data: unknown = vdf.parse(content);
 
     if (data.LibraryFolders) {
-        Object.values(data.LibraryFolders as any)
-            .filter((val: any) => typeof val === 'object' && val.path)
-            .forEach((val: any) => libraryFolders.push(val.path));
+        Object.values(data.LibraryFolders as unknown)
+            .filter((val: unknown) => typeof val === 'object' && val.path)
+            .forEach((val: unknown) => libraryFolders.push(val.path));
     } else {
         // Fallback per un formato alternativo del file VDF
-        Object.values(data as any)
-            .filter((val: any) => typeof val === 'object' && val.path)
-            .forEach((val: any) => libraryFolders.push(val.path));
+        Object.values(data as unknown)
+            .filter((val: unknown) => typeof val === 'object' && val.path)
+            .forEach((val: unknown) => libraryFolders.push(val.path));
     }
 
   } catch (error) {
@@ -928,7 +928,7 @@ export async function getInstalledGames(): Promise<InstalledGame[]> {
         const filePath = path.join(steamappsPath, file);
         try {
           const content = await fs.readFile(filePath, 'utf-8');
-          const data: any = vdf.parse(content);
+          const data: unknown = vdf.parse(content);
           const appState = data.AppState;
 
           if (appState && appState.appid && appState.name && appState.installdir) {

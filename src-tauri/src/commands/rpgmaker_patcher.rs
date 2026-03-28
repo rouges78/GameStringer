@@ -117,19 +117,17 @@ fn detect_rpgmaker_version(game_path: &str) -> RpgMakerVersion {
     let mv_data = path.join("www").join("data");
     let mz_data = path.join("data");
     
-    if mv_data.exists() {
-        if mv_data.join("System.json").exists() {
-            // Controlla se è MZ (ha effetti particolari)
-            let plugins = mv_data.join("..").join("js").join("plugins.js");
-            if plugins.exists() {
-                if let Ok(content) = fs::read_to_string(&plugins) {
-                    if content.contains("VisuMZ") || content.contains("MZ") {
-                        return RpgMakerVersion::MZ;
-                    }
+    if mv_data.exists() && mv_data.join("System.json").exists() {
+        // Controlla se è MZ (ha effetti particolari)
+        let plugins = mv_data.join("..").join("js").join("plugins.js");
+        if plugins.exists() {
+            if let Ok(content) = fs::read_to_string(&plugins) {
+                if content.contains("VisuMZ") || content.contains("MZ") {
+                    return RpgMakerVersion::MZ;
                 }
             }
-            return RpgMakerVersion::MV;
         }
+        return RpgMakerVersion::MV;
     }
     
     if mz_data.exists() && mz_data.join("System.json").exists() {

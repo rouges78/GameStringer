@@ -246,7 +246,7 @@ export function VoiceTranslator() {
       setState(prev => ({
         ...prev,
         transcription: data.text || '',
-        transcriptionSegments: (data.segments || []).map((s: any) => ({
+        transcriptionSegments: (data.segments || []).map((s: unknown) => ({
           start: s.start, end: s.end, text: s.text
         })),
         sourceLanguage: data.language || prev.sourceLanguage,
@@ -254,7 +254,7 @@ export function VoiceTranslator() {
         step: 'idle'
       }));
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setState(prev => ({
         ...prev,
         isTranscribing: false,
@@ -284,7 +284,7 @@ export function VoiceTranslator() {
         step: 'idle'
       }));
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setState(prev => ({
         ...prev,
         isTranslating: false,
@@ -303,14 +303,14 @@ export function VoiceTranslator() {
       const { openai: openaiKey } = getApiKeys();
       
       let ttsUrl = 'https://api.openai.com/v1/audio/speech';
-      let requestBody: any = {
+      let requestBody: Record<string, unknown> = {
         model: 'tts-1',
         input: state.translation,
         voice: state.selectedVoice,
         speed: state.speechSpeed,
         response_format: 'mp3',
       };
-      let headers: any = {
+      let headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
 
@@ -377,7 +377,7 @@ export function VoiceTranslator() {
         step: 'done'
       }));
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setState(prev => ({
         ...prev,
         isSynthesizing: false,

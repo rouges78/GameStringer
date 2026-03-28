@@ -80,7 +80,7 @@ describe('useNotifications', () => {
     vi.useFakeTimers();
     
     // Mock profile auth
-    (require('@/lib/profile-auth').useProfileAuth as any).mockReturnValue({
+    (require('@/lib/profile-auth').useProfileAuth as unknown).mockReturnValue({
       currentProfile: mockProfile
     });
 
@@ -102,7 +102,7 @@ describe('useNotifications', () => {
 
   describe('Initialization', () => {
     it('should initialize with empty state when no profile', () => {
-      (require('@/lib/profile-auth').useProfileAuth as any).mockReturnValue({
+      (require('@/lib/profile-auth').useProfileAuth as unknown).mockReturnValue({
         currentProfile: null
       });
 
@@ -592,7 +592,7 @@ describe('useNotifications', () => {
       });
 
       // Change profile to null
-      (require('@/lib/profile-auth').useProfileAuth as any).mockReturnValue({
+      (require('@/lib/profile-auth').useProfileAuth as unknown).mockReturnValue({
         currentProfile: null
       });
 
@@ -611,7 +611,7 @@ describe('useNotifications', () => {
 
       // Change to different profile
       const newProfile = { ...mockProfile, id: 'new-profile-id' };
-      (require('@/lib/profile-auth').useProfileAuth as any).mockReturnValue({
+      (require('@/lib/profile-auth').useProfileAuth as unknown).mockReturnValue({
         currentProfile: newProfile
       });
 

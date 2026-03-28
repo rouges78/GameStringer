@@ -125,7 +125,7 @@ export function NexusModsBrowser() {
       setIsConfigured(true);
       setShowApiKeyDialog(false);
       toast.success(`${t('nexusMods.welcome')}, ${info.name}!`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || t('nexusMods.invalidApiKey'));
       nexusModsService.clearApiKey();
     } finally {
@@ -161,7 +161,7 @@ export function NexusModsBrowser() {
       } else {
         toast.success(`${results.length} ${t('nexusMods.foundTranslations')}`);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || t('nexusMods.searchError'));
     } finally {
       setIsSearching(false);

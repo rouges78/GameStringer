@@ -22,7 +22,7 @@ interface HltbStatsProps {
 }
 
 // Cache HLTB globale per evitare doppi fetch (StrictMode + HMR)
-const _hltbCache = ((globalThis as any).__gsHltbCache ??= new Map<string, HltbData>());
+const _hltbCache = ((globalThis as unknown as Record<string, unknown>).__gsHltbCache ??= new Map<string, HltbData>());
 
 export function HltbStats({ gameName, className }: HltbStatsProps) {
   const [data, setData] = useState<HltbData | null>(null);

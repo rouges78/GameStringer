@@ -1534,7 +1534,7 @@ export default function AutoTranslatePage() {
   // STEP INDICATOR
   // ============================================================================
 
-  const wizardSteps: { id: WizardStep; label: string; icon: any }[] = [
+  const wizardSteps: { id: WizardStep; label: string; icon: unknown }[] = [
     { id: 'select_game', label: t('autoTranslatePage.selectGame'), icon: Gamepad2 },
     { id: 'translating', label: t('autoTranslatePage.translating'), icon: Sparkles },
     { id: 'review', label: t('autoTranslatePage.toReview'), icon: Eye },

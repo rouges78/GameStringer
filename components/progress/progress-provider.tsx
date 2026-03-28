@@ -19,7 +19,7 @@ import { progressPersistence } from '@/lib/progress-persistence';
 type ProgressAction =
   | { type: 'START_OPERATION'; payload: { id: string; config: ProgressConfig } }
   | { type: 'UPDATE_PROGRESS'; payload: { id: string; progress: number; status?: string } }
-  | { type: 'COMPLETE_OPERATION'; payload: { id: string; result?: any } }
+  | { type: 'COMPLETE_OPERATION'; payload: { id: string; result?: unknown } }
   | { type: 'FAIL_OPERATION'; payload: { id: string; error: Error } }
   | { type: 'CANCEL_OPERATION'; payload: { id: string } }
   | { type: 'CLEANUP_COMPLETED'; payload: { maxAge: number } };
@@ -160,7 +160,7 @@ const ProgressContext = createContext<ProgressState | null>(null);
 type ProgressEventListener = (event: ProgressEvent) => void;
 const eventListeners = new Set<ProgressEventListener>();
 
-function emitProgressEvent(type: ProgressEventType, operationId: string, data?: any) {
+function emitProgressEvent(type: ProgressEventType, operationId: string, data?: unknown) {
   const event: ProgressEvent = {
     type,
     operationId,
@@ -223,7 +223,7 @@ export function ProgressProvider({
     emitProgressEvent('operation_updated', id, { progress, status });
   }, []);
 
-  const completeOperation = useCallback((id: string, result?: any) => {
+  const completeOperation = useCallback((id: string, result?: unknown) => {
     dispatch({ type: 'COMPLETE_OPERATION', payload: { id, result } });
     emitProgressEvent('operation_completed', id, result);
     
@@ -231,7 +231,7 @@ export function ProgressProvider({
     const operation = state.operations.get(id);
     if (operation && 'onComplete' in operation) {
       try {
-        (operation as any).onComplete?.(result);
+        (operation as unknown).onComplete?.(result);
       } catch (error) {
         console.error('Error in onComplete callback:', error);
       }
@@ -246,7 +246,7 @@ export function ProgressProvider({
     const operation = state.operations.get(id);
     if (operation && 'onError' in operation) {
       try {
-        (operation as any).onError?.(error);
+        (operation as unknown).onError?.(error);
       } catch (err) {
         console.error('Error in onError callback:', err);
       }
@@ -262,7 +262,7 @@ export function ProgressProvider({
       // Execute callback if present
       if ('onCancel' in operation) {
         try {
-          (operation as any).onCancel?.();
+          (operation as unknown).onCancel?.();
         } catch (error) {
           console.error('Error in onCancel callback:', error);
         }
@@ -317,7 +317,7 @@ export const ProgressUtils = {
     progressState: ProgressState,
     id: string,
     config: ProgressConfig,
-    operation: (updateFn: (progress: number, status?: string) => void) => Promise<any>
+    operation: (updateFn: (progress: number, status?: string) => void) => Promise<unknown>
   ) => {
     return new Promise((resolve, reject) => {
       progressState.startOperation(id, {
@@ -345,8 +345,8 @@ export const ProgressUtils = {
     progressState: ProgressState,
     id: string,
     config: ProgressConfig,
-    items: any[],
-    processor: (item: any, index: number) => Promise<any>
+    items: unknown[],
+    processor: (item: unknown, index: number) => Promise<unknown>
   ) => {
     return ProgressUtils.createManagedOperation(
       progressState,

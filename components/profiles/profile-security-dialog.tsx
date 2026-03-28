@@ -75,7 +75,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error?.message || 'Error changing password');
     } finally {
       setIsChangingPassword(false);
@@ -113,7 +113,7 @@ export function ProfileSecurityDialog({ open, onOpenChange }: ProfileSecurityDia
       } else {
         toast.error(response.error || 'Incorrect password');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Delete profile error:', error);
       toast.error(error?.message || 'Error during deletion');
     } finally {

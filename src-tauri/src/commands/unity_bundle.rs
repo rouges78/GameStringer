@@ -11,8 +11,7 @@ use reqwest::Client;
 use zip::ZipArchive;
 use std::io::{Cursor, Write};
 
-#[allow(unused_imports)]
-use gamestringer::unity_bundle::parser::UnityBundle;
+// UnityBundle parser removed — module doesn't exist in this crate
 
 #[allow(dead_code)]
 const UABEA_URL: &str = "https://github.com/nesrak1/UABEA/releases/download/v8/uabea-windows.zip";
@@ -654,7 +653,7 @@ pub async fn import_translated_strings(
     
     // Esegui UABEA batchimport
     let result = Command::new(&uabea_exe)
-        .args(&["batchimportdump", &output_bundle, temp_dir.to_str().unwrap_or(".")])
+        .args(["batchimportdump", &output_bundle, temp_dir.to_str().unwrap_or(".")])
         .output();
     
     match result {
@@ -718,7 +717,7 @@ pub async fn extract_strings_auto(bundle_path: String) -> ExtractResult {
     }
     
     // Leggi file raw e cerca stringhe direttamente
-    let data = match fs::read(&path) {
+    let data = match fs::read(path) {
         Ok(d) => d,
         Err(e) => return ExtractResult {
             success: false,
@@ -828,7 +827,7 @@ pub async fn create_translated_bundle(
                 
                 if let Some(pos) = find_string_in_bundle(&data, &entry.value) {
                     // Verifica lunghezza e sostituisci
-                    let original_len = entry.value.as_bytes().len();
+                    let original_len = entry.value.len();
                     if translated_bytes.len() == original_len {
                         data[pos..pos + translated_bytes.len()].copy_from_slice(translated_bytes);
                         replaced += 1;
@@ -872,7 +871,7 @@ fn extract_strings_from_raw(data: &[u8]) -> Vec<StringEntry> {
     while i + 4 < data.len() {
         let len = u32::from_le_bytes([data[i], data[i+1], data[i+2], data[i+3]]) as usize;
         
-        if len >= 2 && len <= 2000 && i + 4 + len <= data.len() {
+        if (2..=2000).contains(&len) && i + 4 + len <= data.len() {
             let str_data = &data[i + 4..i + 4 + len];
             
             if let Ok(s) = std::str::from_utf8(str_data) {

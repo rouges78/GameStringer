@@ -103,7 +103,7 @@ impl MultiProcessInjekt {
         // Scansiona processi esistenti
         self.scan_and_inject_processes()?;
         
-        *self.is_running.lock().unwrap() = true;
+        *self.is_running.lock().unwrap_or_else(|e| e.into_inner()) = true;
         
         log::info!("✅ Sistema multi-processo avviato con successo");
         Ok(())
@@ -113,7 +113,7 @@ impl MultiProcessInjekt {
         log::info!("🔴 Arresto sistema multi-processo...");
         
         // Ferma il monitoraggio
-        *self.is_running.lock().unwrap() = false;
+        *self.is_running.lock().unwrap_or_else(|e| e.into_inner()) = false;
         
         // Attendi che il thread termini
         if let Some(thread) = self.monitor_thread.take() {
@@ -139,11 +139,11 @@ impl MultiProcessInjekt {
         let monitor_thread = thread::spawn(move || {
             log::info!("🔍 Avvio monitoraggio processi multi-processo");
             
-            while *is_running.lock().unwrap() {
+            while *is_running.lock().unwrap_or_else(|e| e.into_inner()) {
                 // Scansiona processi attivi
                 match Self::scan_game_processes(&config.game_name, &config.primary_process, &config.secondary_processes) {
                     Ok(discovered_processes) => {
-                        let mut processes = active_processes.lock().unwrap();
+                        let mut processes = active_processes.lock().unwrap_or_else(|e| e.into_inner());
                         let mut current_pids: Vec<u32> = Vec::new();
                         
                         // Aggiorna processi esistenti e aggiungi nuovi
@@ -291,7 +291,7 @@ impl MultiProcessInjekt {
         
         // Avvia injection
         {
-            let mut injector_guard = injector_arc.lock().unwrap();
+            let mut injector_guard = injector_arc.lock().unwrap_or_else(|e| e.into_inner());
             injector_guard.start()?;
         }
         

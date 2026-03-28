@@ -1164,7 +1164,7 @@ pub fn apply_danganronpa_patch(
     }
     
     // Copia il file patch
-    fs::copy(&patch_path, &dest_path)
+    fs::copy(patch_path, &dest_path)
         .map_err(|e| format!("Errore copia patch: {}", e))?;
     
     log::info!("✅ Patch applicata: {} -> {}", patch_file, dest_path.display());
@@ -1203,7 +1203,7 @@ pub fn restore_danganronpa_backup(
     
     let dest_path = game_dir.join(original_name);
     
-    fs::copy(&backup_path, &dest_path)
+    fs::copy(backup_path, &dest_path)
         .map_err(|e| format!("Errore ripristino: {}", e))?;
     
     log::info!("🔄 Backup ripristinato: {} -> {}", backup_file, dest_path.display());
@@ -1468,7 +1468,7 @@ fn is_utf16le_text(data: &[u8]) -> bool {
             let high = data[i + 1];
             // Printable ASCII in UTF-16LE: 0x20-0x7E followed by 0x00
             // Or newline (0x0A, 0x0D)
-            if high == 0 && (low >= 0x20 && low <= 0x7E || low == 0x0A || low == 0x0D) {
+            if high == 0 && ((0x20..=0x7E).contains(&low) || low == 0x0A || low == 0x0D) {
                 utf16_count += 1;
             }
         }
@@ -1607,9 +1607,9 @@ fn decode_utf16_auto(data: &[u8]) -> (String, &'static str) {
         let b0 = data[i];
         let b1 = data[i + 1];
         // BE pattern: 0x00 followed by printable ASCII
-        if b0 == 0x00 && b1 >= 0x20 && b1 <= 0x7E { be_score += 1; }
+        if b0 == 0x00 && (0x20..=0x7E).contains(&b1) { be_score += 1; }
         // LE pattern: printable ASCII followed by 0x00
-        if b1 == 0x00 && b0 >= 0x20 && b0 <= 0x7E { le_score += 1; }
+        if b1 == 0x00 && (0x20..=0x7E).contains(&b0) { le_score += 1; }
     }
     
     if be_score > le_score && be_score >= 3 {
@@ -1988,7 +1988,7 @@ fn read_utf16_string(data: &[u8]) -> String {
         // Handle special characters
         if code == 0x000A { // Newline
             chars.push('\n');
-        } else if code < 0xD800 || code > 0xDFFF {
+        } else if !(0xD800..=0xDFFF).contains(&code) {
             if let Some(c) = char::from_u32(code as u32) {
                 chars.push(c);
             }
@@ -2465,7 +2465,7 @@ pub async fn auto_translate_danganronpa(
     // 5. Prepara batch per traduzione
     let mut translated_dialogues = all_dialogues.clone();
     let batch_size = 50;
-    let total_batches = (all_dialogues.len() + batch_size - 1) / batch_size;
+    let total_batches = all_dialogues.len().div_ceil(batch_size);
     
     log::info!("🌐 Avvio traduzione: {} batch da {} stringhe", total_batches, batch_size);
     
@@ -2556,28 +2556,25 @@ fn try_parse_lin_data(data: &[u8], pak_name: &str, entry_name: &str) -> Vec<LinD
     }
     
     // Prova parsing LIN
-    match parse_lin_type1(data) {
-        Ok((entries, strings)) => {
-            for s in &strings {
-                if s.text.is_empty() || s.text.len() > 500 {
-                    continue;
-                }
-                let speaker = s.speaker_name.clone().unwrap_or_default();
-                dialogues.push(LinDialogue {
-                    id: format!("{}_{}_s{}", pak_name, entry_name.replace('.', "_"), s.index),
-                    speaker,
-                    original: s.text.clone(),
-                    translated: String::new(),
-                    file: format!("{}/{}", pak_name, entry_name),
-                    line_index: s.index,
-                });
+    if let Ok((entries, strings)) = parse_lin_type1(data) {
+        for s in &strings {
+            if s.text.is_empty() || s.text.len() > 500 {
+                continue;
             }
-            if !dialogues.is_empty() {
-                log::info!("📜 LIN parsed {}/{}: {} entries, {} dialogues", 
-                    pak_name, entry_name, entries.len(), dialogues.len());
-            }
+            let speaker = s.speaker_name.clone().unwrap_or_default();
+            dialogues.push(LinDialogue {
+                id: format!("{}_{}_s{}", pak_name, entry_name.replace('.', "_"), s.index),
+                speaker,
+                original: s.text.clone(),
+                translated: String::new(),
+                file: format!("{}/{}", pak_name, entry_name),
+                line_index: s.index,
+            });
         }
-        Err(_) => {}
+        if !dialogues.is_empty() {
+            log::info!("📜 LIN parsed {}/{}: {} entries, {} dialogues", 
+                pak_name, entry_name, entries.len(), dialogues.len());
+        }
     }
     
     dialogues
@@ -2631,7 +2628,7 @@ fn extract_dialogues_from_pak(pak_path: &str) -> Result<Vec<LinDialogue>, String
         // Splitta per ÿ, recupera la prima lettera, tronca garbage binario.
         let entries: Vec<String> = text.split('\u{00FF}')
             .map(|entry| {
-                let trimmed = entry.trim_start_matches(|c: char| c == '\n' || c == '\r');
+                let trimmed = entry.trim_start_matches(['\n', '\r']);
                 if trimmed.is_empty() { return String::new(); }
                 
                 // Recupera prima lettera mangiata dal control char FE+XX / FF+XX
@@ -2640,18 +2637,18 @@ fn extract_dialogues_from_pak(pak_path: &str) -> Result<Vec<LinDialogue>, String
                 let mut result = String::new();
                 if let Some(first) = chars.next() {
                     let code = first as u32;
-                    if code >= 0xFE00 && code <= 0xFEFF {
+                    if (0xFE00..=0xFEFF).contains(&code) {
                         // Recupera: low byte = prima lettera ASCII
                         let recovered = (code & 0xFF) as u8;
-                        if recovered >= 0x20 && recovered <= 0x7E {
+                        if (0x20..=0x7E).contains(&recovered) {
                             result.push(recovered as char);
                         }
-                    } else if code >= 0xFF00 && code <= 0xFFFF {
+                    } else if (0xFF00..=0xFFFF).contains(&code) {
                         let recovered = (code & 0xFF) as u8;
-                        if recovered >= 0x20 && recovered <= 0x7E {
+                        if (0x20..=0x7E).contains(&recovered) {
                             result.push(recovered as char);
                         }
-                    } else if first.is_ascii() || (first >= '\u{00C0}' && first <= '\u{024F}') {
+                    } else if first.is_ascii() || ('\u{00C0}'..='\u{024F}').contains(&first) {
                         result.push(first);
                     }
                     // else: skip non-Latin first char
@@ -2663,12 +2660,12 @@ fn extract_dialogues_from_pak(pak_path: &str) -> Result<Vec<LinDialogue>, String
                 let mut non_latin_streak = 0usize;
                 let mut truncate_idx = result_chars.len();
                 for (i, &c) in result_chars.iter().enumerate() {
-                    if c.is_ascii() || (c >= '\u{00C0}' && c <= '\u{024F}') {
+                    if c.is_ascii() || ('\u{00C0}'..='\u{024F}').contains(&c) {
                         non_latin_streak = 0;
                     } else {
                         non_latin_streak += 1;
                         if non_latin_streak >= 3 {
-                            truncate_idx = if i >= 2 { i - 2 } else { 0 };
+                            truncate_idx = i.saturating_sub(2);
                             break;
                         }
                     }
@@ -2695,7 +2692,7 @@ fn extract_dialogues_from_pak(pak_path: &str) -> Result<Vec<LinDialogue>, String
             })
             .filter(|entry| {
                 let len = entry.len();
-                if len < 3 || len > 2000 { return false; }
+                if !(3..=2000).contains(&len) { return false; }
                 // Deve contenere almeno una lettera ASCII
                 entry.chars().any(|c| c.is_ascii_alphabetic())
             })
@@ -2871,7 +2868,7 @@ fn extract_strings_from_binary(data: &[u8]) -> Vec<String> {
     let mut current = String::new();
     
     for &byte in data {
-        if byte >= 0x20 && byte < 0x7F {
+        if (0x20..0x7F).contains(&byte) {
             current.push(byte as char);
         } else if !current.is_empty() {
             if current.len() >= 4 && current.chars().any(|c| c.is_alphabetic()) {

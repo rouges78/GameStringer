@@ -109,7 +109,7 @@ export default function MemoryPage() {
       
       try {
         // Carica tutti i games una sola volta
-        const games = await invoke<any[]>('get_games_fast');
+        const games = await invoke<unknown[]>('get_games_fast');
         
         for (const gameId of idsToResolve) {
           if (!gameId) continue;

@@ -1,16 +1,9 @@
 import { NextResponse } from 'next/server';
 import { listInstalledDictionaries } from '@/lib/game-dictionaries';
+import { withErrorHandler } from '@/lib/error-handler';
 
-export async function GET() {
-  try {
-    const dictionaries = await listInstalledDictionaries();
-    
-    return NextResponse.json(dictionaries);
-  } catch (error) {
-    console.error('[DICT API] Error listing dictionaries:', error);
-    return NextResponse.json(
-      { error: 'Failed to list dictionaries', message: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
-    );
-  }
-}
+export const GET = withErrorHandler(async function() {
+  const dictionaries = await listInstalledDictionaries();
+
+  return NextResponse.json(dictionaries);
+});
