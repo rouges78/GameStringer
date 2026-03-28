@@ -72,6 +72,7 @@ export interface BatchProgress {
   failed: number;
   skipped: number;
   fromMemory: number;
+  retried: number;
   currentItem?: string;
   percentage: number;
   estimatedTimeRemaining?: number;  // secondi
@@ -216,6 +217,7 @@ export class BatchTranslator {
         failed: 0,
         skipped: 0,
         fromMemory: 0,
+        retried: 0,
         percentage: 0
       },
       options: mergedOptions,
@@ -519,18 +521,31 @@ export class BatchTranslator {
       console.log(`[BatchTranslator] Translated via ${result.provider}`);
       
       
-      // Applica traduzioni
+      // Applica traduzioni e controlla qualità inline
+      const itemsToRetry: Array<{ item: BatchTranslationItem; issues: string[] }> = [];
+
       for (let i = 0; i < batchItems.length; i++) {
         const item = batchItems[i];
         const translated = i < translations.length ? translations[i] : null;
-        
+
         if (translated) {
           item.translatedText = translated;
-          item.status = 'completed';
           item.fromMemory = false;
+
+          // Quality check inline — solo se abilitato e non siamo già in un retry
+          if (this.job.options.runQualityChecks && this.job.options.maxRetries > 0) {
+            const qc = quickQualityCheck(item.sourceText, translated, item.metadata?.maxLength);
+            if (!qc.passed || qc.score < this.job.options.minQualityScore) {
+              itemsToRetry.push({ item, issues: qc.criticalIssues });
+              continue; // Non contare come completed ancora
+            }
+          }
+
+          // Traduzione OK — finalizza
+          item.status = 'completed';
           this.job.progress.completed++;
           this.job.results.translatedItems++;
-          
+
           // Salva in TM per uso futuro (async, non blocca)
           if (this.job.options.saveToMemory) {
             translationMemory.add(item.sourceText, translated, {
@@ -540,12 +555,12 @@ export class BatchTranslator {
               confidence: 0.85
             }).catch(() => {});
           }
-          
+
           // Stima costi
           const tokens = Math.ceil(item.sourceText.length / 4) + Math.ceil(translated.length / 4);
           this.job.results.totalTokensUsed += tokens;
           this.job.results.estimatedCost += tokens * 0.00002;
-          
+
           this.onItemCompleteCallback?.(item);
         } else {
           item.status = 'failed';
@@ -553,6 +568,11 @@ export class BatchTranslator {
           this.job.progress.failed++;
           this.job.results.failedItems++;
         }
+      }
+
+      // Quality retry loop — ritenta items con qualità insufficiente
+      if (itemsToRetry.length > 0) {
+        await this.retryFailedQuality(itemsToRetry, batchNum, totalBatches);
       }
       
     } catch (error) {
@@ -575,6 +595,148 @@ export class BatchTranslator {
         await this.sleep(200); // Delay ridotto nel fallback
       }
     }
+  }
+
+  /**
+   * Ritenta traduzione per items che non hanno superato il quality check.
+   * Passa i problemi rilevati come contesto aggiuntivo al provider AI.
+   */
+  private async retryFailedQuality(
+    failedItems: Array<{ item: BatchTranslationItem; issues: string[] }>,
+    batchNum: number,
+    totalBatches: number
+  ): Promise<void> {
+    if (!this.job) return;
+
+    const maxAttempts = Math.min(this.job.options.maxRetries, 2); // Max 2 retry per qualità
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      if (failedItems.length === 0) break;
+      if (this.isCancelled) break;
+
+      console.log(`[BatchTranslator] Quality retry attempt ${attempt}/${maxAttempts} for ${failedItems.length} items (batch ${batchNum}/${totalBatches})`);
+
+      this.job.progress.statusMessage = `Quality retry ${attempt}/${maxAttempts} (${failedItems.length} items)`;
+      this.updateProgress();
+
+      // Costruisci contesto con feedback qualità per il provider
+      const qualityFeedback = failedItems.map(({ item, issues }) => {
+        const issueList = issues.length > 0 ? issues.join('; ') : 'Low quality score';
+        return `"${item.sourceText}" → previous: "${item.translatedText}" — issues: ${issueList}`;
+      }).join('\n');
+
+      const retryContext = [
+        this.job.options.gameContext || '',
+        `\n[QUALITY RETRY] The following translations had quality issues. Please fix them:\n${qualityFeedback}`,
+        `\nRules: preserve all placeholders ({0}, %s, etc.), respect max length limits, do not leave text untranslated.`
+      ].filter(Boolean).join('\n');
+
+      const retryTexts = failedItems.map(f => f.item.sourceText);
+
+      const glossaryHint = this.job.gameId
+        ? buildRelevantGlossaryHint(this.job.gameId, retryTexts)
+        : '';
+
+      try {
+        const result = await translateSmart({
+          texts: retryTexts,
+          targetLanguage: this.job.targetLanguage,
+          sourceLanguage: this.job.sourceLanguage || 'en',
+          context: retryContext,
+          glossaryHint: glossaryHint || undefined,
+        });
+
+        if (!result.success) {
+          console.warn(`[BatchTranslator] Quality retry ${attempt} failed — all providers down`);
+          break;
+        }
+
+        const stillFailing: Array<{ item: BatchTranslationItem; issues: string[] }> = [];
+
+        for (let i = 0; i < failedItems.length; i++) {
+          const { item } = failedItems[i];
+          const newTranslation = i < result.translations.length ? result.translations[i] : null;
+
+          if (!newTranslation) {
+            stillFailing.push(failedItems[i]);
+            continue;
+          }
+
+          // Re-check qualità
+          const qc = quickQualityCheck(item.sourceText, newTranslation, item.metadata?.maxLength);
+
+          // Stima costi del retry
+          const tokens = Math.ceil(item.sourceText.length / 4) + Math.ceil(newTranslation.length / 4);
+          this.job.results.totalTokensUsed += tokens;
+          this.job.results.estimatedCost += tokens * 0.00002;
+
+          if (qc.passed && qc.score >= this.job.options.minQualityScore) {
+            // Retry riuscito — accetta nuova traduzione
+            item.translatedText = newTranslation;
+            item.status = 'completed';
+            this.job.progress.completed++;
+            this.job.progress.retried++;
+            this.job.results.translatedItems++;
+
+            if (this.job.options.saveToMemory) {
+              translationMemory.add(item.sourceText, newTranslation, {
+                context: item.classification?.type,
+                gameId: this.job.gameId,
+                provider: this.job.provider,
+                confidence: 0.9 // Confidence più alta per retry riuscito
+              }).catch(() => {});
+            }
+
+            this.onItemCompleteCallback?.(item);
+          } else if (qc.score > quickQualityCheck(item.sourceText, item.translatedText!, item.metadata?.maxLength).score) {
+            // Retry parziale — la nuova è meglio della vecchia, accettala ma ritenta ancora
+            item.translatedText = newTranslation;
+            stillFailing.push({ item, issues: qc.criticalIssues });
+          } else {
+            // Retry non migliorato — mantieni la vecchia e ritenta
+            stillFailing.push(failedItems[i]);
+          }
+        }
+
+        failedItems = stillFailing;
+
+      } catch (error) {
+        console.warn(`[BatchTranslator] Quality retry ${attempt} error:`, error);
+        break;
+      }
+
+      // Piccolo delay tra tentativi di retry
+      if (failedItems.length > 0 && attempt < maxAttempts) {
+        await this.sleep(this.job.options.retryDelay);
+      }
+    }
+
+    // Items rimasti dopo tutti i retry — accettali con la miglior traduzione disponibile
+    for (const { item } of failedItems) {
+      if (item.translatedText) {
+        item.status = 'completed';
+        this.job.progress.completed++;
+        this.job.results.translatedItems++;
+
+        if (this.job.options.saveToMemory) {
+          translationMemory.add(item.sourceText, item.translatedText, {
+            context: item.classification?.type,
+            gameId: this.job.gameId,
+            provider: this.job.provider,
+            confidence: 0.6 // Confidence bassa — non ha superato QA
+          }).catch(() => {});
+        }
+
+        this.onItemCompleteCallback?.(item);
+      } else {
+        item.status = 'failed';
+        item.error = 'Quality check failed after retries';
+        this.job.progress.failed++;
+        this.job.results.failedItems++;
+      }
+    }
+
+    this.job.progress.statusMessage = undefined;
   }
 
   private async translateItem(item: BatchTranslationItem): Promise<void> {
