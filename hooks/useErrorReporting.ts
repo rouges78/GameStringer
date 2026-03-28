@@ -8,7 +8,7 @@ interface ErrorReportContext {
   action?: string;
   userId?: string;
   sessionId?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 export function useErrorReporting() {
@@ -59,7 +59,7 @@ export function useErrorReporting() {
   }, []);
 
   const reportAsyncError = useCallback(async (
-    asyncOperation: () => Promise<any>,
+    asyncOperation: () => Promise<unknown>,
     context?: ErrorReportContext
   ) => {
     try {
@@ -72,7 +72,7 @@ export function useErrorReporting() {
     }
   }, [reportError]);
 
-  const withErrorReporting = useCallback(<T extends any[]>(
+  const withErrorReporting = useCallback(<T extends unknown[]>(
     fn: (...args: T) => void,
     context?: ErrorReportContext
   ) => {
@@ -88,8 +88,8 @@ export function useErrorReporting() {
     };
   }, [reportError]);
 
-  const withAsyncErrorReporting = useCallback(<T extends any[]>(
-    fn: (...args: T) => Promise<any>,
+  const withAsyncErrorReporting = useCallback(<T extends unknown[]>(
+    fn: (...args: T) => Promise<unknown>,
     context?: ErrorReportContext
   ) => {
     return async (...args: T) => {
@@ -120,7 +120,7 @@ export function useApiErrorReporting() {
     error: Error,
     endpoint: string,
     method: string = 'GET',
-    requestData?: any
+    requestData?: unknown
   ) => {
     return reportError(error, {
       component: 'API',
@@ -137,7 +137,7 @@ export function useApiErrorReporting() {
     apiCall: () => Promise<T>,
     endpoint: string,
     method: string = 'GET',
-    requestData?: any
+    requestData?: unknown
   ): Promise<T> => {
     try {
       return await apiCall();

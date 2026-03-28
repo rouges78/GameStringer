@@ -4,16 +4,16 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 
 // Client-side clientLogger (console only)
 const clientLogger = {
-  info: (message: string, component?: string, metadata?: any) => {
+  info: (message: string, component?: string, metadata?: Record<string, unknown>) => {
     console.info(`[${component || 'AUTH'}] ${message}`, metadata);
   },
-  warn: (message: string, component?: string, metadata?: any) => {
+  warn: (message: string, component?: string, metadata?: Record<string, unknown>) => {
     console.warn(`[${component || 'AUTH'}] ${message}`, metadata);
   },
-  error: (message: string, component?: string, metadata?: any) => {
+  error: (message: string, component?: string, metadata?: Record<string, unknown>) => {
     console.error(`[${component || 'AUTH'}] ${message}`, metadata);
   },
-  debug: (message: string, component?: string, metadata?: any) => {
+  debug: (message: string, component?: string, metadata?: Record<string, unknown>) => {
     console.debug(`[${component || 'AUTH'}] ${message}`, metadata);
   }
 };
@@ -33,7 +33,7 @@ export interface ConnectedAccount {
   expiresAt?: number;
   connectedAt: string;
   lastUsed?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AuthUser {
@@ -42,7 +42,7 @@ export interface AuthUser {
   name?: string;
   image?: string;
   accounts: ConnectedAccount[];
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
   createdAt: string;
   lastLogin?: string;
 }
@@ -57,7 +57,7 @@ export interface AuthSession {
 export interface AuthContextType {
   session: AuthSession | null;
   status: AuthStatus;
-  signIn: (provider: string, options?: any) => Promise<{ error?: string; success?: boolean }>;
+  signIn: (provider: string, options?: Record<string, unknown>) => Promise<{ error?: string; success?: boolean }>;
   signOut: (provider?: string) => Promise<void>;
   updateSession: () => Promise<void>;
   isConnected: (provider: string) => boolean;
@@ -166,7 +166,7 @@ const isSessionValid = (session: AuthSession | null): boolean => {
 };
 
 // Account management
-const createAccount = (provider: string, data: any): ConnectedAccount => {
+const createAccount = (provider: string, data: unknown): ConnectedAccount => {
   return {
     provider,
     userId: data.userId || data.id || generateId(),
@@ -256,7 +256,7 @@ export const useUnifiedAuth = (): AuthContextType => {
     }
   };
 
-  const signIn = async (provider: string, options: any = {}): Promise<{ error?: string; success?: boolean }> => {
+  const signIn = async (provider: string, options: Record<string, unknown> = {}): Promise<{ error?: string; success?: boolean }> => {
     try {
       clientLogger.info(`Sign in attempt: ${provider}`, 'UNIFIED_AUTH', { provider, options: { ...options, accessToken: '[REDACTED]' } });
 
@@ -381,7 +381,7 @@ export const useSession = () => {
   };
 };
 
-export const signIn = async (provider: string, options?: any) => {
+export const signIn = async (provider: string, options?: Record<string, unknown>) => {
   // This is a standalone function for compatibility
   // In practice, you should use the useAuth hook
   const accounts = getStorageItem<ConnectedAccount[]>(STORAGE_KEYS.ACCOUNTS) || [];

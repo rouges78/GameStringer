@@ -152,7 +152,7 @@ function applyToJSON(content: string, translations: Map<string, string>): string
   }
 }
 
-function applyToObject(obj: any, translations: Map<string, string>, prefix: string): void {
+function applyToObject(obj: unknown, translations: Map<string, string>, prefix: string): void {
   for (const key of Object.keys(obj)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
     if (typeof obj[key] === 'string') {

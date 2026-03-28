@@ -116,5 +116,5 @@ export interface TranslationMemoryEvent {
   projectId?: string;
   timestamp: Date;
   userId?: string;
-  data?: any;
+  data?: unknown;
 }

@@ -796,7 +796,7 @@ class CommunityHubService {
   }
 
   // Helper methods
-  private countJsonStrings(obj: any): number {
+  private countJsonStrings(obj: unknown): number {
     if (typeof obj === 'string') return 1;
     if (Array.isArray(obj)) return obj.reduce((sum, item) => sum + this.countJsonStrings(item), 0);
     if (typeof obj === 'object' && obj !== null) {

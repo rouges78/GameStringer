@@ -139,14 +139,14 @@ class OfflineSupportService {
   /**
    * Cache dati giochi
    */
-  cacheGames(games: any[]): void {
+  cacheGames(games: unknown[]): void {
     localStorage.setItem(CACHE_KEYS.GAMES, JSON.stringify({
       games,
       cachedAt: new Date().toISOString()
     }));
   }
 
-  getCachedGames(): any[] {
+  getCachedGames(): unknown[] {
     try {
       const data = localStorage.getItem(CACHE_KEYS.GAMES);
       if (data) {
@@ -164,14 +164,14 @@ class OfflineSupportService {
   /**
    * Cache pack traduzioni
    */
-  cachePacks(packs: any[]): void {
+  cachePacks(packs: unknown[]): void {
     localStorage.setItem(CACHE_KEYS.PACKS, JSON.stringify({
       packs,
       cachedAt: new Date().toISOString()
     }));
   }
 
-  getCachedPacks(): any[] {
+  getCachedPacks(): unknown[] {
     try {
       const data = localStorage.getItem(CACHE_KEYS.PACKS);
       if (data) {

@@ -79,9 +79,9 @@ export async function recognizeText(
       }
     });
 
-    const data = result.data as any;
+    const data = result.data as unknown;
     
-    const words: OCRWord[] = (data.words || []).map((w: any) => ({
+    const words: OCRWord[] = (data.words || []).map((w: unknown) => ({
       text: w.text,
       confidence: w.confidence,
       bbox: {
@@ -92,7 +92,7 @@ export async function recognizeText(
       }
     }));
 
-    const lines: OCRLine[] = (data.lines || []).map((l: any) => ({
+    const lines: OCRLine[] = (data.lines || []).map((l: unknown) => ({
       text: l.text,
       confidence: l.confidence,
       bbox: {
@@ -101,7 +101,7 @@ export async function recognizeText(
         x1: l.bbox.x1,
         y1: l.bbox.y1
       },
-      words: (l.words || []).map((w: any) => ({
+      words: (l.words || []).map((w: unknown) => ({
         text: w.text,
         confidence: w.confidence,
         bbox: {

@@ -308,16 +308,16 @@ export function MainLayout({ children }: MainLayoutProps) {
     if (!pathname) return;
     for (const group of navGroups) {
       if (!group.collapsible) continue;
-      const match = group.items.some((item: any) => {
+      const match = group.items.some((item: unknown) => {
         if (pathname === item.href) return true;
-        if (item.subItems) return item.subItems.some((sub: any) => pathname === sub.href);
+        if (item.subItems) return item.subItems.some((sub: unknown) => pathname === sub.href);
         return false;
       });
       if (match) {
         setExpandedGroups(prev => prev.includes(group.label) ? prev : [group.label]);
         // Auto-expand subItems se è un patcher engine
-        const subMatch = group.items.find((item: any) => 
-          item.subItems?.some((sub: any) => pathname === sub.href)
+        const subMatch = group.items.find((item: unknown) => 
+          item.subItems?.some((sub: unknown) => pathname === sub.href)
         );
         if (subMatch) {
           setExpandedSubMenus(prev => prev.includes(subMatch.href) ? prev : [subMatch.href]);
@@ -359,7 +359,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       };
       
       try {
-        const _gc = globalThis as any;
+        const _gc = globalThis as unknown as Record<string, unknown>;
         const cached = _gc.__gsSteamConnCache;
         // Cache 30s per evitare doppia chiamata StrictMode e navigazioni ravvicinate
         if (cached && Date.now() - cached.ts < 30000) {
@@ -544,11 +544,11 @@ export function MainLayout({ children }: MainLayoutProps) {
                           {/* Linea verticale indicatore sottomenu */}
                           <div className="absolute left-[19px] top-2 bottom-2 w-px bg-gradient-to-b from-slate-700/50 via-slate-700/20 to-transparent" />
                           
-                          {group.items.map((item: any, itemIdx: number) => {
+                          {group.items.map((item: unknown, itemIdx: number) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
                             const hasSubItems = item.subItems && item.subItems.length > 0;
-                            const isSubActive = hasSubItems && item.subItems.some((sub: any) => pathname === sub.href);
+                            const isSubActive = hasSubItems && item.subItems.some((sub: unknown) => pathname === sub.href);
                             
                             return (
                               <div key={`${item.href}-${itemIdx}`} className="relative z-10 pl-4">
@@ -589,7 +589,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                                       expandedSubMenus.includes(item.href) ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
                                     )}>
                                       <div className="pl-4 space-y-0.5 py-0.5 max-h-[280px] overflow-y-auto custom-scrollbar">
-                                        {item.subItems.map((subItem: any) => {
+                                        {item.subItems.map((subItem: unknown) => {
                                           const SubIcon = subItem.icon;
                                           const isSubItemActive = pathname === subItem.href;
                                           
@@ -672,7 +672,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                       )}
                       
                       <div className="space-y-0.5">
-                        {group.items.map((item: any) => {
+                        {group.items.map((item: unknown) => {
                           const Icon = item.icon;
                           const isActive = pathname === item.href;
                           const isHighlight = item.highlight === true;

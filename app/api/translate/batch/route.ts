@@ -58,7 +58,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
         try {
           translations = await translateBatchGemini(batchTexts, targetLanguage, sourceLanguage, context, userApiKey);
           console.log('[BATCH API] Gemini success:', translations.length, 'translations');
-        } catch (geminiError: any) {
+        } catch (geminiError: unknown) {
           console.error('[BATCH API] Gemini error details:', {
             message: geminiError?.message,
             stack: geminiError?.stack?.substring(0, 500),
@@ -156,7 +156,7 @@ Keep game terminology consistent. Preserve formatting, variables like {0}, %s, e
   try {
     const parsed = JSON.parse(content);
     return texts.map((original, i) => {
-      const item = parsed.find((p: any) => p.index === i + 1);
+      const item = parsed.find((p: unknown) => p.index === i + 1);
       return {
         original,
         translated: item?.translation || original,
@@ -227,7 +227,7 @@ ${numberedTexts}`;
   try {
     const parsed = JSON.parse(content);
     return texts.map((original, i) => {
-      const item = parsed.find((p: any) => p.index === i + 1);
+      const item = parsed.find((p: unknown) => p.index === i + 1);
       return {
         original,
         translated: item?.translation || original,
@@ -289,7 +289,7 @@ Return ONLY a JSON array: [{"index": 1, "translation": "..."}, ...]`;
     try {
       const parsed = JSON.parse(content);
       return texts.map((original, i) => {
-        const item = parsed.find((p: any) => p.index === i + 1);
+        const item = parsed.find((p: unknown) => p.index === i + 1);
         return {
           original,
           translated: item?.translation || original,
@@ -353,7 +353,7 @@ Return ONLY a JSON array: [{"index": 1, "translation": "..."}, ...]`;
   try {
     const parsed = JSON.parse(content);
     return texts.map((original, i) => {
-      const item = parsed.find((p: any) => p.index === i + 1);
+      const item = parsed.find((p: unknown) => p.index === i + 1);
       return {
         original,
         translated: item?.translation || original,

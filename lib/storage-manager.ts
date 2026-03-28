@@ -10,7 +10,7 @@ import { get, set, del, clear } from 'idb-keyval';
 export const storageManager = {
   // --- TRANSLATION MEMORY E ATTIVITA' ---
   
-  async getTranslations(): Promise<any[]> {
+  async getTranslations(): Promise<unknown[]> {
     try {
       const data = await get('gameTranslations');
       return data || [];
@@ -20,7 +20,7 @@ export const storageManager = {
     }
   },
 
-  async saveTranslations(data: any[]): Promise<void> {
+  async saveTranslations(data: unknown[]): Promise<void> {
     try {
       await set('gameTranslations', data);
     } catch (e) {
@@ -28,7 +28,7 @@ export const storageManager = {
     }
   },
 
-  async getPatches(): Promise<any[]> {
+  async getPatches(): Promise<unknown[]> {
     try {
       const data = await get('gamePatches');
       return data || [];
@@ -38,7 +38,7 @@ export const storageManager = {
     }
   },
 
-  async savePatches(data: any[]): Promise<void> {
+  async savePatches(data: unknown[]): Promise<void> {
     try {
       await set('gamePatches', data);
     } catch (e) {
@@ -57,7 +57,7 @@ export const storageManager = {
     }
   },
 
-  async savePartialTranslations(data: any): Promise<void> {
+  async savePartialTranslations(data: unknown): Promise<void> {
     try {
       await set('gamestringer_partial_translations', data);
     } catch (e) {
@@ -82,7 +82,7 @@ export const storageManager = {
     }
   },
 
-  async saveEditorFile(data: any): Promise<void> {
+  async saveEditorFile(data: unknown): Promise<void> {
     try {
       await set('editorFile', data);
     } catch (e) {

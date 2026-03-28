@@ -112,7 +112,7 @@ async function transcribeWithWhisperAPI(
     text: data.text || '',
     language: data.language || language,
     confidence: 0.95, // Whisper doesn't return confidence
-    segments: (data.segments || []).map((seg: any) => ({
+    segments: (data.segments || []).map((seg: unknown) => ({
       start: seg.start || 0,
       end: seg.end || 0,
       text: seg.text || ''

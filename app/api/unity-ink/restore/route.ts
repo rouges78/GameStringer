@@ -26,7 +26,7 @@ export const POST = withErrorHandler(async function(req: NextRequest) {
     try {
       fs.copyFileSync(backupPath, originalPath);
       restored++;
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(`Errore ripristino ${backup}: ${e.message}`);
     }
   }

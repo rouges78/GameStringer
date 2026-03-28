@@ -737,7 +737,7 @@ async function translateWithTranslateGemma(
     const tagsRes = await fetch(`${ollamaUrl}/api/tags`, { method: 'GET', signal: AbortSignal.timeout(3000) });
     if (!tagsRes.ok) throw new Error('Ollama non raggiungibile');
     const tagsData = await tagsRes.json();
-    const available = (tagsData.models || []).map((m: any) => m.name);
+    const available = (tagsData.models || []).map((m: { name: string }) => m.name);
     const hasModel = available.some((n: string) => n.startsWith('translategemma'));
     if (!hasModel) {
       blockProvider('translategemma'); // Modello mancante → blocco permanente
@@ -838,7 +838,7 @@ async function translateWithHYMT(
     const tagsRes = await fetch(`${ollamaUrl}/api/tags`, { method: 'GET', signal: AbortSignal.timeout(3000) });
     if (!tagsRes.ok) throw new Error('Ollama non raggiungibile');
     const tagsData = await tagsRes.json();
-    const available = (tagsData.models || []).map((m: any) => m.name);
+    const available = (tagsData.models || []).map((m: { name: string }) => m.name);
     const prefer = [
       (n: string) => n.includes('hy-mt') && n.includes('abliterated') && n.includes('7b'),
       (n: string) => n.includes('hy-mt') && n.includes('7b'),
@@ -1143,9 +1143,9 @@ async function translateWithModelWiz(
       if (Array.isArray(data.translations)) {
         translated = data.translations;
       } else if (Array.isArray(data.results)) {
-        translated = data.results.map((r: any) => typeof r === 'string' ? r : r.text || r.translation || '');
+        translated = data.results.map((r: Record<string, unknown>) => typeof r === 'string' ? r : r.text || r.translation || '');
       } else if (Array.isArray(data)) {
-        translated = data.map((r: any) => typeof r === 'string' ? r : r.text || r.translation || '');
+        translated = data.map((r: Record<string, unknown>) => typeof r === 'string' ? r : r.text || r.translation || '');
       } else if (data.translation) {
         translated = [data.translation];
       }
@@ -1155,7 +1155,7 @@ async function translateWithModelWiz(
         allTranslations.push(translated[j] || batch[j]);
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Fallback: prova formato LibreTranslate-compatibile (una stringa alla volta)
       if (err.message?.includes('RateLimit')) throw err;
 
@@ -1198,7 +1198,7 @@ async function translateWithOllamaGeneric(
     const tagsRes = await fetch(`${ollamaUrl}/api/tags`, { method: 'GET', signal: AbortSignal.timeout(3000) });
     if (!tagsRes.ok) throw new Error('Ollama non raggiungibile');
     const tagsData = await tagsRes.json();
-    const available = (tagsData.models || []).map((m: any) => m.name) as string[];
+    const available = (tagsData.models || []).map((m: { name: string }) => m.name) as string[];
     if (available.length === 0) throw new Error('Nessun modello Ollama installato');
 
     // Usa modello preferito se disponibile, altrimenti cerca modelli specializzati in localizzazione (towerinstruct, aya, qwen), altrimenti primo
@@ -1373,7 +1373,7 @@ async function translateWithLingva(
       const data = await res.json();
       const translated = data?.translation || truncated;
       results.push(text.length > MAX_TEXT_LEN ? translated + text.slice(MAX_TEXT_LEN) : translated);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err?.message === 'RateLimit') throw err;
       // CORS o network error (es. 429 senza CORS headers) → rate limit
       if (err?.message?.includes('CORS') || err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
@@ -1574,7 +1574,7 @@ export async function checkChainRequirements(presetId: ChainPreset): Promise<Pro
       if (res.ok) {
         ollamaOnline = true;
         const data = await res.json();
-        const installedModels = (data.models || []).map((m: any) => m.name?.toLowerCase() || '');
+        const installedModels = (data.models || []).map((m: { name: string }) => m.name?.toLowerCase() || '');
 
         // Check modelli installati
         for (const prov of ollamaProviders) {
@@ -2216,7 +2216,7 @@ export async function translateWithComparison(
         timeMs: Date.now() - provStart,
         error: undefined as string | undefined,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         provider: provider.name,
         label: PROVIDER_LABELS[provider.name] || provider.name,

@@ -43,7 +43,7 @@ export interface PipelineStep {
   startedAt?: number;
   completedAt?: number;
   durationMs?: number;
-  result?: any;
+  result?: unknown;
   error?: string;
 }
 
@@ -154,7 +154,7 @@ async function translateWithAgent(
     const tagsRes = await fetch(`${ollamaUrl}/api/tags`, { signal: AbortSignal.timeout(3000) });
     if (!tagsRes.ok) throw new Error('Ollama non raggiungibile');
     const tagsData = await tagsRes.json();
-    const available = (tagsData.models || []).map((m: any) => m.name) as string[];
+    const available = (tagsData.models || []).map((m: { name: string }) => m.name) as string[];
     
     if (!available.some(m => m.startsWith(model) || m === model)) {
       console.warn(`[Multi-Agent] Model ${model} not found in Ollama, falling back to translateSmart`);

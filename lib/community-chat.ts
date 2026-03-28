@@ -41,7 +41,7 @@ export interface ChatMessage {
   type: 'text' | 'system' | 'pack_share' | 'image' | 'translation_request';
   replyTo?: string;
   replyPreview?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   edited: boolean;
   deleted: boolean;
   createdAt: string;
@@ -324,7 +324,7 @@ export async function sendMessage(
   content: string,
   type: ChatMessage['type'] = 'text',
   replyTo?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<ChatMessage> {
   const supabase = await getSupabase();
   const userId = await getCurrentUserId();
@@ -367,8 +367,8 @@ export async function deleteMessage(messageId: string): Promise<void> {
 export type MessageCallback = (message: ChatMessage) => void;
 export type PresenceCallback = (presence: UserPresence[]) => void;
 
-let _messageSubscription: any = null;
-let _presenceSubscription: any = null;
+let _messageSubscription: unknown = null;
+let _presenceSubscription: unknown = null;
 
 export async function subscribeToRoom(roomId: string, onMessage: MessageCallback): Promise<() => void> {
   const supabase = await getSupabase();
@@ -389,7 +389,7 @@ export async function subscribeToRoom(roomId: string, onMessage: MessageCallback
         table: 'chat_messages',
         filter: `room_id=eq.${roomId}`,
       },
-      async (payload: any) => {
+      async (payload: unknown) => {
         // Fetch full message with author info
         try {
           const { data } = await supabase
@@ -428,7 +428,7 @@ export async function subscribeToPresence(onPresence: PresenceCallback): Promise
       const state = channel.presenceState();
       const users: UserPresence[] = [];
       for (const key of Object.keys(state)) {
-        const presences = state[key] as any[];
+        const presences = state[key] as unknown[];
         for (const p of presences) {
           users.push({
             userId: p.user_id,
@@ -501,7 +501,7 @@ export async function getOnlineUsers(): Promise<UserPresence[]> {
     .eq('status', 'online')
     .order('last_seen', { ascending: false });
 
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row: Record<string, unknown>) => ({
     userId: row.user_id,
     username: row.profile?.username || 'Utente',
     avatar: row.profile?.avatar_url,
@@ -542,7 +542,7 @@ export async function markRoomRead(roomId: string): Promise<void> {
 
 // ─── MAPPERS ────────────────────────────────────────────────────
 
-function mapRoom(row: any): ChatRoom {
+function mapRoom(row: Record<string, unknown>): ChatRoom {
   return {
     id: row.id,
     name: row.name,
@@ -559,7 +559,7 @@ function mapRoom(row: any): ChatRoom {
   };
 }
 
-function mapMessage(row: any): ChatMessage {
+function mapMessage(row: Record<string, unknown>): ChatMessage {
   return {
     id: row.id,
     roomId: row.room_id,

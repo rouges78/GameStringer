@@ -14,7 +14,7 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient();
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 // Type-safe Prisma client with new models
-const db = prisma as any;
+const db = prisma as unknown;
 
 // Tutorial Progress Database Operations
 export class TutorialDatabase {
@@ -27,10 +27,10 @@ export class TutorialDatabase {
       if (progress.length === 0) return null;
 
       const completedTutorials = progress
-        .filter((p: any) => p.completed)
-        .map((p: any) => p.tutorialId);
+        .filter((p: unknown) => p.completed)
+        .map((p: unknown) => p.tutorialId);
 
-      const currentTutorial = progress.find((p: any) => !p.completed && !p.skipped);
+      const currentTutorial = progress.find((p: unknown) => !p.completed && !p.skipped);
 
       return {
         userId,
@@ -187,7 +187,7 @@ export class TranslationMemoryDatabase {
         take: limit
       });
 
-      return entries.map((entry: any) => ({
+      return entries.map((entry: unknown) => ({
         id: entry.id,
         sourceText: entry.sourceText,
         targetText: entry.targetText,
@@ -274,7 +274,7 @@ export class GlossaryDatabase {
         ]
       });
 
-      return terms.map((term: any) => ({
+      return terms.map((term: unknown) => ({
         id: term.id,
         term: term.term,
         translation: term.translation,

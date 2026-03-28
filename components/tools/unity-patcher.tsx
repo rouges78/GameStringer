@@ -328,7 +328,7 @@ export function UnityPatcher() {
         if (details?.supported_languages && Array.isArray(details.supported_languages)) {
           setGameLanguages(details.supported_languages);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Ignora rate limit silenziosamente - non è critico
         if (!String(err).includes('Rate limit')) {
           console.error('Languages loading error:', err);
@@ -457,7 +457,7 @@ export function UnityPatcher() {
         throw new Error(result.message);
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Patching error:', err);
       setStatus('error');
       setErrorMessage(err.toString());
@@ -513,7 +513,7 @@ export function UnityPatcher() {
         setLogs(result.steps_completed);
         toast.success(result.message);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Patch removal error:', err);
       toast.error(t('gamePatcher.patchRemoveError'));
     }

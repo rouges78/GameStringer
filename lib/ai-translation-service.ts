@@ -252,7 +252,7 @@ class AITranslationService {
         const lmProvider = this.providers.find(p => p.id === 'lmstudio');
         if (lmProvider) {
           lmProvider.isAvailable = true;
-          lmProvider.models = data.data?.map((m: any) => m.id) || [];
+          lmProvider.models = data.data?.map((m: unknown) => m.id) || [];
         }
         return true;
       }

@@ -31,7 +31,7 @@ describe('useNotifications - Simple Tests', () => {
     vi.clearAllMocks();
     
     // Mock profile auth
-    (require('@/lib/profile-auth').useProfileAuth as any).mockReturnValue({
+    (require('@/lib/profile-auth').useProfileAuth as unknown).mockReturnValue({
       currentProfile: mockProfile
     });
 
@@ -40,7 +40,7 @@ describe('useNotifications - Simple Tests', () => {
   });
 
   it('should initialize with empty state when no profile', () => {
-    (require('@/lib/profile-auth').useProfileAuth as any).mockReturnValue({
+    (require('@/lib/profile-auth').useProfileAuth as unknown).mockReturnValue({
       currentProfile: null
     });
 

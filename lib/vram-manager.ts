@@ -144,7 +144,7 @@ const TIER_MODELS: Record<VramTier, ModelRecommendation> = {
 // ═══════════════════════════════════════════════════════════════════
 
 type VramEventType = 'stats-update' | 'tier-change' | 'model-switch' | 'alert';
-type VramListener = (event: VramEventType, data: any) => void;
+type VramListener = (event: VramEventType, data: unknown) => void;
 
 class VramManager {
   private config: VramConfig;
@@ -154,7 +154,7 @@ class VramManager {
   private history: VramSnapshot[] = [];
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private listeners: VramListener[] = [];
-  private invoke: ((cmd: string, args?: any) => Promise<any>) | null = null;
+  private invoke: ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null = null;
 
   constructor() {
     this.config = this.loadConfig();
@@ -164,7 +164,7 @@ class VramManager {
 
   /** Inizializza il manager con il riferimento a Tauri invoke */
   async init(): Promise<void> {
-    if (typeof window !== 'undefined' && (window as any).__TAURI__) {
+    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__TAURI__) {
       try {
         const { invoke } = await import('@tauri-apps/api/core');
         this.invoke = invoke;
@@ -347,7 +347,7 @@ class VramManager {
     return () => { this.listeners = this.listeners.filter(l => l !== listener); };
   }
 
-  private emit(event: VramEventType, data: any): void {
+  private emit(event: VramEventType, data: unknown): void {
     this.listeners.forEach(l => {
       try { l(event, data); } catch {}
     });

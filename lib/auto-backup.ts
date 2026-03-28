@@ -30,7 +30,7 @@ export interface BackupData {
   projectName: string;
   translations: Record<string, string>;
   glossary: Record<string, string>;
-  settings: Record<string, any>;
+  settings: Record<string, unknown>;
   metadata: {
     totalStrings: number;
     translatedStrings: number;

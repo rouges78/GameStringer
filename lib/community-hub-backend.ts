@@ -468,7 +468,7 @@ export async function getFollowers(userId: string): Promise<HubUser[]> {
     .eq('following_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw new Error(`Errore followers: ${error.message}`);
-  return (data || []).map((r: any) => mapUserRow(r.follower));
+  return (data || []).map((r: Record<string, unknown>) => mapUserRow(r.follower));
 }
 
 export async function getFollowing(userId: string): Promise<HubUser[]> {
@@ -479,10 +479,10 @@ export async function getFollowing(userId: string): Promise<HubUser[]> {
     .eq('follower_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw new Error(`Errore following: ${error.message}`);
-  return (data || []).map((r: any) => mapUserRow(r.following));
+  return (data || []).map((r: Record<string, unknown>) => mapUserRow(r.following));
 }
 
-function mapUserRow(row: any): HubUser {
+function mapUserRow(row: Record<string, unknown>): HubUser {
   return {
     id: row.id,
     email: row.email,
@@ -534,10 +534,10 @@ export async function fetchComments(packId: string): Promise<PackComment[]> {
   let myLikes = new Set<string>();
   if (user) {
     const { data: likes } = await supabase.from('comment_likes').select('comment_id').eq('user_id', user.id);
-    myLikes = new Set((likes || []).map((l: any) => l.comment_id));
+    myLikes = new Set((likes || []).map((l: unknown) => l.comment_id));
   }
 
-  const comments: PackComment[] = (data || []).map((row: any) => ({
+  const comments: PackComment[] = (data || []).map((row: Record<string, unknown>) => ({
     id: row.id,
     packId: row.pack_id,
     author: {
@@ -638,7 +638,7 @@ export interface HubNotification {
   message: string;
   link?: string;
   read: boolean;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -650,7 +650,7 @@ export async function fetchNotifications(limit = 50): Promise<HubNotification[]>
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw new Error(`Errore notifiche: ${error.message}`);
-  return (data || []).map((row: any) => ({
+  return (data || []).map((row: Record<string, unknown>) => ({
     id: row.id,
     type: row.type,
     title: row.title,
@@ -698,7 +698,7 @@ export async function getFavorites(): Promise<TranslationPack[]> {
     .select('pack:translation_packs!pack_id(*, author:user_profiles!author_id(*))')
     .order('created_at', { ascending: false });
   if (error) throw new Error(`Errore preferiti: ${error.message}`);
-  return (data || []).map((r: any) => mapPackRow(r.pack));
+  return (data || []).map((r: Record<string, unknown>) => mapPackRow(r.pack));
 }
 
 export async function isFavorite(packId: string): Promise<boolean> {
@@ -729,7 +729,7 @@ export async function getAllBadges(): Promise<Badge[]> {
   const supabase = await getSupabase();
   const { data, error } = await supabase.from('user_badges').select('*').order('category');
   if (error) throw new Error(`Errore badges: ${error.message}`);
-  return (data || []).map((r: any) => ({
+  return (data || []).map((r: Record<string, unknown>) => ({
     id: r.id, name: r.name, description: r.description, icon: r.icon, color: r.color, category: r.category,
   }));
 }
@@ -742,7 +742,7 @@ export async function getUserBadges(userId: string): Promise<BadgeAward[]> {
     .eq('user_id', userId)
     .order('awarded_at', { ascending: false });
   if (error) throw new Error(`Errore badge utente: ${error.message}`);
-  return (data || []).map((r: any) => ({
+  return (data || []).map((r: Record<string, unknown>) => ({
     badge: { id: r.badge.id, name: r.badge.name, description: r.badge.description, icon: r.badge.icon, color: r.badge.color, category: r.badge.category },
     awardedAt: r.awarded_at,
   }));
@@ -778,7 +778,7 @@ export async function fetchLeaderboard(limit = 50): Promise<LeaderboardEntry[]> 
   const supabase = await getSupabase();
   const { data, error } = await supabase.from('leaderboard').select('*').limit(limit);
   if (error) throw new Error(`Errore leaderboard: ${error.message}`);
-  return (data || []).map((r: any) => ({
+  return (data || []).map((r: Record<string, unknown>) => ({
     id: r.id,
     username: r.username,
     avatar: r.avatar_url,
@@ -857,7 +857,7 @@ export async function fetchHubStats(): Promise<HubStats> {
   const { data: langData } = await supabase.from('translation_packs')
     .select('target_language')
     .in('status', ['published', 'verified', 'featured']);
-  const langCounts = (langData || []).reduce((acc: Record<string, number>, r: any) => {
+  const langCounts = (langData || []).reduce((acc: Record<string, number>, r: unknown) => {
     acc[r.target_language] = (acc[r.target_language] || 0) + 1;
     return acc;
   }, {});
@@ -870,7 +870,7 @@ export async function fetchHubStats(): Promise<HubStats> {
   const { data: gameData } = await supabase.from('translation_packs')
     .select('game_id, game_name')
     .in('status', ['published', 'verified', 'featured']);
-  const gameCounts: Record<string, { name: string; count: number }> = (gameData || []).reduce((acc: Record<string, { name: string; count: number }>, r: any) => {
+  const gameCounts: Record<string, { name: string; count: number }> = (gameData || []).reduce((acc: Record<string, { name: string; count: number }>, r: unknown) => {
     if (!acc[r.game_id]) acc[r.game_id] = { name: r.game_name, count: 0 };
     acc[r.game_id].count++;
     return acc;
@@ -895,7 +895,7 @@ export async function fetchHubStats(): Promise<HubStats> {
 
 // ─── MAPPERS ─────────────────────────────────────────────────────
 
-function mapPackRow(row: any): TranslationPack {
+function mapPackRow(row: Record<string, unknown>): TranslationPack {
   const author: CommunityAuthor = row.author ? {
     id: row.author.id,
     username: row.author.username,
@@ -938,7 +938,7 @@ function mapPackRow(row: any): TranslationPack {
   };
 }
 
-function mapFileRow(row: any): PackFile {
+function mapFileRow(row: Record<string, unknown>): PackFile {
   return {
     name: row.name,
     path: row.path,
@@ -948,7 +948,7 @@ function mapFileRow(row: any): PackFile {
   };
 }
 
-function mapReviewRow(row: any): PackReview {
+function mapReviewRow(row: Record<string, unknown>): PackReview {
   return {
     id: row.id,
     packId: row.pack_id,

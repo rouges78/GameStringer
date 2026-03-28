@@ -113,7 +113,7 @@ export function loadGlossaryConfig(): AutoGlossaryConfig {
   } catch {}
   configLoaded = true;
   // Async: carica da Tauri in background e aggiorna se disponibile
-  invoke<{ [key: string]: any } | null>('load_auto_glossary_config').then(data => {
+  invoke<{ [key: string]: unknown } | null>('load_auto_glossary_config').then(data => {
     if (data) {
       glossaryConfig = { ...DEFAULT_CONFIG, ...data } as AutoGlossaryConfig;
     }

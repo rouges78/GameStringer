@@ -170,7 +170,7 @@ class SessionPersistence {
   // Setup activity tracking con protezione anti-loop
   setupActivityTracking(): void {
     // Evita setup multipli
-    if ((window as any).__sessionTrackingSetup) {
+    if ((window as unknown as Record<string, unknown>).__sessionTrackingSetup) {
       console.log('🔄 Session tracking già configurato, skip');
       return;
     }
@@ -222,17 +222,17 @@ class SessionPersistence {
     }, 120000); // Sync ogni 2 minuti invece di 1
 
     // Cleanup function globale
-    (window as any).__sessionTrackingCleanup = () => {
+    (window as unknown as Record<string, unknown>).__sessionTrackingCleanup = () => {
       console.log('🧹 Cleanup session tracking...');
       if (activityTimeout) clearTimeout(activityTimeout);
       clearInterval(syncInterval);
       listeners.forEach(cleanup => cleanup());
-      delete (window as any).__sessionTrackingSetup;
-      delete (window as any).__sessionTrackingCleanup;
+      delete (window as unknown as Record<string, unknown>).__sessionTrackingSetup;
+      delete (window as unknown as Record<string, unknown>).__sessionTrackingCleanup;
     };
     
     // Marca come configurato
-    (window as any).__sessionTrackingSetup = true;
+    (window as unknown as Record<string, unknown>).__sessionTrackingSetup = true;
     console.log('✅ Session tracking configurato');
   }
 
@@ -248,19 +248,19 @@ class SessionPersistence {
   // Chiamata al boot dell'app per garantire che le credenziali persistano tra i riavvii
   async restoreStoreConnections(): Promise<void> {
     // Evita esecuzioni multiple
-    if ((globalThis as any).__storeConnectionsRestored) return;
-    (globalThis as any).__storeConnectionsRestored = true;
+    if ((globalThis as unknown as Record<string, unknown>).__storeConnectionsRestored) return;
+    (globalThis as unknown as Record<string, unknown>).__storeConnectionsRestored = true;
 
     try {
       const ACCOUNTS_KEY = 'gameStringer_connectedAccounts';
-      const existing: any[] = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]');
+      const existing: unknown[] = JSON.parse(localStorage.getItem(ACCOUNTS_KEY) || '[]');
       let changed = false;
-      const has = (p: string) => existing.some((a: any) => a.provider === p);
+      const has = (p: string) => existing.some((a: unknown) => a.provider === p);
 
       // Steam
       if (!has('steam-credentials')) {
         try {
-          const creds = await invoke<any>('load_steam_credentials');
+          const creds = await invoke<unknown>('load_steam_credentials');
           if (creds?.steam_id && creds.steam_id.length > 0) {
             existing.push({ provider: 'steam-credentials', userId: creds.steam_id, steamId: creds.steam_id });
             changed = true;
@@ -272,7 +272,7 @@ class SessionPersistence {
       // Epic
       if (!has('epicgames')) {
         try {
-          const creds = await invoke<any>('load_epic_credentials');
+          const creds = await invoke<unknown>('load_epic_credentials');
           if (creds?.username_encrypted) {
             existing.push({ provider: 'epicgames', userId: 'epic-user' });
             changed = true;
@@ -284,7 +284,7 @@ class SessionPersistence {
       // GOG
       if (!has('gog-credentials')) {
         try {
-          const creds = await invoke<any>('load_gog_credentials');
+          const creds = await invoke<unknown>('load_gog_credentials');
           if (creds?.email || creds?.username) {
             existing.push({ provider: 'gog-credentials', userId: creds.username || 'gog-user' });
             changed = true;
@@ -296,7 +296,7 @@ class SessionPersistence {
       // Ubisoft
       if (!has('ubisoft-credentials')) {
         try {
-          const creds = await invoke<any>('load_ubisoft_credentials');
+          const creds = await invoke<unknown>('load_ubisoft_credentials');
           if (creds?.email) {
             existing.push({ provider: 'ubisoft-credentials', userId: creds.email });
             changed = true;

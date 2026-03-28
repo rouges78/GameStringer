@@ -99,7 +99,7 @@ export default function OllamaManagerPage() {
       });
       setPullProgress({ status: 'Completato!', percent: 100 });
       await refresh();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setPullProgress({ status: `Errore: ${err.message}`, percent: 0 });
     }
     setTimeout(() => setPulling(null), 1500);

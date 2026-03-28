@@ -156,7 +156,7 @@ export function useKeyboardNavigation(options: UseKeyboardNavigationOptions = {}
  * Hook for managing notification list navigation
  */
 export function useNotificationListNavigation(
-  notifications: any[],
+  notifications: unknown[],
   selectedIndex: number,
   onSelectionChange: (index: number) => void,
   onActivateItem: (index: number) => void,

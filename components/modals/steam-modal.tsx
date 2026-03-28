@@ -29,7 +29,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
   const [verifying, setVerifying] = useState(false);
   const [steamUser, setSteamUser] = useState<SteamUser | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [wishlist, setWishlist] = useState<any[]>([]);
+  const [wishlist, setWishlist] = useState<unknown[]>([]);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [savingCredentials, setSavingCredentials] = useState(false);
@@ -116,7 +116,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       // Notify parent
       await onSubmit(steamId);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.message || 'Errore durante il login Steam');
       setAuthStep('idle');
     }
@@ -170,7 +170,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       // Call parent callback
       await onSubmit(steamId);
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.message || 'Verifica fallita');
       setVerifying(false);
     }
@@ -195,7 +195,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
         
         await onSubmit(steamUser.steam_id);
         onClose();
-      } catch (err: any) {
+      } catch (err: unknown) {
         setError(err?.message || 'Errore durante il salvataggio delle credenziali');
       } finally {
         setSavingCredentials(false);
@@ -221,14 +221,14 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
       // Carica API key dalle credenziali salvate
       let apiKey: string | null = null;
       try {
-        const creds = await invoke<any>('load_steam_credentials');
+        const creds = await invoke<unknown>('load_steam_credentials');
         if (creds?.api_key_encrypted) {
           apiKey = creds.api_key_encrypted;
         }
       } catch {}
-      const list = await invoke<any[]>('steam_get_wishlist', { steamId: steamUser.steam_id, apiKey });
+      const list = await invoke<unknown[]>('steam_get_wishlist', { steamId: steamUser.steam_id, apiKey });
       setWishlist(list);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setError(typeof e === 'string' ? e : (e?.message || 'Errore importazione wishlist'));
     }
     setLoadingWishlist(false);
@@ -339,7 +339,7 @@ export function SteamModal({ isOpen, onClose, onSubmit, isLoading }: SteamModalP
               
               {wishlist.length > 0 && (
                 <div className="max-h-32 overflow-y-auto bg-muted/30 rounded p-2 mb-2 text-xs">
-                  {wishlist.slice(0, 10).map((g: any) => (
+                  {wishlist.slice(0, 10).map((g: unknown) => (
                     <div key={g.app_id} className="truncate py-0.5">{g.name}</div>
                   ))}
                   {wishlist.length > 10 && (

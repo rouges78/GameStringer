@@ -196,7 +196,7 @@ describe('Progress Calculations', () => {
       expect(validateProgress(-10)).toBe(0);
       expect(validateProgress(150)).toBe(100);
       expect(validateProgress(NaN)).toBe(0);
-      expect(validateProgress('invalid' as any)).toBe(0);
+      expect(validateProgress('invalid' as unknown)).toBe(0);
     });
   });
 

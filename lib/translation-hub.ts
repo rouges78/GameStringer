@@ -166,14 +166,14 @@ class TranslationHubEngine {
       if (!response.ok) return [];
       const discussions = await response.json();
       
-      return (discussions as any[])
-        .filter((d: any) => {
+      return (discussions as unknown[])
+        .filter((d: unknown) => {
           const title = (d.title || '').toLowerCase();
           const body = (d.body || '').toLowerCase();
           return (title.includes('pack') || title.includes('translation') || body.includes('.gspack')) &&
                  (title.includes(gameName.toLowerCase()) || body.includes(gameName.toLowerCase()));
         })
-        .map((d: any) => ({
+        .map((d: unknown) => ({
           id: String(d.number),
           gameName,
           targetLanguage: 'auto',
@@ -192,7 +192,7 @@ class TranslationHubEngine {
     }
   }
 
-  getInstalledPacks(): any[] {
+  getInstalledPacks(): unknown[] {
     try {
       return JSON.parse(localStorage.getItem(this.packsKey) || '[]');
     } catch {
@@ -201,7 +201,7 @@ class TranslationHubEngine {
   }
 
   removePack(packId: string) {
-    const installed = this.getInstalledPacks().filter((p: any) => p.id !== packId);
+    const installed = this.getInstalledPacks().filter((p: unknown) => p.id !== packId);
     localStorage.setItem(this.packsKey, JSON.stringify(installed));
   }
 }

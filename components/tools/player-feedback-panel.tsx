@@ -51,7 +51,7 @@ export function PlayerFeedbackPanel() {
   }, [filterStatus, filterCategory]);
 
   const refreshData = () => {
-    const filter: any = {};
+    const filter: unknown = {};
     if (filterStatus !== 'all') filter.status = filterStatus;
     if (filterCategory !== 'all') filter.category = filterCategory;
     

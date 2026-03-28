@@ -42,7 +42,7 @@ IMPORTANT: Output ONLY the translated text, nothing else. No explanations, no qu
 
         let apiUrl: string;
         let headers: Record<string, string>;
-        let body: any;
+        let body: Record<string, unknown>;
 
         switch (provider) {
           case 'openai':

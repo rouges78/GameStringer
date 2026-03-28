@@ -96,7 +96,7 @@ export function VoiceCloneStudio() {
 
       setGeneratedAudio(result);
       toast.success(t('voiceClone.generated'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || t('voiceClone.error'));
     } finally {
       setIsGenerating(false);
@@ -146,7 +146,7 @@ export function VoiceCloneStudio() {
       setCloneDescription('');
       setAudioSamples([]);
       toast.success(t('voiceClone.cloned'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || t('voiceClone.cloneError'));
     } finally {
       setIsCloning(false);
@@ -310,7 +310,7 @@ export function VoiceCloneStudio() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs">{t('voiceClone.provider')}</Label>
-                  <Select value={selectedProvider} onValueChange={(v: any) => setSelectedProvider(v)}>
+                  <Select value={selectedProvider} onValueChange={(v: unknown) => setSelectedProvider(v)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

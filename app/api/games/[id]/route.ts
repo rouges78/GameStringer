@@ -11,7 +11,7 @@ export const GET = withErrorHandler(async function(
   const includeTranslations = searchParams.get('includeTranslations') === 'true';
 
   // Build the query based on what data is requested
-  const include: any = {};
+  const include: Record<string, unknown> = {};
   if (includeTranslations) {
     include.translations = {
       include: {
@@ -40,10 +40,10 @@ export const GET = withErrorHandler(async function(
   if (includeTranslations && game.translations) {
     const stats = {
       total: game.translations.length,
-      completed: game.translations.filter((t: any) => t.status === 'completed').length,
-      pending: game.translations.filter((t: any) => t.status === 'pending').length,
-      reviewed: game.translations.filter((t: any) => t.status === 'reviewed').length,
-      edited: game.translations.filter((t: any) => t.status === 'edited').length,
+      completed: game.translations.filter((t: unknown) => t.status === 'completed').length,
+      pending: game.translations.filter((t: unknown) => t.status === 'pending').length,
+      reviewed: game.translations.filter((t: unknown) => t.status === 'reviewed').length,
+      edited: game.translations.filter((t: unknown) => t.status === 'edited').length,
       averageConfidence: game.translations.reduce((sum, t) => sum + t.confidence, 0) / game.translations.length || 0
     };
 

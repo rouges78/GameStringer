@@ -155,7 +155,7 @@ export class ActivityHistoryClient {
    * Ottieni le ultime N attività (con cache globalThis 5s per evitare chiamate duplicate)
    */
   private get _recentCache(): Map<number, { data: Activity[]; ts: number }> {
-    const g = globalThis as any;
+    const g = globalThis as unknown as Record<string, Map<number, { data: Activity[]; ts: number }> | undefined>;
     if (!g.__gsActivityCache) g.__gsActivityCache = new Map();
     return g.__gsActivityCache;
   }

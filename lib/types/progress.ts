@@ -3,7 +3,7 @@ export interface ProgressState {
   operations: Map<string, OperationProgress>;
   startOperation: (id: string, config: ProgressConfig) => void;
   updateProgress: (id: string, progress: number, status?: string) => void;
-  completeOperation: (id: string, result?: any) => void;
+  completeOperation: (id: string, result?: unknown) => void;
   failOperation: (id: string, error: Error) => void;
   cancelOperation: (id: string) => void;
   getOperation: (id: string) => OperationProgress | undefined;
@@ -20,7 +20,7 @@ export interface OperationProgress {
   canMinimize: boolean;
   canCancel: boolean;
   error?: Error;
-  result?: any;
+  result?: unknown;
   isBackground?: boolean;
 }
 
@@ -32,7 +32,7 @@ export interface ProgressConfig {
   estimatedDuration?: number; // in milliseconds
   isBackground?: boolean;
   onCancel?: () => void;
-  onComplete?: (result?: any) => void;
+  onComplete?: (result?: unknown) => void;
   onError?: (error: Error) => void;
 }
 
@@ -41,7 +41,7 @@ export interface ProgressUpdate {
   progress: number;
   status?: string;
   estimatedTimeRemaining?: number;
-  data?: any;
+  data?: unknown;
 }
 
 export type ProgressEventType = 
@@ -55,7 +55,7 @@ export interface ProgressEvent {
   type: ProgressEventType;
   operationId: string;
   timestamp: Date;
-  data?: any;
+  data?: unknown;
 }
 
 export interface ProgressNotification {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandler } from '@/lib/error-handler';
 
 // In-memory storage for translations (in production, use a database)
-const translations: any[] = [];
+const translations: unknown[] = [];
 
 // GET /api/translations - Get all translations with optional filters
 export const GET = withErrorHandler(async function(request: NextRequest) {

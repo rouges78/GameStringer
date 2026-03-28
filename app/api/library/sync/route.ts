@@ -34,7 +34,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
     });
 
     // Check if we're in a Tauri environment
-    const isTauriEnvironment = typeof window !== 'undefined' && (window as any).__TAURI__;
+    const isTauriEnvironment = typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__TAURI__;
     
     if (!isTauriEnvironment) {
       return NextResponse.json({
@@ -78,7 +78,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
 });
 
 async function syncGamesToDatabase(
-  games: any[],
+  games: unknown[],
   forceRefresh: boolean,
   includeUninstalled: boolean
 ): Promise<SyncResult> {
@@ -195,7 +195,7 @@ async function syncGamesToDatabase(
   }
 }
 
-function shouldUpdateGame(existingGame: any, newGame: any): boolean {
+function shouldUpdateGame(existingGame: Record<string, unknown>, newGame: Record<string, unknown>): boolean {
   // Check if any important fields have changed
   if (existingGame.title !== newGame.name) return true;
   if (existingGame.isInstalled !== newGame.installed) return true;

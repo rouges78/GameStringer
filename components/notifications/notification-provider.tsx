@@ -27,8 +27,8 @@ interface NotificationContextType extends UseNotificationsReturn {
   showWarningNotification: (title: string, message: string, actionUrl?: string) => Promise<boolean>;
   
   // System event handling
-  handleSystemEvent: (eventType: string, data: any) => Promise<void>;
-  handleProfileEvent: (eventType: string, profileId: string, data?: any) => Promise<void>;
+  handleSystemEvent: (eventType: string, data: unknown) => Promise<void>;
+  handleProfileEvent: (eventType: string, profileId: string, data?: unknown) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -153,7 +153,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   // System event handling
-  const handleSystemEvent = async (eventType: string, data: any): Promise<void> => {
+  const handleSystemEvent = async (eventType: string, data: unknown): Promise<void> => {
     if (!enableSystemEvents || !currentProfileId) return;
 
     try {
@@ -229,7 +229,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   // Profile event handling
-  const handleProfileEvent = async (eventType: string, profileId: string, data?: any): Promise<void> => {
+  const handleProfileEvent = async (eventType: string, profileId: string, data?: unknown): Promise<void> => {
     if (!enableProfileEvents || !currentProfileId || profileId !== currentProfileId) return;
 
     try {
@@ -357,8 +357,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
         // Initialize Tauri notification system if available
         if (typeof window !== 'undefined') {
-          const tauri = (window as any).__TAURI__;
-          const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: any) => Promise<any>);
+          const tauri = (window as unknown as Record<string, unknown>).__TAURI__;
+          const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
           if (invoke) {
             try {
               await invoke('initialize_notification_system', {
@@ -460,21 +460,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     // Setup Tauri event listeners se disponibili
     if (typeof window !== 'undefined') {
-      const tauri = (window as any).__TAURI__;
+      const tauri = (window as unknown as Record<string, unknown>).__TAURI__;
       const event = tauri?.event;
 
       if (event?.listen) {
         const setupTauriEventListeners = async () => {
           try {
             if (enableSystemEvents) {
-              const unlistenSystem = await event.listen('system-event', (event: any) => {
+              const unlistenSystem = await event.listen('system-event', (event: unknown) => {
                 handleSystemEvent(event.payload.type, event.payload.data);
               });
               cleanup.push(unlistenSystem);
             }
 
             if (enableProfileEvents) {
-              const unlistenProfile = await event.listen('profile-event', (event: any) => {
+              const unlistenProfile = await event.listen('profile-event', (event: unknown) => {
                 handleProfileEvent(event.payload.type, event.payload.profileId, event.payload.data);
               });
               cleanup.push(unlistenProfile);
@@ -501,10 +501,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     return () => {
       // Cleanup notification system when provider unmounts
       if (typeof window !== 'undefined') {
-        const tauri = (window as any).__TAURI__;
-        const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: any) => Promise<any>);
+        const tauri = (window as unknown as Record<string, unknown>).__TAURI__;
+        const invoke = tauri?.tauri?.invoke as undefined | ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>);
         if (invoke) {
-          invoke('cleanup_notification_system').catch((error: any) => {
+          invoke('cleanup_notification_system').catch((error: unknown) => {
             console.warn('Error cleaning up notification system:', error);
           });
         }

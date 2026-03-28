@@ -6,7 +6,7 @@ import { logger } from '@/lib/logger';
 const testStoreConnection = async (storeId: string): Promise<{ connected: boolean; error?: string; gamesCount?: number; lastSync?: string }> => {
   try {
     // Check if we're in a Tauri environment
-    const isTauriEnvironment = typeof window !== 'undefined' && (window as any).__TAURI__;
+    const isTauriEnvironment = typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__TAURI__;
     
     if (isTauriEnvironment) {
       // Use real Tauri integration

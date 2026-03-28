@@ -109,7 +109,7 @@ export function SteamWorkshopBrowser() {
 
       setItems(result.items);
       setTotalResults(result.total);
-    } catch (error: any) {
+    } catch (error: unknown) {
       const msg = typeof error === 'string' ? error : error?.message || 'Errore ricerca Workshop';
       toast.error(msg);
       setItems([]);

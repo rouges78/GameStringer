@@ -1,9 +1,9 @@
 // Wrapper per l'API Tauri v2, reso più robusto per l'uso in ambienti ibridi (browser/Tauri)
 
 // Controlla una sola volta se l'app è in esecuzione all'interno di Tauri.
-const IS_TAURI = typeof window !== 'undefined' && (window as any).__TAURI_INTERNALS__ !== undefined;
+const IS_TAURI = typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ !== undefined;
 
-let tauriInvoke: ((cmd: string, args?: any) => Promise<any>) | null = null;
+let tauriInvoke: ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null = null;
 
 /**
  * Invoca un comando del backend Rust in modo sicuro.
@@ -13,7 +13,7 @@ let tauriInvoke: ((cmd: string, args?: any) => Promise<any>) | null = null;
  * @param args Gli argomenti per il comando.
  * @returns Una Promise che si risolve con il risultato del comando.
  */
-export const invoke = async <T = any>(cmd: string, args?: any): Promise<T> => {
+export const invoke = async <T = unknown>(cmd: string, args?: Record<string, unknown>): Promise<T> => {
   if (!IS_TAURI) {
     const errorMsg = `Comando Tauri '${cmd}' bloccato: l'app non è in esecuzione in ambiente Tauri.`;
     console.warn(errorMsg, args);

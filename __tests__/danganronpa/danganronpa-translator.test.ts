@@ -205,7 +205,7 @@ describe('Danganronpa Auto-Translator', () => {
         try {
           result = await invoke('translate_batch', { texts: ['Hello'] });
           break;
-        } catch (e: any) {
+        } catch (e: unknown) {
           if (e.status === 429) {
             retries++;
             await new Promise(r => setTimeout(r, 100)); // Short delay for test

@@ -192,7 +192,7 @@ function CacheStatsCard() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const result = await invoke<any>('get_cache_stats');
+        const result = await invoke<unknown>('get_cache_stats');
         setStats(result);
       } catch (e) {
         console.error('Error loading cache stats:', e);
@@ -280,7 +280,7 @@ function CacheStatsCard() {
 // Type declaration for Tauri
 declare global {
   interface Window {
-    __TAURI_IPC__?: any;
+    __TAURI_IPC__?: unknown;
   }
 }
 
@@ -485,7 +485,7 @@ export default function SettingsPage() {
     setTimeout(() => window.location.reload(), 1000);
   };
 
-  const updateSetting = (category: keyof Settings, key: string, value: any) => {
+  const updateSetting = (category: keyof Settings, key: string, value: unknown) => {
     setSettings(prev => ({
       ...prev,
       [category]: {
@@ -516,7 +516,7 @@ export default function SettingsPage() {
       if (typeof window !== 'undefined' && window.__TAURI_IPC__) {
         const { invoke } = await import('@tauri-apps/api/core');
         const result = await invoke('get_games');
-        const games = result as any[];
+        const games = result as unknown[];
         
         addDebugResult(`✅ Game library loaded successfully`);
         addDebugResult(`📋 Total games: ${games.length}`);

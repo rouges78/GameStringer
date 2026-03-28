@@ -40,7 +40,7 @@ export function DebugPanel() {
     try {
       addDebugResult('🔄 Testing force refresh...');
       const result = await invoke('force_refresh_steam_games');
-      const games = result as any[];
+      const games = result as unknown[];
       addDebugResult(`✅ Force refresh returned ${games.length} games`);
       
       // Show sample games
@@ -59,7 +59,7 @@ export function DebugPanel() {
     try {
       addDebugResult('🎮 Getting all games and analyzing library...');
       const result = await invoke('get_games');
-      const games = result as any[];
+      const games = result as unknown[];
       
       addDebugResult(`📊 Total games loaded: ${games.length}`);
       

@@ -69,7 +69,7 @@ export const POST = withErrorHandler(async function(req: NextRequest) {
       totalReplacements: replacementsMatch ? parseInt(replacementsMatch[1]) : 0,
       output: output.substring(0, 2000),
     });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({
       error: `Errore InjectInk: ${e.stderr?.substring(0, 500) || e.message}`
     }, { status: 500 });

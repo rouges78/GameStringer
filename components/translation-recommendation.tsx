@@ -1157,7 +1157,7 @@ export function TranslationRecommendation({ gamePath, gameName, gameId, onAction
             `📊 Qualità: ${validation.score}/100`,
             { duration: 12000 }
           );
-        } catch (e: any) {
+        } catch (e: unknown) {
           // Se è errore API key, non mostrare altri messaggi (già gestito)
           if (e?.message === 'API_KEY_MISSING') {
             return; // Esce silenziosamente, redirect già fatto

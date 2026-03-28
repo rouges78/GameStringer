@@ -30,7 +30,7 @@ export class VlmTranslator {
       if (!res.ok) return [];
       const data = await res.json();
       
-      const allModels = (data.models || []).map((m: any) => m.name) as string[];
+      const allModels = (data.models || []).map((m: { name: string }) => m.name) as string[];
       // Filtra i modelli noti per essere multimodali (VLM)
       return allModels.filter(m => 
         m.includes('llava') || 

@@ -132,7 +132,7 @@ export function InjektUIEnhanced() {
   const fetchProcesses = async () => {
     try {
       const { invoke } = await import('@/lib/tauri-api');
-      const result = await invoke('list_running_processes') as any;
+      const result = await invoke('list_running_processes') as unknown;
       setProcesses(result?.processes || result || []);
     } catch (error) {
       console.error('Error loading processes:', error);
@@ -173,7 +173,7 @@ export function InjektUIEnhanced() {
         processId: selectedProcess.pid,
         processName: selectedProcess.name,
         config: { enabled: true, sourceLang: 'en', targetLang: 'it' }
-      }) as any;
+      }) as unknown;
       
       if (data?.success !== false) {
         // Start stats monitoring

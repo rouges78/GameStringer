@@ -204,7 +204,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
     // Sortmento
     filtered.sort((a, b) => {
-      let aValue: any, bValue: any;
+      let aValue: unknown, bValue: unknown;
       
       switch (sortConfig.field) {
         case 'createdAt':

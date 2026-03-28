@@ -293,7 +293,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       });
       toast.success(nowFav ? 'Aggiunto ai preferiti' : 'Rimosso dai preferiti');
       if (activeTab === 'favorites') loadFavorites();
-    } catch (e: any) { toast.error(e.message || 'Errore preferiti'); }
+    } catch (e: unknown) { toast.error(e.message || 'Errore preferiti'); }
   };
 
   const loadComments = async (packId: string) => {
@@ -313,7 +313,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       setReplyTo(null);
       await loadComments(packId);
       toast.success('Commento pubblicato');
-    } catch (e: any) { toast.error(e.message || 'Errore commento'); }
+    } catch (e: unknown) { toast.error(e.message || 'Errore commento'); }
   };
 
   const handleDeleteComment = async (commentId: string, packId: string) => {
@@ -321,14 +321,14 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       await deleteCommentApi(commentId);
       await loadComments(packId);
       toast.success('Commento eliminato');
-    } catch (e: any) { toast.error(e.message || 'Errore eliminazione'); }
+    } catch (e: unknown) { toast.error(e.message || 'Errore eliminazione'); }
   };
 
   const handleToggleCommentLike = async (commentId: string, packId: string) => {
     try {
       await toggleCommentLike(commentId);
       await loadComments(packId);
-    } catch (e: any) { toast.error(e.message || 'Errore like'); }
+    } catch (e: unknown) { toast.error(e.message || 'Errore like'); }
   };
 
   const handleMarkAllRead = async () => {
@@ -355,7 +355,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
       await communityHubService.downloadPack(packId, './translations');
       toast.success(t('communityHub.packDownloaded'));
       await loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || t('communityHub.downloadError'));
     } finally {
       setIsDownloading(null);
@@ -376,7 +376,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
         sourceLanguage: uploadData.sourceLanguage,
         targetLanguage: uploadData.targetLanguage,
         platform: uploadData.platform || undefined,
-        patchFormat: (uploadData.patchFormat || 'none') as any,
+        patchFormat: (uploadData.patchFormat || 'none') as unknown,
         description: uploadData.description,
         tags: uploadData.tags.split(',').map(t => t.trim()).filter(Boolean),
         files: uploadData.files,
@@ -404,7 +404,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
         files: []
       });
       await loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || t('communityHub.createError'));
     }
   };
@@ -592,7 +592,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
         </Select>
         <Select
           value={filters.sortBy}
-          onValueChange={(v: any) => setFilters(f => ({ ...f, sortBy: v }))}
+          onValueChange={(v: unknown) => setFilters(f => ({ ...f, sortBy: v }))}
         >
           <SelectTrigger className="w-[130px] h-9">
             <SelectValue placeholder={t('communityHub.sortBy')} />
@@ -1433,7 +1433,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                 <Label>Formato patch</Label>
                 <Select
                   value={uploadData.patchFormat || 'none'}
-                  onValueChange={(v) => setUploadData(d => ({ ...d, patchFormat: v as any }))}
+                  onValueChange={(v) => setUploadData(d => ({ ...d, patchFormat: v as string }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1472,7 +1472,7 @@ export function CommunityHub({ initialAction, initialQuery, initialGameId, initi
                     if (patchFile) {
                       const ext = patchFile.name.split('.').pop()?.toLowerCase();
                       const fmt = ext === 'ips' ? 'ips' : ext === 'bps' ? 'bps' : 'xdelta';
-                      setUploadData(d => ({ ...d, files, patchFormat: fmt as any }));
+                      setUploadData(d => ({ ...d, files, patchFormat: fmt as string }));
                     } else {
                       setUploadData(d => ({ ...d, files }));
                     }

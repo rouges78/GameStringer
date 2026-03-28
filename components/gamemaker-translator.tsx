@@ -80,7 +80,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
         : info.is_yyc 
           ? `YYC: ${info.translatable_strings} stringhe traducibili dall'EXE` 
           : `data.win: ${info.translatable_strings} stringhe traducibili`);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e?.toString() || 'data.win non trovato');
     } finally {
       setIsScanning(false);
@@ -103,7 +103,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       });
       setStrings(result);
       setPage(pageNum);
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e?.toString() || 'Errore estrazione stringhe');
     } finally {
       setIsExtracting(false);
@@ -125,7 +125,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       });
       setStrings(result);
       setPage(-1); // search mode
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e?.toString() || 'Errore ricerca');
     } finally {
       setIsExtracting(false);
@@ -284,7 +284,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       } else {
         toast.error(result.message);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e?.toString() || 'Errore patching data.win');
     } finally {
       setIsPatching(false);
@@ -297,7 +297,7 @@ export function GameMakerTranslator({ gamePath, gameName }: GameMakerTranslatorP
       const msg = await invoke<string>('gm_restore_backup', { gamePath });
       toast.success(msg);
       setTranslations({});
-    } catch (e: any) {
+    } catch (e: unknown) {
       toast.error(e?.toString() || 'Errore ripristino backup');
     }
   };

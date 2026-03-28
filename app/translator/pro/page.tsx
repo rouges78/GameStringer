@@ -222,7 +222,7 @@ export default function TranslatorProPage() {
     sourceText: string;
     translatedText: string;
     fromMemory: boolean;
-    metadata?: any;
+    metadata?: Record<string, unknown>;
   }>>([]); // Accumula results durante la traduzione
   
   // Results
@@ -290,9 +290,9 @@ export default function TranslatorProPage() {
       try {
         const cachedGames = await invoke('load_steam_games_cache');
         if (Array.isArray(cachedGames)) {
-          const installedGames = (cachedGames as any[])
-            .filter((g: any) => g.is_installed && g.title?.trim())
-            .map((g: any) => ({
+          const installedGames = (cachedGames as unknown[])
+            .filter((g: unknown) => g.is_installed && g.title?.trim())
+            .map((g: unknown) => ({
               id: String(g.steam_app_id || g.id),
               name: g.title,
               provider: g.platform || 'steam',
@@ -523,7 +523,7 @@ export default function TranslatorProPage() {
         if (!isNaN(appId)) {
           const details = await invoke('fetch_steam_game_details', { appId });
           if (details && typeof details === 'object' && 'supported_languages' in details) {
-            const langs = (details as any).supported_languages;
+            const langs = (details as unknown).supported_languages;
             if (langs) {
               setSelectedGame(prev => prev ? { ...prev, supportedLanguages: langs } : prev);
             }
@@ -630,7 +630,7 @@ export default function TranslatorProPage() {
         for (const file of Array.from(files)) {
           // Filtra solo i file di traduzione
           const ext = file.name.split('.').pop()?.toLowerCase();
-          if (!ext || !SUPPORTED_FORMATS.includes(ext as any)) continue;
+          if (!ext || !SUPPORTED_FORMATS.includes(ext as unknown)) continue;
           
           try {
             const content = await file.text();
@@ -669,7 +669,7 @@ export default function TranslatorProPage() {
       
       // Use same scan command as Translation Wizard
       const extensions = ['json', 'csv', 'xml', 'txt', 'po', 'lang', 'loc', 'strings', 'ini'];
-      const scannedFiles = await invoke<any[]>('scan_localization_files', {
+      const scannedFiles = await invoke<unknown[]>('scan_localization_files', {
         path: fullPath,
         extensions,
         maxDepth: 10
@@ -1376,7 +1376,7 @@ export default function TranslatorProPage() {
       
       // Salva statistica patch per dashboard in IndexedDB
       try {
-        const savedPatches = await get<any[]>('gamePatches') || [];
+        const savedPatches = await get<unknown[]>('gamePatches') || [];
         savedPatches.push({
           id: `patch_${Date.now()}`,
           gameId: selectedGame.id,
@@ -2008,7 +2008,7 @@ export default function TranslatorProPage() {
                       <Button 
                         size="sm" 
                         variant="outline"
-                        onClick={() => setProvider(recommendedProvider.provider as any)}
+                        onClick={() => setProvider(recommendedProvider.provider as unknown)}
                         className="gap-2"
                       >
                         <CheckCircle className="h-3 w-3" />
@@ -2036,7 +2036,7 @@ export default function TranslatorProPage() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>{t('translatorProPage.providerAi')}</Label>
-                  <Select value={provider} onValueChange={(v: any) => setProvider(v)}>
+                  <Select value={provider} onValueChange={(v: unknown) => setProvider(v)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

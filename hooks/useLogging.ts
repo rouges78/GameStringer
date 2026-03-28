@@ -38,12 +38,12 @@ export function useLogging(options: UseLoggingOptions = {}) {
   const log = useCallback((
     level: LogLevel,
     message: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) => {
     componentLogger.current[level](message, metadata);
   }, []);
 
-  const logError = useCallback((error: Error, metadata?: Record<string, any>) => {
+  const logError = useCallback((error: Error, metadata?: Record<string, unknown>) => {
     if (enableErrorLogging) {
       componentLogger.current.logError(error, metadata);
     }
@@ -51,7 +51,7 @@ export function useLogging(options: UseLoggingOptions = {}) {
 
   const logUserAction = useCallback((
     action: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) => {
     if (enableUserActionLogging) {
       componentLogger.current.logUserAction(action, metadata);
@@ -66,7 +66,7 @@ export function useLogging(options: UseLoggingOptions = {}) {
 
   const endPerformanceTimer = useCallback((
     operation: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) => {
     if (enablePerformanceLogging) {
       const startTime = performanceTimers.current.get(operation);
@@ -83,12 +83,12 @@ export function useLogging(options: UseLoggingOptions = {}) {
     url: string,
     statusCode: number,
     duration: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) => {
     clientLogger.logApiCall(method, url, statusCode, duration, metadata);
   }, []);
 
-  const withPerformanceLogging = useCallback(<T extends any[]>(
+  const withPerformanceLogging = useCallback(<T extends unknown[]>(
     fn: (...args: T) => any,
     operation: string
   ) => {
@@ -121,8 +121,8 @@ export function useLogging(options: UseLoggingOptions = {}) {
     };
   }, [enablePerformanceLogging, enableErrorLogging]);
 
-  const withAsyncPerformanceLogging = useCallback(<T extends any[]>(
-    fn: (...args: T) => Promise<any>,
+  const withAsyncPerformanceLogging = useCallback(<T extends unknown[]>(
+    fn: (...args: T) => Promise<unknown>,
     operation: string
   ) => {
     return async (...args: T) => {
@@ -156,11 +156,11 @@ export function useLogging(options: UseLoggingOptions = {}) {
 
   return {
     log,
-    debug: (message: string, metadata?: Record<string, any>) => log('debug', message, metadata),
-    info: (message: string, metadata?: Record<string, any>) => log('info', message, metadata),
-    warn: (message: string, metadata?: Record<string, any>) => log('warn', message, metadata),
-    error: (message: string, metadata?: Record<string, any>) => log('error', message, metadata),
-    fatal: (message: string, metadata?: Record<string, any>) => log('fatal', message, metadata),
+    debug: (message: string, metadata?: Record<string, unknown>) => log('debug', message, metadata),
+    info: (message: string, metadata?: Record<string, unknown>) => log('info', message, metadata),
+    warn: (message: string, metadata?: Record<string, unknown>) => log('warn', message, metadata),
+    error: (message: string, metadata?: Record<string, unknown>) => log('error', message, metadata),
+    fatal: (message: string, metadata?: Record<string, unknown>) => log('fatal', message, metadata),
     logError,
     logUserAction,
     logApiCall,
@@ -181,7 +181,7 @@ export function usePageLogging(pageName: string) {
 
   return {
     logPageAction: logUserAction,
-    logPageInfo: (message: string, metadata?: Record<string, any>) => 
+    logPageInfo: (message: string, metadata?: Record<string, unknown>) => 
       log('info', message, metadata)
   };
 }
@@ -193,7 +193,7 @@ export function useApiLogging() {
     apiCall: () => Promise<T>,
     method: string,
     url: string,
-    requestData?: any
+    requestData?: unknown
   ): Promise<T> => {
     const start = performance.now();
     
@@ -233,12 +233,12 @@ export function useApiLogging() {
 export function useErrorLogging(component?: string) {
   const { logError } = useLogging({ component });
 
-  const logAndThrow = useCallback((error: Error, metadata?: Record<string, any>) => {
+  const logAndThrow = useCallback((error: Error, metadata?: Record<string, unknown>) => {
     logError(error, metadata);
     throw error;
   }, [logError]);
 
-  const handleError = useCallback((error: unknown, metadata?: Record<string, any>) => {
+  const handleError = useCallback((error: unknown, metadata?: Record<string, unknown>) => {
     if (error instanceof Error) {
       logError(error, metadata);
     } else {

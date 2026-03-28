@@ -927,7 +927,7 @@ export class BatchTranslator {
       const report = runQualityGates({
         sourceText: item.sourceText,
         translatedText: item.translatedText,
-        context: item.classification?.type as any,
+        context: item.classification?.type as unknown,
         maxLength: item.metadata?.maxLength,
         glossaryTerms: this.job.options.glossaryTerms,
         minQualityScore: this.job.options.minQualityScore
@@ -991,7 +991,7 @@ export class BatchTranslator {
       translation: item.translatedText!,
       targetLang: this.job!.targetLanguage,
       sourceLang: this.job!.sourceLanguage || 'en',
-      genre: this.job!.gameGenre as any,
+      genre: this.job!.gameGenre as unknown,
       context: item.metadata?.context,
       qaScore: item.qualityReport?.overallScore,
       qaIssues: issues,
@@ -1019,7 +1019,7 @@ export class BatchTranslator {
         const newReport = runQualityGates({
           sourceText: item.sourceText,
           translatedText: suggestion.improved,
-          context: item.classification?.type as any,
+          context: item.classification?.type as unknown,
           maxLength: item.metadata?.maxLength,
           glossaryTerms: this.job!.options.glossaryTerms,
           minQualityScore: this.job!.options.minQualityScore,

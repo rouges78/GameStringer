@@ -91,7 +91,7 @@ async function scrapeDiscussions() {
     const html = await response.text();
 
     // Parse semplice per estrarre le discussions dalla pagina HTML
-    const discussions: any[] = [];
+    const discussions: unknown[] = [];
 
     // Regex per trovare i link alle discussions
     const discussionRegex = /\/discussions\/(\d+)"[^>]*>([^<]+)</g;

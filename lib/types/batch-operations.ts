@@ -27,7 +27,7 @@ export interface BatchResult {
   results: Array<{
     itemId: string;
     success: boolean;
-    result?: any;
+    result?: unknown;
     error?: string;
   }>;
   duration: number;
@@ -39,7 +39,7 @@ export interface BatchOperationConfig {
   retryAttempts?: number;
   retryDelay?: number;
   onProgress?: (progress: number, status: string) => void;
-  onItemComplete?: (itemId: string, result: any) => void;
+  onItemComplete?: (itemId: string, result: unknown) => void;
   onItemError?: (itemId: string, error: Error) => void;
 }
 
@@ -52,7 +52,7 @@ export interface BatchSelectionState {
 // Base batch item type
 export interface BatchItem {
   id: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 // Translation batch item type
@@ -68,7 +68,7 @@ export interface TranslationBatchItem extends BatchItem {
     filePath?: string;
     format?: string;
     overwrite?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 

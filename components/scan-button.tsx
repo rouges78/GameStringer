@@ -45,7 +45,7 @@ export function ScanButton() {
       console.log('Invocando comando scan_games...');
       
       // Usa il comando Tauri per la scansione
-      const scanResults = await invoke<any[]>('scan_games');
+      const scanResults = await invoke<unknown[]>('scan_games');
       
       console.log('Scan results:', scanResults);
       

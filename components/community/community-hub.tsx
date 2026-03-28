@@ -371,7 +371,7 @@ export function CommunityHub() {
               </select>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as string)}
                 className="h-10 px-3 rounded-md border bg-background text-sm"
               >
                 <option value="downloads">{t('communityHubComp.mostDownloaded')}</option>

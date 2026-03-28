@@ -43,7 +43,7 @@ const fetchWithRetry = async (url: string, options: RequestInit, maxRetries = 2)
         continue;
       }
       return response;
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e.name === 'AbortError' || e.message.includes('fetch failed')) {
         attempt++;
         logger.warn(`Fetch error. Retrying in ${2000 * attempt}ms... (Attempt ${attempt}/${maxRetries})`);
@@ -156,7 +156,7 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
           translationResult.confidence = Math.min(translationResult.confidence, 0.6);
         }
         break; // Successo, esci dal loop
-      } catch (err: any) {
+      } catch (err: unknown) {
         lastError = err;
         usedFallback = true;
         logger.warn(`Provider ${fallback.name} failed, trying next fallback`, 'TRANSLATE_API', { error: err.message });
@@ -1031,7 +1031,7 @@ async function translateWithQwen3(
     if (!tagsResponse.ok) throw new Error('Ollama non raggiungibile');
     
     const tagsData = await tagsResponse.json();
-    const availableModels = tagsData.models?.map((m: any) => m.name) || [];
+    const availableModels = tagsData.models?.map((m: { name: string }) => m.name) || [];
     
     let selectedModel = qwenModels.find(m => 
       availableModels.some((am: string) => am.startsWith(m.split(':')[0]))
@@ -1157,7 +1157,7 @@ async function translateWithOllama(
     if (!tagsResponse.ok) throw new Error('Ollama non raggiungibile');
     
     const tagsData = await tagsResponse.json();
-    const availableModels = tagsData.models?.map((m: any) => m.name) || [];
+    const availableModels = tagsData.models?.map((m: { name: string }) => m.name) || [];
     if (availableModels.length === 0) throw new Error('Nessun modello Ollama installato');
     
     const selectedModel = modelName && availableModels.includes(modelName) ? modelName : availableModels[0];

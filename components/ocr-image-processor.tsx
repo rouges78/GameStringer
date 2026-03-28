@@ -339,7 +339,7 @@ anche in condizioni di illuminazione non ottimali.`,
                 <Label>Detection Mode</Label>
                 <Select 
                   value={settings.textDetectionMode} 
-                  onValueChange={(value: any) => setSettings(prev => ({ ...prev, textDetectionMode: value }))}
+                  onValueChange={(value: unknown) => setSettings(prev => ({ ...prev, textDetectionMode: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue />

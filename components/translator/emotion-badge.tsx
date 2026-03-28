@@ -155,9 +155,8 @@ export function EmotionBadge({
             <Progress 
               value={analysis.confidence} 
               className="h-2"
-              style={{ 
-                // @ts-ignore
-                '--progress-background': style.color 
+              style={{
+                '--progress-background': style.color
               } as React.CSSProperties}
             />
           </div>

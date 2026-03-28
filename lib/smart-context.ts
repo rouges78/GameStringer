@@ -111,7 +111,7 @@ class SmartContextManager {
       gameName,
       genre: options?.genre || 'unknown',
       setting: options?.setting || '',
-      tone: options?.tone || 'neutral' as any,
+      tone: options?.tone || 'neutral' as unknown,
       era: options?.era || 'modern',
       characters: [],
       locations: [],

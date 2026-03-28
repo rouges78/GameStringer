@@ -63,19 +63,19 @@ class ProfilePreloader {
    */
   private async preloadFromBackend(): Promise<void> {
     try {
-      const response = await invoke<any>('list_profiles');
+      const response = await invoke<unknown>('list_profiles');
       if (!response.success) return;
 
       const profiles = response.data || [];
       const sortedProfiles = profiles
-        .sort((a: any, b: any) => {
+        .sort((a: unknown, b: unknown) => {
             const timeA = a.last_accessed ? new Date(a.last_accessed).getTime() : 0;
             const timeB = b.last_accessed ? new Date(b.last_accessed).getTime() : 0;
             return timeB - timeA;
         })
         .slice(0, 3);
 
-      const preloadPromises = sortedProfiles.map((profile: any) => 
+      const preloadPromises = sortedProfiles.map((profile: unknown) => 
         this.preloadProfile(profile.id, {
           id: profile.id,
           name: profile.name,
@@ -90,7 +90,7 @@ class ProfilePreloader {
       await Promise.allSettled(preloadPromises);
 
       // Aggiorna cache con i nuovi dati
-      const metadata: ProfileMetadata[] = sortedProfiles.map((profile: any) => ({
+      const metadata: ProfileMetadata[] = sortedProfiles.map((profile: unknown) => ({
         id: profile.id,
         name: profile.name,
         avatar: profile.avatar_path,
@@ -228,7 +228,7 @@ class ProfilePreloader {
       if (existing?.isReady) return existing;
 
       // Carica metadati dal backend
-      const response = await invoke<any>('get_profile_info', { profileId });
+      const response = await invoke<unknown>('get_profile_info', { profileId });
       if (!response.success) return null;
 
       const profile = response.data;

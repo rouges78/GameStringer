@@ -459,7 +459,7 @@ export function useErrorHandler() {
 }
 
 // API route error wrapper
-export function withErrorHandler<T extends any[]>(
+export function withErrorHandler<T extends unknown[]>(
   handler: (...args: T) => Promise<NextResponse>
 ) {
   return async (...args: T): Promise<NextResponse> => {

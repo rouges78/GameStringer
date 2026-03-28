@@ -81,22 +81,22 @@ describe('LibraryPage - Test Caricamento Libreria', () => {
         { id: '2', title: 'Game 2' }
       ];
 
-      const result = safeMap(games, (game: any) => game.title);
+      const result = safeMap(games, (game: Record<string, unknown>) => game.title);
       expect(result).toEqual(['Game 1', 'Game 2']);
     });
 
     it('dovrebbe gestire null senza errori', () => {
-      const result = safeMap(null, (item: any) => item);
+      const result = safeMap(null, (item: unknown) => item);
       expect(result).toEqual([]);
     });
 
     it('dovrebbe gestire undefined senza errori', () => {
-      const result = safeMap(undefined, (item: any) => item);
+      const result = safeMap(undefined, (item: unknown) => item);
       expect(result).toEqual([]);
     });
 
     it('dovrebbe gestire oggetto senza errori', () => {
-      const result = safeMap({ data: 'test' }, (item: any) => item);
+      const result = safeMap({ data: 'test' }, (item: unknown) => item);
       expect(result).toEqual([]);
     });
   });
@@ -110,7 +110,7 @@ describe('LibraryPage - Test Caricamento Libreria', () => {
 
       const games = ensureArray(apiResponse);
       expect(games.length).toBe(2);
-      expect(() => games.map((g: any) => g.title)).not.toThrow();
+      expect(() => games.map((g: unknown) => g.title)).not.toThrow();
     });
 
     it('dovrebbe gestire risposta API con oggetto invece di array', () => {
@@ -142,7 +142,7 @@ describe('LibraryPage - Test Caricamento Libreria', () => {
     });
 
     it('dovrebbe gestire errore di rete (throw)', () => {
-      let games: any[] = [];
+      let games: unknown[] = [];
 
       try {
         throw new Error('Network error');
@@ -171,8 +171,8 @@ describe('LibraryPage - Test Caricamento Libreria', () => {
         { id: '3', title: 'Game 3', platform: 'Steam' }
       ];
 
-      const safeGames = ensureArray<any>(games);
-      const filtered = safeGames.filter((g: any) => g.platform === 'Steam');
+      const safeGames = ensureArray<unknown>(games);
+      const filtered = safeGames.filter((g: unknown) => g.platform === 'Steam');
 
       expect(filtered.length).toBe(2);
       expect(filtered[0].title).toBe('Game 1');
@@ -181,7 +181,7 @@ describe('LibraryPage - Test Caricamento Libreria', () => {
 
     it('dovrebbe filtrare array vuoto senza errori', () => {
       const games = ensureArray(null);
-      const filtered = games.filter((g: any) => g.platform === 'Steam');
+      const filtered = games.filter((g: unknown) => g.platform === 'Steam');
 
       expect(filtered).toEqual([]);
     });
@@ -193,10 +193,10 @@ describe('LibraryPage - Test Caricamento Libreria', () => {
         { id: '3', title: 'VR Game 2', platform: 'Epic', is_vr: true }
       ];
 
-      const safeGames = ensureArray<any>(games);
+      const safeGames = ensureArray<unknown>(games);
       const filtered = safeGames
-        .filter((g: any) => g.platform === 'Steam')
-        .filter((g: any) => g.is_vr);
+        .filter((g: unknown) => g.platform === 'Steam')
+        .filter((g: unknown) => g.is_vr);
 
       expect(filtered.length).toBe(1);
       expect(filtered[0].title).toBe('VR Game');
@@ -242,7 +242,7 @@ describe('LibraryPage - Test Caricamento Libreria', () => {
 
       const safeGames = ensureArray(largeArray);
       expect(safeGames.length).toBe(10000);
-      expect(() => safeGames.map((g: any) => g.title)).not.toThrow();
+      expect(() => safeGames.map((g: unknown) => g.title)).not.toThrow();
     });
   });
 });

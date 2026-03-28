@@ -18,7 +18,7 @@ export interface PluginDefinition {
   description: string;
   author: string;
   enabled: boolean;
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
 }
 
 /**
@@ -61,7 +61,7 @@ export interface PluginManifest {
   repository?: string;
   license?: string;
   entrypoint: string;
-  config?: Record<string, { type: string; default: any; label: string }>;
+  config?: Record<string, { type: string; default: unknown; label: string }>;
 }
 
 /**
@@ -69,7 +69,7 @@ export interface PluginManifest {
  */
 export interface ParsedContent {
   entries: TranslationEntry[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -81,7 +81,7 @@ export interface TranslationEntry {
   target?: string;
   context?: string;
   line?: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -416,16 +416,16 @@ class PluginRegistry {
       }
 
       return { success: false, error: `Tipo plugin '${manifest.type}' non supportato o modulo incompleto` };
-    } catch (e: any) {
+    } catch (e: unknown) {
       return { success: false, error: e.message };
     }
   }
 
   /** Valuta codice plugin in modo sicuro (sandbox limitata) */
-  private evaluatePluginCode(code: string): any {
+  private evaluatePluginCode(code: string): unknown {
     try {
       const fn = new Function('exports', code);
-      const exports: any = {};
+      const exports: Record<string, unknown> = {};
       fn(exports);
       return exports;
     } catch (e) {
@@ -507,7 +507,7 @@ function parseJSON(content: string): ParsedContent {
   const data = JSON.parse(content);
   const entries: TranslationEntry[] = [];
   
-  function extractStrings(obj: any, prefix: string = '') {
+  function extractStrings(obj: unknown, prefix: string = '') {
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = prefix ? `${prefix}.${key}` : key;
       
@@ -524,7 +524,7 @@ function parseJSON(content: string): ParsedContent {
 }
 
 function serializeJSON(content: ParsedContent): string {
-  const result: Record<string, any> = {};
+  const result: Record<string, unknown> = {};
   
   for (const entry of content.entries) {
     const keys = entry.key.split('.');
@@ -545,7 +545,7 @@ function validateJSON(content: string): ValidationResult {
   try {
     JSON.parse(content);
     return { valid: true, errors: [], warnings: [] };
-  } catch (e: any) {
+  } catch (e: unknown) {
     return { valid: false, errors: [e.message], warnings: [] };
   }
 }
@@ -780,7 +780,7 @@ function parseTelltale(content: string): ParsedContent {
   try {
     const data = JSON.parse(content);
     if (typeof data === 'object') {
-      const extractStrings = (obj: any, prefix = ''): void => {
+      const extractStrings = (obj: unknown, prefix = ''): void => {
         for (const [key, value] of Object.entries(obj)) {
           if (typeof value === 'string' && value.length > 0) {
             entries.push({ key: prefix ? `${prefix}.${key}` : key, source: value });
@@ -1034,7 +1034,7 @@ export function validateFile(content: string, extension: string): ValidationResu
   try {
     parser.parse(content);
     return { valid: true, errors: [], warnings: [] };
-  } catch (e: any) {
+  } catch (e: unknown) {
     return { valid: false, errors: [e.message], warnings: [] };
   }
 }

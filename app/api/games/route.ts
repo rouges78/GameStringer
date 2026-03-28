@@ -18,7 +18,7 @@ export const GET = withErrorHandler(async function(request: NextRequest) {
   }
 
   // Build where clause
-  const where: any = {};
+  const where: Record<string, unknown> = {};
   if (platform) where.platform = platform;
   if (isInstalled !== null) where.isInstalled = isInstalled === 'true';
 

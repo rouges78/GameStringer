@@ -208,7 +208,7 @@ export default function HeatmapPage() {
             // Key-value format
             Object.entries(json).forEach(([key, value], i) => {
               if (typeof value === 'object' && value !== null) {
-                const v = value as any
+                const v = value as unknown
                 pairs.push({
                   id: key,
                   original: v.original || v.source || key,
@@ -311,7 +311,7 @@ export default function HeatmapPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as any)}>
+              <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as string)}>
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="demo">{t('heatmap.demo')}</TabsTrigger>
                   <TabsTrigger value="paste">{t('heatmap.paste')}</TabsTrigger>

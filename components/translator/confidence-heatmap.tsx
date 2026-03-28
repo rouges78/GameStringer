@@ -208,10 +208,9 @@ function SummaryCard({ data }: { data: HeatmapData }) {
               <Progress
                 value={(item.count / data.summary.total) * 100}
                 className="h-2"
-                style={{ 
-                  // @ts-ignore
-                  '--progress-background': item.color 
-                }}
+                style={{
+                  '--progress-background': item.color
+                } as React.CSSProperties}
               />
             </div>
           ))}
@@ -352,7 +351,7 @@ export function ConfidenceHeatmap({ data, onSelectPair, className }: ConfidenceH
       <div className="lg:col-span-2 space-y-4">
         {/* Toolbar */}
         <div className="flex items-center gap-2 flex-wrap">
-          <Select value={filterLevel} onValueChange={(v) => setFilterLevel(v as any)}>
+          <Select value={filterLevel} onValueChange={(v) => setFilterLevel(v as string)}>
             <SelectTrigger className="w-[150px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Filtra" />

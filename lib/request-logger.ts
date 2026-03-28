@@ -6,7 +6,7 @@ export interface RequestLogData {
   url: string;
   headers: Record<string, string>;
   query: Record<string, string>;
-  body?: any;
+  body?: unknown;
   ip?: string;
   userAgent?: string;
   userId?: string;
@@ -17,7 +17,7 @@ export interface RequestLogData {
 export interface ResponseLogData {
   statusCode: number;
   headers: Record<string, string>;
-  body?: any;
+  body?: unknown;
   duration: number;
   size?: number;
 }
@@ -54,7 +54,7 @@ export class RequestLogger {
     return sanitized;
   }
 
-  private sanitizeBody(body: any): any {
+  private sanitizeBody(body: unknown): unknown {
     if (!body || typeof body !== 'object') {
       return body;
     }
@@ -85,7 +85,7 @@ export class RequestLogger {
     });
 
     // Parse body if present
-    let body: any = undefined;
+    let body: Record<string, unknown> = undefined;
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       try {
         const contentType = request.headers.get('content-type');

@@ -29,7 +29,7 @@ export function ErrorBoundaryWrapper({
   const getFallbackComponent = () => {
     switch (fallbackType) {
       case 'api':
-        return ({ error, errorInfo, resetError, errorId }: any) => (
+        return ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
           <ApiErrorFallback
             error={error}
             errorInfo={errorInfo}
@@ -39,7 +39,7 @@ export function ErrorBoundaryWrapper({
           />
         );
       case 'loading':
-        return ({ error, errorInfo, resetError, errorId }: any) => (
+        return ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
           <LoadingErrorFallback
             error={error}
             errorInfo={errorInfo}
@@ -49,7 +49,7 @@ export function ErrorBoundaryWrapper({
           />
         );
       default:
-        return ({ error, errorInfo, resetError, errorId }: any) => (
+        return ({ error, errorInfo, resetError, errorId }: { error: Error; errorInfo: unknown; resetError: () => void; errorId: string }) => (
           <ErrorFallback
             error={error}
             errorInfo={errorInfo}

@@ -4,16 +4,16 @@ import { invoke } from '@tauri-apps/api/core';
 
 // Client-side clientLogger (console only)
 const clientLogger = {
-  info: (message: string, component?: string, metadata?: any) => {
+  info: (message: string, component?: string, metadata?: Record<string, unknown>) => {
     console.info(`[${component || 'TAURI'}] ${message}`, metadata);
   },
-  warn: (message: string, component?: string, metadata?: any) => {
+  warn: (message: string, component?: string, metadata?: Record<string, unknown>) => {
     console.warn(`[${component || 'TAURI'}] ${message}`, metadata);
   },
-  error: (message: string, component?: string, metadata?: any) => {
+  error: (message: string, component?: string, metadata?: Record<string, unknown>) => {
     console.error(`[${component || 'TAURI'}] ${message}`, metadata);
   },
-  debug: (message: string, component?: string, metadata?: any) => {
+  debug: (message: string, component?: string, metadata?: Record<string, unknown>) => {
     console.debug(`[${component || 'TAURI'}] ${message}`, metadata);
   }
 };
@@ -29,7 +29,7 @@ const getSecret = (key: string): string | null => {
 export interface TauriError {
   message: string;
   code?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface SteamGame {
@@ -111,7 +111,7 @@ export class TauriIntegration {
     return this.isTauriAvailable;
   }
 
-  private async invokeCommand<T>(command: string, args?: any): Promise<T> {
+  private async invokeCommand<T>(command: string, args?: Record<string, unknown>): Promise<T> {
     if (!this.isInitialized) {
       await this.initialize();
     }
@@ -235,13 +235,13 @@ export class TauriIntegration {
         throw new Error('Epic Games integration requires Tauri environment');
       }
 
-      const epicGames = await this.invokeCommand<any[]>('get_epic_games');
+      const epicGames = await this.invokeCommand<unknown[]>('get_epic_games');
       
       return epicGames.map(game => ({
         id: `epic_${game.app_name}`,
         name: game.display_name,
         provider: 'Epic Games',
-        imageUrl: game.key_images?.find((img: any) => img.type === 'DieselStoreFrontWide')?.url,
+        imageUrl: game.key_images?.find((img: unknown) => img.type === 'DieselStoreFrontWide')?.url,
         installed: game.is_installed || false,
         installPath: game.install_path
       }));
@@ -353,7 +353,7 @@ export class TauriIntegration {
   }
 
   // System utilities
-  public async getSystemInfo(): Promise<any> {
+  public async getSystemInfo(): Promise<unknown> {
     if (!this.isTauriAvailable) {
       return {
         platform: 'web',

@@ -115,7 +115,7 @@ export function GitHubDiscussions() {
       if (restResponse.ok) {
         const data = await restResponse.json();
         if (Array.isArray(data) && data.length > 0) {
-          setDiscussions(data.map((d: any) => ({
+          setDiscussions(data.map((d: unknown) => ({
             id: String(d.number),
             number: d.number,
             title: (d.title || '').replace(/^#\s*/, ''),
@@ -161,7 +161,7 @@ export function GitHubDiscussions() {
           const result = await gqlResponse.json();
           const nodes = result.data?.repository?.discussions?.nodes;
           if (nodes && nodes.length > 0) {
-            setDiscussions(nodes.map((d: any) => ({
+            setDiscussions(nodes.map((d: unknown) => ({
               ...d,
               body: (d.body || '').replace(/[#*`\[\]]/g, '').replace(/\r?\n/g, ' ').trim().slice(0, 200)
             })));

@@ -13,7 +13,7 @@ export function generateOperationId(prefix: string = 'op'): string {
 /**
  * Debounce function for performance optimization
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -28,7 +28,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function for rate limiting
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => any>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -49,7 +49,7 @@ export function throttle<T extends (...args: any[]) => any>(
 export function createSystemEvent(
   type: string,
   source: 'tutorial' | 'batch' | 'progress' | 'memory',
-  data?: any,
+  data?: unknown,
   userId?: string
 ): SystemEvent {
   return {
@@ -68,7 +68,7 @@ export function createSystemEvent(
 export function createErrorInfo(
   code: string,
   message: string,
-  details?: any,
+  details?: Record<string, unknown>,
   recoverable: boolean = true,
   userMessage?: string
 ): ErrorInfo {
@@ -96,7 +96,7 @@ export function safeJsonParse<T>(json: string, fallback: T): T {
 /**
  * Safe JSON stringify
  */
-export function safeJsonStringify(obj: any, fallback: string = '{}'): string {
+export function safeJsonStringify(obj: unknown, fallback: string = '{}'): string {
   try {
     return JSON.stringify(obj);
   } catch {
@@ -246,7 +246,7 @@ export const LocalStorage = {
     }
   },
   
-  set(key: string, value: any): void {
+  set(key: string, value: unknown): void {
     if (typeof window === 'undefined') return;
     
     try {
@@ -282,7 +282,7 @@ export const SessionStorage = {
     }
   },
   
-  set(key: string, value: any): void {
+  set(key: string, value: unknown): void {
     if (typeof window === 'undefined') return;
     
     try {

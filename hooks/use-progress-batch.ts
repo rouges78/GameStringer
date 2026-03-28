@@ -78,8 +78,8 @@ export function useProgressBatch() {
   // Esegue export batch
   const executeExportBatch = useCallback(
     async (
-      items: Array<{ id: string; data: any }>,
-      exporter: (data: any) => Promise<string>
+      items: Array<{ id: string; data: unknown }>,
+      exporter: (data: unknown) => Promise<string>
     ): Promise<BatchResult> => {
       const batchItems: BatchItem[] = items.map(item => ({
         id: item.id,
@@ -108,8 +108,8 @@ export function useProgressBatch() {
   // Esegue import batch
   const executeImportBatch = useCallback(
     async (
-      items: Array<{ id: string; data: any }>,
-      importer: (data: any) => Promise<any>
+      items: Array<{ id: string; data: unknown }>,
+      importer: (data: unknown) => Promise<unknown>
     ): Promise<BatchResult> => {
       const batchItems: BatchItem[] = items.map(item => ({
         id: item.id,
@@ -255,7 +255,7 @@ export function useSimpleBatch() {
     async <T>(
       title: string,
       items: T[],
-      processor: (item: T, index: number) => Promise<any>,
+      processor: (item: T, index: number) => Promise<unknown>,
       options?: {
         description?: string;
         canCancel?: boolean;

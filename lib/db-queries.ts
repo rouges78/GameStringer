@@ -43,7 +43,7 @@ export async function getTranslationsBatch(options: TranslationQueryOptions = {}
     orderDirection = 'desc'
   } = options;
 
-  const where: any = {};
+  const where: Record<string, unknown> = {};
   if (gameId) where.gameId = gameId;
   if (status) where.status = status;
   if (targetLanguage) where.targetLanguage = targetLanguage;
@@ -210,7 +210,7 @@ export async function searchTranslations(
 ) {
   const { gameId, status, targetLanguage, skip = 0, take = 50 } = options;
 
-  const where: any = {
+  const where: Record<string, unknown> = {
     OR: [
       { originalText: { contains: searchTerm } },
       { translatedText: { contains: searchTerm } },

@@ -289,7 +289,7 @@ async function ocrWithOneOCR(
 
   if (data.lines) {
     for (const line of data.lines) {
-      const lineWords: OCRWord[] = (line.words || []).map((w: any) => ({
+      const lineWords: OCRWord[] = (line.words || []).map((w: unknown) => ({
         text: w.text,
         confidence: w.confidence ?? 90,
         bbox: normalizeBbox(w.bounding_box || w.bbox),
@@ -464,7 +464,7 @@ async function ocrWithRapidOCR(
 // BBOX NORMALIZATION
 // ============================================================================
 
-function normalizeBbox(bbox: any): BoundingBox {
+function normalizeBbox(bbox: unknown): BoundingBox {
   if (!bbox) return { x0: 0, y0: 0, x1: 0, y1: 0 };
   if (bbox.x0 !== undefined) return bbox;
   if (bbox.left !== undefined) {
@@ -479,7 +479,7 @@ function normalizeBbox(bbox: any): BoundingBox {
 /**
  * PaddleOCR/RapidOCR usano [[x1,y1],[x2,y2],[x3,y3],[x4,y4]] (4 punti, senso orario)
  */
-function normalizePaddleBbox(points: any): BoundingBox {
+function normalizePaddleBbox(points: unknown): BoundingBox {
   if (!points || !Array.isArray(points)) return { x0: 0, y0: 0, x1: 0, y1: 0 };
 
   // [[x1,y1],[x2,y2],[x3,y3],[x4,y4]] → BoundingBox

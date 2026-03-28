@@ -11,7 +11,7 @@ import {
 
 export interface UseProfileNotificationSettingsReturn {
   // Stato
-  currentProfile: any;
+  currentProfile: unknown;
   preferences: NotificationPreferences | null;
   isLoading: boolean;
   error: string | null;

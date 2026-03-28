@@ -121,7 +121,7 @@ async function captureScreenBrowser(options: CaptureOptions): Promise<CaptureRes
     const stream = await navigator.mediaDevices.getDisplayMedia({
       video: {
         displaySurface: 'monitor'
-      } as any
+      } as unknown
     });
 
     const video = document.createElement('video');

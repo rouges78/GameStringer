@@ -130,8 +130,8 @@ export const NotificationToastProvider: React.FC<NotificationToastProviderProps>
     }
 
     // Mostra la toast immediatamente
-    if (typeof window !== 'undefined' && (window as any).showNotificationToast) {
-      (window as any).showNotificationToast(notification);
+    if (typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).showNotificationToast) {
+      (window as unknown as Record<string, unknown>).showNotificationToast(notification);
     }
   }, [isUIBlocked]);
 

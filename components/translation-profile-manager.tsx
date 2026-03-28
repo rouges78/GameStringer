@@ -61,7 +61,7 @@ export function TranslationProfileManager({
     translated: '',
     category: 'general'
   });
-  const [statistics, setStatistics] = useState<any>(null);
+  const [statistics, setStatistics] = useState<unknown>(null);
 
   // Form state per nuovo profilo
   const [newProfile, setNewProfile] = useState({

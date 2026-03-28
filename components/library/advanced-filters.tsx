@@ -247,7 +247,7 @@ export function AdvancedFilters({
                 ].map((status) => (
                   <Badge
                     key={status.id}
-                    variant={filter.translationStatus.includes(status.id as any) ? 'default' : 'outline'}
+                    variant={filter.translationStatus.includes(status.id as unknown) ? 'default' : 'outline'}
                     className="cursor-pointer gap-1"
                     onClick={() => toggleArrayItem(
                       filter.translationStatus,
@@ -349,7 +349,7 @@ export function AdvancedFilters({
   );
 }
 
-export function useGameFilter(games: any[]) {
+export function useGameFilter(games: unknown[]) {
   const [filter, setFilter] = useState<GameFilter>(DEFAULT_FILTER);
 
   const filteredGames = useMemo(() => {

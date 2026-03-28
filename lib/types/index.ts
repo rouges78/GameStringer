@@ -41,14 +41,14 @@ export interface SystemEvent {
   type: string;
   timestamp: Date;
   userId?: string;
-  data?: any;
+  data?: unknown;
   source: 'tutorial' | 'batch' | 'progress' | 'memory';
 }
 
 export interface ErrorInfo {
   code: string;
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   timestamp: Date;
   recoverable: boolean;
   userMessage?: string;

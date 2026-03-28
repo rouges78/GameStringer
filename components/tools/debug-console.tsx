@@ -27,7 +27,7 @@ export interface LogEntry {
   level: LogLevel;
   source: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 const LOG_COLORS: Record<LogLevel, string> = {
@@ -60,7 +60,7 @@ class DebugLogStore {
   private listeners: Set<(logs: LogEntry[]) => void> = new Set();
   private maxLogs = 500;
 
-  add(level: LogLevel, source: string, message: string, data?: any) {
+  add(level: LogLevel, source: string, message: string, data?: unknown) {
     const entry: LogEntry = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
       timestamp: new Date(),
@@ -104,19 +104,19 @@ if (typeof window !== 'undefined') {
   const origWarn = console.warn;
   const origError = console.error;
 
-  console.log = (...args: any[]) => {
+  console.log = (...args: unknown[]) => {
     origLog.apply(console, args);
     const msg = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
     if (msg.startsWith('[') || msg.includes('Hook') || msg.includes('Translate') || msg.includes('OLLAMA') || msg.includes('fetch')) {
       debugLog.add('info', 'console', msg);
     }
   };
-  console.warn = (...args: any[]) => {
+  console.warn = (...args: unknown[]) => {
     origWarn.apply(console, args);
     const msg = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
     debugLog.add('warn', 'console', msg);
   };
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     origError.apply(console, args);
     const msg = args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' ');
     debugLog.add('error', 'console', msg);

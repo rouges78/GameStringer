@@ -406,7 +406,7 @@ export default function EditorPage() {
           
           // Crea traduzioni dall'array di items
           if (data.items && data.items.length > 0) {
-            const partialTranslations: Translation[] = data.items.map((item: any, index: number) => ({
+            const partialTranslations: Translation[] = data.items.map((item: unknown, index: number) => ({
               id: `partial-${index}-${item.id}`,
               gameId: data.gameId || 'unknown',
               filePath: data.files?.[0]?.path || 'Neural Translator',
@@ -466,7 +466,7 @@ export default function EditorPage() {
       const response = await fetch('/api/games');
       if (response.ok) {
         const data = await response.json();
-        setGames(ensureArray(data).map((g: any) => ({
+        setGames(ensureArray(data).map((g: unknown) => ({
           id: g.id,
           title: g.title,
           platform: 'Unknown',
@@ -486,8 +486,8 @@ export default function EditorPage() {
       
       // Carica dizionari da Tauri
       try {
-        const dictData = await invoke<any[]>('list_installed_dictionaries');
-        for (const dict of ensureArray(dictData) as any[]) {
+        const dictData = await invoke<unknown[]>('list_installed_dictionaries');
+        for (const dict of ensureArray(dictData) as unknown[]) {
           const gameId = dict.game_id || dict.id || 'unknown';
           const gameName = dict.game_name || 'game sconosciuto';
           
@@ -524,7 +524,7 @@ export default function EditorPage() {
         const transResponse = await fetch('/api/translations');
         const transData = transResponse.ok ? await transResponse.json() : [];
         
-        for (const trans of ensureArray(transData) as any[]) {
+        for (const trans of ensureArray(transData) as unknown[]) {
           const gameId = trans.gameId || 'unknown';
           const gameName = trans.game?.title || 'game sconosciuto';
           
@@ -555,7 +555,7 @@ export default function EditorPage() {
           const gamesData = gamesResponse.ok ? await gamesResponse.json() : [];
           
           // Filtra games con traduzioni (quelli che hanno translationStats)
-          for (const game of ensureArray(gamesData) as any[]) {
+          for (const game of ensureArray(gamesData) as unknown[]) {
             if (game.translationStats && game.translationStats.total > 0) {
               projectsMap.set(game.id, {
                 game: { 
@@ -781,9 +781,9 @@ export default function EditorPage() {
       
       // Salva anche in IndexedDB per persistenza
       try {
-        const existingData = await get<any>('gamestringer_partial_translations');
+        const existingData = await get<unknown>('gamestringer_partial_translations');
         if (existingData) {
-          const updatedItems = existingData.items.filter((item: any) => 
+          const updatedItems = existingData.items.filter((item: unknown) => 
             !translatedLines.some(l => 
               (item.metadata?.key === l.key && item.metadata?.lineNumber === l.lineNumber) ||
               item.sourceText === l.originalText
@@ -985,7 +985,7 @@ export default function EditorPage() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Select onValueChange={(format) => exportTranslations(format as any)}>
+                    <Select onValueChange={(format) => exportTranslations(format as string)}>
                       <SelectTrigger className="h-7 w-7 p-0 border-0 bg-transparent text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg flex items-center justify-center [&>svg]:hidden">
                         <Download className="h-3.5 w-3.5" />
                       </SelectTrigger>

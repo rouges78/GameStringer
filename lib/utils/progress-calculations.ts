@@ -156,7 +156,7 @@ export function createProgressUpdate(
   progress: number,
   status?: string,
   startTime?: Date,
-  data?: any
+  data?: unknown
 ): ProgressUpdate {
   const update: ProgressUpdate = {
     operationId,

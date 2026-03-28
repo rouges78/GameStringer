@@ -24,7 +24,7 @@ import { useTranslation, translations } from '@/lib/i18n';
 import { CoverPicker } from '@/components/cover-picker';
 
 // Guard globale: sopravvive a HMR/Fast Refresh e doppio mount React 18
-const _g = globalThis as any;
+const _g = globalThis as unknown as Record<string, unknown>;
 if (!_g.__gsLibCache) {
   _g.__gsLibCache = {
     fetchStarted: false,
@@ -32,7 +32,7 @@ if (!_g.__gsLibCache) {
     cover: { loaded: false, data: {} as Record<string, string> },
     dates: { loaded: false, data: {} as Record<string, number> },
     lang: { loaded: false, data: {} as Record<string, string[]> },
-    games: { loaded: false, data: [] as any[] },
+    games: { loaded: false, data: [] as unknown[] },
   };
 }
 const _libCache = _g.__gsLibCache;
@@ -186,7 +186,7 @@ const GameImageWithFallback = ({ game, sizes, coverCache }: { game: Game; sizes:
         try {
           const steamAppId = parseInt(game.app_id.replace('steam_', '')) || 0;
           if (steamAppId > 0) {
-            const details = await invoke<any>('fetch_steam_game_details', { appId: steamAppId });
+            const details = await invoke<unknown>('fetch_steam_game_details', { appId: steamAppId });
             if (details?.header_image) {
               setSteamGridDbImage(details.header_image);
               queueCoverSave(game.app_id, details.header_image);
@@ -564,11 +564,11 @@ function LibraryListView() {
             apiKey: credentials.api_key_encrypted,
             steamId: credentials.steam_id,
             forceRefresh: false
-          }) as any[];
+          }) as unknown[];
           
           console.log(`[LIBRARY DEBUG] 📊 Steam API: ${apiResult.length} games with names`);
           
-          apiResult.forEach((g: any) => {
+          apiResult.forEach((g: unknown) => {
             apiGames.set(String(g.appid), {
               id: `steam_${g.appid}`,
               app_id: String(g.appid),
@@ -747,7 +747,7 @@ function LibraryListView() {
         // ═══════════════════════════════════════════════════════════
         const localScanPromise = invoke('scan_all_steam_games_fast').catch(e => {
           console.warn('⚠️ Local scan failed:', e);
-          return [] as any[];
+          return [] as unknown[];
         }) as Promise<Array<{
           id: string; title: string; platform: string; install_path: string | null;
           header_image: string | null; is_installed: boolean; steam_app_id: number | null;
@@ -760,10 +760,10 @@ function LibraryListView() {
         // Altri store (Epic, GOG, Origin, Ubisoft, etc.) — con timeout 15s
         const otherStoresPromise = Promise.race([
           invoke('scan_games'),
-          new Promise<any[]>((_, reject) => setTimeout(() => reject('timeout'), 15000))
+          new Promise<unknown[]>((_, reject) => setTimeout(() => reject('timeout'), 15000))
         ]).catch(e => {
           console.warn('⚠️ Other stores scan failed:', e);
-          return [] as any[];
+          return [] as unknown[];
         }) as Promise<Array<{
           id: string; title: string; platform: string; path: string;
           app_id?: string; header_image?: string; is_installed: boolean;
@@ -781,7 +781,7 @@ function LibraryListView() {
               apiKey: creds.api_key_encrypted,
               steamId: creds.steam_id,
               forceRefresh: false
-            }) as any[];
+            }) as unknown[];
           } catch (e) {
             console.warn('⚠️ Steam API failed:', e);
             return null;
@@ -857,7 +857,7 @@ function LibraryListView() {
                 supported_languages: g.supported_languages || [],
                 genres: g.genres || [],
                 last_played: g.last_played,
-                install_dir: (g as any).install_path || (g as any).path || undefined,
+                install_dir: (g as unknown).install_path || (g as unknown).path || undefined,
               });
             }
           }
@@ -966,7 +966,7 @@ function LibraryListView() {
 
           // ── Check aggiornamenti giochi tracciati ──
           try {
-            const tracked = await invoke<Record<string, any>>('get_all_tracked_games');
+            const tracked = await invoke<Record<string, unknown>>('get_all_tracked_games');
             if (tracked && Object.keys(tracked).length > 0) {
               const updatedGames: string[] = [];
               const brokenPatches: string[] = [];
@@ -987,7 +987,7 @@ function LibraryListView() {
                 const batch = toCheck.slice(i, i + BATCH);
                 const results = await Promise.all(
                   batch.map(g =>
-                    invoke<any>('check_game_update', {
+                    invoke<unknown>('check_game_update', {
                       appId: g.app_id,
                       gamePath: g.install_dir,
                     }).catch(() => null)
@@ -1056,7 +1056,7 @@ function LibraryListView() {
                     consecutiveErrors = 0;
                   }
                   await new Promise(r => setTimeout(r, 1000));
-                } catch (e: any) {
+                } catch (e: unknown) {
                   consecutiveErrors++;
                   if (consecutiveErrors >= 3) break;
                   const isRateLimit = e?.message?.includes('429') || e?.message?.includes('403');
@@ -1097,7 +1097,7 @@ function LibraryListView() {
       ...game,
       platform: game.platform || 'Steam',
       title: enrichGameTitle(game.app_id || game.id, game.title, game.platform),
-      install_dir: (game as any).install_path || game.install_dir || undefined,
+      install_dir: (game as unknown).install_path || game.install_dir || undefined,
     }));
     
     // Debug: conta giochi con nomi validi vs invalidi
@@ -1177,8 +1177,8 @@ function LibraryListView() {
             return (a.title || '').localeCompare(b.title || '');
           case 'playtime':
             // Sort per tempo di gioco (se disponibile)
-            const aTime = (a as any).playtime_forever || 0;
-            const bTime = (b as any).playtime_forever || 0;
+            const aTime = (a as unknown).playtime_forever || 0;
+            const bTime = (b as unknown).playtime_forever || 0;
             if (aTime !== bTime) {
               return bTime - aTime;
             }
@@ -1266,7 +1266,7 @@ function LibraryListView() {
                 <Languages className="h-4 w-4" />
               </button>
               <button
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); const dir = game.install_dir || (game as any).install_path || ''; window.location.href = `/prediction-tool?name=${encodeURIComponent(game.title)}&installDir=${encodeURIComponent(dir)}&engine=${encodeURIComponent(game.engine || '')}&headerImage=${encodeURIComponent(game.header_image || '')}`; }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); const dir = game.install_dir || (game as unknown).install_path || ''; window.location.href = `/prediction-tool?name=${encodeURIComponent(game.title)}&installDir=${encodeURIComponent(dir)}&engine=${encodeURIComponent(game.engine || '')}&headerImage=${encodeURIComponent(game.header_image || '')}`; }}
                 className="bg-purple-600/90 hover:bg-purple-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-purple-500/50 hover:scale-110 border border-purple-400/30"
                 title="P.T. Prediction Tool"
               >
@@ -1608,7 +1608,7 @@ function LibraryListView() {
                 toast.info(lib.downloadingNames);
                 try {
                   const result = await invoke('update_remote_game_database');
-                  const updatedGames = Object.values(result as any) as Game[];
+                  const updatedGames = Object.values(result as unknown) as Game[];
                   setGames(updatedGames);
                   toast.success(`${lib.databaseUpdated} ${updatedGames.length} ${lib.games}`);
                 } catch (e) {
@@ -1650,7 +1650,7 @@ function LibraryListView() {
             <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-hover:text-slate-300 transition-colors pointer-events-none" />
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as string)}
               className="appearance-none bg-slate-900/60 border border-slate-700/50 rounded-xl pl-9 pr-9 py-2.5 text-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/50 hover:bg-slate-800/80 cursor-pointer shadow-sm transition-all"
             >
               <option value="alphabetical">{lib.alphabetical}</option>
