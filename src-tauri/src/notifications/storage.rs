@@ -42,7 +42,7 @@ impl NotificationStorage {
 
     /// Inizializza il database e crea le tabelle
     pub async fn initialize(&self) -> NotificationResult<()> {
-        let mut conn_guard = self.connection.lock().unwrap();
+        let mut conn_guard = self.connection.lock().unwrap_or_else(|e| e.into_inner());
         
         if conn_guard.is_none() {
             // Crea la directory se non esiste
@@ -132,7 +132,7 @@ impl NotificationStorage {
 
     /// Ottiene una connessione al database
     fn get_connection(&self) -> NotificationResult<std::sync::MutexGuard<Option<Connection>>> {
-        Ok(self.connection.lock().unwrap())
+        Ok(self.connection.lock().unwrap_or_else(|e| e.into_inner()))
     }
 
     /// Salva una notifica nel database

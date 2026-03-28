@@ -227,7 +227,7 @@ impl InjektTranslator {
         
         // Aggiorna stats
         {
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().unwrap_or_else(|e| e.into_inner());
             stats.is_active = true;
             stats.process_id = Some(target.pid);
             stats.last_heartbeat = Some(chrono::Utc::now().to_rfc3339());
@@ -267,13 +267,13 @@ impl InjektTranslator {
     
     #[allow(dead_code)] // Statistiche injection - essenziali per monitoraggio sicurezza
     pub fn get_stats(&self) -> Value {
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().unwrap_or_else(|e| e.into_inner());
         serde_json::to_value(&*stats).unwrap_or(serde_json::json!({}))
     }
     
     fn apply_hooks(&mut self) -> Result<(), Box<dyn Error>> {
         let start_time = Instant::now();
-        let mut hooks = self.hooks.lock().unwrap();
+        let mut hooks = self.hooks.lock().unwrap_or_else(|e| e.into_inner());
         
         // Calcola numero di hook necessari per la modalità
         let hook_count = match self.config.hook_mode.as_str() {
@@ -311,7 +311,7 @@ impl InjektTranslator {
         
         // Aggiorna stats con metriche di performance
         let application_time = start_time.elapsed().as_millis() as u64;
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().unwrap_or_else(|e| e.into_inner());
         stats.active_hooks = hooks.len();
         
         // Aggiorna metriche performance optimizer
@@ -326,7 +326,7 @@ impl InjektTranslator {
     }
     
     fn remove_hooks(&mut self) -> Result<(), Box<dyn Error>> {
-        let hooks = self.hooks.lock().unwrap();
+        let hooks = self.hooks.lock().unwrap_or_else(|e| e.into_inner());
         
         if let Some(handle_arc) = &self.process_handle {
             let handle = handle_arc.get();
@@ -465,7 +465,7 @@ impl InjektTranslator {
         let pid = self.target_pid.unwrap();
         let start_time = Instant::now();
         
-        *is_running.lock().unwrap() = true;
+        *is_running.lock().unwrap_or_else(|e| e.into_inner()) = true;
         
         let monitor_thread = thread::spawn(move || {
             let mut last_heartbeat = Instant::now();
@@ -473,11 +473,11 @@ impl InjektTranslator {
             
             log::info!("🔍 Avvio monitoraggio injection per PID: {}", pid);
             
-            while *is_running.lock().unwrap() {
+            while *is_running.lock().unwrap_or_else(|e| e.into_inner()) {
                 // Verifica che il processo sia ancora in esecuzione
                 if !is_process_running(pid) {
                     log::warn!("⚠️ Processo target terminato: {}", pid);
-                    *is_running.lock().unwrap() = false;
+                    *is_running.lock().unwrap_or_else(|e| e.into_inner()) = false;
                     break;
                 }
                 

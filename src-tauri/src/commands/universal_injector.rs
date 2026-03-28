@@ -300,7 +300,7 @@ fn find_unreal_translatable(game_dir: &Path) -> Vec<TranslatableFile> {
             let path = entry.path();
             if path.extension().is_some_and(|ext| ext == "pak") {
                 files.push(TranslatableFile {
-                    path: path.file_name().unwrap().to_string_lossy().to_string(),
+                    path: path.file_name().unwrap_or_default().to_string_lossy().to_string(),
                     file_type: "PAK".to_string(),
                     description: "Archivio Unreal (richiede estrazione)".to_string(),
                 });
@@ -382,7 +382,7 @@ fn detect_rpgmaker_mv_mz(game_dir: &Path) -> Option<EngineDetectionResult> {
         for entry in entries.filter_map(|e| e.ok()) {
             let path = entry.path();
             if path.extension().is_some_and(|ext| ext == "json") {
-                let filename = path.file_name().unwrap().to_string_lossy().to_string();
+                let filename = path.file_name().unwrap_or_default().to_string_lossy().to_string();
                 // File con testi traducibili
                 if ["Actors.json", "Classes.json", "CommonEvents.json", "Enemies.json",
                     "Items.json", "Map", "Skills.json", "States.json", "System.json",
@@ -545,7 +545,7 @@ fn detect_renpy(game_dir: &Path) -> Option<EngineDetectionResult> {
                 let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
                 if ext == "rpy" || ext == "rpa" {
                     translatable.push(TranslatableFile {
-                        path: format!("game/{}", path.file_name().unwrap().to_string_lossy()),
+                        path: format!("game/{}", path.file_name().unwrap_or_default().to_string_lossy()),
                         file_type: ext.to_uppercase(),
                         description: if ext == "rpy" { 
                             "Script Ren'Py (modificabile)".to_string() 
@@ -826,7 +826,7 @@ pub async fn list_translatable_files(game_path: String) -> Result<Vec<Translatab
                 let path = entry.path();
                 
                 if path.is_dir() {
-                    let name = path.file_name().unwrap().to_string_lossy();
+                    let name = path.file_name().unwrap_or_default().to_string_lossy();
                     // Salta cartelle di sistema
                     if !name.starts_with('.') && name != "node_modules" && name != "__pycache__" {
                         scan_dir(&path, files, depth + 1);

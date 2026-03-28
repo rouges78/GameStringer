@@ -644,10 +644,10 @@ impl SystemEventHandler {
                 custom_data: Some({
                     let mut data = std::collections::HashMap::new();
                     data.insert("resource_type".to_string(), serde_json::Value::String(resource_type));
-                    data.insert("current_usage".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(current_usage).unwrap()));
-                    data.insert("threshold".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(threshold).unwrap()));
+                    data.insert("current_usage".to_string(), serde_json::json!(current_usage));
+                    data.insert("threshold".to_string(), serde_json::json!(threshold));
                     data.insert("unit".to_string(), serde_json::Value::String(unit));
-                    data.insert("usage_percentage".to_string(), serde_json::Value::Number(serde_json::Number::from_f64(usage_percentage).unwrap()));
+                    data.insert("usage_percentage".to_string(), serde_json::json!(usage_percentage));
                     data
                 }),
             }),

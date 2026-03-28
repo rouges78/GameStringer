@@ -180,7 +180,7 @@ impl SteamApiRateLimiter {
     
     fn is_request_allowed(&self, endpoint: &str) -> bool {
         let now = Self::get_current_time_ms();
-        let mut requests = self.requests.lock().unwrap();
+        let mut requests = self.requests.lock().unwrap_or_else(|e| e.into_inner());
         
         // Get or create request history for this endpoint
         let request_history = requests.entry(endpoint.to_string()).or_default();
@@ -214,7 +214,7 @@ impl SteamApiRateLimiter {
     
     fn get_delay_until_next_request(&self, endpoint: &str) -> u64 {
         let now = Self::get_current_time_ms();
-        let requests = self.requests.lock().unwrap();
+        let requests = self.requests.lock().unwrap_or_else(|e| e.into_inner());
         
         if let Some(request_history) = requests.get(endpoint) {
             // Check if we need to wait for burst limit

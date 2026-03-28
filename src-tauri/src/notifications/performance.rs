@@ -33,7 +33,7 @@ impl ConnectionPool {
 
     /// Ottiene una connessione dal pool o ne crea una nuova
     pub fn get_connection(&self) -> NotificationResult<PooledConnection> {
-        let mut connections = self.connections.lock().unwrap();
+        let mut connections = self.connections.lock().unwrap_or_else(|e| e.into_inner());
         
         // Prova a riutilizzare una connessione esistente
         if let Some(conn) = connections.pop() {
@@ -69,11 +69,11 @@ impl ConnectionPool {
 
     /// Pulisce le connessioni inattive
     pub fn cleanup_idle_connections(&self) {
-        let mut last_cleanup = self.last_cleanup.lock().unwrap();
+        let mut last_cleanup = self.last_cleanup.lock().unwrap_or_else(|e| e.into_inner());
         let now = Instant::now();
         
         if now.duration_since(*last_cleanup) > Duration::from_secs(60) {
-            let mut connections = self.connections.lock().unwrap();
+            let mut connections = self.connections.lock().unwrap_or_else(|e| e.into_inner());
             connections.clear(); // Chiude tutte le connessioni inattive
             *last_cleanup = now;
         }
@@ -111,7 +111,7 @@ impl AsMut<Connection> for PooledConnection {
 impl Drop for PooledConnection {
     fn drop(&mut self) {
         if let Some(conn) = self.connection.take() {
-            let mut pool = self.pool.lock().unwrap();
+            let mut pool = self.pool.lock().unwrap_or_else(|e| e.into_inner());
             pool.push(conn);
         }
     }

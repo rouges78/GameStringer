@@ -350,7 +350,7 @@ pub async fn import_translation_project(
                             .ok_or("Dir non trovata")?
                             .join("GameStringer").join("glossaries")
                             .join(format!("{}.json", imported_gl.game_id));
-                        fs::create_dir_all(gl_path.parent().unwrap())
+                        fs::create_dir_all(gl_path.parent().ok_or("Percorso glossario non valido")?)
                             .map_err(|e| format!("Errore dir glossario: {}", e))?;
                         let gl_json = serde_json::to_string_pretty(&imported_gl)
                             .map_err(|e| format!("Errore serializzazione: {}", e))?;

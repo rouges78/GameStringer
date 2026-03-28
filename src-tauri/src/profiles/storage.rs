@@ -186,14 +186,15 @@ impl ProfileStorage {
         profile.update_last_access();
         
         // Salva aggiornamento (senza password per evitare loop)
-        tokio::spawn({
-            let storage = ProfileStorage::new(self.profiles_dir.parent().unwrap().to_path_buf()).unwrap();
-            let profile_clone = profile.clone();
-            let password = password.to_string();
-            async move {
-                let _ = storage.save_profile(&profile_clone, &password).await;
+        if let Some(parent) = self.profiles_dir.parent() {
+            if let Ok(storage) = ProfileStorage::new(parent.to_path_buf()) {
+                let profile_clone = profile.clone();
+                let password = password.to_string();
+                tokio::spawn(async move {
+                    let _ = storage.save_profile(&profile_clone, &password).await;
+                });
             }
-        });
+        }
         
         println!("[PROFILE STORAGE] ✅ Profilo '{}' caricato", profile.name);
         Ok(profile)

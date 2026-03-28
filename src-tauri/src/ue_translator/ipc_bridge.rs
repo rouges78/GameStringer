@@ -47,7 +47,7 @@ impl IPCBridge {
         log::info!("🚀 Avvio IPC Bridge su {}", PIPE_NAME);
         
         {
-            let mut state = self.state.lock().unwrap();
+            let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
             state.is_running = true;
         }
         
@@ -63,13 +63,13 @@ impl IPCBridge {
     /// Ferma il server IPC
     pub fn stop(&mut self) {
         log::info!("🛑 Arresto IPC Bridge");
-        let mut state = self.state.lock().unwrap();
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         state.is_running = false;
     }
     
     /// Ottiene lo stato corrente
     pub fn get_state(&self) -> IPCBridgeState {
-        self.state.lock().unwrap().clone()
+        self.state.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
     
     /// Processa una richiesta di traduzione
@@ -78,7 +78,7 @@ impl IPCBridge {
         
         // Controlla cache
         {
-            let cache = self.translation_cache.lock().unwrap();
+            let cache = self.translation_cache.lock().unwrap_or_else(|e| e.into_inner());
             if let Some(cached) = cache.get(original) {
                 log::debug!("📦 Cache hit per: {}", truncate_text(original, 50));
                 return TranslationResponse {
@@ -94,7 +94,7 @@ impl IPCBridge {
         
         // Salva in cache
         {
-            let mut cache = self.translation_cache.lock().unwrap();
+            let mut cache = self.translation_cache.lock().unwrap_or_else(|e| e.into_inner());
             cache.insert(original.clone(), translated.clone());
         }
         
@@ -131,7 +131,7 @@ impl IPCBridge {
             loop {
                 // Controlla se dobbiamo fermarci
                 {
-                    let s = state.lock().unwrap();
+                    let s = state.lock().unwrap_or_else(|e| e.into_inner());
                     if !s.is_running {
                         break;
                     }
@@ -149,7 +149,7 @@ impl IPCBridge {
     
     /// Salva la cache su disco
     pub fn save_cache(&self, path: &std::path::Path) -> Result<(), String> {
-        let cache = self.translation_cache.lock().unwrap();
+        let cache = self.translation_cache.lock().unwrap_or_else(|e| e.into_inner());
         let json = serde_json::to_string_pretty(&*cache)
             .map_err(|e| format!("Errore serializzazione cache: {}", e))?;
         std::fs::write(path, json)
@@ -168,7 +168,7 @@ impl IPCBridge {
         let loaded: HashMap<String, String> = serde_json::from_str(&json)
             .map_err(|e| format!("Errore parsing cache: {}", e))?;
         
-        let mut cache = self.translation_cache.lock().unwrap();
+        let mut cache = self.translation_cache.lock().unwrap_or_else(|e| e.into_inner());
         *cache = loaded;
         
         log::info!("📦 Caricata cache con {} traduzioni", cache.len());
