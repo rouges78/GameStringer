@@ -9,7 +9,7 @@ import { translationMemory, translateWithMemory, TranslationUnit } from './trans
 import { runQualityGates, quickQualityCheck, QualityReport, validateBatch } from './quality-gates';
 import { classifyBatch, classifyContent, ContentClassification, BatchClassificationResult } from './content-classifier';
 import { translateSmart } from './ai-translate-direct';
-import { buildRelevantGlossaryHint } from './auto-glossary';
+import { buildRelevantGlossaryHint, extractTerms, loadGlossary, loadGlossaryConfig } from './auto-glossary';
 import { harvestBatch, type HarvestInput, type BatchHarvestResult } from './context-harvester';
 import { runPipeline, type PipelineResult } from './ai-pipeline';
 import { suggestBatchImprovements, type PostEditRequest } from './ai-post-edit';
@@ -279,6 +279,11 @@ export class BatchTranslator {
       this.emitStatusChange('translating');
       await this.translateItems();
 
+      // Step 3.5: Auto-extraction glossario al primo batch di un nuovo gioco
+      if (this.job.gameId) {
+        await this.maybeExtractGlossary();
+      }
+
       // Step 4: Validazione qualità
       if (this.job.options.runQualityChecks) {
         this.job.status = 'validating';
@@ -387,6 +392,50 @@ export class BatchTranslator {
     }
 
     this.updateProgress();
+  }
+
+  /**
+   * Auto-estrae termini glossario al primo batch di un nuovo gioco.
+   * Si attiva solo se autoExtractOnFirstBatch è abilitato e il gioco non ha ancora un glossario.
+   */
+  private async maybeExtractGlossary(): Promise<void> {
+    if (!this.job || !this.job.gameId) return;
+
+    try {
+      const config = loadGlossaryConfig();
+      if (!config.enabled || !config.autoExtractOnFirstBatch) return;
+
+      // Controlla se il gioco ha già un glossario con termini
+      const existing = loadGlossary(this.job.gameId);
+      if (existing && existing.entries.length > 0) return;
+
+      // Seleziona testi sorgente dal job per l'estrazione
+      const sampleTexts = this.job.items
+        .filter(i => i.sourceText.length > 5) // Ignora stringhe troppo corte
+        .slice(0, 60)
+        .map(i => i.sourceText);
+
+      if (sampleTexts.length < 5) return; // Troppo pochi testi per un'estrazione utile
+
+      console.log(`[BatchTranslator] Auto-extracting glossary for game "${this.job.gameName}" (${sampleTexts.length} sample texts)`);
+      this.job.progress.statusMessage = 'Extracting glossary terms...';
+      this.updateProgress();
+
+      const result = await extractTerms(
+        this.job.gameId,
+        this.job.gameName || 'Unknown Game',
+        sampleTexts,
+        this.job.sourceLanguage,
+        this.job.targetLanguage,
+        this.job.gameGenre
+      );
+
+      console.log(`[BatchTranslator] Glossary extracted: ${result.newTerms.length} new terms (${result.duplicates} duplicates) via ${result.provider} in ${result.timeMs}ms`);
+      this.job.progress.statusMessage = undefined;
+    } catch (error) {
+      console.warn('[BatchTranslator] Auto glossary extraction failed:', error);
+      this.job.progress.statusMessage = undefined;
+    }
   }
 
   private async translateItems(): Promise<void> {
