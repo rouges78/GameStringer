@@ -12,6 +12,7 @@ import { translateSmart } from './ai-translate-direct';
 import { buildRelevantGlossaryHint } from './auto-glossary';
 import { harvestBatch, type HarvestInput, type BatchHarvestResult } from './context-harvester';
 import { runPipeline, type PipelineResult } from './ai-pipeline';
+import { suggestBatchImprovements, type PostEditRequest } from './ai-post-edit';
 
 // ============================================================================
 // TYPES
@@ -73,6 +74,7 @@ export interface BatchProgress {
   skipped: number;
   fromMemory: number;
   retried: number;
+  postEdited: number;
   currentItem?: string;
   percentage: number;
   estimatedTimeRemaining?: number;  // secondi
@@ -123,6 +125,7 @@ export interface BatchResults {
   failedItems: number;
   skippedItems: number;
   fromMemoryItems: number;
+  postEditedItems: number;
   averageQualityScore: number;
   totalTokensUsed: number;
   estimatedCost: number;
@@ -218,6 +221,7 @@ export class BatchTranslator {
         skipped: 0,
         fromMemory: 0,
         retried: 0,
+        postEdited: 0,
         percentage: 0
       },
       options: mergedOptions,
@@ -227,6 +231,7 @@ export class BatchTranslator {
         failedItems: 0,
         skippedItems: 0,
         fromMemoryItems: 0,
+        postEditedItems: 0,
         averageQualityScore: 0,
         totalTokensUsed: 0,
         estimatedCost: 0,
@@ -827,6 +832,9 @@ export class BatchTranslator {
     const completedItems = this.job.items.filter(i => i.status === 'completed');
     let totalScore = 0;
 
+    // Step 1: Run quality gates su tutti gli items completati
+    const failedQaItems: Array<{ item: BatchTranslationItem; issues: string[] }> = [];
+
     for (const item of completedItems) {
       if (!item.translatedText) continue;
 
@@ -842,13 +850,13 @@ export class BatchTranslator {
       item.qualityReport = report;
       totalScore += report.overallScore;
 
-      // Collect quality issues
       if (!report.passed) {
         const issues = report.checks
           .filter(c => !c.passed)
           .map(c => c.message || c.name);
-        
+
         if (issues.length > 0) {
+          failedQaItems.push({ item, issues });
           this.job.results.qualityIssues.push({
             itemId: item.id,
             sourceText: item.sourceText.substring(0, 50),
@@ -858,9 +866,106 @@ export class BatchTranslator {
       }
     }
 
-    this.job.results.averageQualityScore = completedItems.length > 0 
-      ? Math.round(totalScore / completedItems.length) 
+    // Step 2: Auto post-edit per items con QA fallito
+    if (failedQaItems.length > 0) {
+      await this.autoPostEdit(failedQaItems);
+
+      // Step 3: Ricalcola score medio includendo items post-editati
+      totalScore = 0;
+      for (const item of completedItems) {
+        totalScore += item.qualityReport?.overallScore || 0;
+      }
+    }
+
+    this.job.results.averageQualityScore = completedItems.length > 0
+      ? Math.round(totalScore / completedItems.length)
       : 0;
+  }
+
+  /**
+   * Auto-applica suggerimenti di post-editing per items con QA fallito.
+   * Solo suggerimenti con confidence ≥75 e che migliorano effettivamente lo score.
+   */
+  private async autoPostEdit(
+    failedItems: Array<{ item: BatchTranslationItem; issues: string[] }>
+  ): Promise<void> {
+    if (!this.job) return;
+
+    const MIN_POST_EDIT_CONFIDENCE = 75;
+
+    console.log(`[BatchTranslator] Auto post-editing ${failedItems.length} items with QA issues`);
+    this.job.progress.statusMessage = `Post-editing ${failedItems.length} items...`;
+    this.updateProgress();
+
+    // Prepara le richieste di post-edit
+    const postEditRequests: PostEditRequest[] = failedItems.map(({ item, issues }) => ({
+      original: item.sourceText,
+      translation: item.translatedText!,
+      targetLang: this.job!.targetLanguage,
+      sourceLang: this.job!.sourceLanguage || 'en',
+      genre: this.job!.gameGenre as any,
+      context: item.metadata?.context,
+      qaScore: item.qualityReport?.overallScore,
+      qaIssues: issues,
+    }));
+
+    try {
+      const suggestions = await suggestBatchImprovements(
+        postEditRequests,
+        (done, total) => {
+          this.job!.progress.statusMessage = `Post-editing ${done}/${total}...`;
+          this.updateProgress();
+        }
+      );
+
+      // Applica suggerimenti con confidence sufficiente
+      suggestions.forEach((suggestion, idx) => {
+        const { item } = failedItems[idx];
+
+        if (suggestion.confidence < MIN_POST_EDIT_CONFIDENCE) {
+          console.log(`[BatchTranslator] Post-edit skipped (confidence ${suggestion.confidence}): "${item.sourceText.substring(0, 40)}..."`);
+          return;
+        }
+
+        // Verifica che il post-edit migliori effettivamente lo score QA
+        const newReport = runQualityGates({
+          sourceText: item.sourceText,
+          translatedText: suggestion.improved,
+          context: item.classification?.type as any,
+          maxLength: item.metadata?.maxLength,
+          glossaryTerms: this.job.options.glossaryTerms,
+          minQualityScore: this.job.options.minQualityScore,
+        });
+
+        const oldScore = item.qualityReport?.overallScore || 0;
+
+        if (newReport.overallScore > oldScore) {
+          // Post-edit accettato — migliora lo score
+          item.translatedText = suggestion.improved;
+          item.qualityReport = newReport;
+          this.job.progress.postEdited++;
+          this.job.results.postEditedItems++;
+
+          // Aggiorna TM con la versione migliorata
+          if (this.job.options.saveToMemory) {
+            translationMemory.add(item.sourceText, suggestion.improved, {
+              context: item.classification?.type,
+              gameId: this.job.gameId,
+              provider: this.job.provider,
+              confidence: 0.92, // Alta confidence per post-edit verificato
+            }).catch(() => {});
+          }
+
+          console.log(`[BatchTranslator] Post-edit applied (${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);
+        } else {
+          console.log(`[BatchTranslator] Post-edit rejected (score not improved ${oldScore}→${newReport.overallScore}): "${item.sourceText.substring(0, 40)}..."`);
+        }
+      });
+    } catch (error) {
+      console.warn('[BatchTranslator] Auto post-edit failed:', error);
+    }
+
+    this.job.progress.statusMessage = undefined;
   }
 
   private updateProgress(): void {
