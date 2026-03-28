@@ -389,17 +389,18 @@ export class BatchTranslator {
 
     const pendingItems = this.job.items.filter(i => i.status === 'pending');
     
-    // Prima: cerca match nella Translation Memory per tutti gli items
+    // Prima: cerca match nella Translation Memory (exact + fuzzy ≥90%)
     const itemsNeedingApi: BatchTranslationItem[] = [];
-    
+
     for (const item of pendingItems) {
       if (this.isCancelled) break;
-      
-      // Cerca nella TM
+
+      // Cerca nella TM: exact via hash (O(1)), poi fuzzy se abilitato
       if (this.job.options.useTranslationMemory) {
-        const tmMatch = translationMemory.findExact(item.sourceText);
-        if (tmMatch) {
-          item.translatedText = tmMatch.targetText;
+        // Fast path: exact match via hash
+        const exactMatch = translationMemory.findExact(item.sourceText);
+        if (exactMatch) {
+          item.translatedText = exactMatch.targetText;
           item.fromMemory = true;
           item.status = 'completed';
           this.job.progress.completed++;
@@ -409,8 +410,31 @@ export class BatchTranslator {
           this.onItemCompleteCallback?.(item);
           continue;
         }
+
+        // Fuzzy path: cerca match ≥90% — abbastanza simili da riusare direttamente
+        const fuzzyResults = translationMemory.search(item.sourceText, {
+          minSimilarity: 90,
+          maxResults: 1,
+          preferVerified: true,
+          gameIdFilter: this.job.gameId
+        });
+
+        if (fuzzyResults.length > 0 && fuzzyResults[0].similarity >= 90) {
+          const fuzzyMatch = fuzzyResults[0];
+          item.translatedText = fuzzyMatch.unit.targetText;
+          item.fromMemory = true;
+          item.status = 'completed';
+          this.job.progress.completed++;
+          this.job.progress.fromMemory++;
+          this.job.results.translatedItems++;
+          this.job.results.fromMemoryItems++;
+          translationMemory.incrementUsage(fuzzyMatch.unit.id).catch(() => {});
+          this.onItemCompleteCallback?.(item);
+          console.log(`[BatchTranslator] Fuzzy TM match (${fuzzyMatch.similarity}%): "${item.sourceText.substring(0, 40)}..."`);
+          continue;
+        }
       }
-      
+
       itemsNeedingApi.push(item);
     }
     
@@ -504,11 +528,23 @@ export class BatchTranslator {
         console.warn('[BatchTranslator] Context harvest failed, continuing without:', e);
       }
 
+      // RAG: inietta traduzioni simili dalla TM come contesto per coerenza terminologica
+      let tmContext = '';
+      if (this.job.options.useTranslationMemory) {
+        tmContext = translationMemory.getRelevantTMContext(batchTexts, {
+          maxPerText: 2,
+          maxTotal: 10,
+          gameIdFilter: this.job.gameId
+        });
+      }
+
+      const fullContext = [this.job.options.gameContext, tmContext].filter(Boolean).join('\n');
+
       const result = await translateSmart({
         texts: batchTexts,
         targetLanguage: this.job.targetLanguage,
         sourceLanguage: this.job.sourceLanguage || 'en',
-        context: this.job.options.gameContext,
+        context: fullContext || undefined,
         glossaryHint: glossaryHint || undefined,
         harvestedContext,
       });
