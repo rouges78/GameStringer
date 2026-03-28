@@ -841,20 +841,39 @@ export class BatchTranslator {
   private async translateItem(item: BatchTranslationItem): Promise<void> {
     if (!this.job) return;
 
-    // Build context
-    let context = '';
-    if (this.job.options.gameContext) {
-      context += this.job.options.gameContext + '\n';
-    }
-    if (this.job.options.characterContext) {
-      context += this.job.options.characterContext + '\n';
-    }
-    if (item.classification) {
-      context += `Content type: ${item.classification.type}\n`;
-    }
-    if (item.metadata?.context) {
-      context += item.metadata.context;
-    }
+    // Build context con genre + character composition + harvester
+    const composedContext = composeGenreAndCharacterContext({
+      genre: this.job.gameGenre as GameGenre | undefined,
+      targetLanguage: this.job.targetLanguage,
+      characterContext: this.job.options.characterContext,
+    });
+
+    const contextParts: string[] = [];
+    if (this.job.options.gameContext) contextParts.push(this.job.options.gameContext);
+    if (composedContext) contextParts.push(composedContext);
+    if (item.classification) contextParts.push(`Content type: ${item.classification.type}`);
+    if (item.metadata?.context) contextParts.push(item.metadata.context);
+
+    // Context harvester per singolo item
+    try {
+      const harvest = harvestBatch([{
+        text: item.sourceText,
+        key: item.metadata?.key,
+        filename: item.metadata?.filename,
+        lineNumber: item.metadata?.lineNumber,
+        comment: item.metadata?.context,
+        maxLength: item.metadata?.maxLength,
+        gameGenre: this.job.gameGenre,
+        gameName: this.job.gameName,
+      }]);
+      if (harvest.batchPromptHint) contextParts.push(harvest.batchPromptHint);
+      const itemCtx = harvest.contexts[0];
+      if (itemCtx?.promptHint && itemCtx.screenConfidence >= 0.3) {
+        contextParts.push(itemCtx.promptHint);
+      }
+    } catch {}
+
+    const context = contextParts.join('\n');
 
     // Translate with memory support (con timeout)
     const timeoutPromise = new Promise<never>((_, reject) => {
