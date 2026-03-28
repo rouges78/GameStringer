@@ -293,7 +293,7 @@ async function translateWithGemini(
 ): Promise<TranslationResponse> {
   const apiKey = userApiKey || secretsManager.get('GEMINI_API_KEY');
   
-  console.log('[GEMINI] API Key ricevuta:', userApiKey ? 'da utente (' + userApiKey.substring(0,8) + '...)' : 'da secrets');
+  console.log('[GEMINI] API Key source:', userApiKey ? 'user-provided' : 'secrets');
   
   if (!apiKey) {
     throw new Error('Gemini API key not configured. Set GEMINI_API_KEY in settings.');

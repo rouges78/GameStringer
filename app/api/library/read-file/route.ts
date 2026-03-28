@@ -39,8 +39,16 @@ export const POST = withErrorHandler(async function(request: NextRequest) {
     );
   }
 
-  // Normalizza il percorso
-  const normalizedPath = path.normalize(filePath);
+  // Normalizza e valida il percorso (prevenzione path traversal)
+  const normalizedPath = path.resolve(filePath);
+
+  // Blocca path traversal: deve essere un percorso assoluto reale
+  if (normalizedPath.includes('..') || normalizedPath !== path.resolve(normalizedPath)) {
+    return NextResponse.json(
+      { error: 'Percorso non valido' },
+      { status: 400 }
+    );
+  }
 
   // Verifica estensione
   const ext = path.extname(normalizedPath).toLowerCase();

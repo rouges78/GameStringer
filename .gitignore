@@ -1,3 +1,7 @@
+# Secrets
+.tauri-updater-key
+.tauri-updater-key.pub
+
 # Dependencies
 /node_modules
 /.pnp

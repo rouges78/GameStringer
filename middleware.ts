@@ -1,51 +1,50 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Routes that require authentication
-const protectedRoutes = [
-  '/library',
-  '/injekt-translator',
-  '/editor',
-  '/dialogue-patcher',
-  '/patches',
-  '/store-manager',
-  '/settings',
-  '/admin'
-];
-
-// Routes that should redirect to dashboard if authenticated
-const publicOnlyRoutes = [
-  '/auth/login',
-  '/auth/register'
-];
-
+/**
+ * Middleware di sicurezza per GameStringer (Tauri desktop app).
+ *
+ * L'auth è client-side (localStorage) perché il server Next.js gira
+ * localmente sulla macchina dell'utente. Il middleware aggiunge security
+ * headers e protegge le API da richieste esterne.
+ */
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  // Skip middleware for static files and API routes
+
+  // Skip per static files
   if (
     pathname.startsWith('/_next/') ||
-    pathname.startsWith('/api/') ||
     pathname.includes('.') ||
     pathname.startsWith('/favicon')
   ) {
     return NextResponse.next();
   }
 
-  // For now, let the client-side routing handle authentication
-  // This middleware can be extended later for server-side protection
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // Security headers
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  // API routes: verifica che la richiesta venga da localhost (protezione base)
+  if (pathname.startsWith('/api/')) {
+    const host = request.headers.get('host') || '';
+    const isLocalhost = host.startsWith('localhost') || host.startsWith('127.0.0.1') || host.startsWith('0.0.0.0');
+    if (!isLocalhost) {
+      return NextResponse.json(
+        { error: 'API accessible only from localhost' },
+        { status: 403 }
+      );
+    }
+  }
+
+  return response;
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
