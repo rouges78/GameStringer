@@ -11,6 +11,7 @@ import { classifyBatch, classifyContent, ContentClassification, BatchClassificat
 import { translateSmart } from './ai-translate-direct';
 import { buildRelevantGlossaryHint, extractTerms, loadGlossary, loadGlossaryConfig } from './auto-glossary';
 import { harvestBatch, type HarvestInput, type BatchHarvestResult } from './context-harvester';
+import { composeGenreAndCharacterContext, type GameGenre } from './genre-prompts';
 import { runPipeline, type PipelineResult } from './ai-pipeline';
 import { suggestBatchImprovements, type PostEditRequest } from './ai-post-edit';
 
@@ -592,7 +593,14 @@ export class BatchTranslator {
         });
       }
 
-      const fullContext = [this.job.options.gameContext, tmContext].filter(Boolean).join('\n');
+      // Componi genre + character profile in contesto coerente
+      const composedContext = composeGenreAndCharacterContext({
+        genre: this.job.gameGenre as GameGenre | undefined,
+        targetLanguage: this.job.targetLanguage,
+        characterContext: this.job.options.characterContext,
+      });
+
+      const fullContext = [this.job.options.gameContext, composedContext, tmContext].filter(Boolean).join('\n');
 
       const result = await translateSmart({
         texts: batchTexts,
@@ -601,6 +609,7 @@ export class BatchTranslator {
         context: fullContext || undefined,
         glossaryHint: glossaryHint || undefined,
         harvestedContext,
+        gameGenre: this.job.gameGenre as GameGenre | undefined,
       });
       
       if (!result.success) {

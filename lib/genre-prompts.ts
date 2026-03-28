@@ -741,3 +741,73 @@ export function detectGenreFromText(texts: string[], gameName?: string): GameGen
   if (bestScore < 4) return 'generic';
   return best;
 }
+
+/**
+ * Compone genre prompt + profilo personaggio in un unico blocco di contesto.
+ * Il genere definisce il tono generale, il profilo personaggio aggiunge speech patterns specifici.
+ * Se uno dei due è assente, restituisce solo l'altro.
+ */
+export function composeGenreAndCharacterContext(options: {
+  genre?: GameGenre;
+  targetLanguage?: string;
+  characterContext?: string;
+  characterProfile?: {
+    name: string;
+    archetype?: string;
+    traits?: string[];
+    mood?: string;
+    formality?: string;
+    vocabulary?: string;
+    catchphrases?: string[];
+    avoidWords?: string[];
+    preferredWords?: Record<string, string>;
+  };
+}): string {
+  const parts: string[] = [];
+
+  // Genre block
+  if (options.genre && options.genre !== 'generic') {
+    const config = getGenreConfig(options.genre);
+    parts.push(`[GENRE: ${config.label}]`);
+    parts.push(config.styleDirective);
+    if (config.rules.length > 0) {
+      parts.push(`Genre rules: ${config.rules.slice(0, 5).join('; ')}`);
+    }
+  }
+
+  // Character profile block (structured)
+  if (options.characterProfile) {
+    const p = options.characterProfile;
+    const profileParts: string[] = [`\n[CHARACTER: ${p.name}]`];
+
+    if (p.archetype) profileParts.push(`Archetype: ${p.archetype}`);
+    if (p.traits && p.traits.length > 0) profileParts.push(`Traits: ${p.traits.join(', ')}`);
+    if (p.mood) profileParts.push(`Mood: ${p.mood}`);
+    if (p.formality) profileParts.push(`Formality: ${p.formality}`);
+    if (p.vocabulary) profileParts.push(`Vocabulary: ${p.vocabulary}`);
+    if (p.catchphrases && p.catchphrases.length > 0) {
+      profileParts.push(`Catchphrases to preserve: ${p.catchphrases.join(', ')}`);
+    }
+    if (p.avoidWords && p.avoidWords.length > 0) {
+      profileParts.push(`Words to avoid: ${p.avoidWords.join(', ')}`);
+    }
+    if (p.preferredWords && Object.keys(p.preferredWords).length > 0) {
+      const subs = Object.entries(p.preferredWords).map(([k, v]) => `${k}→${v}`).join(', ');
+      profileParts.push(`Preferred substitutions: ${subs}`);
+    }
+
+    // Composizione: istruzione che lega genere e personaggio
+    if (parts.length > 0) {
+      profileParts.push(`\nThe character's voice must fit within the ${options.genre} genre atmosphere while maintaining their unique speech patterns.`);
+    }
+
+    parts.push(profileParts.join('\n'));
+  }
+
+  // Fallback: raw characterContext string (legacy)
+  if (!options.characterProfile && options.characterContext) {
+    parts.push(`\n[CHARACTER CONTEXT]\n${options.characterContext}`);
+  }
+
+  return parts.join('\n');
+}
