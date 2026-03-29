@@ -280,7 +280,7 @@ export function PersistentChat() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-3 py-2.5 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-900/40 transition-all hover:scale-105 active:scale-95"
+        className="fixed bottom-4 right-48 z-50 flex items-center gap-2 px-3 py-2.5 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-900/40 transition-all hover:scale-105 active:scale-95"
       >
         <MessageSquare className="h-5 w-5" />
         <span className="text-sm font-medium">Chat</span>
@@ -303,7 +303,7 @@ export function PersistentChat() {
 
   return (
     <>
-      <div className={`fixed bottom-4 right-4 z-50 ${chatWidth} ${chatHeight} flex flex-col rounded-xl border border-slate-700/60 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 transition-all duration-200`}>
+      <div className={`fixed bottom-14 right-4 z-50 ${chatWidth} ${chatHeight} flex flex-col rounded-xl border border-slate-700/60 bg-slate-900/95 backdrop-blur-xl shadow-2xl shadow-black/50 transition-all duration-200`}>
         {/* ── Header ── */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/40 bg-slate-800/50 rounded-t-xl">
           <div className="flex items-center gap-2">
