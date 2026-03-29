@@ -117,6 +117,7 @@ import { SystemOverlay } from '@/components/system-overlay';
 import { useTranslation } from '@/lib/i18n';
 import { useScreen } from '@/components/providers/screen-provider';
 import { isChatEnabled, autoSyncGSToSupabase } from '@/lib/community-chat';
+import { PersistentChat } from '@/components/layout/persistent-chat';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -1088,6 +1089,9 @@ export function MainLayout({ children }: MainLayoutProps) {
           </main>
         </div>
         
+        {/* Persistent Chat Widget — visibile su tutte le pagine */}
+        <PersistentChat />
+
         {/* Profile Notifications */}
         <ProfileNotifications />
         
