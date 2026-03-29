@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   MessageSquare,
   Send,
@@ -92,6 +93,7 @@ function formatTime(iso: string): string {
 // ─── PERSISTENT CHAT WIDGET ─────────────────────────────────────
 
 export function PersistentChat() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('gs_chat_open') === 'true';
@@ -271,6 +273,9 @@ export function PersistentChat() {
 
   // Don't render if chat backend not configured
   if (!enabled) return null;
+
+  // Hide on community-hub page (has its own inline chat)
+  if (pathname === '/community-hub') return null;
 
   const chatWidth = expanded ? 'w-[480px]' : 'w-[360px]';
   const chatHeight = expanded ? 'h-[600px]' : 'h-[420px]';
