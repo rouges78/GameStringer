@@ -116,6 +116,7 @@ import { GlobalSearch } from '@/components/layout/global-search';
 import { SystemOverlay } from '@/components/system-overlay';
 import { useTranslation } from '@/lib/i18n';
 import { useScreen } from '@/components/providers/screen-provider';
+import { isChatEnabled, autoSyncGSToSupabase } from '@/lib/community-chat';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -301,6 +302,13 @@ export function MainLayout({ children }: MainLayoutProps) {
     
     // Aggiorna status del sistema solo all'avvio (no polling continuo)
     updateSystemStatus();
+
+    // Auto-sync chat Supabase appena loggato (in background, non blocca l'UI)
+    if (isChatEnabled()) {
+      autoSyncGSToSupabase().then((uid) => {
+        if (uid) console.log('[MainLayout] Chat Supabase pronta, userId:', uid);
+      }).catch(() => {});
+    }
   }, []);
 
   // Auto-expand gruppo sidebar in base alla pagina corrente
