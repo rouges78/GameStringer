@@ -39,6 +39,7 @@ pub struct LanguageDictionary {
 }
 
 impl LanguageDictionary {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::default()
     }
