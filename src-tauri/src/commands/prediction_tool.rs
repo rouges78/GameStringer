@@ -34,6 +34,16 @@ pub struct PredictionResult {
     pub gs_supported: bool,
     /// Metodo di estrazione consigliato
     pub recommended_method: String,
+    /// Confidence 0-100: quanto è affidabile la predizione
+    pub confidence_score: u32,
+    /// Spiegazione del livello di confidence
+    pub confidence_explanation: String,
+    /// Info su DRM/protezioni rilevate
+    pub drm_info: DrmInfo,
+    /// Info su encoding dei file di testo
+    pub encoding_info: EncodingInfo,
+    /// Complessità della traduzione (contesto, variabili, plurali, etc.)
+    pub translation_complexity: TranslationComplexity,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,6 +54,48 @@ pub struct DetectedLanguage {
     pub source: String,
     pub file_count: u32,
     pub total_size_kb: u64,
+    /// Completezza stimata rispetto a English (0-100%)
+    pub completeness_percent: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DrmInfo {
+    pub has_drm: bool,
+    pub drm_types: Vec<String>,
+    pub affects_translation: bool,
+    pub notes: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EncodingInfo {
+    pub primary_encoding: String,
+    pub has_unicode: bool,
+    pub has_cjk: bool,
+    pub has_rtl: bool,
+    pub bom_detected: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TranslationComplexity {
+    /// Numero di variabili/placeholder rilevati ({0}, %s, {name}, etc.)
+    pub variable_count: u64,
+    /// Numero di tag HTML/markup rilevati
+    pub markup_count: u64,
+    /// Presenza di stringhe con plurali
+    pub has_plurals: bool,
+    /// Presenza di stringhe con genere
+    pub has_gender_forms: bool,
+    /// Lunghezza media delle stringhe
+    pub avg_string_length: f64,
+    /// Percentuale stringhe molto corte (<5 chars) — UI labels
+    pub short_strings_percent: f64,
+    /// Percentuale stringhe molto lunghe (>200 chars) — dialoghi
+    pub long_strings_percent: f64,
+    /// Formati di variabile trovati
+    pub variable_formats: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -100,6 +152,7 @@ pub struct ChainEstimate {
 
 // ── Language Detection ───────────────────────────────────────────────
 
+// Formato: (codice_iso, nome, pattern_file, alias_aggiuntivi)
 const LANG_PATTERNS: &[(&str, &str, &str)] = &[
     ("en", "English", "english"),
     ("it", "Italian", "italian"),
@@ -107,6 +160,7 @@ const LANG_PATTERNS: &[(&str, &str, &str)] = &[
     ("fr", "French", "french"),
     ("es", "Spanish", "spanish"),
     ("pt", "Portuguese", "portuguese"),
+    ("pt-br", "Brazilian Portuguese", "brazilian"),
     ("ru", "Russian", "russian"),
     ("pl", "Polish", "polish"),
     ("nl", "Dutch", "dutch"),
@@ -123,6 +177,8 @@ const LANG_PATTERNS: &[(&str, &str, &str)] = &[
     ("ar", "Arabic", "arabic"),
     ("ja", "Japanese", "japanese"),
     ("zh", "Chinese", "chinese"),
+    ("zh-hans", "Simplified Chinese", "schinese"),
+    ("zh-hant", "Traditional Chinese", "tchinese"),
     ("ko", "Korean", "korean"),
     ("th", "Thai", "thai"),
     ("vi", "Vietnamese", "vietnamese"),
@@ -130,13 +186,74 @@ const LANG_PATTERNS: &[(&str, &str, &str)] = &[
     ("hr", "Croatian", "croatian"),
     ("sk", "Slovak", "slovak"),
     ("sl", "Slovenian", "slovenian"),
+    ("id", "Indonesian", "indonesian"),
+    ("ms", "Malay", "malay"),
+    ("hi", "Hindi", "hindi"),
+    ("he", "Hebrew", "hebrew"),
+    ("lt", "Lithuanian", "lithuanian"),
+    ("lv", "Latvian", "latvian"),
+    ("et", "Estonian", "estonian"),
+    ("sr", "Serbian", "serbian"),
+    ("ka", "Georgian", "georgian"),
+    ("ca", "Catalan", "catalan"),
+    ("eu", "Basque", "basque"),
+    ("gl", "Galician", "galician"),
+    ("la", "Latin", "latam"),
+    ("es-419", "Latin Am. Spanish", "latam"),
 ];
+
+// Alias di locale comuni usati nei file di gioco (Steam, Unreal, Unity, etc.)
+const LOCALE_ALIASES: &[(&str, &str)] = &[
+    // Steam locale IDs
+    ("schinese", "zh-hans"), ("tchinese", "zh-hant"),
+    ("brazilian", "pt-br"), ("latam", "es-419"),
+    ("koreana", "ko"), ("japanese", "ja"),
+    // BCP47 / Windows locale
+    ("en-us", "en"), ("en-gb", "en"), ("en_us", "en"), ("en_gb", "en"),
+    ("fr-fr", "fr"), ("fr_fr", "fr"), ("de-de", "de"), ("de_de", "de"),
+    ("es-es", "es"), ("es_es", "es"), ("it-it", "it"), ("it_it", "it"),
+    ("pt-pt", "pt"), ("pt_pt", "pt"), ("pt-br", "pt-br"), ("pt_br", "pt-br"),
+    ("ru-ru", "ru"), ("ru_ru", "ru"), ("ja-jp", "ja"), ("ja_jp", "ja"),
+    ("ko-kr", "ko"), ("ko_kr", "ko"), ("zh-cn", "zh-hans"), ("zh_cn", "zh-hans"),
+    ("zh-tw", "zh-hant"), ("zh_tw", "zh-hant"),
+    ("pl-pl", "pl"), ("pl_pl", "pl"), ("tr-tr", "tr"), ("tr_tr", "tr"),
+    ("nl-nl", "nl"), ("nl_nl", "nl"), ("cs-cz", "cs"), ("cs_cz", "cs"),
+    ("hu-hu", "hu"), ("hu_hu", "hu"), ("ro-ro", "ro"), ("ro_ro", "ro"),
+    ("th-th", "th"), ("th_th", "th"), ("vi-vn", "vi"), ("vi_vn", "vi"),
+    ("ar-sa", "ar"), ("ar_sa", "ar"), ("he-il", "he"), ("he_il", "he"),
+    ("uk-ua", "uk"), ("uk_ua", "uk"), ("bg-bg", "bg"), ("bg_bg", "bg"),
+    ("el-gr", "el"), ("el_gr", "el"), ("sv-se", "sv"), ("sv_se", "sv"),
+    ("da-dk", "da"), ("da_dk", "da"), ("fi-fi", "fi"), ("fi_fi", "fi"),
+    ("nb-no", "no"), ("nb_no", "no"), ("nn-no", "no"),
+    ("id-id", "id"), ("id_id", "id"), ("ms-my", "ms"), ("ms_my", "ms"),
+    ("hi-in", "hi"), ("hi_in", "hi"),
+    // Unreal Engine locale naming
+    ("int", "en"), ("ita", "it"), ("deu", "de"), ("fra", "fr"),
+    ("esn", "es"), ("kor", "ko"), ("jpn", "ja"), ("chs", "zh-hans"),
+    ("cht", "zh-hant"), ("rus", "ru"), ("pol", "pl"), ("ptb", "pt-br"),
+    // ISO 639-2 (3-letter codes)
+    ("eng", "en"), ("ita", "it"), ("deu", "de"), ("fra", "fr"),
+    ("spa", "es"), ("por", "pt"), ("rus", "ru"), ("pol", "pl"),
+    ("nld", "nl"), ("tur", "tr"), ("ara", "ar"), ("jpn", "ja"),
+    ("kor", "ko"), ("zho", "zh"), ("tha", "th"), ("vie", "vi"),
+];
+
+/// Risolvi alias locale al codice ISO standard
+fn resolve_locale_alias(token: &str) -> Option<&'static str> {
+    let lower = token.to_lowercase();
+    for &(alias, iso) in LOCALE_ALIASES {
+        if lower == alias {
+            return Some(iso);
+        }
+    }
+    None
+}
 
 fn detect_languages_deep(game_path: &Path) -> Vec<DetectedLanguage> {
     let mut lang_map: HashMap<String, (String, HashSet<String>, u32, u64)> = HashMap::new();
 
     let walker = walkdir::WalkDir::new(game_path)
-        .max_depth(6)
+        .max_depth(10)
         .follow_links(false)
         .into_iter()
         .filter_map(|e| e.ok());
@@ -150,10 +267,12 @@ fn detect_languages_deep(game_path: &Path) -> Vec<DetectedLanguage> {
             .to_lowercase();
         let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
 
+        // ── Pattern matching diretto per ogni lingua ──
         for &(code, full_name, pattern) in LANG_PATTERNS {
             let found = name_lower.contains(pattern)
                 || name_lower.starts_with(&format!("{}.", code))
                 || name_lower.starts_with(&format!("{}_", code))
+                || name_lower.starts_with(&format!("{}-", code))
                 || name_lower.ends_with(&format!("_{}.txt", code))
                 || name_lower.ends_with(&format!("_{}.json", code))
                 || name_lower.ends_with(&format!("_{}.xml", code))
@@ -161,9 +280,15 @@ fn detect_languages_deep(game_path: &Path) -> Vec<DetectedLanguage> {
                 || name_lower.ends_with(&format!("_{}.po", code))
                 || name_lower.ends_with(&format!("_{}.loc", code))
                 || name_lower.ends_with(&format!("_{}.lang", code))
+                || name_lower.ends_with(&format!("_{}.ini", code))
+                || name_lower.ends_with(&format!("_{}.cfg", code))
+                || name_lower.ends_with(&format!("_{}.properties", code))
+                || name_lower.ends_with(&format!("_{}.resx", code))
                 || name_lower == format!("{}.txt", code)
                 || name_lower == format!("{}.json", code)
                 || name_lower == format!("{}.xml", code)
+                || name_lower == format!("{}.po", code)
+                || name_lower == format!("{}.strings", code)
                 || rel_path.contains(&format!("/{}/", code))
                 || rel_path.contains(&format!("\\{}\\", code))
                 || rel_path.contains(&format!("/localization/{}", pattern))
@@ -171,7 +296,13 @@ fn detect_languages_deep(game_path: &Path) -> Vec<DetectedLanguage> {
                 || rel_path.contains(&format!("/localisation/{}", pattern))
                 || rel_path.contains(&format!("\\localisation\\{}", pattern))
                 || rel_path.contains(&format!("/lang/{}", code))
-                || rel_path.contains(&format!("\\lang\\{}", code));
+                || rel_path.contains(&format!("\\lang\\{}", code))
+                || rel_path.contains(&format!("/i18n/{}", code))
+                || rel_path.contains(&format!("\\i18n\\{}", code))
+                || rel_path.contains(&format!("/locale/{}", code))
+                || rel_path.contains(&format!("\\locale\\{}", code))
+                || rel_path.contains(&format!("/translations/{}", pattern))
+                || rel_path.contains(&format!("\\translations\\{}", pattern));
 
             if found {
                 let lang_entry = lang_map.entry(code.to_string()).or_insert_with(|| {
@@ -187,18 +318,54 @@ fn detect_languages_deep(game_path: &Path) -> Vec<DetectedLanguage> {
             }
         }
 
-        // Also check inside text files for language markers
+        // ── Locale alias matching (BCP47, Steam IDs, Unreal, ISO 639-2) ──
+        // Estrai token dal nome file e dal path per matchare alias
+        let path_tokens: Vec<&str> = rel_path.split(|c: char| c == '/' || c == '\\' || c == '_' || c == '-' || c == '.')
+            .filter(|t| t.len() >= 2 && t.len() <= 10)
+            .collect();
+        for token in &path_tokens {
+            if let Some(iso_code) = resolve_locale_alias(token) {
+                // Trova il nome completo
+                if let Some(&(_, full_name, _)) = LANG_PATTERNS.iter().find(|&&(c, _, _)| c == iso_code) {
+                    let lang_entry = lang_map.entry(iso_code.to_string()).or_insert_with(|| {
+                        (full_name.to_string(), HashSet::new(), 0, 0)
+                    });
+                    lang_entry.2 += 1;
+                    lang_entry.3 += size / 1024;
+                    lang_entry.1.insert(format!("alias({}): {}", token, name_lower));
+                }
+            }
+        }
+
+        // ── Analisi contenuto file config/manifest per dichiarazioni lingua ──
         if size < 500_000 && is_text_ext(&name_lower) {
             if let Ok(content) = fs::read_to_string(path) {
                 let content_lower = content.to_lowercase();
-                // Look for language declarations in config/manifest files
-                if name_lower.contains("manifest") || name_lower.contains("config") || name_lower.contains("appinfo") || name_lower.contains("steam_api") {
+                let is_config = name_lower.contains("manifest") || name_lower.contains("config")
+                    || name_lower.contains("appinfo") || name_lower.contains("steam_api")
+                    || name_lower.contains("localization") || name_lower.contains("localisation")
+                    || name_lower.contains("settings") || name_lower.contains("languages")
+                    || name_lower.ends_with(".vdf") || name_lower.ends_with(".acf")
+                    || name_lower.ends_with(".ini") || name_lower.ends_with(".cfg");
+
+                if is_config {
                     for &(code, full_name, pattern) in LANG_PATTERNS {
                         if content_lower.contains(pattern) || content_lower.contains(&format!("\"{}\"", code)) {
                             let entry = lang_map.entry(code.to_string()).or_insert_with(|| {
                                 (full_name.to_string(), HashSet::new(), 0, 0)
                             });
-                            entry.1.insert(format!("manifest: {}", name_lower));
+                            entry.1.insert(format!("config: {}", name_lower));
+                        }
+                    }
+                    // Anche alias nei config
+                    for &(alias, iso_code) in LOCALE_ALIASES {
+                        if content_lower.contains(alias) {
+                            if let Some(&(_, full_name, _)) = LANG_PATTERNS.iter().find(|&&(c, _, _)| c == iso_code) {
+                                let entry = lang_map.entry(iso_code.to_string()).or_insert_with(|| {
+                                    (full_name.to_string(), HashSet::new(), 0, 0)
+                                });
+                                entry.1.insert(format!("config-alias({}): {}", alias, name_lower));
+                            }
                         }
                     }
                 }
@@ -206,15 +373,24 @@ fn detect_languages_deep(game_path: &Path) -> Vec<DetectedLanguage> {
         }
     }
 
+    // Calcola completeness: confronta dimensione file di ogni lingua vs English
+    let en_size = lang_map.get("en").map(|e| e.3).unwrap_or(1).max(1);
+
     let mut result: Vec<DetectedLanguage> = lang_map
         .into_iter()
         .map(|(code, (name, sources, count, size))| {
+            let completeness = if code == "en" {
+                100
+            } else {
+                ((size as f64 / en_size as f64) * 100.0).min(100.0) as u32
+            };
             DetectedLanguage {
                 code,
                 name,
-                source: sources.into_iter().take(3).collect::<Vec<_>>().join(", "),
+                source: sources.into_iter().take(5).collect::<Vec<_>>().join(", "),
                 file_count: count,
                 total_size_kb: size,
+                completeness_percent: completeness,
             }
         })
         .collect();
@@ -732,6 +908,358 @@ fn get_format_info(ext: &str) -> (bool, &'static str) {
     }
 }
 
+// ── DRM Detection ───────────────────────────────────────────────────
+
+fn detect_drm(game_path: &Path) -> DrmInfo {
+    let mut drm_types: Vec<String> = Vec::new();
+    let mut affects = false;
+
+    let walker = walkdir::WalkDir::new(game_path)
+        .max_depth(3)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok());
+
+    for entry in walker {
+        let name_lower = entry.file_name().to_string_lossy().to_lowercase();
+
+        // EasyAntiCheat
+        if name_lower.contains("easyanticheat") || name_lower == "eac_launcher.exe" {
+            if !drm_types.contains(&"EasyAntiCheat".to_string()) {
+                drm_types.push("EasyAntiCheat".into());
+                affects = true;
+            }
+        }
+        // BattlEye
+        if name_lower.contains("battleye") || name_lower == "beclient.dll" || name_lower == "beservice.exe" {
+            if !drm_types.contains(&"BattlEye".to_string()) {
+                drm_types.push("BattlEye".into());
+                affects = true;
+            }
+        }
+        // Denuvo
+        if name_lower.contains("denuvo") {
+            if !drm_types.contains(&"Denuvo".to_string()) {
+                drm_types.push("Denuvo".into());
+                affects = true;
+            }
+        }
+        // Steam DRM (steam_api.dll is normal, steam_drm is protection)
+        if name_lower == "steam_api.dll" || name_lower == "steam_api64.dll" {
+            if !drm_types.contains(&"Steam API".to_string()) {
+                drm_types.push("Steam API".into());
+                // Steam API alone doesn't block translation
+            }
+        }
+        // VAC
+        if name_lower.contains("vac") && name_lower.ends_with(".dll") {
+            if !drm_types.contains(&"VAC".to_string()) {
+                drm_types.push("VAC".into());
+                affects = true;
+            }
+        }
+        // nProtect GameGuard
+        if name_lower.contains("gameguard") || name_lower == "gamemon.des" {
+            if !drm_types.contains(&"nProtect GameGuard".to_string()) {
+                drm_types.push("nProtect GameGuard".into());
+                affects = true;
+            }
+        }
+        // PunkBuster
+        if name_lower.contains("punkbuster") || name_lower == "pbcl.dll" {
+            if !drm_types.contains(&"PunkBuster".to_string()) {
+                drm_types.push("PunkBuster".into());
+                affects = true;
+            }
+        }
+        // Arxan
+        if name_lower.contains("arxan") {
+            if !drm_types.contains(&"Arxan".to_string()) {
+                drm_types.push("Arxan".into());
+                affects = true;
+            }
+        }
+    }
+
+    let notes = if drm_types.is_empty() {
+        "Nessun DRM/anti-cheat rilevato. Traduzione sicura.".into()
+    } else if affects {
+        format!(
+            "Rilevati: {}. Potrebbero interferire con memory injection o modifiche ai file.",
+            drm_types.join(", ")
+        )
+    } else {
+        format!("Rilevati: {}. Non dovrebbero interferire con la traduzione.", drm_types.join(", "))
+    };
+
+    DrmInfo {
+        has_drm: !drm_types.is_empty(),
+        drm_types,
+        affects_translation: affects,
+        notes,
+    }
+}
+
+// ── Encoding Analysis ───────────────────────────────────────────────
+
+fn analyze_encoding(game_path: &Path) -> EncodingInfo {
+    let mut has_unicode = false;
+    let mut has_cjk = false;
+    let mut has_rtl = false;
+    let mut bom_detected = false;
+    let mut utf8_count = 0u32;
+    let mut latin_count = 0u32;
+
+    let walker = walkdir::WalkDir::new(game_path)
+        .max_depth(5)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok());
+
+    for entry in walker {
+        if !entry.file_type().is_file() { continue; }
+        let name_lower = entry.file_name().to_string_lossy().to_lowercase();
+        if !is_translatable_ext(&name_lower) { continue; }
+        let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+        if size < 10 || size > 2_000_000 { continue; }
+
+        if let Ok(bytes) = fs::read(entry.path()) {
+            // BOM detection
+            if bytes.len() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
+                bom_detected = true;
+                utf8_count += 1;
+            } else if bytes.len() >= 2 && ((bytes[0] == 0xFF && bytes[1] == 0xFE) || (bytes[0] == 0xFE && bytes[1] == 0xFF)) {
+                bom_detected = true;
+                has_unicode = true;
+            }
+
+            // Check content for multi-byte chars
+            if let Ok(text) = std::str::from_utf8(&bytes) {
+                utf8_count += 1;
+                for ch in text.chars().take(5000) {
+                    let cp = ch as u32;
+                    // CJK ranges
+                    if (0x4E00..=0x9FFF).contains(&cp) || (0x3040..=0x30FF).contains(&cp)
+                        || (0xAC00..=0xD7AF).contains(&cp) {
+                        has_cjk = true;
+                        has_unicode = true;
+                    }
+                    // RTL ranges (Arabic, Hebrew)
+                    if (0x0600..=0x06FF).contains(&cp) || (0x0590..=0x05FF).contains(&cp) {
+                        has_rtl = true;
+                        has_unicode = true;
+                    }
+                    // General unicode (accented, Cyrillic, etc.)
+                    if cp > 127 {
+                        has_unicode = true;
+                    }
+                }
+            } else {
+                latin_count += 1;
+            }
+        }
+    }
+
+    let primary_encoding = if utf8_count > latin_count {
+        "UTF-8".to_string()
+    } else if latin_count > 0 {
+        "Latin-1 / Windows-1252".to_string()
+    } else {
+        "Non determinato".to_string()
+    };
+
+    EncodingInfo {
+        primary_encoding,
+        has_unicode,
+        has_cjk,
+        has_rtl,
+        bom_detected,
+    }
+}
+
+// ── Translation Complexity Analysis ─────────────────────────────────
+
+fn analyze_translation_complexity(game_path: &Path) -> TranslationComplexity {
+    let mut variable_count = 0u64;
+    let mut markup_count = 0u64;
+    let mut has_plurals = false;
+    let mut has_gender_forms = false;
+    let mut total_string_len = 0u64;
+    let mut string_count = 0u64;
+    let mut short_count = 0u64;
+    let mut long_count = 0u64;
+    let mut variable_formats: HashSet<String> = HashSet::new();
+
+    let var_patterns: &[(&str, &str)] = &[
+        (r"\{[0-9]+\}", "{N}"),
+        (r"\{[a-zA-Z_]+\}", "{name}"),
+        (r"%[sdifx]", "%s/%d"),
+        (r"%[0-9]*\.[0-9]*[sdifx]", "%N.Nf"),
+        (r"\$[a-zA-Z_]+", "$var"),
+        (r"@[a-zA-Z_]+", "@var"),
+        (r"\\[CcNnVv]\[[0-9]*\]", "RPG Maker codes"),
+        (r"<[a-zA-Z/][^>]*>", "HTML/XML tags"),
+    ];
+
+    let walker = walkdir::WalkDir::new(game_path)
+        .max_depth(5)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok());
+
+    for entry in walker {
+        if !entry.file_type().is_file() { continue; }
+        let name_lower = entry.file_name().to_string_lossy().to_lowercase();
+        if !is_translatable_ext(&name_lower) { continue; }
+        let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+        if size < 20 || size > 5_000_000 { continue; }
+
+        if let Ok(content) = fs::read_to_string(entry.path()) {
+            // Split into rough "strings" by newlines
+            for line in content.lines() {
+                let trimmed = line.trim();
+                if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with("//") {
+                    continue;
+                }
+
+                let len = trimmed.len();
+                if len < 2 { continue; }
+                string_count += 1;
+                total_string_len += len as u64;
+
+                if len < 5 { short_count += 1; }
+                if len > 200 { long_count += 1; }
+
+                // Variable/placeholder detection
+                for &(pattern, label) in var_patterns {
+                    if let Ok(re) = regex::Regex::new(pattern) {
+                        let matches = re.find_iter(trimmed).count() as u64;
+                        if matches > 0 {
+                            variable_count += matches;
+                            variable_formats.insert(label.to_string());
+                        }
+                    }
+                }
+
+                // Markup detection
+                let tag_re = regex::Regex::new(r"<[a-zA-Z/][^>]*>").unwrap_or_else(|_| regex::Regex::new("$^").unwrap());
+                markup_count += tag_re.find_iter(trimmed).count() as u64;
+
+                // Plural forms detection
+                let lower = trimmed.to_lowercase();
+                if lower.contains("plural") || lower.contains("nplurals") || lower.contains("msgid_plural") {
+                    has_plurals = true;
+                }
+
+                // Gender forms detection
+                if lower.contains("gender") || lower.contains("masculine") || lower.contains("feminine")
+                    || lower.contains("{male}") || lower.contains("{female}") {
+                    has_gender_forms = true;
+                }
+            }
+        }
+    }
+
+    let avg_string_length = if string_count > 0 {
+        total_string_len as f64 / string_count as f64
+    } else {
+        0.0
+    };
+
+    let short_strings_percent = if string_count > 0 {
+        (short_count as f64 / string_count as f64) * 100.0
+    } else {
+        0.0
+    };
+
+    let long_strings_percent = if string_count > 0 {
+        (long_count as f64 / string_count as f64) * 100.0
+    } else {
+        0.0
+    };
+
+    TranslationComplexity {
+        variable_count,
+        markup_count,
+        has_plurals,
+        has_gender_forms,
+        avg_string_length: (avg_string_length * 10.0).round() / 10.0,
+        short_strings_percent: (short_strings_percent * 10.0).round() / 10.0,
+        long_strings_percent: (long_strings_percent * 10.0).round() / 10.0,
+        variable_formats: variable_formats.into_iter().collect(),
+    }
+}
+
+// ── Confidence Score ────────────────────────────────────────────────
+
+fn calculate_confidence(
+    engine: &str,
+    languages: &[DetectedLanguage],
+    text_stats: &TextStats,
+    formats: &[FileFormatInfo],
+    gs_supported: bool,
+) -> (u32, String) {
+    let mut score: i32 = 50; // Base
+    let mut reasons: Vec<&str> = Vec::new();
+
+    // Motore conosciuto = più confidence
+    if engine != "Unknown" {
+        score += 15;
+        reasons.push("motore riconosciuto");
+    } else {
+        score -= 15;
+        reasons.push("motore sconosciuto (stime meno affidabili)");
+    }
+
+    // GS supporta = stime validate
+    if gs_supported {
+        score += 15;
+        reasons.push("motore supportato da GameStringer");
+    }
+
+    // File di testo trovati = stime accurate
+    if text_stats.total_text_files > 10 {
+        score += 10;
+        reasons.push("molti file di testo trovati");
+    } else if text_stats.total_text_files == 0 {
+        score -= 20;
+        reasons.push("nessun file di testo trovato (stima basata su binari)");
+    }
+
+    // Cartelle localizzazione = struttura chiara
+    if !text_stats.localization_folders.is_empty() {
+        score += 10;
+        reasons.push("cartelle localizzazione trovate");
+    }
+
+    // Più lingue = struttura i18n verificata
+    if languages.len() > 3 {
+        score += 10;
+        reasons.push("multiple lingue rilevate");
+    } else if languages.is_empty() {
+        score -= 10;
+        reasons.push("nessuna lingua rilevata nei file");
+    }
+
+    // Formati noti = stima affidabile
+    let known_translatable = formats.iter().filter(|f| f.translatable).count();
+    if known_translatable > 5 {
+        score += 5;
+    }
+
+    let score = score.clamp(10, 100) as u32;
+
+    let explanation = if score >= 80 {
+        format!("Alta affidabilità: {}", reasons.join(", "))
+    } else if score >= 50 {
+        format!("Affidabilità media: {}", reasons.join(", "))
+    } else {
+        format!("Bassa affidabilità: {}", reasons.join(", "))
+    };
+
+    (score, explanation)
+}
+
 // ── Quick Summary Struct (for batch ranking) ─────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -906,9 +1434,22 @@ pub async fn analyze_game_translation(
     // GS support
     let (gs_supported, recommended_method) = check_gs_support(&engine_str);
 
+    // DRM / Anti-Cheat detection
+    let drm_info = detect_drm(&game_path);
+
+    // Encoding analysis
+    let encoding_info = analyze_encoding(&game_path);
+
+    // Translation complexity
+    let translation_complexity = analyze_translation_complexity(&game_path);
+
+    // Confidence score
+    let (confidence_score, confidence_explanation) =
+        calculate_confidence(&engine_str, &languages, &text_stats, &file_formats, gs_supported);
+
     info!(
-        "🔮 P.T. Result: {} | engine={} | difficulty={}/100 | strings~{} | langs={}",
-        game_title, engine_str, difficulty_score, text_stats.estimated_strings, languages.len()
+        "🔮 P.T. Result: {} | engine={} | difficulty={}/100 | strings~{} | langs={} | confidence={}",
+        game_title, engine_str, difficulty_score, text_stats.estimated_strings, languages.len(), confidence_score
     );
 
     Ok(PredictionResult {
@@ -925,5 +1466,10 @@ pub async fn analyze_game_translation(
         warnings,
         gs_supported,
         recommended_method,
+        confidence_score,
+        confidence_explanation,
+        drm_info,
+        encoding_info,
+        translation_complexity,
     })
 }

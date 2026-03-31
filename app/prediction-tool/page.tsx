@@ -7,7 +7,7 @@ import {
   Brain, Globe, FileText, Clock, AlertTriangle, CheckCircle, XCircle,
   ChevronLeft, Loader2, Zap, Server, Cloud, Layers, Shield,
   BarChart3, HardDrive, Languages, Sparkles, Cpu, DollarSign,
-  ArrowRight, Star, Info
+  ArrowRight, Star, Info, Lock, Type, Hash, Gauge
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -18,6 +18,33 @@ interface DetectedLanguage {
   source: string;
   fileCount: number;
   totalSizeKb: number;
+  completenessPercent: number;
+}
+
+interface DrmInfo {
+  hasDrm: boolean;
+  drmTypes: string[];
+  affectsTranslation: boolean;
+  notes: string;
+}
+
+interface EncodingInfo {
+  primaryEncoding: string;
+  hasUnicode: boolean;
+  hasCjk: boolean;
+  hasRtl: boolean;
+  bomDetected: boolean;
+}
+
+interface TranslationComplexity {
+  variableCount: number;
+  markupCount: number;
+  hasPlurals: boolean;
+  hasGenderForms: boolean;
+  avgStringLength: number;
+  shortStringsPercent: number;
+  longStringsPercent: number;
+  variableFormats: string[];
 }
 
 interface FileSizeInfo {
@@ -76,6 +103,11 @@ interface PredictionResult {
   warnings: string[];
   gsSupported: boolean;
   recommendedMethod: string;
+  confidenceScore: number;
+  confidenceExplanation: string;
+  drmInfo: DrmInfo;
+  encodingInfo: EncodingInfo;
+  translationComplexity: TranslationComplexity;
 }
 
 // ── Language Lists ───────────────────────────────────────────────────
@@ -328,6 +360,130 @@ export default function PredictionToolPage() {
                 ))}
               </div>
             )}
+
+            {/* Row 1.5: Confidence + DRM + Encoding + Complexity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Confidence Score */}
+              <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                  <Gauge className="w-4 h-4 text-indigo-400" /> Affidabilità Predizione
+                </h3>
+                <div className="flex items-center gap-4 mb-3">
+                  <div className={`text-3xl font-black ${
+                    result.confidenceScore >= 80 ? 'text-green-400' : result.confidenceScore >= 50 ? 'text-yellow-400' : 'text-red-400'
+                  }`}>
+                    {result.confidenceScore}<span className="text-sm text-slate-500">/100</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div className={`h-full rounded-full transition-all ${
+                        result.confidenceScore >= 80 ? 'bg-green-500' : result.confidenceScore >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`} style={{ width: `${result.confidenceScore}%` }} />
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400">{result.confidenceExplanation}</p>
+              </div>
+
+              {/* DRM Info */}
+              <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-rose-400" /> DRM / Anti-Cheat
+                </h3>
+                {!result.drmInfo.hasDrm ? (
+                  <div className="flex items-center gap-2 text-green-400 text-sm">
+                    <CheckCircle className="w-4 h-4" /> Nessun DRM rilevato
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-1.5">
+                      {result.drmInfo.drmTypes.map((drm, i) => (
+                        <span key={i} className={`text-xs px-2 py-0.5 rounded-full border ${
+                          result.drmInfo.affectsTranslation
+                            ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                            : 'bg-slate-700/50 text-slate-300 border-slate-600/50'
+                        }`}>{drm}</span>
+                      ))}
+                    </div>
+                    {result.drmInfo.affectsTranslation && (
+                      <p className="text-xs text-red-300/70 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> Potrebbe interferire con la traduzione
+                      </p>
+                    )}
+                  </div>
+                )}
+                <p className="text-[11px] text-slate-500 mt-2">{result.drmInfo.notes}</p>
+              </div>
+            </div>
+
+            {/* Row 1.6: Encoding + Translation Complexity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Encoding */}
+              <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                  <Type className="w-4 h-4 text-sky-400" /> Encoding File
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Encoding Primario</span>
+                    <span className="text-xs font-mono text-slate-200 bg-slate-700/50 px-2 py-0.5 rounded">{result.encodingInfo.primaryEncoding}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {result.encodingInfo.hasUnicode && (
+                      <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">Unicode</span>
+                    )}
+                    {result.encodingInfo.hasCjk && (
+                      <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full">CJK</span>
+                    )}
+                    {result.encodingInfo.hasRtl && (
+                      <span className="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full">RTL</span>
+                    )}
+                    {result.encodingInfo.bomDetected && (
+                      <span className="text-[10px] bg-slate-600/30 text-slate-400 border border-slate-600/30 px-2 py-0.5 rounded-full">BOM</span>
+                    )}
+                    {!result.encodingInfo.hasUnicode && !result.encodingInfo.hasCjk && !result.encodingInfo.hasRtl && (
+                      <span className="text-[10px] text-slate-500">Solo caratteri ASCII/Latin</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Translation Complexity */}
+              <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+                <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                  <Hash className="w-4 h-4 text-fuchsia-400" /> Complessità Traduzione
+                </h3>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-slate-900/40 rounded-lg px-3 py-2">
+                    <span className="text-slate-500">Variabili</span>
+                    <p className="text-slate-200 font-bold">{result.translationComplexity.variableCount.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-slate-900/40 rounded-lg px-3 py-2">
+                    <span className="text-slate-500">Tag Markup</span>
+                    <p className="text-slate-200 font-bold">{result.translationComplexity.markupCount.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-slate-900/40 rounded-lg px-3 py-2">
+                    <span className="text-slate-500">Lung. Media</span>
+                    <p className="text-slate-200 font-bold">{result.translationComplexity.avgStringLength} chars</p>
+                  </div>
+                  <div className="bg-slate-900/40 rounded-lg px-3 py-2">
+                    <span className="text-slate-500">Corte/Lunghe</span>
+                    <p className="text-slate-200 font-bold">{result.translationComplexity.shortStringsPercent}% / {result.translationComplexity.longStringsPercent}%</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {result.translationComplexity.hasPlurals && (
+                    <span className="text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full">Plurali</span>
+                  )}
+                  {result.translationComplexity.hasGenderForms && (
+                    <span className="text-[10px] bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2 py-0.5 rounded-full">Genere</span>
+                  )}
+                  {result.translationComplexity.variableFormats.map((fmt, i) => (
+                    <span key={i} className="text-[10px] bg-slate-700/50 text-slate-400 border border-slate-600/30 px-2 py-0.5 rounded-full font-mono">{fmt}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Row 2: Languages + Formats */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
