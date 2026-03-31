@@ -1046,7 +1046,7 @@ function LibraryListView() {
               let fetched = 0;
               let consecutiveErrors = 0;
 
-              for (let i = 0; i < Math.min(gamesToFetch.length, 20); i++) {
+              for (let i = 0; i < Math.min(gamesToFetch.length, 50); i++) {
                 const game = gamesToFetch[i];
                 try {
                   const languages = await invoke<string[]>('fetch_game_languages', { appId: game.app_id });
@@ -1055,12 +1055,19 @@ function LibraryListView() {
                     fetched++;
                     consecutiveErrors = 0;
                   }
-                  await new Promise(r => setTimeout(r, 1000));
+                  // Delay adattivo: più breve normalmente, più lungo dopo errori
+                  await new Promise(r => setTimeout(r, 600));
                 } catch (e: unknown) {
                   consecutiveErrors++;
-                  if (consecutiveErrors >= 3) break;
-                  const isRateLimit = e?.message?.includes('429') || e?.message?.includes('403');
-                  if (isRateLimit) await new Promise(r => setTimeout(r, 5000));
+                  if (consecutiveErrors >= 5) break;
+                  const errMsg = e instanceof Error ? e.message : String(e);
+                  const isRateLimit = errMsg.includes('429') || errMsg.includes('403');
+                  if (isRateLimit) {
+                    await new Promise(r => setTimeout(r, 8000));
+                    consecutiveErrors = Math.max(consecutiveErrors - 1, 0);
+                  } else {
+                    await new Promise(r => setTimeout(r, 1500));
+                  }
                 }
               }
 

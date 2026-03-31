@@ -1959,16 +1959,22 @@ export default function GameDetailPage() {
           </button>
         </Link>
 
-        {/* Metacritic score (floating top-right) */}
+        {/* Metacritic score (floating top-right) — cliccabile se URL disponibile */}
         {game?.metacritic?.score > 0 && (
-          <div className="absolute top-4 right-6 z-20 flex flex-col items-center gap-1">
-            <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-black text-white shadow-lg ${
+          <a
+            href={game.metacritic.url || `https://www.metacritic.com/search/${encodeURIComponent(game.title || '')}/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute top-4 right-6 z-20 flex flex-col items-center gap-1 group cursor-pointer"
+            title="Apri su Metacritic"
+          >
+            <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-black text-white shadow-lg transition-transform group-hover:scale-110 ${
               game.metacritic.score >= 75 ? 'bg-[#66cc33]' : game.metacritic.score >= 50 ? 'bg-[#ffcc33]' : 'bg-[#ff0000]'
             }`}>
               {game.metacritic.score}
             </div>
-            <span className="text-[8px] font-bold uppercase tracking-widest text-white/50">Metacritic</span>
-          </div>
+            <span className="text-[8px] font-bold uppercase tracking-widest text-white/50 group-hover:text-white/80 transition-colors">Metacritic</span>
+          </a>
         )}
 
         {/* Hero content overlay */}
@@ -2522,7 +2528,14 @@ export default function GameDetailPage() {
                     {game.metacritic?.score && (
                       <div className="flex items-center justify-between text-[10px]">
                         <span className="text-[#8f98a0]/60">Metacritic</span>
-                        <span className={`font-bold ${game.metacritic.score >= 80 ? 'text-emerald-400' : game.metacritic.score >= 60 ? 'text-amber-400' : 'text-red-400'}`}>{game.metacritic.score}</span>
+                        <a
+                          href={game.metacritic.url || `https://www.metacritic.com/search/${encodeURIComponent(game.title || '')}/`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`font-bold hover:underline ${game.metacritic.score >= 80 ? 'text-emerald-400' : game.metacritic.score >= 60 ? 'text-amber-400' : 'text-red-400'}`}
+                        >
+                          {game.metacritic.score}
+                        </a>
                       </div>
                     )}
                     {game.playtime_forever > 0 && (

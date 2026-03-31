@@ -2032,20 +2032,50 @@ fn parse_steam_languages(languages_string: &str) -> Vec<String> {
         return vec!["English".to_string()];
     }
     
-    // Rimuovi tutto dopo <br> (separa audio da testo)
-    let relevant_string = languages_string.split("<br>").next().unwrap_or("");
+    // Rimuovi tutto dopo <br> in qualsiasi formato (separa audio da testo)
+    let re_br = regex::Regex::new(r"(?i)<br\s*/?>").unwrap();
+    let relevant_string = re_br.split(languages_string).next().unwrap_or("");
     
-    // Pulisci HTML
+    // Pulisci tutti i tag HTML
     let re_html = regex::Regex::new(r"<[^>]*>").unwrap();
     let cleaned = re_html.replace_all(relevant_string, "");
-    let cleaned = cleaned.replace("*", "").replace("&nbsp;", " ");
     
-    // Split per virgola e pulisci
-    cleaned
+    // Pulisci entità HTML, asterischi (indicatori audio), e spazi
+    let cleaned = cleaned
+        .replace("*", "")
+        .replace("&nbsp;", " ")
+        .replace("&amp;", "&")
+        .replace("&#39;", "'")
+        .replace("&lt;", "")
+        .replace("&gt;", "")
+        .replace("\r", "")
+        .replace("\n", ",");
+    
+    // Split per virgola, pulisci e normalizza
+    let languages: Vec<String> = cleaned
         .split(',')
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
-        .collect()
+        .map(|s| {
+            let trimmed = s.trim();
+            // Capitalizza prima lettera di ogni parola
+            trimmed.split_whitespace()
+                .map(|word| {
+                    let mut chars = word.chars();
+                    match chars.next() {
+                        None => String::new(),
+                        Some(c) => c.to_uppercase().to_string() + &chars.as_str().to_lowercase(),
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(" ")
+        })
+        .filter(|s| !s.is_empty() && s.len() > 1)
+        .collect();
+    
+    if languages.is_empty() {
+        return vec!["English".to_string()];
+    }
+    
+    languages
 }
 
 /// 📂 CARICA FAMILY SHARING IDS - Persistenza locale
