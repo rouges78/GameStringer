@@ -76,6 +76,7 @@ pub mod danganronpa_patcher;
 pub mod rpgmaker_patcher;
 pub mod renpy_patcher;
 pub mod wolfrpg_patcher;
+pub mod tyranoscript_patcher;
 
 // === Windows-only modules (memory injection, WinAPI OCR, screen capture) ===
 #[cfg(windows)]

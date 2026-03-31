@@ -946,6 +946,13 @@ fn main() {
             commands::wolfrpg_patcher::export_for_translator_plus,
             commands::wolfrpg_patcher::import_from_translator_plus,
 
+            // TyranoScript Patcher (Electron/NW.js + .asar + .ks)
+            commands::tyranoscript_patcher::detect_tyrano_game,
+            commands::tyranoscript_patcher::extract_tyrano_strings,
+            commands::tyranoscript_patcher::apply_tyrano_patch,
+            commands::tyranoscript_patcher::restore_tyrano_backup,
+            commands::tyranoscript_patcher::get_tyrano_stats,
+
             // Audio Patcher (In-Game Voice Replacement)
             commands::audio_patcher::scan_game_audio_files,
             commands::audio_patcher::replace_audio_file,
