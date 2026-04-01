@@ -7,7 +7,7 @@ import {
   Brain, Globe, FileText, Clock, AlertTriangle, CheckCircle, XCircle,
   ChevronLeft, Loader2, Zap, Server, Cloud, Layers, Shield,
   BarChart3, HardDrive, Languages, Sparkles, Cpu, DollarSign,
-  ArrowRight, Star, Info, Lock, Type, Hash, Gauge
+  ArrowRight, Star, Info, Lock, Type, Hash, Gauge, TrendingUp
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -108,6 +108,8 @@ interface PredictionResult {
   drmInfo: DrmInfo;
   encodingInfo: EncodingInfo;
   translationComplexity: TranslationComplexity;
+  translationQualityScore: number;
+  translationQualityExplanation: string;
 }
 
 // ── Language Lists ───────────────────────────────────────────────────
@@ -482,6 +484,30 @@ export default function PredictionToolPage() {
                     <span key={i} className="text-[10px] bg-slate-700/50 text-slate-400 border border-slate-600/30 px-2 py-0.5 rounded-full font-mono">{fmt}</span>
                   ))}
                 </div>
+              </div>
+            </div>
+
+            {/* Translation Quality */}
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-purple-400" /> Qualità Traduzione Stimata
+              </h3>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-slate-400">Score Qualità</span>
+                    <span className="text-sm font-bold text-purple-400">{result.translationQualityScore}/100</span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-purple-500 to-purple-400 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${result.translationQualityScore}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="text-xs text-slate-300 leading-relaxed">
+                {result.translationQualityExplanation}
               </div>
             </div>
 

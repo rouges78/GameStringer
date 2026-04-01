@@ -45,6 +45,10 @@ pub struct PredictionResult {
     pub encoding_info: EncodingInfo,
     /// Complessità della traduzione (contesto, variabili, plurali, etc.)
     pub translation_complexity: TranslationComplexity,
+    /// Qualità traduzione stimata 0-100 basata su complessità
+    pub translation_quality_score: u32,
+    /// Spiegazione della qualità traduzione
+    pub translation_quality_explanation: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1387,6 +1391,106 @@ fn calculate_confidence(
     (score, explanation)
 }
 
+// ── Translation Quality Estimation ───────────────────────────────────
+
+fn calculate_translation_quality(
+    complexity: &TranslationComplexity,
+    encoding: &EncodingInfo,
+    text_stats: &TextStats,
+) -> (u32, String) {
+    let mut score: i32 = 85; // Base score - assumiamo traduzione decente
+    let mut factors: Vec<String> = Vec::new();
+    
+    // Complessità variabili: più variabili = più difficile mantenere qualità
+    if complexity.variable_count > 5000 {
+        score -= 15;
+        factors.push("moltissime variabili da gestire".to_string());
+    } else if complexity.variable_count > 1000 {
+        score -= 8;
+        factors.push("molte variabili da gestire".to_string());
+    } else if complexity.variable_count < 50 {
+        score += 5;
+        factors.push("poche variabili, facile gestione".to_string());
+    }
+    
+    // Complessità markup: HTML/XML richiede attenzione
+    if complexity.markup_count > 1000 {
+        score -= 10;
+        factors.push("esteso markup HTML/XML da preservare".to_string());
+    } else if complexity.markup_count < 100 {
+        score += 3;
+        factors.push("markup limitato".to_string());
+    }
+    
+    // Plurali e generi: aggiungono complessità ma anche ricchezza
+    if complexity.has_plurals {
+        score -= 3;
+        factors.push("gestione plurali richiesta".to_string());
+    }
+    if complexity.has_gender_forms {
+        score -= 3;
+        factors.push("gestione generi richiesta".to_string());
+    }
+    
+    // Lunghezza stringhe: stringhe molto lunghe sono difficili da tradurre bene
+    if complexity.long_strings_percent > 20.0 {
+        score -= 8;
+        factors.push("molte stringhe lunghe (>200 char)".to_string());
+    } else if complexity.long_strings_percent < 5.0 {
+        score += 2;
+        factors.push("stringhe di lunghezza gestibile".to_string());
+    }
+    
+    // Stringhe corte: spesso sono UI labels che richiedono precisione
+    if complexity.short_strings_percent > 30.0 {
+        score -= 5;
+        factors.push("molte stringhe corte (<5 char) - UI labels".to_string());
+    }
+    
+    // Encoding: Unicode/CJK/RTL richiedono attenzione speciale
+    if encoding.has_cjk {
+        score -= 5;
+        factors.push("testo CJK richiede competenza specifica".to_string());
+    }
+    if encoding.has_rtl {
+        score -= 5;
+        factors.push("testo RTL richiede competenza specifica".to_string());
+    }
+    if !encoding.has_unicode {
+        score += 2;
+        factors.push("encoding semplice (ASCII/Latin)".to_string());
+    }
+    
+    // Volume testo: più testo = più possibilità di errori
+    if text_stats.estimated_strings > 50000 {
+        score -= 10;
+        factors.push("volume enorme di testo".to_string());
+    } else if text_stats.estimated_strings < 1000 {
+        score += 5;
+        factors.push("volume testo gestibile".to_string());
+    }
+    
+    // BOM detection: può causare problemi
+    if encoding.bom_detected {
+        score -= 2;
+        factors.push("BOM rilevato - potenziali problemi encoding".to_string());
+    }
+    
+    let score = score.clamp(20, 95) as u32;
+    
+    let explanation = if score >= 80 {
+        format!("Qualità traduzione eccellente prevista: {}", factors.join(", "))
+    } else if score >= 60 {
+        format!("Qualità traduzione buona prevista: {}", factors.join(", "))
+    } else if score >= 40 {
+        format!("Qualità traduzione media prevista: {}", factors.join(", "))
+    } else {
+        format!("Qualità traduzione bassa prevista: {}", factors.join(", "))
+    };
+    
+    (score, explanation)
+}
+
 // ── Quick Summary Struct (for batch ranking) ─────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1591,6 +1695,10 @@ pub async fn analyze_game_translation(
     let (confidence_score, confidence_explanation) =
         calculate_confidence(&engine_str, &languages, &text_stats, &file_formats, gs_supported);
 
+    // Translation quality estimation
+    let (translation_quality_score, translation_quality_explanation) =
+        calculate_translation_quality(&translation_complexity, &encoding_info, &text_stats);
+
     let estimated_strings = text_stats.estimated_strings;
     let languages_count = languages.len();
     
@@ -1613,6 +1721,8 @@ pub async fn analyze_game_translation(
         drm_info,
         encoding_info,
         translation_complexity,
+        translation_quality_score,
+        translation_quality_explanation,
     };
 
     // Save to cache
