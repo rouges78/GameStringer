@@ -111,6 +111,7 @@ interface PredictionResult {
   translationQualityScore: number;
   translationQualityExplanation: string;
   existingTools: ExistingTranslationTools;
+  selectedTools: SelectedTools;
 }
 
 interface ExistingTranslationTools {
@@ -139,6 +140,35 @@ interface CommunityPatchInfo {
   status: string;
   installPath?: string;
 }
+
+interface SelectedTools {
+  primaryTextTool?: SelectedTool;
+  alternativeTextTools: SelectedTool[];
+  audioTools: SelectedTool[];
+  graphicsTools: SelectedTool[];
+  archiveTools: SelectedTool[];
+  patchTools: SelectedTool[];
+  workflowRecommendations: string[];
+  selectionScore: number;
+}
+
+interface SelectedTool {
+  name: string;
+  category: ToolCategory;
+  description: string;
+  supportedFormats: string[];
+  compatibilityScore: number;
+  easeOfUse: number;
+  cost: ToolCost;
+  platformSupport: string[];
+  specialFeatures: string[];
+  recommendedUsage: string;
+  installationNotes?: string;
+}
+
+type ToolCategory = 'TextExtraction' | 'TextInsertion' | 'AudioConversion' | 'GraphicsEditing' | 'ArchiveExtraction' | 'PatchCreation' | 'LocalizationSystem';
+
+type ToolCost = 'Free' | 'Freemium' | 'Commercial' | 'Enterprise' | 'OpenSource';
 
 // ── Language Lists ───────────────────────────────────────────────────
 
@@ -677,6 +707,124 @@ export default function PredictionToolPage() {
                !result.existingTools.hasCommunityPatches && (
                 <p className="text-xs text-slate-500 italic">Nessuno strumento di traduzione esistente rilevato. La traduzione dovrà essere creata da zero.</p>
               )}
+            </div>
+
+            {/* Selected Tools */}
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-yellow-400" /> Tool Selezionati Automaticamente
+              </h3>
+              
+              {/* Primary Text Tool */}
+              {result.selectedTools.primaryTextTool && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-green-300 mb-2">Tool Primario - Estrazione Testo</h4>
+                  <div className="bg-slate-900/50 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-200">{result.selectedTools.primaryTextTool.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">
+                          Score: {result.selectedTools.primaryTextTool.compatibilityScore}
+                        </span>
+                        <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">
+                          {result.selectedTools.primaryTextTool.cost}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400 mb-2">{result.selectedTools.primaryTextTool.description}</p>
+                    <p className="text-xs text-slate-500">{result.selectedTools.primaryTextTool.recommendedUsage}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Alternative Tools */}
+              {result.selectedTools.alternativeTextTools.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-orange-300 mb-2">Tool Alternativi</h4>
+                  <div className="space-y-2">
+                    {result.selectedTools.alternativeTextTools.slice(0, 3).map((tool, i) => (
+                      <div key={i} className="flex items-center justify-between bg-slate-900/30 rounded-lg px-3 py-2">
+                        <div>
+                          <span className="text-xs text-slate-300">{tool.name}</span>
+                          <span className="text-[10px] text-slate-500 ml-2">Score: {tool.compatibilityScore}</span>
+                        </div>
+                        <span className="text-[10px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+                          {tool.cost}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Archive Tools */}
+              {result.selectedTools.archiveTools.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-purple-300 mb-2">Tool Archivi</h4>
+                  <div className="space-y-1">
+                    {result.selectedTools.archiveTools.map((tool, i) => (
+                      <div key={i} className="flex items-center justify-between bg-slate-900/30 rounded-lg px-3 py-2">
+                        <span className="text-xs text-slate-300">{tool.name}</span>
+                        <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">
+                          {tool.cost}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Audio/Graphics Tools */}
+              {(result.selectedTools.audioTools.length > 0 || result.selectedTools.graphicsTools.length > 0) && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-cyan-300 mb-2">Tool Multimedia</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {result.selectedTools.audioTools.slice(0, 2).map((tool, i) => (
+                      <div key={`audio-${i}`} className="bg-slate-900/30 rounded-lg px-3 py-2">
+                        <span className="text-xs text-slate-300">{tool.name}</span>
+                        <span className="text-[10px] text-cyan-400 block mt-1">Audio</span>
+                      </div>
+                    ))}
+                    {result.selectedTools.graphicsTools.slice(0, 2).map((tool, i) => (
+                      <div key={`graphics-${i}`} className="bg-slate-900/30 rounded-lg px-3 py-2">
+                        <span className="text-xs text-slate-300">{tool.name}</span>
+                        <span className="text-[10px] text-pink-400 block mt-1">Grafica</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Workflow Recommendations */}
+              {result.selectedTools.workflowRecommendations.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-yellow-300 mb-2">Workflow Consigliato</h4>
+                  <div className="space-y-1">
+                    {result.selectedTools.workflowRecommendations.slice(0, 4).map((rec, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <ArrowRight className="w-3 h-3 text-yellow-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-slate-300 leading-relaxed">{rec}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Selection Score */}
+              <div className="mt-4 pt-3 border-t border-slate-700/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Score Selezione Tool</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-yellow-500 rounded-full transition-all" 
+                        style={{ width: `${result.selectedTools.selectionScore}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-mono text-yellow-400">{result.selectedTools.selectionScore}/100</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Row 2: Languages + Formats */}

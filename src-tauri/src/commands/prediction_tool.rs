@@ -51,6 +51,8 @@ pub struct PredictionResult {
     pub translation_quality_explanation: String,
     /// Informazioni su strumenti di traduzione esistenti
     pub existing_tools: ExistingTranslationTools,
+    /// Tool selezionati per questo workflow
+    pub selected_tools: SelectedTools,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -144,6 +146,65 @@ pub struct CommunityPatchInfo {
     pub languages: Vec<String>,
     pub status: String, // active, inactive, outdated
     pub install_path: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectedTools {
+    /// Tool primario per estrazione/inserimento testo
+    pub primary_text_tool: Option<SelectedTool>,
+    /// Tool alternativi testo
+    pub alternative_text_tools: Vec<SelectedTool>,
+    /// Tool per audio
+    pub audio_tools: Vec<SelectedTool>,
+    /// Tool per grafica
+    pub graphics_tools: Vec<SelectedTool>,
+    /// Tool per archivi/binari
+    pub archive_tools: Vec<SelectedTool>,
+    /// Tool per installazione patch
+    pub patch_tools: Vec<SelectedTool>,
+    /// Raccomandazioni workflow
+    pub workflow_recommendations: Vec<String>,
+    /// Score totale selezione tool
+    pub selection_score: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectedTool {
+    pub name: String,
+    pub category: ToolCategory,
+    pub description: String,
+    pub supported_formats: Vec<String>,
+    pub compatibility_score: u32, // 0-100
+    pub ease_of_use: u32, // 0-100
+    pub cost: ToolCost,
+    pub platform_support: Vec<String>,
+    pub special_features: Vec<String>,
+    pub recommended_usage: String,
+    pub installation_notes: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ToolCategory {
+    TextExtraction,
+    TextInsertion,
+    AudioConversion,
+    GraphicsEditing,
+    ArchiveExtraction,
+    PatchCreation,
+    LocalizationSystem,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ToolCost {
+    Free,
+    Freemium,
+    Commercial(String), // prezzo es. "$29.99"
+    Enterprise,
+    OpenSource,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1912,6 +1973,44 @@ pub async fn analyze_game_translation(
     let estimated_strings = text_stats.estimated_strings;
     let languages_count = languages.len();
     
+    // Create preliminary result for tool selection
+    let preliminary_result = PredictionResult {
+        game_title: game_title.clone(),
+        engine: engine_str.clone(),
+        install_path: install_path.clone(),
+        detected_languages: languages.clone(),
+        difficulty_score,
+        difficulty_label: difficulty_label.clone(),
+        text_stats: text_stats.clone(),
+        file_formats: file_formats.clone(),
+        time_estimates: time_estimates.clone(),
+        chain_estimates: chain_estimates.clone(),
+        warnings: warnings.clone(),
+        gs_supported,
+        recommended_method: recommended_method.clone(),
+        confidence_score,
+        confidence_explanation: confidence_explanation.clone(),
+        drm_info: drm_info.clone(),
+        encoding_info: encoding_info.clone(),
+        translation_complexity: translation_complexity.clone(),
+        translation_quality_score,
+        translation_quality_explanation: translation_quality_explanation.clone(),
+        existing_tools: existing_tools.clone(),
+        selected_tools: SelectedTools {
+            primary_text_tool: None,
+            alternative_text_tools: Vec::new(),
+            audio_tools: Vec::new(),
+            graphics_tools: Vec::new(),
+            archive_tools: Vec::new(),
+            patch_tools: Vec::new(),
+            workflow_recommendations: Vec::new(),
+            selection_score: 0,
+        },
+    };
+
+    // Tool selection
+    let selected_tools = select_optimal_tools(&preliminary_result);
+    
     let result = PredictionResult {
         game_title,
         engine: engine_str,
@@ -1934,6 +2033,7 @@ pub async fn analyze_game_translation(
         translation_quality_score,
         translation_quality_explanation,
         existing_tools,
+        selected_tools,
     };
 
     // Save to cache
@@ -2130,4 +2230,467 @@ async fn export_txt(result: &PredictionResult, output_dir: &Path, filename: &str
         .map_err(|e| format!("Errore scrittura file report: {}", e))?;
     
     Ok(format!("Report esportato in: {}", file_path.display()))
+}
+
+// ── Tool Selection Engine ─────────────────────────────────────────────
+
+fn select_optimal_tools(result: &PredictionResult) -> SelectedTools {
+    let tool_database = get_tool_database();
+    let mut selected_tools = SelectedTools {
+        primary_text_tool: None,
+        alternative_text_tools: Vec::new(),
+        audio_tools: Vec::new(),
+        graphics_tools: Vec::new(),
+        archive_tools: Vec::new(),
+        patch_tools: Vec::new(),
+        workflow_recommendations: Vec::new(),
+        selection_score: 0,
+    };
+
+    // Selezione tool testo basati su motore e formati
+    let text_tools = select_text_tools(&result.engine, &result.file_formats, &tool_database);
+    selected_tools.primary_text_tool = text_tools.first().cloned();
+    selected_tools.alternative_text_tools = text_tools.iter().skip(1).cloned().collect();
+
+    // Selezione tool audio
+    selected_tools.audio_tools = select_audio_tools(&result.file_formats, &tool_database);
+
+    // Selezione tool grafica
+    selected_tools.graphics_tools = select_graphics_tools(&result.file_formats, &tool_database);
+
+    // Selezione tool archivi
+    selected_tools.archive_tools = select_archive_tools(&result.file_formats, &result.engine, &tool_database);
+
+    // Selezione tool patch
+    selected_tools.patch_tools = select_patch_tools(&result.engine, &tool_database);
+
+    // Generazione raccomandazioni
+    selected_tools.workflow_recommendations = generate_workflow_recommendations(&selected_tools, result);
+
+    // Calcolo score totale
+    selected_tools.selection_score = calculate_selection_score(&selected_tools, result);
+
+    selected_tools
+}
+
+fn get_tool_database() -> Vec<Tool> {
+    vec![
+        // Text Extraction Tools
+        Tool {
+            name: "GameStringer".to_string(),
+            category: ToolCategory::TextExtraction,
+            supported_engines: vec!["Unity".to_string(), "Ren'Py".to_string(), "RPG Maker".to_string()],
+            supported_formats: vec!["txt".to_string(), "json".to_string(), "xml".to_string(), "csv".to_string()],
+            compatibility_score: 95,
+            ease_of_use: 90,
+            cost: ToolCost::Freemium,
+            platform_support: vec!["Windows".to_string(), "Linux".to_string(), "macOS".to_string()],
+            special_features: vec!["Auto-detection".to_string(), "Batch processing".to_string(), "Preview mode".to_string()],
+            description: "Strumento completo per estrazione testo giochi Unity e Ren'Py".to_string(),
+        },
+        Tool {
+            name: "Unity Assets Bundle Extractor (UABE)".to_string(),
+            category: ToolCategory::ArchiveExtraction,
+            supported_engines: vec!["Unity".to_string()],
+            supported_formats: vec!["assets".to_string(), "bundle".to_string()],
+            compatibility_score: 85,
+            ease_of_use: 70,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            special_features: vec!["Asset preview".to_string(), "Texture extraction".to_string()],
+            description: "Estrattore di asset Unity per file .assets e .bundle".to_string(),
+        },
+        Tool {
+            name: "UnrealPak".to_string(),
+            category: ToolCategory::ArchiveExtraction,
+            supported_engines: vec!["Unreal Engine".to_string()],
+            supported_formats: vec!["pak".to_string(), "utoc".to_string(), "ucas".to_string()],
+            compatibility_score: 80,
+            ease_of_use: 65,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            special_features: vec!["Pak mounting".to_string(), "AES decryption".to_string()],
+            description: "Tool per estrazione e mount file PAK Unreal Engine".to_string(),
+        },
+        Tool {
+            name: "Atlas".to_string(),
+            category: ToolCategory::TextExtraction,
+            supported_engines: vec!["Unreal Engine".to_string()],
+            supported_formats: vec!["uasset".to_string(), "int".to_string(), "locres".to_string()],
+            compatibility_score: 88,
+            ease_of_use: 75,
+            cost: ToolCost::Freemium,
+            platform_support: vec!["Windows".to_string()],
+            special_features: vec!["Localization support".to_string(), "String preview".to_string()],
+            description: "Tool specifico per Unreal Engine localization files".to_string(),
+        },
+        Tool {
+            name: "Ren'Py Translator Tools".to_string(),
+            category: ToolCategory::TextExtraction,
+            supported_engines: vec!["Ren'Py".to_string()],
+            supported_formats: vec!["rpy".to_string(), "rpyc".to_string(), "tl".to_string()],
+            compatibility_score: 92,
+            ease_of_use: 85,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string(), "Linux".to_string(), "macOS".to_string()],
+            special_features: vec!["Script compilation".to_string(), "Translation validation".to_string()],
+            description: "Tool suite per traduzione giochi Ren'Py".to_string(),
+        },
+        Tool {
+            name: "RPG Maker Trans".to_string(),
+            category: ToolCategory::TextExtraction,
+            supported_engines: vec!["RPG Maker".to_string()],
+            supported_formats: vec!["rvdata2".to_string(), "json".to_string(), "ini".to_string()],
+            compatibility_score: 90,
+            ease_of_use: 80,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            special_features: vec!["Database extraction".to_string(), "Map translation".to_string()],
+            description: "Tool per estrazione testo da giochi RPG Maker".to_string(),
+        },
+        // Audio Tools
+        Tool {
+            name: "Audacity".to_string(),
+            category: ToolCategory::AudioConversion,
+            supported_engines: vec!["*".to_string()], // Universale
+            supported_formats: vec!["wav".to_string(), "mp3".to_string(), "ogg".to_string(), "wem".to_string()],
+            compatibility_score: 95,
+            ease_of_use: 85,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string(), "Linux".to_string(), "macOS".to_string()],
+            special_features: vec!["Multi-track editing".to_string(), "Noise reduction".to_string(), "Format conversion".to_string()],
+            description: "Editor audio professionale open source".to_string(),
+        },
+        Tool {
+            name: "WW2Ogg".to_string(),
+            category: ToolCategory::AudioConversion,
+            supported_engines: vec!["*".to_string()],
+            supported_formats: vec!["wem".to_string(), "wav".to_string()],
+            compatibility_score: 85,
+            ease_of_use: 70,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            special_features: vec!["WEM to WAV conversion".to_string(), "Batch processing".to_string()],
+            description: "Convertitore specifico per formati audio WEM".to_string(),
+        },
+        // Graphics Tools
+        Tool {
+            name: "Photoshop".to_string(),
+            category: ToolCategory::GraphicsEditing,
+            supported_engines: vec!["*".to_string()],
+            supported_formats: vec!["png".to_string(), "dds".to_string(), "tga".to_string(), "psd".to_string()],
+            compatibility_score: 98,
+            ease_of_use: 75,
+            cost: ToolCost::Commercial("$20.99/mo".to_string()),
+            platform_support: vec!["Windows".to_string(), "macOS".to_string()],
+            special_features: vec!["Layer editing".to_string(), "DDS plugin".to_string(), "Batch actions".to_string()],
+            description: "Editor grafico professionale".to_string(),
+        },
+        Tool {
+            name: "GIMP".to_string(),
+            category: ToolCategory::GraphicsEditing,
+            supported_engines: vec!["*".to_string()],
+            supported_formats: vec!["png".to_string(), "dds".to_string(), "tga".to_string(), "jpg".to_string()],
+            compatibility_score: 85,
+            ease_of_use: 70,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string(), "Linux".to_string(), "macOS".to_string()],
+            special_features: vec!["DDS plugin".to_string(), "Batch processing".to_string(), "Scriptable".to_string()],
+            description: "Editor grafico open source con plugin DDS".to_string(),
+        },
+        Tool {
+            name: "Paint.NET".to_string(),
+            category: ToolCategory::GraphicsEditing,
+            supported_engines: vec!["*".to_string()],
+            supported_formats: vec!["png".to_string(), "dds".to_string(), "tga".to_string(), "jpg".to_string()],
+            compatibility_score: 80,
+            ease_of_use: 90,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            special_features: vec!["DDS plugin".to_string(), "Layer support".to_string(), "Plugin system".to_string()],
+            description: "Editor grafico semplice con plugin DDS".to_string(),
+        },
+        // Patch Tools
+        Tool {
+            name: "NSIS".to_string(),
+            category: ToolCategory::PatchCreation,
+            supported_engines: vec!["*".to_string()],
+            supported_formats: vec!["exe".to_string(), "dll".to_string()],
+            compatibility_score: 85,
+            ease_of_use: 65,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            special_features: vec!["Scriptable installer".to_string(), "Custom UI".to_string(), "Multi-language".to_string()],
+            description: "Sistema creazione installer per Windows".to_string(),
+        },
+        Tool {
+            name: "Inno Setup".to_string(),
+            category: ToolCategory::PatchCreation,
+            supported_engines: vec!["*".to_string()],
+            supported_formats: vec!["exe".to_string(), "dll".to_string()],
+            compatibility_score: 88,
+            ease_of_use: 70,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            special_features: vec!["Pascal scripting".to_string(), "Wizard interface".to_string(), "Compression".to_string()],
+            description: "Tool creazione installer con scripting avanzato".to_string(),
+        },
+    ]
+}
+
+// Struttura interna per database tool
+#[derive(Debug, Clone)]
+struct Tool {
+    name: String,
+    category: ToolCategory,
+    supported_engines: Vec<String>,
+    supported_formats: Vec<String>,
+    compatibility_score: u32,
+    ease_of_use: u32,
+    cost: ToolCost,
+    platform_support: Vec<String>,
+    special_features: Vec<String>,
+    description: String,
+}
+
+fn select_text_tools(engine: &str, formats: &[FileFormatInfo], tool_db: &[Tool]) -> Vec<SelectedTool> {
+    let mut compatible_tools: Vec<(usize, u32)> = Vec::new();
+    
+    for (i, tool) in tool_db.iter().enumerate() {
+        if !matches!(tool.category, ToolCategory::TextExtraction | ToolCategory::LocalizationSystem) {
+            continue;
+        }
+        
+        let mut score = 0;
+        
+        // Engine compatibility
+        if tool.supported_engines.contains(&engine.to_string()) || tool.supported_engines.contains(&"*".to_string()) {
+            score += 40;
+        }
+        
+        // Format compatibility
+        let format_match: u32 = formats.iter()
+            .filter(|f| tool.supported_formats.contains(&f.extension))
+            .count() as u32;
+        score += (format_match * 10).min(30);
+        
+        // Tool quality
+        score += tool.compatibility_score / 5;
+        score += tool.ease_of_use / 5;
+        
+        if score > 50 {
+            compatible_tools.push((i, score));
+        }
+    }
+    
+    // Ordina per score e converti in SelectedTool
+    compatible_tools.sort_by(|a, b| b.1.cmp(&a.1));
+    
+    compatible_tools.into_iter().take(5).map(|(i, score)| {
+        let tool = &tool_db[i];
+        SelectedTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: score,
+            ease_of_use: tool.ease_of_use,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            special_features: tool.special_features.clone(),
+            recommended_usage: format!("Ideale per giochi {} con formati {}", engine, 
+                formats.iter().filter(|f| tool.supported_formats.contains(&f.extension))
+                    .map(|f| f.extension.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")),
+            installation_notes: None,
+        }
+    }).collect()
+}
+
+fn select_audio_tools(formats: &[FileFormatInfo], tool_db: &[Tool]) -> Vec<SelectedTool> {
+    let audio_formats: Vec<&FileFormatInfo> = formats.iter()
+        .filter(|f| ["wav", "mp3", "ogg", "wem", "flac", "aac"].contains(&f.extension.as_str()))
+        .collect();
+    
+    if audio_formats.is_empty() {
+        return Vec::new();
+    }
+    
+    tool_db.iter()
+        .filter(|tool| matches!(tool.category, ToolCategory::AudioConversion))
+        .filter(|tool| {
+            audio_formats.iter().any(|f| tool.supported_formats.contains(&f.extension))
+        })
+        .map(|tool| SelectedTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: tool.compatibility_score,
+            ease_of_use: tool.ease_of_use,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            special_features: tool.special_features.clone(),
+            recommended_usage: "Per conversione e editing file audio del gioco".to_string(),
+            installation_notes: None,
+        })
+        .collect()
+}
+
+fn select_graphics_tools(formats: &[FileFormatInfo], tool_db: &[Tool]) -> Vec<SelectedTool> {
+    let graphics_formats: Vec<&FileFormatInfo> = formats.iter()
+        .filter(|f| ["png", "jpg", "dds", "tga", "bmp", "psd", "tiff"].contains(&f.extension.as_str()))
+        .collect();
+    
+    if graphics_formats.is_empty() {
+        return Vec::new();
+    }
+    
+    tool_db.iter()
+        .filter(|tool| matches!(tool.category, ToolCategory::GraphicsEditing))
+        .filter(|tool| {
+            graphics_formats.iter().any(|f| tool.supported_formats.contains(&f.extension))
+        })
+        .map(|tool| SelectedTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: tool.compatibility_score,
+            ease_of_use: tool.ease_of_use,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            special_features: tool.special_features.clone(),
+            recommended_usage: "Per editing textures e immagini del gioco".to_string(),
+            installation_notes: None,
+        })
+        .collect()
+}
+
+fn select_archive_tools(formats: &[FileFormatInfo], engine: &str, tool_db: &[Tool]) -> Vec<SelectedTool> {
+    let archive_formats: Vec<&FileFormatInfo> = formats.iter()
+        .filter(|f| ["pak", "zip", "rar", "7z", "assets", "bundle", "arc"].contains(&f.extension.as_str()))
+        .collect();
+    
+    if archive_formats.is_empty() {
+        return Vec::new();
+    }
+    
+    tool_db.iter()
+        .filter(|tool| matches!(tool.category, ToolCategory::ArchiveExtraction))
+        .filter(|tool| {
+            (tool.supported_engines.contains(&engine.to_string()) || tool.supported_engines.contains(&"*".to_string())) &&
+            archive_formats.iter().any(|f| tool.supported_formats.contains(&f.extension))
+        })
+        .map(|tool| SelectedTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: tool.compatibility_score,
+            ease_of_use: tool.ease_of_use,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            special_features: tool.special_features.clone(),
+            recommended_usage: format!("Per estrazione archivi {} del gioco", engine),
+            installation_notes: None,
+        })
+        .collect()
+}
+
+fn select_patch_tools(engine: &str, tool_db: &[Tool]) -> Vec<SelectedTool> {
+    tool_db.iter()
+        .filter(|tool| matches!(tool.category, ToolCategory::PatchCreation))
+        .filter(|tool| tool.supported_engines.contains(&engine.to_string()) || tool.supported_engines.contains(&"*".to_string()))
+        .map(|tool| SelectedTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: tool.compatibility_score,
+            ease_of_use: tool.ease_of_use,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            special_features: tool.special_features.clone(),
+            recommended_usage: "Per creazione patch di traduzione".to_string(),
+            installation_notes: Some("Installare con privilegi di amministratore per creazione installer".to_string()),
+        })
+        .collect()
+}
+
+fn generate_workflow_recommendations(selected_tools: &SelectedTools, result: &PredictionResult) -> Vec<String> {
+    let mut recommendations = Vec::new();
+    
+    // Raccomandazioni principali
+    if let Some(ref tool) = selected_tools.primary_text_tool {
+        recommendations.push(format!("Usa {} come tool primario per estrazione testo", tool.name));
+    }
+    
+    if !selected_tools.archive_tools.is_empty() {
+        recommendations.push("Estrai prima gli archivi binari prima di procedere con il testo".to_string());
+    }
+    
+    if !selected_tools.audio_tools.is_empty() {
+        recommendations.push("Considera traduzione audio se il gioco ha doppiaggio importante".to_string());
+    }
+    
+    if !selected_tools.graphics_tools.is_empty() {
+        recommendations.push("Verifica immagini con testo incorporato che richiedono editing".to_string());
+    }
+    
+    // Raccomandazioni basate sulla difficoltà
+    if result.difficulty_score > 60 {
+        recommendations.push("Per giochi difficili, usa tool alternativi se quello primario non funziona".to_string());
+    }
+    
+    if result.drm_info.has_drm {
+        recommendations.push("Attenzione: DRM rilevato - potrebbe interferire con estrazione file".to_string());
+    }
+    
+    // Raccomandazioni basate sui costi
+    let has_free_tools = selected_tools.primary_text_tool.as_ref()
+        .map_or(false, |t| matches!(t.cost, ToolCost::Free | ToolCost::OpenSource));
+    
+    if has_free_tools {
+        recommendations.push("Workflow principalmente gratuito disponibile".to_string());
+    } else {
+        recommendations.push("Considera costi licenze tool commerciali nel budget".to_string());
+    }
+    
+    recommendations
+}
+
+fn calculate_selection_score(selected_tools: &SelectedTools, result: &PredictionResult) -> u32 {
+    let mut score = 0u32;
+    
+    // Score tool primario
+    if let Some(ref tool) = selected_tools.primary_text_tool {
+        score += tool.compatibility_score;
+        score += tool.ease_of_use / 2;
+    }
+    
+    // Bonus per tool alternativi
+    score += (selected_tools.alternative_text_tools.len() as u32 * 20).min(100);
+    
+    // Bonus per copertura completa
+    let has_audio = !selected_tools.audio_tools.is_empty();
+    let has_graphics = !selected_tools.graphics_tools.is_empty();
+    let has_archive = !selected_tools.archive_tools.is_empty();
+    let has_patch = !selected_tools.patch_tools.is_empty();
+    
+    if has_audio { score += 25; }
+    if has_graphics { score += 25; }
+    if has_archive { score += 30; }
+    if has_patch { score += 20; }
+    
+    // Bonus per raccomandazioni workflow
+    score += (selected_tools.workflow_recommendations.len() as u32 * 5).min(50);
+    
+    // Adjust based on game difficulty
+    if result.difficulty_score > 70 {
+        score = (score as f64 * 0.8) as u32; // Penalità per giochi difficili
+    }
+    
+    score.min(100)
 }
