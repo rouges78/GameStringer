@@ -5709,17 +5709,18 @@ fn estimate_size_by_extension(game_path: &Path, extensions: &[&str]) -> f64 {
                             total_size += metadata.len() as f64 / (1024.0 * 1024.0);
                         }
                     }
-                }
-            }
-        }
-    }
-    
-    total_size
-}
 
-// ── Workflow Orchestrator Engine ─────────────────────────────────────────────
-
-fn create_workflow_plan(
+#[tauri::command]
+pub async fn execute_complete_workflow(
+    install_path: String,
+    game_title: String,
+    engine: Option<String>,
+    source_lang: String,
+    target_lang: String,
+) -> Result<WorkflowExecutionResult, String> {
+    let game_path = PathBuf::from(&install_path);
+    if !game_path.exists() {
+        return Err(format!("Path non trovato: {}", install_path));
     game_path: &Path,
     engine: &str,
     multimedia_analysis: &MultimediaAnalysis,
