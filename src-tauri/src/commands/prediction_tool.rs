@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::fs;
 use log::info;
 
-/// 🔮 P.T. — Prediction Tool
+/// P.T. — Prediction Tool
 /// Scansiona in profondità i file di un gioco installato per stimare
 /// la difficoltà di traduzione, le lingue presenti, il volume di testo,
 /// i formati trovati, e il tempo stimato per motore/modello LLM.
@@ -247,6 +248,75 @@ fn resolve_locale_alias(token: &str) -> Option<&'static str> {
         }
     }
     None
+}
+
+// ── Prediction Cache ─────────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct PredictionCacheEntry {
+    result: PredictionResult,
+    timestamp: u64,
+    path_hash: u64,
+}
+
+impl PredictionCacheEntry {
+    fn is_expired(&self) -> bool {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        // Cache valida per 24 ore
+        now - self.timestamp > 86400
+    }
+}
+
+fn get_cache_path() -> PathBuf {
+    if let Some(data_dir) = dirs::data_local_dir() {
+        data_dir.join("GameStringer").join("prediction_cache.json")
+    } else {
+        PathBuf::from("./prediction_cache.json")
+    }
+}
+
+fn load_cache() -> HashMap<String, PredictionCacheEntry> {
+    let cache_path = get_cache_path();
+    if cache_path.exists() {
+        if let Ok(content) = fs::read_to_string(&cache_path) {
+            if let Ok(cache) = serde_json::from_str(&content) {
+                return cache;
+            }
+        }
+    }
+    HashMap::new()
+}
+
+fn save_cache(cache: &HashMap<String, PredictionCacheEntry>) {
+    let cache_path = get_cache_path();
+    if let Some(parent) = cache_path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    if let Ok(content) = serde_json::to_string_pretty(cache) {
+        let _ = fs::write(&cache_path, content);
+    }
+}
+
+fn compute_path_hash(path: &Path) -> u64 {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+    
+    let mut hasher = DefaultHasher::new();
+    path.hash(&mut hasher);
+    
+    // Include modification time for cache invalidation
+    if let Ok(metadata) = fs::metadata(path) {
+        if let Ok(modified) = metadata.modified() {
+            if let Ok(secs) = modified.duration_since(UNIX_EPOCH) {
+                hasher.write_u64(secs.as_secs());
+            }
+        }
+    }
+    
+    hasher.finish()
 }
 
 fn detect_languages_deep(game_path: &Path) -> Vec<DetectedLanguage> {
@@ -1460,6 +1530,19 @@ pub async fn analyze_game_translation(
         return Err(format!("Path non trovato: {}", install_path));
     }
 
+    // Check cache first
+    let cache_key = format!("{}:{}", game_title, install_path);
+    let path_hash = compute_path_hash(&game_path);
+    let mut cache = load_cache();
+    
+    if let Some(entry) = cache.get(&cache_key) {
+        if entry.path_hash == path_hash && !entry.is_expired() {
+            info!("🔮 P.T. Cache hit: {} ({} mins old)", game_title, 
+                (SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() - entry.timestamp) / 60);
+            return Ok(entry.result.clone());
+        }
+    }
+
     info!("🔮 P.T. Analyzing: {} at {}", game_title, install_path);
 
     // Detect engine if not provided
@@ -1508,12 +1591,10 @@ pub async fn analyze_game_translation(
     let (confidence_score, confidence_explanation) =
         calculate_confidence(&engine_str, &languages, &text_stats, &file_formats, gs_supported);
 
-    info!(
-        "🔮 P.T. Result: {} | engine={} | difficulty={}/100 | strings~{} | langs={} | confidence={}",
-        game_title, engine_str, difficulty_score, text_stats.estimated_strings, languages.len(), confidence_score
-    );
-
-    Ok(PredictionResult {
+    let estimated_strings = text_stats.estimated_strings;
+    let languages_count = languages.len();
+    
+    let result = PredictionResult {
         game_title,
         engine: engine_str,
         install_path,
@@ -1532,5 +1613,28 @@ pub async fn analyze_game_translation(
         drm_info,
         encoding_info,
         translation_complexity,
-    })
+    };
+
+    // Save to cache
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    
+    cache.insert(cache_key, PredictionCacheEntry {
+        result: result.clone(),
+        timestamp,
+        path_hash,
+    });
+    
+    // Clean expired entries and save
+    cache.retain(|_, entry| !entry.is_expired());
+    save_cache(&cache);
+
+    info!(
+        "🔮 P.T. Result: {} | engine={} | difficulty={}/100 | strings~{} | langs={} | confidence={}",
+        result.game_title, result.engine, difficulty_score, estimated_strings, languages_count, confidence_score
+    );
+
+    Ok(result)
 }
