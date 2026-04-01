@@ -116,6 +116,7 @@ interface PredictionResult {
   llmChains: OptimizedChain[];
   multimediaAnalysis: MultimediaAnalysis;
   backupStrategy: BackupStrategy;
+  workflowPlan: WorkflowPlan;
 }
 
 interface ExistingTranslationTools {
@@ -353,6 +354,207 @@ interface IntegrityCheck {
 }
 
 type IntegrityCheckType = 'FileExists' | 'FileSize' | 'Checksum' | 'Permissions' | 'Structure' | 'Metadata';
+
+interface WorkflowPlan {
+  recommendedApproach: WorkflowApproach;
+  totalEstimatedHours: number;
+  totalEstimatedCostUsd: number;
+  workflowStages: WorkflowStage[];
+  dependencies: WorkflowDependency[];
+  riskFactors: RiskFactor[];
+  successProbability: number;
+  recommendedTeamSize: number;
+  qualityAssurancePlan: QualityAssurancePlan;
+  deliverables: Deliverable[];
+}
+
+type WorkflowApproach = 'Automated' | 'SemiAutomated' | 'Manual' | 'Hybrid' | 'Custom';
+
+interface WorkflowStage {
+  stageId: number;
+  stageName: string;
+  stageType: StageType;
+  estimatedDurationHours: number;
+  estimatedCostUsd: number;
+  requiredTools: string[];
+  requiredSkills: string[];
+  prerequisites: number[];
+  outputs: string[];
+  successCriteria: string[];
+  riskLevel: RiskLevel;
+  automationLevel: AutomationLevel;
+  qualityChecks: QualityCheck[];
+}
+
+type StageType = 'Preparation' | 'Extraction' | 'Analysis' | 'Translation' | 'Integration' | 'Testing' | 'Packaging' | 'Deployment';
+type RiskLevel = 'Low' | 'Medium' | 'High' | 'Critical';
+type AutomationLevel = 'Manual' | 'SemiAutomated' | 'FullyAutomated' | 'Intelligent';
+
+interface QualityCheck {
+  checkType: QualityCheckType;
+  description: string;
+  automated: boolean;
+  critical: boolean;
+  validationMethod: string;
+}
+
+type QualityCheckType = 'FileIntegrity' | 'TranslationAccuracy' | 'FormatCompliance' | 'FunctionalTesting' | 'PerformanceTesting' | 'LocalizationTesting';
+
+interface WorkflowDependency {
+  dependencyType: DependencyType;
+  description: string;
+  required: boolean;
+  resolutionTimeHours: number;
+  impactLevel: ImpactLevel;
+}
+
+type DependencyType = 'ToolInstallation' | 'FilePermissions' | 'SystemRequirements' | 'EngineCompatibility' | 'ThirdPartyServices' | 'NetworkAccess';
+type ImpactLevel = 'Low' | 'Medium' | 'High' | 'Blocking';
+
+interface RiskFactor {
+  riskType: RiskType;
+  description: string;
+  probability: number;
+  impact: ImpactLevel;
+  mitigationStrategy: string;
+  contingencyPlan: string;
+}
+
+type RiskType = 'Technical' | 'Resource' | 'Timeline' | 'Quality' | 'Compatibility' | 'External';
+
+interface QualityAssurancePlan {
+  testingPhases: TestingPhase[];
+  acceptanceCriteria: AcceptanceCriterion[];
+  bugTracking: BugTrackingConfig;
+  reviewProcess: ReviewProcess;
+  qualityMetrics: QualityMetric[];
+}
+
+interface TestingPhase {
+  phaseName: string;
+  phaseType: TestingType;
+  estimatedHours: number;
+  testCasesCount: number;
+  automationCoverage: number;
+  successThreshold: number;
+}
+
+type TestingType = 'UnitTesting' | 'IntegrationTesting' | 'SystemTesting' | 'UserAcceptanceTesting' | 'LocalizationTesting' | 'PerformanceTesting';
+
+interface AcceptanceCriterion {
+  criterionId: string;
+  description: string;
+  category: AcceptanceCategory;
+  measurable: boolean;
+  targetValue: string;
+  validationMethod: string;
+}
+
+type AcceptanceCategory = 'Functional' | 'Performance' | 'Quality' | 'Compatibility' | 'Usability';
+
+interface BugTrackingConfig {
+  tool: string;
+  severityLevels: SeverityLevel[];
+  workflow: string;
+  reportingFormat: string;
+  escalationRules: EscalationRule[];
+}
+
+interface SeverityLevel {
+  level: string;
+  description: string;
+  responseTimeHours: number;
+  autoEscalation: boolean;
+}
+
+interface EscalationRule {
+  triggerCondition: string;
+  escalationLevel: string;
+  notificationRecipients: string[];
+  actionRequired: string;
+}
+
+interface ReviewProcess {
+  reviewType: ReviewType;
+  participants: Participant[];
+  reviewCriteria: ReviewCriterion[];
+  approvalWorkflow: ApprovalWorkflow;
+  feedbackMechanism: FeedbackMechanism;
+}
+
+type ReviewType = 'TechnicalReview' | 'LinguisticReview' | 'CulturalReview' | 'ComplianceReview' | 'StakeholderReview';
+
+interface Participant {
+  role: string;
+  name: string;
+  expertise: string[];
+  authorityLevel: AuthorityLevel;
+  availability: number;
+}
+
+type AuthorityLevel = 'Advisor' | 'Reviewer' | 'Approver' | 'Authority';
+
+interface ReviewCriterion {
+  criterionId: string;
+  description: string;
+  weight: number;
+  evaluationMethod: string;
+  passingScore: number;
+}
+
+interface ApprovalWorkflow {
+  stages: ApprovalStage[];
+  parallelReviews: boolean;
+  autoApprovalConditions: string[];
+  rejectionHandling: RejectionHandling;
+}
+
+interface ApprovalStage {
+  stageName: string;
+  requiredApprovers: number;
+  approvalCriteria: string[];
+  timeoutHours: number;
+}
+
+interface RejectionHandling {
+  feedbackRequired: boolean;
+  resubmissionAllowed: boolean;
+  maxResubmissions: number;
+  escalationOnRejection: boolean;
+}
+
+interface FeedbackMechanism {
+  feedbackFormat: string;
+  structuredFeedback: boolean;
+  ratingSystem: boolean;
+  commentCategories: string[];
+  followUpRequired: boolean;
+}
+
+interface QualityMetric {
+  metricName: string;
+  metricType: MetricType;
+  targetValue: number;
+  measurementMethod: string;
+  frequency: MeasurementFrequency;
+  trendAnalysis: boolean;
+}
+
+type MetricType = 'Quantitative' | 'Qualitative' | 'Binary' | 'Percentage';
+type MeasurementFrequency = 'Once' | 'Daily' | 'Weekly' | 'PerStage' | 'Continuous';
+
+interface Deliverable {
+  deliverableId: string;
+  deliverableName: string;
+  deliverableType: DeliverableType;
+  format: string;
+  sizeEstimateMb: number;
+  deliveryStage: number;
+  acceptanceCriteria: string[];
+  distributionList: string[];
+}
+
+type DeliverableType = 'TranslatedFiles' | 'PatchPackage' | 'InstallationGuide' | 'TestingReport' | 'Documentation' | 'BackupArchive' | 'QualityReport' | 'DeploymentPackage';
 
 // ── Language Lists ───────────────────────────────────────────────────
 
@@ -683,6 +885,150 @@ function getBackupCategoryLabel(category: BackupCategoryType): string {
     case 'Localization': return 'Localization';
     case 'EngineSpecific': return 'Engine Specific';
     default: return category;
+  }
+}
+
+// ── Workflow Helper Functions ───────────────────────────────────────────
+
+function getWorkflowApproachColor(approach: WorkflowApproach): string {
+  switch (approach) {
+    case 'Automated': return '#10b981';
+    case 'SemiAutomated': return '#3b82f6';
+    case 'Manual': return '#f59e0b';
+    case 'Hybrid': return '#8b5cf6';
+    case 'Custom': return '#6b7280';
+    default: return '#6b7280';
+  }
+}
+
+function getWorkflowApproachLabel(approach: WorkflowApproach): string {
+  switch (approach) {
+    case 'Automated': return 'Automated';
+    case 'SemiAutomated': return 'Semi-Automated';
+    case 'Manual': return 'Manual';
+    case 'Hybrid': return 'Hybrid';
+    case 'Custom': return 'Custom';
+    default: return approach;
+  }
+}
+
+function getStageTypeColor(type: StageType): string {
+  switch (type) {
+    case 'Preparation': return '#06b6d4';
+    case 'Extraction': return '#10b981';
+    case 'Analysis': return '#3b82f6';
+    case 'Translation': return '#8b5cf6';
+    case 'Integration': return '#f59e0b';
+    case 'Testing': return '#ef4444';
+    case 'Packaging': return '#dc2626';
+    case 'Deployment': return '#059669';
+    default: return '#6b7280';
+  }
+}
+
+function getStageTypeLabel(type: StageType): string {
+  switch (type) {
+    case 'Preparation': return 'Preparation';
+    case 'Extraction': return 'Extraction';
+    case 'Analysis': return 'Analysis';
+    case 'Translation': return 'Translation';
+    case 'Integration': return 'Integration';
+    case 'Testing': return 'Testing';
+    case 'Packaging': return 'Packaging';
+    case 'Deployment': return 'Deployment';
+    default: return type;
+  }
+}
+
+function getRiskLevelColor(level: RiskLevel): string {
+  switch (level) {
+    case 'Low': return '#10b981';
+    case 'Medium': return '#f59e0b';
+    case 'High': return '#ef4444';
+    case 'Critical': return '#dc2626';
+    default: return '#6b7280';
+  }
+}
+
+function getRiskLevelLabel(level: RiskLevel): string {
+  switch (level) {
+    case 'Low': return 'Low';
+    case 'Medium': return 'Medium';
+    case 'High': return 'High';
+    case 'Critical': return 'Critical';
+    default: return level;
+  }
+}
+
+function getAutomationLevelColor(level: AutomationLevel): string {
+  switch (level) {
+    case 'Manual': return '#ef4444';
+    case 'SemiAutomated': return '#f59e0b';
+    case 'FullyAutomated': return '#10b981';
+    case 'Intelligent': return '#06b6d4';
+    default: return '#6b7280';
+  }
+}
+
+function getAutomationLevelLabel(level: AutomationLevel): string {
+  switch (level) {
+    case 'Manual': return 'Manual';
+    case 'SemiAutomated': return 'Semi-Automated';
+    case 'FullyAutomated': return 'Fully Automated';
+    case 'Intelligent': return 'Intelligent';
+    default: return level;
+  }
+}
+
+function getTestingTypeColor(type: TestingType): string {
+  switch (type) {
+    case 'UnitTesting': return '#06b6d4';
+    case 'IntegrationTesting': return '#10b981';
+    case 'SystemTesting': return '#3b82f6';
+    case 'UserAcceptanceTesting': return '#8b5cf6';
+    case 'LocalizationTesting': return '#f59e0b';
+    case 'PerformanceTesting': return '#ef4444';
+    default: return '#6b7280';
+  }
+}
+
+function getTestingTypeLabel(type: TestingType): string {
+  switch (type) {
+    case 'UnitTesting': return 'Unit Testing';
+    case 'IntegrationTesting': return 'Integration Testing';
+    case 'SystemTesting': return 'System Testing';
+    case 'UserAcceptanceTesting': return 'User Acceptance Testing';
+    case 'LocalizationTesting': return 'Localization Testing';
+    case 'PerformanceTesting': return 'Performance Testing';
+    default: return type;
+  }
+}
+
+function getDeliverableTypeColor(type: DeliverableType): string {
+  switch (type) {
+    case 'TranslatedFiles': return '#06b6d4';
+    case 'PatchPackage': return '#10b981';
+    case 'InstallationGuide': return '#3b82f6';
+    case 'TestingReport': return '#8b5cf6';
+    case 'Documentation': return '#f59e0b';
+    case 'BackupArchive': return '#ef4444';
+    case 'QualityReport': return '#dc2626';
+    case 'DeploymentPackage': return '#059669';
+    default: return '#6b7280';
+  }
+}
+
+function getDeliverableTypeLabel(type: DeliverableType): string {
+  switch (type) {
+    case 'TranslatedFiles': return 'Translated Files';
+    case 'PatchPackage': return 'Patch Package';
+    case 'InstallationGuide': return 'Installation Guide';
+    case 'TestingReport': return 'Testing Report';
+    case 'Documentation': return 'Documentation';
+    case 'BackupArchive': return 'Backup Archive';
+    case 'QualityReport': return 'Quality Report';
+    case 'DeploymentPackage': return 'Deployment Package';
+    default: return type;
   }
 }
 

@@ -58,6 +58,377 @@ pub struct PredictionResult {
     /// Analisi file multimediali (audio e grafica)
     pub multimedia_analysis: MultimediaAnalysis,
     pub backup_strategy: BackupStrategy,
+    pub workflow_plan: WorkflowPlan,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowPlan {
+    pub recommended_approach: WorkflowApproach,
+    pub total_estimated_hours: f64,
+    pub total_estimated_cost_usd: f64,
+    pub workflow_stages: Vec<WorkflowStage>,
+    pub dependencies: Vec<WorkflowDependency>,
+    pub risk_factors: Vec<RiskFactor>,
+    pub success_probability: f64,
+    pub recommended_team_size: u32,
+    pub quality_assurance_plan: QualityAssurancePlan,
+    pub deliverables: Vec<Deliverable>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WorkflowApproach {
+    Automated,      // Completamente automatico
+    SemiAutomated,  // Semi-automatico con supervisione
+    Manual,         // Completamente manuale
+    Hybrid,         // Mix di approcci
+    Custom,         // Personalizzato
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowStage {
+    pub stage_id: u32,
+    pub stage_name: String,
+    pub stage_type: StageType,
+    pub estimated_duration_hours: f64,
+    pub estimated_cost_usd: f64,
+    pub required_tools: Vec<String>,
+    pub required_skills: Vec<String>,
+    pub prerequisites: Vec<u32>,
+    pub outputs: Vec<String>,
+    pub success_criteria: Vec<String>,
+    pub risk_level: RiskLevel,
+    pub automation_level: AutomationLevel,
+    pub quality_checks: Vec<QualityCheck>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum StageType {
+    Preparation,     // Setup e backup
+    Extraction,      // Estrazione file
+    Analysis,        // Analisi contenuti
+    Translation,     // Traduzione
+    Integration,     // Integrazione
+    Testing,         // Test e QA
+    Packaging,       // Creazione patch
+    Deployment,      // Deploy finale
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RiskLevel {
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AutomationLevel {
+    Manual,
+    SemiAutomated,
+    FullyAutomated,
+    Intelligent,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QualityCheck {
+    pub check_type: QualityCheckType,
+    pub description: String,
+    pub automated: bool,
+    pub critical: bool,
+    pub validation_method: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum QualityCheckType {
+    FileIntegrity,
+    TranslationAccuracy,
+    FormatCompliance,
+    FunctionalTesting,
+    PerformanceTesting,
+    LocalizationTesting,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkflowDependency {
+    pub dependency_type: DependencyType,
+    pub description: String,
+    pub required: bool,
+    pub resolution_time_hours: f64,
+    pub impact_level: ImpactLevel,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DependencyType {
+    ToolInstallation,
+    FilePermissions,
+    SystemRequirements,
+    EngineCompatibility,
+    ThirdPartyServices,
+    NetworkAccess,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ImpactLevel {
+    Low,
+    Medium,
+    High,
+    Blocking,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RiskFactor {
+    pub risk_type: RiskType,
+    pub description: String,
+    pub probability: f64,
+    pub impact: ImpactLevel,
+    pub mitigation_strategy: String,
+    pub contingency_plan: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RiskType {
+    Technical,
+    Resource,
+    Timeline,
+    Quality,
+    Compatibility,
+    External,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QualityAssurancePlan {
+    pub testing_phases: Vec<TestingPhase>,
+    pub acceptance_criteria: Vec<AcceptanceCriterion>,
+    pub bug_tracking: BugTrackingConfig,
+    pub review_process: ReviewProcess,
+    pub quality_metrics: Vec<QualityMetric>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TestingPhase {
+    pub phase_name: String,
+    pub phase_type: TestingType,
+    pub estimated_hours: f64,
+    pub test_cases_count: u32,
+    pub automation_coverage: f64,
+    pub success_threshold: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum TestingType {
+    UnitTesting,
+    IntegrationTesting,
+    SystemTesting,
+    UserAcceptanceTesting,
+    LocalizationTesting,
+    PerformanceTesting,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcceptanceCriterion {
+    pub criterion_id: String,
+    pub description: String,
+    pub category: AcceptanceCategory,
+    pub measurable: bool,
+    pub target_value: String,
+    pub validation_method: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AcceptanceCategory {
+    Functional,
+    Performance,
+    Quality,
+    Compatibility,
+    Usability,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BugTrackingConfig {
+    pub tool: String,
+    pub severity_levels: Vec<SeverityLevel>,
+    pub workflow: String,
+    pub reporting_format: String,
+    pub escalation_rules: Vec<EscalationRule>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SeverityLevel {
+    pub level: String,
+    pub description: String,
+    pub response_time_hours: f64,
+    pub auto_escalation: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EscalationRule {
+    pub trigger_condition: String,
+    pub escalation_level: String,
+    pub notification_recipients: Vec<String>,
+    pub action_required: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewProcess {
+    pub review_type: ReviewType,
+    pub participants: Vec<Participant>,
+    pub review_criteria: Vec<ReviewCriterion>,
+    pub approval_workflow: ApprovalWorkflow,
+    pub feedback_mechanism: FeedbackMechanism,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ReviewType {
+    TechnicalReview,
+    LinguisticReview,
+    CulturalReview,
+    ComplianceReview,
+    StakeholderReview,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Participant {
+    pub role: String,
+    pub name: String,
+    pub expertise: Vec<String>,
+    pub authority_level: AuthorityLevel,
+    pub availability: f64, // Percentage
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AuthorityLevel {
+    Advisor,
+    Reviewer,
+    Approver,
+    Authority,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewCriterion {
+    pub criterion_id: String,
+    pub description: String,
+    pub weight: f64,
+    pub evaluation_method: String,
+    pub passing_score: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApprovalWorkflow {
+    pub stages: Vec<ApprovalStage],
+    pub parallel_reviews: bool,
+    pub auto_approval_conditions: Vec<String>,
+    pub rejection_handling: RejectionHandling,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ApprovalStage {
+    pub stage_name: String,
+    pub required_approvers: u32,
+    pub approval_criteria: Vec<String>,
+    pub timeout_hours: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RejectionHandling {
+    pub feedback_required: bool,
+    pub resubmission_allowed: bool,
+    pub max_resubmissions: u32,
+    pub escalation_on_rejection: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FeedbackMechanism {
+    pub feedback_format: String,
+    pub structured_feedback: bool,
+    pub rating_system: bool,
+    pub comment_categories: Vec<String>,
+    pub follow_up_required: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QualityMetric {
+    pub metric_name: String,
+    pub metric_type: MetricType,
+    pub target_value: f64,
+    pub measurement_method: String,
+    pub frequency: MeasurementFrequency,
+    pub trend_analysis: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum MetricType {
+    Quantitative,
+    Qualitative,
+    Binary,
+    Percentage,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum MeasurementFrequency {
+    Once,
+    Daily,
+    Weekly,
+    PerStage,
+    Continuous,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Deliverable {
+    pub deliverable_id: String,
+    pub deliverable_name: String,
+    pub deliverable_type: DeliverableType,
+    pub format: String,
+    pub size_estimate_mb: f64,
+    pub delivery_stage: u32,
+    pub acceptance_criteria: Vec<String>,
+    pub distribution_list: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DeliverableType {
+    TranslatedFiles,
+    PatchPackage,
+    InstallationGuide,
+    TestingReport,
+    Documentation,
+    BackupArchive,
+    QualityReport,
+    DeploymentPackage,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -2520,6 +2891,53 @@ pub async fn analyze_game_translation(
                 can_verify_restore: false,
                 backup_health_score: 0,
             },
+    },
+    workflow_plan: WorkflowPlan {
+        recommended_approach: WorkflowApproach::SemiAutomated,
+        total_estimated_hours: 0.0,
+        total_estimated_cost_usd: 0.0,
+        workflow_stages: Vec::new(),
+        dependencies: Vec::new(),
+        risk_factors: Vec::new(),
+        success_probability: 0.0,
+        recommended_team_size: 1,
+        quality_assurance_plan: QualityAssurancePlan {
+            testing_phases: Vec::new(),
+            acceptance_criteria: Vec::new(),
+            bug_tracking: BugTrackingConfig {
+                tool: "GitHub Issues".to_string(),
+                severity_levels: Vec::new(),
+                workflow: "Standard".to_string(),
+                reporting_format: "Markdown".to_string(),
+                escalation_rules: Vec::new(),
+            },
+            review_process: ReviewProcess {
+                review_type: ReviewType::TechnicalReview,
+                participants: Vec::new(),
+                review_criteria: Vec::new(),
+                approval_workflow: ApprovalWorkflow {
+                    stages: Vec::new(),
+                    parallel_reviews: false,
+                    auto_approval_conditions: Vec::new(),
+                    rejection_handling: RejectionHandling {
+                        feedback_required: true,
+                        resubmission_allowed: true,
+                        max_resubmissions: 3,
+                        escalation_on_rejection: false,
+                    },
+                },
+                feedback_mechanism: FeedbackMechanism {
+                    feedback_format: "Structured".to_string(),
+                    structured_feedback: true,
+                    rating_system: true,
+                    comment_categories: vec!["Technical".to_string(), "Linguistic".to_string()],
+                    follow_up_required: true,
+                },
+            },
+            quality_metrics: Vec::new(),
+        },
+        deliverables: Vec::new(),
+    },
     };
 
     // Tool selection
@@ -2557,6 +2975,7 @@ pub async fn analyze_game_translation(
         llm_chains,
         multimedia_analysis,
         backup_strategy: analyze_backup_strategy(&game_path, &engine_str, &multimedia_analysis),
+        workflow_plan: create_workflow_plan(&game_path, &engine_str, &multimedia_analysis, &selected_tools, &llm_chains),
     };
 
     // Save to cache
@@ -5296,4 +5715,721 @@ fn estimate_size_by_extension(game_path: &Path, extensions: &[&str]) -> f64 {
     }
     
     total_size
+}
+
+// ── Workflow Orchestrator Engine ─────────────────────────────────────────────
+
+fn create_workflow_plan(
+    game_path: &Path,
+    engine: &str,
+    multimedia_analysis: &MultimediaAnalysis,
+    selected_tools: &SelectedTools,
+    llm_chains: &[OptimizedChain],
+) -> WorkflowPlan {
+    // Determine optimal approach
+    let recommended_approach = determine_workflow_approach(engine, multimedia_analysis, selected_tools);
+    
+    // Create workflow stages
+    let workflow_stages = create_workflow_stages(engine, multimedia_analysis, selected_tools);
+    
+    // Analyze dependencies
+    let dependencies = analyze_workflow_dependencies(engine, selected_tools);
+    
+    // Assess risk factors
+    let risk_factors = assess_workflow_risks(engine, multimedia_analysis, selected_tools);
+    
+    // Calculate success probability
+    let success_probability = calculate_success_probability(&risk_factors, &workflow_stages);
+    
+    // Determine team size
+    let recommended_team_size = calculate_optimal_team_size(&workflow_stages, &recommended_approach);
+    
+    // Create quality assurance plan
+    let quality_assurance_plan = create_quality_assurance_plan(engine, &workflow_stages);
+    
+    // Define deliverables
+    let deliverables = define_deliverables(&workflow_stages, engine);
+    
+    // Calculate total estimates
+    let (total_estimated_hours, total_estimated_cost_usd) = calculate_workflow_totals(&workflow_stages);
+    
+    WorkflowPlan {
+        recommended_approach,
+        total_estimated_hours,
+        total_estimated_cost_usd,
+        workflow_stages,
+        dependencies,
+        risk_factors,
+        success_probability,
+        recommended_team_size,
+        quality_assurance_plan,
+        deliverables,
+    }
+}
+
+fn determine_workflow_approach(
+    engine: &str,
+    multimedia_analysis: &MultimediaAnalysis,
+    selected_tools: &SelectedTools,
+) -> WorkflowApproach {
+    let has_complex_multimedia = multimedia_analysis.multimedia_complexity_score > 50;
+    let has_automated_tools = selected_tools.primary_text_tool.is_some();
+    let has_llm_chains = !selected_tools.llm_chains.is_empty();
+    
+    match (engine, has_complex_multimedia, has_automated_tools, has_llm_chains) {
+        ("Unity", false, true, true) => WorkflowApproach::Automated,
+        ("Unreal", false, true, true) => WorkflowApproach::Automated,
+        (_, true, true, true) => WorkflowApproach::SemiAutomated,
+        (_, _, false, _) => WorkflowApproach::Manual,
+        (_, _, _, _) => WorkflowApproach::Hybrid,
+    }
+}
+
+fn create_workflow_stages(
+    engine: &str,
+    multimedia_analysis: &MultimediaAnalysis,
+    selected_tools: &SelectedTools,
+) -> Vec<WorkflowStage> {
+    let mut stages = Vec::new();
+    let mut stage_id = 1u32;
+    
+    // Stage 1: Preparation
+    stages.push(WorkflowStage {
+        stage_id,
+        stage_name: "Preparation and Backup".to_string(),
+        stage_type: StageType::Preparation,
+        estimated_duration_hours: 0.5,
+        estimated_cost_usd: 0.0,
+        required_tools: vec!["GameStringer".to_string()],
+        required_skills: vec!["System Administration".to_string()],
+        prerequisites: vec![],
+        outputs: vec!["Backup Archive".to_string(), "Environment Setup".to_string()],
+        success_criteria: vec!["Backup completed successfully".to_string()],
+        risk_level: RiskLevel::Low,
+        automation_level: AutomationLevel::FullyAutomated,
+        quality_checks: vec![QualityCheck {
+            check_type: QualityCheckType::FileIntegrity,
+            description: "Verify backup integrity".to_string(),
+            automated: true,
+            critical: true,
+            validation_method: "Checksum verification".to_string(),
+        }],
+    });
+    stage_id += 1;
+    
+    // Stage 2: Extraction
+    stages.push(WorkflowStage {
+        stage_id,
+        stage_name: "Content Extraction".to_string(),
+        stage_type: StageType::Extraction,
+        estimated_duration_hours: 1.0,
+        estimated_cost_usd: 0.0,
+        required_tools: vec![format!("{} Tools", engine)],
+        required_skills: vec!["File Analysis".to_string(), "Engine Knowledge".to_string()],
+        prerequisites: vec![1],
+        outputs: vec!["Extracted Text Files".to_string(), "Extracted Audio Files".to_string()],
+        success_criteria: vec!["All translatable content extracted".to_string()],
+        risk_level: RiskLevel::Medium,
+        automation_level: AutomationLevel::Intelligent,
+        quality_checks: vec![
+            QualityCheck {
+                check_type: QualityCheckType::FileIntegrity,
+                description: "Verify extracted file integrity".to_string(),
+                automated: true,
+                critical: true,
+                validation_method: "File format validation".to_string(),
+            },
+            QualityCheck {
+                check_type: QualityCheckType::FormatCompliance,
+                description: "Check file format compliance".to_string(),
+                automated: true,
+                critical: false,
+                validation_method: "Format specification check".to_string(),
+            },
+        ],
+    });
+    stage_id += 1;
+    
+    // Stage 3: Analysis
+    stages.push(WorkflowStage {
+        stage_id,
+        stage_name: "Content Analysis".to_string(),
+        stage_type: StageType::Analysis,
+        estimated_duration_hours: 0.5,
+        estimated_cost_usd: 0.0,
+        required_tools: vec!["GameStringer Analyzer".to_string()],
+        required_skills: vec!["Content Analysis".to_string(), "Quality Assessment".to_string()],
+        prerequisites: vec![2],
+        outputs: vec!["Content Analysis Report".to_string(), "Translation Strategy".to_string()],
+        success_criteria: vec!["Content fully analyzed".to_string()],
+        risk_level: RiskLevel::Low,
+        automation_level: AutomationLevel::FullyAutomated,
+        quality_checks: vec![QualityCheck {
+            check_type: QualityCheckType::TranslationAccuracy,
+            description: "Validate analysis accuracy".to_string(),
+            automated: true,
+            critical: false,
+            validation_method: "Statistical validation".to_string(),
+        }],
+    });
+    stage_id += 1;
+    
+    // Stage 4: Translation
+    stages.push(WorkflowStage {
+        stage_id,
+        stage_name: "Translation Processing".to_string(),
+        stage_type: StageType::Translation,
+        estimated_duration_hours: estimate_translation_hours(multimedia_analysis),
+        estimated_cost_usd: estimate_translation_costs(selected_tools),
+        required_tools: vec!["LLM Translation Service".to_string(), "Translation Editor".to_string()],
+        required_skills: vec!["Translation".to_string(), "Quality Control".to_string()],
+        prerequisites: vec![3],
+        outputs: vec!["Translated Content".to_string(), "Translation Report".to_string()],
+        success_criteria: vec!["All content translated".to_string(), "Quality threshold met".to_string()],
+        risk_level: RiskLevel::Medium,
+        automation_level: AutomationLevel::SemiAutomated,
+        quality_checks: vec![
+            QualityCheck {
+                check_type: QualityCheckType::TranslationAccuracy,
+                description: "Verify translation accuracy".to_string(),
+                automated: true,
+                critical: true,
+                validation_method: "Automated quality scoring".to_string(),
+            },
+            QualityCheck {
+                check_type: QualityCheckType::LocalizationTesting,
+                description: "Test localization compliance".to_string(),
+                automated: false,
+                critical: true,
+                validation_method: "Human review".to_string(),
+            },
+        ],
+    });
+    stage_id += 1;
+    
+    // Stage 5: Integration
+    stages.push(WorkflowStage {
+        stage_id,
+        stage_name: "Content Integration".to_string(),
+        stage_type: StageType::Integration,
+        estimated_duration_hours: 2.0,
+        estimated_cost_usd: 0.0,
+        required_tools: vec![format!("{} Integration Tools", engine)],
+        required_skills: vec!["Engine Integration".to_string(), "File Processing".to_string()],
+        prerequisites: vec![4],
+        outputs: vec!["Integrated Content".to_string(), "Integration Report".to_string()],
+        success_criteria: vec!["Content successfully integrated".to_string()],
+        risk_level: RiskLevel::High,
+        automation_level: AutomationLevel::SemiAutomated,
+        quality_checks: vec![
+            QualityCheck {
+                check_type: QualityCheckType::FunctionalTesting,
+                description: "Test integrated functionality".to_string(),
+                automated: false,
+                critical: true,
+                validation_method: "Manual testing".to_string(),
+            },
+            QualityCheck {
+                check_type: QualityCheckType::FileIntegrity,
+                description: "Verify integrated file integrity".to_string(),
+                automated: true,
+                critical: true,
+                validation_method: "Checksum verification".to_string(),
+            },
+        ],
+    });
+    stage_id += 1;
+    
+    // Stage 6: Testing
+    stages.push(WorkflowStage {
+        stage_id,
+        stage_name: "Quality Testing".to_string(),
+        stage_type: StageType::Testing,
+        estimated_duration_hours: 1.5,
+        estimated_cost_usd: 0.0,
+        required_tools: vec!["Game Testing Framework".to_string()],
+        required_skills: vec!["Quality Assurance".to_string(), "Game Testing".to_string()],
+        prerequisites: vec![5],
+        outputs: vec!["Test Results".to_string(), "Quality Report".to_string()],
+        success_criteria: vec!["All tests passed".to_string(), "Quality standards met".to_string()],
+        risk_level: RiskLevel::Medium,
+        automation_level: AutomationLevel::SemiAutomated,
+        quality_checks: vec![
+            QualityCheck {
+                check_type: QualityCheckType::FunctionalTesting,
+                description: "Comprehensive functional testing".to_string(),
+                automated: true,
+                critical: true,
+                validation_method: "Automated test suite".to_string(),
+            },
+            QualityCheck {
+                check_type: QualityCheckType::PerformanceTesting,
+                description: "Performance impact assessment".to_string(),
+                automated: true,
+                critical: false,
+                validation_method: "Performance benchmarks".to_string(),
+            },
+        ],
+    });
+    stage_id += 1;
+    
+    // Stage 7: Packaging
+    stages.push(WorkflowStage {
+        stage_id,
+        stage_name: "Patch Packaging".to_string(),
+        stage_type: StageType::Packaging,
+        estimated_duration_hours: 1.0,
+        estimated_cost_usd: 0.0,
+        required_tools: vec!["Package Builder".to_string()],
+        required_skills: vec!["Package Management".to_string(), "Distribution".to_string()],
+        prerequisites: vec![6],
+        outputs: vec!["Installation Package".to_string(), "Installation Guide".to_string()],
+        success_criteria: vec!["Package created successfully".to_string()],
+        risk_level: RiskLevel::Low,
+        automation_level: AutomationLevel::FullyAutomated,
+        quality_checks: vec![QualityCheck {
+            check_type: QualityCheckType::FileIntegrity,
+            description: "Verify package integrity".to_string(),
+            automated: true,
+            critical: true,
+            validation_method: "Package validation".to_string(),
+        }],
+    });
+    
+    stages
+}
+
+fn analyze_workflow_dependencies(engine: &str, selected_tools: &SelectedTools) -> Vec<WorkflowDependency> {
+    let mut dependencies = Vec::new();
+    
+    // Tool installation dependencies
+    dependencies.push(WorkflowDependency {
+        dependency_type: DependencyType::ToolInstallation,
+        description: format!("{} development tools required", engine),
+        required: true,
+        resolution_time_hours: 2.0,
+        impact_level: ImpactLevel::High,
+    });
+    
+    // File permissions
+    dependencies.push(WorkflowDependency {
+        dependency_type: DependencyType::FilePermissions,
+        description: "Read/write access to game directory".to_string(),
+        required: true,
+        resolution_time_hours: 0.5,
+        impact_level: ImpactLevel::Blocking,
+    });
+    
+    // System requirements
+    dependencies.push(WorkflowDependency {
+        dependency_type: DependencyType::SystemRequirements,
+        description: "Minimum system requirements for processing".to_string(),
+        required: true,
+        resolution_time_hours: 1.0,
+        impact_level: ImpactLevel::Medium,
+    });
+    
+    // Engine compatibility
+    dependencies.push(WorkflowDependency {
+        dependency_type: DependencyType::EngineCompatibility,
+        description: format!("{} engine compatibility verification", engine),
+        required: true,
+        resolution_time_hours: 0.5,
+        impact_level: ImpactLevel::High,
+    });
+    
+    dependencies
+}
+
+fn assess_workflow_risks(
+    engine: &str,
+    multimedia_analysis: &MultimediaAnalysis,
+    selected_tools: &SelectedTools,
+) -> Vec<RiskFactor> {
+    let mut risks = Vec::new();
+    
+    // Technical risks
+    risks.push(RiskFactor {
+        risk_type: RiskType::Technical,
+        description: format!("{} engine compatibility issues", engine),
+        probability: 0.3,
+        impact: ImpactLevel::High,
+        mitigation_strategy: "Thorough engine testing and compatibility verification".to_string(),
+        contingency_plan: "Fallback to manual extraction methods".to_string(),
+    });
+    
+    // Quality risks
+    risks.push(RiskFactor {
+        risk_type: RiskType::Quality,
+        description: "Translation quality inconsistencies".to_string(),
+        probability: 0.4,
+        impact: ImpactLevel::Medium,
+        mitigation_strategy: "Multiple quality checks and human review".to_string(),
+        contingency_plan: "Professional translation service backup".to_string(),
+    });
+    
+    // Timeline risks
+    risks.push(RiskFactor {
+        risk_type: RiskType::Timeline,
+        description: "Processing time overruns due to complex content".to_string(),
+        probability: 0.25,
+        impact: ImpactLevel::Medium,
+        mitigation_strategy: "Buffer time allocation and parallel processing".to_string(),
+        contingency_plan: "Extend timeline or reduce scope".to_string(),
+    });
+    
+    // Resource risks
+    risks.push(RiskFactor {
+        risk_type: RiskType::Resource,
+        description: "Insufficient processing resources for large projects".to_string(),
+        probability: 0.2,
+        impact: ImpactLevel::Medium,
+        mitigation_strategy: "Resource monitoring and scaling".to_string(),
+        contingency_plan: "Cloud processing services".to_string(),
+    });
+    
+    risks
+}
+
+fn calculate_success_probability(risk_factors: &[RiskFactor], workflow_stages: &[WorkflowStage]) -> f64 {
+    let base_probability = 0.85; // 85% base success rate
+    
+    // Reduce probability based on risks
+    let risk_impact: f64 = risk_factors.iter()
+        .map(|risk| {
+            let impact_multiplier = match risk.impact {
+                ImpactLevel::Low => 0.05,
+                ImpactLevel::Medium => 0.15,
+                ImpactLevel::High => 0.30,
+                ImpactLevel::Blocking => 0.50,
+            };
+            risk.probability * impact_multiplier
+        })
+        .sum();
+    
+    // Increase probability based on automation
+    let automation_bonus: f64 = workflow_stages.iter()
+        .map(|stage| {
+            match stage.automation_level {
+                AutomationLevel::Manual => 0.0,
+                AutomationLevel::SemiAutomated => 0.02,
+                AutomationLevel::FullyAutomated => 0.05,
+                AutomationLevel::Intelligent => 0.08,
+            }
+        })
+        .sum();
+    
+    let final_probability = (base_probability - risk_impact + automation_bonus).max(0.1).min(0.95);
+    final_probability
+}
+
+fn calculate_optimal_team_size(workflow_stages: &[WorkflowStage], approach: &WorkflowApproach) -> u32 {
+    let base_size = match approach {
+        WorkflowApproach::Automated => 1,
+        WorkflowApproach::SemiAutomated => 2,
+        WorkflowApproach::Manual => 3,
+        WorkflowApproach::Hybrid => 2,
+        WorkflowApproach::Custom => 2,
+    };
+    
+    // Adjust based on complexity
+    let complexity_factor = workflow_stages.iter()
+        .filter(|stage| matches!(stage.risk_level, RiskLevel::High | RiskLevel::Critical))
+        .count() as u32;
+    
+    (base_size + complexity_factor).min(5)
+}
+
+fn create_quality_assurance_plan(engine: &str, workflow_stages: &[WorkflowStage]) -> QualityAssurancePlan {
+    QualityAssurancePlan {
+        testing_phases: create_testing_phases(workflow_stages),
+        acceptance_criteria: create_acceptance_criteria(),
+        bug_tracking: create_bug_tracking_config(),
+        review_process: create_review_process(engine),
+        quality_metrics: create_quality_metrics(),
+    }
+}
+
+fn create_testing_phases(workflow_stages: &[WorkflowStage]) -> Vec<TestingPhase> {
+    vec![
+        TestingPhase {
+            phase_name: "Unit Testing".to_string(),
+            phase_type: TestingType::UnitTesting,
+            estimated_hours: 2.0,
+            test_cases_count: 50,
+            automation_coverage: 0.8,
+            success_threshold: 0.95,
+        },
+        TestingPhase {
+            phase_name: "Integration Testing".to_string(),
+            phase_type: TestingType::IntegrationTesting,
+            estimated_hours: 3.0,
+            test_cases_count: 30,
+            automation_coverage: 0.6,
+            success_threshold: 0.90,
+        },
+        TestingPhase {
+            phase_name: "System Testing".to_string(),
+            phase_type: TestingType::SystemTesting,
+            estimated_hours: 4.0,
+            test_cases_count: 25,
+            automation_coverage: 0.4,
+            success_threshold: 0.85,
+        },
+        TestingPhase {
+            phase_name: "Localization Testing".to_string(),
+            phase_type: TestingType::LocalizationTesting,
+            estimated_hours: 2.0,
+            test_cases_count: 20,
+            automation_coverage: 0.3,
+            success_threshold: 0.90,
+        },
+    ]
+}
+
+fn create_acceptance_criteria() -> Vec<AcceptanceCriterion> {
+    vec![
+        AcceptanceCriterion {
+            criterion_id: "AC-001".to_string(),
+            description: "All translatable content is successfully translated".to_string(),
+            category: AcceptanceCategory::Functional,
+            measurable: true,
+            target_value: "100%".to_string(),
+            validation_method: "Content analysis".to_string(),
+        },
+        AcceptanceCriterion {
+            criterion_id: "AC-002".to_string(),
+            description: "Translated content maintains original functionality".to_string(),
+            category: AcceptanceCategory::Functional,
+            measurable: true,
+            target_value: "No functional regressions".to_string(),
+            validation_method: "Functional testing".to_string(),
+        },
+        AcceptanceCriterion {
+            criterion_id: "AC-003".to_string(),
+            description: "Translation quality meets professional standards".to_string(),
+            category: AcceptanceCategory::Quality,
+            measurable: true,
+            target_value: "85% quality score".to_string(),
+            validation_method: "Quality assessment".to_string(),
+        },
+    ]
+}
+
+fn create_bug_tracking_config() -> BugTrackingConfig {
+    BugTrackingConfig {
+        tool: "GitHub Issues".to_string(),
+        severity_levels: vec![
+            SeverityLevel {
+                level: "Critical".to_string(),
+                description: "Blocks functionality".to_string(),
+                response_time_hours: 4.0,
+                auto_escalation: true,
+            },
+            SeverityLevel {
+                level: "High".to_string(),
+                description: "Major impact".to_string(),
+                response_time_hours: 24.0,
+                auto_escalation: false,
+            },
+            SeverityLevel {
+                level: "Medium".to_string(),
+                description: "Moderate impact".to_string(),
+                response_time_hours: 72.0,
+                auto_escalation: false,
+            },
+        ],
+        workflow: "Standard triage and resolution".to_string(),
+        reporting_format: "Markdown template".to_string(),
+        escalation_rules: vec![
+            EscalationRule {
+                trigger_condition: "Critical bugs unresolved after 4 hours".to_string(),
+                escalation_level: "Management".to_string(),
+                notification_recipients: vec!["project-manager@example.com".to_string()],
+                action_required: "Immediate review and resource allocation".to_string(),
+            },
+        ],
+    }
+}
+
+fn create_review_process(engine: &str) -> ReviewProcess {
+    ReviewProcess {
+        review_type: ReviewType::TechnicalReview,
+        participants: vec![
+            Participant {
+                role: "Technical Lead".to_string(),
+                name: "Senior Developer".to_string(),
+                expertise: vec![engine.to_string(), "Localization".to_string()],
+                authority_level: AuthorityLevel::Approver,
+                availability: 0.8,
+            },
+            Participant {
+                role: "Language Specialist".to_string(),
+                name: "Translator".to_string(),
+                expertise: vec!["Translation".to_string(), "Quality Control".to_string()],
+                authority_level: AuthorityLevel::Reviewer,
+                availability: 0.9,
+            },
+        ],
+        review_criteria: vec![
+            ReviewCriterion {
+                criterion_id: "RC-001".to_string(),
+                description: "Technical correctness".to_string(),
+                weight: 0.4,
+                evaluation_method: "Code review".to_string(),
+                passing_score: 0.8,
+            },
+            ReviewCriterion {
+                criterion_id: "RC-002".to_string(),
+                description: "Translation quality".to_string(),
+                weight: 0.4,
+                evaluation_method: "Quality assessment".to_string(),
+                passing_score: 0.8,
+            },
+        ],
+        approval_workflow: ApprovalWorkflow {
+            stages: vec![
+                ApprovalStage {
+                    stage_name: "Technical Review".to_string(),
+                    required_approvers: 1,
+                    approval_criteria: vec!["Technical correctness verified".to_string()],
+                    timeout_hours: 24.0,
+                },
+                ApprovalStage {
+                    stage_name: "Final Approval".to_string(),
+                    required_approvers: 1,
+                    approval_criteria: vec!["All criteria met".to_string()],
+                    timeout_hours: 48.0,
+                },
+            ],
+            parallel_reviews: false,
+            auto_approval_conditions: vec!["Automated tests pass".to_string()],
+            rejection_handling: RejectionHandling {
+                feedback_required: true,
+                resubmission_allowed: true,
+                max_resubmissions: 3,
+                escalation_on_rejection: true,
+            },
+        },
+        feedback_mechanism: FeedbackMechanism {
+            feedback_format: "Structured comments".to_string(),
+            structured_feedback: true,
+            rating_system: true,
+            comment_categories: vec!["Technical".to_string(), "Linguistic".to_string(), "Quality".to_string()],
+            follow_up_required: true,
+        },
+    }
+}
+
+fn create_quality_metrics() -> Vec<QualityMetric> {
+    vec![
+        QualityMetric {
+            metric_name: "Translation Accuracy".to_string(),
+            metric_type: MetricType::Percentage,
+            target_value: 0.85,
+            measurement_method: "Automated quality scoring".to_string(),
+            frequency: MeasurementFrequency::PerStage,
+            trend_analysis: true,
+        },
+        QualityMetric {
+            metric_name: "Functional Test Pass Rate".to_string(),
+            metric_type: MetricType::Percentage,
+            target_value: 0.95,
+            measurement_method: "Test execution results".to_string(),
+            frequency: MeasurementFrequency::PerStage,
+            trend_analysis: true,
+        },
+        QualityMetric {
+            metric_name: "Customer Satisfaction".to_string(),
+            metric_type: MetricType::Qualitative,
+            target_value: 4.0,
+            measurement_method: "User feedback survey".to_string(),
+            frequency: MeasurementFrequency::Once,
+            trend_analysis: false,
+        },
+    ]
+}
+
+fn define_deliverables(workflow_stages: &[WorkflowStage], engine: &str) -> Vec<Deliverable> {
+    vec![
+        Deliverable {
+            deliverable_id: "DEL-001".to_string(),
+            deliverable_name: "Translated Content Package".to_string(),
+            deliverable_type: DeliverableType::TranslatedFiles,
+            format: "Native engine format".to_string(),
+            size_estimate_mb: 50.0,
+            delivery_stage: 4,
+            acceptance_criteria: vec!["100% translation coverage".to_string()],
+            distribution_list: vec!["development-team@example.com".to_string()],
+        },
+        Deliverable {
+            deliverable_id: "DEL-002".to_string(),
+            deliverable_name: format!("{} Localization Patch", engine),
+            deliverable_type: DeliverableType::PatchPackage,
+            format: "Installer package".to_string(),
+            size_estimate_mb: 100.0,
+            delivery_stage: 7,
+            acceptance_criteria: vec!["Patch installs successfully".to_string()],
+            distribution_list: vec!["release-team@example.com".to_string()],
+        },
+        Deliverable {
+            deliverable_id: "DEL-003".to_string(),
+            deliverable_name: "Installation Guide".to_string(),
+            deliverable_type: DeliverableType::InstallationGuide,
+            format: "PDF documentation".to_string(),
+            size_estimate_mb: 2.0,
+            delivery_stage: 7,
+            acceptance_criteria: vec!["Guide is comprehensive".to_string()],
+            distribution_list: vec!["end-users@example.com".to_string()],
+        },
+        Deliverable {
+            deliverable_id: "DEL-004".to_string(),
+            deliverable_name: "Quality Report".to_string(),
+            deliverable_type: DeliverableType::QualityReport,
+            format: "PDF report".to_string(),
+            size_estimate_mb: 1.0,
+            delivery_stage: 6,
+            acceptance_criteria: vec!["Report meets standards".to_string()],
+            distribution_list: vec!["stakeholders@example.com".to_string()],
+        },
+    ]
+}
+
+fn calculate_workflow_totals(workflow_stages: &[WorkflowStage]) -> (f64, f64) {
+    let total_hours: f64 = workflow_stages.iter()
+        .map(|stage| stage.estimated_duration_hours)
+        .sum();
+    
+    let total_cost: f64 = workflow_stages.iter()
+        .map(|stage| stage.estimated_cost_usd)
+        .sum();
+    
+    (total_hours, total_cost)
+}
+
+// Helper functions for workflow estimation
+fn estimate_translation_hours(multimedia_analysis: &MultimediaAnalysis) -> f64 {
+    let base_hours = 2.0; // Base processing time
+    let content_factor = (multimedia_analysis.audio_stats.total_audio_files as f64 * 0.1) + 
+                       (multimedia_analysis.graphics_stats.text_containing_graphics as f64 * 0.05);
+    let complexity_factor = multimedia_analysis.multimedia_complexity_score as f64 * 0.02;
+    
+    base_hours + content_factor + complexity_factor
+}
+
+fn estimate_translation_costs(selected_tools: &SelectedTools) -> f64 {
+    let base_cost = 50.0; // Base processing cost
+    let tool_cost = selected_tools.primary_text_tool.as_ref()
+        .map(|tool| {
+            match tool.cost.as_str() {
+                "Free" => 0.0,
+                "Freium" => 25.0,
+                "Commercial" => 100.0,
+                "Enterprise" => 500.0,
+                _ => 50.0,
+            }
+        })
+        .unwrap_or(50.0);
+    
+    base_cost + tool_cost
 }
