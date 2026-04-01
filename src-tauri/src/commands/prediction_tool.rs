@@ -522,6 +522,9 @@ fn calculate_difficulty(
     languages: &[DetectedLanguage],
     text_stats: &TextStats,
     formats: &[FileFormatInfo],
+    drm_info: &DrmInfo,
+    encoding_info: &EncodingInfo,
+    translation_complexity: &TranslationComplexity,
 ) -> (u32, String, Vec<String>) {
     let mut score: i32 = 0;
     let mut warnings: Vec<String> = Vec::new();
@@ -603,6 +606,60 @@ fn calculate_difficulty(
         // Not a warning, it's good news
     } else {
         score += 5;
+    }
+
+    // DRM / Anti-Cheat impact
+    if drm_info.affects_translation {
+        score += 15;
+        warnings.push(format!("DRM rilevato: {}. Potrebbe bloccare memory injection o modifiche file.", drm_info.drm_types.join(", ")));
+    } else if drm_info.has_drm {
+        score += 5; // Minor penalty for DRM that doesn't affect translation
+    }
+
+    // Translation complexity
+    // High variable count makes translation harder (need to preserve placeholders)
+    if translation_complexity.variable_count > 5000 {
+        score += 10;
+        warnings.push(format!("Molte variabili/placeholder (~{}) — traduzione più complessa", translation_complexity.variable_count));
+    } else if translation_complexity.variable_count > 1000 {
+        score += 5;
+    }
+
+    // Markup tags add complexity
+    if translation_complexity.markup_count > 2000 {
+        score += 5;
+    }
+
+    // Plurals and gender forms require careful translation
+    if translation_complexity.has_plurals {
+        score += 3;
+    }
+    if translation_complexity.has_gender_forms {
+        score += 3;
+    }
+
+    // Very short strings (UI labels) are harder to translate contextually
+    if translation_complexity.short_strings_percent > 40.0 {
+        score += 5;
+        warnings.push("Alta percentuale di stringhe corte (UI labels) — traduzione contestualmente difficile".into());
+    }
+
+    // Very long strings (dialogues) may need segmentation
+    if translation_complexity.long_strings_percent > 20.0 {
+        score += 2;
+    }
+
+    // Encoding issues
+    if encoding_info.has_cjk {
+        score += 5;
+        warnings.push("Caratteri CJK rilevati — verifica supporto font nella lingua target".into());
+    }
+    if encoding_info.has_rtl {
+        score += 8;
+        warnings.push("Scrittura RTL rilevata — verifica supporto nella lingua target".into());
+    }
+    if !encoding_info.has_unicode && !encoding_info.bom_detected {
+        score += 2; // Potential encoding issues
     }
 
     let score = score.clamp(0, 100) as u32;
@@ -1326,8 +1383,12 @@ pub async fn analyze_all_installed_games() -> Result<Vec<GameQuickSummary>, Stri
             }
         }
 
+        let drm_info = detect_drm(&game_path);
+        let encoding_info = analyze_encoding(&game_path);
+        let translation_complexity = analyze_translation_complexity(&game_path);
+
         let (difficulty_score, difficulty_label, warnings) =
-            calculate_difficulty(&engine_str, &languages, &text_stats, &file_formats);
+            calculate_difficulty(&engine_str, &languages, &text_stats, &file_formats, &drm_info, &encoding_info, &translation_complexity);
 
         let s = text_stats.estimated_strings as f64;
         let hours_local = s / 60.0 / 60.0; // hy-mt1.5 speed
@@ -1423,17 +1484,6 @@ pub async fn analyze_game_translation(
         }
     }
 
-    // Difficulty
-    let (difficulty_score, difficulty_label, warnings) =
-        calculate_difficulty(&engine_str, &languages, &text_stats, &file_formats);
-
-    // Time estimates
-    let time_estimates = estimate_times(text_stats.estimated_strings);
-    let chain_estimates = estimate_chains(text_stats.estimated_strings, text_stats.estimated_words);
-
-    // GS support
-    let (gs_supported, recommended_method) = check_gs_support(&engine_str);
-
     // DRM / Anti-Cheat detection
     let drm_info = detect_drm(&game_path);
 
@@ -1442,6 +1492,17 @@ pub async fn analyze_game_translation(
 
     // Translation complexity
     let translation_complexity = analyze_translation_complexity(&game_path);
+
+    // Difficulty
+    let (difficulty_score, difficulty_label, warnings) =
+        calculate_difficulty(&engine_str, &languages, &text_stats, &file_formats, &drm_info, &encoding_info, &translation_complexity);
+
+    // Time estimates
+    let time_estimates = estimate_times(text_stats.estimated_strings);
+    let chain_estimates = estimate_chains(text_stats.estimated_strings, text_stats.estimated_words);
+
+    // GS support
+    let (gs_supported, recommended_method) = check_gs_support(&engine_str);
 
     // Confidence score
     let (confidence_score, confidence_explanation) =
