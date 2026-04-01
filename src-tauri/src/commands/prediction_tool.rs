@@ -53,6 +53,8 @@ pub struct PredictionResult {
     pub existing_tools: ExistingTranslationTools,
     /// Tool selezionati per questo workflow
     pub selected_tools: SelectedTools,
+    /// Chain LLM ottimizzate per questo progetto
+    pub llm_chains: Vec<OptimizedChain>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -205,6 +207,105 @@ pub enum ToolCost {
     Commercial(String), // prezzo es. "$29.99"
     Enterprise,
     OpenSource,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OptimizedChain {
+    /// Nome della chain (es. "Balanced Free", "Premium Quality")
+    pub chain_name: String,
+    /// Categoria della chain
+    pub chain_type: ChainType,
+    /// Lista modelli nella chain in ordine
+    pub models: Vec<ChainModel>,
+    /// Costo totale stimato in USD
+    pub estimated_cost_usd: f64,
+    /// Tempo totale stimato in ore
+    pub estimated_time_hours: f64,
+    /// Qualità finale stimata 0-100
+    pub final_quality_score: u32,
+    /// Confidence nella predizione 0-100
+    pub prediction_confidence: u32,
+    /// Budget target (se applicabile)
+    pub target_budget: Option<f64>,
+    /// Vantaggi di questa chain
+    pub advantages: Vec<String>,
+    /// Svantaggi/limitazioni
+    pub disadvantages: Vec<String>,
+    /// Caso d'uso ideale
+    pub best_for: String,
+    /// Score complessivo della chain 0-100
+    pub chain_score: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChainModel {
+    /// Nome del modello (es. "gpt-4", "claude-3-sonnet")
+    pub model_name: String,
+    /// Provider del modello
+    pub provider: LLMProvider,
+    /// Ruolo del modello nella chain
+    pub role: ModelRole,
+    /// Percentuale di lavoro (0-100)
+    pub workload_percentage: f64,
+    /// Costo per 1M tokens
+    pub cost_per_million_tokens: f64,
+    /// Velocità in tokens/secondo
+    pub speed_tokens_per_sec: f64,
+    /// Qualità output 0-100
+    pub output_quality: u32,
+    /// Limite rate (requests/minuto)
+    pub rate_limit: u32,
+    /// Contesto massimo in tokens
+    pub max_context_tokens: u32,
+    /// Note specifiche del modello
+    pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ChainType {
+    /// Solo modelli free/gratis
+    Free,
+    /// Bilanciata qualità/costo
+    Balanced,
+    /// Massima qualità senza limite budget
+    Premium,
+    /// Ottimizzata per budget specifico
+    BudgetOptimized,
+    /// Ottimizzata per velocità
+    Fast,
+    /// Ibrida con step diversi
+    Hybrid,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LLMProvider {
+    OpenAI,
+    Anthropic,
+    Google,
+    Groq,
+    DeepL,
+    TogetherAI,
+    Ollama,
+    Local,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ModelRole {
+    /// Traduzione principale
+    PrimaryTranslation,
+    /// Post-editing e miglioramento
+    PostEditing,
+    /// Revisione qualità
+    QualityReview,
+    /// Rilevamento contesto
+    ContextDetection,
+    /// Validazione formati
+    FormatValidation,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -2006,10 +2107,14 @@ pub async fn analyze_game_translation(
             workflow_recommendations: Vec::new(),
             selection_score: 0,
         },
+        llm_chains: Vec::new(),
     };
 
     // Tool selection
     let selected_tools = select_optimal_tools(&preliminary_result);
+
+    // LLM Chain Builder
+    let llm_chains = build_optimized_llm_chains(&preliminary_result);
     
     let result = PredictionResult {
         game_title,
@@ -2034,6 +2139,7 @@ pub async fn analyze_game_translation(
         translation_quality_explanation,
         existing_tools,
         selected_tools,
+        llm_chains,
     };
 
     // Save to cache
@@ -2693,4 +2799,604 @@ fn calculate_selection_score(selected_tools: &SelectedTools, result: &Prediction
     }
     
     score.min(100)
+}
+
+// ── LLM Chain Builder Engine ─────────────────────────────────────────────
+
+fn build_optimized_llm_chains(result: &PredictionResult) -> Vec<OptimizedChain> {
+    let llm_database = get_llm_database();
+    let mut optimized_chains = Vec::new();
+    
+    // Calcola metriche base del progetto
+    let total_words = result.text_stats.estimated_words;
+    let total_chars = result.text_stats.estimated_characters;
+    let complexity_factor = get_complexity_factor(&result.translation_complexity);
+    
+    // Build diverse chains for different needs
+    optimized_chains.push(build_free_chain(&llm_database, total_words, total_chars, complexity_factor));
+    optimized_chains.push(build_balanced_chain(&llm_database, total_words, total_chars, complexity_factor));
+    optimized_chains.push(build_premium_chain(&llm_database, total_words, total_chars, complexity_factor));
+    optimized_chains.push(build_fast_chain(&llm_database, total_words, total_chars, complexity_factor));
+    optimized_chains.push(build_hybrid_chain(&llm_database, total_words, total_chars, complexity_factor, result));
+    
+    // Build budget-optimized chains for common budgets
+    for budget in &[5.0, 10.0, 25.0, 50.0, 100.0] {
+        if let Some(chain) = build_budget_chain(&llm_database, total_words, total_chars, complexity_factor, *budget) {
+            optimized_chains.push(chain);
+        }
+    }
+    
+    // Sort by chain score
+    optimized_chains.sort_by(|a, b| b.chain_score.cmp(&a.chain_score));
+    optimized_chains
+}
+
+fn get_llm_database() -> Vec<LLMModel> {
+    vec![
+        // OpenAI Models
+        LLMModel {
+            name: "gpt-4o".to_string(),
+            provider: LLMProvider::OpenAI,
+            cost_per_million_input: 5.0,
+            cost_per_million_output: 15.0,
+            speed_tokens_per_sec: 80.0,
+            quality_score: 95,
+            max_context_tokens: 128000,
+            rate_limit: 10000,
+            special_features: vec!["Multilingual".to_string(), "Context-aware".to_string(), "Code-friendly".to_string()],
+            best_for: vec!["Complex translation".to_string(), "Technical content".to_string()],
+        },
+        LLMModel {
+            name: "gpt-4o-mini".to_string(),
+            provider: LLMProvider::OpenAI,
+            cost_per_million_input: 0.15,
+            cost_per_million_output: 0.6,
+            speed_tokens_per_sec: 150.0,
+            quality_score: 85,
+            max_context_tokens: 128000,
+            rate_limit: 10000,
+            special_features: vec!["Fast".to_string(), "Cost-effective".to_string(), "Multilingual".to_string()],
+            best_for: vec!["Large volume".to_string(), "Draft translation".to_string()],
+        },
+        LLMModel {
+            name: "gpt-3.5-turbo".to_string(),
+            provider: LLMProvider::OpenAI,
+            cost_per_million_input: 0.5,
+            cost_per_million_output: 1.5,
+            speed_tokens_per_sec: 120.0,
+            quality_score: 75,
+            max_context_tokens: 16385,
+            rate_limit: 10000,
+            special_features: vec!["Very fast".to_string(), "Reliable".to_string()],
+            best_for: vec!["Simple content".to_string(), "Speed priority".to_string()],
+        },
+        
+        // Anthropic Models
+        LLMModel {
+            name: "claude-3-5-sonnet-20241022".to_string(),
+            provider: LLMProvider::Anthropic,
+            cost_per_million_input: 3.0,
+            cost_per_million_output: 15.0,
+            speed_tokens_per_sec: 70.0,
+            quality_score: 93,
+            max_context_tokens: 200000,
+            rate_limit: 8000,
+            special_features: vec!["Long context".to_string(), "Creative writing".to_string(), "Nuanced translation".to_string()],
+            best_for: vec!["Literary content".to_string(), "Complex context".to_string()],
+        },
+        LLMModel {
+            name: "claude-3-haiku-20240307".to_string(),
+            provider: LLMProvider::Anthropic,
+            cost_per_million_input: 0.25,
+            cost_per_million_output: 1.25,
+            speed_tokens_per_sec: 200.0,
+            quality_score: 80,
+            max_context_tokens: 200000,
+            rate_limit: 8000,
+            special_features: vec!["Extremely fast".to_string(), "Long context".to_string()],
+            best_for: vec!["Real-time translation".to_string(), "Large projects".to_string()],
+        },
+        
+        // Google Models
+        LLMModel {
+            name: "gemini-1.5-pro".to_string(),
+            provider: LLMProvider::Google,
+            cost_per_million_input: 3.5,
+            cost_per_million_output: 10.5,
+            speed_tokens_per_sec: 60.0,
+            quality_score: 90,
+            max_context_tokens: 2097152,
+            rate_limit: 5000,
+            special_features: vec!["Massive context".to_string(), "Multimodal".to_string(), "Code understanding".to_string()],
+            best_for: vec!["Document translation".to_string(), "Code-heavy content".to_string()],
+        },
+        LLMModel {
+            name: "gemini-1.5-flash".to_string(),
+            provider: LLMProvider::Google,
+            cost_per_million_input: 0.075,
+            cost_per_million_output: 0.3,
+            speed_tokens_per_sec: 180.0,
+            quality_score: 82,
+            max_context_tokens: 1048576,
+            rate_limit: 5000,
+            special_features: vec!["Very fast".to_string(), "Large context".to_string(), "Cost-effective".to_string()],
+            best_for: vec!["Batch processing".to_string(), "Draft translation".to_string()],
+        },
+        
+        // Groq Models
+        LLMModel {
+            name: "llama-3.3-70b-versatile".to_string(),
+            provider: LLMProvider::Groq,
+            cost_per_million_input: 0.59,
+            cost_per_million_output: 0.79,
+            speed_tokens_per_sec: 400.0,
+            quality_score: 85,
+            max_context_tokens: 131072,
+            rate_limit: 30000,
+            special_features: vec!["Extremely fast".to_string(), "Open source".to_string(), "High throughput".to_string()],
+            best_for: vec!["Speed-critical".to_string(), "Large volume".to_string()],
+        },
+        LLMModel {
+            name: "mixtral-8x7b-32768".to_string(),
+            provider: LLMProvider::Groq,
+            cost_per_million_input: 0.27,
+            cost_per_million_output: 0.27,
+            speed_tokens_per_sec: 350.0,
+            quality_score: 78,
+            max_context_tokens: 32768,
+            rate_limit: 30000,
+            special_features: vec!["Fast".to_string(), "Mixture of experts".to_string()],
+            best_for: vec!["General translation".to_string(), "Cost-effective".to_string()],
+        },
+        
+        // DeepL
+        LLMModel {
+            name: "deepL-pro".to_string(),
+            provider: LLMProvider::DeepL,
+            cost_per_million_input: 25.0,
+            cost_per_million_output: 25.0,
+            speed_tokens_per_sec: 50.0,
+            quality_score: 92,
+            max_context_tokens: 128000,
+            rate_limit: 5000,
+            special_features: vec!["Translation-specialized".to_string(), "High accuracy".to_string(), "Formal tone".to_string()],
+            best_for: vec!["Professional translation".to_string(), "Legal/medical".to_string()],
+        },
+        
+        // Together AI
+        LLMModel {
+            name: "mistral-large-2411".to_string(),
+            provider: LLMProvider::TogetherAI,
+            cost_per_million_input: 2.0,
+            cost_per_million_output: 6.0,
+            speed_tokens_per_sec: 90.0,
+            quality_score: 88,
+            max_context_tokens: 128000,
+            rate_limit: 10000,
+            special_features: vec!["European languages".to_string(), "Nuanced understanding".to_string()],
+            best_for: vec!["European languages".to_string(), "Cultural content".to_string()],
+        },
+        
+        // Ollama Local Models
+        LLMModel {
+            name: "huihui_ai/hy-mt1.5-abliterated:7b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 30.0,
+            quality_score: 83,
+            max_context_tokens: 8192,
+            rate_limit: 1000,
+            special_features: vec!["Local processing".to_string(), "Privacy-focused".to_string(), "Free".to_string()],
+            best_for: vec!["Sensitive content".to_string(), "Offline translation".to_string()],
+        },
+        LLMModel {
+            name: "llama3.1:8b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 40.0,
+            quality_score: 75,
+            max_context_tokens: 128000,
+            rate_limit: 1000,
+            special_features: vec!["Local".to_string(), "Free".to_string(), "Large context".to_string()],
+            best_for: vec!["Budget projects".to_string(), "Testing".to_string()],
+        },
+    ]
+}
+
+// Struttura interna per database LLM
+#[derive(Debug, Clone)]
+struct LLMModel {
+    name: String,
+    provider: LLMProvider,
+    cost_per_million_input: f64,
+    cost_per_million_output: f64,
+    speed_tokens_per_sec: f64,
+    quality_score: u32,
+    max_context_tokens: u32,
+    rate_limit: u32,
+    special_features: Vec<String>,
+    best_for: Vec<String>,
+}
+
+fn get_complexity_factor(complexity: &TranslationComplexity) -> f64 {
+    let mut factor = 1.0;
+    
+    // Complessità variabili
+    if complexity.variable_count > 1000 {
+        factor *= 1.2;
+    }
+    
+    // Complessità markup
+    if complexity.markup_count > 500 {
+        factor *= 1.1;
+    }
+    
+    // Plurali e generi
+    if complexity.has_plurals || complexity.has_gender_forms {
+        factor *= 1.15;
+    }
+    
+    // Stringhe molto lunghe
+    if complexity.long_strings_percent > 20.0 {
+        factor *= 1.1;
+    }
+    
+    factor
+}
+
+fn build_free_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
+    let free_models: Vec<_> = llm_db.iter()
+        .filter(|m| m.cost_per_million_input == 0.0 && m.cost_per_million_output == 0.0)
+        .collect();
+    
+    let primary = free_models.first().unwrap();
+    
+    let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
+    let estimated_hours = estimated_tokens / (primary.speed_tokens_per_sec * 3600.0);
+    
+    OptimizedChain {
+        chain_name: "Free Local Translation".to_string(),
+        chain_type: ChainType::Free,
+        models: vec![ChainModel {
+            model_name: primary.name.clone(),
+            provider: primary.provider.clone(),
+            role: ModelRole::PrimaryTranslation,
+            workload_percentage: 100.0,
+            cost_per_million_tokens: 0.0,
+            speed_tokens_per_sec: primary.speed_tokens_per_sec,
+            output_quality: primary.quality_score,
+            rate_limit: primary.rate_limit,
+            max_context_tokens: primary.max_context_tokens,
+            notes: vec!["Completely free".to_string(), "Local processing".to_string(), "Privacy-focused".to_string()],
+        }],
+        estimated_cost_usd: 0.0,
+        estimated_time_hours: estimated_hours * complexity,
+        final_quality_score: (primary.quality_score as f64 * 0.9) as u32, // Slight penalty for free models
+        prediction_confidence: 85,
+        target_budget: None,
+        advantages: vec!["Zero cost".to_string(), "Complete privacy".to_string(), "No rate limits".to_string()],
+        disadvantages: vec!["Lower quality".to_string(), "Slower processing".to_string(), "Limited context".to_string()],
+        best_for: "Budget projects, sensitive content, testing".to_string(),
+        chain_score: 75,
+    }
+}
+
+fn build_balanced_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
+    let primary = llm_db.iter()
+        .find(|m| m.name == "gpt-4o-mini")
+        .or_else(|| llm_db.iter().find(|m| m.name == "gemini-1.5-flash"))
+        .unwrap();
+    
+    let post_editor = llm_db.iter()
+        .find(|m| m.name == "claude-3-haiku-20240307")
+        .unwrap();
+    
+    let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
+    let primary_tokens = estimated_tokens * 0.7;
+    let post_edit_tokens = estimated_tokens * 0.3;
+    
+    let primary_cost = (primary_tokens / 1_000_000.0) * (primary.cost_per_million_input + primary.cost_per_million_output) / 2.0;
+    let post_edit_cost = (post_edit_tokens / 1_000_000.0) * (post_editor.cost_per_million_input + post_editor.cost_per_million_output) / 2.0;
+    
+    let primary_hours = primary_tokens / (primary.speed_tokens_per_sec * 3600.0);
+    let post_edit_hours = post_edit_tokens / (post_editor.speed_tokens_per_sec * 3600.0);
+    
+    OptimizedChain {
+        chain_name: "Balanced Quality & Cost".to_string(),
+        chain_type: ChainType::Balanced,
+        models: vec![
+            ChainModel {
+                model_name: primary.name.clone(),
+                provider: primary.provider.clone(),
+                role: ModelRole::PrimaryTranslation,
+                workload_percentage: 70.0,
+                cost_per_million_tokens: (primary.cost_per_million_input + primary.cost_per_million_output) / 2.0,
+                speed_tokens_per_sec: primary.speed_tokens_per_sec,
+                output_quality: primary.quality_score,
+                rate_limit: primary.rate_limit,
+                max_context_tokens: primary.max_context_tokens,
+                notes: vec!["Fast and reliable".to_string(), "Cost-effective".to_string()],
+            },
+            ChainModel {
+                model_name: post_editor.name.clone(),
+                provider: post_editor.provider.clone(),
+                role: ModelRole::PostEditing,
+                workload_percentage: 30.0,
+                cost_per_million_tokens: (post_editor.cost_per_million_input + post_editor.cost_per_million_output) / 2.0,
+                speed_tokens_per_sec: post_editor.speed_tokens_per_sec,
+                output_quality: post_editor.quality_score,
+                rate_limit: post_editor.rate_limit,
+                max_context_tokens: post_editor.max_context_tokens,
+                notes: vec!["Quality improvement".to_string(), "Nuance enhancement".to_string()],
+            },
+        ],
+        estimated_cost_usd: (primary_cost + post_edit_cost) * complexity,
+        estimated_time_hours: (primary_hours + post_edit_hours) * complexity,
+        final_quality_score: ((primary.quality_score as f64 * 0.7 + post_editor.quality_score as f64 * 0.3) * 0.95) as u32,
+        prediction_confidence: 90,
+        target_budget: None,
+        advantages: vec!["Good quality".to_string(), "Reasonable cost".to_string(), "Two-step quality".to_string()],
+        disadvantages: vec!["More complex".to_string(), "Higher cost than free".to_string()],
+        best_for: "Most projects requiring quality with budget constraints".to_string(),
+        chain_score: 88,
+    }
+}
+
+fn build_premium_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
+    let primary = llm_db.iter()
+        .find(|m| m.name == "gpt-4o")
+        .or_else(|| llm_db.iter().find(|m| m.name == "claude-3-5-sonnet-20241022"))
+        .unwrap();
+    
+    let post_editor = llm_db.iter()
+        .find(|m| m.name == "deepL-pro")
+        .unwrap();
+    
+    let reviewer = llm_db.iter()
+        .find(|m| m.name == "gemini-1.5-pro")
+        .unwrap();
+    
+    let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
+    let primary_tokens = estimated_tokens * 0.6;
+    let post_edit_tokens = estimated_tokens * 0.3;
+    let review_tokens = estimated_tokens * 0.1;
+    
+    let primary_cost = (primary_tokens / 1_000_000.0) * (primary.cost_per_million_input + primary.cost_per_million_output) / 2.0;
+    let post_edit_cost = (post_edit_tokens / 1_000_000.0) * (post_editor.cost_per_million_input + post_editor.cost_per_million_output) / 2.0;
+    let review_cost = (review_tokens / 1_000_000.0) * (reviewer.cost_per_million_input + reviewer.cost_per_million_output) / 2.0;
+    
+    let primary_hours = primary_tokens / (primary.speed_tokens_per_sec * 3600.0);
+    let post_edit_hours = post_edit_tokens / (post_editor.speed_tokens_per_sec * 3600.0);
+    let review_hours = review_tokens / (reviewer.speed_tokens_per_sec * 3600.0);
+    
+    OptimizedChain {
+        chain_name: "Premium Maximum Quality".to_string(),
+        chain_type: ChainType::Premium,
+        models: vec![
+            ChainModel {
+                model_name: primary.name.clone(),
+                provider: primary.provider.clone(),
+                role: ModelRole::PrimaryTranslation,
+                workload_percentage: 60.0,
+                cost_per_million_tokens: (primary.cost_per_million_input + primary.cost_per_million_output) / 2.0,
+                speed_tokens_per_sec: primary.speed_tokens_per_sec,
+                output_quality: primary.quality_score,
+                rate_limit: primary.rate_limit,
+                max_context_tokens: primary.max_context_tokens,
+                notes: vec!["Top-tier quality".to_string(), "Context-aware".to_string()],
+            },
+            ChainModel {
+                model_name: post_editor.name.clone(),
+                provider: post_editor.provider.clone(),
+                role: ModelRole::PostEditing,
+                workload_percentage: 30.0,
+                cost_per_million_tokens: (post_editor.cost_per_million_input + post_editor.cost_per_million_output) / 2.0,
+                speed_tokens_per_sec: post_editor.speed_tokens_per_sec,
+                output_quality: post_editor.quality_score,
+                rate_limit: post_editor.rate_limit,
+                max_context_tokens: post_editor.max_context_tokens,
+                notes: vec!["Specialized translation".to_string(), "Professional quality".to_string()],
+            },
+            ChainModel {
+                model_name: reviewer.name.clone(),
+                provider: reviewer.provider.clone(),
+                role: ModelRole::QualityReview,
+                workload_percentage: 10.0,
+                cost_per_million_tokens: (reviewer.cost_per_million_input + reviewer.cost_per_million_output) / 2.0,
+                speed_tokens_per_sec: reviewer.speed_tokens_per_sec,
+                output_quality: reviewer.quality_score,
+                rate_limit: reviewer.rate_limit,
+                max_context_tokens: reviewer.max_context_tokens,
+                notes: vec!["Final quality check".to_string(), "Massive context".to_string()],
+            },
+        ],
+        estimated_cost_usd: (primary_cost + post_edit_cost + review_cost) * complexity,
+        estimated_time_hours: (primary_hours + post_edit_hours + review_hours) * complexity,
+        final_quality_score: ((primary.quality_score as f64 * 0.6 + post_editor.quality_score as f64 * 0.3 + reviewer.quality_score as f64 * 0.1) * 0.98) as u32,
+        prediction_confidence: 95,
+        target_budget: None,
+        advantages: vec!["Maximum quality".to_string(), "Three-step review".to_string(), "Professional grade".to_string()],
+        disadvantages: vec!["Highest cost".to_string(), "Longest time".to_string(), "Complex setup".to_string()],
+        best_for: "Professional projects, critical content, premium clients".to_string(),
+        chain_score: 95,
+    }
+}
+
+fn build_fast_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
+    let fastest = llm_db.iter()
+        .max_by(|a, b| a.speed_tokens_per_sec.partial_cmp(&b.speed_tokens_per_sec).unwrap())
+        .unwrap();
+    
+    let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
+    let estimated_hours = estimated_tokens / (fastest.speed_tokens_per_sec * 3600.0);
+    
+    let avg_cost = (fastest.cost_per_million_input + fastest.cost_per_million_output) / 2.0;
+    let estimated_cost = (estimated_tokens / 1_000_000.0) * avg_cost;
+    
+    OptimizedChain {
+        chain_name: "Ultra-Fast Translation".to_string(),
+        chain_type: ChainType::Fast,
+        models: vec![ChainModel {
+            model_name: fastest.name.clone(),
+            provider: fastest.provider.clone(),
+            role: ModelRole::PrimaryTranslation,
+            workload_percentage: 100.0,
+            cost_per_million_tokens: avg_cost,
+            speed_tokens_per_sec: fastest.speed_tokens_per_sec,
+            output_quality: fastest.quality_score,
+            rate_limit: fastest.rate_limit,
+            max_context_tokens: fastest.max_context_tokens,
+            notes: vec!["Maximum speed".to_string(), "High throughput".to_string()],
+        }],
+        estimated_cost_usd: estimated_cost * complexity,
+        estimated_time_hours: estimated_hours * complexity,
+        final_quality_score: (fastest.quality_score as f64 * 0.85) as u32, // Speed penalty
+        prediction_confidence: 88,
+        target_budget: None,
+        advantages: vec!["Fastest processing".to_string(), "High throughput".to_string(), "Simple workflow".to_string()],
+        disadvantages: vec!["Quality compromise".to_string(), "Single model".to_string()],
+        best_for: "Time-critical projects, large volume batch processing".to_string(),
+        chain_score: 82,
+    }
+}
+
+fn build_hybrid_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64, result: &PredictionResult) -> OptimizedChain {
+    // Scegli modelli diversi in base alla complessità rilevata
+    let primary = if result.translation_complexity.has_plurals || result.translation_complexity.has_gender_forms {
+        llm_db.iter().find(|m| m.name == "claude-3-5-sonnet-20241022").unwrap()
+    } else {
+        llm_db.iter().find(|m| m.name == "gpt-4o-mini").unwrap()
+    };
+    
+    let context_detector = if result.translation_complexity.variable_count > 1000 {
+        llm_db.iter().find(|m| m.name == "gemini-1.5-pro").unwrap()
+    } else {
+        llm_db.iter().find(|m| m.name == "llama-3.3-70b-versatile").unwrap()
+    };
+    
+    let post_editor = llm_db.iter()
+        .find(|m| m.name == "claude-3-haiku-20240307")
+        .unwrap();
+    
+    let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
+    
+    OptimizedChain {
+        chain_name: "Adaptive Hybrid Translation".to_string(),
+        chain_type: ChainType::Hybrid,
+        models: vec![
+            ChainModel {
+                model_name: context_detector.name.clone(),
+                provider: context_detector.provider.clone(),
+                role: ModelRole::ContextDetection,
+                workload_percentage: 10.0,
+                cost_per_million_tokens: (context_detector.cost_per_million_input + context_detector.cost_per_million_output) / 2.0,
+                speed_tokens_per_sec: context_detector.speed_tokens_per_sec,
+                output_quality: context_detector.quality_score,
+                rate_limit: context_detector.rate_limit,
+                max_context_tokens: context_detector.max_context_tokens,
+                notes: vec!["Context analysis".to_string(), "Complexity handling".to_string()],
+            },
+            ChainModel {
+                model_name: primary.name.clone(),
+                provider: primary.provider.clone(),
+                role: ModelRole::PrimaryTranslation,
+                workload_percentage: 70.0,
+                cost_per_million_tokens: (primary.cost_per_million_input + primary.cost_per_million_output) / 2.0,
+                speed_tokens_per_sec: primary.speed_tokens_per_sec,
+                output_quality: primary.quality_score,
+                rate_limit: primary.rate_limit,
+                max_context_tokens: primary.max_context_tokens,
+                notes: vec!["Adaptive selection".to_string(), "Complexity-aware".to_string()],
+            },
+            ChainModel {
+                model_name: post_editor.name.clone(),
+                provider: post_editor.provider.clone(),
+                role: ModelRole::PostEditing,
+                workload_percentage: 20.0,
+                cost_per_million_tokens: (post_editor.cost_per_million_input + post_editor.cost_per_million_output) / 2.0,
+                speed_tokens_per_sec: post_editor.speed_tokens_per_sec,
+                output_quality: post_editor.quality_score,
+                rate_limit: post_editor.rate_limit,
+                max_context_tokens: post_editor.max_context_tokens,
+                notes: vec!["Quality refinement".to_string(), "Fast post-edit".to_string()],
+            },
+        ],
+        estimated_cost_usd: calculate_chain_cost(&[context_detector, primary, post_editor], estimated_tokens, &[10.0, 70.0, 20.0]) * complexity,
+        estimated_time_hours: calculate_chain_time(&[context_detector, primary, post_editor], estimated_tokens, &[10.0, 70.0, 20.0]) * complexity,
+        final_quality_score: ((context_detector.quality_score as f64 * 0.1 + primary.quality_score as f64 * 0.7 + post_editor.quality_score as f64 * 0.2) * 0.96) as u32,
+        prediction_confidence: 92,
+        target_budget: None,
+        advantages: vec!["Adaptive to complexity".to_string(), "Context-aware".to_string(), "Optimized workflow".to_string()],
+        disadvantages: vec!["Complex configuration".to_string(), "Higher cost".to_string()],
+        best_for: "Complex projects with varied content types".to_string(),
+        chain_score: 90,
+    }
+}
+
+fn build_budget_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64, budget: f64) -> Option<OptimizedChain> {
+    let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
+    let budget_per_million = (budget / estimated_tokens) * 1_000_000.0;
+    
+    // Find best model within budget
+    let affordable_models: Vec<_> = llm_db.iter()
+        .filter(|m| {
+            let avg_cost = (m.cost_per_million_input + m.cost_per_million_output) / 2.0;
+            avg_cost <= budget_per_million * 1.5 // Allow some flexibility
+        })
+        .collect();
+    
+    if affordable_models.is_empty() {
+        return None;
+    }
+    
+    let primary = affordable_models.iter()
+        .max_by(|a, b| (a.quality_score as f64 / a.cost_per_million_input).partial_cmp(&(b.quality_score as f64 / b.cost_per_million_input)).unwrap())
+        .unwrap();
+    
+    let estimated_hours = estimated_tokens / (primary.speed_tokens_per_sec * 3600.0);
+    let avg_cost = (primary.cost_per_million_input + primary.cost_per_million_output) / 2.0;
+    let estimated_cost = (estimated_tokens / 1_000_000.0) * avg_cost;
+    
+    Some(OptimizedChain {
+        chain_name: format!("Budget Optimized (${:.0})", budget),
+        chain_type: ChainType::BudgetOptimized,
+        models: vec![ChainModel {
+            model_name: primary.name.clone(),
+            provider: primary.provider.clone(),
+            role: ModelRole::PrimaryTranslation,
+            workload_percentage: 100.0,
+            cost_per_million_tokens: avg_cost,
+            speed_tokens_per_sec: primary.speed_tokens_per_sec,
+            output_quality: primary.quality_score,
+            rate_limit: primary.rate_limit,
+            max_context_tokens: primary.max_context_tokens,
+            notes: vec![format!("Budget: ${:.2}", budget), "Cost-optimized".to_string()],
+        }],
+        estimated_cost_usd: estimated_cost * complexity,
+        estimated_time_hours: estimated_hours * complexity,
+        final_quality_score: (primary.quality_score as f64 * 0.9) as u32,
+        prediction_confidence: 80,
+        target_budget: Some(budget),
+        advantages: vec![format!("Within ${:.0} budget", budget), "Cost-effective".to_string()],
+        disadvantages: vec!["Limited model choice".to_string(), "Quality compromise".to_string()],
+        best_for: format!("Projects with ${:.0} budget constraint", budget),
+        chain_score: 78,
+    })
+}
+
+fn calculate_chain_cost(models: &[&LLMModel], total_tokens: f64, workloads: &[f64]) -> f64 {
+    models.iter().zip(workloads.iter()).map(|(model, workload)| {
+        let tokens = total_tokens * (workload / 100.0);
+        let avg_cost = (model.cost_per_million_input + model.cost_per_million_output) / 2.0;
+        (tokens / 1_000_000.0) * avg_cost
+    }).sum()
+}
+
+fn calculate_chain_time(models: &[&LLMModel], total_tokens: f64, workloads: &[f64]) -> f64 {
+    models.iter().zip(workloads.iter()).map(|(model, workload)| {
+        let tokens = total_tokens * (workload / 100.0);
+        tokens / (model.speed_tokens_per_sec * 3600.0)
+    }).sum()
 }

@@ -112,6 +112,7 @@ interface PredictionResult {
   translationQualityExplanation: string;
   existingTools: ExistingTranslationTools;
   selectedTools: SelectedTools;
+  llmChains: OptimizedChain[];
 }
 
 interface ExistingTranslationTools {
@@ -169,6 +170,38 @@ interface SelectedTool {
 type ToolCategory = 'TextExtraction' | 'TextInsertion' | 'AudioConversion' | 'GraphicsEditing' | 'ArchiveExtraction' | 'PatchCreation' | 'LocalizationSystem';
 
 type ToolCost = 'Free' | 'Freemium' | 'Commercial' | 'Enterprise' | 'OpenSource';
+
+interface OptimizedChain {
+  chainName: string;
+  chainType: ChainType;
+  models: ChainModel[];
+  estimatedCostUsd: number;
+  estimatedTimeHours: number;
+  finalQualityScore: number;
+  predictionConfidence: number;
+  targetBudget?: number;
+  advantages: string[];
+  disadvantages: string[];
+  bestFor: string;
+  chainScore: number;
+}
+
+interface ChainModel {
+  modelName: string;
+  provider: LLMProvider;
+  role: ModelRole;
+  workloadPercentage: number;
+  costPerMillionTokens: number;
+  speedTokensPerSec: number;
+  outputQuality: number;
+  rateLimit: number;
+  maxContextTokens: number;
+  notes: string[];
+}
+
+type ChainType = 'Free' | 'Balanced' | 'Premium' | 'BudgetOptimized' | 'Fast' | 'Hybrid';
+type LLMProvider = 'OpenAI' | 'Anthropic' | 'Google' | 'Groq' | 'DeepL' | 'TogetherAI' | 'Ollama' | 'Local';
+type ModelRole = 'PrimaryTranslation' | 'PostEditing' | 'QualityReview' | 'ContextDetection' | 'FormatValidation';
 
 // ── Language Lists ───────────────────────────────────────────────────
 
@@ -243,6 +276,43 @@ function QualityBar({ score }: { score: number }) {
       <span className="text-xs font-mono text-slate-400 w-8 text-right">{score}</span>
     </div>
   );
+}
+
+// ── Helper Functions ───────────────────────────────────────────────────
+
+function getChainTypeColor(type: ChainType): string {
+  switch (type) {
+    case 'Free': return '#10b981';
+    case 'Balanced': return '#3b82f6';
+    case 'Premium': return '#8b5cf6';
+    case 'Fast': return '#f59e0b';
+    case 'Hybrid': return '#ec4899';
+    case 'BudgetOptimized': return '#06b6d4';
+    default: return '#6b7280';
+  }
+}
+
+function getChainTypeLabel(type: ChainType): string {
+  switch (type) {
+    case 'Free': return 'Free';
+    case 'Balanced': return 'Balanced';
+    case 'Premium': return 'Premium';
+    case 'Fast': return 'Fast';
+    case 'Hybrid': return 'Hybrid';
+    case 'BudgetOptimized': return 'Budget';
+    default: return type;
+  }
+}
+
+function getRoleLabel(role: ModelRole): string {
+  switch (role) {
+    case 'PrimaryTranslation': return 'Primary';
+    case 'PostEditing': return 'Post-edit';
+    case 'QualityReview': return 'Review';
+    case 'ContextDetection': return 'Context';
+    case 'FormatValidation': return 'Format';
+    default: return role;
+  }
 }
 
 // ── Main Component ───────────────────────────────────────────────────
@@ -823,6 +893,126 @@ export default function PredictionToolPage() {
                     </div>
                     <span className="text-xs font-mono text-yellow-400">{result.selectedTools.selectionScore}/100</span>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* LLM Chains */}
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <Brain className="w-4 h-4 text-blue-400" /> Chain LLM Ottimizzate
+              </h3>
+              
+              {/* Top 3 Chains */}
+              <div className="space-y-3">
+                {result.llmChains.slice(0, 3).map((chain, i) => (
+                  <div key={i} className="bg-slate-900/50 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg font-bold text-slate-200">#{i + 1}</span>
+                          <div className="px-2 py-1 rounded-full text-[10px] font-medium"
+                            style={{
+                              backgroundColor: getChainTypeColor(chain.chainType),
+                              color: 'white'
+                            }}
+                          >
+                            {getChainTypeLabel(chain.chainType)}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-slate-200">{chain.chainName}</h4>
+                          <p className="text-xs text-slate-400">{chain.bestFor}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-mono text-green-400">${chain.estimatedCostUsd.toFixed(2)}</span>
+                          <span className="text-xs text-blue-400">{chain.estimatedTimeHours.toFixed(1)}h</span>
+                          <span className="text-xs text-purple-400">Q{chain.finalQualityScore}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-12 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" 
+                              style={{ width: `${chain.chainScore}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-mono text-slate-400">{chain.chainScore}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Models in Chain */}
+                    <div className="mb-3">
+                      <div className="flex flex-wrap gap-1">
+                        {chain.models.map((model, j) => (
+                          <div key={j} className="flex items-center gap-1 bg-slate-800/50 rounded px-2 py-1">
+                            <span className="text-[10px] font-medium text-slate-300">{model.modelName}</span>
+                            <span className="text-[8px] text-slate-500">{model.workloadPercentage}%</span>
+                            <span className="text-[8px] px-1 rounded bg-slate-700 text-slate-400">
+                              {getRoleLabel(model.role)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Advantages/Disadvantages */}
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-green-400 font-medium">✓ </span>
+                        <span className="text-slate-300">{chain.advantages.slice(0, 2).join(', ')}</span>
+                      </div>
+                      <div>
+                        <span className="text-orange-400 font-medium">⚠ </span>
+                        <span className="text-slate-300">{chain.disadvantages.slice(0, 1).join(', ')}</span>
+                      </div>
+                    </div>
+
+                    {/* Confidence */}
+                    <div className="mt-2 pt-2 border-t border-slate-700/50 flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Confidence</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-400 rounded-full" 
+                            style={{ width: `${chain.predictionConfidence}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-mono text-blue-400">{chain.predictionConfidence}%</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Budget Options */}
+              <div className="mt-4">
+                <h4 className="text-xs font-medium text-yellow-300 mb-2">Opzioni Budget</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  {result.llmChains.filter(c => c.targetBudget).slice(0, 3).map((chain, i) => (
+                    <div key={i} className="bg-slate-900/30 rounded-lg px-3 py-2 text-center">
+                      <div className="text-xs font-medium text-slate-300">${chain.targetBudget}</div>
+                      <div className="text-[10px] text-slate-500">Q{chain.finalQualityScore}</div>
+                      <div className="text-[10px] text-green-400">{chain.estimatedTimeHours.toFixed(1)}h</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chain Type Legend */}
+              <div className="mt-4 pt-3 border-t border-slate-700/50">
+                <div className="flex flex-wrap gap-2">
+                  {(['Free', 'Balanced', 'Premium', 'Fast', 'Hybrid', 'BudgetOptimized'] as ChainType[]).map(type => (
+                    <div key={type} className="flex items-center gap-1">
+                      <div 
+                        className="w-2 h-2 rounded-full" 
+                        style={{ backgroundColor: getChainTypeColor(type) }}
+                      />
+                      <span className="text-[10px] text-slate-400">{getChainTypeLabel(type)}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
