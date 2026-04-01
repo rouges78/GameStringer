@@ -49,6 +49,8 @@ pub struct PredictionResult {
     pub translation_quality_score: u32,
     /// Spiegazione della qualità traduzione
     pub translation_quality_explanation: String,
+    /// Informazioni su strumenti di traduzione esistenti
+    pub existing_tools: ExistingTranslationTools,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -101,6 +103,47 @@ pub struct TranslationComplexity {
     pub long_strings_percent: f64,
     /// Formati di variabile trovati
     pub variable_formats: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExistingTranslationTools {
+    /// Ha file di traduzione standard (.po, .mo, .resx, .loc, etc.)
+    pub has_translation_files: bool,
+    /// File di traduzione trovati
+    pub translation_files: Vec<TranslationFileInfo>,
+    /// Usa Unity Localization system
+    pub uses_unity_localization: bool,
+    /// Usa Unreal Localization system
+    pub uses_unreal_localization: bool,
+    /// Ha mod di traduzione community
+    pub has_community_patches: bool,
+    /// Patch community trovate
+    pub community_patches: Vec<CommunityPatchInfo>,
+    /// Strumenti di localizzazione rilevati
+    pub localization_tools: Vec<String>,
+    /// Raccomandazioni basate su strumenti esistenti
+    pub recommendations: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TranslationFileInfo {
+    pub file_path: String,
+    pub file_type: String, // po, mo, resx, loc, json, csv, etc.
+    pub language: Option<String>,
+    pub string_count: Option<u32>,
+    pub file_size_kb: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommunityPatchInfo {
+    pub patch_name: String,
+    pub patch_type: String, // translation, ui, audio, etc.
+    pub languages: Vec<String>,
+    pub status: String, // active, inactive, outdated
+    pub install_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1491,6 +1534,170 @@ fn calculate_translation_quality(
     (score, explanation)
 }
 
+// ── Existing Translation Tools Detection ─────────────────────────────
+
+fn detect_existing_translation_tools(game_path: &Path, engine: &str) -> ExistingTranslationTools {
+    let mut translation_files: Vec<TranslationFileInfo> = Vec::new();
+    let mut community_patches: Vec<CommunityPatchInfo> = Vec::new();
+    let mut localization_tools: Vec<String> = Vec::new();
+    let mut recommendations: Vec<String> = Vec::new();
+    
+    let walker = walkdir::WalkDir::new(game_path)
+        .max_depth(5)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok());
+
+    for entry in walker {
+        if !entry.file_type().is_file() { continue; }
+        let path = entry.path();
+        let name_lower = entry.file_name().to_string_lossy().to_lowercase();
+        
+        // File di traduzione standard
+        let translation_exts = [
+            (".po", "gettext"), (".mo", "gettext compiled"), (".pot", "gettext template"),
+            (".resx", ".NET resources"), (".resources", ".NET resources"),
+            (".loc", "Unreal localization"), (".locres", "Unreal localization"),
+            (".json", "JSON localization"), (".csv", "CSV localization"),
+            (".xml", "XML localization"), (".yaml", "YAML localization"),
+            (".strings", "Apple strings"), (".lang", "Generic language file"),
+            (".translation", "Generic translation file"),
+        ];
+        
+        for (ext, file_type) in &translation_exts {
+            if name_lower.ends_with(ext) {
+                let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+                let language = extract_language_from_filename(&name_lower);
+                
+                translation_files.push(TranslationFileInfo {
+                    file_path: path.to_string_lossy().to_string(),
+                    file_type: file_type.to_string(),
+                    language,
+                    string_count: None, // In una implementazione reale si potrebbe contare
+                    file_size_kb: size / 1024,
+                });
+            }
+        }
+        
+        // Rileva Unity Localization
+        if name_lower.contains("localization") || name_lower.contains("i18n") {
+            if name_lower.contains("unity") || path.to_string_lossy().to_lowercase().contains("resources") {
+                localization_tools.push("Unity Localization System".to_string());
+            }
+        }
+        
+        // Rileva Unreal Localization
+        if name_lower.contains(".loc") || name_lower.contains(".locres") {
+            localization_tools.push("Unreal Localization System".to_string());
+        }
+        
+        // Rileva patch community
+        if name_lower.contains("translation") || name_lower.contains("localization") || name_lower.contains("traduzione") {
+            if name_lower.contains("patch") || name_lower.contains("mod") {
+                let patch_name = path.file_stem()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("Unknown Patch")
+                    .to_string();
+                
+                let languages = extract_languages_from_filename(&name_lower);
+                let status = if path.exists() { "active".to_string() } else { "inactive".to_string() };
+                
+                community_patches.push(CommunityPatchInfo {
+                    patch_name,
+                    patch_type: "translation".to_string(),
+                    languages,
+                    status,
+                    install_path: Some(path.to_string_lossy().to_string()),
+                });
+            }
+        }
+        
+        // Rileva strumenti specifici per motore
+        match engine {
+            "Unity" => {
+                if path.to_string_lossy().to_lowercase().contains("resources") {
+                    localization_tools.push("Unity AssetBundle Localization".to_string());
+                }
+            }
+            "Unreal Engine" => {
+                if name_lower.contains(".loc") || name_lower.contains(".locres") {
+                    localization_tools.push("Unreal .loc/.locres System".to_string());
+                }
+            }
+            "Ren'Py" => {
+                if name_lower.contains(".rpy") {
+                    localization_tools.push("Ren'Py Script Translation".to_string());
+                }
+            }
+            "RPG Maker" => {
+                if name_lower.contains(".json") || name_lower.contains(".ini") {
+                    localization_tools.push("RPG Maker Data Files".to_string());
+                }
+            }
+            _ => {}
+        }
+    }
+    
+    // Genera raccomandazioni
+    if !translation_files.is_empty() {
+        recommendations.push("Gioco ha già file di traduzione - possibile aggiornare invece di creare da zero".to_string());
+    }
+    
+    if !localization_tools.is_empty() {
+        recommendations.push("Sistema di localizzazione nativo rilevato - usare strumenti specifici del motore".to_string());
+    }
+    
+    if !community_patches.is_empty() {
+        recommendations.push("Patch di traduzione community disponibili - verificare compatibilità".to_string());
+    }
+    
+    if translation_files.is_empty() && localization_tools.is_empty() {
+        recommendations.push("Nessun sistema di traduzione esistente - traduzione da zero richiesta".to_string());
+    }
+    
+    ExistingTranslationTools {
+        has_translation_files: !translation_files.is_empty(),
+        translation_files,
+        uses_unity_localization: localization_tools.iter().any(|t| t.contains("Unity")),
+        uses_unreal_localization: localization_tools.iter().any(|t| t.contains("Unreal")),
+        has_community_patches: !community_patches.is_empty(),
+        community_patches,
+        localization_tools,
+        recommendations,
+    }
+}
+
+fn extract_language_from_filename(filename: &str) -> Option<String> {
+    // Estrae codici lingua da nomi file tipo it.json, en.po, etc.
+    let patterns = [
+        r"([a-z]{2}(-[a-z]{2})?)\.", // it.json, en-US.json
+        r"([a-z]{2})_([a-z]{2})?\.", // en_us.json
+        r"([a-z]{2})\.", // it.po
+    ];
+    
+    for pattern in &patterns {
+        if let Ok(re) = regex::Regex::new(pattern) {
+            if let Some(caps) = re.captures(filename) {
+                return Some(caps.get(1).unwrap().as_str().to_string());
+            }
+        }
+    }
+    None
+}
+
+fn extract_languages_from_filename(filename: &str) -> Vec<String> {
+    let mut languages = Vec::new();
+    
+    // Pattern per lingue multiple nel filename
+    if let Ok(re) = regex::Regex::new(r"([a-z]{2})(?:[-_][a-z]{2})?") {
+        for caps in re.captures_iter(filename) {
+            languages.push(caps.get(0).unwrap().as_str().to_string());
+        }
+    }
+    
+    languages
+}
+
 // ── Quick Summary Struct (for batch ranking) ─────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1699,6 +1906,9 @@ pub async fn analyze_game_translation(
     let (translation_quality_score, translation_quality_explanation) =
         calculate_translation_quality(&translation_complexity, &encoding_info, &text_stats);
 
+    // Existing translation tools detection
+    let existing_tools = detect_existing_translation_tools(&game_path, &engine_str);
+
     let estimated_strings = text_stats.estimated_strings;
     let languages_count = languages.len();
     
@@ -1723,6 +1933,7 @@ pub async fn analyze_game_translation(
         translation_complexity,
         translation_quality_score,
         translation_quality_explanation,
+        existing_tools,
     };
 
     // Save to cache

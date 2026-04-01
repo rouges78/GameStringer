@@ -7,7 +7,7 @@ import {
   Brain, Globe, FileText, Clock, AlertTriangle, CheckCircle, XCircle,
   ChevronLeft, Loader2, Zap, Server, Cloud, Layers, Shield,
   BarChart3, HardDrive, Languages, Sparkles, Cpu, DollarSign,
-  ArrowRight, Star, Info, Lock, Type, Hash, Gauge, TrendingUp
+  ArrowRight, Star, Info, Lock, Type, Hash, Gauge, TrendingUp, Wrench
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -110,6 +110,34 @@ interface PredictionResult {
   translationComplexity: TranslationComplexity;
   translationQualityScore: number;
   translationQualityExplanation: string;
+  existingTools: ExistingTranslationTools;
+}
+
+interface ExistingTranslationTools {
+  hasTranslationFiles: boolean;
+  translationFiles: TranslationFileInfo[];
+  usesUnityLocalization: boolean;
+  usesUnrealLocalization: boolean;
+  hasCommunityPatches: boolean;
+  communityPatches: CommunityPatchInfo[];
+  localizationTools: string[];
+  recommendations: string[];
+}
+
+interface TranslationFileInfo {
+  filePath: string;
+  fileType: string;
+  language?: string;
+  stringCount?: number;
+  fileSizeKb: number;
+}
+
+interface CommunityPatchInfo {
+  patchName: string;
+  patchType: string;
+  languages: string[];
+  status: string;
+  installPath?: string;
 }
 
 // ── Language Lists ───────────────────────────────────────────────────
@@ -509,6 +537,99 @@ export default function PredictionToolPage() {
               <div className="text-xs text-slate-300 leading-relaxed">
                 {result.translationQualityExplanation}
               </div>
+            </div>
+
+            {/* Existing Translation Tools */}
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <Wrench className="w-4 h-4 text-blue-400" /> Strumenti di Traduzione Esistenti
+              </h3>
+              
+              {/* Translation Files */}
+              {result.existingTools.hasTranslationFiles && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-blue-300 mb-2">File di Traduzione Rilevati</h4>
+                  <div className="space-y-1">
+                    {result.existingTools.translationFiles.slice(0, 5).map((file, i) => (
+                      <div key={i} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">{file.fileType}</span>
+                          <span className="text-xs text-slate-400 truncate max-w-xs">{file.filePath.split('/').pop()}</span>
+                          {file.language && (
+                            <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{file.language}</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-slate-500">{(file.fileSizeKb / 1024).toFixed(1)}MB</span>
+                      </div>
+                    ))}
+                    {result.existingTools.translationFiles.length > 5 && (
+                      <p className="text-xs text-slate-500 italic">...e altri {result.existingTools.translationFiles.length - 5} file</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Localization Tools */}
+              {result.existingTools.localizationTools.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-green-300 mb-2">Sistemi di Localizzazione</h4>
+                  <div className="flex flex-wrap gap-1">
+                    {result.existingTools.localizationTools.map((tool, i) => (
+                      <span key={i} className="text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">
+                        {tool}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Community Patches */}
+              {result.existingTools.hasCommunityPatches && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-purple-300 mb-2">Patch Community</h4>
+                  <div className="space-y-1">
+                    {result.existingTools.communityPatches.slice(0, 3).map((patch, i) => (
+                      <div key={i} className="flex items-center justify-between bg-slate-900/50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-300">{patch.patchName}</span>
+                          <div className="flex gap-1">
+                            {patch.languages.map((lang, j) => (
+                              <span key={j} className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">{lang}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          patch.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'
+                        }`}>
+                          {patch.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {result.existingTools.recommendations.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-yellow-300 mb-2">Raccomandazioni</h4>
+                  <div className="space-y-1">
+                    {result.existingTools.recommendations.map((rec, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <ArrowRight className="w-3 h-3 text-yellow-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-slate-300 leading-relaxed">{rec}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No Tools Found */}
+              {!result.existingTools.hasTranslationFiles && 
+               result.existingTools.localizationTools.length === 0 && 
+               !result.existingTools.hasCommunityPatches && (
+                <p className="text-xs text-slate-500 italic">Nessuno strumento di traduzione esistente rilevato. La traduzione dovrà essere creata da zero.</p>
+              )}
             </div>
 
             {/* Row 2: Languages + Formats */}
