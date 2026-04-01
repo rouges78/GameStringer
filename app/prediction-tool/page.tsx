@@ -7,7 +7,8 @@ import {
   Brain, Globe, FileText, Clock, AlertTriangle, CheckCircle, XCircle,
   ChevronLeft, Loader2, Zap, Server, Cloud, Layers, Shield,
   BarChart3, HardDrive, Languages, Sparkles, Cpu, DollarSign,
-  ArrowRight, Star, Info, Lock, Type, Hash, Gauge, TrendingUp, Wrench, Download
+  ArrowRight, Star, Info, Lock, Type, Hash, Gauge, TrendingUp, Wrench, Download,
+  Music, Image
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ interface PredictionResult {
   existingTools: ExistingTranslationTools;
   selectedTools: SelectedTools;
   llmChains: OptimizedChain[];
+  multimediaAnalysis: MultimediaAnalysis;
 }
 
 interface ExistingTranslationTools {
@@ -202,6 +204,107 @@ interface ChainModel {
 type ChainType = 'Free' | 'Balanced' | 'Premium' | 'BudgetOptimized' | 'Fast' | 'Hybrid';
 type LLMProvider = 'OpenAI' | 'Anthropic' | 'Google' | 'Groq' | 'DeepL' | 'TogetherAI' | 'Ollama' | 'Local';
 type ModelRole = 'PrimaryTranslation' | 'PostEditing' | 'QualityReview' | 'ContextDetection' | 'FormatValidation';
+
+interface MultimediaAnalysis {
+  audioStats: AudioStats;
+  graphicsStats: GraphicsStats;
+  recommendedTools: MultimediaTools;
+  multimediaEstimates: MultimediaEstimates;
+  multimediaComplexityScore: number;
+  problematicFiles: ProblematicFile[];
+}
+
+interface AudioStats {
+  totalAudioFiles: number;
+  totalAudioSizeMb: number;
+  audioFormats: AudioFormatInfo[];
+  localizableAudioFiles: number;
+  musicAmbientFiles: number;
+  compressedAudioFiles: number;
+  estimatedTotalMinutes: number;
+  predominantQuality: AudioQuality;
+  streamingAudioFiles: number;
+}
+
+interface GraphicsStats {
+  totalGraphicsFiles: number;
+  totalGraphicsSizeMb: number;
+  graphicsFormats: GraphicsFormatInfo[];
+  textContainingGraphics: number;
+  uiInterfaceFiles: number;
+  textureSpriteFiles: number;
+  embeddedTextFiles: number;
+  predominantResolution: string;
+  animatedFiles: number;
+}
+
+interface AudioFormatInfo {
+  extension: string;
+  count: number;
+  totalSizeMb: number;
+  isEditable: boolean;
+  requiresSpecializedTools: boolean;
+  typicalQuality: AudioQuality;
+  notes: string[];
+}
+
+interface GraphicsFormatInfo {
+  extension: string;
+  count: number;
+  totalSizeMb: number;
+  isEditable: boolean;
+  supportsTransparency: boolean;
+  compressionType: GraphicsCompression;
+  resolutions: string[];
+  notes: string[];
+}
+
+interface MultimediaTools {
+  audioTools: SelectedMultimediaTool[];
+  graphicsTools: SelectedMultimediaTool[];
+  engineSpecificTools: SelectedMultimediaTool[];
+  compressionTools: SelectedMultimediaTool[];
+}
+
+interface SelectedMultimediaTool {
+  name: string;
+  category: MultimediaToolCategory;
+  description: string;
+  supportedFormats: string[];
+  compatibilityScore: number;
+  cost: ToolCost;
+  platformSupport: string[];
+  learningCurve: LearningCurve;
+  specialFeatures: string[];
+  bestFor: string;
+  systemRequirements: string[];
+}
+
+interface MultimediaEstimates {
+  audioEditingHours: number;
+  graphicsEditingHours: number;
+  toolCostsUsd: number;
+  totalComplexity: number;
+  highComplexityFiles: number;
+  compressionDifficultyFactor: number;
+  outsourcingCostEstimate: number;
+}
+
+interface ProblematicFile {
+  filePath: string;
+  problemType: ProblemType;
+  severity: ProblemSeverity;
+  description: string;
+  suggestedSolutions: string[];
+  requiredTools: string[];
+}
+
+type AudioQuality = 'Low' | 'Medium' | 'High' | 'Studio' | 'Unknown';
+type GraphicsCompression = 'None' | 'Lossless' | 'Lossy' | 'Hybrid' | 'Unknown';
+type MultimediaToolCategory = 'AudioEditing' | 'GraphicsEditing' | 'AudioCompression' | 'GraphicsCompression' | 'VideoEditing' | 'AssetManagement' | 'EngineSpecific';
+type LearningCurve = 'Beginner' | 'Easy' | 'Medium' | 'Hard' | 'Expert';
+type ProblemType = 'CompressedFormat' | 'EmbeddedText' | 'ProprietaryFormat' | 'EncryptedContent' | 'CorruptedFile' | 'UnsupportedCodec' | 'LargeFileSize' | 'NestedContainers';
+type ProblemSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
 // ── Language Lists ───────────────────────────────────────────────────
 
@@ -312,6 +415,112 @@ function getRoleLabel(role: ModelRole): string {
     case 'ContextDetection': return 'Context';
     case 'FormatValidation': return 'Format';
     default: return role;
+  }
+}
+
+// ── Multimedia Helper Functions ───────────────────────────────────────
+
+function getAudioQualityColor(quality: AudioQuality): string {
+  switch (quality) {
+    case 'Studio': return '#10b981';
+    case 'High': return '#3b82f6';
+    case 'Medium': return '#f59e0b';
+    case 'Low': return '#ef4444';
+    default: return '#6b7280';
+  }
+}
+
+function getAudioQualityLabel(quality: AudioQuality): string {
+  switch (quality) {
+    case 'Studio': return 'Studio';
+    case 'High': return 'High';
+    case 'Medium': return 'Medium';
+    case 'Low': return 'Low';
+    default: return 'Unknown';
+  }
+}
+
+function getGraphicsCompressionColor(compression: GraphicsCompression): string {
+  switch (compression) {
+    case 'None': return '#10b981';
+    case 'Lossless': return '#3b82f6';
+    case 'Lossy': return '#f59e0b';
+    case 'Hybrid': return '#8b5cf6';
+    default: return '#6b7280';
+  }
+}
+
+function getGraphicsCompressionLabel(compression: GraphicsCompression): string {
+  switch (compression) {
+    case 'None': return 'None';
+    case 'Lossless': return 'Lossless';
+    case 'Lossy': return 'Lossy';
+    case 'Hybrid': return 'Hybrid';
+    default: return 'Unknown';
+  }
+}
+
+function getMultimediaToolCategoryColor(category: MultimediaToolCategory): string {
+  switch (category) {
+    case 'AudioEditing': return '#06b6d4';
+    case 'GraphicsEditing': return '#10b981';
+    case 'AudioCompression': return '#f59e0b';
+    case 'GraphicsCompression': return '#ef4444';
+    case 'EngineSpecific': return '#8b5cf6';
+    default: return '#6b7280';
+  }
+}
+
+function getMultimediaToolCategoryLabel(category: MultimediaToolCategory): string {
+  switch (category) {
+    case 'AudioEditing': return 'Audio';
+    case 'GraphicsEditing': return 'Graphics';
+    case 'AudioCompression': return 'Audio Comp';
+    case 'GraphicsCompression': return 'Graphics Comp';
+    case 'EngineSpecific': return 'Engine';
+    default: return category;
+  }
+}
+
+function getLearningCurveColor(curve: LearningCurve): string {
+  switch (curve) {
+    case 'Beginner': return '#10b981';
+    case 'Easy': return '#3b82f6';
+    case 'Medium': return '#f59e0b';
+    case 'Hard': return '#ef4444';
+    case 'Expert': return '#dc2626';
+    default: return '#6b7280';
+  }
+}
+
+function getLearningCurveLabel(curve: LearningCurve): string {
+  switch (curve) {
+    case 'Beginner': return 'Beginner';
+    case 'Easy': return 'Easy';
+    case 'Medium': return 'Medium';
+    case 'Hard': return 'Hard';
+    case 'Expert': return 'Expert';
+    default: return curve;
+  }
+}
+
+function getProblemSeverityColor(severity: ProblemSeverity): string {
+  switch (severity) {
+    case 'Low': return '#10b981';
+    case 'Medium': return '#f59e0b';
+    case 'High': return '#ef4444';
+    case 'Critical': return '#dc2626';
+    default: return '#6b7280';
+  }
+}
+
+function getProblemSeverityLabel(severity: ProblemSeverity): string {
+  switch (severity) {
+    case 'Low': return 'Low';
+    case 'Medium': return 'Medium';
+    case 'High': return 'High';
+    case 'Critical': return 'Critical';
+    default: return severity;
   }
 }
 
@@ -1013,6 +1222,223 @@ export default function PredictionToolPage() {
                       <span className="text-[10px] text-slate-400">{getChainTypeLabel(type)}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Multimedia Analysis */}
+            <div className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-5">
+              <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                <Music className="w-4 h-4 text-cyan-400" /> Analisi Multimedia
+              </h3>
+              
+              {/* Multimedia Stats Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <div className="bg-slate-900/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Music className="w-3 h-3 text-cyan-400" />
+                    <span className="text-xs font-medium text-slate-300">Audio</span>
+                  </div>
+                  <div className="text-lg font-bold text-white">{result.multimediaAnalysis.audioStats.totalAudioFiles}</div>
+                  <div className="text-xs text-slate-400">{result.multimediaAnalysis.audioStats.totalAudioSizeMb.toFixed(1)} MB</div>
+                </div>
+                
+                <div className="bg-slate-900/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Image className="w-3 h-3 text-emerald-400" />
+                    <span className="text-xs font-medium text-slate-300">Grafica</span>
+                  </div>
+                  <div className="text-lg font-bold text-white">{result.multimediaAnalysis.graphicsStats.totalGraphicsFiles}</div>
+                  <div className="text-xs text-slate-400">{result.multimediaAnalysis.graphicsStats.totalGraphicsSizeMb.toFixed(1)} MB</div>
+                </div>
+                
+                <div className="bg-slate-900/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-3 h-3 text-purple-400" />
+                    <span className="text-xs font-medium text-slate-300">Tempo</span>
+                  </div>
+                  <div className="text-lg font-bold text-white">
+                    {(result.multimediaAnalysis.multimediaEstimates.audioEditingHours + result.multimediaAnalysis.multimediaEstimates.graphicsEditingHours).toFixed(1)}h
+                  </div>
+                  <div className="text-xs text-slate-400">Editing stimato</div>
+                </div>
+                
+                <div className="bg-slate-900/50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <DollarSign className="w-3 h-3 text-yellow-400" />
+                    <span className="text-xs font-medium text-slate-300">Costi</span>
+                  </div>
+                  <div className="text-lg font-bold text-white">${result.multimediaAnalysis.multimediaEstimates.toolCostsUsd.toFixed(0)}</div>
+                  <div className="text-xs text-slate-400">Tool professionali</div>
+                </div>
+              </div>
+
+              {/* Audio Details */}
+              <div className="mb-4">
+                <h4 className="text-xs font-medium text-cyan-300 mb-2">Audio ({result.multimediaAnalysis.audioStats.totalAudioFiles} file)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="bg-slate-900/30 rounded-lg p-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">Localizzabili</span>
+                      <span className="text-xs font-mono text-cyan-400">{result.multimediaAnalysis.audioStats.localizableAudioFiles}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">Musica/Ambient</span>
+                      <span className="text-xs font-mono text-slate-300">{result.multimediaAnalysis.audioStats.musicAmbientFiles}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Compressi</span>
+                      <span className="text-xs font-mono text-orange-400">{result.multimediaAnalysis.audioStats.compressedAudioFiles}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-900/30 rounded-lg p-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">Qualità</span>
+                      <div className="flex items-center gap-1">
+                        <div 
+                          className="w-2 h-2 rounded-full" 
+                          style={{ backgroundColor: getAudioQualityColor(result.multimediaAnalysis.audioStats.predominantQuality) }}
+                        />
+                        <span className="text-xs font-mono text-slate-300">
+                          {getAudioQualityLabel(result.multimediaAnalysis.audioStats.predominantQuality)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">Durata tot.</span>
+                      <span className="text-xs font-mono text-slate-300">{result.multimediaAnalysis.audioStats.estimatedTotalMinutes.toFixed(0)} min</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Streaming</span>
+                      <span className="text-xs font-mono text-purple-400">{result.multimediaAnalysis.audioStats.streamingAudioFiles}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Graphics Details */}
+              <div className="mb-4">
+                <h4 className="text-xs font-medium text-emerald-300 mb-2">Grafica ({result.multimediaAnalysis.graphicsStats.totalGraphicsFiles} file)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="bg-slate-900/30 rounded-lg p-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">Con testo</span>
+                      <span className="text-xs font-mono text-emerald-400">{result.multimediaAnalysis.graphicsStats.textContainingGraphics}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">UI/Interfaccia</span>
+                      <span className="text-xs font-mono text-slate-300">{result.multimediaAnalysis.graphicsStats.uiInterfaceFiles}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Texture/Sprite</span>
+                      <span className="text-xs font-mono text-slate-300">{result.multimediaAnalysis.graphicsStats.textureSpriteFiles}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-900/30 rounded-lg p-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">Testo embedded</span>
+                      <span className="text-xs font-mono text-orange-400">{result.multimediaAnalysis.graphicsStats.embeddedTextFiles}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-slate-400">Animati</span>
+                      <span className="text-xs font-mono text-purple-400">{result.multimediaAnalysis.graphicsStats.animatedFiles}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Risoluzione</span>
+                      <span className="text-xs font-mono text-slate-300">{result.multimediaAnalysis.graphicsStats.predominantResolution}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recommended Tools */}
+              <div className="mb-4">
+                <h4 className="text-xs font-medium text-purple-300 mb-2">Tool Raccomandati</h4>
+                <div className="space-y-2">
+                  {/* Audio Tools */}
+                  {result.multimediaAnalysis.recommendedTools.audioTools.length > 0 && (
+                    <div className="bg-slate-900/30 rounded-lg p-2">
+                      <div className="text-xs font-medium text-cyan-300 mb-1">Audio</div>
+                      <div className="flex flex-wrap gap-1">
+                        {result.multimediaAnalysis.recommendedTools.audioTools.slice(0, 3).map((tool, i) => (
+                          <div key={i} className="flex items-center gap-1 bg-slate-800/50 rounded px-2 py-1">
+                            <span className="text-[10px] font-medium text-slate-300">{tool.name}</span>
+                            <span className="text-[8px] px-1 rounded bg-slate-700 text-slate-400">
+                              {getLearningCurveLabel(tool.learningCurve)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Graphics Tools */}
+                  {result.multimediaAnalysis.recommendedTools.graphicsTools.length > 0 && (
+                    <div className="bg-slate-900/30 rounded-lg p-2">
+                      <div className="text-xs font-medium text-emerald-300 mb-1">Grafica</div>
+                      <div className="flex flex-wrap gap-1">
+                        {result.multimediaAnalysis.recommendedTools.graphicsTools.slice(0, 3).map((tool, i) => (
+                          <div key={i} className="flex items-center gap-1 bg-slate-800/50 rounded px-2 py-1">
+                            <span className="text-[10px] font-medium text-slate-300">{tool.name}</span>
+                            <span className="text-[8px] px-1 rounded bg-slate-700 text-slate-400">
+                              {getLearningCurveLabel(tool.learningCurve)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Problematic Files */}
+              {result.multimediaAnalysis.problematicFiles.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-xs font-medium text-orange-300 mb-2">File Problematici</h4>
+                  <div className="space-y-1">
+                    {result.multimediaAnalysis.problematicFiles.slice(0, 3).map((problem, i) => (
+                      <div key={i} className="bg-slate-900/30 rounded-lg p-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-medium text-slate-300">{problem.filePath}</span>
+                          <div className="flex items-center gap-1">
+                            <div 
+                              className="w-2 h-2 rounded-full" 
+                              style={{ backgroundColor: getProblemSeverityColor(problem.severity) }}
+                            />
+                            <span className="text-[8px] text-slate-400">
+                              {getProblemSeverityLabel(problem.severity)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-slate-400">{problem.description}</div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {problem.suggestedSolutions.slice(0, 2).map((solution, j) => (
+                            <span key={j} className="text-[8px] bg-slate-700/50 rounded px-1 text-slate-300">
+                              {solution}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Complexity Score */}
+              <div className="pt-3 border-t border-slate-700/50">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-400">Complessità Multimediale</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full" 
+                        style={{ width: `${result.multimediaAnalysis.multimediaComplexityScore}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-mono text-orange-400">{result.multimediaAnalysis.multimediaComplexityScore}/100</span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -55,6 +55,8 @@ pub struct PredictionResult {
     pub selected_tools: SelectedTools,
     /// Chain LLM ottimizzate per questo progetto
     pub llm_chains: Vec<OptimizedChain>,
+    /// Analisi file multimediali (audio e grafica)
+    pub multimedia_analysis: MultimediaAnalysis,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -306,6 +308,249 @@ pub enum ModelRole {
     ContextDetection,
     /// Validazione formati
     FormatValidation,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MultimediaAnalysis {
+    /// Statistiche file audio
+    pub audio_stats: AudioStats,
+    /// Statistiche file grafici
+    pub graphics_stats: GraphicsStats,
+    /// Tool multimediali raccomandati
+    pub recommended_tools: MultimediaTools,
+    /// Stima costi e tempi editing
+    pub multimedia_estimates: MultimediaEstimates,
+    /// Complessità multimediale 0-100
+    pub multimedia_complexity_score: u32,
+    /// File problematici che richiedono attenzione speciale
+    pub problematic_files: Vec<ProblematicFile>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AudioStats {
+    /// Numero totale file audio
+    pub total_audio_files: u32,
+    /// Dimensione totale in MB
+    pub total_audio_size_mb: f64,
+    /// Formati audio trovati
+    pub audio_formats: Vec<AudioFormatInfo>,
+    /// File con dialoghi/localizzabili
+    pub localizable_audio_files: u32,
+    /// File musica/ambient (meno prioritari)
+    pub music_ambient_files: u32,
+    /// File audio compressi (difficili da editare)
+    pub compressed_audio_files: u32,
+    /// Durata totale stimata in minuti
+    pub estimated_total_minutes: f64,
+    /// Qualità audio predominante
+    pub predominant_quality: AudioQuality,
+    /// Streaming audio files (Wwise, FMOD)
+    pub streaming_audio_files: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphicsStats {
+    /// Numero totale file grafici
+    pub total_graphics_files: u32,
+    /// Dimensione totale in MB
+    pub total_graphics_size_mb: f64,
+    /// Formati grafici trovati
+    pub graphics_formats: Vec<GraphicsFormatInfo>,
+    /// File con testo localizzabile
+    pub text_containing_graphics: u32,
+    /// File UI/interfaccia
+    pub ui_interface_files: u32,
+    /// Texture e sprite
+    pub texture_sprite_files: u32,
+    /// File con testo embedded (difficili)
+    pub embedded_text_files: u32,
+    /// Risoluzione predominante
+    pub predominant_resolution: String,
+    /// File animati (GIF, APNG, etc.)
+    pub animated_files: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AudioFormatInfo {
+    /// Estensione formato
+    pub extension: String,
+    /// Numero file
+    pub count: u32,
+    /// Dimensione totale MB
+    pub total_size_mb: f64,
+    /// Editabile con tool standard
+    pub is_editable: bool,
+    /// Richiede tool specializzati
+    pub requires_specialized_tools: bool,
+    /// Qualità tipica del formato
+    pub typical_quality: AudioQuality,
+    /// Note sul formato
+    pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GraphicsFormatInfo {
+    /// Estensione formato
+    pub extension: String,
+    /// Numero file
+    pub count: u32,
+    /// Dimensione totale MB
+    pub total_size_mb: f64,
+    /// Editabile con tool standard
+    pub is_editable: bool,
+    /// Supporta trasparenza
+    pub supports_transparency: bool,
+    /// Compressione utilizzata
+    pub compression_type: GraphicsCompression,
+    /// Risoluzioni trovate
+    pub resolutions: Vec<String>,
+    /// Note sul formato
+    pub notes: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MultimediaTools {
+    /// Tool audio raccomandati
+    pub audio_tools: Vec<SelectedMultimediaTool>,
+    /// Tool grafici raccomandati
+    pub graphics_tools: Vec<SelectedMultimediaTool>,
+    /// Tool specializzati per engine
+    pub engine_specific_tools: Vec<SelectedMultimediaTool>,
+    /// Tool per formati compressi
+    pub compression_tools: Vec<SelectedMultimediaTool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectedMultimediaTool {
+    /// Nome del tool
+    pub name: String,
+    /// Categoria (Audio/Graphics/Compression)
+    pub category: MultimediaToolCategory,
+    /// Descrizione del tool
+    pub description: String,
+    /// Formati supportati
+    pub supported_formats: Vec<String>,
+    /// Score di compatibilità 0-100
+    pub compatibility_score: u32,
+    /// Costo del tool
+    pub cost: ToolCost,
+    /// Piattaforme supportate
+    pub platform_support: Vec<String>,
+    /// Curva di apprendimento
+    pub learning_curve: LearningCurve,
+    /// Funzionalità speciali
+    pub special_features: Vec<String>,
+    /// Caso d'uso ideale
+    pub best_for: String,
+    /// Requisiti di sistema
+    pub system_requirements: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MultimediaEstimates {
+    /// Tempo stimato editing audio in ore
+    pub audio_editing_hours: f64,
+    /// Tempo stimato editing grafico in ore
+    pub graphics_editing_hours: f64,
+    /// Costo stimato tool professionali in USD
+    pub tool_costs_usd: f64,
+    /// Complessità totale 0-100
+    pub total_complexity: u32,
+    /// Numero file che richiedono attenzione speciale
+    pub high_complexity_files: u32,
+    /// Fattore di difficoltà per formati compressi
+    pub compression_difficulty_factor: f64,
+    /// Stima costi se outsourcing a professionisti
+    pub outsourcing_cost_estimate: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProblematicFile {
+    /// Path del file
+    pub file_path: String,
+    /// Tipo di problema
+    pub problem_type: ProblemType,
+    /// Gravità del problema
+    pub severity: ProblemSeverity,
+    /// Descrizione del problema
+    pub description: String,
+    /// Soluzioni suggerite
+    pub suggested_solutions: Vec<String>,
+    /// Tool necessari per risolvere
+    pub required_tools: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum AudioQuality {
+    Low,      // < 22kHz, 8-bit
+    Medium,   // 22-44kHz, 16-bit
+    High,     // 44-96kHz, 24-bit
+    Studio,   // >96kHz, 32-bit
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum GraphicsCompression {
+    None,     // BMP, TGA
+    Lossless, // PNG, TIFF
+    Lossy,    // JPG, WEBP
+    Hybrid,   // DDS (can be both)
+    Unknown,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum MultimediaToolCategory {
+    AudioEditing,
+    GraphicsEditing,
+    AudioCompression,
+    GraphicsCompression,
+    VideoEditing,
+    AssetManagement,
+    EngineSpecific,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LearningCurve {
+    Beginner,    // 1-2 hours
+    Easy,        // 2-8 hours
+    Medium,      // 8-24 hours
+    Hard,        // 1-3 days
+    Expert,      // 1+ weeks
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ProblemType {
+    CompressedFormat,     // WEM, BNK, packed formats
+    EmbeddedText,         // Text in graphics
+    ProprietaryFormat,    // Engine-specific formats
+    EncryptedContent,     // DRM/encrypted files
+    CorruptedFile,        // Damaged files
+    UnsupportedCodec,     // Unknown codecs
+    LargeFileSize,        // >100MB files
+    NestedContainers,     // Archives in archives
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ProblemSeverity {
+    Low,      // Minor inconvenience
+    Medium,   // Requires special attention
+    High,     // Significant difficulty
+    Critical, // May prevent localization
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -2108,6 +2353,47 @@ pub async fn analyze_game_translation(
             selection_score: 0,
         },
         llm_chains: Vec::new(),
+        multimedia_analysis: MultimediaAnalysis {
+            audio_stats: AudioStats {
+                total_audio_files: 0,
+                total_audio_size_mb: 0.0,
+                audio_formats: Vec::new(),
+                localizable_audio_files: 0,
+                music_ambient_files: 0,
+                compressed_audio_files: 0,
+                estimated_total_minutes: 0.0,
+                predominant_quality: AudioQuality::Unknown,
+                streaming_audio_files: 0,
+            },
+            graphics_stats: GraphicsStats {
+                total_graphics_files: 0,
+                total_graphics_size_mb: 0.0,
+                graphics_formats: Vec::new(),
+                text_containing_graphics: 0,
+                ui_interface_files: 0,
+                texture_sprite_files: 0,
+                embedded_text_files: 0,
+                predominant_resolution: "Unknown".to_string(),
+                animated_files: 0,
+            },
+            recommended_tools: MultimediaTools {
+                audio_tools: Vec::new(),
+                graphics_tools: Vec::new(),
+                engine_specific_tools: Vec::new(),
+                compression_tools: Vec::new(),
+            },
+            multimedia_estimates: MultimediaEstimates {
+                audio_editing_hours: 0.0,
+                graphics_editing_hours: 0.0,
+                tool_costs_usd: 0.0,
+                total_complexity: 0,
+                high_complexity_files: 0,
+                compression_difficulty_factor: 1.0,
+                outsourcing_cost_estimate: 0.0,
+            },
+            multimedia_complexity_score: 0,
+            problematic_files: Vec::new(),
+        },
     };
 
     // Tool selection
@@ -2115,6 +2401,9 @@ pub async fn analyze_game_translation(
 
     // LLM Chain Builder
     let llm_chains = build_optimized_llm_chains(&preliminary_result);
+
+    // Multimedia Analysis
+    let multimedia_analysis = analyze_multimedia_files(&game_path, &engine_str, &preliminary_result);
     
     let result = PredictionResult {
         game_title,
@@ -2140,6 +2429,7 @@ pub async fn analyze_game_translation(
         existing_tools,
         selected_tools,
         llm_chains,
+        multimedia_analysis,
     };
 
     // Save to cache
@@ -3399,4 +3689,1105 @@ fn calculate_chain_time(models: &[&LLMModel], total_tokens: f64, workloads: &[f6
         let tokens = total_tokens * (workload / 100.0);
         tokens / (model.speed_tokens_per_sec * 3600.0)
     }).sum()
+}
+
+// ── Multimedia Analysis Engine ───────────────────────────────────────────
+
+fn analyze_multimedia_files(game_path: &Path, engine: &str, _result: &PredictionResult) -> MultimediaAnalysis {
+    let audio_stats = analyze_audio_files(game_path);
+    let graphics_stats = analyze_graphics_files(game_path);
+    let recommended_tools = select_multimedia_tools(&audio_stats, &graphics_stats, engine);
+    let multimedia_estimates = calculate_multimedia_estimates(&audio_stats, &graphics_stats, &recommended_tools);
+    let problematic_files = detect_problematic_multimedia_files(game_path, &audio_stats, &graphics_stats);
+    let multimedia_complexity_score = calculate_multimedia_complexity(&audio_stats, &graphics_stats, &problematic_files);
+    
+    MultimediaAnalysis {
+        audio_stats,
+        graphics_stats,
+        recommended_tools,
+        multimedia_estimates,
+        multimedia_complexity_score,
+        problematic_files,
+    }
+}
+
+fn analyze_audio_files(game_path: &Path) -> AudioStats {
+    let audio_extensions = vec![
+        "wav", "mp3", "ogg", "flac", "aac", "m4a", "wma", "aiff",
+        "wem", "bnk", "pck", "fsb", "xm", "it", "s3m", "mod",
+        "opus", "ac3", "dts", "amr", "3gp", "ra", "au"
+    ];
+    
+    let mut total_files = 0u32;
+    let mut total_size_mb = 0.0f64;
+    let mut format_counts = std::collections::HashMap::new();
+    let mut localizable_files = 0u32;
+    let mut music_ambient_files = 0u32;
+    let mut compressed_files = 0u32;
+    let mut streaming_files = 0u32;
+    let mut total_duration_estimate = 0.0f64;
+    
+    let mut quality_samples = Vec::new();
+    
+    if let Ok(entries) = walk_directory(game_path, &audio_extensions) {
+        for entry in entries {
+            if let Ok(metadata) = entry.metadata() {
+                if metadata.is_file() {
+                    total_files += 1;
+                    let size_mb = metadata.len() as f64 / (1024.0 * 1024.0);
+                    total_size_mb += size_mb;
+                    
+                    if let Some(ext) = entry.extension().and_then(|e| e.to_str()) {
+                        let ext_lower = ext.to_lowercase();
+                        *format_counts.entry(ext_lower.clone()).or_insert(0) += 1;
+                        
+                        // Classify file type
+                        if is_localizable_audio(&entry, &ext_lower) {
+                            localizable_files += 1;
+                        } else if is_music_ambient_audio(&entry, &ext_lower) {
+                            music_ambient_files += 1;
+                        }
+                        
+                        // Check for compressed formats
+                        if is_compressed_audio_format(&ext_lower) {
+                            compressed_files += 1;
+                        }
+                        
+                        // Check for streaming formats
+                        if is_streaming_audio_format(&ext_lower) {
+                            streaming_files += 1;
+                        }
+                        
+                        // Estimate duration (rough approximation)
+                        let duration_min = estimate_audio_duration(&ext_lower, size_mb);
+                        total_duration_estimate += duration_min;
+                        
+                        // Sample quality assessment
+                        if let Some(quality) = assess_audio_quality(&entry, size_mb) {
+                            quality_samples.push(quality);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Build format info
+    let audio_formats: Vec<AudioFormatInfo> = format_counts.into_iter().map(|(ext, count)| {
+        let ext_clone = ext.clone();
+        let typical_quality = get_typical_audio_quality(&ext);
+        let is_editable = is_audio_editable(&ext);
+        let requires_specialized = !is_editable || is_compressed_audio_format(&ext);
+        
+        AudioFormatInfo {
+            extension: ext_clone,
+            count,
+            total_size_mb: total_size_mb * (count as f64 / total_files as f64), // Approximate
+            is_editable,
+            requires_specialized_tools: requires_specialized,
+            typical_quality,
+            notes: get_audio_format_notes(&ext),
+        }
+    }).collect();
+    
+    // Determine predominant quality
+    let predominant_quality = if quality_samples.is_empty() {
+        AudioQuality::Unknown
+    } else {
+        let avg_quality = quality_samples.iter().map(|q| quality_to_score(q)).sum::<f64>() / quality_samples.len() as f64;
+        if avg_quality >= 4.5 { AudioQuality::Studio }
+        else if avg_quality >= 3.5 { AudioQuality::High }
+        else if avg_quality >= 2.5 { AudioQuality::Medium }
+        else if avg_quality >= 1.5 { AudioQuality::Low }
+        else { AudioQuality::Unknown }
+    };
+    
+    AudioStats {
+        total_audio_files: total_files,
+        total_audio_size_mb: total_size_mb,
+        audio_formats,
+        localizable_audio_files: localizable_files,
+        music_ambient_files: music_ambient_files,
+        compressed_audio_files: compressed_files,
+        estimated_total_minutes: total_duration_estimate,
+        predominant_quality,
+        streaming_audio_files: streaming_files,
+    }
+}
+
+fn analyze_graphics_files(game_path: &Path) -> GraphicsStats {
+    let graphics_extensions = vec![
+        "png", "jpg", "jpeg", "gif", "bmp", "tga", "dds", "psd", "tiff", "webp",
+        "svg", "ico", "icns", "pnm", "pbm", "pgm", "ppm", "xbm", "xpm",
+        "apng", "avif", "heif", "heic", "jxl", "qoi"
+    ];
+    
+    let mut total_files = 0u32;
+    let mut total_size_mb = 0.0f64;
+    let mut format_counts = std::collections::HashMap::new();
+    let mut text_containing_files = 0u32;
+    let mut ui_interface_files = 0u32;
+    let mut texture_sprite_files = 0u32;
+    let mut embedded_text_files = 0u32;
+    let mut animated_files = 0u32;
+    
+    let mut resolution_samples = Vec::new();
+    
+    if let Ok(entries) = walk_directory(game_path, &graphics_extensions) {
+        for entry in entries {
+            if let Ok(metadata) = entry.metadata() {
+                if metadata.is_file() {
+                    total_files += 1;
+                    let size_mb = metadata.len() as f64 / (1024.0 * 1024.0);
+                    total_size_mb += size_mb;
+                    
+                    if let Some(ext) = entry.extension().and_then(|e| e.to_str()) {
+                        let ext_lower = ext.to_lowercase();
+                        *format_counts.entry(ext_lower.clone()).or_insert(0) += 1;
+                        
+                        // Classify file type
+                        if contains_text(&entry) {
+                            text_containing_files += 1;
+                            if is_ui_interface_file(&entry) {
+                                ui_interface_files += 1;
+                            }
+                        }
+                        
+                        if is_texture_or_sprite(&entry) {
+                            texture_sprite_files += 1;
+                        }
+                        
+                        if has_embedded_text(&entry) {
+                            embedded_text_files += 1;
+                        }
+                        
+                        // Check for animated formats
+                        if is_animated_format(&ext_lower) {
+                            animated_files += 1;
+                        }
+                        
+                        // Sample resolution
+                        if let Some(resolution) = detect_image_resolution(&entry) {
+                            resolution_samples.push(resolution);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Build format info
+    let graphics_formats: Vec<GraphicsFormatInfo> = format_counts.into_iter().map(|(ext, count)| {
+        let ext_clone = ext.clone();
+        let compression_type = get_graphics_compression_type(&ext);
+        let supports_transparency = supports_alpha_channel(&ext);
+        let is_editable = is_graphics_editable(&ext);
+        
+        GraphicsFormatInfo {
+            extension: ext_clone,
+            count,
+            total_size_mb: total_size_mb * (count as f64 / total_files as f64), // Approximate
+            is_editable,
+            supports_transparency,
+            compression_type,
+            resolutions: get_common_resolutions_for_format(&ext),
+            notes: get_graphics_format_notes(&ext),
+        }
+    }).collect();
+    
+    // Determine predominant resolution
+    let predominant_resolution = if resolution_samples.is_empty() {
+        "Unknown".to_string()
+    } else {
+        // Find most common resolution
+        let mut resolution_counts = std::collections::HashMap::new();
+        for res in &resolution_samples {
+            *resolution_counts.entry(res.clone()).or_insert(0) += 1;
+        }
+        resolution_counts.into_iter()
+            .max_by_key(|(_, count)| *count)
+            .map(|(res, _)| res)
+            .unwrap_or_else(|| "Unknown".to_string())
+    };
+    
+    GraphicsStats {
+        total_graphics_files: total_files,
+        total_graphics_size_mb: total_size_mb,
+        graphics_formats,
+        text_containing_graphics: text_containing_files,
+        ui_interface_files: ui_interface_files,
+        texture_sprite_files: texture_sprite_files,
+        embedded_text_files: embedded_text_files,
+        predominant_resolution,
+        animated_files,
+    }
+}
+
+fn select_multimedia_tools(audio_stats: &AudioStats, graphics_stats: &GraphicsStats, engine: &str) -> MultimediaTools {
+    let multimedia_db = get_multimedia_tool_database();
+    
+    let audio_tools = select_multimedia_audio_tools(&multimedia_db, audio_stats, engine);
+    let graphics_tools = select_multimedia_graphics_tools(&multimedia_db, graphics_stats, engine);
+    let engine_specific_tools = select_engine_specific_tools(&multimedia_db, engine);
+    let compression_tools = select_compression_tools(&multimedia_db, audio_stats, graphics_stats);
+    
+    MultimediaTools {
+        audio_tools,
+        graphics_tools,
+        engine_specific_tools,
+        compression_tools,
+    }
+}
+
+fn calculate_multimedia_estimates(audio_stats: &AudioStats, graphics_stats: &GraphicsStats, tools: &MultimediaTools) -> MultimediaEstimates {
+    // Audio editing time estimation
+    let audio_editing_hours = estimate_audio_editing_time(audio_stats);
+    
+    // Graphics editing time estimation
+    let graphics_editing_hours = estimate_graphics_editing_time(graphics_stats);
+    
+    // Tool costs
+    let tool_costs_usd = calculate_multimedia_tool_costs(tools);
+    
+    // Complexity assessment
+    let total_complexity = calculate_multimedia_complexity_score(audio_stats, graphics_stats);
+    
+    // High complexity files
+    let high_complexity_files = audio_stats.compressed_audio_files + graphics_stats.embedded_text_files;
+    
+    // Compression difficulty factor
+    let compression_difficulty_factor = calculate_compression_difficulty(audio_stats, graphics_stats);
+    
+    // Outsourcing cost estimation
+    let outsourcing_cost_estimate = estimate_outsourcing_costs(audio_editing_hours, graphics_editing_hours, total_complexity);
+    
+    MultimediaEstimates {
+        audio_editing_hours,
+        graphics_editing_hours,
+        tool_costs_usd,
+        total_complexity,
+        high_complexity_files,
+        compression_difficulty_factor,
+        outsourcing_cost_estimate,
+    }
+}
+
+fn detect_problematic_multimedia_files(_game_path: &Path, audio_stats: &AudioStats, graphics_stats: &GraphicsStats) -> Vec<ProblematicFile> {
+    let mut problematic_files = Vec::new();
+    
+    // Check for compressed audio files
+    if audio_stats.compressed_audio_files > 0 {
+        problematic_files.push(ProblematicFile {
+            file_path: "Multiple compressed audio files".to_string(),
+            problem_type: ProblemType::CompressedFormat,
+            severity: if audio_stats.compressed_audio_files > 100 { ProblemSeverity::High } else { ProblemSeverity::Medium },
+            description: format!("Found {} compressed audio files that require specialized tools", audio_stats.compressed_audio_files),
+            suggested_solutions: vec![
+                "Use WW2Ogg or FSB extractor".to_string(),
+                "Convert to WAV format first".to_string(),
+                "Consider using FMOD/Wwise tools".to_string(),
+            ],
+            required_tools: vec!["WW2Ogg".to_string(), "FSB Extractor".to_string(), "VGMToolbox".to_string()],
+        });
+    }
+    
+    // Check for embedded text in graphics
+    if graphics_stats.embedded_text_files > 0 {
+        problematic_files.push(ProblematicFile {
+            file_path: "Graphics with embedded text".to_string(),
+            problem_type: ProblemType::EmbeddedText,
+            severity: if graphics_stats.embedded_text_files > 50 { ProblemSeverity::High } else { ProblemSeverity::Medium },
+            description: format!("Found {} graphics files with embedded text that requires manual editing", graphics_stats.embedded_text_files),
+            suggested_solutions: vec![
+                "Use Photoshop/GIMP for manual text replacement".to_string(),
+                "Consider vector text layers if possible".to_string(),
+                "Use OCR tools to extract text first".to_string(),
+            ],
+            required_tools: vec!["Photoshop".to_string(), "GIMP".to_string(), "Inkscape".to_string()],
+        });
+    }
+    
+    // Check for very large files
+    if audio_stats.total_audio_size_mb > 1000.0 || graphics_stats.total_graphics_size_mb > 2000.0 {
+        problematic_files.push(ProblematicFile {
+            file_path: "Large multimedia files".to_string(),
+            problem_type: ProblemType::LargeFileSize,
+            severity: ProblemSeverity::Medium,
+            description: format!("Large multimedia files detected (Audio: {:.1}MB, Graphics: {:.1}MB)", 
+                audio_stats.total_audio_size_mb, graphics_stats.total_graphics_size_mb),
+            suggested_solutions: vec![
+                "Consider file compression".to_string(),
+                "Process files in batches".to_string(),
+                "Use high-performance hardware".to_string(),
+            ],
+            required_tools: vec!["High-spec workstation".to_string(), "Batch processing tools".to_string()],
+        });
+    }
+    
+    problematic_files
+}
+
+fn calculate_multimedia_complexity(audio_stats: &AudioStats, graphics_stats: &GraphicsStats, problematic_files: &[ProblematicFile]) -> u32 {
+    let mut score = 0u32;
+    
+    // Base complexity from file counts
+    score += (audio_stats.total_audio_files / 10).min(20); // Max 20 points
+    score += (graphics_stats.total_graphics_files / 20).min(20); // Max 20 points
+    
+    // Complexity from file sizes
+    score += ((audio_stats.total_audio_size_mb / 100.0) as u32).min(15); // Max 15 points
+    score += ((graphics_stats.total_graphics_size_mb / 200.0) as u32).min(15); // Max 15 points
+    
+    // Complexity from difficult formats
+    score += (audio_stats.compressed_audio_files * 2).min(10); // Max 10 points
+    score += (graphics_stats.embedded_text_files * 3).min(10); // Max 10 points
+    
+    // Complexity from problematic files
+    for problem in problematic_files {
+        match problem.severity {
+            ProblemSeverity::Low => score += 1,
+            ProblemSeverity::Medium => score += 3,
+            ProblemSeverity::High => score += 5,
+            ProblemSeverity::Critical => score += 10,
+        }
+    }
+    
+    score.min(100)
+}
+
+// ── Helper Functions ───────────────────────────────────────────────────
+
+fn walk_directory(path: &Path, extensions: &[&str]) -> std::io::Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    
+    if path.is_dir() {
+        for entry in std::fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            
+            if path.is_dir() && !path.file_name().unwrap_or_default().to_string_lossy().starts_with('.') {
+                // Recurse into subdirectories
+                if let Ok(sub_files) = walk_directory(&path, extensions) {
+                    files.extend(sub_files);
+                }
+            } else if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                if extensions.contains(&ext.to_lowercase().as_str()) {
+                    files.push(path);
+                }
+            }
+        }
+    }
+    
+    Ok(files)
+}
+
+fn is_localizable_audio(path: &Path, ext: &str) -> bool {
+    let path_str = path.to_string_lossy().to_lowercase();
+    
+    // Check file name patterns for dialogue/voice files
+    let dialogue_patterns = [
+        "dialog", "voice", "speech", "talk", "say", "speak", "narr", "story",
+        "char", "npc", "player", "cutscene", "cinema", "intro", "outro"
+    ];
+    
+    for pattern in &dialogue_patterns {
+        if path_str.contains(pattern) {
+            return true;
+        }
+    }
+    
+    // Check common dialogue directories
+    let dialogue_dirs = [
+        "audio/dialogue", "audio/voice", "sound/dialogue", "sound/voice",
+        "dialogue", "voice", "speech", "localization/audio"
+    ];
+    
+    for dir in &dialogue_dirs {
+        if path_str.contains(dir) {
+            return true;
+        }
+    }
+    
+    false
+}
+
+fn is_music_ambient_audio(path: &Path, ext: &str) -> bool {
+    let path_str = path.to_string_lossy().to_lowercase();
+    
+    let music_patterns = [
+        "music", "bgm", "ambient", "atmos", "soundtrack", "theme", "menu",
+        "background", "score", "orchestra", "instrument"
+    ];
+    
+    for pattern in &music_patterns {
+        if path_str.contains(pattern) {
+            return true;
+        }
+    }
+    
+    false
+}
+
+fn is_compressed_audio_format(ext: &str) -> bool {
+    matches!(ext, "wem" | "bnk" | "pck" | "fsb" | "opus" | "aac" | "m4a")
+}
+
+fn is_streaming_audio_format(ext: &str) -> bool {
+    matches!(ext, "wem" | "bnk" | "fsb")
+}
+
+fn is_audio_editable(ext: &str) -> bool {
+    matches!(ext, "wav" | "mp3" | "ogg" | "flac" | "aac" | "m4a")
+}
+
+fn estimate_audio_duration(ext: &str, size_mb: f64) -> f64 {
+    // Rough duration estimation based on format and size
+    let bitrate_mb_per_min = match ext {
+        "wav" => 7.5,  // ~7.5 MB/min for 44.1kHz 16-bit stereo
+        "mp3" => 1.0,  // ~1 MB/min for 128 kbps
+        "ogg" => 0.8,  // ~0.8 MB/min for Vorbis
+        "flac" => 5.0, // ~5 MB/min for FLAC
+        "wem" => 0.6,  // ~0.6 MB/min for WEM (compressed)
+        _ => 1.0,
+    };
+    
+    size_mb / bitrate_mb_per_min
+}
+
+fn assess_audio_quality(path: &Path, size_mb: f64) -> Option<AudioQuality> {
+    let ext = path.extension()?.to_str()?.to_lowercase();
+    
+    // Base quality from format
+    let base_quality = match ext.as_str() {
+        "wav" => AudioQuality::High,
+        "flac" => AudioQuality::Studio,
+        "mp3" => AudioQuality::Medium,
+        "ogg" => AudioQuality::Medium,
+        "aac" | "m4a" => AudioQuality::Medium,
+        "wem" => AudioQuality::Medium,
+        _ => AudioQuality::Unknown,
+    };
+    
+    // Adjust based on file size (larger files often indicate higher quality)
+    let adjusted_quality = match base_quality {
+        AudioQuality::Studio => if size_mb > 10.0 { AudioQuality::Studio } else { AudioQuality::High },
+        AudioQuality::High => if size_mb > 5.0 { AudioQuality::High } else { AudioQuality::Medium },
+        AudioQuality::Medium => if size_mb > 2.0 { AudioQuality::Medium } else { AudioQuality::Low },
+        AudioQuality::Low => AudioQuality::Low,
+        AudioQuality::Unknown => AudioQuality::Unknown,
+    };
+    
+    Some(adjusted_quality)
+}
+
+fn quality_to_score(quality: &AudioQuality) -> f64 {
+    match quality {
+        AudioQuality::Studio => 5.0,
+        AudioQuality::High => 4.0,
+        AudioQuality::Medium => 3.0,
+        AudioQuality::Low => 2.0,
+        AudioQuality::Unknown => 1.0,
+    }
+}
+
+fn get_typical_audio_quality(ext: &str) -> AudioQuality {
+    match ext {
+        "wav" => AudioQuality::High,
+        "flac" => AudioQuality::Studio,
+        "mp3" => AudioQuality::Medium,
+        "ogg" => AudioQuality::Medium,
+        "aac" | "m4a" => AudioQuality::Medium,
+        "wem" => AudioQuality::Medium,
+        "opus" => AudioQuality::Medium,
+        _ => AudioQuality::Unknown,
+    }
+}
+
+fn get_audio_format_notes(ext: &str) -> Vec<String> {
+    match ext {
+        "wav" => vec!["Uncompressed format".to_string(), "High quality".to_string(), "Large file size".to_string()],
+        "mp3" => vec!["Compressed format".to_string(), "Good compatibility".to_string(), "Lossy compression".to_string()],
+        "ogg" => vec!["Open source format".to_string(), "Good compression".to_string(), "Game industry standard".to_string()],
+        "flac" => vec!["Lossless compression".to_string(), "High quality".to_string(), "Large file size".to_string()],
+        "wem" => vec!["Wwise format".to_string(), "Compressed".to_string(), "Requires Wwise tools".to_string()],
+        "bnk" => vec!["Wwise bank format".to_string(), "Multiple audio files".to_string(), "Requires extraction".to_string()],
+        _ => vec!["Standard audio format".to_string()],
+    }
+}
+
+fn contains_text(path: &Path) -> bool {
+    let path_str = path.to_string_lossy().to_lowercase();
+    
+    let text_patterns = [
+        "text", "font", "label", "button", "menu", "ui", "hud", "interface",
+        "dialog", "chat", "message", "notification", "tooltip", "title"
+    ];
+    
+    for pattern in &text_patterns {
+        if path_str.contains(pattern) {
+            return true;
+        }
+    }
+    
+    false
+}
+
+fn is_ui_interface_file(path: &Path) -> bool {
+    let path_str = path.to_string_lossy().to_lowercase();
+    
+    let ui_patterns = [
+        "ui", "hud", "interface", "menu", "button", "panel", "window",
+        "dialog", "tooltip", "cursor", "icon", "banner"
+    ];
+    
+    for pattern in &ui_patterns {
+        if path_str.contains(pattern) {
+            return true;
+        }
+    }
+    
+    false
+}
+
+fn is_texture_or_sprite(path: &Path) -> bool {
+    let path_str = path.to_string_lossy().to_lowercase();
+    
+    let texture_patterns = [
+        "texture", "sprite", "tile", "character", "enemy", "item",
+        "weapon", "armor", "background", "terrain", "object"
+    ];
+    
+    for pattern in &texture_patterns {
+        if path_str.contains(pattern) {
+            return true;
+        }
+    }
+    
+    false
+}
+
+fn has_embedded_text(path: &Path) -> bool {
+    // This would require actual image analysis in a real implementation
+    // For now, use heuristics based on file name and size
+    let path_str = path.to_string_lossy().to_lowercase();
+    
+    // Large UI files are more likely to have embedded text
+    if let Ok(metadata) = path.metadata() {
+        let size_mb = metadata.len() as f64 / (1024.0 * 1024.0);
+        if size_mb > 0.5 && (path_str.contains("ui") || path_str.contains("menu")) {
+            return true;
+        }
+    }
+    
+    false
+}
+
+fn is_animated_format(ext: &str) -> bool {
+    matches!(ext, "gif" | "apng" | "webp")
+}
+
+fn detect_image_resolution(path: &Path) -> Option<String> {
+    // This would require actual image parsing in a real implementation
+    // For now, make educated guesses based on file size and name
+    if let Ok(metadata) = path.metadata() {
+        let size_kb = metadata.len() as f64 / 1024.0;
+        
+        // Rough estimation based on file size
+        let resolution = if size_kb < 10.0 {
+            "Small (< 256x256)"
+        } else if size_kb < 100.0 {
+            "Medium (256x256 - 1024x1024)"
+        } else if size_kb < 500.0 {
+            "Large (1024x1024 - 2048x2048)"
+        } else {
+            "Very Large (> 2048x2048)"
+        };
+        
+        return Some(resolution.to_string());
+    }
+    
+    None
+}
+
+fn get_graphics_compression_type(ext: &str) -> GraphicsCompression {
+    match ext {
+        "bmp" | "tga" => GraphicsCompression::None,
+        "png" | "tiff" => GraphicsCompression::Lossless,
+        "jpg" | "jpeg" | "webp" => GraphicsCompression::Lossy,
+        "dds" => GraphicsCompression::Hybrid,
+        _ => GraphicsCompression::Unknown,
+    }
+}
+
+fn supports_alpha_channel(ext: &str) -> bool {
+    matches!(ext, "png" | "tga" | "dds" | "webp" | "gif" | "tiff" | "svg")
+}
+
+fn is_graphics_editable(ext: &str) -> bool {
+    matches!(ext, "png" | "jpg" | "jpeg" | "bmp" | "tga" | "dds" | "psd" | "tiff" | "webp" | "svg")
+}
+
+fn get_common_resolutions_for_format(ext: &str) -> Vec<String> {
+    match ext {
+        "png" | "jpg" | "jpeg" => vec![
+            "1920x1080".to_string(), "1280x720".to_string(), "1024x768".to_string(),
+            "512x512".to_string(), "256x256".to_string(), "128x128".to_string()
+        ],
+        "dds" => vec![
+            "2048x2048".to_string(), "1024x1024".to_string(), "512x512".to_string(),
+            "256x256".to_string(), "128x128".to_string()
+        ],
+        _ => vec!["Various".to_string()],
+    }
+}
+
+fn get_graphics_format_notes(ext: &str) -> Vec<String> {
+    match ext {
+        "png" => vec!["Lossless compression".to_string(), "Alpha channel support".to_string(), "Web standard".to_string()],
+        "jpg" | "jpeg" => vec!["Lossy compression".to_string(), "Small file size".to_string(), "No transparency".to_string()],
+        "dds" => vec!["DirectX format".to_string(), "Game textures".to_string(), "Multiple compression types".to_string()],
+        "psd" => vec!["Photoshop format".to_string(), "Layer support".to_string(), "High quality".to_string()],
+        "tga" => vec!["Uncompressed".to_string(), "Alpha channel".to_string(), "Legacy format".to_string()],
+        _ => vec!["Standard graphics format".to_string()],
+    }
+}
+
+fn get_multimedia_tool_database() -> Vec<MultimediaTool> {
+    vec![
+        // Audio Tools
+        MultimediaTool {
+            name: "Audacity".to_string(),
+            category: MultimediaToolCategory::AudioEditing,
+            description: "Free, open-source audio editor".to_string(),
+            supported_formats: vec!["wav".to_string(), "mp3".to_string(), "ogg".to_string(), "flac".to_string()],
+            compatibility_score: 85,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string(), "macOS".to_string(), "Linux".to_string()],
+            learning_curve: LearningCurve::Easy,
+            special_features: vec!["Multi-track editing".to_string(), "Noise reduction".to_string(), "Effects library".to_string()],
+            best_for: "Basic audio editing and voice processing".to_string(),
+            system_requirements: vec!["2GB RAM".to_string(), "500MB disk space".to_string()],
+        },
+        MultimediaTool {
+            name: "Adobe Audition".to_string(),
+            category: MultimediaToolCategory::AudioEditing,
+            description: "Professional audio editing software".to_string(),
+            supported_formats: vec!["wav".to_string(), "mp3".to_string(), "aac".to_string(), "flac".to_string()],
+            compatibility_score: 95,
+            cost: ToolCost::Commercial("$20.99/month".to_string()),
+            platform_support: vec!["Windows".to_string(), "macOS".to_string()],
+            learning_curve: LearningCurve::Medium,
+            special_features: vec!["Professional effects".to_string(), "Multi-track mixing".to_string(), "Repair tools".to_string()],
+            best_for: "Professional audio post-production".to_string(),
+            system_requirements: vec!["8GB RAM".to_string(), "4GB disk space".to_string()],
+        },
+        MultimediaTool {
+            name: "Wwise".to_string(),
+            category: MultimediaToolCategory::EngineSpecific,
+            description: "Audio middleware for games".to_string(),
+            supported_formats: vec!["wem".to_string(), "bnk".to_string(), "wav".to_string()],
+            compatibility_score: 90,
+            cost: ToolCost::Commercial("Varies".to_string()),
+            platform_support: vec!["Windows".to_string(), "macOS".to_string()],
+            learning_curve: LearningCurve::Hard,
+            special_features: vec!["Game audio integration".to_string(), "Interactive music".to_string(), "Sound banks".to_string()],
+            best_for: "Game audio integration and WEM/BNK files".to_string(),
+            system_requirements: vec!["16GB RAM".to_string(), "10GB disk space".to_string()],
+        },
+        
+        // Graphics Tools
+        MultimediaTool {
+            name: "Adobe Photoshop".to_string(),
+            category: MultimediaToolCategory::GraphicsEditing,
+            description: "Professional graphics editing software".to_string(),
+            supported_formats: vec!["png".to_string(), "jpg".to_string(), "psd".to_string(), "tga".to_string()],
+            compatibility_score: 98,
+            cost: ToolCost::Commercial("$22.99/month".to_string()),
+            platform_support: vec!["Windows".to_string(), "macOS".to_string()],
+            learning_curve: LearningCurve::Medium,
+            special_features: vec!["Layer editing".to_string(), "Text tools".to_string(), "Advanced effects".to_string()],
+            best_for: "Professional graphics editing and text replacement".to_string(),
+            system_requirements: vec!["8GB RAM".to_string(), "4GB disk space".to_string()],
+        },
+        MultimediaTool {
+            name: "GIMP".to_string(),
+            category: MultimediaToolCategory::GraphicsEditing,
+            description: "Free, open-source graphics editor".to_string(),
+            supported_formats: vec!["png".to_string(), "jpg".to_string(), "tga".to_string(), "dds".to_string()],
+            compatibility_score: 80,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string(), "macOS".to_string(), "Linux".to_string()],
+            learning_curve: LearningCurve::Medium,
+            special_features: vec!["Layer editing".to_string(), "Text tools".to_string(), "Plugin support".to_string()],
+            best_for: "Free alternative to Photoshop".to_string(),
+            system_requirements: vec!["4GB RAM".to_string(), "1GB disk space".to_string()],
+        },
+        MultimediaTool {
+            name: "Krita".to_string(),
+            category: MultimediaToolCategory::GraphicsEditing,
+            description: "Digital painting and graphics editor".to_string(),
+            supported_formats: vec!["png".to_string(), "jpg".to_string(), "psd".to_string()],
+            compatibility_score: 85,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string(), "macOS".to_string(), "Linux".to_string()],
+            learning_curve: LearningCurve::Easy,
+            special_features: vec!["Drawing tools".to_string(), "Brush engine".to_string(), "Text support".to_string()],
+            best_for: "Artistic graphics and UI elements".to_string(),
+            system_requirements: vec!["4GB RAM".to_string(), "1GB disk space".to_string()],
+        },
+        
+        // Compression Tools
+        MultimediaTool {
+            name: "WW2Ogg".to_string(),
+            category: MultimediaToolCategory::AudioCompression,
+            description: "Wwise audio format converter".to_string(),
+            supported_formats: vec!["wem".to_string(), "ogg".to_string(), "wav".to_string()],
+            compatibility_score: 75,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            learning_curve: LearningCurve::Beginner,
+            special_features: vec!["WEM to OGG conversion".to_string(), "Batch processing".to_string()],
+            best_for: "Converting Wwise WEM files to editable formats".to_string(),
+            system_requirements: vec!["1GB RAM".to_string(), "100MB disk space".to_string()],
+        },
+        MultimediaTool {
+            name: "VGMToolbox".to_string(),
+            category: MultimediaToolCategory::AudioCompression,
+            description: "Video game music tools".to_string(),
+            supported_formats: vec!["fsb".to_string(), "bnk".to_string(), "wav".to_string()],
+            compatibility_score: 70,
+            cost: ToolCost::Free,
+            platform_support: vec!["Windows".to_string()],
+            learning_curve: LearningCurve::Easy,
+            special_features: vec!["FSB extraction".to_string(), "BNK processing".to_string()],
+            best_for: "Extracting compressed game audio".to_string(),
+            system_requirements: vec!["2GB RAM".to_string(), "500MB disk space".to_string()],
+        },
+    ]
+}
+
+// Struttura interna per database multimedia
+#[derive(Debug, Clone)]
+struct MultimediaTool {
+    name: String,
+    category: MultimediaToolCategory,
+    description: String,
+    supported_formats: Vec<String>,
+    compatibility_score: u32,
+    cost: ToolCost,
+    platform_support: Vec<String>,
+    learning_curve: LearningCurve,
+    special_features: Vec<String>,
+    best_for: String,
+    system_requirements: Vec<String>,
+}
+
+fn select_multimedia_audio_tools(db: &[MultimediaTool], stats: &AudioStats, engine: &str) -> Vec<SelectedMultimediaTool> {
+    let mut tools = Vec::new();
+    
+    // Score tools based on compatibility with detected formats
+    let mut scored_tools: Vec<_> = db.iter()
+        .filter(|tool| matches!(tool.category, MultimediaToolCategory::AudioEditing | MultimediaToolCategory::EngineSpecific))
+        .map(|tool| {
+            let mut score = tool.compatibility_score;
+            
+            // Bonus for supporting detected formats
+            for format in &stats.audio_formats {
+                if tool.supported_formats.contains(&format.extension) {
+                    score += 10;
+                }
+            }
+            
+            // Bonus for engine-specific tools
+            if matches!(tool.category, MultimediaToolCategory::EngineSpecific) {
+                if (engine.to_lowercase().contains("unreal") && tool.name.contains("Wwise")) ||
+                   (engine.to_lowercase().contains("unity") && tool.name.contains("Wwise")) {
+                    score += 20;
+                }
+            }
+            
+            // Penalty for compressed formats if tool doesn't support them
+            if stats.compressed_audio_files > 0 && !tool.supported_formats.iter().any(|f| ["wem", "bnk", "fsb"].contains(&f.as_str())) {
+                score -= 15;
+            }
+            
+            (tool, score)
+        })
+        .collect();
+    
+    scored_tools.sort_by(|a, b| b.1.cmp(&a.1));
+    
+    // Convert to SelectedMultimediaTool
+    for (tool, score) in scored_tools.into_iter().take(3) {
+        tools.push(SelectedMultimediaTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: score,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            learning_curve: tool.learning_curve.clone(),
+            special_features: tool.special_features.clone(),
+            best_for: tool.best_for.clone(),
+            system_requirements: tool.system_requirements.clone(),
+        });
+    }
+    
+    tools
+}
+
+fn select_multimedia_graphics_tools(db: &[MultimediaTool], stats: &GraphicsStats, engine: &str) -> Vec<SelectedMultimediaTool> {
+    let mut tools = Vec::new();
+    
+    // Score tools based on compatibility with detected formats
+    let mut scored_tools: Vec<_> = db.iter()
+        .filter(|tool| matches!(tool.category, MultimediaToolCategory::GraphicsEditing))
+        .map(|tool| {
+            let mut score = tool.compatibility_score;
+            
+            // Bonus for supporting detected formats
+            for format in &stats.graphics_formats {
+                if tool.supported_formats.contains(&format.extension) {
+                    score += 10;
+                }
+            }
+            
+            // Bonus for text editing capabilities
+            if stats.text_containing_graphics > 0 {
+                if tool.name.contains("Photoshop") || tool.name.contains("GIMP") {
+                    score += 15;
+                }
+            }
+            
+            // Bonus for DDS support (common game format)
+            if stats.graphics_formats.iter().any(|f| f.extension == "dds") {
+                if tool.supported_formats.contains(&"dds".to_string()) {
+                    score += 10;
+                }
+            }
+            
+            (tool, score)
+        })
+        .collect();
+    
+    scored_tools.sort_by(|a, b| b.1.cmp(&a.1));
+    
+    // Convert to SelectedMultimediaTool
+    for (tool, score) in scored_tools.into_iter().take(3) {
+        tools.push(SelectedMultimediaTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: score,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            learning_curve: tool.learning_curve.clone(),
+            special_features: tool.special_features.clone(),
+            best_for: tool.best_for.clone(),
+            system_requirements: tool.system_requirements.clone(),
+        });
+    }
+    
+    tools
+}
+
+fn select_engine_specific_tools(db: &[MultimediaTool], engine: &str) -> Vec<SelectedMultimediaTool> {
+    let mut tools = Vec::new();
+    
+    let engine_tools: Vec<_> = db.iter()
+        .filter(|tool| matches!(tool.category, MultimediaToolCategory::EngineSpecific))
+        .filter(|tool| {
+            // Match tools to specific engines
+            (engine.to_lowercase().contains("unreal") && tool.name.contains("Wwise")) ||
+            (engine.to_lowercase().contains("unity") && tool.name.contains("Wwise")) ||
+            tool.name.to_lowercase().contains(&engine.to_lowercase())
+        })
+        .collect();
+    
+    for tool in engine_tools {
+        tools.push(SelectedMultimediaTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: tool.compatibility_score,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            learning_curve: tool.learning_curve.clone(),
+            special_features: tool.special_features.clone(),
+            best_for: tool.best_for.clone(),
+            system_requirements: tool.system_requirements.clone(),
+        });
+    }
+    
+    tools
+}
+
+fn select_compression_tools(db: &[MultimediaTool], audio_stats: &AudioStats, graphics_stats: &GraphicsStats) -> Vec<SelectedMultimediaTool> {
+    let mut tools = Vec::new();
+    
+    // Select compression tools based on detected compressed formats
+    let compression_tools: Vec<_> = db.iter()
+        .filter(|tool| matches!(tool.category, MultimediaToolCategory::AudioCompression | MultimediaToolCategory::GraphicsCompression))
+        .filter(|tool| {
+            // Check if tool supports detected compressed formats
+            let audio_formats: Vec<String> = audio_stats.audio_formats.iter()
+                .filter(|f| f.requires_specialized_tools)
+                .map(|f| f.extension.clone())
+                .collect();
+            
+            tool.supported_formats.iter().any(|tf| audio_formats.contains(tf))
+        })
+        .collect();
+    
+    for tool in compression_tools {
+        tools.push(SelectedMultimediaTool {
+            name: tool.name.clone(),
+            category: tool.category.clone(),
+            description: tool.description.clone(),
+            supported_formats: tool.supported_formats.clone(),
+            compatibility_score: tool.compatibility_score,
+            cost: tool.cost.clone(),
+            platform_support: tool.platform_support.clone(),
+            learning_curve: tool.learning_curve.clone(),
+            special_features: tool.special_features.clone(),
+            best_for: tool.best_for.clone(),
+            system_requirements: tool.system_requirements.clone(),
+        });
+    }
+    
+    tools
+}
+
+fn estimate_audio_editing_time(stats: &AudioStats) -> f64 {
+    let base_time_per_file = 0.25; // 15 minutes per file base
+    let mut total_hours = stats.total_audio_files as f64 * base_time_per_file;
+    
+    // Adjust for file complexity
+    if stats.compressed_audio_files > 0 {
+        total_hours += stats.compressed_audio_files as f64 * 0.5; // Extra 30min per compressed file
+    }
+    
+    // Adjust for quality (higher quality requires more time)
+    let quality_multiplier = match stats.predominant_quality {
+        AudioQuality::Studio => 1.5,
+        AudioQuality::High => 1.2,
+        AudioQuality::Medium => 1.0,
+        AudioQuality::Low => 0.8,
+        AudioQuality::Unknown => 1.0,
+    };
+    
+    total_hours * quality_multiplier
+}
+
+fn estimate_graphics_editing_time(stats: &GraphicsStats) -> f64 {
+    let base_time_per_file = 0.1; // 6 minutes per file base
+    let mut total_hours = stats.total_graphics_files as f64 * base_time_per_file;
+    
+    // Adjust for text-containing files (require more time)
+    total_hours += stats.text_containing_graphics as f64 * 0.3; // Extra 18min per text file
+    
+    // Adjust for embedded text files (require much more time)
+    total_hours += stats.embedded_text_files as f64 * 0.8; // Extra 48min per embedded text file
+    
+    // Adjust for animated files
+    total_hours += stats.animated_files as f64 * 0.4; // Extra 24min per animated file
+    
+    total_hours
+}
+
+fn calculate_multimedia_tool_costs(tools: &MultimediaTools) -> f64 {
+    let mut total_cost = 0.0;
+    
+    // Calculate costs for all recommended tools
+    for tool in &tools.audio_tools {
+        total_cost += estimate_tool_cost(&tool.cost);
+    }
+    
+    for tool in &tools.graphics_tools {
+        total_cost += estimate_tool_cost(&tool.cost);
+    }
+    
+    for tool in &tools.engine_specific_tools {
+        total_cost += estimate_tool_cost(&tool.cost);
+    }
+    
+    for tool in &tools.compression_tools {
+        total_cost += estimate_tool_cost(&tool.cost);
+    }
+    
+    total_cost
+}
+
+fn estimate_tool_cost(cost: &ToolCost) -> f64 {
+    match cost {
+        ToolCost::Free => 0.0,
+        ToolCost::Freemium => 10.0, // Average freemium cost
+        ToolCost::Commercial(price_str) => {
+            // Parse price string to extract number
+            if let Some(price) = price_str.strip_prefix("$") {
+                if let Ok(monthly) = price.parse::<f64>() {
+                    return monthly * 12.0; // Annual cost
+                }
+            }
+            50.0 // Default commercial cost
+        },
+        ToolCost::Enterprise => 500.0,
+        ToolCost::OpenSource => 0.0,
+    }
+}
+
+fn calculate_multimedia_complexity_score(audio_stats: &AudioStats, graphics_stats: &GraphicsStats) -> u32 {
+    let mut score = 0u32;
+    
+    // File count contribution
+    score += (audio_stats.total_audio_files / 10).min(20);
+    score += (graphics_stats.total_graphics_files / 20).min(20);
+    
+    // Size contribution
+    score += ((audio_stats.total_audio_size_mb / 100.0) as u32).min(15);
+    score += ((graphics_stats.total_graphics_size_mb / 200.0) as u32).min(15);
+    
+    // Format difficulty
+    score += (audio_stats.compressed_audio_files * 2).min(10);
+    score += (graphics_stats.embedded_text_files * 3).min(10);
+    
+    // Quality factors
+    score += match audio_stats.predominant_quality {
+        AudioQuality::Studio => 5,
+        AudioQuality::High => 3,
+        AudioQuality::Medium => 1,
+        _ => 0,
+    };
+    
+    score.min(100)
+}
+
+fn calculate_compression_difficulty(audio_stats: &AudioStats, graphics_stats: &GraphicsStats) -> f64 {
+    let mut difficulty = 1.0;
+    
+    // Audio compression difficulty
+    if audio_stats.compressed_audio_files > 0 {
+        difficulty += (audio_stats.compressed_audio_files as f64 / audio_stats.total_audio_files as f64) * 0.5;
+    }
+    
+    // Graphics compression difficulty
+    if graphics_stats.embedded_text_files > 0 {
+        difficulty += (graphics_stats.embedded_text_files as f64 / graphics_stats.total_graphics_files as f64) * 0.7;
+    }
+    
+    difficulty.min(3.0) // Cap at 3x difficulty
+}
+
+fn estimate_outsourcing_costs(audio_hours: f64, graphics_hours: f64, complexity: u32) -> f64 {
+    // Professional rates (USD per hour)
+    let audio_hourly_rate = 75.0;
+    let graphics_hourly_rate = 50.0;
+    
+    // Complexity multiplier
+    let complexity_multiplier = 1.0 + (complexity as f64 / 100.0);
+    
+    (audio_hours * audio_hourly_rate + graphics_hours * graphics_hourly_rate) * complexity_multiplier
 }
