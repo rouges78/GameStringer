@@ -7,7 +7,7 @@ import {
   Brain, Globe, FileText, Clock, AlertTriangle, CheckCircle, XCircle,
   ChevronLeft, Loader2, Zap, Server, Cloud, Layers, Shield,
   BarChart3, HardDrive, Languages, Sparkles, Cpu, DollarSign,
-  ArrowRight, Star, Info, Lock, Type, Hash, Gauge, TrendingUp, Wrench
+  ArrowRight, Star, Info, Lock, Type, Hash, Gauge, TrendingUp, Wrench, Download
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -230,6 +230,7 @@ export default function PredictionToolPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expandedChain, setExpandedChain] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const analyze = async () => {
     const dir = installDir || result?.installPath || '';
@@ -248,10 +249,28 @@ export default function PredictionToolPage() {
         targetLang,
       });
       setResult(res);
-    } catch (e: unknown) {
-      setError(String(e));
+    } catch (err) {
+      setError(err as string);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const exportReport = async (format: 'json' | 'csv' | 'txt') => {
+    if (!result) return;
+    
+    setExporting(true);
+    try {
+      const message = await invoke<string>('export_prediction_report', {
+        result,
+        format,
+        outputPath: 'C:\\Users\\Public\\Documents\\GameStringer\\Reports'
+      });
+      alert(message);
+    } catch (err) {
+      setError(`Errore export: ${err}`);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -286,12 +305,40 @@ export default function PredictionToolPage() {
             <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-600/20 to-indigo-600/20 border border-purple-500/20">
               <Brain className="w-8 h-8 text-purple-400" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-black tracking-tight">
                 P.T. <span className="text-purple-400">Prediction Tool</span>
               </h1>
               <p className="text-sm text-slate-500">{gameTitle}</p>
             </div>
+            {result && (
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => exportReport('json')}
+                  disabled={exporting}
+                  className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 text-xs font-medium transition-all flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  JSON
+                </button>
+                <button 
+                  onClick={() => exportReport('csv')}
+                  disabled={exporting}
+                  className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 text-xs font-medium transition-all flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  CSV
+                </button>
+                <button 
+                  onClick={() => exportReport('txt')}
+                  disabled={exporting}
+                  className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 text-xs font-medium transition-all flex items-center gap-1.5"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  TXT
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

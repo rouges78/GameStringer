@@ -1959,3 +1959,175 @@ pub async fn analyze_game_translation(
 
     Ok(result)
 }
+
+// ── Export Report Command ─────────────────────────────────────────────
+
+#[tauri::command]
+pub async fn export_prediction_report(
+    result: PredictionResult,
+    format: String,
+    output_path: String,
+) -> Result<String, String> {
+    let output_dir = PathBuf::from(&output_path);
+    if !output_dir.exists() {
+        fs::create_dir_all(&output_dir)
+            .map_err(|e| format!("Impossibile creare directory: {}", e))?;
+    }
+
+    let game_title_safe = result.game_title
+        .chars()
+        .map(|c| if c.is_alphanumeric() { c } else { '_' })
+        .collect::<String>();
+    
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let filename = format!("{}_prediction_{}", game_title_safe, timestamp);
+
+    match format.to_lowercase().as_str() {
+        "json" => export_json(&result, &output_dir, &filename).await,
+        "csv" => export_csv(&result, &output_dir, &filename).await,
+        "txt" => export_txt(&result, &output_dir, &filename).await,
+        _ => Err(format!("Formato non supportato: {}. Usare: json, csv, txt", format)),
+    }
+}
+
+async fn export_json(result: &PredictionResult, output_dir: &Path, filename: &str) -> Result<String, String> {
+    let json_content = serde_json::to_string_pretty(result)
+        .map_err(|e| format!("Errore serializzazione JSON: {}", e))?;
+    
+    let file_path = output_dir.join(format!("{}.json", filename));
+    fs::write(&file_path, json_content)
+        .map_err(|e| format!("Errore scrittura file: {}", e))?;
+    
+    Ok(format!("Report JSON esportato in: {}", file_path.display()))
+}
+
+async fn export_csv(result: &PredictionResult, output_dir: &Path, filename: &str) -> Result<String, String> {
+    let mut csv_content = Vec::new();
+    
+    // Header
+    csv_content.push("Metric,Value,Notes".to_string());
+    
+    // Game info
+    csv_content.push(format!("Game Title,{},", result.game_title));
+    csv_content.push(format!("Engine,{},", result.engine));
+    csv_content.push(format!("Difficulty Score,{},", result.difficulty_score));
+    csv_content.push(format!("Difficulty Label,{},", result.difficulty_label));
+    
+    // Text stats
+    csv_content.push(format!("Total Text Files,{},", result.text_stats.total_text_files));
+    csv_content.push(format!("Estimated Strings,{},", result.text_stats.estimated_strings));
+    csv_content.push(format!("Estimated Words,{},", result.text_stats.estimated_words));
+    csv_content.push(format!("Estimated Characters,{},", result.text_stats.estimated_characters));
+    
+    // Quality and confidence
+    csv_content.push(format!("Confidence Score,{},", result.confidence_score));
+    csv_content.push(format!("Translation Quality Score,{},", result.translation_quality_score));
+    
+    // Languages
+    for lang in &result.detected_languages {
+        csv_content.push(format!("Language - {},{} files,{}KB,{}", 
+            lang.name, lang.file_count, lang.total_size_kb, lang.completeness_percent));
+    }
+    
+    // File formats
+    for format in &result.file_formats {
+        csv_content.push(format!("Format - {},{} files,{}KB,{}", 
+            format.extension, format.count, format.total_size_kb, 
+            if format.translatable { "Translatable" } else { "Not translatable" }));
+    }
+    
+    // Time estimates
+    for estimate in &result.time_estimates {
+        csv_content.push(format!("Estimate - {},{} hours,Quality {},{}", 
+            estimate.model_name, estimate.estimated_hours, estimate.quality_score, estimate.provider));
+    }
+    
+    // Warnings
+    for (i, warning) in result.warnings.iter().enumerate() {
+        csv_content.push(format!("Warning {},{},", i + 1, warning));
+    }
+    
+    let file_path = output_dir.join(format!("{}.csv", filename));
+    fs::write(&file_path, csv_content.join("\n"))
+        .map_err(|e| format!("Errore scrittura file CSV: {}", e))?;
+    
+    Ok(format!("Report CSV esportato in: {}", file_path.display()))
+}
+
+async fn export_txt(result: &PredictionResult, output_dir: &Path, filename: &str) -> Result<String, String> {
+    let mut content = Vec::new();
+    
+    content.push("=".repeat(80));
+    content.push(format!("PREDICTION TOOL REPORT - {}", result.game_title.to_uppercase()));
+    content.push("=".repeat(80));
+    content.push("".to_string());
+    
+    // Game Information
+    content.push("GAME INFORMATION".to_string());
+    content.push("-".repeat(40));
+    content.push(format!("Title: {}", result.game_title));
+    content.push(format!("Engine: {}", result.engine));
+    content.push(format!("Install Path: {}", result.install_path));
+    content.push(format!("Difficulty: {}/100 - {}", result.difficulty_score, result.difficulty_label));
+    content.push("".to_string());
+    
+    // Text Statistics
+    content.push("TEXT STATISTICS".to_string());
+    content.push("-".repeat(40));
+    content.push(format!("Total Text Files: {}", result.text_stats.total_text_files));
+    content.push(format!("Estimated Strings: {}", result.text_stats.estimated_strings));
+    content.push(format!("Estimated Words: {}", result.text_stats.estimated_words));
+    content.push(format!("Estimated Characters: {}", result.text_stats.estimated_characters));
+    content.push("".to_string());
+    
+    // Quality Metrics
+    content.push("QUALITY METRICS".to_string());
+    content.push("-".repeat(40));
+    content.push(format!("Confidence Score: {}/100", result.confidence_score));
+    content.push(format!("Translation Quality: {}/100", result.translation_quality_score));
+    content.push(format!("GS Supported: {}", if result.gs_supported { "Yes" } else { "No" }));
+    content.push(format!("Recommended Method: {}", result.recommended_method));
+    content.push("".to_string());
+    
+    // Languages
+    content.push("DETECTED LANGUAGES".to_string());
+    content.push("-".repeat(40));
+    for lang in &result.detected_languages {
+        content.push(format!("{} ({}): {} files, {}KB, {}% complete", 
+            lang.name, lang.code, lang.file_count, lang.total_size_kb, lang.completeness_percent));
+    }
+    content.push("".to_string());
+    
+    // Time Estimates
+    content.push("TIME ESTIMATES".to_string());
+    content.push("-".repeat(40));
+    for estimate in &result.time_estimates {
+        content.push(format!("{}: {:.1} hours (Quality: {}, Provider: {})", 
+            estimate.model_name, estimate.estimated_hours, estimate.quality_score, estimate.provider));
+    }
+    content.push("".to_string());
+    
+    // Warnings
+    if !result.warnings.is_empty() {
+        content.push("WARNINGS".to_string());
+        content.push("-".repeat(40));
+        for warning in &result.warnings {
+            content.push(format!("⚠ {}", warning));
+        }
+        content.push("".to_string());
+    }
+    
+    // Footer
+    content.push("=".repeat(80));
+    content.push("Generated by GameStringer Prediction Tool v1.5.0".to_string());
+    content.push("=".repeat(80));
+    
+    let file_path = output_dir.join(format!("{}.txt", filename));
+    fs::write(&file_path, content.join("\n"))
+        .map_err(|e| format!("Errore scrittura file report: {}", e))?;
+    
+    Ok(format!("Report esportato in: {}", file_path.display()))
+}

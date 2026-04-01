@@ -798,6 +798,7 @@ fn main() {
             // P.T. — Prediction Tool
             commands::prediction_tool::analyze_game_translation,
             commands::prediction_tool::analyze_all_installed_games,
+            commands::prediction_tool::export_prediction_report,
             // Global Hotkeys System
             commands::global_hotkeys::init_global_hotkeys,
             commands::global_hotkeys::register_global_hotkey,
