@@ -115,6 +115,7 @@ interface PredictionResult {
   selectedTools: SelectedTools;
   llmChains: OptimizedChain[];
   multimediaAnalysis: MultimediaAnalysis;
+  backupStrategy: BackupStrategy;
 }
 
 interface ExistingTranslationTools {
@@ -305,6 +306,53 @@ type MultimediaToolCategory = 'AudioEditing' | 'GraphicsEditing' | 'AudioCompres
 type LearningCurve = 'Beginner' | 'Easy' | 'Medium' | 'Hard' | 'Expert';
 type ProblemType = 'CompressedFormat' | 'EmbeddedText' | 'ProprietaryFormat' | 'EncryptedContent' | 'CorruptedFile' | 'UnsupportedCodec' | 'LargeFileSize' | 'NestedContainers';
 type ProblemSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+
+interface BackupStrategy {
+  recommendedBackupType: BackupType;
+  estimatedBackupSizeMb: number;
+  backupFilesCount: number;
+  compressionMethod: CompressionMethod;
+  backupLocation: string;
+  backupDurationMinutes: number;
+  restoreComplexity: RestoreComplexity;
+  backupCategories: BackupCategory[];
+  spaceSavingsMb: number;
+  backupValidation: BackupValidation;
+}
+
+type BackupType = 'Targeted' | 'Essential' | 'Full' | 'Incremental' | 'Custom';
+type CompressionMethod = 'None' | 'Fast' | 'Balanced' | 'Maximum' | 'Smart';
+type RestoreComplexity = 'Simple' | 'Moderate' | 'Complex' | 'EngineSpecific';
+
+interface BackupCategory {
+  categoryType: BackupCategoryType;
+  fileCount: number;
+  totalSizeMb: number;
+  included: boolean;
+  priority: BackupPriority;
+  description: string;
+  examples: string[];
+}
+
+type BackupCategoryType = 'TextFiles' | 'AudioFiles' | 'GraphicsFiles' | 'Configuration' | 'Executables' | 'Resources' | 'Localization' | 'EngineSpecific';
+type BackupPriority = 'Critical' | 'High' | 'Medium' | 'Low';
+
+interface BackupValidation {
+  checksumValidated: boolean;
+  integrityChecks: IntegrityCheck[];
+  validationTimeMinutes: number;
+  canVerifyRestore: boolean;
+  backupHealthScore: number;
+}
+
+interface IntegrityCheck {
+  checkType: IntegrityCheckType;
+  description: string;
+  passed: boolean;
+  details: string;
+}
+
+type IntegrityCheckType = 'FileExists' | 'FileSize' | 'Checksum' | 'Permissions' | 'Structure' | 'Metadata';
 
 // ── Language Lists ───────────────────────────────────────────────────
 
@@ -521,6 +569,120 @@ function getProblemSeverityLabel(severity: ProblemSeverity): string {
     case 'High': return 'High';
     case 'Critical': return 'Critical';
     default: return severity;
+  }
+}
+
+// ── Backup Helper Functions ───────────────────────────────────────────
+
+function getBackupTypeColor(type: BackupType): string {
+  switch (type) {
+    case 'Targeted': return '#10b981';
+    case 'Essential': return '#3b82f6';
+    case 'Full': return '#f59e0b';
+    case 'Incremental': return '#8b5cf6';
+    case 'Custom': return '#6b7280';
+    default: return '#6b7280';
+  }
+}
+
+function getBackupTypeLabel(type: BackupType): string {
+  switch (type) {
+    case 'Targeted': return 'Targeted';
+    case 'Essential': return 'Essential';
+    case 'Full': return 'Full';
+    case 'Incremental': return 'Incremental';
+    case 'Custom': return 'Custom';
+    default: return type;
+  }
+}
+
+function getCompressionMethodColor(method: CompressionMethod): string {
+  switch (method) {
+    case 'None': return '#10b981';
+    case 'Fast': return '#3b82f6';
+    case 'Balanced': return '#f59e0b';
+    case 'Maximum': return '#ef4444';
+    case 'Smart': return '#8b5cf6';
+    default: return '#6b7280';
+  }
+}
+
+function getCompressionMethodLabel(method: CompressionMethod): string {
+  switch (method) {
+    case 'None': return 'None';
+    case 'Fast': return 'Fast';
+    case 'Balanced': return 'Balanced';
+    case 'Maximum': return 'Maximum';
+    case 'Smart': return 'Smart';
+    default: return method;
+  }
+}
+
+function getRestoreComplexityColor(complexity: RestoreComplexity): string {
+  switch (complexity) {
+    case 'Simple': return '#10b981';
+    case 'Moderate': return '#f59e0b';
+    case 'Complex': return '#ef4444';
+    case 'EngineSpecific': return '#dc2626';
+    default: return '#6b7280';
+  }
+}
+
+function getRestoreComplexityLabel(complexity: RestoreComplexity): string {
+  switch (complexity) {
+    case 'Simple': return 'Simple';
+    case 'Moderate': return 'Moderate';
+    case 'Complex': return 'Complex';
+    case 'EngineSpecific': return 'Engine Specific';
+    default: return complexity;
+  }
+}
+
+function getBackupPriorityColor(priority: BackupPriority): string {
+  switch (priority) {
+    case 'Critical': return '#dc2626';
+    case 'High': return '#ef4444';
+    case 'Medium': return '#f59e0b';
+    case 'Low': return '#10b981';
+    default: return '#6b7280';
+  }
+}
+
+function getBackupPriorityLabel(priority: BackupPriority): string {
+  switch (priority) {
+    case 'Critical': return 'Critical';
+    case 'High': return 'High';
+    case 'Medium': return 'Medium';
+    case 'Low': return 'Low';
+    default: return priority;
+  }
+}
+
+function getBackupCategoryColor(category: BackupCategoryType): string {
+  switch (category) {
+    case 'TextFiles': return '#06b6d4';
+    case 'AudioFiles': return '#10b981';
+    case 'GraphicsFiles': return '#8b5cf6';
+    case 'Configuration': return '#f59e0b';
+    case 'Executables': return '#ef4444';
+    case 'Resources': return '#6b7280';
+    case 'Localization': return '#3b82f6';
+    case 'EngineSpecific': return '#dc2626';
+    default: return '#6b7280';
+  }
+}
+
+function getBackupCategoryLabel(category: BackupCategoryType): string {
+  switch (category) {
+    case 'TextFiles': return 'Text Files';
+    case 'AudioFiles': return 'Audio Files';
+    case 'GraphicsFiles': return 'Graphics Files';
+    case 'Configuration': return 'Configuration';
+    case 'Executables': return 'Executables';
+    case 'Resources': return 'Resources';
+    case 'Localization': return 'Localization';
+    case 'EngineSpecific': return 'Engine Specific';
+    default: return category;
   }
 }
 
