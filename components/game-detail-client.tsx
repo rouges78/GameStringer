@@ -11,9 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import {
   Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
-  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, ExternalLink
+  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, ExternalLink, Brain
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -2086,6 +2086,13 @@ export default function GameDetailPage() {
                 <Globe className="h-3 w-3" /> Steam Store
               </button>
             )}
+            {game.isInstalled && game.installPath && (
+              <Link href={`/prediction-tool?name=${encodeURIComponent(game.title || game.name || '')}&installDir=${encodeURIComponent(game.installPath)}&engine=${encodeURIComponent(engineInfo?.engine || '')}&headerImage=${encodeURIComponent(game.headerImage || game.coverImage || '')}`}
+                className="h-8 flex items-center justify-center gap-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 text-[9px] font-bold uppercase tracking-wider transition-all no-underline"
+              >
+                <Brain className="h-3 w-3" /> P.T.
+              </Link>
+            )}
           </motion.div>
         </div>
       </div>
@@ -2110,6 +2117,13 @@ export default function GameDetailPage() {
         >
           <Search className="h-3.5 w-3.5" />
         </button>
+        {game.isInstalled && game.installPath && (
+          <Link href={`/prediction-tool?name=${encodeURIComponent(game.title || game.name || '')}&installDir=${encodeURIComponent(game.installPath)}&engine=${encodeURIComponent(engineInfo?.engine || '')}&headerImage=${encodeURIComponent(game.headerImage || game.coverImage || '')}`}
+            className="h-9 w-9 flex items-center justify-center rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-400 hover:text-purple-300 transition-all no-underline"
+          >
+            <Brain className="h-3.5 w-3.5" />
+          </Link>
+        )}
       </div>
 
       {/* ═══ SCROLLABLE CONTENT ═══ */}
