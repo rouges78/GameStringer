@@ -556,6 +556,52 @@ interface Deliverable {
 
 type DeliverableType = 'TranslatedFiles' | 'PatchPackage' | 'InstallationGuide' | 'TestingReport' | 'Documentation' | 'BackupArchive' | 'QualityReport' | 'DeploymentPackage';
 
+interface WorkflowExecutionResult {
+  executionId: string;
+  gameTitle: string;
+  engine: string;
+  totalDurationMinutes: number;
+  stagesCompleted: StageExecutionResult[];
+  finalStatus: ExecutionStatus;
+  deliverables: ExecutionDeliverable[];
+  errors: ExecutionError[];
+  successRate: number;
+  nextSteps: string[];
+}
+
+interface StageExecutionResult {
+  stageId: number;
+  stageName: string;
+  status: ExecutionStatus;
+  durationMinutes: number;
+  outputs: string[];
+  errors: string[];
+  success: boolean;
+}
+
+type ExecutionStatus = 'Pending' | 'Running' | 'Completed' | 'Failed' | 'Skipped';
+
+interface ExecutionDeliverable {
+  deliverableId: string;
+  deliverableName: string;
+  filePath?: string;
+  sizeMb: number;
+  status: ExecutionStatus;
+  createdAt: string;
+}
+
+interface ExecutionError {
+  errorId: string;
+  stageId: number;
+  errorType: string;
+  message: string;
+  severity: ErrorSeverity;
+  timestamp: string;
+  resolved: boolean;
+}
+
+type ErrorSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
+
 // ── Language Lists ───────────────────────────────────────────────────
 
 const LANGUAGES = [

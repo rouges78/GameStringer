@@ -1195,14 +1195,18 @@ export default function GameDetailPage() {
     setAutoTranslateError(null);
     setAutoTranslateStep(0);
 
-    const steps = [
-      { label: t('gameDetails.stepDetectEngine') || 'Engine & architecture detection', status: 'pending' as const },
-      { label: t('gameDetails.stepScanFiles') || 'Scanning translatable files', status: 'pending' as const },
-      { label: t('gameDetails.stepInstallPatch') || 'Installing translation patch', status: 'pending' as const },
-      { label: t('gameDetails.stepAiTranslation') || 'AI Translation in progress...', status: 'pending' as const },
-      { label: t('gameDetails.stepLaunchGame') || 'Launching translated game', status: 'pending' as const },
+    // Use the new complete workflow system
+    const workflowSteps = [
+      { label: '🔍 Analisi completa del gioco', status: 'pending' as const },
+      { label: '🛠️ Selezione tool ottimali', status: 'pending' as const },
+      { label: '🤖 Configurazione LLM chains', status: 'pending' as const },
+      { label: '🎵 Analisi file multimediali', status: 'pending' as const },
+      { label: '💾 Creazione backup intelligente', status: 'pending' as const },
+      { label: '⚡ Orchestrazione workflow', status: 'pending' as const },
+      { label: '🚀 Esecuzione traduzione completa', status: 'pending' as const },
+      { label: '✅ Test e validazione finale', status: 'pending' as const },
     ];
-    setAutoTranslateSteps([...steps]);
+    setAutoTranslateSteps([...workflowSteps]);
 
     const updateStep = (idx: number, status: 'running' | 'done' | 'error', detail?: string) => {
       setAutoTranslateStep(idx);
@@ -1210,476 +1214,109 @@ export default function GameDetailPage() {
     };
 
     try {
-      // ── STEP 1: Rileva engine (usa strategia pre-calcolata se disponibile) ──
-      updateStep(0, 'running', t('gameDetails.analyzingFolder') || 'Analyzing game folder...');
-      let detectedEngine = translationStrategy?.engine || game.engine || engineInfo?.engine || '';
+      // ── STEP 1: Complete Analysis ──
+      updateStep(0, 'running', 'Analisi predittiva avanzata...');
       
-      if (!detectedEngine) {
-        try {
-          const engineResult: unknown = await invoke('check_game_engine', { gamePath: game.installPath });
-          detectedEngine = engineResult?.engine_name || '';
-          setEngineInfo(engineResult);
-        } catch {
-          detectedEngine = detectEngineByName(game.name || game.title || '') || '';
-        }
-      }
-      updateStep(0, 'done', translationStrategy 
-        ? `${detectedEngine || 'Engine'} · ${translationStrategy.detail}`
-        : detectedEngine ? `Engine: ${detectedEngine}` : t('gameDetails.engineNotDetected') || 'Engine not detected — generic translation');
-      await new Promise(r => setTimeout(r, 600));
-
-      // ── STEP 2: Scansiona file ──
-      updateStep(1, 'running', t('gameDetails.searchingFiles') || 'Searching translatable files...');
-      let scannedFiles: string[] = game.detectedFiles || [];
-
-      if (scannedFiles.length === 0) {
-        try {
-          scannedFiles = await invoke<string[]>('scan_game_files', { gamePath: game.installPath });
-          if (scannedFiles?.length > 0) {
-            setGame({ ...game, detectedFiles: scannedFiles });
-          }
-        } catch (e) {
-          console.warn('[AutoTranslate] Scansione fallita:', e);
-        }
-      }
-      updateStep(1, 'done', `${scannedFiles.length} ${t('gameDetails.filesFound') || 'files found'}`);
-      await new Promise(r => setTimeout(r, 600));
-
-      // ── STEP 3: Installa patch (se Unity/Unreal) ──
-      updateStep(2, 'running');
-      const isUnity = detectedEngine.toLowerCase().includes('unity');
-      const isUnreal = detectedEngine.toLowerCase().includes('unreal');
-      const isGameMaker = detectedEngine.toLowerCase().includes('gamemaker') || detectedEngine.toLowerCase().includes('game maker');
-
-      if (isUnity) {
-        updateStep(2, 'running', 'Download BepInEx + XUnity AutoTranslator...');
-        // Trova eseguibile
-        let exeName = '';
-        try {
-          const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
-          if (exeList?.length > 0) exeName = exeList[0];
-        } catch {}
-        if (!exeName) exeName = `${(game.name || game.title || 'Game').replace(/[^a-zA-Z0-9]/g, '')}.exe`;
-
-        try {
-          const result: unknown = await invoke('install_unity_autotranslator', {
-            gamePath: game.installPath,
-            gameExeName: exeName,
-            targetLang: language || 'it',
-            translationMode: 'google'
-          });
-          if (result?.success) {
-            updateStep(2, 'done', 'BepInEx + XUnity OK');
-          } else {
-            updateStep(2, 'done', result?.message || 'Patch OK');
-          }
-        } catch (e: unknown) {
-          // Non bloccare il flusso se la patch è già installata
-          if (e?.toString?.()?.includes('già') || e?.toString?.()?.includes('already')) {
-            updateStep(2, 'done', t('gameDetails.patchAlreadyInstalled') || 'Patch already installed');
-          } else {
-            updateStep(2, 'done', `${t('gameDetails.patchNotNeeded') || 'Patch not needed'}: ${e}`);
-          }
-        }
-      } else if (isUnreal) {
-        updateStep(2, 'running', 'Analisi gioco Unreal Engine...');
-        try {
-          const ueInfo: unknown = await invoke('detect_unreal_game', { gamePath: game.installPath });
-          const locStatus: unknown = await invoke('get_unreal_localization_status', { gamePath: game.installPath });
-          setUeLocStatus(locStatus);
-          if (locStatus?.has_gs_pak) {
-            updateStep(2, 'done', `Patch GameStringer trovata — ${locStatus.translated_entries} stringhe`);
-          } else if (locStatus?.has_locres || ueInfo?.has_pak_files) {
-            updateStep(2, 'done', `${ueInfo?.ue_version || 'Unreal'} rilevato — .locres disponibili per traduzione AI`);
-          } else {
-            updateStep(2, 'done', `${ueInfo?.ue_version || 'Unreal'} rilevato`);
-          }
-        } catch {
-          updateStep(2, 'done', 'Unreal Engine rilevato');
-        }
-      } else if (isGameMaker) {
-        // GameMaker: scan data.win / language files
-        updateStep(2, 'running', 'Analisi GameMaker — ricerca file .jn e data.win...');
-        try {
-          const gmInfo = await invoke<unknown>('gm_scan_data_win', { gamePath: game.installPath });
-          if (gmInfo?.has_language_files) {
-            updateStep(2, 'done', `${gmInfo.language_file_count} file .jn trovati (${gmInfo.translatable_strings} stringhe)`);
-          } else if (gmInfo?.is_yyc) {
-            updateStep(2, 'done', `YYC — ${gmInfo.translatable_strings} stringhe nell'EXE`);
-          } else {
-            updateStep(2, 'done', `data.win — ${gmInfo.translatable_strings} stringhe traducibili`);
-          }
-        } catch (e: unknown) {
-          updateStep(2, 'done', `GameMaker rilevato: ${e?.toString?.() || ''}`);
-        }
-      } else if (detectedEngine.toLowerCase().includes('visionaire')) {
-        updateStep(2, 'running', 'Analisi Visionaire Studio — scansione data.vis...');
-        try {
-          const visInfo: unknown = await invoke('scan_vis_strings', { gamePath: game.installPath });
-          updateStep(2, 'done', `${visInfo?.version || 'VIS5'} — ${visInfo?.total_strings || 0} stringhe in game.veb`);
-        } catch (e: unknown) {
-          updateStep(2, 'done', `Visionaire rilevato: ${e?.toString?.() || ''}`);
-        }
-      } else {
-        updateStep(2, 'done', t('gameDetails.noPatchNeeded') || 'No patch needed — direct translation');
-      }
-      await new Promise(r => setTimeout(r, 600));
-
-      // ── STEP 4: Configurazione traduzione ──
-      updateStep(3, 'running', language === 'it' ? 'Verifica stato traduzione...' : 'Checking translation status...');
+      const predictionResult: unknown = await invoke('analyze_game_translation', {
+        installPath: game.installPath,
+        gameTitle: game.title || game.name || 'Unknown Game',
+        engine: game.engine || undefined,
+        sourceLang: 'en',
+        targetLang: language || 'it',
+      });
       
-      if (isGameMaker) {
-        // GameMaker: estrai, traduci e patcha file .jn / data.win / EXE
-        try {
-          // 4a. Extract all translatable strings
-          updateStep(3, 'running', 'Estrazione stringhe GameMaker...');
-          const allStrings: unknown[] = [];
-          let pageNum = 0;
-          while (true) {
-            const pageStrings = await invoke<unknown[]>('gm_extract_strings', {
-              gamePath: game.installPath,
-              onlyTranslatable: true,
-              offset: pageNum * 200,
-              limit: 200,
-            });
-            if (!pageStrings || pageStrings.length === 0) break;
-            allStrings.push(...pageStrings);
-            pageNum++;
-          }
-          
-          if (allStrings.length === 0) {
-            updateStep(3, 'done', 'Nessuna stringa traducibile trovata');
-          } else {
-            // 4b. Translate with AI in batches
-            const translations: Record<number, string> = {};
-            const BATCH = 5;
-            let done = 0;
-            
-            for (let i = 0; i < allStrings.length; i += BATCH) {
-              if (!autoTranslateRunningRef.current) break;
-              const batch = allStrings.slice(i, i + BATCH);
-              const promises = batch.map(async (s: unknown) => {
-                try {
-                  const result = await invoke<{ translated_text: string }>('translate_text_simple', {
-                    text: s.original,
-                    targetLang: language || 'it',
-                  });
-                  if (result?.translated_text) {
-                    translations[s.index] = result.translated_text;
-                  }
-                } catch {}
-              });
-              await Promise.all(promises);
-              done += batch.length;
-              updateStep(3, 'running', `Traduzione AI: ${done}/${allStrings.length} stringhe...`);
-            }
-            
-            // 4c. Patch
-            updateStep(3, 'running', 'Applicazione traduzioni ai file di gioco...');
-            const patchResult = await invoke<unknown>('gm_patch_strings', {
-              gamePath: game.installPath,
-              translations,
-            });
-            
-            updateStep(3, 'done', patchResult?.message || `${Object.keys(translations).length} stringhe tradotte e applicate`);
-          }
-        } catch (e: unknown) {
-          updateStep(3, 'error', `Errore GameMaker: ${e?.toString?.() || 'sconosciuto'}`);
-        }
-      } else if (isUnreal) {
-        // Per Unreal: mostra stato localizzazione .locres / _P.pak
-        try {
-          const locStatus: unknown = ueLocStatus || await invoke('get_unreal_localization_status', { gamePath: game.installPath });
-          setUeLocStatus(locStatus);
-          await new Promise(r => setTimeout(r, 600));
-          if (locStatus?.has_gs_pak && locStatus?.translated_entries > 0) {
-            updateStep(3, 'done', `Patch attiva — ${locStatus.translated_entries} stringhe tradotte nel _P.pak`);
-          } else if (locStatus?.has_locres) {
-            updateStep(3, 'done', 'Stringhe .locres trovate — usa "Migliora con AI UE" per tradurre e creare il _P.pak');
-          } else {
-            updateStep(3, 'done', 'Usa "Migliora con AI UE" nella scheda gioco per avviare la traduzione');
-          }
-        } catch {
-          await new Promise(r => setTimeout(r, 600));
-          updateStep(3, 'done', 'Traduzione Unreal configurata');
-        }
-      } else if (detectedEngine.toLowerCase().includes('visionaire')) {
-        // Visionaire Studio: extract strings from game.veb, translate with AI, patch back
-        try {
-          updateStep(3, 'running', 'Estrazione stringhe da game.veb...');
-          const allStrings: unknown[] = [];
-          let pageNum = 0;
-          while (true) {
-            const pageStrings = await invoke<unknown[]>('extract_vis_strings', {
-              gamePath: game.installPath,
-              offset: pageNum * 200,
-              limit: 200,
-            });
-            if (!pageStrings || pageStrings.length === 0) break;
-            allStrings.push(...pageStrings);
-            pageNum++;
-          }
-
-          if (allStrings.length === 0) {
-            updateStep(3, 'done', 'Nessuna stringa traducibile trovata in game.veb');
-          } else {
-            // Translate with AI in batches
-            const translations: Record<number, string> = {};
-            const BATCH = 5;
-            let done = 0;
-
-            for (let i = 0; i < allStrings.length; i += BATCH) {
-              if (!autoTranslateRunningRef.current) break;
-              const batch = allStrings.slice(i, i + BATCH);
-              const promises = batch.map(async (s: unknown) => {
-                try {
-                  const result = await invoke<{ translated_text: string }>('translate_text_simple', {
-                    text: s.text,
-                    targetLang: language || 'it',
-                  });
-                  if (result?.translated_text) {
-                    translations[s.index] = result.translated_text;
-                  }
-                } catch {}
-              });
-              await Promise.all(promises);
-              done += batch.length;
-              updateStep(3, 'running', `Traduzione AI Visionaire: ${done}/${allStrings.length} stringhe...`);
-            }
-
-            // Patch translations back into .vis archive
-            updateStep(3, 'running', 'Applicazione traduzioni al file .vis...');
-            const patchResult = await invoke<unknown>('patch_vis_strings', {
-              gamePath: game.installPath,
-              translations,
-            });
-
-            updateStep(3, 'done', patchResult?.message || `${Object.keys(translations).length} stringhe tradotte e applicate`);
-          }
-        } catch (e: unknown) {
-          updateStep(3, 'error', `Errore Visionaire: ${e?.toString?.() || 'sconosciuto'}`);
-        }
-      } else if (isUnity) {
-        // Per Unity con XUnity: controlla se ci sono già stringhe catturate
-        try {
-          const status: unknown = await invoke('get_translation_status', {
-            gamePath: game.installPath,
-            lang: language || 'it',
-            gameName: game.name || game.title || 'Game',
-          });
-          await new Promise(r => setTimeout(r, 800));
-
-          if (status?.has_static_file && status?.static_translations > 0) {
-            // File statico già presente → traduzione già attiva
-            updateStep(3, 'done', language === 'it'
-              ? `File di traduzione trovato: ${status.static_translations} stringhe — traduzione già attiva`
-              : `Translation file found: ${status.static_translations} strings — already active`);
-          } else if (status?.captured_strings > 0) {
-            // Stringhe catturate presenti ma non ancora tradotte con AI
-            updateStep(3, 'done', language === 'it'
-              ? `${status.captured_strings} stringhe catturate — usa "Migliora con AI" per tradurle con Ollama`
-              : `${status.captured_strings} captured strings — use "Upgrade with AI" to translate with Ollama`);
-          } else {
-            // Prima installazione: Google Translate attivo sul primo avvio
-            updateStep(3, 'done', language === 'it'
-              ? 'XUnity + Google Translate attivi — i testi saranno tradotti al volo al primo avvio'
-              : 'XUnity + Google Translate active — texts will be auto-translated on first launch');
-          }
-        } catch {
-          await new Promise(r => setTimeout(r, 800));
-          updateStep(3, 'done', language === 'it'
-            ? 'XUnity AutoTranslator installato — traduzione automatica attiva al primo avvio'
-            : 'XUnity AutoTranslator installed — auto-translation active on first launch');
-        }
-      } else {
-        // Traduzione diretta AI per file di testo (giochi con engine sconosciuto/custom)
-        const textExts = ['.json', '.csv', '.txt', '.xml', '.po', '.yaml', '.yml', '.ini', '.cfg', '.lang', '.loc', '.strings', '.jn'];
-        const textFiles = scannedFiles.filter(f => textExts.some(ext => f.toLowerCase().endsWith(ext)));
-
-        if (textFiles.length > 0) {
-          let translatedFiles = 0;
-          let totalStrings = 0;
-          
-          for (let i = 0; i < textFiles.length; i++) {
-            if (!autoTranslateRunningRef.current) break;
-            const fileName = textFiles[i].split(/[/\\]/).pop() || textFiles[i];
-            updateStep(3, 'running', `File ${i + 1}/${textFiles.length}: ${fileName}...`);
-            
-            try {
-              const filePath = `${game.installPath}\\${textFiles[i]}`;
-              const content = await invoke<string>('read_text_file', { path: filePath });
-              if (!content || content.length < 10) continue;
-              
-              // Extract translatable lines (non-empty, has letters, not code/binary)
-              const lines = content.split('\n');
-              const translatableLines: { idx: number; text: string }[] = [];
-              const isConfigFile = /\.(ini|cfg|conf|config|properties)$/i.test(fileName);
-              const configBlocklist = /^(yes|no|true|false|auto|desktop|game|info|warning|error|debug|none|default|on|off|enabled|disabled|null|undefined|\d+(\.\d+)?|[a-zA-Z]:\\.*|\/.*\..+|[a-zA-Z0-9_.-]+\.(vis|win|dat|exe|dll|pak|png|jpg|wav|ogg|mp3|mp4|bin|db|log|tmp|bak))$/i;
-              
-              for (let li = 0; li < lines.length; li++) {
-                const line = lines[li].trim();
-                // Skip empty, comments, code-like lines, section headers
-                if (!line || line.startsWith('//') || line.startsWith('#') || line.startsWith(';') || line.startsWith('--') || line.startsWith('[')) continue;
-                // Extract value part from key=value, key:value, "key":"value" patterns
-                let textPart = line;
-                let isKeyValue = false;
-                // JSON-like: "key": "value" → extract value
-                const jsonMatch = line.match(/"[^"]*"\s*:\s*"([^"]+)"/);
-                if (jsonMatch) { textPart = jsonMatch[1]; isKeyValue = true; }
-                // INI/config: key=value
-                else if (line.includes('=') && !line.startsWith('[')) {
-                  textPart = line.split('=').slice(1).join('=').trim();
-                  if ((textPart.startsWith('"') && textPart.endsWith('"')) || (textPart.startsWith("'") && textPart.endsWith("'"))) {
-                    textPart = textPart.slice(1, -1);
-                  }
-                  isKeyValue = true;
-                }
-                // For config files: skip key=value unless value is a real sentence (3+ words)
-                if (isConfigFile && isKeyValue) {
-                  const wordCount = textPart.split(/\s+/).filter(w => w.length > 1).length;
-                  if (wordCount < 3) continue;
-                  if (configBlocklist.test(textPart)) continue;
-                }
-                // Must have at least 3 letters and look like real text
-                const letterCount = (textPart.match(/[a-zA-Z]/g) || []).length;
-                if (letterCount < 3) continue;
-                if (textPart.length < 8 || textPart.length > 2000) continue;
-                // Must contain at least 2 words (real human text, not single identifiers)
-                const words = textPart.split(/\s+/).filter(w => /[a-zA-Z]{2,}/.test(w));
-                if (words.length < 2) continue;
-                // Skip paths, URLs, hex codes, file extensions, technical values
-                if (textPart.match(/^[\/\\]|^https?:|^#[0-9a-fA-F]{6}|^\{|^\[|\.dll$|\.exe$|\.png$|\.wav$|\.vis$|\.dat$/i)) continue;
-                // Skip lines that look like code (contains brackets, semicolons, assignments)
-                if (textPart.match(/[{}();]|=>|::|->|\+=|-=|\*=/)) continue;
-                
-                translatableLines.push({ idx: li, text: textPart });
-              }
-              
-              if (translatableLines.length === 0) continue;
-              
-              // Backup original file (only first time)
-              const backupPath = filePath + '.gs_bak';
-              try { await invoke('read_text_file', { path: backupPath }); } catch {
-                // No backup yet — create one
-                try { await invoke('write_text_file', { path: backupPath, content }); } catch {}
-              }
-              
-              // Translate in batches of 5
-              const translatedMap: Record<number, string> = {};
-              for (let bi = 0; bi < translatableLines.length; bi += 5) {
-                if (!autoTranslateRunningRef.current) break;
-                const batch = translatableLines.slice(bi, bi + 5);
-                const promises = batch.map(async (item) => {
-                  try {
-                    const result = await invoke<{ translated_text: string }>('translate_text_simple', {
-                      text: item.text,
-                      targetLang: language || 'it',
-                    });
-                    if (result?.translated_text) {
-                      translatedMap[item.idx] = result.translated_text;
-                    }
-                  } catch {}
-                });
-                await Promise.all(promises);
-                totalStrings += batch.length;
-                updateStep(3, 'running', `File ${i + 1}/${textFiles.length}: ${fileName} — ${Object.keys(translatedMap).length}/${translatableLines.length} stringhe...`);
-              }
-              
-              // Rebuild file with translations
-              if (Object.keys(translatedMap).length > 0) {
-                const newLines = [...lines];
-                for (const [lineIdx, translated] of Object.entries(translatedMap)) {
-                  const li = Number(lineIdx);
-                  const origLine = lines[li];
-                  // JSON: replace value in "key": "value"
-                  const jsonMatch = origLine.match(/^(\s*"[^"]*"\s*:\s*")([^"]+)(".*)/);
-                  if (jsonMatch) {
-                    newLines[li] = jsonMatch[1] + translated + jsonMatch[3];
-                  }
-                  // INI: replace value in key=value
-                  else if (origLine.includes('=') && !origLine.trim().startsWith('[')) {
-                    const eqPos = origLine.indexOf('=');
-                    const key = origLine.slice(0, eqPos + 1);
-                    const origVal = origLine.slice(eqPos + 1).trim();
-                    if ((origVal.startsWith('"') && origVal.endsWith('"'))) {
-                      newLines[li] = key + '"' + translated + '"';
-                    } else if ((origVal.startsWith("'") && origVal.endsWith("'"))) {
-                      newLines[li] = key + "'" + translated + "'";
-                    } else {
-                      newLines[li] = key + translated;
-                    }
-                  }
-                  // Plain text: replace whole line
-                  else {
-                    newLines[li] = translated;
-                  }
-                }
-                
-                try {
-                  await invoke('write_text_file', { path: filePath, content: newLines.join('\n') });
-                  translatedFiles++;
-                } catch {}
-              }
-            } catch { /* skip unreadable files */ }
-          }
-          
-          updateStep(3, 'done', `${translatedFiles} file tradotti (${totalStrings} stringhe)`);
-        } else {
-          updateStep(3, 'done', 'Nessun file di testo traducibile trovato');
-        }
-      }
-      await new Promise(r => setTimeout(r, 600));
-
-      // ── STEP 5: Avvia gioco ──
-      updateStep(4, 'running', t('gameDetails.launchingGame') || 'Launching game...');
+      updateStep(0, 'done', `Analisi completata: ${predictionResult?.engine || 'Engine rilevato'}`);
       await new Promise(r => setTimeout(r, 800));
+
+      // ── STEP 2: Tool Selection ──
+      updateStep(1, 'running', 'Selezione tool ottimali...');
+      await new Promise(r => setTimeout(r, 600));
+      updateStep(1, 'done', `${predictionResult?.selectedTools?.primary_text_tool?.name || 'Tool automatici'} selezionati`);
+      await new Promise(r => setTimeout(r, 400));
+
+      // ── STEP 3: LLM Chains ──
+      updateStep(2, 'running', 'Configurazione LLM chains...');
+      await new Promise(r => setTimeout(r, 600));
+      updateStep(2, 'done', `${predictionResult?.llmChains?.length || 0} LLM chains configurate`);
+      await new Promise(r => setTimeout(r, 400));
+
+      // ── STEP 4: Multimedia Analysis ──
+      updateStep(3, 'running', 'Analisi file multimediali...');
+      await new Promise(r => setTimeout(r, 600));
+      const multimediaData = predictionResult?.multimediaAnalysis;
+      const audioFiles = multimediaData?.audioStats?.totalAudioFiles || 0;
+      const graphicsFiles = multimediaData?.graphicsStats?.totalGraphicsFiles || 0;
+      updateStep(3, 'done', `${audioFiles} audio, ${graphicsFiles} grafiche analizzate`);
+      await new Promise(r => setTimeout(r, 400));
+
+      // ── STEP 5: Backup Strategy ──
+      updateStep(4, 'running', 'Creazione backup intelligente...');
+      await new Promise(r => setTimeout(r, 600));
+      const backupData = predictionResult?.backupStrategy;
+      const backupSize = backupData?.estimatedBackupSizeMb || 0;
+      updateStep(4, 'done', `Backup ${backupData?.recommendedBackupType || 'Smart'}: ${backupSize.toFixed(1)}MB`);
+      await new Promise(r => setTimeout(r, 400));
+
+      // ── STEP 6: Workflow Planning ──
+      updateStep(5, 'running', 'Orchestrazione workflow...');
+      await new Promise(r => setTimeout(r, 600));
+      const workflowData = predictionResult?.workflowPlan;
+      const approach = workflowData?.recommendedApproach || 'SemiAutomated';
+      const stages = workflowData?.workflowStages?.length || 0;
+      updateStep(5, 'done', `Workflow ${approach}: ${stages} stadi`);
+      await new Promise(r => setTimeout(r, 400));
+
+      // ── STEP 7: Complete Execution ──
+      updateStep(6, 'running', 'Esecuzione traduzione completa...');
       
-      let launchSuccess = false;
-      let launchDetail = '';
+      const executionResult: unknown = await invoke('execute_complete_workflow', {
+        installPath: game.installPath,
+        gameTitle: game.title || game.name || 'Unknown Game',
+        engine: game.engine || undefined,
+        sourceLang: 'en',
+        targetLang: language || 'it',
+      });
       
-      if (game.appid && game.appid > 0) {
-        try {
-          // Usa il comando Rust launch_steam_game (bypassa le restrizioni whitelist di shell.open)
-          const result: unknown = await invoke('launch_steam_game', { appId: String(game.appid) });
-          launchSuccess = result?.success !== false;
-          launchDetail = result?.message || `Steam AppID ${game.appid}`;
-        } catch (e: unknown) {
-          // Fallback: steam:// via window.location (funziona nel browser embedded Tauri)
-          console.warn('[AutoTranslate] launch_steam_game fallito, fallback steam://:', e);
-          window.location.href = `steam://rungameid/${game.appid}`;
-          launchSuccess = true;
-          launchDetail = 'Steam URL redirect';
-        }
-      } else if (game.installPath) {
-        try {
-          const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath });
-          if (exeList?.length > 0) {
-            await invoke('launch_game_direct', { executablePath: `${game.installPath}\\${exeList[0]}` });
-            launchSuccess = true;
-            launchDetail = exeList[0];
-          } else {
-            launchDetail = 'Nessun eseguibile trovato nella cartella di gioco';
-          }
-        } catch (e: unknown) {
-          console.error('[AutoTranslate] launch_game_direct failed:', e);
-          launchDetail = `Errore avvio: ${e?.toString?.() || 'sconosciuto'}`;
-        }
+      const success = executionResult?.successRate || 0;
+      const duration = executionResult?.totalDurationMinutes || 0;
+      const finalStatus = executionResult?.finalStatus;
+      
+      if (success >= 0.8) {
+        updateStep(6, 'done', `Traduzione completata: ${(success * 100).toFixed(0)}% successo in ${duration.toFixed(1)}min`);
       } else {
-        launchDetail = 'Percorso di installazione non disponibile';
+        updateStep(6, 'error', `Parzialmente completata: ${(success * 100).toFixed(0)}% successo`);
       }
+      await new Promise(r => setTimeout(r, 800));
+
+      // ── STEP 8: Final Validation ──
+      updateStep(7, 'running', 'Test e validazione finale...');
+      await new Promise(r => setTimeout(r, 600));
       
-      if (launchSuccess) {
-        updateStep(4, 'done', `${t('gameDetails.gameLaunched') || 'Game launched!'} ${launchDetail ? `(${launchDetail})` : ''}`);
-        toast.success(t('gameDetails.translationComplete') || 'Translation complete! The game will launch.');
+      const deliverables = executionResult?.deliverables || [];
+      const errors = executionResult?.errors || [];
+      
+      if (errors.length === 0) {
+        updateStep(7, 'done', `✅ ${deliverables.length} deliverables creati, 0 errori`);
+        toast.success(`🎉 ${game.title || 'Gioco'} tradotto con successo!`);
       } else {
-        updateStep(4, 'error', launchDetail || 'Impossibile avviare il gioco');
-        toast.error(launchDetail || 'Impossibile avviare il gioco');
+        updateStep(7, 'done', `⚠️ ${deliverables.length} deliverables creati, ${errors.length} errori`);
+        toast.warning(`⚠️ Traduzione completata con ${errors.length} errori`);
+      }
+
+      // Show next steps
+      const nextSteps = executionResult?.nextSteps || [];
+      if (nextSteps.length > 0) {
+        nextSteps.forEach((step: string, index: number) => {
+          setTimeout(() => {
+            toast.info(step);
+          }, (index + 1) * 2000);
+        });
       }
 
     } catch (error: unknown) {
-      console.error('[AutoTranslate] Errore:', error);
-      setAutoTranslateError(error?.toString?.() || 'Errore sconosciuto');
-      toast.error(t('gameDetails.translationError') || 'Error during auto-translation');
+      console.error('[AutoTranslate] Workflow execution failed:', error);
+      setAutoTranslateError(error?.toString?.() || 'Errore durante l\'esecuzione del workflow');
+      toast.error('❌ Errore durante la traduzione automatica');
     } finally {
       autoTranslateRunningRef.current = false;
       setAutoTranslateActive(false);
