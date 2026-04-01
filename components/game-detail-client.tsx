@@ -266,7 +266,7 @@ export default function GameDetailPage() {
         installPath: game.installPath || null
       });
       setEngineInfo(result);
-      setGame((prev: unknown) => prev ? { ...prev, engine: result.engine } : null);
+      setGame(prev => prev ? { ...prev, engine: result.engine } : null);
     } catch (error) {
       // Fallback client-side: detection per nome
       const gameName = game.name || game.title;
@@ -278,7 +278,7 @@ export default function GameDetailPage() {
           patch_tool: null,
           patch_description: null,
         });
-        setGame((prev: unknown) => prev ? { ...prev, engine: fallbackEngine } : null);
+        setGame(prev => prev ? { ...prev, engine: fallbackEngine } : null);
       }
     } finally {
       setIsDetectingEngine(false);
@@ -505,12 +505,12 @@ export default function GameDetailPage() {
       }) as string | null;
       if (!selected) return;
 
-      const engine = game.engine?.toLowerCase().includes('unreal') ? 'unreal'
-        : game.engine?.toLowerCase().includes('unity') ? 'unity' : 'auto';
+      const engine = game?.engine?.toLowerCase().includes('unreal') ? 'unreal'
+        : game?.engine?.toLowerCase().includes('unity') ? 'unity' : 'auto';
 
       const result: unknown = await invoke('install_translation_from_zip', {
         zipPath: selected,
-        gamePath: game.installPath || '',
+        gamePath: game?.installPath || '',
         engine,
       });
       toast.success(`${result.message} (${result.installed?.length || 0} file)`);
@@ -909,9 +909,10 @@ export default function GameDetailPage() {
           else if (urlPlatform) platform = urlPlatform;
           
           const data = {
+            id: gameId,
             appid: appId || 0,
             name: urlName || steamApiData?.name || decodeURIComponent(gameId),
-            install_dir: urlInstallDir || null,
+            install_dir: urlInstallDir || undefined,
             is_installed: urlInstalled || false
           };
 
@@ -932,23 +933,23 @@ export default function GameDetailPage() {
             ...(steamApiData || {}),
             lastScanned: new Date().toISOString(),
             detectedFiles: [],
-            installPath: realInstallPath,
+            installPath: realInstallPath || undefined,
             platform: platform,
             storeId: data.appid || gameId,
-            engine: detectedEngine,
+            engine: detectedEngine || undefined,
             title: steamApiData?.name || data.name,
             description: steamApiData?.short_description?.replace(/<[^>]*>?/gm, '') || (isNonSteamGame ? null : 'Nessuna descrizione disponibile.'),
             detailedDescription: steamApiData?.detailed_description?.replace(/<[^>]*>?/gm, '') || null,
             aboutGame: steamApiData?.about_the_game?.replace(/<[^>]*>?/gm, '') || null,
             coverUrl: isNonSteamGame 
-              ? (urlHeaderImage || null)
-              : (data.appid > 0 ? `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/library_600x900.jpg` : null),
+              ? (urlHeaderImage || undefined)
+              : (data.appid > 0 ? `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/library_600x900.jpg` : undefined),
             heroUrl: isNonSteamGame 
-              ? (urlHeaderImage || null)
-              : (data.appid > 0 ? `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/library_hero.jpg` : null),
+              ? (urlHeaderImage || undefined)
+              : (data.appid > 0 ? `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/library_hero.jpg` : undefined),
             headerUrl: isNonSteamGame 
-              ? (urlHeaderImage || null)
-              : (steamApiData?.header_image || (data.appid > 0 ? `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/header.jpg` : null)),
+              ? (urlHeaderImage || undefined)
+              : (steamApiData?.header_image || (data.appid > 0 ? `https://cdn.akamai.steamstatic.com/steam/apps/${data.appid}/header.jpg` : undefined)),
             shortDescription: steamApiData?.short_description || null,
             screenshots: steamApiData?.screenshots || [],
             movies: steamApiData?.movies || [],
@@ -1729,8 +1730,10 @@ export default function GameDetailPage() {
               {game.genres?.filter((g: unknown) => g?.description).slice(0, 4).map((genre: unknown, i: number) => (
                 <span key={i} className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-white/[0.06] border border-white/[0.08] text-slate-300">{genre.description}</span>
               ))}
-              {game.recommendations?.total > 0 && (
+              {typeof game.recommendations === 'object' && game.recommendations?.total > 0 && (
                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.total.toLocaleString()}</span>
+              ) || typeof game.recommendations === 'number' && game.recommendations > 0 && (
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-sky-300 bg-sky-500/10 border border-sky-500/15">👍 {game.recommendations.toLocaleString()}</span>
               )}
               {game.playtime_forever > 0 && (
                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-md text-violet-300 bg-violet-500/10 border border-violet-500/15 flex items-center gap-1"><Clock className="h-3 w-3" /> {Math.round(game.playtime_forever / 60)}h</span>
