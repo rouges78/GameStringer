@@ -32,6 +32,56 @@ import { GspackExportDialog, GspackImportDialog } from '@/components/gspack-dial
 import AudioPatcher from '@/components/audio-patcher';
 import { GameMakerTranslator } from '@/components/gamemaker-translator';
 
+// Game interface based on mock data structure
+interface Game {
+  id: string;
+  title: string;
+  description: string;
+  coverUrl?: string;
+  platform: string;
+  storeId?: string | number;
+  engine?: string;
+  installPath?: string;
+  executablePath?: string;
+  isInstalled?: boolean;
+  is_installed?: boolean; // Alternative naming
+  detectedFiles?: string[];
+  lastScanned?: Date | string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  appid?: number;
+  name?: string;
+  shortDescription?: string;
+  headerImage?: string;
+  headerUrl?: string; // Alternative naming
+  heroUrl?: string;
+  coverImage?: string; // Alternative naming
+  screenshots?: string[] | any[];
+  movies?: string[];
+  metacritic?: any;
+  achievements?: any;
+  background?: string;
+  website?: string;
+  legalNotice?: string;
+  recommendations?: number | { total: number };
+  developers?: string[];
+  publishers?: string[];
+  releaseDate?: any;
+  release_date?: any; // Alternative naming
+  genres?: string[];
+  categories?: string[];
+  supportedLanguages?: string;
+  pcRequirements?: any;
+  isFree?: boolean;
+  dlc?: any;
+  executableName?: string;
+  install_dir?: string; // Alternative naming
+  source?: string;
+  detailedDescription?: string;
+  aboutGame?: string;
+  playtime_forever?: number;
+}
+
 export default function GameDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -59,7 +109,7 @@ export default function GameDetailPage() {
     }
   }, [searchParams, params.id]);
   
-  const [game, setGame] = useState<unknown>(null);
+  const [game, setGame] = useState<Game | null>(null);
   const [translations, setTranslations] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
