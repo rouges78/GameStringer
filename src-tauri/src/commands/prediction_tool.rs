@@ -6143,15 +6143,52 @@ async fn execute_workflow_from_prediction(
     
     let target_lang = if target_lang_param.is_empty() { "it" } else { target_lang_param };
     
-    // Try Ollama first (offline, no rate limits), fallback to Google Translate
-    let ollama_available = reqwest::Client::new()
+    // Detect Ollama + find first available model dynamically
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .build()
+        .unwrap_or_default();
+    
+    let ollama_model: Option<String> = match client
         .get("http://localhost:11434/api/tags")
-        .timeout(std::time::Duration::from_secs(2))
+        .timeout(std::time::Duration::from_secs(3))
         .send()
         .await
-        .is_ok();
+    {
+        Ok(resp) => {
+            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                // Pick best model: prefer small/fast text models, skip vision models (llava)
+                let models: Vec<String> = json.get("models")
+                    .and_then(|m| m.as_array())
+                    .map(|arr| arr.iter()
+                        .filter_map(|m| m.get("name").and_then(|n| n.as_str()).map(|s| s.to_string()))
+                        .collect())
+                    .unwrap_or_default();
+                
+                // Priority: qwen3 > mistral > glm4 > lfm2 > any non-llava
+                let preferred_order = ["qwen3:", "mistral", "glm4", "lfm2"];
+                let mut chosen: Option<String> = None;
+                for prefix in &preferred_order {
+                    if let Some(m) = models.iter().find(|m| m.starts_with(prefix)) {
+                        chosen = Some(m.clone());
+                        break;
+                    }
+                }
+                if chosen.is_none() {
+                    chosen = models.iter().find(|m| !m.contains("llava")).cloned();
+                }
+                chosen
+            } else { None }
+        }
+        Err(_) => None,
+    };
     
-    let translation_method = if ollama_available { "Ollama (offline AI)" } else { "Google Translate (web)" };
+    let use_ollama = ollama_model.is_some();
+    let translation_method = if let Some(ref model) = ollama_model {
+        format!("Ollama ({})", model)
+    } else {
+        "Google Translate (web)".to_string()
+    };
     stage5_outputs.push(format!("🤖 Translation method: {}", translation_method));
     stage5_outputs.push(format!("🌍 Target language: {}", target_lang));
     
@@ -6166,79 +6203,104 @@ async fn execute_workflow_from_prediction(
             .join(&execution_id);
         let _ = std::fs::create_dir_all(&translations_dir);
         
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
-            .build()
-            .unwrap_or_default();
-        
         let max_files_to_translate = 50; // Limit for safety
         let max_strings_per_file = 500;
+        let mut ollama_failed = false; // Failsafe: stop trying Ollama after first hard failure
+        
+        // Language name mapping for Ollama prompt
+        let lang_name = match target_lang {
+            "it" => "Italian", "en" => "English", "es" => "Spanish",
+            "fr" => "French", "de" => "German", "ja" => "Japanese",
+            "zh" => "Chinese", "ko" => "Korean", "pt" => "Portuguese",
+            "ru" => "Russian", "pl" => "Polish", "nl" => "Dutch",
+            "sv" => "Swedish", "ar" => "Arabic", "tr" => "Turkish",
+            other => other,
+        };
         
         for (file_path, strings) in extracted_strings.iter().take(max_files_to_translate) {
             let strings_to_translate: Vec<_> = strings.iter().take(max_strings_per_file).collect();
             let mut file_translations: Vec<String> = Vec::new();
-            let mut file_ok = true;
             
-            // Batch translate — 5 strings at a time
-            for batch in strings_to_translate.chunks(5) {
-                for text in batch {
-                    let translated = if ollama_available {
-                        // Try Ollama
-                        let body = serde_json::json!({
-                            "model": "llama3.2:latest",
-                            "prompt": format!("Translate the following text to Italian. Output ONLY the translation, nothing else:\n\n{}", text),
-                            "stream": false
-                        });
-                        match client.post("http://localhost:11434/api/generate")
-                            .json(&body)
-                            .send()
-                            .await
-                        {
-                            Ok(resp) => {
+            // Translate strings one at a time with failsafe
+            for text in &strings_to_translate {
+                let translated = if use_ollama && !ollama_failed {
+                    let body = serde_json::json!({
+                        "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
+                        "prompt": format!("Translate to {}. Output ONLY the translation, nothing else:\n\n{}", lang_name, text),
+                        "stream": false,
+                        "options": { "temperature": 0.3, "num_predict": 512 }
+                    });
+                    match client.post("http://localhost:11434/api/generate")
+                        .json(&body)
+                        .send()
+                        .await
+                    {
+                        Ok(resp) => {
+                            let status = resp.status();
+                            if status.is_success() {
                                 if let Ok(json) = resp.json::<serde_json::Value>().await {
                                     json.get("response")
                                         .and_then(|r| r.as_str())
                                         .map(|s| s.trim().to_string())
+                                        .filter(|s| !s.is_empty())
                                 } else { None }
+                            } else {
+                                // Model not found or other server error — disable Ollama
+                                stage5_outputs.push(format!("⚠️ Ollama returned {} — switching to Google Translate", status));
+                                ollama_failed = true;
+                                None
                             }
-                            Err(_) => None,
                         }
-                    } else {
-                        // Fallback: Google Translate web scraping
-                        let encoded = urlencoding::encode(text);
-                        let url = format!(
-                            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
-                            target_lang, encoded
-                        );
-                        match client.get(&url).send().await {
-                            Ok(resp) => {
-                                if let Ok(json) = resp.json::<serde_json::Value>().await {
-                                    json.get(0)
-                                        .and_then(|a| a.get(0))
-                                        .and_then(|a| a.get(0))
-                                        .and_then(|t| t.as_str())
-                                        .map(|s| s.to_string())
-                                } else { None }
-                            }
-                            Err(_) => None,
+                        Err(_) => {
+                            ollama_failed = true;
+                            None
                         }
-                    };
-                    
-                    match translated {
-                        Some(t) => {
-                            file_translations.push(t);
-                            translated_count += 1;
+                    }
+                } else {
+                    None // Will fall through to Google Translate
+                };
+                
+                // If Ollama failed or unavailable, try Google Translate
+                let final_translation = if let Some(t) = translated {
+                    Some(t)
+                } else {
+                    let encoded = urlencoding::encode(text);
+                    let url = format!(
+                        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
+                        target_lang, encoded
+                    );
+                    match client.get(&url)
+                        .timeout(std::time::Duration::from_secs(10))
+                        .send()
+                        .await
+                    {
+                        Ok(resp) => {
+                            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                                json.get(0)
+                                    .and_then(|a| a.get(0))
+                                    .and_then(|a| a.get(0))
+                                    .and_then(|t| t.as_str())
+                                    .map(|s| s.to_string())
+                            } else { None }
                         }
-                        None => {
-                            file_translations.push(text.to_string()); // Keep original
-                            failed_count += 1;
-                        }
+                        Err(_) => None,
+                    }
+                };
+                
+                match final_translation {
+                    Some(t) => {
+                        file_translations.push(t);
+                        translated_count += 1;
+                    }
+                    None => {
+                        file_translations.push(text.to_string()); // Keep original
+                        failed_count += 1;
                     }
                 }
                 
-                // Small delay to avoid rate limiting (Google)
-                if !ollama_available {
-                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                // Rate limiting: small delay between requests
+                if !use_ollama || ollama_failed {
+                    tokio::time::sleep(std::time::Duration::from_millis(80)).await;
                 }
             }
             
@@ -6268,7 +6330,6 @@ async fn execute_workflow_from_prediction(
                 if let Ok(json_str) = serde_json::to_string_pretty(&translation_data) {
                     if std::fs::write(&json_path, json_str).is_ok() {
                         translated_files.push(json_path);
-                        if file_ok { file_ok = true; }
                     }
                 }
             }
@@ -6489,7 +6550,7 @@ async fn execute_workflow_from_prediction(
         "engine": prediction.engine,
         "install_path": game_path_str,
         "target_language": target_lang,
-        "translation_method": if ollama_available { "ollama" } else { "google" },
+        "translation_method": if use_ollama { "ollama" } else { "google" },
         "total_files_scanned": translatable_files.len(),
         "total_strings_found": total_strings,
         "strings_translated": translated_count,
