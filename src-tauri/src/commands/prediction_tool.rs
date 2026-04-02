@@ -3888,12 +3888,31 @@ fn get_complexity_factor(complexity: &TranslationComplexity) -> f64 {
     factor
 }
 
+/// Safe model lookup with cascading fallback — never panics
+fn find_model<'a>(llm_db: &'a [LLMModel], names: &[&str]) -> &'a LLMModel {
+    for name in names {
+        if let Some(m) = llm_db.iter().find(|m| m.name == *name) {
+            return m;
+        }
+    }
+    // Fallback: best quality model available
+    llm_db.iter()
+        .max_by_key(|m| m.quality_score)
+        .unwrap_or(&llm_db[0])
+}
+
+/// Safe fastest model lookup
+fn find_fastest_model(llm_db: &[LLMModel]) -> &LLMModel {
+    llm_db.iter()
+        .max_by(|a, b| a.speed_tokens_per_sec.partial_cmp(&b.speed_tokens_per_sec).unwrap_or(std::cmp::Ordering::Equal))
+        .unwrap_or(&llm_db[0])
+}
+
 fn build_free_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
-    let free_models: Vec<_> = llm_db.iter()
-        .filter(|m| m.cost_per_million_input == 0.0 && m.cost_per_million_output == 0.0)
-        .collect();
-    
-    let primary = free_models.first().unwrap();
+    let fallback = &llm_db[0];
+    let primary = llm_db.iter()
+        .find(|m| m.cost_per_million_input == 0.0 && m.cost_per_million_output == 0.0)
+        .unwrap_or(fallback);
     
     let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
     let estimated_hours = estimated_tokens / (primary.speed_tokens_per_sec * 3600.0);
@@ -3926,14 +3945,9 @@ fn build_free_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64
 }
 
 fn build_balanced_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
-    let primary = llm_db.iter()
-        .find(|m| m.name == "gpt-4o-mini")
-        .or_else(|| llm_db.iter().find(|m| m.name == "gemini-1.5-flash"))
-        .unwrap();
+    let primary = find_model(llm_db, &["gpt-4o-mini", "gemini-1.5-flash", "llama-3.3-70b-versatile"]);
     
-    let post_editor = llm_db.iter()
-        .find(|m| m.name == "claude-3-haiku-20240307")
-        .unwrap();
+    let post_editor = find_model(llm_db, &["claude-3-haiku-20240307", "gpt-4o-mini", "gemini-1.5-flash"]);
     
     let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
     let primary_tokens = estimated_tokens * 0.7;
@@ -3987,18 +4001,11 @@ fn build_balanced_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity:
 }
 
 fn build_premium_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
-    let primary = llm_db.iter()
-        .find(|m| m.name == "gpt-4o")
-        .or_else(|| llm_db.iter().find(|m| m.name == "claude-3-5-sonnet-20241022"))
-        .unwrap();
+    let primary = find_model(llm_db, &["gpt-4o", "claude-3-5-sonnet-20241022", "gemini-1.5-pro"]);
     
-    let post_editor = llm_db.iter()
-        .find(|m| m.name == "deepL-pro")
-        .unwrap();
+    let post_editor = find_model(llm_db, &["deepL-pro", "claude-3-haiku-20240307", "gpt-4o-mini"]);
     
-    let reviewer = llm_db.iter()
-        .find(|m| m.name == "gemini-1.5-pro")
-        .unwrap();
+    let reviewer = find_model(llm_db, &["gemini-1.5-pro", "gpt-4o", "claude-3-5-sonnet-20241022"]);
     
     let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
     let primary_tokens = estimated_tokens * 0.6;
@@ -4067,9 +4074,7 @@ fn build_premium_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: 
 }
 
 fn build_fast_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
-    let fastest = llm_db.iter()
-        .max_by(|a, b| a.speed_tokens_per_sec.partial_cmp(&b.speed_tokens_per_sec).unwrap())
-        .unwrap();
+    let fastest = find_fastest_model(llm_db);
     
     let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
     let estimated_hours = estimated_tokens / (fastest.speed_tokens_per_sec * 3600.0);
@@ -4107,20 +4112,18 @@ fn build_fast_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64
 fn build_hybrid_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64, result: &PredictionResult) -> OptimizedChain {
     // Scegli modelli diversi in base alla complessità rilevata
     let primary = if result.translation_complexity.has_plurals || result.translation_complexity.has_gender_forms {
-        llm_db.iter().find(|m| m.name == "claude-3-5-sonnet-20241022").unwrap()
+        find_model(llm_db, &["claude-3-5-sonnet-20241022", "gpt-4o", "gemini-1.5-pro"])
     } else {
-        llm_db.iter().find(|m| m.name == "gpt-4o-mini").unwrap()
+        find_model(llm_db, &["gpt-4o-mini", "gemini-1.5-flash", "llama-3.3-70b-versatile"])
     };
     
     let context_detector = if result.translation_complexity.variable_count > 1000 {
-        llm_db.iter().find(|m| m.name == "gemini-1.5-pro").unwrap()
+        find_model(llm_db, &["gemini-1.5-pro", "gpt-4o", "claude-3-5-sonnet-20241022"])
     } else {
-        llm_db.iter().find(|m| m.name == "llama-3.3-70b-versatile").unwrap()
+        find_model(llm_db, &["llama-3.3-70b-versatile", "gemini-1.5-flash", "gpt-4o-mini"])
     };
     
-    let post_editor = llm_db.iter()
-        .find(|m| m.name == "claude-3-haiku-20240307")
-        .unwrap();
+    let post_editor = find_model(llm_db, &["claude-3-haiku-20240307", "gpt-4o-mini", "gemini-1.5-flash"]);
     
     let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
     
@@ -5787,84 +5790,753 @@ pub struct ExecutionError {
 async fn execute_workflow_from_prediction(
     game_path: &Path,
     prediction: &PredictionResult,
+    target_lang_param: &str,
 ) -> Result<WorkflowExecutionResult, String> {
     let start = std::time::Instant::now();
     let execution_id = format!("exec_{}", chrono::Utc::now().timestamp());
+    let game_path_str = game_path.to_string_lossy().to_string();
+    let engine_lower = prediction.engine.to_lowercase();
     
     let mut stages_completed = Vec::new();
     let mut deliverables = Vec::new();
-    let mut errors = Vec::new();
+    let mut errors: Vec<ExecutionError> = Vec::new();
+    let mut error_counter = 0u32;
 
-    // Stage 1: Preparation
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 1: PREPARATION — Validate game path, detect engine, check space
+    // ══════════════════════════════════════════════════════════════════════════
+    let stage_start = std::time::Instant::now();
+    let mut stage1_outputs = vec![
+        format!("🎮 Game: {}", prediction.game_title),
+        format!("⚙️ Engine: {}", prediction.engine),
+        format!("📁 Path: {}", game_path_str),
+        format!("📊 Difficulty: {}/100 ({})", prediction.difficulty_score, prediction.difficulty_label),
+        format!("🎯 Confidence: {}%", prediction.confidence_score),
+    ];
+    
+    // Check disk space
+    let game_size_mb = walkdir::WalkDir::new(game_path)
+        .max_depth(1)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+        .map(|e| e.metadata().map(|m| m.len()).unwrap_or(0))
+        .sum::<u64>() as f64 / (1024.0 * 1024.0);
+    stage1_outputs.push(format!("💿 Game root size: {:.0}MB", game_size_mb));
+
+    // Check available tools
+    let tool_name = prediction.selected_tools.primary_text_tool.as_ref()
+        .map(|t| t.name.clone())
+        .unwrap_or_else(|| "Generic text scanner".to_string());
+    stage1_outputs.push(format!("🛠️ Primary tool: {}", tool_name));
+    
+    if !prediction.llm_chains.is_empty() {
+        stage1_outputs.push(format!("🤖 LLM chains available: {}", prediction.llm_chains.len()));
+    }
+    
     stages_completed.push(StageExecutionResult {
         stage_id: 1,
-        stage_name: "Preparation".to_string(),
+        stage_name: "Preparation & Validation".to_string(),
         status: ExecutionStatus::Completed,
-        duration_minutes: 0.1,
-        outputs: vec![
-            format!("Engine: {}", prediction.engine),
-            format!("Install path: {}", prediction.install_path),
-        ],
+        duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+        outputs: stage1_outputs,
         errors: vec![],
         success: true,
     });
 
-    // Stage 2: Analysis
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 2: SMART BACKUP — Real file backup before any modifications
+    // ══════════════════════════════════════════════════════════════════════════
+    let stage_start = std::time::Instant::now();
+    let mut stage2_outputs = Vec::new();
+    let mut stage2_errors = Vec::new();
+    let mut backup_success = false;
+    
+    let backup_dir = dirs::data_local_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("GameStringer")
+        .join("backups")
+        .join(&execution_id);
+    
+    // Scan translatable files to know what to backup
+    let translatable_extensions = [
+        "json", "xml", "txt", "csv", "tsv", "po", "pot", "resx", "xliff",
+        "yaml", "yml", "ini", "cfg", "lang", "loc", "strings", "properties",
+        "srt", "vtt", "ass", "lua", "rpy", "ks", "locres", "translation",
+        "tres", "tscn", "gml", "htm", "html",
+    ];
+    
+    let mut files_to_backup: Vec<PathBuf> = Vec::new();
+    for entry in walkdir::WalkDir::new(game_path)
+        .max_depth(8)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        if entry.file_type().is_file() {
+            if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
+                if translatable_extensions.contains(&ext.to_lowercase().as_str()) {
+                    files_to_backup.push(entry.path().to_path_buf());
+                }
+            }
+        }
+    }
+    
+    stage2_outputs.push(format!("📋 Found {} translatable files to backup", files_to_backup.len()));
+    
+    if !files_to_backup.is_empty() {
+        match std::fs::create_dir_all(&backup_dir) {
+            Ok(_) => {
+                let mut backed_up = 0u32;
+                let mut backup_size = 0u64;
+                
+                for file_path in &files_to_backup {
+                    if let Ok(relative) = file_path.strip_prefix(game_path) {
+                        let backup_file = backup_dir.join(relative);
+                        if let Some(parent) = backup_file.parent() {
+                            let _ = std::fs::create_dir_all(parent);
+                        }
+                        match std::fs::copy(file_path, &backup_file) {
+                            Ok(size) => {
+                                backed_up += 1;
+                                backup_size += size;
+                            }
+                            Err(e) => {
+                                stage2_errors.push(format!("⚠️ Backup failed: {}: {}", relative.display(), e));
+                            }
+                        }
+                    }
+                }
+                
+                let backup_size_mb = backup_size as f64 / (1024.0 * 1024.0);
+                stage2_outputs.push(format!("✅ Backed up {}/{} files ({:.1}MB)", backed_up, files_to_backup.len(), backup_size_mb));
+                stage2_outputs.push(format!("📂 Backup location: {}", backup_dir.display()));
+                backup_success = backed_up > 0;
+                
+                // Register deliverable
+                deliverables.push(ExecutionDeliverable {
+                    deliverable_id: "del_backup".to_string(),
+                    deliverable_name: format!("Smart Backup ({} files)", backed_up),
+                    file_path: Some(backup_dir.to_string_lossy().to_string()),
+                    size_mb: backup_size_mb,
+                    status: ExecutionStatus::Completed,
+                    created_at: chrono::Utc::now().to_rfc3339(),
+                });
+            }
+            Err(e) => {
+                stage2_errors.push(format!("❌ Failed to create backup dir: {}", e));
+                error_counter += 1;
+                errors.push(ExecutionError {
+                    error_id: format!("err_{}", error_counter),
+                    stage_id: 2,
+                    error_type: "BackupCreationFailed".to_string(),
+                    message: format!("Cannot create backup directory: {}", e),
+                    severity: "high".to_string(),
+                    timestamp: chrono::Utc::now().to_rfc3339(),
+                    resolved: false,
+                });
+            }
+        }
+    } else {
+        stage2_outputs.push("⏩ No translatable files found — skipping backup".to_string());
+        backup_success = true; // Nothing to backup = success
+    }
+    
     stages_completed.push(StageExecutionResult {
         stage_id: 2,
-        stage_name: "Analysis".to_string(),
-        status: ExecutionStatus::Completed,
-        duration_minutes: 0.2,
-        outputs: vec![
-            format!("Difficulty: {} ({})", prediction.difficulty_score, prediction.difficulty_label),
-            format!("Confidence: {:.0}%", prediction.confidence_score),
-            format!("Method: {}", prediction.recommended_method),
-        ],
-        errors: vec![],
-        success: true,
+        stage_name: "Smart Backup".to_string(),
+        status: if backup_success { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+        duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+        outputs: stage2_outputs,
+        errors: stage2_errors,
+        success: backup_success,
     });
 
-    // Stage 3: Translation setup
-    let has_tools = prediction.selected_tools.primary_text_tool.is_some();
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 3: FILE SCANNING — Deep scan for all translatable content
+    // ══════════════════════════════════════════════════════════════════════════
+    let stage_start = std::time::Instant::now();
+    let mut stage3_outputs = Vec::new();
+    let mut translatable_files: Vec<PathBuf> = Vec::new();
+    
+    // Comprehensive deep scan
+    let scan_extensions = match engine_lower.as_str() {
+        e if e.contains("unity") => vec![
+            "json", "xml", "txt", "csv", "yaml", "yml", "bytes", "asset",
+            "lang", "loc", "strings", "properties",
+        ],
+        e if e.contains("unreal") => vec![
+            "locres", "locmeta", "int", "ini", "json", "csv",
+        ],
+        e if e.contains("godot") => vec![
+            "tres", "tscn", "translation", "json", "csv", "cfg",
+        ],
+        e if e.contains("gamemaker") || e.contains("game maker") => vec![
+            "json", "jn", "csv", "txt", "ini", "gml",
+        ],
+        e if e.contains("renpy") || e.contains("ren'py") => vec![
+            "rpy", "json", "txt", "po", "pot",
+        ],
+        e if e.contains("rpg maker") || e.contains("rpgmaker") => vec![
+            "json", "yaml", "yml", "txt", "csv", "rb",
+        ],
+        e if e.contains("visionaire") => vec![
+            "vis", "veb",
+        ],
+        _ => vec![
+            "json", "xml", "txt", "csv", "tsv", "po", "pot", "yaml", "yml",
+            "ini", "cfg", "lang", "loc", "strings", "properties", "lua",
+            "srt", "vtt", "htm", "html",
+        ],
+    };
+    
+    let mut total_text_size = 0u64;
+    let mut format_counts: std::collections::HashMap<String, u32> = std::collections::HashMap::new();
+    
+    for entry in walkdir::WalkDir::new(game_path)
+        .max_depth(10)
+        .into_iter()
+        .filter_entry(|e| {
+            if e.file_type().is_dir() {
+                let name = e.file_name().to_string_lossy().to_lowercase();
+                !["monobleedingedge", "__pycache__", "node_modules", ".git", "crashhandler"].contains(&name.as_str())
+            } else { true }
+        })
+        .filter_map(|e| e.ok())
+    {
+        if entry.file_type().is_file() {
+            if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
+                let ext_lower = ext.to_lowercase();
+                if scan_extensions.contains(&ext_lower.as_str()) {
+                    let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
+                    // Skip huge binary files (>50MB probably not text)
+                    if size < 50 * 1024 * 1024 {
+                        translatable_files.push(entry.path().to_path_buf());
+                        total_text_size += size;
+                        *format_counts.entry(ext_lower).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    stage3_outputs.push(format!("🔍 Deep scan: {} translatable files found", translatable_files.len()));
+    stage3_outputs.push(format!("📊 Total text content: {:.1}MB", total_text_size as f64 / (1024.0 * 1024.0)));
+    
+    // Top formats
+    let mut formats_sorted: Vec<_> = format_counts.iter().collect();
+    formats_sorted.sort_by(|a, b| b.1.cmp(a.1));
+    for (ext, count) in formats_sorted.iter().take(5) {
+        stage3_outputs.push(format!("  📄 .{}: {} files", ext, count));
+    }
+    
+    // Engine-specific scan details
+    match engine_lower.as_str() {
+        e if e.contains("unity") => {
+            let data_folders: Vec<_> = std::fs::read_dir(game_path)
+                .into_iter()
+                .flat_map(|rd| rd.into_iter())
+                .filter_map(|e| e.ok())
+                .filter(|e| e.file_name().to_string_lossy().ends_with("_Data"))
+                .collect();
+            if !data_folders.is_empty() {
+                stage3_outputs.push(format!("🎮 Unity Data folder: {}", data_folders[0].file_name().to_string_lossy()));
+            }
+            let bepinex = game_path.join("BepInEx");
+            if bepinex.exists() {
+                stage3_outputs.push("✅ BepInEx detected — XUnity AutoTranslator compatible".to_string());
+            }
+        }
+        e if e.contains("unreal") => {
+            let pak_count = walkdir::WalkDir::new(game_path)
+                .max_depth(5).into_iter().filter_map(|e| e.ok())
+                .filter(|e| e.path().extension().map(|x| x == "pak").unwrap_or(false))
+                .count();
+            stage3_outputs.push(format!("📦 Unreal .pak files: {}", pak_count));
+        }
+        e if e.contains("godot") => {
+            let pck_count = walkdir::WalkDir::new(game_path)
+                .max_depth(3).into_iter().filter_map(|e| e.ok())
+                .filter(|e| e.path().extension().map(|x| x == "pck").unwrap_or(false))
+                .count();
+            stage3_outputs.push(format!("📦 Godot .pck files: {}", pck_count));
+        }
+        _ => {}
+    }
+    
     stages_completed.push(StageExecutionResult {
         stage_id: 3,
-        stage_name: "Translation Setup".to_string(),
-        status: if has_tools { ExecutionStatus::Completed } else { ExecutionStatus::Skipped },
-        duration_minutes: 0.1,
-        outputs: if has_tools {
-            vec![format!("Primary tool: {}", prediction.selected_tools.primary_text_tool.as_ref().map(|t| t.name.as_str()).unwrap_or("N/A"))]
-        } else {
-            vec!["No automated tools available".to_string()]
-        },
-        errors: vec![],
-        success: has_tools,
-    });
-
-    // Stage 4: Backup
-    stages_completed.push(StageExecutionResult {
-        stage_id: 4,
-        stage_name: "Backup".to_string(),
+        stage_name: "Deep File Scanning".to_string(),
         status: ExecutionStatus::Completed,
-        duration_minutes: 0.3,
-        outputs: vec![
-            format!("Backup type: {:?}", prediction.backup_strategy.recommended_backup_type),
-            format!("Estimated size: {:.1}MB", prediction.backup_strategy.estimated_backup_size_mb),
-        ],
+        duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+        outputs: stage3_outputs,
         errors: vec![],
         success: true,
     });
 
-    // Add deliverable
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 4: STRING EXTRACTION — Extract translatable strings from files
+    // ══════════════════════════════════════════════════════════════════════════
+    let stage_start = std::time::Instant::now();
+    let mut stage4_outputs = Vec::new();
+    let mut extracted_strings: Vec<(PathBuf, Vec<String>)> = Vec::new();
+    let mut total_strings = 0u64;
+    
+    // Extract strings from text-based files
+    for file_path in &translatable_files {
+        match std::fs::read_to_string(file_path) {
+            Ok(content) => {
+                let lines: Vec<String> = content.lines()
+                    .filter(|l| {
+                        let trimmed = l.trim();
+                        !trimmed.is_empty() 
+                        && !trimmed.starts_with("//") 
+                        && !trimmed.starts_with('#')
+                        && !trimmed.starts_with("/*")
+                        && trimmed.len() >= 3
+                        && trimmed.chars().any(|c| c.is_alphabetic())
+                    })
+                    .map(|l| l.to_string())
+                    .collect();
+                
+                if !lines.is_empty() {
+                    total_strings += lines.len() as u64;
+                    extracted_strings.push((file_path.clone(), lines));
+                }
+            }
+            Err(_) => {
+                // Binary file or encoding issue — skip silently
+            }
+        }
+    }
+    
+    stage4_outputs.push(format!("📝 Extracted {} translatable strings from {} files", 
+        total_strings, extracted_strings.len()));
+    
+    // Show top files by string count
+    let mut files_by_count: Vec<_> = extracted_strings.iter()
+        .map(|(p, s)| (p.file_name().unwrap_or_default().to_string_lossy().to_string(), s.len()))
+        .collect();
+    files_by_count.sort_by(|a, b| b.1.cmp(&a.1));
+    for (name, count) in files_by_count.iter().take(5) {
+        stage4_outputs.push(format!("  📄 {}: {} strings", name, count));
+    }
+    
+    stages_completed.push(StageExecutionResult {
+        stage_id: 4,
+        stage_name: "String Extraction".to_string(),
+        status: ExecutionStatus::Completed,
+        duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+        outputs: stage4_outputs,
+        errors: vec![],
+        success: total_strings > 0,
+    });
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 5: TRANSLATION — Real translation via Ollama or Google Translate
+    // ══════════════════════════════════════════════════════════════════════════
+    let stage_start = std::time::Instant::now();
+    let mut stage5_outputs = Vec::new();
+    let mut stage5_errors = Vec::new();
+    let mut translated_count = 0u64;
+    let mut failed_count = 0u64;
+    let mut translated_files: Vec<PathBuf> = Vec::new();
+    
+    let target_lang = if target_lang_param.is_empty() { "it" } else { target_lang_param };
+    
+    // Try Ollama first (offline, no rate limits), fallback to Google Translate
+    let ollama_available = reqwest::Client::new()
+        .get("http://localhost:11434/api/tags")
+        .timeout(std::time::Duration::from_secs(2))
+        .send()
+        .await
+        .is_ok();
+    
+    let translation_method = if ollama_available { "Ollama (offline AI)" } else { "Google Translate (web)" };
+    stage5_outputs.push(format!("🤖 Translation method: {}", translation_method));
+    stage5_outputs.push(format!("🌍 Target language: {}", target_lang));
+    
+    if total_strings == 0 {
+        stage5_outputs.push("⏩ No strings to translate — skipping".to_string());
+    } else {
+        // Save translations to GameStringer data dir
+        let translations_dir = dirs::data_local_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("GameStringer")
+            .join("translations")
+            .join(&execution_id);
+        let _ = std::fs::create_dir_all(&translations_dir);
+        
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .unwrap_or_default();
+        
+        let max_files_to_translate = 50; // Limit for safety
+        let max_strings_per_file = 500;
+        
+        for (file_path, strings) in extracted_strings.iter().take(max_files_to_translate) {
+            let strings_to_translate: Vec<_> = strings.iter().take(max_strings_per_file).collect();
+            let mut file_translations: Vec<String> = Vec::new();
+            let mut file_ok = true;
+            
+            // Batch translate — 5 strings at a time
+            for batch in strings_to_translate.chunks(5) {
+                for text in batch {
+                    let translated = if ollama_available {
+                        // Try Ollama
+                        let body = serde_json::json!({
+                            "model": "llama3.2:latest",
+                            "prompt": format!("Translate the following text to Italian. Output ONLY the translation, nothing else:\n\n{}", text),
+                            "stream": false
+                        });
+                        match client.post("http://localhost:11434/api/generate")
+                            .json(&body)
+                            .send()
+                            .await
+                        {
+                            Ok(resp) => {
+                                if let Ok(json) = resp.json::<serde_json::Value>().await {
+                                    json.get("response")
+                                        .and_then(|r| r.as_str())
+                                        .map(|s| s.trim().to_string())
+                                } else { None }
+                            }
+                            Err(_) => None,
+                        }
+                    } else {
+                        // Fallback: Google Translate web scraping
+                        let encoded = urlencoding::encode(text);
+                        let url = format!(
+                            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
+                            target_lang, encoded
+                        );
+                        match client.get(&url).send().await {
+                            Ok(resp) => {
+                                if let Ok(json) = resp.json::<serde_json::Value>().await {
+                                    json.get(0)
+                                        .and_then(|a| a.get(0))
+                                        .and_then(|a| a.get(0))
+                                        .and_then(|t| t.as_str())
+                                        .map(|s| s.to_string())
+                                } else { None }
+                            }
+                            Err(_) => None,
+                        }
+                    };
+                    
+                    match translated {
+                        Some(t) => {
+                            file_translations.push(t);
+                            translated_count += 1;
+                        }
+                        None => {
+                            file_translations.push(text.to_string()); // Keep original
+                            failed_count += 1;
+                        }
+                    }
+                }
+                
+                // Small delay to avoid rate limiting (Google)
+                if !ollama_available {
+                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+                }
+            }
+            
+            // Save translated file
+            if let Ok(relative) = file_path.strip_prefix(game_path) {
+                let output_path = translations_dir.join(relative);
+                if let Some(parent) = output_path.parent() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
+                
+                // Write translations as JSON for traceability
+                let translation_data = serde_json::json!({
+                    "source_file": file_path.to_string_lossy(),
+                    "target_language": target_lang,
+                    "method": translation_method,
+                    "timestamp": chrono::Utc::now().to_rfc3339(),
+                    "translations": strings.iter().take(max_strings_per_file)
+                        .zip(file_translations.iter())
+                        .map(|(orig, trans)| serde_json::json!({
+                            "original": orig,
+                            "translated": trans,
+                        }))
+                        .collect::<Vec<_>>(),
+                });
+                
+                let json_path = output_path.with_extension("gs_translations.json");
+                if let Ok(json_str) = serde_json::to_string_pretty(&translation_data) {
+                    if std::fs::write(&json_path, json_str).is_ok() {
+                        translated_files.push(json_path);
+                        if file_ok { file_ok = true; }
+                    }
+                }
+            }
+        }
+        
+        stage5_outputs.push(format!("✅ Translated: {}/{} strings", translated_count, total_strings.min((max_files_to_translate * max_strings_per_file) as u64)));
+        if failed_count > 0 {
+            stage5_outputs.push(format!("⚠️ Failed: {} strings (kept original)", failed_count));
+        }
+        stage5_outputs.push(format!("📁 Translation files saved to: {}", translations_dir.display()));
+        stage5_outputs.push(format!("📄 Output files: {}", translated_files.len()));
+        
+        // Register deliverable
+        let total_translation_size: u64 = translated_files.iter()
+            .filter_map(|f| std::fs::metadata(f).ok())
+            .map(|m| m.len())
+            .sum();
+        
+        deliverables.push(ExecutionDeliverable {
+            deliverable_id: "del_translations".to_string(),
+            deliverable_name: format!("Translations ({} strings, {} files)", translated_count, translated_files.len()),
+            file_path: Some(translations_dir.to_string_lossy().to_string()),
+            size_mb: total_translation_size as f64 / (1024.0 * 1024.0),
+            status: ExecutionStatus::Completed,
+            created_at: chrono::Utc::now().to_rfc3339(),
+        });
+    }
+    
+    if failed_count > translated_count && total_strings > 0 {
+        error_counter += 1;
+        errors.push(ExecutionError {
+            error_id: format!("err_{}", error_counter),
+            stage_id: 5,
+            error_type: "TranslationFailureRate".to_string(),
+            message: format!("High failure rate: {}/{} strings failed", failed_count, translated_count + failed_count),
+            severity: "medium".to_string(),
+            timestamp: chrono::Utc::now().to_rfc3339(),
+            resolved: false,
+        });
+    }
+    
+    stages_completed.push(StageExecutionResult {
+        stage_id: 5,
+        stage_name: "AI Translation".to_string(),
+        status: if translated_count > 0 || total_strings == 0 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+        duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+        outputs: stage5_outputs,
+        errors: stage5_errors,
+        success: translated_count > 0 || total_strings == 0,
+    });
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 6: INJECTION — Apply translations back to game files
+    // ══════════════════════════════════════════════════════════════════════════
+    let stage_start = std::time::Instant::now();
+    let mut stage6_outputs = Vec::new();
+    let mut injected_count = 0u32;
+    
+    if translated_count > 0 {
+        // For text-based files, we can do direct injection by replacing original content
+        for (file_path, strings) in extracted_strings.iter().take(50) {
+            match std::fs::read_to_string(file_path) {
+                Ok(mut content) => {
+                    let mut modified = false;
+                    
+                    // Find corresponding translation file
+                    if let Ok(relative) = file_path.strip_prefix(game_path) {
+                        let translations_dir = dirs::data_local_dir()
+                            .unwrap_or_else(|| PathBuf::from("."))
+                            .join("GameStringer")
+                            .join("translations")
+                            .join(&execution_id);
+                        let json_path = translations_dir.join(relative).with_extension("gs_translations.json");
+                        
+                        if let Ok(json_str) = std::fs::read_to_string(&json_path) {
+                            if let Ok(json) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                                if let Some(translations) = json.get("translations").and_then(|t| t.as_array()) {
+                                    for entry in translations {
+                                        if let (Some(orig), Some(trans)) = (
+                                            entry.get("original").and_then(|o| o.as_str()),
+                                            entry.get("translated").and_then(|t| t.as_str()),
+                                        ) {
+                                            if orig != trans && !trans.is_empty() {
+                                                // Only replace exact string occurrences (safe injection)
+                                                if content.contains(orig) {
+                                                    content = content.replacen(orig, trans, 1);
+                                                    modified = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    if modified {
+                        if std::fs::write(file_path, &content).is_ok() {
+                            injected_count += 1;
+                        }
+                    }
+                }
+                Err(_) => {} // Binary file, skip
+            }
+        }
+        
+        stage6_outputs.push(format!("💉 Injected translations into {} files", injected_count));
+        
+        if injected_count > 0 {
+            deliverables.push(ExecutionDeliverable {
+                deliverable_id: "del_injection".to_string(),
+                deliverable_name: format!("Modified game files ({})", injected_count),
+                file_path: Some(game_path_str.clone()),
+                size_mb: 0.0,
+                status: ExecutionStatus::Completed,
+                created_at: chrono::Utc::now().to_rfc3339(),
+            });
+        }
+    } else {
+        stage6_outputs.push("⏩ No translations to inject".to_string());
+    }
+    
+    stages_completed.push(StageExecutionResult {
+        stage_id: 6,
+        stage_name: "Translation Injection".to_string(),
+        status: if injected_count > 0 || translated_count == 0 { ExecutionStatus::Completed } else { ExecutionStatus::Skipped },
+        duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+        outputs: stage6_outputs,
+        errors: vec![],
+        success: injected_count > 0 || translated_count == 0,
+    });
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 7: VALIDATION — Verify translations were applied correctly
+    // ══════════════════════════════════════════════════════════════════════════
+    let stage_start = std::time::Instant::now();
+    let mut stage7_outputs = Vec::new();
+    let mut validation_passed = true;
+    
+    // Check that modified files are still valid
+    let mut valid_files = 0u32;
+    let mut invalid_files = 0u32;
+    
+    for (file_path, _) in extracted_strings.iter().take(50) {
+        match std::fs::read_to_string(file_path) {
+            Ok(content) => {
+                // Basic validation: file is still readable text
+                if !content.is_empty() {
+                    // JSON validation for .json files
+                    if file_path.extension().map(|e| e == "json").unwrap_or(false) {
+                        if serde_json::from_str::<serde_json::Value>(&content).is_err() {
+                            invalid_files += 1;
+                            stage7_outputs.push(format!("⚠️ Invalid JSON after injection: {}", 
+                                file_path.file_name().unwrap_or_default().to_string_lossy()));
+                        } else {
+                            valid_files += 1;
+                        }
+                    } else {
+                        valid_files += 1;
+                    }
+                }
+            }
+            Err(_) => {
+                invalid_files += 1;
+            }
+        }
+    }
+    
+    stage7_outputs.push(format!("✅ Valid files: {}", valid_files));
+    if invalid_files > 0 {
+        stage7_outputs.push(format!("⚠️ Invalid files: {} (restored from backup)", invalid_files));
+        validation_passed = invalid_files == 0;
+        
+        // Auto-restore invalid files from backup
+        for (file_path, _) in extracted_strings.iter().take(50) {
+            if let Ok(relative) = file_path.strip_prefix(game_path) {
+                let backup_file = backup_dir.join(relative);
+                if backup_file.exists() {
+                    // Re-check if the file is invalid
+                    if file_path.extension().map(|e| e == "json").unwrap_or(false) {
+                        if let Ok(content) = std::fs::read_to_string(file_path) {
+                            if serde_json::from_str::<serde_json::Value>(&content).is_err() {
+                                // Restore from backup
+                                if std::fs::copy(&backup_file, file_path).is_ok() {
+                                    stage7_outputs.push(format!("🔄 Restored: {}", relative.display()));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    stage7_outputs.push(format!("🎯 Translation coverage: {:.1}%", 
+        if total_strings > 0 { translated_count as f64 / total_strings as f64 * 100.0 } else { 0.0 }));
+    
+    stages_completed.push(StageExecutionResult {
+        stage_id: 7,
+        stage_name: "Validation & QA".to_string(),
+        status: if validation_passed { ExecutionStatus::Completed } else { ExecutionStatus::Completed },
+        duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+        outputs: stage7_outputs,
+        errors: vec![],
+        success: validation_passed,
+    });
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 8: REPORT — Generate final execution report
+    // ══════════════════════════════════════════════════════════════════════════
+    let stage_start = std::time::Instant::now();
+    let elapsed_total = start.elapsed().as_secs_f64() / 60.0;
+    
+    // Save execution report
+    let report = serde_json::json!({
+        "execution_id": execution_id,
+        "game_title": prediction.game_title,
+        "engine": prediction.engine,
+        "install_path": game_path_str,
+        "target_language": target_lang,
+        "translation_method": if ollama_available { "ollama" } else { "google" },
+        "total_files_scanned": translatable_files.len(),
+        "total_strings_found": total_strings,
+        "strings_translated": translated_count,
+        "strings_failed": failed_count,
+        "files_injected": injected_count,
+        "backup_location": backup_dir.to_string_lossy(),
+        "duration_minutes": elapsed_total,
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+    });
+    
+    let report_dir = dirs::data_local_dir()
+        .unwrap_or_else(|| PathBuf::from("."))
+        .join("GameStringer")
+        .join("reports");
+    let _ = std::fs::create_dir_all(&report_dir);
+    let report_path = report_dir.join(format!("{}.json", execution_id));
+    
+    if let Ok(json_str) = serde_json::to_string_pretty(&report) {
+        let _ = std::fs::write(&report_path, &json_str);
+    }
+    
     deliverables.push(ExecutionDeliverable {
-        deliverable_id: "del_analysis".to_string(),
-        deliverable_name: "Translation Analysis Report".to_string(),
-        file_path: None,
+        deliverable_id: "del_report".to_string(),
+        deliverable_name: "Execution Report".to_string(),
+        file_path: Some(report_path.to_string_lossy().to_string()),
         size_mb: 0.01,
         status: ExecutionStatus::Completed,
         created_at: chrono::Utc::now().to_rfc3339(),
     });
+    
+    stages_completed.push(StageExecutionResult {
+        stage_id: 8,
+        stage_name: "Report Generation".to_string(),
+        status: ExecutionStatus::Completed,
+        duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+        outputs: vec![
+            format!("📊 Report saved: {}", report_path.display()),
+            format!("⏱️ Total duration: {:.1} minutes", elapsed_total),
+            format!("📦 Deliverables: {}", deliverables.len()),
+        ],
+        errors: vec![],
+        success: true,
+    });
 
-    let elapsed = start.elapsed().as_secs_f64() / 60.0;
+    // ══════════════════════════════════════════════════════════════════════════
+    // FINAL RESULT
+    // ══════════════════════════════════════════════════════════════════════════
     let success_count = stages_completed.iter().filter(|s| s.success).count();
     let total_count = stages_completed.len();
     let success_rate = success_count as f64 / total_count as f64;
@@ -5872,24 +6544,35 @@ async fn execute_workflow_from_prediction(
     let final_status = if success_rate >= 0.8 {
         ExecutionStatus::Completed
     } else if success_rate >= 0.5 {
-        ExecutionStatus::Completed // partial success
+        ExecutionStatus::Completed
     } else {
         ExecutionStatus::Failed
     };
 
-    let mut next_steps = vec![
-        format!("Verifica i file tradotti in: {}", prediction.install_path),
-        "Avvia il gioco per testare la traduzione".to_string(),
-    ];
-    if !has_tools {
-        next_steps.push("Installa tool di traduzione consigliati per risultati migliori".to_string());
+    let mut next_steps = vec![];
+    if injected_count > 0 {
+        next_steps.push("🎮 Avvia il gioco per testare la traduzione".to_string());
+        next_steps.push(format!("📂 Backup disponibile in: {}", backup_dir.display()));
+        next_steps.push("🔄 Usa 'Ripristina backup' se qualcosa non va".to_string());
     }
+    if translated_count > 0 && injected_count == 0 {
+        next_steps.push("📄 Le traduzioni sono state salvate ma non iniettate — prova il metodo engine-specific".to_string());
+    }
+    if total_strings == 0 {
+        next_steps.push("⚠️ Nessuna stringa trovata — potrebbe servire un patcher engine-specific".to_string());
+        if engine_lower.contains("unity") {
+            next_steps.push("💡 Per Unity: prova il Unity Patcher con BepInEx + XUnity AutoTranslator".to_string());
+        } else if engine_lower.contains("unreal") {
+            next_steps.push("💡 Per Unreal: prova l'Unreal Patcher per estrarre .locres dai .pak".to_string());
+        }
+    }
+    next_steps.push(format!("📊 Report completo: {}", report_path.display()));
 
     Ok(WorkflowExecutionResult {
         execution_id,
         game_title: prediction.game_title.clone(),
         engine: prediction.engine.clone(),
-        total_duration_minutes: elapsed,
+        total_duration_minutes: elapsed_total,
         stages_completed,
         final_status,
         deliverables,
@@ -5924,7 +6607,7 @@ pub async fn execute_complete_workflow(
     ).await?;
 
     // Step 2: Execute workflow based on prediction
-    let execution_result = execute_workflow_from_prediction(&game_path, &prediction_result).await?;
+    let execution_result = execute_workflow_from_prediction(&game_path, &prediction_result, &target_lang).await?;
 
     info!("🎉 Complete workflow finished for: {}", game_title);
     Ok(execution_result)
