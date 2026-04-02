@@ -6090,19 +6090,48 @@ async fn execute_workflow_from_prediction(
         if !tyrano_strings.is_empty() {
             let max_strings = 500usize;
             let mut ollama_failed = false;
+            let batch_size = 10; // Translate 10 strings per Ollama call
             
-            for ts in tyrano_strings.iter_mut().take(max_strings) {
-                if ts.original.trim().is_empty() || ts.original.len() < 3 {
-                    continue;
+            // Filter translatable strings first
+            let indices: Vec<usize> = tyrano_strings.iter().enumerate()
+                .filter(|(_, ts)| !ts.original.trim().is_empty() && ts.original.len() >= 3)
+                .map(|(i, _)| i)
+                .take(max_strings)
+                .collect();
+            
+            stage5_outputs.push(format!("📊 Stringhe da tradurre: {} (batch da {})", indices.len(), batch_size));
+            
+            // Process in batches
+            let mut batch_num = 0;
+            for batch_indices in indices.chunks(batch_size) {
+                batch_num += 1;
+                let progress_pct = ((translated_count + failed_count) as f64 / indices.len() as f64 * 100.0) as u32;
+                if batch_num % 5 == 0 || batch_num == 1 {
+                    stage5_outputs.push(format!("⏳ Progresso: {}/{} stringhe ({}%) — Batch {}/{}", translated_count, indices.len(), progress_pct, batch_num, (indices.len() + batch_size - 1) / batch_size));
                 }
+                let originals: Vec<String> = batch_indices.iter()
+                    .map(|&i| tyrano_strings[i].original.clone())
+                    .collect();
                 
-                let translated = if use_ollama && !ollama_failed {
+                let mut batch_results: Vec<Option<String>> = vec![None; originals.len()];
+                
+                // Try Ollama batch (one prompt with numbered lines)
+                if use_ollama && !ollama_failed {
+                    let numbered: String = originals.iter().enumerate()
+                        .map(|(i, s)| format!("{}. {}", i + 1, s))
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    
                     let body = serde_json::json!({
                         "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
-                        "prompt": format!("Translate this game dialogue to {}. Output ONLY the translation:\n\n{}", lang_name, ts.original),
+                        "prompt": format!(
+                            "Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}",
+                            lang_name, numbered
+                        ),
                         "stream": false,
-                        "options": { "temperature": 0.3, "num_predict": 512 }
+                        "options": { "temperature": 0.2, "num_predict": 2048 }
                     });
+                    
                     match client.post("http://localhost:11434/api/generate")
                         .json(&body)
                         .send()
@@ -6112,51 +6141,60 @@ async fn execute_workflow_from_prediction(
                             let status = resp.status();
                             if status.is_success() {
                                 if let Ok(json) = resp.json::<serde_json::Value>().await {
-                                    json.get("response")
-                                        .and_then(|r| r.as_str())
-                                        .map(|s| s.trim().to_string())
-                                        .filter(|s| !s.is_empty())
-                                } else { None }
+                                    if let Some(response_text) = json.get("response").and_then(|r| r.as_str()) {
+                                        // Parse numbered responses: "1. traduzione\n2. traduzione\n..."
+                                        for line in response_text.lines() {
+                                            let trimmed = line.trim();
+                                            // Match patterns: "1. text", "1) text", "1: text"
+                                            if let Some(dot_pos) = trimmed.find(|c: char| c == '.' || c == ')' || c == ':') {
+                                                if let Ok(num) = trimmed[..dot_pos].trim().parse::<usize>() {
+                                                    let text = trimmed[dot_pos + 1..].trim();
+                                                    if num >= 1 && num <= originals.len() && !text.is_empty() {
+                                                        batch_results[num - 1] = Some(text.to_string());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             } else {
                                 stage5_outputs.push(format!("⚠️ Ollama {} — fallback Google", status));
                                 ollama_failed = true;
-                                None
                             }
                         }
-                        Err(_) => { ollama_failed = true; None }
+                        Err(_) => { ollama_failed = true; }
                     }
-                } else { None };
-                
-                let final_translation = if let Some(t) = translated {
-                    Some(t)
-                } else {
-                    let encoded = urlencoding::encode(&ts.original);
-                    let url = format!(
-                        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
-                        target_lang, encoded
-                    );
-                    match client.get(&url).timeout(std::time::Duration::from_secs(10)).send().await {
-                        Ok(resp) => {
-                            if let Ok(json) = resp.json::<serde_json::Value>().await {
-                                json.get(0).and_then(|a| a.get(0)).and_then(|a| a.get(0))
-                                    .and_then(|t| t.as_str()).map(|s| s.to_string())
-                            } else { None }
-                        }
-                        Err(_) => None,
-                    }
-                };
-                
-                match final_translation {
-                    Some(t) => { ts.translated = t; translated_count += 1; }
-                    None => { failed_count += 1; }
                 }
                 
-                if !use_ollama || ollama_failed {
-                    tokio::time::sleep(std::time::Duration::from_millis(80)).await;
+                // Fallback: Google Translate for any missing translations
+                for (j, result) in batch_results.iter_mut().enumerate() {
+                    if result.is_none() {
+                        let encoded = urlencoding::encode(&originals[j]);
+                        let url = format!(
+                            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
+                            target_lang, encoded
+                        );
+                        if let Ok(resp) = client.get(&url).timeout(std::time::Duration::from_secs(10)).send().await {
+                            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                                *result = json.get(0).and_then(|a| a.get(0)).and_then(|a| a.get(0))
+                                    .and_then(|t| t.as_str()).map(|s| s.to_string());
+                            }
+                        }
+                        // Rate limit Google
+                        tokio::time::sleep(std::time::Duration::from_millis(60)).await;
+                    }
+                }
+                
+                // Apply results
+                for (j, &idx) in batch_indices.iter().enumerate() {
+                    match &batch_results[j] {
+                        Some(t) => { tyrano_strings[idx].translated = t.clone(); translated_count += 1; }
+                        None => { failed_count += 1; }
+                    }
                 }
             }
             
-            stage5_outputs.push(format!("✅ Tradotte: {}/{} stringhe", translated_count, tyrano_strings.len().min(max_strings)));
+            stage5_outputs.push(format!("✅ Tradotte: {}/{} stringhe", translated_count, indices.len()));
             if failed_count > 0 {
                 stage5_outputs.push(format!("⚠️ Fallite: {} stringhe", failed_count));
             }
@@ -6571,90 +6609,98 @@ async fn execute_workflow_from_prediction(
             other => other,
         };
         
-        for (file_path, strings) in extracted_strings.iter().take(max_files_to_translate) {
+        let batch_size = 10; // Translate 10 strings per Ollama call
+        
+        stage5_outputs.push(format!("📊 File da tradurre: {}", extracted_strings.len().min(max_files_to_translate)));
+        
+        for (file_idx, (file_path, strings)) in extracted_strings.iter().take(max_files_to_translate).enumerate() {
             let strings_to_translate: Vec<_> = strings.iter().take(max_strings_per_file).collect();
             let mut file_translations: Vec<String> = Vec::new();
             
-            // Translate strings one at a time with failsafe
-            for text in &strings_to_translate {
-                let translated = if use_ollama && !ollama_failed {
+            stage5_outputs.push(format!("📄 File {}/{}: {}", file_idx + 1, extracted_strings.len().min(max_files_to_translate), file_path.display()));
+            
+            let mut batch_num = 0;
+            // Batch translate
+            for batch in strings_to_translate.chunks(batch_size) {
+                batch_num += 1;
+                let progress_pct = ((translated_count + failed_count) as f64 / total_strings as f64 * 100.0) as u32;
+                if batch_num % 5 == 0 || batch_num == 1 {
+                    stage5_outputs.push(format!("⏳ Progresso: {}/{} stringhe ({}%) — Batch {}/{}", translated_count, total_strings, progress_pct, batch_num, (strings_to_translate.len() + batch_size - 1) / batch_size));
+                }
+                let originals: Vec<&str> = batch.iter().map(|s| s.as_str()).collect();
+                let mut batch_results: Vec<Option<String>> = vec![None; originals.len()];
+                
+                // Try Ollama batch
+                if use_ollama && !ollama_failed {
+                    let numbered: String = originals.iter().enumerate()
+                        .map(|(i, s)| format!("{}. {}", i + 1, s))
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    
                     let body = serde_json::json!({
                         "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
-                        "prompt": format!("Translate to {}. Output ONLY the translation, nothing else:\n\n{}", lang_name, text),
+                        "prompt": format!(
+                            "Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}",
+                            lang_name, numbered
+                        ),
                         "stream": false,
-                        "options": { "temperature": 0.3, "num_predict": 512 }
+                        "options": { "temperature": 0.2, "num_predict": 2048 }
                     });
+                    
                     match client.post("http://localhost:11434/api/generate")
-                        .json(&body)
-                        .send()
-                        .await
+                        .json(&body).send().await
                     {
                         Ok(resp) => {
                             let status = resp.status();
                             if status.is_success() {
                                 if let Ok(json) = resp.json::<serde_json::Value>().await {
-                                    json.get("response")
-                                        .and_then(|r| r.as_str())
-                                        .map(|s| s.trim().to_string())
-                                        .filter(|s| !s.is_empty())
-                                } else { None }
+                                    if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
+                                        for line in text.lines() {
+                                            let trimmed = line.trim();
+                                            if let Some(dot_pos) = trimmed.find(|c: char| c == '.' || c == ')' || c == ':') {
+                                                if let Ok(num) = trimmed[..dot_pos].trim().parse::<usize>() {
+                                                    let t = trimmed[dot_pos + 1..].trim();
+                                                    if num >= 1 && num <= originals.len() && !t.is_empty() {
+                                                        batch_results[num - 1] = Some(t.to_string());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             } else {
-                                // Model not found or other server error — disable Ollama
-                                stage5_outputs.push(format!("⚠️ Ollama returned {} — switching to Google Translate", status));
+                                stage5_outputs.push(format!("⚠️ Ollama {} — fallback Google", status));
                                 ollama_failed = true;
-                                None
                             }
                         }
-                        Err(_) => {
-                            ollama_failed = true;
-                            None
-                        }
-                    }
-                } else {
-                    None // Will fall through to Google Translate
-                };
-                
-                // If Ollama failed or unavailable, try Google Translate
-                let final_translation = if let Some(t) = translated {
-                    Some(t)
-                } else {
-                    let encoded = urlencoding::encode(text);
-                    let url = format!(
-                        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
-                        target_lang, encoded
-                    );
-                    match client.get(&url)
-                        .timeout(std::time::Duration::from_secs(10))
-                        .send()
-                        .await
-                    {
-                        Ok(resp) => {
-                            if let Ok(json) = resp.json::<serde_json::Value>().await {
-                                json.get(0)
-                                    .and_then(|a| a.get(0))
-                                    .and_then(|a| a.get(0))
-                                    .and_then(|t| t.as_str())
-                                    .map(|s| s.to_string())
-                            } else { None }
-                        }
-                        Err(_) => None,
-                    }
-                };
-                
-                match final_translation {
-                    Some(t) => {
-                        file_translations.push(t);
-                        translated_count += 1;
-                    }
-                    None => {
-                        file_translations.push(text.to_string()); // Keep original
-                        failed_count += 1;
+                        Err(_) => { ollama_failed = true; }
                     }
                 }
                 
-                // Rate limiting: small delay between requests
-                if !use_ollama || ollama_failed {
-                    tokio::time::sleep(std::time::Duration::from_millis(80)).await;
+                // Google Translate fallback for missing
+                for (j, result) in batch_results.iter_mut().enumerate() {
+                    if result.is_none() {
+                        let encoded = urlencoding::encode(originals[j]);
+                        let url = format!(
+                            "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
+                            target_lang, encoded
+                        );
+                        if let Ok(resp) = client.get(&url).timeout(std::time::Duration::from_secs(10)).send().await {
+                            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                                *result = json.get(0).and_then(|a| a.get(0)).and_then(|a| a.get(0))
+                                    .and_then(|t| t.as_str()).map(|s| s.to_string());
+                            }
+                        }
+                        tokio::time::sleep(std::time::Duration::from_millis(60)).await;
+                    }
+                }
+                
+                // Apply
+                for (j, _) in batch.iter().enumerate() {
+                    match &batch_results[j] {
+                        Some(t) => { file_translations.push(t.clone()); translated_count += 1; }
+                        None => { file_translations.push(originals[j].to_string()); failed_count += 1; }
+                    }
                 }
             }
             
