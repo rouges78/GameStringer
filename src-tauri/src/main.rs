@@ -799,6 +799,7 @@ fn main() {
             commands::prediction_tool::analyze_game_translation,
             commands::prediction_tool::analyze_all_installed_games,
             commands::prediction_tool::export_prediction_report,
+            commands::prediction_tool::execute_complete_workflow,
             // Global Hotkeys System
             commands::global_hotkeys::init_global_hotkeys,
             commands::global_hotkeys::register_global_hotkey,
