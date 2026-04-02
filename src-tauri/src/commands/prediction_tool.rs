@@ -5952,7 +5952,361 @@ async fn execute_workflow_from_prediction(
     });
 
     // ══════════════════════════════════════════════════════════════════════════
-    // STAGE 3: FILE SCANNING — Deep scan for all translatable content
+    // TYRANO/ELECTRON FAST PATH — detect .asar games and use dedicated patcher
+    // ══════════════════════════════════════════════════════════════════════════
+    let asar_path = game_path.join("resources").join("app.asar");
+    let is_tyrano_electron = asar_path.exists() || game_path.join("resources").join("app").exists();
+    
+    if is_tyrano_electron {
+        // ── TYRANO STAGE 3: Detection ──
+        let stage_start = std::time::Instant::now();
+        let mut tyrano_outputs = Vec::new();
+        
+        let tyrano_detect = super::tyranoscript_patcher::detect_tyrano_game(game_path_str.clone());
+        match &tyrano_detect {
+            Ok(game_info) => {
+                tyrano_outputs.push(format!("🎭 Engine: TyranoScript ({})", game_info.engine_variant));
+                tyrano_outputs.push(format!("📦 ASAR: {}", if game_info.has_asar { "sì" } else { "no (cartella app)" }));
+                tyrano_outputs.push(format!("📄 Script .ks trovati: {}", game_info.script_files.len()));
+                tyrano_outputs.push(format!("📝 Stringhe totali: {}", game_info.total_strings));
+                for sf in game_info.script_files.iter().take(5) {
+                    tyrano_outputs.push(format!("  📄 {}: {} stringhe", sf.filename, sf.string_count));
+                }
+            }
+            Err(e) => {
+                tyrano_outputs.push(format!("⚠️ Rilevamento TyranoScript fallito: {}", e));
+            }
+        }
+        
+        stages_completed.push(StageExecutionResult {
+            stage_id: 3,
+            stage_name: "TyranoScript Detection".to_string(),
+            status: if tyrano_detect.is_ok() { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: tyrano_outputs,
+            errors: vec![],
+            success: tyrano_detect.is_ok(),
+        });
+
+        // ── TYRANO STAGE 4: String Extraction ──
+        let stage_start = std::time::Instant::now();
+        let mut extract_outputs = Vec::new();
+        
+        let extraction = super::tyranoscript_patcher::extract_tyrano_strings(game_path_str.clone());
+        let mut tyrano_strings = Vec::new();
+        
+        match &extraction {
+            Ok(result) => {
+                extract_outputs.push(format!("📝 Estratte {} stringhe da {} file", result.total_count, result.files_processed));
+                // Mostra top 5 tipi di stringa
+                let mut type_counts: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
+                for s in &result.strings {
+                    *type_counts.entry(&s.string_type).or_insert(0) += 1;
+                }
+                let mut types_sorted: Vec<_> = type_counts.iter().collect();
+                types_sorted.sort_by(|a, b| b.1.cmp(a.1));
+                for (stype, count) in types_sorted.iter().take(5) {
+                    extract_outputs.push(format!("  🏷️ {}: {} stringhe", stype, count));
+                }
+                tyrano_strings = result.strings.clone();
+            }
+            Err(e) => {
+                extract_outputs.push(format!("❌ Estrazione fallita: {}", e));
+            }
+        }
+        
+        stages_completed.push(StageExecutionResult {
+            stage_id: 4,
+            stage_name: "TyranoScript String Extraction".to_string(),
+            status: if extraction.is_ok() { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: extract_outputs,
+            errors: vec![],
+            success: extraction.is_ok(),
+        });
+
+        // ── TYRANO STAGE 5: AI Translation of extracted strings ──
+        let stage_start = std::time::Instant::now();
+        let mut stage5_outputs = Vec::new();
+        let mut translated_count = 0u64;
+        let mut failed_count = 0u64;
+        
+        let target_lang = if target_lang_param.is_empty() { "it" } else { target_lang_param };
+        
+        // Detect Ollama model
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(60))
+            .build()
+            .unwrap_or_default();
+        
+        let ollama_model: Option<String> = match client
+            .get("http://localhost:11434/api/tags")
+            .timeout(std::time::Duration::from_secs(3))
+            .send()
+            .await
+        {
+            Ok(resp) => {
+                if let Ok(json) = resp.json::<serde_json::Value>().await {
+                    let models: Vec<String> = json.get("models")
+                        .and_then(|m| m.as_array())
+                        .map(|arr| arr.iter()
+                            .filter_map(|m| m.get("name").and_then(|n| n.as_str()).map(|s| s.to_string()))
+                            .collect())
+                        .unwrap_or_default();
+                    let preferred_order = ["qwen3:", "mistral", "glm4", "lfm2"];
+                    let mut chosen: Option<String> = None;
+                    for prefix in &preferred_order {
+                        if let Some(m) = models.iter().find(|m| m.starts_with(prefix)) {
+                            chosen = Some(m.clone());
+                            break;
+                        }
+                    }
+                    if chosen.is_none() {
+                        chosen = models.iter().find(|m| !m.contains("llava")).cloned();
+                    }
+                    chosen
+                } else { None }
+            }
+            Err(_) => None,
+        };
+        
+        let use_ollama = ollama_model.is_some();
+        let translation_method = if let Some(ref model) = ollama_model {
+            format!("Ollama ({})", model)
+        } else {
+            "Google Translate (web)".to_string()
+        };
+        stage5_outputs.push(format!("🤖 Translation method: {}", translation_method));
+        stage5_outputs.push(format!("🌍 Target language: {}", target_lang));
+        
+        let lang_name = match target_lang {
+            "it" => "Italian", "en" => "English", "es" => "Spanish",
+            "fr" => "French", "de" => "German", "ja" => "Japanese",
+            "zh" => "Chinese", "ko" => "Korean", "pt" => "Portuguese",
+            "ru" => "Russian", "pl" => "Polish", "nl" => "Dutch",
+            other => other,
+        };
+        
+        if !tyrano_strings.is_empty() {
+            let max_strings = 500usize;
+            let mut ollama_failed = false;
+            
+            for ts in tyrano_strings.iter_mut().take(max_strings) {
+                if ts.original.trim().is_empty() || ts.original.len() < 3 {
+                    continue;
+                }
+                
+                let translated = if use_ollama && !ollama_failed {
+                    let body = serde_json::json!({
+                        "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
+                        "prompt": format!("Translate this game dialogue to {}. Output ONLY the translation:\n\n{}", lang_name, ts.original),
+                        "stream": false,
+                        "options": { "temperature": 0.3, "num_predict": 512 }
+                    });
+                    match client.post("http://localhost:11434/api/generate")
+                        .json(&body)
+                        .send()
+                        .await
+                    {
+                        Ok(resp) => {
+                            let status = resp.status();
+                            if status.is_success() {
+                                if let Ok(json) = resp.json::<serde_json::Value>().await {
+                                    json.get("response")
+                                        .and_then(|r| r.as_str())
+                                        .map(|s| s.trim().to_string())
+                                        .filter(|s| !s.is_empty())
+                                } else { None }
+                            } else {
+                                stage5_outputs.push(format!("⚠️ Ollama {} — fallback Google", status));
+                                ollama_failed = true;
+                                None
+                            }
+                        }
+                        Err(_) => { ollama_failed = true; None }
+                    }
+                } else { None };
+                
+                let final_translation = if let Some(t) = translated {
+                    Some(t)
+                } else {
+                    let encoded = urlencoding::encode(&ts.original);
+                    let url = format!(
+                        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
+                        target_lang, encoded
+                    );
+                    match client.get(&url).timeout(std::time::Duration::from_secs(10)).send().await {
+                        Ok(resp) => {
+                            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                                json.get(0).and_then(|a| a.get(0)).and_then(|a| a.get(0))
+                                    .and_then(|t| t.as_str()).map(|s| s.to_string())
+                            } else { None }
+                        }
+                        Err(_) => None,
+                    }
+                };
+                
+                match final_translation {
+                    Some(t) => { ts.translated = t; translated_count += 1; }
+                    None => { failed_count += 1; }
+                }
+                
+                if !use_ollama || ollama_failed {
+                    tokio::time::sleep(std::time::Duration::from_millis(80)).await;
+                }
+            }
+            
+            stage5_outputs.push(format!("✅ Tradotte: {}/{} stringhe", translated_count, tyrano_strings.len().min(max_strings)));
+            if failed_count > 0 {
+                stage5_outputs.push(format!("⚠️ Fallite: {} stringhe", failed_count));
+            }
+        } else {
+            stage5_outputs.push("⏩ Nessuna stringa da tradurre".to_string());
+        }
+        
+        stages_completed.push(StageExecutionResult {
+            stage_id: 5,
+            stage_name: "AI Translation (TyranoScript)".to_string(),
+            status: if translated_count > 0 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: stage5_outputs,
+            errors: vec![],
+            success: translated_count > 0,
+        });
+
+        // ── TYRANO STAGE 6: Patch application ──
+        let stage_start = std::time::Instant::now();
+        let mut patch_outputs = Vec::new();
+        let mut patch_success = false;
+        
+        if translated_count > 0 {
+            // Filtra solo stringhe con traduzione
+            let patched_strings: Vec<_> = tyrano_strings.iter()
+                .filter(|s| !s.translated.is_empty() && s.translated != s.original)
+                .cloned()
+                .collect();
+            
+            patch_outputs.push(format!("💉 Applicazione patch: {} stringhe tradotte", patched_strings.len()));
+            
+            match super::tyranoscript_patcher::apply_tyrano_patch(game_path_str.clone(), patched_strings) {
+                Ok(result) => {
+                    patch_outputs.push(format!("✅ Patch applicata: {} file, {} stringhe sostituite", result.files_patched, result.strings_replaced));
+                    patch_outputs.push(format!("📂 Backup: {}", result.backup_path));
+                    patch_success = result.success;
+                    
+                    deliverables.push(ExecutionDeliverable {
+                        deliverable_id: "del_tyrano_patch".to_string(),
+                        deliverable_name: format!("TyranoScript Patch ({} strings)", result.strings_replaced),
+                        file_path: Some(game_path_str.clone()),
+                        size_mb: 0.0,
+                        status: ExecutionStatus::Completed,
+                        created_at: chrono::Utc::now().to_rfc3339(),
+                    });
+                    deliverables.push(ExecutionDeliverable {
+                        deliverable_id: "del_tyrano_backup".to_string(),
+                        deliverable_name: "TyranoScript Backup".to_string(),
+                        file_path: Some(result.backup_path),
+                        size_mb: 0.0,
+                        status: ExecutionStatus::Completed,
+                        created_at: chrono::Utc::now().to_rfc3339(),
+                    });
+                }
+                Err(e) => {
+                    patch_outputs.push(format!("❌ Patch fallita: {}", e));
+                    error_counter += 1;
+                    errors.push(ExecutionError {
+                        error_id: format!("err_{}", error_counter),
+                        stage_id: 6,
+                        error_type: "TyranoPatchFailed".to_string(),
+                        message: e.clone(),
+                        severity: "high".to_string(),
+                        timestamp: chrono::Utc::now().to_rfc3339(),
+                        resolved: false,
+                    });
+                }
+            }
+        } else {
+            patch_outputs.push("⏩ Nessuna traduzione da applicare".to_string());
+        }
+        
+        stages_completed.push(StageExecutionResult {
+            stage_id: 6,
+            stage_name: "TyranoScript Patch".to_string(),
+            status: if patch_success { ExecutionStatus::Completed } else { ExecutionStatus::Skipped },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: patch_outputs,
+            errors: vec![],
+            success: patch_success,
+        });
+
+        // ── TYRANO STAGE 7: Report ──
+        let elapsed_total = start.elapsed().as_secs_f64() / 60.0;
+        let report = serde_json::json!({
+            "execution_id": execution_id,
+            "game_title": prediction.game_title,
+            "engine": "TyranoScript/Electron",
+            "install_path": game_path_str,
+            "target_language": target_lang,
+            "translation_method": translation_method,
+            "total_strings_found": tyrano_strings.len(),
+            "strings_translated": translated_count,
+            "strings_failed": failed_count,
+            "patch_applied": patch_success,
+            "duration_minutes": elapsed_total,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        });
+        
+        let report_dir = dirs::data_local_dir()
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join("GameStringer").join("reports");
+        let _ = std::fs::create_dir_all(&report_dir);
+        let report_path = report_dir.join(format!("{}.json", execution_id));
+        if let Ok(json_str) = serde_json::to_string_pretty(&report) {
+            let _ = std::fs::write(&report_path, &json_str);
+        }
+        
+        deliverables.push(ExecutionDeliverable {
+            deliverable_id: "del_report".to_string(),
+            deliverable_name: "Execution Report".to_string(),
+            file_path: Some(report_path.to_string_lossy().to_string()),
+            size_mb: 0.01,
+            status: ExecutionStatus::Completed,
+            created_at: chrono::Utc::now().to_rfc3339(),
+        });
+
+        // ── TYRANO: Final result ──
+        let success_count = stages_completed.iter().filter(|s| s.success).count();
+        let total_count = stages_completed.len();
+        let success_rate = success_count as f64 / total_count as f64;
+        let final_status = if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed };
+        
+        let mut next_steps = vec![];
+        if patch_success {
+            next_steps.push("🎮 Avvia il gioco per testare la traduzione".to_string());
+            next_steps.push("🔄 Usa 'Ripristina backup TyranoScript' se qualcosa non va".to_string());
+        }
+        if translated_count > 0 && !patch_success {
+            next_steps.push("⚠️ Le stringhe sono state tradotte ma la patch non è stata applicata".to_string());
+            next_steps.push("💡 Prova a estrarre manualmente app.asar e sostituire i file .ks".to_string());
+        }
+        next_steps.push(format!("📊 Report: {}", report_path.display()));
+        
+        return Ok(WorkflowExecutionResult {
+            execution_id,
+            game_title: prediction.game_title.clone(),
+            engine: "TyranoScript/Electron".to_string(),
+            total_duration_minutes: elapsed_total,
+            stages_completed,
+            final_status,
+            deliverables,
+            errors,
+            success_rate,
+            next_steps,
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // STAGE 3: FILE SCANNING — Deep scan for all translatable content (generic path)
     // ══════════════════════════════════════════════════════════════════════════
     let stage_start = std::time::Instant::now();
     let mut stage3_outputs = Vec::new();
