@@ -1993,6 +1993,30 @@ fn estimate_times(estimated_strings: u64) -> Vec<TimeEstimate> {
             quality_score: 95,
             provider: "Ollama (locale)".into(),
         },
+        TimeEstimate {
+            model_name: "Gemma 4 27B (MoE A4B)".into(),
+            model_size: "~16 GB".into(),
+            speed_strings_per_min: 45.0,
+            estimated_hours: s / 45.0 / 60.0,
+            quality_score: 92,
+            provider: "Ollama (locale)".into(),
+        },
+        TimeEstimate {
+            model_name: "Gemma 4 E4B".into(),
+            model_size: "~3 GB".into(),
+            speed_strings_per_min: 60.0,
+            estimated_hours: s / 60.0 / 60.0,
+            quality_score: 82,
+            provider: "Ollama (locale)".into(),
+        },
+        TimeEstimate {
+            model_name: "Gemma 4 E2B".into(),
+            model_size: "~1.5 GB".into(),
+            speed_strings_per_min: 90.0,
+            estimated_hours: s / 90.0 / 60.0,
+            quality_score: 72,
+            provider: "Ollama (locale)".into(),
+        },
         // ── Modelli Cloud ──
         TimeEstimate {
             model_name: "GPT-4o".into(),
@@ -4175,7 +4199,44 @@ fn get_llm_database() -> Vec<LLMModel> {
             best_for: vec!["European languages".to_string(), "Cultural content".to_string()],
         },
         
-        // Ollama Local Models
+        // Ollama Local Models — Gemma 4 (April 2026)
+        LLMModel {
+            name: "gemma4:27b-a4b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 55.0,
+            quality_score: 93,
+            max_context_tokens: 256000,
+            rate_limit: 1000,
+            special_features: vec!["MoE 4B active".to_string(), "256K context".to_string(), "35+ languages".to_string(), "Reasoning".to_string(), "Free".to_string()],
+            best_for: vec!["Best local quality".to_string(), "Complex translation".to_string(), "Long documents".to_string()],
+        },
+        LLMModel {
+            name: "gemma4:e4b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 70.0,
+            quality_score: 82,
+            max_context_tokens: 128000,
+            rate_limit: 1000,
+            special_features: vec!["Edge-optimized".to_string(), "128K context".to_string(), "Multimodal".to_string(), "Free".to_string()],
+            best_for: vec!["Fast local translation".to_string(), "Consumer GPU".to_string()],
+        },
+        LLMModel {
+            name: "gemma4:e2b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 100.0,
+            quality_score: 72,
+            max_context_tokens: 128000,
+            rate_limit: 1000,
+            special_features: vec!["Ultra-light".to_string(), "On-device".to_string(), "Audio support".to_string(), "Free".to_string()],
+            best_for: vec!["Low-end hardware".to_string(), "Mobile/edge".to_string()],
+        },
+        // Translation-specialized models
         LLMModel {
             name: "translategemma:12b".to_string(),
             provider: LLMProvider::Ollama,
@@ -4313,8 +4374,8 @@ fn find_fastest_model(llm_db: &[LLMModel]) -> &LLMModel {
 }
 
 fn build_free_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
-    // Prefer TranslateGemma (best free local model), then HY-MT, then any free model
-    let primary = find_model(llm_db, &["translategemma:12b", "huihui_ai/hy-mt1.5-abliterated:7b", "translategemma:4b", "llama3.1:8b"]);
+    // Prefer Gemma 4 27B MoE (best free local), then TranslateGemma (translation-specialized), then HY-MT
+    let primary = find_model(llm_db, &["gemma4:27b-a4b", "translategemma:12b", "huihui_ai/hy-mt1.5-abliterated:7b", "gemma4:e4b", "llama3.1:8b"]);
     
     let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
     let estimated_hours = estimated_tokens / (primary.speed_tokens_per_sec * 3600.0);
