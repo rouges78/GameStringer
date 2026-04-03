@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Gamepad2, Settings, Download, Search, CheckCircle, AlertTriangle, Play, Loader2,
-  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, ExternalLink, Brain
+  FolderOpen, Settings2, Trash2, ArrowLeft, Languages, Info, Folder, Sparkles, Monitor, Edit3, Image as ImageIcon, HardDrive, HardDriveDownload, FileText, Cpu, Map, Zap, Globe, Wrench, Clock, Package, Upload, ExternalLink, Brain, ChevronDown
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -156,6 +156,62 @@ export default function GameDetailPage() {
   const [fallbackImage, setFallbackImage] = useState<string | null>(null);
   const [isCoverPickerOpen, setIsCoverPickerOpen] = useState(false);
 
+  // ═══ TARGET LANGUAGE (lingua traduzione, indipendente dalla lingua UI) ═══
+  const TARGET_LANGUAGES = [
+    { code: 'it', label: 'Italiano', flag: 'IT' },
+    { code: 'en', label: 'English', flag: 'GB' },
+    { code: 'de', label: 'Deutsch', flag: 'DE' },
+    { code: 'fr', label: 'Français', flag: 'FR' },
+    { code: 'es', label: 'Español', flag: 'ES' },
+    { code: 'pt', label: 'Português', flag: 'BR' },
+    { code: 'ru', label: 'Русский', flag: 'RU' },
+    { code: 'ja', label: '日本語', flag: 'JP' },
+    { code: 'ko', label: '한국어', flag: 'KR' },
+    { code: 'zh', label: '中文', flag: 'CN' },
+    { code: 'pl', label: 'Polski', flag: 'PL' },
+    { code: 'tr', label: 'Türkçe', flag: 'TR' },
+    { code: 'uk', label: 'Українська', flag: 'UA' },
+    { code: 'nl', label: 'Nederlands', flag: 'NL' },
+    { code: 'sv', label: 'Svenska', flag: 'SE' },
+    { code: 'cs', label: 'Čeština', flag: 'CZ' },
+    { code: 'hu', label: 'Magyar', flag: 'HU' },
+    { code: 'ro', label: 'Română', flag: 'RO' },
+    { code: 'da', label: 'Dansk', flag: 'DK' },
+    { code: 'no', label: 'Norsk', flag: 'NO' },
+    { code: 'fi', label: 'Suomi', flag: 'FI' },
+    { code: 'ar', label: 'العربية', flag: 'SA' },
+    { code: 'th', label: 'ไทย', flag: 'TH' },
+    { code: 'vi', label: 'Tiếng Việt', flag: 'VN' },
+    { code: 'el', label: 'Ελληνικά', flag: 'GR' },
+    { code: 'bg', label: 'Български', flag: 'BG' },
+    { code: 'hi', label: 'हिन्दी', flag: 'IN' },
+  ];
+  const [targetLang, setTargetLang] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('gs_target_lang') || language || 'it';
+    }
+    return language || 'it';
+  });
+  const [showLangPicker, setShowLangPicker] = useState(false);
+  const langPickerRef = useRef<HTMLDivElement>(null);
+  const currentFlag = TARGET_LANGUAGES.find(l => l.code === targetLang) || TARGET_LANGUAGES[0];
+
+  // Persist targetLang
+  useEffect(() => {
+    localStorage.setItem('gs_target_lang', targetLang);
+  }, [targetLang]);
+
+  // Close lang picker on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (langPickerRef.current && !langPickerRef.current.contains(e.target as Node)) {
+        setShowLangPicker(false);
+      }
+    };
+    if (showLangPicker) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showLangPicker]);
+
   // Auto-Translate one-click flow
   const [autoTranslateActive, setAutoTranslateActive] = useState(false);
   const [autoTranslateStep, setAutoTranslateStep] = useState(0);
@@ -165,7 +221,7 @@ export default function GameDetailPage() {
   // Pre-computed translation strategy (populated on page load)
   const [translationStrategy, setTranslationStrategy] = useState<{
     engine: string;
-    method: 'unity' | 'unreal' | 'gamemaker' | 'visionaire' | 'generic';
+    method: 'unity' | 'unreal' | 'gamemaker' | 'visionaire' | 'tyranoscript' | 'rpgmaker' | 'wolfrpg' | 'renpy' | 'godot' | 'generic';
     detail: string;
     fileCount: number;
     stringCount: number;
@@ -346,6 +402,91 @@ export default function GameDetailPage() {
           });
         } catch {
           setTranslationStrategy({ engine: detectedEngine || 'Visionaire Studio', method: 'visionaire', detail: 'Visionaire rilevato — scansione al click', fileCount: 0, stringCount: 0, ready: true });
+        }
+      } else if (eng.includes('tyrano') || eng.includes('nw.js') || eng.includes('electron')) {
+        // TyranoScript / NW.js / Electron: detect app.asar or app/ folder
+        try {
+          const tyranoInfo: any = await invoke('detect_tyrano_game', { gamePath: game.installPath });
+          setTranslationStrategy({
+            engine: detectedEngine || 'TyranoScript',
+            method: 'tyranoscript',
+            detail: tyranoInfo?.total_strings > 0
+              ? `${tyranoInfo.script_files?.length || 0} file .ks — ${tyranoInfo.total_strings} stringhe`
+              : `${tyranoInfo?.engine_variant || 'TyranoScript'} — ${tyranoInfo?.script_files?.length || 0} file .ks`,
+            fileCount: tyranoInfo?.script_files?.length || 0,
+            stringCount: tyranoInfo?.total_strings || 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine || 'TyranoScript', method: 'tyranoscript', detail: 'TyranoScript/NW.js rilevato', fileCount: 0, stringCount: 0, ready: true });
+        }
+      } else if (eng.includes('rpg maker') || eng.includes('rpgmaker')) {
+        // RPG Maker MV/MZ: JSON-based data files
+        try {
+          const rpgInfo: any = await invoke('detect_rpgmaker_game', { gamePath: game.installPath });
+          const extraction: any = await invoke('extract_all_rpgmaker_strings', { gamePath: game.installPath });
+          setTranslationStrategy({
+            engine: detectedEngine || `RPG Maker ${rpgInfo?.version || ''}`.trim(),
+            method: 'rpgmaker',
+            detail: `${rpgInfo?.version || 'MV/MZ'} — ${rpgInfo?.data_files?.length || 0} file, ${extraction?.total_count || 0} stringhe`,
+            fileCount: rpgInfo?.data_files?.length || 0,
+            stringCount: extraction?.total_count || 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine || 'RPG Maker', method: 'rpgmaker', detail: 'RPG Maker rilevato', fileCount: 0, stringCount: 0, ready: true });
+        }
+      } else if (eng.includes('wolf') && eng.includes('rpg')) {
+        // Wolf RPG Editor
+        try {
+          const wolfInfo: any = await invoke('detect_wolfrpg_game', { gamePath: game.installPath });
+          setTranslationStrategy({
+            engine: detectedEngine || 'Wolf RPG',
+            method: 'wolfrpg',
+            detail: wolfInfo?.encrypted
+              ? `Wolf RPG — criptato (${wolfInfo?.data_files?.length || 0} file)`
+              : `Wolf RPG — ${wolfInfo?.data_files?.length || 0} file dati`,
+            fileCount: wolfInfo?.data_files?.length || 0,
+            stringCount: 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine || 'Wolf RPG', method: 'wolfrpg', detail: 'Wolf RPG rilevato', fileCount: 0, stringCount: 0, ready: true });
+        }
+      } else if (eng.includes('ren\'py') || eng.includes('renpy')) {
+        // Ren'Py: .rpy script files
+        try {
+          const scannedFiles = await invoke<string[]>('scan_game_files', { gamePath: game.installPath });
+          const rpyFiles = (scannedFiles || []).filter(f => f.toLowerCase().endsWith('.rpy'));
+          setTranslationStrategy({
+            engine: detectedEngine || "Ren'Py",
+            method: 'renpy',
+            detail: rpyFiles.length > 0 ? `${rpyFiles.length} file .rpy traducibili` : "Ren'Py rilevato",
+            fileCount: rpyFiles.length,
+            stringCount: 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine || "Ren'Py", method: 'renpy', detail: "Ren'Py rilevato", fileCount: 0, stringCount: 0, ready: true });
+        }
+      } else if (eng.includes('godot')) {
+        // Godot: .tres/.tscn/.translation files
+        try {
+          const scannedFiles = await invoke<string[]>('scan_game_files', { gamePath: game.installPath });
+          const godotFiles = (scannedFiles || []).filter(f => {
+            const l = f.toLowerCase();
+            return l.endsWith('.tres') || l.endsWith('.tscn') || l.endsWith('.translation') || l.endsWith('.csv');
+          });
+          setTranslationStrategy({
+            engine: detectedEngine || 'Godot',
+            method: 'godot',
+            detail: godotFiles.length > 0 ? `${godotFiles.length} file traducibili` : 'Godot rilevato',
+            fileCount: godotFiles.length,
+            stringCount: 0,
+            ready: true,
+          });
+        } catch {
+          setTranslationStrategy({ engine: detectedEngine || 'Godot', method: 'godot', detail: 'Godot rilevato', fileCount: 0, stringCount: 0, ready: true });
         }
       } else {
         // Generic: scan for text files
@@ -1273,7 +1414,7 @@ export default function GameDetailPage() {
         gameTitle: game.title || game.name || 'Unknown Game',
         engine: game.engine || undefined,
         sourceLang: 'en',
-        targetLang: language || 'it',
+        targetLang: targetLang || 'it',
       });
       
       updateStep(0, 'done', `Analisi completata: ${predictionResult?.engine || 'Engine rilevato'}`);
@@ -1317,16 +1458,29 @@ export default function GameDetailPage() {
       updateStep(5, 'done', `Workflow ${approach}: ${stages} stadi`);
       await new Promise(r => setTimeout(r, 400));
 
-      // ── STEP 7: Complete Execution ──
+      // ── STEP 7: Complete Execution with real-time progress ──
       updateStep(6, 'running', 'Esecuzione traduzione completa...');
       
+      // Listen for real-time progress events from backend
+      let unlistenWorkflow: (() => void) | null = null;
+      try {
+        const { listen } = await import('@tauri-apps/api/event');
+        unlistenWorkflow = await listen<{stage: string, step: number, message: string, progress: number}>('workflow-progress', (event) => {
+          const { message, progress } = event.payload;
+          updateStep(6, 'running', `${message} (${progress}%)`);
+        });
+      } catch { /* non-Tauri env */ }
+
       const executionResult: unknown = await invoke('execute_complete_workflow', {
         installPath: game.installPath,
         gameTitle: game.title || game.name || 'Unknown Game',
         engine: game.engine || undefined,
         sourceLang: 'en',
-        targetLang: language || 'it',
+        targetLang: targetLang || 'it',
       });
+      
+      // Cleanup listener
+      if (unlistenWorkflow) unlistenWorkflow();
       
       const success = executionResult?.successRate || 0;
       const duration = executionResult?.totalDurationMinutes || 0;
@@ -1368,9 +1522,10 @@ export default function GameDetailPage() {
       console.error('[AutoTranslate] Workflow execution failed:', error);
       setAutoTranslateError(error?.toString?.() || 'Errore durante l\'esecuzione del workflow');
       toast.error('❌ Errore durante la traduzione automatica');
+      // Cleanup workflow listener on error too
+      if (unlistenWorkflow) unlistenWorkflow();
     } finally {
       autoTranslateRunningRef.current = false;
-      setAutoTranslateActive(false);
     }
   };
 
@@ -1756,13 +1911,45 @@ export default function GameDetailPage() {
               </button>
             )}
             <div className="flex flex-col items-stretch">
-              <button className="h-10 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 relative overflow-hidden group"
-                onClick={startAutoTranslate}
-                disabled={autoTranslateActive}
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateActive ? t('gameDetails.translating') || 'Translating...' : `${t('gameDetails.translate') || 'Translate'} (${language.toUpperCase()})`}
-              </button>
+              <div className="flex items-stretch gap-0">
+                {/* ── Bottone STRING IT! ── */}
+                <button className="h-10 flex-1 flex items-center justify-center gap-2 rounded-l-xl bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-indigo-500 hover:to-violet-400 text-white font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/20 border-r-0 relative overflow-hidden group"
+                  onClick={startAutoTranslate}
+                  disabled={autoTranslateActive}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                  {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" fill="currentColor" />} {autoTranslateActive ? t('gameDetails.translating') || 'Translating...' : 'String it!'}
+                </button>
+                {/* ── Bandierina lingua target ── */}
+                <div className="relative" ref={langPickerRef}>
+                  <button
+                    className="h-10 px-2.5 flex items-center gap-1 rounded-r-xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white text-[10px] font-bold uppercase tracking-wider shadow-lg shadow-purple-500/20 transition-all border border-purple-400/20 border-l-0"
+                    onClick={() => setShowLangPicker(!showLangPicker)}
+                    title={`Lingua: ${currentFlag.label}`}
+                  >
+                    <span className="text-base leading-none">{(() => { const emojis: Record<string, string> = { IT:'🇮🇹', GB:'🇬🇧', DE:'🇩🇪', FR:'🇫🇷', ES:'🇪🇸', BR:'🇧🇷', RU:'🇷🇺', JP:'🇯🇵', KR:'🇰🇷', CN:'🇨🇳', PL:'🇵🇱', TR:'🇹🇷', UA:'🇺🇦', NL:'🇳🇱', SE:'🇸🇪', CZ:'🇨🇿', HU:'🇭🇺', RO:'🇷🇴', DK:'🇩🇰', NO:'🇳🇴', FI:'🇫🇮', SA:'🇸🇦', TH:'🇹🇭', VN:'🇻🇳', GR:'🇬🇷', BG:'🇧🇬', IN:'🇮🇳' }; return emojis[currentFlag.flag] || '🌐'; })()}</span>
+                    <ChevronDown className="h-3 w-3 opacity-70" />
+                  </button>
+                  {showLangPicker && (
+                    <div className="absolute right-0 top-full mt-1 z-50 bg-[#0f1318] border border-white/10 rounded-xl shadow-2xl shadow-black/60 py-1.5 w-48 max-h-72 overflow-y-auto custom-scrollbar">
+                      {TARGET_LANGUAGES.map(lang => {
+                        const emojis: Record<string, string> = { IT:'🇮🇹', GB:'🇬🇧', DE:'🇩🇪', FR:'🇫🇷', ES:'🇪🇸', BR:'🇧🇷', RU:'🇷🇺', JP:'🇯🇵', KR:'🇰🇷', CN:'🇨🇳', PL:'🇵🇱', TR:'🇹🇷', UA:'🇺🇦', NL:'🇳🇱', SE:'🇸🇪', CZ:'🇨🇿', HU:'🇭🇺', RO:'🇷🇴', DK:'🇩🇰', NO:'🇳🇴', FI:'🇫🇮', SA:'🇸🇦', TH:'🇹🇭', VN:'🇻🇳', GR:'🇬🇷', BG:'🇧🇬', IN:'🇮🇳' };
+                        return (
+                          <button
+                            key={lang.code}
+                            className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-left text-[11px] transition-colors ${targetLang === lang.code ? 'bg-indigo-600/30 text-indigo-300 font-bold' : 'text-slate-300 hover:bg-white/5 hover:text-white'}`}
+                            onClick={() => { setTargetLang(lang.code); setShowLangPicker(false); }}
+                          >
+                            <span className="text-sm">{emojis[lang.flag] || '🌐'}</span>
+                            <span>{lang.label}</span>
+                            <span className="ml-auto text-[9px] text-slate-500 uppercase">{lang.code}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
               {translationStrategy?.ready && (
                 <div className="text-[8px] text-center mt-1 text-slate-500 tracking-wide">
                   {translationStrategy.engine} · {translationStrategy.detail}
@@ -1796,11 +1983,17 @@ export default function GameDetailPage() {
             <Play className="h-3.5 w-3.5 fill-current" /> Gioca
           </button>
         )}
-        <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600/90 text-white font-bold text-[10px] uppercase tracking-wider"
+        <button className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-l-lg bg-indigo-600/90 text-white font-bold text-[10px] uppercase tracking-wider"
           onClick={startAutoTranslate}
           disabled={autoTranslateActive}
         >
-          {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />} {autoTranslateActive ? '...' : t('gameDetails.translate') || 'Translate'}
+          {autoTranslateActive ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />} {autoTranslateActive ? '...' : 'String it!'}
+        </button>
+        <button className="h-9 px-2 flex items-center gap-0.5 rounded-r-lg bg-violet-600/90 text-white text-xs font-bold"
+          onClick={() => setShowLangPicker(!showLangPicker)}
+        >
+          {(() => { const emojis: Record<string, string> = { IT:'🇮🇹', GB:'🇬🇧', DE:'🇩🇪', FR:'🇫🇷', ES:'🇪🇸', BR:'🇧🇷', RU:'🇷🇺', JP:'🇯🇵', KR:'🇰🇷', CN:'🇨🇳', PL:'🇵🇱', TR:'🇹🇷', UA:'🇺🇦', NL:'🇳🇱', SE:'🇸🇪', CZ:'🇨🇿', HU:'🇭🇺', RO:'🇷🇴', DK:'🇩🇰', NO:'🇳🇴', FI:'🇫🇮', SA:'🇸🇦', TH:'🇹🇭', VN:'🇻🇳', GR:'🇬🇷', BG:'🇧🇬', IN:'🇮🇳' }; return emojis[currentFlag.flag] || '🌐'; })()}
+          <ChevronDown className="h-2.5 w-2.5 opacity-70" />
         </button>
         <button className="h-9 w-9 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400"
           onClick={scanGameFiles}
@@ -1835,7 +2028,7 @@ export default function GameDetailPage() {
                   </div>
                   <div>
                     <span className="text-sm font-bold text-white block">{t('gameDetails.autoTranslateTitle') || 'Auto Translation'}</span>
-                    <span className="text-[10px] text-indigo-400/70">{t('gameDetails.autoTranslateSubtitle') || `GameStringer is translating to ${language.toUpperCase()}`}</span>
+                    <span className="text-[10px] text-indigo-400/70">{`String it! → ${currentFlag.label}`}</span>
                   </div>
                   {autoTranslateSteps.every(s => s.status === 'done') && (
                     <button className="ml-auto text-[9px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-wider px-3 py-1 rounded-lg hover:bg-white/5 transition-all"
@@ -2048,7 +2241,7 @@ export default function GameDetailPage() {
                           let exeName = '';
                           const exeList = await invoke<string[]>('find_executables_in_folder', { folderPath: game.installPath }).catch(() => [] as string[]);
                           if (exeList?.length) exeName = exeList[0];
-                          await invoke('install_unity_autotranslator', { gamePath: game.installPath, gameExeName: exeName, targetLang: language || 'it', translationMode: 'google' });
+                          await invoke('install_unity_autotranslator', { gamePath: game.installPath, gameExeName: exeName, targetLang: targetLang || 'it', translationMode: 'google' });
                           toast.success('Patch BepInEx riapplicata!');
                           await loadUpdateStatus();
                         } catch (e: unknown) { toast.error(String(e)); }

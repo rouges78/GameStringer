@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "",
     "beforeBuildCommand": "node scripts/build-tauri-cross.js",
-    "devUrl": "http://127.0.0.1:3220",
+    "devUrl": "http://127.0.0.1:3221",
     "frontendDist": "../out"
   },
   "app": {
