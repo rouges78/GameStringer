@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 const GameDetailClient = dynamic(() => import('@/components/game-detail-client'), { ssr: false });
+const DryRunScanner = dynamic(() => import('@/components/dry-run-scanner'), { ssr: false });
 import { invoke } from '@/lib/tauri-api';
 import { get, set } from 'idb-keyval';
 import { activityHistory } from '@/lib/activity-history';
@@ -423,6 +424,7 @@ function LibraryListView() {
   const [games, setGames] = useState<Game[]>(_libCache.games.loaded ? _libCache.games.data : []);
   const [isLoading, setIsLoading] = useState(!_libCache.games.loaded);
   const [coverCache, setCoverCache] = useState<Record<string, string>>({});
+  const [showDryRun, setShowDryRun] = useState(false);
   const libraryLoadedRef = React.useRef(false);
   
   // Safe setter per games con validazione + salvataggio in cache globale
@@ -1610,6 +1612,18 @@ function LibraryListView() {
               <Brain className="h-4 w-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
               <span className="text-[11px] font-semibold tracking-wide">P.T. Rank</span>
             </button>
+            <button
+              onClick={() => setShowDryRun(prev => !prev)}
+              className={`group flex items-center gap-2 px-3 py-2 rounded-xl transition-all border ${
+                showDryRun
+                  ? 'bg-indigo-600/30 text-indigo-200 border-indigo-500/50'
+                  : 'bg-slate-900/60 text-slate-300 hover:text-white hover:bg-indigo-600/20 border-slate-700/50 hover:border-indigo-500/40'
+              }`}
+              title="Dry Run — Scansione batch di tutti i giochi per verificare la pipeline"
+            >
+              <Search className="h-4 w-4 text-indigo-400 group-hover:text-indigo-300 transition-colors" />
+              <span className="text-[11px] font-semibold tracking-wide">Dry Run</span>
+            </button>
             <button 
               onClick={async () => {
                 toast.info(lib.downloadingNames);
@@ -1631,6 +1645,13 @@ function LibraryListView() {
           </div>
         </div>
       </div>
+
+      {/* Dry Run Scanner Panel */}
+      {showDryRun && (
+        <div className="mb-4 animate-in slide-in-from-top-2 duration-300">
+          <DryRunScanner />
+        </div>
+      )}
 
       {/* Barra ricerca + controlli */}
       <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-5">
