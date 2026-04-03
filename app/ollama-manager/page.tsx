@@ -24,6 +24,9 @@ import {
   Play,
   Globe,
   Package,
+  Sparkles,
+  ExternalLink,
+  TrendingUp,
 } from 'lucide-react';
 import {
   isOllamaRunning,
@@ -33,10 +36,13 @@ import {
   speedTest,
   compareModels,
   formatSize,
+  discoverNewModels,
+  invalidateDiscoveryCache,
   RECOMMENDED_MODELS,
   type OllamaModel,
   type SpeedTestResult,
   type ABComparisonResult,
+  type DiscoveredModel,
 } from '@/lib/ollama-manager';
 import { useTranslation } from '@/lib/i18n';
 
@@ -56,6 +62,10 @@ export default function OllamaManagerPage() {
   // Speed test state
   const [speedTesting, setSpeedTesting] = useState<string | null>(null);
   const [speedResults, setSpeedResults] = useState<Map<string, SpeedTestResult>>(new Map());
+
+  // Discovery state
+  const [discovered, setDiscovered] = useState<DiscoveredModel[]>([]);
+  const [discovering, setDiscovering] = useState(false);
 
   // A/B compare state
   const [compareModelA, setCompareModelA] = useState('');
@@ -78,6 +88,9 @@ export default function OllamaManagerPage() {
         } else if (models.length === 1 && !compareModelA) {
           setCompareModelA(models[0].name);
         }
+        // Auto-discovery: cerca nuovi modelli online in background
+        const installedNames = models.map(m => m.name);
+        discoverNewModels(installedNames).then(setDiscovered).catch(() => {});
       }
     } catch {
       setOllamaOnline(false);
@@ -318,6 +331,110 @@ export default function OllamaManagerPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Nuovi Modelli Scoperti Online */}
+          {discovered.length > 0 && (
+            <Card className="border-purple-500/20 bg-purple-950/20">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-400" />
+                    <span className="text-xs font-semibold text-purple-400">Nuovi Modelli Disponibili ({discovered.length})</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-purple-300 hover:text-purple-200"
+                      onClick={async () => {
+                        setDiscovering(true);
+                        try {
+                          invalidateDiscoveryCache();
+                          const names = installed.map(m => m.name);
+                          const found = await discoverNewModels(names, true);
+                          setDiscovered(found);
+                        } catch {}
+                        setDiscovering(false);
+                      }}
+                      disabled={discovering}
+                    >
+                      {discovering ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                      Aggiorna
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground mb-2">
+                  Modelli trovati automaticamente su ollama.com, filtrati per utilità alla traduzione. Non ancora installati né nella lista consigliati.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {discovered.slice(0, 12).map(dm => {
+                    const isPullingThis = pulling === dm.name;
+                    return (
+                      <div key={dm.name} className={cn(
+                        "rounded-lg p-2.5 border transition-colors",
+                        dm.isNew ? "bg-purple-500/5 border-purple-500/20" : "bg-background/30 border-white/5"
+                      )}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-xs font-semibold">{dm.name}</span>
+                              {dm.isNew && <Badge className="text-[7px] h-3 px-1 bg-purple-500/20 text-purple-300 border-purple-500/30">NUOVO</Badge>}
+                              <Badge variant="outline" className="text-[7px] h-3 px-1 text-purple-400 border-purple-500/30">
+                                {dm.relevanceScore}% rilevante
+                              </Badge>
+                            </div>
+                            {dm.description && (
+                              <p className="text-[10px] text-muted-foreground leading-tight line-clamp-2">{dm.description}</p>
+                            )}
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {dm.pulls !== '0' && (
+                                <Badge variant="outline" className="text-[7px] h-3 px-1 text-slate-400 border-slate-500/30">
+                                  <TrendingUp className="h-2 w-2 mr-0.5" />{dm.pulls} pulls
+                                </Badge>
+                              )}
+                              {dm.sizes.length > 0 && (
+                                <Badge variant="outline" className="text-[7px] h-3 px-1 text-cyan-400 border-cyan-500/30">
+                                  {dm.sizes.slice(0, 3).join(', ')}
+                                </Badge>
+                              )}
+                              {dm.categories.map(c => (
+                                <Badge key={c} variant="outline" className="text-[7px] h-3 px-1 text-amber-400 border-amber-500/30">{c}</Badge>
+                              ))}
+                              {dm.updatedAgo !== 'unknown' && (
+                                <Badge variant="outline" className="text-[7px] h-3 px-1 text-slate-500 border-slate-600/30">{dm.updatedAgo}</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <a
+                              href={`https://ollama.com/library/${dm.name}`}
+                              target="_blank"
+                              rel="noopener"
+                              className="inline-flex items-center justify-center h-7 w-7 rounded-md text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                            <Button
+                              variant="outline" size="sm" className="h-7 text-[10px] gap-1"
+                              onClick={() => handlePull(dm.name)}
+                              disabled={!!pulling}
+                            >
+                              {isPullingThis ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                              {isPullingThis ? '...' : 'Pull'}
+                            </Button>
+                          </div>
+                        </div>
+                        {isPullingThis && (
+                          <div className="mt-2 space-y-1">
+                            <Progress value={pullProgress.percent} className="h-1.5" />
+                            <p className="text-[9px] text-muted-foreground truncate">{pullProgress.status} — {pullProgress.percent}%</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Speed Test Tutti */}
           {installed.length > 0 && (

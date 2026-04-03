@@ -513,3 +513,249 @@ export function formatSize(bytes: number): string {
   const mb = bytes / (1024 * 1024);
   return `${mb.toFixed(0)} MB`;
 }
+
+// ============================================================================
+// AUTO-DISCOVERY: Scopri nuovi modelli dal registry Ollama
+// ============================================================================
+
+export interface DiscoveredModel {
+  name: string;
+  description: string;
+  pulls: string;        // es. "4.5M", "90.6K"
+  tags: number;
+  updatedAgo: string;   // es. "14 hours ago", "1 week ago"
+  categories: string[]; // es. ["tools", "thinking", "vision"]
+  sizes: string[];      // es. ["4b", "8b", "27b"]
+  isNew: boolean;       // aggiornato negli ultimi 14 giorni
+  relevanceScore: number; // 0-100, quanto è utile per traduzione
+}
+
+// Cache per evitare richieste eccessive
+let discoveryCache: { models: DiscoveredModel[]; timestamp: number } | null = null;
+const DISCOVERY_CACHE_TTL = 60 * 60 * 1000; // 1 ora
+
+// Parole chiave per determinare rilevanza alla traduzione
+const TRANSLATION_RELEVANT_KEYWORDS = [
+  'translat', 'multilingual', 'language', 'multimodal', 'chat',
+  'reasoning', 'general', 'versatile', 'text', 'instruct',
+];
+const TRANSLATION_IRRELEVANT_KEYWORDS = [
+  'coder', 'coding', 'code-only', 'math-only', 'embedding',
+  'vision-only', 'ocr-only', 'audio-only', 'speech-only',
+];
+
+/**
+ * Scopri nuovi modelli dal registry Ollama.
+ * Fa scraping di ollama.com/search, estrae i modelli e li filtra
+ * per rilevanza alla traduzione. Cachea per 1 ora.
+ */
+export async function discoverNewModels(
+  installedNames: string[],
+  forceRefresh = false,
+): Promise<DiscoveredModel[]> {
+  // Controlla cache
+  if (!forceRefresh && discoveryCache && Date.now() - discoveryCache.timestamp < DISCOVERY_CACHE_TTL) {
+    return filterDiscovered(discoveryCache.models, installedNames);
+  }
+
+  const allModels: DiscoveredModel[] = [];
+
+  // Fetch multiple categorie dalla pagina di ricerca Ollama
+  const searchUrls = [
+    'https://ollama.com/search?q=translate',
+    'https://ollama.com/search?q=multilingual',
+    'https://ollama.com/search?q=&c=tools',   // modelli con tool use (spesso multilingue)
+  ];
+
+  for (const url of searchUrls) {
+    try {
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(8000),
+        headers: { 'Accept': 'text/html', 'User-Agent': 'GameStringer/1.4' },
+      });
+      if (!res.ok) continue;
+      const html = await res.text();
+      const parsed = parseOllamaSearchPage(html);
+      for (const model of parsed) {
+        if (!allModels.some(m => m.name === model.name)) {
+          allModels.push(model);
+        }
+      }
+    } catch {
+      // Silently skip if network error
+    }
+  }
+
+  // Calcola relevance score per ognuno
+  for (const model of allModels) {
+    model.relevanceScore = calculateRelevance(model);
+  }
+
+  // Ordina per relevance e popolarità
+  allModels.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+  // Salva in cache
+  discoveryCache = { models: allModels, timestamp: Date.now() };
+
+  return filterDiscovered(allModels, installedNames);
+}
+
+/** Filtra i modelli scoperti: rimuovi quelli già installati e quelli poco rilevanti */
+function filterDiscovered(models: DiscoveredModel[], installedNames: string[]): DiscoveredModel[] {
+  const installedLower = installedNames.map(n => n.split(':')[0].toLowerCase());
+  const recommendedLower = RECOMMENDED_MODELS.map(r => r.pullName.split(':')[0].toLowerCase());
+
+  return models.filter(m => {
+    const nameLower = m.name.toLowerCase();
+    // Escludi se già installato
+    if (installedLower.some(n => nameLower.includes(n) || n.includes(nameLower))) return false;
+    // Escludi se già nei consigliati
+    if (recommendedLower.some(n => nameLower.includes(n) || n.includes(nameLower))) return false;
+    // Escludi se relevance troppo bassa
+    if (m.relevanceScore < 20) return false;
+    return true;
+  });
+}
+
+/** Parse la pagina HTML di ricerca Ollama per estrarre i modelli */
+function parseOllamaSearchPage(html: string): DiscoveredModel[] {
+  const models: DiscoveredModel[] = [];
+
+  // Estrai blocchi di modelli — ogni modello è in un link/card con classe riconoscibile
+  // Pattern: nome modello + descrizione + pulls + tags + updated
+  const modelBlockRegex = /href="\/library\/([^"]+)"[^>]*>[\s\S]*?<\/a>/gi;
+  let match;
+
+  while ((match = modelBlockRegex.exec(html)) !== null) {
+    const name = match[1].trim();
+    if (!name || models.some(m => m.name === name)) continue;
+
+    const block = match[0];
+
+    // Estrai descrizione — testo dopo il nome, prima dei badge
+    const descMatch = block.match(/(?:>\s*\n\s*)([\w][\s\S]{10,200}?)(?=\s*<)/);
+    const description = descMatch ? descMatch[1].trim().replace(/\s+/g, ' ') : '';
+
+    // Estrai pulls
+    const pullsMatch = block.match(/([\d.]+[KMB]?)\s*Pull/i);
+    const pulls = pullsMatch ? pullsMatch[1] : '0';
+
+    // Estrai tags count
+    const tagsMatch = block.match(/(\d+)\s*Tag/i);
+    const tags = tagsMatch ? parseInt(tagsMatch[1]) : 0;
+
+    // Estrai updated ago
+    const updatedMatch = block.match(/Updated\s+([\w\s]+ago)/i);
+    const updatedAgo = updatedMatch ? updatedMatch[1].trim() : 'unknown';
+
+    // Estrai categorie (tools, thinking, vision, etc.)
+    const categories: string[] = [];
+    const catRegex = />\s*(tools|thinking|vision|embedding|code)\s*</gi;
+    let catMatch;
+    while ((catMatch = catRegex.exec(block)) !== null) {
+      categories.push(catMatch[1].toLowerCase());
+    }
+
+    // Estrai sizes (0.5b, 1b, 4b, 8b, etc.)
+    const sizes: string[] = [];
+    const sizeRegex = />\s*([\d.]+b)\s*</gi;
+    let sizeMatch;
+    while ((sizeMatch = sizeRegex.exec(block)) !== null) {
+      sizes.push(sizeMatch[1].toLowerCase());
+    }
+
+    // Determina se è nuovo (aggiornato di recente)
+    const isNew = /\d+\s*(hour|minute|day)s?\s*ago/i.test(updatedAgo) &&
+      !/\d+\s*(month|year)s?\s*ago/i.test(updatedAgo);
+
+    models.push({
+      name,
+      description,
+      pulls,
+      tags,
+      updatedAgo,
+      categories,
+      sizes,
+      isNew,
+      relevanceScore: 0, // calcolato dopo
+    });
+  }
+
+  // Fallback: parsing più semplice se il regex complesso non trova nulla
+  if (models.length === 0) {
+    const simpleRegex = /\/library\/([\w.-]+)/g;
+    let simpleMatch;
+    const seenNames = new Set<string>();
+    while ((simpleMatch = simpleRegex.exec(html)) !== null) {
+      const name = simpleMatch[1];
+      if (seenNames.has(name)) continue;
+      seenNames.add(name);
+      models.push({
+        name,
+        description: '',
+        pulls: '0',
+        tags: 0,
+        updatedAgo: 'unknown',
+        categories: [],
+        sizes: [],
+        isNew: false,
+        relevanceScore: 0,
+      });
+    }
+  }
+
+  return models;
+}
+
+/** Calcola un punteggio di rilevanza per la traduzione (0-100) */
+function calculateRelevance(model: DiscoveredModel): number {
+  let score = 30; // Base score
+
+  const text = `${model.name} ${model.description}`.toLowerCase();
+
+  // Boost per keywords rilevanti alla traduzione
+  for (const kw of TRANSLATION_RELEVANT_KEYWORDS) {
+    if (text.includes(kw)) score += 8;
+  }
+
+  // Penalità per modelli solo-coding o non rilevanti
+  for (const kw of TRANSLATION_IRRELEVANT_KEYWORDS) {
+    if (text.includes(kw)) score -= 15;
+  }
+
+  // Boost per popolarità (più pulls = più testato)
+  const pullsNum = parsePulls(model.pulls);
+  if (pullsNum > 1_000_000) score += 15;
+  else if (pullsNum > 100_000) score += 10;
+  else if (pullsNum > 10_000) score += 5;
+
+  // Boost per novità
+  if (model.isNew) score += 10;
+
+  // Boost per categories utili
+  if (model.categories.includes('tools')) score += 5;
+  if (model.categories.includes('thinking')) score += 3;
+  if (model.categories.includes('vision')) score += 2; // multimodale è utile
+
+  // Penalità per modelli solo embedding
+  if (model.categories.includes('embedding')) score -= 20;
+
+  // Boost se ha taglie piccole (più accessibili)
+  if (model.sizes.some(s => ['4b', '7b', '8b'].includes(s))) score += 5;
+
+  return Math.max(0, Math.min(100, score));
+}
+
+/** Converte "4.5M", "90.6K", "1234" in numero */
+function parsePulls(pulls: string): number {
+  const num = parseFloat(pulls);
+  if (pulls.toUpperCase().includes('B')) return num * 1_000_000_000;
+  if (pulls.toUpperCase().includes('M')) return num * 1_000_000;
+  if (pulls.toUpperCase().includes('K')) return num * 1_000;
+  return num || 0;
+}
+
+/** Invalida la cache discovery (es. dopo un pull) */
+export function invalidateDiscoveryCache(): void {
+  discoveryCache = null;
+}
