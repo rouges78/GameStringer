@@ -1,0 +1,235 @@
+
+	;マクロ：ボタン１
+		[macro name="lanB1"]
+			[glink name="%n|lan1,bu" color="lan" x="%x" y="210" width="250" height="80" size="40" bold="true" face="%fo" fix="true" text="%t" clickse="card7.ogg" target="%g"]
+		[endmacro]
+	;マクロ：ボタン２
+		[macro name="lanB2"]
+			[glink name="%n|lan2,bu" color="lan" x="%x" y="210" width="250" height="80" size="40" bold="true" face="%fo" fix="true" text="%t" clickse="card7.ogg" target="%g"]
+		[endmacro]
+		
+	;マクロ：テキスト
+		[macro name="lanT"]
+			[ptext layer="0" name="%n|tyu" x="%x|0" y="%y|130" size="%si|34" width="1280" align="center" face="%fo" text="%t"]
+		[endmacro]
+		
+	;マクロ：テキスト
+		[macro name="lanS"]
+			[ptext layer="0" name="syu" x="%x|0" y="%y|150" size="%si|36" face="%fo" text="%t"]
+		[endmacro]
+		
+	;マクロ：ボタン１
+		[macro name="lanBS1"]
+			[glink name="las,lan1,bu" color="lan" x="%x" y="370" width="300" height="70" size="%si|30" bold="true" face="&f.mof" fix="true" text="%t" clickse="card7.ogg" target="%g"]
+		[endmacro]
+		
+	;マクロ：ボタン２
+		[macro name="lanBS2"]
+			[glink name="las,lan2,bu" color="lan" x="%x" y="370" width="300" height="70" size="%si|30" bold="true" face="&f.mof" fix="true" text="%t" clickse="card7.ogg" target="%g"]
+		[endmacro]
+
+	;OKボタン
+		[button name="mefain,lanok" layer="1" x="555" y="470" folder="image" graphic="title/lanok.png" target="*OK" clickse="card1.ogg" enterse="card2.ogg" enterimg="%ent"]
+		
+;-------------------------------------------
+
+	;背景画像
+		[img f="image/title" s="baseLA.jpg"]
+		
+	;フェードイン
+		[Fi-100]
+		
+
+	*P1
+			
+	;テキスト削除
+		[RN0 n="tyu"]
+		
+	;テキスト
+		[if exp="f.lang == 1"]
+			[lanT fo="SHSansJP" t="開始後に言語の変更はできません"]
+			
+		[elsif exp="f.lang == 2"]
+			[lanT fo="SHSansJP" t="You can't change the language once the game has started"]
+			
+		[elsif exp="f.lang == 3"]
+			[lanT fo="SHSansCN" t="游戏开始后无法更改语言"]
+			
+		[elsif exp="f.lang == 4"]
+			[lanT fo="SHSansTW" t="遊戲開始後不能更改語言"]
+			
+		[endif]
+		
+	;削除
+		[clearfix]
+
+	;ボタン
+		[lanB1 fo="SHSansJP" x="90" t="日本語" g="*JP"]
+		[lanB1 fo="SHSansJP" x="370" t="English" g="*EN"]
+		[lanB1 fo="SHSansCN" x="640" t="簡体中文" g="*SC"]
+		[lanB1 fo="SHSansTW" x="910" t="繁體中文" g="*TC"]
+		
+	;ボタン表示変更
+		[if exp="f.lang == 1"]
+			[lanB2 fo="SHSansJP" x="90" t="日本語" g="*JP"]
+			
+		[elsif exp="f.lang == 2"]
+			[lanB2 fo="SHSansJP" x="370" t="English" g="*EN"]
+			
+		[elsif exp="f.lang == 3"]
+			[lanB2 fo="SHSansCN" x="640" t="簡体中文" g="*SC"]
+			
+		[elsif exp="f.lang == 4"]
+			[lanB2 fo="SHSansTW" x="910" t="繁體中文" g="*TC"]
+			
+		[endif]
+		
+	*P2
+		
+	;テキスト削除
+		[RN0 n="syu"]
+		
+	;テキスト
+		[if exp="f.lang == 1"]
+			[VAR e="f.modo1 = '通常モード'" ][VAR e="f.modo2 = '異界語モード'"][VAR e="f.mof = 'SHSansJP'"]
+			
+		[elsif exp="f.lang == 2"]
+			[VAR e="f.modo1 = 'Normal Mode'"][VAR e="f.modo2 = 'Otherworld Mode'"][VAR e="f.mof = 'SHSansJP'"]
+
+		[elsif exp="f.lang == 3"]
+			[VAR e="f.modo1 = '普通模式'"][VAR e="f.modo2 = '异界语言模式'"][VAR e="f.mof = 'SHSansCN'"]
+
+		[elsif exp="f.lang == 4"]
+			[VAR e="f.modo1 = '普通模式'"][VAR e="f.modo2 = '異界語言模式'"][VAR e="f.mof = 'SHSansTW'"]
+
+		[endif]
+	
+		[if exp="f.lang == 1 && f.lg == true"]
+			[lanT fo="SHSansJP" n="syu" y="460" si="26" t="主人公のセリフも異界語になるモード<br>解読ヒント一切無し，解説セリフ一部カット"]
+			
+						
+		[elsif exp="f.lang == 2 && f.lg == true"]
+			[lanT fo="SHSansJP" n="syu" y="460" si="26" t="A mode where the protagonist's dialogue is in an otherworldly language.<br>No decoding hints provided, and some explanatory dialogue is omitted."]
+			
+		[elsif exp="f.lang == 3 && f.lg == true"]
+			[lanT fo="SHSansCN" n="syu" y="460" si="26" t="主角台词变成异界语言的模式。<br>无任何解读提示，并且部分解说台词被删减。"]
+					
+		[elsif exp="f.lang == 4 && f.lg == true"]
+			[lanT fo="SHSansTW" n="syu" y="460" si="26" t="主角台詞變成異界語言的模式。<br>無任何解讀提示，並且部分解說台詞被刪減。"]
+		[endif]
+		
+	;ボタン削除
+		[clearfix name="las"]
+
+	;ボタン表示変更
+		[if exp="f.lg != true"]
+			[lanBS2 x="310"  t="&f.modo1" g="*omote"]
+			[lanBS1 x="660" t="&f.modo2" g="*ura"]
+			
+		[elsif exp="f.lg == true"]
+			[lanBS1 x="310" t="&f.modo1" g="*omote"]
+			[lanBS2 x="660" t="&f.modo2" g="*ura"]
+			
+		[endif]
+		
+		
+	;戻るボタン
+		[button fix="true" name="meb" graphic="backico_h.png" x="1170" y="0" target="*back" clickse="card1.ogg" enterse="card2.ogg"]
+
+
+	[s]
+
+;変数変更--------------------------------------------------
+
+*JP
+	;削除
+		[clearstack]
+	;言語変数
+		[VAR e="f.lang = 1"]
+	;ジャンプ
+		[jump target="*P1"]
+		
+*EN
+	;削除
+		[clearstack]
+	;言語変数
+		[VAR e="f.lang = 2"]
+	;ジャンプ
+		[jump target="*P1"]
+		
+*SC
+	;削除
+		[clearstack]
+	;言語変数
+		[VAR e="f.lang = 3"]
+	;ジャンプ
+		[jump target="*P1"]
+		
+*TC
+	;削除
+		[clearstack]
+	;言語変数
+		[VAR e="f.lang = 4"]
+	;ジャンプ
+		[jump target="*P1"]
+		
+		
+;変数変更--------------------------------------------------
+
+*omote
+	;削除
+		[clearstack]
+	;言語変数
+		[VAR e="f.lg = false"]
+	;ジャンプ
+		[jump target="*P2"]
+		
+*ura
+	;削除
+		[clearstack]
+	;言語変数
+		[VAR e="f.lg = true"]
+	;ジャンプ
+		[jump target="*P2"]
+
+
+		
+;//戻る--------------
+
+	*back
+	
+	 ;フェードアウト
+		[Fo-100]
+	
+	;削除
+		[cm][clearfix][clearstack]
+			
+	;背景削除
+		[R0]
+		
+	;●
+		[W-100]
+			
+	;ジャンプ
+		[J st="title.ks"]
+	
+	
+;---------------------------------------------------
+*OK
+
+	;フェードアウト
+		[Fo-100]
+		
+	;削除
+		[cm][R0][clearfix][clearstack]
+		
+	;マクロ削除
+		[erasemacro name="lanB1"][erasemacro name="lanB2"][erasemacro name="lanT"]
+
+	;●
+		[W-100]
+		
+	;ジャンプ
+		[J st="select_saveslot.ks"][s]
+
+

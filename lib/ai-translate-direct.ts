@@ -35,7 +35,7 @@ const blockedProviders = new Set<string>();
 const cooldownProviders = new Map<string, number>(); // provider → timestamp sblocco
 const cooldownFailCount = new Map<string, number>(); // provider → contatore fallimenti consecutivi
 
-const FREE_PROVIDERS = new Set(['mymemory', 'lingva', 'gemini', 'hymt', 'translategemma', 'ollama', 'lmstudio']);
+const FREE_PROVIDERS = new Set(['mymemory', 'lingva', 'nllb', 'gemini', 'hymt', 'translategemma', 'ollama', 'lmstudio']);
 
 // Provider che richiedono sourceLanguage corretto (web API con traduzione letterale)
 const LANG_SENSITIVE_PROVIDERS = new Set(['mymemory', 'lingva']);
@@ -1393,6 +1393,55 @@ async function translateWithLingva(
   return results;
 }
 
+/** NLLB-200 (Meta) — 200 lingue via HuggingFace Inference API (gratuito) */
+const NLLB_LANG_MAP: Record<string, string> = {
+  en: 'eng_Latn', it: 'ita_Latn', de: 'deu_Latn', fr: 'fra_Latn', es: 'spa_Latn',
+  pt: 'por_Latn', ru: 'rus_Cyrl', zh: 'zho_Hans', ja: 'jpn_Jpan', ko: 'kor_Hang',
+  th: 'tha_Thai', vi: 'vie_Latn', id: 'ind_Latn', ar: 'arb_Arab', hi: 'hin_Deva',
+  tr: 'tur_Latn', uk: 'ukr_Cyrl', pl: 'pol_Latn', nl: 'nld_Latn', sv: 'swe_Latn',
+  da: 'dan_Latn', fi: 'fin_Latn', no: 'nob_Latn', cs: 'ces_Latn', el: 'ell_Grek',
+  hu: 'hun_Latn', ro: 'ron_Latn', bg: 'bul_Cyrl', hr: 'hrv_Latn', sk: 'slk_Latn',
+  sl: 'slv_Latn', lt: 'lit_Latn', lv: 'lvs_Latn', et: 'est_Latn', ms: 'zsm_Latn',
+  bn: 'ben_Beng', ta: 'tam_Taml', te: 'tel_Telu', sw: 'swh_Latn', am: 'amh_Ethi',
+  ka: 'kat_Geor', hy: 'hye_Armn', he: 'heb_Hebr', fa: 'pes_Arab', ur: 'urd_Arab',
+  my: 'mya_Mymr', km: 'khm_Khmr', lo: 'lao_Laoo', ne: 'npi_Deva', si: 'sin_Sinh',
+  ga: 'gle_Latn', cy: 'cym_Latn', eu: 'eus_Latn', gl: 'glg_Latn', ca: 'cat_Latn',
+  af: 'afr_Latn', sq: 'als_Latn', mk: 'mkd_Cyrl', bs: 'bos_Latn', is: 'isl_Latn',
+  mt: 'mlt_Latn', lb: 'ltz_Latn', tl: 'tgl_Latn', mn: 'khk_Cyrl', uz: 'uzn_Latn',
+  kk: 'kaz_Cyrl', az: 'azj_Latn', ky: 'kir_Cyrl', tg: 'tgk_Cyrl',
+};
+
+async function translateWithNLLB(
+  _key: string,
+  opts: TranslateOptions
+): Promise<string[]> {
+  const tgtLang = NLLB_LANG_MAP[opts.targetLanguage] || NLLB_LANG_MAP[opts.targetLanguage?.split('-')[0] || ''];
+  const srcLang = NLLB_LANG_MAP[opts.sourceLanguage || 'en'] || 'eng_Latn';
+  if (!tgtLang) throw new Error(`NLLB: lingua non supportata: ${opts.targetLanguage}`);
+
+  const results: string[] = [];
+  for (const text of opts.texts) {
+    const res = await fetch(
+      'https://api-inference.huggingface.co/models/facebook/nllb-200-distilled-600M',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inputs: text,
+          parameters: { src_lang: srcLang, tgt_lang: tgtLang },
+        }),
+        signal: AbortSignal.timeout(15000),
+      }
+    );
+    if (res.status === 429) throw new Error('RateLimit');
+    if (!res.ok) throw new Error(`NLLB ${res.status}`);
+    const data = await res.json();
+    const translated = Array.isArray(data) ? data[0]?.translation_text : data?.translation_text;
+    results.push(translated || text);
+  }
+  return results;
+}
+
 /** Preset di chain selezionabili per costo/qualità */
 export type ChainPreset = 'free' | 'economy' | 'balanced' | 'quality' | 'max_quality';
 
@@ -1414,7 +1463,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '$0',
     quality: '⭐⭐⭐⭐',
     speed: '🏎 Media',
-    providers: ['hymt', 'translategemma', 'ollama', 'lmstudio', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'ollama', 'lmstudio', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'nllb', 'mymemory', 'lingva'],
   },
   {
     id: 'economy',
@@ -1423,7 +1472,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$0.10',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['hymt', 'translategemma', 'gemini', 'groq', 'cerebras', 'deepseek', 'mistral', 'openrouter', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'gemini', 'groq', 'cerebras', 'deepseek', 'mistral', 'openrouter', 'nllb', 'mymemory', 'lingva'],
   },
   {
     id: 'balanced',
@@ -1432,7 +1481,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$0.25',
     quality: '⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'modelwiz', 'qwen', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'mymemory', 'lingva'],
+    providers: ['hymt', 'translategemma', 'gemini', 'deepseek', 'deepl', 'modelwiz', 'qwen', 'mistral', 'groq-gptoss', 'groq', 'cerebras', 'together', 'fireworks', 'cohere', 'openrouter', 'openai', 'nllb', 'mymemory', 'lingva'],
   },
   {
     id: 'quality',
@@ -1450,7 +1499,7 @@ export const CHAIN_PRESETS: ChainPresetInfo[] = [
     cost: '~$1.00+',
     quality: '⭐⭐⭐⭐⭐',
     speed: '🚀 Veloce',
-    providers: ['deepl', 'modelwiz', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'lmstudio', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'mymemory', 'lingva'],
+    providers: ['deepl', 'modelwiz', 'anthropic', 'openai', 'qwen', 'translategemma', 'ollama', 'lmstudio', 'mistral', 'gemini', 'cohere', 'together', 'deepseek', 'fireworks', 'groq-gptoss', 'groq', 'cerebras', 'openrouter', 'hymt', 'nllb', 'mymemory', 'lingva'],
   },
 ];
 
@@ -1496,6 +1545,7 @@ const PROVIDER_MAP: Record<string, {
   ollama: { getKey: () => 'free', fn: translateWithOllamaGeneric, isBlocked: () => isProviderBlocked('ollama'), needsKey: false },
   lmstudio: { getKey: () => 'free', fn: translateWithLMStudio, isBlocked: () => isProviderBlocked('lmstudio'), needsKey: false },
   modelwiz: { getKey: (k) => k.modelwiz || 'free', fn: translateWithModelWiz, isBlocked: () => isProviderBlocked('modelwiz'), needsKey: false },
+  nllb: { getKey: () => 'free', fn: translateWithNLLB, isBlocked: () => isProviderBlocked('nllb'), needsKey: false },
 };
 
 /** Info requisito mancante per un provider */
@@ -1532,6 +1582,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   ollama: 'Ollama (qualsiasi modello)',
   lmstudio: 'LM Studio (locale, OpenAI-compatible)',
   modelwiz: 'Alocai ModelWiz (MT gaming)',
+  nllb: 'NLLB-200 Meta (200 lingue, gratis)',
 };
 
 /** Provider che richiedono Ollama */

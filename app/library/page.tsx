@@ -1254,7 +1254,7 @@ function LibraryListView() {
               <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); sessionStorage.setItem('wizardAutoGame', JSON.stringify({ id: game.app_id || game.id, title: game.title, install_path: game.install_dir, steam_app_id: game.app_id, header_image: game.header_image })); window.location.href = '/translation-wizard'; }}
                 className="bg-indigo-600/90 hover:bg-indigo-500 p-2 rounded-lg text-white transition-all shadow-lg hover:shadow-indigo-500/50 hover:scale-110 border border-indigo-400/30"
-                title="Traduci"
+                title="String it!"
               >
                 <Sparkles className="h-4 w-4" />
               </button>
@@ -1485,7 +1485,7 @@ function LibraryListView() {
                         title="Translation Wizard"
                       >
                         <Sparkles className="h-3 w-3" />
-                        Traduci
+                        String it!
                       </button>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.location.href = `/batch?game=${encodeURIComponent(game.title)}&appId=${game.app_id}`; }}

@@ -6251,10 +6251,12 @@ pub struct ExecutionError {
 }
 
 async fn execute_workflow_from_prediction(
+    app: &tauri::AppHandle,
     game_path: &Path,
     prediction: &PredictionResult,
     target_lang_param: &str,
 ) -> Result<WorkflowExecutionResult, String> {
+    use tauri::Emitter;
     let start = std::time::Instant::now();
     let execution_id = format!("exec_{}", chrono::Utc::now().timestamp());
     let game_path_str = game_path.to_string_lossy().to_string();
@@ -6265,9 +6267,19 @@ async fn execute_workflow_from_prediction(
     let mut errors: Vec<ExecutionError> = Vec::new();
     let mut error_counter = 0u32;
 
+    // Helper macro for emitting real-time progress to frontend
+    macro_rules! emit_progress {
+        ($stage:expr, $step:expr, $msg:expr, $pct:expr) => {
+            let _ = app.emit("workflow-progress", serde_json::json!({
+                "stage": $stage, "step": $step, "message": $msg, "progress": $pct
+            }));
+        };
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // STAGE 1: PREPARATION — Validate game path, detect engine, check space
     // ══════════════════════════════════════════════════════════════════════════
+    emit_progress!("preparation", 6, format!("⚙️ {} — validazione path...", prediction.engine), 18);
     let stage_start = std::time::Instant::now();
     let mut stage1_outputs = vec![
         format!("🎮 Game: {}", prediction.game_title),
@@ -6310,6 +6322,7 @@ async fn execute_workflow_from_prediction(
     // ══════════════════════════════════════════════════════════════════════════
     // STAGE 2: SMART BACKUP — Real file backup before any modifications
     // ══════════════════════════════════════════════════════════════════════════
+    emit_progress!("backup", 6, "💾 Creazione backup intelligente...", 22);
     let stage_start = std::time::Instant::now();
     let mut stage2_outputs = Vec::new();
     let mut stage2_errors = Vec::new();
@@ -6422,6 +6435,7 @@ async fn execute_workflow_from_prediction(
     
     if is_tyrano_electron {
         // ── TYRANO STAGE 3: Detection ──
+        emit_progress!("tyrano_detect", 6, "🎭 Rilevamento TyranoScript/Electron...", 30);
         let stage_start = std::time::Instant::now();
         let mut tyrano_outputs = Vec::new();
         
@@ -6452,6 +6466,7 @@ async fn execute_workflow_from_prediction(
         });
 
         // ── TYRANO STAGE 4: String Extraction ──
+        emit_progress!("tyrano_extract", 6, "📝 Estrazione stringhe da file .ks...", 40);
         let stage_start = std::time::Instant::now();
         let mut extract_outputs = Vec::new();
         
@@ -6489,6 +6504,7 @@ async fn execute_workflow_from_prediction(
         });
 
         // ── TYRANO STAGE 5: AI Translation of extracted strings ──
+        emit_progress!("tyrano_translate", 6, "🤖 Traduzione AI in corso...", 50);
         let stage_start = std::time::Instant::now();
         let mut stage5_outputs = Vec::new();
         let mut translated_count = 0u64;
@@ -6572,6 +6588,9 @@ async fn execute_workflow_from_prediction(
                 if batch_num % 5 == 0 || batch_num == 1 {
                     stage5_outputs.push(format!("⏳ Progresso: {}/{} stringhe ({}%) — Batch {}/{}", translated_count, indices.len(), progress_pct, batch_num, (indices.len() + batch_size - 1) / batch_size));
                 }
+                // Real-time batch progress
+                let translate_pct = 50 + (progress_pct as u32 * 35 / 100); // 50..85%
+                emit_progress!("tyrano_translate_batch", 6, format!("🤖 Traduzione {}/{} stringhe ({}%)...", translated_count, indices.len(), progress_pct), translate_pct);
                 let originals: Vec<String> = batch_indices.iter()
                     .map(|&i| tyrano_strings[i].original.clone())
                     .collect();
@@ -6676,6 +6695,7 @@ async fn execute_workflow_from_prediction(
         });
 
         // ── TYRANO STAGE 6: Patch application ──
+        emit_progress!("tyrano_patch", 6, format!("💉 Applicazione patch — {} stringhe tradotte...", translated_count), 85);
         let stage_start = std::time::Instant::now();
         let mut patch_outputs = Vec::new();
         let mut patch_success = false;
@@ -6807,8 +6827,613 @@ async fn execute_workflow_from_prediction(
     }
 
     // ══════════════════════════════════════════════════════════════════════════
+    // GAMEMAKER FAST PATH — use native gm_* patcher
+    // ══════════════════════════════════════════════════════════════════════════
+    let is_gamemaker = engine_lower.contains("gamemaker") || engine_lower.contains("game maker")
+        || game_path.join("data.win").exists()
+        || game_path.join("game.ios").exists()
+        || game_path.join("game.droid").exists();
+
+    if is_gamemaker {
+        emit_progress!("gm_detect", 6, "🎮 Rilevamento GameMaker...", 30);
+        let stage_start = std::time::Instant::now();
+        let mut gm_outputs = Vec::new();
+
+        let gm_scan = super::gamemaker_patcher::gm_scan_data_win(game_path_str.clone()).await;
+        match &gm_scan {
+            Ok(info) => {
+                gm_outputs.push(format!("🎮 GameMaker {} — {}", info.gm_version, info.string_source));
+                gm_outputs.push(format!("📝 Stringhe traducibili: {}", info.translatable_strings));
+                if info.has_language_files {
+                    gm_outputs.push(format!("📂 Language dir: {} file .jn", info.language_file_count));
+                }
+            }
+            Err(e) => { gm_outputs.push(format!("⚠️ GameMaker scan fallito: {}", e)); }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 3, stage_name: "GameMaker Detection".into(),
+            status: if gm_scan.is_ok() { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: gm_outputs, errors: vec![], success: gm_scan.is_ok(),
+        });
+
+        // Extract
+        emit_progress!("gm_extract", 6, "📝 Estrazione stringhe GameMaker...", 40);
+        let stage_start = std::time::Instant::now();
+        let mut ext_outputs = Vec::new();
+        let gm_strings = super::gamemaker_patcher::gm_extract_strings(
+            game_path_str.clone(), Some(true), Some(0), Some(500),
+        ).await;
+        let gm_str_vec = gm_strings.unwrap_or_default();
+        ext_outputs.push(format!("📝 Estratte {} stringhe", gm_str_vec.len()));
+        stages_completed.push(StageExecutionResult {
+            stage_id: 4, stage_name: "GameMaker String Extraction".into(),
+            status: ExecutionStatus::Completed,
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: ext_outputs, errors: vec![], success: !gm_str_vec.is_empty(),
+        });
+
+        // Translate with Ollama/Google
+        emit_progress!("gm_translate", 6, format!("🤖 Traduzione AI — {} stringhe...", gm_str_vec.len()), 50);
+        let stage_start = std::time::Instant::now();
+        let mut t_outputs = Vec::new();
+        let target_lang = if target_lang_param.is_empty() { "it" } else { target_lang_param };
+        let lang_name = match target_lang {
+            "it" => "Italian", "en" => "English", "es" => "Spanish", "fr" => "French",
+            "de" => "German", "ja" => "Japanese", "zh" => "Chinese", "ko" => "Korean",
+            "pt" => "Portuguese", "ru" => "Russian", "pl" => "Polish", other => other,
+        };
+
+        let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
+        let ollama_model: Option<String> = detect_ollama_model(&client).await;
+        let use_ollama = ollama_model.is_some();
+        let translation_method = ollama_model.as_ref().map(|m| format!("Ollama ({})", m)).unwrap_or("Google Translate".into());
+        t_outputs.push(format!("🤖 {}", translation_method));
+
+        let mut translations: std::collections::HashMap<usize, String> = std::collections::HashMap::new();
+        let mut translated_count = 0u64;
+        let mut failed_count = 0u64;
+        let mut ollama_failed = false;
+        let batch_size = 10;
+
+        for batch_indices in (0..gm_str_vec.len().min(500)).collect::<Vec<_>>().chunks(batch_size) {
+            let gm_pct = if gm_str_vec.is_empty() { 0 } else { (translated_count as u32 * 100 / gm_str_vec.len().min(500) as u32) };
+            emit_progress!("gm_translate_batch", 6, format!("🤖 GameMaker: {}/{} stringhe ({}%)...", translated_count, gm_str_vec.len().min(500), gm_pct), 50 + gm_pct * 35 / 100);
+            let originals: Vec<&str> = batch_indices.iter().map(|&i| gm_str_vec[i].original.as_str()).collect();
+            let mut results: Vec<Option<String>> = vec![None; originals.len()];
+
+            if use_ollama && !ollama_failed {
+                let numbered: String = originals.iter().enumerate().map(|(i, s)| format!("{}. {}", i+1, s)).collect::<Vec<_>>().join("\n");
+                let body = serde_json::json!({
+                    "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
+                    "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
+                    "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
+                });
+                match client.post("http://localhost:11434/api/generate").json(&body).send().await {
+                    Ok(resp) if resp.status().is_success() => {
+                        if let Ok(json) = resp.json::<serde_json::Value>().await {
+                            if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
+                                parse_numbered_translations(text, &mut results, originals.len());
+                            }
+                        }
+                    }
+                    _ => { ollama_failed = true; }
+                }
+            }
+
+            // Google fallback
+            for (j, result) in results.iter_mut().enumerate() {
+                if result.is_none() {
+                    if let Some(t) = google_translate_single(&client, originals[j], target_lang).await {
+                        *result = Some(t);
+                    }
+                }
+            }
+
+            for (j, &idx) in batch_indices.iter().enumerate() {
+                if let Some(ref t) = results[j] {
+                    translations.insert(gm_str_vec[idx].index, t.clone());
+                    translated_count += 1;
+                } else { failed_count += 1; }
+            }
+        }
+        t_outputs.push(format!("✅ Tradotte: {}/{}", translated_count, gm_str_vec.len()));
+        stages_completed.push(StageExecutionResult {
+            stage_id: 5, stage_name: "AI Translation (GameMaker)".into(),
+            status: if translated_count > 0 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: t_outputs, errors: vec![], success: translated_count > 0,
+        });
+
+        // Patch
+        emit_progress!("gm_patch", 6, format!("💉 Patch GameMaker — {} stringhe tradotte...", translated_count), 85);
+        let stage_start = std::time::Instant::now();
+        let mut p_outputs = Vec::new();
+        let mut patch_success = false;
+        if !translations.is_empty() {
+            match super::gamemaker_patcher::gm_patch_strings(game_path_str.clone(), translations).await {
+                Ok(r) => {
+                    p_outputs.push(format!("✅ Patchate {} stringhe", r.patched_count));
+                    p_outputs.push(format!("📂 Backup: {}", r.backup_path));
+                    patch_success = r.success;
+                    deliverables.push(ExecutionDeliverable {
+                        deliverable_id: "del_gm_patch".into(),
+                        deliverable_name: format!("GameMaker Patch ({} strings)", r.patched_count),
+                        file_path: Some(game_path_str.clone()), size_mb: 0.0,
+                        status: ExecutionStatus::Completed, created_at: chrono::Utc::now().to_rfc3339(),
+                    });
+                }
+                Err(e) => {
+                    p_outputs.push(format!("❌ Patch fallita: {}", e));
+                    error_counter += 1;
+                    errors.push(ExecutionError { error_id: format!("err_{}", error_counter), stage_id: 6,
+                        error_type: "GmPatchFailed".into(), message: e, severity: "high".into(),
+                        timestamp: chrono::Utc::now().to_rfc3339(), resolved: false });
+                }
+            }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 6, stage_name: "GameMaker Patch".into(),
+            status: if patch_success { ExecutionStatus::Completed } else { ExecutionStatus::Skipped },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: p_outputs, errors: vec![], success: patch_success,
+        });
+
+        let elapsed_total = start.elapsed().as_secs_f64() / 60.0;
+        let success_count = stages_completed.iter().filter(|s| s.success).count();
+        let total_count = stages_completed.len();
+        let success_rate = success_count as f64 / total_count as f64;
+        let mut next_steps = vec![];
+        if patch_success { next_steps.push("🎮 Avvia il gioco per testare la traduzione".into()); }
+        return Ok(WorkflowExecutionResult {
+            execution_id, game_title: prediction.game_title.clone(), engine: "GameMaker".into(),
+            total_duration_minutes: elapsed_total, stages_completed,
+            final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            deliverables, errors, success_rate, next_steps,
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // RPG MAKER FAST PATH — use native rpgmaker_patcher (MV/MZ JSON files)
+    // ══════════════════════════════════════════════════════════════════════════
+    let is_rpgmaker = engine_lower.contains("rpg maker") || engine_lower.contains("rpgmaker")
+        || game_path.join("www").join("data").exists()
+        || game_path.join("data").join("System.json").exists();
+
+    if is_rpgmaker {
+        emit_progress!("rpg_detect", 6, "🎮 Rilevamento RPG Maker...", 30);
+        let stage_start = std::time::Instant::now();
+        let mut rpg_outputs = Vec::new();
+
+        let rpg_detect = super::rpgmaker_patcher::detect_rpgmaker_game(game_path_str.clone());
+        match &rpg_detect {
+            Ok(game_info) => {
+                rpg_outputs.push(format!("🎮 RPG Maker {:?} — {}", game_info.version, game_info.title));
+                rpg_outputs.push(format!("📂 Data files: {}", game_info.data_files.len()));
+            }
+            Err(e) => { rpg_outputs.push(format!("⚠️ RPG Maker detection fallita: {}", e)); }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 3, stage_name: "RPG Maker Detection".into(),
+            status: if rpg_detect.is_ok() { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: rpg_outputs, errors: vec![], success: rpg_detect.is_ok(),
+        });
+
+        // Extract all strings
+        emit_progress!("rpg_extract", 6, "📝 Estrazione stringhe RPG Maker...", 40);
+        let stage_start = std::time::Instant::now();
+        let extraction = super::rpgmaker_patcher::extract_all_rpgmaker_strings(game_path_str.clone());
+        let rpg_strings = extraction.map(|r| r.strings).unwrap_or_default();
+        stages_completed.push(StageExecutionResult {
+            stage_id: 4, stage_name: "RPG Maker String Extraction".into(),
+            status: ExecutionStatus::Completed,
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: vec![format!("📝 Estratte {} stringhe", rpg_strings.len())],
+            errors: vec![], success: !rpg_strings.is_empty(),
+        });
+
+        // Translate
+        emit_progress!("rpg_translate", 6, format!("🤖 Traduzione AI — {} stringhe...", rpg_strings.len()), 50);
+        let stage_start = std::time::Instant::now();
+        let target_lang = if target_lang_param.is_empty() { "it" } else { target_lang_param };
+        let lang_name = match target_lang {
+            "it" => "Italian", "en" => "English", "es" => "Spanish", "fr" => "French",
+            "de" => "German", "ja" => "Japanese", "zh" => "Chinese", "ko" => "Korean",
+            "pt" => "Portuguese", "ru" => "Russian", "pl" => "Polish", other => other,
+        };
+        let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
+        let ollama_model: Option<String> = detect_ollama_model(&client).await;
+        let use_ollama = ollama_model.is_some();
+        let mut translations_map: HashMap<String, String> = HashMap::new();
+        let mut translated_count = 0u64;
+        let mut ollama_failed = false;
+        let max_strings = rpg_strings.len().min(500);
+
+        for batch_indices in (0..max_strings).collect::<Vec<_>>().chunks(10) {
+            let rpg_pct = if max_strings == 0 { 0 } else { (translated_count as u32 * 100 / max_strings as u32) };
+            emit_progress!("rpg_translate_batch", 6, format!("🤖 RPG Maker: {}/{} stringhe ({}%)...", translated_count, max_strings, rpg_pct), 50 + rpg_pct * 35 / 100);
+            let originals: Vec<&str> = batch_indices.iter().map(|&i| rpg_strings[i].original.as_str()).collect();
+            let mut results: Vec<Option<String>> = vec![None; originals.len()];
+
+            if use_ollama && !ollama_failed {
+                let numbered: String = originals.iter().enumerate().map(|(i, s)| format!("{}. {}", i+1, s)).collect::<Vec<_>>().join("\n");
+                let body = serde_json::json!({
+                    "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
+                    "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
+                    "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
+                });
+                match client.post("http://localhost:11434/api/generate").json(&body).send().await {
+                    Ok(resp) if resp.status().is_success() => {
+                        if let Ok(json) = resp.json::<serde_json::Value>().await {
+                            if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
+                                parse_numbered_translations(text, &mut results, originals.len());
+                            }
+                        }
+                    }
+                    _ => { ollama_failed = true; }
+                }
+            }
+            for (j, result) in results.iter_mut().enumerate() {
+                if result.is_none() {
+                    if let Some(t) = google_translate_single(&client, originals[j], target_lang).await {
+                        *result = Some(t);
+                    }
+                }
+            }
+            for (j, &idx) in batch_indices.iter().enumerate() {
+                if let Some(ref t) = results[j] {
+                    translations_map.insert(rpg_strings[idx].original.clone(), t.clone());
+                    translated_count += 1;
+                }
+            }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 5, stage_name: "AI Translation (RPG Maker)".into(),
+            status: if translated_count > 0 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: vec![format!("✅ Tradotte: {}/{}", translated_count, max_strings)],
+            errors: vec![], success: translated_count > 0,
+        });
+
+        // Patch — apply translations to each data file in-place (with backup)
+        emit_progress!("rpg_patch", 6, format!("💉 Patch RPG Maker — {} stringhe tradotte...", translated_count), 85);
+        let stage_start = std::time::Instant::now();
+        let mut p_outputs = Vec::new();
+        let mut total_applied = 0u32;
+        let mut patch_success = false;
+
+        if !translations_map.is_empty() {
+            if let Ok(ref game_info) = rpg_detect {
+                for df in &game_info.data_files {
+                    let backup_path = format!("{}.gs_bak", df.path);
+                    if !Path::new(&backup_path).exists() {
+                        let _ = std::fs::copy(&df.path, &backup_path);
+                    }
+                    match super::rpgmaker_patcher::apply_rpgmaker_translations(
+                        df.path.clone(), translations_map.clone(), df.path.clone(),
+                    ) {
+                        Ok(applied) => { total_applied += applied; }
+                        Err(e) => { p_outputs.push(format!("⚠️ {}: {}", df.filename, e)); }
+                    }
+                }
+                patch_success = total_applied > 0;
+                p_outputs.insert(0, format!("✅ Applicate {} traduzioni in {} file", total_applied, game_info.data_files.len()));
+                if patch_success {
+                    deliverables.push(ExecutionDeliverable {
+                        deliverable_id: "del_rpg_patch".into(),
+                        deliverable_name: format!("RPG Maker Patch ({} translations)", total_applied),
+                        file_path: Some(game_path_str.clone()), size_mb: 0.0,
+                        status: ExecutionStatus::Completed, created_at: chrono::Utc::now().to_rfc3339(),
+                    });
+                }
+            }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 6, stage_name: "RPG Maker Patch".into(),
+            status: if patch_success { ExecutionStatus::Completed } else { ExecutionStatus::Skipped },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: p_outputs, errors: vec![], success: patch_success,
+        });
+
+        let elapsed_total = start.elapsed().as_secs_f64() / 60.0;
+        let success_count = stages_completed.iter().filter(|s| s.success).count();
+        let success_rate = success_count as f64 / stages_completed.len() as f64;
+        let mut next_steps = vec![];
+        if patch_success {
+            next_steps.push("🎮 Avvia il gioco per testare la traduzione".into());
+            next_steps.push("🔄 Backup .gs_bak disponibili per ripristino".into());
+        }
+        return Ok(WorkflowExecutionResult {
+            execution_id, game_title: prediction.game_title.clone(), engine: "RPG Maker".into(),
+            total_duration_minutes: elapsed_total, stages_completed,
+            final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            deliverables, errors, success_rate, next_steps,
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // VISIONAIRE FAST PATH — use native vis_* patcher
+    // ══════════════════════════════════════════════════════════════════════════
+    let is_visionaire = engine_lower.contains("visionaire")
+        || walkdir::WalkDir::new(game_path).max_depth(2).into_iter().filter_map(|e| e.ok())
+            .any(|e| e.path().extension().map(|x| x == "vis").unwrap_or(false));
+
+    if is_visionaire {
+        emit_progress!("vis_detect", 6, "🎭 Rilevamento Visionaire Studio...", 30);
+        let stage_start = std::time::Instant::now();
+        let mut vis_outputs = Vec::new();
+
+        let vis_scan = super::visionaire_patcher::scan_vis_strings(game_path_str.clone()).await;
+        match &vis_scan {
+            Ok(info) => {
+                vis_outputs.push(format!("🎭 Visionaire {} — {} stringhe", info.version, info.total_strings));
+            }
+            Err(e) => { vis_outputs.push(format!("⚠️ Visionaire scan fallito: {}", e)); }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 3, stage_name: "Visionaire Detection".into(),
+            status: if vis_scan.is_ok() { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: vis_outputs, errors: vec![], success: vis_scan.is_ok(),
+        });
+
+        // Extract
+        emit_progress!("vis_extract", 6, "📝 Estrazione stringhe da game.veb...", 40);
+        let stage_start = std::time::Instant::now();
+        let vis_strings = super::visionaire_patcher::extract_vis_strings(
+            game_path_str.clone(), Some(0), Some(500),
+        ).await.unwrap_or_default();
+        stages_completed.push(StageExecutionResult {
+            stage_id: 4, stage_name: "Visionaire String Extraction".into(),
+            status: ExecutionStatus::Completed,
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: vec![format!("📝 Estratte {} stringhe", vis_strings.len())],
+            errors: vec![], success: !vis_strings.is_empty(),
+        });
+
+        // Translate
+        emit_progress!("vis_translate", 6, format!("🤖 Traduzione AI — {} stringhe...", vis_strings.len()), 50);
+        let stage_start = std::time::Instant::now();
+        let target_lang = if target_lang_param.is_empty() { "it" } else { target_lang_param };
+        let lang_name = match target_lang {
+            "it" => "Italian", "en" => "English", "es" => "Spanish", "fr" => "French",
+            "de" => "German", "ja" => "Japanese", other => other,
+        };
+        let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
+        let ollama_model: Option<String> = detect_ollama_model(&client).await;
+        let use_ollama = ollama_model.is_some();
+        let mut translations: std::collections::HashMap<usize, String> = std::collections::HashMap::new();
+        let mut translated_count = 0u64;
+        let mut ollama_failed = false;
+
+        for batch_indices in (0..vis_strings.len().min(500)).collect::<Vec<_>>().chunks(10) {
+            let vis_pct = if vis_strings.is_empty() { 0 } else { (translated_count as u32 * 100 / vis_strings.len().min(500) as u32) };
+            emit_progress!("vis_translate_batch", 6, format!("🤖 Visionaire: {}/{} stringhe ({}%)...", translated_count, vis_strings.len().min(500), vis_pct), 50 + vis_pct * 35 / 100);
+            let originals: Vec<&str> = batch_indices.iter().map(|&i| vis_strings[i].text.as_str()).collect();
+            let mut results: Vec<Option<String>> = vec![None; originals.len()];
+
+            if use_ollama && !ollama_failed {
+                let numbered: String = originals.iter().enumerate().map(|(i, s)| format!("{}. {}", i+1, s)).collect::<Vec<_>>().join("\n");
+                let body = serde_json::json!({
+                    "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
+                    "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
+                    "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
+                });
+                match client.post("http://localhost:11434/api/generate").json(&body).send().await {
+                    Ok(resp) if resp.status().is_success() => {
+                        if let Ok(json) = resp.json::<serde_json::Value>().await {
+                            if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
+                                parse_numbered_translations(text, &mut results, originals.len());
+                            }
+                        }
+                    }
+                    _ => { ollama_failed = true; }
+                }
+            }
+            for (j, result) in results.iter_mut().enumerate() {
+                if result.is_none() {
+                    if let Some(t) = google_translate_single(&client, originals[j], target_lang).await {
+                        *result = Some(t);
+                    }
+                }
+            }
+            for (j, &idx) in batch_indices.iter().enumerate() {
+                if let Some(ref t) = results[j] {
+                    translations.insert(vis_strings[idx].index, t.clone());
+                    translated_count += 1;
+                }
+            }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 5, stage_name: "AI Translation (Visionaire)".into(),
+            status: if translated_count > 0 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: vec![format!("✅ Tradotte: {}/{}", translated_count, vis_strings.len())],
+            errors: vec![], success: translated_count > 0,
+        });
+
+        // Patch
+        emit_progress!("vis_patch", 6, format!("💉 Patch Visionaire — {} stringhe tradotte...", translated_count), 85);
+        let stage_start = std::time::Instant::now();
+        let mut patch_success = false;
+        let mut p_outputs = Vec::new();
+        if !translations.is_empty() {
+            match super::visionaire_patcher::patch_vis_strings(game_path_str.clone(), translations).await {
+                Ok(r) => {
+                    p_outputs.push(format!("✅ {}", r.get("message").and_then(|m| m.as_str()).unwrap_or("Patch applicata")));
+                    patch_success = true;
+                    deliverables.push(ExecutionDeliverable {
+                        deliverable_id: "del_vis_patch".into(),
+                        deliverable_name: format!("Visionaire Patch ({} strings)", translated_count),
+                        file_path: Some(game_path_str.clone()), size_mb: 0.0,
+                        status: ExecutionStatus::Completed, created_at: chrono::Utc::now().to_rfc3339(),
+                    });
+                }
+                Err(e) => { p_outputs.push(format!("❌ {}", e)); }
+            }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 6, stage_name: "Visionaire Patch".into(),
+            status: if patch_success { ExecutionStatus::Completed } else { ExecutionStatus::Skipped },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: p_outputs, errors: vec![], success: patch_success,
+        });
+
+        let elapsed_total = start.elapsed().as_secs_f64() / 60.0;
+        let success_count = stages_completed.iter().filter(|s| s.success).count();
+        let success_rate = success_count as f64 / stages_completed.len() as f64;
+        let mut next_steps = vec![];
+        if patch_success { next_steps.push("🎮 Avvia il gioco per testare la traduzione".into()); }
+        return Ok(WorkflowExecutionResult {
+            execution_id, game_title: prediction.game_title.clone(), engine: "Visionaire Studio".into(),
+            total_duration_minutes: elapsed_total, stages_completed,
+            final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            deliverables, errors, success_rate, next_steps,
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // UNREAL FAST PATH — use native unreal localization patcher
+    // ══════════════════════════════════════════════════════════════════════════
+    let is_unreal = engine_lower.contains("unreal")
+        || super::unreal_localization::find_paks_dir(game_path).is_some();
+
+    if is_unreal {
+        emit_progress!("ue_extract", 6, "📦 Estrazione .locres da Unreal Engine...", 30);
+        let stage_start = std::time::Instant::now();
+        let mut ue_outputs = Vec::new();
+
+        let extraction = super::unreal_localization::extract_unreal_localization(game_path_str.clone()).await;
+        match &extraction {
+            Ok(r) => {
+                ue_outputs.push(format!("📦 Unreal — {} stringhe da {}", r.entries.len(), r.locres_path));
+            }
+            Err(e) => { ue_outputs.push(format!("⚠️ Unreal extraction fallita: {}", e)); }
+        }
+        stages_completed.push(StageExecutionResult {
+            stage_id: 3, stage_name: "Unreal Localization Extraction".into(),
+            status: if extraction.is_ok() { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+            duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+            outputs: ue_outputs, errors: vec![], success: extraction.is_ok(),
+        });
+
+        if let Ok(ref ext_result) = extraction {
+            let entries = &ext_result.entries;
+            // Translate
+            emit_progress!("ue_translate", 6, format!("🤖 Traduzione AI — {} stringhe .locres...", entries.len()), 50);
+            let stage_start = std::time::Instant::now();
+            let target_lang = if target_lang_param.is_empty() { "it" } else { target_lang_param };
+            let lang_name = match target_lang {
+                "it" => "Italian", "en" => "English", "es" => "Spanish", "fr" => "French",
+                "de" => "German", "ja" => "Japanese", other => other,
+            };
+            let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().unwrap_or_default();
+            let ollama_model: Option<String> = detect_ollama_model(&client).await;
+            let use_ollama = ollama_model.is_some();
+            let mut translated_entries: Vec<super::unreal_localization::TranslatedEntry> = Vec::new();
+            let mut translated_count = 0u64;
+            let mut ollama_failed = false;
+
+            let max_entries = entries.len().min(500);
+            for batch_indices in (0..max_entries).collect::<Vec<_>>().chunks(10) {
+                let ue_pct = if max_entries == 0 { 0 } else { (translated_count as u32 * 100 / max_entries as u32) };
+                emit_progress!("ue_translate_batch", 6, format!("🤖 Unreal: {}/{} stringhe ({}%)...", translated_count, max_entries, ue_pct), 50 + ue_pct * 35 / 100);
+                let originals: Vec<&str> = batch_indices.iter().map(|&i| entries[i].value.as_str()).collect();
+                let mut results: Vec<Option<String>> = vec![None; originals.len()];
+
+                if use_ollama && !ollama_failed {
+                    let numbered: String = originals.iter().enumerate().map(|(i, s)| format!("{}. {}", i+1, s)).collect::<Vec<_>>().join("\n");
+                    let body = serde_json::json!({
+                        "model": ollama_model.as_deref().unwrap_or("qwen3:4b"),
+                        "prompt": format!("Translate each numbered line to {}. Keep the same numbering. Output ONLY the numbered translations:\n\n{}", lang_name, numbered),
+                        "stream": false, "options": { "temperature": 0.2, "num_predict": 2048 }
+                    });
+                    match client.post("http://localhost:11434/api/generate").json(&body).send().await {
+                        Ok(resp) if resp.status().is_success() => {
+                            if let Ok(json) = resp.json::<serde_json::Value>().await {
+                                if let Some(text) = json.get("response").and_then(|r| r.as_str()) {
+                                    parse_numbered_translations(text, &mut results, originals.len());
+                                }
+                            }
+                        }
+                        _ => { ollama_failed = true; }
+                    }
+                }
+                for (j, result) in results.iter_mut().enumerate() {
+                    if result.is_none() {
+                        if let Some(t) = google_translate_single(&client, originals[j], target_lang).await {
+                            *result = Some(t);
+                        }
+                    }
+                }
+                for (j, &idx) in batch_indices.iter().enumerate() {
+                    let translated_text = results[j].clone().unwrap_or_else(|| entries[idx].value.clone());
+                    if results[j].is_some() { translated_count += 1; }
+                    translated_entries.push(super::unreal_localization::TranslatedEntry {
+                        namespace: entries[idx].namespace.clone(),
+                        key: entries[idx].key.clone(),
+                        source_hash: entries[idx].source_hash,
+                        original: entries[idx].value.clone(),
+                        translated: translated_text,
+                    });
+                }
+            }
+            stages_completed.push(StageExecutionResult {
+                stage_id: 5, stage_name: "AI Translation (Unreal)".into(),
+                status: if translated_count > 0 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+                duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+                outputs: vec![format!("✅ Tradotte: {}/{}", translated_count, max_entries)],
+                errors: vec![], success: translated_count > 0,
+            });
+
+            // Apply — creates _P.pak
+            emit_progress!("ue_pak", 6, format!("📦 Creazione .pak tradotto — {} entries...", translated_count), 85);
+            let stage_start = std::time::Instant::now();
+            let mut patch_success = false;
+            let mut p_outputs = Vec::new();
+            if !translated_entries.is_empty() {
+                match super::unreal_localization::apply_unreal_translation(
+                    game_path_str.clone(), translated_entries, target_lang.to_string(),
+                ).await {
+                    Ok(r) => {
+                        p_outputs.push(format!("✅ {}", r.message));
+                        patch_success = r.success;
+                        deliverables.push(ExecutionDeliverable {
+                            deliverable_id: "del_ue_pak".into(),
+                            deliverable_name: format!("Unreal .pak ({} entries)", r.entries_count),
+                            file_path: Some(r.pak_path), size_mb: 0.0,
+                            status: ExecutionStatus::Completed, created_at: chrono::Utc::now().to_rfc3339(),
+                        });
+                    }
+                    Err(e) => { p_outputs.push(format!("❌ {}", e)); }
+                }
+            }
+            stages_completed.push(StageExecutionResult {
+                stage_id: 6, stage_name: "Unreal .pak Creation".into(),
+                status: if patch_success { ExecutionStatus::Completed } else { ExecutionStatus::Skipped },
+                duration_minutes: stage_start.elapsed().as_secs_f64() / 60.0,
+                outputs: p_outputs, errors: vec![], success: patch_success,
+            });
+
+            let elapsed_total = start.elapsed().as_secs_f64() / 60.0;
+            let success_count = stages_completed.iter().filter(|s| s.success).count();
+            let success_rate = success_count as f64 / stages_completed.len() as f64;
+            let mut next_steps = vec![];
+            if patch_success { next_steps.push("🎮 Avvia il gioco per testare la traduzione".into()); }
+            return Ok(WorkflowExecutionResult {
+                execution_id, game_title: prediction.game_title.clone(), engine: "Unreal Engine".into(),
+                total_duration_minutes: elapsed_total, stages_completed,
+                final_status: if success_rate >= 0.6 { ExecutionStatus::Completed } else { ExecutionStatus::Failed },
+                deliverables, errors, success_rate, next_steps,
+            });
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
     // STAGE 3: FILE SCANNING — Deep scan for all translatable content (generic path)
     // ══════════════════════════════════════════════════════════════════════════
+    emit_progress!("generic_scan", 6, "🔍 Scansione profonda file traducibili...", 30);
     let stage_start = std::time::Instant::now();
     let mut stage3_outputs = Vec::new();
     let mut translatable_files: Vec<PathBuf> = Vec::new();
@@ -6931,6 +7556,7 @@ async fn execute_workflow_from_prediction(
     // ══════════════════════════════════════════════════════════════════════════
     // STAGE 4: STRING EXTRACTION — Extract translatable strings from files
     // ══════════════════════════════════════════════════════════════════════════
+    emit_progress!("generic_extract", 6, format!("📝 Estrazione stringhe da {} file...", translatable_files.len()), 40);
     let stage_start = std::time::Instant::now();
     let mut stage4_outputs = Vec::new();
     let mut extracted_strings: Vec<(PathBuf, Vec<String>)> = Vec::new();
@@ -7090,6 +7716,9 @@ async fn execute_workflow_from_prediction(
                 if batch_num % 5 == 0 || batch_num == 1 {
                     stage5_outputs.push(format!("⏳ Progresso: {}/{} stringhe ({}%) — Batch {}/{}", translated_count, total_strings, progress_pct, batch_num, (strings_to_translate.len() + batch_size - 1) / batch_size));
                 }
+                // Real-time batch progress for generic path
+                let gen_translate_pct = 50 + (progress_pct * 35 / 100);
+                emit_progress!("generic_translate_batch", 6, format!("🤖 Traduzione {}/{} stringhe ({}%) — file {}/{}...", translated_count, total_strings, progress_pct, file_idx + 1, extracted_strings.len().min(max_files_to_translate)), gen_translate_pct);
                 let originals: Vec<&str> = batch.iter().map(|s| s.as_str()).collect();
                 let mut batch_results: Vec<Option<String>> = vec![None; originals.len()];
                 
@@ -7247,6 +7876,7 @@ async fn execute_workflow_from_prediction(
     // ══════════════════════════════════════════════════════════════════════════
     // STAGE 6: INJECTION — Apply translations back to game files
     // ══════════════════════════════════════════════════════════════════════════
+    emit_progress!("generic_inject", 6, format!("💉 Iniezione traduzioni — {} stringhe...", translated_count), 85);
     let stage_start = std::time::Instant::now();
     let mut stage6_outputs = Vec::new();
     let mut injected_count = 0u32;
@@ -7328,6 +7958,7 @@ async fn execute_workflow_from_prediction(
     // ══════════════════════════════════════════════════════════════════════════
     // STAGE 7: VALIDATION — Verify translations were applied correctly
     // ══════════════════════════════════════════════════════════════════════════
+    emit_progress!("generic_validate", 7, "✅ Validazione e QA finale...", 92);
     let stage_start = std::time::Instant::now();
     let mut stage7_outputs = Vec::new();
     let mut validation_passed = true;
@@ -7508,12 +8139,14 @@ async fn execute_workflow_from_prediction(
 
 #[tauri::command]
 pub async fn execute_complete_workflow(
+    app: tauri::AppHandle,
     install_path: String,
     game_title: String,
     engine: Option<String>,
     source_lang: String,
     target_lang: String,
 ) -> Result<WorkflowExecutionResult, String> {
+    use tauri::Emitter;
     let game_path = PathBuf::from(&install_path);
     if !game_path.exists() {
         return Err(format!("Path non trovato: {}", install_path));
@@ -7522,6 +8155,9 @@ pub async fn execute_complete_workflow(
     info!("🚀 Starting complete workflow for: {} at {}", game_title, install_path);
 
     // Step 1: Run complete analysis
+    let _ = app.emit("workflow-progress", serde_json::json!({
+        "stage": "analysis", "step": 0, "message": "Analisi predittiva avanzata...", "progress": 5
+    }));
     let prediction_result = analyze_game_translation(
         install_path.clone(),
         game_title.clone(),
@@ -7529,9 +8165,12 @@ pub async fn execute_complete_workflow(
         source_lang.clone(),
         target_lang.clone(),
     ).await?;
+    let _ = app.emit("workflow-progress", serde_json::json!({
+        "stage": "analysis_done", "step": 0, "message": format!("Engine: {}", prediction_result.engine), "progress": 15
+    }));
 
     // Step 2: Execute workflow based on prediction
-    let execution_result = execute_workflow_from_prediction(&game_path, &prediction_result, &target_lang).await?;
+    let execution_result = execute_workflow_from_prediction(&app, &game_path, &prediction_result, &target_lang).await?;
 
     info!("🎉 Complete workflow finished for: {}", game_title);
     Ok(execution_result)
@@ -8251,4 +8890,58 @@ fn estimate_translation_costs(selected_tools: &SelectedTools) -> f64 {
         .unwrap_or(50.0);
     
     base_cost + tool_cost
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Shared helpers for engine fast paths
+// ══════════════════════════════════════════════════════════════════════════════
+
+/// Detect the best available Ollama model
+async fn detect_ollama_model(client: &reqwest::Client) -> Option<String> {
+    let resp = client.get("http://localhost:11434/api/tags")
+        .timeout(std::time::Duration::from_secs(3))
+        .send().await.ok()?;
+    let json: serde_json::Value = resp.json().await.ok()?;
+    let models: Vec<String> = json.get("models")
+        .and_then(|m| m.as_array())
+        .map(|arr| arr.iter()
+            .filter_map(|m| m.get("name").and_then(|n| n.as_str()).map(|s| s.to_string()))
+            .collect())
+        .unwrap_or_default();
+    let preferred = ["qwen3:", "mistral", "glm4", "lfm2"];
+    for prefix in &preferred {
+        if let Some(m) = models.iter().find(|m| m.starts_with(prefix)) {
+            return Some(m.clone());
+        }
+    }
+    models.iter().find(|m| !m.contains("llava")).cloned()
+}
+
+/// Parse numbered translation responses (e.g. "1. testo\n2. testo")
+fn parse_numbered_translations(text: &str, results: &mut [Option<String>], max_items: usize) {
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if let Some(dot_pos) = trimmed.find(|c: char| c == '.' || c == ')' || c == ':') {
+            if let Ok(num) = trimmed[..dot_pos].trim().parse::<usize>() {
+                let t = trimmed[dot_pos + 1..].trim();
+                if num >= 1 && num <= max_items && !t.is_empty() {
+                    results[num - 1] = Some(t.to_string());
+                }
+            }
+        }
+    }
+}
+
+/// Single-string Google Translate fallback (free gtx endpoint)
+async fn google_translate_single(client: &reqwest::Client, text: &str, target_lang: &str) -> Option<String> {
+    let encoded = urlencoding::encode(text);
+    let url = format!(
+        "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl={}&dt=t&q={}",
+        target_lang, encoded
+    );
+    let resp = client.get(&url).timeout(std::time::Duration::from_secs(10)).send().await.ok()?;
+    let json: serde_json::Value = resp.json().await.ok()?;
+    let result = json.get(0)?.get(0)?.get(0)?.as_str()?.to_string();
+    tokio::time::sleep(std::time::Duration::from_millis(60)).await;
+    Some(result)
 }
