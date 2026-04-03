@@ -8945,3 +8945,233 @@ async fn google_translate_single(client: &reqwest::Client, text: &str, target_la
     tokio::time::sleep(std::time::Duration::from_millis(60)).await;
     Some(result)
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DRY RUN — Scansione batch di tutti i giochi installati (detect + extract, NO traduzione)
+// ══════════════════════════════════════════════════════════════════════════════
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DryRunGameResult {
+    pub title: String,
+    pub install_path: String,
+    pub engine_detected: String,
+    pub fast_path: String,             // "tyranoscript", "gamemaker", "rpgmaker", "visionaire", "unreal", "generic", "unsupported"
+    pub strings_found: u64,
+    pub files_found: u32,
+    pub ready_to_translate: bool,
+    pub error: Option<String>,
+    pub scan_duration_ms: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DryRunReport {
+    pub total_games: u32,
+    pub scanned: u32,
+    pub ready: u32,
+    pub unsupported: u32,
+    pub errors: u32,
+    pub by_engine: HashMap<String, u32>,
+    pub games: Vec<DryRunGameResult>,
+    pub duration_seconds: f64,
+}
+
+#[tauri::command]
+pub async fn dry_run_scan_all_games(app: tauri::AppHandle) -> Result<DryRunReport, String> {
+    use tauri::Emitter;
+    info!("🔍 DRY RUN — Scansione batch di tutti i giochi installati...");
+
+    // Carica giochi installati
+    let all_games = super::steam_enhanced::scan_all_steam_games_fast().await
+        .unwrap_or_default();
+    let installed: Vec<_> = all_games.iter()
+        .filter(|g| g.is_installed && g.install_path.is_some())
+        .collect();
+
+    let total = installed.len() as u32;
+    info!("📊 Trovati {} giochi installati da scansionare", total);
+    let _ = app.emit("dryrun-progress", serde_json::json!({
+        "current": 0, "total": total, "message": format!("Avvio scansione {} giochi...", total)
+    }));
+
+    let start = std::time::Instant::now();
+    let mut results: Vec<DryRunGameResult> = Vec::new();
+    let mut by_engine: HashMap<String, u32> = HashMap::new();
+    let mut ready_count = 0u32;
+    let mut error_count = 0u32;
+    let mut unsupported_count = 0u32;
+
+    for (idx, game) in installed.iter().enumerate() {
+        let game_start = std::time::Instant::now();
+        let path_str = game.install_path.as_deref().unwrap_or("");
+        let game_path = PathBuf::from(path_str);
+        let title = game.title.clone();
+        let engine_hint = game.engine.as_deref().unwrap_or("").to_lowercase();
+
+        let _ = app.emit("dryrun-progress", serde_json::json!({
+            "current": idx + 1, "total": total,
+            "message": format!("[{}/{}] {} ...", idx + 1, total, title),
+            "game": title
+        }));
+
+        if !game_path.exists() {
+            results.push(DryRunGameResult {
+                title, install_path: path_str.to_string(),
+                engine_detected: "N/A".into(), fast_path: "unsupported".into(),
+                strings_found: 0, files_found: 0, ready_to_translate: false,
+                error: Some("Path non esiste".into()), scan_duration_ms: 0,
+            });
+            error_count += 1;
+            continue;
+        }
+
+        // ── Detect engine & try extract ──
+        let mut engine_detected = engine_hint.clone();
+        let mut fast_path = "generic".to_string();
+        let mut strings_found = 0u64;
+        let mut files_found = 0u32;
+        let mut ready = false;
+        let mut error_msg: Option<String> = None;
+
+        // TyranoScript / Electron / NW.js
+        let asar_path = game_path.join("resources").join("app.asar");
+        let is_tyrano = asar_path.exists() || game_path.join("resources").join("app").exists();
+        // GameMaker
+        let is_gm = game_path.join("data.win").exists() || game_path.join("game.ios").exists();
+        // RPG Maker
+        let is_rpg = game_path.join("www").join("data").exists()
+            || game_path.join("data").join("System.json").exists();
+        // Visionaire
+        let is_vis = walkdir::WalkDir::new(&game_path).max_depth(2).into_iter()
+            .filter_map(|e| e.ok())
+            .any(|e| e.path().extension().map(|x| x == "vis").unwrap_or(false));
+        // Unreal
+        let is_ue = engine_hint.contains("unreal")
+            || super::unreal_localization::find_paks_dir(&game_path).is_some();
+
+        if is_tyrano {
+            fast_path = "tyranoscript".into();
+            engine_detected = "TyranoScript".into();
+            match super::tyranoscript_patcher::detect_tyrano_game(path_str.to_string()) {
+                Ok(info) => {
+                    files_found = info.script_files.len() as u32;
+                    strings_found = info.total_strings as u64;
+                    ready = strings_found > 0;
+                }
+                Err(e) => { error_msg = Some(e); }
+            }
+        } else if is_gm {
+            fast_path = "gamemaker".into();
+            engine_detected = "GameMaker".into();
+            match super::gamemaker_patcher::gm_scan_data_win(path_str.to_string()).await {
+                Ok(info) => {
+                    strings_found = info.translatable_strings as u64;
+                    files_found = if info.has_language_files { info.language_file_count as u32 } else { 1 };
+                    ready = strings_found > 0;
+                }
+                Err(e) => { error_msg = Some(e); }
+            }
+        } else if is_rpg {
+            fast_path = "rpgmaker".into();
+            engine_detected = "RPG Maker".into();
+            match super::rpgmaker_patcher::detect_rpgmaker_game(path_str.to_string()) {
+                Ok(info) => {
+                    files_found = info.data_files.len() as u32;
+                    match super::rpgmaker_patcher::extract_all_rpgmaker_strings(path_str.to_string()) {
+                        Ok(ext) => { strings_found = ext.total_count as u64; ready = strings_found > 0; }
+                        Err(e) => { error_msg = Some(e); }
+                    }
+                }
+                Err(e) => { error_msg = Some(e); }
+            }
+        } else if is_vis {
+            fast_path = "visionaire".into();
+            engine_detected = "Visionaire".into();
+            match super::visionaire_patcher::scan_vis_strings(path_str.to_string()).await {
+                Ok(info) => {
+                    strings_found = info.total_strings as u64;
+                    files_found = 1;
+                    ready = strings_found > 0;
+                }
+                Err(e) => { error_msg = Some(e); }
+            }
+        } else if is_ue {
+            fast_path = "unreal".into();
+            engine_detected = "Unreal Engine".into();
+            match super::unreal_localization::extract_unreal_localization(path_str.to_string()).await {
+                Ok(r) => {
+                    strings_found = r.entries.len() as u64;
+                    files_found = 1;
+                    ready = strings_found > 0;
+                }
+                Err(e) => { error_msg = Some(e); }
+            }
+        } else {
+            // Generic: count translatable text files
+            if engine_detected.is_empty() {
+                engine_detected = game.engine.clone().unwrap_or_else(|| "Unknown".into());
+            }
+            let text_exts = ["json", "csv", "txt", "xml", "po", "yaml", "yml", "ini", "cfg",
+                             "lang", "loc", "strings", "properties", "rpy", "ks", "tres", "tscn"];
+            let mut txt_count = 0u32;
+            for entry in walkdir::WalkDir::new(&game_path).max_depth(4).into_iter().filter_map(|e| e.ok()) {
+                if entry.file_type().is_file() {
+                    if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
+                        if text_exts.contains(&ext.to_lowercase().as_str()) {
+                            txt_count += 1;
+                        }
+                    }
+                }
+            }
+            files_found = txt_count;
+            if txt_count > 0 { ready = true; }
+            else {
+                fast_path = "unsupported".into();
+                unsupported_count += 1;
+            }
+        }
+
+        if error_msg.is_some() { error_count += 1; }
+        if ready { ready_count += 1; }
+
+        *by_engine.entry(fast_path.clone()).or_insert(0) += 1;
+
+        let scan_ms = game_start.elapsed().as_millis() as u64;
+        results.push(DryRunGameResult {
+            title, install_path: path_str.to_string(),
+            engine_detected, fast_path,
+            strings_found, files_found,
+            ready_to_translate: ready,
+            error: error_msg, scan_duration_ms: scan_ms,
+        });
+    }
+
+    let duration = start.elapsed().as_secs_f64();
+    let scanned = results.len() as u32;
+
+    info!("✅ DRY RUN completato: {}/{} pronti, {} errori, {} non supportati in {:.1}s",
+          ready_count, scanned, error_count, unsupported_count, duration);
+
+    // Emit final
+    let _ = app.emit("dryrun-progress", serde_json::json!({
+        "current": scanned, "total": total, "done": true,
+        "message": format!("✅ Completato: {}/{} pronti, {} errori", ready_count, scanned, error_count)
+    }));
+
+    // Salva report su disco
+    let report = DryRunReport {
+        total_games: total, scanned, ready: ready_count,
+        unsupported: unsupported_count, errors: error_count,
+        by_engine: by_engine.clone(), games: results.clone(),
+        duration_seconds: duration,
+    };
+    if let Some(data_dir) = dirs::data_local_dir() {
+        let report_path = data_dir.join("GameStringer").join("dryrun_report.json");
+        if let Some(p) = report_path.parent() { let _ = std::fs::create_dir_all(p); }
+        if let Ok(json) = serde_json::to_string_pretty(&report) {
+            let _ = std::fs::write(&report_path, &json);
+            info!("📄 Report salvato: {}", report_path.display());
+        }
+    }
+
+    Ok(report)
+}
