@@ -85,7 +85,24 @@ export default function OllamaManagerPage() {
     setLoading(false);
   }, [compareModelA]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  // Refresh al mount + ogni volta che la pagina torna visibile (tab switch, navigazione)
+  useEffect(() => {
+    refresh();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refresh();
+      }
+    };
+    const onFocus = () => { refresh(); };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [refresh]);
 
   const installedNames = installed.map(m => m.name.split(':')[0]);
 
@@ -100,7 +117,7 @@ export default function OllamaManagerPage() {
       setPullProgress({ status: 'Completato!', percent: 100 });
       await refresh();
     } catch (err: unknown) {
-      setPullProgress({ status: `Errore: ${err.message}`, percent: 0 });
+      setPullProgress({ status: `Errore: ${err instanceof Error ? err.message : String(err)}`, percent: 0 });
     }
     setTimeout(() => setPulling(null), 1500);
   };

@@ -106,7 +106,44 @@ export const RECOMMENDED_MODELS: RecommendedModel[] = [
     vramGb: 2,
     recommended: true,
   },
-  // ─── MoE ULTRA-VELOCI (Marzo 2026) ────────────────────────────
+  // ─── GEMMA 4 (Aprile 2026) ────────────────────────────────────
+  {
+    name: 'Gemma 4 27B MoE (A4B)',
+    pullName: 'gemma4:27b',
+    description: '🆕 NUOVO — Google DeepMind, 27B totali ma attiva solo 4B. Qualità da 27B, velocità da 4B! 256K context, 35+ lingue, reasoning.',
+    sizeGb: '~16',
+    category: 'multilingual' as const,
+    languages: '35+ lingue (pre-trained 140+)',
+    speed: 'fast' as const,
+    quality: 5 as const,
+    vramGb: 18,
+    recommended: true,
+  },
+  {
+    name: 'Gemma 4 E4B',
+    pullName: 'gemma4:e4b',
+    description: '🆕 NUOVO — Google, edge-optimized. 128K context, multimodale, gira su GPU consumer.',
+    sizeGb: '~3',
+    category: 'multilingual' as const,
+    languages: '35+ lingue',
+    speed: 'fast' as const,
+    quality: 4 as const,
+    vramGb: 4,
+    recommended: true,
+  },
+  {
+    name: 'Gemma 4 E2B',
+    pullName: 'gemma4:e2b',
+    description: '🆕 NUOVO — Google, ultra-leggero. ASR + traduzione audio. Gira su Raspberry Pi!',
+    sizeGb: '~1.5',
+    category: 'multilingual' as const,
+    languages: '35+ lingue + audio',
+    speed: 'fast' as const,
+    quality: 3 as const,
+    vramGb: 2,
+    recommended: false,
+  },
+  // ─── MoE ULTRA-VELOCI ───────────────────────────────────────
   {
     name: 'Qwen 3.5 35B-A3B (MoE)',
     pullName: 'qwen3.5:35b-a3b',
@@ -311,7 +348,8 @@ export async function listInstalledModels(): Promise<OllamaModel[]> {
   const res = await fetch(`${OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new Error('Ollama non raggiungibile');
   const data = await res.json();
-  return (data.models || []).map((m: unknown) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data.models || []).map((m: any) => ({
     name: m.name,
     size: m.size || 0,
     digest: m.digest || '',
