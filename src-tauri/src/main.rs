@@ -800,6 +800,7 @@ fn main() {
             commands::prediction_tool::analyze_all_installed_games,
             commands::prediction_tool::export_prediction_report,
             commands::prediction_tool::execute_complete_workflow,
+            commands::prediction_tool::dry_run_scan_all_games,
             // Global Hotkeys System
             commands::global_hotkeys::init_global_hotkeys,
             commands::global_hotkeys::register_global_hotkey,
