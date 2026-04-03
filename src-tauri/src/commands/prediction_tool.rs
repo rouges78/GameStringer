@@ -1412,7 +1412,7 @@ fn analyze_text_content(game_path: &Path) -> TextStats {
     let mut loc_folders: HashSet<String> = HashSet::new();
 
     let walker = walkdir::WalkDir::new(game_path)
-        .max_depth(6)
+        .max_depth(10)
         .follow_links(false)
         .into_iter()
         .filter_map(|e| e.ok());
@@ -1459,11 +1459,52 @@ fn analyze_text_content(game_path: &Path) -> TextStats {
     largest_files.sort_by(|a, b| b.size_kb.cmp(&a.size_kb));
     largest_files.truncate(10);
 
-    // Estimate strings/words from total text size
-    // Average: ~50 bytes per string, ~6 chars per word
-    let est_strings = total_size / 50;
-    let est_words = total_size / 6;
-    let est_chars = total_size;
+    // ── Stima stringhe accurata con parsing reale ──
+    // Scansiona un campione di file traducibili e conta le stringhe effettive
+    // per tipo di formato, poi estrapola per il totale
+    let mut parsed_strings = 0u64;
+    let mut parsed_words = 0u64;
+    let mut parsed_chars = 0u64;
+    let mut parsed_bytes = 0u64;
+
+    let sample_walker = walkdir::WalkDir::new(game_path)
+        .max_depth(10)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok());
+
+    let mut sample_count = 0u32;
+    for entry in sample_walker {
+        if !entry.file_type().is_file() { continue; }
+        let name_lower = entry.file_name().to_string_lossy().to_lowercase();
+        if !is_translatable_ext(&name_lower) { continue; }
+        let fsize = entry.metadata().map(|m| m.len()).unwrap_or(0);
+        if fsize < 50 || fsize > 10_000_000 { continue; }
+        // Limita campione a 100 file per performance
+        if sample_count >= 100 { break; }
+
+        if let Ok(content) = fs::read_to_string(entry.path()) {
+            sample_count += 1;
+            parsed_bytes += fsize;
+            let (s, w, c) = count_strings_by_format(&name_lower, &content);
+            parsed_strings += s;
+            parsed_words += w;
+            parsed_chars += c;
+        }
+    }
+
+    // Se abbiamo parsed file, usa il ratio reale; altrimenti fallback a euristica
+    let (est_strings, est_words, est_chars) = if parsed_bytes > 0 && parsed_strings > 0 {
+        // Estrapola dal campione al totale
+        let ratio = total_size as f64 / parsed_bytes as f64;
+        let est_s = (parsed_strings as f64 * ratio) as u64;
+        let est_w = (parsed_words as f64 * ratio) as u64;
+        let est_c = (parsed_chars as f64 * ratio) as u64;
+        (est_s.max(1), est_w.max(1), est_c.max(1))
+    } else {
+        // Fallback: euristica basata su bytes
+        (total_size / 50, total_size / 6, total_size)
+    };
 
     TextStats {
         total_text_files: total_files,
@@ -1476,13 +1517,195 @@ fn analyze_text_content(game_path: &Path) -> TextStats {
     }
 }
 
+/// Conta stringhe, parole e caratteri in un file in base al formato.
+/// Ritorna (strings, words, chars).
+fn count_strings_by_format(filename: &str, content: &str) -> (u64, u64, u64) {
+    if filename.ends_with(".json") {
+        count_json_strings(content)
+    } else if filename.ends_with(".csv") {
+        count_csv_strings(content)
+    } else if filename.ends_with(".po") || filename.ends_with(".pot") {
+        count_po_strings(content)
+    } else if filename.ends_with(".ini") || filename.ends_with(".cfg") || filename.ends_with(".properties") {
+        count_ini_strings(content)
+    } else if filename.ends_with(".xml") {
+        count_xml_strings(content)
+    } else if filename.ends_with(".rpy") {
+        count_renpy_strings(content)
+    } else {
+        count_plaintext_strings(content)
+    }
+}
+
+/// JSON: conta i valori stringa (non le chiavi)
+fn count_json_strings(content: &str) -> (u64, u64, u64) {
+    // Parsing leggero: cerca pattern "key": "value"
+    let mut strings = 0u64;
+    let mut total_chars = 0u64;
+    let re = regex::Regex::new(r#""[^"]*"\s*:\s*"([^"\\]*(\\.[^"\\]*)*)""#).unwrap_or_else(|_| regex::Regex::new("$^").unwrap());
+    for cap in re.captures_iter(content) {
+        if let Some(val) = cap.get(1) {
+            let v = val.as_str();
+            // Ignora valori che sembrano path, numeri, o codice
+            if v.len() >= 2 && !v.starts_with('/') && !v.starts_with("http")
+                && !v.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-') {
+                strings += 1;
+                total_chars += v.len() as u64;
+            }
+        }
+    }
+    let words = total_chars / 5; // media ~5 chars per parola
+    (strings, words.max(1), total_chars)
+}
+
+/// CSV: conta le celle non-header con testo
+fn count_csv_strings(content: &str) -> (u64, u64, u64) {
+    let mut strings = 0u64;
+    let mut total_chars = 0u64;
+    let lines: Vec<&str> = content.lines().collect();
+    // Skip header (prima riga)
+    for line in lines.iter().skip(1) {
+        let trimmed = line.trim();
+        if trimmed.is_empty() { continue; }
+        // Ogni cella con testo conta come stringa
+        for cell in trimmed.split(',') {
+            let cell = cell.trim().trim_matches('"').trim();
+            if cell.len() >= 3 && !cell.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-') {
+                strings += 1;
+                total_chars += cell.len() as u64;
+            }
+        }
+    }
+    let words = total_chars / 5;
+    (strings, words.max(1), total_chars)
+}
+
+/// PO/POT: conta msgstr non vuoti
+fn count_po_strings(content: &str) -> (u64, u64, u64) {
+    let mut strings = 0u64;
+    let mut total_chars = 0u64;
+    let mut in_msgstr = false;
+
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("msgid ") {
+            in_msgstr = false;
+        } else if trimmed.starts_with("msgstr ") {
+            in_msgstr = true;
+            let val = trimmed.trim_start_matches("msgstr ").trim_matches('"');
+            if !val.is_empty() {
+                strings += 1;
+                total_chars += val.len() as u64;
+            }
+        } else if in_msgstr && trimmed.starts_with('"') && trimmed.ends_with('"') {
+            // Continuazione multilinea
+            let val = trimmed.trim_matches('"');
+            total_chars += val.len() as u64;
+        }
+    }
+    // Se nessun msgstr trovato, conta msgid (file template .pot)
+    if strings == 0 {
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("msgid ") {
+                let val = trimmed.trim_start_matches("msgid ").trim_matches('"');
+                if !val.is_empty() && val != "" {
+                    strings += 1;
+                    total_chars += val.len() as u64;
+                }
+            }
+        }
+    }
+    let words = total_chars / 5;
+    (strings, words.max(1), total_chars)
+}
+
+/// INI/CFG/Properties: conta valori in coppie chiave=valore
+fn count_ini_strings(content: &str) -> (u64, u64, u64) {
+    let mut strings = 0u64;
+    let mut total_chars = 0u64;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with(';') || trimmed.starts_with('[') {
+            continue;
+        }
+        if let Some(idx) = trimmed.find('=') {
+            let val = trimmed[idx + 1..].trim().trim_matches('"');
+            if val.len() >= 2 && !val.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-')
+                && !val.starts_with("true") && !val.starts_with("false") {
+                strings += 1;
+                total_chars += val.len() as u64;
+            }
+        }
+    }
+    let words = total_chars / 5;
+    (strings, words.max(1), total_chars)
+}
+
+/// XML: conta contenuto testuale tra tag
+fn count_xml_strings(content: &str) -> (u64, u64, u64) {
+    let mut strings = 0u64;
+    let mut total_chars = 0u64;
+    let re = regex::Regex::new(r">([^<]{3,})<").unwrap_or_else(|_| regex::Regex::new("$^").unwrap());
+    for cap in re.captures_iter(content) {
+        if let Some(val) = cap.get(1) {
+            let v = val.as_str().trim();
+            if v.len() >= 3 && !v.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-' || c.is_whitespace()) {
+                strings += 1;
+                total_chars += v.len() as u64;
+            }
+        }
+    }
+    let words = total_chars / 5;
+    (strings, words.max(1), total_chars)
+}
+
+/// Ren'Py: conta stringhe tra virgolette nei dialoghi
+fn count_renpy_strings(content: &str) -> (u64, u64, u64) {
+    let mut strings = 0u64;
+    let mut total_chars = 0u64;
+    let re = regex::Regex::new(r#""([^"\\]{3,}(\\.[^"\\]*)*)""#).unwrap_or_else(|_| regex::Regex::new("$^").unwrap());
+    for cap in re.captures_iter(content) {
+        if let Some(val) = cap.get(1) {
+            let v = val.as_str();
+            // Ignora stringhe che sembrano path o codice
+            if !v.starts_with('/') && !v.starts_with("http") && !v.contains("def ")
+                && !v.contains("import ") && v.contains(' ') {
+                strings += 1;
+                total_chars += v.len() as u64;
+            }
+        }
+    }
+    let words = total_chars / 5;
+    (strings, words.max(1), total_chars)
+}
+
+/// Testo piano (TXT, LUA, etc.): conta righe non-vuote non-commento
+fn count_plaintext_strings(content: &str) -> (u64, u64, u64) {
+    let mut strings = 0u64;
+    let mut total_chars = 0u64;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') || trimmed.starts_with("//")
+            || trimmed.starts_with("--") || trimmed.starts_with("/*") {
+            continue;
+        }
+        if trimmed.len() >= 3 {
+            strings += 1;
+            total_chars += trimmed.len() as u64;
+        }
+    }
+    let words = total_chars / 5;
+    (strings, words.max(1), total_chars)
+}
+
 // ── File Formats ─────────────────────────────────────────────────────
 
 fn analyze_file_formats(game_path: &Path) -> Vec<FileFormatInfo> {
     let mut ext_map: HashMap<String, (u32, u64)> = HashMap::new();
 
     let walker = walkdir::WalkDir::new(game_path)
-        .max_depth(5)
+        .max_depth(8)
         .follow_links(false)
         .into_iter()
         .filter_map(|e| e.ok());
@@ -1538,8 +1761,10 @@ fn calculate_difficulty(
         "Unity" => { score += 15; }
         "Ren'Py" => { score += 10; }
         "RPG Maker" => { score += 10; }
-        "GameMaker" => { score += 25; }
-        "Godot" => { score += 20; }
+        "GameMaker" => { score += 20; }
+        "Godot" => { score += 18; }
+        "Wolf RPG Editor" => { score += 12; }
+        "Spike Chunsoft Engine" => { score += 15; }
         "Unreal Engine" => {
             score += 40;
             warnings.push("Unreal usa file .pak — estrazione complessa, possibili asset criptati".into());
@@ -1549,7 +1774,7 @@ fn calculate_difficulty(
             warnings.push("Source Engine: file VPK/VTF, richiede tool specifici".into());
         }
         "Frostbite" => {
-            score += 50;
+            score += 55;
             warnings.push("Frostbite (EA): file criptati/compressi, traduzione molto difficile".into());
         }
         "RE Engine" | "MT Framework" => {
@@ -1557,12 +1782,40 @@ fn calculate_difficulty(
             warnings.push("Engine Capcom: file proprietari, possibili protezioni".into());
         }
         "RAGE Engine" => {
-            score += 50;
+            score += 55;
             warnings.push("RAGE (Rockstar): file criptati, estrazione non supportata".into());
         }
         "FromSoftware Engine" => {
             score += 45;
             warnings.push("FromSoft: file .bnd/.dcx compressi, tool specifici necessari".into());
+        }
+        "CryEngine" | "CRYENGINE" => {
+            score += 42;
+            warnings.push("CryEngine: file .pak proprietari, tool esterni necessari".into());
+        }
+        "id Tech" | "id Tech 7" => {
+            score += 48;
+            warnings.push("id Tech: formato binario proprietario id Software".into());
+        }
+        "Creation Engine" | "Gamebryo" => {
+            score += 38;
+            warnings.push("Creation Engine: BSA/BA2 con tool esterni, stringhe in plugin ESP/ESM".into());
+        }
+        "Telltale Tool" => {
+            score += 40;
+            warnings.push("Telltale: formato proprietario, richiede tool specifici".into());
+        }
+        "Anvil" | "Anvil Engine" => {
+            score += 50;
+            warnings.push("Anvil (Ubisoft): formato proprietario, estrazione molto complessa".into());
+        }
+        "Decima" => {
+            score += 48;
+            warnings.push("Decima: formato proprietario Guerrilla/Kojima Productions".into());
+        }
+        "Luminous" | "Luminous Engine" => {
+            score += 50;
+            warnings.push("Luminous (Square Enix): formato proprietario, file compressi".into());
         }
         "Unknown" => {
             score += 35;
@@ -1683,12 +1936,37 @@ fn calculate_difficulty(
 fn estimate_times(estimated_strings: u64) -> Vec<TimeEstimate> {
     let s = estimated_strings as f64;
     vec![
+        // ── Modelli Locali (Ollama) ──
+        TimeEstimate {
+            model_name: "TranslateGemma:12b".into(),
+            model_size: "~8 GB".into(),
+            speed_strings_per_min: 18.0,
+            estimated_hours: s / 18.0 / 60.0,
+            quality_score: 88,
+            provider: "Ollama (locale)".into(),
+        },
+        TimeEstimate {
+            model_name: "TranslateGemma:4b".into(),
+            model_size: "~3 GB".into(),
+            speed_strings_per_min: 40.0,
+            estimated_hours: s / 40.0 / 60.0,
+            quality_score: 78,
+            provider: "Ollama (locale)".into(),
+        },
         TimeEstimate {
             model_name: "hy-mt1.5-abliterated:7b".into(),
             model_size: "4.6 GB".into(),
             speed_strings_per_min: 20.0,
             estimated_hours: s / 20.0 / 60.0,
-            quality_score: 80,
+            quality_score: 83,
+            provider: "Ollama (locale)".into(),
+        },
+        TimeEstimate {
+            model_name: "hy-mt1.5:1.8b".into(),
+            model_size: "1.1 GB".into(),
+            speed_strings_per_min: 55.0,
+            estimated_hours: s / 55.0 / 60.0,
+            quality_score: 68,
             provider: "Ollama (locale)".into(),
         },
         TimeEstimate {
@@ -1715,12 +1993,13 @@ fn estimate_times(estimated_strings: u64) -> Vec<TimeEstimate> {
             quality_score: 95,
             provider: "Ollama (locale)".into(),
         },
+        // ── Modelli Cloud ──
         TimeEstimate {
             model_name: "GPT-4o".into(),
             model_size: "Cloud".into(),
             speed_strings_per_min: 60.0,
             estimated_hours: s / 60.0 / 60.0,
-            quality_score: 92,
+            quality_score: 93,
             provider: "OpenAI".into(),
         },
         TimeEstimate {
@@ -1728,24 +2007,80 @@ fn estimate_times(estimated_strings: u64) -> Vec<TimeEstimate> {
             model_size: "Cloud".into(),
             speed_strings_per_min: 120.0,
             estimated_hours: s / 120.0 / 60.0,
-            quality_score: 78,
+            quality_score: 80,
             provider: "OpenAI".into(),
         },
         TimeEstimate {
-            model_name: "DeepL Pro".into(),
+            model_name: "Claude 3.5 Sonnet".into(),
             model_size: "Cloud".into(),
-            speed_strings_per_min: 200.0,
-            estimated_hours: s / 200.0 / 60.0,
-            quality_score: 85,
-            provider: "DeepL".into(),
+            speed_strings_per_min: 50.0,
+            estimated_hours: s / 50.0 / 60.0,
+            quality_score: 94,
+            provider: "Anthropic".into(),
+        },
+        TimeEstimate {
+            model_name: "Claude 3 Haiku".into(),
+            model_size: "Cloud".into(),
+            speed_strings_per_min: 150.0,
+            estimated_hours: s / 150.0 / 60.0,
+            quality_score: 80,
+            provider: "Anthropic".into(),
         },
         TimeEstimate {
             model_name: "Gemini 2.0 Flash".into(),
             model_size: "Cloud".into(),
             speed_strings_per_min: 100.0,
             estimated_hours: s / 100.0 / 60.0,
-            quality_score: 82,
+            quality_score: 84,
             provider: "Google".into(),
+        },
+        TimeEstimate {
+            model_name: "Gemini 1.5 Pro".into(),
+            model_size: "Cloud".into(),
+            speed_strings_per_min: 45.0,
+            estimated_hours: s / 45.0 / 60.0,
+            quality_score: 91,
+            provider: "Google".into(),
+        },
+        TimeEstimate {
+            model_name: "Llama 3.3 70B (Groq)".into(),
+            model_size: "Cloud".into(),
+            speed_strings_per_min: 180.0,
+            estimated_hours: s / 180.0 / 60.0,
+            quality_score: 85,
+            provider: "Groq".into(),
+        },
+        TimeEstimate {
+            model_name: "DeepL Pro".into(),
+            model_size: "Cloud".into(),
+            speed_strings_per_min: 200.0,
+            estimated_hours: s / 200.0 / 60.0,
+            quality_score: 88,
+            provider: "DeepL".into(),
+        },
+        TimeEstimate {
+            model_name: "Mistral Large".into(),
+            model_size: "Cloud".into(),
+            speed_strings_per_min: 65.0,
+            estimated_hours: s / 65.0 / 60.0,
+            quality_score: 89,
+            provider: "Together AI".into(),
+        },
+        TimeEstimate {
+            model_name: "DeepSeek V3".into(),
+            model_size: "Cloud".into(),
+            speed_strings_per_min: 70.0,
+            estimated_hours: s / 70.0 / 60.0,
+            quality_score: 87,
+            provider: "DeepSeek".into(),
+        },
+        TimeEstimate {
+            model_name: "NLLB-200 (Meta)".into(),
+            model_size: "Cloud (HuggingFace)".into(),
+            speed_strings_per_min: 250.0,
+            estimated_hours: s / 250.0 / 60.0,
+            quality_score: 72,
+            provider: "HuggingFace (gratis)".into(),
         },
     ]
 }
@@ -1880,6 +2215,16 @@ fn estimate_strings_from_binary(engine: &str, formats: &[FileFormatInfo]) -> u64
         "RAGE Engine" => 0.003,
         "FromSoftware Engine" => 0.008,
         "Godot" => 0.02,
+        "GameMaker" => 0.03, // GameMaker: testo in data.win, alta percentuale
+        "Ren'Py" => 0.05, // Ren'Py: quasi tutto testo
+        "RPG Maker" => 0.04, // RPG Maker: molto testo in JSON
+        "CryEngine" | "CRYENGINE" => 0.005,
+        "id Tech" | "id Tech 7" => 0.004,
+        "Creation Engine" | "Gamebryo" => 0.008, // Bethesda: molte stringhe in ESM/ESP
+        "Telltale Tool" => 0.015, // Telltale: giochi narrativi, molto testo
+        "Anvil" | "Anvil Engine" => 0.003, // Ubisoft: molto compresso
+        "Decima" => 0.004,
+        "Luminous" | "Luminous Engine" => 0.004,
         _ => 0.01, // Default conservativo
     };
 
@@ -1899,16 +2244,27 @@ fn estimate_strings_from_binary(engine: &str, formats: &[FileFormatInfo]) -> u64
 
 fn check_gs_support(engine: &str) -> (bool, String) {
     match engine {
-        "Unity" => (true, "Unity CSV Translator, Unity Asset Injector, Unity Patcher".into()),
-        "Unreal Engine" => (true, "Unreal Localization Patcher, UE Translator DLL".into()),
-        "Ren'Py" => (true, "Ren'Py Patcher".into()),
-        "RPG Maker" => (true, "RPG Maker Patcher".into()),
-        "GameMaker" => (false, "Non ancora supportato — in roadmap".into()),
-        "Godot" => (false, "In sviluppo — Godot Translator page".into()),
+        "Unity" => (true, "Unity CSV Translator, Unity Asset Injector, Unity Patcher, IL2CPP Injector".into()),
+        "Unreal Engine" => (true, "Unreal Localization Patcher, UE Translator DLL, PAK Override".into()),
+        "Ren'Py" => (true, "Ren'Py Patcher (script .rpy/.rpyc)".into()),
+        "RPG Maker" => (true, "RPG Maker Patcher (MV/MZ JSON, VX/Ace rvdata2)".into()),
+        "GameMaker" => (true, "GameMaker Patcher (data.win STRG, YYC EXE, language files .jn)".into()),
+        "Godot" => (true, "Godot PCK Patcher (override PCK leggero, v1/v2)".into()),
         "Source Engine" | "Source 2" => (false, "Non supportato — richiede tool esterni (GCFScape, Crowbar)".into()),
+        "Frostbite" => (false, "Non supportato — file criptati/compressi EA proprietari".into()),
+        "RE Engine" | "MT Framework" => (false, "Non supportato — formato proprietario Capcom".into()),
+        "RAGE Engine" => (false, "Non supportato — file criptati Rockstar".into()),
+        "FromSoftware Engine" => (false, "Parziale — richiede tool specifici (.bnd/.dcx decompression)".into()),
         "Spike Chunsoft Engine" => (true, "Danganronpa Patcher".into()),
         "Wolf RPG Editor" => (true, "Wolf RPG Patcher".into()),
-        _ => (false, format!("Motore '{}' non direttamente supportato — prova OCR Translator o Screen Capture", engine)),
+        "CryEngine" | "CRYENGINE" => (false, "Non supportato — file .pak CryEngine proprietari".into()),
+        "id Tech" | "id Tech 7" => (false, "Non supportato — formato binario proprietario id Software".into()),
+        "Creation Engine" | "Gamebryo" => (false, "Parziale — BSA/BA2 con tool esterni, stringhe in plugin ESP/ESM".into()),
+        "Telltale Tool" => (false, "Non supportato — formato proprietario Telltale".into()),
+        "Anvil" | "Anvil Engine" => (false, "Non supportato — formato proprietario Ubisoft".into()),
+        "Decima" => (false, "Non supportato — formato proprietario Guerrilla/Kojima".into()),
+        "Luminous" | "Luminous Engine" => (false, "Non supportato — formato proprietario Square Enix".into()),
+        _ => (false, format!("Motore '{}' non direttamente supportato — prova OCR Translator, Screen Capture o Overlay Translator", engine)),
     }
 }
 
@@ -3821,6 +4177,30 @@ fn get_llm_database() -> Vec<LLMModel> {
         
         // Ollama Local Models
         LLMModel {
+            name: "translategemma:12b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 25.0,
+            quality_score: 90,
+            max_context_tokens: 8192,
+            rate_limit: 1000,
+            special_features: vec!["Translation-specialized".to_string(), "55 languages".to_string(), "Google quality".to_string(), "Free".to_string()],
+            best_for: vec!["Best local translation".to_string(), "Multi-language projects".to_string()],
+        },
+        LLMModel {
+            name: "translategemma:4b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 50.0,
+            quality_score: 80,
+            max_context_tokens: 8192,
+            rate_limit: 1000,
+            special_features: vec!["Translation-specialized".to_string(), "Lightweight".to_string(), "Fast".to_string(), "Free".to_string()],
+            best_for: vec!["Fast local translation".to_string(), "Low-end hardware".to_string()],
+        },
+        LLMModel {
             name: "huihui_ai/hy-mt1.5-abliterated:7b".to_string(),
             provider: LLMProvider::Ollama,
             cost_per_million_input: 0.0,
@@ -3831,6 +4211,30 @@ fn get_llm_database() -> Vec<LLMModel> {
             rate_limit: 1000,
             special_features: vec!["Local processing".to_string(), "Privacy-focused".to_string(), "Free".to_string()],
             best_for: vec!["Sensitive content".to_string(), "Offline translation".to_string()],
+        },
+        LLMModel {
+            name: "hy-mt1.5:1.8b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 80.0,
+            quality_score: 68,
+            max_context_tokens: 4096,
+            rate_limit: 1000,
+            special_features: vec!["Ultra-lightweight".to_string(), "1.1GB RAM".to_string(), "Free".to_string()],
+            best_for: vec!["Very low-end hardware".to_string(), "Quick draft translation".to_string()],
+        },
+        LLMModel {
+            name: "qwen3:14b".to_string(),
+            provider: LLMProvider::Ollama,
+            cost_per_million_input: 0.0,
+            cost_per_million_output: 0.0,
+            speed_tokens_per_sec: 20.0,
+            quality_score: 88,
+            max_context_tokens: 32768,
+            rate_limit: 1000,
+            special_features: vec!["CJK excellence".to_string(), "Large context".to_string(), "Free".to_string()],
+            best_for: vec!["Asian languages".to_string(), "Complex content".to_string()],
         },
         LLMModel {
             name: "llama3.1:8b".to_string(),
@@ -3909,10 +4313,8 @@ fn find_fastest_model(llm_db: &[LLMModel]) -> &LLMModel {
 }
 
 fn build_free_chain(llm_db: &[LLMModel], words: u64, chars: u64, complexity: f64) -> OptimizedChain {
-    let fallback = &llm_db[0];
-    let primary = llm_db.iter()
-        .find(|m| m.cost_per_million_input == 0.0 && m.cost_per_million_output == 0.0)
-        .unwrap_or(fallback);
+    // Prefer TranslateGemma (best free local model), then HY-MT, then any free model
+    let primary = find_model(llm_db, &["translategemma:12b", "huihui_ai/hy-mt1.5-abliterated:7b", "translategemma:4b", "llama3.1:8b"]);
     
     let estimated_tokens = (words as f64 * 1.3) + (chars as f64 * 0.1);
     let estimated_hours = estimated_tokens / (primary.speed_tokens_per_sec * 3600.0);
