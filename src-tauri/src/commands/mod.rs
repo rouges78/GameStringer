@@ -113,6 +113,12 @@ pub mod godot_patcher;
 pub mod gamemaker_patcher;
 // Visionaire Studio 5 .vis archive patcher
 pub mod visionaire_patcher;
+// CRI Middleware patcher (Persona, Yakuza, Tales of, Dragon Ball, Danganronpa V3)
+pub mod cri_patcher;
+// Universal PO/POT export/import for all game engines
+pub mod po_export;
+// Bethesda Engine patcher (BSA/BA2, STRINGS, ESP/ESM)
+pub mod bethesda_patcher;
 
 // === Linux stubs for Windows-only modules ===
 #[cfg(not(windows))]
