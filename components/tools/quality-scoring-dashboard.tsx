@@ -62,7 +62,7 @@ function ScoreBadge({ stats }: { stats: QualityStats }) {
 function TagBadge({ tag }: { tag: QualityTag }) {
   const info = getTagInfo(tag);
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${info.color}`}>
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-2xs font-bold ${info.color}`}>
       {info.icon} {info.label}
     </span>
   );
@@ -76,31 +76,31 @@ function StatsCards({ stats }: { stats: QualityStats }) {
       <Card className="bg-zinc-900/50 border-zinc-800">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold">{stats.total.toLocaleString()}</div>
-          <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.totale')}</div>
+          <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.totale')}</div>
         </CardContent>
       </Card>
       <Card className="bg-emerald-950/30 border-emerald-900/30">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold text-emerald-400">{stats.human.toLocaleString()}</div>
-          <div className="text-[10px] text-emerald-400/60">✍️ Human</div>
+          <div className="text-2xs text-emerald-400/60">✍️ Human</div>
         </CardContent>
       </Card>
       <Card className="bg-blue-950/30 border-blue-900/30">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold text-blue-400">{stats.validated.toLocaleString()}</div>
-          <div className="text-[10px] text-blue-400/60">✅ Validated</div>
+          <div className="text-2xs text-blue-400/60">✅ Validated</div>
         </CardContent>
       </Card>
       <Card className="bg-amber-950/30 border-amber-900/30">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold text-amber-400">{stats.ai.toLocaleString()}</div>
-          <div className="text-[10px] text-amber-400/60">🤖 AI</div>
+          <div className="text-2xs text-amber-400/60">🤖 AI</div>
         </CardContent>
       </Card>
       <Card className="bg-zinc-900/50 border-zinc-800">
         <CardContent className="p-3 text-center">
           <div className="text-2xl font-bold text-zinc-400">{stats.captured.toLocaleString()}</div>
-          <div className="text-[10px] text-zinc-500">📋 Captured</div>
+          <div className="text-2xs text-zinc-500">📋 Captured</div>
         </CardContent>
       </Card>
     </div>
@@ -158,7 +158,7 @@ function EntryRow({
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         {entry.tag === 'A' && (
-          <Button size="sm" variant="ghost" className="h-6 px-1.5 text-[10px]" onClick={onValidate}>
+          <Button size="sm" variant="ghost" className="h-6 px-1.5 text-2xs" onClick={onValidate}>
             <CheckCircle2 className="h-3 w-3 mr-0.5" /> Validate
           </Button>
         )}
@@ -262,7 +262,7 @@ function ProjectDetail({
       <QualityBar stats={project.stats} />
 
       {/* Legend */}
-      <div className="flex items-center gap-3 text-[10px]">
+      <div className="flex items-center gap-3 text-2xs">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" /> Human</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Validated</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> AI</span>
@@ -273,7 +273,7 @@ function ProjectDetail({
         <div className="relative flex-1">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-500" />
           <Input
-            placeholder="Cerca stringhe..."
+            aria-label="Cerca" placeholder="Cerca stringhe..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-7 text-xs"
@@ -285,7 +285,7 @@ function ProjectDetail({
               key={tag}
               size="sm"
               variant={filterTag === tag ? 'default' : 'ghost'}
-              className="h-7 text-[10px] px-2"
+              className="h-7 text-2xs px-2"
               onClick={() => setFilterTag(tag)}
             >
               {tag === 'all' ? 'Tutti' : getTagInfo(tag as QualityTag).icon + ' ' + getTagInfo(tag as QualityTag).label}
@@ -394,7 +394,7 @@ export function QualityScoringDashboard() {
             <BarChart3 className="h-5 w-5 text-violet-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.projects}</div>
-              <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.progetti')}</div>
+              <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.progetti')}</div>
             </div>
           </CardContent>
         </Card>
@@ -403,7 +403,7 @@ export function QualityScoringDashboard() {
             <FileText className="h-5 w-5 text-cyan-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.totalEntries.toLocaleString()}</div>
-              <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.stringheTotali')}</div>
+              <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.stringheTotali')}</div>
             </div>
           </CardContent>
         </Card>
@@ -412,7 +412,7 @@ export function QualityScoringDashboard() {
             <TrendingUp className="h-5 w-5 text-emerald-400" />
             <div>
               <div className="text-lg font-bold">{globalStats.avgScore}/3</div>
-              <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.scoreMedio')}</div>
+              <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.scoreMedio')}</div>
             </div>
           </CardContent>
         </Card>
@@ -421,7 +421,7 @@ export function QualityScoringDashboard() {
             <Shield className={`h-5 w-5 ${getQualityColor(globalStats.avgLabel)}`} />
             <div>
               <div className="text-lg font-bold">{globalStats.avgLabel}</div>
-              <div className="text-[10px] text-zinc-400">{t('qualityScoringDashboardComp.qualitàMedia')}</div>
+              <div className="text-2xs text-zinc-400">{t('qualityScoringDashboardComp.qualitàMedia')}</div>
             </div>
           </CardContent>
         </Card>
@@ -459,13 +459,13 @@ export function QualityScoringDashboard() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium text-sm">{project.gameName}</h4>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-2xs">
                       {project.sourceLanguage.toUpperCase()} → {project.targetLanguage.toUpperCase()}
                     </Badge>
                     <ScoreBadge stats={project.stats} />
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-zinc-500">
+                    <span className="text-2xs text-zinc-500">
                       {project.stats.translated.toLocaleString()} / {project.stats.total.toLocaleString()}
                     </span>
                     <Button
@@ -479,7 +479,7 @@ export function QualityScoringDashboard() {
                   </div>
                 </div>
                 <QualityBar stats={project.stats} />
-                <div className="flex items-center gap-3 mt-1.5 text-[10px] text-zinc-500">
+                <div className="flex items-center gap-3 mt-1.5 text-2xs text-zinc-500">
                   <span>✍️ H:{project.stats.human}</span>
                   <span>✅ V:{project.stats.validated}</span>
                   <span>🤖 A:{project.stats.ai}</span>

@@ -267,7 +267,7 @@ export function WadExtractor() {
     <div className="space-y-3">
       {/* Stats Bar */}
       {entries.length > 0 && (
-        <Card className="border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted">
           <CardContent className="pt-4 px-4 pb-4">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4">
@@ -293,15 +293,15 @@ export function WadExtractor() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-2xs">
                     <FileText className="w-2.5 h-2.5 mr-1" />
                     {stats.dialogues} dialoghi
                   </Badge>
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-2xs">
                     <BarChart3 className="w-2.5 h-2.5 mr-1" />
                     {stats.texts} testi
                   </Badge>
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-2xs">
                     {stats.uniqueFiles} file
                   </Badge>
                 </div>
@@ -340,7 +340,7 @@ export function WadExtractor() {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
         {/* Sidebar - Extraction */}
-        <Card className="lg:col-span-1 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted" className="lg:col-span-1">
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm flex items-center gap-2">
               <Terminal className="w-4 h-4 text-emerald-400" />
@@ -365,44 +365,44 @@ export function WadExtractor() {
             {/* Extract Command */}
             <div className="p-2 rounded bg-slate-950/80 border border-slate-800">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-muted-foreground">{t('wadExtractorComp.comandoEstrazione')}</span>
+                <span className="text-2xs text-muted-foreground">{t('wadExtractorComp.comandoEstrazione')}</span>
                 <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={copyExtractCommand}>
                   <Copy className="w-3 h-3" />
                 </Button>
               </div>
-              <code className="text-[10px] text-emerald-400 font-mono break-all leading-relaxed">
+              <code className="text-2xs text-emerald-400 font-mono break-all leading-relaxed">
                 node scripts/extract-wad-text.mjs &quot;{wadPath || '<wad-path>'}&quot; out.json
               </code>
             </div>
 
             {/* Workflow Steps */}
             <div className="space-y-2">
-              <p className="text-[10px] text-muted-foreground font-medium uppercase">{t('wadExtractorComp.workflow')}</p>
+              <p className="text-2xs text-muted-foreground font-medium uppercase">{t('wadExtractorComp.workflow')}</p>
               <div className="space-y-1.5">
                 <div className={`flex items-center gap-2 text-xs ${entries.length > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
                     {entries.length > 0 ? <Check className="w-3 h-3" /> : '1'}
                   </div>
                   Estrai testo (CLI)
                 </div>
                 <div className={`flex items-center gap-2 text-xs ${entries.length > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${entries.length > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
                     {entries.length > 0 ? <Check className="w-3 h-3" /> : '2'}
                   </div>
                   Carica JSON
                 </div>
                 <div className={`flex items-center gap-2 text-xs ${stats.translated > 0 ? 'text-emerald-400' : 'text-muted-foreground'}`}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${stats.translated > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold ${stats.translated > 0 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800 border border-slate-700'}`}>
                     {stats.translated > 0 ? <Check className="w-3 h-3" /> : '3'}
                   </div>
                   Traduci (AI/manuale)
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-800 border border-slate-700">4</div>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold bg-slate-800 border border-slate-700">4</div>
                   Esporta traduzioni
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-800 border border-slate-700">5</div>
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-2xs font-bold bg-slate-800 border border-slate-700">5</div>
                   Applica patch (CLI)
                 </div>
               </div>
@@ -421,7 +421,7 @@ export function WadExtractor() {
         </Card>
 
         {/* Main - Text Editor */}
-        <Card className="lg:col-span-3 border-slate-800/50 bg-gradient-to-b from-slate-900/50 to-slate-950/30">
+        <Card variant="muted" className="lg:col-span-3">
           <CardHeader className="py-3 px-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -460,7 +460,7 @@ export function WadExtractor() {
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      placeholder="Cerca testo, file..."
+                      aria-label="Cerca" placeholder="Cerca testo, file..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-9 h-8"
@@ -524,7 +524,7 @@ export function WadExtractor() {
                             isUntranslated ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-slate-800/50'
                           }`}
                         >
-                          <Badge className={`text-[9px] shrink-0 ${
+                          <Badge className={`text-micro shrink-0 ${
                             entry.type === 'dialogue'
                               ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                               : 'bg-purple-500/20 text-purple-400 border-purple-500/30'
@@ -549,7 +549,7 @@ export function WadExtractor() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <Badge className={`text-[9px] ${
+                            <Badge className={`text-micro ${
                               entry.type === 'dialogue'
                                 ? 'bg-blue-500/20 text-blue-400 border-blue-500/30'
                                 : 'bg-purple-500/20 text-purple-400 border-purple-500/30'
@@ -557,10 +557,10 @@ export function WadExtractor() {
                               {entry.type === 'dialogue' ? 'Dialogo' : 'Testo'}
                             </Badge>
                             {entry.raw && (
-                              <Badge variant="outline" className="text-[9px]">CLT</Badge>
+                              <Badge variant="outline" className="text-micro">CLT</Badge>
                             )}
                           </div>
-                          <span className="text-[10px] text-muted-foreground font-mono">
+                          <span className="text-2xs text-muted-foreground font-mono">
                             {entry.file.split('/').pop()} #{entry.index}
                           </span>
                         </div>
@@ -570,7 +570,7 @@ export function WadExtractor() {
                             {entry.original}
                           </p>
                           {entry.raw && entry.raw !== entry.original && (
-                            <p className="text-[10px] text-muted-foreground mt-1 font-mono">
+                            <p className="text-2xs text-muted-foreground mt-1 font-mono">
                               Raw: {entry.raw.substring(0, 100)}{entry.raw.length > 100 ? '...' : ''}
                             </p>
                           )}

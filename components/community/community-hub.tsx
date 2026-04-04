@@ -209,13 +209,13 @@ export function CommunityHub() {
               {formatNumber(pkg.entryCount)}
             </span>
           </div>
-          <Badge variant="outline" className="text-[10px]">v{pkg.version}</Badge>
+          <Badge variant="outline" className="text-2xs">v{pkg.version}</Badge>
         </div>
         
         {!compact && pkg.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {pkg.tags.slice(0, 4).map(tag => (
-              <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+              <Badge key={tag} variant="secondary" className="text-2xs px-1.5 py-0">
                 {tag}
               </Badge>
             ))}
@@ -240,7 +240,7 @@ export function CommunityHub() {
             </div>
             <div className="bg-black/20 backdrop-blur-sm rounded-lg px-2 py-1">
               <h2 className="text-lg font-bold text-white">{t('communityHubComp.communityTranslationHub')}</h2>
-              <p className="text-white/90 text-[10px]">{t('communityHubComp.shareAndDownloadTranslationMem')}</p>
+              <p className="text-white/90 text-2xs">{t('communityHubComp.shareAndDownloadTranslationMem')}</p>
             </div>
           </div>
           
@@ -257,28 +257,28 @@ export function CommunityHub() {
               <Package className="h-4 w-4 text-white/80" />
               <div>
                 <p className="text-lg font-bold text-white leading-none">{stats.totalPackages}</p>
-                <p className="text-[10px] text-white/60">{t('communityHubComp.pacchetti')}</p>
+                <p className="text-2xs text-white/60">{t('communityHubComp.pacchetti')}</p>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-white/20 flex items-center gap-2">
               <Download className="h-4 w-4 text-white/80" />
               <div>
                 <p className="text-lg font-bold text-white leading-none">{formatNumber(stats.totalDownloads)}</p>
-                <p className="text-[10px] text-white/60">{t('communityHubComp.download')}</p>
+                <p className="text-2xs text-white/60">{t('communityHubComp.download')}</p>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-white/20 flex items-center gap-2">
               <Globe className="h-4 w-4 text-white/80" />
               <div>
                 <p className="text-lg font-bold text-white leading-none">{formatNumber(stats.totalEntries)}</p>
-                <p className="text-[10px] text-white/60">{t('communityHubComp.traduzioni')}</p>
+                <p className="text-2xs text-white/60">{t('communityHubComp.traduzioni')}</p>
               </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg px-2 py-1.5 border border-white/20 flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-white/80" />
               <div>
                 <p className="text-lg font-bold text-white leading-none">{stats.topLanguages[0]?.lang.toUpperCase() || 'IT'}</p>
-                <p className="text-[10px] text-white/60">{t('communityHubComp.topLingua')}</p>
+                <p className="text-2xs text-white/60">{t('communityHubComp.topLingua')}</p>
               </div>
             </div>
           </div>
@@ -351,7 +351,7 @@ export function CommunityHub() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by game, name or tag..."
+                aria-label="Search" placeholder="Search by game, name or tag..."
                 className="pl-9"
               />
             </div>
@@ -456,7 +456,7 @@ export function CommunityHub() {
                       <p className="font-medium text-sm truncate">{pkg.name}</p>
                       <p className="text-xs text-muted-foreground">{pkg.gameName}</p>
                     </div>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-2xs">
                       {new Date(pkg.updatedAt).toLocaleDateString()}
                     </Badge>
                   </div>

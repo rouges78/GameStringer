@@ -1515,7 +1515,7 @@ export default function TranslatorProPage() {
                     {isCompleted ? <CheckCircle className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                   </div>
                   <span className={cn(
-                    "text-[10px] mt-1 font-medium",
+                    "text-2xs mt-1 font-medium",
                     isActive && "text-blue-500",
                     isCompleted && "text-green-500",
                     !isActive && !isCompleted && "text-muted-foreground"
@@ -1544,7 +1544,7 @@ export default function TranslatorProPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca tra i tuoi games..."
+                aria-label="Cerca" placeholder="Cerca tra i tuoi games..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 h-10"
@@ -1669,10 +1669,10 @@ export default function TranslatorProPage() {
                         <div className="flex items-center gap-1.5">
                           <Cpu className="h-3 w-3 text-muted-foreground" />
                           <span className="font-medium">{engineInfo.engine_name}</span>
-                          {engineInfo.has_bepinex && <Badge variant="outline" className="text-[8px] h-3.5 px-1 bg-green-500/20">BepInEx</Badge>}
-                          {engineInfo.has_xunity && <Badge variant="outline" className="text-[8px] h-3.5 px-1 bg-blue-500/20">XUnity</Badge>}
+                          {engineInfo.has_bepinex && <Badge variant="outline" className="text-2xs h-3.5 px-1 bg-green-500/20">BepInEx</Badge>}
+                          {engineInfo.has_xunity && <Badge variant="outline" className="text-2xs h-3.5 px-1 bg-blue-500/20">XUnity</Badge>}
                         </div>
-                        <span className={cn("text-[10px]", engineInfo.can_patch ? "text-green-500" : "text-amber-500")}>
+                        <span className={cn("text-2xs", engineInfo.can_patch ? "text-green-500" : "text-amber-500")}>
                           {engineInfo.can_patch ? "✓ Compatibile" : "⚠ Tool esterni"}
                         </span>
                       </div>
@@ -1685,9 +1685,9 @@ export default function TranslatorProPage() {
                           <div className="flex items-center gap-1.5">
                             <FileText className="h-3 w-3 text-muted-foreground" />
                             <span>{localizationInfo.available_languages.length} lingue</span>
-                            <Badge variant="outline" className="text-[8px] h-3.5 px-1">{localizationInfo.format.toUpperCase()}</Badge>
+                            <Badge variant="outline" className="text-2xs h-3.5 px-1">{localizationInfo.format.toUpperCase()}</Badge>
                           </div>
-                          <span className={cn("text-[10px]", localizationInfo.missing_italian ? "text-amber-500" : "text-green-500")}>
+                          <span className={cn("text-2xs", localizationInfo.missing_italian ? "text-amber-500" : "text-green-500")}>
                             {localizationInfo.missing_italian ? "⚠ IT mancante" : "✓ IT presente"}
                           </span>
                         </div>
@@ -2046,21 +2046,21 @@ export default function TranslatorProPage() {
                         <div className="flex items-center gap-2">
                           <Cpu className="h-4 w-4 text-cyan-500" />
                           <span>{t('translatorProPage.deepseekV3')}</span>
-                          <Badge variant="outline" className="text-[9px] ml-1 text-green-400 border-green-500/30">CHEAPEST</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-green-400 border-green-500/30">CHEAPEST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="gemini">
                         <div className="flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-blue-500" />
                           <span>{t('translatorProPage.gemini20Flash')}</span>
-                          <Badge variant="outline" className="text-[9px] ml-1 text-blue-400 border-blue-500/30">FAST</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-blue-400 border-blue-500/30">FAST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="openai">
                         <div className="flex items-center gap-2">
                           <Zap className="h-4 w-4 text-green-500" />
                           <span>{t('translatorProPage.gpt4oMini')}</span>
-                          <Badge variant="outline" className="text-[9px] ml-1 text-gray-400 border-gray-500/30">$0.15/1M</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-gray-400 border-gray-500/30">$0.15/1M</Badge>
                         </div>
                       </SelectItem>
                       
@@ -2069,21 +2069,21 @@ export default function TranslatorProPage() {
                         <div className="flex items-center gap-2">
                           <Brain className="h-4 w-4 text-orange-500" />
                           <span>{t('translatorProPage.claude35Sonnet')}</span>
-                          <Badge variant="outline" className="text-[9px] ml-1 text-orange-400 border-orange-500/30">BEST</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-orange-400 border-orange-500/30">BEST</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="gpt5">
                         <div className="flex items-center gap-2">
                           <Zap className="h-4 w-4 text-emerald-500" />
                           <span>{t('translatorProPage.gpt4o')}</span>
-                          <Badge variant="outline" className="text-[9px] ml-1 text-emerald-400 border-emerald-500/30">RELIABLE</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-emerald-400 border-emerald-500/30">RELIABLE</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="mistral">
                         <div className="flex items-center gap-2">
                           <Wind className="h-4 w-4 text-indigo-500" />
                           <span>{t('translatorProPage.mistralLarge2')}</span>
-                          <Badge variant="outline" className="text-[9px] ml-1 text-indigo-400 border-indigo-500/30">EU</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-indigo-400 border-indigo-500/30">EU</Badge>
                         </div>
                       </SelectItem>
                       
@@ -2092,7 +2092,7 @@ export default function TranslatorProPage() {
                         <div className="flex items-center gap-2">
                           <Languages className="h-4 w-4 text-purple-500" />
                           <span>OpenRouter</span>
-                          <Badge variant="outline" className="text-[9px] ml-1 text-purple-400 border-purple-500/30">MULTI</Badge>
+                          <Badge variant="outline" className="text-micro ml-1 text-purple-400 border-purple-500/30">MULTI</Badge>
                         </div>
                       </SelectItem>
                       <SelectItem value="deepl">
@@ -2363,8 +2363,8 @@ export default function TranslatorProPage() {
                       {translatedItems.length > 0 && (
                         <div className="mt-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700 space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-semibold text-muted-foreground uppercase">{t('translatorProPage.ultimeTraduzioni')}</span>
-                            <span className="text-[10px] text-muted-foreground">{translatedItems.length} completate</span>
+                            <span className="text-2xs font-semibold text-muted-foreground uppercase">{t('translatorProPage.ultimeTraduzioni')}</span>
+                            <span className="text-2xs text-muted-foreground">{translatedItems.length} completate</span>
                           </div>
                           <div className="divide-y divide-border/30">
                             {translatedItems.slice(-3).reverse().map((item, idx) => {
@@ -2644,12 +2644,12 @@ export default function TranslatorProPage() {
                     <Sparkles className="h-4 w-4 text-purple-400" />
                     Dettaglio traduzioni ({translatedItems.length})
                   </h3>
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline" className="text-2xs">
                     {translatedItems.filter(i => i.fromMemory).length} da memoria
                   </Badge>
                 </div>
                 <div className="border rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_80px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase">
+                  <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_90px_80px] gap-2 px-3 py-2 bg-muted/30 text-2xs font-semibold text-muted-foreground uppercase">
                     <span>{t('translatorProPage.original')}</span>
                     <span>{t('translatorProPage.translation')}</span>
                     <span>{t('translatorProPage.tipo')}</span>
@@ -2679,7 +2679,7 @@ export default function TranslatorProPage() {
                     </div>
                   </ScrollArea>
                   {translatedItems.length > 200 && (
-                    <div className="px-3 py-2 text-center text-[10px] text-muted-foreground bg-muted/20 border-t">
+                    <div className="px-3 py-2 text-center text-2xs text-muted-foreground bg-muted/20 border-t">
                       Mostrate 200 di {translatedItems.length} righe
                     </div>
                   )}

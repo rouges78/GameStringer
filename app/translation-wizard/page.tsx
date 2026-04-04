@@ -1811,7 +1811,7 @@ export default function TranslationWizardPage() {
                 )}
               </div>
               <span className={cn(
-                "text-[9px] mt-1",
+                "text-micro mt-1",
                 step === s ? "text-purple-300" : currentIdx > i ? "text-green-400" : "text-slate-600"
               )}>
                 {STEP_LABELS[i]}
@@ -1887,7 +1887,7 @@ export default function TranslationWizardPage() {
                   <div className="relative mb-4">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
-                      placeholder="Search game..."
+                      aria-label="Search" placeholder="Search game..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10 bg-slate-900/50 border-slate-600"
@@ -1926,7 +1926,7 @@ export default function TranslationWizardPage() {
                             {/* Info game */}
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white text-sm truncate">{game.title}</p>
-                              <p className="text-[10px] text-slate-500 truncate">
+                              <p className="text-2xs text-slate-500 truncate">
                                 {game.install_path || 'Percorso non disponibile'}
                               </p>
                             </div>
@@ -1935,7 +1935,7 @@ export default function TranslationWizardPage() {
                               <Badge 
                                 variant="outline" 
                                 className={cn(
-                                  "text-[10px] shrink-0 h-5",
+                                  "text-2xs shrink-0 h-5",
                                   game.engine === 'Unity' && "border-green-500/50 text-green-400 bg-green-500/10",
                                   game.engine?.includes('Unreal') && "border-blue-500/50 text-blue-400 bg-blue-500/10",
                                   game.engine === 'Godot' && "border-cyan-500/50 text-cyan-400 bg-cyan-500/10",
@@ -2033,7 +2033,7 @@ export default function TranslationWizardPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-xl mb-1 truncate">{analysisResult.game.title}</CardTitle>
-                      <CardDescription className="font-mono text-[10px] truncate opacity-70" title={analysisResult.game.install_path}>
+                      <CardDescription className="font-mono text-2xs truncate opacity-70" title={analysisResult.game.install_path}>
                         {analysisResult.game.install_path}
                       </CardDescription>
                     </div>
@@ -2057,17 +2057,17 @@ export default function TranslationWizardPage() {
                     <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
                       <Settings2 className="h-4 w-4 text-blue-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">{analysisResult.engine}</p>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">{t('gameDetails.engine')}</p>
+                      <p className="text-2xs text-slate-500 uppercase tracking-wider">{t('gameDetails.engine')}</p>
                     </div>
                     <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
                       <FileCode className="h-4 w-4 text-purple-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">{analysisResult.localizationFiles.length}</p>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">{t('translationWizardPage.file')}</p>
+                      <p className="text-2xs text-slate-500 uppercase tracking-wider">{t('translationWizardPage.file')}</p>
                     </div>
                     <div className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-700 text-center">
                       <Database className="h-4 w-4 text-cyan-400 mx-auto mb-1.5" />
                       <p className="font-bold text-white text-sm">~{analysisResult.estimatedStrings.toLocaleString()}</p>
-                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">{t('batchTranslator.stringsCol')}</p>
+                      <p className="text-2xs text-slate-500 uppercase tracking-wider">{t('batchTranslator.stringsCol')}</p>
                     </div>
                   </div>
 
@@ -2079,7 +2079,7 @@ export default function TranslationWizardPage() {
                           key={lang} 
                           variant="secondary"
                           className={cn(
-                            "bg-slate-700 text-[10px] px-1.5 h-5",
+                            "bg-slate-700 text-2xs px-1.5 h-5",
                             lang === 'it' && "bg-green-500/20 text-green-400 border-green-500/30"
                           )}
                         >
@@ -2088,7 +2088,7 @@ export default function TranslationWizardPage() {
                         </Badge>
                       ))}
                       {!analysisResult.existingLanguages.includes(targetLanguage) && (
-                        <Badge variant="outline" className="border-dashed border-purple-500/50 text-purple-400 text-[10px] px-1.5 h-5">
+                        <Badge variant="outline" className="border-dashed border-purple-500/50 text-purple-400 text-2xs px-1.5 h-5">
                           + {languageNames[targetLanguage] || targetLanguage.toUpperCase()}
                         </Badge>
                       )}
@@ -2111,7 +2111,7 @@ export default function TranslationWizardPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <h4 className="text-sm font-semibold text-white">{strategy.name}</h4>
-                            <Badge variant="outline" className={cn("text-[9px] h-4",
+                            <Badge variant="outline" className={cn("text-micro h-4",
                               strategy.difficulty === 'easy' && "border-green-500/50 text-green-400",
                               strategy.difficulty === 'medium' && "border-yellow-500/50 text-yellow-400",
                               strategy.difficulty === 'hard' && "border-red-500/50 text-red-400"
@@ -2119,7 +2119,7 @@ export default function TranslationWizardPage() {
                               {strategy.difficulty === 'easy' ? 'Facile' : strategy.difficulty === 'medium' ? 'Media' : 'Difficile'}
                             </Badge>
                             {strategy.canDoInline && (
-                              <Badge className="text-[9px] h-4 bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
+                              <Badge className="text-micro h-4 bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
                                 Traduzione diretta
                               </Badge>
                             )}
@@ -2128,7 +2128,7 @@ export default function TranslationWizardPage() {
                           
                           <div className="space-y-0.5">
                             {strategy.steps.map((step, i) => (
-                              <div key={i} className="flex items-start gap-1.5 text-[10px] text-slate-500">
+                              <div key={i} className="flex items-start gap-1.5 text-2xs text-slate-500">
                                 <span className="text-purple-400 font-bold shrink-0">{i + 1}.</span>
                                 <span>{step}</span>
                               </div>
@@ -2138,13 +2138,13 @@ export default function TranslationWizardPage() {
                           {strategy.requirements.length > 0 && (
                             <div className="mt-2 flex items-center gap-1.5">
                               <Info className="h-3 w-3 text-amber-400 shrink-0" />
-                              <span className="text-[10px] text-amber-300">
+                              <span className="text-2xs text-amber-300">
                                 Richiede: {strategy.requirements.join(', ')}
                               </span>
                             </div>
                           )}
 
-                          <div className="mt-2 text-[10px] text-slate-500">
+                          <div className="mt-2 text-2xs text-slate-500">
                             Tempo stimato: ~{strategy.estimatedMinutes} min
                           </div>
                         </div>
@@ -2155,7 +2155,7 @@ export default function TranslationWizardPage() {
                   {/* Alternative strategies */}
                   {altStrategies.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-[10px] text-slate-500 mb-1.5">{t('translationWizardPage.strategieAlternative')}</p>
+                      <p className="text-2xs text-slate-500 mb-1.5">{t('translationWizardPage.strategieAlternative')}</p>
                       <div className="flex gap-2">
                         {altStrategies.map(alt => (
                           <button
@@ -2163,7 +2163,7 @@ export default function TranslationWizardPage() {
                             onClick={() => startTranslation(alt)}
                             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-purple-500/50 transition-colors text-left"
                           >
-                            <span className="text-[10px] font-medium text-slate-300">{alt.name}</span>
+                            <span className="text-2xs font-medium text-slate-300">{alt.name}</span>
                             <ArrowRight className="h-3 w-3 text-slate-500" />
                           </button>
                         ))}
@@ -2192,7 +2192,7 @@ export default function TranslationWizardPage() {
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className={cn(
-                                "w-6 h-6 rounded flex items-center justify-center text-[9px] font-bold shrink-0",
+                                "w-6 h-6 rounded flex items-center justify-center text-micro font-bold shrink-0",
                                 file.type === 'csv' && "bg-green-500/20 text-green-400",
                                 file.type === 'json' && "bg-yellow-500/20 text-yellow-400",
                                 file.type === 'xml' && "bg-blue-500/20 text-blue-400",
@@ -2203,7 +2203,7 @@ export default function TranslationWizardPage() {
                               </div>
                               <div className="min-w-0">
                                 <p className="text-sm font-medium text-slate-200 truncate leading-tight">{file.name}</p>
-                                <p className="text-[10px] text-slate-500 leading-tight">
+                                <p className="text-2xs text-slate-500 leading-tight">
                                   {file.stringCount > 0 ? `~${file.stringCount} str.` : 'Compilato'}
                                   {file.size > 0 && ` • ${(file.size / 1024).toFixed(1)} KB`}
                                 </p>

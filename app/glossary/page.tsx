@@ -353,18 +353,18 @@ export default function GlossaryPage() {
             </Select>
             {selectedGlossary && (
               <div className="flex gap-1.5">
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-2xs">
                   {selectedGlossary.sourceLang.toUpperCase()} → {selectedGlossary.targetLang.toUpperCase()}
                 </Badge>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-2xs">
                   <Lock className="h-2.5 w-2.5 mr-0.5" />
                   {selectedGlossary.stats.lockedTerms}
                 </Badge>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-2xs">
                   <RefreshCw className="h-2.5 w-2.5 mr-0.5" />
                   {selectedGlossary.stats.syncedTerms}
                 </Badge>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-2xs">
                   <Unlock className="h-2.5 w-2.5 mr-0.5" />
                   {selectedGlossary.stats.flexibleTerms}
                 </Badge>
@@ -377,7 +377,7 @@ export default function GlossaryPage() {
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground/30 mb-4" />
-              <h3 className="text-lg font-semibold mb-1">{t('glossaryPage.noGlossaryYet')}</h3>
+              <h2 className="text-lg font-semibold mb-1">{t('glossaryPage.noGlossaryYet')}</h2>
               <p className="text-sm text-muted-foreground mb-4">
                 Create a glossary for a game to start managing terminology
               </p>
@@ -410,7 +410,7 @@ export default function GlossaryPage() {
                   <Input
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search terms..."
+                    aria-label="Search" placeholder="Search terms..."
                     className="pl-8 h-8 text-xs"
                   />
                 </div>
@@ -442,13 +442,13 @@ export default function GlossaryPage() {
                   <Wand2 className="h-3.5 w-3.5 mr-1" />
                   Default
                 </Button>
-                <Button size="sm" className="h-8 text-xs" onClick={() => { resetForm(); setEditingTerm(null); setShowAddDialog(true); }}>
+                <Button size="xs" className="text-xs" onClick={() => { resetForm(); setEditingTerm(null); setShowAddDialog(true); }}>
                   <Plus className="h-3.5 w-3.5 mr-1" />{t('glossaryManager.add')}</Button>
               </div>
 
               {/* Term List */}
               <div className="border rounded-lg overflow-hidden">
-                <div className="grid grid-cols-[1fr_1fr_80px_90px_40px_60px] gap-2 px-3 py-2 bg-muted/30 text-[10px] font-semibold text-muted-foreground uppercase">
+                <div className="grid grid-cols-[1fr_1fr_80px_90px_40px_60px] gap-2 px-3 py-2 bg-muted/30 text-2xs font-semibold text-muted-foreground uppercase">
                   <span>{t('offlineTranslator.original')}</span>
                   <span>{t('offlineTranslator.translation')}</span>
                   <span>{t('glossaryPage.tier')}</span>
@@ -470,19 +470,19 @@ export default function GlossaryPage() {
                         <span className={`truncate ${term.doNotTranslate ? 'text-muted-foreground italic' : ''}`} title={term.targetTerm}>
                           {term.doNotTranslate ? `[${term.sourceTerm}]` : term.targetTerm}
                         </span>
-                        <Badge variant="outline" className={`text-[9px] ${TIER_COLORS[term.tier]}`}>
+                        <Badge variant="outline" className={`text-micro ${TIER_COLORS[term.tier]}`}>
                           {TIER_ICONS[term.tier]}
                           <span className="ml-0.5">{term.tier}</span>
                         </Badge>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="text-2xs text-muted-foreground">
                           {CATEGORY_EMOJI[term.category]} {term.category}
                         </span>
-                        <span className="text-[10px] text-muted-foreground">{term.confidence}</span>
+                        <span className="text-2xs text-muted-foreground">{term.confidence}</span>
                         <div className="flex gap-0.5 justify-end">
-                          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditTerm(term)}>
+                          <Button variant="ghost" size="icon" aria-label="Modifica" className="h-6 w-6" onClick={() => handleEditTerm(term)}>
                             <Edit className="h-3 w-3" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400" onClick={() => handleDeleteTerm(term.id)}>
+                          <Button variant="ghost" size="icon" aria-label="Elimina" className="h-6 w-6 text-red-400" onClick={() => handleDeleteTerm(term.id)}>
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
@@ -494,7 +494,7 @@ export default function GlossaryPage() {
 
               {/* Stats Bar */}
               {selectedGlossary && selectedGlossary.entries.length > 0 && (
-                <div className="flex items-center gap-4 text-[10px] text-muted-foreground px-1">
+                <div className="flex items-center gap-4 text-2xs text-muted-foreground px-1">
                   <span>{selectedGlossary.entries.length} total terms</span>
                   <span>{selectedGlossary.stats.autoExtracted} auto-extracted</span>
                   <span>{selectedGlossary.stats.manuallyAdded} manual</span>
@@ -509,10 +509,10 @@ export default function GlossaryPage() {
             <TabsContent value="extract" className="space-y-4 mt-3">
               <Card className="border-purple-500/30 bg-gradient-to-r from-purple-950/20 to-indigo-950/20">
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-base">
+                  <CardTitle as="h2" className="flex items-center gap-2 text-base">
                     <Sparkles className="h-5 w-5 text-purple-400" />
                     Automatic Term Extraction
-                    <Badge className="text-[10px] bg-purple-600/80 text-white border-0">AI</Badge>
+                    <Badge className="text-2xs bg-purple-600/80 text-white border-0">AI</Badge>
                   </CardTitle>
                   <p className="text-xs text-muted-foreground">
                     Analizza i testi del gioco con un LLM per identificare automaticamente nomi di personaggi,
@@ -554,14 +554,14 @@ export default function GlossaryPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="text-xs font-semibold text-muted-foreground">{t('glossaryPage.thirdTierSystem')}</h4>
+                    <h3 className="text-xs font-semibold text-muted-foreground">{t('glossaryPage.thirdTierSystem')}</h3>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
                         <div className="flex items-center gap-1.5 mb-1">
                           <Lock className="h-3.5 w-3.5 text-red-400" />
                           <span className="text-xs font-semibold text-red-400">LOCKED</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-2xs text-muted-foreground">
                           Nomi propri, luoghi. Mai modificabili. Sempre identici ovunque.
                         </p>
                       </div>
@@ -570,7 +570,7 @@ export default function GlossaryPage() {
                           <RefreshCw className="h-3.5 w-3.5 text-amber-400" />
                           <span className="text-xs font-semibold text-amber-400">SYNCED</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-2xs text-muted-foreground">
                           UI, menu, sistema. Aggiornati insieme per consistenza.
                         </p>
                       </div>
@@ -579,7 +579,7 @@ export default function GlossaryPage() {
                           <Unlock className="h-3.5 w-3.5 text-green-400" />
                           <span className="text-xs font-semibold text-green-400">FLEXIBLE</span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-2xs text-muted-foreground">
                           Dialoghi, descrizioni. Possono adattarsi al contesto.
                         </p>
                       </div>
@@ -594,7 +594,7 @@ export default function GlossaryPage() {
               <div className="grid grid-cols-2 gap-4">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-1.5">
+                    <CardTitle as="h2" className="text-sm flex items-center gap-1.5">
                       <Download className="h-4 w-4" />{t('projects.export')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -610,7 +610,7 @@ export default function GlossaryPage() {
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-1.5">
+                    <CardTitle as="h2" className="text-sm flex items-center gap-1.5">
                       <Upload className="h-4 w-4" />{t('glossaryManager.import')}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
@@ -622,7 +622,7 @@ export default function GlossaryPage() {
                       <FileJson className="h-4 w-4 mr-2" />
                       Importa JSON
                     </Button>
-                    <p className="text-[10px] text-muted-foreground mt-1">
+                    <p className="text-2xs text-muted-foreground mt-1">
                       CSV: source,target,tier,category,doNotTranslate,context
                     </p>
                   </CardContent>
@@ -633,7 +633,7 @@ export default function GlossaryPage() {
                 <CardContent className="flex items-center justify-between py-4">
                   <div>
                     <p className="text-sm font-medium text-red-400">{t('glossaryPage.deleteGlossary')}</p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-2xs text-muted-foreground">
                       Rimuove il glossario e tutti i termini per questo gioco
                     </p>
                   </div>
@@ -805,7 +805,7 @@ export default function GlossaryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm">{t('glossaryPage.activeGlossary')}</Label>
-                  <p className="text-[10px] text-muted-foreground">{t('glossaryPage.enableAutoGlossary')}</p>
+                  <p className="text-2xs text-muted-foreground">{t('glossaryPage.enableAutoGlossary')}</p>
                 </div>
                 <Switch checked={config.enabled} onCheckedChange={(enabled) => handleSaveConfig({ enabled })} />
               </div>
@@ -813,7 +813,7 @@ export default function GlossaryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm">{t('glossaryPage.promptInjection')}</Label>
-                  <p className="text-[10px] text-muted-foreground">{t('glossaryPage.addToPrompt')}</p>
+                  <p className="text-2xs text-muted-foreground">{t('glossaryPage.addToPrompt')}</p>
                 </div>
                 <Switch checked={config.injectInPrompt} onCheckedChange={(injectInPrompt) => handleSaveConfig({ injectInPrompt })} />
               </div>
@@ -821,7 +821,7 @@ export default function GlossaryPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-sm">{t('glossaryPage.autoExtract')}</Label>
-                  <p className="text-[10px] text-muted-foreground">{t('glossaryPage.autoExtractDesc')}</p>
+                  <p className="text-2xs text-muted-foreground">{t('glossaryPage.autoExtractDesc')}</p>
                 </div>
                 <Switch checked={config.autoExtractOnFirstBatch} onCheckedChange={(autoExtractOnFirstBatch) => handleSaveConfig({ autoExtractOnFirstBatch })} />
               </div>

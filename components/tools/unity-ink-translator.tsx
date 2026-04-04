@@ -458,7 +458,7 @@ export function UnityInkTranslator() {
           
           <div className="hidden md:flex items-center gap-2">
             <Badge variant="outline" className={cn(
-              "border-white/20 text-white/80 text-[10px]",
+              "border-white/20 text-white/80 text-2xs",
               ollamaStatus === 'online' && "border-green-400/40 text-green-300",
               ollamaStatus === 'offline' && "border-red-400/40 text-red-300"
             )}>
@@ -466,7 +466,7 @@ export function UnityInkTranslator() {
               Ollama: {ollamaStatus === 'checking' ? '...' : ollamaStatus === 'online' ? 'Online' : 'Offline'}
             </Badge>
             {gameName && (
-              <Badge variant="outline" className="border-white/20 text-white/80 text-[10px]">
+              <Badge variant="outline" className="border-white/20 text-white/80 text-2xs">
                 🎮 {gameName}
               </Badge>
             )}
@@ -483,7 +483,7 @@ export function UnityInkTranslator() {
             return (
               <div key={s.key} className="flex items-center flex-1">
                 <div className={cn(
-                  "flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all",
+                  "flex items-center gap-1.5 px-2 py-1 rounded-lg text-2xs font-medium transition-all",
                   isActive && "bg-white/20 text-white shadow-lg",
                   isDone && "bg-white/10 text-white/60",
                   !isActive && !isDone && "text-white/30"
@@ -529,7 +529,7 @@ export function UnityInkTranslator() {
                       </h3>
                       {scanningGames && <Loader2 className="h-3 w-3 animate-spin text-slate-500" />}
                       {!scanningGames && (
-                        <Button onClick={scanSteamGames} variant="ghost" size="sm" className="h-6 px-2 text-[10px] text-slate-500">
+                        <Button onClick={scanSteamGames} variant="ghost" size="xs" className="px-2 text-2xs text-slate-500">
                           <RefreshCw className="h-2.5 w-2.5 mr-1" />Riscan
                         </Button>
                       )}
@@ -558,14 +558,14 @@ export function UnityInkTranslator() {
                                 </div>
                                 <div className="min-w-0">
                                   <div className="text-sm font-medium text-slate-200 truncate">{game.name}</div>
-                                  <div className="text-[10px] text-slate-500 truncate">{game.dataPath}</div>
+                                  <div className="text-2xs text-slate-500 truncate">{game.dataPath}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                                <Badge variant="outline" className="text-[9px] border-slate-600/50 text-slate-400">
+                                <Badge variant="outline" className="text-micro border-slate-600/50 text-slate-400">
                                   {game.assetsFiles} file
                                 </Badge>
-                                <Badge variant="outline" className="text-[9px] border-slate-600/50 text-slate-400">
+                                <Badge variant="outline" className="text-micro border-slate-600/50 text-slate-400">
                                   {game.size}
                                 </Badge>
                               </div>
@@ -587,7 +587,7 @@ export function UnityInkTranslator() {
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-slate-700/50" />
                     </div>
-                    <div className="relative flex justify-center text-[10px]">
+                    <div className="relative flex justify-center text-2xs">
                       <span className="bg-slate-900 px-2 text-slate-500">oppure inserisci percorso manualmente</span>
                     </div>
                   </div>
@@ -791,7 +791,7 @@ export function UnityInkTranslator() {
                           </div>
                           
                           {characterProfiles.length > 0 && (
-                            <div className="text-[10px] text-purple-400/70">
+                            <div className="text-2xs text-purple-400/70">
                               {characterProfiles.length} profil{characterProfiles.length === 1 ? 'o' : 'i'} attiv{characterProfiles.length === 1 ? 'o' : 'i'}: {characterProfiles.map(p => p.name).join(', ')}
                             </div>
                           )}
@@ -834,7 +834,7 @@ export function UnityInkTranslator() {
                         <div className="flex items-center gap-2">
                           <span className="text-slate-500">Attuale:</span>
                           {translateProgress.currentCharacter && (
-                            <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-medium">
+                            <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-2xs font-medium">
                               {translateProgress.currentCharacter}
                             </span>
                           )}
@@ -997,7 +997,7 @@ export function UnityInkTranslator() {
                     <Table className="h-4 w-4 text-violet-400" />
                     Preview Traduzioni
                     {previewStats && (
-                      <Badge variant="outline" className="text-[10px] border-violet-500/30 text-violet-300 ml-1">
+                      <Badge variant="outline" className="text-2xs border-violet-500/30 text-violet-300 ml-1">
                         {previewStats.coverage}% copertura
                       </Badge>
                     )}
@@ -1005,10 +1005,10 @@ export function UnityInkTranslator() {
                   <div className="flex items-center gap-1">
                     {showPreview && (
                       <>
-                        <Button onClick={handleExportPack} variant="ghost" size="sm" className="h-7 px-2 text-[10px] text-violet-400">
+                        <Button onClick={handleExportPack} variant="ghost" size="xs" className="px-2 text-2xs text-violet-400">
                           <Package className="h-3 w-3 mr-1" />Export
                         </Button>
-                        <Button onClick={() => loadPreview(previewPage, previewSearch)} variant="ghost" size="sm" className="h-7 px-2 text-[10px] text-slate-400">
+                        <Button onClick={() => loadPreview(previewPage, previewSearch)} variant="ghost" size="xs" className="px-2 text-2xs text-slate-400">
                           <RefreshCw className="h-3 w-3" />
                         </Button>
                       </>
@@ -1025,19 +1025,19 @@ export function UnityInkTranslator() {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2 text-center">
                         <div className="text-lg font-bold text-green-400">{previewStats.coverage}%</div>
-                        <div className="text-[9px] text-green-400/70">Copertura</div>
+                        <div className="text-micro text-green-400/70">Copertura</div>
                       </div>
                       <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2 text-center">
                         <div className="text-lg font-bold text-blue-400">{previewStats.translatedCount.toLocaleString()}</div>
-                        <div className="text-[9px] text-blue-400/70">Tradotte</div>
+                        <div className="text-micro text-blue-400/70">Tradotte</div>
                       </div>
                       <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-2 text-center">
                         <div className="text-lg font-bold text-amber-400">{previewStats.untranslatedCount.toLocaleString()}</div>
-                        <div className="text-[9px] text-amber-400/70">Mancanti</div>
+                        <div className="text-micro text-amber-400/70">Mancanti</div>
                       </div>
                       <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-2 text-center">
                         <div className="text-lg font-bold text-purple-400">{previewStats.totalStrings.toLocaleString()}</div>
-                        <div className="text-[9px] text-purple-400/70">Totale</div>
+                        <div className="text-micro text-purple-400/70">Totale</div>
                       </div>
                     </div>
                   )}
@@ -1045,7 +1045,7 @@ export function UnityInkTranslator() {
                   {/* Coverage Visual Bar */}
                   {previewStats && (
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[10px] text-slate-500">
+                      <div className="flex items-center justify-between text-2xs text-slate-500">
                         <span>Copertura traduzione</span>
                         <span>{previewStats.translatedCount}/{previewStats.totalStrings}</span>
                       </div>
@@ -1055,7 +1055,7 @@ export function UnityInkTranslator() {
                           style={{ width: `${previewStats.coverage}%` }}
                         />
                       </div>
-                      <div className="flex gap-3 text-[9px] text-slate-500">
+                      <div className="flex gap-3 text-micro text-slate-500">
                         <span>Corte (&lt;20): <span className="text-slate-400">{previewStats.shortCount}</span></span>
                         <span>Medie (20-80): <span className="text-slate-400">{previewStats.mediumCount}</span></span>
                         <span>Lunghe (80+): <span className="text-slate-400">{previewStats.longCount}</span></span>
@@ -1072,7 +1072,7 @@ export function UnityInkTranslator() {
                         value={previewSearch}
                         onChange={(e) => setPreviewSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && loadPreview(0, previewSearch)}
-                        placeholder="Cerca nelle traduzioni..."
+                        aria-label="Cerca" placeholder="Cerca nelle traduzioni..."
                         className="w-full bg-slate-800/50 border border-slate-600/50 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-violet-500/50"
                       />
                     </div>
@@ -1089,7 +1089,7 @@ export function UnityInkTranslator() {
 
                   {/* Table */}
                   <div className="bg-slate-950/50 rounded-lg border border-slate-800/50 overflow-hidden">
-                    <div className="grid grid-cols-[1fr_1fr] text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800/50">
+                    <div className="grid grid-cols-[1fr_1fr] text-2xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-800/50">
                       <div className="px-3 py-2">English</div>
                       <div className="px-3 py-2">Italiano</div>
                     </div>
@@ -1129,7 +1129,7 @@ export function UnityInkTranslator() {
                       <Button 
                         onClick={() => loadPreview(Math.max(0, previewPage - 1), previewSearch)} 
                         disabled={previewPage === 0}
-                        variant="ghost" size="sm" className="h-7 text-[10px]"
+                        variant="ghost" size="xs" className="text-2xs"
                       >
                         Precedente
                       </Button>
@@ -1137,7 +1137,7 @@ export function UnityInkTranslator() {
                       <Button 
                         onClick={() => loadPreview(Math.min(previewTotalPages - 1, previewPage + 1), previewSearch)} 
                         disabled={previewPage >= previewTotalPages - 1}
-                        variant="ghost" size="sm" className="h-7 text-[10px]"
+                        variant="ghost" size="xs" className="text-2xs"
                       >
                         Successiva
                       </Button>
@@ -1170,7 +1170,7 @@ export function UnityInkTranslator() {
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-slate-500">Ollama:</span>
                   <Badge variant="outline" className={cn(
-                    "text-[10px]",
+                    "text-2xs",
                     ollamaStatus === 'online' ? "border-green-500/30 text-green-400" : "border-red-500/30 text-red-400"
                   )}>
                     {ollamaStatus === 'online' ? '● Online' : '● Offline'}
@@ -1196,7 +1196,7 @@ export function UnityInkTranslator() {
             </CardHeader>
             {showLogs && (
               <CardContent className="pt-0 px-3 pb-3">
-                <div className="bg-black/50 rounded-lg p-2 max-h-64 overflow-y-auto font-mono text-[10px] text-slate-400 space-y-0.5">
+                <div className="bg-black/50 rounded-lg p-2 max-h-64 overflow-y-auto font-mono text-2xs text-slate-400 space-y-0.5">
                   {logs.length === 0 ? (
                     <div className="text-slate-600">In attesa...</div>
                   ) : (
@@ -1268,7 +1268,7 @@ function StatCard({ label, value, icon: Icon, color, small }: {
       <div className={cn("font-bold", small ? "text-sm" : "text-lg")}>
         {typeof value === 'number' ? value.toLocaleString() : value}
       </div>
-      <div className={cn("opacity-70", small ? "text-[9px]" : "text-[10px]")}>{label}</div>
+      <div className={cn("opacity-70", small ? "text-micro" : "text-2xs")}>{label}</div>
     </div>
   );
 }
