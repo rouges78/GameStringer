@@ -4,7 +4,7 @@
 
 use tauri::command;
 use serde::{Serialize, Deserialize};
-use std::process::Command;
+use super::process_util::no_window_command;
 use std::path::{Path, PathBuf};
 use std::io::Write;
 
@@ -85,7 +85,7 @@ pub async fn inject_unity_assets(
     };
     
     // Build command
-    let mut cmd = Command::new(&python);
+    let mut cmd = no_window_command(&python);
     cmd.arg(&script_path);
     cmd.arg("--game-dir").arg(&game_dir);
     
@@ -395,7 +395,7 @@ fn find_inject_script() -> Option<PathBuf> {
 fn find_python() -> Option<String> {
     // Try common Python executable names
     for name in &["python", "python3", "py"] {
-        if let Ok(output) = Command::new(name).arg("--version").output() {
+        if let Ok(output) = no_window_command(name).arg("--version").output() {
             if output.status.success() {
                 return Some(name.to_string());
             }

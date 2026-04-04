@@ -4,6 +4,7 @@ use std::fs::{self, File};
 use std::io::{Cursor, Read};
 use reqwest::Client;
 use zip::ZipArchive;
+use super::process_util::no_window_command;
 
 // URL per BepInEx 5.x (Unity 2017+) - Aggiornato a v5.4.23.4
 const BEPINEX5_X64_URL: &str = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.4/BepInEx_win_x64_5.4.23.4.zip";
@@ -1957,7 +1958,7 @@ async fn install_with_ipa(game_dir: &Path, exe_path: &Path, target_lang: &str, m
     let exe_name = exe_path.file_name().unwrap_or_default().to_string_lossy().to_string();
     
     // Esegui IPA.exe con l'eseguibile del gioco
-    let output = std::process::Command::new(&ipa_exe)
+    let output = no_window_command(&ipa_exe)
         .arg(&exe_name)
         .arg("--nowait")
         .current_dir(game_dir)

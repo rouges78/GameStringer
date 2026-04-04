@@ -1,5 +1,6 @@
 use serde_json;
 use serde::{Deserialize, Serialize};
+use super::process_util::no_window_command;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct HltbSearchRequest {
@@ -531,7 +532,7 @@ pub async fn get_cache_stats() -> Result<serde_json::Value, String> {
             let path = data_dir.to_string_lossy();
             let drive = if path.len() >= 2 { &path[0..2] } else { "C:" };
             
-            if let Ok(output) = std::process::Command::new("wmic")
+            if let Ok(output) = no_window_command("wmic")
                 .args(["logicaldisk", "where", &format!("DeviceID='{}'", drive), "get", "FreeSpace,Size", "/format:csv"])
                 .output()
             {

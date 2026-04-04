@@ -138,8 +138,8 @@ pub async fn scan_for_text_hooks(
 
 #[cfg(windows)]
 fn get_process_name(pid: u32) -> String {
-    use std::process::Command;
-    if let Ok(output) = Command::new("tasklist")
+    use crate::commands::process_util::no_window_command;
+    if let Ok(output) = no_window_command("tasklist")
         .args(["/FI", &format!("PID eq {}", pid), "/FO", "CSV", "/NH"])
         .output()
     {

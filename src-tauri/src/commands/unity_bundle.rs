@@ -4,7 +4,7 @@
 use tauri::command;
 use std::path::{Path, PathBuf};
 use std::fs;
-use std::process::Command;
+use super::process_util::no_window_command;
 use serde::{Serialize, Deserialize};
 #[allow(unused_imports)]
 use reqwest::Client;
@@ -440,7 +440,7 @@ pub async fn open_uabea_with_bundle(bundle_path: String) -> Result<String, Strin
     
     // Apri Explorer nella cartella UABEA
     #[cfg(windows)]
-    Command::new("explorer")
+    no_window_command("explorer")
         .arg(&uabea_abs)
         .spawn()
         .map_err(|e| format!("Errore apertura cartella: {}", e))?;
@@ -652,7 +652,7 @@ pub async fn import_translated_strings(
     }
     
     // Esegui UABEA batchimport
-    let result = Command::new(&uabea_exe)
+    let result = no_window_command(&uabea_exe)
         .args(["batchimportdump", &output_bundle, temp_dir.to_str().unwrap_or(".")])
         .output();
     
@@ -786,7 +786,7 @@ pub async fn open_uabea() -> Result<String, String> {
         return Err(format!("UABEA non trovato in: {:?}", uabea_path));
     }
     
-    std::process::Command::new(&uabea_path)
+    no_window_command(&uabea_path)
         .spawn()
         .map_err(|e| format!("Errore apertura UABEA: {}", e))?;
     

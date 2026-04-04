@@ -1,5 +1,6 @@
 use serde::Serialize;
-use std::process::Command;
+
+use super::process_util::no_window_command;
 
 #[derive(Debug, Serialize, Clone)]
 pub struct SystemStats {
@@ -20,7 +21,7 @@ pub struct SystemStats {
 /// Ottieni statistiche GPU via nvidia-smi (NVIDIA) o fallback
 fn get_gpu_stats() -> (String, u64, u64, u64, f64, Option<f64>, bool) {
     // Prova nvidia-smi
-    if let Ok(output) = Command::new("nvidia-smi")
+    if let Ok(output) = no_window_command("nvidia-smi")
         .args(["--query-gpu=name,memory.total,memory.used,memory.free,utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"])
         .output()
     {
@@ -49,7 +50,7 @@ fn get_gpu_stats() -> (String, u64, u64, u64, f64, Option<f64>, bool) {
 fn get_ram_stats() -> (u64, u64) {
     #[cfg(target_os = "windows")]
     {
-        if let Ok(output) = Command::new("wmic")
+        if let Ok(output) = no_window_command("wmic")
             .args(["OS", "get", "TotalVisibleMemorySize,FreePhysicalMemory", "/format:csv"])
             .output()
         {
@@ -68,7 +69,7 @@ fn get_ram_stats() -> (u64, u64) {
             }
         }
         // Fallback PowerShell
-        if let Ok(output) = Command::new("powershell")
+        if let Ok(output) = no_window_command("powershell")
             .args(["-NoProfile", "-Command", "(Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize,FreePhysicalMemory | ConvertTo-Json)"])
             .output()
         {
